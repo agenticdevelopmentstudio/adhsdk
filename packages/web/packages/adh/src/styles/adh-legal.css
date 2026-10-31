@@ -22,6 +22,18 @@
   padding: 2rem 0;
 }
 
+/* The h1 is only a wrapper: the two lines inside carry the type, so the browser's
+   heading size, weight and margin are cleared rather than left to stack with theirs. */
+.adh-legal__heading {
+  margin: 0;
+  font: inherit;
+}
+
+.adh-legal__prefix,
+.adh-legal__title {
+  display: block;
+}
+
 .adh-legal__prefix {
   font-family: var(--font-serif, ui-serif, Georgia, serif);
   font-size: 1.4rem;

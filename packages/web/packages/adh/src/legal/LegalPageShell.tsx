@@ -25,8 +25,12 @@ export function LegalPageShell({
   return (
     <div className="adh-legal">
       <div className="adh-legal__hero">
-        <div className="adh-legal__prefix">{prefix}</div>
-        <div className="adh-legal__title">{title}</div>
+        {/* The page's one h1, so the outline starts at the title and not at the first
+            section's h2. Spans, because a heading holds phrasing content only. */}
+        <h1 className="adh-legal__heading">
+          <span className="adh-legal__prefix">{prefix}</span>
+          <span className="adh-legal__title">{title}</span>
+        </h1>
         <div className="adh-legal__rule" />
       </div>
       <article className="adh-legal-doc">
