@@ -51,6 +51,7 @@ function renderProbe(
   sizing: InlineChatSizing | undefined,
   chatRect: Partial<DOMRect>,
   engagement?: ChatEngagement,
+  chatStyle?: CSSProperties,
 ): EngagementProbe {
   const api: EngagementProbe = {
     style: {},
@@ -68,6 +69,7 @@ function renderProbe(
     api.collapsed = collapsed
     api.engaged = engaged
     return createElement('div', {
+      style: chatStyle,
       ref: (el: HTMLDivElement | null) => {
         ref.current = el
         api.el = el
@@ -110,12 +112,29 @@ describe('useChatSizing — content-hugging math', () => {
     expect(api.style.maxHeight).toBe('480px')
   })
 
-  it('resolves viewport-offset: chatBottom - topOffsetPx', () => {
+  it('resolves viewport-offset for a pinned chat: chatBottom - topOffsetPx', () => {
     const api = renderProbe(
       { active: { mode: 'content-hugging', maxHeight: { kind: 'viewport-offset', topOffsetPx: 80 } } },
       { bottom: 780 },
+      undefined,
+      { position: 'fixed' },
     )
     expect(api.style.maxHeight).toBe('700px')
+  })
+
+  it('caps an in-flow chat at the viewport below the offset, however far it is scrolled', () => {
+    // innerHeight 800 - 80. Measured while scrolled so its bottom sat above the offset, the
+    // old cap was 0, and a box held at zero height never resized again to be measured back.
+    const api = renderProbe(
+      { active: { mode: 'content-hugging', maxHeight: { kind: 'viewport-offset', topOffsetPx: 80 } } },
+      { bottom: 60 },
+    )
+    expect(api.style.maxHeight).toBe('720px')
+    act(() => {
+      setRect(api.el!, { bottom: 780 })
+      window.dispatchEvent(new Event('resize'))
+    })
+    expect(api.style.maxHeight).toBe('720px')
   })
 
   it('keeps its viewport-offset cap when the page scrolls the chat away', () => {
@@ -126,8 +145,9 @@ describe('useChatSizing — content-hugging math', () => {
     act(() => {
       setRect(api.el!, { bottom: 125 })
       window.dispatchEvent(new Event('scroll'))
+      window.dispatchEvent(new Event('resize'))
     })
-    expect(api.style.maxHeight).toBe('700px')
+    expect(api.style.maxHeight).toBe('720px')
   })
 
   it('resolves element-offset: chatBottom - (anchorBottom + gapPx)', () => {
@@ -174,6 +194,8 @@ describe('useChatSizing — content-hugging math', () => {
     const api = renderProbe(
       { active: { mode: 'content-hugging', maxHeight: { kind: 'viewport-offset', topOffsetPx: 1000 } } },
       { bottom: 200 },
+      undefined,
+      { position: 'fixed' },
     )
     // 200 - 1000 = -800 → clamped to 0
     expect(api.style.maxHeight).toBe('0px')

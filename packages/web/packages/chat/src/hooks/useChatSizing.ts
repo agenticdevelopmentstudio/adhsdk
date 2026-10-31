@@ -60,6 +60,16 @@ export interface ChatSizing {
   className: string
 }
 
+/** Whether `el` holds still while the page scrolls: it, or a box it sits in, is fixed or
+ *  sticky, so its rect is a place in the viewport rather than a moment of the scroll. */
+function pinnedToViewport(el: Element): boolean {
+  for (let n: Element | null = el; n && n !== document.documentElement; n = n.parentElement) {
+    const position = window.getComputedStyle(n).position
+    if (position === 'fixed' || position === 'sticky') return true
+  }
+  return false
+}
+
 /**
  * Drives the inline chat's size from its active/inactive sizing behaviors.
  *
@@ -178,7 +188,13 @@ export function useChatSizing(
         return
       }
       if (cap.kind === 'viewport-offset') {
-        setMaxHeightPx(Math.max(0, chatBottom - cap.topOffsetPx))
+        // A pinned chat's bottom is where it stays, so the space above it is the cap. An
+        // in-flow chat's bottom is wherever scrolling has carried it, and capping by that
+        // crushed it: scrolled above the offset, the cap was 0, and a box held at zero height
+        // never resized again to be measured back. It gets the viewport below the offset,
+        // which no scroll changes.
+        const bottom = pinnedToViewport(el) ? chatBottom : window.innerHeight
+        setMaxHeightPx(Math.max(0, bottom - cap.topOffsetPx))
         return
       }
       const anchor = cap.ref.current
@@ -200,10 +216,9 @@ export function useChatSizing(
     }
 
     // No window `scroll` listener, deliberately. A fixed chat does not move when the page
-    // scrolls, so it never needed one; a chat in the page's flow does, and capping it by
-    // where scrolling had carried it crushed it: scrolled down to help's footer, the chat
-    // was a 45px sliver, and each cap moved the page, which moved the scroll, which moved
-    // the cap, so the page shook by a pixel on every frame.
+    // scrolls, so it never needed one; an in-flow chat's cap ignores where scrolling has
+    // carried it (see `viewport-offset` above). Recomputing on scroll made each cap move the
+    // page, which moved the scroll, which moved the cap: the page shook by a pixel per frame.
     window.addEventListener('resize', recompute)
 
     // visualViewport reflects the iOS soft-keyboard height; window.resize
