@@ -12,6 +12,7 @@ final class ReviewServiceTests: XCTestCase {
     private var repo: PartnerGitFixture!
     private var store: PartnerStore!
     private var registry: PartnerSessionRegistry!
+    private var detector: ManualSessionEventDetector!
     private var settings: SettingsStore!
     private var notifier: PartnerNotifier!
     private var paths: PartnerPaths!
@@ -25,7 +26,8 @@ final class ReviewServiceTests: XCTestCase {
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
         repo = try PartnerGitFixture()
         store = try PartnerStore(path: directory.appendingPathComponent("Partner.db").path)
-        registry = PartnerSessionRegistry(store: store, environment: { [:] }, detector: ManualSessionEventDetector())
+        detector = ManualSessionEventDetector()
+        registry = PartnerSessionRegistry(store: store, environment: { [:] }, detector: detector)
         settings = SettingsStore(with: InMemorySettingsStorageProvider(),
                                  secureSettingsProvider: InMemorySecureSettingsStorageProvider())
         settings.set("opus", for: UserSettings.partnerReviewsReviewerModel)
@@ -537,6 +539,36 @@ final class ReviewServiceTests: XCTestCase {
         registry.close(id: session.id)
         XCTAssertEqual(try service.requeueInterrupted(), 1)
         XCTAssertEqual(try store.review(id: review.id)?.state, .queued)
+    }
+
+    func testAReviewWhoseSessionExitedFailsAndFreesTheLimit() async throws {
+        try repo.commit(file: "a.txt", day: 1, message: "first")
+        let review = try queue(file: "b.txt", day: 2, message: "second")
+        let other = try queue(file: "c.txt", day: 3, message: "third", repoID: "other")
+        _ = try await service.start(id: review.id)
+        let session = try XCTUnwrap(registry.sessions.first)
+        detector.onExit?(session.id)
+
+        XCTAssertEqual(try service.requeueInterrupted(), 0)
+        let stored = try XCTUnwrap(store.review(id: review.id))
+        XCTAssertEqual(stored.state, .failed)
+        XCTAssertEqual(stored.summary, "its session exited before the review finished")
+        XCTAssertEqual(try attentionItems().filter { $0.kind == .blocked }.count, 1)
+
+        let started = try await service.start(id: other.id)
+        XCTAssertEqual(started.review.state, .running, "the exited review no longer holds the limit")
+    }
+
+    func testNextRequeuesAReviewWhoseSessionWasClosed() async throws {
+        try repo.commit(file: "a.txt", day: 1, message: "first")
+        let review = try queue(file: "b.txt", day: 2, message: "second")
+        _ = try await service.start(id: review.id)
+        registry.close(id: try XCTUnwrap(registry.sessions.first).id)
+
+        let next = try service.next()
+
+        XCTAssertEqual(next.running, 0)
+        XCTAssertEqual(next.reviews.map(\.id), [review.id])
     }
 
     // MARK: - Tools
