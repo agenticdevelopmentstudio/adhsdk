@@ -87,3 +87,12 @@ export type {
   LandingDataOptions,
   HeroSlots,
 } from './page'
+// ---- for agents and answer engines ----
+// The same page data as text (`/index.md`), the site's `llms.txt`, and its structured data.
+// Server-safe: plain functions and one script element.
+export { landingMarkdown } from './agent/landing-markdown'
+export type { LandingMarkdownOptions } from './agent/landing-markdown'
+export { llmsTxt, pathTitle, landingSectionLinks } from './agent/llms-txt'
+export type { LlmsTxt, LlmsSection, LlmsLink } from './agent/llms-txt'
+export { JsonLd, withWebSite } from './agent/json-ld'
+export type { JsonLdValue } from './agent/json-ld'
