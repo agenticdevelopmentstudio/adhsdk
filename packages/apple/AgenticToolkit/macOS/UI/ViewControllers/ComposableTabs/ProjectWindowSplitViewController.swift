@@ -231,6 +231,7 @@ final class ProjectWindowSplitViewController: NSSplitViewController {
             }
             splitView.layoutSubtreeIfNeeded()
         }
+        holdWindowWidth()
         let target = visible ? Self.openShelfWidth : 0
         let link = view.displayLink(target: self, selector: #selector(stepShelfSlide(_:)))
         shelfSlide = ShelfSlide(
@@ -279,6 +280,26 @@ final class ProjectWindowSplitViewController: NSSplitViewController {
 
     private static let shelfSlideDuration: CFTimeInterval = 0.2
 
+    /// The window's width, held required for the length of a slide. The
+    /// walked shelf width and the panes' held shares sit at 999, above the
+    /// window's own stay-put priority (500), so once a pane reached its
+    /// minimum Auto Layout met them by widening the window rather than by
+    /// stopping the shelf, and nothing put the window back. Held, the window
+    /// keeps its size and what cannot fit is the shelf's width or a share.
+    private var windowWidthHold: NSLayoutConstraint?
+
+    private func holdWindowWidth() {
+        guard windowWidthHold == nil, let contentView = view.window?.contentView else { return }
+        let hold = contentView.widthAnchor.constraint(equalToConstant: contentView.frame.width)
+        hold.isActive = true
+        windowWidthHold = hold
+    }
+
+    private func releaseWindowWidth() {
+        windowWidthHold?.isActive = false
+        windowWidthHold = nil
+    }
+
     /// Above every holding priority and the reader's drag, below required so
     /// the content's minimum width still wins.
     private static let slidingWidthPriority = NSLayoutConstraint.Priority(999)
@@ -323,6 +344,7 @@ final class ProjectWindowSplitViewController: NSSplitViewController {
         // Back to the width the shelf opens at, at the priority a drag beats.
         shelfWidth?.constant = Self.openShelfWidth
         shelfWidth?.priority = .defaultLow
+        releaseWindowWidth()
         splitView.layoutSubtreeIfNeeded()
         content.view.endAnimatedResize()
         content.view.layoutSubtreeIfNeeded()
