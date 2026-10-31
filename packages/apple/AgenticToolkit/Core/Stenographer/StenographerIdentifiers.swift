@@ -113,9 +113,13 @@ public struct StenographerPaths: Sendable {
         return currentLogsDirectory
     }
 
+    /// A named instance's sits beside its definition, never in LaunchAgents,
+    /// and never in its data root: launchd refuses to bootstrap a plist from a
+    /// volume mounted `noowners`, which is where data roots usually live.
     public var launchAgentPlist: URL {
-        if let root = instance.dataRoot {
-            return root.appendingPathComponent("launchd/\(instance.label).plist")
+        if instance.dataRoot != nil {
+            return StenographerInstance.definitionsDirectory(home: home)
+                .appendingPathComponent("\(instance.label).plist")
         }
         return agent(StenographerInstance.baseLabel)
     }
