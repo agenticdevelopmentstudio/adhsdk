@@ -213,7 +213,7 @@ public final class ProjectBrowserViewController: NSViewController {
         case #selector(NSResponder.moveLeft(_:)),
              #selector(NSResponder.moveToLeftEndOfLine(_:)),
              #selector(NSResponder.moveToBeginningOfLine(_:)):
-            return collapseOrAscend()
+            return collapseHighlightedFolder()
         default:
             return false
         }
@@ -232,16 +232,13 @@ public final class ProjectBrowserViewController: NSViewController {
         return true
     }
 
-    /// ← on an open folder closes it; anywhere else it steps out to the
-    /// folder the row lives in.
-    private func collapseOrAscend() -> Bool {
-        guard let node = selectedNode else { return false }
-        if node.isFolder, outline.isItemExpanded(node) {
-            outline.collapseItem(node)
-            return true
-        }
-        guard let parent = outline.parent(forItem: node) as? ProjectTreeNode else { return false }
-        select(parent)
+    /// ← on an open folder closes it. On anything else it is the field's: a
+    /// filter highlights its first matching project as the user types, so a
+    /// ← that stepped out to that project's folder would take the key from
+    /// someone fixing a typo, and leave Return with nothing it can open.
+    private func collapseHighlightedFolder() -> Bool {
+        guard let node = selectedNode, node.isFolder, outline.isItemExpanded(node) else { return false }
+        outline.collapseItem(node)
         return true
     }
 
