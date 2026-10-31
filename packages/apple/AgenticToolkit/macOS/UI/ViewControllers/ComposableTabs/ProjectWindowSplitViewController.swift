@@ -345,6 +345,10 @@ final class ProjectWindowSplitViewController: NSSplitViewController {
         setShelfVisible(true) { [weak shelf] in shelf?.focusFilter() }
     }
 
+    /// Ends a slide in flight at its destination — see
+    /// `ProjectShelfWindow.landShelfSlide()`.
+    func landShelfSlide() { finishShelfSlide() }
+
     /// What the shelf looks like now, for a window about to take this one's
     /// place. Each active project's window has a shelf of its own, and the
     /// swap must not visibly move one.

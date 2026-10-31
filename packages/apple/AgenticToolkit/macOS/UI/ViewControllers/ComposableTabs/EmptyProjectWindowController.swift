@@ -13,6 +13,11 @@ public protocol ProjectShelfWindow: AnyObject {
     /// the next so a swap moves nothing.
     var shelfLayout: ProjectShelfLayout { get }
     func adoptShelfLayout(_ layout: ProjectShelfLayout)
+    /// Lands a shelf slide in flight at its destination, running what waited
+    /// for it — before `shelfLayout` is read for a swap, which would otherwise
+    /// hand over a half-slid width and leave the slide to land later on a
+    /// window ordered out.
+    func landShelfSlide()
     func toggleShelfPanel(_ panel: ProjectShelfPanel)
 }
 
@@ -122,6 +127,10 @@ public final class EmptyProjectWindowController: SingleWindowController {
 
     public func adoptShelfLayout(_ layout: ProjectShelfLayout) {
         windowContent.adoptShelfLayout(layout)
+    }
+
+    public func landShelfSlide() {
+        windowContent.landShelfSlide()
     }
 
     @objc public func toggleShelf() {

@@ -521,6 +521,9 @@ public final class ProjectWindowManager: ProjectOpening, ObservableObject {
     /// down, so every session in the outgoing project keeps running.
     private func swap(to incoming: NSWindowController & ProjectShelfWindow, in group: ProjectWindowGroup) {
         let outgoing = shownWindows[group.id]
+        // Landed before anything is read from it: its focus may be the
+        // pending completion, and its layout the slide's destination.
+        outgoing?.landShelfSlide()
         guard outgoing !== incoming else {
             incoming.showWindow(nil)
             incoming.window?.makeKeyAndOrderFront(nil)

@@ -537,6 +537,10 @@ public final class ComposableTabsWindowController: WindowController<NSViewContro
         windowContent.adoptShelfLayout(layout)
     }
 
+    public func landShelfSlide() {
+        windowContent.landShelfSlide()
+    }
+
     /// Keeps the toggle reading as the state it toggles — filled and accented
     /// while the shelf is out, quiet while it is away. The toolbar builds its
     /// items lazily, so this is called again once the window is on screen.
