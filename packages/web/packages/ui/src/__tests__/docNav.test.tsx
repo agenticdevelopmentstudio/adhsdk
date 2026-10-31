@@ -266,9 +266,9 @@ describe('DocNav', () => {
     const { container } = render(
       <DocNav nodes={NODES} activePath="/projects" topLinks={TOP} />,
     )
-    const marks = container.querySelectorAll('p > span.bg-\\[var\\(--color-accent\\)\\]')
+    const marks = container.querySelectorAll('div > span.bg-\\[var\\(--color-accent\\)\\]')
     expect(marks).toHaveLength(1)
-    expect(screen.getByRole('link', { name: 'Projects' }).closest('p')!.contains(marks[0]!)).toBe(
+    expect(screen.getByRole('link', { name: 'Projects' }).closest('div')!.contains(marks[0]!)).toBe(
       true,
     )
   })
@@ -315,11 +315,11 @@ describe('DocNav', () => {
     )
     const children = Array.from(container.querySelector('nav')!.children)
     const rule = children.findIndex((el) => el.className.includes('border-t'))
-    const row = children.findIndex((el) => el.querySelector('p'))
+    const link = screen.getByRole('link', { name: 'Cookbook Project' })
+    const row = children.findIndex((el) => el.contains(link))
 
     expect(rule).toBeGreaterThan(-1)
     expect(row).toBe(rule + 1)
-    expect(screen.getByRole('link', { name: 'Cookbook Project' })).toBeTruthy()
   })
 
   it('draws a rule at each end when both ends carry rows', () => {
