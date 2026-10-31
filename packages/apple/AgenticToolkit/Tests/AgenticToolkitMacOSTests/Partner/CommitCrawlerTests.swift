@@ -40,6 +40,23 @@ final class CommitCrawlerTests: XCTestCase {
         XCTAssertEqual(found[0].author, "Ann")
     }
 
+    func testABranchNamedLikeAPathOrATagIsStillItsOwnBranch() async throws {
+        let repo = try PartnerGitFixture()
+        try FileManager.default.createDirectory(at: repo.directory.appendingPathComponent("docs"),
+                                                withIntermediateDirectories: true)
+        try repo.commit(file: "docs/readme.txt", day: 1, message: "first")
+        try repo.git("checkout", "-b", "docs")
+        let second = try repo.commit(file: "b.txt", day: 2, message: "on docs")
+        try repo.git("checkout", "main")
+        let third = try repo.commit(file: "c.txt", day: 3, message: "on main")
+        try repo.git("tag", "docs", third)
+
+        let found = try await CommitCrawler(git: repo.review)
+            .commits(in: repo.directory, branch: "docs", since: .distantPast)
+        XCTAssertEqual(found.map(\.subject), ["first", "on docs"])
+        XCTAssertEqual(found.last?.sha, second)
+    }
+
     func testSinceFiltersOldCommits() async throws {
         let (repo, shas) = try mergedRepo()
         let since = ISO8601DateFormatter().date(from: "2026-01-02T18:00:00Z")!
