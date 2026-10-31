@@ -422,6 +422,11 @@ public final class ProjectWindowManager: ProjectOpening, ObservableObject {
     private var emptyCloseObservers: [UUID: NSObjectProtocol] = [:]
     private var groupObservers: [UUID: AnyCancellable] = [:]
 
+    /// A swap waiting for its group's window to leave full screen, keyed by
+    /// group: the window to bring in, and how. See `swapInFullScreen`.
+    private var fullScreenSwaps: [UUID: (incoming: NSWindowController & ProjectShelfWindow, quietly: Bool)] = [:]
+    private var fullScreenObservers: [UUID: NSObjectProtocol] = [:]
+
     /// Set while `restoreOpenProjects()` rebuilds the groups, so their
     /// half-built state is not written back over the state being read.
     private var isRestoring = false
@@ -540,6 +545,10 @@ public final class ProjectWindowManager: ProjectOpening, ObservableObject {
             incoming.window?.makeKeyAndOrderFront(nil)
             return
         }
+        if let outgoingWindow = outgoing?.window, outgoingWindow.styleMask.contains(.fullScreen) {
+            swapInFullScreen(outgoingWindow, to: incoming, in: group, quietly: quietly)
+            return
+        }
         let focus = outgoing?.projectShelf?.focus ?? .elsewhere
         if incoming.window == nil { incoming.loadWindow() }
         let outgoingFrame = outgoing?.window?.frame
@@ -583,6 +592,44 @@ public final class ProjectWindowManager: ProjectOpening, ObservableObject {
         if quietly, let previousKey, previousKey !== outgoing?.window, previousKey.isVisible {
             previousKey.makeKey()
         }
+    }
+
+    /// The swap for a group whose window is in full screen. A full-screen
+    /// window owns its Space, and ordering it out there would strand that
+    /// Space empty, while the incoming window, given the screen-sized frame
+    /// without the full-screen style, would land on the desktop. So the
+    /// outgoing window leaves full screen first, the ordinary swap runs once
+    /// it has, and the incoming window takes full screen in its place. A
+    /// second swap asked for while the first waits replaces its target.
+    private func swapInFullScreen(
+        _ outgoingWindow: NSWindow,
+        to incoming: NSWindowController & ProjectShelfWindow,
+        in group: ProjectWindowGroup,
+        quietly: Bool
+    ) {
+        let waiting = fullScreenSwaps[group.id] != nil
+        fullScreenSwaps[group.id] = (incoming, quietly)
+        guard !waiting else { return }
+        let groupID = group.id
+        fullScreenObservers[groupID] = NotificationCenter.default.addObserver(
+            forName: NSWindow.didExitFullScreenNotification, object: outgoingWindow, queue: .main
+        ) { [weak self, weak group] _ in
+            MainActor.assumeIsolated {
+                guard let self else { return }
+                if let observer = self.fullScreenObservers.removeValue(forKey: groupID) {
+                    NotificationCenter.default.removeObserver(observer)
+                }
+                guard let group, let pending = self.fullScreenSwaps.removeValue(forKey: group.id),
+                      self.groups.contains(where: { $0 === group })
+                else { return }
+                self.swap(to: pending.incoming, in: group, quietly: pending.quietly)
+                if self.shownWindows[group.id] === pending.incoming,
+                   let window = pending.incoming.window, !window.styleMask.contains(.fullScreen) {
+                    window.toggleFullScreen(nil)
+                }
+            }
+        }
+        outgoingWindow.toggleFullScreen(nil)
     }
 
     /// Builds `repo`'s window without showing it.
