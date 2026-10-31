@@ -35,18 +35,28 @@ public struct ReviewGit: Sendable {
         return try await client.run(verb, Array(arguments.dropFirst()), in: directory)
     }
 
-    /// The target of `origin/HEAD`, else `main`, else `master`, else the current branch (`HEAD` when detached).
+    /// The first that is a local branch: the target of `origin/HEAD`, `main`, `master`, the current branch.
+    /// Always a local branch, since the crawl and the worktree work on `refs/heads/<name>`: an `origin/HEAD` with
+    /// no local branch of its name (a clone of another branch, a stale origin/HEAD) falls through. Throws when
+    /// none is, with HEAD detached, rather than following whatever commit HEAD happens to be on.
     public func defaultBranch(in repo: URL) async throws -> String {
+        let branches = try await localBranches(in: repo)
         do {
             let origin = try await run(["symbolic-ref", "--short", "refs/remotes/origin/HEAD"], in: repo)
                 .trimmingCharacters(in: .whitespacesAndNewlines)
-            if origin.hasPrefix("origin/") { return String(origin.dropFirst("origin/".count)) }
+            if origin.hasPrefix("origin/") {
+                let name = String(origin.dropFirst("origin/".count))
+                if branches.contains(name) { return name }
+            }
         } catch GitClientError.commandFailed {
             // No origin/HEAD: fall through to the local branches. Cancellation and timeouts still propagate.
         }
-        let branches = try await localBranches(in: repo)
         for candidate in ["main", "master"] where branches.contains(candidate) { return candidate }
-        return try await client.currentBranch(in: repo) ?? "HEAD"
+        if let current = try await client.currentBranch(in: repo), branches.contains(current) { return current }
+        throw GitClientError.commandFailed(
+            verb: "symbolic-ref", exitStatus: 1,
+            standardError: "no default branch: origin/HEAD names no local branch, there is no main or master, "
+                + "and HEAD is detached")
     }
 
     /// The commit a fully qualified ref (`refs/heads/main`) names, or `nil` when it does not exist.
