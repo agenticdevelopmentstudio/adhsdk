@@ -375,18 +375,13 @@ public final class ProjectWindowManager: ProjectOpening, ObservableObject {
     public func openNewWindow() {
         let template = frontGroup.flatMap { shownWindows[$0.id]?.window }
         let group = makeGroup()
-        guard let empty = showEmptyWindow(for: group) else {
+        // Sized like the window in front and cascaded off it — a project
+        // chosen here inherits this frame, so the 800×500 default would
+        // shrink every project opened from a new window
+        // (`principle-of-least-astonishment`).
+        guard let empty = showEmptyWindow(for: group, placedLike: template) else {
             removeGroup(group)
             return
-        }
-        // Sized like the window in front and cascaded off it, as New is in a
-        // document app — a project chosen here inherits this frame, so the
-        // 800×500 default would shrink every project opened from a new window
-        // (`principle-of-least-astonishment`).
-        if let template, let window = empty.window {
-            // Offset by hand: `cascadeTopLeft(from:)` moves the window it is
-            // sent to, which here would be the template.
-            window.setFrame(template.frame.offsetBy(dx: 22, dy: -22), display: false)
         }
         empty.showShelfForChoosing()
         persistGroups()
@@ -687,10 +682,14 @@ public final class ProjectWindowManager: ProjectOpening, ObservableObject {
     /// a host with no registry: a window with nothing to choose from is not
     /// worth showing.
     @discardableResult
-    private func showEmptyWindow(for group: ProjectWindowGroup) -> EmptyProjectWindowController? {
+    private func showEmptyWindow(
+        for group: ProjectWindowGroup,
+        placedLike template: NSWindow? = nil
+    ) -> EmptyProjectWindowController? {
         if let existing = emptyWindows[group.id] { return existing }
         guard let shelf = makeShelf(for: group) else { return nil }
         let empty = EmptyProjectWindowController(groupID: group.id, shelf: shelf)
+        empty.placementTemplate = template
         emptyWindows[group.id] = empty
         empty.loadWindow()
         if shownWindows[group.id] == nil {

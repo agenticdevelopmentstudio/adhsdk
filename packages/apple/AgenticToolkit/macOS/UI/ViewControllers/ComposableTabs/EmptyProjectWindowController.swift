@@ -72,6 +72,26 @@ public final class EmptyProjectWindowController: SingleWindowController {
     @available(*, unavailable)
     public required init?(coder: NSCoder) { fatalError("init(coder:) is not supported") }
 
+    /// The window a new empty window is placed like — File ▸ New Project
+    /// Window's front window — or `nil` for the spec's default. Read when the
+    /// window loads, so it is placed before it is ever shown: a window shown
+    /// at the default and then moved shrinks and regrows in front of the user.
+    public weak var placementTemplate: NSWindow?
+
+    /// Sized like the template and cascaded off it, as New is in a document
+    /// app. `cascadeTopLeft(from:)` is sent to this window, which is the one
+    /// it moves, and keeps it on screen however many times New is chosen.
+    public override func placeWindowWithoutSavedFrame(_ window: NSWindow) {
+        guard let template = placementTemplate else { return }
+        var frame = window.frame
+        frame.size = template.frame.size
+        window.setFrame(frame, display: false)
+        // The first call puts this window's top left on the template's and
+        // answers the next cascade step; the second moves it there.
+        let next = window.cascadeTopLeft(from: NSPoint(x: template.frame.minX, y: template.frame.maxY))
+        window.cascadeTopLeft(from: next)
+    }
+
     /// The same chrome as a project window's — see
     /// `ComposableTabsWindowController.configureWindow(_:)`.
     public override func configureWindow(_ window: NSWindow) {
