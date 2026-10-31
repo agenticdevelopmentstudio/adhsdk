@@ -72,6 +72,10 @@ final class PartnerStoreTests: XCTestCase {
             }
             XCTAssertEqual(found, 99)
             XCTAssertEqual(supported, PartnerStore.currentSchemaVersion)
+            // What the Kitchen logs when it starts without the partner (review finding f1).
+            XCTAssertEqual(error.localizedDescription,
+                           "Partner.db is at schema 99, written by a newer build; this one supports up to "
+                           + "\(PartnerStore.currentSchemaVersion)")
         }
     }
 
