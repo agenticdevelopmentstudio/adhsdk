@@ -40,6 +40,24 @@ extension PartnerController {
         return "> " + item.text.replacingOccurrences(of: "\n", with: "\n> ") + "\n\n"
     }
 
+    /// Puts every `.sent` item whose line will now never be answered back to `.open`, so the owner sees its
+    /// buttons again: its line went to a process that has since ended (``awaitingDone``), or it was lost with
+    /// an earlier run of the app (no queued line names it in ``presetMessageIDs``). Called at start, once the
+    /// lock is held, and whenever the process ends.
+    func reopenUnansweredItems() {
+        awaitingDone = []
+        do {
+            for var item in try store.attentionItems(includeDoneCompletedAfter: nil) where item.state == .sent {
+                guard presetMessageIDs[Self.attentionSourcePrefix + item.id] == nil else { continue }
+                item.state = .open
+                item.updatedAt = now()
+                try store.update(item)
+            }
+        } catch {
+            Self.logger.error("Reopening unanswered attention items failed: \(error.localizedDescription)")
+        }
+    }
+
     /// Marks every item whose button line has gone out `.done`. Called on each message from the partner.
     func completeAwaitedItems() {
         guard !awaitingDone.isEmpty else { return }
