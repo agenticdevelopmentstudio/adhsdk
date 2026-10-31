@@ -1,20 +1,28 @@
 // swiftlint:disable identifier_name
 import XCTest
-@testable import AgenticDeveloperHubSDKDatabase
+@testable import AgenticToolkitDatabase
 
 /// A throwaway session database for tests that need the real schema (the
 /// `ingestion_errors` table, for one). Every test that opens one removes it
 /// again with `remove(path:)`.
 enum TestDaemonDatabase {
 
-    private static let directoryPrefix = "daemontest-"
+    /// The extension of the directory `uniquePath` makes, so `remove` knows a
+    /// parent it may delete from one it must not (an explicit path's).
+    static let directoryExtension = "testdb"
 
-    /// A database path inside its own new temp directory, so the -wal and -shm
-    /// files SQLite makes beside it go when `remove(path:)` removes the directory.
+    /// A database path inside its own new temp directory, so the database's
+    /// -wal and -shm (and any journal) go away with that directory.
+    static func uniquePath(prefix: String = "daemontest", file name: String = "session.db") -> String {
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent("\(prefix)-\(UUID().uuidString).\(directoryExtension)", isDirectory: true)
+        try? FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        return directory.appendingPathComponent(name).path
+    }
+
+    /// `uniquePath()` under the name main's callers use.
     static func makeDatabasePath() throws -> String {
-        let directory = NSTemporaryDirectory() + directoryPrefix + UUID().uuidString
-        try FileManager.default.createDirectory(atPath: directory, withIntermediateDirectories: true)
-        return directory + "/session.db"
+        uniquePath()
     }
 
     /// Opens a fresh `SessionSchema` database at a unique temp path.
@@ -25,7 +33,7 @@ enum TestDaemonDatabase {
         sessionUpsertHook: DaemonDatabase.SessionUpsertHook? = nil,
         file: StaticString = #filePath, line: UInt = #line
     ) throws -> (db: DaemonDatabase, path: String) {
-        let path = try explicitPath ?? makeDatabasePath()
+        let path = explicitPath ?? uniquePath()
         do {
             let db = try DaemonDatabase(
                 path: path,
@@ -43,16 +51,15 @@ enum TestDaemonDatabase {
         }
     }
 
-    /// Removes the database and its WAL siblings, along with the directory
-    /// `makeDatabasePath()` made for it. A path the caller chose keeps its directory.
+    /// Removes the database file and its WAL siblings, and the directory
+    /// `uniquePath` made for it.
     static func remove(path: String) {
-        let directory = (path as NSString).deletingLastPathComponent
-        if (directory as NSString).lastPathComponent.hasPrefix(directoryPrefix) {
-            try? FileManager.default.removeItem(atPath: directory)
-            return
-        }
         for suffix in ["", "-wal", "-shm"] {
             try? FileManager.default.removeItem(atPath: path + suffix)
+        }
+        let directory = URL(fileURLWithPath: path).deletingLastPathComponent()
+        if directory.pathExtension == directoryExtension {
+            try? FileManager.default.removeItem(at: directory)
         }
     }
 }
