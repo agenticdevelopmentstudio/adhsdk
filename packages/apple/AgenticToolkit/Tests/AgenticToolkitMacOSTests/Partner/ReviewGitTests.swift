@@ -80,7 +80,11 @@ final class ReviewGitTests: XCTestCase {
         XCTAssertFalse(diff.isEmpty)
         let cut = try await repo.review.tipDiff(
             from: second, to: "main", files: ["a.txt"], in: repo.directory, maxBytes: 10)
-        XCTAssertEqual(cut.utf8.count, 10)
+        XCTAssertTrue(cut.hasPrefix(String(diff.prefix(10))), cut)
+        XCTAssertTrue(cut.contains("[diff cut at 10 bytes of \(diff.utf8.count); run `git diff \(second) main --`"),
+                      cut)
+        let whole = try await repo.review.tipDiff(from: second, to: "main", files: ["a.txt"], in: repo.directory)
+        XCTAssertFalse(whole.contains("diff cut at"), "a small diff is passed whole under the default cap")
     }
 
     func testSupersedingCommitsEmptyWhenLaterCommitTouchesOtherFile() async throws {
