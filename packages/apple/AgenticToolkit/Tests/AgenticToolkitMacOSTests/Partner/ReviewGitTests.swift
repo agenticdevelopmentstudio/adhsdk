@@ -13,6 +13,31 @@ final class ReviewGitTests: XCTestCase {
         XCTAssertEqual(branches, ["main"])
     }
 
+    func testDefaultBranchSkipsAnOriginHEADWithNoLocalBranch() async throws {
+        let repo = try PartnerGitFixture()
+        try repo.commit(file: "a.txt", day: 1, message: "first")
+        try repo.git("symbolic-ref", "refs/remotes/origin/HEAD", "refs/remotes/origin/master")
+        let defaultBranch = try await repo.review.defaultBranch(in: repo.directory)
+        XCTAssertEqual(defaultBranch, "main")
+    }
+
+    func testDefaultBranchThrowsRatherThanFollowAMissingBranchOrADetachedHEAD() async throws {
+        let repo = try PartnerGitFixture()
+        try repo.commit(file: "a.txt", day: 1, message: "first")
+        try repo.git("branch", "-m", "main", "trunk")
+        try repo.git("checkout", "--detach")
+        do {
+            let found = try await repo.review.defaultBranch(in: repo.directory)
+            XCTFail("expected a failure, got \(found)")
+        } catch let error as GitClientError {
+            guard case .commandFailed(_, _, let standardError) = error else { return XCTFail("unexpected \(error)") }
+            XCTAssertTrue(standardError.contains("no default branch"), standardError)
+        }
+        try repo.git("checkout", "trunk")
+        let current = try await repo.review.defaultBranch(in: repo.directory)
+        XCTAssertEqual(current, "trunk", "with HEAD on a branch, the current branch is the fallback")
+    }
+
     func testIsAncestor() async throws {
         let repo = try PartnerGitFixture()
         try repo.commit(file: "a.txt", day: 1, message: "first")
