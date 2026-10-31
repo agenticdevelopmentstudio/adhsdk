@@ -164,8 +164,12 @@ final class ProjectWindowSplitViewController: NSSplitViewController {
 
     var hasShelf: Bool { shelfItem != nil }
 
+    /// Where the shelf is, or — mid-slide — where it is going. A hide only
+    /// collapses the item once it lands, so the item alone would answer a
+    /// second toggle within the slide as if the first had not happened.
     var isShelfVisible: Bool {
         guard let shelfItem else { return false }
+        if let shelfSlide { return shelfSlide.target > 0 }
         return !shelfItem.isCollapsed
     }
 
@@ -180,11 +184,21 @@ final class ProjectWindowSplitViewController: NSSplitViewController {
     ///   sliding in from zero width takes the keyboard and then loses it.
     func setShelfVisible(_ visible: Bool, completion: (@MainActor () -> Void)? = nil) {
         guard let item = shelfItem else { return }
-        guard item.isCollapsed == visible else {
+        if let slide = shelfSlide, (slide.target > 0) == visible {
+            // Already on its way there: the completion waits for it to land,
+            // as it would have for a slide of its own.
+            shelfSlide?.completion = { slide.completion?(); completion?() }
+            return
+        }
+        guard shelfSlide != nil || item.isCollapsed == visible else {
             completion?()
             return
         }
         UserSettings.projectShelfVisible.value = visible
+        // A slide the other way is landed first, and its completion dropped
+        // with it: that was the focus for a shelf no longer coming, and run
+        // now it would put the keyboard in a filter sliding shut.
+        finishShelfSlide(runsCompletion: false)
         if !visible { shelf?.resignFocus() }
         guard view.window != nil else {
             item.isCollapsed = !visible
@@ -192,7 +206,6 @@ final class ProjectWindowSplitViewController: NSSplitViewController {
             completion?()
             return
         }
-        finishShelfSlide()
         isAnimatingShelf = true
         onShelfWillMove?()
         holdsSharesFromBeforeSlide = true
@@ -261,7 +274,7 @@ final class ProjectWindowSplitViewController: NSSplitViewController {
         var start: CFTimeInterval
         let origin: CGFloat
         let target: CGFloat
-        let completion: (@MainActor () -> Void)?
+        var completion: (@MainActor () -> Void)?
     }
 
     private static let shelfSlideDuration: CFTimeInterval = 0.2
@@ -296,7 +309,10 @@ final class ProjectWindowSplitViewController: NSSplitViewController {
 
     /// Ends the slide in progress, at its destination, if there is one. A
     /// second toggle mid-slide lands the first before it starts its own.
-    private func finishShelfSlide() {
+    ///
+    /// - Parameter runsCompletion: `false` when the slide is being superseded
+    ///   rather than finished, so what was waiting for it does not run.
+    private func finishShelfSlide(runsCompletion: Bool = true) {
         guard let slide = shelfSlide, let item = shelfItem else { return }
         shelfSlide = nil
         slide.link.invalidate()
@@ -314,7 +330,7 @@ final class ProjectWindowSplitViewController: NSSplitViewController {
         holdsSharesFromBeforeSlide = false
         onShelfDidMove?()
         onShelfVisibilityChange?()
-        slide.completion?()
+        if runsCompletion { slide.completion?() }
     }
 
     /// ⌘0 and ⌘1: show the shelf on `panel` with the keyboard in its filter,
