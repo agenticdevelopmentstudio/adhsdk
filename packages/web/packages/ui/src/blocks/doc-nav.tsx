@@ -367,6 +367,10 @@ function NavSection({
  * The same component draws `topLinks` and `bottomLinks`, so a host cannot end up
  * with two kinds of fixed row that read differently depending on which end of the
  * nav they were passed to.
+ *
+ * A `<p>`, not a heading: the nav comes before the page's `<h1>` in the document,
+ * so a heading here put an `h3` at the top of every page's outline, ahead of the
+ * title it was meant to sit under.
  */
 function NavFixedLink({
   link,
@@ -379,14 +383,14 @@ function NavFixedLink({
 }) {
   return (
     <div className="flex flex-col gap-3">
-      <h3 className={DOC_NAV_TOP_LINK_CLASS}>
+      <p className={DOC_NAV_TOP_LINK_CLASS}>
         {activePath === link.href && (
           <span className="absolute -left-6 top-0 bottom-0 w-0.5 bg-[var(--color-accent)]" />
         )}
         <LinkComponent to={link.href} className="hover:text-[var(--color-accent)]">
           {link.label}
         </LinkComponent>
-      </h3>
+      </p>
     </div>
   )
 }

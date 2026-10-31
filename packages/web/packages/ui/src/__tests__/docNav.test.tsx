@@ -266,9 +266,9 @@ describe('DocNav', () => {
     const { container } = render(
       <DocNav nodes={NODES} activePath="/projects" topLinks={TOP} />,
     )
-    const marks = container.querySelectorAll('h3 > span.bg-\\[var\\(--color-accent\\)\\]')
+    const marks = container.querySelectorAll('p > span.bg-\\[var\\(--color-accent\\)\\]')
     expect(marks).toHaveLength(1)
-    expect(screen.getByRole('link', { name: 'Projects' }).closest('h3')!.contains(marks[0]!)).toBe(
+    expect(screen.getByRole('link', { name: 'Projects' }).closest('p')!.contains(marks[0]!)).toBe(
       true,
     )
   })
@@ -315,7 +315,7 @@ describe('DocNav', () => {
     )
     const children = Array.from(container.querySelector('nav')!.children)
     const rule = children.findIndex((el) => el.className.includes('border-t'))
-    const row = children.findIndex((el) => el.querySelector('h3'))
+    const row = children.findIndex((el) => el.querySelector('p'))
 
     expect(rule).toBeGreaterThan(-1)
     expect(row).toBe(rule + 1)
