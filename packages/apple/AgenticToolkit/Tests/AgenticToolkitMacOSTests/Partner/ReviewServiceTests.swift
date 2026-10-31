@@ -476,6 +476,24 @@ final class ReviewServiceTests: XCTestCase {
         XCTAssertEqual(registry.sessions.count, 1, "finish closes nothing")
     }
 
+    func testFinishKeepsOnlyTheNewestFinishedSessionsOpen() async throws {
+        try repo.commit(file: "a.txt", day: 1, message: "first")
+        var reviews: [PartnerReview] = []
+        for day in 2...6 {
+            reviews.append(try queue(file: "f\(day).txt", day: day, message: "change \(day)"))
+        }
+        var sessionIDs: [String] = []
+        for review in reviews {
+            let started = try await service.start(id: review.id)
+            sessionIDs.append(try XCTUnwrap(started.review.sessionID))
+            _ = try service.finish(id: review.id, state: .done, summary: "ok")
+        }
+
+        let open = registry.sessions.map(\.id.uuidString)
+        XCTAssertEqual(open.count, ReviewService.finishedSessionsKept)
+        XCTAssertEqual(Set(open), Set(sessionIDs.suffix(ReviewService.finishedSessionsKept)), "the newest stay")
+    }
+
     func testFinishRefusesAQueuedStateAndAFinishedReview() async throws {
         try repo.commit(file: "a.txt", day: 1, message: "first")
         let review = try queue(file: "b.txt", day: 2, message: "second")
