@@ -232,6 +232,16 @@ final class PartnerControllerTests: XCTestCase {
         XCTAssertTrue(prompt.contains("Always answer in haiku."), prompt)
     }
 
+    func testThePartnerRunsHeadlessWithoutAnInheritedCredential() async {
+        setenv("ANTHROPIC_API_KEY", "inherited", 1)
+        defer { unsetenv("ANTHROPIC_API_KEY") }
+        let controller = makeController()
+        await startIdle(controller)
+        XCTAssertEqual(controller.environment["AGENTIC_TOOLKIT_HEADLESS"], "1")
+        XCTAssertNil(controller.environment["ANTHROPIC_API_KEY"])
+        XCTAssertNotNil(controller.environment["HOME"], "the environment is whole, not a list of overrides")
+    }
+
     func testTurnsAreSerialisedAndNextSentAfterResult() async {
         let controller = makeController()
         await controller.start()

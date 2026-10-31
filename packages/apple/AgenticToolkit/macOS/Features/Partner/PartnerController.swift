@@ -202,7 +202,9 @@ public final class PartnerController: ObservableObject {
         }
 
         self.callerID = callerID
-        environment = ["PATH": ClaudeCLI.searchPath(claudeDirectory: ClaudeCLI.directory(ofBinary: claude))]
+        // The whole environment, not overrides: marked headless so session trackers do not record the partner
+        // as a session, and without any credential the app inherited from the terminal that launched it.
+        environment = ClaudeAuthCLI.childEnvironment(executable: claude)
         do {
             try await launch(configuration)
         } catch is CancellationError {
