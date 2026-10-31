@@ -489,7 +489,7 @@ public final class ComposableTabsWindowController: WindowController<NSViewContro
         super.showWindow(sender)
         installFirstResponderObserverIfNeeded()
         installTitlebarAccessoryIfNeeded()
-        restoreFocusedLeafForActiveTab()
+        restoreFocusedLeafForActiveTab(unlessShelfHasFocus: true)
         refreshActivePaneChrome()
         refreshHelpButtonAppearance()
         refreshShelfToggleAppearance()
@@ -1194,7 +1194,11 @@ public final class ComposableTabsWindowController: WindowController<NSViewContro
         }
     }
 
-    private func restoreFocusedLeafForActiveTab() {
+    /// - Parameter unlessShelfHasFocus: Leave the keyboard where it is if the
+    ///   shelf has it by the time the leaf would take it — for `showWindow`,
+    ///   which a project swap follows by handing the shelf's focus over. A tab
+    ///   chosen by the user always takes the keyboard to its pane.
+    private func restoreFocusedLeafForActiveTab(unlessShelfHasFocus: Bool = false) {
         guard let activeTabID = tabbed.activeTabID,
               let activeSplit = splitControllersByTabID[activeTabID],
               let focusedNodeID = focusedLeafByTabID[activeTabID] else { return }
@@ -1205,7 +1209,7 @@ public final class ComposableTabsWindowController: WindowController<NSViewContro
             // `showWindow` and before this tick. Taking it back for the pane
             // left the arrow keys beeping in a pane the user had not chosen,
             // instead of moving through the shelf they were using.
-            if let shelf = self?.shelf, shelf.focus != .elsewhere { return }
+            if unlessShelfHasFocus, let shelf = self?.shelf, shelf.focus != .elsewhere { return }
             activeSplit.makeLeafFirstResponder(nodeID: focusedNodeID)
         }
     }
