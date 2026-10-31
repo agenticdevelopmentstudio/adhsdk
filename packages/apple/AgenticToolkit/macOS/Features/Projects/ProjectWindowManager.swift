@@ -417,6 +417,15 @@ public final class ProjectWindowManager: ProjectOpening, ObservableObject {
     /// half-built state is not written back over the state being read.
     private var isRestoring = false
 
+    /// Saved windows none of whose projects this registry knows, kept as they
+    /// were and written back beside the live groups. The saved windows are an
+    /// app preference and the registry is a database, and a launch can pair a
+    /// preference with a database it was not written against —
+    /// `APP_TEST_HOME` redirects the database and not the preferences — so
+    /// an id the registry lacks is not evidence the project is gone, and
+    /// dropping it would lose the real windows to a test run.
+    private var unrestoredStates: [ProjectWindowState] = []
+
     /// The group whose window is frontmost, or failing that the last made.
     private var frontGroup: ProjectWindowGroup? {
         let windows = [NSApp.keyWindow].compactMap { $0 } + NSApp.orderedWindows.filter(\.isVisible)
@@ -742,7 +751,7 @@ public final class ProjectWindowManager: ProjectOpening, ObservableObject {
     /// the user's closes would reopen nothing next launch.
     private func persistGroups() {
         guard !WindowManager.shared.isTerminating, !isRestoring else { return }
-        let states = groups.map(\.state)
+        let states = groups.map(\.state) + unrestoredStates
         if UserSettings.projectWindows.currentValue != states {
             UserSettings.projectWindows.value = states
         }
@@ -817,6 +826,11 @@ public final class ProjectWindowManager: ProjectOpening, ObservableObject {
         let repos = Dictionary(coordinator.repos.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
         isRestoring = true
         for var state in states {
+            let wasEmpty = state.activeRepoIDs.isEmpty
+            guard wasEmpty || state.activeRepoIDs.contains(where: { repos[$0] != nil }) else {
+                unrestoredStates.append(state)
+                continue
+            }
             state.activeRepoIDs = state.activeRepoIDs.filter { id in
                 guard let repo = repos[id], controllers[id] == nil else { return false }
                 guard FileManager.default.fileExists(atPath: repo.path) else {
@@ -829,6 +843,10 @@ public final class ProjectWindowManager: ProjectOpening, ObservableObject {
             if let selected = state.selectedRepoID, !state.activeRepoIDs.contains(selected) {
                 state.selectedRepoID = state.activeRepoIDs.first
             }
+            // A window that was empty comes back empty; one whose projects
+            // have all gone since does not come back as an empty window at
+            // every launch after.
+            guard wasEmpty || !state.activeRepoIDs.isEmpty else { continue }
             let group = makeGroup(state: state)
             for id in state.activeRepoIDs {
                 if let repo = repos[id] { makeProjectWindow(repo, in: group) }
