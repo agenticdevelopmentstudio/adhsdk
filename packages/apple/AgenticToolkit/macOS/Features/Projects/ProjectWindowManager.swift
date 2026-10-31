@@ -381,6 +381,15 @@ public final class ProjectWindowManager: ProjectOpening, ObservableObject {
         activateApp()
     }
 
+    /// Puts `repoID`'s window on screen in its group, without asking for the
+    /// foreground — for automation about to drive a pane in a project its
+    /// group has ordered out, which a screenshot or a click cannot reach.
+    /// A project in no group (adopted for scripting) is left as it is.
+    public func reveal(_ repoID: UUID) {
+        guard let group = group(containing: repoID), shownWindows[group.id] !== controllers[repoID] else { return }
+        present(repoID, in: group)
+    }
+
     public func closeProject(repoID: UUID) {
         if let group = group(containing: repoID) {
             // The scan closes a deleted project and deletes its row in the same
