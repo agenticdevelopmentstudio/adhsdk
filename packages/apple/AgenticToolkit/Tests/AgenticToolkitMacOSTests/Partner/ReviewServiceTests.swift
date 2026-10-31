@@ -415,14 +415,36 @@ final class ReviewServiceTests: XCTestCase {
     }
 
     func testStartSkipsAReviewWhoseBranchIsGone() async throws {
-        let sha = try repo.commit(file: "a.txt", day: 1, message: "first")
-        let review = try queueReview(sha: sha, subject: "first", branch: "gone")
+        try repo.commit(file: "a.txt", day: 1, message: "first")
+        try repo.git("checkout", "-b", "gone")
+        let sha = try repo.commit(file: "b.txt", day: 2, message: "unmerged")
+        try repo.git("checkout", "main")
+        try repo.git("branch", "-D", "gone")
+        let review = try queueReview(sha: sha, subject: "unmerged", branch: "gone")
 
         let started = try await service.start(id: review.id)
 
         XCTAssertEqual(started.review.state, .skipped)
         XCTAssertEqual(started.review.skipReason, "branch gone no longer exists")
         XCTAssertTrue(try attentionItems().filter { $0.kind == .blocked }.isEmpty)
+    }
+
+    /// The branch was merged into main and deleted before the review ran: the commit is reviewed on main, since
+    /// main's crawl cannot queue the same sha again.
+    func testAReviewWhoseBranchWasMergedAndDeletedRunsOnTheDefaultBranch() async throws {
+        try repo.commit(file: "a.txt", day: 1, message: "first")
+        try repo.git("checkout", "-b", "feature")
+        let sha = try repo.commit(file: "b.txt", day: 2, message: "on feature")
+        try repo.git("checkout", "main")
+        try repo.git("merge", "--ff-only", "feature")
+        try repo.git("branch", "-d", "feature")
+        let review = try queueReview(sha: sha, subject: "on feature", branch: "feature")
+
+        let started = try await service.start(id: review.id)
+
+        XCTAssertEqual(started.review.state, .running)
+        XCTAssertEqual(started.review.branch, "main")
+        XCTAssertEqual(try store.review(id: review.id)?.branch, "main")
     }
 
     func testGitFailureDuringStartFailsTheReviewInsteadOfLeavingItQueued() async throws {

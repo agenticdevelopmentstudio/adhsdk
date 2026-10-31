@@ -90,7 +90,7 @@ public final class ReviewService {
     /// failure after that leaves the review queued, closes any session it opened and is rethrown; nothing ever
     /// leaves it running without a session.
     public func start(id: String) async throws -> PartnerReviewStart {
-        guard let review = try store.review(id: id) else { throw ReviewError.notFound(id) }
+        guard var review = try store.review(id: id) else { throw ReviewError.notFound(id) }
         guard review.state == .queued else { throw ReviewError.notQueued(id, review.state) }
         _ = try requeueInterrupted()
         let running = try store.reviews(state: .running)
@@ -117,6 +117,7 @@ public final class ReviewService {
         }
         let prepared: Prepared
         do {
+            review = try await retargetedIfLanded(review)
             switch try await prepare(review, baseFixBranch: baseFixBranch) {
             case .skip(let reason): return try skip(review, reason: reason, fixBranch: baseFixBranch)
             case .ready(let found): prepared = found
@@ -242,6 +243,25 @@ public final class ReviewService {
     private enum Preparation {
         case skip(String)
         case ready(Prepared)
+    }
+
+    /// A review whose branch is gone, or no longer holds its commit, moves to the default branch when the commit
+    /// landed there (the branch was merged, then deleted or reset). Otherwise it would be skipped, and the crawl
+    /// of the default branch never queues it again: a repo and sha are queued once, whatever the first row's
+    /// state. Saved, so the session, the fix branch and the store all name the branch the review ran on.
+    private func retargetedIfLanded(_ review: PartnerReview) async throws -> PartnerReview {
+        let repo = URL(fileURLWithPath: review.repoPath)
+        let branchRef = "refs/heads/\(review.branch)"
+        if try await git.resolveCommit(branchRef, in: repo) != nil,
+           try await git.isAncestor(review.sha, of: branchRef, in: repo) {
+            return review
+        }
+        guard let main = try? await git.defaultBranch(in: repo), main != review.branch,
+              try await git.isAncestor(review.sha, of: "refs/heads/\(main)", in: repo) else { return review }
+        var moved = review
+        moved.branch = main
+        try store.updateReview(moved)
+        return moved
     }
 
     /// The default branch's reviews use `baseFixBranch` and `reviews/<repo>-<id>`; any other branch gets
