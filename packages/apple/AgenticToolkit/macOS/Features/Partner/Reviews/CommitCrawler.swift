@@ -28,12 +28,14 @@ public struct CommitCrawler: Sendable {
     }
 
     /// Non-merge commits on `branch` since `since`, oldest first. A root commit's parent is git's empty tree.
+    /// The branch is named as `refs/heads/<branch>` before `--`, so neither a top-level path nor a tag of the
+    /// same name can stand in for it.
     public func commits(in repo: URL, branch: String, since: Date) async throws -> [CrawledCommit] {
         var arguments = ["log", "--no-merges"]
         if since.timeIntervalSince1970 > 0 {
             arguments.append("--since=\(ISO8601DateFormatter().string(from: since))")
         }
-        arguments += ["--format=%H%x1f%P%x1f%s%x1f%an%x1f%cI", branch]
+        arguments += ["--format=%H%x1f%P%x1f%s%x1f%an%x1f%cI", "refs/heads/\(branch)", "--"]
         let formatter = ISO8601DateFormatter()
         let output = try await git.run(arguments, in: repo)
         let found: [CrawledCommit] = output.split(separator: "\n").compactMap { line in
