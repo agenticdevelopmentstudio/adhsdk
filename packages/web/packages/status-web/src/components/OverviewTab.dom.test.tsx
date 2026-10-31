@@ -282,12 +282,12 @@ describe("OverviewTab — an empty roster is a config fault, not a wedged monito
 // Recent Activity's gear "Filter" section: the one checkbox narrows the pane to rows
 // still in flight or failed, keyed off the server's tone rather than the verb text.
 describe("OverviewTab — Recent Activity 'in progress or failed only' filter", () => {
-  function activityRow(id: string, name: string, verb: string, tone: string) {
+  function activityRow(id: string, name: string, verb: string, tone: string, at = new Date().toISOString()) {
     return {
       id, kind: "deploy", step: "build", source: "vercel", tone, verb,
       target: `vercel:${name}`, name, environment: "production", detail: null,
       sourceUrl: null, liveUrl: null, commitHash: null, commitMessage: null,
-      commitRepo: null, branch: null, errorText: null, at: new Date().toISOString(),
+      commitRepo: null, branch: null, errorText: null, at,
     };
   }
 
@@ -339,5 +339,43 @@ describe("OverviewTab — Recent Activity 'in progress or failed only' filter", 
     fireEvent.click(box);
     expect(screen.getAllByText("site-done").length).toBeGreaterThan(0);
     expect(screen.getAllByText("site-stale").length).toBeGreaterThan(0);
+  });
+
+  // A platform admits builds FIFO, so the build that has a slot is the OLDEST of its batch
+  // and the server's oldest-first order puts it at the TOP — above every queued row, out of
+  // sight of a reader tailing the bottom. The filtered view moves running rows last.
+  it("puts building and deploying rows below the queued ones when checked, and only then", async () => {
+    mobile.current = false;
+    const t = (minAgo: number): string => new Date(Date.now() - minAgo * 60_000).toISOString();
+    const board = {
+      generatedAt: new Date().toISOString(),
+      dataAsOfMs: Date.now(),
+      indicator: "operational",
+      problems: [],
+      activity: [
+        activityRow("b1", "site-building", "building", "progress", t(30)),
+        activityRow("d1", "site-deploying", "deploying", "progress", t(25)),
+        activityRow("q1", "site-q1", "queued", "progress", t(20)),
+        activityRow("q2", "site-q2", "queued", "progress", t(10)),
+      ],
+      monitoredTargets: [],
+    };
+    renderWithBoardFetch(async () => new Response(JSON.stringify(board), {
+      status: 200, headers: { "content-type": "application/json" },
+    }));
+    const order = (): string[] =>
+      Array.from(document.querySelectorAll<HTMLElement>('[id^="adh-opt-activity-"]')).map((el) =>
+        el.id.replace("adh-opt-activity-", ""),
+      );
+
+    await screen.findAllByText("site-q2");
+    expect(order()).toEqual(["b1", "d1", "q1", "q2"]);
+
+    fireEvent.click(screen.getByRole("button", { name: "Recent Activity options" }));
+    fireEvent.click(await screen.findByRole("checkbox", { name: "show in progress or failed builds only" }));
+    expect(order()).toEqual(["q1", "q2", "b1", "d1"]);
+
+    fireEvent.click(screen.getByRole("checkbox", { name: "show in progress or failed builds only" }));
+    expect(order()).toEqual(["b1", "d1", "q1", "q2"]);
   });
 });

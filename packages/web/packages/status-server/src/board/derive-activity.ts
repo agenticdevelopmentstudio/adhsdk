@@ -19,7 +19,9 @@ import type {
 // when the board moved server-side, so both it and the duplicate are gone. A deploy row's
 // words are the server's now, for the same reason its existence is. (`ISSUE_VERB` below is
 // the one that still has a client counterpart, and is exported for exactly that reason.)
-const BUILD_VERB: Record<BuildPhase, string> = {
+// Exported for the dashboard's parity test: the client tells a QUEUED build from a running
+// one by this verb alone (both are tone "progress"), so it pins its copy against this table.
+export const BUILD_VERB: Record<BuildPhase, string> = {
   queued: "queued",
   building: "building",
   built: "built",

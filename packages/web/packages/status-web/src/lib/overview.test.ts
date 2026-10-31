@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import type { DeploymentDTO } from "../types";
 import type { ActivityRow, Problem } from "./board-types";
-import { isRealEnvDeploy, isRealEnvDeployRow, activityWindowLabel, isUnresolvedActivity } from "./overview";
+import { isRealEnvDeploy, isRealEnvDeployRow, activityWindowLabel, isActiveBuild, isUnresolvedActivity } from "./overview";
 
 function deploy(overrides: Partial<DeploymentDTO>): DeploymentDTO {
   return {
@@ -121,5 +121,31 @@ describe("isUnresolvedActivity — the 'in progress or failed only' rule", () =>
     expect(isUnresolvedActivity(minor, [])).toBe(false);
     expect(isUnresolvedActivity(opened, live)).toBe(false);
     expect(isUnresolvedActivity(minor, live)).toBe(false);
+  });
+});
+
+describe("isActiveBuild — a build or deploy that has a slot and is running", () => {
+  function row(o: Partial<ActivityRow>): ActivityRow {
+    return {
+      id: "r", kind: "deploy", step: "build", source: "vercel", tone: "progress", verb: "building",
+      target: "vercel:site", name: "site", environment: "production", detail: null, sourceUrl: null,
+      liveUrl: null, commitHash: null, commitMessage: null, commitRepo: null, branch: null,
+      errorText: null, at: "2026-10-30T12:00:00.000Z", ...o,
+    };
+  }
+
+  it("is true for a building build and a deploying deploy", () => {
+    expect(isActiveBuild(row({}))).toBe(true);
+    expect(isActiveBuild(row({ step: "deploy", verb: "deploying" }))).toBe(true);
+  });
+
+  it("is false for a queued build — waiting is not running", () => {
+    expect(isActiveBuild(row({ verb: "queued" }))).toBe(false);
+  });
+
+  it("is false for finished rows and for probe rows", () => {
+    expect(isActiveBuild(row({ tone: "bad", verb: "build failed" }))).toBe(false);
+    expect(isActiveBuild(row({ tone: "good", verb: "deployed" }))).toBe(false);
+    expect(isActiveBuild(row({ kind: "probe", step: null }))).toBe(false);
   });
 });

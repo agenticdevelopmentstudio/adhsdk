@@ -71,6 +71,24 @@ export function isUnresolvedActivity(a: ActivityRow, problems: readonly Problem[
   return problems.some((p) => p.target === a.target && Date.parse(p.since) <= at);
 }
 
+/** The verb the server gives a build waiting for a platform slot (`BUILD_VERB.queued`,
+ *  derive-activity.ts). Queued and building rows share tone "progress", so the verb is the
+ *  only wire field that tells them apart; `activity-verb-parity.test.ts` pins it to the
+ *  server's output so a renamed verb fails a test instead of silently un-sorting the list. */
+export const QUEUED_VERB = "queued";
+
+/**
+ * A build or deploy that is actually RUNNING — in flight and past the queue.
+ *
+ * The "in progress or failed only" view sorts these last. Rows arrive oldest-first, and a
+ * platform admits builds FIFO, so the one or two builds that have a slot are the OLDEST of a
+ * fan-out batch and land at the top, above dozens of queued rows — while the reader tails
+ * the bottom. That made the filtered view read as "everything is queued" when it was not.
+ */
+export function isActiveBuild(a: ActivityRow): boolean {
+  return a.step !== null && a.tone === "progress" && a.verb !== QUEUED_VERB;
+}
+
 /** Build/deploy/failure counts for the stats strip — a tally of rows the server already
  *  judged, which is why it may live on the client. `step` and `tone` arrive on the wire.
  *  `sinceMs` is the board's own `activityFromMs`; the client never picks the window. */

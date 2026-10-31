@@ -15,7 +15,7 @@ import { useNow } from "../hooks/use-now";
 import { useBuildProgress } from "../hooks/use-build-progress";
 import { problemToRow, activityToRow, type Row } from "../lib/row-model";
 import type { ActivityRow } from "../lib/board-types";
-import { indicatorFromProblems, INDICATOR_STATE, isUnresolvedActivity } from "../lib/overview";
+import { indicatorFromProblems, INDICATOR_STATE, isActiveBuild, isUnresolvedActivity } from "../lib/overview";
 import { overallUptimePercent } from "../lib/uptime";
 import { buildSublabel } from "../lib/status-sublabel";
 import { shortSha } from "../lib/format";
@@ -184,7 +184,7 @@ export function OverviewTab(): ReactElement {
   // would re-walk the whole feed — history pages included — every 30 seconds to produce a
   // byte-identical array.
   const ttlNowMs = ttlMs == null ? 0 : nowMs;
-  const { problems, activity: activityAll, feed, unresolvedIds } = useMemo(() => {
+  const { problems, activity: activityAll, feed, unresolvedIds, activeIds } = useMemo(() => {
     const problemRows = (board?.problems ?? []).filter(keep).map(problemToRow);
     const pipeline = (rows: ActivityRow[]): Row[] =>
       rows
@@ -221,7 +221,8 @@ export function OverviewTab(): ReactElement {
     const unresolvedIds = new Set(feed.filter((a) => isUnresolvedActivity(a, allProblems)).map((a) => a.id));
     // `feed` goes out UNFILTERED as well: the controls that decide what the reader is
     // even offered (Clear, the Sources list) have to see the whole record, not the view.
-    return { problems: problemRows, activity: activityRows, feed, unresolvedIds };
+    const activeIds = new Set(feed.filter(isActiveBuild).map((a) => a.id));
+    return { problems: problemRows, activity: activityRows, feed, unresolvedIds, activeIds };
   }, [board, history.rows, keep, clearedBefore, ttlMs, ttlNowMs]);
   // Unfiltered (all envs) takes the server's answer verbatim, so the common case
   // can never disagree with it; an env-filtered view re-derives the sign over just
@@ -291,7 +292,15 @@ export function OverviewTab(): ReactElement {
   const withCanceled = showCanceled ? activityAll : activityAll.filter((r) => !isCanceled(r));
   // In flight, or failed AND still unresolved — `isUnresolvedActivity` (lib/overview.ts)
   // is the rule; a failure the fleet has since recovered from is history, not shown here.
-  const activity = inProgressOrFailedOnly ? withCanceled.filter((r) => unresolvedIds.has(r.key)) : withCanceled;
+  //
+  // In that view, rows that are actually building or deploying go LAST (`isActiveBuild`):
+  // the platform queue is FIFO, so the running builds are the oldest of their batch and would
+  // otherwise sit at the top, out of sight of a reader tailing the bottom. Each group keeps
+  // the server's oldest-first order. The unfiltered log stays strictly chronological.
+  const unresolved = withCanceled.filter((r) => unresolvedIds.has(r.key));
+  const activity = inProgressOrFailedOnly
+    ? [...unresolved.filter((r) => !activeIds.has(r.key)), ...unresolved.filter((r) => activeIds.has(r.key))]
+    : withCanceled;
 
   const uptimePercent = overallUptimePercent(uptimeQuery.data?.services ?? []);
 
