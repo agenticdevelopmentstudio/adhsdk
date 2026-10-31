@@ -2,7 +2,8 @@
 // skeleton in the toolkit and re-assemble.
 import type { Metadata, Viewport } from 'next'
 import type { ReactElement, ReactNode } from 'react'
-import { FrameZoomGuard, frameMetadata, frameViewport } from '@agenticdevelopertoolkit/site-template'
+import { JsonLd } from '@agenticdevelopertoolkit/landing'
+import { FrameZoomGuard, frameJsonLd, frameMetadata, frameViewport } from '@agenticdevelopertoolkit/site-template'
 import type { FrameCopy } from '@agenticdevelopertoolkit/site-template'
 import siteCopy from '../src/content/site/site.json'
 import { SiteAnalytics } from '../src/site/analytics'
@@ -33,13 +34,7 @@ export default function RootLayout({ children }: { children: ReactNode }): React
       <body>
         {/* First in <body>, so the viewport meta it edits is already parsed (see DeckScript). */}
         <FrameZoomGuard />
-        {config.jsonLd === undefined ? null : (
-          <script
-            type="application/ld+json"
-            // `<` escaped so no string in the site's structured data can close the script.
-            dangerouslySetInnerHTML={{ __html: JSON.stringify(config.jsonLd).replace(/</g, '\\u003c') }}
-          />
-        )}
+        <JsonLd data={frameJsonLd(copy, config)} />
         {children}
         <SiteAnalytics />
       </body>

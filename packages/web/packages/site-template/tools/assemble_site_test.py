@@ -107,6 +107,8 @@ class AssembleTest(unittest.TestCase):
             "app/(frame)/page.tsx",
             "app/robots.ts",
             "app/sitemap.ts",
+            "app/llms.txt/route.ts",
+            "app/index.md/route.ts",
             "app/not-found.tsx",
             "app/theme.css",
             "next.config.ts",

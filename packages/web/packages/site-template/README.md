@@ -145,6 +145,14 @@ skeleton's `app/sitemap.ts` awaits. It runs when Next renders the sitemap — at
 on the revalidation its own fetches set — so it should fail soft and return `[]`: a sitemap
 missing its corpus for one window is recoverable, a failed build is not.
 
+For agents and answer engines the skeleton also writes `app/llms.txt/route.ts` and
+`app/index.md/route.ts`, both static. `/llms.txt` is the site's index in the llmstxt.org shape:
+the copy's name and description, then `/`, the sitemap's paths and the sections of `/` as links.
+`/index.md` is `/` as Markdown, from the same `src/landing.json` the page renders; a band whose
+body the site renders itself (`{slot}`) has no words there and is left out. The root layout's
+JSON-LD is a `WebSite` from the copy's name and description and `siteUrl`, followed by the
+entities `site.json`'s `jsonLd` declares; a site that declares its own `WebSite` keeps it.
+
 ## Rewrites and public env in `site.json`
 
 ```json

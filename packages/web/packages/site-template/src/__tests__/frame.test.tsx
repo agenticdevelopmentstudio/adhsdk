@@ -20,6 +20,7 @@ import {
   frameViewport,
 } from '../frame-metadata'
 import { frameNotFoundMetadata } from '../not-found'
+import { frameJsonLd, frameLandingMarkdown, frameLlmsTxt } from '../frame-agent'
 import type { FrameConfig, FrameCopy, SiteFamily, SlotMap } from '../types'
 
 const hero: LandingPage['hero'] = {
@@ -855,5 +856,41 @@ describe('frame metadata helpers', () => {
     const viewport = frameViewport(config)
     expect(viewport.maximumScale).toBe(1)
     expect(viewport.interactiveWidget).toBe('resizes-content')
+  })
+})
+
+describe('what the frame tells agents', () => {
+  const landing = {
+    hero: { headline: 'Cook the thing', tagline: 'One line under it.', blocks: [] },
+    sections: [{ id: 'how', eyebrow: 'How', title: 'How it works', blocks: [{ kind: 'Cta', buttons: [{ href: '/downloads', label: 'Download' }] }] }],
+  }
+  const listed: FrameConfig = { ...config, siteUrl: 'https://kitchen.example/', sitemap: ['/downloads'] }
+
+  it('frameJsonLd puts a WebSite from the copy ahead of the site’s own structured data', () => {
+    const own = { '@context': 'https://schema.org', '@type': 'Organization', name: 'Studio' }
+    expect(frameJsonLd(copy, { ...listed, jsonLd: own })).toEqual({
+      '@context': 'https://schema.org',
+      '@graph': [
+        { '@type': 'WebSite', '@id': 'https://kitchen.example/#website', name: 'Kitchen', url: 'https://kitchen.example', description: 'A kitchen.' },
+        { '@type': 'Organization', name: 'Studio' },
+      ],
+    })
+  })
+
+  it('frameLlmsTxt lists `/`, its Markdown, the listed and computed paths, and the sections of `/`', () => {
+    expect(frameLlmsTxt(copy, listed, landing, [{ path: '/recipes/soup' }])).toBe(
+      [
+        '# Kitchen',
+        '> A kitchen.',
+        '## Pages\n\n- [Home](https://kitchen.example/): https://kitchen.example/index.md as Markdown\n- [Downloads](https://kitchen.example/downloads)\n- [Soup](https://kitchen.example/recipes/soup)',
+        '## Home page sections\n\n- [How](https://kitchen.example/#how)',
+      ].join('\n\n') + '\n',
+    )
+  })
+
+  it('frameLandingMarkdown writes `/` with its links absolute', () => {
+    expect(frameLandingMarkdown(listed, landing)).toBe(
+      '# Cook the thing\n\nOne line under it.\n\n## How\n\n**How it works**\n\n- [Download](https://kitchen.example/downloads)\n',
+    )
   })
 })

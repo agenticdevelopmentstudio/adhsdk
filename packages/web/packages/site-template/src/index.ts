@@ -19,6 +19,7 @@ export {
   frameSitemap,
   frameSiteUrl,
 } from './frame-metadata'
+export { frameJsonLd, frameLlmsTxt, frameLandingMarkdown } from './frame-agent'
 export type {
   BandLook,
   CopyText,
