@@ -1,4 +1,6 @@
 // src/site/SiteConfig.ts
+import { siteIdentity } from "@agentic-toolkit/adh-registry/seo";
+import { withWebSite } from "@agenticdevelopertoolkit/landing";
 import { SITE_TITLE_HELP_ID } from "@agentic-toolkit/adh-ui/help-ids";
 var FAMILY_ROBOTS_DISALLOW = [
   "/login",
@@ -26,6 +28,9 @@ function defineSite(site) {
       footerLinks: site.footerLinks,
       silentSso: site.silentSso,
       chromeGate: site.chromeGate,
+      // Derived, like `help` below: the registry knows the name and origin and the site has
+      // already written what it is for.
+      jsonLd: withWebSite({ ...siteIdentity(site.id), description: site.seo.description }, site.jsonLd),
       // Derived, not required: every site already describes its purpose in `seo.description`,
       // and a fourth copy of that sentence is how the cookbook's sections.ts ended up warning
       // that "Nothing reports a disagreement between the two". A site's own entry wins.
@@ -38,6 +43,21 @@ function defineSite(site) {
 }
 async function siteSitemapRoutes(site) {
   return typeof site.sitemap === "function" ? site.sitemap() : site.sitemap;
+}
+
+// src/site/site-agent.ts
+import { siteIdentity as siteIdentity2 } from "@agentic-toolkit/adh-registry/seo";
+import { landingLlmsTxt, landingMarkdown } from "@agenticdevelopertoolkit/landing";
+async function siteLlmsTxt(site, landing) {
+  const routes = await siteSitemapRoutes(site);
+  return landingLlmsTxt(
+    { ...siteIdentity2(site.id), description: site.seo.description },
+    routes.map((route) => route.path),
+    landing
+  );
+}
+function siteLandingMarkdown(site, landing) {
+  return landingMarkdown(landing, { origin: siteIdentity2(site.id).url });
 }
 
 // src/site/reservedSlugs.ts
@@ -263,6 +283,8 @@ export {
   hubWorkspaceSlug,
   isHubWorkspacePath,
   reservedWorkspaceSlugs,
+  siteLandingMarkdown,
+  siteLlmsTxt,
   siteSitemapRoutes
 };
 //# sourceMappingURL=index.js.map

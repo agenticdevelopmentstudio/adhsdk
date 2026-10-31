@@ -27,6 +27,7 @@ import { DetailsRail } from "@agentic-toolkit/adh/details/DetailsRail";
 // src/details/Breadcrumb.tsx
 import { ancestorsOf, getConcept, hasDetailPage } from "@agentic-toolkit/adh/concepts";
 import { siteProdUrl as siteProdUrl2 } from "@agentic-toolkit/adh-registry";
+import { JsonLd } from "@agenticdevelopertoolkit/landing";
 import { jsx, jsxs } from "react/jsx-runtime";
 function pathFor(node) {
   if (hasDetailPage(node)) return `/details/${node.id}`;
@@ -54,13 +55,7 @@ function Breadcrumb({ siteId, topicId }) {
         last ? /* @__PURE__ */ jsx("span", { "aria-current": "page", children: n.label }) : /* @__PURE__ */ jsx("a", { href: pathFor(n), children: n.label })
       ] }, n.id);
     }) }),
-    /* @__PURE__ */ jsx(
-      "script",
-      {
-        type: "application/ld+json",
-        dangerouslySetInnerHTML: { __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }
-      }
-    )
+    /* @__PURE__ */ jsx(JsonLd, { data: jsonLd })
   ] });
 }
 

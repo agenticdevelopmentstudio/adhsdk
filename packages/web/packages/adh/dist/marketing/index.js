@@ -207,6 +207,7 @@ import { MarketingSiteHeader as MarketingSiteHeader3 } from "@agentic-toolkit/ad
 // src/marketing/MarketingRootHtml.tsx
 import { AdhThemeStyle } from "@agentic-toolkit/adh/server";
 import { getLocale, htmlLang, localeDir } from "@agentic-toolkit/adh/concepts";
+import { JsonLd } from "@agenticdevelopertoolkit/landing";
 
 // src/marketing/MarketingShell.tsx
 import {
@@ -264,14 +265,17 @@ function MarketingShell({
 
 // src/marketing/MarketingRootHtml.tsx
 import { jsx as jsx5, jsxs as jsxs4 } from "react/jsx-runtime";
-function MarketingRootHtml(props) {
+function MarketingRootHtml({ jsonLd, ...props }) {
   const loc = getLocale();
   return (
     // suppressHydrationWarning: AdhThemeStyle's appearance pre-paint script sets class/data-*
     // on <html> before hydration (the user's colour mode), so the client tree legitimately
     // differs from the server's here. Same contract next-themes has.
     /* @__PURE__ */ jsxs4("html", { lang: htmlLang(loc), dir: localeDir(loc), suppressHydrationWarning: true, children: [
-      /* @__PURE__ */ jsx5("head", { children: /* @__PURE__ */ jsx5(AdhThemeStyle, {}) }),
+      /* @__PURE__ */ jsxs4("head", { children: [
+        /* @__PURE__ */ jsx5(AdhThemeStyle, {}),
+        jsonLd === void 0 ? null : /* @__PURE__ */ jsx5(JsonLd, { data: jsonLd })
+      ] }),
       /* @__PURE__ */ jsx5("body", { children: /* @__PURE__ */ jsx5(MarketingShell, { ...props }) })
     ] })
   );

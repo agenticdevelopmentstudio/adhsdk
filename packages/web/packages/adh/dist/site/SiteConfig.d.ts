@@ -1,6 +1,6 @@
 import type { ComponentType, ReactNode } from 'react';
 import type { SiteId } from '@agentic-toolkit/adh-registry';
-import type { SiteRoute, SiteSeo } from '@agentic-toolkit/adh-registry/seo';
+import { type SiteRoute, type SiteSeo } from '@agentic-toolkit/adh-registry/seo';
 import type { SiteHelp } from '@agenticdevelopertoolkit/ui/components/help-content';
 import type { MarketingRootHtmlProps } from '@agentic-toolkit/adh/marketing';
 /** The paths every site in the family keeps out of its production index.
@@ -67,6 +67,11 @@ export interface SiteDefinition {
     /** The site's public routes, as paths. Required: a site with no sitemap is a site whose
      *  pages are discoverable only by luck, and the absence would read as intentional. */
     sitemap: SiteSitemap;
+    /** schema.org entities the site declares about itself (an Organization, a
+     *  SoftwareApplication), as one entity, a list, or a `{ "@context", "@graph" }` document.
+     *  The site's `WebSite` entry is derived and goes first; declaring a `WebSite` here replaces
+     *  it. Omit and the site still states its name, origin and description. */
+    jsonLd?: unknown;
     /** The site's own header, in place of the shared `<MarketingSiteHeader>`. */
     header?: MarketingRootHtmlProps['header'];
     /** The site's own context providers, mounted between the family AuthProvider and the
@@ -187,7 +192,8 @@ export interface SiteConfig {
  * The one per-site declaration in the family. It reads as data and it is data: the React
  * values (`header`, `providers`) pass through untouched and stay whatever the server graph
  * made them. The one field READ rather than forwarded is `seo.description`, which seeds the
- * header's help entry so no site has to write the same sentence twice.
+ * header's help entry and the site's structured data so no site has to write the same
+ * sentence twice.
  */
 export declare function defineSite(site: SiteDefinition): SiteConfig;
 /** The sitemap's routes, whether the site listed them or supplies a function.

@@ -1,0 +1,1 @@
+{"version":3,"file":"site-agent.d.ts","sourceRoot":"","sources":["../../src/site/site-agent.ts"],"names":[],"mappings":"AAEA,OAAO,EAAqB,KAAK,UAAU,EAAE,MAAM,cAAc,CAAA;AAMjE;2DAC2D;AAC3D,wBAAsB,WAAW,CAAC,IAAI,EAAE,UAAU,EAAE,OAAO,EAAE,MAAM,GAAG,OAAO,CAAC,MAAM,CAAC,CAOpF;AAED,8FAA8F;AAC9F,wBAAgB,mBAAmB,CAAC,IAAI,EAAE,UAAU,EAAE,OAAO,EAAE,MAAM,GAAG,MAAM,CAE7E"}
