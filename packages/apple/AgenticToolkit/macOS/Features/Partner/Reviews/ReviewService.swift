@@ -71,9 +71,11 @@ public final class ReviewService {
     }
 
     /// Queued reviews oldest first, the running ones (so a partner with a fresh conversation can see what
-    /// holds the limit), the concurrency limit, and how many are running.
+    /// holds the limit), the concurrency limit, and how many are running. Reconciles the running reviews with
+    /// their sessions first (``requeueInterrupted()``).
     public func next() throws -> (reviews: [PartnerReview], runningReviews: [PartnerReview], concurrency: Int,
                                   running: Int) {
+        _ = try requeueInterrupted()
         let concurrency = max(1, settings.get(UserSettings.partnerReviewsConcurrency))
         let running = try store.reviews(state: .running)
         return (try store.reviews(state: .queued), running, concurrency, running.count)
@@ -90,6 +92,7 @@ public final class ReviewService {
     public func start(id: String) async throws -> PartnerReviewStart {
         guard let review = try store.review(id: id) else { throw ReviewError.notFound(id) }
         guard review.state == .queued else { throw ReviewError.notQueued(id, review.state) }
+        _ = try requeueInterrupted()
         let running = try store.reviews(state: .running)
         guard !startingRepos.contains(review.repoID), !running.contains(where: { $0.repoID == review.repoID }) else {
             throw ReviewError.anotherRunningInRepo(review.repoName)
@@ -189,22 +192,29 @@ public final class ReviewService {
         }
     }
 
-    /// At every partner start: each review left `running` whose session is not open in this process goes back
-    /// to the queue, since nothing can finish it any more. A review whose session is still open stays running.
-    /// Returns how many were requeued.
+    /// At every partner start, and before every `next` and `start`: each review left `running` whose session
+    /// is not open in this process (closed, or from an earlier launch) goes back to the queue, since nothing can
+    /// finish it any more. One whose session exited without `partner_review_finish` is marked `failed` with a
+    /// `blocked` item, so it stops holding the concurrency limit. A review whose session is still running stays
+    /// running. Returns how many were requeued.
     public func requeueInterrupted() throws -> Int {
-        let open = Set(sessions.sessions.map(\.id.uuidString))
-        let interrupted = try store.reviews(state: .running).filter { review in
-            guard let sessionID = review.sessionID else { return true }
-            return !open.contains(sessionID)
-        }
-        for var review in interrupted {
+        let open = Dictionary(uniqueKeysWithValues: sessions.sessions.map { ($0.id.uuidString, $0) })
+        var requeued = 0
+        for var review in try store.reviews(state: .running) {
+            let session = review.sessionID.flatMap { open[$0] }
+            if let session {
+                if session.state == .exited {
+                    markFailed(review, reason: "its session exited before the review finished", from: .running)
+                }
+                continue
+            }
             review.state = .queued
             review.sessionID = nil
             review.startedAt = nil
             try store.updateReview(review)
+            requeued += 1
         }
-        return interrupted.count
+        return requeued
     }
 
     // MARK: - Start's parts
@@ -285,9 +295,9 @@ public final class ReviewService {
     }
 
     /// Like `skip`, leaves a review someone finished while git ran alone, and raises no item for it.
-    private func markFailed(_ review: PartnerReview, reason: String) {
+    private func markFailed(_ review: PartnerReview, reason: String, from expected: PartnerReviewState = .queued) {
         do {
-            guard var failed = try store.review(id: review.id), failed.state == .queued else { return }
+            guard var failed = try store.review(id: review.id), failed.state == expected else { return }
             failed.state = .failed
             failed.summary = reason
             failed.finishedAt = now()
