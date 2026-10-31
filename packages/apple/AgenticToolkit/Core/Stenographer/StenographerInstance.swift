@@ -36,6 +36,7 @@ public struct StenographerInstance: Sendable, Equatable {
         case nameMismatch(file: String, declared: String)
         case relativeDataRoot(String)
         case invalidPort(Int)
+        case overlapsInstalledState(dataRoot: String, protected: String)
         case socketPathTooLong(path: String, limit: Int)
 
         public var description: String {
@@ -52,7 +53,10 @@ public struct StenographerInstance: Sendable, Equatable {
             case .relativeDataRoot(let root):
                 return "instance dataRoot '\(root)' must be an absolute path"
             case .invalidPort(let port):
-                return "instance httpPort \(port) must be 1024-65535 and not \(StenographerInstance.defaultHTTPPort)"
+                let reserved = StenographerInstance.reservedHTTPPorts.sorted().map(String.init).joined(separator: ", ")
+                return "instance httpPort \(port) must be 1024-65535 and not one of \(reserved)"
+            case .overlapsInstalledState(let root, let protected):
+                return "instance dataRoot '\(root)' overlaps \(protected), which the installed Stenographer owns"
             case .socketPathTooLong(let path, let limit):
                 return "instance socket path \(path) is \(path.utf8.count) bytes; the limit is under \(limit)"
             }
@@ -61,6 +65,11 @@ public struct StenographerInstance: Sendable, Equatable {
 
     public static let baseLabel = "com.agenticdevelopmentstudio.stenographer"
     public static let defaultHTTPPort = 22847
+    /// Ports a named instance may never take: the installed daemon's HTTP port,
+    /// the installed account router's (the obvious "next port"), and adkd's.
+    public static let reservedHTTPPorts: Set<Int> = [
+        defaultHTTPPort, StenographerIdentifiers.routerPort, ADKDIdentifiers.httpPort
+    ]
     public static let environmentKey = "STENOGRAPHER_INSTANCE"
     public static let argumentFlag = "-instance"
     /// `sockaddr_un.sun_path` is 104 bytes on Darwin, including the NUL.
@@ -110,25 +119,88 @@ public struct StenographerInstance: Sendable, Equatable {
         } catch {
             throw ResolutionError.unreadable(path: file.path, reason: String(describing: error))
         }
-        try validate(definition, fileName: name)
+        try validate(definition, fileName: name, home: home)
         return StenographerInstance(definition: definition)
     }
 
     /// The rules a definition must satisfy. `scripts/stenographer_instance.py`
-    /// enforces the same ones when it writes a definition.
-    public static func validate(_ definition: Definition, fileName: String) throws {
+    /// (`check_definition`) enforces the same ones when it writes a definition,
+    /// and `tests/fixtures/instance_definition_cases.json` holds the cases both
+    /// sides are tested against.
+    public static func validate(_ definition: Definition, fileName: String, home: URL) throws {
         guard definition.name == fileName else {
             throw ResolutionError.nameMismatch(file: fileName, declared: definition.name)
         }
         guard definition.dataRoot.hasPrefix("/") else { throw ResolutionError.relativeDataRoot(definition.dataRoot) }
-        guard (1024...65535).contains(definition.httpPort), definition.httpPort != defaultHTTPPort else {
+        guard (1024...65535).contains(definition.httpPort), !reservedHTTPPorts.contains(definition.httpPort) else {
             throw ResolutionError.invalidPort(definition.httpPort)
+        }
+        let root = canonicalComponents(definition.dataRoot)
+        for protected in protectedRoots(home: home) {
+            let other = canonicalComponents(protected.path)
+            if root.starts(with: other) || other.starts(with: root) {
+                throw ResolutionError.overlapsInstalledState(dataRoot: definition.dataRoot, protected: protected.path)
+            }
         }
         let socket = URL(fileURLWithPath: definition.dataRoot, isDirectory: true)
             .appendingPathComponent(socketFileName).path
         guard socket.utf8.count < socketPathLimit else {
             throw ResolutionError.socketPathTooLong(path: socket, limit: socketPathLimit)
         }
+    }
+
+    /// What the installed copy owns on disk, whatever instance asks: the
+    /// current and legacy data roots, the current and legacy logs, and
+    /// `~/.claude` (the hook socket, the drop directory, `settings.json`). A
+    /// named instance's data root may not equal, contain or sit inside any of them.
+    public static func protectedRoots(home: URL) -> [URL] {
+        let library = home.appendingPathComponent("Library", isDirectory: true)
+        return [baseLabel, StenographerIdentifiers.legacyLabel].flatMap { label in
+            [library.appendingPathComponent("Application Support/\(label)", isDirectory: true),
+             library.appendingPathComponent("Logs/\(label)", isDirectory: true)]
+        } + [home.appendingPathComponent(".claude", isDirectory: true)]
+    }
+
+    /// `path`'s components after the rules Python's `os.path.realpath` applies
+    /// (`check_definition` uses it): `.` dropped, `..` taken against what is
+    /// resolved so far, every symlink that exists followed, missing components
+    /// kept as written. Lowercased, because the default APFS volume is case
+    /// insensitive and `~/library/logs` is `~/Library/Logs` there.
+    static func canonicalComponents(_ path: String) -> [String] {
+        canonicalPath(path, depth: 0).split(separator: "/").map { $0.lowercased() }
+    }
+
+    private static func canonicalPath(_ path: String, depth: Int) -> String {
+        var parts: [String] = []
+        let components = path.split(separator: "/").map(String.init)
+        for (index, component) in components.enumerated() {
+            switch component {
+            case ".":
+                continue
+            case "..":
+                if !parts.isEmpty { parts.removeLast() }
+            default:
+                let candidate = "/" + (parts + [component]).joined(separator: "/")
+                if let real = realPath(candidate) {
+                    parts = real.split(separator: "/").map(String.init)
+                } else if depth < 32,
+                          let target = try? FileManager.default.destinationOfSymbolicLink(atPath: candidate) {
+                    // A dangling link: realpath(3) fails, os.path.realpath follows it anyway.
+                    let base = target.hasPrefix("/") ? target : "/" + (parts + [target]).joined(separator: "/")
+                    let rest = components[(index + 1)...].joined(separator: "/")
+                    return canonicalPath(rest.isEmpty ? base : base + "/" + rest, depth: depth + 1)
+                } else {
+                    parts.append(component)
+                }
+            }
+        }
+        return "/" + parts.joined(separator: "/")
+    }
+
+    private static func realPath(_ path: String) -> String? {
+        guard let resolved = realpath(path, nil) else { return nil }
+        defer { free(resolved) }
+        return String(cString: resolved)
     }
 
     /// This process's instance, resolved once. A process asked to be an
