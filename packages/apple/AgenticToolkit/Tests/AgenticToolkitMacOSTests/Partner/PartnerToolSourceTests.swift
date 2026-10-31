@@ -115,4 +115,26 @@ final class PartnerToolSourceTests: XCTestCase {
         XCTAssertFalse(closed.isError, closed.content)
         XCTAssertNotNil(try store.sessions().first { $0.id == id }?.closedAt)
     }
+
+    /// An exited shell's screen is still readable, and a command sent to it is an error, not empty output.
+    func testAnExitedSessionKeepsItsScreenAndRefusesCommands() async throws {
+        let opened = try await call("partner_session_open", ["directory": directory.path])
+        let id = try XCTUnwrap((try json(opened.content) as? [String: Any])?["session"] as? String)
+        let session = try XCTUnwrap(registry.session(id: try XCTUnwrap(UUID(uuidString: id))))
+        _ = try await call("partner_session_run", ["session": id, "command": "echo BYE", "settle": 1, "timeout": 10])
+        session.terminal.sendInput("exit\n")
+        let deadline = Date().addingTimeInterval(5)
+        while session.chat.screen(lines: 1) != nil, Date() < deadline {
+            try await Task.sleep(for: .milliseconds(50))
+        }
+        let screen = try await call("partner_session_screen", ["session": id])
+        XCTAssertFalse(screen.isError, screen.content)
+        XCTAssertTrue(screen.content.contains("BYE"), screen.content)
+        XCTAssertTrue(screen.content.contains("has exited"), screen.content)
+        let started = Date()
+        let run = try await call("partner_session_run", ["session": id, "command": "echo AGAIN"])
+        XCTAssertTrue(run.isError, run.content)
+        XCTAssertTrue(run.content.contains("BYE"), run.content)
+        XCTAssertLessThan(Date().timeIntervalSince(started), 2, "an exited shell is not waited for")
+    }
 }
