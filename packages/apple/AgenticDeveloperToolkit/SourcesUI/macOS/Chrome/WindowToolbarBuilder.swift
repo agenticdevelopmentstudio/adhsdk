@@ -237,16 +237,22 @@ extension WindowToolbarBuilder {
 
         public private(set) var searchField: NSSearchField?
 
-        /// The window whose title a `.windowTitle` slot shows. Bound, not
+        /// The window whose title a `.windowTitle` slot shows. Observed, not
         /// copied: `NSWindow.title` stays the one place the title is set, and
         /// it still feeds the Window menu and Mission Control (`dry`). Set it
         /// before the toolbar builds the slot or after; either way the label
-        /// ends up bound.
+        /// ends up following it.
         public weak var titleWindow: NSWindow? {
-            didSet { bindTitleLabel() }
+            didSet { observeTitle() }
         }
 
         private var titleLabel: ThemedLabel?
+
+        /// Key-value observation rather than a Cocoa binding: a programmatic
+        /// binding retains the object it observes, and the window owns the
+        /// toolbar that owns this label, so a binding kept every closed window
+        /// alive. The observation holds the window weakly.
+        private var titleObservation: NSKeyValueObservation?
 
         public init(
             items: [WindowToolbarItem],
@@ -275,11 +281,12 @@ extension WindowToolbarBuilder {
             self.segmentedControls[identifier]
         }
 
-        private func bindTitleLabel() {
-            guard let titleLabel else { return }
-            titleLabel.unbind(.value)
-            guard let titleWindow else { return }
-            titleLabel.bind(.value, to: titleWindow, withKeyPath: "title")
+        private func observeTitle() {
+            titleObservation = nil
+            guard let titleLabel, let titleWindow else { return }
+            titleObservation = titleWindow.observe(\.title, options: [.initial, .new]) { [weak titleLabel] window, _ in
+                MainActor.assumeIsolated { titleLabel?.stringValue = window.title }
+            }
         }
 
         /// A toolbar already pointed at this delegate. Call it from somewhere
@@ -328,7 +335,7 @@ extension WindowToolbarBuilder {
                 // `SettingsWindow`'s help button for the same rule.
                 guard flag else { return item }
                 titleLabel = label
-                bindTitleLabel()
+                observeTitle()
                 return item
 
             case .trackingSeparator(let identifier, let splitView, let dividerIndex):
