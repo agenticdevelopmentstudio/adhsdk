@@ -126,6 +126,8 @@ public final class ReviewService {
             raiseBlockedWorktree(review, reason: reason)
             throw ReviewError.worktreeBlocked(review.repoName, reason)
         } catch {
+            // A cancelled start (the MCP request timed out) is not the review's failure: it stays queued.
+            if error is CancellationError || Task.isCancelled { throw CancellationError() }
             markFailed(review, reason: error.localizedDescription)
             throw error
         }

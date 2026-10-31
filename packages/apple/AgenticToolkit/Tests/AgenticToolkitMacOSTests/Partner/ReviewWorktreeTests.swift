@@ -135,6 +135,25 @@ final class ReviewWorktreeTests: XCTestCase {
         XCTAssertTrue(try git(in: setup.worktree, "status", "--porcelain").isEmpty)
     }
 
+    func testARebaseLeftInProgressIsAbortedBeforeTheNextPrepare() async throws {
+        let setup = try makeSetup()
+        _ = try await prepare(setup)
+        let fixCommit = try commitInWorktree(setup, file: "a.txt", content: "from the fix\n")
+        try setup.repo.commit(file: "a.txt", day: 2, message: "second", content: "from main\n")
+        _ = try? git(in: setup.worktree, "rebase", "main")
+        XCTAssertTrue(try git(in: setup.worktree, "status").contains("rebase in progress"))
+
+        do {
+            _ = try await prepare(setup)
+            XCTFail("expected the conflict again")
+        } catch ReviewWorktree.Failure.rebaseConflict {
+            // Aborted, retried and aborted again: not refused as dirty.
+        }
+        XCTAssertEqual(try head(of: setup.worktree), fixCommit)
+        XCTAssertFalse(try git(in: setup.worktree, "status").contains("rebase in progress"))
+        XCTAssertEqual(try currentBranch(of: setup.worktree), fix)
+    }
+
     func testRecreatesMissingDirectoryKeepingBranch() async throws {
         let setup = try makeSetup()
         _ = try await prepare(setup)
