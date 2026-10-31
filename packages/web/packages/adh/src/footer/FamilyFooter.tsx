@@ -74,7 +74,7 @@ function aboutEntries(): Entry[] {
 
 /** Terms and Privacy open in a scrolling dialog over the page (LegalModals); the hrefs stay,
  *  so a modified click, or a browser without the Popover API, still reaches the pages. */
-const LEGAL_ENTRIES: Entry[] = [
+export const LEGAL_ENTRIES: Entry[] = [
   { label: 'Terms of Use', href: '/terms', onClick: openLegalModal(TERMS_DIALOG_ID) },
   { label: 'Privacy Policy', href: '/privacy', onClick: openLegalModal(PRIVACY_DIALOG_ID) },
 ]

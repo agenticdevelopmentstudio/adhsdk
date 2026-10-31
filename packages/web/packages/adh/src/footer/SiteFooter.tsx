@@ -2,7 +2,7 @@
 
 import { ChevronsUpDown } from 'lucide-react'
 import { AdhModalPopover } from './AdhModalPopover'
-import { FamilyFooter, type SiteLink } from './FamilyFooter'
+import { FamilyFooter, LEGAL_ENTRIES, type SiteLink } from './FamilyFooter'
 import { ADH_CONTACT, BRAND_HREF, BRAND_LABEL, FAMILY_FOOTER_DIALOG_ID, buildVersionLabel, type SiteContact } from './identity'
 import { FooterChat } from './FooterChat'
 import { SitesPopover } from './SitesOverview'
@@ -60,8 +60,9 @@ export function SiteFooter({ links = [], chat = true, live, specimen = false, co
             <ChevronsUpDown className="adh-footer__menu-caret" aria-hidden />
           </button>
           {/* Without the Popover API the trigger is a dead button and the family footer never
-              opens, so the studio's link and this build's version have no other way onto the
-              screen. Shown only there (adh-site.css). AFTER the trigger, because the theme
+              opens, so the studio's link, this build's version, Terms, Privacy and Contact have
+              no other way onto the screen: a crowded line beats an unreachable Terms page.
+              Shown only there (adh-site.css). AFTER the trigger, because the theme
               editor reads the brand's current values off the first `.adh-footer__brand-link`
               it finds (theme-editor/areas.tsx), and that has to be the one people see. */}
           <span className="adh-footer__copyright-fallback">
@@ -70,6 +71,19 @@ export function SiteFooter({ links = [], chat = true, live, specimen = false, co
               {BRAND_LABEL}
             </a>
             {version && <span className="adh-footer__copyright-version"> · {version}</span>}
+            {/* Plain hrefs: the legal dialogs are as dead here as the family footer's. */}
+            {LEGAL_ENTRIES.map((e) => (
+              <span key={e.href}>
+                {' · '}
+                <a className="adh-footer__fallback-link" href={e.href}>
+                  {e.label}
+                </a>
+              </span>
+            ))}
+            {' · '}
+            <a className="adh-footer__fallback-link" href={`mailto:${contact.email}`}>
+              Contact
+            </a>
           </span>
         </div>
       </footer>

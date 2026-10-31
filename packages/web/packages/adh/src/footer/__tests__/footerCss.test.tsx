@@ -130,15 +130,18 @@ describe('a browser without the Popover API', () => {
     expect(popoverParts.filter((el) => shown(el, 'no popovers')).map((el) => el.outerHTML)).toEqual([])
   })
 
-  it('still reaches the studio and this build, as a plain link and text', () => {
-    // The family footer took over the studio's link and the version, so a dead trigger left
-    // both with no way onto the screen at all.
+  it('still reaches the studio, this build, Terms, Privacy and Contact, as plain links and text', () => {
+    // The family footer took over the studio's link, the version and the legal and contact
+    // links, so a dead trigger left all of them with no way onto the screen at all.
     const { copyright } = renderFooter()
     expect(reachable(copyright, 'no popovers')).toEqual([
       'Agentic Development Studio → https://agenticdevelopmentstudio.com/',
+      'Terms of Use → /terms',
+      'Privacy Policy → /privacy',
+      'Contact → mailto:hello@agenticdeveloperhub.com',
     ])
     expect(visibleText(copyright, 'no popovers')).toBe(
-      '© 2026 Agentic Development Studio · v1.0.155 · a73e79b7',
+      '© 2026 Agentic Development Studio · v1.0.155 · a73e79b7 · Terms of Use · Privacy Policy · Contact',
     )
   })
 })
