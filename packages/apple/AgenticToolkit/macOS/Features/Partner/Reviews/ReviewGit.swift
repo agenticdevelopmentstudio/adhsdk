@@ -59,6 +59,17 @@ public struct ReviewGit: Sendable {
                 + "and HEAD is detached")
     }
 
+    /// Whether git accepts `name` as a branch name (`check-ref-format --branch`).
+    public func isValidBranchName(_ name: String, in repo: URL) async throws -> Bool {
+        guard !name.hasPrefix("-") else { return false }
+        do {
+            _ = try await run(["check-ref-format", "--branch", name], in: repo)
+            return true
+        } catch GitClientError.commandFailed {
+            return false
+        }
+    }
+
     /// The commit a fully qualified ref (`refs/heads/main`) names, or `nil` when it does not exist.
     public func resolveCommit(_ ref: String, in repo: URL) async throws -> String? {
         try await client.resolveCommit(ref, in: repo)

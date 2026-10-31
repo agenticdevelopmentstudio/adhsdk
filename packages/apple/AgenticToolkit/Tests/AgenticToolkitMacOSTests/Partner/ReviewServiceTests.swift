@@ -330,6 +330,38 @@ final class ReviewServiceTests: XCTestCase {
         XCTAssertTrue(started.steps[2].command.contains("(\(later))"), started.steps[2].command)
     }
 
+    func testAClearedFixBranchSettingFallsBackToTheDefault() async throws {
+        try repo.commit(file: "a.txt", day: 1, message: "first")
+        let review = try queue(file: "b.txt", day: 2, message: "second")
+        settings.set("  ", for: UserSettings.partnerReviewsFixBranch)
+        let started = try await service.start(id: review.id)
+        XCTAssertEqual(started.fixBranch, UserSettings.partnerReviewsFixBranch.defaultValue)
+        XCTAssertEqual(started.review.state, .running)
+    }
+
+    func testAnInvalidFixBranchLeavesReviewsQueuedWithOneBlockedItem() async throws {
+        try repo.commit(file: "a.txt", day: 1, message: "first")
+        let first = try queue(file: "b.txt", day: 2, message: "second")
+        let second = try queue(file: "c.txt", day: 3, message: "third")
+        settings.set("bad name/", for: UserSettings.partnerReviewsFixBranch)
+
+        for review in [first, second] {
+            do {
+                _ = try await service.start(id: review.id)
+                XCTFail("an invalid fix branch was used")
+            } catch let ReviewError.worktreeBlocked(_, reason) {
+                XCTAssertTrue(reason.contains("bad name/"), reason)
+            }
+            XCTAssertEqual(try store.review(id: review.id)?.state, .queued)
+        }
+        XCTAssertEqual(try attentionItems().filter { $0.kind == .blocked }.count, 1)
+        XCTAssertTrue(registry.sessions.isEmpty)
+
+        settings.set("partner/fixes", for: UserSettings.partnerReviewsFixBranch)
+        let started = try await service.start(id: first.id)
+        XCTAssertEqual(started.fixBranch, "partner/fixes")
+    }
+
     func testDirtyWorktreeLeavesTheReviewQueuedAndRaisesOneBlockedItem() async throws {
         try repo.commit(file: "a.txt", day: 1, message: "first")
         let first = try queue(file: "b.txt", day: 2, message: "second")

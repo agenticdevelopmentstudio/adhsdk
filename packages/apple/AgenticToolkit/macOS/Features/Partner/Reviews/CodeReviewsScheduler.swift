@@ -33,10 +33,11 @@ public final class CodeReviewsScheduler {
         let since = now().addingTimeInterval(-TimeInterval(settings.get(UserSettings.partnerReviewsWindowHours)) * 3600)
         let includeOthers = settings.get(UserSettings.partnerReviewsIncludeOtherBranches)
         let fixBranch = settings.get(UserSettings.partnerReviewsFixBranch)
+        let defaultFixBranch = UserSettings.partnerReviewsFixBranch.defaultValue
         let store = store, crawler = crawler, git = git
         let inserted = await Task.detached {
-            await Self.crawl(repos: repos, since: since, includeOtherBranches: includeOthers, fixBranch: fixBranch,
-                             store: store, crawler: crawler, git: git)
+            await Self.crawl(repos: repos, since: since, includeOtherBranches: includeOthers,
+                             fixBranch: (fixBranch, defaultFixBranch), store: store, crawler: crawler, git: git)
         }.value
         do {
             let counts = try store.reviewCounts()
@@ -50,13 +51,15 @@ public final class CodeReviewsScheduler {
     /// One repo at a time, so a repo whose git calls throw (moved, not a repo, a branch deleted mid-crawl) is
     /// skipped and logged and the rest still queue. Other branches leave out the partner's own fix branches.
     private nonisolated static func crawl(repos: [(id: String, path: String, name: String)], since: Date,
-                                          includeOtherBranches: Bool, fixBranch: String, store: PartnerStore,
+                                          includeOtherBranches: Bool, fixBranch: (global: String, default: String),
+                                          store: PartnerStore,
                                           crawler: CommitCrawler, git: ReviewGit) async -> Int {
         var inserted = 0
         for repo in repos {
             do {
                 let base = ReviewService.baseFixBranch(
-                    repoSetting: try store.reviewSetting(repoID: repo.id, key: "fix_branch"), global: fixBranch)
+                    repoSetting: try store.reviewSetting(repoID: repo.id, key: "fix_branch"),
+                    global: fixBranch.global, defaultValue: fixBranch.default)
                 inserted += try await crawler.crawl(repos: [repo], branches: { url in
                     let main = try await git.defaultBranch(in: url)
                     guard includeOtherBranches else { return [main] }
