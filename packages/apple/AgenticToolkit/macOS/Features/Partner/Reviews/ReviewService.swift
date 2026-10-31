@@ -106,7 +106,15 @@ public final class ReviewService {
 
         let baseFixBranch = Self.baseFixBranch(
             repoSetting: try store.reviewSetting(repoID: review.repoID, key: "fix_branch"),
-            global: settings.get(UserSettings.partnerReviewsFixBranch))
+            global: settings.get(UserSettings.partnerReviewsFixBranch),
+            defaultValue: UserSettings.partnerReviewsFixBranch.defaultValue)
+        // A mistyped setting is the owner's to fix, not this review's failure: it stays queued until then.
+        guard try await git.isValidBranchName(baseFixBranch, in: URL(fileURLWithPath: review.repoPath)) else {
+            let reason = "the fix branch \"\(baseFixBranch)\" is not a valid branch name; correct it in the "
+                + "Coding Partner's Code Reviews settings"
+            raiseBlockedWorktree(review, reason: reason)
+            throw ReviewError.worktreeBlocked(review.repoName, reason)
+        }
         let prepared: Prepared
         do {
             switch try await prepare(review, baseFixBranch: baseFixBranch) {
@@ -266,10 +274,14 @@ public final class ReviewService {
                                fixBranch: fixBranch, superseded: superseded, tipDiff: tipDiff))
     }
 
-    /// The repo's fix branch base: its own `fix_branch` setting when there is one, else the global setting.
-    /// Fix branches are this base, or `<base>-<branch>` for a branch other than the default one.
-    nonisolated static func baseFixBranch(repoSetting: String?, global: String) -> String {
-        repoSetting.flatMap { $0.isEmpty ? nil : $0 } ?? global
+    /// The repo's fix branch base: its own `fix_branch` setting when there is one, else the global setting,
+    /// else (the field was cleared) `defaultValue`; each trimmed of surrounding whitespace. Fix branches are this
+    /// base, or `<base>-<branch>` for a branch other than the default one.
+    nonisolated static func baseFixBranch(repoSetting: String?, global: String, defaultValue: String) -> String {
+        let trimmed = { (value: String?) -> String? in
+            value.map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }.flatMap { $0.isEmpty ? nil : $0 }
+        }
+        return trimmed(repoSetting) ?? trimmed(global) ?? defaultValue
     }
 
     /// Whether `branch` is one of the partner's own fix branches for `base`, which the crawler leaves alone:
