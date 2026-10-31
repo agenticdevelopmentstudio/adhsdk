@@ -104,13 +104,13 @@ final class ProjectFooterStatusTests: XCTestCase {
         super.tearDown()
     }
 
-    func testTheWindowsContentIsTheFooterHostWrappingTheTabs() {
+    func testTheFooterHostWrapsTheTabsBesideTheShelf() {
         let controller = makeController()
 
-        let host = controller.contentViewController as? WindowFooterContentViewController
-        XCTAssertNotNil(host)
-        XCTAssertTrue(host?.contentViewController is MultiTabbedViewController)
-        XCTAssertTrue(controller.footer === host?.footer)
+        XCTAssertTrue(controller.contentViewController is ProjectWindowSplitViewController)
+        let host = controller.footerContent
+        XCTAssertTrue(host.contentViewController is MultiTabbedViewController)
+        XCTAssertTrue(controller.footer === host.footer)
     }
 
     func testAFreshWindowNamesTheProjectTheTabAndThePane() {

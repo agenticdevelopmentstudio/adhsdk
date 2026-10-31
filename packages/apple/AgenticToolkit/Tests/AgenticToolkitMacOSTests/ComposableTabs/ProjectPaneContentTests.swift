@@ -1,6 +1,6 @@
 import XCTest
 import AppKit
-import AgenticToolkitMacOS
+@testable import AgenticToolkitMacOS
 
 /// What an app gets to say about a project's panes: which views exist, how
 /// wide each one wants to be, and what a fresh tab starts out holding.

@@ -89,8 +89,7 @@ final class ProjectWindowSearchTests: XCTestCase {
     private func activeSplit(
         of controller: ComposableTabsWindowController
     ) -> ComposableTabsViewController? {
-        let host = controller.contentViewController as? WindowFooterContentViewController
-        let tabbed = host?.contentViewController as? MultiTabbedViewController
+        let tabbed = controller.footerContent.contentViewController as? MultiTabbedViewController
         return tabbed?.selectedTab(on: .top)?.viewController as? ComposableTabsViewController
     }
 
