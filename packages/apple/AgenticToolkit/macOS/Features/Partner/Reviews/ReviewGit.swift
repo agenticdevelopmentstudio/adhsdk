@@ -112,17 +112,22 @@ public struct ReviewGit: Sendable {
         return lines(try await run(["log", "--format=%H", "\(sha)..\(branch)", "--"] + files, in: repo))
     }
 
-    /// The diff of `files` from `sha` to the tip of `branch`, cut at `maxBytes`.
+    /// The diff of `files` from `sha` to the tip of `branch`. One cut at `maxBytes` ends with a line saying
+    /// so and naming the command for the rest. The default is small on purpose: the diff rides in the
+    /// partner's `partner_review_start` result, which lands in one long-lived conversation and is replaced
+    /// wholesale by a pointer to a file once it passes Claude Code's MCP output limit.
     public func tipDiff(from sha: String, to branch: String, files: [String], in repo: URL,
-                        maxBytes: Int = 200_000) async throws -> String {
+                        maxBytes: Int = 8_000) async throws -> String {
         guard !files.isEmpty else { return "" }
         let diff = try await run(["diff", sha, branch, "--"] + files, in: repo)
         guard diff.utf8.count > maxBytes else { return diff }
+        let note = "\n[diff cut at \(maxBytes) bytes of \(diff.utf8.count); run `git diff \(sha) \(branch) --` "
+            + "on the reviewed files for the rest]\n"
         // Back off at most three bytes so the cut never lands inside a multi-byte character.
         for cut in stride(from: maxBytes, through: max(0, maxBytes - 3), by: -1) {
-            if let text = String(diff.utf8.prefix(cut)) { return text }
+            if let text = String(diff.utf8.prefix(cut)) { return text + note }
         }
-        return ""
+        return note
     }
 
     /// Whether `worktree` is in the middle of a rebase (git's `rebase-merge` or `rebase-apply` exists).
