@@ -36,7 +36,8 @@ public actor PartnerProcess: PartnerProcessing {
             executableURL: URL(fileURLWithPath: executable),
             arguments: arguments,
             environment: environment,
-            environmentPolicy: .mergeOverParent,
+            // The caller hands over the child's whole environment, so a variable it removed stays removed.
+            environmentPolicy: .replace,
             framing: .newlineDelimited,
             currentDirectoryURL: workingDirectory.map { URL(fileURLWithPath: $0) }))
         (stream, continuation) = AsyncStream.makeStream(of: ClaudeStreamMessage.self)
