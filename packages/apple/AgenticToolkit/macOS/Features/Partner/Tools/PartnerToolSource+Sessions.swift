@@ -95,17 +95,23 @@ extension PartnerToolSource {
                                    maximum: TerminalChatControl.Defaults.maximumTimeout)
         switch name {
         case "partner_session_screen":
-            let lines = (args["lines"] as? Int) ?? TerminalChatControl.Defaults.lines
-            let screen = await MainActor.run { session.chat.screen(lines: max(1, lines)) }
-            return screen.map { ($0, false) } ?? Self.failure("session has no terminal")
+            let lines = max(1, (args["lines"] as? Int) ?? TerminalChatControl.Defaults.lines)
+            return await MainActor.run {
+                if let screen = session.chat.screen(lines: lines) { return (screen, false) }
+                // The chat lets go of an exited shell; the terminal still holds what it last showed.
+                return (session.screenText(lines: lines) + "\n[the session's shell has exited]", false)
+            }
         case "partner_session_run":
             guard let command = args["command"] as? String else { return Self.failure("command is required") }
             await Self.waitForShell(session)
+            if let exited = await Self.exitedFailure(session) { return exited }
             let output = await session.chat.run(command, settle: .seconds(settle), timeout: .seconds(timeout))
             return (output, false)
         case "partner_session_wait":
+            if let exited = await Self.exitedFailure(session) { return exited }
             return (await session.chat.waitForOutput(settle: .seconds(settle), timeout: .seconds(timeout)), false)
         case "partner_session_interrupt":
+            if let exited = await Self.exitedFailure(session) { return exited }
             return (await session.chat.interruptAndWait(), false)
         case "partner_session_close":
             await MainActor.run { sessions.close(id: id) }
@@ -120,11 +126,28 @@ extension PartnerToolSource {
         return min(max(number, 0), maximum)
     }
 
-    /// A shell opened a moment ago may not be running yet; typing before it is would be lost.
+    /// A shell opened a moment ago may not be running yet; typing before it is would be lost. One that has
+    /// already exited is not waited for.
     @MainActor
     private static func waitForShell(_ session: PartnerSession) async {
-        for _ in 0..<50 where !session.terminal.isRunning {
+        for _ in 0..<50 {
+            guard !session.terminal.isRunning, !isExited(session) else { return }
             try? await Task.sleep(for: .milliseconds(100))
         }
+    }
+
+    /// The registry marks an exit when its detector reports one; the chat lets go of the terminal at once.
+    @MainActor
+    private static func isExited(_ session: PartnerSession) -> Bool {
+        session.state == .exited || session.chat.screen(lines: 1) == nil
+    }
+
+    /// For a session whose shell has exited: an error saying so, with the last screen it showed, so a dead
+    /// session never reads as a command that ran and printed nothing.
+    @MainActor
+    private static func exitedFailure(_ session: PartnerSession) -> (content: String, isError: Bool)? {
+        guard isExited(session) else { return nil }
+        let screen = session.screenText(lines: 40)
+        return failure("session \(session.id.uuidString) has exited; its last screen:\n\(screen)")
     }
 }
