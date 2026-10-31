@@ -201,6 +201,13 @@ public final class ProjectWindowManager: ProjectOpening, ObservableObject {
     /// already promises. Ordering the window on screen is still done first
     /// (see `openProject(_:)`), so the fallback is a floor rather than the
     /// normal path.
+    ///
+    /// A window group keeps its other active projects' windows built and
+    /// ordered out, and `openOrder` is the order windows were *built*, so the
+    /// most recent one is as likely as not one of those. The floor is
+    /// therefore the window each group shows, front group first; `openOrder`
+    /// answers only for a window adopted for scripting, which belongs to no
+    /// group.
     public var frontWindowController: ComposableTabsWindowController? {
         if let key = NSApp.keyWindow?.windowController as? ComposableTabsWindowController {
             return key
@@ -213,7 +220,12 @@ public final class ProjectWindowManager: ProjectOpening, ObservableObject {
             .first {
             return ordered
         }
-        return openOrder.last.flatMap { controllers[$0] }
+        for group in [frontGroup].compactMap({ $0 }) + groups.reversed() {
+            if let shown = shownWindows[group.id] as? ComposableTabsWindowController {
+                return shown
+            }
+        }
+        return openOrder.last { group(containing: $0) == nil }.flatMap { controllers[$0] }
     }
 
     /// Every open project's workspace, in the order their projects were
