@@ -6,7 +6,7 @@ public struct ReviewWorktree: Sendable {
 
     public enum Outcome: Sendable, Equatable { case created, fastForwarded, reset, rebased, upToDate }
 
-    public enum Failure: Error, Equatable {
+    public enum Failure: Error, LocalizedError, Equatable {
         /// The worktree has uncommitted or untracked changes; nothing was touched.
         case dirty
         /// Rebasing the fix branch onto the tip conflicted; the rebase was aborted. Carries git's stderr.
@@ -14,6 +14,14 @@ public struct ReviewWorktree: Sendable {
         /// The directory is not a worktree of the repo (another repo's checkout, a plain folder, the main
         /// checkout), so no destructive verb was run in it. Carries the reason.
         case notReviewWorktree(String)
+
+        public var errorDescription: String? {
+            switch self {
+            case .dirty: return "the review worktree has uncommitted changes"
+            case .rebaseConflict(let detail): return "rebasing the fix branch onto the tip conflicted: \(detail)"
+            case .notReviewWorktree(let detail): return detail
+            }
+        }
     }
 
     private let git: ReviewGit

@@ -25,7 +25,8 @@ public enum PartnerJobDefaults {
     public static let codeReviewsGuidelines = """
         On a tick, the message says how many reviews are queued and running. Call `partner_review_next`, then \
         start reviews with `partner_review_start`, oldest first, while `running` is below `concurrency`. Never \
-        start two reviews in one repo.
+        start two reviews in one repo. When a start says the repo's review worktree needs the owner, the review \
+        stays queued and the owner has been told: start no other review of that repo and branch this tick.
 
         A `partner_review_start` result that is skipped (no session, no steps) needs nothing more: the app has \
         already marked it. Otherwise it names the review's session and lists its steps with their placeholders \

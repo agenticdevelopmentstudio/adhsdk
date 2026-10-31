@@ -13,6 +13,9 @@ public enum ReviewError: Error, LocalizedError, Equatable {
     case cannotFinish(String, PartnerReviewState)
     /// ``UserSettings/partnerReviewsConcurrency`` reviews are already running, across all repos.
     case concurrencyLimit(Int)
+    /// The repo's review worktree or fix branch needs the owner (uncommitted changes, a fix branch that no
+    /// longer rebases onto the tip); the review stays queued. Carries the repo name and the reason.
+    case worktreeBlocked(String, String)
 
     public var errorDescription: String? {
         switch self {
@@ -22,6 +25,8 @@ public enum ReviewError: Error, LocalizedError, Equatable {
         case .cannotFinish(let id, let state): return "review \(id) cannot be finished as or from \(state.rawValue)"
         case .concurrencyLimit(let limit):
             return "\(limit) review\(limit == 1 ? " is" : "s are") already running, the most allowed at once"
+        case .worktreeBlocked(let repo, let reason):
+            return "the review worktree for \(repo) needs the owner: \(reason); the review stays queued"
         }
     }
 }
@@ -45,6 +50,10 @@ public final class ReviewService {
     /// Repos with a `start` between its checks and its final write. Taken before the first suspension, so two
     /// overlapping starts in one repo cannot both pass the one-at-a-time check while git runs.
     private var startingRepos: Set<String> = []
+
+    /// The reason last raised to the owner for each repo and branch whose worktree is blocked, so a blocked
+    /// worktree raises one item however many starts it refuses. Cleared when that worktree next prepares.
+    private var blockedWorktrees: [String: String] = [:]
 
     public init(store: PartnerStore, sessions: PartnerSessionRegistry, notifier: PartnerNotifier, paths: PartnerPaths,
                 git: ReviewGit = ReviewGit(), worktree: ReviewWorktree = ReviewWorktree(),
@@ -72,8 +81,10 @@ public final class ReviewService {
 
     /// Starts one queued review: skips it when its commit has left the branch, otherwise brings the repo's
     /// review worktree to the branch tip, works out what later commits changed, opens a session in the worktree
-    /// and returns the job's steps filled in. A failure in the git work marks the review `failed`, raises a
-    /// `blocked` attention item and is rethrown, so a review never stays queued because git failed. A store
+    /// and returns the job's steps filled in. When the shared worktree or fix branch needs the owner, the review
+    /// stays queued, one `blocked` item is raised for that worktree and ``ReviewError/worktreeBlocked(_:_:)`` is
+    /// thrown. Any other failure in the git work marks the review `failed`, raises a `blocked` attention item and
+    /// is rethrown, so a review never stays queued because git failed. A store
     /// failure after that leaves the review queued, closes any session it opened and is rethrown; nothing ever
     /// leaves it running without a session.
     public func start(id: String) async throws -> PartnerReviewStart {
@@ -98,10 +109,15 @@ public final class ReviewService {
             case .skip(let reason): return try skip(review, reason: reason, fixBranch: baseFixBranch)
             case .ready(let found): prepared = found
             }
+        } catch let failure as ReviewWorktree.Failure {
+            let reason = failure.localizedDescription
+            raiseBlockedWorktree(review, reason: reason)
+            throw ReviewError.worktreeBlocked(review.repoName, reason)
         } catch {
-            markFailed(review, reason: Self.reason(error))
+            markFailed(review, reason: error.localizedDescription)
             throw error
         }
+        blockedWorktrees[Self.worktreeKey(review)] = nil
 
         // Finished or requeued by someone else while git ran: leave it as they left it.
         let latest = try store.review(id: id)
@@ -266,17 +282,23 @@ public final class ReviewService {
         }
     }
 
-    private static func reason(_ error: Error) -> String {
-        switch error {
-        case ReviewWorktree.Failure.dirty:
-            return "the review worktree has uncommitted changes"
-        case ReviewWorktree.Failure.rebaseConflict(let detail):
-            return "rebasing the fix branch onto the tip conflicted: \(detail)"
-        case ReviewWorktree.Failure.notReviewWorktree(let detail):
-            return detail
-        default:
-            return error.localizedDescription
+    /// Raises one `blocked` item per worktree and reason; the review it came from stays queued.
+    private func raiseBlockedWorktree(_ review: PartnerReview, reason: String) {
+        let key = Self.worktreeKey(review)
+        guard blockedWorktrees[key] != reason else { return }
+        blockedWorktrees[key] = reason
+        do {
+            try notifier.notify(kind: .blocked, title: "reviews of \(review.repoName) \(review.branch) are blocked",
+                                body: reason + ". Reviews stay queued until the review worktree is fixed.",
+                                reference: ["repo": review.repoID, "branch": review.branch], createdBy: "partner")
+        } catch {
+            Self.logger.error("Raising the blocked worktree of \(review.repoName): \(error.localizedDescription)")
         }
+    }
+
+    /// One review worktree per repo and branch.
+    private static func worktreeKey(_ review: PartnerReview) -> String {
+        "\(review.repoID)\n\(review.branch)"
     }
 
     /// An empty model means Claude Code's own default: the `--model {model}` option is dropped, not left blank.

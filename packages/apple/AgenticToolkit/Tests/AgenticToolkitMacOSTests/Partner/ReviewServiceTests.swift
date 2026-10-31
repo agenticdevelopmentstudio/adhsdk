@@ -328,29 +328,39 @@ final class ReviewServiceTests: XCTestCase {
         XCTAssertTrue(started.steps[2].command.contains("(\(later))"), started.steps[2].command)
     }
 
-    func testDirtyWorktreeFailsTheReviewAndRaisesABlockedItem() async throws {
+    func testDirtyWorktreeLeavesTheReviewQueuedAndRaisesOneBlockedItem() async throws {
         try repo.commit(file: "a.txt", day: 1, message: "first")
         let first = try queue(file: "b.txt", day: 2, message: "second")
         let second = try queue(file: "c.txt", day: 3, message: "third")
+        let third = try queue(file: "d.txt", day: 4, message: "fourth")
         let started = try await service.start(id: first.id)
         _ = try service.finish(id: first.id, state: .done, summary: "ok")
-        try "scratch".write(to: URL(fileURLWithPath: started.worktreePath).appendingPathComponent("junk.txt"),
-                            atomically: true, encoding: .utf8)
+        let junk = URL(fileURLWithPath: started.worktreePath).appendingPathComponent("junk.txt")
+        try "scratch".write(to: junk, atomically: true, encoding: .utf8)
 
-        do {
-            _ = try await service.start(id: second.id)
-            XCTFail("a dirty worktree was reused")
-        } catch ReviewWorktree.Failure.dirty {
+        for review in [second, third] {
+            do {
+                _ = try await service.start(id: review.id)
+                XCTFail("a dirty worktree was reused")
+            } catch let ReviewError.worktreeBlocked(repo, reason) {
+                XCTAssertEqual(repo, "demo")
+                XCTAssertEqual(reason, "the review worktree has uncommitted changes")
+            }
         }
 
-        let stored = try XCTUnwrap(store.review(id: second.id))
-        XCTAssertEqual(stored.state, .failed)
-        XCTAssertFalse(stored.summary?.isEmpty ?? true)
-        XCTAssertEqual(stored.finishedAt, clock)
+        for review in [second, third] {
+            let stored = try XCTUnwrap(store.review(id: review.id))
+            XCTAssertEqual(stored.state, .queued, "a blocked worktree is not the review's failure")
+            XCTAssertNil(stored.finishedAt)
+        }
         let blocked = try attentionItems().filter { $0.kind == .blocked }
-        XCTAssertEqual(blocked.count, 1)
-        XCTAssertEqual(blocked.first?.reference["review"], second.id)
-        XCTAssertEqual(registry.sessions.count, 1, "no session for the failed review")
+        XCTAssertEqual(blocked.count, 1, "one item for the worktree, not one per refused start")
+        XCTAssertEqual(blocked.first?.reference["repo"], "repo")
+        XCTAssertEqual(registry.sessions.count, 1, "no session for a refused start")
+
+        try FileManager.default.removeItem(at: junk)
+        let resumed = try await service.start(id: second.id)
+        XCTAssertEqual(resumed.review.state, .running, "the queued review runs once the worktree is fixed")
     }
 
     func testStartSkipsAReviewWhoseBranchIsGone() async throws {
@@ -387,7 +397,7 @@ final class ReviewServiceTests: XCTestCase {
         XCTAssertEqual(started.review.state, .running)
     }
 
-    func testAPlainDirectoryWhereTheWorktreeGoesFailsTheReview() async throws {
+    func testAPlainDirectoryWhereTheWorktreeGoesBlocksTheReview() async throws {
         try repo.commit(file: "a.txt", day: 1, message: "first")
         let review = try queue(file: "b.txt", day: 2, message: "second")
         try repo.git("branch", fixBranch)
@@ -397,17 +407,16 @@ final class ReviewServiceTests: XCTestCase {
         do {
             _ = try await service.start(id: review.id)
             XCTFail("a plain directory was used as the review worktree")
-        } catch ReviewWorktree.Failure.notReviewWorktree {
+        } catch let ReviewError.worktreeBlocked(_, reason) {
+            XCTAssertTrue(reason.contains("is not a worktree of"), reason)
         }
 
-        let stored = try XCTUnwrap(store.review(id: review.id))
-        XCTAssertEqual(stored.state, .failed)
-        XCTAssertTrue(stored.summary?.contains("is not a worktree of") ?? false, stored.summary ?? "nil")
+        XCTAssertEqual(try store.review(id: review.id)?.state, .queued)
         XCTAssertEqual(try attentionItems().filter { $0.kind == .blocked }.count, 1)
         XCTAssertTrue(registry.sessions.isEmpty)
     }
 
-    func testAFixBranchThatConflictsWithTheTipFailsTheReview() async throws {
+    func testAFixBranchThatConflictsWithTheTipBlocksTheReview() async throws {
         try repo.commit(file: "a.txt", day: 1, message: "first")
         let first = try queue(file: "b.txt", day: 2, message: "second")
         let started = try await service.start(id: first.id)
@@ -420,13 +429,11 @@ final class ReviewServiceTests: XCTestCase {
         do {
             _ = try await service.start(id: second.id)
             XCTFail("a conflicting fix branch was rebased")
-        } catch ReviewWorktree.Failure.rebaseConflict {
+        } catch let ReviewError.worktreeBlocked(_, reason) {
+            XCTAssertTrue(reason.hasPrefix("rebasing the fix branch onto the tip conflicted"), reason)
         }
 
-        let stored = try XCTUnwrap(store.review(id: second.id))
-        XCTAssertEqual(stored.state, .failed)
-        XCTAssertTrue(stored.summary?.hasPrefix("rebasing the fix branch onto the tip conflicted") ?? false,
-                      stored.summary ?? "nil")
+        XCTAssertEqual(try store.review(id: second.id)?.state, .queued)
         XCTAssertEqual(try attentionItems().filter { $0.kind == .blocked }.count, 1)
         XCTAssertEqual(try currentBranch(started.worktreePath), fixBranch, "the rebase was aborted")
     }
