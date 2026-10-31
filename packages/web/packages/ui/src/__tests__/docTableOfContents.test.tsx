@@ -144,6 +144,6 @@ describe('DocTableOfContents', () => {
     const aside = screen.getByTestId('toc')
     expect(aside.className).toContain('sticky')
     expect(aside.className).toContain('pl-2')
-    expect(aside.querySelector('h4')!.textContent).toBe('Contents')
+    expect(aside.querySelector('p')!.textContent).toBe('Contents')
   })
 })

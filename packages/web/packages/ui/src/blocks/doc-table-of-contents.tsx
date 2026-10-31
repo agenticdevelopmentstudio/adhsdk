@@ -50,9 +50,11 @@ export function DocTableOfContents({
 
   return (
     <aside className={cn(DOC_TABLE_OF_CONTENTS_CLASS, className)} {...rest}>
-      <h4 className="font-mono text-[10px] font-medium uppercase tracking-widest text-[var(--color-text-dim)] mb-3">
+      {/* A label, not a heading: the rail follows the article, so an `h4` here came
+          straight after the article's last `h2` and broke the page's outline. */}
+      <p className="font-mono text-[10px] font-medium uppercase tracking-widest text-[var(--color-text-dim)] mb-3">
         {title}
-      </h4>
+      </p>
       <ul className="flex flex-col gap-1 border-l border-[var(--color-border-subtle)]">
         {listed.map((heading) => (
           <li key={heading.id} className="-ml-px">
