@@ -87,6 +87,21 @@ final class CodeReviewsSchedulerTests: XCTestCase {
         XCTAssertEqual(feature?.branch, "feature")
     }
 
+    func testThePartnersFixBranchesAreNotCrawled() async throws {
+        try repo.commit(file: "a.txt", day: 1, message: "first")
+        for branch in ["partner/review-fixes", "partner/review-fixes-feature"] {
+            try repo.git("checkout", "-b", branch)
+            try repo.commit(file: "\(branch.count).txt", day: 2, message: "fix on \(branch)")
+            try repo.git("checkout", "main")
+        }
+        settings.set(true, for: UserSettings.partnerReviewsIncludeOtherBranches)
+
+        let summary = await makeScheduler().crawlAndSummarise()
+
+        XCTAssertTrue(summary.contains("1 queued"), summary)
+        XCTAssertEqual(try store.reviews(state: .queued).map(\.subject), ["first"])
+    }
+
     /// One repo whose git calls throw is skipped and logged; the others still queue.
     func testARepoThatFailsIsSkippedAndTheOthersStillQueue() async throws {
         try repo.commit(file: "a.txt", day: 1, message: "first")

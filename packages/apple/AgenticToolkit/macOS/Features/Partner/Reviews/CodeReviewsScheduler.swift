@@ -32,9 +32,10 @@ public final class CodeReviewsScheduler {
             .map { (id: $0.id, path: $0.path, name: $0.name) }
         let since = now().addingTimeInterval(-TimeInterval(settings.get(UserSettings.partnerReviewsWindowHours)) * 3600)
         let includeOthers = settings.get(UserSettings.partnerReviewsIncludeOtherBranches)
+        let fixBranch = settings.get(UserSettings.partnerReviewsFixBranch)
         let store = store, crawler = crawler, git = git
         let inserted = await Task.detached {
-            await Self.crawl(repos: repos, since: since, includeOtherBranches: includeOthers,
+            await Self.crawl(repos: repos, since: since, includeOtherBranches: includeOthers, fixBranch: fixBranch,
                              store: store, crawler: crawler, git: git)
         }.value
         do {
@@ -47,17 +48,21 @@ public final class CodeReviewsScheduler {
     }
 
     /// One repo at a time, so a repo whose git calls throw (moved, not a repo, a branch deleted mid-crawl) is
-    /// skipped and logged and the rest still queue.
+    /// skipped and logged and the rest still queue. Other branches leave out the partner's own fix branches.
     private nonisolated static func crawl(repos: [(id: String, path: String, name: String)], since: Date,
-                                          includeOtherBranches: Bool, store: PartnerStore, crawler: CommitCrawler,
-                                          git: ReviewGit) async -> Int {
+                                          includeOtherBranches: Bool, fixBranch: String, store: PartnerStore,
+                                          crawler: CommitCrawler, git: ReviewGit) async -> Int {
         var inserted = 0
         for repo in repos {
             do {
+                let base = ReviewService.baseFixBranch(
+                    repoSetting: try store.reviewSetting(repoID: repo.id, key: "fix_branch"), global: fixBranch)
                 inserted += try await crawler.crawl(repos: [repo], branches: { url in
                     let main = try await git.defaultBranch(in: url)
                     guard includeOtherBranches else { return [main] }
-                    return [main] + (try await git.localBranches(in: url)).filter { $0 != main }
+                    return [main] + (try await git.localBranches(in: url)).filter {
+                        $0 != main && !ReviewService.isFixBranch($0, base: base)
+                    }
                 }, since: since, store: store)
             } catch {
                 logger.error("""

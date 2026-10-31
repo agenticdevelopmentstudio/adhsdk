@@ -104,8 +104,9 @@ public final class ReviewService {
         startingRepos.insert(review.repoID)
         defer { startingRepos.remove(review.repoID) }
 
-        let baseFixBranch = try store.reviewSetting(repoID: review.repoID, key: "fix_branch")
-            .flatMap { $0.isEmpty ? nil : $0 } ?? settings.get(UserSettings.partnerReviewsFixBranch)
+        let baseFixBranch = Self.baseFixBranch(
+            repoSetting: try store.reviewSetting(repoID: review.repoID, key: "fix_branch"),
+            global: settings.get(UserSettings.partnerReviewsFixBranch))
         let prepared: Prepared
         do {
             switch try await prepare(review, baseFixBranch: baseFixBranch) {
@@ -263,6 +264,18 @@ public final class ReviewService {
         let tipDiff = try await git.tipDiff(from: review.sha, to: branchRef, files: files, in: repo)
         return .ready(Prepared(worktree: directory, worktreeKey: worktreeKey,
                                fixBranch: fixBranch, superseded: superseded, tipDiff: tipDiff))
+    }
+
+    /// The repo's fix branch base: its own `fix_branch` setting when there is one, else the global setting.
+    /// Fix branches are this base, or `<base>-<branch>` for a branch other than the default one.
+    nonisolated static func baseFixBranch(repoSetting: String?, global: String) -> String {
+        repoSetting.flatMap { $0.isEmpty ? nil : $0 } ?? global
+    }
+
+    /// Whether `branch` is one of the partner's own fix branches for `base`, which the crawler leaves alone:
+    /// reviewing them would review the reviews' fixes, and again under a new sha after every rebase.
+    nonisolated static func isFixBranch(_ branch: String, base: String) -> Bool {
+        branch == base || branch.hasPrefix(base + "-")
     }
 
     /// `<repo name>-<first 8 of the repo id>`, both made safe as a file name.
