@@ -65,7 +65,7 @@ public final class NotesCoordinator: AppFeature {
         // very same `NotesSplitViewController` inside a project window's pane
         // (Whippet's `DocumentPanes`), and with that window key the
         // standalone window is not — so New Folder, Import Markdown File…,
-        // Delete Note, Delete Folder and ⌘N all greyed out over a notes view
+        // Delete Note, Delete Folder and New Note all greyed out over a notes view
         // the user was working in, and the keyboard shortcuts did nothing.
         // `activeNotesViewController` answers the real question, and every
         // action below is routed through it so the command lands on the view
@@ -196,7 +196,7 @@ public final class NotesCoordinator: AppFeature {
 
     // MARK: - Where the notes commands act
 
-    /// The notes view the File-menu commands and ⌘N apply to right now, or
+    /// The notes view the File-menu commands and File ▸ New apply to right now, or
     /// `nil` when nothing in front of the user is showing notes.
     ///
     /// `NotesSplitViewController` is not owned solely by
