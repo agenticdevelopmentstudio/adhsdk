@@ -32,20 +32,28 @@ final class AdkdStopEventDetectorTests: XCTestCase {
         detector.onExit = { [unowned self] in exits.append($0) }
     }
 
+    /// The pane id of the session watched last: a row's default owner.
+    private var watchedPane = ""
+
+    private func watch(_ session: PartnerSession) {
+        watchedPane = session.id.uuidString
+        detector.watch(session)
+    }
+
     private func row(_ event: String, at turnStateAt: String = "", directory: String = "/tmp/project",
-                     pane: String = "", session: String = "claude-1") -> AdkdSessionActivity {
-        AdkdSessionActivity(sessionID: session, directory: directory, termSessionID: pane,
+                     pane: String? = nil, session: String = "claude-1") -> AdkdSessionActivity {
+        AdkdSessionActivity(sessionID: session, directory: directory, termSessionID: pane ?? watchedPane,
                             lastEventType: event, turnStateAt: turnStateAt)
     }
 
     func testWatchingSchedulesAFiveSecondPoll() {
-        detector.watch(makeDetachedPartnerSession())
+        watch(makeDetachedPartnerSession())
         XCTAssertEqual(scheduler.lastDelay, 5)
     }
 
     func testEachPollSchedulesTheNextAndUnwatchingStopsThem() async throws {
         let session = makeDetachedPartnerSession()
-        detector.watch(session)
+        watch(session)
         XCTAssertEqual(scheduler.pending, 1)
         scheduler.fireAll()
         for _ in 0..<100 where scheduler.pending == 0 {
@@ -59,7 +67,7 @@ final class AdkdStopEventDetectorTests: XCTestCase {
 
     func testATurnEndingIsOneIdleAndTheSameStateAgainIsNone() async {
         let session = makeDetachedPartnerSession()
-        detector.watch(session)
+        watch(session)
         source.rows = [row("PreToolUse", at: "2026-10-30 10:00:00")]
         await detector.poll()
         XCTAssertEqual(idles, [])
@@ -80,7 +88,7 @@ final class AdkdStopEventDetectorTests: XCTestCase {
         // The idle-prompt Notification a minute after Stop advances
         // last_activity_at, never turn_state_at, so the row reads the same.
         let session = makeDetachedPartnerSession()
-        detector.watch(session)
+        watch(session)
         source.rows = [row("UserPromptSubmit", at: "2026-10-30 10:00:00")]
         await detector.poll()
         source.rows = [row("Stop", at: "2026-10-30 10:00:05")]
@@ -93,7 +101,7 @@ final class AdkdStopEventDetectorTests: XCTestCase {
 
     func testWithoutATurnClockOnlyATransitionIntoStopCounts() async {
         let session = makeDetachedPartnerSession()
-        detector.watch(session)
+        watch(session)
         source.rows = [row("PreToolUse")]
         await detector.poll()
         source.rows = [row("Stop")]
@@ -109,7 +117,7 @@ final class AdkdStopEventDetectorTests: XCTestCase {
 
     func testStopFailureEndsATurnToo() async {
         let session = makeDetachedPartnerSession()
-        detector.watch(session)
+        watch(session)
         source.rows = [row("PreToolUse", at: "2026-10-30 10:00:00")]
         await detector.poll()
         source.rows = [row("StopFailure", at: "2026-10-30 10:00:05")]
@@ -120,7 +128,7 @@ final class AdkdStopEventDetectorTests: XCTestCase {
     func testAStopAlreadyOnRecordAtWatchIsThePast() async {
         source.rows = [row("Stop", at: "2026-10-30 09:00:00")]
         let session = makeDetachedPartnerSession()
-        detector.watch(session)
+        watch(session)
         await detector.poll()
         await detector.poll()
         XCTAssertEqual(idles, [])
@@ -128,7 +136,7 @@ final class AdkdStopEventDetectorTests: XCTestCase {
 
     func testANewClaudeSessionAfterTheBaselineThatStopsIsAnIdle() async {
         let session = makeDetachedPartnerSession()
-        detector.watch(session)
+        watch(session)
         await detector.poll()
         source.rows = [row("Stop", at: "2026-10-30 10:00:05", session: "claude-2")]
         await detector.poll()
@@ -137,16 +145,16 @@ final class AdkdStopEventDetectorTests: XCTestCase {
 
     func testAStopInAnotherDirectoryIsNotThisSession() async {
         let session = makeDetachedPartnerSession()
-        detector.watch(session)
+        watch(session)
         await detector.poll()
-        source.rows = [row("Stop", at: "2026-10-30 10:00:05", directory: "/tmp/elsewhere")]
+        source.rows = [row("Stop", at: "2026-10-30 10:00:05", directory: "/tmp/elsewhere", pane: "")]
         await detector.poll()
         XCTAssertEqual(idles, [])
     }
 
     func testAnotherPaneInTheSameDirectoryIsNotThisSession() async {
         let session = makeDetachedPartnerSession()
-        detector.watch(session)
+        watch(session)
         await detector.poll()
         source.rows = [row("Stop", at: "2026-10-30 10:00:05", pane: UUID().uuidString)]
         await detector.poll()
@@ -155,7 +163,7 @@ final class AdkdStopEventDetectorTests: XCTestCase {
 
     func testThisPaneIsMatchedByIdWhereverItsClaudeRuns() async {
         let session = makeDetachedPartnerSession()
-        detector.watch(session)
+        watch(session)
         await detector.poll()
         source.rows = [row("Stop", at: "2026-10-30 10:00:05", directory: "/tmp/elsewhere",
                            pane: session.id.uuidString)]
@@ -163,18 +171,19 @@ final class AdkdStopEventDetectorTests: XCTestCase {
         XCTAssertEqual(idles, [session.id])
     }
 
-    func testARowWithNoPaneIdFallsBackToTheDirectory() async {
+    /// The owner's own Claude Code in the same project records no pane id; its Stop is not this pane's.
+    func testARowWithNoPaneIdIsNeverThisSessionEvenInItsDirectory() async {
         let session = makeDetachedPartnerSession()
-        detector.watch(session)
+        watch(session)
         await detector.poll()
-        source.rows = [row("Stop", at: "2026-10-30 10:00:05", pane: "")]
+        source.rows = [row("Stop", at: "2026-10-30 10:00:05", directory: session.directory, pane: "")]
         await detector.poll()
-        XCTAssertEqual(idles, [session.id])
+        XCTAssertEqual(idles, [])
     }
 
     func testAnUnreadableDaemonChangesNothing() async {
         let session = makeDetachedPartnerSession()
-        detector.watch(session)
+        watch(session)
         await detector.poll()
         source.rows = nil
         await detector.poll()
@@ -185,7 +194,7 @@ final class AdkdStopEventDetectorTests: XCTestCase {
 
     func testTerminatedIsOneExit() {
         let session = makeDetachedPartnerSession()
-        detector.watch(session)
+        watch(session)
         session.terminal.state = .terminated
         XCTAssertEqual(exits, [session.id])
     }
