@@ -24,11 +24,25 @@ public enum PartnerStepTemplate {
         return result
     }
 
+    /// A terminal step is a shell command line, so each value goes in as one shell word (`shellQuoted`); a
+    /// Claude step is a prompt, and its values are typed as written.
     public static func fill(_ steps: [PartnerJobStep], values: [String: String]) -> [PartnerJobStep] {
-        steps.map { step in
+        let quoted = values.mapValues(shellQuoted)
+        return steps.map { step in
             var filled = step
-            filled.command = fill(step.command, values: values)
+            filled.command = fill(step.command, values: step.environment == .terminal ? quoted : values)
             return filled
         }
     }
+
+    /// `value` as a single zsh word: as written when every character is one no shell treats specially, so
+    /// `claude --model opus` still reads naturally, and single-quoted otherwise (`opus[1m]` would be a glob).
+    public static func shellQuoted(_ value: String) -> String {
+        if !value.isEmpty, value.unicodeScalars.allSatisfy(plainWord.contains) { return value }
+        return "'" + value.replacingOccurrences(of: "'", with: #"'\''"#) + "'"
+    }
+
+    /// No `=` (a leading one is zsh's command-path expansion) and no `~`.
+    private static let plainWord = CharacterSet(
+        charactersIn: "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-./:@+,")
 }

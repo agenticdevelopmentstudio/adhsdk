@@ -64,6 +64,20 @@ final class CommitCrawlerTests: XCTestCase {
         XCTAssertEqual(found.map(\.sha), [shas[2]])
     }
 
+    /// A contributor's commit is never queued: its review would run an unprompted agent over their text.
+    func testCrawlQueuesOnlyTheOwnersCommits() async throws {
+        let repo = try PartnerGitFixture()
+        let mine = try repo.commit(file: "a.txt", day: 1, message: "mine")
+        try repo.git("config", "user.email", "contributor@example.com")
+        try repo.commit(file: "b.txt", day: 2, message: "theirs")
+        try repo.git("config", "user.email", "ANN@example.com")
+        let inserted = try await CommitCrawler(git: repo.review).crawl(
+            repos: [(id: "r1", path: repo.directory.path, name: "repo")], branches: { _ in ["main"] },
+            since: .distantPast, store: store)
+        XCTAssertEqual(inserted, 1)
+        XCTAssertEqual(try store.reviews(state: .queued).map(\.sha), [mine])
+    }
+
     func testCrawlInsertsOnceThenNothing() async throws {
         let (repo, shas) = try mergedRepo()
         let repos = [(id: "r1", path: repo.directory.path, name: "repo")]

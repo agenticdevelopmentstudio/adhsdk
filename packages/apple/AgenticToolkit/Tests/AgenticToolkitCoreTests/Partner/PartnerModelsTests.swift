@@ -12,6 +12,18 @@ import Testing
                                               values: ["subject": "fix {sha} {nope}", "sha": "abc"])
         #expect(filled == "fix {sha} {nope} abc")
     }
+    @Test func aTerminalStepQuotesItsValuesAndAClaudeStepDoesNot() {
+        let steps = [
+            PartnerJobStep(name: "open", environment: .terminal, command: "claude --model {model}", condition: ""),
+            PartnerJobStep(name: "review", environment: .claude, command: "/code-review {model}", condition: "")
+        ]
+        let filled = PartnerStepTemplate.fill(steps, values: ["model": "opus[1m]"])
+        #expect(filled.map(\.command) == ["claude --model 'opus[1m]'", "/code-review opus[1m]"])
+        #expect(PartnerStepTemplate.fill(steps, values: ["model": "claude-opus-5-5"])[0].command
+                == "claude --model claude-opus-5-5")
+        #expect(PartnerStepTemplate.shellQuoted("it's") == #"'it'\''s'"#)
+        #expect(PartnerStepTemplate.shellQuoted("=ls") == "'=ls'")
+    }
     @Test func ticksForSameJobCoalesceAndOwnerMessagesDoNot() {
         var queue = PartnerTurnQueue()
         queue.enqueue(.tick(jobID: "a", jobName: "A", previousTick: nil, summary: nil))
