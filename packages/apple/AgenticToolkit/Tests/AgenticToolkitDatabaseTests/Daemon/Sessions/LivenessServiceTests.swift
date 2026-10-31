@@ -172,7 +172,7 @@ final class LivenessServiceTests: XCTestCase {
         // silence as one that can't be asked at all: swallowed per-directory it
         // reads as "no sessions live under there", and the tick ends every one.
         // An unmigrated database makes every `SELECT … FROM sessions` throw.
-        let path = NSTemporaryDirectory() + "liveness-nodb-\(UUID().uuidString).db"
+        let path = TestDaemonDatabase.uniquePath(prefix: "liveness-nodb")
         let unmigrated = try DaemonDatabase(
             path: path, deferMigrations: true, migrations: SessionSchema.migrations
         )

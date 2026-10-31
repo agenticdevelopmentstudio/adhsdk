@@ -7,13 +7,11 @@ final class DaemonDatabaseTests: XCTestCase {
     private var path: String!
 
     override func setUpWithError() throws {
-        path = NSTemporaryDirectory() + "daemondb-\(UUID().uuidString).store"
+        path = TestDaemonDatabase.uniquePath(prefix: "daemondb", file: "daemon.store")
     }
 
     override func tearDownWithError() throws {
-        for suffix in ["", "-wal", "-shm"] {
-            try? FileManager.default.removeItem(atPath: path + suffix)
-        }
+        TestDaemonDatabase.remove(path: path)
     }
 
     /// Counts how many times each migration body ran.
