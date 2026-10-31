@@ -111,6 +111,34 @@ final class TerminalChatSessionTests: XCTestCase {
         XCTAssertTrue(reply.contains(#"GOT b'one\rtwo\r'"#), reply)
     }
 
+    /// The Return goes to the terminal the text was typed into even when the chat closes before it is
+    /// written: the command is never left typed but not run.
+    func testAMessageSentJustBeforeClosingStillRuns() async throws {
+        let (chat, terminal) = try await connectedShell()
+        defer { withExtendedLifetime(terminal) {} }
+        chat.send("echo closed$((1+1))")
+        chat.close()
+        let deadline = ContinuousClock.now + .seconds(5)
+        func ran() -> Bool {
+            terminal.screenSnapshot().lines.contains { $0.trimmingCharacters(in: .whitespaces) == "closed2" }
+        }
+        while !ran() {
+            guard ContinuousClock.now < deadline else {
+                return XCTFail("never ran: \(terminal.screenSnapshot().lines.joined(separator: "\n"))")
+            }
+            try await Task.sleep(for: .milliseconds(100))
+        }
+    }
+
+    /// The timeout counts from the Return, so one shorter than the pause before it still gets the output.
+    func testATimeoutShorterThanTheReturnDelayStillGetsTheOutput() async throws {
+        let (chat, terminal) = try await connectedShell()
+        defer { withExtendedLifetime(terminal) {} }
+        let reply = await chat.run("echo $((6*7))ZZ", settle: .milliseconds(100), timeout: .milliseconds(400))
+        XCTAssertTrue(reply.contains("42ZZ"), reply)
+        XCTAssertFalse(reply.contains(Self.stillRunning), reply)
+    }
+
     // MARK: - Helpers
 
     /// A chat connected to a freshly started shell, once its first prompt is up.
