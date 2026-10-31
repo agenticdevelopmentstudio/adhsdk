@@ -227,11 +227,14 @@ public final class PartnerCoordinator: AppFeature {
         case ignore(String)
     }
 
-    /// Types a click may hand to their default app: documents that app shows rather than runs.
-    static let showableTypes: [UTType] = [.text, .image, .pdf, .sourceCode]
-    /// Types refused even when they are also showable: a script is source code and text too, and a
-    /// configuration profile is XML that installs.
-    static let launchingTypes: [UTType] = [.script, .executable, .applicationBundle, .package, .bundle]
+    /// Types a click may hand to their default app: documents that app shows rather than runs. Plain text,
+    /// not `.text`: HTML, iCalendar, vCard and every XML type conform to `.text`, and their apps run script
+    /// or start an import.
+    static let showableTypes: [UTType] = [.plainText, .sourceCode, .json, .image, .pdf]
+    /// Types refused even when they are also showable: a script is source code and text too, an SVG is an
+    /// image that carries script, and XML covers Java Web Start files and provisioning profiles.
+    static let launchingTypes: [UTType] = [.script, .executable, .applicationBundle, .package, .bundle,
+                                           .html, .xml, .svg]
     static let launchingIdentifiers: Set<String> = ["com.apple.mobileconfig", "com.apple.configprofile"]
 
     /// Whether a file with extension `pathExtension` is a type that only shows when opened. An unknown

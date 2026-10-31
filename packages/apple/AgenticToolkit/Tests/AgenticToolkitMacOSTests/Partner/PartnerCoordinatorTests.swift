@@ -451,14 +451,16 @@ final class PartnerCoordinatorTests: XCTestCase {
         for name in ["run.command", "setup.pkg", "x.tool", "x.terminal", "x.workflow", "x.scpt", "x.sh",
                      "X.COMMAND", "go.fileloc", "site.webloc", "lib.jar", "disk.dmg", "Xcode.xip", "tool.py",
                      "x.rb", "x.js", "x.inetloc", "x.mobileconfig", "x.configprofile", "x.action", "x.plist",
-                     "noextension", "x.unknownext"] {
+                     "noextension", "x.unknownext", "page.html", "page.xhtml", "logo.svg", "app.jnlp",
+                     "x.provisionprofile", "feed.xml", "invite.ics", "card.vcf"] {
             let path = try file(name)
             XCTAssertEqual(action(["path": path]), .reveal(URL(fileURLWithPath: path)), name)
         }
     }
 
     func testDocumentTypesOpen() throws {
-        for name in ["notes.md", "shot.png", "paper.pdf", "Main.swift", "data.json", "photo.JPG"] {
+        for name in ["notes.md", "shot.png", "paper.pdf", "Main.swift", "data.json", "photo.JPG", "notes.txt",
+                     "change.diff", "table.csv"] {
             let path = try file(name)
             XCTAssertEqual(action(["path": path]), .open(URL(fileURLWithPath: path).resolvingSymlinksInPath()),
                            name)
