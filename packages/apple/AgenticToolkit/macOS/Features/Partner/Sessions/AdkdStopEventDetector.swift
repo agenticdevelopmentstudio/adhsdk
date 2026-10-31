@@ -63,8 +63,13 @@ public struct DaemonSessionActivitySource: AdkdSessionActivitySource {
 /// idle prompt, so silence is a poor signal there — but only for Claude Code,
 /// and only while the daemon is up. Polls every `interval` seconds.
 ///
-/// A row belongs to the pane whose id is its `TERM_SESSION_ID` (the registry
-/// sets it); a row with none falls back to matching the pane's directory. A
+/// A row belongs to the pane whose id is its `TERM_SESSION_ID`, which the
+/// registry sets on every pane it opens. A row with none is never a partner
+/// pane's, whatever its directory: it is a Claude Code run the partner did not
+/// open (the owner's own pane in the same project, a `claude -p`), and taking
+/// it would report a turn that is not this pane's and disarm the pane before
+/// its own Stop. A daemon too old to record the id leaves idles to the
+/// quiet-period fallback. A
 /// turn end is a *change* of turn state — keyed on the state's own clock
 /// (`turnStateAt`) when the daemon reports it, on the event name alone when it
 /// does not — so the activity that follows a Stop without starting a turn (the
@@ -89,21 +94,17 @@ public final class AdkdStopEventDetector: PartnerSessionEventDetecting {
 
     private final class Watch {
         let paneID: String
-        let directory: String
         /// The last turn state seen for each Claude session in the pane. Nil
         /// until the first poll after watching has taken its baseline.
         var turnStates: [String: String]?
         var exitSubscription: AnyCancellable?
 
-        init(paneID: String, directory: String) {
+        init(paneID: String) {
             self.paneID = paneID
-            self.directory = directory
         }
 
         func owns(_ row: AdkdSessionActivity) -> Bool {
-            row.termSessionID.isEmpty
-                ? AdkdStopEventDetector.resolved(row.directory) == directory
-                : row.termSessionID == paneID
+            row.termSessionID == paneID
         }
     }
 
@@ -117,7 +118,7 @@ public final class AdkdStopEventDetector: PartnerSessionEventDetecting {
     public func watch(_ session: PartnerSession) {
         unwatch(id: session.id)
         let id = session.id
-        let watch = Watch(paneID: id.uuidString, directory: Self.resolved(session.directory))
+        let watch = Watch(paneID: id.uuidString)
         watch.exitSubscription = session.terminal.onTermination { [weak self] in self?.exited(id: id) }
         watched[id] = watch
         schedulePoll()
@@ -168,9 +169,5 @@ public final class AdkdStopEventDetector: PartnerSessionEventDetecting {
     private func exited(id: UUID) {
         guard watched[id] != nil else { return }
         onExit?(id)
-    }
-
-    nonisolated static func resolved(_ path: String) -> String {
-        URL(fileURLWithPath: path).resolvingSymlinksInPath().path
     }
 }
