@@ -67,13 +67,16 @@ export function DetailsPage({ siteId, topic }: DetailsPageProps) {
     <div className="adh-details">
       <aside className="adh-details__rail">
         <a className="adh-details__back" href="/">‹ Back to the map</a>
-        <p className="adh-details__rail-label">{siteNode.label}</p>
+        {/* The rail label and the kicker are labels, not paragraphs: the page's first
+            paragraph is the lead under the h1. */}
+        <div className="adh-details__rail-label">{siteNode.label}</div>
         <DetailsRail topics={railTopics} siteLabel={siteNode.label} />
       </aside>
 
-      <main className="adh-details__main">
+      {/* An article, not a second <main>: the app shell around this page already has one. */}
+      <article className="adh-details__main">
         <Breadcrumb siteId={siteId} topicId={node.id} />
-        {node.kicker && <p className="adh-details__kicker">{node.kicker}</p>}
+        {node.kicker && <div className="adh-details__kicker">{node.kicker}</div>}
         <h1 className="adh-details__title">{node.label}</h1>
         <p className="adh-details__lead">{node.blurb}</p>
 
@@ -124,7 +127,7 @@ export function DetailsPage({ siteId, topic }: DetailsPageProps) {
             </div>
           </div>
         )}
-      </main>
+      </article>
     </div>
   )
 }
