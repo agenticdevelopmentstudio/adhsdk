@@ -155,8 +155,13 @@ public final class ReviewService {
                                   tipDiff: prepared.tipDiff, steps: Self.fill(steps(), values: values))
     }
 
+    /// How many finished reviews keep their session open for the owner to read.
+    public static let finishedSessionsKept = 3
+
     /// Sets a queued or running review to `done`, `failed` or `skipped` and leaves a "review done" item for the
-    /// owner. Closes nothing: the session stays for the owner to read.
+    /// owner. Its session stays open for the owner to read, but only the newest
+    /// ``finishedSessionsKept`` finished reviews keep theirs: older ones are closed, each Claude Code with
+    /// them, and the store keeps their final screens.
     public func finish(id: String, state: PartnerReviewState, summary: String) throws -> PartnerReview {
         guard var review = try store.review(id: id) else { throw ReviewError.notFound(id) }
         guard [.done, .failed, .skipped].contains(state) else { throw ReviewError.cannotFinish(id, state) }
@@ -169,7 +174,19 @@ public final class ReviewService {
         try notifier.notify(title: "review done",
                             body: "\(review.repoName) \(review.sha.prefix(7)) \(state.rawValue): \(summary)",
                             reference: ["review": review.id], createdBy: "partner")
+        closeOldFinishedSessions()
         return review
+    }
+
+    /// Sessions are newest first, so everything past the first few finished ones goes.
+    private func closeOldFinishedSessions() {
+        let finished = sessions.sessions.filter { session in
+            guard let reviewID = session.reviewID, let review = try? store.review(id: reviewID) else { return false }
+            return ![.queued, .running].contains(review.state)
+        }
+        for session in finished.dropFirst(Self.finishedSessionsKept) {
+            sessions.close(id: session.id)
+        }
     }
 
     /// At every partner start: each review left `running` whose session is not open in this process goes back
