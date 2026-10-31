@@ -31,6 +31,7 @@ public struct StenographerInstance: Sendable, Equatable {
 
     public enum ResolutionError: Error, Equatable, CustomStringConvertible {
         case invalidName(String)
+        case reservedName(String)
         case undefined(name: String, expectedAt: String)
         case unreadable(path: String, reason: String)
         case nameMismatch(file: String, declared: String)
@@ -43,6 +44,8 @@ public struct StenographerInstance: Sendable, Equatable {
             switch self {
             case .invalidName(let name):
                 return "instance name '\(name)' must match [a-z0-9][a-z0-9-]{0,31}"
+            case .reservedName(let name):
+                return "instance name '\(name)' is reserved: \(baseLabel).\(name) already names something else"
             case .undefined(let name, let path):
                 return "instance '\(name)' is not defined (no \(path)); "
                     + "create it with scripts/stenographer_instance.py create"
@@ -70,6 +73,9 @@ public struct StenographerInstance: Sendable, Equatable {
     public static let reservedHTTPPorts: Set<Int> = [
         defaultHTTPPort, StenographerIdentifiers.routerPort, ADKDIdentifiers.httpPort
     ]
+    /// Names whose label `<baseLabel>.<name>` is already taken: the usage
+    /// widget's bundle id, and the directory that holds the definitions.
+    public static let reservedNames: Set<String> = ["usagewidget", "instances"]
     public static let environmentKey = "STENOGRAPHER_INSTANCE"
     public static let argumentFlag = "-instance"
     /// `sockaddr_un.sun_path` is 104 bytes on Darwin, including the NUL.
@@ -131,6 +137,7 @@ public struct StenographerInstance: Sendable, Equatable {
         guard definition.name == fileName else {
             throw ResolutionError.nameMismatch(file: fileName, declared: definition.name)
         }
+        guard !reservedNames.contains(definition.name) else { throw ResolutionError.reservedName(definition.name) }
         guard definition.dataRoot.hasPrefix("/") else { throw ResolutionError.relativeDataRoot(definition.dataRoot) }
         guard (1024...65535).contains(definition.httpPort), !reservedHTTPPorts.contains(definition.httpPort) else {
             throw ResolutionError.invalidPort(definition.httpPort)
@@ -165,9 +172,20 @@ public struct StenographerInstance: Sendable, Equatable {
     /// (`check_definition` uses it): `.` dropped, `..` taken against what is
     /// resolved so far, every symlink that exists followed, missing components
     /// kept as written. Lowercased, because the default APFS volume is case
-    /// insensitive and `~/library/logs` is `~/Library/Logs` there.
+    /// insensitive and `~/library/logs` is `~/Library/Logs` there. A leading
+    /// `/System/Volumes/Data` is dropped before and after resolving: that
+    /// firmlink reaches the same files, and realpath keeps it as written.
     static func canonicalComponents(_ path: String) -> [String] {
-        canonicalPath(path, depth: 0).split(separator: "/").map { $0.lowercased() }
+        let resolved = canonicalPath(withoutDataVolume(path.split(separator: "/").map(String.init)), depth: 0)
+        return withoutDataVolume(resolved.split(separator: "/").map { $0.lowercased() })
+            .split(separator: "/").map(String.init)
+    }
+
+    private static let dataVolume = ["system", "volumes", "data"]
+
+    private static func withoutDataVolume(_ components: [String]) -> String {
+        let firm = components.prefix(dataVolume.count).map { $0.lowercased() } == dataVolume
+        return "/" + (firm ? components.dropFirst(dataVolume.count) : components[...]).joined(separator: "/")
     }
 
     private static func canonicalPath(_ path: String, depth: Int) -> String {
