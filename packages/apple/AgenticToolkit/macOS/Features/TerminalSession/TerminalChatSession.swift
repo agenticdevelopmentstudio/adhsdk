@@ -64,10 +64,14 @@ public final class TerminalChatSession {
     /// The writes ``send(_:)`` has queued, so a second message never lands
     /// between the first one's text and its Return.
     private var pendingInput: Task<Void, Never>?
-    /// Bumped by an interrupt or a new connection; a queued write from an
-    /// earlier generation is dropped, so Control-C is not followed by a stale
-    /// Return and a new terminal never gets the old one's input.
+    /// Bumped by an interrupt or a new connection; a queued message not yet
+    /// typed is dropped, so a new terminal never gets the old one's input.
     private var inputGeneration = 0
+    /// Bumped by an interrupt only. Text already typed gets its Return in the
+    /// terminal it was typed into, whatever the chat connects to meanwhile, so
+    /// closing a pane never leaves a command typed but not run; only Control-C
+    /// drops that Return.
+    private var interrupts = 0
 
     public init(quietPeriod: Duration = .milliseconds(300), maximumLatency: Duration = .seconds(1),
                 returnDelay: Duration = .milliseconds(250)) {
@@ -271,7 +275,9 @@ private final class OutputWait {
     private var settleTask: Task<Void, Never>?
     private var deadlineTask: Task<Void, Never>?
     private let settle: Duration
-    /// Until armed, output is collected but cannot settle the wait; only the deadline can end it.
+    private let timeout: Duration
+    /// Until armed, output is collected but cannot settle the wait, and the timeout has not started: a
+    /// command's time is counted from when its Return is written, not from when its text began to be typed.
     private var armed: Bool
     private let flushPending: () -> Void
     private let onFinish: (OutputWait) -> Void
@@ -287,9 +293,14 @@ private final class OutputWait {
          onFinish: @escaping (OutputWait) -> Void) {
         self.armed = armed
         self.settle = min(settle, timeout / 2)
+        self.timeout = timeout
         self.flushPending = flushPending
         self.onFinish = onFinish
-        deadlineTask = Task { [weak self] in
+        if armed { startDeadline() }
+    }
+
+    private func startDeadline() {
+        deadlineTask = Task { [weak self, timeout] in
             try? await Task.sleep(for: timeout)
             guard !Task.isCancelled else { return }
             self?.end(stillRunning: true)
@@ -307,9 +318,11 @@ private final class OutputWait {
         }
     }
 
-    /// Lets the wait settle, measuring quiet from now.
+    /// Lets the wait settle, measuring quiet and the timeout from now.
     func arm() {
+        guard finished == nil, !armed else { return }
         armed = true
+        startDeadline()
         activity()
     }
 
@@ -384,18 +397,22 @@ extension TerminalChatSession: @preconcurrency ChatSession {
                 guard let self, self.inputGeneration == generation else { return nil }
                 return self.terminal
             }
+            guard let terminal = current() else { return }
             if !typed.isEmpty {
-                guard let terminal = current() else { return }
+                let interruptsBefore = self?.interrupts
                 terminal.sendInput(typed)
                 try? await Task.sleep(for: returnDelay)
+                // A chat closed and released meanwhile cannot have been interrupted.
+                guard self == nil || self?.interrupts == interruptsBefore else { return }
             }
-            current()?.sendInput("\r")
+            terminal.sendInput("\r")
         }
     }
 
     /// Control-C, which is what interrupting a terminal means.
     public func interrupt() {
         inputGeneration += 1
+        interrupts += 1
         terminal?.sendInput("\u{03}")
     }
 
