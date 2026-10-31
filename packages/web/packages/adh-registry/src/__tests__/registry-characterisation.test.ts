@@ -11,7 +11,7 @@ import {
   siteUrl,
   splitSiteTitle,
 } from '../index'
-import { canonicalOnly, ogImageSize, siteMetadata } from '../seo'
+import { canonicalOnly, ogImageSize, siteIdentity, siteMetadata } from '../seo'
 
 describe('registry URL helpers (pins behaviour across the @agentic-toolkit/adh-registry extraction)', () => {
   it('siteProdUrl is host-independent and always https', () => {
@@ -89,6 +89,16 @@ describe('seo helpers (251 consumers, no other test)', () => {
     expect(md.title).toBe('T')
     expect(md.description).toBe('D')
     expect(md.openGraph).toBeTruthy()
+  })
+
+  it('siteIdentity is the brand and production origin the metadata states', () => {
+    expect(siteIdentity('authentication')).toEqual({
+      name: 'Agentic Developer Authentication',
+      url: 'https://agenticdeveloperauthentication.com',
+    })
+    expect(siteMetadata('authentication', { title: 'T', description: 'D' }).applicationName).toBe(
+      'Agentic Developer Authentication',
+    )
   })
 
   it('ogImageSize is the 1200x630 card every unfurler accepts', () => {

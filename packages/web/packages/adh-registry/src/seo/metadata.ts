@@ -77,6 +77,17 @@ export interface SiteSeo {
  */
 const NOINDEX_BUILD = DEV_BUILD
 
+/** A site's brand name and production origin, as every block below states them: the
+ *  registry's full label (or its label), and `https://<prodHost>`. Unknown ids fall back to
+ *  the hub, as they always have here. The origin has no trailing slash. */
+export function siteIdentity(id: SiteId): { name: string; url: string } {
+  const site = getSite(id)
+  return {
+    name: site ? (site.fullLabel ?? site.label) : 'Agentic Developer Hub',
+    url: `https://${site?.prodHost ?? 'agenticdeveloperhub.com'}`,
+  }
+}
+
 /** The full metadata block for a site, given only its id and its own copy.
  *
  *  Sites that ship a bespoke social card (devteam, myagenticteams,
@@ -89,9 +100,7 @@ const NOINDEX_BUILD = DEV_BUILD
  *      }
  */
 export function siteMetadata(id: SiteId, seo: SiteSeo): Metadata {
-  const site = getSite(id)
-  const brand = site ? (site.fullLabel ?? site.label) : 'Agentic Developer Hub'
-  const origin = `https://${site?.prodHost ?? 'agenticdeveloperhub.com'}`
+  const { name: brand, url: origin } = siteIdentity(id)
   const card = seo.card ?? DEFAULT_CARD
 
   return {
@@ -242,8 +251,7 @@ export interface SiteRoute {
  *  the rest of this module exists to prevent.
  */
 export function siteSitemap(id: SiteId, routes: SiteRoute[]): MetadataRoute.Sitemap {
-  const site = getSite(id)
-  const origin = `https://${site?.prodHost ?? 'agenticdeveloperhub.com'}`
+  const origin = siteIdentity(id).url
   const buildTime = new Date()
 
   return routes.map((route) => ({

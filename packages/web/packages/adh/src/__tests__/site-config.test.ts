@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 import { describe, expect, it } from 'vitest'
-import { defineSite, siteSitemapRoutes, FAMILY_ROBOTS_DISALLOW } from '../site'
+import { defineSite, siteLandingMarkdown, siteLlmsTxt, siteSitemapRoutes, FAMILY_ROBOTS_DISALLOW } from '../site'
 import type { SiteRoute } from '@agentic-toolkit/adh-registry/seo'
 
 const seo = { title: 'T', description: 'D' }
@@ -72,6 +72,52 @@ describe('defineSite', () => {
     expect(
       defineSite({ id: 'academy', seo, sitemap: routes, silentSso: false }).shell.silentSso,
     ).toBe(false)
+  })
+})
+
+describe('what a site tells agents', () => {
+  const website = {
+    '@type': 'WebSite',
+    '@id': 'https://agenticdeveloperauthentication.com/#website',
+    name: 'Agentic Developer Authentication',
+    url: 'https://agenticdeveloperauthentication.com',
+    description: 'D',
+  }
+  const landing = {
+    hero: { headline: 'Sign in once', tagline: 'Everywhere.', blocks: [] },
+    sections: [{ id: 'how', eyebrow: 'How', title: '', blocks: [{ kind: 'Lede', children: { $inline: [{ t: 'link', href: '/details', c: ['More'] }] } }] }],
+  }
+
+  it('gives the shell a WebSite from the registry and seo.description, then the site’s own entities', () => {
+    expect(defineSite({ id: 'authentication', seo, sitemap: routes }).shell.jsonLd).toEqual({
+      '@context': 'https://schema.org',
+      '@graph': [website],
+    })
+    const org = { '@type': 'Organization', name: 'Studio' }
+    expect(defineSite({ id: 'authentication', seo, sitemap: routes, jsonLd: org }).shell.jsonLd).toEqual({
+      '@context': 'https://schema.org',
+      '@graph': [website, org],
+    })
+  })
+
+  it('writes /llms.txt from the registry, the seo, the sitemap and the landing sections', async () => {
+    const site = defineSite({ id: 'authentication', seo, sitemap: [{ path: '/' }, { path: '/details' }] })
+    const base = 'https://agenticdeveloperauthentication.com'
+    expect(await siteLlmsTxt(site, landing)).toBe(
+      [
+        '# Agentic Developer Authentication',
+        '> D',
+        `## Pages\n\n- [Home](${base}/): ${base}/index.md as Markdown\n- [Details](${base}/details)`,
+        `## Home page sections\n\n- [How](${base}/#how)`,
+      ].join('\n\n') + '\n',
+    )
+  })
+
+  it('writes /index.md with links on the production origin', () => {
+    const site = defineSite({ id: 'authentication', seo, sitemap: routes })
+    expect(siteLandingMarkdown(site, landing)).toBe(
+      '# Sign in once\n\nEverywhere.\n\n## How\n\n[More](https://agenticdeveloperauthentication.com/details)\n',
+    )
   })
 })
 

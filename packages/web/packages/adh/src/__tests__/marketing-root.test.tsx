@@ -9,6 +9,7 @@ import {
 import { AuthProvider } from "@agentic-toolkit/adh/auth";
 import { HelpContentProvider } from "@agenticdevelopertoolkit/ui/components/help-content";
 import { FAMILY_ROOT_CLASS } from "../marketing/MarketingShell";
+import { JsonLd } from "@agenticdevelopertoolkit/landing";
 
 /**
  * Open the document without rendering it.
@@ -109,6 +110,14 @@ describe("@agentic-toolkit/adh/marketing", () => {
     expect(html.props.lang).toBe("en");
     expect(html.props.dir).toBe("ltr");
     expect(html.props.suppressHydrationWarning).toBe(true);
+  });
+
+  it("writes the site's structured data into <head> after the theme, and nothing without it", () => {
+    expect(openDocument().head.props.children[1]).toBeNull();
+    const data = { "@context": "https://schema.org", "@type": "WebSite", name: "Hub" };
+    const script = openDocument({ jsonLd: data }).head.props.children[1];
+    expect(script.type).toBe(JsonLd);
+    expect(script.props.data).toBe(data);
   });
 
   it("publishes the site help at the document level, defaulting to empty", () => {

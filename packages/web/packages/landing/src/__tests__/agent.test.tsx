@@ -1,6 +1,6 @@
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it } from 'vitest'
-import { JsonLd, landingMarkdown, landingSectionLinks, llmsTxt, pathTitle, withWebSite } from '../index'
+import { JsonLd, landingLlmsTxt, landingMarkdown, landingSectionLinks, llmsTxt, pathTitle, withWebSite } from '../index'
 import type { LandingBlock } from '../index'
 
 // One block of every kind, keyed by kind: a kind added to LandingBlock without an entry here
@@ -96,6 +96,18 @@ describe('llmsTxt', () => {
     expect(pathTitle('/')).toBe('Home')
     expect(pathTitle('/introduction/overview')).toBe('Overview')
     expect(pathTitle('/code-reviews')).toBe('Code reviews')
+  })
+
+  it('writes a landing site’s index: `/` and its Markdown, its other paths, its sections', () => {
+    const site = { name: 'Site', url: 'https://x.example/', description: 'What it is.' }
+    expect(landingLlmsTxt(site, ['/', '/pricing'], DATA)).toBe(
+      [
+        '# Site',
+        '> What it is.',
+        '## Pages\n\n- [Home](https://x.example/): https://x.example/index.md as Markdown\n- [Pricing](https://x.example/pricing)',
+        '## Home page sections\n\n- [Everything](https://x.example/#all)\n- [Rendered by the site](https://x.example/#band)',
+      ].join('\n\n') + '\n',
+    )
   })
 
   it('links each landing section to its anchor', () => {

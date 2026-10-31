@@ -6,6 +6,9 @@
 // tsup no `external` pairing.
 export { defineSite, siteSitemapRoutes, FAMILY_ROBOTS_DISALLOW } from './SiteConfig'
 export type { SiteConfig, SiteDefinition, SiteGate, SiteSitemap } from './SiteConfig'
+// `/llms.txt` and `/index.md`, from the config and the site's landing data. Server-only like
+// the config itself, and as free of module state.
+export { siteLlmsTxt, siteLandingMarkdown } from './site-agent'
 // Which handles the shared `/<workspace>` route leaves claimable. Here rather than in `home`
 // because the two callers are settings FORMS, and `home` is the client entry that pulls in
 // @agentic-toolkit/data — a form that only needs a word list should not pay for the workspace

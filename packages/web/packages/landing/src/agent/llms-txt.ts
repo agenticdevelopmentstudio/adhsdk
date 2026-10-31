@@ -53,3 +53,28 @@ export function landingSectionLinks(data: object, origin: string): LlmsLink[] {
   const base = origin.replace(/\/+$/, '')
   return sections.map((s) => ({ title: s.eyebrow, url: `${base}/#${s.id}` }))
 }
+
+/** A landing-led site's whole `/llms.txt`: its name and description, a Pages section — `/`
+ *  (noting its Markdown at `/index.md`) and then `paths`, the rest of its sitemap — and the
+ *  sections of `/`. The one shape every site in the family writes, whichever frame it uses. */
+export function landingLlmsTxt(
+  site: { name: string; url: string; description: string },
+  paths: readonly string[],
+  landing: object,
+): string {
+  const base = site.url.replace(/\/+$/, '')
+  return llmsTxt({
+    name: site.name,
+    summary: site.description,
+    sections: [
+      {
+        heading: 'Pages',
+        links: [
+          { title: 'Home', url: `${base}/`, note: `${base}/index.md as Markdown` },
+          ...paths.filter((path) => path !== '/').map((path) => ({ title: pathTitle(path), url: `${base}${path}` })),
+        ],
+      },
+      { heading: 'Home page sections', links: landingSectionLinks(landing, base) },
+    ],
+  })
+}

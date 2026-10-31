@@ -3,6 +3,7 @@ export {
   canonicalOnly,
   siteRobots,
   siteSitemap,
+  siteIdentity,
   ogImageSize,
   type SiteSeo,
   type SiteRobotsOptions,

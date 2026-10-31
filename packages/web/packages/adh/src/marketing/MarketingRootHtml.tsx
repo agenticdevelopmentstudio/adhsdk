@@ -1,13 +1,19 @@
 import type { ReactElement } from 'react'
 import { AdhThemeStyle } from '@agentic-toolkit/adh/server'
 import { getLocale, htmlLang, localeDir } from '@agentic-toolkit/adh/concepts'
+import { JsonLd, type JsonLdValue } from '@agenticdevelopertoolkit/landing'
 // Relative: a server module of this same entry with no module-level state (see index.ts).
 import { MarketingShell, type MarketingShellProps } from './MarketingShell'
 
-/** The document's props are the shell's: the document adds `<html>`, `<head>` and
- *  `<body>` and nothing a site can set. Each seam is documented below on the shell's
- *  type, in MarketingShell.tsx. */
-export type MarketingRootHtmlProps = MarketingShellProps
+/** The document's props are the shell's, plus the one thing only a document can hold: the
+ *  site's structured data. Each shell seam is documented on the shell's type, in
+ *  MarketingShell.tsx. */
+export type MarketingRootHtmlProps = MarketingShellProps & {
+  /** The site's schema.org data, written into `<head>` as one ld+json script. `defineSite`
+   *  fills it — a `WebSite` from the registry's name and origin and `seo.description`, then the
+   *  site's own `jsonLd` — so a site's layout passes it through with the rest of `shell`. */
+  jsonLd?: JsonLdValue
+}
 
 /**
  * The shared root-document shell for the ADH marketing family. Every marketing
@@ -19,7 +25,8 @@ export type MarketingRootHtmlProps = MarketingShellProps
  *    appearance pre-paint script, and the font `<link>`s. The preconnects this line used to
  *    name as a second item are AdhThemeStyle's own: it derives them from the theme's font
  *    origins, so a theme that changes fonts changes them too. Nothing else belongs here;
- *    per-site `<head>` content is `metadata` in the site's own layout.
+ *    per-site `<head>` content is `metadata` in the site's own layout. The one exception is
+ *    the `jsonLd` prop: structured data is not something Next's `metadata` can express.
  *  • an `<AuthProvider clientId="adh" silentSso={silentSso}>` — a feature site
  *    (adh/docs/platform/feature-sites-redesign.md) leaves the probe ON (default): the header is
  *    session-aware and `/home` is the signed-in feature surface. It fires once per tab, on
@@ -60,7 +67,7 @@ export type MarketingRootHtmlProps = MarketingShellProps
  * paths (kept external by tsup) so their 'use client' boundaries survive bundling,
  * mirroring the graph subsystem.
  */
-export function MarketingRootHtml(props: MarketingRootHtmlProps): ReactElement {
+export function MarketingRootHtml({ jsonLd, ...props }: MarketingRootHtmlProps): ReactElement {
   const loc = getLocale()
   return (
     // suppressHydrationWarning: AdhThemeStyle's appearance pre-paint script sets class/data-*
@@ -69,6 +76,7 @@ export function MarketingRootHtml(props: MarketingRootHtmlProps): ReactElement {
     <html lang={htmlLang(loc)} dir={localeDir(loc)} suppressHydrationWarning>
       <head>
         <AdhThemeStyle />
+        {jsonLd === undefined ? null : <JsonLd data={jsonLd} />}
       </head>
       <body>
         <MarketingShell {...props} />

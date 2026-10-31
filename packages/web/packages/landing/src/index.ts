@@ -92,7 +92,7 @@ export type {
 // Server-safe: plain functions and one script element.
 export { landingMarkdown } from './agent/landing-markdown'
 export type { LandingMarkdownOptions } from './agent/landing-markdown'
-export { llmsTxt, pathTitle, landingSectionLinks } from './agent/llms-txt'
+export { llmsTxt, pathTitle, landingSectionLinks, landingLlmsTxt } from './agent/llms-txt'
 export type { LlmsTxt, LlmsSection, LlmsLink } from './agent/llms-txt'
 export { JsonLd, withWebSite } from './agent/json-ld'
 export type { JsonLdValue } from './agent/json-ld'

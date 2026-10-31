@@ -1,4 +1,4 @@
-import { landingMarkdown, landingSectionLinks, llmsTxt, pathTitle, withWebSite } from '@agenticdevelopertoolkit/landing'
+import { landingLlmsTxt, landingMarkdown, withWebSite } from '@agenticdevelopertoolkit/landing'
 import type { JsonLdValue } from '@agenticdevelopertoolkit/landing'
 import type { FrameConfig, FrameCopy, FrameSitemapRoute } from './types'
 
@@ -26,22 +26,11 @@ export function frameLlmsTxt(
   landing: object,
   computed: readonly FrameSitemapRoute[] = [],
 ): string {
-  const base = origin(config)
-  const paths = [...config.sitemap, ...computed.map((route) => route.path)]
-  return llmsTxt({
-    name: copy.name,
-    summary: copy.description,
-    sections: [
-      {
-        heading: 'Pages',
-        links: [
-          { title: 'Home', url: `${base}/`, note: `${base}/index.md as Markdown` },
-          ...paths.map((path) => ({ title: pathTitle(path), url: `${base}${path}` })),
-        ],
-      },
-      { heading: 'Home page sections', links: landingSectionLinks(landing, base) },
-    ],
-  })
+  return landingLlmsTxt(
+    { name: copy.name, url: origin(config), description: copy.description },
+    [...config.sitemap, ...computed.map((route) => route.path)],
+    landing,
+  )
 }
 
 /** `/index.md`: `/`'s words as Markdown, with its links made absolute. */

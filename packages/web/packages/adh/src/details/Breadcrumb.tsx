@@ -1,5 +1,6 @@
 import { ancestorsOf, getConcept, hasDetailPage, type ConceptNode } from '@agentic-toolkit/adh/concepts'
 import { siteProdUrl, type SiteId } from '@agentic-toolkit/adh-registry'
+import { JsonLd } from '@agenticdevelopertoolkit/landing'
 
 // Same-site breadcrumb path for a node. Detail-bearing nodes (sites + leaves)
 // link to their /details page; concepts + the root live in the graph, so they
@@ -44,13 +45,8 @@ export function Breadcrumb({ siteId, topicId }: { siteId: SiteId; topicId: strin
           )
         })}
       </ol>
-      {/* JSON-LD from trusted, in-repo data (taxonomy labels + registry hosts).
-          `<` is escaped to < — the canonical safe way to embed structured
-          data, so no value can ever break out of the <script> element. */}
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, '\\u003c') }}
-      />
+      {/* JSON-LD from trusted, in-repo data (taxonomy labels + registry hosts). */}
+      <JsonLd data={jsonLd} />
     </nav>
   )
 }
