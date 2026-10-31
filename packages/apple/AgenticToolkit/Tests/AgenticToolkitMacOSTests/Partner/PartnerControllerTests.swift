@@ -27,6 +27,12 @@ final class FakePartnerProcess: PartnerProcessing, @unchecked Sendable {
 
     private let gate: StartGate?
     private let ending: Ending
+    private var terminateGateValue: StartGate?
+    /// `terminate()` waits at this gate before the process ends.
+    var terminateGate: StartGate? {
+        get { lock.withLock { terminateGateValue } }
+        set { lock.withLock { terminateGateValue = newValue } }
+    }
 
     init(configuration: PartnerProcessConfiguration, gate: StartGate? = nil, ending: Ending = .none) {
         self.configuration = configuration
@@ -58,6 +64,7 @@ final class FakePartnerProcess: PartnerProcessing, @unchecked Sendable {
     func send(_ text: String) async throws { lock.withLock { sentTexts.append(text) } }
     func messages() -> AsyncStream<ClaudeStreamMessage> { stream }
     func terminate() async {
+        await terminateGate?.wait()
         lock.withLock { terminated = true; running = false }
         continuation.finish()
     }
@@ -341,6 +348,23 @@ final class PartnerControllerTests: XCTestCase {
         XCTAssertEqual(try store.attentionItem(id: item.id)?.state, .sent, "its line is still queued")
         await waitUntil { process.sent.contains("Confirmed: Ship it?") }
         XCTAssertEqual(process.sent.last, "Confirmed: Ship it?")
+    }
+
+    func testAnEventQueuedWhileStoppingWaitsForTheNextStart() async throws {
+        let controller = makeController()
+        await startIdle(controller)
+        let first = process
+        let gate = StartGate()
+        first.terminateGate = gate
+        let stopping = Task { await controller.stop() }
+        await waitUntil { gate.arrived == 1 }
+        controller.enqueue(.owner(text: "late", attribution: nil))
+        gate.open()
+        await stopping.value
+        XCTAssertEqual(first.sent.count, 1, "the stopping process was sent \(first.sent)")
+        await startIdle(controller)
+        await waitUntil { process.sent.contains("late") }
+        XCTAssertTrue(process.sent.contains("late"), "\(process.sent)")
     }
 
     func testAButtonLineCutOffByACrashReopensTheItem() async throws {
