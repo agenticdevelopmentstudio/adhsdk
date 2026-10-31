@@ -68,12 +68,15 @@ struct PartnerBasePromptTests {
 
     @Test func skillDescriptionIsYAMLQuoted() {
         let markdown = PartnerBasePrompt.skillMarkdown(for: job("Say \"hi\": a\\b", enabled: true))
-        #expect(markdown.contains("description: \"Say \\\"hi\\\": a\\\\b\"\n"))
+        #expect(markdown.contains("guidelines for its Say \\\"hi\\\": a\\\\b job. "))
     }
 
     @Test func skillMarkdownHasFrontmatter() {
         let markdown = PartnerBasePrompt.skillMarkdown(for: job("General coding partner", enabled: true))
-        let head = "---\nname: adkitchen-partner-general\ndescription: \"General coding partner\"\n---\n"
+        let head = "---\nname: adkitchen-partner-general\n"
+            + "description: \"The Agentic Developer Kitchen Coding Partner's guidelines for its General coding "
+            + "partner job. Only for the Coding Partner, which has the partner_* tools; not for ordinary "
+            + "requests.\"\n---\n"
         #expect(markdown.hasPrefix(head))
         #expect(markdown.contains("Be useful."))
     }
