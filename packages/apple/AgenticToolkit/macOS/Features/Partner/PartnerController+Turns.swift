@@ -28,9 +28,10 @@ extension PartnerController {
         await stop()
     }
 
-    /// Starts the next queued turn when nothing is in flight.
+    /// Starts the next queued turn when nothing is in flight. Never while stopping: the process is on its way
+    /// out, and an event written to it would be lost when the stop clears the turn; it waits for the next start.
     func runNextTurnIfIdle() {
-        guard state == .idle, let process, let inbound = queue.next() else { return }
+        guard state == .idle, !isStopping, let process, let inbound = queue.next() else { return }
         setQueuedCount(queue.count)
         currentInbound = inbound
         let isResend = inbound == resentInbound
