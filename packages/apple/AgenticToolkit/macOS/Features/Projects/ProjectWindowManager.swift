@@ -400,8 +400,10 @@ public final class ProjectWindowManager: ProjectOpening, ObservableObject {
     public func closeProject(repoID: UUID) {
         if let group = group(containing: repoID) {
             // The scan closes a deleted project and deletes its row in the same
-            // turn, so the window has to be gone by the time this returns.
-            closeActiveProject(repoID, in: group, synchronously: true)
+            // turn, so the window has to be gone by the time this returns. A
+            // scan runs in the background, so it is quiet as well: it must not
+            // take key or the front from whatever the user is working in.
+            closeActiveProject(repoID, in: group, synchronously: true, quietly: true)
         } else {
             controllers[repoID]?.close()
         }
@@ -519,8 +521,17 @@ public final class ProjectWindowManager: ProjectOpening, ObservableObject {
     /// takes the outgoing one's frame, shelf and keyboard focus, is ordered
     /// in, and the outgoing one is ordered out — nothing is built or torn
     /// down, so every session in the outgoing project keeps running.
-    private func swap(to incoming: NSWindowController & ProjectShelfWindow, in group: ProjectWindowGroup) {
+    ///
+    /// - Parameter quietly: Order the incoming window in where the outgoing
+    ///   one stood in the stack and leave key where it was, for a swap the
+    ///   user did not ask for.
+    private func swap(
+        to incoming: NSWindowController & ProjectShelfWindow,
+        in group: ProjectWindowGroup,
+        quietly: Bool = false
+    ) {
         let outgoing = shownWindows[group.id]
+        let previousKey = NSApp.keyWindow
         // Landed before anything is read from it: its focus may be the
         // pending completion, and its layout the slide's destination.
         outgoing?.landShelfSlide()
@@ -552,7 +563,11 @@ public final class ProjectWindowManager: ProjectOpening, ObservableObject {
         if let outgoingFrame, incoming.window?.frame != outgoingFrame {
             incoming.window?.setFrame(outgoingFrame, display: true)
         }
-        incoming.window?.makeKeyAndOrderFront(nil)
+        if quietly, let outgoingWindow = outgoing?.window, outgoingWindow.isVisible {
+            incoming.window?.order(.above, relativeTo: outgoingWindow.windowNumber)
+        } else {
+            incoming.window?.makeKeyAndOrderFront(nil)
+        }
         shownWindows[group.id] = incoming
         if let outgoing {
             outgoing.window?.isExcludedFromWindowsMenu = true
@@ -562,6 +577,12 @@ public final class ProjectWindowManager: ProjectOpening, ObservableObject {
             }
         }
         incoming.projectShelf?.restore(focus: focus)
+        // `showWindow` makes the window key whatever is asked of it; a quiet
+        // swap hands key back to the window that had it, unless that was the
+        // outgoing one, whose place the incoming window has taken.
+        if quietly, let previousKey, previousKey !== outgoing?.window, previousKey.isVisible {
+            previousKey.makeKey()
+        }
     }
 
     /// Builds `repo`'s window without showing it.
@@ -657,14 +678,29 @@ public final class ProjectWindowManager: ProjectOpening, ObservableObject {
     /// - Parameter synchronously: close the window before returning. False
     ///   for the shelf's close box, which is running inside the very window
     ///   being closed when the project is the one on screen.
-    private func closeActiveProject(_ repoID: UUID, in group: ProjectWindowGroup, synchronously: Bool) {
+    ///
+    /// - Parameter quietly: For a close nobody asked for in this window — the
+    ///   scan's. The project put on screen in its place takes the closed
+    ///   one's place in the window stack without becoming key, and a group
+    ///   left with no project closes rather than raising an empty window.
+    private func closeActiveProject(
+        _ repoID: UUID,
+        in group: ProjectWindowGroup,
+        synchronously: Bool,
+        quietly: Bool = false
+    ) {
         guard let controller = controllers[repoID] else { return }
         let wasShown = shownWindows[group.id] === controller
         let next = group.deactivate(repoID)
+        if quietly, next == nil {
+            closeGroup(group, sparing: repoID)
+            controller.close()
+            return
+        }
         if wasShown {
             if let next, let incoming = controllers[next] {
                 group.select(next)
-                swap(to: incoming, in: group)
+                swap(to: incoming, in: group, quietly: quietly)
             } else {
                 group.select(nil)
                 if let empty = showEmptyWindow(for: group) {
