@@ -148,6 +148,23 @@ final class ReviewWorktreeTests: XCTestCase {
         XCTAssertTrue(FileManager.default.fileExists(atPath: setup.worktree.appendingPathComponent("fix.txt").path))
     }
 
+    func testRecreatingTheDirectoryKeepsAnotherMissingWorktreeRegistered() async throws {
+        let setup = try makeSetup()
+        _ = try await prepare(setup)
+        let other = FileManager.default.temporaryDirectory
+            .appendingPathComponent("PartnerOtherWorktree-\(UUID().uuidString)")
+        try git(in: setup.repo.directory, "worktree", "add", "-b", "owner/elsewhere", other.path)
+        try FileManager.default.removeItem(at: other)
+        addTeardownBlock { try? FileManager.default.removeItem(at: other) }
+        try FileManager.default.removeItem(at: setup.worktree)
+
+        _ = try await prepare(setup)
+
+        let list = try git(in: setup.repo.directory, "worktree", "list", "--porcelain")
+        XCTAssertTrue(list.contains(other.lastPathComponent), "the owner's absent worktree is still registered")
+        XCTAssertEqual(try currentBranch(of: setup.worktree), fix)
+    }
+
     func testUpToDateWhenNothingChanged() async throws {
         let setup = try makeSetup()
         _ = try await prepare(setup)

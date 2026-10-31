@@ -43,7 +43,12 @@ public struct ReviewWorktree: Sendable {
         }
 
         if !FileManager.default.fileExists(atPath: worktree.path) {
-            _ = try await git.run(["worktree", "prune"], in: repo)
+            // Drop only our own stale registration: a repo-wide `worktree prune` would also drop the owner's
+            // worktrees whose directories are merely absent (an unmounted volume), along with their locks.
+            let missing = Self.canonical(worktree)
+            if try await git.worktrees(in: repo).contains(where: { Self.canonical($0.directory) == missing }) {
+                _ = try await git.run(["worktree", "remove", "--force", worktree.path], in: repo)
+            }
             _ = try await git.run(["worktree", "add", worktree.path, fixBranch], in: repo)
         }
 
@@ -108,8 +113,15 @@ public struct ReviewWorktree: Sendable {
         return Failure.rebaseConflict(error.localizedDescription + abortNote)
     }
 
-    /// Standardized with symlinks resolved, so `/var/...` and `/private/var/...` compare equal.
+    /// Standardized with symlinks resolved, so `/var/...` and `/private/var/...` compare equal. A missing path
+    /// resolves through its nearest existing ancestor, since symlinks resolve only in paths that exist.
     private static func canonical(_ url: URL) -> String {
-        url.standardizedFileURL.resolvingSymlinksInPath().path
+        let standardized = url.standardizedFileURL
+        guard !FileManager.default.fileExists(atPath: standardized.path) else {
+            return standardized.resolvingSymlinksInPath().path
+        }
+        let parent = standardized.deletingLastPathComponent()
+        guard parent.path != standardized.path else { return standardized.path }
+        return URL(fileURLWithPath: canonical(parent)).appendingPathComponent(standardized.lastPathComponent).path
     }
 }
