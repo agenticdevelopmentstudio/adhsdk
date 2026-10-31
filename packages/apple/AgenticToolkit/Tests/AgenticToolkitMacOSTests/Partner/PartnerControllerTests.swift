@@ -323,6 +323,38 @@ final class PartnerControllerTests: XCTestCase {
         XCTAssertEqual(sentMessage.attribution?.name, "Confirm")
     }
 
+    func testASentItemLeftByAnEarlierRunIsReopenedAtStart() async throws {
+        var item = AttentionItem(kind: .question, text: "Ship it?", createdBy: "partner")
+        item.state = .sent
+        try store.insert(item)
+        let controller = makeController()
+        await startIdle(controller)
+        XCTAssertEqual(try store.attentionItem(id: item.id)?.state, .open)
+    }
+
+    func testAButtonLineQueuedAcrossAStopStaysSent() async throws {
+        let controller = makeController()
+        let item = AttentionItem(kind: .question, text: "Ship it?", createdBy: "partner")
+        try store.insert(item)
+        try controller.performButton(.confirm, itemID: item.id)
+        await startIdle(controller)
+        XCTAssertEqual(try store.attentionItem(id: item.id)?.state, .sent, "its line is still queued")
+        await waitUntil { process.sent.contains("Confirmed: Ship it?") }
+        XCTAssertEqual(process.sent.last, "Confirmed: Ship it?")
+    }
+
+    func testAButtonLineCutOffByACrashReopensTheItem() async throws {
+        let controller = makeController()
+        await startIdle(controller)
+        let item = AttentionItem(kind: .question, text: "Ship it?", createdBy: "partner")
+        try store.insert(item)
+        try controller.performButton(.confirm, itemID: item.id)
+        await waitUntil { process.sent.count == 2 }
+        process.crash(stderr: "boom\n")
+        await waitUntil { controller.state == .failed("partner process exited") }
+        XCTAssertEqual(try store.attentionItem(id: item.id)?.state, .open)
+    }
+
     func testBeginDiscussionQuotesTheItem() async throws {
         let controller = makeController()
         let item = AttentionItem(kind: .question, text: "Line one\nLine two", createdBy: "partner")

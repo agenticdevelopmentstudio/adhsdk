@@ -169,6 +169,7 @@ public final class PartnerController: ObservableObject {
             return
         }
         onLockAcquired?()
+        reopenUnansweredItems()
         UserSettings.migratePartnerAllowedTools(in: settings)
         guard let claude = findClaude() else { return failReleasingLock("claude not found") }
         guard let endpoint = endpoint() else { return failReleasingLock("automation endpoint is not running") }
@@ -234,6 +235,7 @@ public final class PartnerController: ObservableObject {
         process = nil
         currentInbound = nil
         callerID = nil
+        reopenUnansweredItems()
         releaseLock()
         state = .stopped
         chatSession.setState(.closed)
@@ -342,6 +344,7 @@ public final class PartnerController: ObservableObject {
         self.process = nil
         currentInbound = nil
         tearDown()
+        reopenUnansweredItems()
         releaseLock()
         fail("partner process exited", notify: true, detail: String(stderr.suffix(2_000)))
     }
