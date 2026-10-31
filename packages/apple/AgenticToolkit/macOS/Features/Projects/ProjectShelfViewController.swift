@@ -159,10 +159,15 @@ public final class ProjectShelfViewController: NSViewController {
 
         // Choosing from the browser makes the project active, so the shelf
         // moves to where it now is: the active list, with it highlighted. Its
-        // filter is cleared so nothing typed there earlier can hide it.
+        // filter is cleared so nothing typed there earlier can hide it. A
+        // project that is open in another window stays there, so this shelf
+        // is left alone.
         browser.onChoose = { [weak self] repo in
             guard let self else { return }
             self.onLoadProject?(repo)
+            // Already open in another group's window, it was brought forward
+            // there and this group is unchanged: leave its shelf as it was.
+            guard self.group.contains(repo.id) else { return }
             self.group.filterText[.activeProjects] = ""
             self.group.panel = .activeProjects
         }

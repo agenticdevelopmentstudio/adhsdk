@@ -223,14 +223,25 @@ public final class ActiveProjectsViewController: NSViewController {
 
     @objc private func rowClicked(_ sender: Any?) {
         let row = table.clickedRow
-        guard rows.indices.contains(row) else { return }
+        guard !isLaterClickOfMultiClick, rows.indices.contains(row) else { return }
         onChoose?(rows[row].id)
+    }
+
+    /// The event in hand is the second (or later) click of a multi-click. The
+    /// first click already chose; a double-click in the browser opens on its
+    /// first click and flips the shelf to this list, so its second click lands
+    /// here on whatever row is under the pointer and must not choose that.
+    private var isLaterClickOfMultiClick: Bool {
+        guard let event = NSApp.currentEvent,
+              [.leftMouseDown, .leftMouseUp].contains(event.type) else { return false }
+        return event.clickCount > 1
     }
 
     /// The user moved the highlight: show that project, unless it is the one
     /// already on screen.
     private func chooseAfterUserMove() {
-        guard !isFollowingWindow, let id = highlightedRepoID, id != group.selectedRepoID else { return }
+        guard !isFollowingWindow, !isLaterClickOfMultiClick,
+              let id = highlightedRepoID, id != group.selectedRepoID else { return }
         onChoose?(id)
     }
 
