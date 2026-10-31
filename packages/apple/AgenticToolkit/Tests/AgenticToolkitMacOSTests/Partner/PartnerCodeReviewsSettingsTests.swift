@@ -101,6 +101,27 @@ final class PartnerCodeReviewsSettingsTests: XCTestCase {
         XCTAssertFalse(FileManager.default.fileExists(atPath: file.path))
     }
 
+    /// A schedule typed and then left by focus, not Return, is saved (review finding f14).
+    func testAScheduleIsSavedWhenTheFieldLosesFocus() throws {
+        let panel = PartnerSettingsPanel.make(controller: makeController(), projects: { [] })
+        let jobs = try XCTUnwrap(panel.containedPanels.first { $0 is PartnerJobsSettingsViewController }
+            as? PartnerJobsSettingsViewController)
+        let window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 900, height: 700),
+                              styleMask: [.titled, .closable], backing: .buffered, defer: false)
+        window.isReleasedWhenClosed = false
+        window.contentView = jobs.view
+        defer { window.close() }
+        let row = try XCTUnwrap(jobs.model.jobs.firstIndex { $0.id == PartnerJobDefaults.generalID })
+        jobs.jobsTable.selectRowIndexes([row], byExtendingSelection: false)
+
+        XCTAssertTrue(window.makeFirstResponder(jobs.scheduleField))
+        jobs.scheduleField.stringValue = "15"
+        XCTAssertTrue(window.makeFirstResponder(nil))
+
+        let stored = try XCTUnwrap(store.jobs().first { $0.id == PartnerJobDefaults.generalID })
+        XCTAssertEqual(stored.scheduleSeconds, 900)
+    }
+
     // MARK: - Toolbar status
 
     func testTheStatusShowsTheQueueWhileReviewsAreEnabled() {

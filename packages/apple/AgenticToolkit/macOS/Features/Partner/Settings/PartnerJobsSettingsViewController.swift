@@ -13,12 +13,12 @@ public final class PartnerJobsSettingsViewController: ComposableSettings.Setting
     private static let stepColumns = ["name", "environment", "command", "condition"]
 
     private let controller: PartnerController
-    private let model: PartnerJobsEditorModel
+    let model: PartnerJobsEditorModel
 
-    private let jobsTable = NSTableView()
+    let jobsTable = NSTableView()
     private let stepsTable = NSTableView()
     private let enabledBox = NSButton(checkboxWithTitle: "Enabled", target: nil, action: nil)
-    private let scheduleField = NSTextField()
+    let scheduleField = NSTextField()
     private let guidelinesView = NSTextView()
     private let addButton = NSButton(title: "Add step", target: nil, action: nil)
     private let removeButton = NSButton(title: "Remove", target: nil, action: nil)
@@ -74,6 +74,9 @@ public final class PartnerJobsSettingsViewController: ComposableSettings.Setting
         scheduleField.placeholderString = "minutes (empty = on request)"
         scheduleField.target = self
         scheduleField.action = #selector(scheduleChanged)
+        // Saved when the field loses focus too, not only on Return: tabbing away or picking another job was
+        // the usual way out of it, and dropped the value.
+        scheduleField.cell?.sendsActionOnEndEditing = true
         enabledBox.target = self
         enabledBox.action = #selector(enabledChanged)
         _ = enabledBox.accessibilityID("settings.partner.job.enabled")
@@ -278,6 +281,7 @@ public final class PartnerJobsSettingsViewController: ComposableSettings.Setting
             field.lineBreakMode = .byTruncatingTail
             field.target = self
             field.action = #selector(stepEdited(_:))
+            field.cell?.sendsActionOnEndEditing = true
             return field
         }
     }
@@ -285,7 +289,7 @@ public final class PartnerJobsSettingsViewController: ComposableSettings.Setting
     public func tableViewSelectionDidChange(_ notification: Notification) {
         guard let table = notification.object as? NSTableView else { return }
         if table === jobsTable {
-            flushGuidelines()
+            commitPendingEdits()
             let row = jobsTable.selectedRow
             model.selectedID = model.jobs.indices.contains(row) ? model.jobs[row].id : nil
             refreshDetail()
@@ -314,6 +318,8 @@ public final class PartnerJobsSettingsViewController: ComposableSettings.Setting
         else { return }
         let field = stepsTable.tableColumns[column].identifier.rawValue
         let text = (sender as? NSTextField)?.stringValue ?? (sender as? NSPopUpButton)?.titleOfSelectedItem ?? ""
+        // End editing sends the action whether or not anything changed; an unchanged value is not a save.
+        guard text != Self.value(of: field, in: job.steps[row]) else { return }
         if field == "environment", PartnerJobStep.Environment(rawValue: text) == nil {
             Self.logger.error("Ignoring unknown step environment \(text, privacy: .public)")
             return
@@ -337,6 +343,7 @@ public final class PartnerJobsSettingsViewController: ComposableSettings.Setting
     @objc private func enabledChanged() {
         guard let job = current else { return }
         let isOn = enabledBox.state == .on
+        commitPendingEdits()
         perform { try model.update(job.id) { $0.isEnabled = isOn } }
     }
 
@@ -349,12 +356,14 @@ public final class PartnerJobsSettingsViewController: ComposableSettings.Setting
             refreshDetail()
             return
         }
-        perform { try model.update(job.id) { $0.scheduleSeconds = minutes.map { $0 * 60 } } }
+        let seconds = minutes.map { $0 * 60 }
+        guard seconds != job.scheduleSeconds else { return }
+        perform { try model.update(job.id) { $0.scheduleSeconds = seconds } }
     }
 
     @objc private func addStep() {
         guard let job = current else { return }
-        flushGuidelines()
+        commitPendingEdits()
         perform { try model.addStep(to: job.id) }
         let last = (current?.steps.count ?? 1) - 1
         stepsTable.selectRowIndexes([last], byExtendingSelection: false)
@@ -363,7 +372,7 @@ public final class PartnerJobsSettingsViewController: ComposableSettings.Setting
     @objc private func removeStep() {
         guard let job = current, stepsTable.selectedRow >= 0 else { return }
         let row = stepsTable.selectedRow
-        flushGuidelines()
+        commitPendingEdits()
         perform { try model.removeStep(in: job.id, at: row) }
     }
 
@@ -373,7 +382,7 @@ public final class PartnerJobsSettingsViewController: ComposableSettings.Setting
     private func moveSelectedStep(by offset: Int) {
         guard let job = current, stepsTable.selectedRow >= 0 else { return }
         let row = stepsTable.selectedRow
-        flushGuidelines()
+        commitPendingEdits()
         perform { try model.moveStep(in: job.id, from: row, to: row + offset) }
         stepsTable.selectRowIndexes([row + offset], byExtendingSelection: false)
     }
@@ -385,9 +394,23 @@ public final class PartnerJobsSettingsViewController: ComposableSettings.Setting
     }
 
     @objc private func apply() {
-        flushGuidelines()
+        commitPendingEdits()
         let controller = self.controller
         Task { @MainActor in await controller.restart(guidelinesChanged: true) }
+    }
+
+    /// Ends whatever field is being edited, which saves it through its own action, then saves the guidelines.
+    /// Called before anything that reloads the detail or restarts the partner, so a value typed but not yet
+    /// committed with Return is saved rather than redrawn over.
+    private func commitPendingEdits() {
+        if let window = view.window, window.firstResponder is NSText { _ = window.makeFirstResponder(nil) }
+        flushGuidelines()
+    }
+
+    /// Closing the window, or leaving the tab, mid-edit keeps what was typed.
+    public override func viewWillDisappear() {
+        commitPendingEdits()
+        super.viewWillDisappear()
     }
 
     // MARK: - Guidelines
