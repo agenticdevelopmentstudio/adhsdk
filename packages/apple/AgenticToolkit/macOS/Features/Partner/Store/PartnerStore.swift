@@ -4,7 +4,7 @@ import SQLite3
 import AgenticToolkitCore
 import AgenticToolkitDatabase
 
-public enum PartnerStoreError: Error {
+public enum PartnerStoreError: LocalizedError {
     case openFailed(String)
     case prepareFailed(String)
     case executionFailed(String)
@@ -12,6 +12,20 @@ public enum PartnerStoreError: Error {
     case invalidSchema(String)
     /// The file was written by a newer build than this one understands.
     case newerSchema(found: Int, supported: Int)
+
+    /// What the Kitchen logs when `Partner.db` will not open, so the reason reads as one rather than as
+    /// `PartnerStoreError error 5`.
+    public var errorDescription: String? {
+        switch self {
+        case .openFailed(let detail): "Partner.db could not be opened: \(detail)"
+        case .prepareFailed(let detail): "a Partner.db statement could not be prepared: \(detail)"
+        case .executionFailed(let detail): "a Partner.db statement failed: \(detail)"
+        case .invalidData(let detail): "Partner.db holds a row this build cannot read: \(detail)"
+        case .invalidSchema(let detail): "Partner.db's schema is not one this build knows: \(detail)"
+        case .newerSchema(let found, let supported):
+            "Partner.db is at schema \(found), written by a newer build; this one supports up to \(supported)"
+        }
+    }
 }
 
 /// The Coding Partner's one database, `Partner.db`.
