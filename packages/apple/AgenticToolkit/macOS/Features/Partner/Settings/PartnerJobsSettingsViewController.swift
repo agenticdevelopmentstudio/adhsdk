@@ -307,18 +307,28 @@ public final class PartnerJobsSettingsViewController: ComposableSettings.Setting
 
     @objc private func stepEdited(_ sender: NSView) {
         let row = stepsTable.row(for: sender)
+        // column(for:) is the on-screen position, which a dragged header changes; the column at that
+        // position in tableColumns carries the identifier that says which field it edits.
         let column = stepsTable.column(for: sender)
-        guard let job = current, job.steps.indices.contains(row), Self.stepColumns.indices.contains(column) else {
+        guard let job = current, job.steps.indices.contains(row), stepsTable.tableColumns.indices.contains(column)
+        else { return }
+        let field = stepsTable.tableColumns[column].identifier.rawValue
+        let text = (sender as? NSTextField)?.stringValue ?? (sender as? NSPopUpButton)?.titleOfSelectedItem ?? ""
+        if field == "environment", PartnerJobStep.Environment(rawValue: text) == nil {
+            Self.logger.error("Ignoring unknown step environment \(text, privacy: .public)")
             return
         }
-        let text = (sender as? NSTextField)?.stringValue ?? (sender as? NSPopUpButton)?.titleOfSelectedItem ?? ""
         perform {
             try model.update(job.id) { job in
-                switch Self.stepColumns[column] {
+                switch field {
                 case "name": job.steps[row].name = text
                 case "command": job.steps[row].command = text
                 case "condition": job.steps[row].condition = text
-                default: job.steps[row].environment = PartnerJobStep.Environment(rawValue: text) ?? .terminal
+                case "environment":
+                    if let environment = PartnerJobStep.Environment(rawValue: text) {
+                        job.steps[row].environment = environment
+                    }
+                default: break
                 }
             }
         }
