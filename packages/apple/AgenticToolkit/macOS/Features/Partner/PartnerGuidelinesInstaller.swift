@@ -78,6 +78,15 @@ public struct PartnerGuidelinesInstaller {
         }
     }
 
+    /// Removes every partner skill, so a switched-off partner leaves nothing in the skills directory.
+    public func removeSkills() throws {
+        let fileManager = FileManager.default
+        guard let names = try? fileManager.contentsOfDirectory(atPath: paths.skillsDirectory.path) else { return }
+        for name in names where name.hasPrefix("adkitchen-partner-") {
+            try fileManager.removeItem(at: paths.skillsDirectory.appendingPathComponent(name, isDirectory: true))
+        }
+    }
+
     public enum InstallError: Error, Equatable {
         case invalidJobID(String)
     }

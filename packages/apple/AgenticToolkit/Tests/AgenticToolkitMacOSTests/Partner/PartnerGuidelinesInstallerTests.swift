@@ -71,6 +71,21 @@ final class PartnerGuidelinesInstallerTests: XCTestCase {
         }
     }
 
+    func testRemoveSkillsRemovesEveryPartnerSkillOnly() throws {
+        let installer = PartnerGuidelinesInstaller(paths: paths)
+        try installer.installSkills(jobs: [job(enabled: true)])
+        let other = paths.skillsDirectory.appendingPathComponent("someone-elses")
+        try FileManager.default.createDirectory(at: other, withIntermediateDirectories: true)
+        try installer.removeSkills()
+        let general = paths.skillsDirectory.appendingPathComponent("adkitchen-partner-general")
+        XCTAssertFalse(FileManager.default.fileExists(atPath: general.path))
+        XCTAssertTrue(FileManager.default.fileExists(atPath: other.path))
+    }
+
+    func testRemoveSkillsWithNoSkillsDirectoryIsFine() throws {
+        XCTAssertNoThrow(try PartnerGuidelinesInstaller(paths: paths).removeSkills())
+    }
+
     func testRemovesOrphanedPartnerSkillsOnly() throws {
         let skills = paths.skillsDirectory
         let orphan = skills.appendingPathComponent("adkitchen-partner-gone")

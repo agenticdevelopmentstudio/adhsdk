@@ -239,6 +239,15 @@ public final class PartnerController: ObservableObject {
         chatSession.setState(.closed)
     }
 
+    /// Removes the jobs' skills from the skills directory; called when the partner is switched off.
+    public func removeSkills() {
+        do {
+            try PartnerGuidelinesInstaller(paths: paths).removeSkills()
+        } catch {
+            Self.logger.error("Could not remove the partner skills: \(error.localizedDescription, privacy: .public)")
+        }
+    }
+
     /// Stops and starts again, re-reading the guidelines files.
     ///
     /// - Parameter guidelinesChanged: The owner restarted to apply edited guidelines or steps; once the

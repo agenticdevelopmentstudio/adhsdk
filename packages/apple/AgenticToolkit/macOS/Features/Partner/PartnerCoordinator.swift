@@ -351,8 +351,11 @@ public final class PartnerCoordinator: AppFeature {
                 case .stopped, .failed: await controller.start()
                 case .starting, .idle, .thinking: break
                 }
-            } else if controller.state != .stopped {
-                await controller.stop()
+            } else {
+                if controller.state != .stopped {
+                    await controller.stop()
+                }
+                controller.removeSkills()
             }
         }
     }

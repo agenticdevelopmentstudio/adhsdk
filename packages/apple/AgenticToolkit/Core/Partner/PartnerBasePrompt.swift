@@ -121,7 +121,9 @@ public enum PartnerBasePrompt {
             .replacingOccurrences(of: "\\", with: "\\\\")
             .replacingOccurrences(of: "\"", with: "\\\"")
             .replacingOccurrences(of: "\n", with: "\\n")
-        return "---\nname: adkitchen-partner-\(job.id)\ndescription: \"\(quoted)\"\n---\n\n\(job.guidelines)\n"
+        let description = "The Agentic Developer Kitchen Coding Partner's guidelines for its \(quoted) job. "
+            + "Only for the Coding Partner, which has the partner_* tools; not for ordinary requests."
+        return "---\nname: adkitchen-partner-\(job.id)\ndescription: \"\(description)\"\n---\n\n\(job.guidelines)\n"
     }
 }
 // swiftlint:enable line_length
