@@ -24,6 +24,13 @@ describe("LandingFooter", () => {
     expect(hrefs()).not.toContain(siteProdUrl("fishlampdesign", "/"));
   });
 
+  it("titles its columns h2, so a short page's outline does not skip from its h1 to h3", () => {
+    render(<LandingFooter />);
+    const titles = [...document.querySelectorAll(".adh-landing-footer .adh-landing-footer__heading")];
+    expect(titles.length).toBeGreaterThan(0);
+    expect(titles.every((t) => t.tagName === "H2")).toBe(true);
+  });
+
   it("lists only the studio and FishLamp Design under About", () => {
     render(<LandingFooter />);
     const about = document.querySelector('nav[aria-label="About"]');

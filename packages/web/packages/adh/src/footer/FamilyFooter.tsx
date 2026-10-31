@@ -79,10 +79,14 @@ const LEGAL_ENTRIES: Entry[] = [
   { label: 'Privacy Policy', href: '/privacy', onClick: openLegalModal(PRIVACY_DIALOG_ID) },
 ]
 
-function Column({ title, entries }: ColumnDef): ReactElement {
+/** A column's title is an h2 in flow, where an h3 would skip a level after a short page's h1,
+ *  and an h3 in the dialog, under the dialog's own h2. */
+type ColumnHeading = 'h2' | 'h3'
+
+function Column({ title, entries, heading: Heading }: ColumnDef & { heading: ColumnHeading }): ReactElement {
   return (
     <nav className="adh-landing-footer__column" aria-label={title}>
-      <h3 className="adh-landing-footer__heading">{title}</h3>
+      <Heading className="adh-landing-footer__heading">{title}</Heading>
       <ul className="adh-landing-footer__list">
         {entries.map((e) => (
           <li key={e.label} className="adh-landing-footer__item">
@@ -145,7 +149,7 @@ export function FamilyFooter({
       </div>
       <div className="adh-landing-footer__directory">
         {columns.map((column) => (
-          <Column key={column.title} {...column} />
+          <Column key={column.title} {...column} heading={anchored ? 'h2' : 'h3'} />
         ))}
       </div>
       <div className="adh-landing-footer__fine-print">

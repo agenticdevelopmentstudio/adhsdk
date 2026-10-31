@@ -23,6 +23,8 @@ describe('adh SiteFooter', () => {
     const headings = Array.from(dialog.querySelectorAll('.adh-landing-footer__heading')).map((h) => h.textContent)
     expect(headings[0]).toBe('This site')
     expect(headings.slice(-3)).toEqual(['About', 'Legal', 'Contact'])
+    // Under the dialog's own h2.
+    expect(dialog.querySelector('.adh-landing-footer__heading')!.tagName).toBe('H3')
     expect(within(dialog).getByRole('link', { name: 'GitHub', hidden: true })).toHaveAttribute('href', 'https://example.com')
   })
 
