@@ -59,6 +59,10 @@ public struct ReviewWorktree: Sendable {
             throw Failure.notReviewWorktree("\(worktree.path) is not a worktree of \(repo.path)")
         }
 
+        // A rebase an earlier start was cut off in (the process killed, the abort never ran) would otherwise
+        // read as dirty, or fail the switch below, on every review until someone aborted it by hand.
+        if try await git.isRebasing(worktree: worktree) { try await abortRebase(in: worktree) }
+
         guard try await git.isClean(worktree: worktree) else { throw Failure.dirty }
 
         if entry.branch != fixBranch {
@@ -85,13 +89,22 @@ public struct ReviewWorktree: Sendable {
         do {
             _ = try await git.run(["rebase", tip, fixBranch], in: worktree)
         } catch {
-            // Whatever stopped the rebase (a conflict, a timeout), never leave it half done. The abort's own
-            // failure must not replace the rebase's error: that error is what the owner needs to read.
+            // Whatever stopped the rebase (a conflict, a timeout, cancellation), never leave it half done. The
+            // abort's own failure must not replace the rebase's error: that error is what the owner needs to read.
             var abortError: Error?
-            do { _ = try await git.run(["rebase", "--abort"], in: worktree) } catch { abortError = error }
+            do { try await abortRebase(in: worktree) } catch { abortError = error }
+            // A cancelled start kills git mid-rebase, which reads as a failed rebase, not a conflict.
+            if Task.isCancelled && abortError == nil { throw CancellationError() }
             throw Self.rebaseFailure(error, abortError: abortError)
         }
         return .rebased
+    }
+
+    /// `rebase --abort` on an unstructured task, so it still runs when the caller has been cancelled: the
+    /// cancellation that interrupted the rebase would otherwise kill its cleanup too.
+    private func abortRebase(in worktree: URL) async throws {
+        let git = git
+        try await Task { _ = try await git.run(["rebase", "--abort"], in: worktree) }.value
     }
 
     /// The error a failed rebase is reported with: a git failure becomes ``Failure/rebaseConflict(_:)``

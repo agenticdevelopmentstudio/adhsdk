@@ -330,6 +330,23 @@ final class ReviewServiceTests: XCTestCase {
         XCTAssertTrue(started.steps[2].command.contains("(\(later))"), started.steps[2].command)
     }
 
+    func testACancelledStartLeavesTheReviewQueued() async throws {
+        try repo.commit(file: "a.txt", day: 1, message: "first")
+        let review = try queue(file: "b.txt", day: 2, message: "second")
+        let service: ReviewService = service
+        let task = Task { try await service.start(id: review.id) }
+        task.cancel()
+        do {
+            _ = try await task.value
+            XCTFail("a cancelled start went ahead")
+        } catch is CancellationError {
+        }
+        let stored = try XCTUnwrap(store.review(id: review.id))
+        XCTAssertEqual(stored.state, .queued)
+        XCTAssertNil(stored.finishedAt)
+        XCTAssertTrue(registry.sessions.isEmpty)
+    }
+
     func testAClearedFixBranchSettingFallsBackToTheDefault() async throws {
         try repo.commit(file: "a.txt", day: 1, message: "first")
         let review = try queue(file: "b.txt", day: 2, message: "second")
