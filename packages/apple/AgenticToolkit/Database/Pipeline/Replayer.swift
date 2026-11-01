@@ -67,7 +67,8 @@ public enum Replayer {
             let page = try archive.records(after: cursor, limit: size)
             return (page, page.last?.id)
         } catch RawArchiveError.corruptPayload {
-            let high = min(cursor + Int64(size), try archive.maxID())
+            let (sum, overflow) = cursor.addingReportingOverflow(Int64(size))
+            let high = min(overflow ? Int64.max : sum, try archive.maxID())
             guard high > cursor else { return ([], nil) }
             var page: [ArchivedRecord] = []
             for id in (cursor + 1)...high {
