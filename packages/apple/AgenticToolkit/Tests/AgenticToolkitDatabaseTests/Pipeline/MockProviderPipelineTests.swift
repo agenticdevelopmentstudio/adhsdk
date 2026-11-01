@@ -50,9 +50,12 @@ final class MockProviderPipelineTests: XCTestCase {
                 try spool.append(Array(input[next..<end]))
                 next = end
             }
-            // About 10 % of passes crash at a random step; pass 2 always does.
+            // The first five passes crash at each DrainStep in turn, deterministically;
+            // after that about 10 % of passes crash at a random step.
             var crashStep: DrainStep?
-            if pass == 2 || Int.random(in: 0..<10, using: &rng) == 0 {
+            if pass < DrainStep.allCases.count {
+                crashStep = DrainStep.allCases[pass]
+            } else if Int.random(in: 0..<10, using: &rng) == 0 {
                 crashStep = DrainStep.allCases.randomElement(using: &rng)
             }
             struct Crash: Error {}
@@ -67,7 +70,7 @@ final class MockProviderPipelineTests: XCTestCase {
             if pass >= 2000 { break }
         }
 
-        XCTAssertGreaterThan(crashes, 0)
+        XCTAssertGreaterThanOrEqual(crashes, DrainStep.allCases.count)
         for record in input {
             XCTAssertNotNil(try archive.id(forDedupKey: record.dedupKey), "archive lacks \(record.dedupKey)")
         }
