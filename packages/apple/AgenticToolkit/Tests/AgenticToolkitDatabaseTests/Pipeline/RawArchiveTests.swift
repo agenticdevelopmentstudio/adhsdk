@@ -59,6 +59,13 @@ final class RawArchiveTests: XCTestCase {
         let second = try archive.append([rec("k", "B")])
         XCTAssertEqual(second.ids, first.ids)
         XCTAssertEqual(second.insertedCount, 0)
+        guard case .conflict(let existing, let archivedSHA, let incomingSHA) = second.outcomes[0] else {
+            return XCTFail("expected a conflict, got \(second.outcomes)")
+        }
+        XCTAssertEqual(existing, first.ids[0])
+        XCTAssertEqual(archivedSHA, RawArchive.hex(Data("A".utf8)))
+        XCTAssertEqual(incomingSHA, RawArchive.hex(Data("B".utf8)))
+        XCTAssertEqual(try archive.append([rec("k", "A")]).outcomes, [.duplicate(first.ids[0])])
         XCTAssertEqual(try archive.record(id: first.ids[0])?.record.payload, Data("A".utf8))
         XCTAssertEqual(try archive.count(), 1)
     }
@@ -69,7 +76,13 @@ final class RawArchiveTests: XCTestCase {
         XCTAssertEqual(result.ids.count, 2)
         XCTAssertEqual(result.ids[0], result.ids[1])
         XCTAssertEqual(result.insertedCount, 1)
+        XCTAssertEqual(result.outcomes[0], .inserted(result.ids[0]))
+        XCTAssertEqual(result.outcomes[1], .conflict(existingID: result.ids[0],
+                                                     archivedSHA256: RawArchive.hex(Data("A".utf8)),
+                                                     incomingSHA256: RawArchive.hex(Data("B".utf8))))
         XCTAssertEqual(try archive.record(id: result.ids[0])?.record.payload, Data("A".utf8))
+        let same = try archive.append([rec("j", "C"), rec("j", "C")])
+        XCTAssertEqual(same.outcomes, [.inserted(same.ids[0]), .duplicate(same.ids[0])])
     }
 
     func testEmptyPayloadRoundTrips() throws {
@@ -79,7 +92,7 @@ final class RawArchiveTests: XCTestCase {
     }
 
     func testTenMegabytePayloadRoundTripsByteExact() throws {
-        var generator = SeededGenerator(seed: 42)
+        var generator = ProviderConformance.SeededGenerator(seed: 42)
         let count = 10 * 1024 * 1024
         var bytes = [UInt8](repeating: 0, count: count)
         for index in stride(from: 0, to: count, by: 8) {
@@ -180,17 +193,23 @@ final class RawArchiveTests: XCTestCase {
         XCTAssertEqual(seen, seen.sorted())
         XCTAssertEqual(Set(seen).count, 25)
     }
-}
 
-/// SplitMix64: deterministic, so the "incompressible" payload is reproducible.
-private struct SeededGenerator {
-    private var state: UInt64
-    init(seed: UInt64) { state = seed }
-    mutating func next() -> UInt64 {
-        state &+= 0x9E37_79B9_7F4A_7C15
-        var mixed = state
-        mixed = (mixed ^ (mixed >> 30)) &* 0xBF58_476D_1CE4_E5B9
-        mixed = (mixed ^ (mixed >> 27)) &* 0x94D0_49BB_1331_11EB
-        return mixed ^ (mixed >> 31)
+    func testIdsAfterHonoursLimitAndByteBudgetButAlwaysTakesOne() throws {
+        let archive = try makeArchive()
+        let ids = try archive.append((0..<6).map { rec("k\($0)", String(repeating: "p", count: 10)) }).ids
+        XCTAssertEqual(try archive.ids(after: 0, limit: 4), Array(ids.prefix(4)))
+        XCTAssertEqual(try archive.ids(after: ids[1], limit: 10, maxBytes: 25), [ids[2], ids[3]])
+        XCTAssertEqual(try archive.ids(after: 0, limit: 10, maxBytes: 1), [ids[0]])
+        XCTAssertEqual(try archive.ids(after: ids[5], limit: 10), [])
+        XCTAssertEqual(try archive.ids(after: 0, limit: 0), [])
+    }
+
+    func testRecordsByIdsReturnsExactlyThoseInOrder() throws {
+        let archive = try makeArchive()
+        let ids = try archive.append((0..<5).map { rec("k\($0)", "p\($0)") }).ids
+        let picked = try archive.records(ids: [ids[1], ids[3]])
+        XCTAssertEqual(picked.map(\.id), [ids[1], ids[3]])
+        XCTAssertEqual(picked.map(\.record.payload), [Data("p1".utf8), Data("p3".utf8)])
+        XCTAssertEqual(try archive.records(ids: []), [])
     }
 }

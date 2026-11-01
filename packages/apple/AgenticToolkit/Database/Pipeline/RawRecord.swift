@@ -21,3 +21,21 @@ public struct RawRecord: Sendable, Equatable {
         self.payload = payload
     }
 }
+
+/// Shared limits for the pipeline.
+public enum PipelineLimits {
+    /// The default byte budget for one spool batch or one replay chunk (32 MiB of
+    /// payload). A batch always holds at least one record, however large.
+    public static let defaultMaxBatchBytes = 32 * 1024 * 1024
+
+    /// The longest prefix of `sizes` whose total stays within `maxBytes`, and never
+    /// fewer than one element when `sizes` is not empty.
+    public static func prefixWithinBudget(_ sizes: [Int], maxBytes: Int) -> Int {
+        var total = 0
+        for (index, size) in sizes.enumerated() {
+            if index > 0 && total + size > maxBytes { return index }
+            total += size
+        }
+        return sizes.count
+    }
+}

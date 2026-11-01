@@ -2,13 +2,20 @@ import Foundation
 
 /// A JSON value with a stable Codable form: every number is a Double, so the same
 /// value always encodes to the same text (with `.sortedKeys`).
-public indirect enum JSONValue: Sendable, Equatable, Codable {
+///
+/// Named `NormalizedValue`, not `JSONValue`: `AgenticToolkitSync` already exports a
+/// top-level `JSONValue`, and `apple-sync` and `apple-database` are lateral
+/// foundation tiers, so Database must not import Sync. A second top-level
+/// `JSONValue` here made the name ambiguous in every module that imports both
+/// (SyncGRDB, Markdown, the app). Same resolution as `ExtensionManifest.JSONValue`
+/// (`Core/Extensions/ExtensionManifest.swift`).
+public indirect enum NormalizedValue: Sendable, Equatable, Codable {
     case null
     case bool(Bool)
     case number(Double)
     case string(String)
-    case array([JSONValue])
-    case object([String: JSONValue])
+    case array([NormalizedValue])
+    case object([String: NormalizedValue])
 
     public init(from decoder: Decoder) throws {
         let container = try decoder.singleValueContainer()
@@ -20,10 +27,10 @@ public indirect enum JSONValue: Sendable, Equatable, Codable {
             self = .number(value)
         } else if let value = try? container.decode(String.self) {
             self = .string(value)
-        } else if let value = try? container.decode([JSONValue].self) {
+        } else if let value = try? container.decode([NormalizedValue].self) {
             self = .array(value)
         } else {
-            self = .object(try container.decode([String: JSONValue].self))
+            self = .object(try container.decode([String: NormalizedValue].self))
         }
     }
 
@@ -79,14 +86,14 @@ public struct NormalizedEvent: Sendable, Equatable {
     public var cwd: String?
     public var toolName: String?
     public var summary: String?
-    public var attrs: [String: JSONValue]
+    public var attrs: [String: NormalizedValue]
     /// The raw archive id this was derived from.
     public var rawRef: Int64
 
     public init(
         dedupKey: String, sessionID: String, kind: EventKind, providerType: String, time: Date,
         cwd: String? = nil, toolName: String? = nil, summary: String? = nil,
-        attrs: [String: JSONValue] = [:], rawRef: Int64
+        attrs: [String: NormalizedValue] = [:], rawRef: Int64
     ) {
         self.dedupKey = dedupKey
         self.sessionID = sessionID
@@ -114,12 +121,12 @@ public struct SessionUpsert: Sendable, Equatable {
     public var status: String?
     public var startedAt: Date?
     public var endedAt: Date?
-    public var attrs: [String: JSONValue]
+    public var attrs: [String: NormalizedValue]
 
     public init(
         sessionID: String, asOf: Date, cwd: String? = nil, project: String? = nil,
         account: String? = nil, model: String? = nil, title: String? = nil, status: String? = nil,
-        startedAt: Date? = nil, endedAt: Date? = nil, attrs: [String: JSONValue] = [:]
+        startedAt: Date? = nil, endedAt: Date? = nil, attrs: [String: NormalizedValue] = [:]
     ) {
         self.sessionID = sessionID
         self.asOf = asOf
@@ -135,10 +142,18 @@ public struct SessionUpsert: Sendable, Equatable {
     }
 }
 
+/// One model turn (usage). Several records may carry the same turn (for Claude,
+/// every transcript line of one API message shares `message.id`), so turns merge
+/// like sessions: each field, and each attrs key, keeps the value with the greatest
+/// `as_of`; on an exact tie the lexically larger UTF-8 value wins. The result never
+/// depends on the order the records arrive in.
 public struct TurnRow: Sendable, Equatable {
+    /// Unique per provider; records that describe the same turn emit the same key.
     public var dedupKey: String
     public var sessionID: String
     public var time: Date
+    /// When this observation of the turn was made; `time` when nil.
+    public var asOf: Date?
     public var model: String?
     public var account: String?
     public var agent: String?
@@ -148,16 +163,20 @@ public struct TurnRow: Sendable, Equatable {
     public var cacheReadTokens: Int
     public var cacheWriteTokens: Int
     public var costUSD: Double?
+    /// Model- and provider-specific fields, e.g. `cache_creation_1h_tokens`, `is_subagent`.
+    public var attrs: [String: NormalizedValue]
     public var rawRef: Int64
 
     public init(
-        dedupKey: String, sessionID: String, time: Date, model: String? = nil, account: String? = nil,
-        agent: String? = nil, toolName: String? = nil, inputTokens: Int = 0, outputTokens: Int = 0,
-        cacheReadTokens: Int = 0, cacheWriteTokens: Int = 0, costUSD: Double? = nil, rawRef: Int64
+        dedupKey: String, sessionID: String, time: Date, asOf: Date? = nil, model: String? = nil,
+        account: String? = nil, agent: String? = nil, toolName: String? = nil, inputTokens: Int = 0,
+        outputTokens: Int = 0, cacheReadTokens: Int = 0, cacheWriteTokens: Int = 0, costUSD: Double? = nil,
+        attrs: [String: NormalizedValue] = [:], rawRef: Int64
     ) {
         self.dedupKey = dedupKey
         self.sessionID = sessionID
         self.time = time
+        self.asOf = asOf
         self.model = model
         self.account = account
         self.agent = agent
@@ -167,11 +186,17 @@ public struct TurnRow: Sendable, Equatable {
         self.cacheReadTokens = cacheReadTokens
         self.cacheWriteTokens = cacheWriteTokens
         self.costUSD = costUSD
+        self.attrs = attrs
         self.rawRef = rawRef
     }
 }
 
+/// A conversation message, keyed by `(provider, session_id, uuid)`: a transcript
+/// uuid repeats across sessions when a session is resumed or forked, and each copy
+/// is its own row. `dedupKey` ties the row to the record it came from.
 public struct MessageRow: Sendable, Equatable {
+    /// The record's dedup key, or that key plus `#<suffix>`.
+    public var dedupKey: String
     public var uuid: String
     public var parentUUID: String?
     public var sessionID: String
@@ -179,13 +204,14 @@ public struct MessageRow: Sendable, Equatable {
     public var time: Date
     public var isSidechain: Bool
     public var text: String
-    public var attrs: [String: JSONValue]
+    public var attrs: [String: NormalizedValue]
     public var rawRef: Int64
 
     public init(
-        uuid: String, parentUUID: String? = nil, sessionID: String, role: String, time: Date,
-        isSidechain: Bool = false, text: String, attrs: [String: JSONValue] = [:], rawRef: Int64
+        dedupKey: String, uuid: String, parentUUID: String? = nil, sessionID: String, role: String, time: Date,
+        isSidechain: Bool = false, text: String, attrs: [String: NormalizedValue] = [:], rawRef: Int64
     ) {
+        self.dedupKey = dedupKey
         self.uuid = uuid
         self.parentUUID = parentUUID
         self.sessionID = sessionID
@@ -205,6 +231,8 @@ public struct NormalizedBatch: Sendable, Equatable {
     public var messages: [MessageRow] = []
 
     public init() {}
+
+    public var isEmpty: Bool { events.isEmpty && sessions.isEmpty && turns.isEmpty && messages.isEmpty }
 
     public mutating func append(_ other: NormalizedBatch) {
         events += other.events

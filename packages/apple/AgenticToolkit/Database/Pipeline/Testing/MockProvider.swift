@@ -13,18 +13,31 @@ public struct MockProvider: Normalizer {
     public init() {}
 
     /// Scripted record. Payload is JSON:
-    /// `{"op":"event"|"session"|"turn"|"message"|"bad", "session":…, "t":<epoch>, "n":<int>,`
-    /// `"pad":<int>, "blob":<pad bytes>}`
+    /// `{"op":"event"|"session"|"turn"|"usage"|"message"|"bad", "session":…, "t":<epoch>, "n":<int>,`
+    /// `"pad":<int>, "blob":<pad bytes>[, "turn":<turn key>][, "uuid":<message uuid>]}`
+    /// - `turn` and `usage` emit a turn keyed `turn` (default `<key>#turn`); several records naming
+    ///   one turn key update that turn, merged per field by `as_of` (= `t`).
+    /// - `message` emits a message with `uuid` (default `uuid-<key>`) and dedup key `<key>#msg`.
     public static func record(key: String, op operation: String, session: String = "s1", t epoch: Double,
-                              n number: Int = 0, pad: Int = 0) -> RawRecord {
-        let object: [String: Any] = [
+                              n number: Int = 0, pad: Int = 0, turn: String? = nil,
+                              uuid: String? = nil) -> RawRecord {
+        RawRecord(provider: "mock", sourceKind: "hook", dedupKey: key,
+                  receivedAt: Date(timeIntervalSince1970: epoch),
+                  payload: payload(op: operation, session: session, t: epoch, n: number, pad: pad,
+                                   turn: turn, uuid: uuid))
+    }
+
+    /// The payload bytes `record` would carry; one JSON object, no trailing newline.
+    public static func payload(op operation: String, session: String = "s1", t epoch: Double, n number: Int = 0,
+                               pad: Int = 0, turn: String? = nil, uuid: String? = nil) -> Data {
+        var object: [String: Any] = [
             "op": operation, "session": session, "t": epoch, "n": number, "pad": pad,
             "blob": String(repeating: "x", count: max(0, pad))
         ]
+        if let turn { object["turn"] = turn }
+        if let uuid { object["uuid"] = uuid }
         // Sorted keys so the same arguments always give the same bytes.
-        let data = (try? JSONSerialization.data(withJSONObject: object, options: [.sortedKeys])) ?? Data()
-        return RawRecord(provider: "mock", sourceKind: "hook", dedupKey: key,
-                         receivedAt: Date(timeIntervalSince1970: epoch), payload: data)
+        return (try? JSONSerialization.data(withJSONObject: object, options: [.sortedKeys])) ?? Data()
     }
 
     public func normalize(_ record: ArchivedRecord) throws -> NormalizedBatch {
@@ -55,15 +68,26 @@ public struct MockProvider: Normalizer {
                 time: time, summary: "session \(count)", rawRef: record.id)]
         case "turn":
             batch.turns = [TurnRow(
-                dedupKey: "\(key)#turn", sessionID: session, time: time, model: "m-\(count % 3)",
-                inputTokens: count, outputTokens: count * 2, cacheReadTokens: count % 5,
-                cacheWriteTokens: count % 3, costUSD: Double(count) / 100, rawRef: record.id)]
+                dedupKey: object["turn"] as? String ?? "\(key)#turn", sessionID: session, time: time,
+                asOf: time, model: "m-\(count % 3)", inputTokens: count, outputTokens: count * 2,
+                cacheReadTokens: count % 5, cacheWriteTokens: count % 3, costUSD: Double(count) / 100,
+                attrs: ["kind": .string("turn"), "n\(count % 2)": .number(Double(count))], rawRef: record.id)]
+        case "usage":
+            // A later (or earlier) observation of a turn: different tokens and attrs, same key.
+            batch.turns = [TurnRow(
+                dedupKey: object["turn"] as? String ?? "\(key)#turn", sessionID: session, time: time,
+                asOf: time, model: "m-\(count % 3)", account: "acct-\(count % 2)",
+                inputTokens: count * 3, outputTokens: count, cacheReadTokens: count % 7,
+                cacheWriteTokens: count % 2, costUSD: Double(count) / 50,
+                attrs: ["kind": .string("usage"), "cache_creation_1h_tokens": .number(Double(count % 11))],
+                rawRef: record.id)]
         case "message":
             batch.messages = [MessageRow(
-                uuid: "\(key)#msg", sessionID: session, role: count % 2 == 0 ? "user" : "assistant",
-                time: time, text: "message \(count)" + blob, rawRef: record.id)]
+                dedupKey: "\(key)#msg", uuid: object["uuid"] as? String ?? "uuid-\(key)", sessionID: session,
+                role: count % 2 == 0 ? "user" : "assistant", time: time, text: "message \(count)" + blob,
+                rawRef: record.id)]
         default:
-            var attrs: [String: JSONValue] = ["n": .number(Double(count))]
+            var attrs: [String: NormalizedValue] = ["n": .number(Double(count))]
             if !blob.isEmpty { attrs["blob"] = .string(blob) }
             batch.events = [NormalizedEvent(
                 dedupKey: "\(key)#0", sessionID: session, kind: .toolCall, providerType: "PreToolUse",

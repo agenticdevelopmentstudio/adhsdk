@@ -24,10 +24,16 @@ public enum ProviderConformance {
     /// - notArchived, normalizerThrew, emptyBatch, malformedAccepted, undrained, quarantineMismatch,
     ///   replayMismatch: nothing is lost. Every fixture is archived; no well-formed fixture throws or
     ///   yields an empty batch; the quarantined set and the replay failures equal `malformedKeys` exactly.
-    /// - unstoredFixture: after the live drain the store holds an event, turn or message row for every
-    ///   well-formed fixture, keyed `<dedupKey>` or `<dedupKey>#<suffix>`.
+    /// - unstoredFixture: after the live drain the store holds a row for every well-formed fixture:
+    ///   an event or message whose `dedup_key` is `<dedupKey>` or `<dedupKey>#<suffix>`, or a turn row
+    ///   under a turn key the fixture emits (turns merge across records, so their key need not carry
+    ///   the record's).
     /// - purity: `normalize(r)` twice gives equal batches (or equal thrown descriptions).
-    /// - keys: every event/turn/message key is unique across the fixtures and stable across runs.
+    /// - keys: every event and message dedup key is unique across the fixtures; turn keys may repeat
+    ///   (records that describe one turn merge into it) but never reuse an event or message key; all
+    ///   keys are stable across runs.
+    /// - keyCollision: no two fixtures share a dedup key with different payload bytes (the archive
+    ///   would keep the first and the drainer would quarantine the other).
     /// - rawRef: every emitted row's rawRef equals the input record's archive id.
     /// - liveEqualsReplay: spool and drain all fixtures in seeded, shuffled batch sizes, then replay
     ///   the archive into a fresh store; the canonical dumps are equal.
@@ -57,6 +63,7 @@ public enum ProviderConformance {
         _ = try archive.append(fixtures)
         let archived = try archive.records(after: 0, limit: max(1, try archive.count()))
 
+        failures += checkCollisions(fixtures.map { ($0.dedupKey, $0.payload) }, check: "keyCollision")
         failures += checkNoLoss(normalizer, archived, fixtures: fixtures, malformedKeys: malformedKeys)
         failures += checkPurityAndRefs(normalizer, archived)
         failures += checkKeys(normalizer, archived)
@@ -65,7 +72,8 @@ public enum ProviderConformance {
         let live = try drainAll(normalizer, fixtures, in: root.appendingPathComponent("live"),
                                 passes: 1, crashAt: nil, rng: &rng)
         failures += try checkPipelineLoss(live, fixtures: fixtures, malformedKeys: malformedKeys)
-        failures += checkStored(live.dump, fixtures: fixtures, malformedKeys: malformedKeys)
+        failures += checkStored(live.dump, fixtures: fixtures, malformedKeys: malformedKeys,
+                                turnKeys: turnKeys(normalizer, archived))
 
         let replayed = try replayDump(normalizer, archive: live.archive, in: root.appendingPathComponent("replay"))
         if live.dump != replayed.dump {
@@ -101,6 +109,93 @@ public enum ProviderConformance {
                 failures.append(ConformanceFailure(
                     check: "crashRecovery",
                     detail: "crash at \(step.rawValue): " + describeDiff(live.dump, crashed.dump)))
+            }
+        }
+        return failures
+    }
+
+    /// Runs the source-contract checks against an `IngestSource` over its prepared input; returns
+    /// failures (empty = conforms). `makeSource` builds a fresh source (modelling a restarted
+    /// process) whose `poll` calls the injector at each `SourceStep`; when given nil it must not
+    /// inject. Every source it builds reads the same input.
+    /// - sourceEmpty: an uninterrupted run (poll until it returns 0) spools nothing.
+    /// - sourceDuplicated: an uninterrupted run spools some dedup key more than once.
+    /// - keyCollision: the run spools one dedup key for different payloads.
+    /// - sourceCrash: for every `SourceStep`, crash once there, then poll to the end with a fresh
+    ///   source; the spooled (key, payload) multiset equals the uninterrupted run's. Also fails when
+    ///   the fault never fired.
+    /// - sourceRunaway: a run did not reach a 0-record poll within `maxPolls`.
+    /// Works in a fresh subdirectory of `workDirectory`, which is the only thing removed.
+    public static func checkSource(
+        provider: String, workDirectory: URL, maxPolls: Int = 10_000,
+        makeSource: (_ faultInjector: (@Sendable (SourceStep) throws -> Void)?) throws -> any IngestSource
+    ) throws -> [ConformanceFailure] {
+        var failures: [ConformanceFailure] = []
+        let fileManager = FileManager.default
+        let root = workDirectory.appendingPathComponent("source-conformance-\(UUID().uuidString)")
+        try fileManager.createDirectory(at: root, withIntermediateDirectories: true)
+        defer { try? fileManager.removeItem(at: root) }
+
+        func spool(_ name: String) throws -> ProviderSpool {
+            try ProviderSpool(path: root.appendingPathComponent("\(name)-ingest.db").path, provider: provider)
+        }
+        /// Polls until a poll returns 0; false when `maxPolls` ran out first.
+        func pollToEnd(_ source: any IngestSource, into spool: ProviderSpool) throws -> Bool {
+            var polls = 0
+            while polls < max(1, maxPolls) {
+                polls += 1
+                if try source.poll(into: spool) == 0 { return true }
+            }
+            return false
+        }
+        func spooled(_ spool: ProviderSpool) throws -> [RawRecord] {
+            let count = try spool.pendingCount()
+            return try spool.pendingBatch(limit: max(1, count), maxBytes: Int.max).map(\.record)
+        }
+        func multiset(_ records: [RawRecord]) -> [String] {
+            records.map { "\($0.dedupKey)\u{0}\(RawArchive.hex($0.payload))" }.sorted()
+        }
+
+        let baselineSpool = try spool("baseline")
+        if try !pollToEnd(try makeSource(nil), into: baselineSpool) {
+            failures.append(ConformanceFailure(
+                check: "sourceRunaway", detail: "uninterrupted run still appending after \(maxPolls) polls"))
+        }
+        let baseline = try spooled(baselineSpool)
+        if baseline.isEmpty {
+            failures.append(ConformanceFailure(check: "sourceEmpty", detail: "an uninterrupted run spooled nothing"))
+        }
+        var counts: [String: Int] = [:]
+        for record in baseline { counts[record.dedupKey, default: 0] += 1 }
+        for (key, count) in counts.sorted(by: { $0.key < $1.key }) where count > 1 {
+            failures.append(ConformanceFailure(
+                check: "sourceDuplicated", detail: "\(key) spooled \(count) times in one uninterrupted run"))
+        }
+        failures += checkCollisions(baseline.map { ($0.dedupKey, $0.payload) }, check: "keyCollision")
+        let expected = multiset(baseline)
+
+        for step in SourceStep.allCases {
+            let crashSpool = try spool("crash-\(step.rawValue)")
+            let fault = OneShotFault(step)
+            let crashing = try makeSource { current in try fault.inject(current) }
+            do {
+                _ = try pollToEnd(crashing, into: crashSpool)
+            } catch is OneShotFault<SourceStep>.Crash {
+                // The crash ends the "process"; recovery follows.
+            }
+            if !fault.didFire {
+                failures.append(ConformanceFailure(
+                    check: "sourceCrash", detail: "the fault at \(step.rawValue) never fired; the run proves nothing"))
+            }
+            if try !pollToEnd(try makeSource(nil), into: crashSpool) {
+                failures.append(ConformanceFailure(
+                    check: "sourceRunaway",
+                    detail: "recovery after \(step.rawValue) still appending after \(maxPolls) polls"))
+            }
+            let recovered = multiset(try spooled(crashSpool))
+            if recovered != expected {
+                failures.append(ConformanceFailure(
+                    check: "sourceCrash", detail: "crash at \(step.rawValue): " + describeDiff(expected, recovered)))
             }
         }
         return failures
@@ -148,16 +243,21 @@ public enum ProviderConformance {
         return failures
     }
 
-    /// Every well-formed fixture must have a stored event/turn/message whose key is the fixture's
-    /// dedup key or that key followed by "#suffix".
-    private static func checkStored(_ dump: [String], fixtures: [RawRecord],
-                                    malformedKeys: Set<String>) -> [ConformanceFailure] {
+    /// Every well-formed fixture must have a stored event or message whose dedup key is the fixture's
+    /// dedup key or that key followed by "#suffix", or a stored turn under a key it emits.
+    private static func checkStored(_ dump: [String], fixtures: [RawRecord], malformedKeys: Set<String>,
+                                    turnKeys: [String: Set<String>]) -> [ConformanceFailure] {
         var roots = Set<String>()
+        var storedTurns = Set<String>()
         for line in dump {
             guard let data = line.data(using: .utf8),
-                  let object = try? JSONDecoder().decode([String: JSONValue].self, from: data),
-                  case .string(let table)? = object["table"], table != "sessions" else { continue }
-            guard case .string(let key)? = object[table == "messages" ? "uuid" : "dedup_key"] else { continue }
+                  let object = try? JSONDecoder().decode([String: NormalizedValue].self, from: data),
+                  case .string(let table)? = object["table"], table != "sessions",
+                  case .string(let key)? = object["dedup_key"] else { continue }
+            if table == "turns" {
+                storedTurns.insert(key)
+                continue
+            }
             roots.insert(key)
             for (offset, character) in key.enumerated() where character == "#" {
                 roots.insert(String(key.prefix(offset)))
@@ -166,10 +266,41 @@ public enum ProviderConformance {
         var failures: [ConformanceFailure] = []
         var reported = Set<String>()
         for fixture in fixtures where !malformedKeys.contains(fixture.dedupKey) && !roots.contains(fixture.dedupKey) {
+            if let emitted = turnKeys[fixture.dedupKey], !emitted.isDisjoint(with: storedTurns) { continue }
             if reported.insert(fixture.dedupKey).inserted {
                 failures.append(ConformanceFailure(
                     check: "unstoredFixture",
                     detail: "no event, turn or message in the store is keyed by \(fixture.dedupKey)"))
+            }
+        }
+        return failures
+    }
+
+    /// The turn keys each record emits, by record dedup key.
+    private static func turnKeys(_ normalizer: any Normalizer, _ archived: [ArchivedRecord]) -> [String: Set<String>] {
+        var result: [String: Set<String>] = [:]
+        for item in archived {
+            guard case .batch(let batch) = run(normalizer, item) else { continue }
+            result[item.record.dedupKey, default: []].formUnion(batch.turns.map(\.dedupKey))
+        }
+        return result
+    }
+
+    /// Fails for every dedup key that arrives with more than one distinct payload.
+    static func checkCollisions(_ items: [(key: String, payload: Data)], check: String) -> [ConformanceFailure] {
+        var first: [String: Data] = [:]
+        var reported = Set<String>()
+        var failures: [ConformanceFailure] = []
+        for item in items {
+            if let existing = first[item.key] {
+                if existing != item.payload && reported.insert(item.key).inserted {
+                    failures.append(ConformanceFailure(
+                        check: check,
+                        detail: "dedup key \(item.key) is used for different payloads (sha \(RawArchive.hex(existing)) "
+                            + "vs \(RawArchive.hex(item.payload)))"))
+                }
+            } else {
+                first[item.key] = item.payload
             }
         }
         return failures
@@ -213,27 +344,37 @@ public enum ProviderConformance {
         return failures
     }
 
-    private static func keys(_ outcome: Outcome) -> [String] {
-        guard case .batch(let batch) = outcome else { return [] }
-        return batch.events.map(\.dedupKey) + batch.turns.map(\.dedupKey) + batch.messages.map(\.uuid)
+    private static func keys(_ outcome: Outcome) -> (unique: [String], turns: [String]) {
+        guard case .batch(let batch) = outcome else { return ([], []) }
+        return (batch.events.map(\.dedupKey) + batch.messages.map(\.dedupKey), batch.turns.map(\.dedupKey))
     }
 
     private static func checkKeys(_ normalizer: any Normalizer,
                                   _ archived: [ArchivedRecord]) -> [ConformanceFailure] {
         var failures: [ConformanceFailure] = []
         var seen: [String: String] = [:]
+        var turnOwners: [String: String] = [:]
         for item in archived {
             let first = keys(run(normalizer, item))
-            if first != keys(run(normalizer, item)) {
+            let second = keys(run(normalizer, item))
+            if first.unique != second.unique || first.turns != second.turns {
                 failures.append(ConformanceFailure(
                     check: "keys", detail: "record \(item.record.dedupKey) gave different dedupKeys on a rerun"))
             }
-            for key in first {
-                if let owner = seen[key] {
+            for key in first.unique {
+                if let owner = seen[key] ?? turnOwners[key] {
                     failures.append(ConformanceFailure(
                         check: "keys", detail: "dedupKey \(key) from \(item.record.dedupKey) already used by \(owner)"))
                 }
                 seen[key] = item.record.dedupKey
+            }
+            for key in first.turns {
+                if let owner = seen[key] {
+                    failures.append(ConformanceFailure(
+                        check: "keys",
+                        detail: "turn key \(key) from \(item.record.dedupKey) is an event or message key of \(owner)"))
+                }
+                if turnOwners[key] == nil { turnOwners[key] = item.record.dedupKey }
             }
         }
         return failures
@@ -251,14 +392,14 @@ public enum ProviderConformance {
     }
 
     /// Fires its fault once, at one step.
-    private final class OneShotFault: @unchecked Sendable {
+    private final class OneShotFault<Step: Equatable>: @unchecked Sendable {
         struct Crash: Error {}
         private let lock = NSLock()
-        private let step: DrainStep
+        private let step: Step
         private var fired = false
         var didFire: Bool { lock.lock(); defer { lock.unlock() }; return fired }
-        init(_ step: DrainStep) { self.step = step }
-        func inject(_ current: DrainStep) throws {
+        init(_ step: Step) { self.step = step }
+        func inject(_ current: Step) throws {
             lock.lock()
             let fire = current == step && !fired
             if fire { fired = true }
@@ -279,21 +420,21 @@ public enum ProviderConformance {
         let archive = try RawArchive(path: directory.appendingPathComponent("raw.db").path, provider: provider)
         let store = try EventStore(path: directory.appendingPathComponent("events.db").path)
         let batchSize = Int.random(in: 1...64, using: &rng)
-        func makeDrainer(_ fault: OneShotFault? = nil) -> PipelineDrainer {
+        func makeDrainer(_ fault: OneShotFault<DrainStep>? = nil) throws -> PipelineDrainer {
             var injector: (@Sendable (DrainStep) throws -> Void)?
             if let fault { injector = { step in try fault.inject(step) } }
-            return PipelineDrainer(spool: spool, archive: archive, normalizer: normalizer, store: store,
-                                   batchSize: batchSize, faultInjector: injector)
+            return try PipelineDrainer(spool: spool, archive: archive, normalizer: normalizer, store: store,
+                                       batchSize: batchSize, faultInjector: injector)
         }
-        var drainer = makeDrainer()
+        var drainer = try makeDrainer()
         var fired: Bool?
         if let crashAt {
             try spool.append(fixtures)
             // A fresh drainer models the restarted process.
             let fault = OneShotFault(crashAt)
-            _ = makeDrainer(fault).drainOnce()
+            _ = try makeDrainer(fault).drainOnce()
             fired = fault.didFire
-            drainer = makeDrainer()
+            drainer = try makeDrainer()
         } else {
             for _ in 0..<passes {
                 var index = 0
@@ -331,19 +472,21 @@ public enum ProviderConformance {
         return "\(left.count) vs \(right.count) rows; \(onlyLeft.count) only in first (e.g. \(sample.0.prefix(200))), "
             + "\(onlyRight.count) only in second (e.g. \(sample.1.prefix(200)))"
     }
-}
 
-/// SplitMix64: deterministic, so a seed reproduces a run.
-public struct SeededGenerator: RandomNumberGenerator, Sendable {
-    private var state: UInt64
+    // MARK: - Seeded randomness
 
-    public init(seed: UInt64) { state = seed }
+    /// SplitMix64: deterministic, so a seed reproduces a run.
+    public struct SeededGenerator: RandomNumberGenerator, Sendable {
+        private var state: UInt64
 
-    public mutating func next() -> UInt64 {
-        state &+= 0x9E37_79B9_7F4A_7C15
-        var value = state
-        value = (value ^ (value >> 30)) &* 0xBF58_476D_1CE4_E5B9
-        value = (value ^ (value >> 27)) &* 0x94D0_49BB_1331_11EB
-        return value ^ (value >> 31)
+        public init(seed: UInt64) { state = seed }
+
+        public mutating func next() -> UInt64 {
+            state &+= 0x9E37_79B9_7F4A_7C15
+            var value = state
+            value = (value ^ (value >> 30)) &* 0xBF58_476D_1CE4_E5B9
+            value = (value ^ (value >> 27)) &* 0x94D0_49BB_1331_11EB
+            return value ^ (value >> 31)
+        }
     }
 }

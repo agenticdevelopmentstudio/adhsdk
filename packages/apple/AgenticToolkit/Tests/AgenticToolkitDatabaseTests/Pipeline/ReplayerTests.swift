@@ -86,8 +86,8 @@ final class ReplayerTests: XCTestCase {
         records.append(record("k10"))
         XCTAssertEqual(records.count, 50)
         try spool.append(records)
-        let outcome = PipelineDrainer(spool: spool, archive: archive, normalizer: ReplayTestNormalizer(),
-                                      store: live, batchSize: 7).drainUntilEmpty()
+        let outcome = try PipelineDrainer(spool: spool, archive: archive, normalizer: ReplayTestNormalizer(),
+                                          store: live, batchSize: 7).drainUntilEmpty()
         XCTAssertFalse(outcome.failed)
         XCTAssertEqual(try archive.count(), 48)
 
@@ -189,11 +189,124 @@ final class ReplayerTests: XCTestCase {
         let store = try makeStore("e.db")
         let progress = ProgressLog()
         let report = try Replayer.replay(archive: archive, normalizer: ReplayTestNormalizer(), into: store,
-                                         chunk: 5, progress: { progress.add($0) })
+                                         chunk: 5, progress: { progress.add($0.records) })
         XCTAssertEqual(report.normalized, 12)
         XCTAssertEqual(try store.counts().events, 12)
         XCTAssertEqual(progress.values, [5, 10, 12])
+        XCTAssertEqual(report.provider, "mock")
+        XCTAssertEqual(report.lastID, try archive.maxID())
     }
+
+    func testReplayChunkRespectsByteBudgetButAlwaysTakesOneRecord() throws {
+        let archive = try makeArchive()
+        _ = try archive.append((0..<3).map { record("k\($0)") })
+        let store = try makeStore("e.db")
+        let progress = ProgressLog()
+        let report = try Replayer.replay(archive: archive, normalizer: ReplayTestNormalizer(), into: store,
+                                         chunk: 100, maxBytes: 1, progress: { progress.add($0.records) })
+        XCTAssertEqual(progress.values, [1, 2, 3])
+        XCTAssertEqual(report.normalized, 3)
+        XCTAssertEqual(try store.counts().events, 3)
+    }
+
+    func testReplayResumesAfterLastID() throws {
+        let archive = try makeArchive()
+        let ids = try archive.append((0..<10).map { record("k\($0)") }).ids
+        let full = try makeStore("full.db")
+        _ = try Replayer.replay(archive: archive, normalizer: ReplayTestNormalizer(), into: full, chunk: 3)
+
+        // An interrupted replay got as far as ids[5]; resume from its lastID.
+        let interrupted = try makeStore("interrupted.db")
+        let firstHalf = try ArchiveSlice.copy(archive, upTo: ids[5], to: path("half.db"))
+        let early = try Replayer.replay(archive: firstHalf, normalizer: ReplayTestNormalizer(), into: interrupted)
+        XCTAssertEqual(early.lastID, ids[5])
+        let rest = try Replayer.replay(archive: archive, normalizer: ReplayTestNormalizer(), into: interrupted,
+                                       after: early.lastID, chunk: 2)
+        XCTAssertEqual(rest.records, 4)
+        XCTAssertEqual(rest.lastID, ids[9])
+        XCTAssertEqual(try interrupted.canonicalDump(), try full.canonicalDump())
+
+        // Nothing after the last id: the report keeps the starting point.
+        let none = try Replayer.replay(archive: archive, normalizer: ReplayTestNormalizer(), into: interrupted,
+                                       after: ids[9])
+        XCTAssertEqual(none.records, 0)
+        XCTAssertEqual(none.lastID, ids[9])
+    }
+
+    func testMultiSourceReplayUsesOneBulkWindowAndReportsPerProvider() throws {
+        struct OtherNormalizer: Normalizer {
+            let provider = "other"
+            func normalize(_ record: ArchivedRecord) throws -> NormalizedBatch {
+                var batch = NormalizedBatch()
+                batch.events = [NormalizedEvent(
+                    dedupKey: "\(record.record.dedupKey)#0", sessionID: "o", kind: .other, providerType: "O",
+                    time: record.record.receivedAt, rawRef: record.id)]
+                return batch
+            }
+        }
+        let mock = try makeArchive()
+        _ = try mock.append((0..<4).map { record("k\($0)") })
+        let other = try RawArchive(path: path("other.db"), provider: "other")
+        _ = try other.append((0..<3).map {
+            RawRecord(provider: "other", sourceKind: "hook", dedupKey: "o\($0)",
+                      receivedAt: Date(timeIntervalSince1970: 1_800_000_000), payload: Data("{}".utf8))
+        })
+        let store = try makeStore("e.db")
+        let bulkSeen = LockedFlags()
+        let reports = try Replayer.replay(
+            sources: [ReplaySource(archive: mock, normalizer: ReplayTestNormalizer()),
+                      ReplaySource(archive: other, normalizer: OtherNormalizer())],
+            into: store, chunk: 2,
+            progress: { _ in bulkSeen.add((try? store.isInBulkLoad()) ?? false) })
+        XCTAssertEqual(reports.map(\.provider), ["mock", "other"])
+        XCTAssertEqual(reports.map(\.records), [4, 3])
+        XCTAssertEqual(try store.counts().events, 7)
+        XCTAssertFalse(bulkSeen.values.isEmpty)
+        XCTAssertTrue(bulkSeen.values.allSatisfy { $0 }, "every chunk runs inside the one bulk window")
+        XCTAssertFalse(try store.isInBulkLoad())
+        let indexes = try store.indexNames()
+        XCTAssertTrue(["events_session_time", "events_time"].allSatisfy(indexes.contains), "\(indexes)")
+    }
+
+    func testReplayRefusesDuplicateProviderOrMismatchedNormalizerBeforeTouchingTheStore() throws {
+        let archive = try makeArchive()
+        _ = try archive.append([record("k0")])
+        let store = try makeStore("e.db")
+        XCTAssertThrowsError(try Replayer.replay(
+            sources: [ReplaySource(archive: archive, normalizer: ReplayTestNormalizer()),
+                      ReplaySource(archive: archive, normalizer: ReplayTestNormalizer(), after: 5)],
+            into: store)) { error in
+            XCTAssertEqual(error as? PipelineError, .duplicateProvider("mock"))
+        }
+        struct OtherNormalizer: Normalizer {
+            let provider = "other"
+            func normalize(_ record: ArchivedRecord) throws -> NormalizedBatch { NormalizedBatch() }
+        }
+        XCTAssertThrowsError(
+            try Replayer.replay(archive: archive, normalizer: OtherNormalizer(), into: store)) { error in
+            XCTAssertEqual(error as? PipelineError, .normalizerMismatch(archive: "mock", normalizer: "other"))
+        }
+        XCTAssertEqual(try store.counts().events, 0)
+        XCTAssertFalse(try store.isInBulkLoad())
+    }
+}
+
+/// Copies the archive's rows up to an id into a new archive file, preserving ids:
+/// an archive as it stood when an interrupted replay stopped.
+private enum ArchiveSlice {
+    static func copy(_ source: RawArchive, upTo lastID: Int64, to path: String) throws -> RawArchive {
+        let slice = try RawArchive(path: path, provider: source.provider)
+        let records = try source.records(after: 0, limit: Int.max).filter { $0.id <= lastID }
+        _ = try slice.append(records.map(\.record))
+        return slice
+    }
+}
+
+private final class LockedFlags: @unchecked Sendable {
+    private let lock = NSLock()
+    private var items: [Bool] = []
+    func add(_ value: Bool) { lock.lock(); items.append(value); lock.unlock() }
+    var values: [Bool] { lock.lock(); defer { lock.unlock() }; return items }
 }
 
 private final class ProgressLog: @unchecked Sendable {

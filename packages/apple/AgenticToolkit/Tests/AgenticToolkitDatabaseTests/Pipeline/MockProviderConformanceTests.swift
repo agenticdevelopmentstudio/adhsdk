@@ -72,6 +72,14 @@ final class MockProviderConformanceTests: XCTestCase {
             out.append(MockProvider.record(key: "big\(index)", op: "event", session: "s1",
                                            t: 1_800_000_100 + Double(index), n: 1000 + index, pad: 1_000_000))
         }
+        // Later and earlier observations of existing turns (k2 and k6 are turn records), with an
+        // as_of tie, so turn merging is exercised across records and batches.
+        for index in 0..<6 {
+            out.append(MockProvider.record(key: "u\(index)", op: "usage", session: "s2",
+                                           t: 1_800_000_000 + Double([30, 1, 30, 44, 12, 0][index]),
+                                           n: 500 + index, turn: index % 2 == 0 ? "k2#turn" : "k6#turn"))
+        }
+        out.append(MockProvider.record(key: "u-own", op: "usage", session: "s3", t: 1_800_000_007, n: 600))
         out.append(MockProvider.record(key: "bad0", op: "bad", t: 1_800_000_200))
         // Duplicate deliveries of earlier records.
         out.append(out[3])
@@ -139,6 +147,79 @@ final class MockProviderConformanceTests: XCTestCase {
         XCTAssertTrue(dropped.contains { $0.check == "unstoredFixture" && $0.detail.hasSuffix("by k8") }, "\(dropped)")
     }
 
+    func testConformanceCatchesKeyCollisionInFixtures() throws {
+        var fixtures = Self.fixtures().filter { $0.dedupKey != "bad0" }
+        fixtures.append(MockProvider.record(key: "k5", op: "event", t: 1_800_000_999, n: 9_999))
+        let found = try ProviderConformance.check(normalizer: MockProvider(), fixtures: fixtures,
+                                                  workDirectory: tmpDir.appendingPathComponent("w"))
+        XCTAssertEqual(found.filter { $0.check == "keyCollision" }.count, 1, "\(found)")
+        XCTAssertTrue(found.contains { $0.check == "keyCollision" && $0.detail.contains("k5") }, "\(found)")
+    }
+
+    /// Shared turn keys are legal (`testMockProviderConforms` has them); a turn key that is
+    /// another record's event key is not.
+    func testConformanceCatchesTurnKeyThatReusesAnEventKey() throws {
+        var fixtures = Self.fixtures().filter { $0.dedupKey != "bad0" }
+        // A usage record whose turn key is k0's event key.
+        fixtures.append(MockProvider.record(key: "u-clash", op: "usage", t: 1_800_000_001, n: 7, turn: "k0#0"))
+        let found = try ProviderConformance.check(normalizer: MockProvider(), fixtures: fixtures,
+                                                  workDirectory: tmpDir.appendingPathComponent("w"))
+        XCTAssertTrue(found.contains { $0.check == "keys" && $0.detail.contains("k0#0") }, "\(found)")
+    }
+
+    // MARK: - Sources
+
+    private func writeSourceFixture(_ count: Int = 60) throws -> URL {
+        let url = tmpDir.appendingPathComponent("source-\(UUID().uuidString).jsonl")
+        let ops = ["event", "session", "turn", "message"]
+        try MockSource.writeFixture((0..<count).map {
+            MockProvider.payload(op: ops[$0 % ops.count], session: "s\($0 % 3)", t: 1_800_000_000 + Double($0), n: $0)
+        }, to: url)
+        return url
+    }
+
+    func testMockSourceConforms() throws {
+        let url = try writeSourceFixture()
+        let failures = try ProviderConformance.checkSource(
+            provider: "mock", workDirectory: tmpDir.appendingPathComponent("w")) { injector in
+            MockSource(fileURL: url, maxRecordsPerPoll: 7, faultInjector: injector)
+        }
+        XCTAssertEqual(failures, [], "\(failures)")
+    }
+
+    func testSourceCheckCatchesConstantDedupKey() throws {
+        let url = try writeSourceFixture()
+        let failures = try ProviderConformance.checkSource(
+            provider: "mock", workDirectory: tmpDir.appendingPathComponent("w")) { injector in
+            MockSource(fileURL: url, maxRecordsPerPoll: 7, deriveKey: { _, _ in "same" }, faultInjector: injector)
+        }
+        let checks = Set(failures.map(\.check))
+        XCTAssertTrue(checks.contains("keyCollision"), "\(failures)")
+        XCTAssertTrue(checks.contains("sourceDuplicated"), "\(failures)")
+    }
+
+    func testSourceCheckCatchesCursorCommittedApartFromAppend() throws {
+        let url = try writeSourceFixture()
+        let failures = try ProviderConformance.checkSource(
+            provider: "mock", workDirectory: tmpDir.appendingPathComponent("w")) { injector in
+            CursorFirstSource(fileURL: url, faultInjector: injector)
+        }
+        XCTAssertTrue(failures.contains { $0.check == "sourceCrash" && $0.detail.contains("beforeAppend") },
+                      "\(failures)")
+    }
+
+    func testSourceCheckCatchesSourceThatFindsNothing() throws {
+        let url = tmpDir.appendingPathComponent("empty.jsonl")
+        try MockSource.writeFixture([], to: url)
+        let failures = try ProviderConformance.checkSource(
+            provider: "mock", workDirectory: tmpDir.appendingPathComponent("w")) { injector in
+            MockSource(fileURL: url, faultInjector: injector)
+        }
+        let checks = Set(failures.map(\.check))
+        XCTAssertTrue(checks.contains("sourceEmpty"), "\(failures)")
+        XCTAssertTrue(checks.contains("sourceCrash"), "a fault that never fires is reported")
+    }
+
     func testConformanceNeverRemovesCallersDirectory() throws {
         let work = tmpDir.appendingPathComponent("w")
         try FileManager.default.createDirectory(at: work, withIntermediateDirectories: true)
@@ -148,5 +229,38 @@ final class MockProviderConformanceTests: XCTestCase {
                                           malformedKeys: ["bad0"], workDirectory: work)
         XCTAssertTrue(FileManager.default.fileExists(atPath: marker.path))
         XCTAssertEqual(try FileManager.default.contentsOfDirectory(atPath: work.path), ["keep.txt"])
+    }
+}
+
+/// Breaks the source contract: commits the cursor in its own transaction before the
+/// append, so a crash between them skips the batch.
+private struct CursorFirstSource: IngestSource {
+    let provider = "mock"
+    let fileURL: URL
+    let faultInjector: (@Sendable (SourceStep) throws -> Void)?
+    private let key = "cursor-first"
+
+    init(fileURL: URL, faultInjector: (@Sendable (SourceStep) throws -> Void)?) {
+        self.fileURL = fileURL
+        self.faultInjector = faultInjector
+    }
+
+    func poll(into spool: ProviderSpool) throws -> Int {
+        let start = (try spool.sourceState(key)).flatMap { String(bytes: $0, encoding: .utf8) }.flatMap { Int($0) } ?? 0
+        let data = try Data(contentsOf: fileURL)
+        var offset = start
+        var records: [RawRecord] = []
+        while records.count < 5, offset < data.count,
+              let newline = data[offset...].firstIndex(of: UInt8(ascii: "\n")) {
+            records.append(RawRecord(provider: provider, sourceKind: "transcript", dedupKey: "line@\(offset)",
+                                     receivedAt: Date(timeIntervalSince1970: 0), payload: Data(data[offset..<newline])))
+            offset = newline + 1
+        }
+        guard !records.isEmpty else { return 0 }
+        try spool.setSourceState(key, Data(String(offset).utf8))
+        try faultInjector?(.beforeAppend)
+        try spool.append(records)
+        try faultInjector?(.afterAppend)
+        return records.count
     }
 }

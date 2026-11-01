@@ -42,6 +42,20 @@ final class ProviderSpoolTests: XCTestCase {
         XCTAssertEqual(try spool.pendingBatch(limit: -3), [])
     }
 
+    func testPendingBatchHonoursByteBudgetButAlwaysReturnsOne() throws {
+        let spool = try makeSpool()
+        let ten = String(repeating: "p", count: 10)
+        try spool.append([rec("a", ten), rec("b", ten), rec("c", ten), rec("d", String(repeating: "q", count: 100))])
+        XCTAssertEqual(try spool.pendingBatch(limit: 10, maxBytes: 25).map(\.record.dedupKey), ["a", "b"])
+        XCTAssertEqual(try spool.pendingBatch(limit: 10, maxBytes: 30).map(\.record.dedupKey), ["a", "b", "c"])
+        XCTAssertEqual(try spool.pendingBatch(limit: 2, maxBytes: 1_000).map(\.record.dedupKey), ["a", "b"])
+        XCTAssertEqual(try spool.pendingBatch(limit: 10, maxBytes: 1).map(\.record.dedupKey), ["a"])
+        let ids = try spool.pendingBatch(limit: 3).map(\.id)
+        try spool.complete(ids: ids)
+        // Only an oversized record is left: it still comes back, alone.
+        XCTAssertEqual(try spool.pendingBatch(limit: 10, maxBytes: 5).map(\.record.dedupKey), ["d"])
+    }
+
     func testCompleteRemovesOnlyNamedIds() throws {
         let spool = try makeSpool()
         try spool.append([rec("a"), rec("b"), rec("c")])
@@ -127,7 +141,7 @@ final class ProviderSpoolTests: XCTestCase {
 
     func testTenMegabyteAndEmptyPayloadsRoundTrip() throws {
         let spool = try makeSpool()
-        var generator = SeededGenerator(seed: 42)
+        var generator = ProviderConformance.SeededGenerator(seed: 42)
         let big = Data((0..<(10 * 1024 * 1024)).map { _ in UInt8.random(in: 0...255, using: &generator) })
         try spool.append([rec("big", big), rec("empty", Data())])
         let got = try spool.pendingBatch(limit: 10)

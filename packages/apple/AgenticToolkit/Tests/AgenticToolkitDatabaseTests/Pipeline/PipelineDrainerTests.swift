@@ -89,10 +89,12 @@ final class PipelineDrainerTests: XCTestCase {
             store: try EventStore(path: path(EventStore.fileName)))
     }
 
-    private func drainer(_ rig: Rig, batchSize: Int = 200,
-                         inject: (@Sendable (DrainStep) throws -> Void)? = nil) -> PipelineDrainer {
-        PipelineDrainer(spool: rig.spool, archive: rig.archive, normalizer: TestNormalizer(),
-                        store: rig.store, batchSize: batchSize, faultInjector: inject)
+    private func drainer(_ rig: Rig, batchSize: Int = 200, maxBatchBytes: Int = PipelineLimits.defaultMaxBatchBytes,
+                         sinks: [any PipelineSink] = [],
+                         inject: (@Sendable (DrainStep) throws -> Void)? = nil) throws -> PipelineDrainer {
+        try PipelineDrainer(spool: rig.spool, archive: rig.archive, normalizer: TestNormalizer(),
+                            store: rig.store, batchSize: batchSize, maxBatchBytes: maxBatchBytes, sinks: sinks,
+                            faultInjector: inject)
     }
 
     private func record(_ key: String, payload: String? = nil) -> RawRecord {
@@ -104,7 +106,7 @@ final class PipelineDrainerTests: XCTestCase {
     func testDrainArchivesStoresAndCompletes() throws {
         let rig = try makeRig()
         try rig.spool.append((0..<10).map { record("k\($0)") })
-        let outcome = drainer(rig).drainUntilEmpty()
+        let outcome = try drainer(rig).drainUntilEmpty()
         XCTAssertFalse(outcome.failed)
         XCTAssertEqual(try rig.spool.pendingCount(), 0)
         XCTAssertEqual(try rig.archive.count(), 10)
@@ -124,12 +126,12 @@ final class PipelineDrainerTests: XCTestCase {
 
             struct Boom: Error {}
             let once = FireOnce()
-            let crashing = drainer(rig) { current in
+            let crashing = try drainer(rig) { current in
                 if current == step, once.shouldFire() { throw Boom() }
             }
             XCTAssertTrue(crashing.drainOnce().failed, "step \(step)")
 
-            let clean = drainer(rig).drainUntilEmpty()
+            let clean = try drainer(rig).drainUntilEmpty()
             XCTAssertFalse(clean.failed, "step \(step)")
             XCTAssertEqual(try rig.archive.count(), 20, "step \(step)")
             XCTAssertEqual(try rig.store.counts().events, 20, "step \(step)")
@@ -145,7 +147,7 @@ final class PipelineDrainerTests: XCTestCase {
         var records = (0..<4).map { record("g\($0)") }
         records.insert(record("bad", payload: "BAD"), at: 2)
         try rig.spool.append(records)
-        let pipe = drainer(rig)
+        let pipe = try drainer(rig)
         for _ in 0..<ProviderSpool.maxAttempts { pipe.drainOnce() }
         let quarantined = try rig.spool.quarantined(limit: 10)
         XCTAssertEqual(quarantined.count, 1)
@@ -161,7 +163,7 @@ final class PipelineDrainerTests: XCTestCase {
         var records = (0..<5).map { record("g\($0)") }
         records.insert(record("bad", payload: "BAD"), at: 0)
         try rig.spool.append(records)
-        let outcome = drainer(rig).drainOnce()
+        let outcome = try drainer(rig).drainOnce()
         XCTAssertFalse(outcome.failed)
         XCTAssertEqual(try rig.store.counts().events, 5)
         XCTAssertEqual(try rig.spool.pendingCount(), 1)
@@ -171,7 +173,7 @@ final class PipelineDrainerTests: XCTestCase {
         let rig = try makeRig()
         try rig.spool.append([record("dup")])
         try rig.spool.append([record("dup")])
-        drainer(rig).drainUntilEmpty()
+        try drainer(rig).drainUntilEmpty()
         XCTAssertEqual(try rig.archive.count(), 1)
         XCTAssertEqual(try rig.store.counts().events, 1)
         XCTAssertEqual(try rig.spool.pendingCount(), 0)
@@ -183,7 +185,7 @@ final class PipelineDrainerTests: XCTestCase {
         let observer = RecordingObserver(probe: {
             ((try? rig.store.counts().events) ?? -1, (try? rig.spool.pendingCount()) ?? -1)
         })
-        let pipe = drainer(rig)
+        let pipe = try drainer(rig)
         pipe.addObserver(observer)
         pipe.drainUntilEmpty()
         XCTAssertEqual(observer.received.count, 1)
@@ -202,7 +204,7 @@ final class PipelineDrainerTests: XCTestCase {
         let saboteur = try DatabaseQueue(path: path)
         try saboteur.write { try $0.execute(sql: "ALTER TABLE events RENAME TO events_hidden") }
 
-        let failed = drainer(rig).drainOnce()
+        let failed = try drainer(rig).drainOnce()
         XCTAssertTrue(failed.failed)
         XCTAssertNotNil(failed.failureReason)
         XCTAssertEqual(failed.completed, 0)
@@ -210,7 +212,7 @@ final class PipelineDrainerTests: XCTestCase {
         XCTAssertEqual(try rig.archive.count(), 6)
 
         try saboteur.write { try $0.execute(sql: "ALTER TABLE events_hidden RENAME TO events") }
-        let recovered = drainer(rig).drainUntilEmpty()
+        let recovered = try drainer(rig).drainUntilEmpty()
         XCTAssertFalse(recovered.failed)
         XCTAssertEqual(try rig.store.counts().events, 6)
         XCTAssertEqual(try rig.spool.pendingCount(), 0)
@@ -220,7 +222,7 @@ final class PipelineDrainerTests: XCTestCase {
     func testDrainUntilEmptyStopsWithoutProgressAndDoesNotBurnAttempts() throws {
         let rig = try makeRig()
         try rig.spool.append([record("flaky")])
-        let pipe = PipelineDrainer(spool: rig.spool, archive: rig.archive,
+        let pipe = try PipelineDrainer(spool: rig.spool, archive: rig.archive,
                                    normalizer: AlwaysFailingNormalizer(), store: rig.store)
         let outcome = pipe.drainUntilEmpty()
         XCTAssertFalse(outcome.failed)
@@ -233,7 +235,7 @@ final class PipelineDrainerTests: XCTestCase {
 
     func testStartWakeStop() throws {
         let rig = try makeRig()
-        let pipe = drainer(rig)
+        let pipe = try drainer(rig)
         XCTAssertTrue(pipe.start(idlePoll: 0.05))
         try rig.spool.append((0..<5).map { record("k\($0)") })
         pipe.wake()
@@ -252,7 +254,7 @@ final class PipelineDrainerTests: XCTestCase {
 
     func testStartRefusesWhileWorkerIsAlive() throws {
         let rig = try makeRig()
-        let pipe = drainer(rig)
+        let pipe = try drainer(rig)
         XCTAssertTrue(pipe.start(idlePoll: 0.05))
         XCTAssertFalse(pipe.start(idlePoll: 0.05))
         pipe.stop()
@@ -268,7 +270,7 @@ final class PipelineDrainerTests: XCTestCase {
             holder.drainer?.stop()
             elapsed.set(Date().timeIntervalSince(began))
         })
-        let pipe = drainer(rig)
+        let pipe = try drainer(rig)
         holder.drainer = pipe
         pipe.addObserver(observer)
         XCTAssertTrue(pipe.start(idlePoll: 0.05))
@@ -286,6 +288,223 @@ final class PipelineDrainerTests: XCTestCase {
         pipe.stop()
         holder.drainer = nil
     }
+
+    // MARK: - Archive conflicts and budgets
+
+    func testConflictingRedeliveryIsQuarantinedAndArchiveKeepsFirstBytes() throws {
+        let rig = try makeRig()
+        let first = "{\"session\":\"s1\",\"t\":1}"
+        try rig.spool.append([record("k", payload: first)])
+        try drainer(rig).drainUntilEmpty()
+        try rig.spool.append([record("k", payload: "{\"session\":\"s2\",\"t\":2}")])
+        let outcome = try drainer(rig).drainOnce()
+        XCTAssertFalse(outcome.failed, outcome.failureReason ?? "")
+        XCTAssertEqual(outcome.quarantined, 1)
+        XCTAssertEqual(outcome.completed, 0)
+        XCTAssertEqual(try rig.spool.pendingCount(), 0)
+        let quarantined = try rig.spool.quarantined(limit: 10)
+        XCTAssertEqual(quarantined.count, 1)
+        XCTAssertTrue(quarantined.first?.reason.hasPrefix("dedup-key conflict: archived sha ") ?? false,
+                      quarantined.first?.reason ?? "")
+        XCTAssertEqual(quarantined.first?.record.payload, Data("{\"session\":\"s2\",\"t\":2}".utf8))
+        let id = try XCTUnwrap(try rig.archive.id(forDedupKey: "k"))
+        XCTAssertEqual(try rig.archive.record(id: id)?.record.payload, Data(first.utf8))
+        XCTAssertEqual(try rig.store.counts().events, 1)
+    }
+
+    func testPassRespectsByteBudgetButAlwaysTakesOneRecord() throws {
+        let rig = try makeRig()
+        try rig.spool.append((0..<4).map { record("k\($0)") })
+        let pipe = try drainer(rig, maxBatchBytes: 1)
+        let outcome = pipe.drainOnce()
+        XCTAssertFalse(outcome.failed, outcome.failureReason ?? "")
+        XCTAssertEqual(outcome.read, 1)
+        XCTAssertEqual(outcome.completed, 1)
+        XCTAssertEqual(try rig.spool.pendingCount(), 3)
+        pipe.drainUntilEmpty()
+        XCTAssertEqual(try rig.store.counts().events, 4)
+    }
+
+    // MARK: - Sinks
+
+    func testSinksRunAfterTheStoreCommitAndBeforeCompletion() throws {
+        let rig = try makeRig()
+        try rig.spool.append((0..<3).map { record("k\($0)") })
+        let seen = LockedBox<[(events: Int, pending: Int, records: Int, batchEvents: Int)]>([])
+        let sink = ClosureSink { batch, records in
+            let events = (try? rig.store.counts().events) ?? -1
+            let pending = (try? rig.spool.pendingCount()) ?? -1
+            seen.update { $0.append((events, pending, records.count, batch.events.count)) }
+        }
+        let outcome = try drainer(rig, sinks: [sink]).drainUntilEmpty()
+        XCTAssertFalse(outcome.failed, outcome.failureReason ?? "")
+        let calls = seen.value
+        XCTAssertEqual(calls.count, 1)
+        XCTAssertEqual(calls.first?.events, 3, "the store write is committed before sinks run")
+        XCTAssertEqual(calls.first?.pending, 3, "spool rows are completed only after sinks")
+        XCTAssertEqual(calls.first?.records, 3)
+        XCTAssertEqual(calls.first?.batchEvents, 3)
+        XCTAssertEqual(try rig.spool.pendingCount(), 0)
+    }
+
+    func testSinkFailureFailsThePassChargesEachRecordAndQuarantinesAtMaxAttempts() throws {
+        let rig = try makeRig()
+        try rig.spool.append((0..<2).map { record("k\($0)") })
+        struct SinkDown: Error {}
+        let pipe = try drainer(rig, sinks: [ClosureSink { _, _ in throw SinkDown() }])
+        let first = pipe.drainOnce()
+        XCTAssertTrue(first.failed)
+        XCTAssertTrue(first.failureReason?.contains("SinkDown") ?? false, first.failureReason ?? "")
+        XCTAssertEqual(first.completed, 0)
+        XCTAssertEqual(try rig.spool.pendingCount(), 2)
+        XCTAssertEqual(try rig.spool.pendingBatch(limit: 10).map(\.attempts), [1, 1])
+        // The store write already committed and is idempotent; redelivery adds nothing.
+        XCTAssertEqual(try rig.store.counts().events, 2)
+        for _ in 1..<ProviderSpool.maxAttempts { pipe.drainOnce() }
+        XCTAssertEqual(try rig.spool.pendingCount(), 0)
+        let quarantined = try rig.spool.quarantined(limit: 10)
+        XCTAssertEqual(Set(quarantined.map(\.record.dedupKey)), ["k0", "k1"])
+        XCTAssertTrue(quarantined.allSatisfy { $0.reason.contains("sink") }, "\(quarantined.map(\.reason))")
+        XCTAssertEqual(try rig.store.counts().events, 2)
+    }
+
+    func testAfterSinksCrashRedeliversAndConverges() throws {
+        let rig = try makeRig()
+        try rig.spool.append((0..<5).map { record("k\($0)") })
+        let calls = LockedBox(0)
+        let sink = ClosureSink { _, records in calls.update { $0 += records.count } }
+        struct Boom: Error {}
+        let once = FireOnce()
+        let crashing = try drainer(rig, sinks: [sink]) { step in
+            if step == .afterSinks, once.shouldFire() { throw Boom() }
+        }
+        XCTAssertTrue(crashing.drainOnce().failed)
+        XCTAssertEqual(try rig.spool.pendingCount(), 5)
+        XCTAssertFalse(try drainer(rig, sinks: [sink]).drainUntilEmpty().failed)
+        XCTAssertEqual(try rig.spool.pendingCount(), 0)
+        XCTAssertEqual(try rig.store.counts().events, 5)
+        // At-least-once: the sink saw the batch before the crash and again after it.
+        XCTAssertEqual(calls.value, 10)
+    }
+
+    // MARK: - Reentrancy and observers
+
+    func testDrainFromInsideOwnPassIsSkipped() throws {
+        let rig = try makeRig()
+        try rig.spool.append([record("k0")])
+        let holder = DrainerBox()
+        let inner = LockedBox<DrainOutcome?>(nil)
+        let sink = ClosureSink { _, _ in
+            let outcome = holder.drainer?.drainOnce()
+            inner.update { $0 = outcome }
+        }
+        let pipe = try drainer(rig, sinks: [sink])
+        holder.drainer = pipe
+        let outcome = pipe.drainOnce()
+        holder.drainer = nil
+        XCTAssertFalse(outcome.failed, outcome.failureReason ?? "")
+        XCTAssertEqual(outcome.completed, 1)
+        let nested = try XCTUnwrap(inner.value)
+        XCTAssertTrue(nested.skippedReentrant)
+        XCTAssertEqual(nested.read, 0)
+    }
+
+    func testObserversRunOutsideThePassAndMayDrainAgain() throws {
+        let rig = try makeRig()
+        try rig.spool.append([record("k0")])
+        let holder = DrainerBox()
+        let inner = LockedBox<DrainOutcome?>(nil)
+        let second = record("k1")
+        let once = FireOnce()
+        let observer = RecordingObserver(onStore: {
+            // A second record arrives while the observer runs; draining here must neither
+            // deadlock nor be treated as reentrant.
+            guard once.shouldFire() else { return }
+            try? rig.spool.append([second])
+            let outcome = holder.drainer?.drainOnce()
+            inner.update { $0 = outcome }
+        })
+        let pipe = try drainer(rig)
+        holder.drainer = pipe
+        pipe.addObserver(observer)
+        pipe.drainOnce()
+        holder.drainer = nil
+        let nested = try XCTUnwrap(inner.value)
+        XCTAssertFalse(nested.skippedReentrant)
+        XCTAssertEqual(nested.completed, 1)
+        XCTAssertEqual(try rig.store.counts().events, 2)
+    }
+
+    func testObserverHearsOnlyChangedRowsAndNeverAnEmptyBatch() throws {
+        let rig = try makeRig()
+        let observer = RecordingObserver()
+        let pipe = try drainer(rig)
+        pipe.addObserver(observer)
+        try rig.spool.append([record("dup")])
+        pipe.drainUntilEmpty()
+        // The same bytes again: archived as a duplicate, normalized, stored as a no-op.
+        try rig.spool.append([record("dup")])
+        let outcome = pipe.drainUntilEmpty()
+        XCTAssertEqual(outcome.completed, 1)
+        try rig.spool.append([record("dup"), record("new")])
+        pipe.drainUntilEmpty()
+        XCTAssertEqual(observer.received.map { $0.events.map(\.dedupKey) }, [["dup#0"], ["new#0"]])
+    }
+
+    // MARK: - Wiring checks
+
+    func testProviderMismatchIsRefusedAtInit() throws {
+        let rig = try makeRig()
+        struct OtherNormalizer: Normalizer {
+            let provider = "other"
+            func normalize(_ record: ArchivedRecord) throws -> NormalizedBatch { NormalizedBatch() }
+        }
+        XCTAssertThrowsError(try PipelineDrainer(
+            spool: rig.spool, archive: rig.archive, normalizer: OtherNormalizer(), store: rig.store)) { error in
+            XCTAssertEqual(error as? PipelineError,
+                           .providerMismatch(spool: "mock", archive: "mock", normalizer: "other"))
+        }
+        let otherArchive = try RawArchive(path: tmpDir.appendingPathComponent("other-raw.db").path, provider: "other")
+        XCTAssertThrowsError(try PipelineDrainer(
+            spool: rig.spool, archive: otherArchive, normalizer: TestNormalizer(), store: rig.store)) { error in
+            XCTAssertEqual(error as? PipelineError,
+                           .providerMismatch(spool: "mock", archive: "other", normalizer: "mock"))
+        }
+    }
+
+    func testLiveDrainerBlocksBulkLoadUntilReleased() throws {
+        let rig = try makeRig()
+        var pipe: PipelineDrainer? = try drainer(rig)
+        XCTAssertNotNil(pipe)
+        XCTAssertThrowsError(try rig.store.beginBulkLoad()) { error in
+            XCTAssertEqual(error as? EventStoreError, .liveWritersAttached(count: 1))
+        }
+        XCTAssertThrowsError(try Replayer.replay(archive: rig.archive, normalizer: TestNormalizer(), into: rig.store))
+        XCTAssertFalse(try rig.store.isInBulkLoad())
+        pipe = nil
+        try rig.store.beginBulkLoad()
+        XCTAssertThrowsError(try drainer(rig)) { error in
+            XCTAssertEqual(error as? EventStoreError, .bulkLoadInProgress)
+        }
+        try rig.store.endBulkLoad()
+        XCTAssertNoThrow(try drainer(rig))
+    }
+}
+
+private struct ClosureSink: PipelineSink {
+    let body: @Sendable (NormalizedBatch, [ArchivedRecord]) throws -> Void
+    init(_ body: @escaping @Sendable (NormalizedBatch, [ArchivedRecord]) throws -> Void) { self.body = body }
+    func write(_ batch: NormalizedBatch, records: [ArchivedRecord], provider: String) throws {
+        try body(batch, records)
+    }
+}
+
+private final class LockedBox<Value>: @unchecked Sendable {
+    private let lock = NSLock()
+    private var stored: Value
+    init(_ value: Value) { stored = value }
+    var value: Value { lock.lock(); defer { lock.unlock() }; return stored }
+    func update(_ change: (inout Value) -> Void) { lock.lock(); change(&stored); lock.unlock() }
 }
 
 private final class ElapsedBox: @unchecked Sendable {

@@ -39,7 +39,7 @@ final class EventStoreTests: XCTestCase {
             dedupKey: "t#0", sessionID: "s1", time: date(2), model: "m", inputTokens: 3,
             outputTokens: 4, costUSD: 0.5, rawRef: 8)]
         batch.messages = [MessageRow(
-            uuid: "u1", sessionID: "s1", role: "user", time: date(3), text: "hi", rawRef: 9)]
+            dedupKey: "m#msg", uuid: "u1", sessionID: "s1", role: "user", time: date(3), text: "hi", rawRef: 9)]
         batch.sessions = [SessionUpsert(sessionID: "s1", asOf: date(1), cwd: "/a", startedAt: date(1))]
         return batch
     }
@@ -53,6 +53,77 @@ final class EventStoreTests: XCTestCase {
         XCTAssertEqual(try store.counts(), counts)
         XCTAssertEqual(counts, EventStoreCounts(sessions: 1, events: 1, turns: 1, messages: 1))
         XCTAssertEqual(try store.canonicalDump(), dump)
+    }
+
+    func testWriteReturnsOnlyWhatChanged() throws {
+        let store = try makeStore()
+        let first = try store.write(sampleBatch(), provider: "mock")
+        XCTAssertEqual(first.events.count, 1)
+        XCTAssertEqual(first.turns.count, 1)
+        XCTAssertEqual(first.messages.count, 1)
+        XCTAssertEqual(first.sessions.count, 1)
+        XCTAssertTrue(try store.write(sampleBatch(), provider: "mock").isEmpty)
+        // A newer observation of the session changes only the session.
+        var newer = NormalizedBatch()
+        newer.sessions = [SessionUpsert(sessionID: "s1", asOf: date(9), title: "later")]
+        let changed = try store.write(newer, provider: "mock")
+        XCTAssertEqual(changed.sessions.map(\.sessionID), ["s1"])
+        XCTAssertTrue(changed.events.isEmpty && changed.turns.isEmpty && changed.messages.isEmpty)
+    }
+
+    func testTurnMergeIsOrderIndependent() throws {
+        // One turn seen by three records: different as_of, overlapping attrs, and a tie.
+        let rows = [
+            TurnRow(dedupKey: "turn-1", sessionID: "s", time: date(1), asOf: date(1), model: "m1",
+                    inputTokens: 10, outputTokens: 1, costUSD: 0.1,
+                    attrs: ["kind": .string("first"), "a": .number(1)], rawRef: 1),
+            TurnRow(dedupKey: "turn-1", sessionID: "s", time: date(1), asOf: date(3), model: "m3",
+                    account: "acct", inputTokens: 30, outputTokens: 3,
+                    attrs: ["kind": .string("third"), "cache_creation_1h_tokens": .number(7)], rawRef: 3),
+            TurnRow(dedupKey: "turn-1", sessionID: "s", time: date(1), asOf: date(3), model: "m3b",
+                    inputTokens: 20, outputTokens: 2, costUSD: 0.2,
+                    attrs: ["kind": .string("tie"), "a": .number(2)], rawRef: 2)
+        ]
+        var dumps: Set<[String]> = []
+        for (index, order) in permutations(rows).enumerated() {
+            let store = try makeStore("turn-perm-\(index).db")
+            for row in order {
+                var batch = NormalizedBatch()
+                batch.turns = [row]
+                try store.write(batch, provider: "mock")
+            }
+            XCTAssertEqual(try store.counts().turns, 1)
+            dumps.insert(try store.canonicalDump())
+            // All three in one batch, in this order, gives the same row.
+            let together = try makeStore("turn-batch-\(index).db")
+            var batch = NormalizedBatch()
+            batch.turns = order
+            try together.write(batch, provider: "mock")
+            dumps.insert(try together.canonicalDump())
+        }
+        XCTAssertEqual(dumps.count, 1, "\(dumps)")
+        let dump = try XCTUnwrap(dumps.first?.first(where: { $0.contains("\"table\":\"turns\"") }))
+        XCTAssertTrue(dump.contains("\"account\":\"acct\""), dump)
+        XCTAssertTrue(dump.contains("\"as_of\":\(date(3).timeIntervalSince1970)"), dump)
+    }
+
+    func testSameMessageUUIDInTwoSessionsIsTwoRowsAndFirstCopyWinsWithinOne() throws {
+        let store = try makeStore()
+        func message(_ key: String, session: String, text: String) -> NormalizedBatch {
+            var batch = NormalizedBatch()
+            batch.messages = [MessageRow(dedupKey: key, uuid: "shared-uuid", sessionID: session, role: "user",
+                                         time: date(1), text: text, rawRef: 1)]
+            return batch
+        }
+        try store.write(message("a#msg", session: "original", text: "one"), provider: "mock")
+        try store.write(message("b#msg", session: "resumed", text: "two"), provider: "mock")
+        XCTAssertEqual(try store.counts().messages, 2)
+        let again = try store.write(message("c#msg", session: "original", text: "three"), provider: "mock")
+        XCTAssertTrue(again.messages.isEmpty)
+        XCTAssertEqual(try store.counts().messages, 2)
+        let original = try XCTUnwrap(try store.canonicalDump().first { $0.contains("\"session_id\":\"original\"") })
+        XCTAssertTrue(original.contains("\"text\":\"one\"") && original.contains("\"dedup_key\":\"a#msg\""),
+                      original)
     }
 
     private func permutations<T>(_ items: [T]) -> [[T]] {
@@ -108,7 +179,7 @@ final class EventStoreTests: XCTestCase {
         try store.write(batch(SessionUpsert(sessionID: "s", asOf: date(4), startedAt: date(4), endedAt: date(4))),
                         provider: "mock")
         let dump = try XCTUnwrap(try store.canonicalDump().first)
-        let row = try JSONDecoder().decode([String: JSONValue].self, from: Data(dump.utf8))
+        let row = try JSONDecoder().decode([String: NormalizedValue].self, from: Data(dump.utf8))
         XCTAssertEqual(row["started_at"], .number(date(4).timeIntervalSince1970))
         XCTAssertEqual(row["ended_at"], .number(date(5).timeIntervalSince1970))
         XCTAssertEqual(row["as_of"], .number(date(6).timeIntervalSince1970))
@@ -153,6 +224,34 @@ final class EventStoreTests: XCTestCase {
         try store.endBulkLoad()
     }
 
+    func testBulkLoadFlagIsSetWhileLoadingAndClearedAtEnd() throws {
+        let store = try makeStore()
+        XCTAssertFalse(try store.isInBulkLoad())
+        try store.beginBulkLoad()
+        XCTAssertTrue(try store.isInBulkLoad())
+        try store.endBulkLoad()
+        XCTAssertFalse(try store.isInBulkLoad())
+        XCTAssertEqual(try store.indexNames().intersection(indexNames), Set(indexNames))
+    }
+
+    func testOpeningAfterACrashMidBulkLoadRebuildsIndexesAndClearsFlag() throws {
+        let path = tmpDir.appendingPathComponent(EventStore.fileName).path
+        do {
+            let crashed = try makeStore()
+            try crashed.beginBulkLoad()
+            try crashed.write(sampleBatch(), provider: "mock")
+            XCTAssertTrue(Set(indexNames).isDisjoint(with: try presentIndexes(path)))
+            // The process dies here: endBulkLoad never runs.
+        }
+        let reopened = try makeStore()
+        XCTAssertFalse(try reopened.isInBulkLoad())
+        XCTAssertTrue(Set(indexNames).isSubset(of: try presentIndexes(path)))
+        XCTAssertEqual(try reopened.counts().events, 1)
+        // And a fresh bulk load is allowed again.
+        try reopened.beginBulkLoad()
+        try reopened.endBulkLoad()
+    }
+
     func testAutoVacuumIsIncremental() throws {
         _ = try makeStore()
         let queue = try DatabaseQueue(path: tmpDir.appendingPathComponent(EventStore.fileName).path)
@@ -160,13 +259,13 @@ final class EventStoreTests: XCTestCase {
         XCTAssertEqual(mode, 2)
     }
 
-    func testJSONValueRoundTrip() throws {
-        let value = JSONValue.object([
+    func testNormalizedValueRoundTrip() throws {
+        let value = NormalizedValue.object([
             "n": .null, "b": .bool(true), "d": .number(1.5), "i": .number(3),
             "s": .string("x"), "a": .array([.number(1), .string("y"), .null])
         ])
         let text = try value.canonicalString()
-        let decoded = try JSONDecoder().decode(JSONValue.self, from: Data(text.utf8))
+        let decoded = try JSONDecoder().decode(NormalizedValue.self, from: Data(text.utf8))
         XCTAssertEqual(decoded, value)
         XCTAssertEqual(try decoded.canonicalString(), text)
     }

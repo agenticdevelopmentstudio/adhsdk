@@ -2,7 +2,16 @@ import Foundation
 
 /// The points in a drain pass where a test can inject a failure.
 public enum DrainStep: String, Sendable, CaseIterable {
-    case afterRead, afterArchive, afterNormalize, afterStore, afterComplete
+    case afterRead, afterArchive, afterNormalize, afterStore, afterSinks, afterComplete
+}
+
+public enum PipelineError: Error, Equatable {
+    /// The spool, the archive and the normalizer must all name the same provider.
+    case providerMismatch(spool: String, archive: String, normalizer: String)
+    /// A replay source's normalizer names another provider than its archive.
+    case normalizerMismatch(archive: String, normalizer: String)
+    /// Two replay sources name the same provider.
+    case duplicateProvider(String)
 }
 
 public struct DrainOutcome: Sendable, Equatable {
@@ -15,24 +24,64 @@ public struct DrainOutcome: Sendable, Equatable {
     public var failed = false
     /// Why the pass stopped early (the thrown error's description); nil unless `failed`.
     public var failureReason: String?
+    /// True when `drainOnce` was called from inside this drainer's own pass (from a
+    /// normalizer, a sink or a fault injector) and so did nothing.
+    public var skippedReentrant = false
 
     public init() {}
 }
 
 public protocol PipelineObserver: AnyObject, Sendable {
-    /// Called after the store commit, with what this pass wrote. Never inside a transaction.
+    /// Called after the pass, outside every lock and transaction, with what the pass
+    /// changed in the store (rows actually inserted or changed; a redelivery that
+    /// changed nothing is not reported). Never called with an empty batch.
     func pipelineDidStore(_ batch: NormalizedBatch, provider: String)
 }
 
-/// The live path: spool -> raw archive -> normalize -> events.db -> complete.
+/// A second destination the drainer writes to on every pass (the "write to both"
+/// backup during cutover). Sinks run after the events.db commit and before the
+/// spool rows are completed, with the pass's full normalized batch and the archived
+/// records it came from, so a sink sees every record at least once. A sink that
+/// throws fails the pass: the spool rows stay, each is charged one failed attempt,
+/// and it is retried on the next pass (a record that reaches
+/// `ProviderSpool.maxAttempts` is quarantined, bytes kept). Sinks must therefore be
+/// idempotent.
+public protocol PipelineSink: Sendable {
+    func write(_ batch: NormalizedBatch, records: [ArchivedRecord], provider: String) throws
+}
+
+/// The live path: spool -> raw archive -> normalize -> events.db -> sinks -> complete.
 /// A spool row is only completed after its record is in the archive and its
 /// normalized rows are committed, so a crash at any step loses nothing and the
 /// next pass converges (every write is idempotent).
+///
+/// **Durability ordering.** The archive, events.db and the spool all run
+/// `synchronous=FULL`, so each commit is on disk before the next step starts:
+/// the archive commit precedes normalization, the events.db commit precedes the
+/// sinks, and those precede `complete`. A power loss can therefore only lose the
+/// steps after the last durable commit, and every one of those is redone by the
+/// next pass, because the spool row is still there. There is no window in which a
+/// completed record is missing from events.db, so no watermark or catch-up scan is
+/// needed.
+///
+/// Normalization reads the **archived** copy, never the spool copy, so events.db
+/// always derives from the bytes a replay will see. A record whose key is already
+/// archived with different bytes (`ArchiveAppendOutcome.conflict`) is quarantined
+/// with its payload, never completed.
+///
+/// **Reentrancy.** `drainOnce` called on the thread that is running this
+/// drainer's pass (from a normalizer, a sink or a fault injector) does not wait
+/// for the pass it is inside; it returns at once with `skippedReentrant` set.
+/// Observers run after the pass has released its lock, so an observer may call
+/// `drainOnce` or `drainUntilEmpty` freely.
 ///
 /// Observer notification is at-most-once: a crash after the spool rows are
 /// completed and before observers are told loses that batch's notification,
 /// because the replay finds nothing left to write. Observers that must be
 /// reliable should resync from the store.
+///
+/// The drainer registers with the store as a live writer for its lifetime, so
+/// a replay cannot start a bulk load under it.
 public final class PipelineDrainer: @unchecked Sendable {
     private struct StepFailure: Error, CustomStringConvertible {
         let description: String
@@ -48,6 +97,8 @@ public final class PipelineDrainer: @unchecked Sendable {
     private let normalizer: any Normalizer
     private let store: EventStore
     private let batchSize: Int
+    private let maxBatchBytes: Int
+    private let sinks: [any PipelineSink]
     private let faultInjector: (@Sendable (DrainStep) throws -> Void)?
 
     private let lock = NSLock()
@@ -58,15 +109,29 @@ public final class PipelineDrainer: @unchecked Sendable {
     private let wakeSignal = DispatchSemaphore(value: 0)
     /// Serializes passes so a manual drain never interleaves with the thread's.
     private let passLock = NSLock()
+    /// The thread running a pass right now (guarded by `lock`).
+    private var passOwner: Thread?
 
+    /// Throws `PipelineError.providerMismatch` unless the spool, the archive and the
+    /// normalizer name the same provider, and `EventStoreError.bulkLoadInProgress`
+    /// while a replay holds the store.
     public init(spool: ProviderSpool, archive: RawArchive, normalizer: any Normalizer,
                 store: EventStore, batchSize: Int = 200,
-                faultInjector: (@Sendable (DrainStep) throws -> Void)? = nil) {
+                maxBatchBytes: Int = PipelineLimits.defaultMaxBatchBytes,
+                sinks: [any PipelineSink] = [],
+                faultInjector: (@Sendable (DrainStep) throws -> Void)? = nil) throws {
+        guard spool.provider == archive.provider, archive.provider == normalizer.provider else {
+            throw PipelineError.providerMismatch(
+                spool: spool.provider, archive: archive.provider, normalizer: normalizer.provider)
+        }
+        try store.attachLiveWriter()
         self.spool = spool
         self.archive = archive
         self.normalizer = normalizer
         self.store = store
         self.batchSize = batchSize
+        self.maxBatchBytes = maxBatchBytes
+        self.sinks = sinks
         self.faultInjector = faultInjector
     }
 
@@ -78,15 +143,38 @@ public final class PipelineDrainer: @unchecked Sendable {
     }
 
     /// One pass. Never throws: errors leave the spool rows in place and set `failed`.
+    /// Called from inside this drainer's own pass it does nothing and returns an
+    /// outcome with `skippedReentrant` set.
     @discardableResult
     public func drainOnce() -> DrainOutcome {
-        passLock.lock(); defer { passLock.unlock() }
+        lock.lock()
+        let reentrant = passOwner === Thread.current
+        lock.unlock()
+        if reentrant {
+            var skipped = DrainOutcome()
+            skipped.skippedReentrant = true
+            return skipped
+        }
+
         var outcome = DrainOutcome()
+        var written = NormalizedBatch()
+        passLock.lock()
+        lock.lock(); passOwner = Thread.current; lock.unlock()
         do {
-            try pass(&outcome)
+            written = try pass(&outcome)
         } catch {
             outcome.failed = true
             outcome.failureReason = String(describing: error)
+        }
+        lock.lock(); passOwner = nil; lock.unlock()
+        passLock.unlock()
+
+        if !written.isEmpty {
+            lock.lock()
+            observers.removeAll { $0.observer == nil }
+            let live = observers.compactMap(\.observer)
+            lock.unlock()
+            for observer in live { observer.pipelineDidStore(written, provider: normalizer.provider) }
         }
         return outcome
     }
@@ -105,6 +193,7 @@ public final class PipelineDrainer: @unchecked Sendable {
             total.stored += one.stored
             total.quarantined += one.quarantined
             total.completed += one.completed
+            if one.skippedReentrant { total.skippedReentrant = true }
             if one.failed {
                 total.failed = true
                 total.failureReason = one.failureReason
@@ -120,51 +209,104 @@ public final class PipelineDrainer: @unchecked Sendable {
         }
     }
 
-    private func pass(_ outcome: inout DrainOutcome) throws {
-        let pending = try spool.pendingBatch(limit: batchSize)
-        guard !pending.isEmpty else { return }
+    /// Charges one failed attempt; quarantines the record when attempts run out.
+    private func charge(_ spooled: SpooledRecord, reason: String, _ outcome: inout DrainOutcome) throws {
+        if try spool.recordFailure(id: spooled.id, reason: reason) {
+            try spool.quarantine(id: spooled.id, reason: reason)
+            outcome.quarantined += 1
+        }
+    }
+
+    /// The archived copies, by id. A corrupt row is missing from the result (its
+    /// spool record is charged a failure by the caller).
+    private func readArchived(_ ids: [Int64]) throws -> [Int64: Result<ArchivedRecord, Error>] {
+        var result: [Int64: Result<ArchivedRecord, Error>] = [:]
+        do {
+            for archived in try archive.records(ids: ids) { result[archived.id] = .success(archived) }
+        } catch RawArchiveError.corruptPayload {
+            for id in ids {
+                do {
+                    if let archived = try archive.record(id: id) { result[id] = .success(archived) }
+                } catch let error as RawArchiveError {
+                    result[id] = .failure(error)
+                }
+            }
+        }
+        return result
+    }
+
+    /// Returns what the store write changed, for the observers.
+    private func pass(_ outcome: inout DrainOutcome) throws -> NormalizedBatch {
+        let pending = try spool.pendingBatch(limit: batchSize, maxBytes: maxBatchBytes)
+        guard !pending.isEmpty else { return NormalizedBatch() }
         outcome.read = pending.count
         try inject(.afterRead)
 
         // Nothing is ever completed before it is in the archive.
         let appended = try archive.append(pending.map(\.record))
-        guard appended.ids.count == pending.count else {
-            throw StepFailure(description: "archive returned \(appended.ids.count) ids for \(pending.count) records")
+        guard appended.outcomes.count == pending.count else {
+            throw StepFailure(
+                description: "archive returned \(appended.outcomes.count) outcomes for \(pending.count) records")
         }
-        outcome.archived = pending.count
+        var accepted: [(spooled: SpooledRecord, archiveID: Int64)] = []
+        for (spooled, result) in zip(pending, appended.outcomes) {
+            switch result {
+            case .inserted(let id), .duplicate(let id):
+                accepted.append((spooled, id))
+            case .conflict(_, let archivedSHA, let incomingSHA):
+                // The archive keeps the first bytes; these differ, so keep them in
+                // quarantine rather than acknowledging bytes that were never stored.
+                try spool.quarantine(
+                    id: spooled.id,
+                    reason: "dedup-key conflict: archived sha \(archivedSHA) vs incoming sha \(incomingSHA)")
+                outcome.quarantined += 1
+            }
+        }
+        outcome.archived = accepted.count
         try inject(.afterArchive)
 
+        // Normalize the archived copy: events.db derives from the bytes replay sees.
+        let archivedCopies = try readArchived(accepted.map(\.archiveID))
         var merged = NormalizedBatch()
         var normalizedIDs: [Int64] = []
-        for (spooled, archivedID) in zip(pending, appended.ids) {
+        var normalizedRecords: [ArchivedRecord] = []
+        var normalizedSpooled: [SpooledRecord] = []
+        for (spooled, archiveID) in accepted {
             do {
-                let batch = try normalizer.normalize(ArchivedRecord(id: archivedID, record: spooled.record))
+                guard let copy = archivedCopies[archiveID] else {
+                    throw StepFailure(description: "archive row \(archiveID) missing after append")
+                }
+                let archived = try copy.get()
+                let batch = try normalizer.normalize(archived)
                 merged.append(batch)
                 normalizedIDs.append(spooled.id)
+                normalizedRecords.append(archived)
+                normalizedSpooled.append(spooled)
             } catch {
-                let reason = String(describing: error)
-                let exhausted = try spool.recordFailure(id: spooled.id, reason: reason)
-                if exhausted {
-                    try spool.quarantine(id: spooled.id, reason: reason)
-                    outcome.quarantined += 1
-                }
+                try charge(spooled, reason: String(describing: error), &outcome)
             }
         }
         try inject(.afterNormalize)
 
-        try store.write(merged, provider: normalizer.provider)
+        let written = try store.write(merged, provider: normalizer.provider)
         outcome.stored = normalizedIDs.count
         try inject(.afterStore)
+
+        for sink in sinks {
+            do {
+                try sink.write(merged, records: normalizedRecords, provider: normalizer.provider)
+            } catch {
+                let reason = "sink \(type(of: sink)) failed: \(error)"
+                for spooled in normalizedSpooled { try charge(spooled, reason: reason, &outcome) }
+                throw StepFailure(description: reason)
+            }
+        }
+        try inject(.afterSinks)
 
         try spool.complete(ids: normalizedIDs)
         outcome.completed = normalizedIDs.count
         try inject(.afterComplete)
-
-        lock.lock()
-        observers.removeAll { $0.observer == nil }
-        let live = observers.compactMap(\.observer)
-        lock.unlock()
-        for observer in live { observer.pipelineDidStore(merged, provider: normalizer.provider) }
+        return written
     }
 
     // MARK: - Background thread
@@ -218,6 +360,7 @@ public final class PipelineDrainer: @unchecked Sendable {
         // The worker holds no strong reference; make it exit promptly.
         lock.lock(); stopRequested = true; lock.unlock()
         wakeSignal.signal()
+        store.detachLiveWriter()
     }
 
     private func shouldStop() -> Bool {

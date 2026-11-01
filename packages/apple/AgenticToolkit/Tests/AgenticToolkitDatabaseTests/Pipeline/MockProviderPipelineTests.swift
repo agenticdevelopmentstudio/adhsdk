@@ -38,7 +38,7 @@ final class MockProviderPipelineTests: XCTestCase {
         let archive = try RawArchive(path: path("raw.db"), provider: "mock")
         let store = try EventStore(path: path("events.db"))
         let input = records(1000)
-        var rng = SeededGenerator(seed: 42)
+        var rng = ProviderConformance.SeededGenerator(seed: 42)
         var crashes = 0
         var next = 0
         var pass = 0
@@ -61,7 +61,7 @@ final class MockProviderPipelineTests: XCTestCase {
             struct Crash: Error {}
             let step = crashStep
             // A fresh drainer each pass models a restarted process.
-            let drainer = PipelineDrainer(
+            let drainer = try PipelineDrainer(
                 spool: spool, archive: archive, normalizer: MockProvider(), store: store, batchSize: 50,
                 faultInjector: { if $0 == step { throw Crash() } })
             if drainer.drainOnce().failed { crashes += 1 }
@@ -76,7 +76,11 @@ final class MockProviderPipelineTests: XCTestCase {
         }
         XCTAssertEqual(try archive.count(), input.count)
         XCTAssertEqual(try store.canonicalDump(), try replayDump(archive, to: "replay.db"))
-        XCTAssertEqual(try store.counts().events, 250)
+        // The event and session ops each emit one event; turn and message ops one turn / message.
+        let counts = try store.counts()
+        XCTAssertEqual(counts.events, 500)
+        XCTAssertEqual(counts.turns, 250)
+        XCTAssertEqual(counts.messages, 250)
     }
 
     func testHugePayloadsSurvive() throws {
@@ -87,8 +91,8 @@ final class MockProviderPipelineTests: XCTestCase {
             MockProvider.record(key: "huge\($0)", op: "event", t: 1_800_000_000 + Double($0), n: $0, pad: 10_000_000)
         }
         try spool.append(input)
-        let drainer = PipelineDrainer(spool: spool, archive: archive, normalizer: MockProvider(), store: store,
-                                      batchSize: 2)
+        let drainer = try PipelineDrainer(spool: spool, archive: archive, normalizer: MockProvider(), store: store,
+                                          batchSize: 2)
         let outcome = drainer.drainUntilEmpty()
         XCTAssertFalse(outcome.failed, outcome.failureReason ?? "")
         XCTAssertEqual(try spool.pendingCount(), 0)
@@ -106,7 +110,8 @@ final class MockProviderPipelineTests: XCTestCase {
         do {
             let store = try EventStore(path: path("events.db"))
             try spool.append(records(300))
-            PipelineDrainer(spool: spool, archive: archive, normalizer: MockProvider(), store: store).drainUntilEmpty()
+            try PipelineDrainer(spool: spool, archive: archive, normalizer: MockProvider(), store: store)
+                .drainUntilEmpty()
             before = try store.canonicalDump()
         }
         XCTAssertFalse(before.isEmpty)
@@ -118,5 +123,46 @@ final class MockProviderPipelineTests: XCTestCase {
         let report = try Replayer.replay(archive: archive, normalizer: MockProvider(), into: rebuilt)
         XCTAssertEqual(report.failed, 0)
         XCTAssertEqual(try rebuilt.canonicalDump(), before)
+    }
+
+    /// Source -> spool -> drainer, with the source crashing on both sides of its append
+    /// and restarting from the cursor it committed: nothing lost, nothing spooled twice.
+    func testMockSourceCursorSurvivesCrashesEndToEnd() throws {
+        let fixture = tmpDir.appendingPathComponent("transcript.jsonl")
+        let ops = ["event", "session", "turn", "message"]
+        try MockSource.writeFixture((0..<120).map {
+            MockProvider.payload(op: ops[$0 % ops.count], session: "s\($0 % 4)", t: 1_800_000_000 + Double($0), n: $0)
+        }, to: fixture)
+        let spool = try ProviderSpool(path: path("ingest.db"), provider: "mock")
+        let archive = try RawArchive(path: path("raw.db"), provider: "mock")
+        let store = try EventStore(path: path("events.db"))
+        let drainer = try PipelineDrainer(spool: spool, archive: archive, normalizer: MockProvider(), store: store,
+                                          batchSize: 30)
+        struct Crash: Error {}
+        // Poll 2 crashes before its append, poll 4 after it; each crash restarts the source.
+        let plan: [Int: SourceStep] = [2: .beforeAppend, 4: .afterAppend]
+        var poll = 0
+        var crashes = 0
+        while poll < 100 {
+            poll += 1
+            let step = plan[poll]
+            let source = MockSource(fileURL: fixture, maxRecordsPerPoll: 25,
+                                    faultInjector: { if $0 == step { throw Crash() } })
+            do {
+                if try source.poll(into: spool) == 0 { break }
+            } catch is Crash {
+                crashes += 1
+            }
+            drainer.drainUntilEmpty()
+        }
+        XCTAssertEqual(crashes, 2)
+        XCTAssertEqual(try spool.pendingCount(), 0)
+        XCTAssertEqual(try archive.count(), 120)
+        let size = try Data(contentsOf: fixture).count
+        let source = MockSource(fileURL: fixture)
+        XCTAssertEqual(try spool.sourceState(source.cursorKey), Data(String(size).utf8))
+        XCTAssertEqual(try store.counts().events, 60)
+        XCTAssertEqual(try store.counts().messages, 30)
+        XCTAssertEqual(try store.canonicalDump(), try replayDump(archive, to: "replay.db"))
     }
 }

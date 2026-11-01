@@ -36,6 +36,10 @@ public struct QuarantinedRecord: Sendable, Equatable {
 /// spool only through `complete` or by moving to quarantine; it is never lost.
 /// `dedup_key` is deliberately not unique here: redeliveries are collapsed by the
 /// archive and the store, so the spool never refuses input.
+///
+/// Durability: `synchronous=FULL`. An append is acknowledged to the source (a hook
+/// exits, a cursor advances) only after it commits, so a commit must survive power
+/// loss; under NORMAL the last transactions in the WAL can roll back.
 public final class ProviderSpool: @unchecked Sendable {
     public static func fileName(provider: String) -> String { "\(provider)-ingest.db" }
     public static let maxAttempts = 5
@@ -48,7 +52,7 @@ public final class ProviderSpool: @unchecked Sendable {
         self.pool = try BoundedDatabase(
             path: path, readers: 2,
             readDeadline: .seconds(30), writeDeadline: .seconds(60),
-            prepare: { conn in try conn.execute(sql: "PRAGMA synchronous=NORMAL") }
+            prepare: { conn in try conn.execute(sql: "PRAGMA synchronous=FULL") }
         )
         try pool.write { conn in
             try conn.execute(sql: """
@@ -149,14 +153,25 @@ public final class ProviderSpool: @unchecked Sendable {
 
     // MARK: - Reading
 
-    /// Oldest first (ascending id). A limit of zero or less returns nothing.
-    public func pendingBatch(limit: Int) throws -> [SpooledRecord] {
+    /// Oldest first (ascending id), at most `limit` records whose payloads total at
+    /// most `maxBytes`; always at least one record when any is pending, even one
+    /// larger than the budget. A limit of zero or less returns nothing.
+    public func pendingBatch(limit: Int, maxBytes: Int = PipelineLimits.defaultMaxBatchBytes) throws
+        -> [SpooledRecord] {
         guard limit > 0 else { return [] }
         return try pool.read { conn in
+            // Size first, so an oversized batch is cut before any payload is read.
+            let sized = try Row.fetchAll(conn, sql: """
+                SELECT id, length(payload) AS size FROM spooled_record ORDER BY id ASC LIMIT ?
+                """, arguments: [limit])
+            let sizes: [Int] = sized.map { $0["size"] ?? 0 }
+            let keep = PipelineLimits.prefixWithinBudget(sizes, maxBytes: maxBytes)
+            guard keep > 0 else { return [] }
+            let lastID: Int64 = sized[keep - 1]["id"]
             let rows = try Row.fetchAll(conn, sql: """
                 SELECT id, source_kind, dedup_key, received_at, payload, attempts
-                FROM spooled_record ORDER BY id ASC LIMIT ?
-                """, arguments: [limit])
+                FROM spooled_record WHERE id <= ? ORDER BY id ASC LIMIT ?
+                """, arguments: [lastID, keep])
             return rows.map { row in
                 SpooledRecord(id: row["id"], record: makeRecord(row), attempts: row["attempts"])
             }

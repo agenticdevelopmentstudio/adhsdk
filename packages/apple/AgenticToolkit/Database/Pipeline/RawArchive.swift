@@ -21,22 +21,48 @@ public struct ArchivedRecord: Sendable, Equatable {
     }
 }
 
-public struct ArchiveAppendResult: Sendable, Equatable {
-    /// Same order as the input; an existing id for a duplicate.
-    public let ids: [Int64]
-    /// New rows only; duplicates are not counted.
-    public let insertedCount: Int
+/// What happened to one record handed to `RawArchive.append`.
+public enum ArchiveAppendOutcome: Sendable, Equatable {
+    /// Stored as a new row.
+    case inserted(Int64)
+    /// The key was already archived with the same bytes (sha256 matches).
+    case duplicate(Int64)
+    /// The key was already archived with DIFFERENT bytes. The archive keeps the
+    /// first payload; the incoming bytes are not stored here, so the caller must
+    /// keep them (the drainer quarantines the spool record).
+    case conflict(existingID: Int64, archivedSHA256: String, incomingSHA256: String)
 
-    public init(ids: [Int64], insertedCount: Int) {
-        self.ids = ids
-        self.insertedCount = insertedCount
+    /// The archive row that holds this key.
+    public var id: Int64 {
+        switch self {
+        case .inserted(let id), .duplicate(let id): return id
+        case .conflict(let id, _, _): return id
+        }
+    }
+}
+
+public struct ArchiveAppendResult: Sendable, Equatable {
+    /// Same order as the input.
+    public let outcomes: [ArchiveAppendOutcome]
+
+    public init(outcomes: [ArchiveAppendOutcome]) {
+        self.outcomes = outcomes
+    }
+
+    /// Same order as the input; the existing id for a duplicate or a conflict.
+    public var ids: [Int64] { outcomes.map(\.id) }
+
+    /// New rows only; duplicates and conflicts are not counted.
+    public var insertedCount: Int {
+        outcomes.filter { if case .inserted = $0 { return true } else { return false } }.count
     }
 }
 
 /// The untrimmed backup of everything a provider ever ingested: every record is
 /// stored verbatim (LZFSE-compressed when that helps), append-only, and never
 /// deleted from, updated or trimmed by any code in this framework. A duplicate
-/// dedup key keeps the first payload. One file per provider.
+/// dedup key keeps the first payload; `append` reports a key that arrives again
+/// with different bytes as `.conflict`. One file per provider.
 public final class RawArchive: @unchecked Sendable {
     public static func fileName(provider: String) -> String { "\(provider)-raw.db" }
 
@@ -82,18 +108,21 @@ public final class RawArchive: @unchecked Sendable {
 
     // MARK: - Writing
 
-    /// Stores every record in one transaction. Throws `.providerMismatch` before
-    /// writing anything if any record belongs to another provider.
+    /// Stores every record in one transaction and reports, per record, whether it
+    /// was inserted, a byte-identical duplicate, or a conflict (same key, different
+    /// sha256), including against an earlier record in the same call. Throws
+    /// `.providerMismatch` before writing anything if any record belongs to another
+    /// provider.
+    @discardableResult
     public func append(_ records: [RawRecord]) throws -> ArchiveAppendResult {
         if let foreign = records.first(where: { $0.provider != provider }) {
             throw RawArchiveError.providerMismatch(expected: provider, got: foreign.provider)
         }
-        // Compress and hash outside the transaction.
+        // Compress, verify and hash outside the transaction.
         let prepared = records.map { Self.encode($0.payload) }
         return try pool.write { conn in
-            var ids: [Int64] = []
-            ids.reserveCapacity(records.count)
-            var inserted = 0
+            var outcomes: [ArchiveAppendOutcome] = []
+            outcomes.reserveCapacity(records.count)
             for (record, encoded) in zip(records, prepared) {
                 try conn.execute(sql: """
                     INSERT INTO raw_record(source_kind, dedup_key, received_at, payload_size,
@@ -104,15 +133,25 @@ public final class RawArchive: @unchecked Sendable {
                         record.sourceKind, record.dedupKey, record.receivedAt.timeIntervalSince1970,
                         record.payload.count, encoded.sha256, encoded.compression, encoded.stored
                     ])
-                if conn.changesCount > 0 { inserted += 1 }
-                guard let id = try Int64.fetchOne(
-                    conn, sql: "SELECT id FROM raw_record WHERE dedup_key = ?", arguments: [record.dedupKey]
+                let inserted = conn.changesCount > 0
+                guard let row = try Row.fetchOne(
+                    conn, sql: "SELECT id, payload_sha256 FROM raw_record WHERE dedup_key = ?",
+                    arguments: [record.dedupKey]
                 ) else {
                     throw DatabaseError(message: "raw_record row missing right after insert")
                 }
-                ids.append(id)
+                let id: Int64 = row["id"]
+                let archivedSHA: String = row["payload_sha256"]
+                if inserted {
+                    outcomes.append(.inserted(id))
+                } else if archivedSHA == encoded.sha256 {
+                    outcomes.append(.duplicate(id))
+                } else {
+                    outcomes.append(.conflict(
+                        existingID: id, archivedSHA256: archivedSHA, incomingSHA256: encoded.sha256))
+                }
             }
-            return ArchiveAppendResult(ids: ids, insertedCount: inserted)
+            return ArchiveAppendResult(outcomes: outcomes)
         }
     }
 
@@ -133,6 +172,31 @@ public final class RawArchive: @unchecked Sendable {
             let rows = try Row.fetchAll(
                 conn, sql: Self.selectSQL + " WHERE id > ? ORDER BY id ASC LIMIT ?", arguments: [id, limit])
             return try rows.map { try decode($0) }
+        }
+    }
+
+    /// Ids greater than `id`, ascending, at most `limit`, and cut so their total
+    /// payload size stays within `maxBytes` (always at least one id).
+    public func ids(after id: Int64, limit: Int,
+                    maxBytes: Int = PipelineLimits.defaultMaxBatchBytes) throws -> [Int64] {
+        try pool.read { conn in
+            let rows = try Row.fetchAll(
+                conn, sql: "SELECT id, payload_size FROM raw_record WHERE id > ? ORDER BY id ASC LIMIT ?",
+                arguments: [id, limit])
+            let sizes: [Int] = rows.map { $0["payload_size"] }
+            let keep = PipelineLimits.prefixWithinBudget(sizes, maxBytes: maxBytes)
+            return rows.prefix(keep).map { $0["id"] }
+        }
+    }
+
+    /// The records with these ids, ascending; ids that do not exist are skipped.
+    public func records(ids: [Int64]) throws -> [ArchivedRecord] {
+        guard let first = ids.min(), let last = ids.max() else { return [] }
+        let wanted = Set(ids)
+        return try pool.read { conn in
+            let rows = try Row.fetchAll(
+                conn, sql: Self.selectSQL + " WHERE id BETWEEN ? AND ? ORDER BY id ASC", arguments: [first, last])
+            return try rows.filter { wanted.contains($0["id"]) }.map { try decode($0) }
         }
     }
 
@@ -164,15 +228,22 @@ public final class RawArchive: @unchecked Sendable {
         let sha256: String
     }
 
-    private static func hex(_ data: Data) -> String {
+    /// Same as `Core/Text/DigestHex.swift` `hexString`; copied because Pipeline
+    /// (the apple-database tier) must not import Core.
+    static func hex(_ data: Data) -> String {
         SHA256.hash(data: data).map { String(format: "%02x", $0) }.joined()
     }
 
+    /// Compresses when that helps, then decompresses and compares before trusting
+    /// it: a compressor bug falls back to storing the bytes uncompressed rather than
+    /// surfacing only at replay.
     private static func encode(_ payload: Data) -> Encoded {
         let digest = hex(payload)
         if !payload.isEmpty,
            let compressed = try? (payload as NSData).compressed(using: .lzfse) as Data,
-           compressed.count < payload.count {
+           compressed.count < payload.count,
+           let roundTrip = try? (compressed as NSData).decompressed(using: .lzfse) as Data,
+           roundTrip == payload {
             return Encoded(stored: compressed, compression: compressionLZFSE, sha256: digest)
         }
         return Encoded(stored: payload, compression: compressionNone, sha256: digest)
