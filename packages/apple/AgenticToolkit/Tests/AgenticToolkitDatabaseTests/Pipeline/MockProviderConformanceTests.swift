@@ -4,7 +4,7 @@ import XCTest
 
 /// Wraps the mock normalizer and perturbs its output.
 private struct PerturbedNormalizer: Normalizer {
-    enum Mode { case impure, unstableKeys, wrongRawRef, stateful, throwsAlways, emptyBatches }
+    enum Mode { case impure, unstableKeys, wrongRawRef, stateful, throwsAlways, emptyBatches, mangledKey, dropsOne }
     let provider = "mock"
     let mode: Mode
     /// Carries state across calls, so output depends on history rather than on the record.
@@ -21,6 +21,7 @@ private struct PerturbedNormalizer: Normalizer {
     func normalize(_ record: ArchivedRecord) throws -> NormalizedBatch {
         if mode == .throwsAlways { throw Boom() }
         if mode == .emptyBatches { return NormalizedBatch() }
+        if mode == .dropsOne && record.record.dedupKey == "k8" { return NormalizedBatch() }
         var batch = try MockProvider().normalize(record)
         switch mode {
         case .impure:
@@ -32,7 +33,12 @@ private struct PerturbedNormalizer: Normalizer {
         case .stateful:
             let number = calls.next()
             for index in batch.events.indices { batch.events[index].summary = "call \(number)" }
-        case .throwsAlways, .emptyBatches:
+        case .mangledKey:
+            // Keys stay unique and stable, but one fixture's rows no longer carry its dedup key.
+            for index in batch.events.indices where record.record.dedupKey == "k4" {
+                batch.events[index].dedupKey = "mangled-\(batch.events[index].dedupKey)"
+            }
+        case .throwsAlways, .emptyBatches, .dropsOne:
             break
         }
         return batch
@@ -95,29 +101,42 @@ final class MockProviderConformanceTests: XCTestCase {
         XCTAssertTrue(failures.contains { $0.check == "keys" }, "\(failures)")
     }
 
-    private func failingChecks(_ mode: PerturbedNormalizer.Mode) throws -> Set<String> {
-        let failures = try ProviderConformance.check(
-            normalizer: PerturbedNormalizer(mode: mode), fixtures: Self.fixtures(), malformedKeys: ["bad0"],
-            workDirectory: tmpDir.appendingPathComponent("w"))
-        return Set(failures.map(\.check))
+    /// Failures from a perturbed adapter. `wellFormedOnly` drops `bad0` so no unrelated check fires first.
+    private func failures(_ mode: PerturbedNormalizer.Mode,
+                          wellFormedOnly: Bool = true) throws -> [ConformanceFailure] {
+        let fixtures = wellFormedOnly ? Self.fixtures().filter { $0.dedupKey != "bad0" } : Self.fixtures()
+        return try ProviderConformance.check(
+            normalizer: PerturbedNormalizer(mode: mode), fixtures: fixtures,
+            malformedKeys: wellFormedOnly ? [] : ["bad0"], workDirectory: tmpDir.appendingPathComponent("w"))
     }
 
     func testConformanceCatchesWrongRawRef() throws {
-        XCTAssertTrue(try failingChecks(.wrongRawRef).contains("rawRef"))
+        let found = try failures(.wrongRawRef, wellFormedOnly: false)
+        XCTAssertTrue(found.contains { $0.check == "rawRef" && $0.detail.contains("emitted rawRef") }, "\(found)")
     }
 
     func testConformanceCatchesLiveReplayDivergenceAndRedeliveryDrift() throws {
-        let checks = try failingChecks(.stateful)
+        let checks = Set(try failures(.stateful, wellFormedOnly: false).map(\.check))
         XCTAssertTrue(checks.contains("liveEqualsReplay"), "\(checks)")
         XCTAssertTrue(checks.contains("idempotentRedelivery"), "\(checks)")
     }
 
     func testConformanceCatchesNormalizerThatThrowsOnEverything() throws {
-        XCTAssertTrue(try failingChecks(.throwsAlways).contains("dataLoss"))
+        let found = try failures(.throwsAlways)
+        XCTAssertTrue(found.contains { $0.check == "normalizerThrew" && $0.detail.contains("threw") }, "\(found)")
     }
 
     func testConformanceCatchesNormalizerThatEmitsNothing() throws {
-        XCTAssertTrue(try failingChecks(.emptyBatches).contains("dataLoss"))
+        let found = try failures(.emptyBatches)
+        XCTAssertTrue(found.contains { $0.check == "emptyBatch" && $0.detail.contains("yielded no rows") }, "\(found)")
+    }
+
+    func testConformanceCatchesFixtureWhoseRowsNeverReachTheStore() throws {
+        let mangled = try failures(.mangledKey)
+        XCTAssertEqual(mangled.filter { $0.check == "unstoredFixture" }.map(\.detail),
+                       ["no event, turn or message in the store is keyed by k4"], "\(mangled)")
+        let dropped = try failures(.dropsOne)
+        XCTAssertTrue(dropped.contains { $0.check == "unstoredFixture" && $0.detail.hasSuffix("by k8") }, "\(dropped)")
     }
 
     func testConformanceNeverRemovesCallersDirectory() throws {

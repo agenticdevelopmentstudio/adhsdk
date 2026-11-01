@@ -21,8 +21,11 @@ public enum ProviderConformance {
     /// archived, fail to normalize, end up quarantined, and be the only replay failures. Every other
     /// fixture must normalize to a non-empty batch. Supply fixtures of every `sourceKind` the
     /// adapter handles (for Claude: hook payloads and transcript lines).
-    /// - dataLoss: no well-formed fixture throws or yields an empty batch; every fixture is archived;
-    ///   the quarantined set and the replay failures equal `malformedKeys` exactly.
+    /// - notArchived, normalizerThrew, emptyBatch, malformedAccepted, undrained, quarantineMismatch,
+    ///   replayMismatch: nothing is lost. Every fixture is archived; no well-formed fixture throws or
+    ///   yields an empty batch; the quarantined set and the replay failures equal `malformedKeys` exactly.
+    /// - unstoredFixture: after the live drain the store holds an event, turn or message row for every
+    ///   well-formed fixture, keyed `<dedupKey>` or `<dedupKey>#<suffix>`.
     /// - purity: `normalize(r)` twice gives equal batches (or equal thrown descriptions).
     /// - keys: every event/turn/message key is unique across the fixtures and stable across runs.
     /// - rawRef: every emitted row's rawRef equals the input record's archive id.
@@ -62,6 +65,7 @@ public enum ProviderConformance {
         let live = try drainAll(normalizer, fixtures, in: root.appendingPathComponent("live"),
                                 passes: 1, crashAt: nil, rng: &rng)
         failures += try checkPipelineLoss(live, fixtures: fixtures, malformedKeys: malformedKeys)
+        failures += checkStored(live.dump, fixtures: fixtures, malformedKeys: malformedKeys)
 
         let replayed = try replayDump(normalizer, archive: live.archive, in: root.appendingPathComponent("replay"))
         if live.dump != replayed.dump {
@@ -74,7 +78,7 @@ public enum ProviderConformance {
         if replayKeys != malformedKeys || replayed.report.failed != malformedKeys.count {
             let ids = replayed.report.failures.keys.sorted()
             failures.append(ConformanceFailure(
-                check: "dataLoss", detail: "replay failed ids \(ids) (keys \(replayKeys.sorted())); "
+                check: "replayMismatch", detail: "replay failed ids \(ids) (keys \(replayKeys.sorted())); "
                     + "expected exactly \(malformedKeys.sorted())"))
         }
 
@@ -88,6 +92,11 @@ public enum ProviderConformance {
         for step in DrainStep.allCases {
             let crashed = try drainAll(normalizer, fixtures, in: root.appendingPathComponent("crash-\(step.rawValue)"),
                                        passes: 1, crashAt: step, rng: &rng)
+            if crashed.faultFired == false {
+                failures.append(ConformanceFailure(
+                    check: "crashRecovery",
+                    detail: "the fault at \(step.rawValue) never fired; the pass proves nothing"))
+            }
             if crashed.dump != live.dump {
                 failures.append(ConformanceFailure(
                     check: "crashRecovery",
@@ -113,17 +122,18 @@ public enum ProviderConformance {
         var failures: [ConformanceFailure] = []
         let archivedKeys = Set(archived.map(\.record.dedupKey))
         for fixture in fixtures where !archivedKeys.contains(fixture.dedupKey) {
-            failures.append(ConformanceFailure(check: "dataLoss", detail: "\(fixture.dedupKey) is not archived"))
+            failures.append(ConformanceFailure(check: "notArchived", detail: "\(fixture.dedupKey) is not archived"))
         }
         for item in archived where !malformedKeys.contains(item.record.dedupKey) {
             switch run(normalizer, item) {
             case .threw(let reason):
                 failures.append(ConformanceFailure(
-                    check: "dataLoss", detail: "well-formed \(item.record.dedupKey) (id \(item.id)) threw: \(reason)"))
+                    check: "normalizerThrew",
+                    detail: "well-formed \(item.record.dedupKey) (id \(item.id)) threw: \(reason)"))
             case .batch(let batch):
                 if batch == NormalizedBatch() {
                     failures.append(ConformanceFailure(
-                        check: "dataLoss",
+                        check: "emptyBatch",
                         detail: "well-formed \(item.record.dedupKey) (id \(item.id)) yielded no rows"))
                 }
             }
@@ -131,7 +141,35 @@ public enum ProviderConformance {
         for item in archived where malformedKeys.contains(item.record.dedupKey) {
             if case .batch = run(normalizer, item) {
                 failures.append(ConformanceFailure(
-                    check: "dataLoss", detail: "declared-malformed \(item.record.dedupKey) normalized without error"))
+                    check: "malformedAccepted",
+                    detail: "declared-malformed \(item.record.dedupKey) normalized without error"))
+            }
+        }
+        return failures
+    }
+
+    /// Every well-formed fixture must have a stored event/turn/message whose key is the fixture's
+    /// dedup key or that key followed by "#suffix".
+    private static func checkStored(_ dump: [String], fixtures: [RawRecord],
+                                    malformedKeys: Set<String>) -> [ConformanceFailure] {
+        var roots = Set<String>()
+        for line in dump {
+            guard let data = line.data(using: .utf8),
+                  let object = try? JSONDecoder().decode([String: JSONValue].self, from: data),
+                  case .string(let table)? = object["table"], table != "sessions" else { continue }
+            guard case .string(let key)? = object[table == "messages" ? "uuid" : "dedup_key"] else { continue }
+            roots.insert(key)
+            for (offset, character) in key.enumerated() where character == "#" {
+                roots.insert(String(key.prefix(offset)))
+            }
+        }
+        var failures: [ConformanceFailure] = []
+        var reported = Set<String>()
+        for fixture in fixtures where !malformedKeys.contains(fixture.dedupKey) && !roots.contains(fixture.dedupKey) {
+            if reported.insert(fixture.dedupKey).inserted {
+                failures.append(ConformanceFailure(
+                    check: "unstoredFixture",
+                    detail: "no event, turn or message in the store is keyed by \(fixture.dedupKey)"))
             }
         }
         return failures
@@ -141,16 +179,16 @@ public enum ProviderConformance {
                                           malformedKeys: Set<String>) throws -> [ConformanceFailure] {
         var failures: [ConformanceFailure] = []
         if live.pending != 0 {
-            failures.append(ConformanceFailure(check: "dataLoss", detail: "\(live.pending) records never drained"))
+            failures.append(ConformanceFailure(check: "undrained", detail: "\(live.pending) records never drained"))
         }
         if live.quarantinedKeys != malformedKeys {
             failures.append(ConformanceFailure(
-                check: "dataLoss", detail: "quarantined \(live.quarantinedKeys.sorted()); "
+                check: "quarantineMismatch", detail: "quarantined \(live.quarantinedKeys.sorted()); "
                     + "expected exactly \(malformedKeys.sorted())"))
         }
         for fixture in fixtures where try live.archive.id(forDedupKey: fixture.dedupKey) == nil {
             failures.append(ConformanceFailure(
-                check: "dataLoss", detail: "\(fixture.dedupKey) missing from the live archive"))
+                check: "notArchived", detail: "\(fixture.dedupKey) missing from the live archive"))
         }
         return failures
     }
@@ -208,6 +246,8 @@ public enum ProviderConformance {
         let archive: RawArchive
         let quarantinedKeys: Set<String>
         let pending: Int
+        /// Nil unless a crash was injected; then whether it actually fired.
+        var faultFired: Bool?
     }
 
     /// Fires its fault once, at one step.
@@ -216,6 +256,7 @@ public enum ProviderConformance {
         private let lock = NSLock()
         private let step: DrainStep
         private var fired = false
+        var didFire: Bool { lock.lock(); defer { lock.unlock() }; return fired }
         init(_ step: DrainStep) { self.step = step }
         func inject(_ current: DrainStep) throws {
             lock.lock()
@@ -245,10 +286,13 @@ public enum ProviderConformance {
                                    batchSize: batchSize, faultInjector: injector)
         }
         var drainer = makeDrainer()
+        var fired: Bool?
         if let crashAt {
             try spool.append(fixtures)
             // A fresh drainer models the restarted process.
-            _ = makeDrainer(OneShotFault(crashAt)).drainOnce()
+            let fault = OneShotFault(crashAt)
+            _ = makeDrainer(fault).drainOnce()
+            fired = fault.didFire
             drainer = makeDrainer()
         } else {
             for _ in 0..<passes {
@@ -269,7 +313,7 @@ public enum ProviderConformance {
         let quarantined = try spool.quarantined(limit: max(1, fixtures.count))
         return DrainResult(dump: try store.canonicalDump(), archive: archive,
                            quarantinedKeys: Set(quarantined.map(\.record.dedupKey)),
-                           pending: try spool.pendingCount())
+                           pending: try spool.pendingCount(), faultFired: fired)
     }
 
     private static func replayDump(_ normalizer: any Normalizer, archive: RawArchive,

@@ -50,7 +50,9 @@ public struct MockProvider: Normalizer {
 
         switch operation {
         case "session":
-            break
+            batch.events = [NormalizedEvent(
+                dedupKey: "\(key)#0", sessionID: session, kind: .sessionStart, providerType: "SessionStart",
+                time: time, summary: "session \(count)", rawRef: record.id)]
         case "turn":
             batch.turns = [TurnRow(
                 dedupKey: "\(key)#turn", sessionID: session, time: time, model: "m-\(count % 3)",
