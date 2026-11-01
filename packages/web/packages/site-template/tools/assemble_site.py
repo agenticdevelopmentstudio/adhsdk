@@ -173,8 +173,9 @@ SITEMAP_OFF = (
 
 def plan_sitemap(site: Path, entry: str | None) -> tuple[str, list[str]]:
     """`src/site/sitemap.ts`, and what is wrong with `sitemapRoutes` if anything is. The site's
-    function is imported under its own name and re-exported typed, so a function whose result
-    is not `FrameSitemapRoute[]` fails the site's typecheck here rather than at render."""
+    function is imported under an alias, so it may itself be called `sitemapRoutes`, and
+    re-exported typed, so a function whose result is not `FrameSitemapRoute[]` fails the site's
+    typecheck here rather than at render."""
     if entry is None:
         return SITEMAP_OFF, []
     file, _, name = entry.partition("#")
@@ -189,9 +190,9 @@ def plan_sitemap(site: Path, entry: str | None) -> tuple[str, list[str]]:
     text = (
         f"{HEADER}\n"
         "import type { FrameSitemapRoute } from '@agenticdevelopertoolkit/site-template'\n"
-        f"import {{ {name} }} from '../{module}'\n\n"
+        f"import {{ {name} as siteRoutes }} from '../{module}'\n\n"
         "/** The routes the site computes, which the sitemap lists after its listed paths. */\n"
-        f"export const sitemapRoutes: () => Promise<readonly FrameSitemapRoute[]> = {name}\n"
+        "export const sitemapRoutes: () => Promise<readonly FrameSitemapRoute[]> = siteRoutes\n"
     )
     return text, []
 
@@ -221,9 +222,9 @@ def plan_slot_markdown(site: Path, entry: str | None) -> tuple[str, list[str]]:
     module = re.sub(r"\.tsx?$", "", source.relative_to(source_root).as_posix())
     text = (
         f"{HEADER}\n"
-        f"import {{ {name} }} from '../{module}'\n\n"
+        f"import {{ {name} as siteSlotMarkdown }} from '../{module}'\n\n"
         "/** The words of the bands the site renders itself, as Markdown by section id, for `/index.md`. */\n"
-        f"export const slotMarkdown: Readonly<Record<string, string>> = {name}\n"
+        "export const slotMarkdown: Readonly<Record<string, string>> = siteSlotMarkdown\n"
     )
     return text, []
 

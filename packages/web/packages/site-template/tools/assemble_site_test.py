@@ -672,9 +672,9 @@ class AssembleTest(unittest.TestCase):
         self.write("site/src/lib/sitemap-routes.ts", "export async function loadPaperRoutes() { return [] }\n")
         self.assert_ok(self.assemble())
         sitemap = (self.app / "src/site/sitemap.ts").read_text()
-        self.assertIn("import { loadPaperRoutes } from '../lib/sitemap-routes'", sitemap)
+        self.assertIn("import { loadPaperRoutes as siteRoutes } from '../lib/sitemap-routes'", sitemap)
         self.assertIn(
-            "export const sitemapRoutes: () => Promise<readonly FrameSitemapRoute[]> = loadPaperRoutes", sitemap
+            "export const sitemapRoutes: () => Promise<readonly FrameSitemapRoute[]> = siteRoutes", sitemap
         )
         self.assert_ok(run(self.site, "--check"))
 
@@ -694,12 +694,13 @@ class AssembleTest(unittest.TestCase):
         self.assertIn("frameLandingMarkdown(config, landing, slotMarkdown)", route)
 
     def test_slot_markdown_imports_the_sites_export(self) -> None:
-        self.config["slotMarkdown"] = "slot-markdown.ts#bandWords"
-        self.write("site/src/slot-markdown.ts", "export const bandWords = {}\n")
+        # The export may share the generated file's own name, which every site gives it.
+        self.config["slotMarkdown"] = "slot-markdown.ts#slotMarkdown"
+        self.write("site/src/slot-markdown.ts", "export const slotMarkdown = {}\n")
         self.assert_ok(self.assemble())
         markdown = (self.app / "src/site/markdown.ts").read_text()
-        self.assertIn("import { bandWords } from '../slot-markdown'", markdown)
-        self.assertIn("export const slotMarkdown: Readonly<Record<string, string>> = bandWords", markdown)
+        self.assertIn("import { slotMarkdown as siteSlotMarkdown } from '../slot-markdown'", markdown)
+        self.assertIn("export const slotMarkdown: Readonly<Record<string, string>> = siteSlotMarkdown", markdown)
 
     def test_slot_markdown_naming_no_file_is_refused(self) -> None:
         self.config["slotMarkdown"] = "nope.ts#bandWords"
