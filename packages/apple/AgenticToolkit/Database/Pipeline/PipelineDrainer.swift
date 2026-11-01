@@ -13,6 +13,8 @@ public struct DrainOutcome: Sendable, Equatable {
     public var completed = 0
     /// True when the pass stopped early on an error.
     public var failed = false
+    /// Why the pass stopped early (the thrown error's description); nil unless `failed`.
+    public var failureReason: String?
 
     public init() {}
 }
@@ -26,8 +28,15 @@ public protocol PipelineObserver: AnyObject, Sendable {
 /// A spool row is only completed after its record is in the archive and its
 /// normalized rows are committed, so a crash at any step loses nothing and the
 /// next pass converges (every write is idempotent).
+///
+/// Observer notification is at-most-once: a crash after the spool rows are
+/// completed and before observers are told loses that batch's notification,
+/// because the replay finds nothing left to write. Observers that must be
+/// reliable should resync from the store.
 public final class PipelineDrainer: @unchecked Sendable {
-    private struct StepFailure: Error {}
+    private struct StepFailure: Error, CustomStringConvertible {
+        let description: String
+    }
 
     private final class WeakObserver {
         weak var observer: (any PipelineObserver)?
@@ -45,7 +54,6 @@ public final class PipelineDrainer: @unchecked Sendable {
     private var observers: [WeakObserver] = []
     private var thread: Thread?
     private var stopRequested = false
-    private var wakeRequested = false
     private var finished: DispatchSemaphore?
     private let wakeSignal = DispatchSemaphore(value: 0)
     /// Serializes passes so a manual drain never interleaves with the thread's.
@@ -78,11 +86,15 @@ public final class PipelineDrainer: @unchecked Sendable {
             try pass(&outcome)
         } catch {
             outcome.failed = true
+            outcome.failureReason = String(describing: error)
         }
         return outcome
     }
 
-    /// Drains until the spool is empty or a pass fails.
+    /// Drains until the spool is empty, a pass fails, or a pass makes no progress
+    /// (nothing completed and nothing quarantined). The last rule stops a record
+    /// that keeps failing from burning all its attempts in one call; it is retried
+    /// on the next call or wake instead.
     @discardableResult
     public func drainUntilEmpty() -> DrainOutcome {
         var total = DrainOutcome()
@@ -93,13 +105,19 @@ public final class PipelineDrainer: @unchecked Sendable {
             total.stored += one.stored
             total.quarantined += one.quarantined
             total.completed += one.completed
-            if one.failed { total.failed = true; return total }
-            if one.read == 0 { return total }
+            if one.failed {
+                total.failed = true
+                total.failureReason = one.failureReason
+                return total
+            }
+            if one.read == 0 || (one.completed == 0 && one.quarantined == 0) { return total }
         }
     }
 
     private func inject(_ step: DrainStep) throws {
-        do { try faultInjector?(step) } catch { throw StepFailure() }
+        do { try faultInjector?(step) } catch {
+            throw StepFailure(description: "fault injected \(step.rawValue): \(error)")
+        }
     }
 
     private func pass(_ outcome: inout DrainOutcome) throws {
@@ -110,7 +128,9 @@ public final class PipelineDrainer: @unchecked Sendable {
 
         // Nothing is ever completed before it is in the archive.
         let appended = try archive.append(pending.map(\.record))
-        guard appended.ids.count == pending.count else { throw StepFailure() }
+        guard appended.ids.count == pending.count else {
+            throw StepFailure(description: "archive returned \(appended.ids.count) ids for \(pending.count) records")
+        }
         outcome.archived = pending.count
         try inject(.afterArchive)
 
@@ -149,42 +169,55 @@ public final class PipelineDrainer: @unchecked Sendable {
 
     // MARK: - Background thread
 
-    public func start(idlePoll: TimeInterval = 5) {
+    /// Starts the worker. Returns false, starting nothing, if a previous worker is
+    /// still alive (running, or asked to stop but not yet exited): a second worker
+    /// is never spawned.
+    @discardableResult
+    public func start(idlePoll: TimeInterval = 5) -> Bool {
         lock.lock(); defer { lock.unlock() }
-        guard thread == nil else { return }
+        guard thread == nil else { return false }
         stopRequested = false
         let done = DispatchSemaphore(value: 0)
         finished = done
+        let signal = wakeSignal
         let worker = Thread { [weak self] in
-            self?.run(idlePoll: idlePoll)
+            // Hold self only for the duration of a pass, so a dropped drainer can deallocate.
+            while Self.passIfRunning(self) {
+                _ = signal.wait(timeout: .now() + idlePoll)
+            }
+            self?.workerDidExit()
             done.signal()
         }
         worker.name = "PipelineDrainer.\(normalizer.provider)"
         worker.qualityOfService = .utility
         thread = worker
         worker.start()
+        return true
     }
 
     public func wake() {
-        lock.lock()
-        wakeRequested = true
-        lock.unlock()
         wakeSignal.signal()
     }
 
-    /// Joins the thread, waiting up to 5 s.
+    /// Asks the worker to stop and waits up to 5 s for it to exit. Called from the
+    /// worker thread itself (for example inside an observer) it only requests the
+    /// stop and returns. If the wait times out the worker is still alive and
+    /// `start()` refuses until it has exited.
     public func stop() {
         lock.lock()
-        guard thread != nil else { lock.unlock(); return }
+        guard let worker = thread else { lock.unlock(); return }
         stopRequested = true
         let done = finished
+        let onWorker = Thread.current === worker
         lock.unlock()
         wakeSignal.signal()
-        _ = done?.wait(timeout: .now() + 5)
-        lock.lock()
-        thread = nil
-        finished = nil
-        lock.unlock()
+        if !onWorker { _ = done?.wait(timeout: .now() + 5) }
+    }
+
+    deinit {
+        // The worker holds no strong reference; make it exit promptly.
+        lock.lock(); stopRequested = true; lock.unlock()
+        wakeSignal.signal()
     }
 
     private func shouldStop() -> Bool {
@@ -192,13 +225,18 @@ public final class PipelineDrainer: @unchecked Sendable {
         return stopRequested
     }
 
-    private func run(idlePoll: TimeInterval) {
-        while !shouldStop() {
-            let outcome = drainUntilEmpty()
-            if shouldStop() { return }
-            // After a failed pass, back off to the poll interval rather than spin.
-            _ = outcome
-            _ = wakeSignal.wait(timeout: .now() + idlePoll)
+    private func workerDidExit() {
+        lock.lock(); defer { lock.unlock() }
+        if thread === Thread.current {
+            thread = nil
+            finished = nil
         }
+    }
+
+    /// One drain-until-empty if the drainer is alive and not asked to stop.
+    private static func passIfRunning(_ drainer: PipelineDrainer?) -> Bool {
+        guard let drainer, !drainer.shouldStop() else { return false }
+        drainer.drainUntilEmpty()
+        return !drainer.shouldStop()
     }
 }
