@@ -224,8 +224,11 @@ final class PartnerControllerTests: XCTestCase {
 
     func testStartUsesEditedGuidelinesFromJobFiles() async throws {
         try FileManager.default.createDirectory(at: paths.jobsDirectory, withIntermediateDirectories: true)
-        try "Always answer in haiku.".write(to: paths.jobsDirectory.appendingPathComponent("general.md"),
+        try "Always answer in haiku.".write(to: paths.jobsDirectory.appendingPathComponent("code-reviews.md"),
                                             atomically: true, encoding: .utf8)
+        var reviews = PartnerJobDefaults.codeReviews()
+        reviews.isEnabled = true
+        try store.upsert(reviews)
         let controller = makeController()
         await controller.start()
         let prompt = try String(contentsOf: paths.systemPrompt, encoding: .utf8)
@@ -490,25 +493,29 @@ final class PartnerControllerTests: XCTestCase {
         XCTAssertEqual(try store.sessionID(), process.configuration.sessionID)
     }
 
-    func testAllowedToolsDefaultKeepsParenthesisedEntriesWhole() {
-        XCTAssertEqual(PartnerController.allowedTools(settings.get(UserSettings.partnerAllowedTools)), [
-            "mcp__adkitchen", "Bash(git log *)", "Bash(git show *)", "Bash(git diff *)",
-            "Bash(git status *)", "Read"
-        ])
-        XCTAssertEqual(PartnerController.allowedTools("Read\tBash(git log *)\n  Edit "),
-                       ["Read", "Bash(git log *)", "Edit"])
+    func testStartPassesTheAllowedToolsListAndMigratesAnEditedOldString() async {
+        settings.set("Read Bash(npm run *) mcp__x", for: UserSettings.partnerAllowedToolsLegacy)
+        await startIdle(makeController())
+        XCTAssertEqual(process.configuration.allowedTools, ["Read", "Bash(npm run *)", "mcp__x"])
+        XCTAssertFalse(settings.contains(UserSettings.partnerAllowedToolsLegacy))
     }
 
-    func testStartDropsTheOldDefaultAllowListButKeepsAnEditedOne() async {
-        settings.set(UserSettings.partnerAllowedToolsPreviousDefault, for: UserSettings.partnerAllowedTools)
+    func testStartRemovesTheRetiredGeneralJobAndKeepsCodeReviews() async throws {
+        try store.upsert(PartnerJob(id: "general", name: "General", isEnabled: true, guidelines: "g", steps: []))
+        try store.upsert(PartnerJobDefaults.codeReviews())
+        try FileManager.default.createDirectory(at: paths.jobsDirectory, withIntermediateDirectories: true)
+        let file = paths.jobsDirectory.appendingPathComponent("general.md")
+        try "g".write(to: file, atomically: true, encoding: .utf8)
         await startIdle(makeController())
-        XCTAssertEqual(settings.get(UserSettings.partnerAllowedTools), UserSettings.partnerAllowedTools.defaultValue)
-        XCTAssertFalse(process.configuration.allowedTools.contains("Bash(git branch *)"))
+        XCTAssertEqual(try store.jobs().map(\.id), ["code-reviews"])
+        XCTAssertFalse(FileManager.default.fileExists(atPath: file.path))
+    }
 
-        let edited = UserSettings.partnerAllowedToolsPreviousDefault + " Edit"
-        settings.set(edited, for: UserSettings.partnerAllowedTools)
-        UserSettings.migratePartnerAllowedTools(in: settings)
-        XCTAssertEqual(settings.get(UserSettings.partnerAllowedTools), edited)
+    func testStartFailsWhenTheProviderIsNoLongerConfigured() async {
+        settings.set(UUID().uuidString, for: UserSettings.partnerProvider)
+        let controller = makeController()
+        await controller.start()
+        XCTAssertEqual(controller.state, .failed("The Coding Partner's provider is no longer configured."))
     }
 
     func testFailureClearsTheCallerID() async {
@@ -571,7 +578,7 @@ final class PartnerControllerTests: XCTestCase {
     func testSyncSchedulesFollowsEnableDisableAndScheduleEdits() async throws {
         let controller = makeController()
         await startIdle(controller)
-        let id = PartnerJobDefaults.generalID
+        let id = PartnerJobDefaults.codeReviewsID
         var general = try XCTUnwrap(controller.jobs().first { $0.id == id })
         general.isEnabled = false
         try store.upsert(general)

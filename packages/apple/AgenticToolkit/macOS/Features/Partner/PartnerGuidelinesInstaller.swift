@@ -87,6 +87,15 @@ public struct PartnerGuidelinesInstaller {
         }
     }
 
+    /// Deletes a retired job: its store row, `jobs/<id>.md` and its skill directory. Anything missing is a no-op.
+    public func removeRetiredJob(id: String, store: PartnerStore) throws {
+        try store.deleteJob(id: id)
+        let file = try jobFile(id)
+        if fileManager.fileExists(atPath: file.path) { try fileManager.removeItem(at: file) }
+        let skill = paths.skillFile(jobID: id).deletingLastPathComponent()
+        if fileManager.fileExists(atPath: skill.path) { try fileManager.removeItem(at: skill) }
+    }
+
     public enum InstallError: Error, Equatable {
         case invalidJobID(String)
     }

@@ -8,32 +8,68 @@ extension UserSettings {
     /// Whether the partner runs at all.
     public static let partnerEnabled = UserSetting<Bool>("partner.enabled", default: false)
 
-    /// The model passed to `claude --model`; "" = Claude Code's own default.
+    /// The legacy free-text model passed to `claude --model`; "" = Claude Code's own default. Read only as
+    /// the fallback when ``partnerProvider`` is "".
     public static let partnerModel = UserSetting<String>("partner.model", default: "")
+
+    /// The partner's provider: "" for the default Claude Code, or an ``AIProviderConfiguration`` id (a UUID string).
+    public static let partnerProvider = UserSetting<String>("partner.provider", default: "")
+
+    /// The model for the provider configuration `config`; "" = that provider's own default.
+    public static func partnerModel(config: UUID) -> UserSetting<String> {
+        UserSetting<String>("partner.model.\(config.uuidString)", default: "")
+    }
 
     /// The `--permission-mode` the partner's Claude Code runs under.
     public static let partnerPermissionMode = UserSetting<String>("partner.permission_mode", default: "dontAsk")
 
-    /// Space-separated `--allowedTools` entries: the partner's MCP tools plus read-only git and Read.
+    /// The `--allowedTools` entries: the partner's MCP tools plus read-only git and Read.
     ///
     /// No `git branch` entry: `Bash(git branch *)` also matches `-D`, `-f` and `-m`, which delete and move
     /// the owner's branches, and `partner_projects_list` already gives each repo's branch.
-    public static let partnerAllowedTools = UserSetting<String>(
-        "partner.allowed_tools",
-        default: "mcp__adkitchen Bash(git log *) Bash(git show *) Bash(git diff *) Bash(git status *) Read"
+    public static let partnerAllowedToolsList = UserSetting<[String]>(
+        "partner.allowed_tools_list",
+        default: ["mcp__adkitchen", "Bash(git log *)", "Bash(git show *)", "Bash(git diff *)",
+                  "Bash(git status *)", "Read"]
     )
 
-    /// The default ``partnerAllowedTools`` shipped before `Bash(git branch *)` was dropped.
-    static let partnerAllowedToolsPreviousDefault =
-        "mcp__adkitchen Bash(git log *) Bash(git show *) Bash(git diff *) Bash(git status *) Bash(git branch *) Read"
+    /// The old space-separated key, read once by ``migratePartnerAllowedToolsToList(in:)``.
+    static let partnerAllowedToolsLegacy = UserSetting<String>("partner.allowed_tools", default: "")
 
-    /// A stored ``partnerAllowedTools`` that is exactly the old default was never chosen by the owner (it was
-    /// written by the settings field showing the default), so it is removed and the current default applies.
-    /// Anything the owner edited is left alone.
-    public static func migratePartnerAllowedTools(in settings: SettingsStore) {
-        guard settings.contains(partnerAllowedTools),
-              settings.get(partnerAllowedTools) == partnerAllowedToolsPreviousDefault else { return }
-        settings.remove(partnerAllowedTools)
+    /// Both space-separated defaults the old key shipped with; a stored value equal to either was never chosen.
+    static let partnerAllowedToolsLegacyDefaults = [
+        "mcp__adkitchen Bash(git log *) Bash(git show *) Bash(git diff *) Bash(git status *) Read",
+        "mcp__adkitchen Bash(git log *) Bash(git show *) Bash(git diff *) Bash(git status *) Bash(git branch *) Read"
+    ]
+
+    /// Moves a stored space-separated `partner.allowed_tools` to ``partnerAllowedToolsList`` and removes the old
+    /// key. A value equal to an old default writes nothing, so the current default applies.
+    public static func migratePartnerAllowedToolsToList(in settings: SettingsStore) {
+        guard settings.contains(partnerAllowedToolsLegacy) else { return }
+        let old = settings.get(partnerAllowedToolsLegacy)
+        if !partnerAllowedToolsLegacyDefaults.contains(old) {
+            settings.set(splitAllowedTools(old), for: partnerAllowedToolsList)
+        }
+        settings.remove(partnerAllowedToolsLegacy)
+    }
+
+    /// Splits on whitespace outside parentheses, so `Bash(git log *)` stays one entry.
+    public static func splitAllowedTools(_ setting: String) -> [String] {
+        var tools: [String] = []
+        var current = ""
+        var depth = 0
+        for character in setting {
+            switch character {
+            case "(": depth += 1; current.append(character)
+            case ")": depth = max(depth - 1, 0); current.append(character)
+            case _ where character.isWhitespace && depth == 0:
+                if !current.isEmpty { tools.append(current) }
+                current = ""
+            default: current.append(character)
+            }
+        }
+        if !current.isEmpty { tools.append(current) }
+        return tools
     }
 
     /// How long a session's output must be quiet before the partner is told it went idle.

@@ -66,12 +66,12 @@ final class PartnerJobsEditorModelTests: XCTestCase {
     }
 
     func testSaveWritesGuidelinesFileAndModelReadsItBack() throws {
-        var job = try XCTUnwrap(model.jobs.first { $0.id == "general" })
+        var job = try XCTUnwrap(model.jobs.first { $0.id == "code-reviews" })
         job.guidelines = "Edited by the owner."
         try model.save(job)
-        XCTAssertEqual(try String(contentsOf: paths.jobsDirectory.appendingPathComponent("general.md"),
+        XCTAssertEqual(try String(contentsOf: paths.jobsDirectory.appendingPathComponent("code-reviews.md"),
                                   encoding: .utf8), "Edited by the owner.")
-        XCTAssertEqual(model.jobs.first { $0.id == "general" }?.guidelines, "Edited by the owner.")
+        XCTAssertEqual(model.jobs.first { $0.id == "code-reviews" }?.guidelines, "Edited by the owner.")
     }
 
     func testResetToDefaultRestoresStepsAndDeletesGuidelinesFile() throws {

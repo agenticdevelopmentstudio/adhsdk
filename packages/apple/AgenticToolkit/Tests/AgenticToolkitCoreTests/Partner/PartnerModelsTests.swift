@@ -49,7 +49,7 @@ import Testing
     }
     @Test func defaultsHaveTheTwoBuiltInJobs() {
         let ids = PartnerJobDefaults.all.map(\.id)
-        #expect(ids == ["general", "code-reviews"])
+        #expect(ids == ["code-reviews"])
         #expect(PartnerJobDefaults.codeReviews().steps.map(\.name) == ["open session", "review", "fix"])
     }
     @Test func inboundTextNamesTheEvent() {

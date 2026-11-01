@@ -1,24 +1,10 @@
 import Foundation
 
-/// The two jobs every install starts with.
+/// The jobs every install starts with: the code reviews job. The general job was retired.
 public enum PartnerJobDefaults {
-    public static let generalID = "general"
+    /// The retired general job; kept only so ``PartnerGuidelinesInstaller`` can remove what it left behind.
+    public static let retiredGeneralID = "general"
     public static let codeReviewsID = "code-reviews"
-
-    public static func general() -> PartnerJob {
-        PartnerJob(
-            id: generalID,
-            name: "General",
-            isEnabled: true,
-            scheduleSeconds: nil,
-            guidelines: "Help with whatever the owner asks. Use the session tools to open, read and drive "
-                + "Claude Code sessions, and raise attention items rather than waiting on the owner.",
-            steps: [
-                PartnerJobStep(name: "open session", environment: .terminal, command: "claude",
-                               condition: "A fresh tab in the chosen project.")
-            ],
-            isBuiltIn: true)
-    }
 
     /// The code-reviews loop. The app crawls and queues before each tick; the partner starts reviews and judges
     /// what each review session's screen says.
@@ -72,5 +58,5 @@ public enum PartnerJobDefaults {
             isBuiltIn: true)
     }
 
-    public static var all: [PartnerJob] { [general(), codeReviews()] }
+    public static var all: [PartnerJob] { [codeReviews()] }
 }

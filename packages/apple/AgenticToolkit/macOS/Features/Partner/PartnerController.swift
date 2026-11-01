@@ -170,9 +170,19 @@ public final class PartnerController: ObservableObject {
         }
         onLockAcquired?()
         reopenUnansweredItems()
-        UserSettings.migratePartnerAllowedTools(in: settings)
+        UserSettings.migratePartnerAllowedToolsToList(in: settings)
         guard let claude = findClaude() else { return failReleasingLock("claude not found") }
         guard let endpoint = endpoint() else { return failReleasingLock("automation endpoint is not running") }
+
+        let model: String
+        switch PartnerModelChoice.resolve(
+            provider: settings.get(UserSettings.partnerProvider),
+            configurations: settings.get(UserSettings.aiProviderConfigurations),
+            model: { [settings] in settings.get(UserSettings.partnerModel(config: $0)) },
+            legacyModel: settings.get(UserSettings.partnerModel)) {
+        case .success(let resolved): model = resolved
+        case .failure(let failure): return failReleasingLock(failure.message)
+        }
 
         let callerID = UUID().uuidString
         let configuration: PartnerProcessConfiguration
@@ -181,6 +191,7 @@ public final class PartnerController: ObservableObject {
             try PartnerMCPConfig.write(port: endpoint.port, token: endpoint.token, callerID: callerID,
                                        to: paths.mcpConfig)
             let installer = PartnerGuidelinesInstaller(paths: paths)
+            try installer.removeRetiredJob(id: PartnerJobDefaults.retiredGeneralID, store: store)
             jobs = installer.loadGuidelines(jobs: self.jobs())
             try installer.writeJobFiles(jobs: jobs)
             try installer.writeSystemPrompt(jobs: jobs)
@@ -192,9 +203,9 @@ public final class PartnerController: ObservableObject {
             freshSessionAvailable = true
             configuration = PartnerProcessConfiguration(
                 executable: claude, sessionID: stored ?? UUID(), resume: stored != nil,
-                model: settings.get(UserSettings.partnerModel),
+                model: model,
                 permissionMode: settings.get(UserSettings.partnerPermissionMode),
-                allowedTools: Self.allowedTools(settings.get(UserSettings.partnerAllowedTools)),
+                allowedTools: settings.get(UserSettings.partnerAllowedToolsList),
                 mcpConfigPath: paths.mcpConfig.path, systemPromptPath: paths.systemPrompt.path,
                 workingDirectory: paths.directory.path)
         } catch {
@@ -530,25 +541,6 @@ public final class PartnerController: ObservableObject {
             Self.logger.error("Purging partner tool calls failed: \(error.localizedDescription)")
         }
         sessions.purge(retentionDays: days)
-    }
-
-    /// Splits the allowed-tools setting on whitespace outside parentheses, so `Bash(git log *)` stays one entry.
-    static func allowedTools(_ setting: String) -> [String] {
-        var tools: [String] = []
-        var current = ""
-        var depth = 0
-        for character in setting {
-            switch character {
-            case "(": depth += 1; current.append(character)
-            case ")": depth = max(depth - 1, 0); current.append(character)
-            case _ where character.isWhitespace && depth == 0:
-                if !current.isEmpty { tools.append(current) }
-                current = ""
-            default: current.append(character)
-            }
-        }
-        if !current.isEmpty { tools.append(current) }
-        return tools
     }
 
     static let createdBy = "app"

@@ -71,8 +71,8 @@ public final class PartnerGeneralSettingsViewController: ComposableSettings.Sett
                 explanation: "dontAsk refuses anything not in the allowed tools instead of asking.")))
         model.addSettingSubview(ComposableSettings.TextEditView(with: ComposableSettings.ViewModel<String>(
             title: "Allowed tools",
-            get: { settings.get(UserSettings.partnerAllowedTools) },
-            set: { settings.set($0, for: UserSettings.partnerAllowedTools) },
+            get: { settings.get(UserSettings.partnerAllowedToolsList).joined(separator: " ") },
+            set: { settings.set(UserSettings.splitAllowedTools($0), for: UserSettings.partnerAllowedToolsList) },
             explanation: "Space-separated claude --allowedTools entries.")))
         addGroup(model)
 

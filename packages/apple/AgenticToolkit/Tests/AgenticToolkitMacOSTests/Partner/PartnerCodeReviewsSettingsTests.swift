@@ -111,14 +111,14 @@ final class PartnerCodeReviewsSettingsTests: XCTestCase {
         window.isReleasedWhenClosed = false
         window.contentView = jobs.view
         defer { window.close() }
-        let row = try XCTUnwrap(jobs.model.jobs.firstIndex { $0.id == PartnerJobDefaults.generalID })
+        let row = try XCTUnwrap(jobs.model.jobs.firstIndex { $0.id == PartnerJobDefaults.codeReviewsID })
         jobs.jobsTable.selectRowIndexes([row], byExtendingSelection: false)
 
         XCTAssertTrue(window.makeFirstResponder(jobs.scheduleField))
         jobs.scheduleField.stringValue = "15"
         XCTAssertTrue(window.makeFirstResponder(nil))
 
-        let stored = try XCTUnwrap(store.jobs().first { $0.id == PartnerJobDefaults.generalID })
+        let stored = try XCTUnwrap(store.jobs().first { $0.id == PartnerJobDefaults.codeReviewsID })
         XCTAssertEqual(stored.scheduleSeconds, 900)
     }
 

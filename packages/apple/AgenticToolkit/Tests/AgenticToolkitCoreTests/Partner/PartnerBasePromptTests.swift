@@ -35,7 +35,7 @@ struct PartnerBasePromptTests {
         let line = "arrive filled in from `partner_review_start`"
         var reviews = PartnerJobDefaults.codeReviews()
         reviews.isEnabled = true
-        var general = PartnerJobDefaults.general()
+        var general = PartnerJob(id: "general", name: "General", isEnabled: false, guidelines: "g", steps: [])
         general.isEnabled = true
         #expect(PartnerBasePrompt.systemPrompt(jobs: [reviews]).contains(line))
         #expect(!PartnerBasePrompt.systemPrompt(jobs: [general]).contains(line))
