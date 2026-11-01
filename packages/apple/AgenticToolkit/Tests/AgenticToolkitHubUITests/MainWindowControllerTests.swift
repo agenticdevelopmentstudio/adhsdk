@@ -2,6 +2,7 @@
 import AppKit
 import XCTest
 import AgenticToolkitHubService
+@testable import AgenticToolkitHubAuth
 @testable import AgenticToolkitHubUI
 
 /// The main window's geometry, which a shipped build got wrong in a way no

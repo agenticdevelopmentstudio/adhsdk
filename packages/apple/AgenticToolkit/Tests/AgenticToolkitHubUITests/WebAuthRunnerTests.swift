@@ -1,6 +1,7 @@
 import AuthenticationServices
 import XCTest
 import AgenticToolkitHubService
+@testable import AgenticToolkitHubAuth
 @testable import AgenticToolkitHubUI
 
 /// `WebAuthRunner`'s completion handler shipped isolated to `@MainActor` —

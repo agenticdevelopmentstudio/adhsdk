@@ -1,5 +1,6 @@
 import AgenticToolkitHTDV
 import XCTest
+@testable import AgenticToolkitHubAuth
 @testable import AgenticToolkitHub
 
 final class FakeMessagingDataSource: MessagingDataSource, @unchecked Sendable {

@@ -1,6 +1,5 @@
 import AgenticDeveloperToolkit
-import AgenticDeveloperHubClient
-import AgenticToolkitHubService
+import AgenticDeveloperHubAuth
 import Foundation
 
 extension AccountUser {

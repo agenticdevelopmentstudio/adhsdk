@@ -1,4 +1,4 @@
-import AgenticDeveloperHubClient
+import AgenticDeveloperHubAuth
 import Foundation
 
 /// Spec §5.2 social providers, in the order the sign-in screen lists them.

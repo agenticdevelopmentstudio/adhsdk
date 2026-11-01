@@ -33,20 +33,20 @@ public struct KeychainCredentialStore: CredentialStore {
     }
 
     public func currentCredentials() -> Credentials? {
-        guard let token = KeychainHelper.get(forKey: tokenKey) else { return nil }
-        let kind = KeychainHelper.get(forKey: kindKey)
+        guard let token = HubKeychainHelper.get(forKey: tokenKey) else { return nil }
+        let kind = HubKeychainHelper.get(forKey: kindKey)
             .flatMap(Credentials.Kind.init(rawValue:)) ?? .jwt
         return Credentials(token: token, kind: kind)
     }
 
     public func save(_ credentials: Credentials) {
-        KeychainHelper.set(credentials.token, forKey: tokenKey)
-        KeychainHelper.set(credentials.kind.rawValue, forKey: kindKey)
+        HubKeychainHelper.set(credentials.token, forKey: tokenKey)
+        HubKeychainHelper.set(credentials.kind.rawValue, forKey: kindKey)
     }
 
     public func clear() {
-        KeychainHelper.delete(forKey: tokenKey)
-        KeychainHelper.delete(forKey: kindKey)
+        HubKeychainHelper.delete(forKey: tokenKey)
+        HubKeychainHelper.delete(forKey: kindKey)
     }
 }
 

@@ -4,14 +4,14 @@ options:
   developmentLanguage: en
   createIntermediateGroups: true
   deploymentTarget:
-    macOS: "14.0"
+    macOS: "26.0"
     iOS: "17.0"
 
 settings:
   base:
     SWIFT_VERSION: "6.0"
     SWIFT_STRICT_CONCURRENCY: complete
-    MACOSX_DEPLOYMENT_TARGET: "14.0"
+    MACOSX_DEPLOYMENT_TARGET: "26.0"
     SDKROOT: macosx
     MARKETING_VERSION: "0.1.0"
     CURRENT_PROJECT_VERSION: "1"
@@ -44,6 +44,37 @@ packages:
     maxVersion: "2.0.0"
 
 targets:
+  # The sign-in tier: ADHClient, the Direct/Daemon transports, the session,
+  # credential and Keychain stores, the auth/refresh middleware, and a typed
+  # client generated for ONLY the sign-in/session paths
+  # (openapi-generator-auth-config.yaml, about 5.5k lines). An app that wants
+  # the hub login links this alone and never compiles the full client below.
+  # Multi-destination for the same reason as AgenticDeveloperHubClient.
+  AgenticDeveloperHubAuth:
+    type: framework
+    supportedDestinations: [macOS, iOS]
+    sources:
+      - path: AuthSources
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.mikefullerton.AgenticDeveloperHubAuth
+        SDKROOT: auto
+        IPHONEOS_DEPLOYMENT_TARGET: "17.0"
+    dependencies:
+      - package: swift-openapi-runtime
+        product: OpenAPIRuntime
+      - package: swift-openapi-urlsession
+        product: OpenAPIURLSession
+      # The middleware and rawJSON import HTTPTypes directly; see the same
+      # dependency on AgenticDeveloperHubClient below for why it is declared.
+      - package: swift-http-types
+        product: HTTPTypes
+
+  # The whole API, generated, plus the offline-sync wire client. Built on
+  # AgenticDeveloperHubAuth, which it re-exports (Sources/ADHClient+API.swift),
+  # so `import AgenticDeveloperHubClient` still reaches ADHClient and every
+  # store; it adds `ADHClient.api`, the full typed surface.
+  #
   # One multi-destination target (macOS + iOS) rather than a separate
   # AgenticDeveloperHubClient-iOS twin: both approaches landed concurrently
   # (sync branch vs main) and both emit AgenticDeveloperHubClient.framework
@@ -69,6 +100,7 @@ targets:
           STRIP_INSTALLED_PRODUCT: YES
           STRIP_STYLE: non-global
     dependencies:
+      - target: AgenticDeveloperHubAuth
       - package: swift-openapi-runtime
         product: OpenAPIRuntime
       - package: swift-openapi-urlsession
@@ -97,11 +129,24 @@ targets:
       - target: AgenticDeveloperHubClient
         embed: true
         codeSign: true
+      - target: AgenticDeveloperHubAuth
+        embed: true
+        codeSign: true
+      # Two frameworks here link these packages, so Xcode builds them as
+      # dynamic PackageFrameworks rather than merging them into one framework;
+      # the tests call into them directly, so they link them directly.
+      - package: swift-openapi-runtime
+        product: OpenAPIRuntime
+      - package: swift-openapi-urlsession
+        product: OpenAPIURLSession
+      - package: swift-http-types
+        product: HTTPTypes
 
 schemes:
   AgenticDeveloperHubClient:
     build:
       targets:
+        AgenticDeveloperHubAuth: all
         AgenticDeveloperHubClient: all
         AgenticDeveloperHubClientTests: [test]
     run:

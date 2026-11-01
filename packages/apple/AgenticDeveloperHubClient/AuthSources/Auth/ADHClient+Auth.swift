@@ -7,7 +7,7 @@ import Foundation
 #endif
 
 /// Thin convenience wrappers over the generated auth operations. They are just
-/// ergonomics — the same calls are available on ``ADHClient/api`` directly — but
+/// ergonomics — the same calls are available on ``ADHClient/authAPI`` directly — but
 /// they save callers from spelling out the long generated request/response type
 /// names and wire the result into the credential store.
 extension ADHClient {
@@ -27,7 +27,7 @@ extension ADHClient {
     /// on this client is authenticated.
     @discardableResult
     public func login(email: String, password: String) async throws -> AuthResponse {
-        let output = try await api.postAuthLogin(body: .json(.init(email: email, password: password)))
+        let output = try await authAPI.postAuthLogin(body: .json(.init(email: email, password: password)))
         let auth = try output.ok.body.json
         credentials.save(Credentials(token: auth.token, kind: .jwt))
         return auth
@@ -44,7 +44,7 @@ extension ADHClient {
     /// client to it.
     @discardableResult
     public func createAPIToken(name: String, expiresAt: Date? = nil) async throws -> CreatedAPIToken {
-        let output = try await api.postAuthTokens(body: .json(.init(name: name, expiresAt: expiresAt)))
+        let output = try await authAPI.postAuthTokens(body: .json(.init(name: name, expiresAt: expiresAt)))
         return try output.created.body.json
     }
 

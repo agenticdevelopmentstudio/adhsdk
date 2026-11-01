@@ -1,8 +1,7 @@
-import AgenticToolkitHubService
-import AgenticToolkitHub
 import Foundation
 
-/// Web URLs for the rows v1 does not implement natively (spec §5.4: Messages).
+/// Web URLs on the hub's site. The workspace-scoped form,
+/// `HubLinks.workspaceURL(_:path:)`, is the hub UI's extension of this.
 public enum HubLinks {
     public static let webBase: URL = {
         guard let url = URL(string: "https://agenticdeveloperhub.com") else { preconditionFailure("static URL") }
@@ -11,9 +10,5 @@ public enum HubLinks {
 
     public static func url(path: String) -> URL {
         webBase.appendingPathComponent(path.trimmingCharacters(in: CharacterSet(charactersIn: "/")))
-    }
-
-    public static func workspaceURL(_ workspace: HubWorkspace, path: String) -> URL {
-        url(path: "\(workspace.slug)/\(path.trimmingCharacters(in: CharacterSet(charactersIn: "/")))")
     }
 }

@@ -1,5 +1,6 @@
 import AgenticToolkitHTDV
 import XCTest
+@testable import AgenticToolkitHubAuth
 @testable import AgenticToolkitHub
 
 final class FakeInvitationsDataSource: InvitationsDataSource, @unchecked Sendable {

@@ -3,13 +3,15 @@ import AgenticToolkitHub
 import Foundation
 import XCTest
 import AgenticToolkitHubService
+@testable import AgenticToolkitHubAuth
 @testable import AgenticToolkitHubUI
 
 @MainActor
 final class FeatureModulesTests: XCTestCase {
     func testRegisterAllRegistersEveryDeclaredModule() {
         let stub = StubClientTransport()
-        let store = InMemorySessionStore(Session(credentials: Credentials(token: "jwt", kind: .jwt), refreshToken: "r"))
+        let store = InMemorySessionStore(
+            HubSession(credentials: Credentials(token: "jwt", kind: .jwt), refreshToken: "r"))
         let environment = HubEnvironment(
             sessionStore: store,
             transportSource: StaticTransportSource(.direct(transport: stub)),
@@ -26,7 +28,8 @@ final class FeatureModulesTests: XCTestCase {
 
     private func makeEnvironment() -> HubEnvironment {
         let stub = StubClientTransport()
-        let store = InMemorySessionStore(Session(credentials: Credentials(token: "jwt", kind: .jwt), refreshToken: "r"))
+        let store = InMemorySessionStore(
+            HubSession(credentials: Credentials(token: "jwt", kind: .jwt), refreshToken: "r"))
         return HubEnvironment(
             sessionStore: store,
             transportSource: StaticTransportSource(.direct(transport: stub)),

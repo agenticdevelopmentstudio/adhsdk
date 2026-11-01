@@ -15,6 +15,20 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
+               BlueprintIdentifier = "14E79E951C8C858501397877"
+               BuildableName = "AgenticDeveloperHubAuth.framework"
+               BlueprintName = "AgenticDeveloperHubAuth"
+               ReferencedContainer = "container:AgenticDeveloperHubClient.xcodeproj">
+            </BuildableReference>
+         </BuildActionEntry>
+         <BuildActionEntry
+            buildForTesting = "YES"
+            buildForRunning = "YES"
+            buildForProfiling = "YES"
+            buildForArchiving = "YES"
+            buildForAnalyzing = "YES">
+            <BuildableReference
+               BuildableIdentifier = "primary"
                BlueprintIdentifier = "E96BF20E30DBAE73927064F5"
                BuildableName = "AgenticDeveloperHubClient.framework"
                BlueprintName = "AgenticDeveloperHubClient"
@@ -46,9 +60,9 @@
       <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "E96BF20E30DBAE73927064F5"
-            BuildableName = "AgenticDeveloperHubClient.framework"
-            BlueprintName = "AgenticDeveloperHubClient"
+            BlueprintIdentifier = "14E79E951C8C858501397877"
+            BuildableName = "AgenticDeveloperHubAuth.framework"
+            BlueprintName = "AgenticDeveloperHubAuth"
             ReferencedContainer = "container:AgenticDeveloperHubClient.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
@@ -81,9 +95,9 @@
       <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "E96BF20E30DBAE73927064F5"
-            BuildableName = "AgenticDeveloperHubClient.framework"
-            BlueprintName = "AgenticDeveloperHubClient"
+            BlueprintIdentifier = "14E79E951C8C858501397877"
+            BuildableName = "AgenticDeveloperHubAuth.framework"
+            BlueprintName = "AgenticDeveloperHubAuth"
             ReferencedContainer = "container:AgenticDeveloperHubClient.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
@@ -101,9 +115,9 @@
       <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "E96BF20E30DBAE73927064F5"
-            BuildableName = "AgenticDeveloperHubClient.framework"
-            BlueprintName = "AgenticDeveloperHubClient"
+            BlueprintIdentifier = "14E79E951C8C858501397877"
+            BuildableName = "AgenticDeveloperHubAuth.framework"
+            BlueprintName = "AgenticDeveloperHubAuth"
             ReferencedContainer = "container:AgenticDeveloperHubClient.xcodeproj">
          </BuildableReference>
       </MacroExpansion>

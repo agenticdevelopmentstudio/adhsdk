@@ -1,5 +1,6 @@
 import AgenticDeveloperHubClient
 import XCTest
+@testable import AgenticToolkitHubAuth
 @testable import AgenticToolkitHubService
 
 final class SignInConfigurationTests: XCTestCase {

@@ -11,7 +11,7 @@ import Foundation
 /// `.unavailable` (5xx, transport error) is the backend being unreachable,
 /// which must never sign the user out.
 public enum SessionRefreshOutcome: Sendable, Equatable {
-    case refreshed(Session)
+    case refreshed(HubSession)
     case rejected
     case unavailable
 }
@@ -157,7 +157,7 @@ public struct SessionRefreshMiddleware: ClientMiddleware {
             case 200:
                 let data = try await Data(collecting: responseBody ?? HTTPBody(), upTo: ADHBodyLimit.maxBuffered)
                 let decoded = try JSONDecoder().decode(RefreshResponseBody.self, from: data)
-                return .refreshed(Session(
+                return .refreshed(HubSession(
                     credentials: Credentials(token: decoded.token, kind: .jwt),
                     refreshToken: decoded.refreshToken
                 ))
@@ -218,9 +218,9 @@ actor RefreshCoordinator {
 
     func refresh(
         previousToken: String,
-        currentSession: @Sendable () -> Session?,
+        currentSession: @Sendable () -> HubSession?,
         perform: @Sendable () async -> SessionRefreshOutcome,
-        save: @Sendable (Session) -> Void
+        save: @Sendable (HubSession) -> Void
     ) async -> SessionRefreshOutcome {
         while leaderToken != nil {
             let shared: SessionRefreshOutcome? = await withCheckedContinuation { continuation in

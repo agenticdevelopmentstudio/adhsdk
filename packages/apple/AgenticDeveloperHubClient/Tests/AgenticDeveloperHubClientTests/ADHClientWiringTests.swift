@@ -8,6 +8,7 @@ import FoundationEssentials
 import Foundation
 #endif
 
+@testable import AgenticDeveloperHubAuth
 @testable import AgenticDeveloperHubClient
 
 /// Hermetic tests for the `ADHClient` façade: the generated typed client routes
@@ -122,7 +123,7 @@ struct ADHClientWiringTests {
         // A unique access token per test: refreshes serialize through the
         // process-wide `RefreshCoordinator.shared`, which identifies a refresh
         // wave by the expired access token (real tokens never collide).
-        let store = InMemorySessionStore(Session(credentials: Credentials(token: "jwt-wiring", kind: .jwt), refreshToken: "r-wiring"))
+        let store = InMemorySessionStore(HubSession(credentials: Credentials(token: "jwt-wiring", kind: .jwt), refreshToken: "r-wiring"))
         let calls = Box<[HTTPRequest]>([])
         let mock = MockClientTransport { request in
             calls.set(calls.get + [request])
@@ -150,7 +151,7 @@ struct ADHClientWiringTests {
         // A unique access token per test: refreshes serialize through the
         // process-wide `RefreshCoordinator.shared`, which identifies a refresh
         // wave by the expired access token (real tokens never collide).
-        let store = InMemorySessionStore(Session(credentials: Credentials(token: "jwt-expiry", kind: .jwt), refreshToken: "r-expiry"))
+        let store = InMemorySessionStore(HubSession(credentials: Credentials(token: "jwt-expiry", kind: .jwt), refreshToken: "r-expiry"))
         let expired = Box(false)
         let mock = MockClientTransport { _ in (HTTPResponse(status: .unauthorized), nil) }
         let adh = ADHClient(transport: .direct(transport: mock), session: store, onSessionExpired: { expired.set(true) })

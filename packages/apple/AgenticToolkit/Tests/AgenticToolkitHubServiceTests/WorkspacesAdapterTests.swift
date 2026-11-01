@@ -2,6 +2,7 @@ import AgenticDeveloperHubClient
 import AgenticToolkitHub
 import Foundation
 import XCTest
+@testable import AgenticToolkitHubAuth
 @testable import AgenticToolkitHubService
 
 @MainActor
@@ -14,7 +15,8 @@ final class WorkspacesAdapterTests: XCTestCase {
 
     private func makeAdapter() -> (WorkspacesAdapter, StubClientTransport) {
         let stub = StubClientTransport()
-        let store = InMemorySessionStore(Session(credentials: Credentials(token: "jwt", kind: .jwt), refreshToken: "r"))
+        let store = InMemorySessionStore(
+            HubSession(credentials: Credentials(token: "jwt", kind: .jwt), refreshToken: "r"))
         let environment = HubEnvironment(
             sessionStore: store,
             transportSource: StaticTransportSource(.direct(transport: stub)),

@@ -1,6 +1,7 @@
 import AgenticDeveloperHubClient
 import AgenticDeveloperToolkit
 import AgenticToolkitHubService
+@testable import AgenticToolkitHubAuth
 @testable import AgenticToolkitHubUI
 import Foundation
 import Testing

@@ -1,3 +1,4 @@
+import AgenticToolkitHubAuth
 import AgenticToolkitHubService
 import AgenticDeveloperHubClient
 

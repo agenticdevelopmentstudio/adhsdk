@@ -1,5 +1,4 @@
-import AgenticDeveloperHubClient
-import AgenticToolkitHub
+import AgenticDeveloperHubAuth
 import Foundation
 import OpenAPIRuntime
 
@@ -61,12 +60,12 @@ public enum SessionControllerError: Error, Equatable, Sendable {
 /// client is rebuilt when the transport kind changes, so never cache it.
 @MainActor
 public final class SessionController {
-    /// Alias for `WorkspaceController.recentsKey`: `signOut()` clears the
-    /// recents list on the same key the picker reads, and Task 9's shell
-    /// tests reach for this name rather than reaching across into
-    /// `WorkspaceController` for what is, from the session's point of view,
-    /// just "the recents key".
-    public static let recentsKey = WorkspaceController.recentsKey
+    /// The single authoritative definition of the workspace-recents
+    /// `UserDefaults` key. `signOut()` clears it; the hub's
+    /// `WorkspaceController` reads and writes it under the same name. It lives
+    /// here, in the sign-in tier, because the session must clear it without
+    /// depending on the workspace layer above it.
+    public static let recentsKey = "hub.recents"
 
     public private(set) var state: SessionState = .restoring {
         didSet { if state != oldValue { onChange(state) } }
@@ -170,7 +169,7 @@ public final class SessionController {
         code: String
     ) async throws -> HubUser {
         try await attemptingSignIn {
-            let apiMethod: MfaMethod
+            let apiMethod: HubMfaMethod
             switch method {
             case .sms: apiMethod = .sms
             case .totp: apiMethod = .totp
@@ -306,7 +305,7 @@ public final class SessionController {
 
     /// Spec §5.5: forget recents, revoke best-effort, clear the session.
     public func signOut() async {
-        defaults.removeObject(forKey: WorkspaceController.recentsKey)
+        defaults.removeObject(forKey: Self.recentsKey)
         cache.clear()
         await environment.client.signOut()
         state = .signedOut

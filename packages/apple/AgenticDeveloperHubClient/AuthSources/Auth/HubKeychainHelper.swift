@@ -5,9 +5,9 @@ import os
 /// Simple CRUD over macOS Keychain generic-password items, scoped to a
 /// configurable service identifier.
 ///
-/// Vendored from an internal `KeychainHelper`, with the `Loggable`
+/// Vendored from an internal `HubKeychainHelper`, with the `Loggable`
 /// dependency dropped so this module stays dependency-free.
-public enum KeychainHelper {
+public enum HubKeychainHelper {
 
     /// The Keychain service identifier. Defaults to the main bundle identifier.
     nonisolated(unsafe) public static var service: String =

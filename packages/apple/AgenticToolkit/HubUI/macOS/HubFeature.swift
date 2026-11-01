@@ -2,6 +2,7 @@
 import AgenticDeveloperToolkitUI
 import AgenticToolkitCoreMacOS
 import AgenticToolkitHTDV
+import AgenticToolkitHubAuth
 import AgenticToolkitHubService
 import AgenticToolkitPermissions
 import AgenticToolkitPermissionsUI

@@ -8,7 +8,9 @@ import FoundationEssentials
 import Foundation
 #endif
 
-@testable import AgenticDeveloperHubClient
+// Only the sign-in tier: importing AgenticDeveloperHubClient too would make
+// `Operations` ambiguous between the two generated clients.
+@testable import AgenticDeveloperHubAuth
 
 /// Drives `SessionRefreshMiddleware.intercept` directly with a scripted `next`
 /// — no transport, no generated client. Each test is one row of the refresh
@@ -56,7 +58,7 @@ struct SessionRefreshMiddlewareTests {
     }
 
     private func jwtStore(token: String = "jwt-1", refresh: String? = "r-1") -> InMemorySessionStore {
-        InMemorySessionStore(Session(credentials: Credentials(token: token, kind: .jwt), refreshToken: refresh))
+        InMemorySessionStore(HubSession(credentials: Credentials(token: token, kind: .jwt), refreshToken: refresh))
     }
 
     private func intercept(
@@ -121,7 +123,7 @@ struct SessionRefreshMiddlewareTests {
         #expect(calls[2].path == "/auth/me")
         #expect(calls[2].authorization == "Bearer jwt-2")
         #expect(calls[2].body == requestBody)
-        #expect(store.currentSession() == Session(credentials: Credentials(token: "jwt-2", kind: .jwt), refreshToken: "r-2"))
+        #expect(store.currentSession() == HubSession(credentials: Credentials(token: "jwt-2", kind: .jwt), refreshToken: "r-2"))
     }
 
     @Test("a rejected refresh clears the session and reports expiry; the original 401 is returned")
@@ -228,7 +230,7 @@ struct SessionRefreshMiddlewareTests {
 
     @Test("an API-token session is never refreshed")
     func apiTokenNotRefreshed() async throws {
-        let store = InMemorySessionStore(Session(credentials: Credentials(token: "adh_x", kind: .apiToken)))
+        let store = InMemorySessionStore(HubSession(credentials: Credentials(token: "adh_x", kind: .apiToken)))
         let script = Script([(.unauthorized, "{}")])
 
         let response = try await intercept(SessionRefreshMiddleware(session: store), script: script)
@@ -271,7 +273,7 @@ struct SessionRefreshMiddlewareTests {
         }
 
         async let a = middleware.intercept(request, body: nil, baseURL: Self.baseURL, operationID: Operations.GetAuthMe.id, next: next)
-        async let b = middleware.intercept(request, body: nil, baseURL: Self.baseURL, operationID: Operations.GetWorkspaces.id, next: next)
+        async let b = middleware.intercept(request, body: nil, baseURL: Self.baseURL, operationID: ADHClient.rawOperationID(method: .get, path: "/workspaces"), next: next)
         let (ra, rb) = try await (a.0, b.0)
 
         #expect(ra.status == .ok)
@@ -321,14 +323,14 @@ struct SessionRefreshMiddlewareTests {
         let firstMiddleware = try #require(first.middlewares.first)
         let secondMiddleware = try #require(second.middlewares.first)
         async let a = firstMiddleware.intercept(request, body: nil, baseURL: Self.baseURL, operationID: Operations.GetAuthMe.id, next: next)
-        async let b = secondMiddleware.intercept(request, body: nil, baseURL: Self.baseURL, operationID: Operations.GetWorkspaces.id, next: next)
+        async let b = secondMiddleware.intercept(request, body: nil, baseURL: Self.baseURL, operationID: ADHClient.rawOperationID(method: .get, path: "/workspaces"), next: next)
         let (ra, rb) = try await (a.0, b.0)
 
         #expect(ra.status == .ok)
         #expect(rb.status == .ok)
         #expect(refreshCalls.get == 1)
         #expect(expired.get == 0)
-        #expect(store.currentSession() == Session(credentials: Credentials(token: "jwt-2", kind: .jwt), refreshToken: "r-2"))
+        #expect(store.currentSession() == HubSession(credentials: Credentials(token: "jwt-2", kind: .jwt), refreshToken: "r-2"))
     }
 
     /// The other half of the shared-coordinator contract: sharing must not

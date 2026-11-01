@@ -3,6 +3,7 @@ import AgenticToolkitHub
 import Foundation
 import HTTPTypes
 import XCTest
+@testable import AgenticToolkitHubAuth
 @testable import AgenticToolkitHubService
 
 @MainActor
@@ -12,7 +13,8 @@ final class HubAPITests: XCTestCase {
 
     private func makeAPI() -> (HubAPI, StubClientTransport) {
         let stub = StubClientTransport()
-        let store = InMemorySessionStore(Session(credentials: Credentials(token: "jwt", kind: .jwt), refreshToken: "r"))
+        let store = InMemorySessionStore(
+            HubSession(credentials: Credentials(token: "jwt", kind: .jwt), refreshToken: "r"))
         let environment = HubEnvironment(
             sessionStore: store,
             transportSource: StaticTransportSource(.direct(transport: stub)),

@@ -21,9 +21,10 @@
       ],
       "depends_on": [],
       "shared": true,
-      "holds": "AgenticDeveloperHubClient. The generated OpenAPI client for the hub API plus EmbeddedDaemon, over swift-openapi-runtime/urlsession.",
+      "holds": "AgenticDeveloperHubClient (Sources/: the full generated OpenAPI client and ADHSyncAPI) over AgenticDeveloperHubAuth (AuthSources/: ADHClient, the auth-only generated client, the session, Keychain stores and transports incl. EmbeddedDaemon), over swift-openapi-runtime/urlsession. AgenticDeveloperHubClient re-exports AgenticDeveloperHubAuth.",
       "imported_as": [
-        "AgenticDeveloperHubClient"
+        "AgenticDeveloperHubClient",
+        "AgenticDeveloperHubAuth"
       ]
     },
     {
@@ -259,15 +260,31 @@
       "holds": "AgenticToolkitHTDV. Native Hierarchical Topic Detail View: HTDVDataSource/HTDVController/HTDVLayoutEngine, form spec + FormState + FormViewController, MarkdownEditing protocol. Foundation + AppKit/UIKit only."
     },
     {
+      "name": "apple-hubauth",
+      "paths": [
+        "packages/apple/AgenticToolkit/HubAuth/"
+      ],
+      "depends_on": [
+        "apple-hubclient",
+        "apple-adt"
+      ],
+      "shared": true,
+      "holds": "AgenticToolkitHubAuth. The hub login on its own: SessionController, HubEnvironment and the transport sources, HubError, HubUser, HubAccount, the sign-in view model, passkeys and web sign-in, HubLinks. Links only AgenticDeveloperHubAuth, never the full client, HTDV or the workspace layer. AgenticToolkitHub re-exports it.",
+      "imported_as": [
+        "AgenticToolkitHubAuth"
+      ]
+    },
+    {
       "name": "apple-hub",
       "paths": [
         "packages/apple/AgenticToolkit/Hub/"
       ],
       "depends_on": [
-        "apple-htdv"
+        "apple-htdv",
+        "apple-hubauth"
       ],
       "shared": true,
-      "holds": "AgenticToolkitHub. Shared hub feature layer: HubModules registry hook, HubError, and per-feature models/data sources/modules consumed by the native hub apps."
+      "holds": "AgenticToolkitHub. Shared hub feature layer: HubModules registry hook (re-exports AgenticToolkitHubAuth, which holds HubError), and per-feature models/data sources/modules consumed by the native hub apps."
     },
     {
       "name": "apple-hubservice",
@@ -279,10 +296,11 @@
         "apple-htdv",
         "apple-permissions",
         "apple-hubclient",
-        "apple-adt"
+        "apple-adt",
+        "apple-hubauth"
       ],
       "shared": true,
-      "holds": "AgenticToolkitHubService. The hub's session, workspaces, API adapters and transport — no UI. Sees an embedded daemon only as AgenticDeveloperHubClient's EmbeddedDaemon."
+      "holds": "AgenticToolkitHubService. The hub's workspaces, API adapters and permissions — no UI. The session and transport live in AgenticToolkitHubAuth below it."
     },
     {
       "name": "apple-hubui",
@@ -298,7 +316,8 @@
         "apple-coreui",
         "apple-core",
         "apple-permissions",
-        "apple-permissionsui"
+        "apple-permissionsui",
+        "apple-hubauth"
       ],
       "shared": true,
       "holds": "AgenticToolkitHubUI. The hub's shells (AppKit and UIKit), sign-in, feature registry, and on macOS HubFeature and the hub script commands. Hosts assemble it; it builds no menu and no app delegate."
@@ -358,7 +377,8 @@
         "apple-systemmonitor",
         "apple-systemmonitorui",
         "apple-adt",
-        "apple-hubclient"
+        "apple-hubclient",
+        "apple-hubauth"
       ],
       "shared": false,
       "holds": "Test bundles. Nothing depends on these."

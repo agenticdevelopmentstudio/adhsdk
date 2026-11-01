@@ -11,7 +11,7 @@ public enum SignInOutcome: Sendable {
     case mfaRequired(Components.Schemas.MfaChallenge)
 }
 
-public enum MfaMethod: String, Sendable, CaseIterable {
+public enum HubMfaMethod: String, Sendable, CaseIterable {
     case sms
     case totp
     case recovery
@@ -60,7 +60,7 @@ extension ADHClient {
     }
 
     private func adopt(_ auth: Components.Schemas.AuthResult, into store: any SessionStore) -> Components.Schemas.User {
-        store.save(Session(
+        store.save(HubSession(
             credentials: Credentials(token: auth.token, kind: .jwt),
             refreshToken: auth.refreshToken
         ))
@@ -80,7 +80,7 @@ extension ADHClient {
     /// `email` key would pin the lookup to email only.
     public func signIn(email: String, password: String) async throws -> SignInOutcome {
         let store = try sessionStore()
-        let output = try await api.postAuthLogin(body: .json(.init(identifier: email, password: password)))
+        let output = try await authAPI.postAuthLogin(body: .json(.init(identifier: email, password: password)))
         switch output {
         case .ok(let ok):
             return .signedIn(adopt(try ok.body.json, into: store))
@@ -93,9 +93,9 @@ extension ADHClient {
         }
     }
 
-    public func completeMfa(challengeToken: String, method: MfaMethod, code: String) async throws -> Components.Schemas.User {
+    public func completeMfa(challengeToken: String, method: HubMfaMethod, code: String) async throws -> Components.Schemas.User {
         let store = try sessionStore()
-        let output = try await api.postAuthLoginMfa(body: .json(.init(token: challengeToken, method: method.payload, code: code)))
+        let output = try await authAPI.postAuthLoginMfa(body: .json(.init(token: challengeToken, method: method.payload, code: code)))
         switch output {
         case .ok(let ok):
             return adopt(try ok.body.json, into: store)
@@ -112,7 +112,7 @@ extension ADHClient {
 
     public func sendMfaSms(challengeToken: String) async throws {
         _ = try sessionStore()
-        let output = try await api.postAuthLoginMfaSmsSend(body: .json(.init(token: challengeToken)))
+        let output = try await authAPI.postAuthLoginMfaSmsSend(body: .json(.init(token: challengeToken)))
         switch output {
         case .accepted:
             return
@@ -138,7 +138,7 @@ extension ADHClient {
     /// WebAuthn standard's, not the hub's.
     public func passkeyOptions(identifier: String) async throws -> PasskeyOptions {
         _ = try sessionStore()
-        let output = try await api.postAuthLoginWebauthnOptions(body: .json(.init(identifier: identifier)))
+        let output = try await authAPI.postAuthLoginWebauthnOptions(body: .json(.init(identifier: identifier)))
         switch output {
         case .ok(let ok):
             let payload = try ok.body.json
@@ -156,7 +156,7 @@ extension ADHClient {
     /// (`id`, `rawId`, `type`, `response.{clientDataJSON,authenticatorData,signature,userHandle}` base64url).
     public func completePasskey(challengeToken: String, response: OpenAPIObjectContainer) async throws -> Components.Schemas.User {
         let store = try sessionStore()
-        let output = try await api.postAuthLoginWebauthn(
+        let output = try await authAPI.postAuthLoginWebauthn(
             body: .json(.init(token: challengeToken, response: .init(additionalProperties: response)))
         )
         switch output {
@@ -174,7 +174,7 @@ extension ADHClient {
     /// token) to `completeMfaPasskey`.
     public func mfaPasskeyOptions(challengeToken: String) async throws -> PasskeyOptions {
         _ = try sessionStore()
-        let output = try await api.postAuthLoginMfaWebauthnOptions(body: .json(.init(token: challengeToken)))
+        let output = try await authAPI.postAuthLoginMfaWebauthnOptions(body: .json(.init(token: challengeToken)))
         switch output {
         case .ok(let ok):
             let payload = try ok.body.json
@@ -194,7 +194,7 @@ extension ADHClient {
     /// shape as `completePasskey`).
     public func completeMfaPasskey(challengeToken: String, response: OpenAPIObjectContainer) async throws -> Components.Schemas.User {
         let store = try sessionStore()
-        let output = try await api.postAuthLoginMfaWebauthn(
+        let output = try await authAPI.postAuthLoginMfaWebauthn(
             body: .json(.init(token: challengeToken, response: .init(additionalProperties: response)))
         )
         switch output {
@@ -230,7 +230,7 @@ extension ADHClient {
     public func exchangeOAuthCode(_ code: String, userAgent: String? = nil) async throws -> Components.Schemas.User {
         let store = try sessionStore()
         guard let userAgent else {
-            let output = try await api.postOauthSigninExchange(body: .json(.init(code: code)))
+            let output = try await authAPI.postOauthSigninExchange(body: .json(.init(code: code)))
             switch output {
             case .ok(let ok):
                 return adopt(try ok.body.json, into: store)
@@ -295,7 +295,7 @@ extension ADHClient {
     }
 
     public func currentUser() async throws -> Components.Schemas.User {
-        let output = try await api.getAuthMe()
+        let output = try await authAPI.getAuthMe()
         switch output {
         case .ok(let ok):
             return try ok.body.json

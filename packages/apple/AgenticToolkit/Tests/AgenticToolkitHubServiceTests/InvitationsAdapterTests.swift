@@ -3,6 +3,7 @@ import AgenticToolkitHub
 import Foundation
 import HTTPTypes
 import XCTest
+@testable import AgenticToolkitHubAuth
 @testable import AgenticToolkitHubService
 
 @MainActor
@@ -15,7 +16,7 @@ final class InvitationsAdapterTests: XCTestCase {
         try await super.setUp()
         stub = StubClientTransport()
         let store = InMemorySessionStore(
-            Session(credentials: Credentials(token: "jwt", kind: .jwt), refreshToken: "r")
+            HubSession(credentials: Credentials(token: "jwt", kind: .jwt), refreshToken: "r")
         )
         let environment = HubEnvironment(
             sessionStore: store,

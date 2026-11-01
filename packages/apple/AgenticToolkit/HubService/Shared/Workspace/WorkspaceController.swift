@@ -1,3 +1,7 @@
+// The session, transports and HubError live in AgenticToolkitHubAuth, the
+// hub's login tier. Re-exported here so `import AgenticToolkitHubService`
+// still reaches SessionController, HubEnvironment and the rest.
+@_exported import AgenticToolkitHubAuth
 import AgenticToolkitHub
 import Foundation
 
@@ -13,10 +17,9 @@ public enum WorkspaceState: Equatable, Sendable {
 /// keeps the recents list the account menu and picker show.
 @MainActor
 public final class WorkspaceController {
-    /// The single authoritative definition of the recents `UserDefaults` key —
-    /// `SessionController.signOut()` also clears it, so it refers to this
-    /// constant rather than keeping its own copy of the literal.
-    public static let recentsKey = "hub.recents"
+    /// The recents `UserDefaults` key. Defined by `SessionController` (the
+    /// sign-in tier), whose `signOut()` clears it.
+    public static let recentsKey = SessionController.recentsKey
     public static let maxRecents = 5
     public static let noWorkspacesMessage = "No workspaces are available for this account."
 

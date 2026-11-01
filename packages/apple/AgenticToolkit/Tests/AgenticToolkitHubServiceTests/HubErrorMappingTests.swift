@@ -3,6 +3,7 @@ import AgenticToolkitHub
 import Foundation
 import OpenAPIRuntime
 import XCTest
+@testable import AgenticToolkitHubAuth
 @testable import AgenticToolkitHubService
 
 final class HubErrorMappingTests: XCTestCase {

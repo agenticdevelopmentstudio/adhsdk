@@ -3,6 +3,7 @@ import AgenticToolkitHub
 import Foundation
 import HTTPTypes
 import XCTest
+@testable import AgenticToolkitHubAuth
 @testable import AgenticToolkitHubService
 
 @MainActor
@@ -16,7 +17,7 @@ final class EcosystemConfigAdaptersTests: XCTestCase {
         try await super.setUp()
         stub = StubClientTransport()
         let store = InMemorySessionStore(
-            Session(credentials: Credentials(token: "jwt", kind: .jwt), refreshToken: "r")
+            HubSession(credentials: Credentials(token: "jwt", kind: .jwt), refreshToken: "r")
         )
         environment = HubEnvironment(
             sessionStore: store,

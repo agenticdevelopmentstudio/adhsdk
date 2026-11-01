@@ -6,6 +6,7 @@ import FoundationEssentials
 import Foundation
 #endif
 
+@testable import AgenticDeveloperHubAuth
 @testable import AgenticDeveloperHubClient
 
 /// Opt-in integration test against the **live** backend. Skipped unless

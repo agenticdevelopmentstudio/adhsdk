@@ -4,7 +4,7 @@ import Foundation
 /// on every request plus, for password/MFA/passkey/OAuth sign-ins, the
 /// single-use refresh token `POST /auth/refresh` rotates. API-token sessions
 /// have no refresh token (`refreshToken == nil`) and are never refreshed.
-public struct Session: Sendable, Equatable, Codable {
+public struct HubSession: Sendable, Equatable, Codable {
     public var credentials: Credentials
     public var refreshToken: String?
 
@@ -18,7 +18,7 @@ public struct Session: Sendable, Equatable, Codable {
 /// access token nor the (single-use, long-lived) refresh token may ever reach
 /// a log. Whether a refresh token is present is the part that matters when
 /// diagnosing a session, so that much is reported.
-extension Session: CustomStringConvertible, CustomDebugStringConvertible {
+extension HubSession: CustomStringConvertible, CustomDebugStringConvertible {
 
     public var description: String {
         "Session(kind: \(credentials.kind.rawValue), token: <redacted>, refreshToken: \(refreshToken == nil ? "none" : "<redacted>"))"

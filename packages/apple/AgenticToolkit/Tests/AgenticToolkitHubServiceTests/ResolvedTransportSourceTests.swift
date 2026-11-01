@@ -1,5 +1,6 @@
 import AgenticDeveloperHubClient
 import XCTest
+@testable import AgenticToolkitHubAuth
 @testable import AgenticToolkitHubService
 
 /// `ResolvedTransportSource` is the macOS bootstrap path: it must map the

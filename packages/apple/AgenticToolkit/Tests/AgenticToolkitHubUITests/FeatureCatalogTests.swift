@@ -2,6 +2,7 @@ import AgenticToolkitHTDV
 import AgenticToolkitHub
 import XCTest
 import AgenticToolkitHubService
+@testable import AgenticToolkitHubAuth
 @testable import AgenticToolkitHubUI
 
 final class FeatureCatalogTests: XCTestCase {

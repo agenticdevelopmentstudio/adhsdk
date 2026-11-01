@@ -1,5 +1,4 @@
-import AgenticDeveloperHubClient
-import AgenticToolkitHub
+import AgenticDeveloperHubAuth
 import Foundation
 import OpenAPIRuntime
 

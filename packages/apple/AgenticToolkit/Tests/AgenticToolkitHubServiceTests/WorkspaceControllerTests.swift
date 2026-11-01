@@ -1,6 +1,7 @@
 import AgenticToolkitHub
 import Foundation
 import XCTest
+@testable import AgenticToolkitHubAuth
 @testable import AgenticToolkitHubService
 
 @MainActor

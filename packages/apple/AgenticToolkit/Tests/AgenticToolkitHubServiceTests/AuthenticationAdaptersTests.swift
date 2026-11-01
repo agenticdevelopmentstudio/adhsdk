@@ -3,6 +3,7 @@ import AgenticToolkitHub
 import Foundation
 import HTTPTypes
 import XCTest
+@testable import AgenticToolkitHubAuth
 @testable import AgenticToolkitHubService
 
 @MainActor
@@ -14,7 +15,8 @@ final class AuthenticationAdaptersTests: XCTestCase {
     override func setUp() async throws {
         try await super.setUp()
         stub = StubClientTransport()
-        let store = InMemorySessionStore(Session(credentials: Credentials(token: "jwt", kind: .jwt), refreshToken: "r"))
+        let store = InMemorySessionStore(
+            HubSession(credentials: Credentials(token: "jwt", kind: .jwt), refreshToken: "r"))
         environment = HubEnvironment(
             sessionStore: store,
             transportSource: StaticTransportSource(.direct(transport: stub)),

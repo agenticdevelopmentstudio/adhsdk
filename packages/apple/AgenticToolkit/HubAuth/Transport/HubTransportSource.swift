@@ -1,4 +1,4 @@
-import AgenticDeveloperHubClient
+import AgenticDeveloperHubAuth
 import Foundation
 
 /// Where the app's `APITransport` comes from. macOS resolves against a

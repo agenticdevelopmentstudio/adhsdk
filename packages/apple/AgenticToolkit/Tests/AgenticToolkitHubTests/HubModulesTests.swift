@@ -1,5 +1,6 @@
 import XCTest
 import AgenticToolkitHTDV
+@testable import AgenticToolkitHubAuth
 @testable import AgenticToolkitHub
 
 @MainActor

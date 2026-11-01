@@ -8,6 +8,7 @@ import FoundationEssentials
 import Foundation
 #endif
 
+@testable import AgenticDeveloperHubAuth
 @testable import AgenticDeveloperHubClient
 
 /// Tests for the `login` / `createAPIToken` / `adopt` / `logout` convenience

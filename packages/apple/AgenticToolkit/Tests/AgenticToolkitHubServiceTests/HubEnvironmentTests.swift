@@ -2,6 +2,7 @@ import AgenticDeveloperHubClient
 import Foundation
 import HTTPTypes
 import XCTest
+@testable import AgenticToolkitHubAuth
 @testable import AgenticToolkitHubService
 
 @MainActor
@@ -52,7 +53,7 @@ final class HubEnvironmentTests: XCTestCase {
     func testDaemonNoStoreSuccessMarksServedFromCacheAndClearsOnFreshResponse() async throws {
         let stub = StubClientTransport()
         stub.on(.get, "/auth/me", headers: ["cache-control": "no-store"], json: Self.userJSON)
-        let store = InMemorySessionStore(Session(credentials: Credentials(token: "jwt", kind: .jwt)))
+        let store = InMemorySessionStore(HubSession(credentials: Credentials(token: "jwt", kind: .jwt)))
         let env = await HubEnvironment.bootstrap(
             sessionStore: store,
             transportSource: StaticTransportSource(.daemon(port: 1, transport: stub))
@@ -75,7 +76,7 @@ final class HubEnvironmentTests: XCTestCase {
     func testDirectNoStoreNeverMarksServedFromCache() async throws {
         let stub = StubClientTransport()
         stub.on(.get, "/auth/me", headers: ["cache-control": "no-store"], json: Self.userJSON)
-        let store = InMemorySessionStore(Session(credentials: Credentials(token: "jwt", kind: .jwt)))
+        let store = InMemorySessionStore(HubSession(credentials: Credentials(token: "jwt", kind: .jwt)))
         let env = await HubEnvironment.bootstrap(
             sessionStore: store,
             transportSource: StaticTransportSource(.direct(transport: stub))
@@ -111,7 +112,7 @@ final class HubEnvironmentTests: XCTestCase {
         stub.on(.get, "/auth/me", status: 401, json: #"{"error":{"message":"expired"}}"#)
         stub.on(.post, "/auth/refresh", status: 401, json: #"{"error":"refresh rejected"}"#)
         let store = InMemorySessionStore(
-            Session(credentials: Credentials(token: "jwt", kind: .jwt), refreshToken: "r1")
+            HubSession(credentials: Credentials(token: "jwt", kind: .jwt), refreshToken: "r1")
         )
         let env = await HubEnvironment.bootstrap(
             sessionStore: store,

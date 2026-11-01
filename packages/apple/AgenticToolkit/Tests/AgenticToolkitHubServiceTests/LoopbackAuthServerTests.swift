@@ -1,5 +1,6 @@
 import Network
 import XCTest
+@testable import AgenticToolkitHubAuth
 @testable import AgenticToolkitHubService
 
 /// Test ports sit in 38_811–38_821, below macOS's ephemeral range (49152 and

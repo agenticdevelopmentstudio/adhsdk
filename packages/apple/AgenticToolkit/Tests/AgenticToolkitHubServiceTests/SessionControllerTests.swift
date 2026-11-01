@@ -4,6 +4,7 @@ import Foundation
 import HTTPTypes
 import OpenAPIRuntime
 import XCTest
+@testable import AgenticToolkitHubAuth
 @testable import AgenticToolkitHubService
 
 @MainActor
@@ -43,7 +44,7 @@ final class SessionControllerTests: XCTestCase {
         let environment: HubEnvironment
     }
 
-    private func makeHarness(session: Session? = nil) -> Harness {
+    private func makeHarness(session: HubSession? = nil) -> Harness {
         let stub = StubClientTransport()
         let store = InMemorySessionStore(session)
         let environment = HubEnvironment(
@@ -111,11 +112,11 @@ final class SessionControllerTests: XCTestCase {
         private var mainThreadReads = 0
         var readsOnMain: Int { lock.withLock { mainThreadReads } }
 
-        func currentSession() -> Session? {
+        func currentSession() -> HubSession? {
             if Thread.isMainThread { lock.withLock { mainThreadReads += 1 } }
             return nil
         }
-        func save(_ session: Session) {}
+        func save(_ session: HubSession) {}
         func clear() {}
     }
 
@@ -145,7 +146,7 @@ final class SessionControllerTests: XCTestCase {
 
     func testRestoreWithAValidSessionSignsInAndCachesTheUser() async {
         let harness = makeHarness(
-            session: Session(credentials: Credentials(token: "jwt", kind: .jwt), refreshToken: "r")
+            session: HubSession(credentials: Credentials(token: "jwt", kind: .jwt), refreshToken: "r")
         )
         harness.stub.on(.get, "/auth/me", json: Self.userJSON)
         var observed: [SessionState] = []
@@ -158,7 +159,7 @@ final class SessionControllerTests: XCTestCase {
 
     func testRestoreWhenTheRefreshIsRejectedSignsOut() async {
         let harness = makeHarness(
-            session: Session(credentials: Credentials(token: "jwt", kind: .jwt), refreshToken: "r")
+            session: HubSession(credentials: Credentials(token: "jwt", kind: .jwt), refreshToken: "r")
         )
         CachedUserStore(defaults: isolated.defaults).save(Self.ada)
         harness.stub.on(.get, "/auth/me", status: 401, json: #"{"error":{"message":"expired"}}"#)
@@ -171,7 +172,7 @@ final class SessionControllerTests: XCTestCase {
 
     func testRestoreOfflineFallsBackToTheCachedUser() async {
         let harness = makeHarness(
-            session: Session(credentials: Credentials(token: "jwt", kind: .jwt), refreshToken: "r")
+            session: HubSession(credentials: Credentials(token: "jwt", kind: .jwt), refreshToken: "r")
         )
         CachedUserStore(defaults: isolated.defaults).save(Self.ada)
         harness.stub.on(.get, "/auth/me") { _, _ in throw URLError(.notConnectedToInternet) }
@@ -182,7 +183,7 @@ final class SessionControllerTests: XCTestCase {
 
     func testRestoreOfflineWithoutACacheIsAnError() async {
         let harness = makeHarness(
-            session: Session(credentials: Credentials(token: "jwt", kind: .jwt), refreshToken: "r")
+            session: HubSession(credentials: Credentials(token: "jwt", kind: .jwt), refreshToken: "r")
         )
         harness.stub.on(.get, "/auth/me") { _, _ in throw URLError(.notConnectedToInternet) }
         await harness.controller.restore()
@@ -202,7 +203,7 @@ final class SessionControllerTests: XCTestCase {
     /// never fall through to the cached-user offline path.
     func testRestoreOn401SignsOutAndClearsStoreAndCacheEvenWhenARefreshRotatedTheStore() async {
         let harness = makeHarness(
-            session: Session(credentials: Credentials(token: "jwt", kind: .jwt), refreshToken: "r")
+            session: HubSession(credentials: Credentials(token: "jwt", kind: .jwt), refreshToken: "r")
         )
         CachedUserStore(defaults: isolated.defaults).save(Self.ada)
         harness.stub.on(.get, "/auth/me", status: 401, json: #"{"error":{"message":"unauthorized"}}"#)
@@ -458,7 +459,7 @@ final class SessionControllerTests: XCTestCase {
     /// merely away from `.restoring`.
     private func makeHarnessStuckInError() async -> Harness {
         let harness = makeHarness(
-            session: Session(credentials: Credentials(token: "jwt", kind: .jwt), refreshToken: "r")
+            session: HubSession(credentials: Credentials(token: "jwt", kind: .jwt), refreshToken: "r")
         )
         // A 500 on `/auth/me` is an undocumented status, which the generated
         // client surfaces as `SessionError.unexpectedResponse("HTTP 500")`,
@@ -552,7 +553,7 @@ final class SessionControllerTests: XCTestCase {
     /// `.signedIn` specifically so it fails if that guard is removed.
     func testAttemptingSignInNeverDemotesAnAlreadySignedInSession() async {
         let harness = makeHarness(
-            session: Session(credentials: Credentials(token: "jwt", kind: .jwt), refreshToken: "r")
+            session: HubSession(credentials: Credentials(token: "jwt", kind: .jwt), refreshToken: "r")
         )
         harness.stub.on(.get, "/auth/me", json: Self.userJSON)
         await harness.controller.restore()
@@ -572,7 +573,7 @@ final class SessionControllerTests: XCTestCase {
 
     func testSignOutClearsRecentsCacheAndSessionAfterRevoking() async {
         let harness = makeHarness(
-            session: Session(credentials: Credentials(token: "jwt", kind: .jwt), refreshToken: "r")
+            session: HubSession(credentials: Credentials(token: "jwt", kind: .jwt), refreshToken: "r")
         )
         harness.stub.on(.get, "/auth/me", json: Self.userJSON)
         harness.stub.on(.post, "/auth/revoke", status: 204, json: "")
@@ -591,7 +592,7 @@ final class SessionControllerTests: XCTestCase {
 
     func testSessionExpiryFromTheEnvironmentSignsOut() async {
         let harness = makeHarness(
-            session: Session(credentials: Credentials(token: "jwt", kind: .jwt), refreshToken: "r")
+            session: HubSession(credentials: Credentials(token: "jwt", kind: .jwt), refreshToken: "r")
         )
         harness.stub.on(.get, "/auth/me", json: Self.userJSON)
         await harness.controller.restore()

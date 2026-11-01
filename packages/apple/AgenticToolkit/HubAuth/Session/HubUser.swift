@@ -1,4 +1,4 @@
-import AgenticDeveloperHubClient
+import AgenticDeveloperHubAuth
 import Foundation
 
 /// The app-facing user. Deliberately narrower than the generated schema:

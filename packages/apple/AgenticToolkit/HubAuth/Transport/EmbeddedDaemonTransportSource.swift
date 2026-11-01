@@ -1,4 +1,4 @@
-import AgenticDeveloperHubClient
+import AgenticDeveloperHubAuth
 
 /// Transport source for a host that embeds the daemon in-process (iOS): every
 /// request goes through it. Holds the daemon as `any EmbeddedDaemon` — this

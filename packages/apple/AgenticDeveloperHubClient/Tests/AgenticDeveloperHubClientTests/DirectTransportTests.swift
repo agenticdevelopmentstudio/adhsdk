@@ -7,6 +7,7 @@ import FoundationEssentials
 import Foundation
 #endif
 
+@testable import AgenticDeveloperHubAuth
 @testable import AgenticDeveloperHubClient
 
 /// End-to-end proof for the Direct path: a *real* `URLSessionTransport` carries a

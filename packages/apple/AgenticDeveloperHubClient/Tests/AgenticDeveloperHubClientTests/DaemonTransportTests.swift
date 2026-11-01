@@ -6,6 +6,7 @@ import FoundationEssentials
 import Foundation
 #endif
 
+@testable import AgenticDeveloperHubAuth
 @testable import AgenticDeveloperHubClient
 
 /// Semi-hermetic tests for the Daemon path: a typed operation travels over a real

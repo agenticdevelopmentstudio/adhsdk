@@ -166,8 +166,18 @@ together, each with its own `project.yml`:
   `CodeEditLanguages`. Multi-platform (macOS + iOS) targets live beside them:
   `AgenticToolkitHTDV` (native Hierarchical Topic Detail View, forms, markdown
   hooks — Foundation/AppKit/UIKit only, see `docs/architecture/htdv.md`) and
-  `AgenticToolkitHub` (shared hub feature layer; depends on HTDV only). Neither
-  may import `AgenticToolkitCore`.
+  `AgenticToolkitHub` (shared hub feature layer; depends on HTDV and
+  `AgenticToolkitHubAuth`, which it re-exports). Neither may import
+  `AgenticToolkitCore`.
+- The hub is opt-in in tiers, by what a product links.
+  `AgenticToolkitHubAuth` (`HubAuth/`) is the login alone: session, transports,
+  `HubError`, `HubAccount`, sign-in model. It links only
+  `AgenticDeveloperHubAuth`, the client project's auth-only generated client
+  (`AuthSources/`, `openapi-generator-auth-config.yaml`), never the full
+  ~517k-line `AgenticDeveloperHubClient`, HTDV or the workspace layer.
+  `Hub` → `HubService` → `HubUI` build the full hub on top of it. A product
+  that only needs "sign in to the hub" (Stenographer) links the two auth
+  frameworks and nothing above them.
 - `AgenticToolkitApp/` — host app (`AgenticToolkitApp.app`). Links and embeds
   the toolkit frameworks. macOS 26+.
 - `AIPlugins/` — `AIPluginsShared.framework` + five `.aiplugin` bundles

@@ -1,6 +1,7 @@
 import AgenticToolkitHubService
 import AgenticToolkitPermissions
 import XCTest
+@testable import AgenticToolkitHubAuth
 @testable import AgenticToolkitHubUI
 
 /// `HubFeature` is what a host assembles; these pin the parts a host relies

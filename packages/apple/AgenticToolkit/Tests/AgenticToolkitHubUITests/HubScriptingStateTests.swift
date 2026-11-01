@@ -4,6 +4,7 @@ import AgenticToolkitHub
 import Foundation
 import XCTest
 import AgenticToolkitHubService
+@testable import AgenticToolkitHubAuth
 @testable import AgenticToolkitHubUI
 
 /// The vocabulary a script types and the snapshot it reads back.

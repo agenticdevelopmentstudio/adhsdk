@@ -2,6 +2,7 @@ import AgenticDeveloperHubClient
 import Foundation
 import OpenAPIURLSession
 import XCTest
+@testable import AgenticToolkitHubAuth
 @testable import AgenticToolkitHubService
 
 /// Review focus 5: the service sees the embedded daemon only as a protocol,

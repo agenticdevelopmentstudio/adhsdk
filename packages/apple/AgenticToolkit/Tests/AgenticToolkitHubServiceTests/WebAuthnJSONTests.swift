@@ -1,5 +1,6 @@
 import OpenAPIRuntime
 import XCTest
+@testable import AgenticToolkitHubAuth
 @testable import AgenticToolkitHubService
 
 final class WebAuthnJSONTests: XCTestCase {

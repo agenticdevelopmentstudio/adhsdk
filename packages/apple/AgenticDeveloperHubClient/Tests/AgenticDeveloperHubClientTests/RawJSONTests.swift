@@ -8,6 +8,7 @@ import FoundationEssentials
 import Foundation
 #endif
 
+@testable import AgenticDeveloperHubAuth
 @testable import AgenticDeveloperHubClient
 
 @Suite("rawJSON escape hatch")
@@ -15,7 +16,7 @@ struct RawJSONTests {
 
     @Test("runs through the session middleware: bearer attached, query encoded, body forwarded")
     func goesThroughMiddleware() async throws {
-        let store = InMemorySessionStore(Session(credentials: Credentials(token: "jwt-1", kind: .jwt), refreshToken: "r-1"))
+        let store = InMemorySessionStore(HubSession(credentials: Credentials(token: "jwt-1", kind: .jwt), refreshToken: "r-1"))
         let mock = MockClientTransport { _ in
             var response = HTTPResponse(status: .ok)
             response.headerFields[.contentType] = "application/json"
@@ -40,7 +41,7 @@ struct RawJSONTests {
         // A unique access token per test: refreshes serialize through the
         // process-wide `RefreshCoordinator.shared`, which identifies a refresh
         // wave by the expired access token (real tokens never collide).
-        let store = InMemorySessionStore(Session(credentials: Credentials(token: "jwt-raw", kind: .jwt), refreshToken: "r-raw"))
+        let store = InMemorySessionStore(HubSession(credentials: Credentials(token: "jwt-raw", kind: .jwt), refreshToken: "r-raw"))
         let mock = MockClientTransport { request in
             if request.path == "/auth/refresh" {
                 var response = HTTPResponse(status: .ok)

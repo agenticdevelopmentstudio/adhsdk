@@ -1,4 +1,4 @@
-import AgenticDeveloperHubClient
+import AgenticDeveloperHubAuth
 import AgenticDeveloperToolkit
 import Foundation
 import HTTPTypes

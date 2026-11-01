@@ -2,6 +2,7 @@ import AgenticDeveloperHubClient
 import AgenticToolkitHub
 import XCTest
 import AgenticToolkitHubService
+@testable import AgenticToolkitHubAuth
 @testable import AgenticToolkitHubUI
 
 @MainActor
@@ -80,7 +81,7 @@ final class AppCoordinatorTests: XCTestCase {
     }
 
     private func makeHarness(
-        session: Session? = nil,
+        session: HubSession? = nil,
         beforeCoordinator: (SessionController) -> Void = { _ in }
     ) -> Harness {
         let stub = StubClientTransport()
@@ -117,7 +118,7 @@ final class AppCoordinatorTests: XCTestCase {
 
     private func signedInHarness() -> Harness {
         let harness = makeHarness(
-            session: Session(credentials: Credentials(token: "jwt", kind: .jwt), refreshToken: "r")
+            session: HubSession(credentials: Credentials(token: "jwt", kind: .jwt), refreshToken: "r")
         )
         harness.stub.on(.get, "/auth/me", status: 200, json: Self.userJSON)
         harness.stub.on(.get, "/workspaces", status: 200, json: Self.workspacesJSON)
@@ -163,7 +164,7 @@ final class AppCoordinatorTests: XCTestCase {
 
     func testRejectedSessionGoesToSignIn() async {
         let harness = makeHarness(
-            session: Session(credentials: Credentials(token: "jwt", kind: .jwt), refreshToken: nil)
+            session: HubSession(credentials: Credentials(token: "jwt", kind: .jwt), refreshToken: nil)
         )
         harness.stub.on(.get, "/auth/me", status: 401, json: #"{"error":{"message":"expired"}}"#)
         await harness.coordinator.start()
@@ -172,7 +173,7 @@ final class AppCoordinatorTests: XCTestCase {
 
     func testUnreachableServerWithoutCacheIsAnErrorAndRetryRecovers() async {
         let harness = makeHarness(
-            session: Session(credentials: Credentials(token: "jwt", kind: .jwt), refreshToken: "r")
+            session: HubSession(credentials: Credentials(token: "jwt", kind: .jwt), refreshToken: "r")
         )
         harness.stub.on(.get, "/auth/me") { _, _ in throw URLError(.notConnectedToInternet) }
         await harness.coordinator.start()
@@ -288,7 +289,7 @@ final class AppCoordinatorTests: XCTestCase {
     func testWorkspaceLoadResolvingAfterSignOutDoesNotResurrectPhase() async {
         let stub = StubClientTransport()
         let store = InMemorySessionStore(
-            Session(credentials: Credentials(token: "jwt", kind: .jwt), refreshToken: "r")
+            HubSession(credentials: Credentials(token: "jwt", kind: .jwt), refreshToken: "r")
         )
         let environment = HubEnvironment(
             sessionStore: store,

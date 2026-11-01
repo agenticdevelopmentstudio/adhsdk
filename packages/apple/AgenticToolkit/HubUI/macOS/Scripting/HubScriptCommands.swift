@@ -1,5 +1,6 @@
 #if canImport(AppKit)
 import AgenticToolkitHTDV
+import AgenticToolkitHubAuth
 import AgenticToolkitHubService
 import AgenticToolkitScripting
 import AppKit

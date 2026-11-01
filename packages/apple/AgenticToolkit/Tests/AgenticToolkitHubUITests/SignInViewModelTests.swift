@@ -3,6 +3,7 @@ import Foundation
 import OpenAPIRuntime
 import XCTest
 import AgenticToolkitHubService
+@testable import AgenticToolkitHubAuth
 @testable import AgenticToolkitHubUI
 
 @MainActor

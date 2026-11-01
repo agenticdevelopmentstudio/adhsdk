@@ -1,6 +1,7 @@
 import Foundation
 import OpenAPIURLSession
 import Testing
+@testable import AgenticDeveloperHubAuth
 @testable import AgenticDeveloperHubClient
 
 /// `EmbeddedDaemon` is the only view of the in-process daemon that the hub

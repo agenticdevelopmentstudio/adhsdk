@@ -51,7 +51,7 @@ enum ADHBodyLimit {
 /// Escape hatch for backend routes the OpenAPI document does not describe, or
 /// describes stalely enough that the generated operation cannot express
 /// the real request (see the design spec's endpoint inventory). Runs the exact
-/// middleware chain the typed `api` uses, so bearer injection and
+/// middleware chain the typed clients use, so bearer injection and
 /// refresh-and-retry apply identically.
 extension ADHClient {
 

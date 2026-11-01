@@ -6,6 +6,7 @@ import FoundationEssentials
 import Foundation
 #endif
 
+@testable import AgenticDeveloperHubAuth
 @testable import AgenticDeveloperHubClient
 
 @Suite("Session stores")
@@ -17,7 +18,7 @@ struct SessionStoreTests {
         #expect(store.currentSession() == nil)
         #expect(store.currentCredentials() == nil)
 
-        let session = Session(credentials: Credentials(token: "jwt-1", kind: .jwt), refreshToken: "r-1")
+        let session = HubSession(credentials: Credentials(token: "jwt-1", kind: .jwt), refreshToken: "r-1")
         store.save(session)
 
         #expect(store.currentSession() == session)
@@ -26,16 +27,16 @@ struct SessionStoreTests {
 
     @Test("saving bare credentials drops any refresh token (an API token has none)")
     func saveCredentialsDropsRefreshToken() {
-        let store = InMemorySessionStore(Session(credentials: Credentials(token: "jwt-1", kind: .jwt), refreshToken: "r-1"))
+        let store = InMemorySessionStore(HubSession(credentials: Credentials(token: "jwt-1", kind: .jwt), refreshToken: "r-1"))
 
         store.save(Credentials(token: "adh_secret", kind: .apiToken))
 
-        #expect(store.currentSession() == Session(credentials: Credentials(token: "adh_secret", kind: .apiToken), refreshToken: nil))
+        #expect(store.currentSession() == HubSession(credentials: Credentials(token: "adh_secret", kind: .apiToken), refreshToken: nil))
     }
 
     @Test("clear removes the whole session")
     func clearRemovesSession() {
-        let store = InMemorySessionStore(Session(credentials: Credentials(token: "jwt-1", kind: .jwt), refreshToken: "r-1"))
+        let store = InMemorySessionStore(HubSession(credentials: Credentials(token: "jwt-1", kind: .jwt), refreshToken: "r-1"))
 
         store.clear()
 
@@ -45,7 +46,7 @@ struct SessionStoreTests {
 
     @Test("a session store is usable wherever a CredentialProvider is expected")
     func isACredentialProvider() {
-        let store: any CredentialProvider = InMemorySessionStore(Session(credentials: Credentials(token: "t", kind: .jwt)))
+        let store: any CredentialProvider = InMemorySessionStore(HubSession(credentials: Credentials(token: "t", kind: .jwt)))
         #expect(store.currentCredentials()?.token == "t")
     }
 
@@ -83,7 +84,7 @@ struct KeychainSessionStoreTests {
 
         #expect(store.currentSession() == nil)
 
-        let session = Session(credentials: Credentials(token: "jwt-kc-1", kind: .jwt), refreshToken: "r-kc-1")
+        let session = HubSession(credentials: Credentials(token: "jwt-kc-1", kind: .jwt), refreshToken: "r-kc-1")
         store.save(session)
 
         #expect(store.currentSession() == session)
@@ -101,13 +102,13 @@ struct KeychainSessionStoreTests {
         let store = KeychainSessionStore(keyPrefix: prefix)
         defer { store.clear() }
 
-        store.save(Session(credentials: Credentials(token: "jwt-kc-2", kind: .jwt), refreshToken: "r-kc-2"))
-        #expect(KeychainHelper.exists(forKey: store.refreshKey))
+        store.save(HubSession(credentials: Credentials(token: "jwt-kc-2", kind: .jwt), refreshToken: "r-kc-2"))
+        #expect(HubKeychainHelper.exists(forKey: store.refreshKey))
 
         store.save(Credentials(token: "adh_secret", kind: .apiToken))
 
-        #expect(!KeychainHelper.exists(forKey: store.refreshKey))
-        #expect(store.currentSession() == Session(credentials: Credentials(token: "adh_secret", kind: .apiToken), refreshToken: nil))
+        #expect(!HubKeychainHelper.exists(forKey: store.refreshKey))
+        #expect(store.currentSession() == HubSession(credentials: Credentials(token: "adh_secret", kind: .apiToken), refreshToken: nil))
     }
 
     @Test("clear removes all three keys")
@@ -116,13 +117,13 @@ struct KeychainSessionStoreTests {
         let store = KeychainSessionStore(keyPrefix: prefix)
         defer { store.clear() }
 
-        store.save(Session(credentials: Credentials(token: "jwt-kc-3", kind: .jwt), refreshToken: "r-kc-3"))
+        store.save(HubSession(credentials: Credentials(token: "jwt-kc-3", kind: .jwt), refreshToken: "r-kc-3"))
 
         store.clear()
 
-        #expect(!KeychainHelper.exists(forKey: store.tokenKey))
-        #expect(!KeychainHelper.exists(forKey: store.kindKey))
-        #expect(!KeychainHelper.exists(forKey: store.refreshKey))
+        #expect(!HubKeychainHelper.exists(forKey: store.tokenKey))
+        #expect(!HubKeychainHelper.exists(forKey: store.kindKey))
+        #expect(!HubKeychainHelper.exists(forKey: store.refreshKey))
         #expect(store.currentSession() == nil)
         #expect(store.currentCredentials() == nil)
     }
@@ -139,16 +140,16 @@ struct KeychainSessionStoreTests {
         defer { sessionStore.clear() }
 
         credentialStore.save(Credentials(token: "adh_older", kind: .apiToken))
-        #expect(sessionStore.currentSession() == Session(credentials: Credentials(token: "adh_older", kind: .apiToken), refreshToken: nil))
+        #expect(sessionStore.currentSession() == HubSession(credentials: Credentials(token: "adh_older", kind: .apiToken), refreshToken: nil))
 
-        sessionStore.save(Session(credentials: Credentials(token: "jwt-kc-4", kind: .jwt), refreshToken: "r-kc-4"))
+        sessionStore.save(HubSession(credentials: Credentials(token: "jwt-kc-4", kind: .jwt), refreshToken: "r-kc-4"))
         #expect(credentialStore.currentCredentials() == Credentials(token: "jwt-kc-4", kind: .jwt))
 
         credentialStore.clear()
         #expect(sessionStore.currentSession() == nil)
         // `clear()` on the older store knows nothing about the refresh key —
         // the session store's own `clear()` is what removes it.
-        #expect(KeychainHelper.exists(forKey: sessionStore.refreshKey))
+        #expect(HubKeychainHelper.exists(forKey: sessionStore.refreshKey))
     }
 }
 
@@ -173,11 +174,11 @@ struct CredentialRedactionTests {
 
     @Test("Session never prints either token but reports whether a refresh token is present")
     func sessionRedacted() {
-        let withRefresh = Session(
+        let withRefresh = HubSession(
             credentials: Credentials(token: Self.accessToken, kind: .jwt),
             refreshToken: Self.refreshToken
         )
-        let withoutRefresh = Session(credentials: Credentials(token: Self.accessToken, kind: .apiToken))
+        let withoutRefresh = HubSession(credentials: Credentials(token: Self.accessToken, kind: .apiToken))
 
         for text in ["\(withRefresh)", String(reflecting: withRefresh), "\(withoutRefresh)", String(reflecting: withoutRefresh)] {
             #expect(!text.contains(Self.accessToken))
@@ -192,13 +193,13 @@ struct CredentialRedactionTests {
     @Test("redaction does not change value semantics")
     func valueSemanticsUnchanged() throws {
         let credentials = Credentials(token: Self.accessToken, kind: .jwt)
-        let session = Session(credentials: credentials, refreshToken: Self.refreshToken)
+        let session = HubSession(credentials: credentials, refreshToken: Self.refreshToken)
 
         #expect(credentials == Credentials(token: Self.accessToken, kind: .jwt))
-        #expect(session == Session(credentials: credentials, refreshToken: Self.refreshToken))
+        #expect(session == HubSession(credentials: credentials, refreshToken: Self.refreshToken))
 
         let encoded = try JSONEncoder().encode(session)
-        #expect(try JSONDecoder().decode(Session.self, from: encoded) == session)
+        #expect(try JSONDecoder().decode(HubSession.self, from: encoded) == session)
         // The tokens are still *stored* — only the description hides them.
         #expect(session.credentials.token == Self.accessToken)
         #expect(session.refreshToken == Self.refreshToken)

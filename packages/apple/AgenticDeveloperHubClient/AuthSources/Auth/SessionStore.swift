@@ -5,8 +5,8 @@ import Foundation
 /// credentials, `save(_ credentials:)` replaces the session with one that has
 /// no refresh token (that is what adopting an API token means).
 public protocol SessionStore: CredentialStore {
-    func currentSession() -> Session?
-    func save(_ session: Session)
+    func currentSession() -> HubSession?
+    func save(_ session: HubSession)
 }
 
 extension SessionStore {
@@ -15,24 +15,24 @@ extension SessionStore {
     }
 
     public func save(_ credentials: Credentials) {
-        save(Session(credentials: credentials, refreshToken: nil))
+        save(HubSession(credentials: credentials, refreshToken: nil))
     }
 }
 
 public final class InMemorySessionStore: SessionStore, @unchecked Sendable {
 
     private let lock = NSLock()
-    private var session: Session?
+    private var session: HubSession?
 
-    public init(_ session: Session? = nil) {
+    public init(_ session: HubSession? = nil) {
         self.session = session
     }
 
-    public func currentSession() -> Session? {
+    public func currentSession() -> HubSession? {
         lock.withLock { session }
     }
 
-    public func save(_ session: Session) {
+    public func save(_ session: HubSession) {
         lock.withLock { self.session = session }
     }
 
@@ -63,29 +63,29 @@ public struct KeychainSessionStore: SessionStore {
     /// is told the keys rather than restating them.
     public var accountKeys: [String] { [tokenKey, kindKey, refreshKey] }
 
-    public func currentSession() -> Session? {
-        guard let token = KeychainHelper.get(forKey: tokenKey) else { return nil }
-        let kind = KeychainHelper.get(forKey: kindKey)
+    public func currentSession() -> HubSession? {
+        guard let token = HubKeychainHelper.get(forKey: tokenKey) else { return nil }
+        let kind = HubKeychainHelper.get(forKey: kindKey)
             .flatMap(Credentials.Kind.init(rawValue:)) ?? .jwt
-        return Session(
+        return HubSession(
             credentials: Credentials(token: token, kind: kind),
-            refreshToken: KeychainHelper.get(forKey: refreshKey)
+            refreshToken: HubKeychainHelper.get(forKey: refreshKey)
         )
     }
 
-    public func save(_ session: Session) {
-        KeychainHelper.set(session.credentials.token, forKey: tokenKey)
-        KeychainHelper.set(session.credentials.kind.rawValue, forKey: kindKey)
+    public func save(_ session: HubSession) {
+        HubKeychainHelper.set(session.credentials.token, forKey: tokenKey)
+        HubKeychainHelper.set(session.credentials.kind.rawValue, forKey: kindKey)
         if let refreshToken = session.refreshToken {
-            KeychainHelper.set(refreshToken, forKey: refreshKey)
+            HubKeychainHelper.set(refreshToken, forKey: refreshKey)
         } else {
-            KeychainHelper.delete(forKey: refreshKey)
+            HubKeychainHelper.delete(forKey: refreshKey)
         }
     }
 
     public func clear() {
         for key in accountKeys {
-            KeychainHelper.delete(forKey: key)
+            HubKeychainHelper.delete(forKey: key)
         }
     }
 }

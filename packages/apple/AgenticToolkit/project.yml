@@ -1030,7 +1030,7 @@ targets:
     settings:
       base:
         PRODUCT_NAME: AgenticToolkitHTDV
-        MACOSX_DEPLOYMENT_TARGET: "14.0"
+        MACOSX_DEPLOYMENT_TARGET: "26.0"
 
   AgenticToolkitHTDV-iOS:
     type: framework
@@ -1058,7 +1058,58 @@ targets:
         embed: true
         codeSign: true
 
-  # Split for the same reason as HTDV, which it depends on.
+  # The hub login, on its own: the session, the transports, the Keychain-backed
+  # stores (through AgenticDeveloperHubAuth, the auth-only generated client),
+  # HubAccount and the sign-in model. An app that wants only "sign in to the
+  # hub" links this pair and never compiles the full client, the workspace
+  # layer or HTDV. AgenticToolkitHub, HubService and HubUI build on it and
+  # re-export it. Split per platform because AgenticDeveloperToolkit is.
+  AgenticToolkitHubAuth-macOS:
+    type: framework
+    platform: macOS
+    templates: [SwiftLint]
+    sources:
+      - HubAuth
+    dependencies:
+      - target: AgenticDeveloperHubClient/AgenticDeveloperHubAuth
+      - target: AgenticDeveloperToolkit/AgenticDeveloperToolkit-macOS
+      - package: swift-openapi-runtime
+        product: OpenAPIRuntime
+      - package: swift-http-types
+        product: HTTPTypes
+      # HubEnvironment.swift's APITransport.direct() default parameter
+      # constructs URLSessionTransport() in this target's own code.
+      - package: swift-openapi-urlsession
+        product: OpenAPIURLSession
+    settings:
+      base:
+        PRODUCT_NAME: AgenticToolkitHubAuth
+        MACOSX_DEPLOYMENT_TARGET: "26.0"
+
+  AgenticToolkitHubAuth-iOS:
+    type: framework
+    platform: iOS
+    templates: [SwiftLint]
+    sources:
+      - HubAuth
+    dependencies:
+      - target: AgenticDeveloperHubClient/AgenticDeveloperHubAuth
+      - target: AgenticDeveloperToolkit/AgenticDeveloperToolkit-iOS
+      - package: swift-openapi-runtime
+        product: OpenAPIRuntime
+      - package: swift-http-types
+        product: HTTPTypes
+      - package: swift-openapi-urlsession
+        product: OpenAPIURLSession
+    settings:
+      base:
+        SDKROOT: iphoneos
+        PRODUCT_NAME: AgenticToolkitHubAuth
+        IPHONEOS_DEPLOYMENT_TARGET: "26.0"
+        TARGETED_DEVICE_FAMILY: "1,2"
+
+  # Split for the same reason as HTDV, which it depends on. HubError lives in
+  # AgenticToolkitHubAuth, which this re-exports (HubAuthReExports.swift).
   AgenticToolkitHub-macOS:
     type: framework
     platform: macOS
@@ -1067,10 +1118,11 @@ targets:
       - Hub
     dependencies:
       - target: AgenticToolkitHTDV-macOS
+      - target: AgenticToolkitHubAuth-macOS
     settings:
       base:
         PRODUCT_NAME: AgenticToolkitHub
-        MACOSX_DEPLOYMENT_TARGET: "14.0"
+        MACOSX_DEPLOYMENT_TARGET: "26.0"
 
   AgenticToolkitHub-iOS:
     type: framework
@@ -1080,6 +1132,7 @@ targets:
       - Hub
     dependencies:
       - target: AgenticToolkitHTDV-iOS
+      - target: AgenticToolkitHubAuth-iOS
     settings:
       base:
         SDKROOT: iphoneos
@@ -1097,9 +1150,27 @@ targets:
       - target: AgenticToolkitHub-macOS
         embed: true
         codeSign: true
+      - target: AgenticToolkitHubAuth-macOS
+        embed: true
+        codeSign: true
       - target: AgenticToolkitHTDV-macOS
         embed: true
         codeSign: true
+      - target: AgenticDeveloperHubClient/AgenticDeveloperHubAuth
+        embed: true
+        codeSign: true
+      - target: AgenticDeveloperToolkit/AgenticDeveloperToolkit-macOS
+        embed: true
+        codeSign: true
+      - target: AgenticDeveloperToolkit/AgenticDeveloperToolkitUI-macOS
+        embed: true
+        codeSign: true
+      - package: swift-openapi-runtime
+        product: OpenAPIRuntime
+      - package: swift-http-types
+        product: HTTPTypes
+      - package: swift-openapi-urlsession
+        product: OpenAPIURLSession
 
   # The hub's service layer — session, workspaces, adapters, transport — with
   # no UI. Split per platform because it depends on AgenticToolkitHub, which is.
@@ -1112,8 +1183,10 @@ targets:
         excludes: ["iOS"]
     dependencies:
       - target: AgenticToolkitHub-macOS
+      - target: AgenticToolkitHubAuth-macOS
       - target: AgenticToolkitPermissions
       - target: AgenticDeveloperHubClient/AgenticDeveloperHubClient
+      - target: AgenticDeveloperHubClient/AgenticDeveloperHubAuth
       # withDeadline: the bounded wait HubEnvironment resolves its transport
       # under lives in the bottom framework so every tier can share it.
       - target: AgenticDeveloperToolkit/AgenticDeveloperToolkit-macOS
@@ -1148,7 +1221,9 @@ targets:
         excludes: ["macOS"]
     dependencies:
       - target: AgenticToolkitHub-iOS
+      - target: AgenticToolkitHubAuth-iOS
       - target: AgenticDeveloperHubClient/AgenticDeveloperHubClient
+      - target: AgenticDeveloperHubClient/AgenticDeveloperHubAuth
       # See AgenticToolkitHubService-macOS: withDeadline.
       - target: AgenticDeveloperToolkit/AgenticDeveloperToolkit-iOS
       - package: swift-openapi-runtime
@@ -1182,6 +1257,9 @@ targets:
       - target: AgenticToolkitHub-macOS
         embed: true
         codeSign: true
+      - target: AgenticToolkitHubAuth-macOS
+        embed: true
+        codeSign: true
       - target: AgenticToolkitHTDV-macOS
         embed: true
         codeSign: true
@@ -1189,6 +1267,9 @@ targets:
         embed: true
         codeSign: true
       - target: AgenticDeveloperHubClient/AgenticDeveloperHubClient
+        embed: true
+        codeSign: true
+      - target: AgenticDeveloperHubClient/AgenticDeveloperHubAuth
         embed: true
         codeSign: true
       - target: AgenticDeveloperToolkit/AgenticDeveloperToolkit-macOS
@@ -1217,6 +1298,7 @@ targets:
         excludes: ["iOS"]
     dependencies:
       - target: AgenticToolkitHubService-macOS
+      - target: AgenticToolkitHubAuth-macOS
       - target: AgenticToolkitHub-macOS
       - target: AgenticToolkitHTDV-macOS
       - target: AgenticToolkitCoreMacOS
@@ -1225,6 +1307,7 @@ targets:
       - target: AgenticToolkitPermissionsUI
       - target: AgenticDeveloperToolkit/AgenticDeveloperToolkitUI-macOS
       - target: AgenticDeveloperHubClient/AgenticDeveloperHubClient
+      - target: AgenticDeveloperHubClient/AgenticDeveloperHubAuth
       - package: swift-openapi-runtime
         product: OpenAPIRuntime
     settings:
@@ -1241,10 +1324,12 @@ targets:
         excludes: ["macOS"]
     dependencies:
       - target: AgenticToolkitHubService-iOS
+      - target: AgenticToolkitHubAuth-iOS
       - target: AgenticToolkitHub-iOS
       - target: AgenticToolkitHTDV-iOS
       - target: AgenticDeveloperToolkit/AgenticDeveloperToolkitUI-iOS
       - target: AgenticDeveloperHubClient/AgenticDeveloperHubClient
+      - target: AgenticDeveloperHubClient/AgenticDeveloperHubAuth
       - package: swift-openapi-runtime
         product: OpenAPIRuntime
     settings:
@@ -1274,6 +1359,9 @@ targets:
       - target: AgenticToolkitHub-macOS
         embed: true
         codeSign: true
+      - target: AgenticToolkitHubAuth-macOS
+        embed: true
+        codeSign: true
       - target: AgenticToolkitHTDV-macOS
         embed: true
         codeSign: true
@@ -1296,6 +1384,9 @@ targets:
         embed: true
         codeSign: true
       - target: AgenticDeveloperHubClient/AgenticDeveloperHubClient
+        embed: true
+        codeSign: true
+      - target: AgenticDeveloperHubClient/AgenticDeveloperHubAuth
         embed: true
         codeSign: true
       - target: AgenticDeveloperToolkit/AgenticDeveloperToolkit-macOS
@@ -1331,6 +1422,7 @@ aggregateTargets:
       - AgenticToolkitSyncGRDB
       - AgenticToolkitMarkdown-macOS
       - AgenticToolkitHTDV-macOS
+      - AgenticToolkitHubAuth-macOS
       - AgenticToolkitHub-macOS
       - AgenticToolkitHubService-macOS
       - AgenticToolkitHubUI-macOS
@@ -1350,6 +1442,7 @@ aggregateTargets:
       - AgenticToolkitSyncGRDB
       - AgenticToolkitMarkdown-iOS
       - AgenticToolkitHTDV-iOS
+      - AgenticToolkitHubAuth-iOS
       - AgenticToolkitHub-iOS
       - AgenticToolkitHubService-iOS
       - AgenticToolkitHubUI-iOS

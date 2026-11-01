@@ -1,4 +1,3 @@
-import AgenticToolkitHubService
 import Foundation
 
 /// Platform-independent state machine behind both sign-in screens (spec §5.2).

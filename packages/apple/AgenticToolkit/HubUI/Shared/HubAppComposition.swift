@@ -1,3 +1,7 @@
+// HubAccount, SignInViewModel, passkeys and web sign-in live in
+// AgenticToolkitHubAuth, the hub's login tier. Re-exported here so
+// `import AgenticToolkitHubUI` still reaches them.
+@_exported import AgenticToolkitHubAuth
 import AgenticToolkitHubService
 import AgenticDeveloperHubClient
 import AgenticToolkitHub

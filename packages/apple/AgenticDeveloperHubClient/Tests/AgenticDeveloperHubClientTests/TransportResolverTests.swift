@@ -6,6 +6,7 @@ import FoundationEssentials
 import Foundation
 #endif
 
+@testable import AgenticDeveloperHubAuth
 @testable import AgenticDeveloperHubClient
 
 /// Tests for the daemon-vs-direct decision. The override paths and caching are

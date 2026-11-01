@@ -8,13 +8,17 @@ import Foundation
 
 /// The entry point to the Agentic Developer Hub API.
 ///
-/// `ADHClient` is a thin façade over the generated `Client`: it wires a chosen
+/// `ADHClient` is a thin façade over the generated clients: it wires a chosen
 /// ``APITransport`` (Direct or Daemon) to the typed surface and attaches
 /// either the ``AuthenticationMiddleware`` (bearer-only) or the
 /// ``SessionRefreshMiddleware`` (bearer + refresh-and-retry) so every request
-/// carries the bearer token. The generated client is exposed directly as
-/// ``api`` — consumers call the full, typed API through it (e.g.
-/// `client.api.postAuthLogin(...)`).
+/// carries the bearer token.
+///
+/// It lives in AgenticDeveloperHubAuth, the sign-in tier, which generates only
+/// the sign-in and session operations (``authAPI``). The whole typed API is
+/// `api`, added by AgenticDeveloperHubClient — link that, and
+/// `client.api.getWorkspaces(...)` is there; link only this, and sign-in costs
+/// a few thousand lines instead of the full client.
 ///
 /// The transport is the only point of variation: Direct and Daemon produce an
 /// identical `Client`, differing only by the `(serverURL, transport)` pair the
@@ -22,8 +26,10 @@ import Foundation
 /// ``daemon(credentials:)``, or let ``TransportResolver`` choose at runtime.
 public struct ADHClient: Sendable {
 
-    /// The full generated typed API. Call any operation directly on this.
-    public let api: Client
+    /// The generated sign-in and session operations — the paths
+    /// `openapi-generator-auth-config.yaml` keeps. The whole API is `api`, in
+    /// AgenticDeveloperHubClient.
+    public let authAPI: HubAuthClient
 
     /// The transport this client is wired to. Kept so a later raw-request
     /// escape hatch can route un-generated endpoints through the same
@@ -41,9 +47,10 @@ public struct ADHClient: Sendable {
     /// Non-nil only for clients built with `init(transport:session:onSessionExpired:)`.
     let session: (any SessionStore)?
 
-    /// The middleware chain `api` was built with, kept so `rawJSON` can run
-    /// un-generated endpoints through the same auth/refresh behavior.
-    let middlewares: [any ClientMiddleware]
+    /// The middleware chain every request runs through: `rawJSON` sends
+    /// un-generated endpoints through it, and AgenticDeveloperHubClient builds
+    /// the full `api` on it, so both get the same auth/refresh behavior.
+    public let middlewares: [any ClientMiddleware]
 
     /// Bearer-only client (no refresh). Kept for callers that hold a
     /// `CredentialStore` — the daemon's `EnvCredentialProvider` fallback,
@@ -60,7 +67,7 @@ public struct ADHClient: Sendable {
         self.credentials = credentials
         self.session = nil
         self.middlewares = [AuthenticationMiddleware(credentials: credentials)]
-        self.api = Client(
+        self.authAPI = HubAuthClient(
             serverURL: transport.serverURL,
             transport: transport.transport,
             middlewares: middlewares
@@ -79,7 +86,7 @@ public struct ADHClient: Sendable {
         self.credentials = session
         self.session = session
         self.middlewares = [SessionRefreshMiddleware(session: session, onSessionExpired: onSessionExpired)]
-        self.api = Client(
+        self.authAPI = HubAuthClient(
             serverURL: transport.serverURL,
             transport: transport.transport,
             middlewares: middlewares

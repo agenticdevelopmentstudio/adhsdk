@@ -8,6 +8,7 @@ import FoundationEssentials
 import Foundation
 #endif
 
+@testable import AgenticDeveloperHubAuth
 @testable import AgenticDeveloperHubClient
 
 @Suite("Session sign-in wrappers")
@@ -39,7 +40,7 @@ struct SessionWrappersTests {
 
         guard case .signedIn(let user) = outcome else { Issue.record("expected signedIn"); return }
         #expect(user.id == "u1")
-        #expect(store.currentSession() == Session(credentials: Credentials(token: "jwt-1", kind: .jwt), refreshToken: "r-1"))
+        #expect(store.currentSession() == HubSession(credentials: Credentials(token: "jwt-1", kind: .jwt), refreshToken: "r-1"))
     }
 
     @Test("signIn sends what the user typed as `identifier`, never `email`")
@@ -164,7 +165,7 @@ struct SessionWrappersTests {
 
     @Test("signOut revokes the refresh token and clears the store, even if revoke fails")
     func signOut() async throws {
-        let store = InMemorySessionStore(Session(credentials: Credentials(token: "jwt-1", kind: .jwt), refreshToken: "r-1"))
+        let store = InMemorySessionStore(HubSession(credentials: Credentials(token: "jwt-1", kind: .jwt), refreshToken: "r-1"))
         let (adh, mock) = makeClient(store: store) { _ in (.serviceUnavailable, "{}") }
 
         await adh.signOut()
@@ -186,7 +187,7 @@ struct SessionWrappersTests {
     /// rotated token survives on the server while the local store is cleared.
     @Test("a 401 on revoke does not trigger a refresh")
     func signOutDoesNotRefreshOn401() async throws {
-        let store = InMemorySessionStore(Session(credentials: Credentials(token: "jwt-expired", kind: .jwt), refreshToken: "r-signout"))
+        let store = InMemorySessionStore(HubSession(credentials: Credentials(token: "jwt-expired", kind: .jwt), refreshToken: "r-signout"))
         let (adh, mock) = makeClient(store: store) { _ in (.unauthorized, #"{"error":{"message":"token expired"}}"#) }
 
         await adh.signOut()
@@ -199,7 +200,7 @@ struct SessionWrappersTests {
 
     @Test("currentUser decodes GET /auth/me")
     func currentUser() async throws {
-        let (adh, _) = makeClient(store: InMemorySessionStore(Session(credentials: Credentials(token: "jwt-1", kind: .jwt)))) { _ in (.ok, Self.userJSON) }
+        let (adh, _) = makeClient(store: InMemorySessionStore(HubSession(credentials: Credentials(token: "jwt-1", kind: .jwt)))) { _ in (.ok, Self.userJSON) }
 
         let user = try await adh.currentUser()
 

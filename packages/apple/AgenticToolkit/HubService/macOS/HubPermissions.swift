@@ -7,6 +7,6 @@ import AgenticToolkitPermissions
 /// asks for. macOS only: `AgenticToolkitPermissions` is a macOS framework.
 public enum HubPermissions {
     public static let required: [AgenticToolkitPermissions.Permission] = [
-        .keychain(service: KeychainHelper.service)
+        .keychain(service: HubKeychainHelper.service)
     ]
 }

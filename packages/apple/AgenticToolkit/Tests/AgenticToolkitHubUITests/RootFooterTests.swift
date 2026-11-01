@@ -2,6 +2,7 @@ import AgenticDeveloperHubClient
 import AgenticToolkitHubService
 import AppKit
 import XCTest
+@testable import AgenticToolkitHubAuth
 @testable import AgenticToolkitHubUI
 
 /// Review focus 4: the status footer replaces the hand-built strip, and with

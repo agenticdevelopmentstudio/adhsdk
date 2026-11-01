@@ -1,6 +1,7 @@
 import AgenticDeveloperHubClient
 import AgenticToolkitHub
 import XCTest
+@testable import AgenticToolkitHubAuth
 @testable import AgenticToolkitHubService
 
 /// Proves the test bundle links every tier HubService depends on. Each assertion

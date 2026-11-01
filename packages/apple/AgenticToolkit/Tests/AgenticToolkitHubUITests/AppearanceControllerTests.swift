@@ -1,6 +1,7 @@
 import AgenticDeveloperHubClient
 import XCTest
 import AgenticToolkitHubService
+@testable import AgenticToolkitHubAuth
 @testable import AgenticToolkitHubUI
 
 @MainActor
@@ -9,7 +10,7 @@ final class AppearanceControllerTests: XCTestCase {
         let stub = StubClientTransport()
         let environment = HubEnvironment(
             sessionStore: InMemorySessionStore(
-                Session(credentials: Credentials(token: "jwt", kind: .jwt), refreshToken: "r")
+                HubSession(credentials: Credentials(token: "jwt", kind: .jwt), refreshToken: "r")
             ),
             transportSource: StaticTransportSource(.direct(transport: stub)),
             initialTransport: .direct(transport: stub)

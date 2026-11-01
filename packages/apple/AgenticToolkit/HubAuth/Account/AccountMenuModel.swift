@@ -1,4 +1,3 @@
-import AgenticToolkitHubService
 import Foundation
 
 /// Spec §5.5: avatar label precedence and the account menu.

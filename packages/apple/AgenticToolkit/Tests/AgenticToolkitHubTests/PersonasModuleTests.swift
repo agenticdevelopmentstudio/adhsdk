@@ -1,6 +1,7 @@
 import AgenticToolkitHTDV
 import Foundation
 import XCTest
+@testable import AgenticToolkitHubAuth
 @testable import AgenticToolkitHub
 
 /// In-memory data source: records calls, serves fixtures.

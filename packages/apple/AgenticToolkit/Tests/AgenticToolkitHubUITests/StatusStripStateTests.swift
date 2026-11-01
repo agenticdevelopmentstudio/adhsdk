@@ -1,6 +1,7 @@
 import AgenticDeveloperHubClient
 import XCTest
 import AgenticToolkitHubService
+@testable import AgenticToolkitHubAuth
 @testable import AgenticToolkitHubUI
 
 final class StatusStripStateTests: XCTestCase {

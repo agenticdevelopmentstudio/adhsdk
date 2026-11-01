@@ -1,6 +1,7 @@
 import Foundation
 import Testing
 
+@testable import AgenticDeveloperHubAuth
 @testable import AgenticDeveloperHubClient
 
 /// Nested under ``StubURLProtocolSuites`` — see that type's doc comment for why.

@@ -1,4 +1,5 @@
 import XCTest
+@testable import AgenticToolkitHubAuth
 @testable import AgenticToolkitHub
 
 final class HubWorkspaceTests: XCTestCase {
