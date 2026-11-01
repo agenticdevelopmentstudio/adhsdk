@@ -123,6 +123,7 @@ class AssembleTest(unittest.TestCase):
             "src/site/analytics.tsx",
             "src/site/family.ts",
             "src/site/sitemap.ts",
+            "src/site/markdown.ts",
             "src/fonts/iosevka-site-400.woff2",
             ".site-template.json",
         ]:
@@ -684,6 +685,25 @@ class AssembleTest(unittest.TestCase):
     def test_sitemap_routes_outside_site_src_is_refused(self) -> None:
         self.config["sitemapRoutes"] = "../site.json#x"
         self.assert_refused(self.assemble(), "sitemapRoutes")
+
+    def test_no_slot_markdown_hands_none(self) -> None:
+        self.assert_ok(self.assemble())
+        markdown = (self.app / "src/site/markdown.ts").read_text()
+        self.assertIn("export const slotMarkdown: Readonly<Record<string, string>> = {}", markdown)
+        route = (self.app / "app/index.md/route.ts").read_text()
+        self.assertIn("frameLandingMarkdown(config, landing, slotMarkdown)", route)
+
+    def test_slot_markdown_imports_the_sites_export(self) -> None:
+        self.config["slotMarkdown"] = "slot-markdown.ts#bandWords"
+        self.write("site/src/slot-markdown.ts", "export const bandWords = {}\n")
+        self.assert_ok(self.assemble())
+        markdown = (self.app / "src/site/markdown.ts").read_text()
+        self.assertIn("import { bandWords } from '../slot-markdown'", markdown)
+        self.assertIn("export const slotMarkdown: Readonly<Record<string, string>> = bandWords", markdown)
+
+    def test_slot_markdown_naming_no_file_is_refused(self) -> None:
+        self.config["slotMarkdown"] = "nope.ts#bandWords"
+        self.assert_refused(self.assemble(), "slotMarkdown", "site/src/nope.ts")
 
     def test_sitemap_routes_without_an_export_is_refused(self) -> None:
         self.config["sitemapRoutes"] = "lib/sitemap-routes.ts"

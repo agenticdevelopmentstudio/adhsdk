@@ -33,7 +33,12 @@ export function frameLlmsTxt(
   )
 }
 
-/** `/index.md`: `/`'s words as Markdown, with its links made absolute. */
-export function frameLandingMarkdown(config: FrameConfig, landing: object): string {
-  return landingMarkdown(landing, { origin: origin(config) })
+/** `/index.md`: `/`'s words as Markdown, with its links made absolute, and the words of the
+ *  bands the site renders itself from `slots` (site.json's `slotMarkdown`). */
+export function frameLandingMarkdown(
+  config: FrameConfig,
+  landing: object,
+  slots: Readonly<Record<string, string>> = {},
+): string {
+  return landingMarkdown(landing, { origin: origin(config), slots })
 }

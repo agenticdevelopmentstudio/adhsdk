@@ -893,4 +893,9 @@ describe('what the frame tells agents', () => {
       '# Cook the thing\n\nOne line under it.\n\n## How\n\n**How it works**\n\n- [Download](https://kitchen.example/downloads)\n',
     )
   })
+
+  it('frameLandingMarkdown writes a slot band from the Markdown the site hands it', () => {
+    const slotted = { ...landing, sections: [...landing.sections, section('band', 'Band', { slot: true, blocks: [] })] }
+    expect(frameLandingMarkdown(listed, slotted, { band: 'Its words.' })).toContain('## Band\n\n**Band title**\n\nIts words.\n')
+  })
 })

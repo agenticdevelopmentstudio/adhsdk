@@ -69,6 +69,16 @@ describe('landingMarkdown', () => {
     expect(md).not.toContain('Rendered by the site')
   })
 
+  it('writes a slot section from the Markdown the site hands it', () => {
+    const filled = landingMarkdown(DATA, { slots: { band: '### A product\n\nWhat it does.\n' } })
+    expect(filled).toContain('## Rendered by the site\n\n### A product\n\nWhat it does.\n')
+  })
+
+  it('refuses slot Markdown for a section that is not a slot', () => {
+    expect(() => landingMarkdown(DATA, { slots: { all: 'x' } })).toThrow(/"all"/)
+    expect(() => landingMarkdown(DATA, { slots: { nope: 'x' } })).toThrow(/"nope"/)
+  })
+
   it('leaves links alone without an origin', () => {
     expect(landingMarkdown(DATA)).toContain('[the details](/details)')
   })

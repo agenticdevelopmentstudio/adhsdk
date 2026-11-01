@@ -196,6 +196,38 @@ def plan_sitemap(site: Path, entry: str | None) -> tuple[str, list[str]]:
     return text, []
 
 
+# `src/site/markdown.ts`, which the skeleton's `/index.md` hands frameLandingMarkdown: no slot
+# words, or the site's own (site.json's `slotMarkdown`, a file under `site/src/` and its export).
+SLOT_MARKDOWN_OFF = (
+    f"{HEADER}\n"
+    "/** No slot words: site.json does not set `slotMarkdown`, so `/index.md` leaves its slot bands out. */\n"
+    "export const slotMarkdown: Readonly<Record<string, string>> = {}\n"
+)
+
+
+def plan_slot_markdown(site: Path, entry: str | None) -> tuple[str, list[str]]:
+    """`src/site/markdown.ts`, and what is wrong with `slotMarkdown` if anything is. Re-exported
+    typed, so an export that is not section id to Markdown fails the site's typecheck here."""
+    if entry is None:
+        return SLOT_MARKDOWN_OFF, []
+    file, _, name = entry.partition("#")
+    source_root = (site / "site" / "src").resolve()
+    source = (source_root / file).resolve()
+    if not name or source_root not in source.parents or not source.is_file():
+        return SLOT_MARKDOWN_OFF, [
+            f"site/site.json: slotMarkdown: {entry!r} must name a file under site/src/ and its export "
+            f"(no file site/src/{file})"
+        ]
+    module = re.sub(r"\.tsx?$", "", source.relative_to(source_root).as_posix())
+    text = (
+        f"{HEADER}\n"
+        f"import {{ {name} }} from '../{module}'\n\n"
+        "/** The words of the bands the site renders itself, as Markdown by section id, for `/index.md`. */\n"
+        f"export const slotMarkdown: Readonly<Record<string, string>> = {name}\n"
+    )
+    return text, []
+
+
 # `src/site/analytics.tsx`, which the root layout always renders: nothing, or Vercel's two.
 ANALYTICS_OFF = (
     f"{HEADER}\n"
@@ -1176,6 +1208,9 @@ def plan_app(site: Path, web: Path) -> tuple[Path, AppPlan]:
     sitemap_text, sitemap_problems = plan_sitemap(site, config.get("sitemapRoutes"))
     plan.problems += sitemap_problems
     plan.add("src/site/sitemap.ts", sitemap_text.encode(), "generated")
+    markdown_text, markdown_problems = plan_slot_markdown(site, config.get("slotMarkdown"))
+    plan.problems += markdown_problems
+    plan.add("src/site/markdown.ts", markdown_text.encode(), "generated")
     # What next.config.ts resolves against the build's environment (the `./next` export's
     # frameNext); the schema has already checked every `${…}` is well formed.
     analytics = ANALYTICS_ON if config.get("analytics", defaults["analytics"]) else ANALYTICS_OFF
