@@ -4,8 +4,8 @@ import AgenticToolkitCoreMacOS
 
 import AppKit
 
-/// Singleton window controller for the Coding Partner window: the shelf, the
-/// partner's transcript and its sessions' terminals, and "Needs you".
+/// Singleton window controller for the Coding Partner window: tab cards, the
+/// partner's transcript and its sessions' terminals, and "Notifications".
 ///
 /// The Conversations window's recipe: built by ``ensureCurrent(controller:)``
 /// without showing so `restoreOnLaunch()` can reopen it, always-on-top from a
@@ -71,7 +71,7 @@ public final class PartnerWindowController: SingleWindowController {
         self.windowStyleMask = [.titled, .closable, .resizable, .miniaturizable]
         self.windowSpec = WindowSpec(
             defaultSize: NSSize(width: 1100, height: 720),
-            minSize: NSSize(width: 720, height: 420),
+            minSize: NSSize(width: 800, height: 420),
             defaultPosition: .center,
             persistsFrame: true
         )

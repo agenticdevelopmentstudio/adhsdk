@@ -23,6 +23,13 @@ public final class TabPaneViewController: NSViewController, TabBarStackedItem {
         didSet { paneView.onClose = onClose }
     }
 
+    /// Whether the card offers a close button. A host whose card stands for
+    /// something that cannot be closed turns it off; the default leaves every
+    /// other card as it was.
+    public var showsCloseButton = true {
+        didSet { paneView.closeButton.isHidden = !showsCloseButton }
+    }
+
     private(set) lazy var paneView = TabPaneView(edge: edge, tabID: tabID)
 
     public init(edge: Edge, tabID: UUID) {
@@ -42,6 +49,7 @@ public final class TabPaneViewController: NSViewController, TabBarStackedItem {
         }
         applyDepth()
         paneView.onClose = onClose
+        paneView.closeButton.isHidden = !showsCloseButton
     }
 
     /// The bar states selection and depth separately; the card draws from one

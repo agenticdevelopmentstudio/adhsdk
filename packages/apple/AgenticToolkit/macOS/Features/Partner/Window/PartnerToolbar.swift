@@ -1,6 +1,7 @@
 import AppKit
 import Combine
 import AgenticToolkitCore
+import os
 
 extension PartnerController.State {
     /// How the window names the state: the toolbar's status and the shelf's partner row.
@@ -33,6 +34,7 @@ public final class PartnerToolbar: NSObject, NSToolbarDelegate {
         static let status = NSToolbarItem.Identifier("partner.toolbar.status")
         static let startStop = NSToolbarItem.Identifier("partner.toolbar.startStop")
         static let restart = NSToolbarItem.Identifier("partner.toolbar.restart")
+        static let newSession = NSToolbarItem.Identifier("partner.toolbar.newSession")
     }
 
     private let controller: PartnerController
@@ -41,6 +43,7 @@ public final class PartnerToolbar: NSObject, NSToolbarDelegate {
     /// Internal for tests.
     let startStopButton = NSButton()
     private var subscriptions: Set<AnyCancellable> = []
+    private weak var window: NSWindow?
 
     public init(controller: PartnerController) {
         self.controller = controller
@@ -85,6 +88,7 @@ public final class PartnerToolbar: NSObject, NSToolbarDelegate {
         toolbar.delegate = self
         toolbar.displayMode = .iconOnly
         toolbar.allowsUserCustomization = false
+        self.window = window
         window.toolbar = toolbar
         window.toolbarStyle = .unified
     }
@@ -129,16 +133,53 @@ public final class PartnerToolbar: NSObject, NSToolbarDelegate {
                            reviewsEnabled: Bool) -> String {
         var parts = [state.displayText]
         if !jobs.isEmpty { parts.append(jobs.joined(separator: ", ")) }
-        if let queue, reviewsEnabled || queue != ReviewQueue(waiting: 0, running: 0, done: 0) {
-            parts.append("queue: \(queue.waiting) waiting · \(queue.running) running · \(queue.done) done")
-        }
+        if let text = queueText(queue, reviewsEnabled: reviewsEnabled) { parts.append(text) }
         return parts.joined(separator: " · ")
+    }
+
+    /// The queue part of the status line, shared with the partner's card. Nil when there is nothing to show.
+    static func queueText(_ queue: ReviewQueue?, reviewsEnabled: Bool) -> String? {
+        guard let queue, reviewsEnabled || queue != ReviewQueue(waiting: 0, running: 0, done: 0) else { return nil }
+        return "queue: \(queue.waiting) waiting · \(queue.running) running · \(queue.done) done"
+    }
+
+    /// The review queue as the store reports it now; nil when it cannot be read.
+    static func currentQueueText(store: PartnerStore) -> String? {
+        let enabled = ((try? store.jobs()) ?? []).filter(\.isEnabled)
+        let queue = (try? store.reviewCounts()).map {
+            ReviewQueue(waiting: $0.queued, running: $0.running, done: $0.done)
+        }
+        return queueText(queue, reviewsEnabled: enabled.contains { $0.id == PartnerJobDefaults.codeReviewsID })
     }
 
     @objc private func startOrStop() {
         let controller = controller
         Task { @MainActor in
             if controller.state.isRunning { await controller.stop() } else { await controller.start() }
+        }
+    }
+
+    /// Starting a new session discards the partner's conversation, so it asks first, as a sheet.
+    @objc private func newSession() {
+        let alert = NSAlert()
+        alert.messageText = "Start a new session?"
+        alert.informativeText = "The partner forgets this conversation."
+        alert.addButton(withTitle: "OK")
+        alert.addButton(withTitle: "Cancel")
+        let controller = controller
+        let confirm: (NSApplication.ModalResponse) -> Void = { response in
+            guard response == .alertFirstButtonReturn else { return }
+            Task { @MainActor in
+                do { try await controller.startNewSession() } catch {
+                    Self.logger.error("Starting a new session failed: \(error.localizedDescription)")
+                    NSSound.beep()
+                }
+            }
+        }
+        if let window = window {
+            alert.beginSheetModal(for: window, completionHandler: confirm)
+        } else {
+            confirm(alert.runModal())
         }
     }
 
@@ -150,7 +191,8 @@ public final class PartnerToolbar: NSObject, NSToolbarDelegate {
     // MARK: - NSToolbarDelegate
 
     public func toolbarDefaultItemIdentifiers(_ toolbar: NSToolbar) -> [NSToolbarItem.Identifier] {
-        [ItemID.status, .flexibleSpace, ItemID.startStop, ItemID.restart, .inspectorTrackingSeparator,
+        [ItemID.status, .flexibleSpace, ItemID.startStop, ItemID.restart, ItemID.newSession,
+         .inspectorTrackingSeparator,
          .toggleInspector]
     }
 
@@ -180,8 +222,21 @@ public final class PartnerToolbar: NSObject, NSToolbarDelegate {
             item.action = #selector(restart)
             item.isBordered = true
             return item
+        case ItemID.newSession:
+            let item = NSToolbarItem(itemIdentifier: itemIdentifier)
+            item.label = "New Session"
+            item.toolTip = "Start a new partner conversation"
+            item.image = NSImage(systemSymbolName: "square.and.pencil", accessibilityDescription: "New Session")
+            item.target = self
+            item.action = #selector(newSession)
+            item.isBordered = true
+            return item
         default:
             return nil
         }
     }
+}
+
+extension PartnerToolbar: Loggable {
+    public static nonisolated let logger = makeLogger()
 }

@@ -3,35 +3,40 @@ import Combine
 import AgenticToolkitCore
 import os
 
-/// The Coding Partner window's three columns: the shelf, the selected row's
-/// content, and "Needs you" as the inspector.
+/// The Coding Partner window: tab cards and one content pane, built from the same shared components as the
+/// Projects window, and "Notifications" as the inspector.
 ///
-/// Turns the attention pane's buttons into controller calls, and keeps the one
-/// piece of window state the controller does not: which attention item, if
-/// any, the owner is discussing. The next line the composer sends goes to the
-/// partner as the reply to that item, and ends the discussion.
+/// The content item is a ``MultiTabbedViewController`` with only its left edge on. Its first tab is the
+/// partner, which cannot be closed; each live session the partner opened adds another after it. Selecting a
+/// card shows that tab's pane in the center.
+///
+/// Turns the attention pane's buttons into controller calls, and keeps the one piece of window state the
+/// controller does not: which attention item, if any, the owner is discussing. The next line the composer
+/// sends goes to the partner as the reply to that item, and ends the discussion.
 @MainActor
 public final class PartnerSplitViewController: NSSplitViewController {
 
-    public let shelf = PartnerShelfViewController()
     public let attention: AttentionPaneViewController
-    public private(set) var content: PartnerContentViewController!
+    /// The partner's transcript, for prefilling and focusing the composer.
+    let chat: PartnerChatViewController
+    let tabbed = MultiTabbedViewController()
+    /// The partner's tab. Fixed, so a selection can name it.
+    let partnerTabID = UUID()
 
-    /// A reference link in the attention pane was clicked. The app decides what opening it means.
-    public var onOpenReference: (([String: String]) -> Void)? {
-        get { attention.model.onOpenReference }
-        set { attention.model.onOpenReference = newValue }
-    }
+    /// A reference link in the attention pane was clicked that is not a live or closed session of this
+    /// window. The app decides what opening it means.
+    public var onOpenReference: (([String: String]) -> Void)?
 
     private let controller: PartnerController
     private var attentionItem: NSSplitViewItem!
-    private var selectedID: PartnerShelfRow.ID = PartnerShelfRow.partnerID
-    /// The middle column shows a live session's terminal, which its close replaces with the final screen.
-    private var showsLiveSession = false
+    private var notificationsPane: PartnerPaneViewController!
+    private var cards: [UUID: (card: TabPaneViewController, source: TabPaneDataSource)] = [:]
     /// The attention item the owner pressed Discuss on and has not replied to yet.
     private var discussionItemID: String?
     private var subscriptions: Set<AnyCancellable> = []
     private var sessionSubscriptions: Set<AnyCancellable> = []
+    private var spacingObservers: [UserSettingObserver<Int>] = []
+    private var backdropObserver: ThemePaletteObserver?
     private var paneVisibleObserver: UserSettingObserver<Bool>?
     private var collapseObservation: NSKeyValueObservation?
 
@@ -40,10 +45,11 @@ public final class PartnerSplitViewController: NSSplitViewController {
         attention = AttentionPaneViewController(model: AttentionPaneModel(
             store: controller.store,
             retentionDays: { UserSettings.partnerAttentionRetentionDays.value }))
+        // The route needs `self`, which does not exist yet: the chat is told where to send afterwards.
+        var route: (@MainActor (String) -> Void)?
+        chat = PartnerChatViewController(controller: controller) { text in route?(text) }
         super.init(nibName: nil, bundle: nil)
-        content = PartnerContentViewController(controller: controller) { [weak self] text in
-            self?.sendFromComposer(text)
-        }
+        route = { [weak self] text in self?.sendFromComposer(text) }
         wireAttention()
     }
 
@@ -54,16 +60,14 @@ public final class PartnerSplitViewController: NSSplitViewController {
         super.viewDidLoad()
         // No split autosave: it would also restore the inspector's collapsed state, a second source of truth
         // beside `partnerAttentionPaneVisible`.
-        let shelfItem = NSSplitViewItem(sidebarWithViewController: shelf)
-        shelfItem.minimumThickness = 180
-        shelfItem.canCollapse = true
-        addSplitViewItem(shelfItem)
-
-        let contentItem = NSSplitViewItem(viewController: content)
-        contentItem.minimumThickness = 300
+        configureTabs()
+        let contentItem = NSSplitViewItem(viewController: tabbed)
+        contentItem.minimumThickness = 500
         addSplitViewItem(contentItem)
 
-        let attentionItem = NSSplitViewItem(inspectorWithViewController: attention)
+        notificationsPane = PartnerPaneViewController(title: "Notifications", content: attention)
+        notificationsPane.host = self
+        let attentionItem = NSSplitViewItem(inspectorWithViewController: notificationsPane)
         attentionItem.minimumThickness = 260
         attentionItem.canCollapse = true
         attentionItem.isCollapsed = !UserSettings.partnerAttentionPaneVisible.value
@@ -71,46 +75,163 @@ public final class PartnerSplitViewController: NSSplitViewController {
         self.attentionItem = attentionItem
         bindAttentionVisibility()
 
-        shelf.onSelect = { [weak self] id in self?.select(id) }
-        observeRows()
-        reloadRows()
-        select(selectedID)
+        observeTabs()
+        syncTabs()
+        tabbed.selectTab(id: partnerTabID, on: .left)
     }
 
-    // MARK: - Selection
+    // MARK: - Tabs
 
-    /// Shows the row with `id` in the middle column and selects it on the shelf. An id no longer listed
-    /// shows the partner.
-    public func select(_ row: PartnerShelfRow.ID) {
-        loadViewIfNeeded()
-        if row != PartnerShelfRow.partnerID, let id = UUID(uuidString: row),
-           let session = controller.sessions.session(id: id) {
-            content.show(session: session)
-            showsLiveSession = true
-        } else if row != PartnerShelfRow.partnerID, let record = closedRecord(id: row) {
-            content.showClosed(record)
-            showsLiveSession = false
-        } else {
-            showsLiveSession = false
-            selectedID = PartnerShelfRow.partnerID
-            content.showPartner()
-            shelf.setSelection(selectedID)
-            return
+    /// Left edge only, and the Projects window's spacing and backdrop: the same shared setters it calls.
+    private func configureTabs() {
+        tabbed.delegate = self
+        tabbed.setEdgeEnabled(.top, false)
+        tabbed.setEdgeEnabled(.left, true)
+        ComposableTabsWindowController.applyPaneSpacing(PaneSpacing.contentInsets, to: tabbed)
+        spacingObservers = PaneSpacing.edgeSettings.values.map { setting in
+            UserSettingObserver(setting) { [weak self] _ in
+                guard let tabbed = self?.tabbed else { return }
+                ComposableTabsWindowController.applyPaneSpacing(PaneSpacing.contentInsets, to: tabbed)
+            }
         }
-        selectedID = row
-        shelf.setSelection(row)
+        backdropObserver = ThemePaletteObserver(host: tabbed.view) { [weak self] palette in
+            self?.tabbed.centerBackgroundColor = NSColor(palette.projectPaneBackdrop)
+            self?.tabbed.centerOutlineColor = NSColor(palette.projectPaneOutline)
+            self?.view.window?.backgroundColor = NSColor(palette.projectPaneBackdrop)
+        }
+        addTab(id: partnerTabID, source: PartnerCardSource(controller: controller),
+               pane: PartnerPaneViewController(title: "Partner", content: chat), closable: false)
+    }
+
+    private func addTab(id: UUID, source: TabPaneDataSource, pane: PartnerPaneViewController, closable: Bool,
+                        at index: Int? = nil) {
+        let card = TabPaneViewController(edge: .left, tabID: id)
+        card.dataSource = source
+        card.showsCloseButton = closable
+        card.reload()
+        pane.host = self
+        cards[id] = (card, source)
+        let tab = MultiTabbedViewController.Tab(id: id, item: .viewController(card), viewController: pane)
+        if let index { tabbed.insertTab(tab, at: index, on: .left) } else { tabbed.addTab(tab, on: .left) }
+    }
+
+    /// Selects the tab for the session with `sessionID`; nil, or a session no longer open, selects the partner.
+    public func select(sessionID: UUID?) {
+        loadViewIfNeeded()
+        let id = sessionID.flatMap { cards[$0] != nil ? $0 : nil } ?? partnerTabID
+        tabbed.selectTab(id: id, on: .left)
     }
 
     /// Puts `text` in the partner's composer with the cursor at its end, showing the partner first.
     public func prefillComposer(_ text: String) {
-        select(PartnerShelfRow.partnerID)
-        let chatView = content.chatView
+        select(sessionID: nil)
+        let chatView = chat.chatView
         guard let field = chatView.composerField as? NSTextField else { return }
         field.stringValue = text
         // The send button follows the delegate's text-changed call, which a programmatic set does not make.
         chatView.controlTextDidChange(Notification(name: NSControl.textDidChangeNotification, object: field))
         chatView.focusInput()
         field.currentEditor()?.selectedRange = NSRange(location: (text as NSString).length, length: 0)
+    }
+
+    /// Adds a tab for each session that opened and removes the tab of each that closed; when the selected tab
+    /// goes, the partner is selected.
+    private func syncTabs() {
+        let live = controller.sessions.sessions
+        let liveIDs = Set(live.map(\.id))
+        for id in cards.keys where id != partnerTabID && !liveIDs.contains(id) {
+            let wasSelected = tabbed.activeTabID == id
+            tabbed.removeTab(id: id)
+            cards[id] = nil
+            if wasSelected { tabbed.selectTab(id: partnerTabID, on: .left) }
+        }
+        for (offset, session) in live.enumerated() where cards[session.id] == nil {
+            let store = controller.store
+            let source = SessionCardSource(session: session) { id in
+                do { return try store.review(id: id) } catch {
+                    Self.logger.error("Loading review \(id) failed: \(error.localizedDescription)")
+                    return nil
+                }
+            }
+            let pane = PartnerPaneViewController(
+                title: "Terminal", content: session.viewController, sessionID: session.id)
+            addTab(id: session.id, source: source, pane: pane, closable: true,
+                   at: min(offset + 1, tabbed.tabs(on: .left).count))
+        }
+        reloadCards()
+    }
+
+    private func reloadCards() {
+        for entry in cards.values { entry.card.reload() }
+    }
+
+    private func observeTabs() {
+        controller.$state
+            .sink { [weak self] _ in self?.scheduleSync(sessionsChanged: false) }
+            .store(in: &subscriptions)
+        controller.sessions.$sessions
+            .sink { [weak self] sessions in self?.observe(sessions) }
+            .store(in: &subscriptions)
+        controller.store.changes
+            // Main first: the filter closure is main-actor isolated, and writes arrive from MCP calls off it.
+            .receive(on: DispatchQueue.main)
+            // A review's state and summary are on its session's card, and the queue is on the partner's.
+            .filter { $0 == .sessions || $0 == .reviews }
+            .sink { [weak self] _ in MainActor.assumeIsolated { self?.reloadCards() } }
+            .store(in: &subscriptions)
+        // The partner's card names the provider and model chosen in Settings.
+        controller.settings.changes
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in MainActor.assumeIsolated { self?.reloadCards() } }
+            .store(in: &subscriptions)
+    }
+
+    /// A session's state is on its card, so each live session's changes reload the cards too.
+    private func observe(_ sessions: [PartnerSession]) {
+        sessionSubscriptions = []
+        for session in sessions {
+            session.$state
+                .sink { [weak self] _ in self?.scheduleSync(sessionsChanged: false) }
+                .store(in: &sessionSubscriptions)
+        }
+        scheduleSync(sessionsChanged: true)
+    }
+
+    /// `@Published` sends before the value changes, so the tabs are read on the next main-queue turn.
+    private func scheduleSync(sessionsChanged: Bool) {
+        DispatchQueue.main.async { [weak self] in
+            MainActor.assumeIsolated {
+                if sessionsChanged { self?.syncTabs() } else { self?.reloadCards() }
+            }
+        }
+    }
+
+    // MARK: - Show session
+
+    /// A reference link was clicked. One that names a session selects its tab, or shows a closed session's
+    /// final screen; anything else goes to the app.
+    private func open(reference: [String: String]) {
+        guard let raw = reference["session_id"], !raw.isEmpty else {
+            onOpenReference?(reference)
+            return
+        }
+        if let id = UUID(uuidString: raw), cards[id] != nil {
+            select(sessionID: id)
+        } else if let record = storedRecord(id: raw) {
+            let pane = PartnerPaneViewController(title: "Final screen",
+                                                 content: PartnerFinalScreenViewController(record: record))
+            pane.host = self
+            tabbed.overlayContentViewController = pane
+        } else {
+            onOpenReference?(reference)
+        }
+    }
+
+    private func storedRecord(id: String) -> PartnerStore.SessionRecord? {
+        do { return try controller.store.sessions().first { $0.id == id } } catch {
+            Self.logger.error("Loading partner sessions failed: \(error.localizedDescription)")
+            return nil
+        }
     }
 
     // MARK: - Composer
@@ -140,6 +261,7 @@ public final class PartnerSplitViewController: NSSplitViewController {
         model.onDiscuss = { [weak self] id in self?.discuss(itemID: id) }
         model.onResolved = { [weak self] id in self?.press(.resolved, itemID: id) }
         model.onConfirm = { [weak self] id in self?.press(.confirm, itemID: id) }
+        model.onOpenReference = { [weak self] reference in self?.open(reference: reference) }
     }
 
     private func discuss(itemID: String) {
@@ -182,88 +304,34 @@ public final class PartnerSplitViewController: NSSplitViewController {
             }
         }
     }
+}
 
-    // MARK: - Rows
-
-    private func observeRows() {
-        controller.$state
-            .sink { [weak self] _ in self?.scheduleReload() }
-            .store(in: &subscriptions)
-        controller.sessions.$sessions
-            .sink { [weak self] sessions in self?.observe(sessions) }
-            .store(in: &subscriptions)
-        controller.store.changes
-            // Main first: the filter closure is main-actor isolated, and writes arrive from MCP calls off it.
-            .receive(on: DispatchQueue.main)
-            // A review's state and summary are in its session's subtitle.
-            .filter { $0 == .sessions || $0 == .reviews }
-            .sink { [weak self] _ in MainActor.assumeIsolated { self?.reloadRows() } }
-            .store(in: &subscriptions)
+extension PartnerSplitViewController: MultiTabbedViewControllerDelegate {
+    /// A card's close closes its session; the partner's card cannot close.
+    public func multiTabbedViewController(_ controller: MultiTabbedViewController,
+                                          didRequestCloseTab id: UUID, on edge: Edge) {
+        guard id != partnerTabID else { return }
+        self.controller.sessions.close(id: id)
     }
+}
 
-    /// A session's state is in its row's subtitle, so each live session's changes reload the rows too.
-    private func observe(_ sessions: [PartnerSession]) {
-        sessionSubscriptions = []
-        for session in sessions {
-            session.$state
-                .sink { [weak self] _ in self?.scheduleReload() }
-                .store(in: &sessionSubscriptions)
-        }
-        scheduleReload()
-    }
-
-    /// `@Published` sends before the value changes, so the rows are rebuilt on the next main-queue turn.
-    private func scheduleReload() {
-        DispatchQueue.main.async { [weak self] in
-            MainActor.assumeIsolated { self?.reloadRows() }
+extension PartnerSplitViewController: PaneHost {
+    public func paneDidRequestClose(_ pane: PaneViewController) {
+        if let sessionID = (pane as? PartnerPaneViewController)?.sessionID {
+            controller.sessions.close(id: sessionID)
+        } else if pane === tabbed.overlayContentViewController {
+            tabbed.overlayContentViewController = nil
         }
     }
 
-    private func reloadRows() {
-        let live = controller.sessions.sessions
-        let liveIDs = Set(live.map(\.id.uuidString))
-        var rows: [PartnerShelfRow] = [.partner(status: controller.state.displayText)]
-        for session in live {
-            let subtitle = PartnerShelfRow.sessionSubtitle(
-                directory: session.directory, state: session.state.rawValue, review: review(id: session.reviewID),
-                sessionID: session.id.uuidString)
-            rows.append(.session(id: session.id.uuidString, title: session.title, subtitle: subtitle,
-                                 isLive: true))
-        }
-        for record in storedRecords() where !liveIDs.contains(record.id) {
-            let subtitle = PartnerShelfRow.sessionSubtitle(
-                directory: record.directory, state: "closed", review: review(id: record.reviewID),
-                sessionID: record.id)
-            rows.append(.session(id: record.id, title: record.title, subtitle: subtitle, isLive: false))
-        }
-        shelf.rows = rows
-        // The row on show went away (a purge): fall back to the partner. A live session that closed is
-        // still listed, now as a closed one, and its final screen replaces the terminal.
-        if !rows.contains(where: { $0.id == selectedID }) {
-            select(PartnerShelfRow.partnerID)
-        } else if showsLiveSession, !liveIDs.contains(selectedID) {
-            select(selectedID)
-        }
-    }
+    public func paneDidRequestZoom(_ pane: PaneViewController) {}
+    public func paneDidRequestMinimize(_ pane: PaneViewController, to edge: PaneEdge) {}
+    public func paneDidRequestRestore(_ pane: PaneViewController) {}
+    public func availableMinimizeEdges(for pane: PaneViewController) -> Set<PaneEdge> { [] }
 
-    private func storedRecords() -> [PartnerStore.SessionRecord] {
-        do { return try controller.store.sessions() } catch {
-            Self.logger.error("Loading partner sessions failed: \(error.localizedDescription)")
-            return []
-        }
-    }
-
-    /// An unreadable review leaves the row with its plain folder-and-state line.
-    private func review(id: String?) -> PartnerReview? {
-        guard let id else { return nil }
-        do { return try controller.store.review(id: id) } catch {
-            Self.logger.error("Loading review \(id) failed: \(error.localizedDescription)")
-            return nil
-        }
-    }
-
-    private func closedRecord(id: String) -> PartnerStore.SessionRecord? {
-        storedRecords().first { $0.id == id }
+    /// The partner and Notifications stay; a session, and a final screen, close.
+    public func canClose(_ pane: PaneViewController) -> Bool {
+        (pane as? PartnerPaneViewController)?.sessionID != nil || pane === tabbed.overlayContentViewController
     }
 }
 

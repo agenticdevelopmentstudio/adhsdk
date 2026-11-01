@@ -60,7 +60,7 @@ struct AttentionCard: View {
                 .font(.callout)
                 .textSelection(.enabled)
                 .fixedSize(horizontal: false, vertical: true)
-            if let label = Self.referenceLabel(item.reference) {
+            if let label = Self.buttonLabel(item.reference) {
                 Button(label) { model.onOpenReference?(item.reference) }
                     .buttonStyle(.link)
                     .font(.caption)
@@ -112,6 +112,12 @@ struct AttentionCard: View {
         case .blocked: return .orange
         case .notification: return .yellow
         }
+    }
+
+    /// The link's label: "Show session" for a reference to a session, else the reference as one line.
+    static func buttonLabel(_ reference: [String: String]) -> String? {
+        if let id = reference["session_id"], !id.isEmpty { return "Show session" }
+        return referenceLabel(reference)
     }
 
     /// The reference as one line, preferring the keys that name a thing a person recognises.

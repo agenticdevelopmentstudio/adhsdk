@@ -299,28 +299,6 @@ final class PartnerCoordinatorTests: XCTestCase {
         XCTAssertTrue(toolbar.statusLabel.stringValue.hasSuffix(expected), toolbar.statusLabel.stringValue)
     }
 
-    func testAReviewSessionsSubtitleShowsTheReviewsStateAndSummary() async throws {
-        let coordinator = makeCoordinator()
-        let split = PartnerSplitViewController(controller: coordinator.controller)
-        split.loadViewIfNeeded()
-        var owned = review("abc1234", state: .running)
-        owned.sessionID = "s1"  // the session the review is running in
-        try store.insertReview(owned)
-        try store.upsert(PartnerStore.SessionRecord(id: "s1", title: "review abc1234", directory: "/w/demo",
-                                                    openedAt: Date(), closedAt: Date(), reviewID: "repo:abc1234"))
-        await waitUntil { split.shelf.rows.contains { $0.id == "s1" } }
-        XCTAssertEqual(split.shelf.rows.first { $0.id == "s1" }?.subtitle, "review running")
-
-        var finished = try XCTUnwrap(try store.review(id: "repo:abc1234"))
-        finished.state = .done
-        finished.summary = "Fixed one finding."
-        try store.updateReview(finished)
-        await waitUntil { split.shelf.rows.first { $0.id == "s1" }?.subtitle == "review done · Fixed one finding." }
-        XCTAssertEqual(split.shelf.rows.first { $0.id == "s1" }?.subtitle, "review done · Fixed one finding.")
-    }
-
-    // MARK: - Quit
-
     func testQuitTurnFitsTheFlushBudget() {
         XCTAssertEqual(PartnerCoordinator.quitTurnLimit, .seconds(3))
         XCTAssertLessThan(PartnerCoordinator.quitTurnLimit, ApplicationShutdownCoordinator.defaultFlushBudget)
@@ -391,19 +369,6 @@ final class PartnerCoordinatorTests: XCTestCase {
         }.value
         await waitUntil { toolbar.statusLabel.stringValue.contains("Off Main") }
         XCTAssertTrue(toolbar.statusLabel.stringValue.contains("Off Main"), toolbar.statusLabel.stringValue)
-    }
-
-    func testASessionsWriteOffTheMainActorReloadsTheShelf() async throws {
-        let coordinator = makeCoordinator()
-        let split = PartnerSplitViewController(controller: coordinator.controller)
-        split.loadViewIfNeeded()
-        let store = self.store!
-        try await Task.detached {
-            try store.upsert(PartnerStore.SessionRecord(id: "offmain", title: "Off Main", directory: "/a",
-                                                        openedAt: Date(), closedAt: Date()))
-        }.value
-        await waitUntil { split.shelf.rows.contains { $0.id == "offmain" } }
-        XCTAssertTrue(split.shelf.rows.contains { $0.id == "offmain" })
     }
 
     // MARK: - References

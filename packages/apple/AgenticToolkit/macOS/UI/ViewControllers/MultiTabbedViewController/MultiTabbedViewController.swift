@@ -73,6 +73,17 @@ open class MultiTabbedViewController: NSViewController {
         }
     }
 
+    /// Content that takes the center ahead of the active tab, for something a
+    /// host wants to show without a tab of its own. Selecting a tab, or
+    /// pressing the one already selected, clears it. `nil` by default, which
+    /// leaves the center showing the active tab.
+    public var overlayContentViewController: NSViewController? {
+        didSet {
+            guard oldValue !== overlayContentViewController else { return }
+            refreshCenterContent()
+        }
+    }
+
     /// The single tab (across all edges) whose content occupies the center.
     public private(set) var activeTabID: UUID?
 
@@ -337,6 +348,7 @@ open class MultiTabbedViewController: NSViewController {
         let edge = bar.edge
         bar.onSelect = { [weak self] id in
             guard let self else { return }
+            self.overlayContentViewController = nil
             self.selectTab(id: id, on: edge)
             self.delegate?.multiTabbedViewController(self, didSelectTab: id, on: edge)
         }
@@ -416,6 +428,7 @@ open class MultiTabbedViewController: NSViewController {
     }
 
     private func setActiveTab(_ id: UUID?) {
+        overlayContentViewController = nil
         guard activeTabID != id else { return }
         activeTabID = id
         for (edge, bar) in tabBars { bar.setSelected(selectedID(on: edge)) }
@@ -459,7 +472,7 @@ open class MultiTabbedViewController: NSViewController {
 
     private func refreshCenterContent() {
         guard isViewLoaded else { return }
-        let target = activeTab?.viewController ?? mainContentViewController
+        let target = overlayContentViewController ?? activeTab?.viewController ?? mainContentViewController
         guard mountedCenterController !== target else { return }
         if let mounted = mountedCenterController {
             mounted.view.removeFromSuperview()
