@@ -21,6 +21,7 @@ import {
 } from '../frame-metadata'
 import { frameNotFoundMetadata } from '../not-found'
 import { frameJsonLd, frameLandingMarkdown, frameLlmsTxt } from '../frame-agent'
+import { wordsMarkdown } from '../words'
 import type { FrameConfig, FrameCopy, SiteFamily, SlotMap } from '../types'
 
 const hero: LandingPage['hero'] = {
@@ -897,5 +898,22 @@ describe('what the frame tells agents', () => {
   it('frameLandingMarkdown writes a slot band from the Markdown the site hands it', () => {
     const slotted = { ...landing, sections: [...landing.sections, section('band', 'Band', { slot: true, blocks: [] })] }
     expect(frameLandingMarkdown(listed, slotted, { band: 'Its words.' })).toContain('## Band\n\n**Band title**\n\nIts words.\n')
+  })
+})
+
+describe('wordsMarkdown', () => {
+  it('passes a string through', () => {
+    expect(wordsMarkdown('Plain & simple')).toBe('Plain & simple')
+  })
+
+  it('writes content-buildr\'s inline markup as Markdown', () => {
+    expect(
+      wordsMarkdown({ html: 'A <a href="https://x.example">link</a>, <b>bold</b>, <em>em</em>, <code>&lt;x&gt;</code> &amp; &quot;q&quot;' }),
+    ).toBe('A [link](https://x.example), **bold**, *em*, `<x>` & "q"')
+  })
+
+  it('refuses a tag or entity it has no Markdown for', () => {
+    expect(() => wordsMarkdown({ html: '<span>x</span>' })).toThrow(/<span>/)
+    expect(() => wordsMarkdown({ html: '&copy;' })).toThrow(/&copy;/)
   })
 })
