@@ -4,6 +4,7 @@ import KeyboardShortcuts
 import os
 import UniformTypeIdentifiers
 import AgenticToolkitCore
+import AIPluginKit
 
 /// The Coding Partner as an app feature: its controller, its `partner_*` tools on
 /// the app's MCP endpoint, the Window-menu item and key command for its window,
@@ -37,6 +38,7 @@ public final class PartnerCoordinator: AppFeature {
     private let settings: SettingsStore
     private let registerTools: @MainActor (any ChatToolSource) -> Void
     private let projects: @MainActor () -> [PartnerToolSource.Project]
+    private let pluginManager: AIPluginManager?
     private let toolSource: PartnerToolSource
     /// The code-reviews job: the tools' service and the crawl run before each of its ticks.
     let reviews: ReviewService
@@ -59,10 +61,12 @@ public final class PartnerCoordinator: AppFeature {
                             terminalEnvironment: @escaping @MainActor () -> [String: String],
                             registerTools: @escaping @MainActor (any ChatToolSource) -> Void,
                             projects: @escaping @MainActor () -> [PartnerToolSource.Project],
-                            commandRegistry: CommandRegistry, detector: (any PartnerSessionEventDetecting)? = nil) {
+                            commandRegistry: CommandRegistry, detector: (any PartnerSessionEventDetecting)? = nil,
+                            pluginManager: AIPluginManager? = nil) {
         self.init(store: store, paths: paths, status: status, terminalEnvironment: terminalEnvironment,
                   registerTools: registerTools, projects: projects, commandRegistry: commandRegistry,
-                  detector: detector, settings: UserSettings.shared, quitLimit: Self.quitTurnLimit,
+                  detector: detector, pluginManager: pluginManager, settings: UserSettings.shared,
+                  quitLimit: Self.quitTurnLimit,
                   makeController: { store, sessions, notifier, paths, endpoint in
                       PartnerController(store: store, sessions: sessions, notifier: notifier, paths: paths,
                                         endpoint: endpoint)
@@ -74,13 +78,15 @@ public final class PartnerCoordinator: AppFeature {
          registerTools: @escaping @MainActor (any ChatToolSource) -> Void,
          projects: @escaping @MainActor () -> [PartnerToolSource.Project],
          commandRegistry: CommandRegistry, detector: (any PartnerSessionEventDetecting)?,
-         settings: SettingsStore, quitLimit: Duration = PartnerCoordinator.quitTurnLimit,
+         pluginManager: AIPluginManager? = nil, settings: SettingsStore,
+         quitLimit: Duration = PartnerCoordinator.quitTurnLimit,
          makeController: MakeController) {
         self.status = status
         self.settings = settings
         self.quitLimit = quitLimit
         self.registerTools = registerTools
         self.projects = projects
+        self.pluginManager = pluginManager
         let sessions = PartnerSessionRegistry(
             store: store, environment: { terminalEnvironment() },
             detector: detector ?? QuietPeriodDetector(settle: {
@@ -202,8 +208,9 @@ public final class PartnerCoordinator: AppFeature {
         await quitTask?.value
     }
 
-    public func settingsPanel() -> ComposableSettings.SectionTabsPanel {
-        PartnerSettingsPanel.make(controller: controller, projects: projects)
+    public func settingsPanel() -> ComposableSettings.SettingsPanelSplitViewController {
+        PartnerSettingsPanelViewController(
+            controller: controller, pluginManager: pluginManager, projects: projects, settings: settings)
     }
 
     /// The system-wide key command that opens the window. Ships switched off.

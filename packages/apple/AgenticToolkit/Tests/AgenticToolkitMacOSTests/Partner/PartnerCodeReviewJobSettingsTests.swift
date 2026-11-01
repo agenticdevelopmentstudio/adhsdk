@@ -3,14 +3,14 @@ import AgenticToolkitCore
 @testable import AgenticToolkitMacOS
 
 @MainActor
-final class PartnerCodeReviewsSettingsTests: XCTestCase {
+final class PartnerCodeReviewJobSettingsTests: XCTestCase {
 
     private var directory: URL!
     private var store: PartnerStore!
 
     override func setUp() async throws {
         directory = FileManager.default.temporaryDirectory
-            .appendingPathComponent("PartnerCodeReviewsSettingsTests-\(UUID().uuidString)")
+            .appendingPathComponent("PartnerCodeReviewJobSettingsTests-\(UUID().uuidString)")
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
         store = try PartnerStore(path: directory.appendingPathComponent("Partner.db").path)
     }
@@ -34,8 +34,11 @@ final class PartnerCodeReviewsSettingsTests: XCTestCase {
 
     // MARK: - Projects table
 
-    private func makeTab() -> PartnerCodeReviewsSettingsViewController {
-        let tab = PartnerCodeReviewsSettingsViewController(store: store, projects: {
+    private func makePaths() -> PartnerPaths { PartnerPaths(home: directory, token: "kitchen-test") }
+
+    private func makeTab() -> PartnerCodeReviewJobSettingsViewController {
+        let model = PartnerJobsEditorModel(store: store, guidelines: PartnerGuidelinesInstaller(paths: makePaths()))
+        let tab = PartnerCodeReviewJobSettingsViewController(model: model, store: store, projects: {
             [.init(id: "a", name: "Alpha", path: "/r/alpha"), .init(id: "b", name: "Beta", path: "/r/beta"),
              .init(id: "c", name: "No Path", path: "")]
         })
@@ -47,10 +50,10 @@ final class PartnerCodeReviewsSettingsTests: XCTestCase {
     func testProjectsWithAPathAreListed() {
         let tab = makeTab()
         XCTAssertEqual(tab.listed.map(\.id), ["a", "b"])
-        XCTAssertEqual(tab.projectsTable.numberOfRows, 2)
+        XCTAssertEqual(tab.projectsCard.rows.map(\.id), ["a", "b"])
     }
 
-    func testTheReviewCheckboxWritesTheOptOut() throws {
+    func testTheReviewToggleWritesTheOptOut() throws {
         let tab = makeTab()
         XCTAssertTrue(tab.isReviewed("a"), "reviewed unless opted out")
         tab.setReviewed(false, projectID: "a")
@@ -62,64 +65,67 @@ final class PartnerCodeReviewsSettingsTests: XCTestCase {
         XCTAssertTrue(tab.isReviewed("a"))
     }
 
-    func testTheCheckboxCellShowsTheOptOut() throws {
+    func testTheReviewCellShowsTheOptOut() throws {
         try store.setReviewSetting(repoID: "b", key: "opted_out", value: "1")
         let tab = makeTab()
-        let column = try XCTUnwrap(tab.projectsTable.tableColumns.first { $0.identifier.rawValue == "review" })
-        let alpha = tab.tableView(tab.projectsTable, viewFor: column, row: 0) as? NSButton
-        let beta = tab.tableView(tab.projectsTable, viewFor: column, row: 1) as? NSButton
-        XCTAssertEqual(alpha?.state, .on)
-        XCTAssertEqual(beta?.state, .off)
+        func isOn(_ id: String) -> Bool? {
+            guard case .toggle(let isOn)? = tab.projectsCard.rows.first(where: { $0.id == id })?.cells["review"]
+            else { return nil }
+            return isOn
+        }
+        XCTAssertEqual(isOn("a"), true)
+        XCTAssertEqual(isOn("b"), false)
     }
+
+    func testTogglingTheCellWritesTheOptOut() throws {
+        let tab = makeTab()
+        tab.projectsCard.onToggle?("a", "review", false)
+        XCTAssertEqual(try store.reviewSetting(repoID: "a", key: "opted_out"), "1")
+    }
+
+    // MARK: - Panel
 
     private func makeController() -> PartnerController {
         let sessions = PartnerSessionRegistry(store: store, environment: { [:] },
                                               detector: ManualSessionEventDetector())
-        let paths = PartnerPaths(home: directory, token: "kitchen-test")
         return PartnerController(
-            store: store, sessions: sessions, notifier: PartnerNotifier(store: store), paths: paths,
+            store: store, sessions: sessions, notifier: PartnerNotifier(store: store), paths: makePaths(),
             endpoint: { nil })
     }
 
-    func testThePanelHasACodeReviewsTab() {
-        let panel = PartnerSettingsPanel.make(controller: makeController(), projects: { [] })
-        XCTAssertTrue(panel.containedPanels.contains { $0 is PartnerCodeReviewsSettingsViewController },
-                      "\(panel.containedPanels.map { type(of: $0) })")
+    func testThePanelListsExactlyTheFiveSubTopics() {
+        let panel = PartnerSettingsPanelViewController(controller: makeController(), pluginManager: nil)
+        panel.loadViewIfNeeded()
+        XCTAssertEqual(panel.panels.map { $0.descriptor.title },
+                       ["General", "Model", "Permissions", "Code Review Job", "Notifications"])
+        XCTAssertEqual(panel.descriptor.title, "Coding Partner")
+        XCTAssertEqual(panel.sidebarTitle, "Coding Partner")
     }
 
-    func testShowingTheJobsTabKeepsTheGuidelines() throws {
-        let controller = makeController()
-        let panel = PartnerSettingsPanel.make(controller: controller, projects: { [] })
-        let jobs = try XCTUnwrap(panel.containedPanels.first { $0 is PartnerJobsSettingsViewController }
-            as? PartnerJobsSettingsViewController)
-        jobs.loadViewIfNeeded()
-        jobs.flushGuidelines()
-        let stored = try XCTUnwrap(store.jobs().first { $0.id == PartnerJobDefaults.codeReviewsID })
-        XCTAssertEqual(stored.guidelines, PartnerJobDefaults.codeReviewsGuidelines,
-                       "the first refresh's selection flush must not save the unfilled view")
-        let file = controller.paths.jobsDirectory.appendingPathComponent("code-reviews.md")
-        XCTAssertFalse(FileManager.default.fileExists(atPath: file.path))
+    func testTheCodeReviewStepsAreEditedThroughTheModel() throws {
+        let tab = makeTab()
+        tab.reloadSteps()
+        XCTAssertEqual(tab.stepsCard.rows.count, PartnerJobDefaults.codeReviews().steps.count)
+        tab.editStep(rowID: "0", column: "name", to: "renamed")
+        XCTAssertEqual(try store.jobs().first { $0.id == PartnerJobDefaults.codeReviewsID }?.steps.first?.name,
+                       "renamed")
+        tab.editStep(rowID: "1", column: "environment", to: "terminal")
+        XCTAssertEqual(try store.jobs().first { $0.id == PartnerJobDefaults.codeReviewsID }?.steps[1].environment,
+                       .terminal)
     }
 
-    /// A schedule typed and then left by focus, not Return, is saved (review finding f14).
-    func testAScheduleIsSavedWhenTheFieldLosesFocus() throws {
-        let panel = PartnerSettingsPanel.make(controller: makeController(), projects: { [] })
-        let jobs = try XCTUnwrap(panel.containedPanels.first { $0 is PartnerJobsSettingsViewController }
-            as? PartnerJobsSettingsViewController)
-        let window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 900, height: 700),
-                              styleMask: [.titled, .closable], backing: .buffered, defer: false)
-        window.isReleasedWhenClosed = false
-        window.contentView = jobs.view
-        defer { window.close() }
-        let row = try XCTUnwrap(jobs.model.jobs.firstIndex { $0.id == PartnerJobDefaults.codeReviewsID })
-        jobs.jobsTable.selectRowIndexes([row], byExtendingSelection: false)
-
-        XCTAssertTrue(window.makeFirstResponder(jobs.scheduleField))
-        jobs.scheduleField.stringValue = "15"
-        XCTAssertTrue(window.makeFirstResponder(nil))
-
-        let stored = try XCTUnwrap(store.jobs().first { $0.id == PartnerJobDefaults.codeReviewsID })
-        XCTAssertEqual(stored.scheduleSeconds, 900)
+    func testThePermissionsToolsTableEditsTheList() {
+        let settings = SettingsStore(with: InMemorySettingsStorageProvider(),
+                                     secureSettingsProvider: InMemorySecureSettingsStorageProvider())
+        let tab = PartnerPermissionsSettingsViewController(settings: settings)
+        tab.loadViewIfNeeded()
+        let count = settings.get(UserSettings.partnerAllowedToolsList).count
+        tab.addTool()
+        XCTAssertEqual(settings.get(UserSettings.partnerAllowedToolsList).count, count + 1)
+        tab.editTool(rowID: String(count), to: "Grep")
+        XCTAssertEqual(settings.get(UserSettings.partnerAllowedToolsList).last, "Grep")
+        tab.editTool(rowID: String(count), to: "  ")
+        XCTAssertEqual(settings.get(UserSettings.partnerAllowedToolsList).count, count, "an empty cell removes it")
     }
 
     // MARK: - Toolbar status

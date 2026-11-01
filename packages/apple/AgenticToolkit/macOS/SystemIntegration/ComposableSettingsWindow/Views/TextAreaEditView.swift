@@ -24,6 +24,9 @@ extension ComposableSettings {
         public var settingTitle: String? { viewModel.title }
         public var settingExplanation: String? { viewModel.explanation }
         private let scrollView = NSScrollView()
+        private var heightConstraint: NSLayoutConstraint?
+        private let fitsContent: Bool
+        private var minimumHeight: CGFloat = 0
         /// Set while `commit` writes, so the setting's echo back through `onChange`
         /// isn't mistaken for an external edit.
         private var isCommitting = false
@@ -34,8 +37,13 @@ extension ComposableSettings {
         ///     Text beyond it scrolls.
         ///   - monospaced: use a fixed-width font — right for prompts and code,
         ///     wrong for prose.
-        public init(with viewModel: ViewModel<String>, visibleLines: Int = 6, monospaced: Bool = false) {
+        ///   - fitsContent: grow with the text instead of scrolling, so none of it is
+        ///     clipped; `visibleLines` is then the least height. For a panel that
+        ///     scrolls as a whole, where a second scroller would hide text behind the first.
+        public init(with viewModel: ViewModel<String>, visibleLines: Int = 6, monospaced: Bool = false,
+                    fitsContent: Bool = false) {
             self.viewModel = viewModel
+            self.fitsContent = fitsContent
             self.label = TextEditView.createLabel(title: viewModel.title)
             self.textView = NSTextView()
 
@@ -99,10 +107,12 @@ extension ComposableSettings {
             Self.pinToEdges(stack, of: self)
 
             let lineHeight = font.boundingRectForFont.height
+            self.minimumHeight = (lineHeight * CGFloat(visibleLines)).rounded() + 8
+            let height = self.scrollView.heightAnchor.constraint(equalToConstant: self.minimumHeight)
+            self.heightConstraint = height
             NSLayoutConstraint.activate([
                 self.scrollView.widthAnchor.constraint(equalTo: stack.widthAnchor),
-                self.scrollView.heightAnchor.constraint(
-                    equalToConstant: (lineHeight * CGFloat(visibleLines)).rounded() + 8)
+                height
             ])
 
             viewModel.onChange = { [weak self] _ in
@@ -116,6 +126,7 @@ extension ComposableSettings {
                 // this editor holds focus. Ignoring it left stale text on screen that
                 // `commit` then wrote back, silently undoing the reset.
                 self.textView.string = viewModel.value
+                self.fitHeightToContent()
                 if self.window?.firstResponder === self.textView {
                     self.textView.setSelectedRange(NSRange(location: viewModel.value.count, length: 0))
                 }
@@ -178,6 +189,29 @@ extension ComposableSettings {
 
         public func textDidEndEditing(_ notification: Notification) {
             commit()
+        }
+
+        public func textDidChange(_ notification: Notification) {
+            fitHeightToContent()
+        }
+
+        public override func layout() {
+            super.layout()
+            fitHeightToContent()
+        }
+
+        /// With `fitsContent`, the editor is as tall as its wrapped text (never under
+        /// the minimum). Waits for a real width: at zero the text wraps one character
+        /// to a line and measures absurdly tall.
+        private func fitHeightToContent() {
+            guard fitsContent, let heightConstraint,
+                  let layoutManager = textView.layoutManager, let container = textView.textContainer,
+                  scrollView.contentSize.width > 50 else { return }
+            layoutManager.ensureLayout(for: container)
+            let used = layoutManager.usedRect(for: container).height
+                + textView.textContainerInset.height * 2 + 8
+            let height = max(minimumHeight, used.rounded(.up))
+            if abs(heightConstraint.constant - height) > 0.5 { heightConstraint.constant = height }
         }
 
         /// Write the editor's text to the setting. Called when editing ends; also

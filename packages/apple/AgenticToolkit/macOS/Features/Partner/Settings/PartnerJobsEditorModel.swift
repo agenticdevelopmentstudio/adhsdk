@@ -58,6 +58,24 @@ public final class PartnerJobsEditorModel: ObservableObject {
         reload()
     }
 
+    /// Restores only the job's guidelines to its bundled default, and removes its edited guidelines file.
+    public func resetGuidelines(id: String) throws {
+        guard let original = PartnerJobDefaults.all.first(where: { $0.id == id }) else {
+            throw EditorError.noDefault(id)
+        }
+        try update(id) { $0.guidelines = original.guidelines }
+        try guidelines.resetGuidelines(jobID: id)
+        reload()
+    }
+
+    /// Restores only the job's steps to its bundled default.
+    public func resetSteps(id: String) throws {
+        guard let original = PartnerJobDefaults.all.first(where: { $0.id == id }) else {
+            throw EditorError.noDefault(id)
+        }
+        try update(id) { $0.steps = original.steps }
+    }
+
     public func addStep(to jobID: String) throws {
         try update(jobID) {
             $0.steps.append(PartnerJobStep(name: "new step", environment: .terminal, command: "", condition: ""))

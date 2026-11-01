@@ -2,16 +2,17 @@ import AppKit
 
 import AgenticToolkitCore
 
-/// Attention tab: how long done items stay, and which kinds also post a system notification.
+/// Notifications: how long done items stay, and which kinds also post a system notification.
 @MainActor
-public final class PartnerAttentionSettingsViewController: ComposableSettings.SettingsPanelViewController {
+// swiftlint:disable:next type_name
+public final class PartnerNotificationsSettingsViewController: ComposableSettings.SettingsPanelViewController {
 
     private let settings: SettingsStore
 
     public init(settings: SettingsStore = UserSettings.shared) {
         self.settings = settings
         super.init(with: ComposableSettings.SettingsPanelDescriptor(
-            title: "Attention", icon: NSImage(systemSymbolName: "bell", accessibilityDescription: nil)))
+            title: "Notifications", icon: NSImage(systemSymbolName: "bell", accessibilityDescription: nil)))
     }
 
     public required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
@@ -22,8 +23,8 @@ public final class PartnerAttentionSettingsViewController: ComposableSettings.Se
 
     public override var helpContent: ComposableSettings.PanelHelp? {
         ComposableSettings.PanelHelp(topics: [
-            .init(title: "Attention",
-                  body: "Items the partner raises appear in the Needs-you pane. Done items stay for the "
+            .init(title: "Notifications",
+                  body: "Items the partner raises appear in the Notifications pane. Done items stay for the "
                       + "retention period, then are removed. A kind that is checked also posts a macOS "
                       + "notification when an item of that kind is raised.")
         ])
