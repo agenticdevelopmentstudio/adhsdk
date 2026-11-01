@@ -150,7 +150,7 @@ final class PartnerCodeReviewJobSettingsTests: XCTestCase {
         XCTAssertEqual(PartnerToolbar.statusText(state: .idle, jobs: [], queue: nil, reviewsEnabled: true), "Idle")
     }
 
-    // MARK: - Shelf subtitle
+    // MARK: - Card summary
 
     private func review(state: PartnerReviewState, summary: String? = nil, skip: String? = nil,
                         sessionID: String = "s1") -> PartnerReview {
@@ -159,32 +159,17 @@ final class PartnerCodeReviewJobSettingsTests: XCTestCase {
                       sessionID: sessionID, summary: summary, skipReason: skip)
     }
 
-    func testASessionWithoutAReviewShowsItsFolderAndState() {
-        XCTAssertEqual(PartnerShelfRow.sessionSubtitle(directory: "/w/demo", state: "idle", review: nil,
-                                                       sessionID: "s1"),
-                       "demo · idle")
+    func testASessionWithoutAReviewShowsItsState() {
+        XCTAssertEqual(SessionCardSource.summary(state: .idle, review: nil), "Idle")
     }
 
     func testAReviewSessionShowsTheReviewsStateAndSummary() {
-        XCTAssertEqual(PartnerShelfRow.sessionSubtitle(directory: "/w/demo", state: "busy",
-                                                       review: review(state: .running), sessionID: "s1"),
+        XCTAssertEqual(SessionCardSource.summary(state: .running, review: review(state: .running)),
                        "review running")
-        XCTAssertEqual(PartnerShelfRow.sessionSubtitle(directory: "/w/demo", state: "closed",
-                                                       review: review(state: .done, summary: "Fixed two.\n"),
-                                                       sessionID: "s1"),
-                       "review done · Fixed two.")
-        XCTAssertEqual(PartnerShelfRow.sessionSubtitle(directory: "/w/demo", state: "closed",
-                                                       review: review(state: .skipped, skip: "dirty worktree"),
-                                                       sessionID: "s1"),
+        let done = review(state: .done, summary: "Fixed two.\n")
+        XCTAssertEqual(SessionCardSource.summary(state: .exited, review: done), "review done · Fixed two.")
+        let skipped = review(state: .skipped, skip: "dirty worktree")
+        XCTAssertEqual(SessionCardSource.summary(state: .exited, review: skipped),
                        "review skipped · dirty worktree")
-    }
-
-    /// A requeued review runs again in a new session; the earlier session's row must not claim its state.
-    func testOnlyTheReviewsOwnSessionShowsItsState() {
-        let requeued = review(state: .running, sessionID: "new")
-        XCTAssertEqual(PartnerShelfRow.sessionSubtitle(directory: "/w/demo", state: "busy", review: requeued,
-                                                       sessionID: "new"), "review running")
-        XCTAssertEqual(PartnerShelfRow.sessionSubtitle(directory: "/w/demo", state: "closed", review: requeued,
-                                                       sessionID: "old"), "demo · closed")
     }
 }
