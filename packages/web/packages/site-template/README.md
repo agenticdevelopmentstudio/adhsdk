@@ -149,12 +149,14 @@ For agents and answer engines the skeleton also writes `app/llms.txt/route.ts` a
 `app/index.md/route.ts`, both static. `/llms.txt` is the site's index in the llmstxt.org shape:
 the copy's name and description, then `/`, the sitemap's paths and the sections of `/` as links.
 `/index.md` is `/` as Markdown, from the same `src/landing.json` the page renders. A band whose
-body the site renders itself (`{slot}`) has no words there, so the site hands them over:
+body the site renders itself (`{slot}`, or any `band:<id>`) has no words there, so the site
+hands them over:
 `"slotMarkdown": "slot-markdown.ts#slotMarkdown"`, a file under `site/src/` and its export, a
 `Record<string, string>` from section id to the band's body as Markdown, built from the same
 words the band's component renders. The assembler writes `src/site/markdown.ts`, which the
-skeleton's `app/index.md/route.ts` imports; a slot band it does not name is left out, and a key
-that names no slot section fails the build. The root layout's
+skeleton's `app/index.md/route.ts` imports. A band it names takes those words in place of its
+blocks, a `{slot}` band it does not name is left out, and a key that names no section fails the
+build. The root layout's
 JSON-LD is a `WebSite` from the copy's name and description and `siteUrl`, followed by the
 entities `site.json`'s `jsonLd` declares; a site that declares its own `WebSite` keeps it.
 

@@ -74,8 +74,13 @@ describe('landingMarkdown', () => {
     expect(filled).toContain('## Rendered by the site\n\n### A product\n\nWhat it does.\n')
   })
 
-  it('refuses slot Markdown for a section that is not a slot', () => {
-    expect(() => landingMarkdown(DATA, { slots: { all: 'x' } })).toThrow(/"all"/)
+  it('writes the site\'s Markdown in place of a section\'s blocks', () => {
+    const md = landingMarkdown(DATA, { slots: { all: 'Its own words.' } })
+    expect(md).toContain('## Everything\n\n**Every block**\n\nIts own words.\n')
+    expect(md).not.toContain('Its body.')
+  })
+
+  it('refuses slot Markdown for a section that does not exist', () => {
     expect(() => landingMarkdown(DATA, { slots: { nope: 'x' } })).toThrow(/"nope"/)
   })
 

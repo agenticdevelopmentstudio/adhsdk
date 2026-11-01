@@ -8,9 +8,10 @@
  * rendering here; a kind this file does not know is refused rather than dropped, so a block
  * added to the kit without a rendering here fails a test instead of vanishing from the text.
  *
- * A section whose body the SITE renders (`slot`) has no words in the data. The site can hand
- * them over as Markdown (`slots`, by section id); a slot it does not is left out rather than
- * printed as a heading with nothing under it.
+ * A section whose body the SITE renders (a `slot`, or any band its own component replaces) has
+ * no words in the data. The site hands them over as Markdown (`slots`, by section id), in place
+ * of the section's blocks; a section left with no words is left out rather than printed as a
+ * heading with nothing under it.
  */
 
 type Rich = unknown
@@ -25,8 +26,8 @@ export interface LandingMarkdownOptions {
   /** The site's origin, which a root-relative link (`/details`) is resolved against so the
    *  Markdown still points somewhere when it is read away from the site. */
   origin?: string
-  /** The bodies of the sections the site renders itself (`slot`), as Markdown, by section id.
-   *  A key that names no slot section is refused rather than ignored. */
+  /** The bodies of the sections the site renders itself, as Markdown, by section id, in place
+   *  of their blocks. A key that names no section is refused rather than ignored. */
   slots?: Readonly<Record<string, string>>
 }
 
@@ -34,9 +35,9 @@ export interface LandingMarkdownOptions {
 export function landingMarkdown(data: object, options: LandingMarkdownOptions = {}): string {
   const page = data as { hero?: Record<string, unknown>; sections?: Record<string, unknown>[] }
   const slots = options.slots ?? {}
-  const slotIds = new Set((page.sections ?? []).filter((s) => s.slot === true).map((s) => s.id))
+  const ids = new Set((page.sections ?? []).map((s) => s.id))
   for (const id of Object.keys(slots)) {
-    if (!slotIds.has(id)) throw new Error(`landingMarkdown: slots names ${JSON.stringify(id)}, which is not a slot section`)
+    if (!ids.has(id)) throw new Error(`landingMarkdown: slots names ${JSON.stringify(id)}, which is not a section`)
   }
   const out: string[] = []
   const hero = page.hero ?? {}
@@ -46,7 +47,7 @@ export function landingMarkdown(data: object, options: LandingMarkdownOptions = 
   if (tagline !== '') out.push(tagline)
   out.push(...blocks(hero.blocks, 2, options))
   for (const section of page.sections ?? []) {
-    const slot = section.slot === true ? slots[section.id as string]?.trim() : undefined
+    const slot = slots[section.id as string]?.trim()
     const body = slot === undefined || slot === '' ? blocks(section.blocks, 3, options) : [slot]
     const title = text(section.title, options)
     if (body.length === 0 && title === '') continue
