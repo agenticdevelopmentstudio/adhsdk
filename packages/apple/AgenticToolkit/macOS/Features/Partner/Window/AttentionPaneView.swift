@@ -60,7 +60,12 @@ struct AttentionCard: View {
                 .font(.callout)
                 .textSelection(.enabled)
                 .fixedSize(horizontal: false, vertical: true)
-            if let label = Self.buttonLabel(item.reference) {
+            if Self.sessionID(item.reference) != nil {
+                Button("Show session") { model.onOpenReference?(item.reference) }
+                    .buttonStyle(.link)
+                    .font(.caption)
+            }
+            if let label = Self.referenceTextLabel(item.reference) {
                 Button(label) { model.onOpenReference?(item.reference) }
                     .buttonStyle(.link)
                     .font(.caption)
@@ -116,14 +121,31 @@ struct AttentionCard: View {
 
     /// The link's label: "Show session" for a reference to a session, else the reference as one line.
     static func buttonLabel(_ reference: [String: String]) -> String? {
-        if let id = reference["session_id"], !id.isEmpty { return "Show session" }
+        if sessionID(reference) != nil { return "Show session" }
         return referenceLabel(reference)
+    }
+
+    /// The session a reference names; the store writes `session_id` and the tools write `session`.
+    static func sessionID(_ reference: [String: String]) -> String? {
+        for key in ["session_id", "session"] {
+            if let value = reference[key], !value.isEmpty { return value }
+        }
+        return nil
+    }
+
+    /// The reference as text beside a "Show session" link: everything but the session, nil when only that.
+    static func referenceTextLabel(_ reference: [String: String]) -> String? {
+        var rest = reference
+        rest["session_id"] = nil
+        rest["session"] = nil
+        guard sessionID(reference) != nil else { return referenceLabel(reference) }
+        return referenceLabel(rest)
     }
 
     /// The reference as one line, preferring the keys that name a thing a person recognises.
     static func referenceLabel(_ reference: [String: String]) -> String? {
         guard !reference.isEmpty else { return nil }
-        for key in ["url", "path", "commit", "review_id", "session_id"] {
+        for key in ["url", "path", "commit", "review_id", "review", "session_id", "session"] {
             if let value = reference[key], !value.isEmpty { return value }
         }
         return reference.sorted { $0.key < $1.key }.map { "\($0.key): \($0.value)" }.joined(separator: ", ")

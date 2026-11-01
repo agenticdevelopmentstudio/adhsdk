@@ -106,6 +106,14 @@ public final class PartnerCoordinator: AppFeature {
                                        projects: projects, notifier: notifier, reviews: reviews)
         super.init()
         featureName = "Coding Partner"
+        // The retired General job goes on every launch, enabled or not; idempotent, so `start()` repeating it is
+        // harmless. Done once here on the main thread, which the store's own calls already allow.
+        do {
+            try PartnerGuidelinesInstaller(paths: paths)
+                .removeRetiredJob(id: PartnerJobDefaults.retiredGeneralID, store: store)
+        } catch {
+            Self.logger.error("Removing the retired General job failed: \(error.localizedDescription)")
+        }
         // On every start, once this process holds the lock and before its first tick lists the queue: a
         // restart may begin a fresh conversation, which cannot see the reviews the old one left running.
         controller.onLockAcquired = { [weak self] in self?.requeueInterruptedReviews() }

@@ -65,7 +65,8 @@ public final class PartnerSplitViewController: NSSplitViewController {
         contentItem.minimumThickness = 500
         addSplitViewItem(contentItem)
 
-        notificationsPane = PartnerPaneViewController(title: "Notifications", content: attention)
+        notificationsPane = PartnerPaneViewController(
+            title: "Notifications", content: attention, showsCloseButton: false)
         notificationsPane.host = self
         let attentionItem = NSSplitViewItem(inspectorWithViewController: notificationsPane)
         attentionItem.minimumThickness = 260
@@ -100,7 +101,8 @@ public final class PartnerSplitViewController: NSSplitViewController {
             self?.view.window?.backgroundColor = NSColor(palette.projectPaneBackdrop)
         }
         addTab(id: partnerTabID, source: PartnerCardSource(controller: controller),
-               pane: PartnerPaneViewController(title: "Partner", content: chat), closable: false)
+               pane: PartnerPaneViewController(
+                   title: "Partner", content: chat, showsCloseButton: false), closable: false)
     }
 
     private func addTab(id: UUID, source: TabPaneDataSource, pane: PartnerPaneViewController, closable: Bool,
@@ -140,10 +142,10 @@ public final class PartnerSplitViewController: NSSplitViewController {
         let live = controller.sessions.sessions
         let liveIDs = Set(live.map(\.id))
         for id in cards.keys where id != partnerTabID && !liveIDs.contains(id) {
-            let wasSelected = tabbed.activeTabID == id
+            // Select the partner first, so the neighbouring session is never mounted for a moment.
+            if tabbed.activeTabID == id { tabbed.selectTab(id: partnerTabID, on: .left) }
             tabbed.removeTab(id: id)
             cards[id] = nil
-            if wasSelected { tabbed.selectTab(id: partnerTabID, on: .left) }
         }
         for (offset, session) in live.enumerated() where cards[session.id] == nil {
             let store = controller.store
@@ -211,9 +213,12 @@ public final class PartnerSplitViewController: NSSplitViewController {
     /// A reference link was clicked. One that names a session selects its tab, or shows a closed session's
     /// final screen; anything else goes to the app.
     private func open(reference: [String: String]) {
-        guard let raw = reference["session_id"], !raw.isEmpty else {
+        guard let raw = AttentionCard.sessionID(reference), !raw.isEmpty else {
             onOpenReference?(reference)
             return
+        }
+        if let id = UUID(uuidString: raw), cards[id] == nil, controller.sessions.session(id: id) != nil {
+            syncTabs()
         }
         if let id = UUID(uuidString: raw), cards[id] != nil {
             select(sessionID: id)

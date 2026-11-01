@@ -124,9 +124,12 @@ final class PartnerPaneViewController: PaneViewController {
     /// The session this pane shows, when it shows one; closing the pane closes the session.
     let sessionID: UUID?
     private let content: NSViewController
+    /// False for a pane that cannot be closed (the partner, the Notifications pane): it shows no × at all.
+    let showsCloseButton: Bool
 
-    init(title: String, content: NSViewController, sessionID: UUID? = nil) {
+    init(title: String, content: NSViewController, sessionID: UUID? = nil, showsCloseButton: Bool = true) {
         paneTitle = title
+        self.showsCloseButton = showsCloseButton
         self.content = content
         self.sessionID = sessionID
         super.init(stateStore: EphemeralPaneStateStore())
@@ -143,6 +146,7 @@ final class PartnerPaneViewController: PaneViewController {
         super.viewDidLoad()
         titleBar.controls.minimizeButton.isHidden = true
         titleBar.controls.zoomButton.isHidden = true
+        titleBar.controls.closeButton.isHidden = !showsCloseButton
     }
 }
 
