@@ -4,7 +4,9 @@ import XCTest
 
 /// Wraps the mock normalizer and perturbs its output.
 private struct PerturbedNormalizer: Normalizer {
-    enum Mode { case impure, unstableKeys, wrongRawRef, stateful, throwsAlways, emptyBatches, mangledKey, dropsOne }
+    enum Mode {
+        case impure, unstableKeys, wrongRawRef, stateful, throwsAlways, emptyBatches, mangledKey, dropsOne, nonFinite
+    }
     let provider = "mock"
     let mode: Mode
     /// Carries state across calls, so output depends on history rather than on the record.
@@ -37,6 +39,10 @@ private struct PerturbedNormalizer: Normalizer {
             // Keys stay unique and stable, but one fixture's rows no longer carry its dedup key.
             for index in batch.events.indices where record.record.dedupKey == "k4" {
                 batch.events[index].dedupKey = "mangled-\(batch.events[index].dedupKey)"
+            }
+        case .nonFinite:
+            for index in batch.events.indices where record.record.dedupKey == "k4" {
+                batch.events[index].attrs["ratio"] = .number(.nan)
             }
         case .throwsAlways, .emptyBatches, .dropsOne:
             break
@@ -145,6 +151,14 @@ final class MockProviderConformanceTests: XCTestCase {
                        ["no event, turn or message in the store is keyed by k4"], "\(mangled)")
         let dropped = try failures(.dropsOne)
         XCTAssertTrue(dropped.contains { $0.check == "unstoredFixture" && $0.detail.hasSuffix("by k8") }, "\(dropped)")
+    }
+
+    func testConformanceCatchesNaNAndStopsBeforeTheStoreChecks() throws {
+        let found = try failures(.nonFinite)
+        XCTAssertEqual(found.filter { $0.check == "nonFiniteNumber" }.map(\.detail),
+                       ["record k4 emitted NaN or infinity at k4#0.attrs.ratio"], "\(found)")
+        // The store-based checks cannot run on unstorable rows, so they are skipped.
+        XCTAssertFalse(found.contains { $0.check == "liveEqualsReplay" || $0.check == "crashRecovery" }, "\(found)")
     }
 
     func testConformanceCatchesKeyCollisionInFixtures() throws {

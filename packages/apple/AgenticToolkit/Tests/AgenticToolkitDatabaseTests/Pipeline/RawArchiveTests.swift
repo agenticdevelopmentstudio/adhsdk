@@ -212,4 +212,28 @@ final class RawArchiveTests: XCTestCase {
         XCTAssertEqual(picked.map(\.record.payload), [Data("p1".utf8), Data("p3".utf8)])
         XCTAssertEqual(try archive.records(ids: []), [])
     }
+
+    func testRecordsByIdsReadsOnlyTheRequestedRowsWhenAnOldIdSitsBesideNewOnes() throws {
+        let archive = try makeArchive()
+        let ids = try archive.append((0..<1_200).map { rec("k\($0)", "p\($0)") }).ids
+        // A requeued old duplicate (id 1) next to the newest ids: nothing in between is read.
+        let wanted = [ids[1_199], ids[0], ids[1_198]]
+        let picked = try archive.records(ids: wanted)
+        XCTAssertEqual(picked.count, 3)
+        XCTAssertEqual(picked.map(\.id), [ids[0], ids[1_198], ids[1_199]])
+        XCTAssertEqual(picked.map(\.record.dedupKey), ["k0", "k1198", "k1199"])
+        // A repeated id comes back once; an unknown one is skipped.
+        XCTAssertEqual(try archive.records(ids: [ids[5], ids[5], 999_999]).map(\.id), [ids[5]])
+    }
+
+    func testRecordsByIdsSplitsLongListsAcrossStatements() throws {
+        let archive = try makeArchive()
+        let ids = try archive.append((0..<1_200).map { rec("k\($0)", "p\($0)") }).ids
+        XCTAssertGreaterThan(ids.count, RawArchive.maxIDsPerStatement * 2)
+        // Every other id, so each statement's id list is sparse and spans several chunks.
+        let wanted = stride(from: 0, to: ids.count, by: 2).map { ids[$0] }
+        let picked = try archive.records(ids: wanted.reversed())
+        XCTAssertEqual(picked.map(\.id), wanted)
+        XCTAssertEqual(picked.map(\.record.payload), wanted.indices.map { Data("p\($0 * 2)".utf8) })
+    }
 }

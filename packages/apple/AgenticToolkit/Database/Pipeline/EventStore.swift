@@ -189,13 +189,15 @@ public final class EventStore: @unchecked Sendable {
     }
 
     /// Rebuilds the indexes and clears the flag. Safe to call even when
-    /// `beginBulkLoad` never ran.
+    /// `beginBulkLoad` never ran. Ends the in-process bulk window even when the
+    /// rebuild throws, so drainers can attach again; the on-disk flag then stays
+    /// set and the next open finishes the rebuild.
     public func endBulkLoad() throws {
+        defer { setBulkActive(false) }
         try pool.write(deadline: Self.bulkDeadline) { conn in
             for index in Self.indexes { try conn.execute(sql: index.sql) }
             try conn.execute(sql: "DELETE FROM store_meta WHERE key = ?", arguments: [Self.bulkLoadKey])
         }
-        setBulkActive(false)
     }
 
     private func setBulkActive(_ value: Bool) {
@@ -315,9 +317,13 @@ public final class EventStore: @unchecked Sendable {
     // MARK: - Per-field merge
 
     /// Fields that merge independently: each keeps the value offered with the
-    /// greatest `as_of`; on an exact tie the lexically larger UTF-8 value wins
-    /// (strings compare as text, anything else by its canonical JSON). The result is
-    /// the same whatever order the offers arrive in. Attrs keys are `attrs.<key>`.
+    /// greatest `as_of`. On an exact tie: two numbers keep the larger (so a token
+    /// count of 10 beats 9), two strings the lexically larger UTF-8 text, anything
+    /// else the lexically larger canonical JSON (and numerically equal numbers, such
+    /// as 0 and -0, fall back to that too). The result is the same whatever order the
+    /// offers arrive in. Attrs keys are `attrs.<key>`. Non-finite numbers never reach
+    /// here in a conforming provider (`Normalizer`); if one does, it still ties
+    /// deterministically, and the write then fails on encoding.
     struct MergedFields: Equatable {
         var values: [String: NormalizedValue] = [:]
         var times: [String: Double] = [:]
@@ -336,9 +342,19 @@ public final class EventStore: @unchecked Sendable {
             if case .string(let left) = lhs, case .string(let right) = rhs {
                 return left.utf8.lexicographicallyPrecedes(right.utf8)
             }
-            let left = (try? lhs.canonicalString()) ?? ""
-            let right = (try? rhs.canonicalString()) ?? ""
+            if case .number(let left) = lhs, case .number(let right) = rhs,
+               left.isFinite, right.isFinite, left != right {
+                return left < right
+            }
+            let left = tieText(lhs)
+            let right = tieText(rhs)
             return left.utf8.lexicographicallyPrecedes(right.utf8)
+        }
+
+        /// The canonical JSON, or for a value JSON cannot encode (NaN, infinity) a
+        /// stable description, so the tie-break stays a total order.
+        private static func tieText(_ value: NormalizedValue) -> String {
+            (try? value.canonicalString()) ?? "~" + String(describing: value)
         }
 
         func string(_ field: String) -> String? {

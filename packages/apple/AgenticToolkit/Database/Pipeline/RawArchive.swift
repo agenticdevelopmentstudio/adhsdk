@@ -189,14 +189,30 @@ public final class RawArchive: @unchecked Sendable {
         }
     }
 
-    /// The records with these ids, ascending; ids that do not exist are skipped.
+    /// Most ids bound into one `IN (…)` statement; SQLite's historical bind limit is 999.
+    static let maxIDsPerStatement = 500
+
+    /// The records with these ids, ascending, each once; ids that do not exist are
+    /// skipped. Reads exactly the requested rows (`WHERE id IN (…)`, at most
+    /// `maxIDsPerStatement` ids per statement, all in one read transaction), so a
+    /// batch mixing an old id with new ones never touches the rows between them.
     public func records(ids: [Int64]) throws -> [ArchivedRecord] {
-        guard let first = ids.min(), let last = ids.max() else { return [] }
-        let wanted = Set(ids)
+        let wanted = Array(Set(ids)).sorted()
+        guard !wanted.isEmpty else { return [] }
         return try pool.read { conn in
-            let rows = try Row.fetchAll(
-                conn, sql: Self.selectSQL + " WHERE id BETWEEN ? AND ? ORDER BY id ASC", arguments: [first, last])
-            return try rows.filter { wanted.contains($0["id"]) }.map { try decode($0) }
+            var result: [ArchivedRecord] = []
+            result.reserveCapacity(wanted.count)
+            var start = 0
+            while start < wanted.count {
+                let chunk = Array(wanted[start..<min(wanted.count, start + Self.maxIDsPerStatement)])
+                let marks = Array(repeating: "?", count: chunk.count).joined(separator: ",")
+                let rows = try Row.fetchAll(
+                    conn, sql: Self.selectSQL + " WHERE id IN (\(marks)) ORDER BY id ASC",
+                    arguments: StatementArguments(chunk))
+                result += try rows.map { try decode($0) }
+                start += chunk.count
+            }
+            return result
         }
     }
 

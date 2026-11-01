@@ -195,6 +195,37 @@ final class EventStoreTests: XCTestCase {
         XCTAssertTrue(dump.contains("{\\\"a\\\":\\\"new\\\",\\\"b\\\":\\\"only\\\"}"), dump)
     }
 
+    func testNumericTieKeepsTheLargerNumberInEitherOrder() throws {
+        for order in [[9.0, 10.0], [10.0, 9.0]] {
+            var fields = EventStore.MergedFields()
+            for value in order { fields.offer("attrs.tokens", .number(value), asOf: 1) }
+            XCTAssertEqual(fields.values["attrs.tokens"], .number(10), "\(order)")
+        }
+    }
+
+    func testTieBreakIsTotalEvenForValuesJSONCannotEncode() throws {
+        // NaN and infinity never reach a conforming store, but the tie-break must not
+        // depend on arrival order even if one does.
+        let offers: [NormalizedValue] = [.number(.nan), .number(1), .number(.infinity), .string("x"), .bool(true)]
+        var winners: Set<String> = []
+        for order in permutations(offers) {
+            var fields = EventStore.MergedFields()
+            for value in order { fields.offer("attrs.v", value, asOf: 1) }
+            winners.insert(String(describing: fields.values["attrs.v"]))
+        }
+        XCTAssertEqual(winners.count, 1, "\(winners)")
+    }
+
+    func testNonFiniteFieldsNamesEveryNaNOrInfinity() throws {
+        var batch = sampleBatch()
+        XCTAssertEqual(batch.nonFiniteFields, [])
+        batch.turns = [TurnRow(dedupKey: "t", sessionID: "s", time: date(1), costUSD: .infinity,
+                               attrs: ["deep": .array([.object(["x": .number(.nan)])])], rawRef: 1)]
+        XCTAssertEqual(batch.nonFiniteFields, ["t.attrs.deep", "t.costUSD"])
+        XCTAssertFalse(NormalizedValue.object(["a": .array([.number(-.infinity)])]).isFinite)
+        XCTAssertTrue(NormalizedValue.object(["a": .array([.number(1), .string("nan")])]).isFinite)
+    }
+
     func testEventsFromTwoProvidersWithSameKeyCoexist() throws {
         let store = try makeStore()
         try store.write(sampleBatch(), provider: "mock")
@@ -232,6 +263,25 @@ final class EventStoreTests: XCTestCase {
         try store.endBulkLoad()
         XCTAssertFalse(try store.isInBulkLoad())
         XCTAssertEqual(try store.indexNames().intersection(indexNames), Set(indexNames))
+    }
+
+    func testFailedIndexRebuildStillEndsTheBulkWindowAndLeavesTheFlagForRepair() throws {
+        let store = try makeStore()
+        try store.beginBulkLoad()
+        // Hide a table the indexes need, so the rebuild throws.
+        let path = tmpDir.appendingPathComponent(EventStore.fileName).path
+        let saboteur = try DatabaseQueue(path: path)
+        try saboteur.write { try $0.execute(sql: "ALTER TABLE events RENAME TO events_hidden") }
+        XCTAssertThrowsError(try store.endBulkLoad())
+        // The in-process window is closed: a live writer may attach again.
+        XCTAssertNoThrow(try store.attachLiveWriter())
+        store.detachLiveWriter()
+        // The on-disk flag is still set, so the next open finishes the rebuild.
+        XCTAssertTrue(try store.isInBulkLoad())
+        try saboteur.write { try $0.execute(sql: "ALTER TABLE events_hidden RENAME TO events") }
+        let reopened = try EventStore(path: path)
+        XCTAssertFalse(try reopened.isInBulkLoad())
+        XCTAssertEqual(try reopened.indexNames().intersection(indexNames), Set(indexNames))
     }
 
     func testOpeningAfterACrashMidBulkLoadRebuildsIndexesAndClearsFlag() throws {

@@ -40,6 +40,12 @@ public struct ReplaySource: Sendable {
 /// `EventStore` open rebuilds the indexes, and replaying again with
 /// `after: report.lastID` (from the last progress callback) resumes; every write
 /// is idempotent, so overlapping a chunk is harmless.
+///
+/// Cost of that recovery: the open that finds the flag rebuilds **every** index
+/// before returning, which on a large migrated store can take hours, and the
+/// resumed replay then drops them again at once in its own `beginBulkLoad`. A host
+/// that is about to resume should expect that open to be slow (it runs under
+/// `EventStore.bulkDeadline`), and should not treat it as hung.
 public enum Replayer {
     public static let maxReportedFailures = 1000
 

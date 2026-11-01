@@ -35,6 +35,9 @@ public enum ProviderConformance {
     /// - keyCollision: no two fixtures share a dedup key with different payload bytes (the archive
     ///   would keep the first and the drainer would quarantine the other).
     /// - rawRef: every emitted row's rawRef equals the input record's archive id.
+    /// - nonFiniteNumber: no emitted row holds NaN or an infinity (`NormalizedBatch.nonFiniteFields`);
+    ///   the store cannot write one. When this fails the store-based checks below are skipped, since
+    ///   every one of them would fail on the same unstorable rows.
     /// - liveEqualsReplay: spool and drain all fixtures in seeded, shuffled batch sizes, then replay
     ///   the archive into a fresh store; the canonical dumps are equal.
     /// - idempotentRedelivery: draining the fixtures twice gives the same dump as once.
@@ -67,6 +70,9 @@ public enum ProviderConformance {
         failures += checkNoLoss(normalizer, archived, fixtures: fixtures, malformedKeys: malformedKeys)
         failures += checkPurityAndRefs(normalizer, archived)
         failures += checkKeys(normalizer, archived)
+        let nonFinite = checkFinite(normalizer, archived)
+        failures += nonFinite
+        if !nonFinite.isEmpty { return failures }
 
         var rng = SeededGenerator(seed: seed)
         let live = try drainAll(normalizer, fixtures, in: root.appendingPathComponent("live"),
@@ -342,6 +348,18 @@ public enum ProviderConformance {
             }
         }
         return failures
+    }
+
+    private static func checkFinite(_ normalizer: any Normalizer,
+                                    _ archived: [ArchivedRecord]) -> [ConformanceFailure] {
+        archived.compactMap { item in
+            guard case .batch(let batch) = run(normalizer, item) else { return nil }
+            let fields = batch.nonFiniteFields
+            guard !fields.isEmpty else { return nil }
+            return ConformanceFailure(
+                check: "nonFiniteNumber",
+                detail: "record \(item.record.dedupKey) emitted NaN or infinity at \(fields.joined(separator: ", "))")
+        }
     }
 
     private static func keys(_ outcome: Outcome) -> (unique: [String], turns: [String]) {

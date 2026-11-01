@@ -46,6 +46,18 @@ public indirect enum NormalizedValue: Sendable, Equatable, Codable {
         }
     }
 
+    /// False when this value holds NaN or an infinity anywhere. JSON cannot encode
+    /// those, so `canonicalString()` throws on them and the store cannot write them;
+    /// normalizers must never emit one (conformance check `nonFiniteNumber`).
+    public var isFinite: Bool {
+        switch self {
+        case .null, .bool, .string: return true
+        case .number(let value): return value.isFinite
+        case .array(let values): return values.allSatisfy(\.isFinite)
+        case .object(let values): return values.values.allSatisfy(\.isFinite)
+        }
+    }
+
     /// Sorted-keys JSON text; the canonical form used for storage and tie-breaks.
     public func canonicalString() throws -> String {
         let encoder = JSONEncoder()
@@ -233,6 +245,41 @@ public struct NormalizedBatch: Sendable, Equatable {
     public init() {}
 
     public var isEmpty: Bool { events.isEmpty && sessions.isEmpty && turns.isEmpty && messages.isEmpty }
+
+    /// Every place this batch holds NaN or an infinity (an attrs value, a cost or a
+    /// date), as `<row key>.<field>`; empty when the batch is storable.
+    public var nonFiniteFields: [String] {
+        var found: [String] = []
+        func attrs(_ owner: String, _ values: [String: NormalizedValue]) {
+            for (key, value) in values.sorted(by: { $0.key < $1.key }) where !value.isFinite {
+                found.append("\(owner).attrs.\(key)")
+            }
+        }
+        func date(_ owner: String, _ field: String, _ value: Date?) {
+            if let value, !value.timeIntervalSince1970.isFinite { found.append("\(owner).\(field)") }
+        }
+        for event in events {
+            attrs(event.dedupKey, event.attrs)
+            date(event.dedupKey, "time", event.time)
+        }
+        for session in sessions {
+            attrs(session.sessionID, session.attrs)
+            date(session.sessionID, "asOf", session.asOf)
+            date(session.sessionID, "startedAt", session.startedAt)
+            date(session.sessionID, "endedAt", session.endedAt)
+        }
+        for turn in turns {
+            attrs(turn.dedupKey, turn.attrs)
+            date(turn.dedupKey, "time", turn.time)
+            date(turn.dedupKey, "asOf", turn.asOf)
+            if let cost = turn.costUSD, !cost.isFinite { found.append("\(turn.dedupKey).costUSD") }
+        }
+        for message in messages {
+            attrs(message.dedupKey, message.attrs)
+            date(message.dedupKey, "time", message.time)
+        }
+        return found
+    }
 
     public mutating func append(_ other: NormalizedBatch) {
         events += other.events

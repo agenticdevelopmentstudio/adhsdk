@@ -18,6 +18,19 @@ private struct TestNormalizer: Normalizer {
     }
 }
 
+/// `TestNormalizer`, except a record keyed `poison*` emits a NaN attr, which the
+/// store cannot encode, so its write always fails.
+private struct PoisonNormalizer: Normalizer {
+    let provider = "mock"
+    func normalize(_ record: ArchivedRecord) throws -> NormalizedBatch {
+        var batch = try TestNormalizer().normalize(record)
+        if record.record.dedupKey.hasPrefix("poison") {
+            for index in batch.events.indices { batch.events[index].attrs["bad"] = .number(.nan) }
+        }
+        return batch
+    }
+}
+
 private struct AlwaysFailingNormalizer: Normalizer {
     let provider = "mock"
     struct Transient: Error {}
@@ -210,6 +223,8 @@ final class PipelineDrainerTests: XCTestCase {
         XCTAssertEqual(failed.completed, 0)
         XCTAssertEqual(try rig.spool.pendingCount(), 6)
         XCTAssertEqual(try rig.archive.count(), 6)
+        // A store failure is charged like any other, one attempt per record.
+        XCTAssertEqual(try rig.spool.pendingBatch(limit: 10).map(\.attempts), Array(repeating: 1, count: 6))
 
         try saboteur.write { try $0.execute(sql: "ALTER TABLE events_hidden RENAME TO events") }
         let recovered = try drainer(rig).drainUntilEmpty()
@@ -217,6 +232,28 @@ final class PipelineDrainerTests: XCTestCase {
         XCTAssertEqual(try rig.store.counts().events, 6)
         XCTAssertEqual(try rig.spool.pendingCount(), 0)
         XCTAssertEqual(try rig.archive.count(), 6)
+    }
+
+    func testUnstorableRecordIsIsolatedChargedAndQuarantinedWithoutBlockingItsBatch() throws {
+        let rig = try makeRig()
+        try rig.spool.append([record("k0"), record("poison"), record("k1")])
+        let pipe = try PipelineDrainer(spool: rig.spool, archive: rig.archive,
+                                       normalizer: PoisonNormalizer(), store: rig.store)
+        let first = pipe.drainOnce()
+        XCTAssertFalse(first.failed, first.failureReason ?? "")
+        XCTAssertEqual(first.completed, 2)
+        XCTAssertEqual(try rig.store.counts().events, 2)
+        let left = try rig.spool.pendingBatch(limit: 10)
+        XCTAssertEqual(left.map(\.record.dedupKey), ["poison"])
+        XCTAssertEqual(left.map(\.attempts), [1])
+        // Alone in its batch it keeps failing, and is quarantined at maxAttempts, bytes kept.
+        for _ in 1..<ProviderSpool.maxAttempts { pipe.drainOnce() }
+        XCTAssertEqual(try rig.spool.pendingCount(), 0)
+        let quarantined = try rig.spool.quarantined(limit: 10)
+        XCTAssertEqual(quarantined.map(\.record.dedupKey), ["poison"])
+        XCTAssertTrue(quarantined.first?.reason.hasPrefix("store write failed") ?? false,
+                      quarantined.first?.reason ?? "")
+        XCTAssertEqual(quarantined.first?.record.payload, record("poison").payload)
     }
 
     func testDrainUntilEmptyStopsWithoutProgressAndDoesNotBurnAttempts() throws {
@@ -310,6 +347,29 @@ final class PipelineDrainerTests: XCTestCase {
         let id = try XCTUnwrap(try rig.archive.id(forDedupKey: "k"))
         XCTAssertEqual(try rig.archive.record(id: id)?.record.payload, Data(first.utf8))
         XCTAssertEqual(try rig.store.counts().events, 1)
+        // The live store still derives from the archived bytes: a replay rebuilds it exactly.
+        let rebuilt = try EventStore(path: tmpDir.appendingPathComponent("replayed.db").path)
+        let report = try Replayer.replay(archive: rig.archive, normalizer: TestNormalizer(), into: rebuilt)
+        XCTAssertEqual(report.failed, 0)
+        XCTAssertEqual(try rebuilt.canonicalDump(), try rig.store.canonicalDump())
+    }
+
+    func testRequeuedOldRecordBesideNewOnesReadsOnlyThoseArchiveRows() throws {
+        let rig = try makeRig()
+        try rig.spool.append((0..<50).map { record("old\($0)") })
+        try drainer(rig).drainUntilEmpty()
+        let oldID = try XCTUnwrap(try rig.archive.id(forDedupKey: "old0"))
+        // The oldest key again (same bytes), next to two new ones.
+        try rig.spool.append([record("old0"), record("new0"), record("new1")])
+        let seen = LockedBox<[Int64]>([])
+        let sink = ClosureSink { _, records in seen.update { $0 += records.map(\.id) } }
+        let outcome = try drainer(rig, sinks: [sink]).drainOnce()
+        XCTAssertFalse(outcome.failed, outcome.failureReason ?? "")
+        XCTAssertEqual(outcome.completed, 3)
+        let newIDs = try ["new0", "new1"].map { try XCTUnwrap(try rig.archive.id(forDedupKey: $0)) }
+        XCTAssertEqual(seen.value, [oldID] + newIDs)
+        XCTAssertEqual(try rig.archive.count(), 52)
+        XCTAssertEqual(try rig.store.counts().events, 52)
     }
 
     func testPassRespectsByteBudgetButAlwaysTakesOneRecord() throws {
@@ -435,20 +495,50 @@ final class PipelineDrainerTests: XCTestCase {
         XCTAssertEqual(try rig.store.counts().events, 2)
     }
 
-    func testObserverHearsOnlyChangedRowsAndNeverAnEmptyBatch() throws {
+    func testObserverHearsTheCompletedBatchAsWrittenAndNeverAnEmptyBatch() throws {
         let rig = try makeRig()
         let observer = RecordingObserver()
         let pipe = try drainer(rig)
         pipe.addObserver(observer)
         try rig.spool.append([record("dup")])
         pipe.drainUntilEmpty()
-        // The same bytes again: archived as a duplicate, normalized, stored as a no-op.
+        // The same bytes again: archived as a duplicate and a store no-op, but completed,
+        // so observers hear its rows again (at-least-once; they must be idempotent).
         try rig.spool.append([record("dup")])
         let outcome = pipe.drainUntilEmpty()
         XCTAssertEqual(outcome.completed, 1)
         try rig.spool.append([record("dup"), record("new")])
         pipe.drainUntilEmpty()
-        XCTAssertEqual(observer.received.map { $0.events.map(\.dedupKey) }, [["dup#0"], ["new#0"]])
+        // A pass that completes nothing (a conflict is quarantined) notifies no one.
+        try rig.spool.append([record("dup", payload: "{\"session\":\"s9\",\"t\":9}")])
+        let conflicted = pipe.drainUntilEmpty()
+        XCTAssertEqual(conflicted.quarantined, 1)
+        XCTAssertEqual(observer.received.map { $0.events.map(\.dedupKey) },
+                       [["dup#0"], ["dup#0"], ["dup#0", "new#0"]])
+    }
+
+    func testObserverHearsRowsCommittedBeforeASinkFailureWhenTheRetryCompletes() throws {
+        let rig = try makeRig()
+        try rig.spool.append((0..<2).map { record("k\($0)") })
+        struct SinkDown: Error {}
+        let once = FireOnce()
+        let sink = ClosureSink { _, _ in if once.shouldFire() { throw SinkDown() } }
+        let observer = RecordingObserver()
+        let pipe = try drainer(rig, sinks: [sink])
+        pipe.addObserver(observer)
+
+        let failed = pipe.drainOnce()
+        XCTAssertTrue(failed.failed)
+        // The rows are committed, but nothing is completed, so nobody has been told yet.
+        XCTAssertEqual(try rig.store.counts().events, 2)
+        XCTAssertTrue(observer.received.isEmpty)
+
+        let retried = pipe.drainOnce()
+        XCTAssertFalse(retried.failed, retried.failureReason ?? "")
+        XCTAssertEqual(retried.completed, 2)
+        // The retry's store write changed nothing, yet observers hear every row once.
+        XCTAssertEqual(observer.received.map { $0.events.map(\.dedupKey) }, [["k0#0", "k1#0"]])
+        XCTAssertEqual(try rig.spool.pendingCount(), 0)
     }
 
     // MARK: - Wiring checks

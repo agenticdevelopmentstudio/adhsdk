@@ -32,9 +32,17 @@ public struct DrainOutcome: Sendable, Equatable {
 }
 
 public protocol PipelineObserver: AnyObject, Sendable {
-    /// Called after the pass, outside every lock and transaction, with what the pass
-    /// changed in the store (rows actually inserted or changed; a redelivery that
-    /// changed nothing is not reported). Never called with an empty batch.
+    /// Called after a pass that completed records, outside every lock and
+    /// transaction, with the normalized batch as written for exactly those records:
+    /// every row they produced, including rows the store already held (a retry after
+    /// a sink or `complete` failure, a redelivered record). Never called with an
+    /// empty batch, and never for records the pass did not complete.
+    ///
+    /// Delivery is at-least-once on errors (a record whose pass failed after its
+    /// store write is reported by the pass that finally completes it, and a
+    /// redelivery is reported again) and at-most-once on crashes (a crash between
+    /// `complete` and the notification loses it). Observers must be idempotent, and
+    /// one that must never miss a row should resync from the store.
     func pipelineDidStore(_ batch: NormalizedBatch, provider: String)
 }
 
@@ -46,6 +54,12 @@ public protocol PipelineObserver: AnyObject, Sendable {
 /// and it is retried on the next pass (a record that reaches
 /// `ProviderSpool.maxAttempts` is quarantined, bytes kept). Sinks must therefore be
 /// idempotent.
+///
+/// A sink outage therefore quarantines records: `maxAttempts` failed passes (which
+/// can be seconds when sources keep waking the drainer) move the whole batch to
+/// quarantine. Those records are already archived and in events.db; once the sink
+/// is back, `ProviderSpool.requeueQuarantined` sends them through again, and the
+/// pass reads only their archive rows (`RawArchive.records(ids:)`).
 public protocol PipelineSink: Sendable {
     func write(_ batch: NormalizedBatch, records: [ArchivedRecord], provider: String) throws
 }
@@ -75,10 +89,17 @@ public protocol PipelineSink: Sendable {
 /// Observers run after the pass has released its lock, so an observer may call
 /// `drainOnce` or `drainUntilEmpty` freely.
 ///
-/// Observer notification is at-most-once: a crash after the spool rows are
-/// completed and before observers are told loses that batch's notification,
-/// because the replay finds nothing left to write. Observers that must be
-/// reliable should resync from the store.
+/// **Failure accounting.** A record that fails to normalize, a record whose store
+/// write fails, and every record of a pass whose sink fails is charged one attempt,
+/// and quarantined (bytes kept) at `ProviderSpool.maxAttempts`. When a batch's store
+/// write fails, the drainer writes its records one at a time and charges only the
+/// ones that still fail, so one unstorable record cannot block the spool or take
+/// the rest of its batch with it. An archive or spool error is not charged: the
+/// pass fails and is retried as is.
+///
+/// Observers hear, after each pass that completes records, the batch as written
+/// for those records: at-least-once on errors, at-most-once on crashes
+/// (`PipelineObserver`). They must be idempotent.
 ///
 /// The drainer registers with the store as a live writer for its lifetime, so
 /// a replay cannot start a bulk load under it.
@@ -235,7 +256,8 @@ public final class PipelineDrainer: @unchecked Sendable {
         return result
     }
 
-    /// Returns what the store write changed, for the observers.
+    /// Returns the normalized batch for the records this pass completed, for the
+    /// observers (empty when it completed nothing).
     private func pass(_ outcome: inout DrainOutcome) throws -> NormalizedBatch {
         let pending = try spool.pendingBatch(limit: batchSize, maxBytes: maxBatchBytes)
         guard !pending.isEmpty else { return NormalizedBatch() }
@@ -271,6 +293,7 @@ public final class PipelineDrainer: @unchecked Sendable {
         var normalizedIDs: [Int64] = []
         var normalizedRecords: [ArchivedRecord] = []
         var normalizedSpooled: [SpooledRecord] = []
+        var normalizedBatches: [NormalizedBatch] = []
         for (spooled, archiveID) in accepted {
             do {
                 guard let copy = archivedCopies[archiveID] else {
@@ -282,13 +305,24 @@ public final class PipelineDrainer: @unchecked Sendable {
                 normalizedIDs.append(spooled.id)
                 normalizedRecords.append(archived)
                 normalizedSpooled.append(spooled)
+                normalizedBatches.append(batch)
             } catch {
                 try charge(spooled, reason: String(describing: error), &outcome)
             }
         }
         try inject(.afterNormalize)
 
-        let written = try store.write(merged, provider: normalizer.provider)
+        do {
+            _ = try store.write(merged, provider: normalizer.provider)
+        } catch {
+            let kept = try isolateStoreFailure(
+                error, Array(zip(normalizedSpooled, zip(normalizedRecords, normalizedBatches))), &outcome)
+            normalizedSpooled = kept.map(\.spooled)
+            normalizedRecords = kept.map(\.archived)
+            normalizedIDs = normalizedSpooled.map(\.id)
+            merged = NormalizedBatch()
+            for item in kept { merged.append(item.batch) }
+        }
         outcome.stored = normalizedIDs.count
         try inject(.afterStore)
 
@@ -306,7 +340,27 @@ public final class PipelineDrainer: @unchecked Sendable {
         try spool.complete(ids: normalizedIDs)
         outcome.completed = normalizedIDs.count
         try inject(.afterComplete)
-        return written
+        return merged
+    }
+
+    /// After a failed batch write: writes each record's rows on its own, charges the
+    /// records that still fail, and returns the ones that are now stored. Throws the
+    /// original failure when nothing could be stored.
+    private func isolateStoreFailure(
+        _ batchError: Error, _ items: [(SpooledRecord, (ArchivedRecord, NormalizedBatch))],
+        _ outcome: inout DrainOutcome
+    ) throws -> [(spooled: SpooledRecord, archived: ArchivedRecord, batch: NormalizedBatch)] {
+        var kept: [(spooled: SpooledRecord, archived: ArchivedRecord, batch: NormalizedBatch)] = []
+        for (item, (archived, batch)) in items {
+            do {
+                _ = try store.write(batch, provider: normalizer.provider)
+                kept.append((item, archived, batch))
+            } catch {
+                try charge(item, reason: "store write failed: \(error)", &outcome)
+            }
+        }
+        if kept.isEmpty { throw StepFailure(description: "store write failed: \(batchError)") }
+        return kept
     }
 
     // MARK: - Background thread

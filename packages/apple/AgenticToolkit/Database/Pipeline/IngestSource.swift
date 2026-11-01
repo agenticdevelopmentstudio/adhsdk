@@ -28,6 +28,13 @@ public protocol IngestSource: Sendable {
 /// The points inside a source's `poll` where a test can inject a crash: before the
 /// spool append (nothing written), and after it (append and cursor committed
 /// together, so the cursor has advanced too).
+///
+/// A source must fire `afterAppend` **immediately after** the one
+/// `ProviderSpool.append(_:settingSourceState:to:)` call that carries both its
+/// records and its cursor, with nothing in between. `ProviderConformance.checkSource`
+/// can only prove atomicity at the hooks: a source that appends, then writes its
+/// cursor separately, and only then fires `afterAppend` would pass the check while
+/// still having a crash window.
 public enum SourceStep: String, Sendable, CaseIterable {
     case beforeAppend, afterAppend
 }
