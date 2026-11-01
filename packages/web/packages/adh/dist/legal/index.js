@@ -8,8 +8,10 @@ function LegalPageShell({
 }) {
   return /* @__PURE__ */ jsxs("div", { className: "adh-legal", children: [
     /* @__PURE__ */ jsxs("div", { className: "adh-legal__hero", children: [
-      /* @__PURE__ */ jsx("div", { className: "adh-legal__prefix", children: prefix }),
-      /* @__PURE__ */ jsx("div", { className: "adh-legal__title", children: title }),
+      /* @__PURE__ */ jsxs("h1", { className: "adh-legal__heading", children: [
+        /* @__PURE__ */ jsx("span", { className: "adh-legal__prefix", children: prefix }),
+        /* @__PURE__ */ jsx("span", { className: "adh-legal__title", children: title })
+      ] }),
       /* @__PURE__ */ jsx("div", { className: "adh-legal__rule" })
     ] }),
     /* @__PURE__ */ jsxs("article", { className: "adh-legal-doc", children: [

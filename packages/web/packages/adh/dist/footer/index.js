@@ -327,9 +327,9 @@ var LEGAL_ENTRIES = [
   { label: "Terms of Use", href: "/terms", onClick: openLegalModal(TERMS_DIALOG_ID) },
   { label: "Privacy Policy", href: "/privacy", onClick: openLegalModal(PRIVACY_DIALOG_ID) }
 ];
-function Column({ title, entries }) {
+function Column({ title, entries, heading: Heading }) {
   return /* @__PURE__ */ jsxs5("nav", { className: "adh-landing-footer__column", "aria-label": title, children: [
-    /* @__PURE__ */ jsx6("h3", { className: "adh-landing-footer__heading", children: title }),
+    /* @__PURE__ */ jsx6(Heading, { className: "adh-landing-footer__heading", children: title }),
     /* @__PURE__ */ jsx6("ul", { className: "adh-landing-footer__list", children: entries.map((e) => /* @__PURE__ */ jsxs5("li", { className: "adh-landing-footer__item", children: [
       /* @__PURE__ */ jsx6("a", { className: "adh-landing-footer__link", href: e.href, onClick: e.onClick, children: e.label }),
       e.badge && /* @__PURE__ */ jsx6("span", { className: "adh-landing-footer__badge", children: e.badge })
@@ -351,7 +351,7 @@ function FamilyFooter({
   ];
   return /* @__PURE__ */ jsxs5("div", { id: anchored ? MORE_INFO_ANCHOR_ID : void 0, className: LANDING_FOOTER_CLASS, children: [
     /* @__PURE__ */ jsx6("div", { className: "adh-landing-footer__head", children: /* @__PURE__ */ jsx6(PreviewNotice, { variant: "badge" }) }),
-    /* @__PURE__ */ jsx6("div", { className: "adh-landing-footer__directory", children: columns.map((column) => /* @__PURE__ */ jsx6(Column, { ...column }, column.title)) }),
+    /* @__PURE__ */ jsx6("div", { className: "adh-landing-footer__directory", children: columns.map((column) => /* @__PURE__ */ jsx6(Column, { ...column, heading: anchored ? "h2" : "h3" }, column.title)) }),
     /* @__PURE__ */ jsxs5("div", { className: "adh-landing-footer__fine-print", children: [
       /* @__PURE__ */ jsxs5("p", { className: "adh-landing-footer__copyright", children: [
         "Copyright \xA9 ",

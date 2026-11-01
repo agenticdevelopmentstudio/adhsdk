@@ -102,12 +102,12 @@ function DetailsPage({ siteId, topic }) {
   return /* @__PURE__ */ jsxs3("div", { className: "adh-details", children: [
     /* @__PURE__ */ jsxs3("aside", { className: "adh-details__rail", children: [
       /* @__PURE__ */ jsx3("a", { className: "adh-details__back", href: "/", children: "\u2039 Back to the map" }),
-      /* @__PURE__ */ jsx3("p", { className: "adh-details__rail-label", children: siteNode.label }),
+      /* @__PURE__ */ jsx3("div", { className: "adh-details__rail-label", children: siteNode.label }),
       /* @__PURE__ */ jsx3(DetailsRail, { topics: railTopics, siteLabel: siteNode.label })
     ] }),
-    /* @__PURE__ */ jsxs3("main", { className: "adh-details__main", children: [
+    /* @__PURE__ */ jsxs3("article", { className: "adh-details__main", children: [
       /* @__PURE__ */ jsx3(Breadcrumb, { siteId, topicId: node.id }),
-      node.kicker && /* @__PURE__ */ jsx3("p", { className: "adh-details__kicker", children: node.kicker }),
+      node.kicker && /* @__PURE__ */ jsx3("div", { className: "adh-details__kicker", children: node.kicker }),
       /* @__PURE__ */ jsx3("h1", { className: "adh-details__title", children: node.label }),
       /* @__PURE__ */ jsx3("p", { className: "adh-details__lead", children: node.blurb }),
       node.ctas && node.ctas.length > 0 && /* @__PURE__ */ jsx3("div", { className: "adh-details__ctas", children: node.ctas.map((c) => /* @__PURE__ */ jsx3(
