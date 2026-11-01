@@ -108,9 +108,10 @@ final class EventStoreTests: XCTestCase {
         try store.write(batch(SessionUpsert(sessionID: "s", asOf: date(4), startedAt: date(4), endedAt: date(4))),
                         provider: "mock")
         let dump = try XCTUnwrap(try store.canonicalDump().first)
-        XCTAssertTrue(dump.contains("\"started_at\":\(date(4).timeIntervalSince1970)"), dump)
-        XCTAssertTrue(dump.contains("\"ended_at\":\(date(5).timeIntervalSince1970)"), dump)
-        XCTAssertTrue(dump.contains("\"as_of\":\(date(6).timeIntervalSince1970)"), dump)
+        let row = try JSONDecoder().decode([String: JSONValue].self, from: Data(dump.utf8))
+        XCTAssertEqual(row["started_at"], .number(date(4).timeIntervalSince1970))
+        XCTAssertEqual(row["ended_at"], .number(date(5).timeIntervalSince1970))
+        XCTAssertEqual(row["as_of"], .number(date(6).timeIntervalSince1970))
     }
 
     func testAttrsMergePerKeyByAsOf() throws {

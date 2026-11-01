@@ -36,6 +36,8 @@ public final class EventStore: @unchecked Sendable {
 
     private static let scalarFields = ["cwd", "project", "account", "model", "title", "status"]
 
+    /// Opening always runs `CREATE INDEX IF NOT EXISTS`, so a process that died
+    /// mid-bulk-load gets its indexes rebuilt on the next open (correct, but slow).
     public init(path: String) throws {
         self.pool = try BoundedDatabase(
             path: path, readers: 3,
@@ -221,7 +223,8 @@ public final class EventStore: @unchecked Sendable {
             guard let text else { return }
             if let oldAsOf = fieldAsOf[field] {
                 let oldText = currentText(field)
-                let wins = newAsOf > oldAsOf || (newAsOf == oldAsOf && text > oldText)
+                let largerText = oldText.utf8.lexicographicallyPrecedes(text.utf8)
+                let wins = newAsOf > oldAsOf || (newAsOf == oldAsOf && largerText)
                 guard wins else { return }
             }
             fieldAsOf[field] = newAsOf
