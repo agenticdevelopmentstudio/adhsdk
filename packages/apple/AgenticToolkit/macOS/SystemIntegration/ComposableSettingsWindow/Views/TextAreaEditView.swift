@@ -203,10 +203,18 @@ extension ComposableSettings {
         /// With `fitsContent`, the editor is as tall as its wrapped text (never under
         /// the minimum). Waits for a real width: at zero the text wraps one character
         /// to a line and measures absurdly tall.
+        private var lastFitWidth: CGFloat = 0
+        private var lastFitText: String?
+
         private func fitHeightToContent() {
             guard fitsContent, let heightConstraint,
                   let layoutManager = textView.layoutManager, let container = textView.textContainer,
                   scrollView.contentSize.width > 50 else { return }
+            let width = scrollView.contentSize.width
+            let text = textView.string
+            guard width != lastFitWidth || text != lastFitText else { return }
+            lastFitWidth = width
+            lastFitText = text
             layoutManager.ensureLayout(for: container)
             let used = layoutManager.usedRect(for: container).height
                 + textView.textContainerInset.height * 2 + 8

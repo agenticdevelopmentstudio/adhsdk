@@ -93,7 +93,7 @@ public final class PartnerCodeReviewJobSettingsViewController: ComposableSetting
             .init(title: "Guidelines and steps",
                   body: "Guidelines are saved to the job's file under the partner folder. A step is typed into a "
                       + "terminal or into Claude Code when its condition holds. The partner reads both when it "
-                      + "starts, so edits apply the next time it does."),
+                      + "starts, so edits apply the next time it does, or use Restart in the partner window."),
             .init(title: "Crawl interval",
                   body: "How often the crawl runs. Changing it rewrites the job's schedule and restarts its "
                       + "timer, which crawls at once."),
@@ -261,7 +261,8 @@ public final class PartnerCodeReviewJobSettingsViewController: ComposableSetting
                 }
             }
         }
-        reloadSteps()
+        // A text cell already shows what was typed, and rebuilding the rows mid-edit can drop the editor.
+        if column == StepColumn.environment { reloadSteps() }
     }
 
     private func moveSelectedStep(by offset: Int) {
