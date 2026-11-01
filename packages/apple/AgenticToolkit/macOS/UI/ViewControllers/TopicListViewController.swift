@@ -110,6 +110,8 @@ open class TopicListViewController: NSViewController {
         // Use .automatic (not .sourceList) so no internal NSVisualEffectView
         // forces a dark sidebar material regardless of NSApp.appearance.
         outlineView.style = .automatic
+        // The selection draws its own outline; AppKit's focus ring vanishes in a non-key window.
+        outlineView.focusRingType = .none
         outlineView.rowSizeStyle = .default
         // Flat list (no disclosure triangles) — reclaim the per-level indent so
         // the row's own leading inset is the only left margin, keeping the
@@ -651,7 +653,9 @@ extension TopicListViewController: NSOutlineViewDelegate {
         rowViewForItem item: Any
     ) -> NSTableRowView? {
         // Self-themed: it observes the palette and repaints on theme change.
-        return ThemedTableRowView(frame: .zero)
+        let row = ThemedTableRowView(frame: .zero)
+        row.drawsSelectionOutline = true
+        return row
     }
 
     public func outlineViewSelectionDidChange(_ notification: Notification) {
