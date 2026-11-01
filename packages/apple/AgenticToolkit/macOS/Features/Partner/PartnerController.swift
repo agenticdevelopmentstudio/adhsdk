@@ -191,7 +191,6 @@ public final class PartnerController: ObservableObject {
             try PartnerMCPConfig.write(port: endpoint.port, token: endpoint.token, callerID: callerID,
                                        to: paths.mcpConfig)
             let installer = PartnerGuidelinesInstaller(paths: paths)
-            try installer.removeRetiredJob(id: PartnerJobDefaults.retiredGeneralID, store: store)
             jobs = installer.loadGuidelines(jobs: self.jobs())
             try installer.writeJobFiles(jobs: jobs)
             try installer.writeSystemPrompt(jobs: jobs)

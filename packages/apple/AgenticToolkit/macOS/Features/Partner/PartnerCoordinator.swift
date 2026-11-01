@@ -106,7 +106,10 @@ public final class PartnerCoordinator: AppFeature {
                                        projects: projects, notifier: notifier, reviews: reviews)
         super.init()
         featureName = "Coding Partner"
-        // The retired General job goes on every launch, enabled or not; idempotent, so `start()` repeating it is
+        // Before anything reads the allowed tools (Settings, or a start): the partner is off by default, so
+        // migrating only in `start()` showed the defaults in Settings and later overwrote edits made there.
+        UserSettings.migratePartnerAllowedToolsToList(in: settings)
+        // The retired General job goes on every launch, enabled or not, and only here: a leftover file is
         // harmless. Done once here on the main thread, which the store's own calls already allow.
         do {
             try PartnerGuidelinesInstaller(paths: paths)

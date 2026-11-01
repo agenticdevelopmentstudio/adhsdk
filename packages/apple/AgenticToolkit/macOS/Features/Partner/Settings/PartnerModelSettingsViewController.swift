@@ -57,10 +57,10 @@ public final class PartnerModelSettingsViewController: ComposableSettings.Settin
     /// The reason the selection cannot run, or nothing (hidden) while it resolves.
     var noteText: String? {
         let result = PartnerModelChoice.resolve(
-            provider: UserSettings.partnerProvider.value,
-            configurations: UserSettings.aiProviderConfigurations.value,
-            model: { UserSettings.partnerModel(config: $0).value },
-            legacyModel: UserSettings.partnerModel.value)
+            provider: settings.get(UserSettings.partnerProvider),
+            configurations: settings.get(UserSettings.aiProviderConfigurations),
+            model: { [settings] in settings.get(UserSettings.partnerModel(config: $0)) },
+            legacyModel: settings.get(UserSettings.partnerModel))
         if case .failure(let failure) = result { return failure.message }
         return nil
     }

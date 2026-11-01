@@ -72,6 +72,25 @@ final class PartnerCoordinatorTests: XCTestCase {
         status.port = 4321
     }
 
+    func testLaunchMigratesTheOldAllowedToolsWhileThePartnerIsOff() {
+        settings.set("Read Bash(npm run *) mcp__x", for: UserSettings.partnerAllowedToolsLegacy)
+        _ = makeCoordinator()
+        XCTAssertEqual(settings.get(UserSettings.partnerAllowedToolsList), ["Read", "Bash(npm run *)", "mcp__x"])
+        XCTAssertFalse(settings.contains(UserSettings.partnerAllowedToolsLegacy))
+    }
+
+    func testLaunchRemovesTheRetiredGeneralJobAndKeepsCodeReviews() throws {
+        try store.upsert(PartnerJob(id: "general", name: "General", isEnabled: true, guidelines: "g", steps: []))
+        try store.upsert(PartnerJobDefaults.codeReviews())
+        let paths = PartnerPaths(home: directory, token: "kitchen-test")
+        try FileManager.default.createDirectory(at: paths.jobsDirectory, withIntermediateDirectories: true)
+        let file = paths.jobsDirectory.appendingPathComponent("general.md")
+        try "g".write(to: file, atomically: true, encoding: .utf8)
+        _ = makeCoordinator()
+        XCTAssertEqual(try store.jobs().map(\.id), ["code-reviews"])
+        XCTAssertFalse(FileManager.default.fileExists(atPath: file.path))
+    }
+
     func testToolsAreRegisteredOnceAcrossRestarts() {
         let coordinator = makeCoordinator()
         coordinator.startServices()

@@ -22,7 +22,7 @@ public final class PartnerSettingsPanelViewController: ComposableSettings.Settin
         self.settings = settings
         super.init(with: ComposableSettings.SettingsPanelDescriptor(
             title: "Coding Partner",
-            icon: NSImage(systemSymbolName: "person.2.wave.2", accessibilityDescription: nil)))
+            icon: NSImage(systemSymbolName: "checklist", accessibilityDescription: nil)))
         sidebarTitle = "Coding Partner"
     }
 
