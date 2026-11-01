@@ -9,7 +9,8 @@ public final class PartnerModelSettingsViewController: ComposableSettings.Settin
 
     private let pluginManager: AIPluginManager?
     private let settings: SettingsStore
-    private let note = NSTextField(wrappingLabelWithString: "")
+    /// Self-hiding, so its card row closes up while the selection can run.
+    private let note = ComposableSettings.ExplanationView(withText: "")
     private var providerObserver: UserSettingObserver<String>?
     private var configurationsObserver: UserSettingObserver<[AIProviderConfiguration]>?
 
@@ -42,7 +43,6 @@ public final class PartnerModelSettingsViewController: ComposableSettings.Settin
             selectedSetting: UserSettings.partnerProvider,
             leadingChoices: [.init(label: "Default (Claude Code)", value: "")],
             modelSetting: { id, _ in UserSettings.partnerModel(config: id) }))
-        note.textColor = .secondaryLabelColor
         _ = note.accessibilityID("settings.partner.model.note")
         group.addSettingSubview(note)
         addGroup(group)
@@ -67,7 +67,7 @@ public final class PartnerModelSettingsViewController: ComposableSettings.Settin
 
     private func refreshNote() {
         let text = noteText
-        note.stringValue = text ?? ""
+        note.text = text ?? ""
         note.isHidden = text == nil
     }
 }

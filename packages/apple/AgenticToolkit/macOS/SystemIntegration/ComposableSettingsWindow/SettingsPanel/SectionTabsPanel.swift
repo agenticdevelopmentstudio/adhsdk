@@ -20,6 +20,10 @@ extension ComposableSettings {
     ///
     ///     Workspace  | [Browser] [Git] [Projects] [Terminal]
     ///
+    /// A section holding a single panel shows no tab bar: one segment chooses
+    /// nothing, and over a panel with its own sub-topics it would stack a tab
+    /// over a second level of navigation. The panel fills the topic instead.
+    ///
     /// The tabs keep the order they are handed over in; `AppCoordinator` hands
     /// them over alphabetised. The selected tab survives `setPanels` when its
     /// panel is still among the new ones, so a panel added late never moves
@@ -44,6 +48,8 @@ extension ComposableSettings {
         private let tabs = NSSegmentedControl(
             labels: [], trackingMode: .selectOne, target: nil, action: nil)
         private let content = NSView()
+        private var contentBelowTabs: NSLayoutConstraint?
+        private var contentAtTop: NSLayoutConstraint?
         private var shown: (any ComposableSettingsPanel)?
 
         public init(section: String, icon: NSImage?) {
@@ -63,11 +69,12 @@ extension ComposableSettings {
             content.translatesAutoresizingMaskIntoConstraints = false
             root.addSubview(tabs)
             root.addSubview(content)
+            contentBelowTabs = content.topAnchor.constraint(equalTo: tabs.bottomAnchor, constant: 8)
+            contentAtTop = content.topAnchor.constraint(equalTo: root.topAnchor)
             NSLayoutConstraint.activate([
                 tabs.topAnchor.constraint(equalTo: root.topAnchor, constant: 12),
                 tabs.centerXAnchor.constraint(equalTo: root.centerXAnchor),
                 tabs.leadingAnchor.constraint(greaterThanOrEqualTo: root.leadingAnchor, constant: 12),
-                content.topAnchor.constraint(equalTo: tabs.bottomAnchor, constant: 8),
                 content.leadingAnchor.constraint(equalTo: root.leadingAnchor),
                 content.trailingAnchor.constraint(equalTo: root.trailingAnchor),
                 content.bottomAnchor.constraint(equalTo: root.bottomAnchor)
@@ -102,7 +109,13 @@ extension ComposableSettings {
             show(panel)
         }
 
+        /// Whether the tab bar shows: only when there is more than one tab.
+        var showsTabs: Bool { containedPanels.count > 1 }
+
         private func rebuildTabs() {
+            tabs.isHidden = !showsTabs
+            contentAtTop?.isActive = !showsTabs
+            contentBelowTabs?.isActive = showsTabs
             tabs.segmentCount = containedPanels.count
             for (index, panel) in containedPanels.enumerated() {
                 tabs.setLabel(panel.descriptor.title, forSegment: index)

@@ -42,7 +42,7 @@ public final class PartnerCodeReviewJobSettingsViewController: ComposableSetting
     let stepsCard = ComposableSettings.EditableTableCard(
         title: "Steps",
         columns: [
-            .init(id: StepColumn.name, title: "Name", width: 120, kind: .text(editable: true)),
+            .init(id: StepColumn.name, title: "Name", width: 135, kind: .text(editable: true)),
             .init(id: StepColumn.environment, title: "Environment", width: 110, kind: .popUp,
                   fitsWidestChoice: true),
             .init(id: StepColumn.command, title: "Command", width: 260, kind: .text(editable: true)),
