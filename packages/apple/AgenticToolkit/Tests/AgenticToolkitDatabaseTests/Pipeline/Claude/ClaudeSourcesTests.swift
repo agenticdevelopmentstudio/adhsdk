@@ -509,14 +509,74 @@ final class ClaudeSourcesTests: XCTestCase {
             try transcript("c\(index)", lines: (1...5).map { Self.userLine(index * 10 + $0, session: "c\(index)") },
                            mtime: base.addingTimeInterval(TimeInterval(index)))
         }
+        // A line Claude wrote twice verbatim: one dedup key, two line numbers.
+        let repeated = Self.userLine(90, session: "c-repeat")
+        try transcript("c-repeat", lines: [repeated, Self.userLine(91, session: "c-repeat"), repeated],
+                       mtime: base.addingTimeInterval(5))
         let projects = projectsDir!
-        let failures = try ProviderConformance.checkSource(
-            provider: ClaudeProvider.name, workDirectory: tmpDir
-        ) { injector in
+        let makeSource: ((@Sendable (SourceStep) throws -> Void)?) throws -> any IngestSource = { injector in
             ClaudeTranscriptSource(projectsDirectory: projects, filesPerPoll: 1, linesPerChunk: 2,
                                    faultInjector: injector)
         }
+        let failures = try ProviderConformance.checkSource(
+            provider: ClaudeProvider.name, workDirectory: tmpDir,
+            equivalent: ClaudeNormalizer().isEquivalent, makeSource: makeSource)
         XCTAssertEqual(failures, [])
+
+        // Byte equality would report the repeat; the normalizer's equivalence is what admits it.
+        let byBytes = try ProviderConformance.checkSource(
+            provider: ClaudeProvider.name, workDirectory: tmpDir, makeSource: makeSource)
+        XCTAssertEqual(Set(byBytes.map(\.check)), ["sourceDuplicated", "keyCollision"], "\(byBytes)")
+    }
+
+    /// Blank and non-UTF-8 lines after the last record move the cursor with no
+    /// records, so the next wake neither re-scans nor re-archives them.
+    func testTrailingBlankAndUndecodableLinesStepTheCursorWithoutRecords() throws {
+        let lines = [Self.userLine(1), Self.userLine(2)]
+        let url = try transcript(Self.sessionID, lines: lines, mtime: base)
+        let handle = try FileHandle(forWritingTo: url)
+        try handle.seekToEnd()
+        try handle.write(contentsOf: Data("\n\n".utf8) + Data([0xFF, 0xFE, 0xC3, 0x28, 0x0A]))
+        try handle.close()
+        try setMTime(url, base.addingTimeInterval(1))
+        let size = try XCTUnwrap(
+            (try FileManager.default.attributesOfItem(atPath: url.path)[.size] as? NSNumber)?.intValue)
+
+        let source = ClaudeTranscriptSource(projectsDirectory: projectsDir, linesPerChunk: 1)
+        XCTAssertEqual(try source.poll(into: spool), 2)
+        let cursor = try XCTUnwrap(try spool.sourceState(ClaudeTranscriptSource.cursorKey(for: url)))
+        let object = try XCTUnwrap(try JSONSerialization.jsonObject(with: cursor) as? [String: Any])
+        XCTAssertEqual(object["byte_offset"] as? Int, size, "the cursor steps over the trailing junk")
+        XCTAssertEqual(object["line_no"] as? Int, 2)
+        XCTAssertEqual(try source.poll(file: url, into: spool), 0)
+        XCTAssertEqual(try payloads().map(\.line), lines)
+
+        // A record after the junk continues the numbering from the cursor.
+        try appendText(Self.userLine(3) + "\n", to: url, mtime: base.addingTimeInterval(2))
+        XCTAssertEqual(try source.poll(file: url, into: spool), 1)
+        XCTAssertEqual(try payloads().map(\.lineNo), [1, 2, 3])
+    }
+
+    /// Each chunk's offset ends just past its own last line — never past a skipped
+    /// line that follows it — so a crash between chunks re-reads only unarchived bytes.
+    func testChunkOffsetsEndAtEachChunksLastLineAcrossSkippedLines() throws {
+        let first = Self.userLine(1), second = Self.userLine(2), third = Self.userLine(3)
+        let url = try transcript("chunks", lines: [first, "", second, "", third])
+        var chunks: [(lines: [String], through: Int64)] = []
+        let result = try JSONLScanner.streamCompleteLineChunks(at: url, linesPerChunk: 2, bufferSize: 64) {
+            chunks.append(($0, $1))
+        }
+        let len = { (line: String) in Int64(line.utf8.count + 1) }
+        XCTAssertEqual(chunks.map(\.lines), [[first, second], [third]])
+        XCTAssertEqual(chunks.map(\.through),
+                       [len(first) + 1 + len(second), len(first) + 1 + len(second) + 1 + len(third)])
+        XCTAssertEqual(result.bytesConsumed, chunks.last?.through)
+
+        // Resuming from the first chunk's offset yields exactly the rest.
+        var resumed: [[String]] = []
+        _ = try JSONLScanner.streamCompleteLineChunks(
+            at: url, startingAtByte: chunks[0].through, linesPerChunk: 2) { lines, _ in resumed.append(lines) }
+        XCTAssertEqual(resumed, [[third]])
     }
 }
 

@@ -127,7 +127,9 @@ public enum ProviderConformance {
     /// inject. Every source it builds reads the same input.
     /// - sourceEmpty: an uninterrupted run (poll until it returns 0) spools nothing.
     /// - sourceDuplicated: an uninterrupted run spools some dedup key more than once.
-    /// - keyCollision: the run spools one dedup key for different payloads.
+    /// - keyCollision: the run spools one dedup key for payloads `equivalent` rejects (pass the
+    ///   provider normalizer's `isEquivalent`; the default is byte equality). Byte-distinct records
+    ///   that are all equivalent under one key are not `sourceDuplicated` either.
     /// - sourceCrash: for every `SourceStep`, crash once there, then poll to the end with a fresh
     ///   source; the spooled (key, payload) multiset equals the uninterrupted run's. Also fails when
     ///   the fault never fired.
@@ -135,6 +137,7 @@ public enum ProviderConformance {
     /// Works in a fresh subdirectory of `workDirectory`, which is the only thing removed.
     public static func checkSource(
         provider: String, workDirectory: URL, maxPolls: Int = 10_000,
+        equivalent: (_ archived: RawRecord, _ incoming: RawRecord) -> Bool = { $0.payload == $1.payload },
         makeSource: (_ faultInjector: (@Sendable (SourceStep) throws -> Void)?) throws -> any IngestSource
     ) throws -> [ConformanceFailure] {
         var failures: [ConformanceFailure] = []
@@ -172,13 +175,17 @@ public enum ProviderConformance {
         if baseline.isEmpty {
             failures.append(ConformanceFailure(check: "sourceEmpty", detail: "an uninterrupted run spooled nothing"))
         }
-        var counts: [String: Int] = [:]
-        for record in baseline { counts[record.dedupKey, default: 0] += 1 }
-        for (key, count) in counts.sorted(by: { $0.key < $1.key }) where count > 1 {
+        var byKey: [String: [RawRecord]] = [:]
+        for record in baseline { byKey[record.dedupKey, default: []].append(record) }
+        for (key, records) in byKey.sorted(by: { $0.key < $1.key }) where records.count > 1 {
+            // Distinct occurrences the provider calls equivalent (a transcript line repeated
+            // verbatim) are legitimate; a byte-identical repeat is the source re-spooling a record.
+            let distinctBytes = Set(records.map(\.payload)).count == records.count
+            if distinctBytes && records.dropFirst().allSatisfy({ equivalent(records[0], $0) }) { continue }
             failures.append(ConformanceFailure(
-                check: "sourceDuplicated", detail: "\(key) spooled \(count) times in one uninterrupted run"))
+                check: "sourceDuplicated", detail: "\(key) spooled \(records.count) times in one uninterrupted run"))
         }
-        failures += checkCollisions(baseline, check: "keyCollision")
+        failures += checkCollisions(baseline, check: "keyCollision", equivalent: equivalent)
         let expected = multiset(baseline)
 
         for step in SourceStep.allCases {
