@@ -128,26 +128,23 @@ final class PartnerCodeReviewJobSettingsTests: XCTestCase {
         XCTAssertEqual(settings.get(UserSettings.partnerAllowedToolsList).count, count, "an empty cell removes it")
     }
 
-    // MARK: - Toolbar status
+    // MARK: - Partner card queue
 
-    func testTheStatusShowsTheQueueWhileReviewsAreEnabled() {
-        let queue = PartnerToolbar.ReviewQueue(waiting: 2, running: 1, done: 3)
-        XCTAssertEqual(PartnerToolbar.statusText(state: .idle, jobs: ["Code reviews"], queue: queue,
-                                                 reviewsEnabled: true),
-                       "Idle · Code reviews · queue: 2 waiting · 1 running · 3 done")
-        XCTAssertEqual(PartnerToolbar.statusText(state: .idle, jobs: ["Code reviews"],
-                                                 queue: .init(waiting: 0, running: 0, done: 0), reviewsEnabled: true),
-                       "Idle · Code reviews · queue: 0 waiting · 0 running · 0 done")
+    func testTheQueueShowsWhileReviewsAreEnabled() {
+        let queue = PartnerCardSource.ReviewQueue(waiting: 2, running: 1, done: 3)
+        XCTAssertEqual(PartnerCardSource.queueText(queue, reviewsEnabled: true),
+                       "queue: 2 waiting · 1 running · 3 done")
+        XCTAssertEqual(PartnerCardSource.queueText(.init(waiting: 0, running: 0, done: 0), reviewsEnabled: true),
+                       "queue: 0 waiting · 0 running · 0 done")
     }
 
-    func testTheStatusHidesAnEmptyQueueWhileReviewsAreOff() {
-        let empty = PartnerToolbar.ReviewQueue(waiting: 0, running: 0, done: 0)
-        let finished = PartnerToolbar.ReviewQueue(waiting: 0, running: 0, done: 4)
-        XCTAssertEqual(PartnerToolbar.statusText(state: .stopped, jobs: [], queue: empty, reviewsEnabled: false),
-                       "Stopped")
-        XCTAssertEqual(PartnerToolbar.statusText(state: .stopped, jobs: [], queue: finished, reviewsEnabled: false),
-                       "Stopped · queue: 0 waiting · 0 running · 4 done")
-        XCTAssertEqual(PartnerToolbar.statusText(state: .idle, jobs: [], queue: nil, reviewsEnabled: true), "Idle")
+    func testAnEmptyQueueHidesWhileReviewsAreOff() {
+        let empty = PartnerCardSource.ReviewQueue(waiting: 0, running: 0, done: 0)
+        let finished = PartnerCardSource.ReviewQueue(waiting: 0, running: 0, done: 4)
+        XCTAssertNil(PartnerCardSource.queueText(empty, reviewsEnabled: false))
+        XCTAssertEqual(PartnerCardSource.queueText(finished, reviewsEnabled: false),
+                       "queue: 0 waiting · 0 running · 4 done")
+        XCTAssertNil(PartnerCardSource.queueText(nil, reviewsEnabled: true))
     }
 
     // MARK: - Card summary

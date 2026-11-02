@@ -6,6 +6,10 @@ import os
 /// The Coding Partner window: tab cards and one content pane, built from the same shared components as the
 /// Projects window, and "Notifications" as the inspector.
 ///
+/// Its panes are framed exactly as a Projects window's: each is a ``PartnerPaneViewController`` on the shared
+/// pane backdrop, the gap between the center and Notifications is a ``PaneSplitView`` gutter, and the space
+/// around them is the window's pane spacing.
+///
 /// The content item is a ``MultiTabbedViewController`` with only its left edge on. Its first tab is the
 /// partner, which cannot be closed; each live session the partner opened adds another after it. Selecting a
 /// card shows that tab's pane in the center.
@@ -14,12 +18,17 @@ import os
 /// controller does not: which attention item, if any, the owner is discussing. The next line the composer
 /// sends goes to the partner as the reply to that item, and ends the discussion.
 @MainActor
-public final class PartnerSplitViewController: NSSplitViewController {
+public final class PartnerSplitViewController: ThemedSplitViewController {
 
     public let attention: AttentionPaneViewController
     /// The partner's transcript, for prefilling and focusing the composer.
     let chat: PartnerChatViewController
     let tabbed = MultiTabbedViewController()
+    /// Hosts Notifications with no tabs, so it sits on the same backdrop, with the same outer spacing, as the
+    /// center.
+    let notificationsHost = MultiTabbedViewController()
+    /// Start/Stop, Restart and New Conversation, shared by the toolbar and the Partner pane's gear menu.
+    let commands: PartnerCommands
     /// The partner's tab. Fixed, so a selection can name it.
     let partnerTabID = UUID()
 
@@ -30,7 +39,8 @@ public final class PartnerSplitViewController: NSSplitViewController {
     private let controller: PartnerController
     private var attentionItem: NSSplitViewItem!
     private var notificationsPane: PartnerPaneViewController!
-    private var cards: [UUID: (card: TabPaneViewController, source: TabPaneDataSource)] = [:]
+    /// Internal for tests.
+    private(set) var cards: [UUID: (card: TabPaneViewController, source: TabPaneDataSource)] = [:]
     /// The attention item the owner pressed Discuss on and has not replied to yet.
     private var discussionItemID: String?
     private var subscriptions: Set<AnyCancellable> = []
@@ -38,10 +48,10 @@ public final class PartnerSplitViewController: NSSplitViewController {
     private var spacingObservers: [UserSettingObserver<Int>] = []
     private var backdropObserver: ThemePaletteObserver?
     private var paneVisibleObserver: UserSettingObserver<Bool>?
-    private var collapseObservation: NSKeyValueObservation?
 
     public init(controller: PartnerController) {
         self.controller = controller
+        commands = PartnerCommands(controller: controller)
         attention = AttentionPaneViewController(model: AttentionPaneModel(
             store: controller.store,
             retentionDays: { UserSettings.partnerAttentionRetentionDays.value }))
@@ -50,11 +60,15 @@ public final class PartnerSplitViewController: NSSplitViewController {
         chat = PartnerChatViewController(controller: controller) { text in route?(text) }
         super.init(nibName: nil, bundle: nil)
         route = { [weak self] text in self?.sendFromComposer(text) }
+        commands.window = { [weak self] in self?.view.window }
         wireAttention()
     }
 
     @available(*, unavailable)
     required init?(coder: NSCoder) { fatalError("init(coder:) is not supported") }
+
+    /// The Projects window's split view: a divider as wide as the user's gutter, painted as backdrop.
+    public override func makeSplitView() -> ThemedSplitView { PaneSplitView() }
 
     public override func viewDidLoad() {
         super.viewDidLoad()
@@ -68,13 +82,16 @@ public final class PartnerSplitViewController: NSSplitViewController {
         notificationsPane = PartnerPaneViewController(
             title: "Notifications", content: attention, showsCloseButton: false)
         notificationsPane.host = self
-        let attentionItem = NSSplitViewItem(inspectorWithViewController: notificationsPane)
+        for edge in [Edge.top, .left, .bottom, .right] { notificationsHost.setEdgeEnabled(edge, false) }
+        notificationsHost.mainContentViewController = notificationsPane
+        let attentionItem = NSSplitViewItem(inspectorWithViewController: notificationsHost)
         attentionItem.minimumThickness = 260
         attentionItem.canCollapse = true
         attentionItem.isCollapsed = !UserSettings.partnerAttentionPaneVisible.value
         addSplitViewItem(attentionItem)
         self.attentionItem = attentionItem
         bindAttentionVisibility()
+        applySpacing()
 
         observeTabs()
         syncTabs()
@@ -88,21 +105,54 @@ public final class PartnerSplitViewController: NSSplitViewController {
         tabbed.delegate = self
         tabbed.setEdgeEnabled(.top, false)
         tabbed.setEdgeEnabled(.left, true)
-        ComposableTabsWindowController.applyPaneSpacing(PaneSpacing.contentInsets, to: tabbed)
         spacingObservers = PaneSpacing.edgeSettings.values.map { setting in
+            UserSettingObserver(setting) { [weak self] _ in self?.applySpacing() }
+        } + PaneSpacing.gutterSettings.values.map { setting in
             UserSettingObserver(setting) { [weak self] _ in
-                guard let tabbed = self?.tabbed else { return }
-                ComposableTabsWindowController.applyPaneSpacing(PaneSpacing.contentInsets, to: tabbed)
+                (self?.splitView as? PaneSplitView)?.spacingDidChange()
             }
         }
         backdropObserver = ThemePaletteObserver(host: tabbed.view) { [weak self] palette in
-            self?.tabbed.centerBackgroundColor = NSColor(palette.projectPaneBackdrop)
-            self?.tabbed.centerOutlineColor = NSColor(palette.projectPaneOutline)
-            self?.view.window?.backgroundColor = NSColor(palette.projectPaneBackdrop)
+            guard let self else { return }
+            for host in [self.tabbed, self.notificationsHost] {
+                host.centerBackgroundColor = NSColor(palette.projectPaneBackdrop)
+                host.centerOutlineColor = NSColor(palette.projectPaneOutline)
+            }
+            self.view.window?.backgroundColor = NSColor(palette.projectPaneBackdrop)
         }
+        let commands = commands
         addTab(id: partnerTabID, source: PartnerCardSource(controller: controller),
                pane: PartnerPaneViewController(
-                   title: "Partner", content: chat, showsCloseButton: false), closable: false)
+                   title: "Partner", content: chat, showsCloseButton: false,
+                   menuItems: { commands.menuItems() }), closable: false)
+    }
+
+    /// Whether Notifications showed when the spacing was last applied.
+    private var spacedForNotifications: Bool?
+
+    /// Notifications showing or hiding (the toolbar toggle, a drag, the setting) resizes the split's panes. It
+    /// moves the center's right inset, and a change made in the window is written back to the setting.
+    public override func splitViewDidResizeSubviews(_ notification: Notification) {
+        super.splitViewDidResizeSubviews(notification)
+        guard let item = attentionItem else { return }
+        let visible = !item.isCollapsed
+        if spacedForNotifications != visible { applySpacing() }
+        if UserSettings.partnerAttentionPaneVisible.value != visible {
+            UserSettings.partnerAttentionPaneVisible.value = visible
+        }
+    }
+
+    /// The window's pane spacing around both hosts. The gap between them is the split's gutter, so the
+    /// center's right inset applies only while Notifications is hidden, and Notifications never has a left one.
+    private func applySpacing() {
+        var center = PaneSpacing.contentInsets
+        let notificationsShown = attentionItem.map { !$0.isCollapsed } ?? false
+        spacedForNotifications = notificationsShown
+        if notificationsShown { center.right = 0 }
+        ComposableTabsWindowController.applyPaneSpacing(center, to: tabbed)
+        var side = PaneSpacing.contentInsets
+        side.left = 0
+        notificationsHost.contentInsets = side
     }
 
     private func addTab(id: UUID, source: TabPaneDataSource, pane: PartnerPaneViewController, closable: Bool,
@@ -293,20 +343,12 @@ public final class PartnerSplitViewController: NSSplitViewController {
         }
     }
 
-    /// The inspector follows the setting, and a toggle in the window writes it back.
+    /// The inspector follows the setting; a toggle in the window writes it back from
+    /// `splitViewDidResizeSubviews`.
     private func bindAttentionVisibility() {
         paneVisibleObserver = UserSettingObserver(UserSettings.partnerAttentionPaneVisible) { [weak self] visible in
             guard let item = self?.attentionItem, item.isCollapsed == visible else { return }
             item.animator().isCollapsed = !visible
-        }
-        collapseObservation = attentionItem.observe(\.isCollapsed, options: [.new]) { [weak self] _, _ in
-            MainActor.assumeIsolated {
-                guard let item = self?.attentionItem else { return }
-                let visible = !item.isCollapsed
-                if UserSettings.partnerAttentionPaneVisible.value != visible {
-                    UserSettings.partnerAttentionPaneVisible.value = visible
-                }
-            }
         }
     }
 }

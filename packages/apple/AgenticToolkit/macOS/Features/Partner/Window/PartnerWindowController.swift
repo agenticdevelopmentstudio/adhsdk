@@ -53,7 +53,7 @@ public final class PartnerWindowController: SingleWindowController {
     private init(controller: PartnerController) {
         let split = PartnerSplitViewController(controller: controller)
         splitViewController = split
-        toolbar = PartnerToolbar(controller: controller)
+        toolbar = PartnerToolbar(controller: controller, commands: split.commands)
         configDialog = WindowOptionsDialog(title: "Coding Partner Window") {
             [
                 ComposableSettings.CheckboxView(

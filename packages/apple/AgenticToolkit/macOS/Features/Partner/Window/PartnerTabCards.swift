@@ -63,7 +63,31 @@ final class PartnerCardSource: TabPaneDataSource {
     func tabPaneBranch(_ pane: TabPaneViewController) -> String? { nil }
 
     func tabPaneSummary(_ pane: TabPaneViewController) -> String? {
-        PartnerToolbar.currentQueueText(store: controller.store)
+        Self.currentQueueText(store: controller.store)
+    }
+
+    /// The review counts the card shows.
+    struct ReviewQueue: Equatable {
+        var waiting: Int
+        var running: Int
+        var done: Int
+    }
+
+    /// "queue: Q waiting · R running · D done", shown while the code-reviews job is enabled, and after it is
+    /// turned off while any review is still listed. Nil when there is nothing to show or the counts are
+    /// unreadable.
+    static func queueText(_ queue: ReviewQueue?, reviewsEnabled: Bool) -> String? {
+        guard let queue, reviewsEnabled || queue != ReviewQueue(waiting: 0, running: 0, done: 0) else { return nil }
+        return "queue: \(queue.waiting) waiting · \(queue.running) running · \(queue.done) done"
+    }
+
+    /// The review queue as the store reports it now; nil when it cannot be read.
+    static func currentQueueText(store: PartnerStore) -> String? {
+        let enabled = ((try? store.jobs()) ?? []).filter(\.isEnabled)
+        let queue = (try? store.reviewCounts()).map {
+            ReviewQueue(waiting: $0.queued, running: $0.running, done: $0.done)
+        }
+        return queueText(queue, reviewsEnabled: enabled.contains { $0.id == PartnerJobDefaults.codeReviewsID })
     }
 }
 
@@ -116,7 +140,9 @@ final class SessionCardSource: TabPaneDataSource {
     }
 }
 
-/// The shared pane with a fixed title, wrapping the content it is given. Zoom and minimize are not offered.
+/// The shared pane with a fixed title, wrapping the content it is given, framed exactly as a Projects window
+/// pane is: on `ComposableTabsPaneBackgroundView`, which draws every pane's border and the active pane's
+/// outline, and takes part in the same click-to-activate tracking. Zoom and minimize are not offered.
 @MainActor
 final class PartnerPaneViewController: PaneViewController {
 
@@ -126,19 +152,29 @@ final class PartnerPaneViewController: PaneViewController {
     private let content: NSViewController
     /// False for a pane that cannot be closed (the partner, the Notifications pane): it shows no × at all.
     let showsCloseButton: Bool
+    /// The pane's own items in its gear menu, made each time the menu opens.
+    private let menuItems: () -> [NSMenuItem]
+    /// Names this pane to the active-pane tracker, as a layout node names a Projects window pane.
+    let nodeID = UUID()
 
-    init(title: String, content: NSViewController, sessionID: UUID? = nil, showsCloseButton: Bool = true) {
+    init(title: String, content: NSViewController, sessionID: UUID? = nil, showsCloseButton: Bool = true,
+         menuItems: @escaping () -> [NSMenuItem] = { [] }) {
         paneTitle = title
         self.showsCloseButton = showsCloseButton
         self.content = content
         self.sessionID = sessionID
+        self.menuItems = menuItems
         super.init(stateStore: EphemeralPaneStateStore())
     }
 
     @available(*, unavailable)
     required init?(coder: NSCoder) { fatalError("init(coder:) is not supported") }
 
+    override func makeContainerView() -> NSView { ComposableTabsPaneBackgroundView(nodeID: nodeID) }
+    /// Room for the border the backdrop draws, the same number a Projects window pane uses.
+    override var contentInset: CGFloat { ComposableTabsPaneBackgroundView.borderInset }
     override func makeContentViewController() -> NSViewController? { content }
+    override func makeMenuItems() -> [NSMenuItem] { menuItems() }
     override var fallbackTitle: String { paneTitle }
     override var paneAccessibilityIdentifier: String { "partner.pane" }
 

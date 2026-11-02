@@ -300,10 +300,15 @@ final class PartnerCoordinatorTests: XCTestCase {
             supersededBy: [])
     }
 
-    func testAReviewsWriteRefreshesTheToolbarQueue() async throws {
+    /// A reviews write made off the main actor reaches the partner's card, where the queue is shown.
+    func testAReviewsWriteOffTheMainActorRefreshesThePartnerCardQueue() async throws {
         let coordinator = makeCoordinator()
-        let toolbar = PartnerToolbar(controller: coordinator.controller)
-        XCTAssertFalse(toolbar.statusLabel.stringValue.contains("queue"), toolbar.statusLabel.stringValue)
+        let split = PartnerSplitViewController(controller: coordinator.controller)
+        split.loadViewIfNeeded()
+        let card = try XCTUnwrap(split.cards[split.partnerTabID]?.card)
+        card.loadViewIfNeeded()
+        let summary = { card.paneView.summaryLabel.stringValue }
+        XCTAssertFalse(summary().contains("1 running"), summary())
         let store = self.store!
         let running = review("aaa", state: .running)
         let queued = review("bbb", state: .queued)
@@ -314,8 +319,24 @@ final class PartnerCoordinatorTests: XCTestCase {
             try store.insertReview(done)
         }.value
         let expected = "queue: 1 waiting · 1 running · 1 done"
-        await waitUntil { toolbar.statusLabel.stringValue.contains(expected) }
-        XCTAssertTrue(toolbar.statusLabel.stringValue.hasSuffix(expected), toolbar.statusLabel.stringValue)
+        await waitUntil { summary().contains(expected) }
+        XCTAssertTrue(summary().contains(expected), summary())
+    }
+
+    func testStartStopIsALabelledButtonDisabledWhileThePartnerIsOff() {
+        settings.set(false, for: UserSettings.partnerEnabled)
+        let coordinator = makeCoordinator()
+        let split = PartnerSplitViewController(controller: coordinator.controller)
+        let toolbar = PartnerToolbar(controller: coordinator.controller, commands: split.commands)
+        XCTAssertEqual(toolbar.startStopButton.title, "Start")
+        XCTAssertFalse(toolbar.startStopButton.isEnabled)
+        XCTAssertEqual(toolbar.startStopButton.toolTip, "Turn on the Coding Partner in Settings to start it")
+    }
+
+    func testThePartnerPaneGearMenuOffersThePartnerCommands() {
+        let coordinator = makeCoordinator()
+        let split = PartnerSplitViewController(controller: coordinator.controller)
+        XCTAssertEqual(split.commands.menuItems().map(\.title), ["Start", "Restart", "New Conversation…"])
     }
 
     func testQuitTurnFitsTheFlushBudget() {
@@ -374,20 +395,6 @@ final class PartnerCoordinatorTests: XCTestCase {
         try? await Task.sleep(for: .milliseconds(200))
         XCTAssertTrue(log.all.isEmpty)
         XCTAssertEqual(coordinator.controller.state, .stopped)
-    }
-
-    // MARK: - Window subscribers fed off the main actor
-
-    func testAJobsWriteOffTheMainActorRefreshesTheToolbar() async throws {
-        let coordinator = makeCoordinator()
-        let toolbar = PartnerToolbar(controller: coordinator.controller)
-        let store = self.store!
-        try await Task.detached {
-            try store.upsert(PartnerJob(id: "offmain", name: "Off Main", isEnabled: true, guidelines: "",
-                                        steps: []))
-        }.value
-        await waitUntil { toolbar.statusLabel.stringValue.contains("Off Main") }
-        XCTAssertTrue(toolbar.statusLabel.stringValue.contains("Off Main"), toolbar.statusLabel.stringValue)
     }
 
     // MARK: - References
