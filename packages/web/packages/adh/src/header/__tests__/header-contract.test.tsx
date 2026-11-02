@@ -351,18 +351,20 @@ describe('AdhHeader (registry-free)', () => {
     expect(name.textContent).toBe('mikefullerton')
   })
 
-  // The trigger is the avatar ALONE. The name is still its accessible name (asserted by
-  // the getByRole above), so this is about the printed copy, not about a11y.
+  // The account control is SPLIT: [first name + avatar] is a link Home, and the menu
+  // trigger beside it prints nothing but its chevron. The name is still the trigger's
+  // accessible name (asserted by the getByRole above).
   //
-  // Asserted as an EQUALITY on the trigger's whole text, not as "does it contain the
-  // name": the only characters the trigger may print are the avatar's own initials
-  // fallback, so any re-introduced name/slug/email span fails this line whatever it
-  // is called. (`toContain('Mike Fullerton')` would pass a trigger that printed the
-  // slug instead.)
-  it('prints only the avatar beside the trigger — no name, slug or email', () => {
-    render(<AdhHeader siteName="Hub" user={{ name: 'Mike Fullerton' }} />)
+  // Asserted as EQUALITIES on whole text, not as "does it contain": the Home half may
+  // print the first name and the avatar's initials and nothing else — so a full name,
+  // the slug or the email creeping back in fails this whatever span it rides in — and
+  // the trigger may print nothing at all.
+  it('prints the first name and avatar on the Home half, and nothing on the menu trigger', () => {
+    render(<AdhHeader siteName="Hub" user={{ name: 'Mike Fullerton', fullName: 'Mike Fullerton' }} />)
     const trigger = screen.getByRole('button', { name: 'Open Mike Fullerton menu' })
-    expect(trigger.textContent).toBe('MF')
+    expect(trigger.textContent).toBe('')
+    const home = screen.getByRole('link', { name: 'Home (Mike)' })
+    expect(home.textContent).toBe('MikeMF')
   })
 })
 

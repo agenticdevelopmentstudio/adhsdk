@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, afterEach } from 'vitest'
 import { render, screen } from '@testing-library/react'
+import { siteUrl } from '@agentic-toolkit/adh-registry'
 
 // The equivalence test for Task 5.6's split. `AdhHeader` (now
 // `@agentic-toolkit/adh/header`) resolves NOTHING about adh — it takes a site name,
@@ -185,6 +186,23 @@ describe('SiteHeader', () => {
       expect(href).toContain(path)
       expect(href).toContain('return_to=')
     }
+  })
+
+  it("points the avatar's Home at the HUB's /home from a satellite, never at the satellite's own", () => {
+    // The bug: on help.agenticdeveloperhub.com, Home reloaded help's own /home. The hub's
+    // /home is the one that resolves the visitor's workspace.
+    render(<SiteHeader siteId="hub-help" />)
+    // Compared against the registry's own URLs for this host (jsdom's is localhost, so
+    // these are the dev ports), not spelled: the claim is "the hub's, not help's".
+    const host = window.location.host
+    const href = String(headerProps.current?.homeHref ?? '')
+    expect(href).toBe(siteUrl('hub', '/home', host))
+    expect(href).not.toBe(siteUrl('hub-help', '/home', host))
+  })
+
+  it("keeps the avatar's Home a relative /home on the hub itself", () => {
+    render(<SiteHeader siteId="hub" />)
+    expect(headerProps.current?.homeHref).toBe('/home')
   })
 
   it('lets a site override the auth hrefs the registry would otherwise supply', () => {

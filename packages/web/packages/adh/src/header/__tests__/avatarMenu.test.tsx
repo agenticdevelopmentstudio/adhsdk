@@ -144,4 +144,30 @@ describe("AvatarMenu", () => {
     const row = await screen.findByRole("menuitem", { name: "Debug Options" });
     expect(row).toHaveAccessibleDescription("");
   });
+
+  it("labels the bar with the first name when the account has one", () => {
+    render(<AvatarMenu user={userWithSlug} homeHref="/home" onLogout={vi.fn()} />);
+    const home = screen.getByRole("link", { name: "Home (Mike)" });
+    expect(home).toHaveTextContent("Mike");
+    expect(home.getAttribute("href")).toBe("/home");
+  });
+
+  it("falls back to the slug when no personal name is known", () => {
+    render(<AvatarMenu user={{ name: "mikefullerton", slug: "mikefullerton" }} onLogout={vi.fn()} />);
+    expect(screen.getByRole("link", { name: "Home (mikefullerton)" })).toHaveTextContent("mikefullerton");
+  });
+
+  it("is a split control: the name + avatar half goes Home, the chevron half opens the menu", async () => {
+    render(<AvatarMenu user={user} homeHref="https://agenticdeveloperhub.com/home" onLogout={vi.fn()} />);
+    const home = screen.getByRole("link", { name: "Home (Mike)" });
+    expect(home.getAttribute("href")).toBe("https://agenticdeveloperhub.com/home");
+    // Following the Home half must not be what opens the menu.
+    expect(screen.queryByText("Log out")).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Open Mike Fullerton menu" }));
+    expect(await screen.findByText("Log out")).toBeInTheDocument();
+    // The menu's Home row and the split's Home half go to the same place.
+    expect((await screen.findByRole("menuitem", { name: "Home" })).getAttribute("href")).toBe(
+      "https://agenticdeveloperhub.com/home",
+    );
+  });
 });

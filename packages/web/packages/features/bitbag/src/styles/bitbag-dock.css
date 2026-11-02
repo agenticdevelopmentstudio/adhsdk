@@ -504,3 +504,43 @@
   letter-spacing: 0.08em;
   color: var(--color-ember);
 }
+
+/* --- in the page: BitbagInline --------------------------------------------- */
+
+/* The open avatar-rest dock, in flow. Its own root rather than a `.bb-dock`
+ * modifier, so none of the fixture's rules above (fixed position, scrim, doze
+ * scale, slide) reach it — only the geometry of the open corner is restated:
+ * his face on the chat's lower-right corner as the send button, the composer
+ * stopping short of him, and the `i` on the mirrored top-left. BitbagInline sets
+ * `--bb-inline-corner-w` to his width there. */
+.bb-inline {
+  position: relative;
+  width: 100%;
+}
+.bb-inline .bb-inline__chat {
+  /* Same reason as `.bb-dock .bb-dock__chat`: only `.persona-chat` paints. */
+  background: none;
+}
+.bb-inline .persona-chat .pc-input-area {
+  padding-right: calc(var(--bb-inline-corner-w, 0px) + 0.6rem);
+}
+.bb-inline__avatar {
+  position: absolute;
+  z-index: 1;
+  right: 0.3rem;
+  bottom: 0.3rem;
+  cursor: pointer;
+}
+.bb-inline__avatar:focus-visible {
+  outline: 2px solid var(--color-accent, #e8a33d);
+  outline-offset: 2px;
+  border-radius: 8px;
+}
+.bb-inline .bb-info {
+  left: 0.7rem;
+  right: auto;
+}
+.bb-inline .bb-info__pop {
+  left: 0;
+  right: auto;
+}

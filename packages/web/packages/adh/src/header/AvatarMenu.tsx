@@ -41,8 +41,9 @@ export type AvatarMenuUser = {
 
 export type AvatarMenuProps = {
   user: AvatarMenuUser
-  /** Where "Home" points. The site's own post-login landing, supplied by the
-   *  registry-aware wrapper; defaults to the site root. */
+  /** Where "Home" points — both the menu's Home row and the name + avatar half of the
+   *  split control. Supplied by the registry-aware wrapper (the hub's `/home`, which lands
+   *  on the visitor's workspace); defaults to the site root. */
   homeHref?: string
   /** Where the Profile row points, and whether it renders at all — present ⇒ the row
    *  offers it, absent ⇒ the row is omitted. This component resolves no site ids and
@@ -84,7 +85,8 @@ function initialsOf(name: string | undefined | null): string {
 }
 
 /**
- * The signed-in account menu: the avatar in the bar, and under it the user's name
+ * The signed-in account control: a split button in the bar — the account's first name (or
+ * slug) and avatar as a link Home, beside a chevron that opens the menu — and under it the user's name
  * plus the account destinations — Home, Profile, User Settings, Log out — and, for a
  * developer or an adh admin only, Debug Options, last and behind its own divider.
  *
@@ -151,107 +153,127 @@ export function AvatarMenu({
     </DropdownMenuLinkItem>
   ) : null
 
-  return (
-    <DropdownMenu>
-      {/* The trigger is the avatar alone — no name, no slug. The name is still the
-          trigger's ACCESSIBLE name (and heads the popup), so nothing is lost to a
-          screen reader by dropping the visible copy. */}
-      <DropdownMenuTrigger
-        className="adh-avatar-menu-trigger"
-        aria-label={`Open ${user.name} menu`}
-      >
-        <span className="adh-avatar-menu-trigger__avatar-wrap">{avatarInner}</span>
-        <span className="adh-avatar-menu-trigger__chevron" aria-hidden="true">
-          <ChevronDown className="adh-avatar-menu-trigger__chevron-icon" />
-        </span>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent className="adh-avatar-menu" align="end" sideOffset={8}>
-        {/* A greeting when we know the person's name, the bare handle when we do
-            not. Same element and same class either way, so the row keeps its one
-            style and nothing has to reason about which shape is showing. */}
-        <div className="adh-avatar-menu__header">
-          <div className="adh-avatar-menu__identity">
-            <span className="adh-avatar-menu__name">
-              {user.fullName ? `Welcome ${firstNameOf(user.fullName)}!` : user.name}
-            </span>
-          </div>
-        </div>
-        <DropdownMenuSeparator />
-        <DropdownMenuLinkItem render={<Link href={homeHref} />} className="adh-avatar-menu__item">
-          <Home className="adh-avatar-menu__item-icon" />
-          <span className="adh-avatar-menu__item-label">Home</span>
-        </DropdownMenuLinkItem>
-        {profileHref && (
-          <DropdownMenuLinkItem
-            // Profile SLIDES in, as if pushed onto a stack, and Back (button or swipe) slides it
-            // off again to wherever it was opened from — it is a destination you visit and
-            // return from, not a section you switch to. Still the same Link and the same push:
-            // a modified click (new tab), a click the unsaved-changes guard has already
-            // intercepted, or a browser that cannot animate all fall through to it untouched.
-            render={
-              <Link
-                href={profileHref}
-                onClick={(e) => {
-                  if (e.defaultPrevented || isModifiedClick(e)) return
-                  if (slideNavigate(profileHref)) e.preventDefault()
-                }}
-              />
-            }
-            className="adh-avatar-menu__item"
-          >
-            <UserIcon className="adh-avatar-menu__item-icon" />
-            <span className="adh-avatar-menu__item-label">Profile</span>
-          </DropdownMenuLinkItem>
-        )}
-        {settingsItem && (
-          <>
-            <DropdownMenuSeparator />
-            {settingsItem}
-          </>
-        )}
-        {onLogout && (
-          <>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem
-              onClick={onLogout}
-              className="adh-avatar-menu__item"
-            >
-              <LogOut className="adh-avatar-menu__item-icon" />
-              <span className="adh-avatar-menu__item-label">Log out</span>
-            </DropdownMenuItem>
-          </>
-        )}
-        {/* Last, and after Log out: it is a developer's tool, not an account
-            destination, so it sits apart from the rows every visitor uses.
+  // What the bar CALLS this account, beside the avatar: the first word of the person's own
+  // name when the backend holds one, else their handle (the repo owner's rule: "first name,
+  // else the slug"). `user.name` is the last resort only because a source may have neither —
+  // it is never empty, so the label never collapses to nothing.
+  const barLabel = user.fullName ? firstNameOf(user.fullName) : (user.slug || user.name)
 
-            Named by its label span and DESCRIBED by the hint, both by reference. A
-            menuitem with neither takes its name from all of its text, which made it
-            "Debug OptionsSim: prod" while production was being simulated — a row a
-            screen reader, a voice command ("click Debug Options") and a role query
-            could no longer find by its name, in exactly the state a developer most
-            needs to get back into the console to leave. */}
-        {onDebugOptions && (
-          <>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem
-              onClick={onDebugOptions}
-              className="adh-avatar-menu__item"
-              aria-labelledby={debugLabelId}
-              aria-describedby={debugOptionsHint ? debugHintId : undefined}
-            >
-              <Wrench className="adh-avatar-menu__item-icon" />
-              <span id={debugLabelId} className="adh-avatar-menu__item-label">
-                Debug Options
+  return (
+    // A SPLIT control, two buttons wearing one outline: the name + avatar half is a plain link
+    // Home (the most common thing anyone wants from their own avatar), the chevron half opens
+    // the account menu. Two real controls rather than one trigger with a click-target
+    // trick, so each has its own role, name and focus stop.
+    <div className="adh-avatar-split">
+      <Link
+        href={homeHref}
+        className="adh-avatar-split__home"
+        // Named for where it goes, not for whom: the visible label is the person, but a
+        // screen reader or a voice command wants the destination.
+        aria-label={`Home (${barLabel})`}
+      >
+        <span className="adh-avatar-split__name">{barLabel}</span>
+        <span className="adh-avatar-menu-trigger__avatar-wrap">{avatarInner}</span>
+      </Link>
+      <DropdownMenu>
+        {/* The trigger is the chevron alone; the name + avatar beside it are the Home half of
+            the split. The name is still the trigger's ACCESSIBLE name (and heads the popup). */}
+        <DropdownMenuTrigger
+          className="adh-avatar-menu-trigger adh-avatar-split__menu"
+          aria-label={`Open ${user.name} menu`}
+        >
+          <span className="adh-avatar-menu-trigger__chevron" aria-hidden="true">
+            <ChevronDown className="adh-avatar-menu-trigger__chevron-icon" />
+          </span>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent className="adh-avatar-menu" align="end" sideOffset={8}>
+          {/* A greeting when we know the person's name, the bare handle when we do
+              not. Same element and same class either way, so the row keeps its one
+              style and nothing has to reason about which shape is showing. */}
+          <div className="adh-avatar-menu__header">
+            <div className="adh-avatar-menu__identity">
+              <span className="adh-avatar-menu__name">
+                {user.fullName ? `Welcome ${firstNameOf(user.fullName)}!` : user.name}
               </span>
-              {debugOptionsHint && (
-                <span id={debugHintId} className="adh-avatar-menu__item-hint">
-                  {debugOptionsHint}
+            </div>
+          </div>
+          <DropdownMenuSeparator />
+          <DropdownMenuLinkItem render={<Link href={homeHref} />} className="adh-avatar-menu__item">
+            <Home className="adh-avatar-menu__item-icon" />
+            <span className="adh-avatar-menu__item-label">Home</span>
+          </DropdownMenuLinkItem>
+          {profileHref && (
+            <DropdownMenuLinkItem
+              // Profile SLIDES in, as if pushed onto a stack, and Back (button or swipe) slides it
+              // off again to wherever it was opened from — it is a destination you visit and
+              // return from, not a section you switch to. Still the same Link and the same push:
+              // a modified click (new tab), a click the unsaved-changes guard has already
+              // intercepted, or a browser that cannot animate all fall through to it untouched.
+              render={
+                <Link
+                  href={profileHref}
+                  onClick={(e) => {
+                    if (e.defaultPrevented || isModifiedClick(e)) return
+                    if (slideNavigate(profileHref)) e.preventDefault()
+                  }}
+                />
+              }
+              className="adh-avatar-menu__item"
+            >
+              <UserIcon className="adh-avatar-menu__item-icon" />
+              <span className="adh-avatar-menu__item-label">Profile</span>
+            </DropdownMenuLinkItem>
+          )}
+          {settingsItem && (
+            <>
+              <DropdownMenuSeparator />
+              {settingsItem}
+            </>
+          )}
+          {onLogout && (
+            <>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                onClick={onLogout}
+                className="adh-avatar-menu__item"
+              >
+                <LogOut className="adh-avatar-menu__item-icon" />
+                <span className="adh-avatar-menu__item-label">Log out</span>
+              </DropdownMenuItem>
+            </>
+          )}
+          {/* Last, and after Log out: it is a developer's tool, not an account
+              destination, so it sits apart from the rows every visitor uses.
+
+              Named by its label span and DESCRIBED by the hint, both by reference. A
+              menuitem with neither takes its name from all of its text, which made it
+              "Debug OptionsSim: prod" while production was being simulated — a row a
+              screen reader, a voice command ("click Debug Options") and a role query
+              could no longer find by its name, in exactly the state a developer most
+              needs to get back into the console to leave. */}
+          {onDebugOptions && (
+            <>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                onClick={onDebugOptions}
+                className="adh-avatar-menu__item"
+                aria-labelledby={debugLabelId}
+                aria-describedby={debugOptionsHint ? debugHintId : undefined}
+              >
+                <Wrench className="adh-avatar-menu__item-icon" />
+                <span id={debugLabelId} className="adh-avatar-menu__item-label">
+                  Debug Options
                 </span>
-              )}
-            </DropdownMenuItem>
-          </>
-        )}
-      </DropdownMenuContent>
-    </DropdownMenu>
+                {debugOptionsHint && (
+                  <span id={debugHintId} className="adh-avatar-menu__item-hint">
+                    {debugOptionsHint}
+                  </span>
+                )}
+              </DropdownMenuItem>
+            </>
+          )}
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
   )
 }

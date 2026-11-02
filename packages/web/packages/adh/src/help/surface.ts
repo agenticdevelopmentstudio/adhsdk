@@ -6,8 +6,8 @@
 
 export { HELP_ROOT_LEVEL_KEY, HelpSurface, helpHref, helpRootLevel } from './HelpSurface'
 export type { HelpRouteItem, HelpRouteLevel } from './HelpMasterDetail'
-// The per-topic row glyph, shared with both HMDV rails — re-exported here so the hub-help REST API
-// route (a server component consuming this same barrel) gives its root rows the identical icons.
+// The per-topic row glyph, shared with both HMDV rails — re-exported here so the hub-help area
+// cards (its /home, a server component consuming this same barrel) carry the identical icons.
 export { topicIcon } from './topic-icons'
 export {
   HELP_TOPICS,

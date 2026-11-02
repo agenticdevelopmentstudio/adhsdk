@@ -26,7 +26,7 @@ vi.mock('@agentic-toolkit/adh/footer', async () => {
   }
 })
 
-function renderOn(route: string, landingFooter?: boolean) {
+function renderOn(route: string, landingFooter?: boolean | { chat: boolean }) {
   pathname = route
   return render(
     <AppShell header={<header>HEADER</header>} landingFooter={landingFooter}>
@@ -42,6 +42,18 @@ describe('AppShell landingFooter', () => {
     expect(screen.getByText('BITBAG')).toBeInTheDocument()
     expect(screen.queryByText('BAR')).not.toBeInTheDocument()
     expect(screen.getByText('PAGE')).toBeInTheDocument()
+  })
+
+  it('drops bitbag from the landing footer with `{ chat: false }`, and keeps the rest', () => {
+    const { container } = renderOn('/', { chat: false })
+    expect(container.querySelector('.adh-landing-footer-band .adh-landing-footer')).not.toBeNull()
+    expect(screen.queryByText('BITBAG')).not.toBeInTheDocument()
+    expect(screen.queryByText('BAR')).not.toBeInTheDocument()
+  })
+
+  it('keeps the bar on every other route with `{ chat: false }` too', () => {
+    renderOn('/docs/getting-started', { chat: false })
+    expect(screen.getByText('BAR')).toBeInTheDocument()
   })
 
   it('keeps the bar on every other route', () => {

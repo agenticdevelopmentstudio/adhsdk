@@ -1,7 +1,6 @@
 // Per-topic leading glyph for the help topic rows, shared by ALL renderings of the ONE topic tree:
 // the SSR help site rail ({@link HelpMasterDetail}), the Help modal on every site
-// ({@link HelpWindow}), the REST API route's own root rail (hub-help's ApiHelpSurface) and the Hub
-// Features route's (hub-help's HubSurface). It replaces the toolkit HMDV's neutral fallback ring
+// ({@link HelpWindow}) and the hub-help site's area cards (its /home page). It replaces the toolkit HMDV's neutral fallback ring
 // (lucide `Circle` — an empty circle that says nothing about the topic) with a glyph that reads as
 // the topic, so no help row is a meaningless ring. Keyed by the stable {@link HelpTopic.id}; any id
 // not mapped here (a future topic) falls back to a document glyph, never the ring.

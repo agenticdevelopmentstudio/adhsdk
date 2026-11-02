@@ -285,6 +285,19 @@ export function SiteHeader({
   const resolvedLoginHref = loginHref ?? (onLogin ? undefined : hubAuthHref('/login'))
   const resolvedSignupHref = signupHref ?? (onSignup ? undefined : hubAuthHref('/signup'))
 
+  // The signed-in "Home": the HUB's `/home` from every site, never this site's own. It used
+  // to be `siteHomePath(siteId)`, so on help.agenticdeveloperhub.com "Home" reloaded the help
+  // site — a satellite's landing is not anybody's home. The hub's `/home` is the family's
+  // "take me to my workspace" URL: it resolves the visitor's stored workspace and replaces
+  // itself with `/<workspace>` (SiteHomeRoute / useWorkspaceRoute), the same destination the
+  // site menu's Home row already uses (`useSiteMenu`'s `homeHref`). On the hub it stays a
+  // relative path so it navigates client-side; elsewhere it is the env-resolved hub URL,
+  // routed through the source's SSO switch when signed in so it lands already logged in.
+  const accountHomeHref =
+    siteId === 'hub'
+      ? '/home'
+      : (resolveSwitchHref ?? ((href: string) => href))(resolveHubHref('/home'))
+
   // The signed-in settings gear in the switcher: prefer the host's in-app overlay
   // (resolvedOnSettings — a caller's own handler, or the shared one AppShell's provider
   // supplies); otherwise make the gear a link — to the site's own settingsHref if it set
@@ -362,12 +375,9 @@ export function SiteHeader({
         // REACHABLE from here.
         previewNotice={previewNotice}
         previewDetail={previewDetail}
-        // The avatar menu's "Home" — THIS site's post-login landing (its /home, or root
-        // when it has none), the same destination the default Login/Join links already
-        // return to. A relative path, not `selfReturn`'s absolute URL: Home never leaves
-        // the site, so it should navigate client-side rather than reload through the
-        // env-resolved origin.
-        homeHref={siteHomePath(siteId)}
+        // The avatar's "Home" (its menu row AND the name + avatar half of the split
+        // control) — see `accountHomeHref`.
+        homeHref={accountHomeHref}
         // The avatar menu's Profile row: present only when BOTH the signed-in account has
         // a slug (a stranger with no slug has no profile address at all) AND this site
         // actually carries the `/<slug>/profile` route — `hasProfileRoute` reads that off

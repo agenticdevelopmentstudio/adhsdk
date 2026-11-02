@@ -97,8 +97,14 @@ export type AppShellProps = {
    *  fine print) in flow in place of the floating copyright, with bitbag beside it; every other
    *  route keeps the floating copyright. For a site whose landing page is under this shell. A templated site's `/` is the
    *  template's own and takes LandingFooter through the template's `footer` slot instead.
-   *  Omitted, every route gets the bar. */
-  landingFooter?: boolean
+   *  Omitted, every route gets the bar.
+   *
+   *  `{ chat: false }` is the landing footer WITHOUT bitbag in the corner — for a landing page
+   *  whose main area already is a bitbag chat (hub-help's `/`), where a second one in the
+   *  corner is two of him talking over each other. An object rather than a second boolean
+   *  prop, so "no chat" cannot be asked for on a site that has no landing footer for it to
+   *  be missing from. */
+  landingFooter?: boolean | { chat: boolean }
 }
 
 /**
@@ -116,6 +122,7 @@ export function AppShell({ header, children, footer, chromeGate, landingFooter }
   // `providers` fallback.
   const Chrome = chromeGate ?? Fragment
   const bar = <SiteFooter links={footer?.links} contact={footer?.contact} live={liveBuildIdentity()} />
+  const landingChat = typeof landingFooter === 'object' ? landingFooter.chat : true
   return (
     <AppShellProviders>
       <AdhAppShell
@@ -131,7 +138,7 @@ export function AppShell({ header, children, footer, chromeGate, landingFooter }
                   // bottom padding clears.
                   <footer className="adh-landing-footer-band">
                     <LandingFooter contact={footer?.contact} />
-                    <FooterChat />
+                    {landingChat && <FooterChat />}
                   </footer>
                 }
                 rest={bar}

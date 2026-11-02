@@ -13,7 +13,7 @@ import {
 // this whole server entry. A relative specifier would inline a private copy and silently fork
 // that state. Both halves of the remedy are required — see the note atop layout/AppShell.tsx
 // and <adh-tools>/sites/scripts/verify-bundle-boundaries.py.
-import { AppShell } from "@agentic-toolkit/adh/layout";
+import { AppShell, type AppShellProps } from "@agentic-toolkit/adh/layout";
 import type { SiteId } from "@agentic-toolkit/adh-registry";
 import { AuthProvider } from "@agentic-toolkit/adh/auth";
 import { MarketingSiteHeader } from "@agentic-toolkit/adh/marketing/MarketingSiteHeader";
@@ -122,9 +122,11 @@ export type MarketingShellProps = {
    * Whether `/` ends with the landing page's footer, the family directory, instead of the
    * shared bar. Every other route keeps the bar. For a site whose landing page is under this
    * shell (hub-help); a templated site's `/` belongs to the template and takes the same footer
-   * through the template's `footer` slot. See AppShell's prop of the same name.
+   * through the template's `footer` slot. `{ chat: false }` drops bitbag from that footer's
+   * corner, for a landing page that already has him in its main area. See AppShell's prop of
+   * the same name.
    */
-  landingFooter?: boolean;
+  landingFooter?: AppShellProps["landingFooter"];
   children: ReactNode;
 };
 
