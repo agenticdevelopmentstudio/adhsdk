@@ -301,21 +301,21 @@ extension DaemonDatabase {
 
     // MARK: - Messages and titles
 
-    /// The session's conversation messages and the main sessions' user and
-    /// assistant messages (a sub-agent's sidechain is a different
-    /// conversation), newest first by time, then by id — the order lines were
-    /// stored in, so two untimed lines keep their file order. `sessionId` nil is
-    /// every session; `before` (epoch seconds) keeps only messages strictly
-    /// earlier.
+    /// User and assistant messages of the main thread (a sub-agent's sidechain
+    /// is a different conversation), newest first by time, then by id — the
+    /// order they were stored in. `sessionId` nil is every session; `before`
+    /// (epoch seconds) keeps only messages strictly earlier.
     ///
-    /// A message whose line carried no timestamp sits at the epoch and is kept:
-    /// the feed shows it at the oldest end rather than losing a real prompt or
-    /// reply.
+    /// A message whose line carried no timestamp (stored at about the epoch,
+    /// below `claudeEarliestKnownEventTime`) is not part of the timeline and
+    /// is left out, as the transcript-line feed left out an empty timestamp:
+    /// sorted below everything, such lines would fill the oldest page and could
+    /// never be paged past.
     public func claudeConversationMessages(
         sessionId: String?, before: Double?, limit: Int
     ) throws -> [ClaudeMessageRow] {
-        var conditions = ["provider = ?", "is_sidechain = 0", "role IN ('user', 'assistant')"]
-        var arguments: [any DatabaseValueConvertible] = [ClaudeProvider.name]
+        var conditions = ["provider = ?", "is_sidechain = 0", "role IN ('user', 'assistant')", "time >= ?"]
+        var arguments: [any DatabaseValueConvertible] = [ClaudeProvider.name, Self.claudeEarliestKnownEventTime]
         if let sessionId {
             conditions.append("session_id = ?")
             arguments.append(sessionId)

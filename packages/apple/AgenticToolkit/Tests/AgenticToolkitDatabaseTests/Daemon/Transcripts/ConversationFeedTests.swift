@@ -222,22 +222,101 @@ final class ConversationFeedTests: XCTestCase {
         XCTAssertEqual(try feed().first?.timestamp, "2026-09-01T10:00:00.000Z")
     }
 
-    func testAnUntimedMessageIsShownAtTheOldestEnd() throws {
-        // A line with no timestamp is stored at the epoch. It is a real message,
-        // so it is shown — after everything that has a time, stamped 1970 — and
-        // a cursor taken from it has nothing older to return.
+    func testAnUntimedMessageIsNotOnTheTimeline() throws {
+        // A line with no timestamp is stored at about the epoch. Shown, it would
+        // sort below everything and fill the oldest page with lines no cursor
+        // can page past; like the transcript-line feed's empty timestamp, it is
+        // left out, and the timed lines page as if it were not there.
         let session = try makeSession(cwd: "/src/untimed", branch: "main")
         try ingest([
             prompt(session: session, at: nil, "no time on this one"),
-            prompt(session: session, at: "2026-09-01T10:00:00Z", "timed")
+            prompt(session: session, at: nil, "nor this one"),
+            prompt(session: session, at: "2026-09-01T10:00:00Z", "one"),
+            prompt(session: session, at: "2026-09-01T10:00:01Z", "two")
         ], session: session)
 
-        let page = try feed()
-        XCTAssertEqual(page.map(\.text), ["timed", "no time on this one"])
-        XCTAssertEqual(page.last?.timestamp, "1970-01-01T00:00:00.000Z")
-        XCTAssertEqual(try feed(limit: 1, before: "2026-09-01T10:00:00.000Z").map(\.text),
-                       ["no time on this one"])
-        XCTAssertEqual(try feed(before: page.last?.timestamp), [])
+        XCTAssertEqual(try feed(work: true).map(\.text), ["two", "one"])
+        XCTAssertEqual(try feed(work: true, session: session).map(\.text), ["two", "one"])
+        let page = try feed(limit: 1)
+        XCTAssertEqual(page.map(\.text), ["two"])
+        let older = try feed(limit: 1, before: page.last?.timestamp)
+        XCTAssertEqual(older.map(\.text), ["one"])
+        XCTAssertEqual(try feed(limit: 1, before: older.last?.timestamp), [])
+        XCTAssertEqual(try feed(before: "1970-01-01T00:00:00.001Z"), [])
+    }
+
+    /// Every page together, following the cursor until it returns nothing.
+    private func allPages(limit: Int, work: Bool = false) throws -> [[ConversationEntryDTO]] {
+        var pages: [[ConversationEntryDTO]] = []
+        var before: String?
+        while pages.count < 20 {
+            let page = try feed(limit: limit, work: work, before: before)
+            guard let last = page.last else { break }
+            pages.append(page)
+            before = last.timestamp
+        }
+        return pages
+    }
+
+    func testAPageNeverSplitsAMillisecond() throws {
+        // Parallel tool calls and streamed lines land in one millisecond. The
+        // cursor is the rendered millisecond, so a page that stopped inside one
+        // would lose the rest of it: the next page asks for older than that.
+        let session = try makeSession(cwd: "/src/samems", branch: "main")
+        try ingest([
+            prompt(session: session, at: "2026-09-01T10:00:00.100Z", "older"),
+            prompt(session: session, at: "2026-09-01T10:00:00.500Z", "first of three"),
+            prompt(session: session, at: "2026-09-01T10:00:00.500Z", "second of three"),
+            prompt(session: session, at: "2026-09-01T10:00:00.500Z", "third of three"),
+            prompt(session: session, at: "2026-09-01T10:00:00.900Z", "newest")
+        ], session: session)
+
+        let pages = try allPages(limit: 2)
+        XCTAssertEqual(pages.map { $0.map(\.text) }, [
+            ["newest", "third of three", "second of three", "first of three"],
+            ["older"]
+        ], "the millisecond group is finished on the page it began on")
+        let texts = pages.flatMap { $0.map(\.text) }
+        XCTAssertEqual(texts.count, Set(texts).count, "nothing is returned twice")
+        XCTAssertEqual(Set(texts).count, 5, "nothing is lost")
+    }
+
+    func testAGroupThatDoesNotFitWaitsForTheNextPage() throws {
+        let session = try makeSession(cwd: "/src/samems2", branch: "main")
+        try ingest([
+            prompt(session: session, at: "2026-09-01T10:00:00.500Z", "a"),
+            prompt(session: session, at: "2026-09-01T10:00:00.500Z", "b"),
+            prompt(session: session, at: "2026-09-01T10:00:00.900Z", "newest")
+        ], session: session)
+
+        // limit 1: the page is full after "newest", and "b" is a different
+        // millisecond, so it waits; the next page then takes the group whole.
+        XCTAssertEqual(try allPages(limit: 1).map { $0.map(\.text) }, [["newest"], ["b", "a"]])
+    }
+
+    func testAScanThatEndsInsideAMillisecondLeavesItForTheNextPage() throws {
+        // limit 2 with work output scans 6 messages. Three tool calls yield no
+        // line, so the scan ends on the second of three same-ms prompts; the
+        // third is beyond it. Shown, the two would strand the third behind the
+        // cursor, so the group waits for the next page and comes back whole.
+        let session = try makeSession(cwd: "/src/samems3", branch: "main")
+        let toolCall = { (time: String) in
+            self.line(session: session, at: time,
+                      json: #"{"type":"assistant","message":{"role":"assistant","stop_reason":"tool_use","#
+                          + #""content":[{"type":"tool_use","id":"t","name":"Bash","input":{}}]}}"#)
+        }
+        try ingest([
+            prompt(session: session, at: "2026-09-01T10:00:00.500Z", "a"),
+            prompt(session: session, at: "2026-09-01T10:00:00.500Z", "b"),
+            prompt(session: session, at: "2026-09-01T10:00:00.500Z", "c"),
+            toolCall("2026-09-01T10:00:00.600Z"),
+            toolCall("2026-09-01T10:00:00.700Z"),
+            toolCall("2026-09-01T10:00:00.800Z"),
+            prompt(session: session, at: "2026-09-01T10:00:00.900Z", "newest")
+        ], session: session)
+
+        XCTAssertEqual(try allPages(limit: 2, work: true).map { $0.map(\.text) },
+                       [["newest"], ["c", "b", "a"]])
     }
 
     func testAnUnreadableCursorReturnsNothing() throws {

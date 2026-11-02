@@ -44,12 +44,12 @@ public struct ConversationStore: Sendable {
     /// ## Timestamps
     ///
     /// Each entry's `timestamp` is the message time as ISO-8601 UTC with
-    /// milliseconds (`2026-09-01T10:00:00.000Z`). A message whose line carried
-    /// no timestamp is stored at the epoch and is shown, not dropped: it sorts
-    /// to the oldest end of the feed, in file order, stamped
-    /// `1970-01-01T00:00:00.000Z`. Nothing is older than that, so a `before`
-    /// cursor taken from such an entry returns nothing more; the untimed
-    /// entries a page did not reach are not paged to.
+    /// milliseconds (`2026-09-01T10:00:00.000Z`), and that is the paging
+    /// cursor, so a page never splits a millisecond: once a page holds `limit`
+    /// lines it still takes the rest of its last millisecond, and the next
+    /// page's `before` then excludes exactly what was shown. A message whose
+    /// line carried no timestamp is not on the timeline and is left out, as
+    /// the transcript-line feed left out an empty timestamp.
     ///
     /// Without an event store attached, and over one that holds nothing, the
     /// feed is empty.
@@ -96,7 +96,16 @@ public struct ConversationStore: Sendable {
         let labels = try sessionLabels(Set(messages.map(\.sessionId)))
 
         var entries: [ConversationEntryDTO] = []
+        // Set once the page holds `limit` lines: from then on only the rest of
+        // the last entry's millisecond may follow.
+        var full = false
+        var consumedEveryMessage = true
         for message in messages {
+            let timestamp = message.timestamp
+            if full, timestamp != entries.last?.timestamp {
+                consumedEveryMessage = false
+                break
+            }
             let lines = extractCache.lines(
                 messageId: message.id, role: message.role, text: message.text, attrsJSON: message.attrs)
             guard !lines.isEmpty else { continue }
@@ -126,14 +135,18 @@ public struct ConversationStore: Sendable {
             )
             guard !shown.isEmpty else { continue }
 
-            // Whole entries only. Pages are cut on the timestamp, and every
-            // block of one message carries the SAME one — so a page that
-            // stopped mid-entry would lose the rest: the next page asks for
-            // older than that timestamp. The one exception is an entry bigger
-            // than `limit` all by itself, emitted whole (a short overshoot)
-            // because otherwise it would wedge paging at that point forever.
-            if !entries.isEmpty, entries.count + shown.count > limit { break }
-            let timestamp = message.timestamp
+            // Whole millisecond groups only. Pages are cut on the rendered
+            // timestamp, and every block of one message — and every message
+            // of one millisecond — carries the SAME one, so a page that
+            // stopped inside a group would lose the rest: the next page asks
+            // for older than that timestamp. A group that does not fit is
+            // left for the next page; one that has already begun is finished
+            // here, overshooting `limit`, as is an entry bigger than `limit`
+            // by itself, because otherwise paging would wedge at that point.
+            if !entries.isEmpty, entries.count + shown.count > limit, timestamp != entries.last?.timestamp {
+                consumedEveryMessage = false
+                break
+            }
             for (offset, line) in shown {
                 entries.append(ConversationEntryDTO(
                     id: Int(message.id) * Self.maxLinesPerConversationEntry + offset,
@@ -147,7 +160,17 @@ public struct ConversationStore: Sendable {
                     termProgram: label.termProgram
                 ))
             }
-            if entries.count >= limit { break }
+            if entries.count >= limit { full = true }
+        }
+        // A scan that came back full may have stopped inside its last
+        // millisecond, with more of that group beyond it. Leave that group to
+        // the next page, whose cursor then reaches all of it — unless it is
+        // everything this page has, when a partial group beats a page that
+        // can never move on.
+        if consumedEveryMessage, messages.count >= scanLimit,
+           let tail = messages.last?.timestamp, entries.last?.timestamp == tail {
+            let complete = entries.filter { $0.timestamp != tail }
+            if !complete.isEmpty { entries = complete }
         }
         return entries
     }
