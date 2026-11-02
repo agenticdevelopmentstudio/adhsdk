@@ -73,6 +73,47 @@ public struct ClaudeMessageRow: Sendable, Equatable {
     }
 }
 
+/// How `claudeTurnTotals` keys its rows: one key for everything, the model,
+/// or the session id.
+public enum ClaudeTurnGrouping: Sendable {
+    case all, model, session
+}
+
+/// Token totals of one (key, model) group of Claude turns. `key` is `"all"`,
+/// the model or the session id, per the read's `ClaudeTurnGrouping`; `model`
+/// is "" for turns that carried none.
+public struct ClaudeTurnTotals: Sendable, Equatable {
+    public let key: String
+    public let model: String
+    public let turnCount: Int
+    public let inputTokens: Int
+    public let outputTokens: Int
+    public let cacheReadTokens: Int
+    public let cacheCreationTokens: Int
+    public let cacheCreation1hTokens: Int
+
+    public init(key: String, model: String, turnCount: Int, inputTokens: Int, outputTokens: Int,
+                cacheReadTokens: Int, cacheCreationTokens: Int, cacheCreation1hTokens: Int) {
+        self.key = key
+        self.model = model
+        self.turnCount = turnCount
+        self.inputTokens = inputTokens
+        self.outputTokens = outputTokens
+        self.cacheReadTokens = cacheReadTokens
+        self.cacheCreationTokens = cacheCreationTokens
+        self.cacheCreation1hTokens = cacheCreation1hTokens
+    }
+
+    func adding(_ other: ClaudeTurnTotals) -> ClaudeTurnTotals {
+        ClaudeTurnTotals(
+            key: key, model: model, turnCount: turnCount + other.turnCount,
+            inputTokens: inputTokens + other.inputTokens, outputTokens: outputTokens + other.outputTokens,
+            cacheReadTokens: cacheReadTokens + other.cacheReadTokens,
+            cacheCreationTokens: cacheCreationTokens + other.cacheCreationTokens,
+            cacheCreation1hTokens: cacheCreation1hTokens + other.cacheCreation1hTokens)
+    }
+}
+
 /// Every read the session database's readers make of the event store
 /// (`events.db`) and the raw archive. Each binds the Claude provider, and each
 /// answers empty — never throws — when no event store is attached
@@ -362,6 +403,188 @@ extension DaemonDatabase {
             try Bool.fetchOne(conn, sql: """
                 SELECT EXISTS(SELECT 1 FROM messages WHERE provider = ? AND session_id = ?)
                 """, arguments: [ClaudeProvider.name, sessionId]) ?? false
+        }
+    }
+
+    // MARK: - Turns
+
+    /// The time-range and tool filters of a turn read, with their arguments
+    /// (the provider first). A ranged read leaves out turns stored before
+    /// `claudeEarliestKnownEventTime` — a line with no timestamp sits at the
+    /// epoch, and a range must never catch it.
+    private static func claudeTurnFilter(
+        since: Double?, until: Double?, toolName: String?
+    ) -> (conditions: [String], arguments: [any DatabaseValueConvertible]) {
+        var conditions = ["provider = ?"]
+        var arguments: [any DatabaseValueConvertible] = [ClaudeProvider.name]
+        if since != nil || until != nil {
+            conditions.append("time >= ?")
+            arguments.append(claudeEarliestKnownEventTime)
+        }
+        if let since {
+            conditions.append("time >= ?")
+            arguments.append(since)
+        }
+        if let until {
+            conditions.append("time < ?")
+            arguments.append(until)
+        }
+        if let toolName, !toolName.isEmpty {
+            conditions.append("tool_name = ?")
+            arguments.append(toolName)
+        }
+        return (conditions, arguments)
+    }
+
+    /// Token totals of the Claude turns matching the filters, one row per
+    /// (group key, model) — a model's rate applies only to its own tokens, so a
+    /// caller pricing the rows never prices a mixed sum.
+    ///
+    /// - `since`/`until`: epoch seconds, `[since, until)`; either one also drops
+    ///   untimed turns (see `claudeTurnFilter`).
+    /// - `sessionIds`: nil reads every session; a list (any length — it binds in
+    ///   chunks) reads only those, and an empty list reads nothing.
+    /// - `topKeys`: keep only the that-many keys with the most turns (ties by
+    ///   key), every model row of each. Without session ids the cut is made in
+    ///   SQL, so a whole-history read never materialises every group.
+    public func claudeTurnTotals(
+        since: Double? = nil,
+        until: Double? = nil,
+        toolName: String? = nil,
+        sessionIds: [String]? = nil,
+        groupBy: ClaudeTurnGrouping = .all,
+        topKeys: Int? = nil
+    ) throws -> [ClaudeTurnTotals] {
+        let unique = sessionIds.map { Array(Set($0)).sorted() }
+        if let unique, unique.isEmpty { return [] }
+        let filter = Self.claudeTurnFilter(since: since, until: until, toolName: toolName)
+        let keySQL: String
+        switch groupBy {
+        case .all: keySQL = "'all'"
+        case .model: keySQL = "COALESCE(model, '')"
+        case .session: keySQL = "session_id"
+        }
+        let select = """
+            SELECT \(keySQL), COALESCE(model, ''), COUNT(*),
+                   COALESCE(SUM(input_tokens), 0), COALESCE(SUM(output_tokens), 0),
+                   COALESCE(SUM(cache_read_tokens), 0), COALESCE(SUM(cache_write_tokens), 0),
+                   CAST(COALESCE(SUM(json_extract(attrs, '$.cache_creation_1h_tokens')), 0) AS INTEGER)
+            FROM turns
+            """
+        func totals(_ row: Row) -> ClaudeTurnTotals {
+            ClaudeTurnTotals(
+                key: row[0] ?? "", model: row[1] ?? "", turnCount: row[2] ?? 0, inputTokens: row[3] ?? 0,
+                outputTokens: row[4] ?? 0, cacheReadTokens: row[5] ?? 0, cacheCreationTokens: row[6] ?? 0,
+                cacheCreation1hTokens: row[7] ?? 0)
+        }
+
+        let rows: [ClaudeTurnTotals] = try withEventReads([]) { conn in
+            guard let unique else {
+                let whereSQL = filter.conditions.joined(separator: " AND ")
+                if let topKeys, groupBy != .all {
+                    // Rank the keys in their own pass, then aggregate only the winners.
+                    let arguments = filter.arguments + [max(topKeys, 0)] + filter.arguments
+                    return try Row.fetchAll(conn, sql: """
+                        WITH ranked AS (
+                            SELECT \(keySQL) AS rank_key FROM turns
+                            WHERE \(whereSQL)
+                            GROUP BY \(keySQL)
+                            ORDER BY COUNT(*) DESC, rank_key
+                            LIMIT ?
+                        )
+                        \(select)
+                        WHERE \(whereSQL) AND \(keySQL) IN (SELECT rank_key FROM ranked)
+                        GROUP BY \(keySQL), COALESCE(model, '')
+                        """, arguments: StatementArguments(arguments)).map(totals)
+                }
+                return try Row.fetchAll(conn, sql: """
+                    \(select)
+                    WHERE \(whereSQL)
+                    GROUP BY \(keySQL), COALESCE(model, '')
+                    """, arguments: StatementArguments(filter.arguments)).map(totals)
+            }
+            var merged: [String: ClaudeTurnTotals] = [:]
+            for start in stride(from: 0, to: unique.count, by: Self.claudeReadChunk) {
+                let chunk = Array(unique[start..<min(start + Self.claudeReadChunk, unique.count)])
+                let marks = chunk.map { _ in "?" }.joined(separator: ",")
+                let conditions = filter.conditions + ["session_id IN (\(marks))"]
+                let arguments = filter.arguments + chunk.map { $0 as any DatabaseValueConvertible }
+                for row in try Row.fetchAll(conn, sql: """
+                    \(select)
+                    WHERE \(conditions.joined(separator: " AND "))
+                    GROUP BY \(keySQL), COALESCE(model, '')
+                    """, arguments: StatementArguments(arguments)).map(totals) {
+                    let id = "\(row.key)\u{0}\(row.model)"
+                    merged[id] = merged[id].map { $0.adding(row) } ?? row
+                }
+            }
+            return Array(merged.values)
+        }
+        guard let topKeys, unique != nil, groupBy != .all else { return rows }
+        var counts: [String: Int] = [:]
+        for row in rows { counts[row.key, default: 0] += row.turnCount }
+        let kept = Set(counts.sorted { $0.value != $1.value ? $0.value > $1.value : $0.key < $1.key }
+            .prefix(max(topKeys, 0)).map(\.key))
+        return rows.filter { kept.contains($0.key) }
+    }
+
+    /// Every Claude turn's (session, time) in `[since, until)` (epoch seconds),
+    /// ordered by session then time — what the active-hours walk needs. Untimed
+    /// turns are left out. `sessionIds` as in `claudeTurnTotals`.
+    public func claudeTurnTimes(
+        since: Double, until: Double, sessionIds: [String]?
+    ) throws -> [(sessionId: String, time: Double)] {
+        let unique = sessionIds.map { Array(Set($0)).sorted() }
+        if let unique, unique.isEmpty { return [] }
+        let filter = Self.claudeTurnFilter(since: since, until: until, toolName: nil)
+        func fetch(_ conn: Database, _ chunk: [String]?) throws -> [(sessionId: String, time: Double)] {
+            var conditions = filter.conditions
+            var arguments = filter.arguments
+            if let chunk {
+                conditions.append("session_id IN (\(chunk.map { _ in "?" }.joined(separator: ",")))")
+                arguments += chunk.map { $0 as any DatabaseValueConvertible }
+            }
+            return try Row.fetchAll(conn, sql: """
+                SELECT session_id, time FROM turns
+                WHERE \(conditions.joined(separator: " AND "))
+                ORDER BY session_id, time
+                """, arguments: StatementArguments(arguments)).map { (sessionId: $0[0] ?? "", time: $0[1] ?? 0) }
+        }
+        return try withEventReads([]) { conn in
+            guard let unique else { return try fetch(conn, nil) }
+            // Chunks are cut from the sorted ids, so concatenating them keeps the order.
+            var out: [(sessionId: String, time: Double)] = []
+            for start in stride(from: 0, to: unique.count, by: Self.claudeReadChunk) {
+                out += try fetch(conn, Array(unique[start..<min(start + Self.claudeReadChunk, unique.count)]))
+            }
+            return out
+        }
+    }
+
+    /// One Claude turn by its dedup key (a transcript turn's message id), as the
+    /// columns of a stored turn: `time` epoch seconds (0 when untimed), `attrs`
+    /// the JSON object text.
+    func claudeTurn(dedupKey: String) throws -> Row? {
+        try withEventReads(nil) { conn in
+            try Row.fetchOne(conn, sql: """
+                SELECT session_id, time, COALESCE(json_extract(attrs, '$.kind'), ''), COALESCE(model, ''),
+                       input_tokens, output_tokens, cache_read_tokens, cache_write_tokens,
+                       COALESCE(tool_name, ''), COALESCE(json_extract(attrs, '$.is_subagent'), 0),
+                       COALESCE(agent, '')
+                FROM turns WHERE provider = ? AND dedup_key = ?
+                """, arguments: [ClaudeProvider.name, dedupKey])
+        }
+    }
+
+    /// Claude turns in the store, optionally for one session.
+    public func claudeTurnCount(sessionId: String? = nil) throws -> Int {
+        try withEventReads(0) { conn in
+            if let sessionId {
+                return try Int.fetchOne(conn, sql: "SELECT COUNT(*) FROM turns WHERE provider = ? AND session_id = ?",
+                                        arguments: [ClaudeProvider.name, sessionId]) ?? 0
+            }
+            return try Int.fetchOne(
+                conn, sql: "SELECT COUNT(*) FROM turns WHERE provider = ?", arguments: [ClaudeProvider.name]) ?? 0
         }
     }
 

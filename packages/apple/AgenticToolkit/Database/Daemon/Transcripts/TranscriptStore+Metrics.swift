@@ -268,8 +268,8 @@ extension DaemonDatabase {
     /// moves, and record the revision that produced the numbers now on disk.
     ///
     /// `total_cost_usd` is the one figure a daemon *stores* rather than
-    /// recomputes: `/turns` and `/insights/usage-rows` price live from
-    /// `transcript_turns` on every request, but `/sessions/:id/metrics` serves
+    /// recomputes: `/turns` and `/insights/usage-rows` price live from the
+    /// event store's turns on every request, but `/sessions/:id/metrics` serves
     /// what the importer wrote. And the importer never revisits a transcript
     /// whose mtime hasn't moved (`JSONLImporter.run`), so a finished session's
     /// `.jsonl` is read exactly once, ever. Without this pass a price
@@ -278,8 +278,14 @@ extension DaemonDatabase {
     /// invisible until someone reconciles two screens.
     ///
     /// Idempotent, and nothing at all on every launch after the first at a given
-    /// revision — but NOT cheap: the scan below groups the whole of
-    /// `transcript_turns`, which on a multi-gigabyte DB takes minutes.
+    /// revision — but NOT cheap: the scan below groups every Claude turn in the
+    /// event store, and the legacy `transcript_turns` scan it replaced took
+    /// minutes on a multi-gigabyte DB.
+    ///
+    /// The costs come from the event store (`events.db` `turns`). Without one
+    /// attached there is nothing to price from, so the pass logs and leaves the
+    /// revision unrecorded — the next launch, with a store, runs it. A session
+    /// with no turns in the store keeps the cost it has.
     ///
     /// Which is why this is maintenance that runs AFTER the listener is up
     /// (the daemon's run loop), never from `runMigrations()`. It did run there,
@@ -305,39 +311,23 @@ extension DaemonDatabase {
         let recorded = (try? setting(for: Self.pricingRevisionKey)) ?? nil
         guard recorded != String(TranscriptPricing.revision) else { return }
 
-        // A DB whose `transcript_turns` predates these columns holds nothing
-        // this pass could reprice, so there is nothing to do and nothing to
-        // report.
-        let priced = ["session_id", "model", "input_tokens", "output_tokens",
-                      "cache_read_tokens", "cache_creation_tokens", "cache_creation_1h_tokens"]
-        let present = columnNames(of: "transcript_turns")
-        guard priced.allSatisfy(present.contains) else {
-            logger.info("repricing skipped: transcript_turns predates the priced columns")
+        guard eventReads != nil else {
+            logger.info("repricing deferred: no event store attached")
             return
         }
 
         // Group by (session, model) so each model's rate is applied only to its
-        // own tokens — the same rule `sessionMetricsFromTranscriptTurns` follows
-        // for a single session, which is what keeps the two agreeing.
+        // own tokens — the same rule `sessionMetricsFromTurns` follows for a
+        // single session, which is what keeps the two agreeing.
         var costs: [String: Double] = [:]
-        try query("""
-            SELECT session_id, model,
-                   COALESCE(SUM(input_tokens), 0),
-                   COALESCE(SUM(output_tokens), 0),
-                   COALESCE(SUM(cache_read_tokens), 0),
-                   COALESCE(SUM(cache_creation_tokens), 0),
-                   COALESCE(SUM(cache_creation_1h_tokens), 0)
-            FROM transcript_turns
-            GROUP BY session_id, model
-            """, deadline: DaemonDatabase.maintenanceReadDeadline) { row in
-            let sessionId = self.string(row, 0)
-            costs[sessionId, default: 0] += TranscriptPricing.cost(
-                model: self.string(row, 1),
-                inputTokens: Int(self.int64(row, 2)),
-                outputTokens: Int(self.int64(row, 3)),
-                cacheReadTokens: Int(self.int64(row, 4)),
-                cacheCreationTokens: Int(self.int64(row, 5)),
-                cacheCreation1hTokens: Int(self.int64(row, 6))
+        for group in try claudeTurnTotals(groupBy: .session) {
+            costs[group.key, default: 0] += TranscriptPricing.cost(
+                model: group.model,
+                inputTokens: group.inputTokens,
+                outputTokens: group.outputTokens,
+                cacheReadTokens: group.cacheReadTokens,
+                cacheCreationTokens: group.cacheCreationTokens,
+                cacheCreation1hTokens: group.cacheCreation1hTokens
             )
         }
 

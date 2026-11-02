@@ -268,6 +268,205 @@ final class ClaudeEventReadsTests: XCTestCase {
         XCTAssertEqual(after.map(\.providerType), ["Stop"])
     }
 
+    // MARK: - Turns
+
+    private var turnSeq: Int64 = 0
+
+    /// Writes one Claude turn straight into the store, as the normalizer would.
+    private func turn(
+        _ key: String, _ session: String, _ stamp: String?, model: String? = "claude-sonnet-4-6",
+        tool: String? = nil, agent: String? = nil, input: Int = 0, output: Int = 0, cacheRead: Int = 0,
+        cacheWrite: Int = 0, cache1h: Int = 0, kind: String = "assistant", subagent: Bool = false
+    ) throws {
+        turnSeq += 1
+        let time = try stamp.map { try XCTUnwrap(TimestampParsing.parse($0)) } ?? Date(timeIntervalSince1970: 0)
+        var batch = NormalizedBatch()
+        batch.turns = [TurnRow(
+            dedupKey: key, sessionID: session, time: time, model: model, agent: agent, toolName: tool,
+            inputTokens: input, outputTokens: output, cacheReadTokens: cacheRead, cacheWriteTokens: cacheWrite,
+            attrs: ["kind": .string(kind), "cache_creation_1h_tokens": .number(Double(cache1h)),
+                    "is_subagent": .bool(subagent)],
+            rawRef: turnSeq)]
+        try harness.store.write(batch, provider: ClaudeProvider.name)
+    }
+
+    private func epoch(_ stamp: String) throws -> Double {
+        try XCTUnwrap(TimestampParsing.parse(stamp)).timeIntervalSince1970
+    }
+
+    private func describe(_ rows: [ClaudeTurnTotals]) -> [String] {
+        rows.map {
+            "\($0.key)|\($0.model)|n\($0.turnCount)|i\($0.inputTokens)|o\($0.outputTokens)"
+                + "|r\($0.cacheReadTokens)|w\($0.cacheCreationTokens)|h\($0.cacheCreation1hTokens)"
+        }.sorted()
+    }
+
+    func testTurnTotalsGroupByModelSessionAndAll() throws {
+        try turn("a", "s1", "2026-06-01T12:00:00Z", tool: "Edit", input: 10, output: 1, cacheRead: 100)
+        try turn("b", "s1", "2026-06-01T12:01:00Z", input: 20, output: 2, cacheWrite: 50, cache1h: 30)
+        try turn("c", "s1", "2026-06-01T12:02:00Z", model: "claude-opus-4-1", input: 5, output: 5)
+        try turn("d", "s2", "2026-06-01T13:00:00Z", input: 1, output: 1)
+
+        XCTAssertEqual(describe(try database.claudeTurnTotals()), [
+            "all|claude-opus-4-1|n1|i5|o5|r0|w0|h0",
+            "all|claude-sonnet-4-6|n3|i31|o4|r100|w50|h30"
+        ], "the 1h cache tokens come from attrs")
+        XCTAssertEqual(describe(try database.claudeTurnTotals(groupBy: .model)).count, 2)
+        XCTAssertEqual(describe(try database.claudeTurnTotals(groupBy: .session)), [
+            "s1|claude-opus-4-1|n1|i5|o5|r0|w0|h0",
+            "s1|claude-sonnet-4-6|n2|i30|o3|r100|w50|h30",
+            "s2|claude-sonnet-4-6|n1|i1|o1|r0|w0|h0"
+        ])
+        XCTAssertEqual(Set(try database.claudeTurnTotals(groupBy: .session, topKeys: 1).map(\.key)), ["s1"],
+                       "the top key by turn count keeps every model row")
+        XCTAssertEqual(describe(try database.claudeTurnTotals(toolName: "Edit")),
+                       ["all|claude-sonnet-4-6|n1|i10|o1|r100|w0|h0"])
+        XCTAssertEqual(describe(try database.claudeTurnTotals(
+            since: try epoch("2026-06-01T12:01:00Z"), until: try epoch("2026-06-01T13:00:00Z"))), [
+            "all|claude-opus-4-1|n1|i5|o5|r0|w0|h0",
+            "all|claude-sonnet-4-6|n1|i20|o2|r0|w50|h30"
+        ], "since is inclusive, until exclusive")
+        XCTAssertEqual(describe(try database.claudeTurnTotals(sessionIds: ["s2", "none"])),
+                       ["all|claude-sonnet-4-6|n1|i1|o1|r0|w0|h0"])
+        XCTAssertTrue(try database.claudeTurnTotals(sessionIds: []).isEmpty, "no sessions, no turns")
+    }
+
+    func testTurnTotalsLeaveUntimedTurnsOutOfARange() throws {
+        try turn("timed", "s1", "2026-06-01T12:00:00Z", input: 7)
+        try turn("untimed", "s1", nil, input: 3)
+
+        XCTAssertEqual(try database.claudeTurnTotals(since: 0).map(\.inputTokens), [7])
+        XCTAssertEqual(try database.claudeTurnTotals(until: 2e9).map(\.inputTokens), [7])
+        XCTAssertEqual(try database.claudeTurnTotals().map(\.inputTokens), [10], "an unranged read counts both")
+        XCTAssertEqual(try database.claudeTurnTimes(since: 0, until: 2e9, sessionIds: nil).count, 1)
+    }
+
+    func testTurnTotalsAndTimesCoverMoreSessionsThanOneChunk() throws {
+        var batch = NormalizedBatch()
+        let base = try epoch("2026-06-01T12:00:00Z")
+        let ids = (0..<520).map { "chunk-\($0)" }
+        batch.turns = ids.enumerated().map { index, id in
+            TurnRow(dedupKey: "k-\(id)", sessionID: id, time: Date(timeIntervalSince1970: base + Double(index)),
+                    model: "claude-sonnet-4-6", inputTokens: 1, rawRef: Int64(index + 1))
+        }
+        try harness.store.write(batch, provider: ClaudeProvider.name)
+        try turn("outside", "other", "2026-06-01T12:00:00Z", input: 1000)
+
+        let all = try database.claudeTurnTotals(sessionIds: ids)
+        XCTAssertEqual(all.map(\.turnCount), [520])
+        XCTAssertEqual(all.map(\.inputTokens), [520])
+        XCTAssertEqual(try database.claudeTurnTotals(sessionIds: ids, groupBy: .session).count, 520)
+        XCTAssertEqual(try database.claudeTurnTotals(sessionIds: ids, groupBy: .session, topKeys: 500).count, 500)
+        XCTAssertEqual(try database.claudeTurnTimes(since: base, until: base + 1e6, sessionIds: ids).count, 520)
+    }
+
+    func testTurnTimesAreOrderedBySessionThenTime() throws {
+        try turn("b2", "b", "2026-06-01T12:05:00.500Z")
+        try turn("a1", "a", "2026-06-01T12:03:00Z")
+        try turn("b1", "b", "2026-06-01T12:01:00Z")
+        try turn("late", "a", "2026-06-02T00:00:00Z")
+
+        let times = try database.claudeTurnTimes(
+            since: try epoch("2026-06-01T00:00:00Z"), until: try epoch("2026-06-02T00:00:00Z"), sessionIds: nil)
+        XCTAssertEqual(times.map(\.sessionId), ["a", "b", "b"])
+        XCTAssertEqual(times.map(\.time), [try epoch("2026-06-01T12:03:00Z"), try epoch("2026-06-01T12:01:00Z"),
+                                           try epoch("2026-06-01T12:05:00.500Z")], "fractional seconds kept")
+        XCTAssertEqual(try database.claudeTurnTimes(since: 0, until: 2e9, sessionIds: ["a"]).count, 2)
+        XCTAssertTrue(try database.claudeTurnTimes(since: 0, until: 2e9, sessionIds: []).isEmpty)
+    }
+
+    func testTranscriptTurnIsLookedUpByItsMessageId() throws {
+        let file = harness.transcriptFile(sessionId: "t1")
+        try harness.ingestTranscript(lines: [
+            #"{"type":"assistant","sessionId":"t1","timestamp":"2026-06-01T12:00:00.250Z","cwd":"/w","#
+                + #""message":{"id":"msg-1","model":"claude-sonnet-4-6","#
+                + #""usage":{"input_tokens":10,"output_tokens":5,"cache_read_input_tokens":7,"#
+                + #""cache_creation_input_tokens":3},"content":[{"type":"tool_use","name":"Edit","input":{}}]}}"#
+        ], file: file)
+
+        let row = try XCTUnwrap(try database.transcriptTurn(messageId: "msg-1"))
+        XCTAssertEqual(row.sessionId, "t1")
+        XCTAssertEqual(row.timestamp, "2026-06-01T12:00:00.250Z")
+        XCTAssertEqual(row.kind, "assistant")
+        XCTAssertEqual(row.model, "claude-sonnet-4-6")
+        XCTAssertEqual([row.inputTokens, row.outputTokens, row.cacheReadTokens, row.cacheCreationTokens],
+                       [10, 5, 7, 3])
+        XCTAssertEqual(row.toolName, "Edit")
+        XCTAssertFalse(row.isSubagent)
+        XCTAssertEqual(row.agentId, "")
+        XCTAssertNil(try database.transcriptTurn(messageId: "msg-unknown"))
+        XCTAssertEqual(try database.transcriptTurnCount(sessionId: "t1"), 1)
+    }
+
+    func testTranscriptTurnCarriesSubagentAgentAndUntimedStamp() throws {
+        try turn("sub", "s1", nil, model: nil, agent: "agent-7", kind: "assistant", subagent: true)
+        try turn("other", "s2", "2026-06-01T12:00:00Z")
+
+        let row = try XCTUnwrap(try database.transcriptTurn(messageId: "sub"))
+        XCTAssertTrue(row.isSubagent)
+        XCTAssertEqual(row.agentId, "agent-7")
+        XCTAssertEqual(row.model, "")
+        XCTAssertEqual(row.timestamp, "", "a line with no timestamp reads back empty, as the legacy row stored it")
+        XCTAssertEqual(try database.transcriptTurnCount(), 2)
+        XCTAssertEqual(try database.transcriptTurnCount(sessionId: "s1"), 1)
+        XCTAssertEqual(try database.transcriptTurnCount(sessionId: "none"), 0)
+    }
+
+    // MARK: - Repricing
+
+    private static let pricingRevisionKey = "transcript_pricing_revision"
+
+    /// Stores `cost` as the session's `session_metrics` cost, stubbing its session row first.
+    private func storeCost(_ cost: Double, session: String, in target: DaemonDatabase) throws {
+        _ = try target.createSessionStubIfMissing(
+            sessionId: session, cwd: "/tmp", model: "", startedAt: "2026-06-01T12:00:00Z",
+            lastActivityAt: "2026-06-01T12:00:00Z", accountEmail: "")
+        try target.upsertSessionMetrics(SessionMetricsDTO(
+            sessionId: session, totalInputTokens: 0, totalOutputTokens: 0, cacheReadTokens: 0,
+            cacheCreationTokens: 0, totalCostUsd: cost, turnCount: 0, model: "", firstTurnAt: "",
+            lastTurnAt: "", updatedAt: ""), accountEmail: "")
+    }
+
+    func testRepricingRecomputesSessionCostsFromTheStore() throws {
+        try turn("a", "s1", "2026-06-01T12:00:00Z", input: 1000, output: 2000, cacheRead: 300, cacheWrite: 40,
+                 cache1h: 10)
+        try turn("b", "s1", "2026-06-01T12:01:00Z", model: "claude-opus-4-1", output: 500)
+        try turn("c", "untracked", nil, output: 9)
+        try storeCost(999, session: "s1", in: database)
+        try storeCost(4.5, session: "legacy-only", in: database)
+
+        database.repriceSessionMetricsIfNeeded()
+
+        let expected = TranscriptPricing.cost(
+            model: "claude-sonnet-4-6", inputTokens: 1000, outputTokens: 2000, cacheReadTokens: 300,
+            cacheCreationTokens: 40, cacheCreation1hTokens: 10)
+            + TranscriptPricing.cost(
+                model: "claude-opus-4-1", inputTokens: 0, outputTokens: 500, cacheReadTokens: 0,
+                cacheCreationTokens: 0, cacheCreation1hTokens: 0)
+        XCTAssertEqual(try XCTUnwrap(try database.metricsForSession(sessionId: "s1")).totalCostUsd,
+                       expected, accuracy: 1e-9)
+        XCTAssertEqual(try database.metricsForSession(sessionId: "legacy-only")?.totalCostUsd, 4.5,
+                       "a session with no store turns keeps its cost")
+        XCTAssertEqual(try database.setting(for: Self.pricingRevisionKey), String(TranscriptPricing.revision))
+
+        // Recorded: a second pass at the same revision changes nothing.
+        try storeCost(1, session: "s1", in: database)
+        database.repriceSessionMetricsIfNeeded()
+        XCTAssertEqual(try database.metricsForSession(sessionId: "s1")?.totalCostUsd, 1)
+    }
+
+    func testRepricingWithoutAStoreDoesNothingAndRecordsNothing() throws {
+        let opened = try TestDaemonDatabase.makeSessionDatabase()
+        defer { TestDaemonDatabase.remove(path: opened.path) }
+        let bare = opened.db
+        try storeCost(999, session: "s1", in: bare)
+
+        bare.repriceSessionMetricsIfNeeded()
+
+        XCTAssertEqual(try bare.metricsForSession(sessionId: "s1")?.totalCostUsd, 999)
+        XCTAssertNil(try bare.setting(for: Self.pricingRevisionKey), "a later pass with a store must still run")
+    }
+
     // MARK: - An empty store
 
     /// A store that is attached but holds no events answers empty, not with the
@@ -290,6 +489,10 @@ final class ClaudeEventReadsTests: XCTestCase {
         XCTAssertNil(try database.claudeFirstEventTime(sessionId: "s1"))
         XCTAssertTrue(try database.claudeEventTimes(sessionId: "s1", afterId: 0).isEmpty)
         XCTAssertEqual(try database.eventIdHighWater(), 0)
+        XCTAssertTrue(try database.claudeTurnTotals().isEmpty)
+        XCTAssertTrue(try database.claudeTurnTimes(since: 0, until: 2e9, sessionIds: nil).isEmpty)
+        XCTAssertNil(try database.transcriptTurn(messageId: "m1"))
+        XCTAssertEqual(try database.transcriptTurnCount(), 0)
     }
 
     // MARK: - No event store
@@ -324,6 +527,16 @@ final class ClaudeEventReadsTests: XCTestCase {
         XCTAssertNil(try bare.claudeFirstEventTime(sessionId: "s1"))
         XCTAssertTrue(try bare.claudeEventTimes(sessionId: "s1", afterId: 0).isEmpty)
         XCTAssertNil(try bare.eventIdHighWater())
+        try bare.insertTranscriptTurn(
+            sessionId: "s1", timestamp: "2026-06-01T12:00:00Z", kind: "assistant", model: "claude-sonnet-4-6",
+            messageId: "m1", inputTokens: 10, outputTokens: 1, cacheReadTokens: 0, cacheCreationTokens: 0,
+            toolName: "", cwd: "/tmp", accountEmail: "")
+        XCTAssertEqual(try bare.legacyTranscriptTurnCount(sessionId: "s1"), 1, "the legacy row is there")
+        XCTAssertTrue(try bare.claudeTurnTotals().isEmpty)
+        XCTAssertTrue(try bare.claudeTurnTotals(sessionIds: ["s1"], groupBy: .session).isEmpty)
+        XCTAssertTrue(try bare.claudeTurnTimes(since: 0, until: 2e9, sessionIds: nil).isEmpty)
+        XCTAssertNil(try bare.transcriptTurn(messageId: "m1"))
+        XCTAssertEqual(try bare.transcriptTurnCount(sessionId: "s1"), 0)
         let archived = bare.claudeArchivedPayload(rawRef: 1)
         XCTAssertNil(archived.hookData)
         XCTAssertNil(archived.line)
