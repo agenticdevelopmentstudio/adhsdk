@@ -16,6 +16,9 @@
 
 ## Reference
 
+- [`shared-analytics.md`](shared-analytics.md) — the shared PostHog
+  package: why it is shared, its privacy configuration, and how each kind
+  of site wires it.
 - [`monorepo-conversion.md`](monorepo-conversion.md) — historical and
   architectural record of the May 2026 conversion: what shipped, why,
   and what was deferred.
