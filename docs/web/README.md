@@ -19,6 +19,10 @@
 - [`shared-analytics.md`](shared-analytics.md) — the shared PostHog
   package: why it is shared, its privacy configuration, and how each kind
   of site wires it.
+- [`dependency-security.md`](dependency-security.md) — clearing
+  Dependabot alerts: the security floors in the workspace overrides, the
+  minimatch patch for redocly, the status-server pins its hosts must follow,
+  and regenerating the terminal client.
 - [`monorepo-conversion.md`](monorepo-conversion.md) — historical and
   architectural record of the May 2026 conversion: what shipped, why,
   and what was deferred.
