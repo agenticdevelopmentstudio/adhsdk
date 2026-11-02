@@ -73,8 +73,12 @@ public final class EventStore: @unchecked Sendable {
             readDeadline: .seconds(30), writeDeadline: .seconds(60),
             prepare: { conn in
                 // Runs before the journal mode is set, so on a new file it lands
-                // before page 1 exists; on an existing file it is a no-op.
-                try conn.execute(sql: "PRAGMA auto_vacuum = INCREMENTAL")
+                // before page 1 exists; on an existing file it is a no-op. Only the
+                // writer may set it: SQLite refuses it on the pool's read-only
+                // reader connections ("attempt to write a readonly database").
+                if !conn.configuration.readonly {
+                    try conn.execute(sql: "PRAGMA auto_vacuum = INCREMENTAL")
+                }
                 try conn.execute(sql: "PRAGMA synchronous=FULL")
             }
         )
@@ -237,7 +241,12 @@ public final class EventStore: @unchecked Sendable {
 
     /// Every row of every table as a sorted-keys JSON line, ordered by content key,
     /// without the integer `id`. Equal dumps mean equal content.
-    public func canonicalDump() throws -> [String] {
+    ///
+    /// `includingRawRef: false` also drops `raw_ref`, for comparing stores built from
+    /// different archives: archive ids follow arrival order, and when several records
+    /// feed one turn at the same `as_of`, which of them the row points back to is
+    /// arbitrary. Stores replayed from the same archive compare with it included.
+    public func canonicalDump(includingRawRef: Bool = true) throws -> [String] {
         let tables: [(name: String, order: String)] = [
             ("sessions", "provider, session_id"),
             ("events", "provider, dedup_key"),
@@ -250,7 +259,7 @@ public final class EventStore: @unchecked Sendable {
                 let rows = try Row.fetchAll(conn, sql: "SELECT * FROM \(table.name) ORDER BY \(table.order)")
                 for row in rows {
                     var object: [String: NormalizedValue] = ["table": .string(table.name)]
-                    for (column, value) in row where column != "id" {
+                    for (column, value) in row where column != "id" && (includingRawRef || column != "raw_ref") {
                         switch value.storage {
                         case .null: object[column] = .null
                         case .int64(let int): object[column] = .number(Double(int))

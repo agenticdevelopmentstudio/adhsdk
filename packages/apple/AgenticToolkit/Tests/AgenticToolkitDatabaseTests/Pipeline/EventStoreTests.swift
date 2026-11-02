@@ -104,7 +104,8 @@ final class EventStoreTests: XCTestCase {
         XCTAssertEqual(dumps.count, 1, "\(dumps)")
         let dump = try XCTUnwrap(dumps.first?.first(where: { $0.contains("\"table\":\"turns\"") }))
         XCTAssertTrue(dump.contains("\"account\":\"acct\""), dump)
-        XCTAssertTrue(dump.contains("\"as_of\":\(date(3).timeIntervalSince1970)"), dump)
+        // Canonical JSON writes a whole number without a fraction (1800000003, not 1800000003.0).
+        XCTAssertTrue(dump.contains("\"as_of\":\(Int(date(3).timeIntervalSince1970))"), dump)
     }
 
     func testSameMessageUUIDInTwoSessionsIsTwoRowsAndFirstCopyWinsWithinOne() throws {

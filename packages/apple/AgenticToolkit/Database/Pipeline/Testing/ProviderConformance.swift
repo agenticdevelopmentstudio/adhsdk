@@ -98,9 +98,9 @@ public enum ProviderConformance {
 
         let twice = try drainAll(normalizer, fixtures, in: root.appendingPathComponent("twice"),
                                  passes: 2, crashAt: nil, rng: &rng)
-        if twice.dump != live.dump {
+        if twice.content != live.content {
             failures.append(ConformanceFailure(
-                check: "idempotentRedelivery", detail: describeDiff(live.dump, twice.dump)))
+                check: "idempotentRedelivery", detail: describeDiff(live.content, twice.content)))
         }
 
         for step in DrainStep.allCases {
@@ -111,10 +111,10 @@ public enum ProviderConformance {
                     check: "crashRecovery",
                     detail: "the fault at \(step.rawValue) never fired; the pass proves nothing"))
             }
-            if crashed.dump != live.dump {
+            if crashed.content != live.content {
                 failures.append(ConformanceFailure(
                     check: "crashRecovery",
-                    detail: "crash at \(step.rawValue): " + describeDiff(live.dump, crashed.dump)))
+                    detail: "crash at \(step.rawValue): " + describeDiff(live.content, crashed.content)))
             }
         }
         return failures
@@ -402,6 +402,10 @@ public enum ProviderConformance {
 
     private struct DrainResult {
         let dump: [String]
+        /// The dump without `raw_ref`: archive ids follow arrival order, so two runs that
+        /// archive in different orders are compared on this (the `rawRef` check proves the
+        /// references themselves).
+        let content: [String]
         let archive: RawArchive
         let quarantinedKeys: Set<String>
         let pending: Int
@@ -470,7 +474,8 @@ public enum ProviderConformance {
             drainer.drainUntilEmpty()
         }
         let quarantined = try spool.quarantined(limit: max(1, fixtures.count))
-        return DrainResult(dump: try store.canonicalDump(), archive: archive,
+        return DrainResult(dump: try store.canonicalDump(),
+                           content: try store.canonicalDump(includingRawRef: false), archive: archive,
                            quarantinedKeys: Set(quarantined.map(\.record.dedupKey)),
                            pending: try spool.pendingCount(), faultFired: fired)
     }
@@ -487,8 +492,8 @@ public enum ProviderConformance {
         let onlyLeft = Set(left).subtracting(right)
         let onlyRight = Set(right).subtracting(left)
         let sample = (onlyLeft.sorted().first ?? "-", onlyRight.sorted().first ?? "-")
-        return "\(left.count) vs \(right.count) rows; \(onlyLeft.count) only in first (e.g. \(sample.0.prefix(200))), "
-            + "\(onlyRight.count) only in second (e.g. \(sample.1.prefix(200)))"
+        return "\(left.count) vs \(right.count) rows; \(onlyLeft.count) only in first (e.g. \(sample.0.prefix(2000))), "
+            + "\(onlyRight.count) only in second (e.g. \(sample.1.prefix(2000)))"
     }
 
     // MARK: - Seeded randomness
