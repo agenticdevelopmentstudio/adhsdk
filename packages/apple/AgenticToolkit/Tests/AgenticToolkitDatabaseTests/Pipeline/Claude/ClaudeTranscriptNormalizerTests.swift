@@ -211,6 +211,45 @@ final class ClaudeTranscriptNormalizerTests: XCTestCase {
         }
     }
 
+    func testZeroUsageRepeatNeverOverwritesTurnTokensInEitherOrder() throws {
+        // A later streamed line of the same message with empty usage emits no
+        // turn, but still its message and session upsert.
+        let zeroLine = #"{"type":"assistant","sessionId":"6f1c2a9e-0b7d-4c55-9a3e-2d8f1e4b7a10","#
+            + #""timestamp":"2026-10-30T12:00:09.000Z","uuid":"0a1b2c3d-0009-4000-8000-000000000009","#
+            + #""message":{"id":"msg_01XyZAbCdEfGhIjKlMnOpQrS","role":"assistant","model":"claude-opus-4-1","#
+            + #""content":[{"type":"text","text":"done"}],"usage":{"input_tokens":0,"output_tokens":0}}}"#
+        let zeroPayload = ClaudeTranscriptPayload(file: Self.mainFile, lineNo: 12, subagentFile: false, line: zeroLine)
+        let zero = try ClaudeTranscriptNormalizer().normalize(
+            ArchivedRecord(id: 3, record: try Self.record(zeroPayload)))
+        XCTAssertTrue(zero.turns.isEmpty)
+        XCTAssertEqual(zero.messages.count, 1)
+        XCTAssertEqual(zero.sessions.count, 1)
+
+        let real = try ClaudeTranscriptNormalizer().normalize(try Self.archived("assistant", id: 1))
+        for (index, order) in [[real, zero], [zero, real]].enumerated() {
+            let store = try EventStore(path: tmpDir.appendingPathComponent("zero-\(index).db").path)
+            for batch in order { _ = try store.write(batch, provider: ClaudeProvider.name) }
+            let rows = try store.read { conn in
+                try Row.fetchAll(conn, sql: """
+                    SELECT input_tokens, output_tokens, cache_read_tokens, cache_write_tokens FROM turns
+                    WHERE provider = 'claude' AND dedup_key = 'msg_01XyZAbCdEfGhIjKlMnOpQrS'
+                    """)
+            }
+            XCTAssertEqual(rows.count, 1, "order \(index)")
+            let row = try XCTUnwrap(rows.first)
+            XCTAssertEqual(row["input_tokens"] as Int?, 4, "order \(index)")
+            XCTAssertEqual(row["output_tokens"] as Int?, 12, "order \(index)")
+            XCTAssertEqual(row["cache_read_tokens"] as Int?, 18000, "order \(index)")
+            XCTAssertEqual(row["cache_write_tokens"] as Int?, 2400, "order \(index)")
+        }
+    }
+
+    func testIdlessZeroUsageUserLineKeepsItsTurn() throws {
+        let turn = try XCTUnwrap(try Self.normalize("user-tool-result").turns.first)
+        XCTAssertEqual(turn.inputTokens + turn.outputTokens + turn.cacheReadTokens + turn.cacheWriteTokens, 0)
+        XCTAssertTrue(turn.dedupKey.hasPrefix("user:"))
+    }
+
     func testSidechainLineIsASubagentTurn() throws {
         let batch = try Self.normalize("sidechain")
         let turn = try XCTUnwrap(batch.turns.first)

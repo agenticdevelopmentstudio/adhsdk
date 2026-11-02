@@ -13,7 +13,8 @@ import Foundation
 ///   accepts, keyed by `message.id`. A streamed assistant message repeats its
 ///   id on several lines with growing usage; `as_of` is the line's time plus
 ///   `line_no` microseconds, so the store's latest-wins merge keeps the last
-///   (largest) line whichever order they arrive in.
+///   (largest) line whichever order they arrive in. A zero-usage line of a
+///   message with an id emits no turn, so it can never overwrite real counts.
 /// - Message (Ruling 6): one per user/assistant line and per queued prompt,
 ///   keyed by the record's dedup key, with `content` kept verbatim in
 ///   `attrs.blocks` and its text blocks flattened into `text`.
@@ -103,8 +104,8 @@ private struct Line {
     }
 
     func appendTurnAndMessage(to batch: inout NormalizedBatch) {
-        if let turn {
-            batch.turns.append(turnRow(turn))
+        if let turn, let row = turnRow(turn) {
+            batch.turns.append(row)
         }
         let queuedPrompt = QueuedPrompt.queuedPrompt(root)
         guard raw.entryType == "user" || raw.entryType == "assistant" || queuedPrompt != nil else { return }
@@ -162,7 +163,14 @@ private struct Line {
             sessionID: ownSessionID, asOf: asOf, cwd: cwd, model: model, startedAt: parsedTime, attrs: attrs))
     }
 
-    private func turnRow(_ turn: JSONLScanner.ParsedTurn) -> TurnRow {
+    /// The turn for `turn`, or nil for a zero-usage line of a message that has
+    /// an id: a streamed message can repeat its id on a later line with empty
+    /// usage, and since the store merges latest-wins, that line would wipe the
+    /// real token counts (the legacy importer's guard, TranscriptStore+Turns).
+    /// Id-less lines keep their turn: their fallback key is theirs alone.
+    private func turnRow(_ turn: JSONLScanner.ParsedTurn) -> TurnRow? {
+        let usage = turn.inputTokens + turn.outputTokens + turn.cacheReadTokens + turn.cacheCreationTokens
+        if !turn.messageId.isEmpty && usage == 0 { return nil }
         let key: String
         if !turn.messageId.isEmpty {
             key = turn.messageId
