@@ -141,7 +141,8 @@ public struct ClaudeHookNormalizer: Normalizer {
         }
         if let remaining = (leaves["context_window_remaining_percentage"] as? NSNumber)?.doubleValue,
            remaining.isFinite {
-            attrs["context_used_pct"] = .number(Double(max(0, min(100, 100 - Int(remaining.rounded())))))
+            let clamped = max(0, min(100, remaining.rounded()))
+            attrs["context_used_pct"] = .number(100 - clamped)
         }
         // The cause maps stay whole objects, never flattened (their keys are unbounded).
         let cache = hookData["prompt_cache"] as? [String: Any]
