@@ -1,4 +1,5 @@
 import AgenticToolkitCore
+import GRDB
 import XCTest
 import Foundation
 @testable import AgenticToolkitDatabase
@@ -86,6 +87,56 @@ final class ClaudeInsightReadsTests: XCTestCase {
                                                                dimension: .attr("trigger"))
             .map { "\($0.day) \($0.dimension) \($0.count)" }.sorted()
         XCTAssertEqual(triggers, ["2026-06-01 auto 1", "2026-06-02 manual 1"])
+
+        let toolTotals = try database.claudeDimensionCounts(providerType: "PreToolUse", dimension: .toolName)
+            .map { "\($0.dimension) \($0.count)" }.sorted()
+        XCTAssertEqual(toolTotals, ["Bash 1", "Read 2"])
+        let lateTriggers = try database.claudeDimensionCounts(
+            providerType: "PreCompact", dimension: .attr("trigger"),
+            from: try epoch("2026-06-02T00:00:00Z"))
+            .map { "\($0.dimension) \($0.count)" }
+        XCTAssertEqual(lateTriggers, ["manual 1"])
+    }
+
+    /// A row whose attrs are not JSON is skipped by an attr read rather than
+    /// failing the whole query (json_extract errors on malformed JSON).
+    func testAttrDimensionReadsSkipAMalformedAttrsRow() throws {
+        try harness.ingest([
+            hook("PreCompact", "s1", "2026-06-01T12:05:00Z", ["trigger": "auto"])
+        ])
+        let queue = try DatabaseQueue(path: harness.directory.appendingPathComponent(EventStore.fileName).path)
+        try queue.write { conn in
+            try conn.execute(sql: """
+                INSERT INTO events (provider, dedup_key, session_id, kind, provider_type, time, attrs, raw_ref)
+                VALUES ('claude', 'broken-1', 's1', 'other', 'PreCompact', ?, '{not json', 0)
+                """, arguments: [try epoch("2026-06-01T12:06:00Z")])
+        }
+        let byDay = try database.claudeDimensionCountsByDay(providerType: "PreCompact", dimension: .attr("trigger"))
+            .map { "\($0.day) \($0.dimension) \($0.count)" }
+        XCTAssertEqual(byDay, ["2026-06-01 auto 1"])
+        let totals = try database.claudeDimensionCounts(providerType: "PreCompact", dimension: .attr("trigger"))
+            .map { "\($0.dimension) \($0.count)" }
+        XCTAssertEqual(totals, ["auto 1"])
+    }
+
+    /// The day walk seeks one row per day: gaps cost nothing, `limit` stops it,
+    /// and `until` is exclusive.
+    func testEventDaysWalkSkipsGapsAndHonoursLimitAndUntil() throws {
+        try harness.ingest([
+            hook("Stop", "s1", "2026-06-01T00:00:00Z"),
+            hook("Stop", "s1", "2026-06-01T23:59:59Z"),
+            hook("Stop", "s1", "2026-06-05T08:00:00Z"),
+            hook("Stop", "s1", "2026-06-20T08:00:00Z"),
+            hook("Stop", "s1", "1970-01-01T00:00:10Z")
+        ])
+        XCTAssertEqual(try database.claudeEventDays(), ["2026-06-01", "2026-06-05", "2026-06-20"])
+        XCTAssertEqual(try database.claudeEventDays(limit: 2), ["2026-06-01", "2026-06-05"])
+        XCTAssertEqual(try database.claudeEventDays(limit: 0), [])
+        XCTAssertEqual(try database.claudeEventDays(until: try epoch("2026-06-20T00:00:00Z")),
+                       ["2026-06-01", "2026-06-05"])
+        XCTAssertEqual(try database.claudeEventDays(from: try epoch("2026-06-01T12:00:00Z"),
+                                                    until: try epoch("2026-06-20T08:00:00Z")),
+                       ["2026-06-01", "2026-06-05"])
     }
 
     func testCwdSessionCountsNewSessionsAndDays() throws {

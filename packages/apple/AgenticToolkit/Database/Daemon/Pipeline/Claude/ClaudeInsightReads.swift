@@ -10,14 +10,16 @@ public enum ClaudeEventDimension: Sendable, Equatable {
     case toolName
     case attr(String)
 
-    /// The SQL expression reading the dimension off an `events` row. An attrs
-    /// key is bound, never spliced, so any key is safe.
-    fileprivate var sql: (expression: String, arguments: [any DatabaseValueConvertible]) {
+    /// The SQL expression reading the dimension off an `events` row, and the
+    /// row filter it needs. An attrs key is bound, never spliced, so any key is
+    /// safe; `attrs` is opaque TEXT, so a row whose JSON is malformed is skipped
+    /// rather than aborting the whole read.
+    fileprivate var sql: (expression: String, filter: String, arguments: [any DatabaseValueConvertible]) {
         switch self {
-        case .toolName: return ("tool_name", [])
+        case .toolName: return ("tool_name", "", [])
         case .attr(let key):
             let quoted = key.replacingOccurrences(of: "\"", with: "\"\"")
-            return ("json_extract(attrs, ?)", ["$.\"\(quoted)\""])
+            return ("json_extract(attrs, ?)", " AND json_valid(attrs)", ["$.\"\(quoted)\""])
         }
     }
 }
@@ -105,12 +107,39 @@ extension DaemonDatabase {
                 SELECT day, dim, COUNT(*) FROM (
                     SELECT date(time, 'unixepoch') AS day, CAST(\(dim.expression) AS TEXT) AS dim
                     FROM events
-                    WHERE provider = ? AND provider_type = ? AND \(range.sql)
+                    WHERE provider = ? AND provider_type = ? AND \(range.sql)\(dim.filter)
                 )
                 WHERE dim IS NOT NULL AND dim != ''
                 GROUP BY day, dim
                 """, arguments: StatementArguments(arguments))
                 .map { (day: $0[0] ?? "", dimension: $0[1] ?? "", count: $0[2] ?? 0) }
+        }
+    }
+
+    /// One hook type's events per dimension value over the whole range,
+    /// unordered — ``claudeDimensionCountsByDay(providerType:dimension:from:until:deadline:)``
+    /// without the day split. Null and empty values are left out.
+    public func claudeDimensionCounts(
+        providerType: String,
+        dimension: ClaudeEventDimension,
+        from: Double? = nil,
+        until: Double? = nil
+    ) throws -> [(dimension: String, count: Int)] {
+        let range = Self.claudeTimeRange(from: from, until: until)
+        let dim = dimension.sql
+        let arguments: [any DatabaseValueConvertible] =
+            dim.arguments + [ClaudeProvider.name, providerType] + range.arguments
+        return try withEventReads([]) { conn in
+            try Row.fetchAll(conn, sql: """
+                SELECT dim, COUNT(*) FROM (
+                    SELECT CAST(\(dim.expression) AS TEXT) AS dim
+                    FROM events
+                    WHERE provider = ? AND provider_type = ? AND \(range.sql)\(dim.filter)
+                )
+                WHERE dim IS NOT NULL AND dim != ''
+                GROUP BY dim
+                """, arguments: StatementArguments(arguments))
+                .map { (dimension: $0[0] ?? "", count: $0[1] ?? 0) }
         }
     }
 
@@ -169,25 +198,42 @@ extension DaemonDatabase {
         }
     }
 
-    /// The distinct UTC days holding an event in the range, oldest first.
+    /// The distinct UTC days holding an event in the range, oldest first, at
+    /// most `limit` of them.
+    ///
+    /// Found by seeking, never by scanning: each day is one probe for the
+    /// earliest event at or after the start of the day after the last one
+    /// found, which the `events_time` index answers from its left edge. So the cost is one probe per day
+    /// returned, however many events the range holds, and a `limit` stops the
+    /// walk instead of trimming a sorted whole-range result. Empty calendar
+    /// gaps cost nothing: the next probe lands on the next day that has events.
     public func claudeEventDays(
         from: Double? = nil, until: Double? = nil, limit: Int? = nil, deadline: Duration? = nil
     ) throws -> [String] {
-        let range = Self.claudeTimeRange(from: from, until: until)
-        var arguments: [any DatabaseValueConvertible] = [ClaudeProvider.name] + range.arguments
-        var sql = """
-            SELECT DISTINCT date(time, 'unixepoch') AS day
-            FROM events
-            WHERE provider = ? AND \(range.sql)
-            ORDER BY day ASC
-            """
-        if let limit {
-            sql += "\nLIMIT ?"
-            arguments.append(limit)
-        }
+        if let limit, limit <= 0 { return [] }
+        let untilClause = until == nil ? "" : " AND time < ?"
         return try withEventReads([], deadline: deadline) { conn in
-            try String.fetchAll(conn, sql: sql, arguments: StatementArguments(arguments))
-                .filter { !$0.isEmpty }
+            var days: [String] = []
+            var cursor = max(from ?? Self.claudeEarliestKnownEventTime, Self.claudeEarliestKnownEventTime)
+            while limit.map({ days.count < $0 }) ?? true {
+                var arguments: [any DatabaseValueConvertible] = [ClaudeProvider.name, cursor]
+                if let until { arguments.append(until) }
+                // ORDER BY + LIMIT 1 rather than MIN(): the probe walks the time
+                // index in order and stops at the first matching row. No
+                // INDEXED BY — a bulk load drops the index, and the read must
+                // still answer (slowly) rather than fail.
+                guard let time = try Double.fetchOne(conn, sql: """
+                    SELECT time FROM events
+                    WHERE provider = ? AND time >= ?\(untilClause)
+                    ORDER BY time LIMIT 1
+                    """, arguments: StatementArguments(arguments)) else { break }
+                // Unix time has no leap seconds, so a UTC day is a whole multiple
+                // of 86400 from the epoch.
+                let dayStart = (time / 86400).rounded(.down) * 86400
+                days.append(UTCDay.string(from: Date(timeIntervalSince1970: dayStart)))
+                cursor = dayStart + 86400
+            }
+            return days
         }
     }
 
