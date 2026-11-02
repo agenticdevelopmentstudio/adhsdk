@@ -1663,6 +1663,7 @@ class AssembleTest(unittest.TestCase):
         deps = json.loads((self.app / "package.json").read_text())["dependencies"]
         self.assertNotIn("@vercel/analytics", deps)
         self.assertNotIn("@vercel/speed-insights", deps)
+        self.assertNotIn("@agenticdevelopertoolkit/analytics", deps)
 
     def test_analytics_mounts_vercels_two_in_production(self) -> None:
         self.config["analytics"] = True
@@ -1674,6 +1675,21 @@ class AssembleTest(unittest.TestCase):
         deps = json.loads((self.app / "package.json").read_text())["dependencies"]
         self.assertEqual(deps["@vercel/analytics"], "^2.0.1")
         self.assertEqual(deps["@vercel/speed-insights"], "^2.0.0")
+
+    def test_analytics_mounts_the_toolkits_posthog_on_every_deploy(self) -> None:
+        self.config["analytics"] = True
+        self.assert_ok(self.assemble())
+        text = (self.app / "src/site/analytics.tsx").read_text()
+        self.assertIn("import { PostHogAnalytics } from '@agenticdevelopertoolkit/analytics'", text)
+        # Outside the production gate: the key, set per Vercel environment, is PostHog's only switch.
+        self.assertLess(text.index("<PostHogAnalytics />"), text.index("process.env.DEPLOYMENT_ENV"))
+        deps = json.loads((self.app / "package.json").read_text())["dependencies"]
+        self.assertTrue(deps["@agenticdevelopertoolkit/analytics"].startswith("link:"))
+        self.assertTrue(deps["@agenticdevelopertoolkit/analytics"].endswith("/analytics"))
+
+    def test_analytics_toolkit_package_is_not_listed_twice(self) -> None:
+        self.config.update({"analytics": True, "toolkitPackages": ["analytics"]})
+        self.assert_refused(self.assemble(), "already a dependency")
 
     def test_analytics_dependencies_are_the_templates_to_pin(self) -> None:
         self.config.update({"analytics": True, "dependencies": {"@vercel/analytics": "^1.0.0"}})

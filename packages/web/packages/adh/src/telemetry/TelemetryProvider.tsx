@@ -2,8 +2,8 @@
 
 import { useEffect, type ReactNode } from 'react'
 import * as Sentry from '@sentry/react'
-import posthog from 'posthog-js'
-import { scrubPath, setPosthogReady, captureEvent } from './analytics'
+import { scrubUrl, startPostHog } from '@agenticdevelopertoolkit/analytics'
+import { setPosthogReady, captureEvent } from './analytics'
 import { instrumentFetch } from './fetch-instrumentation'
 // Package-path specifier, not relative: this leaf is `external` in this package's own
 // tsup.config.ts (module-level `reporter` state must stay a single instance across every
@@ -15,7 +15,8 @@ import { setErrorReporter } from '@agentic-toolkit/adh/telemetry/report-error'
 // from a single place (the way the header/footer already work). Two engines, both
 // privacy-first by construction:
 //   • Errors    → Sentry SDK pointed at self-hosted GlitchTip (errors only).
-//   • Analytics → PostHog, anonymous + cookieless + allowlist-only.
+//   • Analytics → PostHog, anonymous + cookieless + allowlist-only, configured in
+//     @agenticdevelopertoolkit/analytics.
 //
 // Privacy principle: default-deny / fail-toward-privacy. A mistake must EXCLUDE
 // data, never accidentally include something private — so autocapture and session
@@ -26,20 +27,6 @@ import { setErrorReporter } from '@agentic-toolkit/adh/telemetry/report-error'
 // ship before the GlitchTip / PostHog projects exist.
 
 let started = false
-
-/** Reduce a URL to origin + a redacted path: drops query/hash (tokens) AND redacts
- *  id-shaped path segments via the same `scrubPath` used for `http_request`, so pageview
- *  and web-vitals events don't leak `/u/<id>`-style ids that `http_request` already hides. */
-function scrubUrl(url: string | undefined): string | undefined {
-  if (!url) return url
-  try {
-    const u = new URL(url)
-    return u.origin + scrubPath(u.pathname)
-  } catch {
-    // Relative or non-URL value — scrub it as a bare path.
-    return scrubPath(url)
-  }
-}
 
 function startTelemetry(resolveEnvironment: (hostname: string) => string): void {
   if (started || typeof window === 'undefined') return
@@ -83,38 +70,10 @@ function startTelemetry(resolveEnvironment: (hostname: string) => string): void 
   }
 
   // ── Analytics → PostHog (anonymous, cookieless, allowlist-only) ───────────
-  const phKey = process.env.NEXT_PUBLIC_POSTHOG_KEY
-  if (phKey) {
-    posthog.init(phKey, {
-      api_host: process.env.NEXT_PUBLIC_POSTHOG_HOST ?? 'https://us.i.posthog.com',
-      autocapture: false, // the heart of "default to less": no automatic click/input capture
-      disable_session_recording: true, // no screen replay, ever
-      capture_pageview: 'history_change', // traffic only — pageviews on SPA route change
-      // Real-user Core Web Vitals (LCP/INP/CLS/FCP) as `$web_vitals` events. Distinct
-      // from autocapture (which stays off) and numeric-only, so it carries no PII.
-      capture_performance: { web_vitals: true },
-      persistence: 'memory', // cookieless: no cross-session id ⇒ no consent banner
-      person_profiles: 'identified_only', // never create a profile for an anonymous visitor
-      mask_all_text: true, // belt-and-suspenders if any capture path ever runs
-      mask_all_element_attributes: true,
-      disable_surveys: true,
-      before_send: (event) => {
-        // Scrub the URL/path properties PostHog attaches to every event (pageviews AND
-        // $web_vitals): origin + redacted path, no query/hash. $pathname is redacted too
-        // so an id-bearing route can't ride along unscrubbed.
-        if (event?.properties) {
-          event.properties.$current_url = scrubUrl(event.properties.$current_url)
-          event.properties.$referrer = scrubUrl(event.properties.$referrer)
-          if (typeof event.properties.$pathname === 'string') {
-            event.properties.$pathname = scrubPath(event.properties.$pathname)
-          }
-        }
-        return event
-      },
-    })
-    // Gate captureEvent: custom events only reach PostHog once init has actually run.
-    setPosthogReady(true)
-  }
+  // The config is @agenticdevelopertoolkit/analytics', shared with every site outside the
+  // family; it no-ops without NEXT_PUBLIC_POSTHOG_KEY. Gate captureEvent on it: custom
+  // events only reach PostHog once init has actually run.
+  if (startPostHog()) setPosthogReady(true)
 
   // Route HANDLED errors (captureException across the platform) to BOTH pipelines,
   // registered regardless of which backend is configured: GlitchTip gets the error

@@ -115,6 +115,8 @@ FIXED_SCRIPTS = ("dev", "build", "start")
 
 # `analytics: true` mounts these in the root layout; the template pins their ranges.
 ANALYTICS_DEPS = {"@vercel/analytics": "^2.0.1", "@vercel/speed-insights": "^2.0.0"}
+# ...and the toolkit's PostHog, linked like the skeleton's own toolkit packages.
+ANALYTICS_TOOLKIT = {"@agenticdevelopertoolkit/analytics": "analytics"}
 
 # content-buildr's outputs: never written, never deleted.
 PROTECTED_DIRS = ("src/content/",)
@@ -229,7 +231,8 @@ def plan_slot_markdown(site: Path, entry: str | None) -> tuple[str, list[str]]:
     return text, []
 
 
-# `src/site/analytics.tsx`, which the root layout always renders: nothing, or Vercel's two.
+# `src/site/analytics.tsx`, which the root layout always renders: nothing, or Vercel's two and
+# the toolkit's PostHog.
 ANALYTICS_OFF = (
     f"{HEADER}\n"
     "import type { ReactElement } from 'react'\n\n"
@@ -242,18 +245,25 @@ ANALYTICS_ON = (
     f"{HEADER}\n"
     "import type { ReactElement } from 'react'\n"
     "import { Analytics } from '@vercel/analytics/next'\n"
-    "import { SpeedInsights } from '@vercel/speed-insights/next'\n\n"
+    "import { SpeedInsights } from '@vercel/speed-insights/next'\n"
+    "import { PostHogAnalytics } from '@agenticdevelopertoolkit/analytics'\n\n"
     "/**\n"
     " * Vercel Web Analytics and Speed Insights, on production deploys only. `DEPLOYMENT_ENV`, not\n"
     " * Vercel's own label: every tier's project makes `VERCEL_ENV=production` deployments.\n"
+    " * PostHog runs wherever the project sets `NEXT_PUBLIC_POSTHOG_KEY`, and nowhere else.\n"
     " */\n"
-    "export function SiteAnalytics(): ReactElement | null {\n"
-    "  return process.env.DEPLOYMENT_ENV === 'production' ? (\n"
+    "export function SiteAnalytics(): ReactElement {\n"
+    "  return (\n"
     "    <>\n"
-    "      <Analytics />\n"
-    "      <SpeedInsights />\n"
+    "      <PostHogAnalytics />\n"
+    "      {process.env.DEPLOYMENT_ENV === 'production' ? (\n"
+    "        <>\n"
+    "          <Analytics />\n"
+    "          <SpeedInsights />\n"
+    "        </>\n"
+    "      ) : null}\n"
     "    </>\n"
-    "  ) : null\n"
+    "  )\n"
     "}\n"
 )
 
@@ -965,7 +975,8 @@ def raise_roots(css: str) -> str:
 
 def plan_package(base: dict, config: dict, site: Path, app: Path, web: Path, problems: list[str]) -> bytes:
     """`package.json`: the skeleton's base with its `link:` paths rewritten for this app, the dev
-    port, the site's own scripts, the analytics packages when `analytics` is set, and the site's
+    port, the site's own scripts, the analytics packages (Vercel's and the toolkit's PostHog) when
+    `analytics` is set, and the site's
     extra npm dependencies and toolkit packages."""
 
     def link(package_dir: str) -> str:
@@ -985,6 +996,7 @@ def plan_package(base: dict, config: dict, site: Path, app: Path, web: Path, pro
     }
     if config.get("analytics", False):
         deps.update(ANALYTICS_DEPS)
+        deps.update({name: link(package_dir) for name, package_dir in ANALYTICS_TOOLKIT.items()})
     template_deps = set(deps) | set(pkg.get("devDependencies", {}))
     for name, spec in config.get("dependencies", {}).items():
         if name in template_deps:

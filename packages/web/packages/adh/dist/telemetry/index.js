@@ -3,7 +3,7 @@
 "use client";
 
 // src/telemetry/analytics.ts
-import posthog from "posthog-js";
+import { captureAnalyticsEvent } from "@agenticdevelopertoolkit/analytics";
 import { markRetriedRequest, consumeRetriedFlag } from "@agentic-toolkit/adh/telemetry/retry";
 var EVENT_HTTP_REQUEST = "http_request";
 var posthogReady = false;
@@ -13,27 +13,14 @@ function setPosthogReady(ready) {
 var debugEnabled = true;
 function captureEvent(name, props) {
   try {
-    if (posthogReady) posthog.capture(name, props);
+    if (posthogReady) captureAnalyticsEvent(name, props);
     if (debugEnabled) console.debug("[perf]", name, props);
   } catch {
   }
 }
-var UUID_ANYWHERE = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/gi;
-var DIGIT_RUN = /\d{4,}/g;
-function scrubPath(url) {
-  let pathname;
-  try {
-    const u = new URL(url, "http://_");
-    if (u.protocol !== "http:" && u.protocol !== "https:") return ":non-http";
-    pathname = u.pathname;
-  } catch {
-    const cuts = [url.indexOf("?"), url.indexOf("#")].filter((i) => i >= 0);
-    pathname = cuts.length ? url.slice(0, Math.min(...cuts)) : url;
-  }
-  return pathname.replace(UUID_ANYWHERE, ":id").replace(DIGIT_RUN, ":id");
-}
 
 // src/telemetry/fetch-instrumentation.ts
+import { scrubPath } from "@agenticdevelopertoolkit/analytics";
 var installed = false;
 var coldUsed = false;
 function safe(fn, fallback) {
@@ -168,18 +155,9 @@ function instrumentFetch() {
 // src/telemetry/TelemetryProvider.tsx
 import { useEffect } from "react";
 import * as Sentry from "@sentry/react";
-import posthog2 from "posthog-js";
+import { scrubUrl, startPostHog } from "@agenticdevelopertoolkit/analytics";
 import { setErrorReporter } from "@agentic-toolkit/adh/telemetry/report-error";
 var started = false;
-function scrubUrl(url) {
-  if (!url) return url;
-  try {
-    const u = new URL(url);
-    return u.origin + scrubPath(u.pathname);
-  } catch {
-    return scrubPath(url);
-  }
-}
 function startTelemetry(resolveEnvironment) {
   if (started || typeof window === "undefined") return;
   started = true;
@@ -214,40 +192,7 @@ function startTelemetry(resolveEnvironment) {
       }
     });
   }
-  const phKey = process.env.NEXT_PUBLIC_POSTHOG_KEY;
-  if (phKey) {
-    posthog2.init(phKey, {
-      api_host: process.env.NEXT_PUBLIC_POSTHOG_HOST ?? "https://us.i.posthog.com",
-      autocapture: false,
-      // the heart of "default to less": no automatic click/input capture
-      disable_session_recording: true,
-      // no screen replay, ever
-      capture_pageview: "history_change",
-      // traffic only — pageviews on SPA route change
-      // Real-user Core Web Vitals (LCP/INP/CLS/FCP) as `$web_vitals` events. Distinct
-      // from autocapture (which stays off) and numeric-only, so it carries no PII.
-      capture_performance: { web_vitals: true },
-      persistence: "memory",
-      // cookieless: no cross-session id ⇒ no consent banner
-      person_profiles: "identified_only",
-      // never create a profile for an anonymous visitor
-      mask_all_text: true,
-      // belt-and-suspenders if any capture path ever runs
-      mask_all_element_attributes: true,
-      disable_surveys: true,
-      before_send: (event) => {
-        if (event?.properties) {
-          event.properties.$current_url = scrubUrl(event.properties.$current_url);
-          event.properties.$referrer = scrubUrl(event.properties.$referrer);
-          if (typeof event.properties.$pathname === "string") {
-            event.properties.$pathname = scrubPath(event.properties.$pathname);
-          }
-        }
-        return event;
-      }
-    });
-    setPosthogReady(true);
-  }
+  if (startPostHog()) setPosthogReady(true);
   setErrorReporter((error, context) => {
     Sentry.withScope((scope) => {
       if (context) scope.setExtras(context);
@@ -292,7 +237,6 @@ export {
   instrumentFetch,
   markRetriedRequest,
   reportUnexpectedError,
-  scrubPath,
   setErrorReporter2 as setErrorReporter,
   setPosthogReady
 };

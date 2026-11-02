@@ -48,6 +48,8 @@ frameworks), `AgenticToolkitApp` (host app), and `AIPlugins`
 The web platform is a pnpm monorepo with libraries under
 `packages/web/packages/`:
 
+- `@agenticdevelopertoolkit/analytics` — privacy-first PostHog analytics any site
+  can mount: anonymous, cookieless, allowlist-only, with URLs scrubbed of ids.
 - `@agenticdevelopertoolkit/avatar` — headless avatar behaviour and the
   `useAvatarEngine` hook.
 - `@agenticdevelopertoolkit/chat` — React chat components (`InlineChat`,

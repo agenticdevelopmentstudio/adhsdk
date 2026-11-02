@@ -2,7 +2,8 @@
 import { describe, it, expect, vi, beforeAll, beforeEach } from 'vitest'
 
 // Mock posthog-js (the real module is browser-oriented) and spy on captureEvent while
-// keeping the real scrubPath / consumeRetriedFlag / markRetriedRequest.
+// keeping the real consumeRetriedFlag / markRetriedRequest (scrubPath is the analytics
+// package's, unmocked).
 vi.mock('posthog-js', () => ({ default: { capture: vi.fn() } }))
 
 const captureEventMock = vi.hoisted(() => vi.fn())

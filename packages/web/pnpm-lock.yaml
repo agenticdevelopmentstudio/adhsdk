@@ -72,6 +72,9 @@ importers:
       '@agentic-toolkit/resource':
         specifier: workspace:*
         version: link:../resource
+      '@agenticdevelopertoolkit/analytics':
+        specifier: workspace:*
+        version: link:../analytics
       '@agenticdevelopertoolkit/landing':
         specifier: workspace:*
         version: link:../landing
@@ -108,9 +111,6 @@ importers:
       motion:
         specifier: ^12.40.0
         version: 12.43.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
-      posthog-js:
-        specifier: ^1.386.1
-        version: 1.435.6(@types/react@19.2.16)(react@19.2.8)
       react:
         specifier: ^19.0.0
         version: 19.2.8
@@ -458,6 +458,49 @@ importers:
         version: 5.9.3
       vitest:
         specifier: ^4.1.4
+        version: 4.1.11(@types/node@24.13.3)(jsdom@29.1.1)(vite@8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.0))
+
+  packages/analytics:
+    dependencies:
+      posthog-js:
+        specifier: ^1.386.1
+        version: 1.435.6(@types/react@19.2.16)(react@19.2.8)
+    devDependencies:
+      '@testing-library/jest-dom':
+        specifier: ^6.9.1
+        version: 6.10.0(@testing-library/dom@10.4.1)
+      '@testing-library/react':
+        specifier: ^16.3.2
+        version: 16.3.2(@testing-library/dom@10.4.1)(@types/react-dom@19.2.3(@types/react@19.2.16))(@types/react@19.2.16)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+      '@types/node':
+        specifier: ^24.0.0
+        version: 24.13.3
+      '@types/react':
+        specifier: ^19.2.14
+        version: 19.2.16
+      '@types/react-dom':
+        specifier: ^19.2.3
+        version: 19.2.3(@types/react@19.2.16)
+      esbuild-plugin-preserve-directives:
+        specifier: ^0.0.11
+        version: 0.0.11(esbuild@0.28.2)
+      jsdom:
+        specifier: ^29.0.2
+        version: 29.1.1
+      react:
+        specifier: ^19.0.0
+        version: 19.2.8
+      react-dom:
+        specifier: ^19.0.0
+        version: 19.2.8(react@19.2.8)
+      tsup:
+        specifier: ^8.3.5
+        version: 8.5.1(jiti@2.7.0)(postcss@8.5.26)(tsx@4.23.15)(typescript@5.9.3)(yaml@2.9.0)
+      typescript:
+        specifier: ^5.7.2
+        version: 5.9.3
+      vitest:
+        specifier: ^4.1.11
         version: 4.1.11(@types/node@24.13.3)(jsdom@29.1.1)(vite@8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.0))
 
   packages/api-explorer:

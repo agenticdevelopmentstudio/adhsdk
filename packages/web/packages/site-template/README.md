@@ -325,8 +325,10 @@ JSON cannot hold; one every site needs belongs in the skeleton's config.
 
 `"analytics": true` writes `src/site/analytics.tsx` mounting `@vercel/analytics` and
 `@vercel/speed-insights` (added to the app's dependencies at the template's pinned ranges) when
-`DEPLOYMENT_ENV` is `production`; the root layout renders it on every route. Absent or false, the
-file renders nothing and neither package is added.
+`DEPLOYMENT_ENV` is `production`, and the toolkit's `PostHogAnalytics` (linked from
+`@agenticdevelopertoolkit/analytics`) on every deploy; PostHog stays off wherever the project has
+no `NEXT_PUBLIC_POSTHOG_KEY`. The root layout renders the file on every route. Absent or false, it
+renders nothing and none of the three packages is added.
 
 ## Slots in `site.json`
 

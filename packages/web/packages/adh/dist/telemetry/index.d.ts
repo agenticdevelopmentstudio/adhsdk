@@ -1,4 +1,4 @@
-export { EVENT_HTTP_REQUEST, captureEvent, scrubPath, markRetriedRequest, consumeRetriedFlag, setPosthogReady, type EventProps, } from './analytics';
+export { EVENT_HTTP_REQUEST, captureEvent, markRetriedRequest, consumeRetriedFlag, setPosthogReady, type EventProps, } from './analytics';
 export { instrumentFetch } from './fetch-instrumentation';
 export { TelemetryProvider } from './TelemetryProvider';
 export { setErrorReporter, captureException, reportUnexpectedError, type ErrorContext, } from '@agentic-toolkit/adh/telemetry/report-error';

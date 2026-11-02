@@ -7,7 +7,6 @@
 export {
   EVENT_HTTP_REQUEST,
   captureEvent,
-  scrubPath,
   markRetriedRequest,
   consumeRetriedFlag,
   setPosthogReady,

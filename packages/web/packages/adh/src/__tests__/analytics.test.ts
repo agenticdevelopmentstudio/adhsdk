@@ -1,41 +1,16 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
+// captureEvent hands off to the shared analytics package, which owns the PostHog instance.
 const captureMock = vi.hoisted(() => vi.fn())
-vi.mock('posthog-js', () => ({ default: { capture: captureMock } }))
+vi.mock('@agenticdevelopertoolkit/analytics', () => ({ captureAnalyticsEvent: captureMock }))
 
 import {
-  scrubPath,
   captureEvent,
   setPosthogReady,
   markRetriedRequest,
   consumeRetriedFlag,
   EVENT_HTTP_REQUEST,
 } from '../telemetry/analytics'
-
-describe('scrubPath', () => {
-  it('redacts UUID and long-numeric segments and strips query/hash', () => {
-    expect(scrubPath('/api/persona/services/3f8b1c2d-1234-4abc-89de-0123456789ab')).toBe(
-      '/api/persona/services/:id',
-    )
-    expect(scrubPath('/api/users/123456?token=secret#frag')).toBe('/api/users/:id')
-    expect(scrubPath('https://api.example.com/api/auth/me?q=1')).toBe('/api/auth/me')
-  })
-
-  it('keeps low-cardinality segments (versions, short numbers up to 3 digits, words)', () => {
-    expect(scrubPath('/api/v2/items/42')).toBe('/api/v2/items/42')
-    expect(scrubPath('/api/items/123')).toBe('/api/items/123') // 3 digits: kept (threshold is 4)
-  })
-
-  it('redacts ids embedded inside a segment, not just whole segments', () => {
-    expect(scrubPath('/api/users/user-123456/posts')).toBe('/api/users/user-:id/posts')
-    expect(scrubPath('/api/order_3f8b1c2d-1234-4abc-89de-0123456789ab')).toBe('/api/order_:id')
-  })
-
-  it('never emits the "pathname" of a non-http(s) URL (data:/mailto:/blob:)', () => {
-    expect(scrubPath('data:text/plain,secret')).toBe(':non-http')
-    expect(scrubPath('mailto:jane@example.com')).toBe(':non-http')
-  })
-})
 
 describe('captureEvent', () => {
   beforeEach(() => {
@@ -54,7 +29,7 @@ describe('captureEvent', () => {
     expect(captureMock).toHaveBeenCalledWith(EVENT_HTTP_REQUEST, { path: '/api/x', status: 200 })
   })
 
-  it('never throws even if posthog.capture throws', () => {
+  it('never throws even if the capture throws', () => {
     setPosthogReady(true)
     captureMock.mockImplementationOnce(() => {
       throw new Error('boom')

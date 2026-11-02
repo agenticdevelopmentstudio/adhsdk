@@ -438,6 +438,7 @@
         "web-adh-registry",
         "web-adh-site-config",
         "web-adh-ui",
+        "web-analytics",
         "web-api-explorer",
         "web-auth",
         "web-data",
@@ -771,6 +772,17 @@
       ],
       "shared": true,
       "holds": "@agenticdevelopertoolkit/ui. shadcn slot, cn, blocks, globals.css. The bottom of the web stack."
+    },
+    {
+      "name": "web-analytics",
+      "paths": [
+        "packages/web/packages/analytics/"
+      ],
+      "depends_on": [
+        "web-toolchain"
+      ],
+      "shared": true,
+      "holds": "@agenticdevelopertoolkit/analytics. Privacy-first product analytics any site can mount: the one PostHog config (anonymous, cookieless, allowlist-only), PostHogAnalytics to start it from a root layout, and the URL scrubbers every analytics and error pipeline shares. No adh imports, so a site outside the family drops it in."
     },
     {
       "name": "web-avatar",

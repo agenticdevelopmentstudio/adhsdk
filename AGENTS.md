@@ -57,6 +57,7 @@ workspace.
 The web platform is one pnpm workspace; its libraries live under
 `packages/web/packages/`. The shared libraries:
 
+- `@agenticdevelopertoolkit/analytics`
 - `@agenticdevelopertoolkit/avatar`
 - `@agenticdevelopertoolkit/chat`
 - `@agenticdevelopertoolkit/chrome`
