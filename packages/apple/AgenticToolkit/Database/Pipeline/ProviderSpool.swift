@@ -198,6 +198,11 @@ public final class ProviderSpool: @unchecked Sendable {
         try pool.read { conn in try Int.fetchOne(conn, sql: "SELECT COUNT(*) FROM spooled_record") ?? 0 }
     }
 
+    /// Records parked in quarantine: out of attempts, or bytes the archive refused.
+    public func quarantinedCount() throws -> Int {
+        try pool.read { conn in try Int.fetchOne(conn, sql: "SELECT COUNT(*) FROM quarantined_record") ?? 0 }
+    }
+
     public func sourceState(_ key: String) throws -> Data? {
         try pool.read { conn in
             try Data.fetchOne(conn, sql: "SELECT value FROM source_state WHERE key = ?", arguments: [key])

@@ -112,6 +112,32 @@ public final class DaemonDatabase: @unchecked Sendable {
         return _isReady
     }
 
+    // MARK: - Event reads
+
+    private let eventReadsLock = NSLock()
+    private var attachedEventReads: EventStore?
+    private var attachedRawArchive: RawArchive?
+
+    /// Hands this database the provider pipeline's event store and raw archive,
+    /// which readers of the moved tables go through. Set once, when the runtime
+    /// opens; a second call keeps the first pair.
+    public func attachEventReads(_ store: EventStore, archive: RawArchive) {
+        eventReadsLock.withLock {
+            guard attachedEventReads == nil else {
+                assertionFailure("attachEventReads called twice")
+                return
+            }
+            attachedEventReads = store
+            attachedRawArchive = archive
+        }
+    }
+
+    /// The event store (`events.db`), or nil until ``attachEventReads(_:archive:)``.
+    public var eventReads: EventStore? { eventReadsLock.withLock { attachedEventReads } }
+
+    /// The raw archive, or nil until ``attachEventReads(_:archive:)``.
+    public var rawArchive: RawArchive? { eventReadsLock.withLock { attachedRawArchive } }
+
     // MARK: - Attachments
 
     private let attachmentLock = NSLock()

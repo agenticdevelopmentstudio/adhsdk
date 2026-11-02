@@ -20,7 +20,10 @@ enum IngestRoutes {
             },
             RouteTable.route("GET", where: { $0 == ["ingestion", "errors", "count"] }) { _, _ in
                 let counts = quarantine.counts()
-                return .json(["count": counts.total, "exhausted": counts.exhausted])
+                // A provider spool's quarantined records count too; they have no
+                // automatic retry, so they do not add to `exhausted`.
+                let total = counts.total + services.pipelineQuarantinedCount()
+                return .json(["count": total, "exhausted": counts.exhausted])
             },
             // Persistent ingestion-error log (DB-backed) for tracking recurring
             // failures — includes recovered/cleared history, unlike the live list.

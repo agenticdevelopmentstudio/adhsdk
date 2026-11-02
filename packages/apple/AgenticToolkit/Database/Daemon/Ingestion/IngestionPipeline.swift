@@ -60,6 +60,10 @@ public final class IngestionPipeline: @unchecked Sendable {
     ///     ``SocketDecodeFailure`` when they are malformed or untrackable.
     ///   - summarizeOnStop: called with the session id after `Stop` / `SessionEnd`.
     ///   - footprintSuffix: appended to the ingestor's backfill log lines.
+    ///   - claude: the Claude provider pipeline. When set, a capture and a
+    ///     quarantine retry go to its spool, and the transcript tailer feeds its
+    ///     transcript source, instead of the legacy spool and writers. Nil keeps
+    ///     the legacy path.
     public init(
         paths: Paths,
         spool: IngestSpool,
@@ -68,7 +72,8 @@ public final class IngestionPipeline: @unchecked Sendable {
         queueLabel: @Sendable (String) -> String,
         decode: @escaping @Sendable (Data) throws -> ParsedEvent,
         summarizeOnStop: (@Sendable (String) async -> Void)? = nil,
-        footprintSuffix: @escaping @Sendable () -> String = { "" }
+        footprintSuffix: @escaping @Sendable () -> String = { "" },
+        claude: ClaudePipelineHandles? = nil
     ) {
         let quarantine = QuarantineService(
             errorsDirectory: paths.errorsDirectory,
@@ -82,7 +87,8 @@ public final class IngestionPipeline: @unchecked Sendable {
             quarantine: quarantine,
             tailerQueueLabel: queueLabel("transcript-tailer"),
             summarizeOnStop: summarizeOnStop,
-            footprintSuffix: footprintSuffix
+            footprintSuffix: footprintSuffix,
+            transcriptPoll: Self.transcriptPoll(claude)
         )
         let drainer = IngestDrainer(
             spool: spool,
@@ -95,6 +101,11 @@ public final class IngestionPipeline: @unchecked Sendable {
         let dropDirectory = paths.dropDirectory
         let capture: @Sendable (ParsedEvent) throws -> Void = { [drainer] event in
             do {
+                if let claude {
+                    // Appends to the Claude spool and wakes its drainer.
+                    try claude.capture(event)
+                    return
+                }
                 try spool.enqueue(event)
             } catch {
                 // The spool file itself is unwritable — a full volume, most
@@ -120,7 +131,13 @@ public final class IngestionPipeline: @unchecked Sendable {
         self.spool = spool
         self.drainer = drainer
         self.capture = capture
-        self.retryIngest = { [ingestor] in try ingestor.ingest($0) }
+        if let claude {
+            // A retried event is captured afresh: the Claude spool takes it and the
+            // drainer writes it, so nothing re-enters the legacy writer.
+            self.retryIngest = { event in try claude.capture(event) }
+        } else {
+            self.retryIngest = { [ingestor] in try ingestor.ingest($0) }
+        }
         self.socketHandler = IngestSocketHandler(
             socketPath: paths.socketPath, capture: capture, decode: decode
         )
@@ -147,6 +164,12 @@ public final class IngestionPipeline: @unchecked Sendable {
     public func stop() async {
         drainer.stop()
         socketHandler.stop()
+    }
+
+    /// The tailer's per-file read into the Claude pipeline, or nil for the legacy import.
+    private static func transcriptPoll(_ claude: ClaudePipelineHandles?) -> (@Sendable (URL) throws -> Void)? {
+        guard let claude else { return nil }
+        return { url in _ = try claude.pollTranscript(file: url) }
     }
 
     // MARK: - Drop file fallback

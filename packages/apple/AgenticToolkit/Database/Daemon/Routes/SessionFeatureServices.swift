@@ -73,6 +73,9 @@ public struct SessionFeatureServices: Sendable {
     /// How the summarize route loads AI plugins. Defaults to `.live` (the default
     /// folders only); `SessionDaemonRuntime.services` passes the daemon's own.
     public let pluginRuntime: DaemonAIChat.PluginRuntime
+    /// Records a provider pipeline's spool has quarantined, added to the
+    /// quarantine count the badge polls. Defaults to none.
+    public let pipelineQuarantinedCount: @Sendable () -> Int
 
     public init(
         database: DaemonDatabase,
@@ -93,7 +96,8 @@ public struct SessionFeatureServices: Sendable {
         buildHookEvent: @escaping @Sendable (_ event: String, _ payload: Data) -> ParsedEvent?,
         captureHook: @escaping @Sendable (ParsedEvent) throws -> Void,
         runImport: @escaping @Sendable (ImportRequestDTO) throws -> ImportSummary,
-        pluginRuntime: DaemonAIChat.PluginRuntime = .live
+        pluginRuntime: DaemonAIChat.PluginRuntime = .live,
+        pipelineQuarantinedCount: @escaping @Sendable () -> Int = { 0 }
     ) {
         self.database = database
         self.conversations = conversations
@@ -114,6 +118,7 @@ public struct SessionFeatureServices: Sendable {
         self.captureHook = captureHook
         self.runImport = runImport
         self.pluginRuntime = pluginRuntime
+        self.pipelineQuarantinedCount = pipelineQuarantinedCount
     }
 }
 #endif

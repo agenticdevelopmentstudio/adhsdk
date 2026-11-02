@@ -94,4 +94,50 @@ final class IngestionPipelineTests: XCTestCase {
         }
         XCTAssertEqual(reread.eventType, "PreToolUse")
     }
+
+    // MARK: - With the Claude pipeline
+
+    private func claudePipeline() throws -> (IngestionPipeline, ClaudePipelineHandles) {
+        let root = tmpDir.appendingPathComponent("claude")
+        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+        let handles = try ClaudePipelineHandles(
+            spool: try ProviderSpool(path: root.appendingPathComponent("claude-ingest.db").path,
+                                     provider: ClaudeProvider.name),
+            archive: try RawArchive(path: root.appendingPathComponent("claude-raw.db").path,
+                                    provider: ClaudeProvider.name),
+            store: try EventStore(path: root.appendingPathComponent("events.db").path),
+            database: database,
+            dropDirectory: root.appendingPathComponent("drop"),
+            projectsDirectory: root.appendingPathComponent("projects"))
+        let drop = root.appendingPathComponent("drop")
+        let pipeline = IngestionPipeline(
+            paths: .init(dropDirectory: drop, errorsDirectory: drop.appendingPathComponent("errors"),
+                         socketPath: root.appendingPathComponent("s").path),
+            spool: try IngestSpool(path: root.appendingPathComponent("ingest.db").path),
+            database: database, sink: sink, queueLabel: { "test.claude.\($0)" },
+            decode: { _ in throw SocketDecodeFailure.malformed },
+            claude: handles)
+        return (pipeline, handles)
+    }
+
+    func testWithClaudeACaptureGoesToTheClaudeSpoolNotTheLegacyOne() async throws {
+        let (pipeline, handles) = try claudePipeline()
+        try pipeline.capture(event(session: "s-c1"))
+
+        XCTAssertEqual(try handles.spool.pendingCount(), 1)
+        XCTAssertEqual(pipeline.spool.pendingCount(), 0)
+        XCTAssertFalse(handles.drainer.drainUntilEmpty().failed)
+        XCTAssertEqual(try handles.store.counts().events, 1)
+        XCTAssertTrue(try database.fetchEvents(sessionId: "s-c1", eventType: nil, limit: 10).isEmpty)
+        await pipeline.stop()
+    }
+
+    func testWithClaudeARetryIsRecapturedIntoTheClaudeSpool() async throws {
+        let (pipeline, handles) = try claudePipeline()
+        try pipeline.retryIngest(event(session: "s-c2"))
+
+        XCTAssertEqual(try handles.spool.pendingCount(), 1)
+        XCTAssertTrue(try database.fetchEvents(sessionId: "s-c2", eventType: nil, limit: 10).isEmpty)
+        await pipeline.stop()
+    }
 }

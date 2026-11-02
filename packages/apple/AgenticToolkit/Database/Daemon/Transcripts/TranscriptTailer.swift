@@ -82,6 +82,10 @@ public actor TranscriptTailer {
     private let importQueue: DispatchQueue
     private let quietPeriod: Duration
     private let metricsInterval: Duration
+    /// When set, a pass hands the file to this (a provider pipeline's transcript
+    /// source and drainer wake) instead of `JSONLImporter`, and the pipeline's sink
+    /// owns the metrics, so this tailer never recomputes them.
+    private let pollFile: (@Sendable (URL) throws -> Void)?
 
     /// Files inside their quiet period — an import is running, or just ran.
     private var cooling: Set<String> = []
@@ -102,16 +106,20 @@ public actor TranscriptTailer {
 
     /// - Parameter queueLabel: label of the serial import queue, so a daemon
     ///   can put it under its own subsystem.
+    /// - Parameter pollFile: reads one transcript into a provider pipeline; nil
+    ///   keeps the legacy `JSONLImporter` pass.
     public init(
         database: DaemonDatabase,
         queueLabel: String = "transcript-tailer",
         quietPeriod: Duration = TranscriptTailer.defaultQuietPeriod,
-        metricsInterval: Duration = TranscriptTailer.defaultMetricsInterval
+        metricsInterval: Duration = TranscriptTailer.defaultMetricsInterval,
+        pollFile: (@Sendable (URL) throws -> Void)? = nil
     ) {
         self.database = database
         self.importQueue = DispatchQueue(label: queueLabel, qos: .utility)
         self.quietPeriod = quietPeriod
         self.metricsInterval = metricsInterval
+        self.pollFile = pollFile
     }
 
     /// Notes that `sessionId`, whose transcript is `transcriptPath`, just wrote
@@ -213,8 +221,24 @@ public actor TranscriptTailer {
     private nonisolated func importNow(path: String, database: DaemonDatabase) async -> Int {
         let url = URL(fileURLWithPath: path)
         let importQueue = self.importQueue
+        let pollFile = self.pollFile
         return await withCheckedContinuation { (continuation: CheckedContinuation<Int, Never>) in
             importQueue.async {
+                if let pollFile {
+                    do {
+                        try pollFile(url)
+                    } catch {
+                        // The cursor is not advanced past a failed append, so the
+                        // next sweep reads exactly these lines again.
+                        Self.logger.warning("""
+                            Tail failed for \(url.lastPathComponent, privacy: .public): \
+                            \(error.localizedDescription, privacy: .public)
+                            """)
+                    }
+                    // 0: the pipeline's sink recomputes metrics, not this tailer.
+                    continuation.resume(returning: 0)
+                    return
+                }
                 let importer = JSONLImporter(
                     // Unused under `only` — discovery and the cursor prune are
                     // the only things that read it, and a scoped run does

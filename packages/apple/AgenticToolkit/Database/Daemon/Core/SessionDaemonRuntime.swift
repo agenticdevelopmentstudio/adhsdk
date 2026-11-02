@@ -95,6 +95,9 @@ public final class SessionDaemonRuntime: @unchecked Sendable {
         var pipeline: IngestionPipeline
         var hookDisabled: Bool
         var preferences: PreferencesService
+        var claude: ClaudePipelineHandles
+        /// Held here because the drainer holds its observers weakly.
+        var claudeObserver: ClaudeLiveObserver
     }
     private let lock = NSLock()
     private var opened: Opened?
@@ -143,6 +146,9 @@ public final class SessionDaemonRuntime: @unchecked Sendable {
     public var pipeline: IngestionPipeline { requireOpened("pipeline").pipeline }
     /// Whether the user had turned tracking off when the runtime opened.
     public var hookDisabled: Bool { requireOpened("hookDisabled").hookDisabled }
+    /// The Claude provider pipeline (spool, archive, event store, drainer and
+    /// sources), or nil before ``openPhaseA()``.
+    public var claudePipeline: ClaudePipelineHandles? { lock.withLock { opened?.claude } }
 
     /// The conversations feed over the runtime's database.
     public var conversations: ConversationStore { ConversationStore(database: database) }
@@ -191,7 +197,8 @@ public final class SessionDaemonRuntime: @unchecked Sendable {
             buildHookEvent: wiring.buildHookEvent,
             captureHook: opened.pipeline.capture,
             runImport: wiring.runImport,
-            pluginRuntime: pluginRuntime
+            pluginRuntime: pluginRuntime,
+            pipelineQuarantinedCount: { [claude = opened.claude] in claude.quarantinedCount() }
         )
     }
 
@@ -222,10 +229,23 @@ public final class SessionDaemonRuntime: @unchecked Sendable {
             statusLineIngest: statusLineIngest, sessionUpsertHook: sessionUpsertHook
         )
         async let hookDisabledTask: Bool = Self.checkHookDisabled(installer: installer)
+        async let claudeSpoolTask: ProviderSpool = Self.openClaudeSpool(path: configuration.claudeSpoolPath)
+        async let archiveTask: RawArchive = Self.openClaudeArchive(path: configuration.claudeArchivePath)
+        async let storeTask: EventStore = Self.openEventStore(path: configuration.eventStorePath)
 
         let spool = try await spoolTask
         let database = try await dbTask
         let hookDisabled = await hookDisabledTask
+        let claudeSpool = try await claudeSpoolTask
+        let archive = try await archiveTask
+        let store = try await storeTask
+
+        database.attachEventReads(store, archive: archive)
+        let claude = try ClaudePipelineHandles(
+            spool: claudeSpool, archive: archive, store: store, database: database,
+            dropDirectory: configuration.dropDirectory,
+            projectsDirectory: configuration.claudeProjectsDirectory
+        )
 
         let pipeline = IngestionPipeline(
             paths: .init(
@@ -239,8 +259,15 @@ public final class SessionDaemonRuntime: @unchecked Sendable {
             queueLabel: { "\(configuration.subsystem).\($0)" },
             decode: behavior.decode,
             summarizeOnStop: behavior.summarizeOnStop,
-            footprintSuffix: behavior.footprintSuffix
+            footprintSuffix: behavior.footprintSuffix,
+            claude: claude
         )
+        // One enrichment, shared with the legacy ingestor, so both paths drive the
+        // same transcript tailer and summarizer.
+        let observer = ClaudeLiveObserver(
+            eventReads: store, sink: behavior.sink, enrichment: pipeline.ingestor.enrichment
+        )
+        claude.drainer.addObserver(observer)
         let preferences = PreferencesService(
             database: database, secretStore: secretStore, hookInstaller: installer,
             summariesDefaultEnabled: configuration.summariesDefaultEnabled,
@@ -249,7 +276,8 @@ public final class SessionDaemonRuntime: @unchecked Sendable {
         lock.withLock {
             opened = Opened(
                 spool: spool, database: database, pipeline: pipeline,
-                hookDisabled: hookDisabled, preferences: preferences
+                hookDisabled: hookDisabled, preferences: preferences,
+                claude: claude, claudeObserver: observer
             )
         }
     }
@@ -284,9 +312,12 @@ public final class SessionDaemonRuntime: @unchecked Sendable {
         try database.migrateNow()
     }
 
-    /// Starts emptying the spool into the migrated database.
+    /// Starts emptying the spools into the migrated database: the legacy spool's
+    /// leftovers, and the Claude pipeline's.
     public func startDrainer() async {
-        pipeline.startDraining()
+        let opened = requireOpened("startDrainer")
+        opened.pipeline.startDraining()
+        opened.claude.drainer.start()
     }
 
     /// Stops the ingestion pipeline: a batch already in flight finishes against
@@ -294,18 +325,34 @@ public final class SessionDaemonRuntime: @unchecked Sendable {
     /// Idempotent. The hook registration is deliberately left in place — see
     /// the daemon's own uninstall path.
     public func shutdown() async {
-        let pipeline: IngestionPipeline? = lock.withLock {
-            let current = isShutDown ? nil : opened?.pipeline
+        let current: Opened? = lock.withLock {
+            let current = isShutDown ? nil : opened
             isShutDown = true
             return current
         }
-        await pipeline?.stop()
+        guard let current else { return }
+        // The Claude drainer first: a pass in flight finishes (stop waits up to
+        // 5 s), and anything still spooled drains on the next launch.
+        current.claude.drainer.stop()
+        await current.pipeline.stop()
     }
 
     // MARK: - Sendable helpers (called from child tasks)
 
     private static func openSpool(path: String) throws -> IngestSpool {
         try IngestSpool(path: path)
+    }
+
+    private static func openClaudeSpool(path: String) throws -> ProviderSpool {
+        try ProviderSpool(path: path, provider: ClaudeProvider.name)
+    }
+
+    private static func openClaudeArchive(path: String) throws -> RawArchive {
+        try RawArchive(path: path, provider: ClaudeProvider.name)
+    }
+
+    private static func openEventStore(path: String) throws -> EventStore {
+        try EventStore(path: path)
     }
 
     /// Opens the pool only; the migration is ``migrate()``'s.

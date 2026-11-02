@@ -58,6 +58,8 @@ public final class EventIngestor: @unchecked Sendable {
     ///     so a daemon can put it under its own subsystem.
     ///   - summarizeOnStop: called with the session id after `Stop` / `SessionEnd`.
     ///   - footprintSuffix: appended to the backfill log lines; empty by default.
+    ///   - transcriptPoll: reads one transcript into a provider pipeline; the
+    ///     tailer calls it instead of `JSONLImporter`. Nil keeps the legacy import.
     public init(
         dropDirectory: URL,
         database: DaemonDatabase,
@@ -65,14 +67,16 @@ public final class EventIngestor: @unchecked Sendable {
         quarantine: QuarantineService,
         tailerQueueLabel: String,
         summarizeOnStop: (@Sendable (String) async -> Void)? = nil,
-        footprintSuffix: @escaping @Sendable () -> String = { "" }
+        footprintSuffix: @escaping @Sendable () -> String = { "" },
+        transcriptPoll: (@Sendable (URL) throws -> Void)? = nil
     ) {
         self.dropDirectory = dropDirectory
         self.database = database
         self.sink = sink
         self.quarantine = quarantine
         self.footprintSuffix = footprintSuffix
-        let transcriptTailer = TranscriptTailer(database: database, queueLabel: tailerQueueLabel)
+        let transcriptTailer = TranscriptTailer(
+            database: database, queueLabel: tailerQueueLabel, pollFile: transcriptPoll)
         self.transcriptTailer = transcriptTailer
         self.enrichment = ClaudeEnrichmentHooks.live(
             database: database, transcriptTailer: transcriptTailer, summarizeOnStop: summarizeOnStop)
