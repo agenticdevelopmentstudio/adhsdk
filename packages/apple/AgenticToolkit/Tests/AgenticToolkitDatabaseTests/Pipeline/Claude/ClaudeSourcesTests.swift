@@ -360,6 +360,63 @@ final class ClaudeSourcesTests: XCTestCase {
         XCTAssertEqual(try spool.quarantined(limit: 10).count, 0)
     }
 
+    /// Review Focus 2: a compaction removes the top line, so every surviving line comes
+    /// back with a shifted line_no (different payload bytes, same dedup key). Those are
+    /// duplicates by `ClaudeNormalizer.isEquivalent`: nothing quarantined, no new rows
+    /// except the genuinely new line, and the archive keeps the first payloads.
+    func testCompactionShiftingLineNumbersDedupsInsteadOfConflicting() throws {
+        let lines = (1...4).map { Self.userLine($0) }
+        let url = try transcript(Self.sessionID, lines: lines, mtime: base)
+        let source = ClaudeTranscriptSource(projectsDirectory: projectsDir)
+        XCTAssertEqual(try source.poll(into: spool), 4)
+        let (drainer, archive) = try makeDrainer()
+        _ = drainer.drainUntilEmpty()
+        XCTAssertEqual(try archive.count(), 4)
+        let line2Key = ClaudeTranscriptPayload.dedupKey(line: lines[1], file: url.path)
+        let line2Before = try XCTUnwrap(try archive.id(forDedupKey: line2Key))
+
+        let oldInode = try inode(url)
+        let compacted = Array(lines.dropFirst()) + [Self.userLine(5)]
+        try Data(compacted.map { $0 + "\n" }.joined().utf8).write(to: url, options: .atomic)
+        try setMTime(url, base.addingTimeInterval(20))
+        XCTAssertNotEqual(try inode(url), oldInode)
+
+        XCTAssertEqual(try source.poll(into: spool), 4, "restarted from byte 0")
+        XCTAssertEqual(try payloads().map(\.lineNo), [1, 2, 3, 4], "every surviving line moved up one")
+        let outcome = drainer.drainUntilEmpty()
+        XCTAssertFalse(outcome.failed, outcome.failureReason ?? "")
+        XCTAssertEqual(outcome.quarantined, 0)
+        XCTAssertEqual(try spool.quarantined(limit: 10).count, 0, "no conflicts")
+        XCTAssertEqual(try spool.pendingCount(), 0)
+        XCTAssertEqual(try archive.count(), 5, "only line 5 is a new archive row")
+        let kept = try XCTUnwrap(try archive.record(id: line2Before))
+        XCTAssertEqual(try ClaudeTranscriptPayload.decode(kept.record.payload).lineNo, 2,
+                       "the archive keeps the first-read payload")
+    }
+
+    func testClaudeEquivalenceComparesTranscriptLinesOnlyAndHooksByBytes() throws {
+        let normalizer = ClaudeNormalizer()
+        func transcriptRecord(_ payload: ClaudeTranscriptPayload) throws -> RawRecord {
+            RawRecord(provider: ClaudeProvider.name, sourceKind: ClaudeProvider.transcriptKind,
+                      dedupKey: ClaudeTranscriptPayload.dedupKey(line: payload.line, file: payload.file),
+                      receivedAt: base, payload: try ClaudeTranscriptPayload.encode(payload))
+        }
+        let line = Self.userLine(1)
+        let archived = try transcriptRecord(.init(file: "/p/a.jsonl", lineNo: 1, subagentFile: false, line: line))
+        let moved = try transcriptRecord(.init(file: "/p/b.jsonl", lineNo: 9, subagentFile: true, line: line))
+        let other = try transcriptRecord(.init(file: "/p/a.jsonl", lineNo: 1, subagentFile: false,
+                                               line: Self.userLine(2)))
+        XCTAssertTrue(normalizer.isEquivalent(archived: archived, incoming: moved))
+        XCTAssertFalse(normalizer.isEquivalent(archived: archived, incoming: other))
+
+        func hook(_ text: String) -> RawRecord {
+            RawRecord(provider: ClaudeProvider.name, sourceKind: ClaudeProvider.hookKind, dedupKey: "h",
+                      receivedAt: base, payload: Data(text.utf8))
+        }
+        XCTAssertTrue(normalizer.isEquivalent(archived: hook("{\"a\":1}"), incoming: hook("{\"a\":1}")))
+        XCTAssertFalse(normalizer.isEquivalent(archived: hook("{\"a\":1}"), incoming: hook("{\"a\": 1}")))
+    }
+
     func testSameInodeChangeBelowTheCursorRestarts() throws {
         let url = try transcript(Self.sessionID, lines: [Self.userLine(1), Self.userLine(2)], mtime: base)
         let source = ClaudeTranscriptSource(projectsDirectory: projectsDir)

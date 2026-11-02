@@ -32,8 +32,9 @@ public enum ProviderConformance {
     /// - keys: every event and message dedup key is unique across the fixtures; turn keys may repeat
     ///   (records that describe one turn merge into it) but never reuse an event or message key; all
     ///   keys are stable across runs.
-    /// - keyCollision: no two fixtures share a dedup key with different payload bytes (the archive
-    ///   would keep the first and the drainer would quarantine the other).
+    /// - keyCollision: no two fixtures share a dedup key with payloads the normalizer does not call
+    ///   equivalent (`Normalizer.isEquivalent`; the archive would keep the first and the drainer would
+    ///   quarantine the other).
     /// - rawRef: every emitted row's rawRef equals the input record's archive id.
     /// - nonFiniteNumber: no emitted row holds NaN or an infinity (`NormalizedBatch.nonFiniteFields`);
     ///   the store cannot write one. When this fails the store-based checks below are skipped, since
@@ -66,7 +67,7 @@ public enum ProviderConformance {
         _ = try archive.append(fixtures)
         let archived = try archive.records(after: 0, limit: max(1, try archive.count()))
 
-        failures += checkCollisions(fixtures.map { ($0.dedupKey, $0.payload) }, check: "keyCollision")
+        failures += checkCollisions(fixtures, check: "keyCollision", equivalent: normalizer.isEquivalent)
         failures += checkNoLoss(normalizer, archived, fixtures: fixtures, malformedKeys: malformedKeys)
         failures += checkPurityAndRefs(normalizer, archived)
         failures += checkKeys(normalizer, archived)
@@ -177,7 +178,7 @@ public enum ProviderConformance {
             failures.append(ConformanceFailure(
                 check: "sourceDuplicated", detail: "\(key) spooled \(count) times in one uninterrupted run"))
         }
-        failures += checkCollisions(baseline.map { ($0.dedupKey, $0.payload) }, check: "keyCollision")
+        failures += checkCollisions(baseline, check: "keyCollision")
         let expected = multiset(baseline)
 
         for step in SourceStep.allCases {
@@ -292,21 +293,27 @@ public enum ProviderConformance {
         return result
     }
 
-    /// Fails for every dedup key that arrives with more than one distinct payload.
-    static func checkCollisions(_ items: [(key: String, payload: Data)], check: String) -> [ConformanceFailure] {
-        var first: [String: Data] = [:]
+    /// Fails for every dedup key that arrives with a payload not equivalent to the
+    /// first one under that key — exactly the records the drainer would quarantine.
+    /// `equivalent` defaults to byte equality; `check` passes the normalizer's
+    /// `isEquivalent`, so a provider-defined duplicate is not reported.
+    static func checkCollisions(
+        _ records: [RawRecord], check: String,
+        equivalent: (_ archived: RawRecord, _ incoming: RawRecord) -> Bool = { $0.payload == $1.payload }
+    ) -> [ConformanceFailure] {
+        var first: [String: RawRecord] = [:]
         var reported = Set<String>()
         var failures: [ConformanceFailure] = []
-        for item in items {
-            if let existing = first[item.key] {
-                if existing != item.payload && reported.insert(item.key).inserted {
+        for record in records {
+            if let existing = first[record.dedupKey] {
+                if !equivalent(existing, record) && reported.insert(record.dedupKey).inserted {
                     failures.append(ConformanceFailure(
                         check: check,
-                        detail: "dedup key \(item.key) is used for different payloads (sha \(RawArchive.hex(existing)) "
-                            + "vs \(RawArchive.hex(item.payload)))"))
+                        detail: "dedup key \(record.dedupKey) is used for different payloads "
+                            + "(sha \(RawArchive.hex(existing.payload)) vs \(RawArchive.hex(record.payload)))"))
                 }
             } else {
-                first[item.key] = item.payload
+                first[record.dedupKey] = record
             }
         }
         return failures

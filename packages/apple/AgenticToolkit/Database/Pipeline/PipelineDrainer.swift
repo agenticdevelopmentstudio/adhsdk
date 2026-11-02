@@ -81,7 +81,8 @@ public protocol PipelineSink: Sendable {
 /// Normalization reads the **archived** copy, never the spool copy, so events.db
 /// always derives from the bytes a replay will see. A record whose key is already
 /// archived with different bytes (`ArchiveAppendOutcome.conflict`) is quarantined
-/// with its payload, never completed.
+/// with its payload, never completed, unless `Normalizer.isEquivalent` says it is
+/// the same record, in which case it is completed as an ordinary duplicate.
 ///
 /// **Reentrancy.** `drainOnce` called on the thread that is running this
 /// drainer's pass (from a normalizer, a sink or a fault injector) does not wait
@@ -238,6 +239,20 @@ public final class PipelineDrainer: @unchecked Sendable {
         }
     }
 
+    /// Asks the normalizer whether `incoming` is the same record as archive row `id`.
+    /// A row that cannot be read (corrupt or missing) is not equivalent, so the
+    /// incoming bytes are quarantined rather than dropped.
+    private func isEquivalentToArchived(_ id: Int64, _ incoming: RawRecord) throws -> Bool {
+        let archived: ArchivedRecord?
+        do {
+            archived = try archive.record(id: id)
+        } catch is RawArchiveError {
+            return false
+        }
+        guard let archived else { return false }
+        return normalizer.isEquivalent(archived: archived.record, incoming: incoming)
+    }
+
     /// The archived copies, by id. A corrupt row is missing from the result (its
     /// spool record is charged a failure by the caller).
     private func readArchived(_ ids: [Int64]) throws -> [Int64: Result<ArchivedRecord, Error>] {
@@ -275,7 +290,14 @@ public final class PipelineDrainer: @unchecked Sendable {
             switch result {
             case .inserted(let id), .duplicate(let id):
                 accepted.append((spooled, id))
-            case .conflict(_, let archivedSHA, let incomingSHA):
+            case .conflict(let existingID, let archivedSHA, let incomingSHA):
+                // The provider may define these bytes as the same record (e.g. a
+                // transcript line that moved): then it is an ordinary duplicate and
+                // the archived first record stands.
+                if try isEquivalentToArchived(existingID, spooled.record) {
+                    accepted.append((spooled, existingID))
+                    continue
+                }
                 // The archive keeps the first bytes; these differ, so keep them in
                 // quarantine rather than acknowledging bytes that were never stored.
                 try spool.quarantine(

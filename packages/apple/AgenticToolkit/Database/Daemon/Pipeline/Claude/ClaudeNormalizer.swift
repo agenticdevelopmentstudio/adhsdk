@@ -30,5 +30,19 @@ public struct ClaudeNormalizer: Normalizer {
             throw ClaudeNormalizerError.unsupportedSourceKind(record.record.sourceKind)
         }
     }
+
+    /// A transcript line is identified by its bytes alone: the same line read again
+    /// at another line number (a compaction rewrote the file above it), from another
+    /// file or with another subagent flag is the line already archived. Hook kinds,
+    /// and transcript payloads that do not decode, keep the byte-equal default.
+    public func isEquivalent(archived: RawRecord, incoming: RawRecord) -> Bool {
+        if archived.payload == incoming.payload { return true }
+        guard archived.sourceKind == ClaudeProvider.transcriptKind,
+              incoming.sourceKind == ClaudeProvider.transcriptKind,
+              let old = try? ClaudeTranscriptPayload.decode(archived.payload),
+              let new = try? ClaudeTranscriptPayload.decode(incoming.payload)
+        else { return false }
+        return old.line == new.line
+    }
 }
 #endif

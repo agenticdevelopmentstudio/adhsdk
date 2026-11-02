@@ -31,6 +31,20 @@ private struct PoisonNormalizer: Normalizer {
     }
 }
 
+/// `TestNormalizer`, except two payloads with the same `"t"` are the same record
+/// whatever else differs (a provider-defined identity, like a transcript line that moved).
+private struct SameTNormalizer: Normalizer {
+    let provider = "mock"
+    func normalize(_ record: ArchivedRecord) throws -> NormalizedBatch { try TestNormalizer().normalize(record) }
+    func isEquivalent(archived: RawRecord, incoming: RawRecord) -> Bool {
+        func tValue(_ data: Data) -> Int? {
+            (try? JSONSerialization.jsonObject(with: data) as? [String: Any])?["t"] as? Int
+        }
+        guard let old = tValue(archived.payload) else { return false }
+        return old == tValue(incoming.payload)
+    }
+}
+
 private struct AlwaysFailingNormalizer: Normalizer {
     let provider = "mock"
     struct Transient: Error {}
@@ -352,6 +366,43 @@ final class PipelineDrainerTests: XCTestCase {
         let report = try Replayer.replay(archive: rig.archive, normalizer: TestNormalizer(), into: rebuilt)
         XCTAssertEqual(report.failed, 0)
         XCTAssertEqual(try rebuilt.canonicalDump(), try rig.store.canonicalDump())
+    }
+
+    func testEquivalentRedeliveryIsADuplicateNotAConflict() throws {
+        let rig = try makeRig()
+        let first = "{\"session\":\"s1\",\"t\":1}"
+        let pipe = try PipelineDrainer(spool: rig.spool, archive: rig.archive, normalizer: SameTNormalizer(),
+                                       store: rig.store)
+        try rig.spool.append([record("k", payload: first)])
+        pipe.drainUntilEmpty()
+        let before = try rig.store.canonicalDump()
+        // Same "t", different bytes: the normalizer calls it the same record.
+        try rig.spool.append([record("k", payload: "{\"session\":\"s1\",\"t\":1,\"moved\":true}")])
+        let outcome = pipe.drainOnce()
+        XCTAssertFalse(outcome.failed, outcome.failureReason ?? "")
+        XCTAssertEqual(outcome.quarantined, 0)
+        XCTAssertEqual(outcome.completed, 1)
+        XCTAssertEqual(try rig.spool.pendingCount(), 0)
+        XCTAssertTrue(try rig.spool.quarantined(limit: 10).isEmpty)
+        XCTAssertEqual(try rig.archive.count(), 1)
+        let id = try XCTUnwrap(try rig.archive.id(forDedupKey: "k"))
+        XCTAssertEqual(try rig.archive.record(id: id)?.record.payload, Data(first.utf8))
+        XCTAssertEqual(try rig.store.canonicalDump(), before)
+
+        // A different "t" under the same key is still a conflict for this normalizer.
+        try rig.spool.append([record("k", payload: "{\"session\":\"s1\",\"t\":2}")])
+        let conflicted = pipe.drainOnce()
+        XCTAssertEqual(conflicted.quarantined, 1)
+        XCTAssertEqual(conflicted.completed, 0)
+        XCTAssertEqual(try rig.archive.count(), 1)
+    }
+
+    func testDefaultEquivalenceIsByteEquality() {
+        let normalizer = TestNormalizer()
+        let base = record("k", payload: "{\"session\":\"s1\",\"t\":1}")
+        XCTAssertTrue(normalizer.isEquivalent(archived: base, incoming: base))
+        XCTAssertFalse(normalizer.isEquivalent(
+            archived: base, incoming: record("k", payload: "{\"session\":\"s1\",\"t\":1,\"moved\":true}")))
     }
 
     func testRequeuedOldRecordBesideNewOnesReadsOnlyThoseArchiveRows() throws {
