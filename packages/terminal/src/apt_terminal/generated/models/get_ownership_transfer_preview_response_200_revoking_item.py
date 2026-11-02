@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar
 
@@ -19,20 +21,20 @@ T = TypeVar("T", bound="GetOwnershipTransferPreviewResponse200RevokingItem")
 class GetOwnershipTransferPreviewResponse200RevokingItem:
     """
     Attributes:
-        kind (Union[Unset, GetOwnershipTransferPreviewResponse200RevokingItemKind]):
-        id (Union[Unset, str]):
-        name (Union[Unset, str]):
-        via (Union[Unset, GetOwnershipTransferPreviewResponse200RevokingItemVia]): where the access came from
+        kind (GetOwnershipTransferPreviewResponse200RevokingItemKind | Unset):
+        id (str | Unset):
+        name (str | Unset):
+        via (GetOwnershipTransferPreviewResponse200RevokingItemVia | Unset): where the access came from
     """
 
-    kind: Unset | GetOwnershipTransferPreviewResponse200RevokingItemKind = UNSET
-    id: Unset | str = UNSET
-    name: Unset | str = UNSET
-    via: Unset | GetOwnershipTransferPreviewResponse200RevokingItemVia = UNSET
+    kind: GetOwnershipTransferPreviewResponse200RevokingItemKind | Unset = UNSET
+    id: str | Unset = UNSET
+    name: str | Unset = UNSET
+    via: GetOwnershipTransferPreviewResponse200RevokingItemVia | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
-        kind: Unset | str = UNSET
+        kind: str | Unset = UNSET
         if not isinstance(self.kind, Unset):
             kind = self.kind.value
 
@@ -40,7 +42,7 @@ class GetOwnershipTransferPreviewResponse200RevokingItem:
 
         name = self.name
 
-        via: Unset | str = UNSET
+        via: str | Unset = UNSET
         if not isinstance(self.via, Unset):
             via = self.via.value
 
@@ -62,7 +64,7 @@ class GetOwnershipTransferPreviewResponse200RevokingItem:
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
         d = dict(src_dict)
         _kind = d.pop("kind", UNSET)
-        kind: Unset | GetOwnershipTransferPreviewResponse200RevokingItemKind
+        kind: GetOwnershipTransferPreviewResponse200RevokingItemKind | Unset
         if isinstance(_kind, Unset):
             kind = UNSET
         else:
@@ -73,7 +75,7 @@ class GetOwnershipTransferPreviewResponse200RevokingItem:
         name = d.pop("name", UNSET)
 
         _via = d.pop("via", UNSET)
-        via: Unset | GetOwnershipTransferPreviewResponse200RevokingItemVia
+        via: GetOwnershipTransferPreviewResponse200RevokingItemVia | Unset
         if isinstance(_via, Unset):
             via = UNSET
         else:

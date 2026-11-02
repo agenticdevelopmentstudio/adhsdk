@@ -1,5 +1,6 @@
 from http import HTTPStatus
 from typing import Any
+from urllib.parse import quote
 
 import httpx
 
@@ -8,22 +9,25 @@ from ...client import AuthenticatedClient, Client
 from ...models.campaign import Campaign
 from ...models.campaign_patch import CampaignPatch
 from ...models.error import Error
-from ...types import Response
+from ...types import UNSET, Response, Unset
 
 
 def _get_kwargs(
     campaign_id: str,
     *,
-    body: CampaignPatch,
+    body: CampaignPatch | Unset = UNSET,
 ) -> dict[str, Any]:
     headers: dict[str, Any] = {}
 
     _kwargs: dict[str, Any] = {
         "method": "patch",
-        "url": f"/audience/campaigns/{campaign_id}",
+        "url": "/audience/campaigns/{campaign_id}".format(
+            campaign_id=quote(str(campaign_id), safe=""),
+        ),
     }
 
-    _kwargs["json"] = body.to_dict()
+    if not isinstance(body, Unset):
+        _kwargs["json"] = body.to_dict()
 
     headers["Content-Type"] = "application/json"
 
@@ -85,20 +89,21 @@ def sync_detailed(
     campaign_id: str,
     *,
     client: AuthenticatedClient,
-    body: CampaignPatch,
+    body: CampaignPatch | Unset = UNSET,
 ) -> Response[Campaign | Error]:
     """Edit a draft campaign
 
     Args:
         campaign_id (str):
-        body (CampaignPatch): All fields optional; only present on a campaign still in draft.
+        body (CampaignPatch | Unset): All fields optional; only present on a campaign still in
+            draft.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Campaign, Error]]
+        Response[Campaign | Error]
     """
 
     kwargs = _get_kwargs(
@@ -117,20 +122,21 @@ def sync(
     campaign_id: str,
     *,
     client: AuthenticatedClient,
-    body: CampaignPatch,
+    body: CampaignPatch | Unset = UNSET,
 ) -> Campaign | Error | None:
     """Edit a draft campaign
 
     Args:
         campaign_id (str):
-        body (CampaignPatch): All fields optional; only present on a campaign still in draft.
+        body (CampaignPatch | Unset): All fields optional; only present on a campaign still in
+            draft.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Campaign, Error]
+        Campaign | Error
     """
 
     return sync_detailed(
@@ -144,20 +150,21 @@ async def asyncio_detailed(
     campaign_id: str,
     *,
     client: AuthenticatedClient,
-    body: CampaignPatch,
+    body: CampaignPatch | Unset = UNSET,
 ) -> Response[Campaign | Error]:
     """Edit a draft campaign
 
     Args:
         campaign_id (str):
-        body (CampaignPatch): All fields optional; only present on a campaign still in draft.
+        body (CampaignPatch | Unset): All fields optional; only present on a campaign still in
+            draft.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Campaign, Error]]
+        Response[Campaign | Error]
     """
 
     kwargs = _get_kwargs(
@@ -174,20 +181,21 @@ async def asyncio(
     campaign_id: str,
     *,
     client: AuthenticatedClient,
-    body: CampaignPatch,
+    body: CampaignPatch | Unset = UNSET,
 ) -> Campaign | Error | None:
     """Edit a draft campaign
 
     Args:
         campaign_id (str):
-        body (CampaignPatch): All fields optional; only present on a campaign still in draft.
+        body (CampaignPatch | Unset): All fields optional; only present on a campaign still in
+            draft.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Campaign, Error]
+        Campaign | Error
     """
 
     return (

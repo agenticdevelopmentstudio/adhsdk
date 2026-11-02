@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -12,20 +14,20 @@ T = TypeVar("T", bound="PutDocumentDocumentsIdBody")
 class PutDocumentDocumentsIdBody:
     """
     Attributes:
-        ecosystem_id (Union[Unset, str]):
-        title (Union[Unset, str]):
-        doc_type (Union[Unset, str]):
-        last_op_id (Union[None, Unset, str]):
-        last_snapshot_id (Union[None, Unset, str]):
-        sync_txid (Union[Unset, int]):
+        ecosystem_id (str | Unset):
+        title (str | Unset):
+        doc_type (str | Unset):
+        last_op_id (None | str | Unset):
+        last_snapshot_id (None | str | Unset):
+        sync_txid (int | Unset):
     """
 
-    ecosystem_id: Unset | str = UNSET
-    title: Unset | str = UNSET
-    doc_type: Unset | str = UNSET
-    last_op_id: None | Unset | str = UNSET
-    last_snapshot_id: None | Unset | str = UNSET
-    sync_txid: Unset | int = UNSET
+    ecosystem_id: str | Unset = UNSET
+    title: str | Unset = UNSET
+    doc_type: str | Unset = UNSET
+    last_op_id: None | str | Unset = UNSET
+    last_snapshot_id: None | str | Unset = UNSET
+    sync_txid: int | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
         ecosystem_id = self.ecosystem_id
@@ -34,13 +36,13 @@ class PutDocumentDocumentsIdBody:
 
         doc_type = self.doc_type
 
-        last_op_id: None | Unset | str
+        last_op_id: None | str | Unset
         if isinstance(self.last_op_id, Unset):
             last_op_id = UNSET
         else:
             last_op_id = self.last_op_id
 
-        last_snapshot_id: None | Unset | str
+        last_snapshot_id: None | str | Unset
         if isinstance(self.last_snapshot_id, Unset):
             last_snapshot_id = UNSET
         else:
@@ -75,21 +77,21 @@ class PutDocumentDocumentsIdBody:
 
         doc_type = d.pop("docType", UNSET)
 
-        def _parse_last_op_id(data: object) -> None | Unset | str:
+        def _parse_last_op_id(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         last_op_id = _parse_last_op_id(d.pop("lastOpId", UNSET))
 
-        def _parse_last_snapshot_id(data: object) -> None | Unset | str:
+        def _parse_last_snapshot_id(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         last_snapshot_id = _parse_last_snapshot_id(d.pop("lastSnapshotId", UNSET))
 

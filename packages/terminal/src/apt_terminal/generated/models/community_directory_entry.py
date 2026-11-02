@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -18,10 +20,10 @@ class CommunityDirectoryEntry:
         joined_at (str):
         post_count (int): Live posts by this member in this community.
         active_category_ids (list[str]): Distinct category ids this member has posted in.
-        bio (Union[None, Unset, str]):
-        display_name (Union[None, Unset, str]):
-        slug (Union[None, Unset, str]):
-        avatar_url (Union[None, Unset, str]):
+        bio (None | str | Unset):
+        display_name (None | str | Unset):
+        slug (None | str | Unset):
+        avatar_url (None | str | Unset):
     """
 
     customer_id: str
@@ -29,10 +31,10 @@ class CommunityDirectoryEntry:
     joined_at: str
     post_count: int
     active_category_ids: list[str]
-    bio: None | Unset | str = UNSET
-    display_name: None | Unset | str = UNSET
-    slug: None | Unset | str = UNSET
-    avatar_url: None | Unset | str = UNSET
+    bio: None | str | Unset = UNSET
+    display_name: None | str | Unset = UNSET
+    slug: None | str | Unset = UNSET
+    avatar_url: None | str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -46,25 +48,25 @@ class CommunityDirectoryEntry:
 
         active_category_ids = self.active_category_ids
 
-        bio: None | Unset | str
+        bio: None | str | Unset
         if isinstance(self.bio, Unset):
             bio = UNSET
         else:
             bio = self.bio
 
-        display_name: None | Unset | str
+        display_name: None | str | Unset
         if isinstance(self.display_name, Unset):
             display_name = UNSET
         else:
             display_name = self.display_name
 
-        slug: None | Unset | str
+        slug: None | str | Unset
         if isinstance(self.slug, Unset):
             slug = UNSET
         else:
             slug = self.slug
 
-        avatar_url: None | Unset | str
+        avatar_url: None | str | Unset
         if isinstance(self.avatar_url, Unset):
             avatar_url = UNSET
         else:
@@ -105,39 +107,39 @@ class CommunityDirectoryEntry:
 
         active_category_ids = cast(list[str], d.pop("activeCategoryIds"))
 
-        def _parse_bio(data: object) -> None | Unset | str:
+        def _parse_bio(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         bio = _parse_bio(d.pop("bio", UNSET))
 
-        def _parse_display_name(data: object) -> None | Unset | str:
+        def _parse_display_name(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         display_name = _parse_display_name(d.pop("displayName", UNSET))
 
-        def _parse_slug(data: object) -> None | Unset | str:
+        def _parse_slug(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         slug = _parse_slug(d.pop("slug", UNSET))
 
-        def _parse_avatar_url(data: object) -> None | Unset | str:
+        def _parse_avatar_url(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         avatar_url = _parse_avatar_url(d.pop("avatarUrl", UNSET))
 

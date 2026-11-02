@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 from uuid import UUID
@@ -14,26 +16,26 @@ class PutPersonaMemoryFactsIdResponse200:
         id (str):
         ecosystem_id (str):
         customer_id (str):
-        deleted_at (Union[None, str]):
+        deleted_at (None | str):
         persona_id (UUID):
         scope (str):
-        memory_id (Union[None, str]):
-        subject_table (Union[None, str]):
-        subject_id (Union[None, str]):
+        memory_id (None | str):
+        subject_table (None | str):
+        subject_id (None | str):
         predicate (str):
-        object_table (Union[None, str]):
-        object_id (Union[None, str]):
-        object_value (Union[None, str]):
+        object_table (None | str):
+        object_id (None | str):
+        object_value (None | str):
         source (str):
         confidence (int):
-        valid_from (Union[None, str]):
-        valid_to (Union[None, str]):
+        valid_from (None | str):
+        valid_to (None | str):
         status (str):
-        supersedes_id (Union[None, str]):
+        supersedes_id (None | str):
         created_at (str):
         updated_at (str):
         sync_version (int):
-        sync_stamped_at (Union[None, str]):
+        sync_stamped_at (None | str):
         sync_txid (int):
     """
 

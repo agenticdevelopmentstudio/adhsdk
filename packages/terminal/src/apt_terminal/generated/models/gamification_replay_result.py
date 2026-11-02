@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar
 
@@ -15,12 +17,12 @@ class GamificationReplayResult:
     Attributes:
         subjects (int): Subjects touched (1 for a single-subject replay)
         badges (int): Newly-granted badges across the replayed subject(s)
-        xp_gained (Union[Unset, int]): Points granted — single-subject replay only
+        xp_gained (int | Unset): Points granted — single-subject replay only
     """
 
     subjects: int
     badges: int
-    xp_gained: Unset | int = UNSET
+    xp_gained: int | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:

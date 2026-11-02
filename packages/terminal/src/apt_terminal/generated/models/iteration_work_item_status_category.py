@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class IterationWorkItemStatusCategory(str, Enum):
+class IterationWorkItemStatusCategory(StrEnum):
     BACKLOG = "backlog"
     CANCELED = "canceled"
     DONE = "done"

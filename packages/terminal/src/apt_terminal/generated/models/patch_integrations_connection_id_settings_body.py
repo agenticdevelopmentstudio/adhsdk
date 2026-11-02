@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -12,36 +14,35 @@ T = TypeVar("T", bound="PatchIntegrationsConnectionIdSettingsBody")
 class PatchIntegrationsConnectionIdSettingsBody:
     """
     Attributes:
-        gmail_label_ids (Union[Unset, list[str]]): Gmail label ids to sync (default INBOX).
-        gmail_window_days (Union[Unset, int]): Days of history to sync (default 30, max 366).
-        reddit_subreddits (Union[Unset, list[str]]): Subreddits to watch (name or r/name; max 50).
-        reddit_keywords (Union[Unset, list[str]]): Keywords to match within watched subreddits (max 50).
-        audience_ids (Union[Unset, list[str]]): Provider audience/list ids to sync contacts for (default none — roster
-            only).
+        gmail_label_ids (list[str] | Unset): Gmail label ids to sync (default INBOX).
+        gmail_window_days (int | Unset): Days of history to sync (default 30, max 366).
+        reddit_subreddits (list[str] | Unset): Subreddits to watch (name or r/name; max 50).
+        reddit_keywords (list[str] | Unset): Keywords to match within watched subreddits (max 50).
+        audience_ids (list[str] | Unset): Provider audience/list ids to sync contacts for (default none — roster only).
     """
 
-    gmail_label_ids: Unset | list[str] = UNSET
-    gmail_window_days: Unset | int = UNSET
-    reddit_subreddits: Unset | list[str] = UNSET
-    reddit_keywords: Unset | list[str] = UNSET
-    audience_ids: Unset | list[str] = UNSET
+    gmail_label_ids: list[str] | Unset = UNSET
+    gmail_window_days: int | Unset = UNSET
+    reddit_subreddits: list[str] | Unset = UNSET
+    reddit_keywords: list[str] | Unset = UNSET
+    audience_ids: list[str] | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
-        gmail_label_ids: Unset | list[str] = UNSET
+        gmail_label_ids: list[str] | Unset = UNSET
         if not isinstance(self.gmail_label_ids, Unset):
             gmail_label_ids = self.gmail_label_ids
 
         gmail_window_days = self.gmail_window_days
 
-        reddit_subreddits: Unset | list[str] = UNSET
+        reddit_subreddits: list[str] | Unset = UNSET
         if not isinstance(self.reddit_subreddits, Unset):
             reddit_subreddits = self.reddit_subreddits
 
-        reddit_keywords: Unset | list[str] = UNSET
+        reddit_keywords: list[str] | Unset = UNSET
         if not isinstance(self.reddit_keywords, Unset):
             reddit_keywords = self.reddit_keywords
 
-        audience_ids: Unset | list[str] = UNSET
+        audience_ids: list[str] | Unset = UNSET
         if not isinstance(self.audience_ids, Unset):
             audience_ids = self.audience_ids
 

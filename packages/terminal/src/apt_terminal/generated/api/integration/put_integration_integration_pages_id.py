@@ -1,5 +1,6 @@
 from http import HTTPStatus
 from typing import Any
+from urllib.parse import quote
 
 import httpx
 
@@ -10,22 +11,25 @@ from ...models.put_integration_integration_pages_id_body import PutIntegrationIn
 from ...models.put_integration_integration_pages_id_response_200 import (
     PutIntegrationIntegrationPagesIdResponse200,
 )
-from ...types import Response
+from ...types import UNSET, Response, Unset
 
 
 def _get_kwargs(
     id: str,
     *,
-    body: PutIntegrationIntegrationPagesIdBody,
+    body: PutIntegrationIntegrationPagesIdBody | Unset = UNSET,
 ) -> dict[str, Any]:
     headers: dict[str, Any] = {}
 
     _kwargs: dict[str, Any] = {
         "method": "put",
-        "url": f"/integration/integration-pages/{id}",
+        "url": "/integration/integration-pages/{id}".format(
+            id=quote(str(id), safe=""),
+        ),
     }
 
-    _kwargs["json"] = body.to_dict()
+    if not isinstance(body, Unset):
+        _kwargs["json"] = body.to_dict()
 
     headers["Content-Type"] = "application/json"
 
@@ -77,20 +81,20 @@ def sync_detailed(
     id: str,
     *,
     client: AuthenticatedClient,
-    body: PutIntegrationIntegrationPagesIdBody,
+    body: PutIntegrationIntegrationPagesIdBody | Unset = UNSET,
 ) -> Response[Error | PutIntegrationIntegrationPagesIdResponse200]:
     """Update integration_pages
 
     Args:
         id (str):
-        body (PutIntegrationIntegrationPagesIdBody):
+        body (PutIntegrationIntegrationPagesIdBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, PutIntegrationIntegrationPagesIdResponse200]]
+        Response[Error | PutIntegrationIntegrationPagesIdResponse200]
     """
 
     kwargs = _get_kwargs(
@@ -109,20 +113,20 @@ def sync(
     id: str,
     *,
     client: AuthenticatedClient,
-    body: PutIntegrationIntegrationPagesIdBody,
+    body: PutIntegrationIntegrationPagesIdBody | Unset = UNSET,
 ) -> Error | PutIntegrationIntegrationPagesIdResponse200 | None:
     """Update integration_pages
 
     Args:
         id (str):
-        body (PutIntegrationIntegrationPagesIdBody):
+        body (PutIntegrationIntegrationPagesIdBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, PutIntegrationIntegrationPagesIdResponse200]
+        Error | PutIntegrationIntegrationPagesIdResponse200
     """
 
     return sync_detailed(
@@ -136,20 +140,20 @@ async def asyncio_detailed(
     id: str,
     *,
     client: AuthenticatedClient,
-    body: PutIntegrationIntegrationPagesIdBody,
+    body: PutIntegrationIntegrationPagesIdBody | Unset = UNSET,
 ) -> Response[Error | PutIntegrationIntegrationPagesIdResponse200]:
     """Update integration_pages
 
     Args:
         id (str):
-        body (PutIntegrationIntegrationPagesIdBody):
+        body (PutIntegrationIntegrationPagesIdBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, PutIntegrationIntegrationPagesIdResponse200]]
+        Response[Error | PutIntegrationIntegrationPagesIdResponse200]
     """
 
     kwargs = _get_kwargs(
@@ -166,20 +170,20 @@ async def asyncio(
     id: str,
     *,
     client: AuthenticatedClient,
-    body: PutIntegrationIntegrationPagesIdBody,
+    body: PutIntegrationIntegrationPagesIdBody | Unset = UNSET,
 ) -> Error | PutIntegrationIntegrationPagesIdResponse200 | None:
     """Update integration_pages
 
     Args:
         id (str):
-        body (PutIntegrationIntegrationPagesIdBody):
+        body (PutIntegrationIntegrationPagesIdBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, PutIntegrationIntegrationPagesIdResponse200]
+        Error | PutIntegrationIntegrationPagesIdResponse200
     """
 
     return (

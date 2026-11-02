@@ -8,12 +8,12 @@ from ...client import AuthenticatedClient, Client
 from ...models.error import Error
 from ...models.post_persona_personas_body import PostPersonaPersonasBody
 from ...models.post_persona_personas_response_201 import PostPersonaPersonasResponse201
-from ...types import Response
+from ...types import UNSET, Response, Unset
 
 
 def _get_kwargs(
     *,
-    body: PostPersonaPersonasBody,
+    body: PostPersonaPersonasBody | Unset = UNSET,
 ) -> dict[str, Any]:
     headers: dict[str, Any] = {}
 
@@ -22,7 +22,8 @@ def _get_kwargs(
         "url": "/persona/personas",
     }
 
-    _kwargs["json"] = body.to_dict()
+    if not isinstance(body, Unset):
+        _kwargs["json"] = body.to_dict()
 
     headers["Content-Type"] = "application/json"
 
@@ -68,19 +69,19 @@ def _build_response(
 def sync_detailed(
     *,
     client: AuthenticatedClient,
-    body: PostPersonaPersonasBody,
+    body: PostPersonaPersonasBody | Unset = UNSET,
 ) -> Response[Error | PostPersonaPersonasResponse201]:
     """Create personas
 
     Args:
-        body (PostPersonaPersonasBody):
+        body (PostPersonaPersonasBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, PostPersonaPersonasResponse201]]
+        Response[Error | PostPersonaPersonasResponse201]
     """
 
     kwargs = _get_kwargs(
@@ -97,19 +98,19 @@ def sync_detailed(
 def sync(
     *,
     client: AuthenticatedClient,
-    body: PostPersonaPersonasBody,
+    body: PostPersonaPersonasBody | Unset = UNSET,
 ) -> Error | PostPersonaPersonasResponse201 | None:
     """Create personas
 
     Args:
-        body (PostPersonaPersonasBody):
+        body (PostPersonaPersonasBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, PostPersonaPersonasResponse201]
+        Error | PostPersonaPersonasResponse201
     """
 
     return sync_detailed(
@@ -121,19 +122,19 @@ def sync(
 async def asyncio_detailed(
     *,
     client: AuthenticatedClient,
-    body: PostPersonaPersonasBody,
+    body: PostPersonaPersonasBody | Unset = UNSET,
 ) -> Response[Error | PostPersonaPersonasResponse201]:
     """Create personas
 
     Args:
-        body (PostPersonaPersonasBody):
+        body (PostPersonaPersonasBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, PostPersonaPersonasResponse201]]
+        Response[Error | PostPersonaPersonasResponse201]
     """
 
     kwargs = _get_kwargs(
@@ -148,19 +149,19 @@ async def asyncio_detailed(
 async def asyncio(
     *,
     client: AuthenticatedClient,
-    body: PostPersonaPersonasBody,
+    body: PostPersonaPersonasBody | Unset = UNSET,
 ) -> Error | PostPersonaPersonasResponse201 | None:
     """Create personas
 
     Args:
-        body (PostPersonaPersonasBody):
+        body (PostPersonaPersonasBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, PostPersonaPersonasResponse201]
+        Error | PostPersonaPersonasResponse201
     """
 
     return (

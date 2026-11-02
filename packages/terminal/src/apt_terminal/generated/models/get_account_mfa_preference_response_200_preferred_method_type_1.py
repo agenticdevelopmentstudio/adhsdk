@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class GetAccountMfaPreferenceResponse200PreferredMethodType1(str, Enum):
+class GetAccountMfaPreferenceResponse200PreferredMethodType1(StrEnum):
     SMS = "sms"
     TOTP = "totp"
     WEBAUTHN = "webauthn"

@@ -1,5 +1,6 @@
 from http import HTTPStatus
 from typing import Any
+from urllib.parse import quote
 
 import httpx
 
@@ -16,7 +17,7 @@ def _get_kwargs(
     id: str,
     *,
     slug: str,
-    branch: Unset | str = UNSET,
+    branch: str | Unset = UNSET,
 ) -> dict[str, Any]:
     params: dict[str, Any] = {}
 
@@ -28,7 +29,9 @@ def _get_kwargs(
 
     _kwargs: dict[str, Any] = {
         "method": "get",
-        "url": f"/shipr/connections/{id}/declaration",
+        "url": "/shipr/connections/{id}/declaration".format(
+            id=quote(str(id), safe=""),
+        ),
         "params": params,
     }
 
@@ -90,7 +93,7 @@ def sync_detailed(
     *,
     client: AuthenticatedClient,
     slug: str,
-    branch: Unset | str = UNSET,
+    branch: str | Unset = UNSET,
 ) -> Response[Error | GetShiprConnectionsIdDeclarationResponse200]:
     """What a repository’s committed `.shipr` declares it deploys to
 
@@ -105,14 +108,14 @@ def sync_detailed(
     Args:
         id (str):
         slug (str):
-        branch (Union[Unset, str]):
+        branch (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, GetShiprConnectionsIdDeclarationResponse200]]
+        Response[Error | GetShiprConnectionsIdDeclarationResponse200]
     """
 
     kwargs = _get_kwargs(
@@ -133,7 +136,7 @@ def sync(
     *,
     client: AuthenticatedClient,
     slug: str,
-    branch: Unset | str = UNSET,
+    branch: str | Unset = UNSET,
 ) -> Error | GetShiprConnectionsIdDeclarationResponse200 | None:
     """What a repository’s committed `.shipr` declares it deploys to
 
@@ -148,14 +151,14 @@ def sync(
     Args:
         id (str):
         slug (str):
-        branch (Union[Unset, str]):
+        branch (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, GetShiprConnectionsIdDeclarationResponse200]
+        Error | GetShiprConnectionsIdDeclarationResponse200
     """
 
     return sync_detailed(
@@ -171,7 +174,7 @@ async def asyncio_detailed(
     *,
     client: AuthenticatedClient,
     slug: str,
-    branch: Unset | str = UNSET,
+    branch: str | Unset = UNSET,
 ) -> Response[Error | GetShiprConnectionsIdDeclarationResponse200]:
     """What a repository’s committed `.shipr` declares it deploys to
 
@@ -186,14 +189,14 @@ async def asyncio_detailed(
     Args:
         id (str):
         slug (str):
-        branch (Union[Unset, str]):
+        branch (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, GetShiprConnectionsIdDeclarationResponse200]]
+        Response[Error | GetShiprConnectionsIdDeclarationResponse200]
     """
 
     kwargs = _get_kwargs(
@@ -212,7 +215,7 @@ async def asyncio(
     *,
     client: AuthenticatedClient,
     slug: str,
-    branch: Unset | str = UNSET,
+    branch: str | Unset = UNSET,
 ) -> Error | GetShiprConnectionsIdDeclarationResponse200 | None:
     """What a repository’s committed `.shipr` declares it deploys to
 
@@ -227,14 +230,14 @@ async def asyncio(
     Args:
         id (str):
         slug (str):
-        branch (Union[Unset, str]):
+        branch (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, GetShiprConnectionsIdDeclarationResponse200]
+        Error | GetShiprConnectionsIdDeclarationResponse200
     """
 
     return (

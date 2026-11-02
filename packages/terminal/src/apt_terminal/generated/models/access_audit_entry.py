@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -16,13 +18,13 @@ class AccessAuditEntry:
         owner_id (str):
         actor_kind (str):
         actor_id (str):
-        actor_email (Union[None, str]):
+        actor_email (None | str):
         action (str):
-        subject_kind (Union[None, str]):
-        subject_id (Union[None, str]):
-        target_feature (Union[None, str]):
-        target_item_id (Union[None, str]):
-        role_id (Union[None, str]):
+        subject_kind (None | str):
+        subject_id (None | str):
+        target_feature (None | str):
+        target_item_id (None | str):
+        role_id (None | str):
         before (Any): Pre-change state (action-shaped)
         after (Any): Post-change state (action-shaped)
         at (str):

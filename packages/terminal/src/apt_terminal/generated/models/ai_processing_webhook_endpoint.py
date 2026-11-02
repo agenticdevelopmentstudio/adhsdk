@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 from uuid import UUID
@@ -22,7 +24,7 @@ class AiProcessingWebhookEndpoint:
         active (bool): Whether the endpoint receives deliveries
         created_at (str): ISO 8601 timestamp
         updated_at (str): ISO 8601 timestamp of last modification
-        description (Union[None, Unset, str]): Human-readable label
+        description (None | str | Unset): Human-readable label
     """
 
     id: UUID
@@ -33,7 +35,7 @@ class AiProcessingWebhookEndpoint:
     active: bool
     created_at: str
     updated_at: str
-    description: None | Unset | str = UNSET
+    description: None | str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -53,7 +55,7 @@ class AiProcessingWebhookEndpoint:
 
         updated_at = self.updated_at
 
-        description: None | Unset | str
+        description: None | str | Unset
         if isinstance(self.description, Unset):
             description = UNSET
         else:
@@ -97,12 +99,12 @@ class AiProcessingWebhookEndpoint:
 
         updated_at = d.pop("updatedAt")
 
-        def _parse_description(data: object) -> None | Unset | str:
+        def _parse_description(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         description = _parse_description(d.pop("description", UNSET))
 

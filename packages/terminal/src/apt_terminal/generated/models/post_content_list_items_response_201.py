@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, TypeVar, Union, cast
+from typing import TYPE_CHECKING, Any, TypeVar, cast
 
 from attrs import define as _attrs_define
 
@@ -19,14 +21,14 @@ class PostContentListItemsResponse201:
         id (str):
         ecosystem_id (str):
         customer_id (str):
-        deleted_at (Union[None, str]):
+        deleted_at (None | str):
         list_id (str):
         position (int):
-        value (Union['PostContentListItemsResponse201ValueType1', None, bool, float, list[Any], str]):
+        value (bool | float | list[Any] | None | PostContentListItemsResponse201ValueType1 | str):
         created_at (str):
         updated_at (str):
         sync_version (int):
-        sync_stamped_at (Union[None, str]):
+        sync_stamped_at (None | str):
         sync_txid (int):
     """
 
@@ -36,7 +38,7 @@ class PostContentListItemsResponse201:
     deleted_at: None | str
     list_id: str
     position: int
-    value: Union["PostContentListItemsResponse201ValueType1", None, bool, float, list[Any], str]
+    value: bool | float | list[Any] | None | PostContentListItemsResponse201ValueType1 | str
     created_at: str
     updated_at: str
     sync_version: int
@@ -61,7 +63,7 @@ class PostContentListItemsResponse201:
 
         position = self.position
 
-        value: None | bool | dict[str, Any] | float | list[Any] | str
+        value: bool | dict[str, Any] | float | list[Any] | None | str
         if isinstance(self.value, PostContentListItemsResponse201ValueType1):
             value = self.value.to_dict()
         elif isinstance(self.value, list):
@@ -128,7 +130,7 @@ class PostContentListItemsResponse201:
 
         def _parse_value(
             data: object,
-        ) -> Union["PostContentListItemsResponse201ValueType1", None, bool, float, list[Any], str]:
+        ) -> bool | float | list[Any] | None | PostContentListItemsResponse201ValueType1 | str:
             if data is None:
                 return data
             try:
@@ -137,7 +139,7 @@ class PostContentListItemsResponse201:
                 value_type_1 = PostContentListItemsResponse201ValueType1.from_dict(data)
 
                 return value_type_1
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
             try:
                 if not isinstance(data, list):
@@ -145,12 +147,10 @@ class PostContentListItemsResponse201:
                 value_type_2 = cast(list[Any], data)
 
                 return value_type_2
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
             return cast(
-                Union[
-                    "PostContentListItemsResponse201ValueType1", None, bool, float, list[Any], str
-                ],
+                bool | float | list[Any] | None | PostContentListItemsResponse201ValueType1 | str,
                 data,
             )
 

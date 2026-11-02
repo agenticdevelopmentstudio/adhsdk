@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class RegistryEntryServicePricingModel(str, Enum):
+class RegistryEntryServicePricingModel(StrEnum):
     BARTER = "barter"
     FREE = "free"
     HOURLY = "hourly"

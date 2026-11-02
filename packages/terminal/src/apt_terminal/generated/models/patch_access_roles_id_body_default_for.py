@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class PatchAccessRolesIdBodyDefaultFor(str, Enum):
+class PatchAccessRolesIdBodyDefaultFor(StrEnum):
     CUSTOMER = "customer"
     PERSONA = "persona"
     VALUE_0 = ""

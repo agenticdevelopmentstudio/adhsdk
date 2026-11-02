@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class RegistryPersonaApprovalStatus(str, Enum):
+class RegistryPersonaApprovalStatus(StrEnum):
     APPROVED = "approved"
     PENDING = "pending"
     REJECTED = "rejected"

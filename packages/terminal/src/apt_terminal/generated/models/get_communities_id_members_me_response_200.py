@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -11,7 +13,7 @@ T = TypeVar("T", bound="GetCommunitiesIdMembersMeResponse200")
 class GetCommunitiesIdMembersMeResponse200:
     """
     Attributes:
-        role (Union[None, str]): owner | admin | moderator | member, or null (not a member).
+        role (None | str): owner | admin | moderator | member, or null (not a member).
     """
 
     role: None | str

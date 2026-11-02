@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, TypeVar, Union, cast
+from typing import TYPE_CHECKING, Any, TypeVar, cast
 
 from attrs import define as _attrs_define
 
@@ -23,12 +25,12 @@ class GetBucketBucketTypesIdResponse200:
         name (str):
         description (str):
         ref_mode (str):
-        metadata (Union['GetBucketBucketTypesIdResponse200MetadataType0Type1', None, bool, float, list[Any], str]):
+        metadata (bool | float | GetBucketBucketTypesIdResponse200MetadataType0Type1 | list[Any] | None | str):
         created_at (str):
         updated_at (str):
-        deleted_at (Union[None, str]):
+        deleted_at (None | str):
         sync_version (int):
-        sync_stamped_at (Union[None, str]):
+        sync_stamped_at (None | str):
         sync_txid (int):
     """
 
@@ -39,9 +41,9 @@ class GetBucketBucketTypesIdResponse200:
     name: str
     description: str
     ref_mode: str
-    metadata: Union[
-        "GetBucketBucketTypesIdResponse200MetadataType0Type1", None, bool, float, list[Any], str
-    ]
+    metadata: (
+        bool | float | GetBucketBucketTypesIdResponse200MetadataType0Type1 | list[Any] | None | str
+    )
     created_at: str
     updated_at: str
     deleted_at: None | str
@@ -68,7 +70,7 @@ class GetBucketBucketTypesIdResponse200:
 
         ref_mode = self.ref_mode
 
-        metadata: None | bool | dict[str, Any] | float | list[Any] | str
+        metadata: bool | dict[str, Any] | float | list[Any] | None | str
         if isinstance(self.metadata, GetBucketBucketTypesIdResponse200MetadataType0Type1):
             metadata = self.metadata.to_dict()
         elif isinstance(self.metadata, list):
@@ -137,9 +139,14 @@ class GetBucketBucketTypesIdResponse200:
 
         def _parse_metadata(
             data: object,
-        ) -> Union[
-            "GetBucketBucketTypesIdResponse200MetadataType0Type1", None, bool, float, list[Any], str
-        ]:
+        ) -> (
+            bool
+            | float
+            | GetBucketBucketTypesIdResponse200MetadataType0Type1
+            | list[Any]
+            | None
+            | str
+        ):
             if data is None:
                 return data
             try:
@@ -150,7 +157,7 @@ class GetBucketBucketTypesIdResponse200:
                 )
 
                 return metadata_type_0_type_1
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
             try:
                 if not isinstance(data, list):
@@ -158,17 +165,15 @@ class GetBucketBucketTypesIdResponse200:
                 metadata_type_0_type_2 = cast(list[Any], data)
 
                 return metadata_type_0_type_2
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
             return cast(
-                Union[
-                    "GetBucketBucketTypesIdResponse200MetadataType0Type1",
-                    None,
-                    bool,
-                    float,
-                    list[Any],
-                    str,
-                ],
+                bool
+                | float
+                | GetBucketBucketTypesIdResponse200MetadataType0Type1
+                | list[Any]
+                | None
+                | str,
                 data,
             )
 

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar
 
@@ -23,9 +25,9 @@ class GamificationRealmBadgeInput:
         badge_line (str):
         tier (GamificationRealmBadgeInputTier):
         point_value (int):
-        comparator (Union[Unset, GamificationRealmBadgeInputComparator]):  Default:
+        comparator (GamificationRealmBadgeInputComparator | Unset):  Default:
             GamificationRealmBadgeInputComparator.VALUE_0.
-        hidden (Union[Unset, bool]):  Default: False.
+        hidden (bool | Unset):  Default: False.
     """
 
     name: str
@@ -36,10 +38,10 @@ class GamificationRealmBadgeInput:
     badge_line: str
     tier: GamificationRealmBadgeInputTier
     point_value: int
-    comparator: Unset | GamificationRealmBadgeInputComparator = (
+    comparator: GamificationRealmBadgeInputComparator | Unset = (
         GamificationRealmBadgeInputComparator.VALUE_0
     )
-    hidden: Unset | bool = False
+    hidden: bool | Unset = False
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -59,7 +61,7 @@ class GamificationRealmBadgeInput:
 
         point_value = self.point_value
 
-        comparator: Unset | str = UNSET
+        comparator: str | Unset = UNSET
         if not isinstance(self.comparator, Unset):
             comparator = self.comparator.value
 
@@ -106,7 +108,7 @@ class GamificationRealmBadgeInput:
         point_value = d.pop("pointValue")
 
         _comparator = d.pop("comparator", UNSET)
-        comparator: Unset | GamificationRealmBadgeInputComparator
+        comparator: GamificationRealmBadgeInputComparator | Unset
         if isinstance(_comparator, Unset):
             comparator = UNSET
         else:

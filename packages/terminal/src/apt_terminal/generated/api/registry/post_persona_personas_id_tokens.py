@@ -1,5 +1,6 @@
 from http import HTTPStatus
 from typing import Any
+from urllib.parse import quote
 
 import httpx
 
@@ -8,22 +9,25 @@ from ...client import AuthenticatedClient, Client
 from ...models.error import Error
 from ...models.post_persona_personas_id_tokens_body import PostPersonaPersonasIdTokensBody
 from ...models.registry_persona_token_created import RegistryPersonaTokenCreated
-from ...types import Response
+from ...types import UNSET, Response, Unset
 
 
 def _get_kwargs(
     id: str,
     *,
-    body: PostPersonaPersonasIdTokensBody,
+    body: PostPersonaPersonasIdTokensBody | Unset = UNSET,
 ) -> dict[str, Any]:
     headers: dict[str, Any] = {}
 
     _kwargs: dict[str, Any] = {
         "method": "post",
-        "url": f"/persona/personas/{id}/tokens",
+        "url": "/persona/personas/{id}/tokens".format(
+            id=quote(str(id), safe=""),
+        ),
     }
 
-    _kwargs["json"] = body.to_dict()
+    if not isinstance(body, Unset):
+        _kwargs["json"] = body.to_dict()
 
     headers["Content-Type"] = "application/json"
 
@@ -85,20 +89,20 @@ def sync_detailed(
     id: str,
     *,
     client: AuthenticatedClient,
-    body: PostPersonaPersonasIdTokensBody,
+    body: PostPersonaPersonasIdTokensBody | Unset = UNSET,
 ) -> Response[Error | RegistryPersonaTokenCreated]:
     """Mint a scoped API token that lets the persona act (raw value shown once)
 
     Args:
         id (str):
-        body (PostPersonaPersonasIdTokensBody):
+        body (PostPersonaPersonasIdTokensBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, RegistryPersonaTokenCreated]]
+        Response[Error | RegistryPersonaTokenCreated]
     """
 
     kwargs = _get_kwargs(
@@ -117,20 +121,20 @@ def sync(
     id: str,
     *,
     client: AuthenticatedClient,
-    body: PostPersonaPersonasIdTokensBody,
+    body: PostPersonaPersonasIdTokensBody | Unset = UNSET,
 ) -> Error | RegistryPersonaTokenCreated | None:
     """Mint a scoped API token that lets the persona act (raw value shown once)
 
     Args:
         id (str):
-        body (PostPersonaPersonasIdTokensBody):
+        body (PostPersonaPersonasIdTokensBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, RegistryPersonaTokenCreated]
+        Error | RegistryPersonaTokenCreated
     """
 
     return sync_detailed(
@@ -144,20 +148,20 @@ async def asyncio_detailed(
     id: str,
     *,
     client: AuthenticatedClient,
-    body: PostPersonaPersonasIdTokensBody,
+    body: PostPersonaPersonasIdTokensBody | Unset = UNSET,
 ) -> Response[Error | RegistryPersonaTokenCreated]:
     """Mint a scoped API token that lets the persona act (raw value shown once)
 
     Args:
         id (str):
-        body (PostPersonaPersonasIdTokensBody):
+        body (PostPersonaPersonasIdTokensBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, RegistryPersonaTokenCreated]]
+        Response[Error | RegistryPersonaTokenCreated]
     """
 
     kwargs = _get_kwargs(
@@ -174,20 +178,20 @@ async def asyncio(
     id: str,
     *,
     client: AuthenticatedClient,
-    body: PostPersonaPersonasIdTokensBody,
+    body: PostPersonaPersonasIdTokensBody | Unset = UNSET,
 ) -> Error | RegistryPersonaTokenCreated | None:
     """Mint a scoped API token that lets the persona act (raw value shown once)
 
     Args:
         id (str):
-        body (PostPersonaPersonasIdTokensBody):
+        body (PostPersonaPersonasIdTokensBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, RegistryPersonaTokenCreated]
+        Error | RegistryPersonaTokenCreated
     """
 
     return (

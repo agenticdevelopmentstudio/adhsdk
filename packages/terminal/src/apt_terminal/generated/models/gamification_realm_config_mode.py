@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class GamificationRealmConfigMode(str, Enum):
+class GamificationRealmConfigMode(StrEnum):
     GAME = "game"
     GAMIFICATION = "gamification"
     NONE = "none"

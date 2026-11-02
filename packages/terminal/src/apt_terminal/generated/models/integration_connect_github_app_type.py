@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class IntegrationConnectGithubAppType(str, Enum):
+class IntegrationConnectGithubAppType(StrEnum):
     GITHUB_APP = "github_app"
 
     def __str__(self) -> str:

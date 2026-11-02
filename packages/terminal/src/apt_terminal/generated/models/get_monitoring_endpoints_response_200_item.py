@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -18,7 +20,7 @@ class GetMonitoringEndpointsResponse200Item:
         kind (str):
         url (str):
         expected_status (int):
-        expected_body_contains (Union[None, str]):
+        expected_body_contains (None | str):
         timeout_ms (int):
         degraded_threshold_ms (int):
         check_interval_seconds (int):

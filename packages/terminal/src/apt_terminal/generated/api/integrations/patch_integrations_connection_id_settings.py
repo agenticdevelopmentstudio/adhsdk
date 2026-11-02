@@ -1,5 +1,6 @@
 from http import HTTPStatus
 from typing import Any
+from urllib.parse import quote
 
 import httpx
 
@@ -12,22 +13,25 @@ from ...models.patch_integrations_connection_id_settings_response_200 import (
     PatchIntegrationsConnectionIdSettingsResponse200,
 )
 from ...models.problem_details import ProblemDetails
-from ...types import Response
+from ...types import UNSET, Response, Unset
 
 
 def _get_kwargs(
     connection_id: str,
     *,
-    body: PatchIntegrationsConnectionIdSettingsBody,
+    body: PatchIntegrationsConnectionIdSettingsBody | Unset = UNSET,
 ) -> dict[str, Any]:
     headers: dict[str, Any] = {}
 
     _kwargs: dict[str, Any] = {
         "method": "patch",
-        "url": f"/integrations/{connection_id}/settings",
+        "url": "/integrations/{connection_id}/settings".format(
+            connection_id=quote(str(connection_id), safe=""),
+        ),
     }
 
-    _kwargs["json"] = body.to_dict()
+    if not isinstance(body, Unset):
+        _kwargs["json"] = body.to_dict()
 
     headers["Content-Type"] = "application/json"
 
@@ -84,7 +88,7 @@ def sync_detailed(
     connection_id: str,
     *,
     client: AuthenticatedClient,
-    body: PatchIntegrationsConnectionIdSettingsBody,
+    body: PatchIntegrationsConnectionIdSettingsBody | Unset = UNSET,
 ) -> Response[PatchIntegrationsConnectionIdSettingsResponse200 | ProblemDetails]:
     """Update per-connection sync settings
 
@@ -95,14 +99,14 @@ def sync_detailed(
 
     Args:
         connection_id (str):
-        body (PatchIntegrationsConnectionIdSettingsBody):
+        body (PatchIntegrationsConnectionIdSettingsBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[PatchIntegrationsConnectionIdSettingsResponse200, ProblemDetails]]
+        Response[PatchIntegrationsConnectionIdSettingsResponse200 | ProblemDetails]
     """
 
     kwargs = _get_kwargs(
@@ -121,7 +125,7 @@ def sync(
     connection_id: str,
     *,
     client: AuthenticatedClient,
-    body: PatchIntegrationsConnectionIdSettingsBody,
+    body: PatchIntegrationsConnectionIdSettingsBody | Unset = UNSET,
 ) -> PatchIntegrationsConnectionIdSettingsResponse200 | ProblemDetails | None:
     """Update per-connection sync settings
 
@@ -132,14 +136,14 @@ def sync(
 
     Args:
         connection_id (str):
-        body (PatchIntegrationsConnectionIdSettingsBody):
+        body (PatchIntegrationsConnectionIdSettingsBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[PatchIntegrationsConnectionIdSettingsResponse200, ProblemDetails]
+        PatchIntegrationsConnectionIdSettingsResponse200 | ProblemDetails
     """
 
     return sync_detailed(
@@ -153,7 +157,7 @@ async def asyncio_detailed(
     connection_id: str,
     *,
     client: AuthenticatedClient,
-    body: PatchIntegrationsConnectionIdSettingsBody,
+    body: PatchIntegrationsConnectionIdSettingsBody | Unset = UNSET,
 ) -> Response[PatchIntegrationsConnectionIdSettingsResponse200 | ProblemDetails]:
     """Update per-connection sync settings
 
@@ -164,14 +168,14 @@ async def asyncio_detailed(
 
     Args:
         connection_id (str):
-        body (PatchIntegrationsConnectionIdSettingsBody):
+        body (PatchIntegrationsConnectionIdSettingsBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[PatchIntegrationsConnectionIdSettingsResponse200, ProblemDetails]]
+        Response[PatchIntegrationsConnectionIdSettingsResponse200 | ProblemDetails]
     """
 
     kwargs = _get_kwargs(
@@ -188,7 +192,7 @@ async def asyncio(
     connection_id: str,
     *,
     client: AuthenticatedClient,
-    body: PatchIntegrationsConnectionIdSettingsBody,
+    body: PatchIntegrationsConnectionIdSettingsBody | Unset = UNSET,
 ) -> PatchIntegrationsConnectionIdSettingsResponse200 | ProblemDetails | None:
     """Update per-connection sync settings
 
@@ -199,14 +203,14 @@ async def asyncio(
 
     Args:
         connection_id (str):
-        body (PatchIntegrationsConnectionIdSettingsBody):
+        body (PatchIntegrationsConnectionIdSettingsBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[PatchIntegrationsConnectionIdSettingsResponse200, ProblemDetails]
+        PatchIntegrationsConnectionIdSettingsResponse200 | ProblemDetails
     """
 
     return (

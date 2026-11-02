@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import TYPE_CHECKING, Any, TypeVar
 
@@ -24,7 +26,7 @@ class PersonaBootstrapChat:
 
     conversations_url: str
     streaming: PersonaBootstrapChatStreaming
-    limits: "PersonaBootstrapChatLimits"
+    limits: PersonaBootstrapChatLimits
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -48,7 +50,9 @@ class PersonaBootstrapChat:
 
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
-        from ..models.persona_bootstrap_chat_limits import PersonaBootstrapChatLimits
+        from ..models.persona_bootstrap_chat_limits import (
+            PersonaBootstrapChatLimits,
+        )
 
         d = dict(src_dict)
         conversations_url = d.pop("conversationsUrl")

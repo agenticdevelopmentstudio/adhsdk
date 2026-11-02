@@ -1,5 +1,6 @@
 from http import HTTPStatus
 from typing import Any
+from urllib.parse import quote
 
 import httpx
 
@@ -12,8 +13,8 @@ from ...types import UNSET, Response, Unset
 def _get_kwargs(
     registry_slug: str,
     *,
-    page: Unset | str = UNSET,
-    page_size: Unset | str = UNSET,
+    page: str | Unset = UNSET,
+    page_size: str | Unset = UNSET,
 ) -> dict[str, Any]:
     params: dict[str, Any] = {}
 
@@ -25,7 +26,9 @@ def _get_kwargs(
 
     _kwargs: dict[str, Any] = {
         "method": "get",
-        "url": f"/public/registries/{registry_slug}/entries",
+        "url": "/public/registries/{registry_slug}/entries".format(
+            registry_slug=quote(str(registry_slug), safe=""),
+        ),
         "params": params,
     }
 
@@ -61,15 +64,15 @@ def sync_detailed(
     registry_slug: str,
     *,
     client: AuthenticatedClient | Client,
-    page: Unset | str = UNSET,
-    page_size: Unset | str = UNSET,
+    page: str | Unset = UNSET,
+    page_size: str | Unset = UNSET,
 ) -> Response[PublicRegistryEntryList]:
     """Browse a registry’s published, public entries (newest first)
 
     Args:
         registry_slug (str):
-        page (Union[Unset, str]):
-        page_size (Union[Unset, str]):
+        page (str | Unset):
+        page_size (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -96,15 +99,15 @@ def sync(
     registry_slug: str,
     *,
     client: AuthenticatedClient | Client,
-    page: Unset | str = UNSET,
-    page_size: Unset | str = UNSET,
+    page: str | Unset = UNSET,
+    page_size: str | Unset = UNSET,
 ) -> PublicRegistryEntryList | None:
     """Browse a registry’s published, public entries (newest first)
 
     Args:
         registry_slug (str):
-        page (Union[Unset, str]):
-        page_size (Union[Unset, str]):
+        page (str | Unset):
+        page_size (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -126,15 +129,15 @@ async def asyncio_detailed(
     registry_slug: str,
     *,
     client: AuthenticatedClient | Client,
-    page: Unset | str = UNSET,
-    page_size: Unset | str = UNSET,
+    page: str | Unset = UNSET,
+    page_size: str | Unset = UNSET,
 ) -> Response[PublicRegistryEntryList]:
     """Browse a registry’s published, public entries (newest first)
 
     Args:
         registry_slug (str):
-        page (Union[Unset, str]):
-        page_size (Union[Unset, str]):
+        page (str | Unset):
+        page_size (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -159,15 +162,15 @@ async def asyncio(
     registry_slug: str,
     *,
     client: AuthenticatedClient | Client,
-    page: Unset | str = UNSET,
-    page_size: Unset | str = UNSET,
+    page: str | Unset = UNSET,
+    page_size: str | Unset = UNSET,
 ) -> PublicRegistryEntryList | None:
     """Browse a registry’s published, public entries (newest first)
 
     Args:
         registry_slug (str):
-        page (Union[Unset, str]):
-        page_size (Union[Unset, str]):
+        page (str | Unset):
+        page_size (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.

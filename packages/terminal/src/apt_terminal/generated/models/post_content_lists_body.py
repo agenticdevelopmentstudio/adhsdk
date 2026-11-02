@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -13,22 +15,22 @@ class PostContentListsBody:
     """
     Attributes:
         name (str):
-        ecosystem_id (Union[Unset, str]):
-        description (Union[None, Unset, str]):
-        sync_txid (Union[Unset, int]):
+        ecosystem_id (str | Unset):
+        description (None | str | Unset):
+        sync_txid (int | Unset):
     """
 
     name: str
-    ecosystem_id: Unset | str = UNSET
-    description: None | Unset | str = UNSET
-    sync_txid: Unset | int = UNSET
+    ecosystem_id: str | Unset = UNSET
+    description: None | str | Unset = UNSET
+    sync_txid: int | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
         name = self.name
 
         ecosystem_id = self.ecosystem_id
 
-        description: None | Unset | str
+        description: None | str | Unset
         if isinstance(self.description, Unset):
             description = UNSET
         else:
@@ -59,12 +61,12 @@ class PostContentListsBody:
 
         ecosystem_id = d.pop("ecosystemId", UNSET)
 
-        def _parse_description(data: object) -> None | Unset | str:
+        def _parse_description(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         description = _parse_description(d.pop("description", UNSET))
 

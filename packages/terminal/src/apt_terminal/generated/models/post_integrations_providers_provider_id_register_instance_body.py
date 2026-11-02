@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar
 
@@ -16,16 +18,16 @@ class PostIntegrationsProvidersProviderIdRegisterInstanceBody:
         ecosystem_id (str): Target ecosystem id (the caller must manage it)
         instance_url (str):
         redirect_uri (str):
-        service_type (Union[Unset, str]):
-        provider_config_id (Union[Unset, str]): When set, per-instance clientId/clientSecret/instanceUrl come from this
+        service_type (str | Unset):
+        provider_config_id (str | Unset): When set, per-instance clientId/clientSecret/instanceUrl come from this
             ecosystem provider-config (not a dynamic registration) and the connection links it.
     """
 
     ecosystem_id: str
     instance_url: str
     redirect_uri: str
-    service_type: Unset | str = UNSET
-    provider_config_id: Unset | str = UNSET
+    service_type: str | Unset = UNSET
+    provider_config_id: str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:

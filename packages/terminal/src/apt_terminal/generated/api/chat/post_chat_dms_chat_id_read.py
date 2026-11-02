@@ -1,5 +1,6 @@
 from http import HTTPStatus
 from typing import Any
+from urllib.parse import quote
 
 import httpx
 
@@ -8,22 +9,25 @@ from ...client import AuthenticatedClient, Client
 from ...models.dm_read_request import DmReadRequest
 from ...models.dm_read_result import DmReadResult
 from ...models.error import Error
-from ...types import Response
+from ...types import UNSET, Response, Unset
 
 
 def _get_kwargs(
     chat_id: str,
     *,
-    body: DmReadRequest,
+    body: DmReadRequest | Unset = UNSET,
 ) -> dict[str, Any]:
     headers: dict[str, Any] = {}
 
     _kwargs: dict[str, Any] = {
         "method": "post",
-        "url": f"/chat/dms/{chat_id}/read",
+        "url": "/chat/dms/{chat_id}/read".format(
+            chat_id=quote(str(chat_id), safe=""),
+        ),
     }
 
-    _kwargs["json"] = body.to_dict()
+    if not isinstance(body, Unset):
+        _kwargs["json"] = body.to_dict()
 
     headers["Content-Type"] = "application/json"
 
@@ -80,7 +84,7 @@ def sync_detailed(
     chat_id: str,
     *,
     client: AuthenticatedClient,
-    body: DmReadRequest,
+    body: DmReadRequest | Unset = UNSET,
 ) -> Response[DmReadResult | Error]:
     """Mark a DM chat read up to a message
 
@@ -89,14 +93,14 @@ def sync_detailed(
 
     Args:
         chat_id (str):
-        body (DmReadRequest):
+        body (DmReadRequest | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[DmReadResult, Error]]
+        Response[DmReadResult | Error]
     """
 
     kwargs = _get_kwargs(
@@ -115,7 +119,7 @@ def sync(
     chat_id: str,
     *,
     client: AuthenticatedClient,
-    body: DmReadRequest,
+    body: DmReadRequest | Unset = UNSET,
 ) -> DmReadResult | Error | None:
     """Mark a DM chat read up to a message
 
@@ -124,14 +128,14 @@ def sync(
 
     Args:
         chat_id (str):
-        body (DmReadRequest):
+        body (DmReadRequest | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[DmReadResult, Error]
+        DmReadResult | Error
     """
 
     return sync_detailed(
@@ -145,7 +149,7 @@ async def asyncio_detailed(
     chat_id: str,
     *,
     client: AuthenticatedClient,
-    body: DmReadRequest,
+    body: DmReadRequest | Unset = UNSET,
 ) -> Response[DmReadResult | Error]:
     """Mark a DM chat read up to a message
 
@@ -154,14 +158,14 @@ async def asyncio_detailed(
 
     Args:
         chat_id (str):
-        body (DmReadRequest):
+        body (DmReadRequest | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[DmReadResult, Error]]
+        Response[DmReadResult | Error]
     """
 
     kwargs = _get_kwargs(
@@ -178,7 +182,7 @@ async def asyncio(
     chat_id: str,
     *,
     client: AuthenticatedClient,
-    body: DmReadRequest,
+    body: DmReadRequest | Unset = UNSET,
 ) -> DmReadResult | Error | None:
     """Mark a DM chat read up to a message
 
@@ -187,14 +191,14 @@ async def asyncio(
 
     Args:
         chat_id (str):
-        body (DmReadRequest):
+        body (DmReadRequest | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[DmReadResult, Error]
+        DmReadResult | Error
     """
 
     return (

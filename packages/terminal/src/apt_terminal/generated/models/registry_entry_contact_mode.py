@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class RegistryEntryContactMode(str, Enum):
+class RegistryEntryContactMode(StrEnum):
     DM = "dm"
     NONE = "none"
 

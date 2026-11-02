@@ -8,12 +8,12 @@ from ...client import AuthenticatedClient, Client
 from ...models.error import Error
 from ...models.game_player import GamePlayer
 from ...models.game_player_patch import GamePlayerPatch
-from ...types import Response
+from ...types import UNSET, Response, Unset
 
 
 def _get_kwargs(
     *,
-    body: GamePlayerPatch,
+    body: GamePlayerPatch | Unset = UNSET,
 ) -> dict[str, Any]:
     headers: dict[str, Any] = {}
 
@@ -22,7 +22,8 @@ def _get_kwargs(
         "url": "/game/players/me",
     }
 
-    _kwargs["json"] = body.to_dict()
+    if not isinstance(body, Unset):
+        _kwargs["json"] = body.to_dict()
 
     headers["Content-Type"] = "application/json"
 
@@ -83,7 +84,7 @@ def _build_response(
 def sync_detailed(
     *,
     client: AuthenticatedClient,
-    body: GamePlayerPatch,
+    body: GamePlayerPatch | Unset = UNSET,
 ) -> Response[Error | GamePlayer]:
     """Create or edit the caller’s own per-game profile
 
@@ -95,7 +96,7 @@ def sync_detailed(
     the verdict. 422 also when the game’s `character_names` setting is `off`.
 
     Args:
-        body (GamePlayerPatch): Omit a key to leave it alone; send `null` to clear it.
+        body (GamePlayerPatch | Unset): Omit a key to leave it alone; send `null` to clear it.
             `character_name` is screened whenever it is set, whatever the profile’s visibility.
 
     Raises:
@@ -103,7 +104,7 @@ def sync_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, GamePlayer]]
+        Response[Error | GamePlayer]
     """
 
     kwargs = _get_kwargs(
@@ -120,7 +121,7 @@ def sync_detailed(
 def sync(
     *,
     client: AuthenticatedClient,
-    body: GamePlayerPatch,
+    body: GamePlayerPatch | Unset = UNSET,
 ) -> Error | GamePlayer | None:
     """Create or edit the caller’s own per-game profile
 
@@ -132,7 +133,7 @@ def sync(
     the verdict. 422 also when the game’s `character_names` setting is `off`.
 
     Args:
-        body (GamePlayerPatch): Omit a key to leave it alone; send `null` to clear it.
+        body (GamePlayerPatch | Unset): Omit a key to leave it alone; send `null` to clear it.
             `character_name` is screened whenever it is set, whatever the profile’s visibility.
 
     Raises:
@@ -140,7 +141,7 @@ def sync(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, GamePlayer]
+        Error | GamePlayer
     """
 
     return sync_detailed(
@@ -152,7 +153,7 @@ def sync(
 async def asyncio_detailed(
     *,
     client: AuthenticatedClient,
-    body: GamePlayerPatch,
+    body: GamePlayerPatch | Unset = UNSET,
 ) -> Response[Error | GamePlayer]:
     """Create or edit the caller’s own per-game profile
 
@@ -164,7 +165,7 @@ async def asyncio_detailed(
     the verdict. 422 also when the game’s `character_names` setting is `off`.
 
     Args:
-        body (GamePlayerPatch): Omit a key to leave it alone; send `null` to clear it.
+        body (GamePlayerPatch | Unset): Omit a key to leave it alone; send `null` to clear it.
             `character_name` is screened whenever it is set, whatever the profile’s visibility.
 
     Raises:
@@ -172,7 +173,7 @@ async def asyncio_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, GamePlayer]]
+        Response[Error | GamePlayer]
     """
 
     kwargs = _get_kwargs(
@@ -187,7 +188,7 @@ async def asyncio_detailed(
 async def asyncio(
     *,
     client: AuthenticatedClient,
-    body: GamePlayerPatch,
+    body: GamePlayerPatch | Unset = UNSET,
 ) -> Error | GamePlayer | None:
     """Create or edit the caller’s own per-game profile
 
@@ -199,7 +200,7 @@ async def asyncio(
     the verdict. 422 also when the game’s `character_names` setting is `off`.
 
     Args:
-        body (GamePlayerPatch): Omit a key to leave it alone; send `null` to clear it.
+        body (GamePlayerPatch | Unset): Omit a key to leave it alone; send `null` to clear it.
             `character_name` is screened whenever it is set, whatever the profile’s visibility.
 
     Raises:
@@ -207,7 +208,7 @@ async def asyncio(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, GamePlayer]
+        Error | GamePlayer
     """
 
     return (

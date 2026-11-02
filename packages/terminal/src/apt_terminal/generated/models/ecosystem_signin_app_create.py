@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -16,15 +18,15 @@ class EcosystemSigninAppCreate:
         slug (str): The LEAF only — the stored slug is "<ecosystem-slug>.<this>", composed by the server. A composed
             slug over 100 characters is a 400.
         name (str):
-        allowed_return_origins (Union[Unset, list[str]]): Bare http(s) origins: no credentials, no path, no query, no
+        allowed_return_origins (list[str] | Unset): Bare http(s) origins: no credentials, no path, no query, no
             fragment. Anything else is a 400.
-        enable_github (Union[Unset, bool]):  Default: True.
+        enable_github (bool | Unset):  Default: True.
     """
 
     slug: str
     name: str
-    allowed_return_origins: Unset | list[str] = UNSET
-    enable_github: Unset | bool = True
+    allowed_return_origins: list[str] | Unset = UNSET
+    enable_github: bool | Unset = True
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -32,7 +34,7 @@ class EcosystemSigninAppCreate:
 
         name = self.name
 
-        allowed_return_origins: Unset | list[str] = UNSET
+        allowed_return_origins: list[str] | Unset = UNSET
         if not isinstance(self.allowed_return_origins, Unset):
             allowed_return_origins = self.allowed_return_origins
 

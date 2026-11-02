@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import TYPE_CHECKING, Any, TypeVar
 
@@ -15,10 +17,10 @@ T = TypeVar("T", bound="GetProcessingWebhooksResponse200")
 class GetProcessingWebhooksResponse200:
     """
     Attributes:
-        endpoints (list['AiProcessingWebhookEndpoint']):
+        endpoints (list[AiProcessingWebhookEndpoint]):
     """
 
-    endpoints: list["AiProcessingWebhookEndpoint"]
+    endpoints: list[AiProcessingWebhookEndpoint]
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -39,7 +41,9 @@ class GetProcessingWebhooksResponse200:
 
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
-        from ..models.ai_processing_webhook_endpoint import AiProcessingWebhookEndpoint
+        from ..models.ai_processing_webhook_endpoint import (
+            AiProcessingWebhookEndpoint,
+        )
 
         d = dict(src_dict)
         endpoints = []

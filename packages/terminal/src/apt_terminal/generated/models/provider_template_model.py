@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, TypeVar, Union, cast
+from typing import TYPE_CHECKING, Any, TypeVar, cast
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -19,17 +21,17 @@ class ProviderTemplateModel:
     Attributes:
         id (str):
         name (str):
-        description (Union[None, str]):
-        metadata (Union['ProviderTemplateModelMetadataType0', None]):
+        description (None | str):
+        metadata (None | ProviderTemplateModelMetadataType0):
         source (ProviderTemplateModelSource):
-        last_synced_at (Union[None, str]):
+        last_synced_at (None | str):
         created_at (str):
     """
 
     id: str
     name: str
     description: None | str
-    metadata: Union["ProviderTemplateModelMetadataType0", None]
+    metadata: None | ProviderTemplateModelMetadataType0
     source: ProviderTemplateModelSource
     last_synced_at: None | str
     created_at: str
@@ -47,7 +49,7 @@ class ProviderTemplateModel:
         description: None | str
         description = self.description
 
-        metadata: None | dict[str, Any]
+        metadata: dict[str, Any] | None
         if isinstance(self.metadata, ProviderTemplateModelMetadataType0):
             metadata = self.metadata.to_dict()
         else:
@@ -94,7 +96,7 @@ class ProviderTemplateModel:
 
         description = _parse_description(d.pop("description"))
 
-        def _parse_metadata(data: object) -> Union["ProviderTemplateModelMetadataType0", None]:
+        def _parse_metadata(data: object) -> None | ProviderTemplateModelMetadataType0:
             if data is None:
                 return data
             try:
@@ -103,9 +105,9 @@ class ProviderTemplateModel:
                 metadata_type_0 = ProviderTemplateModelMetadataType0.from_dict(data)
 
                 return metadata_type_0
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
-            return cast(Union["ProviderTemplateModelMetadataType0", None], data)
+            return cast(None | ProviderTemplateModelMetadataType0, data)
 
         metadata = _parse_metadata(d.pop("metadata"))
 

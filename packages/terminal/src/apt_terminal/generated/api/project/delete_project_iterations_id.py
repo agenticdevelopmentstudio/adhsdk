@@ -1,5 +1,6 @@
 from http import HTTPStatus
 from typing import Any
+from urllib.parse import quote
 
 import httpx
 
@@ -15,7 +16,9 @@ def _get_kwargs(
 ) -> dict[str, Any]:
     _kwargs: dict[str, Any] = {
         "method": "delete",
-        "url": f"/project/iterations/{id}",
+        "url": "/project/iterations/{id}".format(
+            id=quote(str(id), safe=""),
+        ),
     }
 
     return _kwargs
@@ -66,11 +69,11 @@ def sync_detailed(
     *,
     client: AuthenticatedClient,
 ) -> Response[DeleteProjectIterationsIdResponse200 | Error]:
-    r"""Soft-delete a time-box, UN-ASSIGNING every card committed to it
+    """Soft-delete a time-box, UN-ASSIGNING every card committed to it
 
      Unlike deleting a board column — which is refused while any card sits in it, because `statusId` is
     NOT NULL and there would be no answer to give — this always succeeds: `iterationId` is nullable and
-    \"no iteration\" IS the backlog, an ordinary state. The cards are swept back there rather than
+    "no iteration" IS the backlog, an ordinary state. The cards are swept back there rather than
     deleted, and the response is the COUNT of them, never the cards themselves. Requires the workspace’s
     projects D verb.
 
@@ -82,7 +85,7 @@ def sync_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[DeleteProjectIterationsIdResponse200, Error]]
+        Response[DeleteProjectIterationsIdResponse200 | Error]
     """
 
     kwargs = _get_kwargs(
@@ -101,11 +104,11 @@ def sync(
     *,
     client: AuthenticatedClient,
 ) -> DeleteProjectIterationsIdResponse200 | Error | None:
-    r"""Soft-delete a time-box, UN-ASSIGNING every card committed to it
+    """Soft-delete a time-box, UN-ASSIGNING every card committed to it
 
      Unlike deleting a board column — which is refused while any card sits in it, because `statusId` is
     NOT NULL and there would be no answer to give — this always succeeds: `iterationId` is nullable and
-    \"no iteration\" IS the backlog, an ordinary state. The cards are swept back there rather than
+    "no iteration" IS the backlog, an ordinary state. The cards are swept back there rather than
     deleted, and the response is the COUNT of them, never the cards themselves. Requires the workspace’s
     projects D verb.
 
@@ -117,7 +120,7 @@ def sync(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[DeleteProjectIterationsIdResponse200, Error]
+        DeleteProjectIterationsIdResponse200 | Error
     """
 
     return sync_detailed(
@@ -131,11 +134,11 @@ async def asyncio_detailed(
     *,
     client: AuthenticatedClient,
 ) -> Response[DeleteProjectIterationsIdResponse200 | Error]:
-    r"""Soft-delete a time-box, UN-ASSIGNING every card committed to it
+    """Soft-delete a time-box, UN-ASSIGNING every card committed to it
 
      Unlike deleting a board column — which is refused while any card sits in it, because `statusId` is
     NOT NULL and there would be no answer to give — this always succeeds: `iterationId` is nullable and
-    \"no iteration\" IS the backlog, an ordinary state. The cards are swept back there rather than
+    "no iteration" IS the backlog, an ordinary state. The cards are swept back there rather than
     deleted, and the response is the COUNT of them, never the cards themselves. Requires the workspace’s
     projects D verb.
 
@@ -147,7 +150,7 @@ async def asyncio_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[DeleteProjectIterationsIdResponse200, Error]]
+        Response[DeleteProjectIterationsIdResponse200 | Error]
     """
 
     kwargs = _get_kwargs(
@@ -164,11 +167,11 @@ async def asyncio(
     *,
     client: AuthenticatedClient,
 ) -> DeleteProjectIterationsIdResponse200 | Error | None:
-    r"""Soft-delete a time-box, UN-ASSIGNING every card committed to it
+    """Soft-delete a time-box, UN-ASSIGNING every card committed to it
 
      Unlike deleting a board column — which is refused while any card sits in it, because `statusId` is
     NOT NULL and there would be no answer to give — this always succeeds: `iterationId` is nullable and
-    \"no iteration\" IS the backlog, an ordinary state. The cards are swept back there rather than
+    "no iteration" IS the backlog, an ordinary state. The cards are swept back there rather than
     deleted, and the response is the COUNT of them, never the cards themselves. Requires the workspace’s
     projects D verb.
 
@@ -180,7 +183,7 @@ async def asyncio(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[DeleteProjectIterationsIdResponse200, Error]
+        DeleteProjectIterationsIdResponse200 | Error
     """
 
     return (

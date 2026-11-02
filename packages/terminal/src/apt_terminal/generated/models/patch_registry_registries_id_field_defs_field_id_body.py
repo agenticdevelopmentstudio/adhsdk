@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, TypeVar, Union, cast
+from typing import TYPE_CHECKING, Any, TypeVar, cast
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -25,23 +27,23 @@ T = TypeVar("T", bound="PatchRegistryRegistriesIdFieldDefsFieldIdBody")
 class PatchRegistryRegistriesIdFieldDefsFieldIdBody:
     """
     Attributes:
-        label (Union[Unset, str]):
-        help_ (Union[Unset, str]):
-        required (Union[Unset, bool]):
-        sort_order (Union[Unset, int]):
-        config (Union[Unset, PatchRegistryRegistriesIdFieldDefsFieldIdBodyConfig]):
-        visibility (Union[Unset, PatchRegistryRegistriesIdFieldDefsFieldIdBodyVisibility]): The owner's ceiling for this
-            field across every entry
-        show_if (Union['PatchRegistryRegistriesIdFieldDefsFieldIdBodyShowIfType0', None, Unset]):
+        label (str | Unset):
+        help_ (str | Unset):
+        required (bool | Unset):
+        sort_order (int | Unset):
+        config (PatchRegistryRegistriesIdFieldDefsFieldIdBodyConfig | Unset):
+        visibility (PatchRegistryRegistriesIdFieldDefsFieldIdBodyVisibility | Unset): The owner's ceiling for this field
+            across every entry
+        show_if (None | PatchRegistryRegistriesIdFieldDefsFieldIdBodyShowIfType0 | Unset):
     """
 
-    label: Unset | str = UNSET
-    help_: Unset | str = UNSET
-    required: Unset | bool = UNSET
-    sort_order: Unset | int = UNSET
-    config: Union[Unset, "PatchRegistryRegistriesIdFieldDefsFieldIdBodyConfig"] = UNSET
-    visibility: Unset | PatchRegistryRegistriesIdFieldDefsFieldIdBodyVisibility = UNSET
-    show_if: Union["PatchRegistryRegistriesIdFieldDefsFieldIdBodyShowIfType0", None, Unset] = UNSET
+    label: str | Unset = UNSET
+    help_: str | Unset = UNSET
+    required: bool | Unset = UNSET
+    sort_order: int | Unset = UNSET
+    config: PatchRegistryRegistriesIdFieldDefsFieldIdBodyConfig | Unset = UNSET
+    visibility: PatchRegistryRegistriesIdFieldDefsFieldIdBodyVisibility | Unset = UNSET
+    show_if: None | PatchRegistryRegistriesIdFieldDefsFieldIdBodyShowIfType0 | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -57,15 +59,15 @@ class PatchRegistryRegistriesIdFieldDefsFieldIdBody:
 
         sort_order = self.sort_order
 
-        config: Unset | dict[str, Any] = UNSET
+        config: dict[str, Any] | Unset = UNSET
         if not isinstance(self.config, Unset):
             config = self.config.to_dict()
 
-        visibility: Unset | str = UNSET
+        visibility: str | Unset = UNSET
         if not isinstance(self.visibility, Unset):
             visibility = self.visibility.value
 
-        show_if: None | Unset | dict[str, Any]
+        show_if: dict[str, Any] | None | Unset
         if isinstance(self.show_if, Unset):
             show_if = UNSET
         elif isinstance(self.show_if, PatchRegistryRegistriesIdFieldDefsFieldIdBodyShowIfType0):
@@ -112,14 +114,14 @@ class PatchRegistryRegistriesIdFieldDefsFieldIdBody:
         sort_order = d.pop("sortOrder", UNSET)
 
         _config = d.pop("config", UNSET)
-        config: Unset | PatchRegistryRegistriesIdFieldDefsFieldIdBodyConfig
+        config: PatchRegistryRegistriesIdFieldDefsFieldIdBodyConfig | Unset
         if isinstance(_config, Unset):
             config = UNSET
         else:
             config = PatchRegistryRegistriesIdFieldDefsFieldIdBodyConfig.from_dict(_config)
 
         _visibility = d.pop("visibility", UNSET)
-        visibility: Unset | PatchRegistryRegistriesIdFieldDefsFieldIdBodyVisibility
+        visibility: PatchRegistryRegistriesIdFieldDefsFieldIdBodyVisibility | Unset
         if isinstance(_visibility, Unset):
             visibility = UNSET
         else:
@@ -127,7 +129,7 @@ class PatchRegistryRegistriesIdFieldDefsFieldIdBody:
 
         def _parse_show_if(
             data: object,
-        ) -> Union["PatchRegistryRegistriesIdFieldDefsFieldIdBodyShowIfType0", None, Unset]:
+        ) -> None | PatchRegistryRegistriesIdFieldDefsFieldIdBodyShowIfType0 | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
@@ -140,10 +142,10 @@ class PatchRegistryRegistriesIdFieldDefsFieldIdBody:
                 )
 
                 return show_if_type_0
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
             return cast(
-                Union["PatchRegistryRegistriesIdFieldDefsFieldIdBodyShowIfType0", None, Unset], data
+                None | PatchRegistryRegistriesIdFieldDefsFieldIdBodyShowIfType0 | Unset, data
             )
 
         show_if = _parse_show_if(d.pop("showIf", UNSET))

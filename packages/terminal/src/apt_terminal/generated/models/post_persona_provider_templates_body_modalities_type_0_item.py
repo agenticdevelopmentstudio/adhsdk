@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class PostPersonaProviderTemplatesBodyModalitiesType0Item(str, Enum):
+class PostPersonaProviderTemplatesBodyModalitiesType0Item(StrEnum):
     CHAT = "chat"
     IMAGE = "image"
     VIDEO = "video"

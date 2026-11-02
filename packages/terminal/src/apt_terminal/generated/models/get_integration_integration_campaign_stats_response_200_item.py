@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, TypeVar, Union, cast
+from typing import TYPE_CHECKING, Any, TypeVar, cast
 
 from attrs import define as _attrs_define
 
@@ -25,25 +27,25 @@ class GetIntegrationIntegrationCampaignStatsResponse200Item:
         provider (str):
         audience_id (str):
         external_id (str):
-        name (Union[None, str]):
-        subject (Union[None, str]):
-        status (Union[None, str]):
-        sent_at (Union[None, str]):
-        recipients (Union[None, int]):
-        opens (Union[None, int]):
-        unique_opens (Union[None, int]):
-        clicks (Union[None, int]):
-        unique_clicks (Union[None, int]):
-        bounces (Union[None, int]):
-        unsubscribes (Union[None, int]):
-        raw (Union['GetIntegrationIntegrationCampaignStatsResponse200ItemRawType0Type1', None, bool, float, list[Any],
-            str]):
+        name (None | str):
+        subject (None | str):
+        status (None | str):
+        sent_at (None | str):
+        recipients (int | None):
+        opens (int | None):
+        unique_opens (int | None):
+        clicks (int | None):
+        unique_clicks (int | None):
+        bounces (int | None):
+        unsubscribes (int | None):
+        raw (bool | float | GetIntegrationIntegrationCampaignStatsResponse200ItemRawType0Type1 | list[Any] | None |
+            str):
         is_deleted (bool):
-        deleted_at (Union[None, str]):
+        deleted_at (None | str):
         created_at (str):
         updated_at (str):
         sync_version (int):
-        sync_stamped_at (Union[None, str]):
+        sync_stamped_at (None | str):
         sync_txid (int):
     """
 
@@ -60,21 +62,21 @@ class GetIntegrationIntegrationCampaignStatsResponse200Item:
     subject: None | str
     status: None | str
     sent_at: None | str
-    recipients: None | int
-    opens: None | int
-    unique_opens: None | int
-    clicks: None | int
-    unique_clicks: None | int
-    bounces: None | int
-    unsubscribes: None | int
-    raw: Union[
-        "GetIntegrationIntegrationCampaignStatsResponse200ItemRawType0Type1",
-        None,
-        bool,
-        float,
-        list[Any],
-        str,
-    ]
+    recipients: int | None
+    opens: int | None
+    unique_opens: int | None
+    clicks: int | None
+    unique_clicks: int | None
+    bounces: int | None
+    unsubscribes: int | None
+    raw: (
+        bool
+        | float
+        | GetIntegrationIntegrationCampaignStatsResponse200ItemRawType0Type1
+        | list[Any]
+        | None
+        | str
+    )
     is_deleted: bool
     deleted_at: None | str
     created_at: str
@@ -118,28 +120,28 @@ class GetIntegrationIntegrationCampaignStatsResponse200Item:
         sent_at: None | str
         sent_at = self.sent_at
 
-        recipients: None | int
+        recipients: int | None
         recipients = self.recipients
 
-        opens: None | int
+        opens: int | None
         opens = self.opens
 
-        unique_opens: None | int
+        unique_opens: int | None
         unique_opens = self.unique_opens
 
-        clicks: None | int
+        clicks: int | None
         clicks = self.clicks
 
-        unique_clicks: None | int
+        unique_clicks: int | None
         unique_clicks = self.unique_clicks
 
-        bounces: None | int
+        bounces: int | None
         bounces = self.bounces
 
-        unsubscribes: None | int
+        unsubscribes: int | None
         unsubscribes = self.unsubscribes
 
-        raw: None | bool | dict[str, Any] | float | list[Any] | str
+        raw: bool | dict[str, Any] | float | list[Any] | None | str
         if isinstance(self.raw, GetIntegrationIntegrationCampaignStatsResponse200ItemRawType0Type1):
             raw = self.raw.to_dict()
         elif isinstance(self.raw, list):
@@ -254,65 +256,65 @@ class GetIntegrationIntegrationCampaignStatsResponse200Item:
 
         sent_at = _parse_sent_at(d.pop("sentAt"))
 
-        def _parse_recipients(data: object) -> None | int:
+        def _parse_recipients(data: object) -> int | None:
             if data is None:
                 return data
-            return cast(None | int, data)
+            return cast(int | None, data)
 
         recipients = _parse_recipients(d.pop("recipients"))
 
-        def _parse_opens(data: object) -> None | int:
+        def _parse_opens(data: object) -> int | None:
             if data is None:
                 return data
-            return cast(None | int, data)
+            return cast(int | None, data)
 
         opens = _parse_opens(d.pop("opens"))
 
-        def _parse_unique_opens(data: object) -> None | int:
+        def _parse_unique_opens(data: object) -> int | None:
             if data is None:
                 return data
-            return cast(None | int, data)
+            return cast(int | None, data)
 
         unique_opens = _parse_unique_opens(d.pop("uniqueOpens"))
 
-        def _parse_clicks(data: object) -> None | int:
+        def _parse_clicks(data: object) -> int | None:
             if data is None:
                 return data
-            return cast(None | int, data)
+            return cast(int | None, data)
 
         clicks = _parse_clicks(d.pop("clicks"))
 
-        def _parse_unique_clicks(data: object) -> None | int:
+        def _parse_unique_clicks(data: object) -> int | None:
             if data is None:
                 return data
-            return cast(None | int, data)
+            return cast(int | None, data)
 
         unique_clicks = _parse_unique_clicks(d.pop("uniqueClicks"))
 
-        def _parse_bounces(data: object) -> None | int:
+        def _parse_bounces(data: object) -> int | None:
             if data is None:
                 return data
-            return cast(None | int, data)
+            return cast(int | None, data)
 
         bounces = _parse_bounces(d.pop("bounces"))
 
-        def _parse_unsubscribes(data: object) -> None | int:
+        def _parse_unsubscribes(data: object) -> int | None:
             if data is None:
                 return data
-            return cast(None | int, data)
+            return cast(int | None, data)
 
         unsubscribes = _parse_unsubscribes(d.pop("unsubscribes"))
 
         def _parse_raw(
             data: object,
-        ) -> Union[
-            "GetIntegrationIntegrationCampaignStatsResponse200ItemRawType0Type1",
-            None,
-            bool,
-            float,
-            list[Any],
-            str,
-        ]:
+        ) -> (
+            bool
+            | float
+            | GetIntegrationIntegrationCampaignStatsResponse200ItemRawType0Type1
+            | list[Any]
+            | None
+            | str
+        ):
             if data is None:
                 return data
             try:
@@ -325,7 +327,7 @@ class GetIntegrationIntegrationCampaignStatsResponse200Item:
                 )
 
                 return raw_type_0_type_1
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
             try:
                 if not isinstance(data, list):
@@ -333,17 +335,15 @@ class GetIntegrationIntegrationCampaignStatsResponse200Item:
                 raw_type_0_type_2 = cast(list[Any], data)
 
                 return raw_type_0_type_2
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
             return cast(
-                Union[
-                    "GetIntegrationIntegrationCampaignStatsResponse200ItemRawType0Type1",
-                    None,
-                    bool,
-                    float,
-                    list[Any],
-                    str,
-                ],
+                bool
+                | float
+                | GetIntegrationIntegrationCampaignStatsResponse200ItemRawType0Type1
+                | list[Any]
+                | None
+                | str,
                 data,
             )
 

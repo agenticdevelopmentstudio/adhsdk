@@ -10,12 +10,12 @@ from ...models.post_auth_login_mfa_webauthn_options_body import PostAuthLoginMfa
 from ...models.post_auth_login_mfa_webauthn_options_response_200 import (
     PostAuthLoginMfaWebauthnOptionsResponse200,
 )
-from ...types import Response
+from ...types import UNSET, Response, Unset
 
 
 def _get_kwargs(
     *,
-    body: PostAuthLoginMfaWebauthnOptionsBody,
+    body: PostAuthLoginMfaWebauthnOptionsBody | Unset = UNSET,
 ) -> dict[str, Any]:
     headers: dict[str, Any] = {}
 
@@ -24,7 +24,8 @@ def _get_kwargs(
         "url": "/auth/login/mfa/webauthn/options",
     }
 
-    _kwargs["json"] = body.to_dict()
+    if not isinstance(body, Unset):
+        _kwargs["json"] = body.to_dict()
 
     headers["Content-Type"] = "application/json"
 
@@ -75,19 +76,19 @@ def _build_response(
 def sync_detailed(
     *,
     client: AuthenticatedClient | Client,
-    body: PostAuthLoginMfaWebauthnOptionsBody,
+    body: PostAuthLoginMfaWebauthnOptionsBody | Unset = UNSET,
 ) -> Response[Error | PostAuthLoginMfaWebauthnOptionsResponse200]:
     """WebAuthn 2nd-factor: assertion options bound to the pending challenge
 
     Args:
-        body (PostAuthLoginMfaWebauthnOptionsBody):
+        body (PostAuthLoginMfaWebauthnOptionsBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, PostAuthLoginMfaWebauthnOptionsResponse200]]
+        Response[Error | PostAuthLoginMfaWebauthnOptionsResponse200]
     """
 
     kwargs = _get_kwargs(
@@ -104,19 +105,19 @@ def sync_detailed(
 def sync(
     *,
     client: AuthenticatedClient | Client,
-    body: PostAuthLoginMfaWebauthnOptionsBody,
+    body: PostAuthLoginMfaWebauthnOptionsBody | Unset = UNSET,
 ) -> Error | PostAuthLoginMfaWebauthnOptionsResponse200 | None:
     """WebAuthn 2nd-factor: assertion options bound to the pending challenge
 
     Args:
-        body (PostAuthLoginMfaWebauthnOptionsBody):
+        body (PostAuthLoginMfaWebauthnOptionsBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, PostAuthLoginMfaWebauthnOptionsResponse200]
+        Error | PostAuthLoginMfaWebauthnOptionsResponse200
     """
 
     return sync_detailed(
@@ -128,19 +129,19 @@ def sync(
 async def asyncio_detailed(
     *,
     client: AuthenticatedClient | Client,
-    body: PostAuthLoginMfaWebauthnOptionsBody,
+    body: PostAuthLoginMfaWebauthnOptionsBody | Unset = UNSET,
 ) -> Response[Error | PostAuthLoginMfaWebauthnOptionsResponse200]:
     """WebAuthn 2nd-factor: assertion options bound to the pending challenge
 
     Args:
-        body (PostAuthLoginMfaWebauthnOptionsBody):
+        body (PostAuthLoginMfaWebauthnOptionsBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, PostAuthLoginMfaWebauthnOptionsResponse200]]
+        Response[Error | PostAuthLoginMfaWebauthnOptionsResponse200]
     """
 
     kwargs = _get_kwargs(
@@ -155,19 +156,19 @@ async def asyncio_detailed(
 async def asyncio(
     *,
     client: AuthenticatedClient | Client,
-    body: PostAuthLoginMfaWebauthnOptionsBody,
+    body: PostAuthLoginMfaWebauthnOptionsBody | Unset = UNSET,
 ) -> Error | PostAuthLoginMfaWebauthnOptionsResponse200 | None:
     """WebAuthn 2nd-factor: assertion options bound to the pending challenge
 
     Args:
-        body (PostAuthLoginMfaWebauthnOptionsBody):
+        body (PostAuthLoginMfaWebauthnOptionsBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, PostAuthLoginMfaWebauthnOptionsResponse200]
+        Error | PostAuthLoginMfaWebauthnOptionsResponse200
     """
 
     return (

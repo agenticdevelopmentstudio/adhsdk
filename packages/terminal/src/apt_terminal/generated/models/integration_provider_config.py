@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, TypeVar, Union, cast
+from typing import TYPE_CHECKING, Any, TypeVar, cast
 from uuid import UUID
 
 from attrs import define as _attrs_define
@@ -25,17 +27,17 @@ class IntegrationProviderConfig:
         ecosystem_id (str): Ecosystem id (the RLS owner)
         provider_id (str):
         name (str): Human-facing instance name (drives the rdid leaf)
-        rdid (Union[None, str]): The reverse-domain id integration.<ecosystem-slug>.<name-slug> (addressable), or null
-            when this row has no canonical mapping. NULLABLE RATHER THAN "" — the read paths attach the rdid with a second
-            lookup that can legitimately come back empty (a row predating the mint, or one whose mapping an operator freed),
-            and the empty string is a valid rdid-shaped value clients treat as one: keying rows on it collapses every
-            unmapped config into a single identity. Fall back to `id` for row identity.
+        rdid (None | str): The reverse-domain id integration.<ecosystem-slug>.<name-slug> (addressable), or null when
+            this row has no canonical mapping. NULLABLE RATHER THAN "" — the read paths attach the rdid with a second lookup
+            that can legitimately come back empty (a row predating the mint, or one whose mapping an operator freed), and
+            the empty string is a valid rdid-shaped value clients treat as one: keying rows on it collapses every unmapped
+            config into a single identity. Fall back to `id` for row identity.
         config (IntegrationProviderConfigConfig): Non-secret config: clientId, scopes, URLs, endpoints, credentialStyle
         has_secret (bool): Whether a client secret is stored (the value is never returned)
-        updated_by (Union[None, Unset, str]):
-        created_at (Union[Unset, str]):
-        updated_at (Union[Unset, str]):
-        deliverability_webhook (Union['IntegrationProviderConfigDeliverabilityWebhookType0', None, Unset]): Postmark
+        updated_by (None | str | Unset):
+        created_at (str | Unset):
+        updated_at (str | Unset):
+        deliverability_webhook (IntegrationProviderConfigDeliverabilityWebhookType0 | None | Unset): Postmark
             deliverability webhook registration details (postmark configs only)
     """
 
@@ -44,14 +46,14 @@ class IntegrationProviderConfig:
     provider_id: str
     name: str
     rdid: None | str
-    config: "IntegrationProviderConfigConfig"
+    config: IntegrationProviderConfigConfig
     has_secret: bool
-    updated_by: None | Unset | str = UNSET
-    created_at: Unset | str = UNSET
-    updated_at: Unset | str = UNSET
-    deliverability_webhook: Union[
-        "IntegrationProviderConfigDeliverabilityWebhookType0", None, Unset
-    ] = UNSET
+    updated_by: None | str | Unset = UNSET
+    created_at: str | Unset = UNSET
+    updated_at: str | Unset = UNSET
+    deliverability_webhook: IntegrationProviderConfigDeliverabilityWebhookType0 | None | Unset = (
+        UNSET
+    )
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -74,7 +76,7 @@ class IntegrationProviderConfig:
 
         has_secret = self.has_secret
 
-        updated_by: None | Unset | str
+        updated_by: None | str | Unset
         if isinstance(self.updated_by, Unset):
             updated_by = UNSET
         else:
@@ -84,7 +86,7 @@ class IntegrationProviderConfig:
 
         updated_at = self.updated_at
 
-        deliverability_webhook: None | Unset | dict[str, Any]
+        deliverability_webhook: dict[str, Any] | None | Unset
         if isinstance(self.deliverability_webhook, Unset):
             deliverability_webhook = UNSET
         elif isinstance(
@@ -120,7 +122,9 @@ class IntegrationProviderConfig:
 
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
-        from ..models.integration_provider_config_config import IntegrationProviderConfigConfig
+        from ..models.integration_provider_config_config import (
+            IntegrationProviderConfigConfig,
+        )
         from ..models.integration_provider_config_deliverability_webhook_type_0 import (
             IntegrationProviderConfigDeliverabilityWebhookType0,
         )
@@ -145,12 +149,12 @@ class IntegrationProviderConfig:
 
         has_secret = d.pop("hasSecret")
 
-        def _parse_updated_by(data: object) -> None | Unset | str:
+        def _parse_updated_by(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         updated_by = _parse_updated_by(d.pop("updatedBy", UNSET))
 
@@ -160,7 +164,7 @@ class IntegrationProviderConfig:
 
         def _parse_deliverability_webhook(
             data: object,
-        ) -> Union["IntegrationProviderConfigDeliverabilityWebhookType0", None, Unset]:
+        ) -> IntegrationProviderConfigDeliverabilityWebhookType0 | None | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
@@ -173,11 +177,9 @@ class IntegrationProviderConfig:
                 )
 
                 return deliverability_webhook_type_0
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
-            return cast(
-                Union["IntegrationProviderConfigDeliverabilityWebhookType0", None, Unset], data
-            )
+            return cast(IntegrationProviderConfigDeliverabilityWebhookType0 | None | Unset, data)
 
         deliverability_webhook = _parse_deliverability_webhook(
             d.pop("deliverabilityWebhook", UNSET)

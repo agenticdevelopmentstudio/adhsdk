@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import TYPE_CHECKING, Any, TypeVar
 
@@ -21,11 +23,11 @@ class GetOauthClientsSlugResponse200:
     """
     Attributes:
         client (GetOauthClientsSlugResponse200Client):
-        providers (list['GetOauthClientsSlugResponse200ProvidersItem']):
+        providers (list[GetOauthClientsSlugResponse200ProvidersItem]):
     """
 
-    client: "GetOauthClientsSlugResponse200Client"
-    providers: list["GetOauthClientsSlugResponse200ProvidersItem"]
+    client: GetOauthClientsSlugResponse200Client
+    providers: list[GetOauthClientsSlugResponse200ProvidersItem]
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:

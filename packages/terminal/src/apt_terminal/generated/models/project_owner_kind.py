@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class ProjectOwnerKind(str, Enum):
+class ProjectOwnerKind(StrEnum):
     CUSTOMER = "customer"
     ORGANIZATION = "organization"
 

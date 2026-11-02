@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class OrgSheetSubjectType(str, Enum):
+class OrgSheetSubjectType(StrEnum):
     ORG = "org"
 
     def __str__(self) -> str:

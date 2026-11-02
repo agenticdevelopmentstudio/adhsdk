@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -20,12 +22,12 @@ class ProjectComment:
         work_item_id (str):
         body (str):
         created_at (str):
-        parent_id (Union[None, Unset, str]): the comment this one replies to; null for a top-level comment
-        author_kind (Union[Unset, ProjectCommentAuthorKind]):
-        author_id (Union[None, Unset, str]):
-        author_label (Union[None, Unset, str]):
-        edited_at (Union[None, Unset, str]): set the first time the body changes; the prior text is in the trail
-        updated_at (Union[Unset, str]):
+        parent_id (None | str | Unset): the comment this one replies to; null for a top-level comment
+        author_kind (ProjectCommentAuthorKind | Unset):
+        author_id (None | str | Unset):
+        author_label (None | str | Unset):
+        edited_at (None | str | Unset): set the first time the body changes; the prior text is in the trail
+        updated_at (str | Unset):
     """
 
     id: str
@@ -34,12 +36,12 @@ class ProjectComment:
     work_item_id: str
     body: str
     created_at: str
-    parent_id: None | Unset | str = UNSET
-    author_kind: Unset | ProjectCommentAuthorKind = UNSET
-    author_id: None | Unset | str = UNSET
-    author_label: None | Unset | str = UNSET
-    edited_at: None | Unset | str = UNSET
-    updated_at: Unset | str = UNSET
+    parent_id: None | str | Unset = UNSET
+    author_kind: ProjectCommentAuthorKind | Unset = UNSET
+    author_id: None | str | Unset = UNSET
+    author_label: None | str | Unset = UNSET
+    edited_at: None | str | Unset = UNSET
+    updated_at: str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -55,29 +57,29 @@ class ProjectComment:
 
         created_at = self.created_at
 
-        parent_id: None | Unset | str
+        parent_id: None | str | Unset
         if isinstance(self.parent_id, Unset):
             parent_id = UNSET
         else:
             parent_id = self.parent_id
 
-        author_kind: Unset | str = UNSET
+        author_kind: str | Unset = UNSET
         if not isinstance(self.author_kind, Unset):
             author_kind = self.author_kind.value
 
-        author_id: None | Unset | str
+        author_id: None | str | Unset
         if isinstance(self.author_id, Unset):
             author_id = UNSET
         else:
             author_id = self.author_id
 
-        author_label: None | Unset | str
+        author_label: None | str | Unset
         if isinstance(self.author_label, Unset):
             author_label = UNSET
         else:
             author_label = self.author_label
 
-        edited_at: None | Unset | str
+        edited_at: None | str | Unset
         if isinstance(self.edited_at, Unset):
             edited_at = UNSET
         else:
@@ -127,46 +129,46 @@ class ProjectComment:
 
         created_at = d.pop("createdAt")
 
-        def _parse_parent_id(data: object) -> None | Unset | str:
+        def _parse_parent_id(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         parent_id = _parse_parent_id(d.pop("parentId", UNSET))
 
         _author_kind = d.pop("authorKind", UNSET)
-        author_kind: Unset | ProjectCommentAuthorKind
+        author_kind: ProjectCommentAuthorKind | Unset
         if isinstance(_author_kind, Unset):
             author_kind = UNSET
         else:
             author_kind = ProjectCommentAuthorKind(_author_kind)
 
-        def _parse_author_id(data: object) -> None | Unset | str:
+        def _parse_author_id(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         author_id = _parse_author_id(d.pop("authorId", UNSET))
 
-        def _parse_author_label(data: object) -> None | Unset | str:
+        def _parse_author_label(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         author_label = _parse_author_label(d.pop("authorLabel", UNSET))
 
-        def _parse_edited_at(data: object) -> None | Unset | str:
+        def _parse_edited_at(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         edited_at = _parse_edited_at(d.pop("editedAt", UNSET))
 

@@ -8,12 +8,12 @@ from ...client import AuthenticatedClient, Client
 from ...models.error import Error
 from ...models.post_auth_link_provider_body import PostAuthLinkProviderBody
 from ...models.post_auth_link_provider_response_200 import PostAuthLinkProviderResponse200
-from ...types import Response
+from ...types import UNSET, Response, Unset
 
 
 def _get_kwargs(
     *,
-    body: PostAuthLinkProviderBody,
+    body: PostAuthLinkProviderBody | Unset = UNSET,
 ) -> dict[str, Any]:
     headers: dict[str, Any] = {}
 
@@ -22,7 +22,8 @@ def _get_kwargs(
         "url": "/auth/link-provider",
     }
 
-    _kwargs["json"] = body.to_dict()
+    if not isinstance(body, Unset):
+        _kwargs["json"] = body.to_dict()
 
     headers["Content-Type"] = "application/json"
 
@@ -83,19 +84,19 @@ def _build_response(
 def sync_detailed(
     *,
     client: AuthenticatedClient,
-    body: PostAuthLinkProviderBody,
+    body: PostAuthLinkProviderBody | Unset = UNSET,
 ) -> Response[Error | PostAuthLinkProviderResponse200]:
     """Link a verified OAuth provider identity to the caller
 
     Args:
-        body (PostAuthLinkProviderBody):
+        body (PostAuthLinkProviderBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, PostAuthLinkProviderResponse200]]
+        Response[Error | PostAuthLinkProviderResponse200]
     """
 
     kwargs = _get_kwargs(
@@ -112,19 +113,19 @@ def sync_detailed(
 def sync(
     *,
     client: AuthenticatedClient,
-    body: PostAuthLinkProviderBody,
+    body: PostAuthLinkProviderBody | Unset = UNSET,
 ) -> Error | PostAuthLinkProviderResponse200 | None:
     """Link a verified OAuth provider identity to the caller
 
     Args:
-        body (PostAuthLinkProviderBody):
+        body (PostAuthLinkProviderBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, PostAuthLinkProviderResponse200]
+        Error | PostAuthLinkProviderResponse200
     """
 
     return sync_detailed(
@@ -136,19 +137,19 @@ def sync(
 async def asyncio_detailed(
     *,
     client: AuthenticatedClient,
-    body: PostAuthLinkProviderBody,
+    body: PostAuthLinkProviderBody | Unset = UNSET,
 ) -> Response[Error | PostAuthLinkProviderResponse200]:
     """Link a verified OAuth provider identity to the caller
 
     Args:
-        body (PostAuthLinkProviderBody):
+        body (PostAuthLinkProviderBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, PostAuthLinkProviderResponse200]]
+        Response[Error | PostAuthLinkProviderResponse200]
     """
 
     kwargs = _get_kwargs(
@@ -163,19 +164,19 @@ async def asyncio_detailed(
 async def asyncio(
     *,
     client: AuthenticatedClient,
-    body: PostAuthLinkProviderBody,
+    body: PostAuthLinkProviderBody | Unset = UNSET,
 ) -> Error | PostAuthLinkProviderResponse200 | None:
     """Link a verified OAuth provider identity to the caller
 
     Args:
-        body (PostAuthLinkProviderBody):
+        body (PostAuthLinkProviderBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, PostAuthLinkProviderResponse200]
+        Error | PostAuthLinkProviderResponse200
     """
 
     return (

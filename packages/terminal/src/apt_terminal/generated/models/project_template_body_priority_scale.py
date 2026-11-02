@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class ProjectTemplateBodyPriorityScale(str, Enum):
+class ProjectTemplateBodyPriorityScale(StrEnum):
     NONE = "none"
     STANDARD = "standard"
 

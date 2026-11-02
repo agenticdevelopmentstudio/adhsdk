@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class ShiprRunState(str, Enum):
+class ShiprRunState(StrEnum):
     CANCELLED = "cancelled"
     FAILED = "failed"
     QUEUED = "queued"

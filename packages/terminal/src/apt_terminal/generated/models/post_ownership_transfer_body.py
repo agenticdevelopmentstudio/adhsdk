@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar
 
@@ -19,14 +21,14 @@ class PostOwnershipTransferBody:
             registry
         entity_id (str): the object’s rdid or uuid
         target (str): destination workspace slug (or ecosystem rdid, per the entity)
-        target_kind (Union[Unset, PostOwnershipTransferBodyTargetKind]): the namespace `target` names, when the client
-            knows it
+        target_kind (PostOwnershipTransferBodyTargetKind | Unset): the namespace `target` names, when the client knows
+            it
     """
 
     entity_type: PostOwnershipTransferBodyEntityType
     entity_id: str
     target: str
-    target_kind: Unset | PostOwnershipTransferBodyTargetKind = UNSET
+    target_kind: PostOwnershipTransferBodyTargetKind | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -36,7 +38,7 @@ class PostOwnershipTransferBody:
 
         target = self.target
 
-        target_kind: Unset | str = UNSET
+        target_kind: str | Unset = UNSET
         if not isinstance(self.target_kind, Unset):
             target_kind = self.target_kind.value
 
@@ -64,7 +66,7 @@ class PostOwnershipTransferBody:
         target = d.pop("target")
 
         _target_kind = d.pop("targetKind", UNSET)
-        target_kind: Unset | PostOwnershipTransferBodyTargetKind
+        target_kind: PostOwnershipTransferBodyTargetKind | Unset
         if isinstance(_target_kind, Unset):
             target_kind = UNSET
         else:

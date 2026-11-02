@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -15,47 +17,47 @@ class PostIntegrationIntegrationCalendarEventsBody:
         title (str):
         source (str):
         external_id (str):
-        description (Union[None, Unset, str]):
-        start_time (Union[None, Unset, str]):
-        end_time (Union[None, Unset, str]):
-        start_date (Union[None, Unset, str]):
-        end_date (Union[None, Unset, str]):
-        is_all_day (Union[Unset, bool]):
-        location (Union[None, Unset, str]):
-        connection_id (Union[None, Unset, str]):
-        calendar_name (Union[None, Unset, str]):
-        calendar_color (Union[None, Unset, str]):
-        status (Union[Unset, str]):
-        organizer (Union[None, Unset, str]):
-        attendees (Union[None, Unset, str]):
-        reminders (Union[None, Unset, str]):
-        url (Union[None, Unset, str]):
-        ai_extraction (Union[None, Unset, str]):
-        ecosystem_id (Union[Unset, str]):
-        sync_txid (Union[Unset, int]):
+        description (None | str | Unset):
+        start_time (None | str | Unset):
+        end_time (None | str | Unset):
+        start_date (None | str | Unset):
+        end_date (None | str | Unset):
+        is_all_day (bool | Unset):
+        location (None | str | Unset):
+        connection_id (None | str | Unset):
+        calendar_name (None | str | Unset):
+        calendar_color (None | str | Unset):
+        status (str | Unset):
+        organizer (None | str | Unset):
+        attendees (None | str | Unset):
+        reminders (None | str | Unset):
+        url (None | str | Unset):
+        ai_extraction (None | str | Unset):
+        ecosystem_id (str | Unset):
+        sync_txid (int | Unset):
     """
 
     title: str
     source: str
     external_id: str
-    description: None | Unset | str = UNSET
-    start_time: None | Unset | str = UNSET
-    end_time: None | Unset | str = UNSET
-    start_date: None | Unset | str = UNSET
-    end_date: None | Unset | str = UNSET
-    is_all_day: Unset | bool = UNSET
-    location: None | Unset | str = UNSET
-    connection_id: None | Unset | str = UNSET
-    calendar_name: None | Unset | str = UNSET
-    calendar_color: None | Unset | str = UNSET
-    status: Unset | str = UNSET
-    organizer: None | Unset | str = UNSET
-    attendees: None | Unset | str = UNSET
-    reminders: None | Unset | str = UNSET
-    url: None | Unset | str = UNSET
-    ai_extraction: None | Unset | str = UNSET
-    ecosystem_id: Unset | str = UNSET
-    sync_txid: Unset | int = UNSET
+    description: None | str | Unset = UNSET
+    start_time: None | str | Unset = UNSET
+    end_time: None | str | Unset = UNSET
+    start_date: None | str | Unset = UNSET
+    end_date: None | str | Unset = UNSET
+    is_all_day: bool | Unset = UNSET
+    location: None | str | Unset = UNSET
+    connection_id: None | str | Unset = UNSET
+    calendar_name: None | str | Unset = UNSET
+    calendar_color: None | str | Unset = UNSET
+    status: str | Unset = UNSET
+    organizer: None | str | Unset = UNSET
+    attendees: None | str | Unset = UNSET
+    reminders: None | str | Unset = UNSET
+    url: None | str | Unset = UNSET
+    ai_extraction: None | str | Unset = UNSET
+    ecosystem_id: str | Unset = UNSET
+    sync_txid: int | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
         title = self.title
@@ -64,31 +66,31 @@ class PostIntegrationIntegrationCalendarEventsBody:
 
         external_id = self.external_id
 
-        description: None | Unset | str
+        description: None | str | Unset
         if isinstance(self.description, Unset):
             description = UNSET
         else:
             description = self.description
 
-        start_time: None | Unset | str
+        start_time: None | str | Unset
         if isinstance(self.start_time, Unset):
             start_time = UNSET
         else:
             start_time = self.start_time
 
-        end_time: None | Unset | str
+        end_time: None | str | Unset
         if isinstance(self.end_time, Unset):
             end_time = UNSET
         else:
             end_time = self.end_time
 
-        start_date: None | Unset | str
+        start_date: None | str | Unset
         if isinstance(self.start_date, Unset):
             start_date = UNSET
         else:
             start_date = self.start_date
 
-        end_date: None | Unset | str
+        end_date: None | str | Unset
         if isinstance(self.end_date, Unset):
             end_date = UNSET
         else:
@@ -96,25 +98,25 @@ class PostIntegrationIntegrationCalendarEventsBody:
 
         is_all_day = self.is_all_day
 
-        location: None | Unset | str
+        location: None | str | Unset
         if isinstance(self.location, Unset):
             location = UNSET
         else:
             location = self.location
 
-        connection_id: None | Unset | str
+        connection_id: None | str | Unset
         if isinstance(self.connection_id, Unset):
             connection_id = UNSET
         else:
             connection_id = self.connection_id
 
-        calendar_name: None | Unset | str
+        calendar_name: None | str | Unset
         if isinstance(self.calendar_name, Unset):
             calendar_name = UNSET
         else:
             calendar_name = self.calendar_name
 
-        calendar_color: None | Unset | str
+        calendar_color: None | str | Unset
         if isinstance(self.calendar_color, Unset):
             calendar_color = UNSET
         else:
@@ -122,31 +124,31 @@ class PostIntegrationIntegrationCalendarEventsBody:
 
         status = self.status
 
-        organizer: None | Unset | str
+        organizer: None | str | Unset
         if isinstance(self.organizer, Unset):
             organizer = UNSET
         else:
             organizer = self.organizer
 
-        attendees: None | Unset | str
+        attendees: None | str | Unset
         if isinstance(self.attendees, Unset):
             attendees = UNSET
         else:
             attendees = self.attendees
 
-        reminders: None | Unset | str
+        reminders: None | str | Unset
         if isinstance(self.reminders, Unset):
             reminders = UNSET
         else:
             reminders = self.reminders
 
-        url: None | Unset | str
+        url: None | str | Unset
         if isinstance(self.url, Unset):
             url = UNSET
         else:
             url = self.url
 
-        ai_extraction: None | Unset | str
+        ai_extraction: None | str | Unset
         if isinstance(self.ai_extraction, Unset):
             ai_extraction = UNSET
         else:
@@ -213,133 +215,133 @@ class PostIntegrationIntegrationCalendarEventsBody:
 
         external_id = d.pop("externalId")
 
-        def _parse_description(data: object) -> None | Unset | str:
+        def _parse_description(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         description = _parse_description(d.pop("description", UNSET))
 
-        def _parse_start_time(data: object) -> None | Unset | str:
+        def _parse_start_time(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         start_time = _parse_start_time(d.pop("startTime", UNSET))
 
-        def _parse_end_time(data: object) -> None | Unset | str:
+        def _parse_end_time(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         end_time = _parse_end_time(d.pop("endTime", UNSET))
 
-        def _parse_start_date(data: object) -> None | Unset | str:
+        def _parse_start_date(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         start_date = _parse_start_date(d.pop("startDate", UNSET))
 
-        def _parse_end_date(data: object) -> None | Unset | str:
+        def _parse_end_date(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         end_date = _parse_end_date(d.pop("endDate", UNSET))
 
         is_all_day = d.pop("isAllDay", UNSET)
 
-        def _parse_location(data: object) -> None | Unset | str:
+        def _parse_location(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         location = _parse_location(d.pop("location", UNSET))
 
-        def _parse_connection_id(data: object) -> None | Unset | str:
+        def _parse_connection_id(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         connection_id = _parse_connection_id(d.pop("connectionId", UNSET))
 
-        def _parse_calendar_name(data: object) -> None | Unset | str:
+        def _parse_calendar_name(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         calendar_name = _parse_calendar_name(d.pop("calendarName", UNSET))
 
-        def _parse_calendar_color(data: object) -> None | Unset | str:
+        def _parse_calendar_color(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         calendar_color = _parse_calendar_color(d.pop("calendarColor", UNSET))
 
         status = d.pop("status", UNSET)
 
-        def _parse_organizer(data: object) -> None | Unset | str:
+        def _parse_organizer(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         organizer = _parse_organizer(d.pop("organizer", UNSET))
 
-        def _parse_attendees(data: object) -> None | Unset | str:
+        def _parse_attendees(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         attendees = _parse_attendees(d.pop("attendees", UNSET))
 
-        def _parse_reminders(data: object) -> None | Unset | str:
+        def _parse_reminders(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         reminders = _parse_reminders(d.pop("reminders", UNSET))
 
-        def _parse_url(data: object) -> None | Unset | str:
+        def _parse_url(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         url = _parse_url(d.pop("url", UNSET))
 
-        def _parse_ai_extraction(data: object) -> None | Unset | str:
+        def _parse_ai_extraction(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         ai_extraction = _parse_ai_extraction(d.pop("aiExtraction", UNSET))
 

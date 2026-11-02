@@ -11,8 +11,8 @@ from ...types import UNSET, Response, Unset
 
 def _get_kwargs(
     *,
-    page: Unset | str = UNSET,
-    page_size: Unset | str = UNSET,
+    page: str | Unset = UNSET,
+    page_size: str | Unset = UNSET,
 ) -> dict[str, Any]:
     params: dict[str, Any] = {}
 
@@ -59,14 +59,14 @@ def _build_response(
 def sync_detailed(
     *,
     client: AuthenticatedClient | Client,
-    page: Unset | str = UNSET,
-    page_size: Unset | str = UNSET,
+    page: str | Unset = UNSET,
+    page_size: str | Unset = UNSET,
 ) -> Response[PublicRegistryDirectory]:
     """List the public registries, alphabetical by name
 
     Args:
-        page (Union[Unset, str]):
-        page_size (Union[Unset, str]):
+        page (str | Unset):
+        page_size (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -91,14 +91,14 @@ def sync_detailed(
 def sync(
     *,
     client: AuthenticatedClient | Client,
-    page: Unset | str = UNSET,
-    page_size: Unset | str = UNSET,
+    page: str | Unset = UNSET,
+    page_size: str | Unset = UNSET,
 ) -> PublicRegistryDirectory | None:
     """List the public registries, alphabetical by name
 
     Args:
-        page (Union[Unset, str]):
-        page_size (Union[Unset, str]):
+        page (str | Unset):
+        page_size (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -118,14 +118,14 @@ def sync(
 async def asyncio_detailed(
     *,
     client: AuthenticatedClient | Client,
-    page: Unset | str = UNSET,
-    page_size: Unset | str = UNSET,
+    page: str | Unset = UNSET,
+    page_size: str | Unset = UNSET,
 ) -> Response[PublicRegistryDirectory]:
     """List the public registries, alphabetical by name
 
     Args:
-        page (Union[Unset, str]):
-        page_size (Union[Unset, str]):
+        page (str | Unset):
+        page_size (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -148,14 +148,14 @@ async def asyncio_detailed(
 async def asyncio(
     *,
     client: AuthenticatedClient | Client,
-    page: Unset | str = UNSET,
-    page_size: Unset | str = UNSET,
+    page: str | Unset = UNSET,
+    page_size: str | Unset = UNSET,
 ) -> PublicRegistryDirectory | None:
     """List the public registries, alphabetical by name
 
     Args:
-        page (Union[Unset, str]):
-        page_size (Union[Unset, str]):
+        page (str | Unset):
+        page_size (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.

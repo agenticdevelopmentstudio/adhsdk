@@ -1,5 +1,6 @@
 from http import HTTPStatus
 from typing import Any
+from urllib.parse import quote
 
 import httpx
 
@@ -10,22 +11,25 @@ from ...models.post_project_projects_id_participants_body import (
     PostProjectProjectsIdParticipantsBody,
 )
 from ...models.project_participant import ProjectParticipant
-from ...types import Response
+from ...types import UNSET, Response, Unset
 
 
 def _get_kwargs(
     id: str,
     *,
-    body: PostProjectProjectsIdParticipantsBody,
+    body: PostProjectProjectsIdParticipantsBody | Unset = UNSET,
 ) -> dict[str, Any]:
     headers: dict[str, Any] = {}
 
     _kwargs: dict[str, Any] = {
         "method": "post",
-        "url": f"/project/projects/{id}/participants",
+        "url": "/project/projects/{id}/participants".format(
+            id=quote(str(id), safe=""),
+        ),
     }
 
-    _kwargs["json"] = body.to_dict()
+    if not isinstance(body, Unset):
+        _kwargs["json"] = body.to_dict()
 
     headers["Content-Type"] = "application/json"
 
@@ -82,20 +86,20 @@ def sync_detailed(
     id: str,
     *,
     client: AuthenticatedClient,
-    body: PostProjectProjectsIdParticipantsBody,
+    body: PostProjectProjectsIdParticipantsBody | Unset = UNSET,
 ) -> Response[Error | ProjectParticipant]:
     """Attach a customer / persona / team (+ a participant.added activity)
 
     Args:
         id (str):
-        body (PostProjectProjectsIdParticipantsBody):
+        body (PostProjectProjectsIdParticipantsBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, ProjectParticipant]]
+        Response[Error | ProjectParticipant]
     """
 
     kwargs = _get_kwargs(
@@ -114,20 +118,20 @@ def sync(
     id: str,
     *,
     client: AuthenticatedClient,
-    body: PostProjectProjectsIdParticipantsBody,
+    body: PostProjectProjectsIdParticipantsBody | Unset = UNSET,
 ) -> Error | ProjectParticipant | None:
     """Attach a customer / persona / team (+ a participant.added activity)
 
     Args:
         id (str):
-        body (PostProjectProjectsIdParticipantsBody):
+        body (PostProjectProjectsIdParticipantsBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, ProjectParticipant]
+        Error | ProjectParticipant
     """
 
     return sync_detailed(
@@ -141,20 +145,20 @@ async def asyncio_detailed(
     id: str,
     *,
     client: AuthenticatedClient,
-    body: PostProjectProjectsIdParticipantsBody,
+    body: PostProjectProjectsIdParticipantsBody | Unset = UNSET,
 ) -> Response[Error | ProjectParticipant]:
     """Attach a customer / persona / team (+ a participant.added activity)
 
     Args:
         id (str):
-        body (PostProjectProjectsIdParticipantsBody):
+        body (PostProjectProjectsIdParticipantsBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, ProjectParticipant]]
+        Response[Error | ProjectParticipant]
     """
 
     kwargs = _get_kwargs(
@@ -171,20 +175,20 @@ async def asyncio(
     id: str,
     *,
     client: AuthenticatedClient,
-    body: PostProjectProjectsIdParticipantsBody,
+    body: PostProjectProjectsIdParticipantsBody | Unset = UNSET,
 ) -> Error | ProjectParticipant | None:
     """Attach a customer / persona / team (+ a participant.added activity)
 
     Args:
         id (str):
-        body (PostProjectProjectsIdParticipantsBody):
+        body (PostProjectProjectsIdParticipantsBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, ProjectParticipant]
+        Error | ProjectParticipant
     """
 
     return (

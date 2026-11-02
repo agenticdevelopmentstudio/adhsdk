@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -12,26 +14,26 @@ T = TypeVar("T", bound="PutMonitoringEndpointsIdBody")
 class PutMonitoringEndpointsIdBody:
     """
     Attributes:
-        site_id (Union[Unset, str]):
-        kind (Union[Unset, str]):
-        url (Union[Unset, str]):
-        expected_status (Union[Unset, int]):
-        expected_body_contains (Union[None, Unset, str]):
-        timeout_ms (Union[Unset, int]):
-        degraded_threshold_ms (Union[Unset, int]):
-        check_interval_seconds (Union[Unset, int]):
-        is_active (Union[Unset, bool]):
+        site_id (str | Unset):
+        kind (str | Unset):
+        url (str | Unset):
+        expected_status (int | Unset):
+        expected_body_contains (None | str | Unset):
+        timeout_ms (int | Unset):
+        degraded_threshold_ms (int | Unset):
+        check_interval_seconds (int | Unset):
+        is_active (bool | Unset):
     """
 
-    site_id: Unset | str = UNSET
-    kind: Unset | str = UNSET
-    url: Unset | str = UNSET
-    expected_status: Unset | int = UNSET
-    expected_body_contains: None | Unset | str = UNSET
-    timeout_ms: Unset | int = UNSET
-    degraded_threshold_ms: Unset | int = UNSET
-    check_interval_seconds: Unset | int = UNSET
-    is_active: Unset | bool = UNSET
+    site_id: str | Unset = UNSET
+    kind: str | Unset = UNSET
+    url: str | Unset = UNSET
+    expected_status: int | Unset = UNSET
+    expected_body_contains: None | str | Unset = UNSET
+    timeout_ms: int | Unset = UNSET
+    degraded_threshold_ms: int | Unset = UNSET
+    check_interval_seconds: int | Unset = UNSET
+    is_active: bool | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
         site_id = self.site_id
@@ -42,7 +44,7 @@ class PutMonitoringEndpointsIdBody:
 
         expected_status = self.expected_status
 
-        expected_body_contains: None | Unset | str
+        expected_body_contains: None | str | Unset
         if isinstance(self.expected_body_contains, Unset):
             expected_body_contains = UNSET
         else:
@@ -91,12 +93,12 @@ class PutMonitoringEndpointsIdBody:
 
         expected_status = d.pop("expectedStatus", UNSET)
 
-        def _parse_expected_body_contains(data: object) -> None | Unset | str:
+        def _parse_expected_body_contains(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         expected_body_contains = _parse_expected_body_contains(d.pop("expectedBodyContains", UNSET))
 

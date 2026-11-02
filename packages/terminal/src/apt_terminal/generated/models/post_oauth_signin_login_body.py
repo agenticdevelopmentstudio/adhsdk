@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar
 
@@ -16,17 +18,17 @@ class PostOauthSigninLoginBody:
         client_id (str):
         return_ (str):
         password (str):
-        email (Union[Unset, str]):
-        slug (Union[Unset, str]):
-        identifier (Union[Unset, str]):
+        email (str | Unset):
+        slug (str | Unset):
+        identifier (str | Unset):
     """
 
     client_id: str
     return_: str
     password: str
-    email: Unset | str = UNSET
-    slug: Unset | str = UNSET
-    identifier: Unset | str = UNSET
+    email: str | Unset = UNSET
+    slug: str | Unset = UNSET
+    identifier: str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:

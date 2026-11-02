@@ -11,11 +11,11 @@ from ...types import UNSET, Response, Unset
 
 def _get_kwargs(
     *,
-    page: Unset | int = UNSET,
-    page_size: Unset | int = 50,
-    q: Unset | str = UNSET,
-    tag: Unset | str = UNSET,
-    category: Unset | str = UNSET,
+    page: int | Unset = UNSET,
+    page_size: int | Unset = 50,
+    q: str | Unset = UNSET,
+    tag: str | Unset = UNSET,
+    category: str | Unset = UNSET,
 ) -> dict[str, Any]:
     params: dict[str, Any] = {}
 
@@ -68,11 +68,11 @@ def _build_response(
 def sync_detailed(
     *,
     client: AuthenticatedClient | Client,
-    page: Unset | int = UNSET,
-    page_size: Unset | int = 50,
-    q: Unset | str = UNSET,
-    tag: Unset | str = UNSET,
-    category: Unset | str = UNSET,
+    page: int | Unset = UNSET,
+    page_size: int | Unset = 50,
+    q: str | Unset = UNSET,
+    tag: str | Unset = UNSET,
+    category: str | Unset = UNSET,
 ) -> Response[GetPublicPapersResponse200]:
     """Search published papers across ALL authors (metadata + snippet)
 
@@ -82,11 +82,11 @@ def sync_detailed(
     match-context snippet — never the full body.
 
     Args:
-        page (Union[Unset, int]):
-        page_size (Union[Unset, int]):  Default: 50.
-        q (Union[Unset, str]):
-        tag (Union[Unset, str]):
-        category (Union[Unset, str]):
+        page (int | Unset):
+        page_size (int | Unset):  Default: 50.
+        q (str | Unset):
+        tag (str | Unset):
+        category (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -114,11 +114,11 @@ def sync_detailed(
 def sync(
     *,
     client: AuthenticatedClient | Client,
-    page: Unset | int = UNSET,
-    page_size: Unset | int = 50,
-    q: Unset | str = UNSET,
-    tag: Unset | str = UNSET,
-    category: Unset | str = UNSET,
+    page: int | Unset = UNSET,
+    page_size: int | Unset = 50,
+    q: str | Unset = UNSET,
+    tag: str | Unset = UNSET,
+    category: str | Unset = UNSET,
 ) -> GetPublicPapersResponse200 | None:
     """Search published papers across ALL authors (metadata + snippet)
 
@@ -128,11 +128,11 @@ def sync(
     match-context snippet — never the full body.
 
     Args:
-        page (Union[Unset, int]):
-        page_size (Union[Unset, int]):  Default: 50.
-        q (Union[Unset, str]):
-        tag (Union[Unset, str]):
-        category (Union[Unset, str]):
+        page (int | Unset):
+        page_size (int | Unset):  Default: 50.
+        q (str | Unset):
+        tag (str | Unset):
+        category (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -155,11 +155,11 @@ def sync(
 async def asyncio_detailed(
     *,
     client: AuthenticatedClient | Client,
-    page: Unset | int = UNSET,
-    page_size: Unset | int = 50,
-    q: Unset | str = UNSET,
-    tag: Unset | str = UNSET,
-    category: Unset | str = UNSET,
+    page: int | Unset = UNSET,
+    page_size: int | Unset = 50,
+    q: str | Unset = UNSET,
+    tag: str | Unset = UNSET,
+    category: str | Unset = UNSET,
 ) -> Response[GetPublicPapersResponse200]:
     """Search published papers across ALL authors (metadata + snippet)
 
@@ -169,11 +169,11 @@ async def asyncio_detailed(
     match-context snippet — never the full body.
 
     Args:
-        page (Union[Unset, int]):
-        page_size (Union[Unset, int]):  Default: 50.
-        q (Union[Unset, str]):
-        tag (Union[Unset, str]):
-        category (Union[Unset, str]):
+        page (int | Unset):
+        page_size (int | Unset):  Default: 50.
+        q (str | Unset):
+        tag (str | Unset):
+        category (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -199,11 +199,11 @@ async def asyncio_detailed(
 async def asyncio(
     *,
     client: AuthenticatedClient | Client,
-    page: Unset | int = UNSET,
-    page_size: Unset | int = 50,
-    q: Unset | str = UNSET,
-    tag: Unset | str = UNSET,
-    category: Unset | str = UNSET,
+    page: int | Unset = UNSET,
+    page_size: int | Unset = 50,
+    q: str | Unset = UNSET,
+    tag: str | Unset = UNSET,
+    category: str | Unset = UNSET,
 ) -> GetPublicPapersResponse200 | None:
     """Search published papers across ALL authors (metadata + snippet)
 
@@ -213,11 +213,11 @@ async def asyncio(
     match-context snippet — never the full body.
 
     Args:
-        page (Union[Unset, int]):
-        page_size (Union[Unset, int]):  Default: 50.
-        q (Union[Unset, str]):
-        tag (Union[Unset, str]):
-        category (Union[Unset, str]):
+        page (int | Unset):
+        page_size (int | Unset):  Default: 50.
+        q (str | Unset):
+        tag (str | Unset):
+        category (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.

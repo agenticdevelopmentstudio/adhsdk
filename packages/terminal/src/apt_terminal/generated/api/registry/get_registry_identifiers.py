@@ -12,10 +12,10 @@ from ...types import UNSET, Response, Unset
 
 def _get_kwargs(
     *,
-    q: Unset | str = UNSET,
-    entity_ids: Unset | str = UNSET,
-    entity_type: Unset | str = UNSET,
-    limit: Unset | str = UNSET,
+    q: str | Unset = UNSET,
+    entity_ids: str | Unset = UNSET,
+    entity_type: str | Unset = UNSET,
+    limit: str | Unset = UNSET,
 ) -> dict[str, Any]:
     params: dict[str, Any] = {}
 
@@ -40,7 +40,7 @@ def _get_kwargs(
 
 def _parse_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> Error | list["RegistryIdentifier"] | None:
+) -> Error | list[RegistryIdentifier] | None:
     if response.status_code == 200:
         response_200 = []
         _response_200 = response.json()
@@ -74,7 +74,7 @@ def _parse_response(
 
 def _build_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> Response[Error | list["RegistryIdentifier"]]:
+) -> Response[Error | list[RegistryIdentifier]]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -86,11 +86,11 @@ def _build_response(
 def sync_detailed(
     *,
     client: AuthenticatedClient,
-    q: Unset | str = UNSET,
-    entity_ids: Unset | str = UNSET,
-    entity_type: Unset | str = UNSET,
-    limit: Unset | str = UNSET,
-) -> Response[Error | list["RegistryIdentifier"]]:
+    q: str | Unset = UNSET,
+    entity_ids: str | Unset = UNSET,
+    entity_type: str | Unset = UNSET,
+    limit: str | Unset = UNSET,
+) -> Response[Error | list[RegistryIdentifier]]:
     """Search rdids by prefix, or resolve a batch of entity ids (admin only)
 
      Send `q` for a left-anchored prefix search, or `entityIds` for a batch reverse lookup — never both.
@@ -98,17 +98,17 @@ def sync_detailed(
     rather than failing the request.
 
     Args:
-        q (Union[Unset, str]):
-        entity_ids (Union[Unset, str]):
-        entity_type (Union[Unset, str]):
-        limit (Union[Unset, str]):
+        q (str | Unset):
+        entity_ids (str | Unset):
+        entity_type (str | Unset):
+        limit (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, list['RegistryIdentifier']]]
+        Response[Error | list[RegistryIdentifier]]
     """
 
     kwargs = _get_kwargs(
@@ -128,11 +128,11 @@ def sync_detailed(
 def sync(
     *,
     client: AuthenticatedClient,
-    q: Unset | str = UNSET,
-    entity_ids: Unset | str = UNSET,
-    entity_type: Unset | str = UNSET,
-    limit: Unset | str = UNSET,
-) -> Error | list["RegistryIdentifier"] | None:
+    q: str | Unset = UNSET,
+    entity_ids: str | Unset = UNSET,
+    entity_type: str | Unset = UNSET,
+    limit: str | Unset = UNSET,
+) -> Error | list[RegistryIdentifier] | None:
     """Search rdids by prefix, or resolve a batch of entity ids (admin only)
 
      Send `q` for a left-anchored prefix search, or `entityIds` for a batch reverse lookup — never both.
@@ -140,17 +140,17 @@ def sync(
     rather than failing the request.
 
     Args:
-        q (Union[Unset, str]):
-        entity_ids (Union[Unset, str]):
-        entity_type (Union[Unset, str]):
-        limit (Union[Unset, str]):
+        q (str | Unset):
+        entity_ids (str | Unset):
+        entity_type (str | Unset):
+        limit (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, list['RegistryIdentifier']]
+        Error | list[RegistryIdentifier]
     """
 
     return sync_detailed(
@@ -165,11 +165,11 @@ def sync(
 async def asyncio_detailed(
     *,
     client: AuthenticatedClient,
-    q: Unset | str = UNSET,
-    entity_ids: Unset | str = UNSET,
-    entity_type: Unset | str = UNSET,
-    limit: Unset | str = UNSET,
-) -> Response[Error | list["RegistryIdentifier"]]:
+    q: str | Unset = UNSET,
+    entity_ids: str | Unset = UNSET,
+    entity_type: str | Unset = UNSET,
+    limit: str | Unset = UNSET,
+) -> Response[Error | list[RegistryIdentifier]]:
     """Search rdids by prefix, or resolve a batch of entity ids (admin only)
 
      Send `q` for a left-anchored prefix search, or `entityIds` for a batch reverse lookup — never both.
@@ -177,17 +177,17 @@ async def asyncio_detailed(
     rather than failing the request.
 
     Args:
-        q (Union[Unset, str]):
-        entity_ids (Union[Unset, str]):
-        entity_type (Union[Unset, str]):
-        limit (Union[Unset, str]):
+        q (str | Unset):
+        entity_ids (str | Unset):
+        entity_type (str | Unset):
+        limit (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, list['RegistryIdentifier']]]
+        Response[Error | list[RegistryIdentifier]]
     """
 
     kwargs = _get_kwargs(
@@ -205,11 +205,11 @@ async def asyncio_detailed(
 async def asyncio(
     *,
     client: AuthenticatedClient,
-    q: Unset | str = UNSET,
-    entity_ids: Unset | str = UNSET,
-    entity_type: Unset | str = UNSET,
-    limit: Unset | str = UNSET,
-) -> Error | list["RegistryIdentifier"] | None:
+    q: str | Unset = UNSET,
+    entity_ids: str | Unset = UNSET,
+    entity_type: str | Unset = UNSET,
+    limit: str | Unset = UNSET,
+) -> Error | list[RegistryIdentifier] | None:
     """Search rdids by prefix, or resolve a batch of entity ids (admin only)
 
      Send `q` for a left-anchored prefix search, or `entityIds` for a batch reverse lookup — never both.
@@ -217,17 +217,17 @@ async def asyncio(
     rather than failing the request.
 
     Args:
-        q (Union[Unset, str]):
-        entity_ids (Union[Unset, str]):
-        entity_type (Union[Unset, str]):
-        limit (Union[Unset, str]):
+        q (str | Unset):
+        entity_ids (str | Unset):
+        entity_type (str | Unset):
+        limit (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, list['RegistryIdentifier']]
+        Error | list[RegistryIdentifier]
     """
 
     return (

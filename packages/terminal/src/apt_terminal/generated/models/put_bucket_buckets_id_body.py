@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, TypeVar, Union, cast
+from typing import TYPE_CHECKING, Any, TypeVar, cast
 
 from attrs import define as _attrs_define
 
@@ -18,24 +20,24 @@ T = TypeVar("T", bound="PutBucketBucketsIdBody")
 class PutBucketBucketsIdBody:
     """
     Attributes:
-        ecosystem_id (Union[Unset, str]):
-        parent_id (Union[None, Unset, str]):
-        name (Union[Unset, str]):
-        description (Union[Unset, str]):
-        kind (Union[Unset, str]):
-        metadata (Union['PutBucketBucketsIdBodyMetadataType0Type1', None, Unset, bool, float, list[Any], str]):
-        sync_txid (Union[Unset, int]):
+        ecosystem_id (str | Unset):
+        parent_id (None | str | Unset):
+        name (str | Unset):
+        description (str | Unset):
+        kind (str | Unset):
+        metadata (bool | float | list[Any] | None | PutBucketBucketsIdBodyMetadataType0Type1 | str | Unset):
+        sync_txid (int | Unset):
     """
 
-    ecosystem_id: Unset | str = UNSET
-    parent_id: None | Unset | str = UNSET
-    name: Unset | str = UNSET
-    description: Unset | str = UNSET
-    kind: Unset | str = UNSET
-    metadata: Union[
-        "PutBucketBucketsIdBodyMetadataType0Type1", None, Unset, bool, float, list[Any], str
-    ] = UNSET
-    sync_txid: Unset | int = UNSET
+    ecosystem_id: str | Unset = UNSET
+    parent_id: None | str | Unset = UNSET
+    name: str | Unset = UNSET
+    description: str | Unset = UNSET
+    kind: str | Unset = UNSET
+    metadata: (
+        bool | float | list[Any] | None | PutBucketBucketsIdBodyMetadataType0Type1 | str | Unset
+    ) = UNSET
+    sync_txid: int | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
         from ..models.put_bucket_buckets_id_body_metadata_type_0_type_1 import (
@@ -44,7 +46,7 @@ class PutBucketBucketsIdBody:
 
         ecosystem_id = self.ecosystem_id
 
-        parent_id: None | Unset | str
+        parent_id: None | str | Unset
         if isinstance(self.parent_id, Unset):
             parent_id = UNSET
         else:
@@ -56,7 +58,7 @@ class PutBucketBucketsIdBody:
 
         kind = self.kind
 
-        metadata: None | Unset | bool | dict[str, Any] | float | list[Any] | str
+        metadata: bool | dict[str, Any] | float | list[Any] | None | str | Unset
         if isinstance(self.metadata, Unset):
             metadata = UNSET
         elif isinstance(self.metadata, PutBucketBucketsIdBodyMetadataType0Type1):
@@ -98,12 +100,12 @@ class PutBucketBucketsIdBody:
         d = dict(src_dict)
         ecosystem_id = d.pop("ecosystemId", UNSET)
 
-        def _parse_parent_id(data: object) -> None | Unset | str:
+        def _parse_parent_id(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         parent_id = _parse_parent_id(d.pop("parentId", UNSET))
 
@@ -115,9 +117,9 @@ class PutBucketBucketsIdBody:
 
         def _parse_metadata(
             data: object,
-        ) -> Union[
-            "PutBucketBucketsIdBodyMetadataType0Type1", None, Unset, bool, float, list[Any], str
-        ]:
+        ) -> (
+            bool | float | list[Any] | None | PutBucketBucketsIdBodyMetadataType0Type1 | str | Unset
+        ):
             if data is None:
                 return data
             if isinstance(data, Unset):
@@ -128,7 +130,7 @@ class PutBucketBucketsIdBody:
                 metadata_type_0_type_1 = PutBucketBucketsIdBodyMetadataType0Type1.from_dict(data)
 
                 return metadata_type_0_type_1
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
             try:
                 if not isinstance(data, list):
@@ -136,18 +138,16 @@ class PutBucketBucketsIdBody:
                 metadata_type_0_type_2 = cast(list[Any], data)
 
                 return metadata_type_0_type_2
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
             return cast(
-                Union[
-                    "PutBucketBucketsIdBodyMetadataType0Type1",
-                    None,
-                    Unset,
-                    bool,
-                    float,
-                    list[Any],
-                    str,
-                ],
+                bool
+                | float
+                | list[Any]
+                | None
+                | PutBucketBucketsIdBodyMetadataType0Type1
+                | str
+                | Unset,
                 data,
             )
 

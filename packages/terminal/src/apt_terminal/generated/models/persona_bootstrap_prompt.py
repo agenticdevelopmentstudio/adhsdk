@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -12,8 +14,8 @@ class PersonaBootstrapPrompt:
     """
     Attributes:
         system (str):
-        voice (Union[None, str]):
-        character (Union[None, str]):
+        voice (None | str):
+        character (None | str):
     """
 
     system: str

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar
 
@@ -12,18 +14,18 @@ T = TypeVar("T", bound="PutContentPollOptionsIdBody")
 class PutContentPollOptionsIdBody:
     """
     Attributes:
-        ecosystem_id (Union[Unset, str]):
-        poll_id (Union[Unset, str]):
-        text (Union[Unset, str]):
-        sort_order (Union[Unset, int]):
-        sync_txid (Union[Unset, int]):
+        ecosystem_id (str | Unset):
+        poll_id (str | Unset):
+        text (str | Unset):
+        sort_order (int | Unset):
+        sync_txid (int | Unset):
     """
 
-    ecosystem_id: Unset | str = UNSET
-    poll_id: Unset | str = UNSET
-    text: Unset | str = UNSET
-    sort_order: Unset | int = UNSET
-    sync_txid: Unset | int = UNSET
+    ecosystem_id: str | Unset = UNSET
+    poll_id: str | Unset = UNSET
+    text: str | Unset = UNSET
+    sort_order: int | Unset = UNSET
+    sync_txid: int | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
         ecosystem_id = self.ecosystem_id

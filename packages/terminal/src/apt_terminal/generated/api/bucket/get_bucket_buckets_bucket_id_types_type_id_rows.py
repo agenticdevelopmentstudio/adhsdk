@@ -1,5 +1,6 @@
 from http import HTTPStatus
 from typing import Any
+from urllib.parse import quote
 
 import httpx
 
@@ -27,7 +28,10 @@ def _get_kwargs(
 
     _kwargs: dict[str, Any] = {
         "method": "get",
-        "url": f"/bucket/buckets/{bucket_id}/types/{type_id}/rows",
+        "url": "/bucket/buckets/{bucket_id}/types/{type_id}/rows".format(
+            bucket_id=quote(str(bucket_id), safe=""),
+            type_id=quote(str(type_id), safe=""),
+        ),
         "params": params,
     }
 
@@ -100,7 +104,7 @@ def sync_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[BucketRowList, Error]]
+        Response[BucketRowList | Error]
     """
 
     kwargs = _get_kwargs(
@@ -138,7 +142,7 @@ def sync(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[BucketRowList, Error]
+        BucketRowList | Error
     """
 
     return sync_detailed(
@@ -171,7 +175,7 @@ async def asyncio_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[BucketRowList, Error]]
+        Response[BucketRowList | Error]
     """
 
     kwargs = _get_kwargs(
@@ -207,7 +211,7 @@ async def asyncio(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[BucketRowList, Error]
+        BucketRowList | Error
     """
 
     return (

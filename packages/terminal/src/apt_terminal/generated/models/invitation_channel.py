@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class InvitationChannel(str, Enum):
+class InvitationChannel(StrEnum):
     EMAIL = "email"
     SMS = "sms"
 

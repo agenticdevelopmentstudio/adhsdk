@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar
 
@@ -15,16 +17,16 @@ class PostCommunitiesIdCategoriesBody:
     Attributes:
         slug (str): Unique per community.
         name (str):
-        description (Union[Unset, str]):
-        color (Union[Unset, str]): Display color (e.g. a hex string).
-        display_order (Union[Unset, int]): Sort order within the community.
+        description (str | Unset):
+        color (str | Unset): Display color (e.g. a hex string).
+        display_order (int | Unset): Sort order within the community.
     """
 
     slug: str
     name: str
-    description: Unset | str = UNSET
-    color: Unset | str = UNSET
-    display_order: Unset | int = UNSET
+    description: str | Unset = UNSET
+    color: str | Unset = UNSET
+    display_order: int | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:

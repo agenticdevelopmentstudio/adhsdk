@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import TYPE_CHECKING, Any, TypeVar
 
@@ -15,12 +17,12 @@ T = TypeVar("T", bound="GetSearchDocumentsResponse200")
 class GetSearchDocumentsResponse200:
     """
     Attributes:
-        results (list['SearchDocumentResult']):
+        results (list[SearchDocumentResult]):
         limit (int):
         has_more (bool):
     """
 
-    results: list["SearchDocumentResult"]
+    results: list[SearchDocumentResult]
     limit: int
     has_more: bool
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)

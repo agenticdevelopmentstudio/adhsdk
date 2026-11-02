@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -14,17 +16,17 @@ class PostProcessingJobsIdFailResponse200:
     """
     Attributes:
         will_retry (bool): True when the job was re-queued
-        run_at (Union[None, Unset, str]): Scheduled re-run timestamp (null when dead)
+        run_at (None | str | Unset): Scheduled re-run timestamp (null when dead)
     """
 
     will_retry: bool
-    run_at: None | Unset | str = UNSET
+    run_at: None | str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
         will_retry = self.will_retry
 
-        run_at: None | Unset | str
+        run_at: None | str | Unset
         if isinstance(self.run_at, Unset):
             run_at = UNSET
         else:
@@ -47,12 +49,12 @@ class PostProcessingJobsIdFailResponse200:
         d = dict(src_dict)
         will_retry = d.pop("willRetry")
 
-        def _parse_run_at(data: object) -> None | Unset | str:
+        def _parse_run_at(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         run_at = _parse_run_at(d.pop("runAt", UNSET))
 

@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, TypeVar, Union
+from typing import TYPE_CHECKING, Any, TypeVar
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -17,22 +19,22 @@ T = TypeVar("T", bound="PostEcosystemMoveResponse200")
 class PostEcosystemMoveResponse200:
     """
     Attributes:
-        schema (Union[Unset, str]):
-        table (Union[Unset, str]):
-        id (Union[Unset, str]):
-        from_ (Union[Unset, str]):
-        to (Union[Unset, str]):
-        dry_run (Union[Unset, bool]):
-        moved (Union[Unset, PostEcosystemMoveResponse200Moved]):
+        schema (str | Unset):
+        table (str | Unset):
+        id (str | Unset):
+        from_ (str | Unset):
+        to (str | Unset):
+        dry_run (bool | Unset):
+        moved (PostEcosystemMoveResponse200Moved | Unset):
     """
 
-    schema: Unset | str = UNSET
-    table: Unset | str = UNSET
-    id: Unset | str = UNSET
-    from_: Unset | str = UNSET
-    to: Unset | str = UNSET
-    dry_run: Unset | bool = UNSET
-    moved: Union[Unset, "PostEcosystemMoveResponse200Moved"] = UNSET
+    schema: str | Unset = UNSET
+    table: str | Unset = UNSET
+    id: str | Unset = UNSET
+    from_: str | Unset = UNSET
+    to: str | Unset = UNSET
+    dry_run: bool | Unset = UNSET
+    moved: PostEcosystemMoveResponse200Moved | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -48,7 +50,7 @@ class PostEcosystemMoveResponse200:
 
         dry_run = self.dry_run
 
-        moved: Unset | dict[str, Any] = UNSET
+        moved: dict[str, Any] | Unset = UNSET
         if not isinstance(self.moved, Unset):
             moved = self.moved.to_dict()
 
@@ -92,7 +94,7 @@ class PostEcosystemMoveResponse200:
         dry_run = d.pop("dryRun", UNSET)
 
         _moved = d.pop("moved", UNSET)
-        moved: Unset | PostEcosystemMoveResponse200Moved
+        moved: PostEcosystemMoveResponse200Moved | Unset
         if isinstance(_moved, Unset):
             moved = UNSET
         else:

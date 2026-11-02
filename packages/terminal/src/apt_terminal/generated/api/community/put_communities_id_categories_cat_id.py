@@ -1,5 +1,6 @@
 from http import HTTPStatus
 from typing import Any
+from urllib.parse import quote
 
 import httpx
 
@@ -8,23 +9,27 @@ from ...client import AuthenticatedClient, Client
 from ...models.community_category import CommunityCategory
 from ...models.error import Error
 from ...models.put_communities_id_categories_cat_id_body import PutCommunitiesIdCategoriesCatIdBody
-from ...types import Response
+from ...types import UNSET, Response, Unset
 
 
 def _get_kwargs(
     id: str,
     cat_id: str,
     *,
-    body: PutCommunitiesIdCategoriesCatIdBody,
+    body: PutCommunitiesIdCategoriesCatIdBody | Unset = UNSET,
 ) -> dict[str, Any]:
     headers: dict[str, Any] = {}
 
     _kwargs: dict[str, Any] = {
         "method": "put",
-        "url": f"/communities/{id}/categories/{cat_id}",
+        "url": "/communities/{id}/categories/{cat_id}".format(
+            id=quote(str(id), safe=""),
+            cat_id=quote(str(cat_id), safe=""),
+        ),
     }
 
-    _kwargs["json"] = body.to_dict()
+    if not isinstance(body, Unset):
+        _kwargs["json"] = body.to_dict()
 
     headers["Content-Type"] = "application/json"
 
@@ -87,21 +92,21 @@ def sync_detailed(
     cat_id: str,
     *,
     client: AuthenticatedClient,
-    body: PutCommunitiesIdCategoriesCatIdBody,
+    body: PutCommunitiesIdCategoriesCatIdBody | Unset = UNSET,
 ) -> Response[CommunityCategory | Error]:
     """Edit a category (community admin only)
 
     Args:
         id (str):
         cat_id (str):
-        body (PutCommunitiesIdCategoriesCatIdBody):
+        body (PutCommunitiesIdCategoriesCatIdBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[CommunityCategory, Error]]
+        Response[CommunityCategory | Error]
     """
 
     kwargs = _get_kwargs(
@@ -122,21 +127,21 @@ def sync(
     cat_id: str,
     *,
     client: AuthenticatedClient,
-    body: PutCommunitiesIdCategoriesCatIdBody,
+    body: PutCommunitiesIdCategoriesCatIdBody | Unset = UNSET,
 ) -> CommunityCategory | Error | None:
     """Edit a category (community admin only)
 
     Args:
         id (str):
         cat_id (str):
-        body (PutCommunitiesIdCategoriesCatIdBody):
+        body (PutCommunitiesIdCategoriesCatIdBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[CommunityCategory, Error]
+        CommunityCategory | Error
     """
 
     return sync_detailed(
@@ -152,21 +157,21 @@ async def asyncio_detailed(
     cat_id: str,
     *,
     client: AuthenticatedClient,
-    body: PutCommunitiesIdCategoriesCatIdBody,
+    body: PutCommunitiesIdCategoriesCatIdBody | Unset = UNSET,
 ) -> Response[CommunityCategory | Error]:
     """Edit a category (community admin only)
 
     Args:
         id (str):
         cat_id (str):
-        body (PutCommunitiesIdCategoriesCatIdBody):
+        body (PutCommunitiesIdCategoriesCatIdBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[CommunityCategory, Error]]
+        Response[CommunityCategory | Error]
     """
 
     kwargs = _get_kwargs(
@@ -185,21 +190,21 @@ async def asyncio(
     cat_id: str,
     *,
     client: AuthenticatedClient,
-    body: PutCommunitiesIdCategoriesCatIdBody,
+    body: PutCommunitiesIdCategoriesCatIdBody | Unset = UNSET,
 ) -> CommunityCategory | Error | None:
     """Edit a category (community admin only)
 
     Args:
         id (str):
         cat_id (str):
-        body (PutCommunitiesIdCategoriesCatIdBody):
+        body (PutCommunitiesIdCategoriesCatIdBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[CommunityCategory, Error]
+        CommunityCategory | Error
     """
 
     return (

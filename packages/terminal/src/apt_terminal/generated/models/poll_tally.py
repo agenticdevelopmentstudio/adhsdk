@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import TYPE_CHECKING, Any, TypeVar, cast
 
@@ -16,12 +18,12 @@ class PollTally:
     """
     Attributes:
         poll_id (str):
-        options (list['PollTallyOption']):
+        options (list[PollTallyOption]):
         my_option_ids (list[str]):
     """
 
     poll_id: str
-    options: list["PollTallyOption"]
+    options: list[PollTallyOption]
     my_option_ids: list[str]
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 

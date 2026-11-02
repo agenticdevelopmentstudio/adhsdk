@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -13,17 +15,17 @@ T = TypeVar("T", bound="PutDiscussionTopicsIdBody")
 class PutDiscussionTopicsIdBody:
     """
     Attributes:
-        title (Union[Unset, str]):
-        is_pinned (Union[Unset, bool]): Community moderator only.
-        is_locked (Union[Unset, bool]): Community moderator only.
-        answered_post_id (Union[None, Unset, str]): Topic author or community moderator; must be a live post in this
-            topic (or null to clear).
+        title (str | Unset):
+        is_pinned (bool | Unset): Community moderator only.
+        is_locked (bool | Unset): Community moderator only.
+        answered_post_id (None | str | Unset): Topic author or community moderator; must be a live post in this topic
+            (or null to clear).
     """
 
-    title: Unset | str = UNSET
-    is_pinned: Unset | bool = UNSET
-    is_locked: Unset | bool = UNSET
-    answered_post_id: None | Unset | str = UNSET
+    title: str | Unset = UNSET
+    is_pinned: bool | Unset = UNSET
+    is_locked: bool | Unset = UNSET
+    answered_post_id: None | str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -33,7 +35,7 @@ class PutDiscussionTopicsIdBody:
 
         is_locked = self.is_locked
 
-        answered_post_id: None | Unset | str
+        answered_post_id: None | str | Unset
         if isinstance(self.answered_post_id, Unset):
             answered_post_id = UNSET
         else:
@@ -62,12 +64,12 @@ class PutDiscussionTopicsIdBody:
 
         is_locked = d.pop("isLocked", UNSET)
 
-        def _parse_answered_post_id(data: object) -> None | Unset | str:
+        def _parse_answered_post_id(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         answered_post_id = _parse_answered_post_id(d.pop("answeredPostId", UNSET))
 

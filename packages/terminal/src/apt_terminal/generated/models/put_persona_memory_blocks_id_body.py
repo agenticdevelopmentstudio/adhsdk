@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, TypeVar, Union, cast
+from typing import TYPE_CHECKING, Any, TypeVar, cast
 
 from attrs import define as _attrs_define
 
@@ -18,20 +20,20 @@ T = TypeVar("T", bound="PutPersonaMemoryBlocksIdBody")
 class PutPersonaMemoryBlocksIdBody:
     """
     Attributes:
-        ecosystem_id (Union[Unset, str]):
-        name (Union[Unset, str]):
-        content (Union['PutPersonaMemoryBlocksIdBodyContentType1', None, Unset, bool, float, list[Any], str]):
-        size_limit (Union[None, Unset, int]):
-        sync_txid (Union[Unset, int]):
+        ecosystem_id (str | Unset):
+        name (str | Unset):
+        content (bool | float | list[Any] | None | PutPersonaMemoryBlocksIdBodyContentType1 | str | Unset):
+        size_limit (int | None | Unset):
+        sync_txid (int | Unset):
     """
 
-    ecosystem_id: Unset | str = UNSET
-    name: Unset | str = UNSET
-    content: Union[
-        "PutPersonaMemoryBlocksIdBodyContentType1", None, Unset, bool, float, list[Any], str
-    ] = UNSET
-    size_limit: None | Unset | int = UNSET
-    sync_txid: Unset | int = UNSET
+    ecosystem_id: str | Unset = UNSET
+    name: str | Unset = UNSET
+    content: (
+        bool | float | list[Any] | None | PutPersonaMemoryBlocksIdBodyContentType1 | str | Unset
+    ) = UNSET
+    size_limit: int | None | Unset = UNSET
+    sync_txid: int | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
         from ..models.put_persona_memory_blocks_id_body_content_type_1 import (
@@ -42,7 +44,7 @@ class PutPersonaMemoryBlocksIdBody:
 
         name = self.name
 
-        content: None | Unset | bool | dict[str, Any] | float | list[Any] | str
+        content: bool | dict[str, Any] | float | list[Any] | None | str | Unset
         if isinstance(self.content, Unset):
             content = UNSET
         elif isinstance(self.content, PutPersonaMemoryBlocksIdBodyContentType1):
@@ -53,7 +55,7 @@ class PutPersonaMemoryBlocksIdBody:
         else:
             content = self.content
 
-        size_limit: None | Unset | int
+        size_limit: int | None | Unset
         if isinstance(self.size_limit, Unset):
             size_limit = UNSET
         else:
@@ -90,9 +92,9 @@ class PutPersonaMemoryBlocksIdBody:
 
         def _parse_content(
             data: object,
-        ) -> Union[
-            "PutPersonaMemoryBlocksIdBodyContentType1", None, Unset, bool, float, list[Any], str
-        ]:
+        ) -> (
+            bool | float | list[Any] | None | PutPersonaMemoryBlocksIdBodyContentType1 | str | Unset
+        ):
             if data is None:
                 return data
             if isinstance(data, Unset):
@@ -103,7 +105,7 @@ class PutPersonaMemoryBlocksIdBody:
                 content_type_1 = PutPersonaMemoryBlocksIdBodyContentType1.from_dict(data)
 
                 return content_type_1
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
             try:
                 if not isinstance(data, list):
@@ -111,29 +113,27 @@ class PutPersonaMemoryBlocksIdBody:
                 content_type_2 = cast(list[Any], data)
 
                 return content_type_2
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
             return cast(
-                Union[
-                    "PutPersonaMemoryBlocksIdBodyContentType1",
-                    None,
-                    Unset,
-                    bool,
-                    float,
-                    list[Any],
-                    str,
-                ],
+                bool
+                | float
+                | list[Any]
+                | None
+                | PutPersonaMemoryBlocksIdBodyContentType1
+                | str
+                | Unset,
                 data,
             )
 
         content = _parse_content(d.pop("content", UNSET))
 
-        def _parse_size_limit(data: object) -> None | Unset | int:
+        def _parse_size_limit(data: object) -> int | None | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | int, data)
+            return cast(int | None | Unset, data)
 
         size_limit = _parse_size_limit(d.pop("sizeLimit", UNSET))
 

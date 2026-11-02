@@ -1,5 +1,6 @@
 from http import HTTPStatus
 from typing import Any
+from urllib.parse import quote
 
 import httpx
 
@@ -8,22 +9,25 @@ from ...client import AuthenticatedClient, Client
 from ...models.bucket_access_group import BucketAccessGroup
 from ...models.error import Error
 from ...models.patch_bucket_access_groups_group_id_body import PatchBucketAccessGroupsGroupIdBody
-from ...types import Response
+from ...types import UNSET, Response, Unset
 
 
 def _get_kwargs(
     group_id: str,
     *,
-    body: PatchBucketAccessGroupsGroupIdBody,
+    body: PatchBucketAccessGroupsGroupIdBody | Unset = UNSET,
 ) -> dict[str, Any]:
     headers: dict[str, Any] = {}
 
     _kwargs: dict[str, Any] = {
         "method": "patch",
-        "url": f"/bucket/access-groups/{group_id}",
+        "url": "/bucket/access-groups/{group_id}".format(
+            group_id=quote(str(group_id), safe=""),
+        ),
     }
 
-    _kwargs["json"] = body.to_dict()
+    if not isinstance(body, Unset):
+        _kwargs["json"] = body.to_dict()
 
     headers["Content-Type"] = "application/json"
 
@@ -80,13 +84,13 @@ def sync_detailed(
     group_id: str,
     *,
     client: AuthenticatedClient,
-    body: PatchBucketAccessGroupsGroupIdBody,
+    body: PatchBucketAccessGroupsGroupIdBody | Unset = UNSET,
 ) -> Response[BucketAccessGroup | Error]:
     """Rename / edit an access group
 
     Args:
         group_id (str):
-        body (PatchBucketAccessGroupsGroupIdBody): At least one of name or description is
+        body (PatchBucketAccessGroupsGroupIdBody | Unset): At least one of name or description is
             required.
 
     Raises:
@@ -94,7 +98,7 @@ def sync_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[BucketAccessGroup, Error]]
+        Response[BucketAccessGroup | Error]
     """
 
     kwargs = _get_kwargs(
@@ -113,13 +117,13 @@ def sync(
     group_id: str,
     *,
     client: AuthenticatedClient,
-    body: PatchBucketAccessGroupsGroupIdBody,
+    body: PatchBucketAccessGroupsGroupIdBody | Unset = UNSET,
 ) -> BucketAccessGroup | Error | None:
     """Rename / edit an access group
 
     Args:
         group_id (str):
-        body (PatchBucketAccessGroupsGroupIdBody): At least one of name or description is
+        body (PatchBucketAccessGroupsGroupIdBody | Unset): At least one of name or description is
             required.
 
     Raises:
@@ -127,7 +131,7 @@ def sync(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[BucketAccessGroup, Error]
+        BucketAccessGroup | Error
     """
 
     return sync_detailed(
@@ -141,13 +145,13 @@ async def asyncio_detailed(
     group_id: str,
     *,
     client: AuthenticatedClient,
-    body: PatchBucketAccessGroupsGroupIdBody,
+    body: PatchBucketAccessGroupsGroupIdBody | Unset = UNSET,
 ) -> Response[BucketAccessGroup | Error]:
     """Rename / edit an access group
 
     Args:
         group_id (str):
-        body (PatchBucketAccessGroupsGroupIdBody): At least one of name or description is
+        body (PatchBucketAccessGroupsGroupIdBody | Unset): At least one of name or description is
             required.
 
     Raises:
@@ -155,7 +159,7 @@ async def asyncio_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[BucketAccessGroup, Error]]
+        Response[BucketAccessGroup | Error]
     """
 
     kwargs = _get_kwargs(
@@ -172,13 +176,13 @@ async def asyncio(
     group_id: str,
     *,
     client: AuthenticatedClient,
-    body: PatchBucketAccessGroupsGroupIdBody,
+    body: PatchBucketAccessGroupsGroupIdBody | Unset = UNSET,
 ) -> BucketAccessGroup | Error | None:
     """Rename / edit an access group
 
     Args:
         group_id (str):
-        body (PatchBucketAccessGroupsGroupIdBody): At least one of name or description is
+        body (PatchBucketAccessGroupsGroupIdBody | Unset): At least one of name or description is
             required.
 
     Raises:
@@ -186,7 +190,7 @@ async def asyncio(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[BucketAccessGroup, Error]
+        BucketAccessGroup | Error
     """
 
     return (

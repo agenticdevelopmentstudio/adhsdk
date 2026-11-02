@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar
 
@@ -13,14 +15,14 @@ T = TypeVar("T", bound="GetCustomerTransferPreviewResponse200ConflictsItem")
 class GetCustomerTransferPreviewResponse200ConflictsItem:
     """
     Attributes:
-        user_id (Union[Unset, str]):
-        constraint (Union[Unset, str]):
-        detail (Union[Unset, str]):
+        user_id (str | Unset):
+        constraint (str | Unset):
+        detail (str | Unset):
     """
 
-    user_id: Unset | str = UNSET
-    constraint: Unset | str = UNSET
-    detail: Unset | str = UNSET
+    user_id: str | Unset = UNSET
+    constraint: str | Unset = UNSET
+    detail: str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -14,8 +16,8 @@ class IntegrationProviderConfigDeliverabilityWebhookType0:
     Attributes:
         url (str): Absolute URL to paste into Postmark
         secret_header (str): Header Postmark must send this config's webhook secret in
-        secret (Union[None, str]): This config's own inbound webhook secret. Never shared between ecosystems. Null when
-            none has been minted yet (a config predating the feature) — POST .../rotate-webhook-secret mints one.
+        secret (None | str): This config's own inbound webhook secret. Never shared between ecosystems. Null when none
+            has been minted yet (a config predating the feature) — POST .../rotate-webhook-secret mints one.
         instruction (str): One-line operator instruction
     """
 

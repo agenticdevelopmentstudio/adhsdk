@@ -12,7 +12,7 @@ from ...types import UNSET, Response, Unset
 
 def _get_kwargs(
     *,
-    workspace: Unset | str = UNSET,
+    workspace: str | Unset = UNSET,
 ) -> dict[str, Any]:
     params: dict[str, Any] = {}
 
@@ -72,7 +72,7 @@ def _build_response(
 def sync_detailed(
     *,
     client: AuthenticatedClient,
-    workspace: Unset | str = UNSET,
+    workspace: str | Unset = UNSET,
 ) -> Response[Error | GetShiprOrgDefaultsResponse200]:
     """The per-org defaults, all of them
 
@@ -81,14 +81,14 @@ def sync_detailed(
     is simply absent rather than a 404 the client has to read as “unset”.
 
     Args:
-        workspace (Union[Unset, str]):
+        workspace (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, GetShiprOrgDefaultsResponse200]]
+        Response[Error | GetShiprOrgDefaultsResponse200]
     """
 
     kwargs = _get_kwargs(
@@ -105,7 +105,7 @@ def sync_detailed(
 def sync(
     *,
     client: AuthenticatedClient,
-    workspace: Unset | str = UNSET,
+    workspace: str | Unset = UNSET,
 ) -> Error | GetShiprOrgDefaultsResponse200 | None:
     """The per-org defaults, all of them
 
@@ -114,14 +114,14 @@ def sync(
     is simply absent rather than a 404 the client has to read as “unset”.
 
     Args:
-        workspace (Union[Unset, str]):
+        workspace (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, GetShiprOrgDefaultsResponse200]
+        Error | GetShiprOrgDefaultsResponse200
     """
 
     return sync_detailed(
@@ -133,7 +133,7 @@ def sync(
 async def asyncio_detailed(
     *,
     client: AuthenticatedClient,
-    workspace: Unset | str = UNSET,
+    workspace: str | Unset = UNSET,
 ) -> Response[Error | GetShiprOrgDefaultsResponse200]:
     """The per-org defaults, all of them
 
@@ -142,14 +142,14 @@ async def asyncio_detailed(
     is simply absent rather than a 404 the client has to read as “unset”.
 
     Args:
-        workspace (Union[Unset, str]):
+        workspace (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, GetShiprOrgDefaultsResponse200]]
+        Response[Error | GetShiprOrgDefaultsResponse200]
     """
 
     kwargs = _get_kwargs(
@@ -164,7 +164,7 @@ async def asyncio_detailed(
 async def asyncio(
     *,
     client: AuthenticatedClient,
-    workspace: Unset | str = UNSET,
+    workspace: str | Unset = UNSET,
 ) -> Error | GetShiprOrgDefaultsResponse200 | None:
     """The per-org defaults, all of them
 
@@ -173,14 +173,14 @@ async def asyncio(
     is simply absent rather than a 404 the client has to read as “unset”.
 
     Args:
-        workspace (Union[Unset, str]):
+        workspace (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, GetShiprOrgDefaultsResponse200]
+        Error | GetShiprOrgDefaultsResponse200
     """
 
     return (

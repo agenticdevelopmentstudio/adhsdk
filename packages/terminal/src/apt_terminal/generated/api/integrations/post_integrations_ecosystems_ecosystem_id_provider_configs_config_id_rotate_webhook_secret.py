@@ -1,5 +1,6 @@
 from http import HTTPStatus
 from typing import Any
+from urllib.parse import quote
 
 import httpx
 
@@ -16,7 +17,10 @@ def _get_kwargs(
 ) -> dict[str, Any]:
     _kwargs: dict[str, Any] = {
         "method": "post",
-        "url": f"/integrations/ecosystems/{ecosystem_id}/provider-configs/{config_id}/rotate-webhook-secret",
+        "url": "/integrations/ecosystems/{ecosystem_id}/provider-configs/{config_id}/rotate-webhook-secret".format(
+            ecosystem_id=quote(str(ecosystem_id), safe=""),
+            config_id=quote(str(config_id), safe=""),
+        ),
     }
 
     return _kwargs
@@ -78,14 +82,14 @@ def sync_detailed(
     *,
     client: AuthenticatedClient,
 ) -> Response[IntegrationProviderConfig | ProblemDetails]:
-    r"""Rotate a postmark config's inbound deliverability webhook secret
+    """Rotate a postmark config's inbound deliverability webhook secret
 
      Mints a NEW per-config webhook secret and returns it on the config's `deliverabilityWebhook.secret`.
     The previous secret stops authenticating immediately, so any Postmark webhook still sending it
-    starts failing until the operator pastes the new value — the same \"this breaks what is already
-    deployed\" contract as POST /audience/lists/{listId}/rotate-key. Also the way a config created
-    before the per-config secret existed gets its first one. 400 on a provider with no inbound webhook;
-    404 when the config is absent or not owned by the ecosystem.
+    starts failing until the operator pastes the new value — the same "this breaks what is already
+    deployed" contract as POST /audience/lists/{listId}/rotate-key. Also the way a config created before
+    the per-config secret existed gets its first one. 400 on a provider with no inbound webhook; 404
+    when the config is absent or not owned by the ecosystem.
 
     Args:
         ecosystem_id (str):
@@ -96,7 +100,7 @@ def sync_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[IntegrationProviderConfig, ProblemDetails]]
+        Response[IntegrationProviderConfig | ProblemDetails]
     """
 
     kwargs = _get_kwargs(
@@ -117,14 +121,14 @@ def sync(
     *,
     client: AuthenticatedClient,
 ) -> IntegrationProviderConfig | ProblemDetails | None:
-    r"""Rotate a postmark config's inbound deliverability webhook secret
+    """Rotate a postmark config's inbound deliverability webhook secret
 
      Mints a NEW per-config webhook secret and returns it on the config's `deliverabilityWebhook.secret`.
     The previous secret stops authenticating immediately, so any Postmark webhook still sending it
-    starts failing until the operator pastes the new value — the same \"this breaks what is already
-    deployed\" contract as POST /audience/lists/{listId}/rotate-key. Also the way a config created
-    before the per-config secret existed gets its first one. 400 on a provider with no inbound webhook;
-    404 when the config is absent or not owned by the ecosystem.
+    starts failing until the operator pastes the new value — the same "this breaks what is already
+    deployed" contract as POST /audience/lists/{listId}/rotate-key. Also the way a config created before
+    the per-config secret existed gets its first one. 400 on a provider with no inbound webhook; 404
+    when the config is absent or not owned by the ecosystem.
 
     Args:
         ecosystem_id (str):
@@ -135,7 +139,7 @@ def sync(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[IntegrationProviderConfig, ProblemDetails]
+        IntegrationProviderConfig | ProblemDetails
     """
 
     return sync_detailed(
@@ -151,14 +155,14 @@ async def asyncio_detailed(
     *,
     client: AuthenticatedClient,
 ) -> Response[IntegrationProviderConfig | ProblemDetails]:
-    r"""Rotate a postmark config's inbound deliverability webhook secret
+    """Rotate a postmark config's inbound deliverability webhook secret
 
      Mints a NEW per-config webhook secret and returns it on the config's `deliverabilityWebhook.secret`.
     The previous secret stops authenticating immediately, so any Postmark webhook still sending it
-    starts failing until the operator pastes the new value — the same \"this breaks what is already
-    deployed\" contract as POST /audience/lists/{listId}/rotate-key. Also the way a config created
-    before the per-config secret existed gets its first one. 400 on a provider with no inbound webhook;
-    404 when the config is absent or not owned by the ecosystem.
+    starts failing until the operator pastes the new value — the same "this breaks what is already
+    deployed" contract as POST /audience/lists/{listId}/rotate-key. Also the way a config created before
+    the per-config secret existed gets its first one. 400 on a provider with no inbound webhook; 404
+    when the config is absent or not owned by the ecosystem.
 
     Args:
         ecosystem_id (str):
@@ -169,7 +173,7 @@ async def asyncio_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[IntegrationProviderConfig, ProblemDetails]]
+        Response[IntegrationProviderConfig | ProblemDetails]
     """
 
     kwargs = _get_kwargs(
@@ -188,14 +192,14 @@ async def asyncio(
     *,
     client: AuthenticatedClient,
 ) -> IntegrationProviderConfig | ProblemDetails | None:
-    r"""Rotate a postmark config's inbound deliverability webhook secret
+    """Rotate a postmark config's inbound deliverability webhook secret
 
      Mints a NEW per-config webhook secret and returns it on the config's `deliverabilityWebhook.secret`.
     The previous secret stops authenticating immediately, so any Postmark webhook still sending it
-    starts failing until the operator pastes the new value — the same \"this breaks what is already
-    deployed\" contract as POST /audience/lists/{listId}/rotate-key. Also the way a config created
-    before the per-config secret existed gets its first one. 400 on a provider with no inbound webhook;
-    404 when the config is absent or not owned by the ecosystem.
+    starts failing until the operator pastes the new value — the same "this breaks what is already
+    deployed" contract as POST /audience/lists/{listId}/rotate-key. Also the way a config created before
+    the per-config secret existed gets its first one. 400 on a provider with no inbound webhook; 404
+    when the config is absent or not owned by the ecosystem.
 
     Args:
         ecosystem_id (str):
@@ -206,7 +210,7 @@ async def asyncio(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[IntegrationProviderConfig, ProblemDetails]
+        IntegrationProviderConfig | ProblemDetails
     """
 
     return (

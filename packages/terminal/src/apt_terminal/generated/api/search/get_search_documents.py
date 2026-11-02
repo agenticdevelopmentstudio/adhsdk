@@ -13,7 +13,7 @@ from ...types import UNSET, Response, Unset
 def _get_kwargs(
     *,
     q: str,
-    limit: Unset | int = 20,
+    limit: int | Unset = 20,
 ) -> dict[str, Any]:
     params: dict[str, Any] = {}
 
@@ -71,20 +71,20 @@ def sync_detailed(
     *,
     client: AuthenticatedClient,
     q: str,
-    limit: Unset | int = 20,
+    limit: int | Unset = 20,
 ) -> Response[Error | GetSearchDocumentsResponse200]:
     """Full-text search the caller's document blocks
 
     Args:
         q (str):
-        limit (Union[Unset, int]):  Default: 20.
+        limit (int | Unset):  Default: 20.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, GetSearchDocumentsResponse200]]
+        Response[Error | GetSearchDocumentsResponse200]
     """
 
     kwargs = _get_kwargs(
@@ -103,20 +103,20 @@ def sync(
     *,
     client: AuthenticatedClient,
     q: str,
-    limit: Unset | int = 20,
+    limit: int | Unset = 20,
 ) -> Error | GetSearchDocumentsResponse200 | None:
     """Full-text search the caller's document blocks
 
     Args:
         q (str):
-        limit (Union[Unset, int]):  Default: 20.
+        limit (int | Unset):  Default: 20.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, GetSearchDocumentsResponse200]
+        Error | GetSearchDocumentsResponse200
     """
 
     return sync_detailed(
@@ -130,20 +130,20 @@ async def asyncio_detailed(
     *,
     client: AuthenticatedClient,
     q: str,
-    limit: Unset | int = 20,
+    limit: int | Unset = 20,
 ) -> Response[Error | GetSearchDocumentsResponse200]:
     """Full-text search the caller's document blocks
 
     Args:
         q (str):
-        limit (Union[Unset, int]):  Default: 20.
+        limit (int | Unset):  Default: 20.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, GetSearchDocumentsResponse200]]
+        Response[Error | GetSearchDocumentsResponse200]
     """
 
     kwargs = _get_kwargs(
@@ -160,20 +160,20 @@ async def asyncio(
     *,
     client: AuthenticatedClient,
     q: str,
-    limit: Unset | int = 20,
+    limit: int | Unset = 20,
 ) -> Error | GetSearchDocumentsResponse200 | None:
     """Full-text search the caller's document blocks
 
     Args:
         q (str):
-        limit (Union[Unset, int]):  Default: 20.
+        limit (int | Unset):  Default: 20.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, GetSearchDocumentsResponse200]
+        Error | GetSearchDocumentsResponse200
     """
 
     return (

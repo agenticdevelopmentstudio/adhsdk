@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, TypeVar, Union, cast
+from typing import TYPE_CHECKING, Any, TypeVar, cast
 
 from attrs import define as _attrs_define
 
@@ -20,16 +22,16 @@ class PostPersonaModelsBody:
     Attributes:
         template_id (str):
         name (str):
-        description (Union[None, Unset, str]):
-        metadata (Union['PostPersonaModelsBodyMetadataType0Type1', None, Unset, bool, float, list[Any], str]):
+        description (None | str | Unset):
+        metadata (bool | float | list[Any] | None | PostPersonaModelsBodyMetadataType0Type1 | str | Unset):
     """
 
     template_id: str
     name: str
-    description: None | Unset | str = UNSET
-    metadata: Union[
-        "PostPersonaModelsBodyMetadataType0Type1", None, Unset, bool, float, list[Any], str
-    ] = UNSET
+    description: None | str | Unset = UNSET
+    metadata: (
+        bool | float | list[Any] | None | PostPersonaModelsBodyMetadataType0Type1 | str | Unset
+    ) = UNSET
 
     def to_dict(self) -> dict[str, Any]:
         from ..models.post_persona_models_body_metadata_type_0_type_1 import (
@@ -40,13 +42,13 @@ class PostPersonaModelsBody:
 
         name = self.name
 
-        description: None | Unset | str
+        description: None | str | Unset
         if isinstance(self.description, Unset):
             description = UNSET
         else:
             description = self.description
 
-        metadata: None | Unset | bool | dict[str, Any] | float | list[Any] | str
+        metadata: bool | dict[str, Any] | float | list[Any] | None | str | Unset
         if isinstance(self.metadata, Unset):
             metadata = UNSET
         elif isinstance(self.metadata, PostPersonaModelsBodyMetadataType0Type1):
@@ -83,20 +85,20 @@ class PostPersonaModelsBody:
 
         name = d.pop("name")
 
-        def _parse_description(data: object) -> None | Unset | str:
+        def _parse_description(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         description = _parse_description(d.pop("description", UNSET))
 
         def _parse_metadata(
             data: object,
-        ) -> Union[
-            "PostPersonaModelsBodyMetadataType0Type1", None, Unset, bool, float, list[Any], str
-        ]:
+        ) -> (
+            bool | float | list[Any] | None | PostPersonaModelsBodyMetadataType0Type1 | str | Unset
+        ):
             if data is None:
                 return data
             if isinstance(data, Unset):
@@ -107,7 +109,7 @@ class PostPersonaModelsBody:
                 metadata_type_0_type_1 = PostPersonaModelsBodyMetadataType0Type1.from_dict(data)
 
                 return metadata_type_0_type_1
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
             try:
                 if not isinstance(data, list):
@@ -115,18 +117,16 @@ class PostPersonaModelsBody:
                 metadata_type_0_type_2 = cast(list[Any], data)
 
                 return metadata_type_0_type_2
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
             return cast(
-                Union[
-                    "PostPersonaModelsBodyMetadataType0Type1",
-                    None,
-                    Unset,
-                    bool,
-                    float,
-                    list[Any],
-                    str,
-                ],
+                bool
+                | float
+                | list[Any]
+                | None
+                | PostPersonaModelsBodyMetadataType0Type1
+                | str
+                | Unset,
                 data,
             )
 

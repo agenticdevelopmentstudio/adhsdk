@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -15,18 +17,18 @@ class DiscussionPost:
     Attributes:
         id (str):
         topic_id (str):
-        parent_post_id (Union[None, str]):
+        parent_post_id (None | str):
         post_number (int):
-        body_document_id (Union[None, str]): The content.markdown doc backing this post’s body.
+        body_document_id (None | str): The content.markdown doc backing this post’s body.
         created_at (str):
         updated_at (str):
-        customer_id (Union[Unset, str]): Author (server-stamped principal). Omitted on the public surface.
-        ecosystem_id (Union[Unset, str]): Owning ecosystem (present on create only).
-        community_id (Union[Unset, str]): The community instance (inherited from the topic; present on create only).
-        content (Union[None, Unset, str]): Resolved markdown body (present on the list routes; null if the body doc was
+        customer_id (str | Unset): Author (server-stamped principal). Omitted on the public surface.
+        ecosystem_id (str | Unset): Owning ecosystem (present on create only).
+        community_id (str | Unset): The community instance (inherited from the topic; present on create only).
+        content (None | str | Unset): Resolved markdown body (present on the list routes; null if the body doc was
             deleted).
-        is_deleted (Union[Unset, bool]):
-        deleted_at (Union[None, Unset, str]):
+        is_deleted (bool | Unset):
+        deleted_at (None | str | Unset):
     """
 
     id: str
@@ -36,12 +38,12 @@ class DiscussionPost:
     body_document_id: None | str
     created_at: str
     updated_at: str
-    customer_id: Unset | str = UNSET
-    ecosystem_id: Unset | str = UNSET
-    community_id: Unset | str = UNSET
-    content: None | Unset | str = UNSET
-    is_deleted: Unset | bool = UNSET
-    deleted_at: None | Unset | str = UNSET
+    customer_id: str | Unset = UNSET
+    ecosystem_id: str | Unset = UNSET
+    community_id: str | Unset = UNSET
+    content: None | str | Unset = UNSET
+    is_deleted: bool | Unset = UNSET
+    deleted_at: None | str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -67,7 +69,7 @@ class DiscussionPost:
 
         community_id = self.community_id
 
-        content: None | Unset | str
+        content: None | str | Unset
         if isinstance(self.content, Unset):
             content = UNSET
         else:
@@ -75,7 +77,7 @@ class DiscussionPost:
 
         is_deleted = self.is_deleted
 
-        deleted_at: None | Unset | str
+        deleted_at: None | str | Unset
         if isinstance(self.deleted_at, Unset):
             deleted_at = UNSET
         else:
@@ -142,23 +144,23 @@ class DiscussionPost:
 
         community_id = d.pop("communityId", UNSET)
 
-        def _parse_content(data: object) -> None | Unset | str:
+        def _parse_content(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         content = _parse_content(d.pop("content", UNSET))
 
         is_deleted = d.pop("isDeleted", UNSET)
 
-        def _parse_deleted_at(data: object) -> None | Unset | str:
+        def _parse_deleted_at(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         deleted_at = _parse_deleted_at(d.pop("deletedAt", UNSET))
 

@@ -41,7 +41,7 @@ dev = [
     # Pinned (like the swift generator's --branch pin) so `pnpm gen` is reproducible:
     # an unpinned range reformats the whole generated tree whenever the installed
     # version drifts. Bump deliberately + regenerate.
-    "openapi-python-client==0.26.2",
+    "openapi-python-client==0.29.1",
 ]
 
 [project.scripts]

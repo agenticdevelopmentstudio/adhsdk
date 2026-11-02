@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar
 
@@ -15,15 +17,15 @@ class PostPersonaToolTemplatesBody:
         tool_key (str):
         source_kind (str):
         display_name (str):
-        description (Union[Unset, str]):
-        read_only (Union[Unset, bool]):
+        description (str | Unset):
+        read_only (bool | Unset):
     """
 
     tool_key: str
     source_kind: str
     display_name: str
-    description: Unset | str = UNSET
-    read_only: Unset | bool = UNSET
+    description: str | Unset = UNSET
+    read_only: bool | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
         tool_key = self.tool_key

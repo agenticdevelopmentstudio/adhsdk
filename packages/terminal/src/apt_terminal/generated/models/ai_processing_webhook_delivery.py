@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import TYPE_CHECKING, Any, TypeVar, cast
 from uuid import UUID
@@ -30,9 +32,9 @@ class AiProcessingWebhookDelivery:
         next_attempt_at (str):
         created_at (str):
         updated_at (str):
-        response_status (Union[None, Unset, int]):
-        last_error (Union[None, Unset, str]):
-        delivered_at (Union[None, Unset, str]):
+        response_status (int | None | Unset):
+        last_error (None | str | Unset):
+        delivered_at (None | str | Unset):
     """
 
     id: UUID
@@ -40,16 +42,16 @@ class AiProcessingWebhookDelivery:
     endpoint_id: UUID
     event_id: UUID
     event_type: str
-    payload: "AiProcessingWebhookDeliveryPayload"
+    payload: AiProcessingWebhookDeliveryPayload
     status: str
     attempts: int
     max_attempts: int
     next_attempt_at: str
     created_at: str
     updated_at: str
-    response_status: None | Unset | int = UNSET
-    last_error: None | Unset | str = UNSET
-    delivered_at: None | Unset | str = UNSET
+    response_status: int | None | Unset = UNSET
+    last_error: None | str | Unset = UNSET
+    delivered_at: None | str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -77,19 +79,19 @@ class AiProcessingWebhookDelivery:
 
         updated_at = self.updated_at
 
-        response_status: None | Unset | int
+        response_status: int | None | Unset
         if isinstance(self.response_status, Unset):
             response_status = UNSET
         else:
             response_status = self.response_status
 
-        last_error: None | Unset | str
+        last_error: None | str | Unset
         if isinstance(self.last_error, Unset):
             last_error = UNSET
         else:
             last_error = self.last_error
 
-        delivered_at: None | Unset | str
+        delivered_at: None | str | Unset
         if isinstance(self.delivered_at, Unset):
             delivered_at = UNSET
         else:
@@ -153,30 +155,30 @@ class AiProcessingWebhookDelivery:
 
         updated_at = d.pop("updatedAt")
 
-        def _parse_response_status(data: object) -> None | Unset | int:
+        def _parse_response_status(data: object) -> int | None | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | int, data)
+            return cast(int | None | Unset, data)
 
         response_status = _parse_response_status(d.pop("responseStatus", UNSET))
 
-        def _parse_last_error(data: object) -> None | Unset | str:
+        def _parse_last_error(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         last_error = _parse_last_error(d.pop("lastError", UNSET))
 
-        def _parse_delivered_at(data: object) -> None | Unset | str:
+        def _parse_delivered_at(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         delivered_at = _parse_delivered_at(d.pop("deliveredAt", UNSET))
 

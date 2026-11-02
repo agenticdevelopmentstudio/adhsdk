@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class PostPersonaProviderTemplatesBodyProviderKind(str, Enum):
+class PostPersonaProviderTemplatesBodyProviderKind(StrEnum):
     ANTHROPIC = "anthropic"
     EXTERNAL = "external"
     GEMINI = "gemini"

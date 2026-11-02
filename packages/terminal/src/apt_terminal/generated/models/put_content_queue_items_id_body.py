@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, TypeVar, Union, cast
+from typing import TYPE_CHECKING, Any, TypeVar, cast
 
 from attrs import define as _attrs_define
 
@@ -18,28 +20,28 @@ T = TypeVar("T", bound="PutContentQueueItemsIdBody")
 class PutContentQueueItemsIdBody:
     """
     Attributes:
-        ecosystem_id (Union[Unset, str]):
-        queue_id (Union[Unset, str]):
-        payload (Union['PutContentQueueItemsIdBodyPayloadType1', None, Unset, bool, float, list[Any], str]):
-        status (Union[Unset, str]):
-        enqueued_at (Union[Unset, str]):
-        dequeued_at (Union[None, Unset, str]):
-        acked_at (Union[None, Unset, str]):
-        nacked_at (Union[None, Unset, str]):
-        sync_txid (Union[Unset, int]):
+        ecosystem_id (str | Unset):
+        queue_id (str | Unset):
+        payload (bool | float | list[Any] | None | PutContentQueueItemsIdBodyPayloadType1 | str | Unset):
+        status (str | Unset):
+        enqueued_at (str | Unset):
+        dequeued_at (None | str | Unset):
+        acked_at (None | str | Unset):
+        nacked_at (None | str | Unset):
+        sync_txid (int | Unset):
     """
 
-    ecosystem_id: Unset | str = UNSET
-    queue_id: Unset | str = UNSET
-    payload: Union[
-        "PutContentQueueItemsIdBodyPayloadType1", None, Unset, bool, float, list[Any], str
-    ] = UNSET
-    status: Unset | str = UNSET
-    enqueued_at: Unset | str = UNSET
-    dequeued_at: None | Unset | str = UNSET
-    acked_at: None | Unset | str = UNSET
-    nacked_at: None | Unset | str = UNSET
-    sync_txid: Unset | int = UNSET
+    ecosystem_id: str | Unset = UNSET
+    queue_id: str | Unset = UNSET
+    payload: (
+        bool | float | list[Any] | None | PutContentQueueItemsIdBodyPayloadType1 | str | Unset
+    ) = UNSET
+    status: str | Unset = UNSET
+    enqueued_at: str | Unset = UNSET
+    dequeued_at: None | str | Unset = UNSET
+    acked_at: None | str | Unset = UNSET
+    nacked_at: None | str | Unset = UNSET
+    sync_txid: int | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
         from ..models.put_content_queue_items_id_body_payload_type_1 import (
@@ -50,7 +52,7 @@ class PutContentQueueItemsIdBody:
 
         queue_id = self.queue_id
 
-        payload: None | Unset | bool | dict[str, Any] | float | list[Any] | str
+        payload: bool | dict[str, Any] | float | list[Any] | None | str | Unset
         if isinstance(self.payload, Unset):
             payload = UNSET
         elif isinstance(self.payload, PutContentQueueItemsIdBodyPayloadType1):
@@ -65,19 +67,19 @@ class PutContentQueueItemsIdBody:
 
         enqueued_at = self.enqueued_at
 
-        dequeued_at: None | Unset | str
+        dequeued_at: None | str | Unset
         if isinstance(self.dequeued_at, Unset):
             dequeued_at = UNSET
         else:
             dequeued_at = self.dequeued_at
 
-        acked_at: None | Unset | str
+        acked_at: None | str | Unset
         if isinstance(self.acked_at, Unset):
             acked_at = UNSET
         else:
             acked_at = self.acked_at
 
-        nacked_at: None | Unset | str
+        nacked_at: None | str | Unset
         if isinstance(self.nacked_at, Unset):
             nacked_at = UNSET
         else:
@@ -122,9 +124,7 @@ class PutContentQueueItemsIdBody:
 
         def _parse_payload(
             data: object,
-        ) -> Union[
-            "PutContentQueueItemsIdBodyPayloadType1", None, Unset, bool, float, list[Any], str
-        ]:
+        ) -> bool | float | list[Any] | None | PutContentQueueItemsIdBodyPayloadType1 | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
@@ -135,7 +135,7 @@ class PutContentQueueItemsIdBody:
                 payload_type_1 = PutContentQueueItemsIdBodyPayloadType1.from_dict(data)
 
                 return payload_type_1
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
             try:
                 if not isinstance(data, list):
@@ -143,18 +143,16 @@ class PutContentQueueItemsIdBody:
                 payload_type_2 = cast(list[Any], data)
 
                 return payload_type_2
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
             return cast(
-                Union[
-                    "PutContentQueueItemsIdBodyPayloadType1",
-                    None,
-                    Unset,
-                    bool,
-                    float,
-                    list[Any],
-                    str,
-                ],
+                bool
+                | float
+                | list[Any]
+                | None
+                | PutContentQueueItemsIdBodyPayloadType1
+                | str
+                | Unset,
                 data,
             )
 
@@ -164,30 +162,30 @@ class PutContentQueueItemsIdBody:
 
         enqueued_at = d.pop("enqueuedAt", UNSET)
 
-        def _parse_dequeued_at(data: object) -> None | Unset | str:
+        def _parse_dequeued_at(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         dequeued_at = _parse_dequeued_at(d.pop("dequeuedAt", UNSET))
 
-        def _parse_acked_at(data: object) -> None | Unset | str:
+        def _parse_acked_at(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         acked_at = _parse_acked_at(d.pop("ackedAt", UNSET))
 
-        def _parse_nacked_at(data: object) -> None | Unset | str:
+        def _parse_nacked_at(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         nacked_at = _parse_nacked_at(d.pop("nackedAt", UNSET))
 

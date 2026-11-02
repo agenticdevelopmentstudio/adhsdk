@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, TypeVar, Union, cast
+from typing import TYPE_CHECKING, Any, TypeVar, cast
 
 from attrs import define as _attrs_define
 
@@ -18,32 +20,32 @@ T = TypeVar("T", bound="PutIntegrationIntegrationAudiencesIdBody")
 class PutIntegrationIntegrationAudiencesIdBody:
     """
     Attributes:
-        ecosystem_id (Union[Unset, str]):
-        connection_id (Union[Unset, str]):
-        provider (Union[Unset, str]):
-        external_id (Union[Unset, str]):
-        name (Union[Unset, str]):
-        member_count (Union[None, Unset, int]):
-        raw (Union['PutIntegrationIntegrationAudiencesIdBodyRawType0Type1', None, Unset, bool, float, list[Any], str]):
-        sync_txid (Union[Unset, int]):
+        ecosystem_id (str | Unset):
+        connection_id (str | Unset):
+        provider (str | Unset):
+        external_id (str | Unset):
+        name (str | Unset):
+        member_count (int | None | Unset):
+        raw (bool | float | list[Any] | None | PutIntegrationIntegrationAudiencesIdBodyRawType0Type1 | str | Unset):
+        sync_txid (int | Unset):
     """
 
-    ecosystem_id: Unset | str = UNSET
-    connection_id: Unset | str = UNSET
-    provider: Unset | str = UNSET
-    external_id: Unset | str = UNSET
-    name: Unset | str = UNSET
-    member_count: None | Unset | int = UNSET
-    raw: Union[
-        "PutIntegrationIntegrationAudiencesIdBodyRawType0Type1",
-        None,
-        Unset,
-        bool,
-        float,
-        list[Any],
-        str,
-    ] = UNSET
-    sync_txid: Unset | int = UNSET
+    ecosystem_id: str | Unset = UNSET
+    connection_id: str | Unset = UNSET
+    provider: str | Unset = UNSET
+    external_id: str | Unset = UNSET
+    name: str | Unset = UNSET
+    member_count: int | None | Unset = UNSET
+    raw: (
+        bool
+        | float
+        | list[Any]
+        | None
+        | PutIntegrationIntegrationAudiencesIdBodyRawType0Type1
+        | str
+        | Unset
+    ) = UNSET
+    sync_txid: int | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
         from ..models.put_integration_integration_audiences_id_body_raw_type_0_type_1 import (
@@ -60,13 +62,13 @@ class PutIntegrationIntegrationAudiencesIdBody:
 
         name = self.name
 
-        member_count: None | Unset | int
+        member_count: int | None | Unset
         if isinstance(self.member_count, Unset):
             member_count = UNSET
         else:
             member_count = self.member_count
 
-        raw: None | Unset | bool | dict[str, Any] | float | list[Any] | str
+        raw: bool | dict[str, Any] | float | list[Any] | None | str | Unset
         if isinstance(self.raw, Unset):
             raw = UNSET
         elif isinstance(self.raw, PutIntegrationIntegrationAudiencesIdBodyRawType0Type1):
@@ -118,26 +120,26 @@ class PutIntegrationIntegrationAudiencesIdBody:
 
         name = d.pop("name", UNSET)
 
-        def _parse_member_count(data: object) -> None | Unset | int:
+        def _parse_member_count(data: object) -> int | None | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | int, data)
+            return cast(int | None | Unset, data)
 
         member_count = _parse_member_count(d.pop("memberCount", UNSET))
 
         def _parse_raw(
             data: object,
-        ) -> Union[
-            "PutIntegrationIntegrationAudiencesIdBodyRawType0Type1",
-            None,
-            Unset,
-            bool,
-            float,
-            list[Any],
-            str,
-        ]:
+        ) -> (
+            bool
+            | float
+            | list[Any]
+            | None
+            | PutIntegrationIntegrationAudiencesIdBodyRawType0Type1
+            | str
+            | Unset
+        ):
             if data is None:
                 return data
             if isinstance(data, Unset):
@@ -150,7 +152,7 @@ class PutIntegrationIntegrationAudiencesIdBody:
                 )
 
                 return raw_type_0_type_1
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
             try:
                 if not isinstance(data, list):
@@ -158,18 +160,16 @@ class PutIntegrationIntegrationAudiencesIdBody:
                 raw_type_0_type_2 = cast(list[Any], data)
 
                 return raw_type_0_type_2
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
             return cast(
-                Union[
-                    "PutIntegrationIntegrationAudiencesIdBodyRawType0Type1",
-                    None,
-                    Unset,
-                    bool,
-                    float,
-                    list[Any],
-                    str,
-                ],
+                bool
+                | float
+                | list[Any]
+                | None
+                | PutIntegrationIntegrationAudiencesIdBodyRawType0Type1
+                | str
+                | Unset,
                 data,
             )
 

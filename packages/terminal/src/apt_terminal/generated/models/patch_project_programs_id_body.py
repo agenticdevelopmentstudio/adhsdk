@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -15,18 +17,18 @@ class PatchProjectProgramsIdBody:
     null to CLEAR it; the pair is checked as it WILL BE.
 
         Attributes:
-            name (Union[Unset, str]):
-            description (Union[Unset, str]):
-            color (Union[Unset, str]):
-            start_date (Union[None, Unset, str]):
-            target_date (Union[None, Unset, str]):
+            name (str | Unset):
+            description (str | Unset):
+            color (str | Unset):
+            start_date (None | str | Unset):
+            target_date (None | str | Unset):
     """
 
-    name: Unset | str = UNSET
-    description: Unset | str = UNSET
-    color: Unset | str = UNSET
-    start_date: None | Unset | str = UNSET
-    target_date: None | Unset | str = UNSET
+    name: str | Unset = UNSET
+    description: str | Unset = UNSET
+    color: str | Unset = UNSET
+    start_date: None | str | Unset = UNSET
+    target_date: None | str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -36,13 +38,13 @@ class PatchProjectProgramsIdBody:
 
         color = self.color
 
-        start_date: None | Unset | str
+        start_date: None | str | Unset
         if isinstance(self.start_date, Unset):
             start_date = UNSET
         else:
             start_date = self.start_date
 
-        target_date: None | Unset | str
+        target_date: None | str | Unset
         if isinstance(self.target_date, Unset):
             target_date = UNSET
         else:
@@ -73,21 +75,21 @@ class PatchProjectProgramsIdBody:
 
         color = d.pop("color", UNSET)
 
-        def _parse_start_date(data: object) -> None | Unset | str:
+        def _parse_start_date(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         start_date = _parse_start_date(d.pop("startDate", UNSET))
 
-        def _parse_target_date(data: object) -> None | Unset | str:
+        def _parse_target_date(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         target_date = _parse_target_date(d.pop("targetDate", UNSET))
 

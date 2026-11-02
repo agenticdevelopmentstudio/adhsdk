@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -11,9 +13,9 @@ T = TypeVar("T", bound="PostProjectIterationsIdRolloverBody")
 class PostProjectIterationsIdRolloverBody:
     """
     Attributes:
-        to_iteration_id (Union[None, str]): where the unfinished cards go. An iteration in the SAME workspace (never
-            this one), or null to send them back to the backlog — which is the honest destination when the next cycle does
-            not exist yet.
+        to_iteration_id (None | str): where the unfinished cards go. An iteration in the SAME workspace (never this
+            one), or null to send them back to the backlog — which is the honest destination when the next cycle does not
+            exist yet.
     """
 
     to_iteration_id: None | str

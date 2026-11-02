@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -16,10 +18,10 @@ class PutUsageRateLimitTiersIdResponse200:
         rate_capacity (int):
         rate_refill_tokens (int):
         rate_refill_seconds (int):
-        quota_requests (Union[None, int]):
-        quota_bytes (Union[None, int]):
-        quota_tokens (Union[None, int]):
-        quota_cost_micros (Union[None, int]):
+        quota_requests (int | None):
+        quota_bytes (int | None):
+        quota_tokens (int | None):
+        quota_cost_micros (int | None):
         quota_period_days (int):
         quota_enforced (bool):
         is_default (bool):
@@ -34,10 +36,10 @@ class PutUsageRateLimitTiersIdResponse200:
     rate_capacity: int
     rate_refill_tokens: int
     rate_refill_seconds: int
-    quota_requests: None | int
-    quota_bytes: None | int
-    quota_tokens: None | int
-    quota_cost_micros: None | int
+    quota_requests: int | None
+    quota_bytes: int | None
+    quota_tokens: int | None
+    quota_cost_micros: int | None
     quota_period_days: int
     quota_enforced: bool
     is_default: bool
@@ -58,16 +60,16 @@ class PutUsageRateLimitTiersIdResponse200:
 
         rate_refill_seconds = self.rate_refill_seconds
 
-        quota_requests: None | int
+        quota_requests: int | None
         quota_requests = self.quota_requests
 
-        quota_bytes: None | int
+        quota_bytes: int | None
         quota_bytes = self.quota_bytes
 
-        quota_tokens: None | int
+        quota_tokens: int | None
         quota_tokens = self.quota_tokens
 
-        quota_cost_micros: None | int
+        quota_cost_micros: int | None
         quota_cost_micros = self.quota_cost_micros
 
         quota_period_days = self.quota_period_days
@@ -122,31 +124,31 @@ class PutUsageRateLimitTiersIdResponse200:
 
         rate_refill_seconds = d.pop("rateRefillSeconds")
 
-        def _parse_quota_requests(data: object) -> None | int:
+        def _parse_quota_requests(data: object) -> int | None:
             if data is None:
                 return data
-            return cast(None | int, data)
+            return cast(int | None, data)
 
         quota_requests = _parse_quota_requests(d.pop("quotaRequests"))
 
-        def _parse_quota_bytes(data: object) -> None | int:
+        def _parse_quota_bytes(data: object) -> int | None:
             if data is None:
                 return data
-            return cast(None | int, data)
+            return cast(int | None, data)
 
         quota_bytes = _parse_quota_bytes(d.pop("quotaBytes"))
 
-        def _parse_quota_tokens(data: object) -> None | int:
+        def _parse_quota_tokens(data: object) -> int | None:
             if data is None:
                 return data
-            return cast(None | int, data)
+            return cast(int | None, data)
 
         quota_tokens = _parse_quota_tokens(d.pop("quotaTokens"))
 
-        def _parse_quota_cost_micros(data: object) -> None | int:
+        def _parse_quota_cost_micros(data: object) -> int | None:
             if data is None:
                 return data
-            return cast(None | int, data)
+            return cast(int | None, data)
 
         quota_cost_micros = _parse_quota_cost_micros(d.pop("quotaCostMicros"))
 

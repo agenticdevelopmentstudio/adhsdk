@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import TYPE_CHECKING, Any, TypeVar
 
@@ -19,19 +21,19 @@ T = TypeVar("T", bound="PostOwnershipTransferResponse200Revoked")
 class PostOwnershipTransferResponse200Revoked:
     """
     Attributes:
-        tokens (Union[Unset, int]): API tokens revoked
-        subjects (Union[Unset, list['PostOwnershipTransferResponse200RevokedSubjectsItem']]): principals that lose reach
-            over the object once it moves
+        tokens (int | Unset): API tokens revoked
+        subjects (list[PostOwnershipTransferResponse200RevokedSubjectsItem] | Unset): principals that lose reach over
+            the object once it moves
     """
 
-    tokens: Unset | int = UNSET
-    subjects: Unset | list["PostOwnershipTransferResponse200RevokedSubjectsItem"] = UNSET
+    tokens: int | Unset = UNSET
+    subjects: list[PostOwnershipTransferResponse200RevokedSubjectsItem] | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
         tokens = self.tokens
 
-        subjects: Unset | list[dict[str, Any]] = UNSET
+        subjects: list[dict[str, Any]] | Unset = UNSET
         if not isinstance(self.subjects, Unset):
             subjects = []
             for subjects_item_data in self.subjects:
@@ -57,14 +59,16 @@ class PostOwnershipTransferResponse200Revoked:
         d = dict(src_dict)
         tokens = d.pop("tokens", UNSET)
 
-        subjects = []
         _subjects = d.pop("subjects", UNSET)
-        for subjects_item_data in _subjects or []:
-            subjects_item = PostOwnershipTransferResponse200RevokedSubjectsItem.from_dict(
-                subjects_item_data
-            )
+        subjects: list[PostOwnershipTransferResponse200RevokedSubjectsItem] | Unset = UNSET
+        if _subjects is not UNSET:
+            subjects = []
+            for subjects_item_data in _subjects:
+                subjects_item = PostOwnershipTransferResponse200RevokedSubjectsItem.from_dict(
+                    subjects_item_data
+                )
 
-            subjects.append(subjects_item)
+                subjects.append(subjects_item)
 
         post_ownership_transfer_response_200_revoked = cls(
             tokens=tokens,

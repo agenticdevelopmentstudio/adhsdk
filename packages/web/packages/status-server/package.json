@@ -93,8 +93,8 @@
     "@hono/zod-openapi": "^1.4.0",
     "@libsql/client": "^0.14.0",
     "drizzle-orm": "^0.45.2",
-    "hono": "^4.12.23",
-    "zod": "^4.4.3"
+    "hono": "^4.13.11",
+    "zod": "^4.6.6"
   },
   "comment:peers": "Every peer is OPTIONAL for the same reason deploy-platform's drizzle-orm peer is: a backend host (websites/main) declares hono, @hono/zod-openapi, drizzle-orm, @libsql/client and zod itself, while the dashboard host vendors this package only for status-web's type-only import and the two board/deploy-status parity tests, which reach the pure ./activity and ./deploy-status subpaths. A required peer would make pnpm's auto-install-peers drag the ORM and the native libsql driver into a browser install that never imports them. @hono/node-server is a peer for the same reason hono is: ./mcp reads its HttpBindings and RESPONSE_ALREADY_SENT off the host's node adapter, so it must be the host's ONE copy — as a dependency it would be inlined into dist and a second copy would sit beside the host's.",
   "peerDependenciesMeta": {
@@ -125,12 +125,12 @@
     "@types/node": "^24.0.0",
     "drizzle-kit": "^0.31.10",
     "drizzle-orm": "^0.45.2",
-    "hono": "4.12.25",
+    "hono": "4.13.16",
     "tsup": "^8.3.5",
     "tsx": "^4.22.3",
     "typescript": "^5.7.2",
     "vitest": "^4.1.4",
-    "zod": "4.4.3"
+    "zod": "4.6.7"
   },
   "comment:devPins": "hono, @hono/zod-openapi and zod are pinned EXACTLY in devDependencies (the peer ranges stay caret): openapi.json is a function of the JSON-schema emitter in those three, and the committed document must reproduce byte-for-byte in this workspace AND in websites/main, which locks these same versions. Bump all three together with the host lockfile and re-run openapi:dump."
 }

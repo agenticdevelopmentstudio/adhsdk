@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar
 
@@ -14,16 +16,16 @@ class PostContentCategoryEdgesBody:
     Attributes:
         parent_id (str):
         child_id (str):
-        ecosystem_id (Union[Unset, str]):
-        sort_order (Union[Unset, int]):
-        sync_txid (Union[Unset, int]):
+        ecosystem_id (str | Unset):
+        sort_order (int | Unset):
+        sync_txid (int | Unset):
     """
 
     parent_id: str
     child_id: str
-    ecosystem_id: Unset | str = UNSET
-    sort_order: Unset | int = UNSET
-    sync_txid: Unset | int = UNSET
+    ecosystem_id: str | Unset = UNSET
+    sort_order: int | Unset = UNSET
+    sync_txid: int | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
         parent_id = self.parent_id

@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class PostRegistryRegistriesRegistryIdEntriesBodyProviderType(str, Enum):
+class PostRegistryRegistriesRegistryIdEntriesBodyProviderType(StrEnum):
     ORGANIZATION = "organization"
     PERSON = "person"
     PERSONA = "persona"

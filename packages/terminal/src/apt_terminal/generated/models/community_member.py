@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -18,7 +20,7 @@ class CommunityMember:
         role (str): owner | admin | moderator | member
         created_at (str):
         updated_at (str):
-        bio (Union[None, Unset, str]): The member’s one-line "what I’m building" intro for this community.
+        bio (None | str | Unset): The member’s one-line "what I’m building" intro for this community.
     """
 
     community_id: str
@@ -26,7 +28,7 @@ class CommunityMember:
     role: str
     created_at: str
     updated_at: str
-    bio: None | Unset | str = UNSET
+    bio: None | str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -40,7 +42,7 @@ class CommunityMember:
 
         updated_at = self.updated_at
 
-        bio: None | Unset | str
+        bio: None | str | Unset
         if isinstance(self.bio, Unset):
             bio = UNSET
         else:
@@ -75,12 +77,12 @@ class CommunityMember:
 
         updated_at = d.pop("updatedAt")
 
-        def _parse_bio(data: object) -> None | Unset | str:
+        def _parse_bio(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         bio = _parse_bio(d.pop("bio", UNSET))
 

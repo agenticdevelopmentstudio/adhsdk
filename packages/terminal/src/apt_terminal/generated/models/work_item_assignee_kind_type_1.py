@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class WorkItemAssigneeKindType1(str, Enum):
+class WorkItemAssigneeKindType1(StrEnum):
     CUSTOMER = "customer"
     PERSONA = "persona"
     TEAM = "team"

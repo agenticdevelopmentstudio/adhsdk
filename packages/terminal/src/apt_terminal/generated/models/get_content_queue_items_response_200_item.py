@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, TypeVar, Union, cast
+from typing import TYPE_CHECKING, Any, TypeVar, cast
 
 from attrs import define as _attrs_define
 
@@ -19,17 +21,17 @@ class GetContentQueueItemsResponse200Item:
         id (str):
         ecosystem_id (str):
         customer_id (str):
-        deleted_at (Union[None, str]):
+        deleted_at (None | str):
         queue_id (str):
-        payload (Union['GetContentQueueItemsResponse200ItemPayloadType1', None, bool, float, list[Any], str]):
+        payload (bool | float | GetContentQueueItemsResponse200ItemPayloadType1 | list[Any] | None | str):
         status (str):
         enqueued_at (str):
-        dequeued_at (Union[None, str]):
-        acked_at (Union[None, str]):
-        nacked_at (Union[None, str]):
+        dequeued_at (None | str):
+        acked_at (None | str):
+        nacked_at (None | str):
         updated_at (str):
         sync_version (int):
-        sync_stamped_at (Union[None, str]):
+        sync_stamped_at (None | str):
         sync_txid (int):
     """
 
@@ -38,9 +40,7 @@ class GetContentQueueItemsResponse200Item:
     customer_id: str
     deleted_at: None | str
     queue_id: str
-    payload: Union[
-        "GetContentQueueItemsResponse200ItemPayloadType1", None, bool, float, list[Any], str
-    ]
+    payload: bool | float | GetContentQueueItemsResponse200ItemPayloadType1 | list[Any] | None | str
     status: str
     enqueued_at: str
     dequeued_at: None | str
@@ -67,7 +67,7 @@ class GetContentQueueItemsResponse200Item:
 
         queue_id = self.queue_id
 
-        payload: None | bool | dict[str, Any] | float | list[Any] | str
+        payload: bool | dict[str, Any] | float | list[Any] | None | str
         if isinstance(self.payload, GetContentQueueItemsResponse200ItemPayloadType1):
             payload = self.payload.to_dict()
         elif isinstance(self.payload, list):
@@ -146,9 +146,9 @@ class GetContentQueueItemsResponse200Item:
 
         def _parse_payload(
             data: object,
-        ) -> Union[
-            "GetContentQueueItemsResponse200ItemPayloadType1", None, bool, float, list[Any], str
-        ]:
+        ) -> (
+            bool | float | GetContentQueueItemsResponse200ItemPayloadType1 | list[Any] | None | str
+        ):
             if data is None:
                 return data
             try:
@@ -157,7 +157,7 @@ class GetContentQueueItemsResponse200Item:
                 payload_type_1 = GetContentQueueItemsResponse200ItemPayloadType1.from_dict(data)
 
                 return payload_type_1
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
             try:
                 if not isinstance(data, list):
@@ -165,17 +165,15 @@ class GetContentQueueItemsResponse200Item:
                 payload_type_2 = cast(list[Any], data)
 
                 return payload_type_2
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
             return cast(
-                Union[
-                    "GetContentQueueItemsResponse200ItemPayloadType1",
-                    None,
-                    bool,
-                    float,
-                    list[Any],
-                    str,
-                ],
+                bool
+                | float
+                | GetContentQueueItemsResponse200ItemPayloadType1
+                | list[Any]
+                | None
+                | str,
                 data,
             )
 

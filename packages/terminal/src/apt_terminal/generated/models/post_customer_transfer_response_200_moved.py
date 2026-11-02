@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar
 
@@ -9,8 +11,6 @@ T = TypeVar("T", bound="PostCustomerTransferResponse200Moved")
 
 @_attrs_define
 class PostCustomerTransferResponse200Moved:
-    """ """
-
     additional_properties: dict[str, int] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:

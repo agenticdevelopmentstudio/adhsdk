@@ -1,5 +1,6 @@
 from http import HTTPStatus
 from typing import Any
+from urllib.parse import quote
 
 import httpx
 
@@ -8,22 +9,25 @@ from ...client import AuthenticatedClient, Client
 from ...models.error import Error
 from ...models.post_project_work_items_id_move_body import PostProjectWorkItemsIdMoveBody
 from ...models.work_item import WorkItem
-from ...types import Response
+from ...types import UNSET, Response, Unset
 
 
 def _get_kwargs(
     id: str,
     *,
-    body: PostProjectWorkItemsIdMoveBody,
+    body: PostProjectWorkItemsIdMoveBody | Unset = UNSET,
 ) -> dict[str, Any]:
     headers: dict[str, Any] = {}
 
     _kwargs: dict[str, Any] = {
         "method": "post",
-        "url": f"/project/work-items/{id}/move",
+        "url": "/project/work-items/{id}/move".format(
+            id=quote(str(id), safe=""),
+        ),
     }
 
-    _kwargs["json"] = body.to_dict()
+    if not isinstance(body, Unset):
+        _kwargs["json"] = body.to_dict()
 
     headers["Content-Type"] = "application/json"
 
@@ -75,25 +79,25 @@ def sync_detailed(
     id: str,
     *,
     client: AuthenticatedClient,
-    body: PostProjectWorkItemsIdMoveBody,
+    body: PostProjectWorkItemsIdMoveBody | Unset = UNSET,
 ) -> Response[Error | WorkItem]:
     """Reorder a card among its siblings (+ a work_item.moved activity)
 
     Args:
         id (str):
-        body (PostProjectWorkItemsIdMoveBody): Where the card goes, as the cards it lands between.
-            `{afterId: X}` puts it directly below X, `{beforeId: X}` directly above X, `{afterId:
-            null}` at the very top, `{beforeId: null}` at the very bottom. Naming neither is a 400,
-            and so is nulling both — that describes a list with nothing else in it. Each neighbour
-            must be a SIBLING (same project, same parent) — re-parenting is PATCH /project/work-
-            items/{id}.
+        body (PostProjectWorkItemsIdMoveBody | Unset): Where the card goes, as the cards it lands
+            between. `{afterId: X}` puts it directly below X, `{beforeId: X}` directly above X,
+            `{afterId: null}` at the very top, `{beforeId: null}` at the very bottom. Naming neither
+            is a 400, and so is nulling both — that describes a list with nothing else in it. Each
+            neighbour must be a SIBLING (same project, same parent) — re-parenting is PATCH
+            /project/work-items/{id}.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, WorkItem]]
+        Response[Error | WorkItem]
     """
 
     kwargs = _get_kwargs(
@@ -112,25 +116,25 @@ def sync(
     id: str,
     *,
     client: AuthenticatedClient,
-    body: PostProjectWorkItemsIdMoveBody,
+    body: PostProjectWorkItemsIdMoveBody | Unset = UNSET,
 ) -> Error | WorkItem | None:
     """Reorder a card among its siblings (+ a work_item.moved activity)
 
     Args:
         id (str):
-        body (PostProjectWorkItemsIdMoveBody): Where the card goes, as the cards it lands between.
-            `{afterId: X}` puts it directly below X, `{beforeId: X}` directly above X, `{afterId:
-            null}` at the very top, `{beforeId: null}` at the very bottom. Naming neither is a 400,
-            and so is nulling both — that describes a list with nothing else in it. Each neighbour
-            must be a SIBLING (same project, same parent) — re-parenting is PATCH /project/work-
-            items/{id}.
+        body (PostProjectWorkItemsIdMoveBody | Unset): Where the card goes, as the cards it lands
+            between. `{afterId: X}` puts it directly below X, `{beforeId: X}` directly above X,
+            `{afterId: null}` at the very top, `{beforeId: null}` at the very bottom. Naming neither
+            is a 400, and so is nulling both — that describes a list with nothing else in it. Each
+            neighbour must be a SIBLING (same project, same parent) — re-parenting is PATCH
+            /project/work-items/{id}.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, WorkItem]
+        Error | WorkItem
     """
 
     return sync_detailed(
@@ -144,25 +148,25 @@ async def asyncio_detailed(
     id: str,
     *,
     client: AuthenticatedClient,
-    body: PostProjectWorkItemsIdMoveBody,
+    body: PostProjectWorkItemsIdMoveBody | Unset = UNSET,
 ) -> Response[Error | WorkItem]:
     """Reorder a card among its siblings (+ a work_item.moved activity)
 
     Args:
         id (str):
-        body (PostProjectWorkItemsIdMoveBody): Where the card goes, as the cards it lands between.
-            `{afterId: X}` puts it directly below X, `{beforeId: X}` directly above X, `{afterId:
-            null}` at the very top, `{beforeId: null}` at the very bottom. Naming neither is a 400,
-            and so is nulling both — that describes a list with nothing else in it. Each neighbour
-            must be a SIBLING (same project, same parent) — re-parenting is PATCH /project/work-
-            items/{id}.
+        body (PostProjectWorkItemsIdMoveBody | Unset): Where the card goes, as the cards it lands
+            between. `{afterId: X}` puts it directly below X, `{beforeId: X}` directly above X,
+            `{afterId: null}` at the very top, `{beforeId: null}` at the very bottom. Naming neither
+            is a 400, and so is nulling both — that describes a list with nothing else in it. Each
+            neighbour must be a SIBLING (same project, same parent) — re-parenting is PATCH
+            /project/work-items/{id}.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, WorkItem]]
+        Response[Error | WorkItem]
     """
 
     kwargs = _get_kwargs(
@@ -179,25 +183,25 @@ async def asyncio(
     id: str,
     *,
     client: AuthenticatedClient,
-    body: PostProjectWorkItemsIdMoveBody,
+    body: PostProjectWorkItemsIdMoveBody | Unset = UNSET,
 ) -> Error | WorkItem | None:
     """Reorder a card among its siblings (+ a work_item.moved activity)
 
     Args:
         id (str):
-        body (PostProjectWorkItemsIdMoveBody): Where the card goes, as the cards it lands between.
-            `{afterId: X}` puts it directly below X, `{beforeId: X}` directly above X, `{afterId:
-            null}` at the very top, `{beforeId: null}` at the very bottom. Naming neither is a 400,
-            and so is nulling both — that describes a list with nothing else in it. Each neighbour
-            must be a SIBLING (same project, same parent) — re-parenting is PATCH /project/work-
-            items/{id}.
+        body (PostProjectWorkItemsIdMoveBody | Unset): Where the card goes, as the cards it lands
+            between. `{afterId: X}` puts it directly below X, `{beforeId: X}` directly above X,
+            `{afterId: null}` at the very top, `{beforeId: null}` at the very bottom. Naming neither
+            is a 400, and so is nulling both — that describes a list with nothing else in it. Each
+            neighbour must be a SIBLING (same project, same parent) — re-parenting is PATCH
+            /project/work-items/{id}.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, WorkItem]
+        Error | WorkItem
     """
 
     return (

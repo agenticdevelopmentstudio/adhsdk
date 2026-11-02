@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class IntegrationConnectAppPasswordType(str, Enum):
+class IntegrationConnectAppPasswordType(StrEnum):
     APP_PASSWORD = "app_password"
 
     def __str__(self) -> str:

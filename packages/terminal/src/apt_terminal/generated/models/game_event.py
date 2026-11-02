@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, TypeVar, Union, cast
+from typing import TYPE_CHECKING, Any, TypeVar, cast
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -25,10 +27,10 @@ class GameEvent:
         seq (int):
         client_event_id (str):
         occurred_at (str):
-        input_ (Union['GameEventInputType0', None, Unset]):
-        output (Union['GameEventOutputType0', None, Unset]):
-        cost (Union['GameEventCostType0', None, Unset]):
-        artifact_id (Union[None, Unset, str]):
+        input_ (GameEventInputType0 | None | Unset):
+        output (GameEventOutputType0 | None | Unset):
+        cost (GameEventCostType0 | None | Unset):
+        artifact_id (None | str | Unset):
     """
 
     id: str
@@ -37,10 +39,10 @@ class GameEvent:
     seq: int
     client_event_id: str
     occurred_at: str
-    input_: Union["GameEventInputType0", None, Unset] = UNSET
-    output: Union["GameEventOutputType0", None, Unset] = UNSET
-    cost: Union["GameEventCostType0", None, Unset] = UNSET
-    artifact_id: None | Unset | str = UNSET
+    input_: GameEventInputType0 | None | Unset = UNSET
+    output: GameEventOutputType0 | None | Unset = UNSET
+    cost: GameEventCostType0 | None | Unset = UNSET
+    artifact_id: None | str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -60,7 +62,7 @@ class GameEvent:
 
         occurred_at = self.occurred_at
 
-        input_: None | Unset | dict[str, Any]
+        input_: dict[str, Any] | None | Unset
         if isinstance(self.input_, Unset):
             input_ = UNSET
         elif isinstance(self.input_, GameEventInputType0):
@@ -68,7 +70,7 @@ class GameEvent:
         else:
             input_ = self.input_
 
-        output: None | Unset | dict[str, Any]
+        output: dict[str, Any] | None | Unset
         if isinstance(self.output, Unset):
             output = UNSET
         elif isinstance(self.output, GameEventOutputType0):
@@ -76,7 +78,7 @@ class GameEvent:
         else:
             output = self.output
 
-        cost: None | Unset | dict[str, Any]
+        cost: dict[str, Any] | None | Unset
         if isinstance(self.cost, Unset):
             cost = UNSET
         elif isinstance(self.cost, GameEventCostType0):
@@ -84,7 +86,7 @@ class GameEvent:
         else:
             cost = self.cost
 
-        artifact_id: None | Unset | str
+        artifact_id: None | str | Unset
         if isinstance(self.artifact_id, Unset):
             artifact_id = UNSET
         else:
@@ -132,7 +134,7 @@ class GameEvent:
 
         occurred_at = d.pop("occurredAt")
 
-        def _parse_input_(data: object) -> Union["GameEventInputType0", None, Unset]:
+        def _parse_input_(data: object) -> GameEventInputType0 | None | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
@@ -143,13 +145,13 @@ class GameEvent:
                 input_type_0 = GameEventInputType0.from_dict(data)
 
                 return input_type_0
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
-            return cast(Union["GameEventInputType0", None, Unset], data)
+            return cast(GameEventInputType0 | None | Unset, data)
 
         input_ = _parse_input_(d.pop("input", UNSET))
 
-        def _parse_output(data: object) -> Union["GameEventOutputType0", None, Unset]:
+        def _parse_output(data: object) -> GameEventOutputType0 | None | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
@@ -160,13 +162,13 @@ class GameEvent:
                 output_type_0 = GameEventOutputType0.from_dict(data)
 
                 return output_type_0
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
-            return cast(Union["GameEventOutputType0", None, Unset], data)
+            return cast(GameEventOutputType0 | None | Unset, data)
 
         output = _parse_output(d.pop("output", UNSET))
 
-        def _parse_cost(data: object) -> Union["GameEventCostType0", None, Unset]:
+        def _parse_cost(data: object) -> GameEventCostType0 | None | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
@@ -177,18 +179,18 @@ class GameEvent:
                 cost_type_0 = GameEventCostType0.from_dict(data)
 
                 return cost_type_0
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
-            return cast(Union["GameEventCostType0", None, Unset], data)
+            return cast(GameEventCostType0 | None | Unset, data)
 
         cost = _parse_cost(d.pop("cost", UNSET))
 
-        def _parse_artifact_id(data: object) -> None | Unset | str:
+        def _parse_artifact_id(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         artifact_id = _parse_artifact_id(d.pop("artifactId", UNSET))
 

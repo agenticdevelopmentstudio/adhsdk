@@ -8,12 +8,12 @@ from ...client import AuthenticatedClient, Client
 from ...models.error import Error
 from ...models.post_oauth_clients_body import PostOauthClientsBody
 from ...models.post_oauth_clients_response_201 import PostOauthClientsResponse201
-from ...types import Response
+from ...types import UNSET, Response, Unset
 
 
 def _get_kwargs(
     *,
-    body: PostOauthClientsBody,
+    body: PostOauthClientsBody | Unset = UNSET,
 ) -> dict[str, Any]:
     headers: dict[str, Any] = {}
 
@@ -22,7 +22,8 @@ def _get_kwargs(
         "url": "/oauth/clients",
     }
 
-    _kwargs["json"] = body.to_dict()
+    if not isinstance(body, Unset):
+        _kwargs["json"] = body.to_dict()
 
     headers["Content-Type"] = "application/json"
 
@@ -68,19 +69,19 @@ def _build_response(
 def sync_detailed(
     *,
     client: AuthenticatedClient,
-    body: PostOauthClientsBody,
+    body: PostOauthClientsBody | Unset = UNSET,
 ) -> Response[Error | PostOauthClientsResponse201]:
     """Create an OAuth client + issue its app token (admin)
 
     Args:
-        body (PostOauthClientsBody):
+        body (PostOauthClientsBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, PostOauthClientsResponse201]]
+        Response[Error | PostOauthClientsResponse201]
     """
 
     kwargs = _get_kwargs(
@@ -97,19 +98,19 @@ def sync_detailed(
 def sync(
     *,
     client: AuthenticatedClient,
-    body: PostOauthClientsBody,
+    body: PostOauthClientsBody | Unset = UNSET,
 ) -> Error | PostOauthClientsResponse201 | None:
     """Create an OAuth client + issue its app token (admin)
 
     Args:
-        body (PostOauthClientsBody):
+        body (PostOauthClientsBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, PostOauthClientsResponse201]
+        Error | PostOauthClientsResponse201
     """
 
     return sync_detailed(
@@ -121,19 +122,19 @@ def sync(
 async def asyncio_detailed(
     *,
     client: AuthenticatedClient,
-    body: PostOauthClientsBody,
+    body: PostOauthClientsBody | Unset = UNSET,
 ) -> Response[Error | PostOauthClientsResponse201]:
     """Create an OAuth client + issue its app token (admin)
 
     Args:
-        body (PostOauthClientsBody):
+        body (PostOauthClientsBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, PostOauthClientsResponse201]]
+        Response[Error | PostOauthClientsResponse201]
     """
 
     kwargs = _get_kwargs(
@@ -148,19 +149,19 @@ async def asyncio_detailed(
 async def asyncio(
     *,
     client: AuthenticatedClient,
-    body: PostOauthClientsBody,
+    body: PostOauthClientsBody | Unset = UNSET,
 ) -> Error | PostOauthClientsResponse201 | None:
     """Create an OAuth client + issue its app token (admin)
 
     Args:
-        body (PostOauthClientsBody):
+        body (PostOauthClientsBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, PostOauthClientsResponse201]
+        Error | PostOauthClientsResponse201
     """
 
     return (

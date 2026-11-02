@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -16,8 +18,8 @@ class VisitorConversation:
         id (str):
         title (str):
         model (str): The persona's configured model, copied at creation
-        persona_slug (Union[None, str]):
-        persona_id (Union[None, str]):
+        persona_slug (None | str):
+        persona_id (None | str):
         state (VisitorConversationState):
         created_at (str):
         updated_at (str):

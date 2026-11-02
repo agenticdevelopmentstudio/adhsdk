@@ -12,11 +12,11 @@ from ...types import UNSET, Response, Unset
 
 def _get_kwargs(
     *,
-    game_id: Unset | str = UNSET,
-    slug: Unset | str = UNSET,
-    ecosystem: Unset | str = UNSET,
-    page: Unset | str = UNSET,
-    page_size: Unset | str = UNSET,
+    game_id: str | Unset = UNSET,
+    slug: str | Unset = UNSET,
+    ecosystem: str | Unset = UNSET,
+    page: str | Unset = UNSET,
+    page_size: str | Unset = UNSET,
 ) -> dict[str, Any]:
     params: dict[str, Any] = {}
 
@@ -84,11 +84,11 @@ def _build_response(
 def sync_detailed(
     *,
     client: AuthenticatedClient | Client,
-    game_id: Unset | str = UNSET,
-    slug: Unset | str = UNSET,
-    ecosystem: Unset | str = UNSET,
-    page: Unset | str = UNSET,
-    page_size: Unset | str = UNSET,
+    game_id: str | Unset = UNSET,
+    slug: str | Unset = UNSET,
+    ecosystem: str | Unset = UNSET,
+    page: str | Unset = UNSET,
+    page_size: str | Unset = UNSET,
 ) -> Response[Error | GetGameFeedResponse200]:
     """One game’s public artifact feed (anonymous, read replica)
 
@@ -101,18 +101,18 @@ def sync_detailed(
     retired game is 404, and so is a product that is not in `game` mode.
 
     Args:
-        game_id (Union[Unset, str]):
-        slug (Union[Unset, str]):
-        ecosystem (Union[Unset, str]):
-        page (Union[Unset, str]):
-        page_size (Union[Unset, str]):
+        game_id (str | Unset):
+        slug (str | Unset):
+        ecosystem (str | Unset):
+        page (str | Unset):
+        page_size (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, GetGameFeedResponse200]]
+        Response[Error | GetGameFeedResponse200]
     """
 
     kwargs = _get_kwargs(
@@ -133,11 +133,11 @@ def sync_detailed(
 def sync(
     *,
     client: AuthenticatedClient | Client,
-    game_id: Unset | str = UNSET,
-    slug: Unset | str = UNSET,
-    ecosystem: Unset | str = UNSET,
-    page: Unset | str = UNSET,
-    page_size: Unset | str = UNSET,
+    game_id: str | Unset = UNSET,
+    slug: str | Unset = UNSET,
+    ecosystem: str | Unset = UNSET,
+    page: str | Unset = UNSET,
+    page_size: str | Unset = UNSET,
 ) -> Error | GetGameFeedResponse200 | None:
     """One game’s public artifact feed (anonymous, read replica)
 
@@ -150,18 +150,18 @@ def sync(
     retired game is 404, and so is a product that is not in `game` mode.
 
     Args:
-        game_id (Union[Unset, str]):
-        slug (Union[Unset, str]):
-        ecosystem (Union[Unset, str]):
-        page (Union[Unset, str]):
-        page_size (Union[Unset, str]):
+        game_id (str | Unset):
+        slug (str | Unset):
+        ecosystem (str | Unset):
+        page (str | Unset):
+        page_size (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, GetGameFeedResponse200]
+        Error | GetGameFeedResponse200
     """
 
     return sync_detailed(
@@ -177,11 +177,11 @@ def sync(
 async def asyncio_detailed(
     *,
     client: AuthenticatedClient | Client,
-    game_id: Unset | str = UNSET,
-    slug: Unset | str = UNSET,
-    ecosystem: Unset | str = UNSET,
-    page: Unset | str = UNSET,
-    page_size: Unset | str = UNSET,
+    game_id: str | Unset = UNSET,
+    slug: str | Unset = UNSET,
+    ecosystem: str | Unset = UNSET,
+    page: str | Unset = UNSET,
+    page_size: str | Unset = UNSET,
 ) -> Response[Error | GetGameFeedResponse200]:
     """One game’s public artifact feed (anonymous, read replica)
 
@@ -194,18 +194,18 @@ async def asyncio_detailed(
     retired game is 404, and so is a product that is not in `game` mode.
 
     Args:
-        game_id (Union[Unset, str]):
-        slug (Union[Unset, str]):
-        ecosystem (Union[Unset, str]):
-        page (Union[Unset, str]):
-        page_size (Union[Unset, str]):
+        game_id (str | Unset):
+        slug (str | Unset):
+        ecosystem (str | Unset):
+        page (str | Unset):
+        page_size (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, GetGameFeedResponse200]]
+        Response[Error | GetGameFeedResponse200]
     """
 
     kwargs = _get_kwargs(
@@ -224,11 +224,11 @@ async def asyncio_detailed(
 async def asyncio(
     *,
     client: AuthenticatedClient | Client,
-    game_id: Unset | str = UNSET,
-    slug: Unset | str = UNSET,
-    ecosystem: Unset | str = UNSET,
-    page: Unset | str = UNSET,
-    page_size: Unset | str = UNSET,
+    game_id: str | Unset = UNSET,
+    slug: str | Unset = UNSET,
+    ecosystem: str | Unset = UNSET,
+    page: str | Unset = UNSET,
+    page_size: str | Unset = UNSET,
 ) -> Error | GetGameFeedResponse200 | None:
     """One game’s public artifact feed (anonymous, read replica)
 
@@ -241,18 +241,18 @@ async def asyncio(
     retired game is 404, and so is a product that is not in `game` mode.
 
     Args:
-        game_id (Union[Unset, str]):
-        slug (Union[Unset, str]):
-        ecosystem (Union[Unset, str]):
-        page (Union[Unset, str]):
-        page_size (Union[Unset, str]):
+        game_id (str | Unset):
+        slug (str | Unset):
+        ecosystem (str | Unset):
+        page (str | Unset):
+        page_size (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, GetGameFeedResponse200]
+        Error | GetGameFeedResponse200
     """
 
     return (

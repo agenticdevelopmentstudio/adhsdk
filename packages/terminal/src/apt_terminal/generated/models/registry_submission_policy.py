@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class RegistrySubmissionPolicy(str, Enum):
+class RegistrySubmissionPolicy(StrEnum):
     OPEN = "open"
     REVIEWED = "reviewed"
 

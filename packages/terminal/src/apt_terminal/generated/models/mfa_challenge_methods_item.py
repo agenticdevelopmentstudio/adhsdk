@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class MfaChallengeMethodsItem(str, Enum):
+class MfaChallengeMethodsItem(StrEnum):
     RECOVERY = "recovery"
     SMS = "sms"
     TOTP = "totp"

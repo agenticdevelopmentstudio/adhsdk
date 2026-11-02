@@ -8,12 +8,12 @@ from ...client import AuthenticatedClient, Client
 from ...models.error import Error
 from ...models.post_system_audit_events_body import PostSystemAuditEventsBody
 from ...models.post_system_audit_events_response_201 import PostSystemAuditEventsResponse201
-from ...types import Response
+from ...types import UNSET, Response, Unset
 
 
 def _get_kwargs(
     *,
-    body: PostSystemAuditEventsBody,
+    body: PostSystemAuditEventsBody | Unset = UNSET,
 ) -> dict[str, Any]:
     headers: dict[str, Any] = {}
 
@@ -22,7 +22,8 @@ def _get_kwargs(
         "url": "/system/audit-events",
     }
 
-    _kwargs["json"] = body.to_dict()
+    if not isinstance(body, Unset):
+        _kwargs["json"] = body.to_dict()
 
     headers["Content-Type"] = "application/json"
 
@@ -68,19 +69,19 @@ def _build_response(
 def sync_detailed(
     *,
     client: AuthenticatedClient,
-    body: PostSystemAuditEventsBody,
+    body: PostSystemAuditEventsBody | Unset = UNSET,
 ) -> Response[Error | PostSystemAuditEventsResponse201]:
     """Create audit_events
 
     Args:
-        body (PostSystemAuditEventsBody):
+        body (PostSystemAuditEventsBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, PostSystemAuditEventsResponse201]]
+        Response[Error | PostSystemAuditEventsResponse201]
     """
 
     kwargs = _get_kwargs(
@@ -97,19 +98,19 @@ def sync_detailed(
 def sync(
     *,
     client: AuthenticatedClient,
-    body: PostSystemAuditEventsBody,
+    body: PostSystemAuditEventsBody | Unset = UNSET,
 ) -> Error | PostSystemAuditEventsResponse201 | None:
     """Create audit_events
 
     Args:
-        body (PostSystemAuditEventsBody):
+        body (PostSystemAuditEventsBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, PostSystemAuditEventsResponse201]
+        Error | PostSystemAuditEventsResponse201
     """
 
     return sync_detailed(
@@ -121,19 +122,19 @@ def sync(
 async def asyncio_detailed(
     *,
     client: AuthenticatedClient,
-    body: PostSystemAuditEventsBody,
+    body: PostSystemAuditEventsBody | Unset = UNSET,
 ) -> Response[Error | PostSystemAuditEventsResponse201]:
     """Create audit_events
 
     Args:
-        body (PostSystemAuditEventsBody):
+        body (PostSystemAuditEventsBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, PostSystemAuditEventsResponse201]]
+        Response[Error | PostSystemAuditEventsResponse201]
     """
 
     kwargs = _get_kwargs(
@@ -148,19 +149,19 @@ async def asyncio_detailed(
 async def asyncio(
     *,
     client: AuthenticatedClient,
-    body: PostSystemAuditEventsBody,
+    body: PostSystemAuditEventsBody | Unset = UNSET,
 ) -> Error | PostSystemAuditEventsResponse201 | None:
     """Create audit_events
 
     Args:
-        body (PostSystemAuditEventsBody):
+        body (PostSystemAuditEventsBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, PostSystemAuditEventsResponse201]
+        Error | PostSystemAuditEventsResponse201
     """
 
     return (

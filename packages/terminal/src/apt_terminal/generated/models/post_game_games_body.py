@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, TypeVar, Union, cast
+from typing import TYPE_CHECKING, Any, TypeVar, cast
 
 from attrs import define as _attrs_define
 
@@ -21,29 +23,29 @@ class PostGameGamesBody:
         slug (str):
         name (str):
         engine (str):
-        ecosystem_id (Union[Unset, str]):
-        description (Union[None, Unset, str]):
-        engine_config (Union['PostGameGamesBodyEngineConfigType1', None, Unset, bool, float, list[Any], str]):
-        character_names (Union[Unset, str]):
-        status (Union[Unset, str]):
-        event_log (Union[Unset, str]):
-        event_retention_days (Union[Unset, int]):
-        sync_txid (Union[Unset, int]):
+        ecosystem_id (str | Unset):
+        description (None | str | Unset):
+        engine_config (bool | float | list[Any] | None | PostGameGamesBodyEngineConfigType1 | str | Unset):
+        character_names (str | Unset):
+        status (str | Unset):
+        event_log (str | Unset):
+        event_retention_days (int | Unset):
+        sync_txid (int | Unset):
     """
 
     slug: str
     name: str
     engine: str
-    ecosystem_id: Unset | str = UNSET
-    description: None | Unset | str = UNSET
-    engine_config: Union[
-        "PostGameGamesBodyEngineConfigType1", None, Unset, bool, float, list[Any], str
-    ] = UNSET
-    character_names: Unset | str = UNSET
-    status: Unset | str = UNSET
-    event_log: Unset | str = UNSET
-    event_retention_days: Unset | int = UNSET
-    sync_txid: Unset | int = UNSET
+    ecosystem_id: str | Unset = UNSET
+    description: None | str | Unset = UNSET
+    engine_config: (
+        bool | float | list[Any] | None | PostGameGamesBodyEngineConfigType1 | str | Unset
+    ) = UNSET
+    character_names: str | Unset = UNSET
+    status: str | Unset = UNSET
+    event_log: str | Unset = UNSET
+    event_retention_days: int | Unset = UNSET
+    sync_txid: int | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
         from ..models.post_game_games_body_engine_config_type_1 import (
@@ -58,13 +60,13 @@ class PostGameGamesBody:
 
         ecosystem_id = self.ecosystem_id
 
-        description: None | Unset | str
+        description: None | str | Unset
         if isinstance(self.description, Unset):
             description = UNSET
         else:
             description = self.description
 
-        engine_config: None | Unset | bool | dict[str, Any] | float | list[Any] | str
+        engine_config: bool | dict[str, Any] | float | list[Any] | None | str | Unset
         if isinstance(self.engine_config, Unset):
             engine_config = UNSET
         elif isinstance(self.engine_config, PostGameGamesBodyEngineConfigType1):
@@ -128,18 +130,18 @@ class PostGameGamesBody:
 
         ecosystem_id = d.pop("ecosystemId", UNSET)
 
-        def _parse_description(data: object) -> None | Unset | str:
+        def _parse_description(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         description = _parse_description(d.pop("description", UNSET))
 
         def _parse_engine_config(
             data: object,
-        ) -> Union["PostGameGamesBodyEngineConfigType1", None, Unset, bool, float, list[Any], str]:
+        ) -> bool | float | list[Any] | None | PostGameGamesBodyEngineConfigType1 | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
@@ -150,7 +152,7 @@ class PostGameGamesBody:
                 engine_config_type_1 = PostGameGamesBodyEngineConfigType1.from_dict(data)
 
                 return engine_config_type_1
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
             try:
                 if not isinstance(data, list):
@@ -158,12 +160,10 @@ class PostGameGamesBody:
                 engine_config_type_2 = cast(list[Any], data)
 
                 return engine_config_type_2
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
             return cast(
-                Union[
-                    "PostGameGamesBodyEngineConfigType1", None, Unset, bool, float, list[Any], str
-                ],
+                bool | float | list[Any] | None | PostGameGamesBodyEngineConfigType1 | str | Unset,
                 data,
             )
 

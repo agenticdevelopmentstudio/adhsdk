@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class VisitorStatusEventPhase(str, Enum):
+class VisitorStatusEventPhase(StrEnum):
     RETRYING = "retrying"
 
     def __str__(self) -> str:

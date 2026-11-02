@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -22,12 +24,11 @@ class CommunityCategory:
         is_archived (bool):
         created_at (str):
         updated_at (str):
-        description (Union[None, Unset, str]):
-        color (Union[None, Unset, str]):
-        discussion_count (Union[Unset, int]): Live discussions filed under this category (public-only for anonymous
-            callers).
-        last_activity_at (Union[None, Unset, str]): Most recent activity across the category’s live discussions (null
-            when empty).
+        description (None | str | Unset):
+        color (None | str | Unset):
+        discussion_count (int | Unset): Live discussions filed under this category (public-only for anonymous callers).
+        last_activity_at (None | str | Unset): Most recent activity across the category’s live discussions (null when
+            empty).
     """
 
     id: str
@@ -39,10 +40,10 @@ class CommunityCategory:
     is_archived: bool
     created_at: str
     updated_at: str
-    description: None | Unset | str = UNSET
-    color: None | Unset | str = UNSET
-    discussion_count: Unset | int = UNSET
-    last_activity_at: None | Unset | str = UNSET
+    description: None | str | Unset = UNSET
+    color: None | str | Unset = UNSET
+    discussion_count: int | Unset = UNSET
+    last_activity_at: None | str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -64,13 +65,13 @@ class CommunityCategory:
 
         updated_at = self.updated_at
 
-        description: None | Unset | str
+        description: None | str | Unset
         if isinstance(self.description, Unset):
             description = UNSET
         else:
             description = self.description
 
-        color: None | Unset | str
+        color: None | str | Unset
         if isinstance(self.color, Unset):
             color = UNSET
         else:
@@ -78,7 +79,7 @@ class CommunityCategory:
 
         discussion_count = self.discussion_count
 
-        last_activity_at: None | Unset | str
+        last_activity_at: None | str | Unset
         if isinstance(self.last_activity_at, Unset):
             last_activity_at = UNSET
         else:
@@ -131,32 +132,32 @@ class CommunityCategory:
 
         updated_at = d.pop("updatedAt")
 
-        def _parse_description(data: object) -> None | Unset | str:
+        def _parse_description(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         description = _parse_description(d.pop("description", UNSET))
 
-        def _parse_color(data: object) -> None | Unset | str:
+        def _parse_color(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         color = _parse_color(d.pop("color", UNSET))
 
         discussion_count = d.pop("discussionCount", UNSET)
 
-        def _parse_last_activity_at(data: object) -> None | Unset | str:
+        def _parse_last_activity_at(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         last_activity_at = _parse_last_activity_at(d.pop("lastActivityAt", UNSET))
 

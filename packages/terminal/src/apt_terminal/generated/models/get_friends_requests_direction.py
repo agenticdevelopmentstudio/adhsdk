@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class GetFriendsRequestsDirection(str, Enum):
+class GetFriendsRequestsDirection(StrEnum):
     RECEIVED = "received"
     SENT = "sent"
 

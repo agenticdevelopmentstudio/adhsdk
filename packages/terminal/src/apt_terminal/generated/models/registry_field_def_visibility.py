@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class RegistryFieldDefVisibility(str, Enum):
+class RegistryFieldDefVisibility(StrEnum):
     AUTHENTICATED = "authenticated"
     PRIVATE = "private"
     PUBLIC = "public"

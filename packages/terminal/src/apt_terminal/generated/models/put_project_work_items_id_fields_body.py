@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import TYPE_CHECKING, Any, TypeVar
 
@@ -17,12 +19,12 @@ T = TypeVar("T", bound="PutProjectWorkItemsIdFieldsBody")
 class PutProjectWorkItemsIdFieldsBody:
     """
     Attributes:
-        values (list['PutProjectWorkItemsIdFieldsBodyValuesItem']): a batch of set/clear operations, applied in payload
+        values (list[PutProjectWorkItemsIdFieldsBodyValuesItem]): a batch of set/clear operations, applied in payload
             order; ALL entries are validated before any write, so a bad entry fails the whole batch. An empty array is a
             legal no-op.
     """
 
-    values: list["PutProjectWorkItemsIdFieldsBodyValuesItem"]
+    values: list[PutProjectWorkItemsIdFieldsBodyValuesItem]
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:

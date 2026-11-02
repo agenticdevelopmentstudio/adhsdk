@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import TYPE_CHECKING, Any, TypeVar
 
@@ -21,7 +23,7 @@ class PostAuthLoginWebauthnOptionsResponse200:
         token (str):
     """
 
-    options: "PostAuthLoginWebauthnOptionsResponse200Options"
+    options: PostAuthLoginWebauthnOptionsResponse200Options
     token: str
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 

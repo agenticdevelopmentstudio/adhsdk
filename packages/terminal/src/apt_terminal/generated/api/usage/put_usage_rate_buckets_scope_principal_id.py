@@ -1,5 +1,6 @@
 from http import HTTPStatus
 from typing import Any
+from urllib.parse import quote
 
 import httpx
 
@@ -12,23 +13,27 @@ from ...models.put_usage_rate_buckets_scope_principal_id_body import (
 from ...models.put_usage_rate_buckets_scope_principal_id_response_200 import (
     PutUsageRateBucketsScopePrincipalIdResponse200,
 )
-from ...types import Response
+from ...types import UNSET, Response, Unset
 
 
 def _get_kwargs(
     scope: str,
     principal_id: str,
     *,
-    body: PutUsageRateBucketsScopePrincipalIdBody,
+    body: PutUsageRateBucketsScopePrincipalIdBody | Unset = UNSET,
 ) -> dict[str, Any]:
     headers: dict[str, Any] = {}
 
     _kwargs: dict[str, Any] = {
         "method": "put",
-        "url": f"/usage/rate-buckets/{scope}/{principal_id}",
+        "url": "/usage/rate-buckets/{scope}/{principal_id}".format(
+            scope=quote(str(scope), safe=""),
+            principal_id=quote(str(principal_id), safe=""),
+        ),
     }
 
-    _kwargs["json"] = body.to_dict()
+    if not isinstance(body, Unset):
+        _kwargs["json"] = body.to_dict()
 
     headers["Content-Type"] = "application/json"
 
@@ -81,21 +86,21 @@ def sync_detailed(
     principal_id: str,
     *,
     client: AuthenticatedClient,
-    body: PutUsageRateBucketsScopePrincipalIdBody,
+    body: PutUsageRateBucketsScopePrincipalIdBody | Unset = UNSET,
 ) -> Response[Error | PutUsageRateBucketsScopePrincipalIdResponse200]:
     """Update rate_buckets
 
     Args:
         scope (str):
         principal_id (str):
-        body (PutUsageRateBucketsScopePrincipalIdBody):
+        body (PutUsageRateBucketsScopePrincipalIdBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, PutUsageRateBucketsScopePrincipalIdResponse200]]
+        Response[Error | PutUsageRateBucketsScopePrincipalIdResponse200]
     """
 
     kwargs = _get_kwargs(
@@ -116,21 +121,21 @@ def sync(
     principal_id: str,
     *,
     client: AuthenticatedClient,
-    body: PutUsageRateBucketsScopePrincipalIdBody,
+    body: PutUsageRateBucketsScopePrincipalIdBody | Unset = UNSET,
 ) -> Error | PutUsageRateBucketsScopePrincipalIdResponse200 | None:
     """Update rate_buckets
 
     Args:
         scope (str):
         principal_id (str):
-        body (PutUsageRateBucketsScopePrincipalIdBody):
+        body (PutUsageRateBucketsScopePrincipalIdBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, PutUsageRateBucketsScopePrincipalIdResponse200]
+        Error | PutUsageRateBucketsScopePrincipalIdResponse200
     """
 
     return sync_detailed(
@@ -146,21 +151,21 @@ async def asyncio_detailed(
     principal_id: str,
     *,
     client: AuthenticatedClient,
-    body: PutUsageRateBucketsScopePrincipalIdBody,
+    body: PutUsageRateBucketsScopePrincipalIdBody | Unset = UNSET,
 ) -> Response[Error | PutUsageRateBucketsScopePrincipalIdResponse200]:
     """Update rate_buckets
 
     Args:
         scope (str):
         principal_id (str):
-        body (PutUsageRateBucketsScopePrincipalIdBody):
+        body (PutUsageRateBucketsScopePrincipalIdBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, PutUsageRateBucketsScopePrincipalIdResponse200]]
+        Response[Error | PutUsageRateBucketsScopePrincipalIdResponse200]
     """
 
     kwargs = _get_kwargs(
@@ -179,21 +184,21 @@ async def asyncio(
     principal_id: str,
     *,
     client: AuthenticatedClient,
-    body: PutUsageRateBucketsScopePrincipalIdBody,
+    body: PutUsageRateBucketsScopePrincipalIdBody | Unset = UNSET,
 ) -> Error | PutUsageRateBucketsScopePrincipalIdResponse200 | None:
     """Update rate_buckets
 
     Args:
         scope (str):
         principal_id (str):
-        body (PutUsageRateBucketsScopePrincipalIdBody):
+        body (PutUsageRateBucketsScopePrincipalIdBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, PutUsageRateBucketsScopePrincipalIdResponse200]
+        Error | PutUsageRateBucketsScopePrincipalIdResponse200
     """
 
     return (

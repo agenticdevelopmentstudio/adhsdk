@@ -12,7 +12,7 @@ from ...types import UNSET, Response, Unset
 
 def _get_kwargs(
     *,
-    limit: Unset | str = UNSET,
+    limit: str | Unset = UNSET,
 ) -> dict[str, Any]:
     params: dict[str, Any] = {}
 
@@ -31,7 +31,7 @@ def _get_kwargs(
 
 def _parse_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> Error | list["BillingEvent"] | None:
+) -> Error | list[BillingEvent] | None:
     if response.status_code == 200:
         response_200 = []
         _response_200 = response.json()
@@ -65,7 +65,7 @@ def _parse_response(
 
 def _build_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> Response[Error | list["BillingEvent"]]:
+) -> Response[Error | list[BillingEvent]]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -77,8 +77,8 @@ def _build_response(
 def sync_detailed(
     *,
     client: AuthenticatedClient,
-    limit: Unset | str = UNSET,
-) -> Response[Error | list["BillingEvent"]]:
+    limit: str | Unset = UNSET,
+) -> Response[Error | list[BillingEvent]]:
     """The webhook ledger, newest first
 
      The receipt log the redrive below operates on: did the event arrive, and did it process. A row with
@@ -90,14 +90,14 @@ def sync_detailed(
     answer the question.
 
     Args:
-        limit (Union[Unset, str]):
+        limit (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, list['BillingEvent']]]
+        Response[Error | list[BillingEvent]]
     """
 
     kwargs = _get_kwargs(
@@ -114,8 +114,8 @@ def sync_detailed(
 def sync(
     *,
     client: AuthenticatedClient,
-    limit: Unset | str = UNSET,
-) -> Error | list["BillingEvent"] | None:
+    limit: str | Unset = UNSET,
+) -> Error | list[BillingEvent] | None:
     """The webhook ledger, newest first
 
      The receipt log the redrive below operates on: did the event arrive, and did it process. A row with
@@ -127,14 +127,14 @@ def sync(
     answer the question.
 
     Args:
-        limit (Union[Unset, str]):
+        limit (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, list['BillingEvent']]
+        Error | list[BillingEvent]
     """
 
     return sync_detailed(
@@ -146,8 +146,8 @@ def sync(
 async def asyncio_detailed(
     *,
     client: AuthenticatedClient,
-    limit: Unset | str = UNSET,
-) -> Response[Error | list["BillingEvent"]]:
+    limit: str | Unset = UNSET,
+) -> Response[Error | list[BillingEvent]]:
     """The webhook ledger, newest first
 
      The receipt log the redrive below operates on: did the event arrive, and did it process. A row with
@@ -159,14 +159,14 @@ async def asyncio_detailed(
     answer the question.
 
     Args:
-        limit (Union[Unset, str]):
+        limit (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, list['BillingEvent']]]
+        Response[Error | list[BillingEvent]]
     """
 
     kwargs = _get_kwargs(
@@ -181,8 +181,8 @@ async def asyncio_detailed(
 async def asyncio(
     *,
     client: AuthenticatedClient,
-    limit: Unset | str = UNSET,
-) -> Error | list["BillingEvent"] | None:
+    limit: str | Unset = UNSET,
+) -> Error | list[BillingEvent] | None:
     """The webhook ledger, newest first
 
      The receipt log the redrive below operates on: did the event arrive, and did it process. A row with
@@ -194,14 +194,14 @@ async def asyncio(
     answer the question.
 
     Args:
-        limit (Union[Unset, str]):
+        limit (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, list['BillingEvent']]
+        Error | list[BillingEvent]
     """
 
     return (

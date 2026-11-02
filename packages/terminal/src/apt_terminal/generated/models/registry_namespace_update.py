@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -12,8 +14,8 @@ class RegistryNamespaceUpdate:
     """
     Attributes:
         id (str):
-        slug (Union[None, str]):
-        name (Union[None, str]):
+        slug (None | str):
+        name (None | str):
     """
 
     id: str

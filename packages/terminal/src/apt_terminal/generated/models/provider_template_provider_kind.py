@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class ProviderTemplateProviderKind(str, Enum):
+class ProviderTemplateProviderKind(StrEnum):
     ANTHROPIC = "anthropic"
     EXTERNAL = "external"
     GEMINI = "gemini"

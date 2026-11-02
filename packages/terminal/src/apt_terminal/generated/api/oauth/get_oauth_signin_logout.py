@@ -11,8 +11,8 @@ from ...types import UNSET, Response, Unset
 
 def _get_kwargs(
     *,
-    client_id: Unset | str = UNSET,
-    return_: Unset | str = UNSET,
+    client_id: str | Unset = UNSET,
+    return_: str | Unset = UNSET,
 ) -> dict[str, Any]:
     params: dict[str, Any] = {}
 
@@ -67,21 +67,21 @@ def _build_response(
 def sync_detailed(
     *,
     client: AuthenticatedClient | Client,
-    client_id: Unset | str = UNSET,
-    return_: Unset | str = UNSET,
+    client_id: str | Unset = UNSET,
+    return_: str | Unset = UNSET,
 ) -> Response[Any | Error]:
     """Central single-logout (browser) — revoke + clear the SSO cookie, then 302 back
 
     Args:
-        client_id (Union[Unset, str]):
-        return_ (Union[Unset, str]):
+        client_id (str | Unset):
+        return_ (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Any, Error]]
+        Response[Any | Error]
     """
 
     kwargs = _get_kwargs(
@@ -99,21 +99,21 @@ def sync_detailed(
 def sync(
     *,
     client: AuthenticatedClient | Client,
-    client_id: Unset | str = UNSET,
-    return_: Unset | str = UNSET,
+    client_id: str | Unset = UNSET,
+    return_: str | Unset = UNSET,
 ) -> Any | Error | None:
     """Central single-logout (browser) — revoke + clear the SSO cookie, then 302 back
 
     Args:
-        client_id (Union[Unset, str]):
-        return_ (Union[Unset, str]):
+        client_id (str | Unset):
+        return_ (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Any, Error]
+        Any | Error
     """
 
     return sync_detailed(
@@ -126,21 +126,21 @@ def sync(
 async def asyncio_detailed(
     *,
     client: AuthenticatedClient | Client,
-    client_id: Unset | str = UNSET,
-    return_: Unset | str = UNSET,
+    client_id: str | Unset = UNSET,
+    return_: str | Unset = UNSET,
 ) -> Response[Any | Error]:
     """Central single-logout (browser) — revoke + clear the SSO cookie, then 302 back
 
     Args:
-        client_id (Union[Unset, str]):
-        return_ (Union[Unset, str]):
+        client_id (str | Unset):
+        return_ (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Any, Error]]
+        Response[Any | Error]
     """
 
     kwargs = _get_kwargs(
@@ -156,21 +156,21 @@ async def asyncio_detailed(
 async def asyncio(
     *,
     client: AuthenticatedClient | Client,
-    client_id: Unset | str = UNSET,
-    return_: Unset | str = UNSET,
+    client_id: str | Unset = UNSET,
+    return_: str | Unset = UNSET,
 ) -> Any | Error | None:
     """Central single-logout (browser) — revoke + clear the SSO cookie, then 302 back
 
     Args:
-        client_id (Union[Unset, str]):
-        return_ (Union[Unset, str]):
+        client_id (str | Unset):
+        return_ (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Any, Error]
+        Any | Error
     """
 
     return (

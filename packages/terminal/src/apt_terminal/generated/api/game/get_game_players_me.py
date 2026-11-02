@@ -12,8 +12,8 @@ from ...types import UNSET, Response, Unset
 
 def _get_kwargs(
     *,
-    game_id: Unset | str = UNSET,
-    slug: Unset | str = UNSET,
+    game_id: str | Unset = UNSET,
+    slug: str | Unset = UNSET,
 ) -> dict[str, Any]:
     params: dict[str, Any] = {}
 
@@ -80,8 +80,8 @@ def _build_response(
 def sync_detailed(
     *,
     client: AuthenticatedClient,
-    game_id: Unset | str = UNSET,
-    slug: Unset | str = UNSET,
+    game_id: str | Unset = UNSET,
+    slug: str | Unset = UNSET,
 ) -> Response[Error | GamePlayer]:
     """The caller’s own per-game profile
 
@@ -91,15 +91,15 @@ def sync_detailed(
     blank profile would make the PATCH below look like an update when it is the first write.
 
     Args:
-        game_id (Union[Unset, str]):
-        slug (Union[Unset, str]):
+        game_id (str | Unset):
+        slug (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, GamePlayer]]
+        Response[Error | GamePlayer]
     """
 
     kwargs = _get_kwargs(
@@ -117,8 +117,8 @@ def sync_detailed(
 def sync(
     *,
     client: AuthenticatedClient,
-    game_id: Unset | str = UNSET,
-    slug: Unset | str = UNSET,
+    game_id: str | Unset = UNSET,
+    slug: str | Unset = UNSET,
 ) -> Error | GamePlayer | None:
     """The caller’s own per-game profile
 
@@ -128,15 +128,15 @@ def sync(
     blank profile would make the PATCH below look like an update when it is the first write.
 
     Args:
-        game_id (Union[Unset, str]):
-        slug (Union[Unset, str]):
+        game_id (str | Unset):
+        slug (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, GamePlayer]
+        Error | GamePlayer
     """
 
     return sync_detailed(
@@ -149,8 +149,8 @@ def sync(
 async def asyncio_detailed(
     *,
     client: AuthenticatedClient,
-    game_id: Unset | str = UNSET,
-    slug: Unset | str = UNSET,
+    game_id: str | Unset = UNSET,
+    slug: str | Unset = UNSET,
 ) -> Response[Error | GamePlayer]:
     """The caller’s own per-game profile
 
@@ -160,15 +160,15 @@ async def asyncio_detailed(
     blank profile would make the PATCH below look like an update when it is the first write.
 
     Args:
-        game_id (Union[Unset, str]):
-        slug (Union[Unset, str]):
+        game_id (str | Unset):
+        slug (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, GamePlayer]]
+        Response[Error | GamePlayer]
     """
 
     kwargs = _get_kwargs(
@@ -184,8 +184,8 @@ async def asyncio_detailed(
 async def asyncio(
     *,
     client: AuthenticatedClient,
-    game_id: Unset | str = UNSET,
-    slug: Unset | str = UNSET,
+    game_id: str | Unset = UNSET,
+    slug: str | Unset = UNSET,
 ) -> Error | GamePlayer | None:
     """The caller’s own per-game profile
 
@@ -195,15 +195,15 @@ async def asyncio(
     blank profile would make the PATCH below look like an update when it is the first write.
 
     Args:
-        game_id (Union[Unset, str]):
-        slug (Union[Unset, str]):
+        game_id (str | Unset):
+        slug (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, GamePlayer]
+        Error | GamePlayer
     """
 
     return (

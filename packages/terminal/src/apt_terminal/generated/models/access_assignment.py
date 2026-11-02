@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -20,10 +22,10 @@ class AccessAssignment:
         scope_feature (str): '' = workspace-wide
         scope_item_id (str): '' = workspace-wide
         role_id (str):
-        role_slug (Union[Unset, str]):
-        role_name (Union[Unset, str]):
-        granted_by (Union[None, Unset, str]):
-        granted_at (Union[Unset, str]):
+        role_slug (str | Unset):
+        role_name (str | Unset):
+        granted_by (None | str | Unset):
+        granted_at (str | Unset):
     """
 
     id: str
@@ -32,10 +34,10 @@ class AccessAssignment:
     scope_feature: str
     scope_item_id: str
     role_id: str
-    role_slug: Unset | str = UNSET
-    role_name: Unset | str = UNSET
-    granted_by: None | Unset | str = UNSET
-    granted_at: Unset | str = UNSET
+    role_slug: str | Unset = UNSET
+    role_name: str | Unset = UNSET
+    granted_by: None | str | Unset = UNSET
+    granted_at: str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -55,7 +57,7 @@ class AccessAssignment:
 
         role_name = self.role_name
 
-        granted_by: None | Unset | str
+        granted_by: None | str | Unset
         if isinstance(self.granted_by, Unset):
             granted_by = UNSET
         else:
@@ -105,12 +107,12 @@ class AccessAssignment:
 
         role_name = d.pop("roleName", UNSET)
 
-        def _parse_granted_by(data: object) -> None | Unset | str:
+        def _parse_granted_by(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         granted_by = _parse_granted_by(d.pop("grantedBy", UNSET))
 

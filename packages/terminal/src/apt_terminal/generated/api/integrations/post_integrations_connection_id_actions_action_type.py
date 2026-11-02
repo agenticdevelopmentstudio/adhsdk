@@ -1,5 +1,6 @@
 from http import HTTPStatus
-from typing import Any, Union
+from typing import Any
+from urllib.parse import quote
 
 import httpx
 
@@ -23,18 +24,17 @@ def _get_kwargs(
     connection_id: str,
     action_type: str,
     *,
-    body: Union[
-        "IntegrationActionBroadcast",
-        "IntegrationActionBroadcastSend",
-        "IntegrationActionComment",
-        "IntegrationActionPost",
-        "IntegrationActionSend",
-        "IntegrationActionSms",
-        "IntegrationActionSubmit",
-        "IntegrationActionSubscribe",
-        "IntegrationActionUnsubscribe",
-    ],
-    idempotency_key: Unset | str = UNSET,
+    body: IntegrationActionBroadcast
+    | IntegrationActionBroadcastSend
+    | IntegrationActionComment
+    | IntegrationActionPost
+    | IntegrationActionSend
+    | IntegrationActionSms
+    | IntegrationActionSubmit
+    | IntegrationActionSubscribe
+    | IntegrationActionUnsubscribe
+    | Unset = UNSET,
+    idempotency_key: str | Unset = UNSET,
 ) -> dict[str, Any]:
     headers: dict[str, Any] = {}
     if not isinstance(idempotency_key, Unset):
@@ -42,10 +42,12 @@ def _get_kwargs(
 
     _kwargs: dict[str, Any] = {
         "method": "post",
-        "url": f"/integrations/{connection_id}/actions/{action_type}",
+        "url": "/integrations/{connection_id}/actions/{action_type}".format(
+            connection_id=quote(str(connection_id), safe=""),
+            action_type=quote(str(action_type), safe=""),
+        ),
     }
 
-    _kwargs["json"]: dict[str, Any]
     if (
         isinstance(body, IntegrationActionSend)
         or isinstance(body, IntegrationActionPost)
@@ -131,18 +133,17 @@ def sync_detailed(
     action_type: str,
     *,
     client: AuthenticatedClient,
-    body: Union[
-        "IntegrationActionBroadcast",
-        "IntegrationActionBroadcastSend",
-        "IntegrationActionComment",
-        "IntegrationActionPost",
-        "IntegrationActionSend",
-        "IntegrationActionSms",
-        "IntegrationActionSubmit",
-        "IntegrationActionSubscribe",
-        "IntegrationActionUnsubscribe",
-    ],
-    idempotency_key: Unset | str = UNSET,
+    body: IntegrationActionBroadcast
+    | IntegrationActionBroadcastSend
+    | IntegrationActionComment
+    | IntegrationActionPost
+    | IntegrationActionSend
+    | IntegrationActionSms
+    | IntegrationActionSubmit
+    | IntegrationActionSubscribe
+    | IntegrationActionUnsubscribe
+    | Unset = UNSET,
+    idempotency_key: str | Unset = UNSET,
 ) -> Response[IntegrationActionResult | ProblemDetails]:
     """Act as the user (outbound action)
 
@@ -155,18 +156,18 @@ def sync_detailed(
     Args:
         connection_id (str):
         action_type (str):
-        idempotency_key (Union[Unset, str]):
-        body (Union['IntegrationActionBroadcast', 'IntegrationActionBroadcastSend',
-            'IntegrationActionComment', 'IntegrationActionPost', 'IntegrationActionSend',
-            'IntegrationActionSms', 'IntegrationActionSubmit', 'IntegrationActionSubscribe',
-            'IntegrationActionUnsubscribe']):
+        idempotency_key (str | Unset):
+        body (IntegrationActionBroadcast | IntegrationActionBroadcastSend |
+            IntegrationActionComment | IntegrationActionPost | IntegrationActionSend |
+            IntegrationActionSms | IntegrationActionSubmit | IntegrationActionSubscribe |
+            IntegrationActionUnsubscribe | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[IntegrationActionResult, ProblemDetails]]
+        Response[IntegrationActionResult | ProblemDetails]
     """
 
     kwargs = _get_kwargs(
@@ -188,18 +189,17 @@ def sync(
     action_type: str,
     *,
     client: AuthenticatedClient,
-    body: Union[
-        "IntegrationActionBroadcast",
-        "IntegrationActionBroadcastSend",
-        "IntegrationActionComment",
-        "IntegrationActionPost",
-        "IntegrationActionSend",
-        "IntegrationActionSms",
-        "IntegrationActionSubmit",
-        "IntegrationActionSubscribe",
-        "IntegrationActionUnsubscribe",
-    ],
-    idempotency_key: Unset | str = UNSET,
+    body: IntegrationActionBroadcast
+    | IntegrationActionBroadcastSend
+    | IntegrationActionComment
+    | IntegrationActionPost
+    | IntegrationActionSend
+    | IntegrationActionSms
+    | IntegrationActionSubmit
+    | IntegrationActionSubscribe
+    | IntegrationActionUnsubscribe
+    | Unset = UNSET,
+    idempotency_key: str | Unset = UNSET,
 ) -> IntegrationActionResult | ProblemDetails | None:
     """Act as the user (outbound action)
 
@@ -212,18 +212,18 @@ def sync(
     Args:
         connection_id (str):
         action_type (str):
-        idempotency_key (Union[Unset, str]):
-        body (Union['IntegrationActionBroadcast', 'IntegrationActionBroadcastSend',
-            'IntegrationActionComment', 'IntegrationActionPost', 'IntegrationActionSend',
-            'IntegrationActionSms', 'IntegrationActionSubmit', 'IntegrationActionSubscribe',
-            'IntegrationActionUnsubscribe']):
+        idempotency_key (str | Unset):
+        body (IntegrationActionBroadcast | IntegrationActionBroadcastSend |
+            IntegrationActionComment | IntegrationActionPost | IntegrationActionSend |
+            IntegrationActionSms | IntegrationActionSubmit | IntegrationActionSubscribe |
+            IntegrationActionUnsubscribe | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[IntegrationActionResult, ProblemDetails]
+        IntegrationActionResult | ProblemDetails
     """
 
     return sync_detailed(
@@ -240,18 +240,17 @@ async def asyncio_detailed(
     action_type: str,
     *,
     client: AuthenticatedClient,
-    body: Union[
-        "IntegrationActionBroadcast",
-        "IntegrationActionBroadcastSend",
-        "IntegrationActionComment",
-        "IntegrationActionPost",
-        "IntegrationActionSend",
-        "IntegrationActionSms",
-        "IntegrationActionSubmit",
-        "IntegrationActionSubscribe",
-        "IntegrationActionUnsubscribe",
-    ],
-    idempotency_key: Unset | str = UNSET,
+    body: IntegrationActionBroadcast
+    | IntegrationActionBroadcastSend
+    | IntegrationActionComment
+    | IntegrationActionPost
+    | IntegrationActionSend
+    | IntegrationActionSms
+    | IntegrationActionSubmit
+    | IntegrationActionSubscribe
+    | IntegrationActionUnsubscribe
+    | Unset = UNSET,
+    idempotency_key: str | Unset = UNSET,
 ) -> Response[IntegrationActionResult | ProblemDetails]:
     """Act as the user (outbound action)
 
@@ -264,18 +263,18 @@ async def asyncio_detailed(
     Args:
         connection_id (str):
         action_type (str):
-        idempotency_key (Union[Unset, str]):
-        body (Union['IntegrationActionBroadcast', 'IntegrationActionBroadcastSend',
-            'IntegrationActionComment', 'IntegrationActionPost', 'IntegrationActionSend',
-            'IntegrationActionSms', 'IntegrationActionSubmit', 'IntegrationActionSubscribe',
-            'IntegrationActionUnsubscribe']):
+        idempotency_key (str | Unset):
+        body (IntegrationActionBroadcast | IntegrationActionBroadcastSend |
+            IntegrationActionComment | IntegrationActionPost | IntegrationActionSend |
+            IntegrationActionSms | IntegrationActionSubmit | IntegrationActionSubscribe |
+            IntegrationActionUnsubscribe | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[IntegrationActionResult, ProblemDetails]]
+        Response[IntegrationActionResult | ProblemDetails]
     """
 
     kwargs = _get_kwargs(
@@ -295,18 +294,17 @@ async def asyncio(
     action_type: str,
     *,
     client: AuthenticatedClient,
-    body: Union[
-        "IntegrationActionBroadcast",
-        "IntegrationActionBroadcastSend",
-        "IntegrationActionComment",
-        "IntegrationActionPost",
-        "IntegrationActionSend",
-        "IntegrationActionSms",
-        "IntegrationActionSubmit",
-        "IntegrationActionSubscribe",
-        "IntegrationActionUnsubscribe",
-    ],
-    idempotency_key: Unset | str = UNSET,
+    body: IntegrationActionBroadcast
+    | IntegrationActionBroadcastSend
+    | IntegrationActionComment
+    | IntegrationActionPost
+    | IntegrationActionSend
+    | IntegrationActionSms
+    | IntegrationActionSubmit
+    | IntegrationActionSubscribe
+    | IntegrationActionUnsubscribe
+    | Unset = UNSET,
+    idempotency_key: str | Unset = UNSET,
 ) -> IntegrationActionResult | ProblemDetails | None:
     """Act as the user (outbound action)
 
@@ -319,18 +317,18 @@ async def asyncio(
     Args:
         connection_id (str):
         action_type (str):
-        idempotency_key (Union[Unset, str]):
-        body (Union['IntegrationActionBroadcast', 'IntegrationActionBroadcastSend',
-            'IntegrationActionComment', 'IntegrationActionPost', 'IntegrationActionSend',
-            'IntegrationActionSms', 'IntegrationActionSubmit', 'IntegrationActionSubscribe',
-            'IntegrationActionUnsubscribe']):
+        idempotency_key (str | Unset):
+        body (IntegrationActionBroadcast | IntegrationActionBroadcastSend |
+            IntegrationActionComment | IntegrationActionPost | IntegrationActionSend |
+            IntegrationActionSms | IntegrationActionSubmit | IntegrationActionSubscribe |
+            IntegrationActionUnsubscribe | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[IntegrationActionResult, ProblemDetails]
+        IntegrationActionResult | ProblemDetails
     """
 
     return (

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -19,9 +21,9 @@ class MarkdownDocumentVersionSummary:
         content_hash (str):
         size_bytes (int):
         created_at (str):
-        author_type (Union[None, Unset, str]):
-        author_id (Union[None, Unset, str]):
-        author_name (Union[None, Unset, str]):
+        author_type (None | str | Unset):
+        author_id (None | str | Unset):
+        author_name (None | str | Unset):
     """
 
     id: str
@@ -30,9 +32,9 @@ class MarkdownDocumentVersionSummary:
     content_hash: str
     size_bytes: int
     created_at: str
-    author_type: None | Unset | str = UNSET
-    author_id: None | Unset | str = UNSET
-    author_name: None | Unset | str = UNSET
+    author_type: None | str | Unset = UNSET
+    author_id: None | str | Unset = UNSET
+    author_name: None | str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -48,19 +50,19 @@ class MarkdownDocumentVersionSummary:
 
         created_at = self.created_at
 
-        author_type: None | Unset | str
+        author_type: None | str | Unset
         if isinstance(self.author_type, Unset):
             author_type = UNSET
         else:
             author_type = self.author_type
 
-        author_id: None | Unset | str
+        author_id: None | str | Unset
         if isinstance(self.author_id, Unset):
             author_id = UNSET
         else:
             author_id = self.author_id
 
-        author_name: None | Unset | str
+        author_name: None | str | Unset
         if isinstance(self.author_name, Unset):
             author_name = UNSET
         else:
@@ -102,30 +104,30 @@ class MarkdownDocumentVersionSummary:
 
         created_at = d.pop("createdAt")
 
-        def _parse_author_type(data: object) -> None | Unset | str:
+        def _parse_author_type(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         author_type = _parse_author_type(d.pop("authorType", UNSET))
 
-        def _parse_author_id(data: object) -> None | Unset | str:
+        def _parse_author_id(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         author_id = _parse_author_id(d.pop("authorId", UNSET))
 
-        def _parse_author_name(data: object) -> None | Unset | str:
+        def _parse_author_name(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         author_name = _parse_author_name(d.pop("authorName", UNSET))
 

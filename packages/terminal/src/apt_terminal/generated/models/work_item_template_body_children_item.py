@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -13,17 +15,17 @@ class WorkItemTemplateBodyChildrenItem:
     """
     Attributes:
         title (str):
-        description (Union[Unset, str]):
-        priority (Union[Unset, int]): rank, 0 (none) to 4 (urgent); higher is more urgent
-        estimate (Union[Unset, int]):
-        labels (Union[Unset, list[str]]):
+        description (str | Unset):
+        priority (int | Unset): rank, 0 (none) to 4 (urgent); higher is more urgent
+        estimate (int | Unset):
+        labels (list[str] | Unset):
     """
 
     title: str
-    description: Unset | str = UNSET
-    priority: Unset | int = UNSET
-    estimate: Unset | int = UNSET
-    labels: Unset | list[str] = UNSET
+    description: str | Unset = UNSET
+    priority: int | Unset = UNSET
+    estimate: int | Unset = UNSET
+    labels: list[str] | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
         title = self.title
@@ -34,7 +36,7 @@ class WorkItemTemplateBodyChildrenItem:
 
         estimate = self.estimate
 
-        labels: Unset | list[str] = UNSET
+        labels: list[str] | Unset = UNSET
         if not isinstance(self.labels, Unset):
             labels = self.labels
 

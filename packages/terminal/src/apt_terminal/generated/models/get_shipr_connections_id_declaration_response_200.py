@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import TYPE_CHECKING, Any, TypeVar, cast
 
@@ -19,19 +21,19 @@ T = TypeVar("T", bound="GetShiprConnectionsIdDeclarationResponse200")
 class GetShiprConnectionsIdDeclarationResponse200:
     """
     Attributes:
-        deployments (Union[None, list['GetShiprConnectionsIdDeclarationResponse200DeploymentsType0Item']]):
+        deployments (list[GetShiprConnectionsIdDeclarationResponse200DeploymentsType0Item] | None):
         fallback_slug (str): The `<name>-deployment` convention applied to this repository — what a run creates when
             nothing is declared, and what the form prepopulates its org and name fields from.
-        note (Union[Unset, str]): Why the declaration was not usable, when it was present but not.
+        note (str | Unset): Why the declaration was not usable, when it was present but not.
     """
 
-    deployments: None | list["GetShiprConnectionsIdDeclarationResponse200DeploymentsType0Item"]
+    deployments: list[GetShiprConnectionsIdDeclarationResponse200DeploymentsType0Item] | None
     fallback_slug: str
-    note: Unset | str = UNSET
+    note: str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
-        deployments: None | list[dict[str, Any]]
+        deployments: list[dict[str, Any]] | None
         if isinstance(self.deployments, list):
             deployments = []
             for deployments_type_0_item_data in self.deployments:
@@ -68,7 +70,7 @@ class GetShiprConnectionsIdDeclarationResponse200:
 
         def _parse_deployments(
             data: object,
-        ) -> None | list["GetShiprConnectionsIdDeclarationResponse200DeploymentsType0Item"]:
+        ) -> list[GetShiprConnectionsIdDeclarationResponse200DeploymentsType0Item] | None:
             if data is None:
                 return data
             try:
@@ -86,10 +88,10 @@ class GetShiprConnectionsIdDeclarationResponse200:
                     deployments_type_0.append(deployments_type_0_item)
 
                 return deployments_type_0
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
             return cast(
-                None | list["GetShiprConnectionsIdDeclarationResponse200DeploymentsType0Item"], data
+                list[GetShiprConnectionsIdDeclarationResponse200DeploymentsType0Item] | None, data
             )
 
         deployments = _parse_deployments(d.pop("deployments"))

@@ -13,8 +13,8 @@ from ...types import UNSET, Response, Unset
 def _get_kwargs(
     *,
     workspace: str,
-    feature: Unset | str = UNSET,
-    item_id: Unset | str = UNSET,
+    feature: str | Unset = UNSET,
+    item_id: str | Unset = UNSET,
 ) -> dict[str, Any]:
     params: dict[str, Any] = {}
 
@@ -84,22 +84,22 @@ def sync_detailed(
     *,
     client: AuthenticatedClient,
     workspace: str,
-    feature: Unset | str = UNSET,
-    item_id: Unset | str = UNSET,
+    feature: str | Unset = UNSET,
+    item_id: str | Unset = UNSET,
 ) -> Response[AccessAssignmentList | Error]:
     """List assignments (workspace-wide for admins; per-item for M holders)
 
     Args:
         workspace (str):
-        feature (Union[Unset, str]):
-        item_id (Union[Unset, str]):
+        feature (str | Unset):
+        item_id (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[AccessAssignmentList, Error]]
+        Response[AccessAssignmentList | Error]
     """
 
     kwargs = _get_kwargs(
@@ -119,22 +119,22 @@ def sync(
     *,
     client: AuthenticatedClient,
     workspace: str,
-    feature: Unset | str = UNSET,
-    item_id: Unset | str = UNSET,
+    feature: str | Unset = UNSET,
+    item_id: str | Unset = UNSET,
 ) -> AccessAssignmentList | Error | None:
     """List assignments (workspace-wide for admins; per-item for M holders)
 
     Args:
         workspace (str):
-        feature (Union[Unset, str]):
-        item_id (Union[Unset, str]):
+        feature (str | Unset):
+        item_id (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[AccessAssignmentList, Error]
+        AccessAssignmentList | Error
     """
 
     return sync_detailed(
@@ -149,22 +149,22 @@ async def asyncio_detailed(
     *,
     client: AuthenticatedClient,
     workspace: str,
-    feature: Unset | str = UNSET,
-    item_id: Unset | str = UNSET,
+    feature: str | Unset = UNSET,
+    item_id: str | Unset = UNSET,
 ) -> Response[AccessAssignmentList | Error]:
     """List assignments (workspace-wide for admins; per-item for M holders)
 
     Args:
         workspace (str):
-        feature (Union[Unset, str]):
-        item_id (Union[Unset, str]):
+        feature (str | Unset):
+        item_id (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[AccessAssignmentList, Error]]
+        Response[AccessAssignmentList | Error]
     """
 
     kwargs = _get_kwargs(
@@ -182,22 +182,22 @@ async def asyncio(
     *,
     client: AuthenticatedClient,
     workspace: str,
-    feature: Unset | str = UNSET,
-    item_id: Unset | str = UNSET,
+    feature: str | Unset = UNSET,
+    item_id: str | Unset = UNSET,
 ) -> AccessAssignmentList | Error | None:
     """List assignments (workspace-wide for admins; per-item for M holders)
 
     Args:
         workspace (str):
-        feature (Union[Unset, str]):
-        item_id (Union[Unset, str]):
+        feature (str | Unset):
+        item_id (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[AccessAssignmentList, Error]
+        AccessAssignmentList | Error
     """
 
     return (

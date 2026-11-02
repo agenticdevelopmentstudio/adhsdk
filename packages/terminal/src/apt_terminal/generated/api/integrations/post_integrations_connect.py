@@ -1,5 +1,5 @@
 from http import HTTPStatus
-from typing import Any, Union
+from typing import Any
 
 import httpx
 
@@ -13,19 +13,18 @@ from ...models.integration_connect_o_auth_instance import IntegrationConnectOAut
 from ...models.integration_connect_plaid_link import IntegrationConnectPlaidLink
 from ...models.integration_connection import IntegrationConnection
 from ...models.problem_details import ProblemDetails
-from ...types import Response
+from ...types import UNSET, Response, Unset
 
 
 def _get_kwargs(
     *,
-    body: Union[
-        "IntegrationConnectApiKey",
-        "IntegrationConnectAppPassword",
-        "IntegrationConnectGithubApp",
-        "IntegrationConnectOAuth",
-        "IntegrationConnectOAuthInstance",
-        "IntegrationConnectPlaidLink",
-    ],
+    body: IntegrationConnectApiKey
+    | IntegrationConnectAppPassword
+    | IntegrationConnectGithubApp
+    | IntegrationConnectOAuth
+    | IntegrationConnectOAuthInstance
+    | IntegrationConnectPlaidLink
+    | Unset = UNSET,
 ) -> dict[str, Any]:
     headers: dict[str, Any] = {}
 
@@ -34,7 +33,6 @@ def _get_kwargs(
         "url": "/integrations/connect",
     }
 
-    _kwargs["json"]: dict[str, Any]
     if (
         isinstance(body, IntegrationConnectOAuth)
         or isinstance(body, IntegrationConnectApiKey)
@@ -100,14 +98,13 @@ def _build_response(
 def sync_detailed(
     *,
     client: AuthenticatedClient,
-    body: Union[
-        "IntegrationConnectApiKey",
-        "IntegrationConnectAppPassword",
-        "IntegrationConnectGithubApp",
-        "IntegrationConnectOAuth",
-        "IntegrationConnectOAuthInstance",
-        "IntegrationConnectPlaidLink",
-    ],
+    body: IntegrationConnectApiKey
+    | IntegrationConnectAppPassword
+    | IntegrationConnectGithubApp
+    | IntegrationConnectOAuth
+    | IntegrationConnectOAuthInstance
+    | IntegrationConnectPlaidLink
+    | Unset = UNSET,
 ) -> Response[IntegrationConnection | ProblemDetails]:
     """Connect an integration (polymorphic by auth method)
 
@@ -116,16 +113,16 @@ def sync_detailed(
     connection (tokens never echoed).
 
     Args:
-        body (Union['IntegrationConnectApiKey', 'IntegrationConnectAppPassword',
-            'IntegrationConnectGithubApp', 'IntegrationConnectOAuth',
-            'IntegrationConnectOAuthInstance', 'IntegrationConnectPlaidLink']):
+        body (IntegrationConnectApiKey | IntegrationConnectAppPassword |
+            IntegrationConnectGithubApp | IntegrationConnectOAuth | IntegrationConnectOAuthInstance |
+            IntegrationConnectPlaidLink | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[IntegrationConnection, ProblemDetails]]
+        Response[IntegrationConnection | ProblemDetails]
     """
 
     kwargs = _get_kwargs(
@@ -142,14 +139,13 @@ def sync_detailed(
 def sync(
     *,
     client: AuthenticatedClient,
-    body: Union[
-        "IntegrationConnectApiKey",
-        "IntegrationConnectAppPassword",
-        "IntegrationConnectGithubApp",
-        "IntegrationConnectOAuth",
-        "IntegrationConnectOAuthInstance",
-        "IntegrationConnectPlaidLink",
-    ],
+    body: IntegrationConnectApiKey
+    | IntegrationConnectAppPassword
+    | IntegrationConnectGithubApp
+    | IntegrationConnectOAuth
+    | IntegrationConnectOAuthInstance
+    | IntegrationConnectPlaidLink
+    | Unset = UNSET,
 ) -> IntegrationConnection | ProblemDetails | None:
     """Connect an integration (polymorphic by auth method)
 
@@ -158,16 +154,16 @@ def sync(
     connection (tokens never echoed).
 
     Args:
-        body (Union['IntegrationConnectApiKey', 'IntegrationConnectAppPassword',
-            'IntegrationConnectGithubApp', 'IntegrationConnectOAuth',
-            'IntegrationConnectOAuthInstance', 'IntegrationConnectPlaidLink']):
+        body (IntegrationConnectApiKey | IntegrationConnectAppPassword |
+            IntegrationConnectGithubApp | IntegrationConnectOAuth | IntegrationConnectOAuthInstance |
+            IntegrationConnectPlaidLink | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[IntegrationConnection, ProblemDetails]
+        IntegrationConnection | ProblemDetails
     """
 
     return sync_detailed(
@@ -179,14 +175,13 @@ def sync(
 async def asyncio_detailed(
     *,
     client: AuthenticatedClient,
-    body: Union[
-        "IntegrationConnectApiKey",
-        "IntegrationConnectAppPassword",
-        "IntegrationConnectGithubApp",
-        "IntegrationConnectOAuth",
-        "IntegrationConnectOAuthInstance",
-        "IntegrationConnectPlaidLink",
-    ],
+    body: IntegrationConnectApiKey
+    | IntegrationConnectAppPassword
+    | IntegrationConnectGithubApp
+    | IntegrationConnectOAuth
+    | IntegrationConnectOAuthInstance
+    | IntegrationConnectPlaidLink
+    | Unset = UNSET,
 ) -> Response[IntegrationConnection | ProblemDetails]:
     """Connect an integration (polymorphic by auth method)
 
@@ -195,16 +190,16 @@ async def asyncio_detailed(
     connection (tokens never echoed).
 
     Args:
-        body (Union['IntegrationConnectApiKey', 'IntegrationConnectAppPassword',
-            'IntegrationConnectGithubApp', 'IntegrationConnectOAuth',
-            'IntegrationConnectOAuthInstance', 'IntegrationConnectPlaidLink']):
+        body (IntegrationConnectApiKey | IntegrationConnectAppPassword |
+            IntegrationConnectGithubApp | IntegrationConnectOAuth | IntegrationConnectOAuthInstance |
+            IntegrationConnectPlaidLink | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[IntegrationConnection, ProblemDetails]]
+        Response[IntegrationConnection | ProblemDetails]
     """
 
     kwargs = _get_kwargs(
@@ -219,14 +214,13 @@ async def asyncio_detailed(
 async def asyncio(
     *,
     client: AuthenticatedClient,
-    body: Union[
-        "IntegrationConnectApiKey",
-        "IntegrationConnectAppPassword",
-        "IntegrationConnectGithubApp",
-        "IntegrationConnectOAuth",
-        "IntegrationConnectOAuthInstance",
-        "IntegrationConnectPlaidLink",
-    ],
+    body: IntegrationConnectApiKey
+    | IntegrationConnectAppPassword
+    | IntegrationConnectGithubApp
+    | IntegrationConnectOAuth
+    | IntegrationConnectOAuthInstance
+    | IntegrationConnectPlaidLink
+    | Unset = UNSET,
 ) -> IntegrationConnection | ProblemDetails | None:
     """Connect an integration (polymorphic by auth method)
 
@@ -235,16 +229,16 @@ async def asyncio(
     connection (tokens never echoed).
 
     Args:
-        body (Union['IntegrationConnectApiKey', 'IntegrationConnectAppPassword',
-            'IntegrationConnectGithubApp', 'IntegrationConnectOAuth',
-            'IntegrationConnectOAuthInstance', 'IntegrationConnectPlaidLink']):
+        body (IntegrationConnectApiKey | IntegrationConnectAppPassword |
+            IntegrationConnectGithubApp | IntegrationConnectOAuth | IntegrationConnectOAuthInstance |
+            IntegrationConnectPlaidLink | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[IntegrationConnection, ProblemDetails]
+        IntegrationConnection | ProblemDetails
     """
 
     return (

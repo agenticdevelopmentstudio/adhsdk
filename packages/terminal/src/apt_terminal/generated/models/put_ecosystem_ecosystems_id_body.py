@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -12,32 +14,32 @@ T = TypeVar("T", bound="PutEcosystemEcosystemsIdBody")
 class PutEcosystemEcosystemsIdBody:
     """
     Attributes:
-        owner_id (Union[Unset, str]):
-        slug (Union[Unset, str]):
-        name (Union[Unset, str]):
-        description (Union[Unset, str]):
-        region (Union[Unset, str]):
-        dedicated_db_connection_id (Union[None, Unset, str]):
-        primary_domain (Union[Unset, str]):
-        is_default (Union[Unset, bool]):
-        is_infrastructure (Union[Unset, bool]):
-        namespace_id (Union[None, Unset, str]):
-        parent_id (Union[None, Unset, str]):
-        archived_at (Union[None, Unset, str]):
+        owner_id (str | Unset):
+        slug (str | Unset):
+        name (str | Unset):
+        description (str | Unset):
+        region (str | Unset):
+        dedicated_db_connection_id (None | str | Unset):
+        primary_domain (str | Unset):
+        is_default (bool | Unset):
+        is_infrastructure (bool | Unset):
+        namespace_id (None | str | Unset):
+        parent_id (None | str | Unset):
+        archived_at (None | str | Unset):
     """
 
-    owner_id: Unset | str = UNSET
-    slug: Unset | str = UNSET
-    name: Unset | str = UNSET
-    description: Unset | str = UNSET
-    region: Unset | str = UNSET
-    dedicated_db_connection_id: None | Unset | str = UNSET
-    primary_domain: Unset | str = UNSET
-    is_default: Unset | bool = UNSET
-    is_infrastructure: Unset | bool = UNSET
-    namespace_id: None | Unset | str = UNSET
-    parent_id: None | Unset | str = UNSET
-    archived_at: None | Unset | str = UNSET
+    owner_id: str | Unset = UNSET
+    slug: str | Unset = UNSET
+    name: str | Unset = UNSET
+    description: str | Unset = UNSET
+    region: str | Unset = UNSET
+    dedicated_db_connection_id: None | str | Unset = UNSET
+    primary_domain: str | Unset = UNSET
+    is_default: bool | Unset = UNSET
+    is_infrastructure: bool | Unset = UNSET
+    namespace_id: None | str | Unset = UNSET
+    parent_id: None | str | Unset = UNSET
+    archived_at: None | str | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
         owner_id = self.owner_id
@@ -50,7 +52,7 @@ class PutEcosystemEcosystemsIdBody:
 
         region = self.region
 
-        dedicated_db_connection_id: None | Unset | str
+        dedicated_db_connection_id: None | str | Unset
         if isinstance(self.dedicated_db_connection_id, Unset):
             dedicated_db_connection_id = UNSET
         else:
@@ -62,19 +64,19 @@ class PutEcosystemEcosystemsIdBody:
 
         is_infrastructure = self.is_infrastructure
 
-        namespace_id: None | Unset | str
+        namespace_id: None | str | Unset
         if isinstance(self.namespace_id, Unset):
             namespace_id = UNSET
         else:
             namespace_id = self.namespace_id
 
-        parent_id: None | Unset | str
+        parent_id: None | str | Unset
         if isinstance(self.parent_id, Unset):
             parent_id = UNSET
         else:
             parent_id = self.parent_id
 
-        archived_at: None | Unset | str
+        archived_at: None | str | Unset
         if isinstance(self.archived_at, Unset):
             archived_at = UNSET
         else:
@@ -123,12 +125,12 @@ class PutEcosystemEcosystemsIdBody:
 
         region = d.pop("region", UNSET)
 
-        def _parse_dedicated_db_connection_id(data: object) -> None | Unset | str:
+        def _parse_dedicated_db_connection_id(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         dedicated_db_connection_id = _parse_dedicated_db_connection_id(
             d.pop("dedicatedDbConnectionId", UNSET)
@@ -140,30 +142,30 @@ class PutEcosystemEcosystemsIdBody:
 
         is_infrastructure = d.pop("isInfrastructure", UNSET)
 
-        def _parse_namespace_id(data: object) -> None | Unset | str:
+        def _parse_namespace_id(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         namespace_id = _parse_namespace_id(d.pop("namespaceId", UNSET))
 
-        def _parse_parent_id(data: object) -> None | Unset | str:
+        def _parse_parent_id(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         parent_id = _parse_parent_id(d.pop("parentId", UNSET))
 
-        def _parse_archived_at(data: object) -> None | Unset | str:
+        def _parse_archived_at(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         archived_at = _parse_archived_at(d.pop("archivedAt", UNSET))
 

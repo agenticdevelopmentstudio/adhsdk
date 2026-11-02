@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, TypeVar, Union, cast
+from typing import TYPE_CHECKING, Any, TypeVar, cast
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -21,20 +23,20 @@ class PublicPersona:
     Attributes:
         slug (str):
         name (str):
-        description (Union[None, str]):
+        description (None | str):
         model_prompt (str):
-        provider (Union[None, str]):
+        provider (None | str):
         model (str):
-        avatar_url (Union[None, str]):
-        voice (Union[None, str]):
-        character (Union[None, str]):
-        examples (Union[None, str]):
+        avatar_url (None | str):
+        voice (None | str):
+        character (None | str):
+        examples (None | str):
         visibility (PublicPersonaVisibility):
         created_at (str):
-        owner (Union['PublicOwnerType0', None]):
+        owner (None | PublicOwnerType0):
         demo_enabled (bool):
-        chat_status (Union['PublicPersonaChatStatusType0', None, Unset]): Per-persona chat status configuration: word
-            pairs, glyph sets and tint. Resolved and rendered client-side.
+        chat_status (None | PublicPersonaChatStatusType0 | Unset): Per-persona chat status configuration: word pairs,
+            glyph sets and tint. Resolved and rendered client-side.
     """
 
     slug: str
@@ -49,14 +51,16 @@ class PublicPersona:
     examples: None | str
     visibility: PublicPersonaVisibility
     created_at: str
-    owner: Union["PublicOwnerType0", None]
+    owner: None | PublicOwnerType0
     demo_enabled: bool
-    chat_status: Union["PublicPersonaChatStatusType0", None, Unset] = UNSET
+    chat_status: None | PublicPersonaChatStatusType0 | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
         from ..models.public_owner_type_0 import PublicOwnerType0
-        from ..models.public_persona_chat_status_type_0 import PublicPersonaChatStatusType0
+        from ..models.public_persona_chat_status_type_0 import (
+            PublicPersonaChatStatusType0,
+        )
 
         slug = self.slug
 
@@ -88,7 +92,7 @@ class PublicPersona:
 
         created_at = self.created_at
 
-        owner: None | dict[str, Any]
+        owner: dict[str, Any] | None
         if isinstance(self.owner, PublicOwnerType0):
             owner = self.owner.to_dict()
         else:
@@ -96,7 +100,7 @@ class PublicPersona:
 
         demo_enabled = self.demo_enabled
 
-        chat_status: None | Unset | dict[str, Any]
+        chat_status: dict[str, Any] | None | Unset
         if isinstance(self.chat_status, Unset):
             chat_status = UNSET
         elif isinstance(self.chat_status, PublicPersonaChatStatusType0):
@@ -132,7 +136,9 @@ class PublicPersona:
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
         from ..models.public_owner_type_0 import PublicOwnerType0
-        from ..models.public_persona_chat_status_type_0 import PublicPersonaChatStatusType0
+        from ..models.public_persona_chat_status_type_0 import (
+            PublicPersonaChatStatusType0,
+        )
 
         d = dict(src_dict)
         slug = d.pop("slug")
@@ -189,7 +195,7 @@ class PublicPersona:
 
         created_at = d.pop("createdAt")
 
-        def _parse_owner(data: object) -> Union["PublicOwnerType0", None]:
+        def _parse_owner(data: object) -> None | PublicOwnerType0:
             if data is None:
                 return data
             try:
@@ -198,15 +204,15 @@ class PublicPersona:
                 componentsschemas_public_owner_type_0 = PublicOwnerType0.from_dict(data)
 
                 return componentsschemas_public_owner_type_0
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
-            return cast(Union["PublicOwnerType0", None], data)
+            return cast(None | PublicOwnerType0, data)
 
         owner = _parse_owner(d.pop("owner"))
 
         demo_enabled = d.pop("demoEnabled")
 
-        def _parse_chat_status(data: object) -> Union["PublicPersonaChatStatusType0", None, Unset]:
+        def _parse_chat_status(data: object) -> None | PublicPersonaChatStatusType0 | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
@@ -217,9 +223,9 @@ class PublicPersona:
                 chat_status_type_0 = PublicPersonaChatStatusType0.from_dict(data)
 
                 return chat_status_type_0
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
-            return cast(Union["PublicPersonaChatStatusType0", None, Unset], data)
+            return cast(None | PublicPersonaChatStatusType0 | Unset, data)
 
         chat_status = _parse_chat_status(d.pop("chatStatus", UNSET))
 

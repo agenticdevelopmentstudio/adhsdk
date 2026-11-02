@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import TYPE_CHECKING, Any, TypeVar
 
@@ -18,16 +20,16 @@ T = TypeVar("T", bound="PatchAccessRolesIdBody")
 class PatchAccessRolesIdBody:
     """
     Attributes:
-        name (Union[Unset, str]):
-        description (Union[Unset, str]):
-        default_for (Union[Unset, PatchAccessRolesIdBodyDefaultFor]):
-        grants (Union[Unset, list['AccessGrant']]):
+        name (str | Unset):
+        description (str | Unset):
+        default_for (PatchAccessRolesIdBodyDefaultFor | Unset):
+        grants (list[AccessGrant] | Unset):
     """
 
-    name: Unset | str = UNSET
-    description: Unset | str = UNSET
-    default_for: Unset | PatchAccessRolesIdBodyDefaultFor = UNSET
-    grants: Unset | list["AccessGrant"] = UNSET
+    name: str | Unset = UNSET
+    description: str | Unset = UNSET
+    default_for: PatchAccessRolesIdBodyDefaultFor | Unset = UNSET
+    grants: list[AccessGrant] | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -35,11 +37,11 @@ class PatchAccessRolesIdBody:
 
         description = self.description
 
-        default_for: Unset | str = UNSET
+        default_for: str | Unset = UNSET
         if not isinstance(self.default_for, Unset):
             default_for = self.default_for.value
 
-        grants: Unset | list[dict[str, Any]] = UNSET
+        grants: list[dict[str, Any]] | Unset = UNSET
         if not isinstance(self.grants, Unset):
             grants = []
             for grants_item_data in self.grants:
@@ -70,18 +72,20 @@ class PatchAccessRolesIdBody:
         description = d.pop("description", UNSET)
 
         _default_for = d.pop("defaultFor", UNSET)
-        default_for: Unset | PatchAccessRolesIdBodyDefaultFor
+        default_for: PatchAccessRolesIdBodyDefaultFor | Unset
         if isinstance(_default_for, Unset):
             default_for = UNSET
         else:
             default_for = PatchAccessRolesIdBodyDefaultFor(_default_for)
 
-        grants = []
         _grants = d.pop("grants", UNSET)
-        for grants_item_data in _grants or []:
-            grants_item = AccessGrant.from_dict(grants_item_data)
+        grants: list[AccessGrant] | Unset = UNSET
+        if _grants is not UNSET:
+            grants = []
+            for grants_item_data in _grants:
+                grants_item = AccessGrant.from_dict(grants_item_data)
 
-            grants.append(grants_item)
+                grants.append(grants_item)
 
         patch_access_roles_id_body = cls(
             name=name,

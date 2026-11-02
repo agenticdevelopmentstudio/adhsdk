@@ -11,8 +11,8 @@ from ...types import UNSET, Response, Unset
 
 def _get_kwargs(
     *,
-    workspace: Unset | str = UNSET,
-    access_token: Unset | str = UNSET,
+    workspace: str | Unset = UNSET,
+    access_token: str | Unset = UNSET,
 ) -> dict[str, Any]:
     params: dict[str, Any] = {}
 
@@ -73,8 +73,8 @@ def _build_response(
 def sync_detailed(
     *,
     client: AuthenticatedClient,
-    workspace: Unset | str = UNSET,
-    access_token: Unset | str = UNSET,
+    workspace: str | Unset = UNSET,
+    access_token: str | Unset = UNSET,
 ) -> Response[Error | str]:
     """The workspace’s runs as they change state
 
@@ -82,15 +82,15 @@ def sync_detailed(
     is moving. Open the per-run stream for output.
 
     Args:
-        workspace (Union[Unset, str]):
-        access_token (Union[Unset, str]):
+        workspace (str | Unset):
+        access_token (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, str]]
+        Response[Error | str]
     """
 
     kwargs = _get_kwargs(
@@ -108,8 +108,8 @@ def sync_detailed(
 def sync(
     *,
     client: AuthenticatedClient,
-    workspace: Unset | str = UNSET,
-    access_token: Unset | str = UNSET,
+    workspace: str | Unset = UNSET,
+    access_token: str | Unset = UNSET,
 ) -> Error | str | None:
     """The workspace’s runs as they change state
 
@@ -117,15 +117,15 @@ def sync(
     is moving. Open the per-run stream for output.
 
     Args:
-        workspace (Union[Unset, str]):
-        access_token (Union[Unset, str]):
+        workspace (str | Unset):
+        access_token (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, str]
+        Error | str
     """
 
     return sync_detailed(
@@ -138,8 +138,8 @@ def sync(
 async def asyncio_detailed(
     *,
     client: AuthenticatedClient,
-    workspace: Unset | str = UNSET,
-    access_token: Unset | str = UNSET,
+    workspace: str | Unset = UNSET,
+    access_token: str | Unset = UNSET,
 ) -> Response[Error | str]:
     """The workspace’s runs as they change state
 
@@ -147,15 +147,15 @@ async def asyncio_detailed(
     is moving. Open the per-run stream for output.
 
     Args:
-        workspace (Union[Unset, str]):
-        access_token (Union[Unset, str]):
+        workspace (str | Unset):
+        access_token (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, str]]
+        Response[Error | str]
     """
 
     kwargs = _get_kwargs(
@@ -171,8 +171,8 @@ async def asyncio_detailed(
 async def asyncio(
     *,
     client: AuthenticatedClient,
-    workspace: Unset | str = UNSET,
-    access_token: Unset | str = UNSET,
+    workspace: str | Unset = UNSET,
+    access_token: str | Unset = UNSET,
 ) -> Error | str | None:
     """The workspace’s runs as they change state
 
@@ -180,15 +180,15 @@ async def asyncio(
     is moving. Open the per-run stream for output.
 
     Args:
-        workspace (Union[Unset, str]):
-        access_token (Union[Unset, str]):
+        workspace (str | Unset):
+        access_token (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, str]
+        Error | str
     """
 
     return (

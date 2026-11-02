@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class ListMemberDeliveryStatus(str, Enum):
+class ListMemberDeliveryStatus(StrEnum):
     BOUNCED = "bounced"
     COMPLAINED = "complained"
     OK = "ok"

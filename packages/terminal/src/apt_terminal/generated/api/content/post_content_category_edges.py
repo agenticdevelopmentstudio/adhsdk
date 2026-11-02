@@ -8,12 +8,12 @@ from ...client import AuthenticatedClient, Client
 from ...models.error import Error
 from ...models.post_content_category_edges_body import PostContentCategoryEdgesBody
 from ...models.post_content_category_edges_response_201 import PostContentCategoryEdgesResponse201
-from ...types import Response
+from ...types import UNSET, Response, Unset
 
 
 def _get_kwargs(
     *,
-    body: PostContentCategoryEdgesBody,
+    body: PostContentCategoryEdgesBody | Unset = UNSET,
 ) -> dict[str, Any]:
     headers: dict[str, Any] = {}
 
@@ -22,7 +22,8 @@ def _get_kwargs(
         "url": "/content/category-edges",
     }
 
-    _kwargs["json"] = body.to_dict()
+    if not isinstance(body, Unset):
+        _kwargs["json"] = body.to_dict()
 
     headers["Content-Type"] = "application/json"
 
@@ -68,19 +69,19 @@ def _build_response(
 def sync_detailed(
     *,
     client: AuthenticatedClient,
-    body: PostContentCategoryEdgesBody,
+    body: PostContentCategoryEdgesBody | Unset = UNSET,
 ) -> Response[Error | PostContentCategoryEdgesResponse201]:
     """Create category_edges
 
     Args:
-        body (PostContentCategoryEdgesBody):
+        body (PostContentCategoryEdgesBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, PostContentCategoryEdgesResponse201]]
+        Response[Error | PostContentCategoryEdgesResponse201]
     """
 
     kwargs = _get_kwargs(
@@ -97,19 +98,19 @@ def sync_detailed(
 def sync(
     *,
     client: AuthenticatedClient,
-    body: PostContentCategoryEdgesBody,
+    body: PostContentCategoryEdgesBody | Unset = UNSET,
 ) -> Error | PostContentCategoryEdgesResponse201 | None:
     """Create category_edges
 
     Args:
-        body (PostContentCategoryEdgesBody):
+        body (PostContentCategoryEdgesBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, PostContentCategoryEdgesResponse201]
+        Error | PostContentCategoryEdgesResponse201
     """
 
     return sync_detailed(
@@ -121,19 +122,19 @@ def sync(
 async def asyncio_detailed(
     *,
     client: AuthenticatedClient,
-    body: PostContentCategoryEdgesBody,
+    body: PostContentCategoryEdgesBody | Unset = UNSET,
 ) -> Response[Error | PostContentCategoryEdgesResponse201]:
     """Create category_edges
 
     Args:
-        body (PostContentCategoryEdgesBody):
+        body (PostContentCategoryEdgesBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, PostContentCategoryEdgesResponse201]]
+        Response[Error | PostContentCategoryEdgesResponse201]
     """
 
     kwargs = _get_kwargs(
@@ -148,19 +149,19 @@ async def asyncio_detailed(
 async def asyncio(
     *,
     client: AuthenticatedClient,
-    body: PostContentCategoryEdgesBody,
+    body: PostContentCategoryEdgesBody | Unset = UNSET,
 ) -> Error | PostContentCategoryEdgesResponse201 | None:
     """Create category_edges
 
     Args:
-        body (PostContentCategoryEdgesBody):
+        body (PostContentCategoryEdgesBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, PostContentCategoryEdgesResponse201]
+        Error | PostContentCategoryEdgesResponse201
     """
 
     return (

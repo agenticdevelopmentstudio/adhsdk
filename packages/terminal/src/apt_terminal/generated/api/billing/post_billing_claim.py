@@ -8,12 +8,12 @@ from ...client import AuthenticatedClient, Client
 from ...models.billing_claim_request import BillingClaimRequest
 from ...models.billing_claim_result import BillingClaimResult
 from ...models.error import Error
-from ...types import Response
+from ...types import UNSET, Response, Unset
 
 
 def _get_kwargs(
     *,
-    body: BillingClaimRequest,
+    body: BillingClaimRequest | Unset = UNSET,
 ) -> dict[str, Any]:
     headers: dict[str, Any] = {}
 
@@ -22,7 +22,8 @@ def _get_kwargs(
         "url": "/billing/claim",
     }
 
-    _kwargs["json"] = body.to_dict()
+    if not isinstance(body, Unset):
+        _kwargs["json"] = body.to_dict()
 
     headers["Content-Type"] = "application/json"
 
@@ -78,16 +79,16 @@ def _build_response(
 def sync_detailed(
     *,
     client: AuthenticatedClient,
-    body: BillingClaimRequest,
+    body: BillingClaimRequest | Unset = UNSET,
 ) -> Response[BillingClaimResult | Error]:
-    r"""Redeem a claim token, binding a paid account to the caller
+    """Redeem a claim token, binding a paid account to the caller
 
      Authenticated, and on the billing base rather than `/public`, because redeeming BINDS an adh
     identity to a paid account and there is nothing to bind without a session — a claim route mounted on
     `/public` would read the principal as undefined on every request and refuse every claim. The page
     that collects the token is the public half and lives in the frontend; it posts here once the visitor
-    is signed in. A delegated (acting) principal is refused outright: delegation means \"act on their
-    behalf\", and irreversibly claiming ownership of something they paid for is not that.
+    is signed in. A delegated (acting) principal is refused outright: delegation means "act on their
+    behalf", and irreversibly claiming ownership of something they paid for is not that.
 
     IDEMPOTENT FOR THE CLAIMANT, single-use for everyone else. A repeat presentation by the identity
     that already claimed it returns the same body as the first call, so a prefetching mail client or a
@@ -95,14 +96,14 @@ def sync_detailed(
     token still gets the 404.
 
     Args:
-        body (BillingClaimRequest):
+        body (BillingClaimRequest | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[BillingClaimResult, Error]]
+        Response[BillingClaimResult | Error]
     """
 
     kwargs = _get_kwargs(
@@ -119,16 +120,16 @@ def sync_detailed(
 def sync(
     *,
     client: AuthenticatedClient,
-    body: BillingClaimRequest,
+    body: BillingClaimRequest | Unset = UNSET,
 ) -> BillingClaimResult | Error | None:
-    r"""Redeem a claim token, binding a paid account to the caller
+    """Redeem a claim token, binding a paid account to the caller
 
      Authenticated, and on the billing base rather than `/public`, because redeeming BINDS an adh
     identity to a paid account and there is nothing to bind without a session — a claim route mounted on
     `/public` would read the principal as undefined on every request and refuse every claim. The page
     that collects the token is the public half and lives in the frontend; it posts here once the visitor
-    is signed in. A delegated (acting) principal is refused outright: delegation means \"act on their
-    behalf\", and irreversibly claiming ownership of something they paid for is not that.
+    is signed in. A delegated (acting) principal is refused outright: delegation means "act on their
+    behalf", and irreversibly claiming ownership of something they paid for is not that.
 
     IDEMPOTENT FOR THE CLAIMANT, single-use for everyone else. A repeat presentation by the identity
     that already claimed it returns the same body as the first call, so a prefetching mail client or a
@@ -136,14 +137,14 @@ def sync(
     token still gets the 404.
 
     Args:
-        body (BillingClaimRequest):
+        body (BillingClaimRequest | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[BillingClaimResult, Error]
+        BillingClaimResult | Error
     """
 
     return sync_detailed(
@@ -155,16 +156,16 @@ def sync(
 async def asyncio_detailed(
     *,
     client: AuthenticatedClient,
-    body: BillingClaimRequest,
+    body: BillingClaimRequest | Unset = UNSET,
 ) -> Response[BillingClaimResult | Error]:
-    r"""Redeem a claim token, binding a paid account to the caller
+    """Redeem a claim token, binding a paid account to the caller
 
      Authenticated, and on the billing base rather than `/public`, because redeeming BINDS an adh
     identity to a paid account and there is nothing to bind without a session — a claim route mounted on
     `/public` would read the principal as undefined on every request and refuse every claim. The page
     that collects the token is the public half and lives in the frontend; it posts here once the visitor
-    is signed in. A delegated (acting) principal is refused outright: delegation means \"act on their
-    behalf\", and irreversibly claiming ownership of something they paid for is not that.
+    is signed in. A delegated (acting) principal is refused outright: delegation means "act on their
+    behalf", and irreversibly claiming ownership of something they paid for is not that.
 
     IDEMPOTENT FOR THE CLAIMANT, single-use for everyone else. A repeat presentation by the identity
     that already claimed it returns the same body as the first call, so a prefetching mail client or a
@@ -172,14 +173,14 @@ async def asyncio_detailed(
     token still gets the 404.
 
     Args:
-        body (BillingClaimRequest):
+        body (BillingClaimRequest | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[BillingClaimResult, Error]]
+        Response[BillingClaimResult | Error]
     """
 
     kwargs = _get_kwargs(
@@ -194,16 +195,16 @@ async def asyncio_detailed(
 async def asyncio(
     *,
     client: AuthenticatedClient,
-    body: BillingClaimRequest,
+    body: BillingClaimRequest | Unset = UNSET,
 ) -> BillingClaimResult | Error | None:
-    r"""Redeem a claim token, binding a paid account to the caller
+    """Redeem a claim token, binding a paid account to the caller
 
      Authenticated, and on the billing base rather than `/public`, because redeeming BINDS an adh
     identity to a paid account and there is nothing to bind without a session — a claim route mounted on
     `/public` would read the principal as undefined on every request and refuse every claim. The page
     that collects the token is the public half and lives in the frontend; it posts here once the visitor
-    is signed in. A delegated (acting) principal is refused outright: delegation means \"act on their
-    behalf\", and irreversibly claiming ownership of something they paid for is not that.
+    is signed in. A delegated (acting) principal is refused outright: delegation means "act on their
+    behalf", and irreversibly claiming ownership of something they paid for is not that.
 
     IDEMPOTENT FOR THE CLAIMANT, single-use for everyone else. A repeat presentation by the identity
     that already claimed it returns the same body as the first call, so a prefetching mail client or a
@@ -211,14 +212,14 @@ async def asyncio(
     token still gets the 404.
 
     Args:
-        body (BillingClaimRequest):
+        body (BillingClaimRequest | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[BillingClaimResult, Error]
+        BillingClaimResult | Error
     """
 
     return (

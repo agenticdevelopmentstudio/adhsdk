@@ -13,8 +13,8 @@ from ...types import UNSET, Response, Unset
 def _get_kwargs(
     *,
     target_kind: str,
-    target_id: Unset | str = UNSET,
-    target_ids: Unset | str = UNSET,
+    target_id: str | Unset = UNSET,
+    target_ids: str | Unset = UNSET,
 ) -> dict[str, Any]:
     params: dict[str, Any] = {}
 
@@ -74,22 +74,22 @@ def sync_detailed(
     *,
     client: AuthenticatedClient,
     target_kind: str,
-    target_id: Unset | str = UNSET,
-    target_ids: Unset | str = UNSET,
+    target_id: str | Unset = UNSET,
+    target_ids: str | Unset = UNSET,
 ) -> Response[Error | GetContentReactionsResponse200]:
     """List all reactions on one target, or a batch of them (public within the ecosystem)
 
     Args:
         target_kind (str):
-        target_id (Union[Unset, str]):
-        target_ids (Union[Unset, str]):
+        target_id (str | Unset):
+        target_ids (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, GetContentReactionsResponse200]]
+        Response[Error | GetContentReactionsResponse200]
     """
 
     kwargs = _get_kwargs(
@@ -109,22 +109,22 @@ def sync(
     *,
     client: AuthenticatedClient,
     target_kind: str,
-    target_id: Unset | str = UNSET,
-    target_ids: Unset | str = UNSET,
+    target_id: str | Unset = UNSET,
+    target_ids: str | Unset = UNSET,
 ) -> Error | GetContentReactionsResponse200 | None:
     """List all reactions on one target, or a batch of them (public within the ecosystem)
 
     Args:
         target_kind (str):
-        target_id (Union[Unset, str]):
-        target_ids (Union[Unset, str]):
+        target_id (str | Unset):
+        target_ids (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, GetContentReactionsResponse200]
+        Error | GetContentReactionsResponse200
     """
 
     return sync_detailed(
@@ -139,22 +139,22 @@ async def asyncio_detailed(
     *,
     client: AuthenticatedClient,
     target_kind: str,
-    target_id: Unset | str = UNSET,
-    target_ids: Unset | str = UNSET,
+    target_id: str | Unset = UNSET,
+    target_ids: str | Unset = UNSET,
 ) -> Response[Error | GetContentReactionsResponse200]:
     """List all reactions on one target, or a batch of them (public within the ecosystem)
 
     Args:
         target_kind (str):
-        target_id (Union[Unset, str]):
-        target_ids (Union[Unset, str]):
+        target_id (str | Unset):
+        target_ids (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, GetContentReactionsResponse200]]
+        Response[Error | GetContentReactionsResponse200]
     """
 
     kwargs = _get_kwargs(
@@ -172,22 +172,22 @@ async def asyncio(
     *,
     client: AuthenticatedClient,
     target_kind: str,
-    target_id: Unset | str = UNSET,
-    target_ids: Unset | str = UNSET,
+    target_id: str | Unset = UNSET,
+    target_ids: str | Unset = UNSET,
 ) -> Error | GetContentReactionsResponse200 | None:
     """List all reactions on one target, or a batch of them (public within the ecosystem)
 
     Args:
         target_kind (str):
-        target_id (Union[Unset, str]):
-        target_ids (Union[Unset, str]):
+        target_id (str | Unset):
+        target_ids (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, GetContentReactionsResponse200]
+        Error | GetContentReactionsResponse200
     """
 
     return (

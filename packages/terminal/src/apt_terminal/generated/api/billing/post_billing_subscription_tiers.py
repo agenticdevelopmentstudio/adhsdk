@@ -10,12 +10,12 @@ from ...models.post_billing_subscription_tiers_body import PostBillingSubscripti
 from ...models.post_billing_subscription_tiers_response_201 import (
     PostBillingSubscriptionTiersResponse201,
 )
-from ...types import Response
+from ...types import UNSET, Response, Unset
 
 
 def _get_kwargs(
     *,
-    body: PostBillingSubscriptionTiersBody,
+    body: PostBillingSubscriptionTiersBody | Unset = UNSET,
 ) -> dict[str, Any]:
     headers: dict[str, Any] = {}
 
@@ -24,7 +24,8 @@ def _get_kwargs(
         "url": "/billing/subscription-tiers",
     }
 
-    _kwargs["json"] = body.to_dict()
+    if not isinstance(body, Unset):
+        _kwargs["json"] = body.to_dict()
 
     headers["Content-Type"] = "application/json"
 
@@ -70,19 +71,19 @@ def _build_response(
 def sync_detailed(
     *,
     client: AuthenticatedClient,
-    body: PostBillingSubscriptionTiersBody,
+    body: PostBillingSubscriptionTiersBody | Unset = UNSET,
 ) -> Response[Error | PostBillingSubscriptionTiersResponse201]:
     """Create subscription_tiers
 
     Args:
-        body (PostBillingSubscriptionTiersBody):
+        body (PostBillingSubscriptionTiersBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, PostBillingSubscriptionTiersResponse201]]
+        Response[Error | PostBillingSubscriptionTiersResponse201]
     """
 
     kwargs = _get_kwargs(
@@ -99,19 +100,19 @@ def sync_detailed(
 def sync(
     *,
     client: AuthenticatedClient,
-    body: PostBillingSubscriptionTiersBody,
+    body: PostBillingSubscriptionTiersBody | Unset = UNSET,
 ) -> Error | PostBillingSubscriptionTiersResponse201 | None:
     """Create subscription_tiers
 
     Args:
-        body (PostBillingSubscriptionTiersBody):
+        body (PostBillingSubscriptionTiersBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, PostBillingSubscriptionTiersResponse201]
+        Error | PostBillingSubscriptionTiersResponse201
     """
 
     return sync_detailed(
@@ -123,19 +124,19 @@ def sync(
 async def asyncio_detailed(
     *,
     client: AuthenticatedClient,
-    body: PostBillingSubscriptionTiersBody,
+    body: PostBillingSubscriptionTiersBody | Unset = UNSET,
 ) -> Response[Error | PostBillingSubscriptionTiersResponse201]:
     """Create subscription_tiers
 
     Args:
-        body (PostBillingSubscriptionTiersBody):
+        body (PostBillingSubscriptionTiersBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, PostBillingSubscriptionTiersResponse201]]
+        Response[Error | PostBillingSubscriptionTiersResponse201]
     """
 
     kwargs = _get_kwargs(
@@ -150,19 +151,19 @@ async def asyncio_detailed(
 async def asyncio(
     *,
     client: AuthenticatedClient,
-    body: PostBillingSubscriptionTiersBody,
+    body: PostBillingSubscriptionTiersBody | Unset = UNSET,
 ) -> Error | PostBillingSubscriptionTiersResponse201 | None:
     """Create subscription_tiers
 
     Args:
-        body (PostBillingSubscriptionTiersBody):
+        body (PostBillingSubscriptionTiersBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, PostBillingSubscriptionTiersResponse201]
+        Error | PostBillingSubscriptionTiersResponse201
     """
 
     return (

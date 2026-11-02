@@ -1,5 +1,6 @@
 from http import HTTPStatus
 from typing import Any
+from urllib.parse import quote
 
 import httpx
 
@@ -13,7 +14,7 @@ from ...types import UNSET, Response, Unset
 def _get_kwargs(
     id: str,
     *,
-    workspace: Unset | str = UNSET,
+    workspace: str | Unset = UNSET,
 ) -> dict[str, Any]:
     params: dict[str, Any] = {}
 
@@ -23,7 +24,9 @@ def _get_kwargs(
 
     _kwargs: dict[str, Any] = {
         "method": "get",
-        "url": f"/content/social-links/{id}",
+        "url": "/content/social-links/{id}".format(
+            id=quote(str(id), safe=""),
+        ),
         "params": params,
     }
 
@@ -69,20 +72,20 @@ def sync_detailed(
     id: str,
     *,
     client: AuthenticatedClient,
-    workspace: Unset | str = UNSET,
+    workspace: str | Unset = UNSET,
 ) -> Response[Error | GetContentSocialLinksIdResponse200]:
     """Get social_links by id
 
     Args:
         id (str):
-        workspace (Union[Unset, str]):
+        workspace (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, GetContentSocialLinksIdResponse200]]
+        Response[Error | GetContentSocialLinksIdResponse200]
     """
 
     kwargs = _get_kwargs(
@@ -101,20 +104,20 @@ def sync(
     id: str,
     *,
     client: AuthenticatedClient,
-    workspace: Unset | str = UNSET,
+    workspace: str | Unset = UNSET,
 ) -> Error | GetContentSocialLinksIdResponse200 | None:
     """Get social_links by id
 
     Args:
         id (str):
-        workspace (Union[Unset, str]):
+        workspace (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, GetContentSocialLinksIdResponse200]
+        Error | GetContentSocialLinksIdResponse200
     """
 
     return sync_detailed(
@@ -128,20 +131,20 @@ async def asyncio_detailed(
     id: str,
     *,
     client: AuthenticatedClient,
-    workspace: Unset | str = UNSET,
+    workspace: str | Unset = UNSET,
 ) -> Response[Error | GetContentSocialLinksIdResponse200]:
     """Get social_links by id
 
     Args:
         id (str):
-        workspace (Union[Unset, str]):
+        workspace (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, GetContentSocialLinksIdResponse200]]
+        Response[Error | GetContentSocialLinksIdResponse200]
     """
 
     kwargs = _get_kwargs(
@@ -158,20 +161,20 @@ async def asyncio(
     id: str,
     *,
     client: AuthenticatedClient,
-    workspace: Unset | str = UNSET,
+    workspace: str | Unset = UNSET,
 ) -> Error | GetContentSocialLinksIdResponse200 | None:
     """Get social_links by id
 
     Args:
         id (str):
-        workspace (Union[Unset, str]):
+        workspace (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, GetContentSocialLinksIdResponse200]
+        Error | GetContentSocialLinksIdResponse200
     """
 
     return (

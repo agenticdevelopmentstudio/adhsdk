@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar
 
@@ -12,18 +14,18 @@ T = TypeVar("T", bound="PutPersonaToolTemplatesIdBody")
 class PutPersonaToolTemplatesIdBody:
     """
     Attributes:
-        tool_key (Union[Unset, str]):
-        source_kind (Union[Unset, str]):
-        display_name (Union[Unset, str]):
-        description (Union[Unset, str]):
-        read_only (Union[Unset, bool]):
+        tool_key (str | Unset):
+        source_kind (str | Unset):
+        display_name (str | Unset):
+        description (str | Unset):
+        read_only (bool | Unset):
     """
 
-    tool_key: Unset | str = UNSET
-    source_kind: Unset | str = UNSET
-    display_name: Unset | str = UNSET
-    description: Unset | str = UNSET
-    read_only: Unset | bool = UNSET
+    tool_key: str | Unset = UNSET
+    source_kind: str | Unset = UNSET
+    display_name: str | Unset = UNSET
+    description: str | Unset = UNSET
+    read_only: bool | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
         tool_key = self.tool_key

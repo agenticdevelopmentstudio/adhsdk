@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar
 
@@ -15,11 +17,11 @@ class InviteAcceptResult:
     """
     Attributes:
         status (InviteAcceptResultStatus):
-        ecosystem_name (Union[Unset, str]):
+        ecosystem_name (str | Unset):
     """
 
     status: InviteAcceptResultStatus
-    ecosystem_name: Unset | str = UNSET
+    ecosystem_name: str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:

@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, TypeVar, Union
+from typing import TYPE_CHECKING, Any, TypeVar
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -19,19 +21,19 @@ T = TypeVar("T", bound="PatchProjectProjectsIdSavedViewsViewIdBody")
 class PatchProjectProjectsIdSavedViewsViewIdBody:
     """
     Attributes:
-        name (Union[Unset, str]):
-        config (Union[Unset, PatchProjectProjectsIdSavedViewsViewIdBodyConfig]): opaque client-defined view config (view
-            id, filter, sort). Stored whole, never interpreted; must be a JSON object and serialize to at most 8192 bytes.
+        name (str | Unset):
+        config (PatchProjectProjectsIdSavedViewsViewIdBodyConfig | Unset): opaque client-defined view config (view id,
+            filter, sort). Stored whole, never interpreted; must be a JSON object and serialize to at most 8192 bytes.
     """
 
-    name: Unset | str = UNSET
-    config: Union[Unset, "PatchProjectProjectsIdSavedViewsViewIdBodyConfig"] = UNSET
+    name: str | Unset = UNSET
+    config: PatchProjectProjectsIdSavedViewsViewIdBodyConfig | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
         name = self.name
 
-        config: Unset | dict[str, Any] = UNSET
+        config: dict[str, Any] | Unset = UNSET
         if not isinstance(self.config, Unset):
             config = self.config.to_dict()
 
@@ -55,7 +57,7 @@ class PatchProjectProjectsIdSavedViewsViewIdBody:
         name = d.pop("name", UNSET)
 
         _config = d.pop("config", UNSET)
-        config: Unset | PatchProjectProjectsIdSavedViewsViewIdBodyConfig
+        config: PatchProjectProjectsIdSavedViewsViewIdBodyConfig | Unset
         if isinstance(_config, Unset):
             config = UNSET
         else:

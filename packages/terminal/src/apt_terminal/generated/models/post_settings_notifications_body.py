@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar
 
@@ -13,19 +15,19 @@ class PostSettingsNotificationsBody:
     """
     Attributes:
         category (str):
-        ecosystem_id (Union[Unset, str]):
-        email (Union[Unset, bool]):
-        sms (Union[Unset, bool]):
-        in_app (Union[Unset, bool]):
-        sync_txid (Union[Unset, int]):
+        ecosystem_id (str | Unset):
+        email (bool | Unset):
+        sms (bool | Unset):
+        in_app (bool | Unset):
+        sync_txid (int | Unset):
     """
 
     category: str
-    ecosystem_id: Unset | str = UNSET
-    email: Unset | bool = UNSET
-    sms: Unset | bool = UNSET
-    in_app: Unset | bool = UNSET
-    sync_txid: Unset | int = UNSET
+    ecosystem_id: str | Unset = UNSET
+    email: bool | Unset = UNSET
+    sms: bool | Unset = UNSET
+    in_app: bool | Unset = UNSET
+    sync_txid: int | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
         category = self.category

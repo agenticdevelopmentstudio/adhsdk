@@ -14,7 +14,7 @@ from ...types import UNSET, Response, Unset
 
 def _get_kwargs(
     *,
-    status: Unset | str = UNSET,
+    status: str | Unset = UNSET,
 ) -> dict[str, Any]:
     params: dict[str, Any] = {}
 
@@ -69,19 +69,19 @@ def _build_response(
 def sync_detailed(
     *,
     client: AuthenticatedClient,
-    status: Unset | str = UNSET,
+    status: str | Unset = UNSET,
 ) -> Response[Error | GetProcessingPersonasApprovalsResponse200]:
     """List the persona-action approvals the caller may decide
 
     Args:
-        status (Union[Unset, str]):
+        status (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, GetProcessingPersonasApprovalsResponse200]]
+        Response[Error | GetProcessingPersonasApprovalsResponse200]
     """
 
     kwargs = _get_kwargs(
@@ -98,19 +98,19 @@ def sync_detailed(
 def sync(
     *,
     client: AuthenticatedClient,
-    status: Unset | str = UNSET,
+    status: str | Unset = UNSET,
 ) -> Error | GetProcessingPersonasApprovalsResponse200 | None:
     """List the persona-action approvals the caller may decide
 
     Args:
-        status (Union[Unset, str]):
+        status (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, GetProcessingPersonasApprovalsResponse200]
+        Error | GetProcessingPersonasApprovalsResponse200
     """
 
     return sync_detailed(
@@ -122,19 +122,19 @@ def sync(
 async def asyncio_detailed(
     *,
     client: AuthenticatedClient,
-    status: Unset | str = UNSET,
+    status: str | Unset = UNSET,
 ) -> Response[Error | GetProcessingPersonasApprovalsResponse200]:
     """List the persona-action approvals the caller may decide
 
     Args:
-        status (Union[Unset, str]):
+        status (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, GetProcessingPersonasApprovalsResponse200]]
+        Response[Error | GetProcessingPersonasApprovalsResponse200]
     """
 
     kwargs = _get_kwargs(
@@ -149,19 +149,19 @@ async def asyncio_detailed(
 async def asyncio(
     *,
     client: AuthenticatedClient,
-    status: Unset | str = UNSET,
+    status: str | Unset = UNSET,
 ) -> Error | GetProcessingPersonasApprovalsResponse200 | None:
     """List the persona-action approvals the caller may decide
 
     Args:
-        status (Union[Unset, str]):
+        status (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, GetProcessingPersonasApprovalsResponse200]
+        Error | GetProcessingPersonasApprovalsResponse200
     """
 
     return (

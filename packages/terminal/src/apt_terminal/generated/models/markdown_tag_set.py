@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import TYPE_CHECKING, Any, TypeVar, cast
 
@@ -16,11 +18,11 @@ class MarkdownTagSet:
     """
     Attributes:
         items (list[str]): Tag labels, alphabetical.
-        nodes (list['MarkdownKeywordNode']): The same labels with their row ids, in the same order.
+        nodes (list[MarkdownKeywordNode]): The same labels with their row ids, in the same order.
     """
 
     items: list[str]
-    nodes: list["MarkdownKeywordNode"]
+    nodes: list[MarkdownKeywordNode]
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:

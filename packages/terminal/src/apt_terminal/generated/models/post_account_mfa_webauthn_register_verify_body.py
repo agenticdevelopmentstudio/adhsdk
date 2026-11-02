@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import TYPE_CHECKING, Any, TypeVar
 
@@ -21,12 +23,12 @@ class PostAccountMfaWebauthnRegisterVerifyBody:
     Attributes:
         token (str): Registration challenge token
         response (PostAccountMfaWebauthnRegisterVerifyBodyResponse): RegistrationResponseJSON
-        name (Union[Unset, str]):
+        name (str | Unset):
     """
 
     token: str
-    response: "PostAccountMfaWebauthnRegisterVerifyBodyResponse"
-    name: Unset | str = UNSET
+    response: PostAccountMfaWebauthnRegisterVerifyBodyResponse
+    name: str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:

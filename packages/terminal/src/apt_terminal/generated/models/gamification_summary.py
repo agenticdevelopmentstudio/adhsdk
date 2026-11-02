@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import TYPE_CHECKING, Any, TypeVar, cast
 
@@ -21,16 +23,16 @@ class GamificationSummary:
         subject_id (str):
         total_points (int):
         opted_out (bool):
-        badges (list['GamificationSubjectBadge']):
-        level (Union[None, Unset, str]):
+        badges (list[GamificationSubjectBadge]):
+        level (None | str | Unset):
     """
 
     subject_type: str
     subject_id: str
     total_points: int
     opted_out: bool
-    badges: list["GamificationSubjectBadge"]
-    level: None | Unset | str = UNSET
+    badges: list[GamificationSubjectBadge]
+    level: None | str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -47,7 +49,7 @@ class GamificationSummary:
             badges_item = badges_item_data.to_dict()
             badges.append(badges_item)
 
-        level: None | Unset | str
+        level: None | str | Unset
         if isinstance(self.level, Unset):
             level = UNSET
         else:
@@ -89,12 +91,12 @@ class GamificationSummary:
 
             badges.append(badges_item)
 
-        def _parse_level(data: object) -> None | Unset | str:
+        def _parse_level(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         level = _parse_level(d.pop("level", UNSET))
 

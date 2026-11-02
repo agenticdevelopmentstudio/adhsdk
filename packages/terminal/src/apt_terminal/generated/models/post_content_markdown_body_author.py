@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar
 
@@ -15,14 +17,14 @@ class PostContentMarkdownBodyAuthor:
     types are caller-asserted (unverified).
 
         Attributes:
-            type_ (Union[Unset, str]): Lower-cased. e.g. 'customer', 'user', 'persona', 'agent', 'system'.
-            id (Union[Unset, str]): Id within that type's namespace (ignored for customer/user — pinned to the caller).
-            name (Union[Unset, str]): Display label; ignored for customer/user (taken from the principal).
+            type_ (str | Unset): Lower-cased. e.g. 'customer', 'user', 'persona', 'agent', 'system'.
+            id (str | Unset): Id within that type's namespace (ignored for customer/user — pinned to the caller).
+            name (str | Unset): Display label; ignored for customer/user (taken from the principal).
     """
 
-    type_: Unset | str = UNSET
-    id: Unset | str = UNSET
-    name: Unset | str = UNSET
+    type_: str | Unset = UNSET
+    id: str | Unset = UNSET
+    name: str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:

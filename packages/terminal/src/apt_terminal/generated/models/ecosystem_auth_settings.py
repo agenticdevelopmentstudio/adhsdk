@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -16,13 +18,13 @@ class EcosystemAuthSettings:
     Attributes:
         signup_mode (EcosystemAuthSettingsSignupMode): Defaults to invite_only
         login_enabled (bool): Defaults to true
-        allowed_providers (Union[None, list[str]]): null means every configured provider. An empty array is stored as
-            null, never as "none".
+        allowed_providers (list[str] | None): null means every configured provider. An empty array is stored as null,
+            never as "none".
     """
 
     signup_mode: EcosystemAuthSettingsSignupMode
     login_enabled: bool
-    allowed_providers: None | list[str]
+    allowed_providers: list[str] | None
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -30,7 +32,7 @@ class EcosystemAuthSettings:
 
         login_enabled = self.login_enabled
 
-        allowed_providers: None | list[str]
+        allowed_providers: list[str] | None
         if isinstance(self.allowed_providers, list):
             allowed_providers = self.allowed_providers
 
@@ -56,7 +58,7 @@ class EcosystemAuthSettings:
 
         login_enabled = d.pop("loginEnabled")
 
-        def _parse_allowed_providers(data: object) -> None | list[str]:
+        def _parse_allowed_providers(data: object) -> list[str] | None:
             if data is None:
                 return data
             try:
@@ -65,9 +67,9 @@ class EcosystemAuthSettings:
                 allowed_providers_type_0 = cast(list[str], data)
 
                 return allowed_providers_type_0
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
-            return cast(None | list[str], data)
+            return cast(list[str] | None, data)
 
         allowed_providers = _parse_allowed_providers(d.pop("allowedProviders"))
 

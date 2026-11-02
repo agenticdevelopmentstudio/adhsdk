@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class IterationWorkItemPriorityScale(str, Enum):
+class IterationWorkItemPriorityScale(StrEnum):
     NONE = "none"
     STANDARD = "standard"
 

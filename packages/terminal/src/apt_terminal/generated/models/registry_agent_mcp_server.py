@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -21,7 +23,7 @@ class RegistryAgentMcpServer:
         has_auth_secret (bool): true iff a per-server bearer secret is stored; the secret itself is NEVER returned
         created_at (str):
         updated_at (str):
-        created_by (Union[None, Unset, str]): The admin who registered it (null for system rows)
+        created_by (None | str | Unset): The admin who registered it (null for system rows)
     """
 
     id: str
@@ -32,7 +34,7 @@ class RegistryAgentMcpServer:
     has_auth_secret: bool
     created_at: str
     updated_at: str
-    created_by: None | Unset | str = UNSET
+    created_by: None | str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -52,7 +54,7 @@ class RegistryAgentMcpServer:
 
         updated_at = self.updated_at
 
-        created_by: None | Unset | str
+        created_by: None | str | Unset
         if isinstance(self.created_by, Unset):
             created_by = UNSET
         else:
@@ -96,12 +98,12 @@ class RegistryAgentMcpServer:
 
         updated_at = d.pop("updatedAt")
 
-        def _parse_created_by(data: object) -> None | Unset | str:
+        def _parse_created_by(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         created_by = _parse_created_by(d.pop("createdBy", UNSET))
 

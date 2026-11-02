@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -16,15 +18,15 @@ class WorkspaceMember:
         user_id (str):
         is_admin (bool): Admin of any of the org's teams (the roster's strongest role)
         added_at (str): Earliest membership across the org's teams
-        email (Union[None, Unset, str]):
-        display_name (Union[None, Unset, str]):
+        email (None | str | Unset):
+        display_name (None | str | Unset):
     """
 
     user_id: str
     is_admin: bool
     added_at: str
-    email: None | Unset | str = UNSET
-    display_name: None | Unset | str = UNSET
+    email: None | str | Unset = UNSET
+    display_name: None | str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -34,13 +36,13 @@ class WorkspaceMember:
 
         added_at = self.added_at
 
-        email: None | Unset | str
+        email: None | str | Unset
         if isinstance(self.email, Unset):
             email = UNSET
         else:
             email = self.email
 
-        display_name: None | Unset | str
+        display_name: None | str | Unset
         if isinstance(self.display_name, Unset):
             display_name = UNSET
         else:
@@ -71,21 +73,21 @@ class WorkspaceMember:
 
         added_at = d.pop("addedAt")
 
-        def _parse_email(data: object) -> None | Unset | str:
+        def _parse_email(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         email = _parse_email(d.pop("email", UNSET))
 
-        def _parse_display_name(data: object) -> None | Unset | str:
+        def _parse_display_name(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         display_name = _parse_display_name(d.pop("displayName", UNSET))
 

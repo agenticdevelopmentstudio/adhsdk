@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, TypeVar, Union, cast
+from typing import TYPE_CHECKING, Any, TypeVar, cast
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -26,11 +28,11 @@ class GameHoldingWithArtifact:
         kind (str):
         quantity (int):
         acquired_at (str):
-        data (Union['GameHoldingWithArtifactDataType0', None, Unset]):
-        artifact_kind (Union[Unset, str]):
-        artifact_slot (Union[None, Unset, str]):
-        artifact_summary (Union['GameHoldingWithArtifactArtifactSummaryType0', None, Unset]):
-        artifact_visibility (Union[Unset, str]):
+        data (GameHoldingWithArtifactDataType0 | None | Unset):
+        artifact_kind (str | Unset):
+        artifact_slot (None | str | Unset):
+        artifact_summary (GameHoldingWithArtifactArtifactSummaryType0 | None | Unset):
+        artifact_visibility (str | Unset):
     """
 
     id: str
@@ -39,18 +41,20 @@ class GameHoldingWithArtifact:
     kind: str
     quantity: int
     acquired_at: str
-    data: Union["GameHoldingWithArtifactDataType0", None, Unset] = UNSET
-    artifact_kind: Unset | str = UNSET
-    artifact_slot: None | Unset | str = UNSET
-    artifact_summary: Union["GameHoldingWithArtifactArtifactSummaryType0", None, Unset] = UNSET
-    artifact_visibility: Unset | str = UNSET
+    data: GameHoldingWithArtifactDataType0 | None | Unset = UNSET
+    artifact_kind: str | Unset = UNSET
+    artifact_slot: None | str | Unset = UNSET
+    artifact_summary: GameHoldingWithArtifactArtifactSummaryType0 | None | Unset = UNSET
+    artifact_visibility: str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
         from ..models.game_holding_with_artifact_artifact_summary_type_0 import (
             GameHoldingWithArtifactArtifactSummaryType0,
         )
-        from ..models.game_holding_with_artifact_data_type_0 import GameHoldingWithArtifactDataType0
+        from ..models.game_holding_with_artifact_data_type_0 import (
+            GameHoldingWithArtifactDataType0,
+        )
 
         id = self.id
 
@@ -64,7 +68,7 @@ class GameHoldingWithArtifact:
 
         acquired_at = self.acquired_at
 
-        data: None | Unset | dict[str, Any]
+        data: dict[str, Any] | None | Unset
         if isinstance(self.data, Unset):
             data = UNSET
         elif isinstance(self.data, GameHoldingWithArtifactDataType0):
@@ -74,13 +78,13 @@ class GameHoldingWithArtifact:
 
         artifact_kind = self.artifact_kind
 
-        artifact_slot: None | Unset | str
+        artifact_slot: None | str | Unset
         if isinstance(self.artifact_slot, Unset):
             artifact_slot = UNSET
         else:
             artifact_slot = self.artifact_slot
 
-        artifact_summary: None | Unset | dict[str, Any]
+        artifact_summary: dict[str, Any] | None | Unset
         if isinstance(self.artifact_summary, Unset):
             artifact_summary = UNSET
         elif isinstance(self.artifact_summary, GameHoldingWithArtifactArtifactSummaryType0):
@@ -120,7 +124,9 @@ class GameHoldingWithArtifact:
         from ..models.game_holding_with_artifact_artifact_summary_type_0 import (
             GameHoldingWithArtifactArtifactSummaryType0,
         )
-        from ..models.game_holding_with_artifact_data_type_0 import GameHoldingWithArtifactDataType0
+        from ..models.game_holding_with_artifact_data_type_0 import (
+            GameHoldingWithArtifactDataType0,
+        )
 
         d = dict(src_dict)
         id = d.pop("id")
@@ -135,7 +141,7 @@ class GameHoldingWithArtifact:
 
         acquired_at = d.pop("acquiredAt")
 
-        def _parse_data(data: object) -> Union["GameHoldingWithArtifactDataType0", None, Unset]:
+        def _parse_data(data: object) -> GameHoldingWithArtifactDataType0 | None | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
@@ -146,26 +152,26 @@ class GameHoldingWithArtifact:
                 data_type_0 = GameHoldingWithArtifactDataType0.from_dict(data)
 
                 return data_type_0
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
-            return cast(Union["GameHoldingWithArtifactDataType0", None, Unset], data)
+            return cast(GameHoldingWithArtifactDataType0 | None | Unset, data)
 
         data = _parse_data(d.pop("data", UNSET))
 
         artifact_kind = d.pop("artifactKind", UNSET)
 
-        def _parse_artifact_slot(data: object) -> None | Unset | str:
+        def _parse_artifact_slot(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         artifact_slot = _parse_artifact_slot(d.pop("artifactSlot", UNSET))
 
         def _parse_artifact_summary(
             data: object,
-        ) -> Union["GameHoldingWithArtifactArtifactSummaryType0", None, Unset]:
+        ) -> GameHoldingWithArtifactArtifactSummaryType0 | None | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
@@ -178,9 +184,9 @@ class GameHoldingWithArtifact:
                 )
 
                 return artifact_summary_type_0
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
-            return cast(Union["GameHoldingWithArtifactArtifactSummaryType0", None, Unset], data)
+            return cast(GameHoldingWithArtifactArtifactSummaryType0 | None | Unset, data)
 
         artifact_summary = _parse_artifact_summary(d.pop("artifactSummary", UNSET))
 

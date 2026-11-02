@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, TypeVar, Union, cast
+from typing import TYPE_CHECKING, Any, TypeVar, cast
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -26,36 +28,36 @@ T = TypeVar("T", bound="PutGamificationRealmsEcosystemIdConfigBody")
 class PutGamificationRealmsEcosystemIdConfigBody:
     """
     Attributes:
-        mode (Union[Unset, PutGamificationRealmsEcosystemIdConfigBodyMode]):
-        skin (Union[Unset, PutGamificationRealmsEcosystemIdConfigBodySkin]):
-        surfaces (Union[Unset, PutGamificationRealmsEcosystemIdConfigBodySurfaces]):
-        seasons (Union['GamificationSeasonsType0', None, Unset]):
-        timezone (Union[Unset, str]): IANA zone for the realm's day/streak boundary
+        mode (PutGamificationRealmsEcosystemIdConfigBodyMode | Unset):
+        skin (PutGamificationRealmsEcosystemIdConfigBodySkin | Unset):
+        surfaces (PutGamificationRealmsEcosystemIdConfigBodySurfaces | Unset):
+        seasons (GamificationSeasonsType0 | None | Unset):
+        timezone (str | Unset): IANA zone for the realm's day/streak boundary
     """
 
-    mode: Unset | PutGamificationRealmsEcosystemIdConfigBodyMode = UNSET
-    skin: Unset | PutGamificationRealmsEcosystemIdConfigBodySkin = UNSET
-    surfaces: Union[Unset, "PutGamificationRealmsEcosystemIdConfigBodySurfaces"] = UNSET
-    seasons: Union["GamificationSeasonsType0", None, Unset] = UNSET
-    timezone: Unset | str = UNSET
+    mode: PutGamificationRealmsEcosystemIdConfigBodyMode | Unset = UNSET
+    skin: PutGamificationRealmsEcosystemIdConfigBodySkin | Unset = UNSET
+    surfaces: PutGamificationRealmsEcosystemIdConfigBodySurfaces | Unset = UNSET
+    seasons: GamificationSeasonsType0 | None | Unset = UNSET
+    timezone: str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
         from ..models.gamification_seasons_type_0 import GamificationSeasonsType0
 
-        mode: Unset | str = UNSET
+        mode: str | Unset = UNSET
         if not isinstance(self.mode, Unset):
             mode = self.mode.value
 
-        skin: Unset | str = UNSET
+        skin: str | Unset = UNSET
         if not isinstance(self.skin, Unset):
             skin = self.skin.value
 
-        surfaces: Unset | dict[str, Any] = UNSET
+        surfaces: dict[str, Any] | Unset = UNSET
         if not isinstance(self.surfaces, Unset):
             surfaces = self.surfaces.to_dict()
 
-        seasons: None | Unset | dict[str, Any]
+        seasons: dict[str, Any] | None | Unset
         if isinstance(self.seasons, Unset):
             seasons = UNSET
         elif isinstance(self.seasons, GamificationSeasonsType0):
@@ -90,27 +92,27 @@ class PutGamificationRealmsEcosystemIdConfigBody:
 
         d = dict(src_dict)
         _mode = d.pop("mode", UNSET)
-        mode: Unset | PutGamificationRealmsEcosystemIdConfigBodyMode
+        mode: PutGamificationRealmsEcosystemIdConfigBodyMode | Unset
         if isinstance(_mode, Unset):
             mode = UNSET
         else:
             mode = PutGamificationRealmsEcosystemIdConfigBodyMode(_mode)
 
         _skin = d.pop("skin", UNSET)
-        skin: Unset | PutGamificationRealmsEcosystemIdConfigBodySkin
+        skin: PutGamificationRealmsEcosystemIdConfigBodySkin | Unset
         if isinstance(_skin, Unset):
             skin = UNSET
         else:
             skin = PutGamificationRealmsEcosystemIdConfigBodySkin(_skin)
 
         _surfaces = d.pop("surfaces", UNSET)
-        surfaces: Unset | PutGamificationRealmsEcosystemIdConfigBodySurfaces
+        surfaces: PutGamificationRealmsEcosystemIdConfigBodySurfaces | Unset
         if isinstance(_surfaces, Unset):
             surfaces = UNSET
         else:
             surfaces = PutGamificationRealmsEcosystemIdConfigBodySurfaces.from_dict(_surfaces)
 
-        def _parse_seasons(data: object) -> Union["GamificationSeasonsType0", None, Unset]:
+        def _parse_seasons(data: object) -> GamificationSeasonsType0 | None | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
@@ -123,9 +125,9 @@ class PutGamificationRealmsEcosystemIdConfigBody:
                 )
 
                 return componentsschemas_gamification_seasons_type_0
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
-            return cast(Union["GamificationSeasonsType0", None, Unset], data)
+            return cast(GamificationSeasonsType0 | None | Unset, data)
 
         seasons = _parse_seasons(d.pop("seasons", UNSET))
 

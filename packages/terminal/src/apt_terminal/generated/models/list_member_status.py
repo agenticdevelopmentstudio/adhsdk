@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class ListMemberStatus(str, Enum):
+class ListMemberStatus(StrEnum):
     SUBSCRIBED = "subscribed"
     UNSUBSCRIBED = "unsubscribed"
 

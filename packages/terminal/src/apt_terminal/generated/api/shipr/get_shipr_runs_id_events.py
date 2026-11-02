@@ -1,5 +1,6 @@
 from http import HTTPStatus
 from typing import Any
+from urllib.parse import quote
 
 import httpx
 
@@ -13,9 +14,9 @@ from ...types import UNSET, Response, Unset
 def _get_kwargs(
     id: str,
     *,
-    after: Unset | str = UNSET,
-    limit: Unset | str = UNSET,
-    repo: Unset | str = UNSET,
+    after: str | Unset = UNSET,
+    limit: str | Unset = UNSET,
+    repo: str | Unset = UNSET,
 ) -> dict[str, Any]:
     params: dict[str, Any] = {}
 
@@ -29,7 +30,9 @@ def _get_kwargs(
 
     _kwargs: dict[str, Any] = {
         "method": "get",
-        "url": f"/shipr/runs/{id}/events",
+        "url": "/shipr/runs/{id}/events".format(
+            id=quote(str(id), safe=""),
+        ),
         "params": params,
     }
 
@@ -80,9 +83,9 @@ def sync_detailed(
     id: str,
     *,
     client: AuthenticatedClient,
-    after: Unset | str = UNSET,
-    limit: Unset | str = UNSET,
-    repo: Unset | str = UNSET,
+    after: str | Unset = UNSET,
+    limit: str | Unset = UNSET,
+    repo: str | Unset = UNSET,
 ) -> Response[Error | GetShiprRunsIdEventsResponse200]:
     """A page of the run’s log
 
@@ -91,16 +94,16 @@ def sync_detailed(
 
     Args:
         id (str):
-        after (Union[Unset, str]):
-        limit (Union[Unset, str]):
-        repo (Union[Unset, str]):
+        after (str | Unset):
+        limit (str | Unset):
+        repo (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, GetShiprRunsIdEventsResponse200]]
+        Response[Error | GetShiprRunsIdEventsResponse200]
     """
 
     kwargs = _get_kwargs(
@@ -121,9 +124,9 @@ def sync(
     id: str,
     *,
     client: AuthenticatedClient,
-    after: Unset | str = UNSET,
-    limit: Unset | str = UNSET,
-    repo: Unset | str = UNSET,
+    after: str | Unset = UNSET,
+    limit: str | Unset = UNSET,
+    repo: str | Unset = UNSET,
 ) -> Error | GetShiprRunsIdEventsResponse200 | None:
     """A page of the run’s log
 
@@ -132,16 +135,16 @@ def sync(
 
     Args:
         id (str):
-        after (Union[Unset, str]):
-        limit (Union[Unset, str]):
-        repo (Union[Unset, str]):
+        after (str | Unset):
+        limit (str | Unset):
+        repo (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, GetShiprRunsIdEventsResponse200]
+        Error | GetShiprRunsIdEventsResponse200
     """
 
     return sync_detailed(
@@ -157,9 +160,9 @@ async def asyncio_detailed(
     id: str,
     *,
     client: AuthenticatedClient,
-    after: Unset | str = UNSET,
-    limit: Unset | str = UNSET,
-    repo: Unset | str = UNSET,
+    after: str | Unset = UNSET,
+    limit: str | Unset = UNSET,
+    repo: str | Unset = UNSET,
 ) -> Response[Error | GetShiprRunsIdEventsResponse200]:
     """A page of the run’s log
 
@@ -168,16 +171,16 @@ async def asyncio_detailed(
 
     Args:
         id (str):
-        after (Union[Unset, str]):
-        limit (Union[Unset, str]):
-        repo (Union[Unset, str]):
+        after (str | Unset):
+        limit (str | Unset):
+        repo (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, GetShiprRunsIdEventsResponse200]]
+        Response[Error | GetShiprRunsIdEventsResponse200]
     """
 
     kwargs = _get_kwargs(
@@ -196,9 +199,9 @@ async def asyncio(
     id: str,
     *,
     client: AuthenticatedClient,
-    after: Unset | str = UNSET,
-    limit: Unset | str = UNSET,
-    repo: Unset | str = UNSET,
+    after: str | Unset = UNSET,
+    limit: str | Unset = UNSET,
+    repo: str | Unset = UNSET,
 ) -> Error | GetShiprRunsIdEventsResponse200 | None:
     """A page of the run’s log
 
@@ -207,16 +210,16 @@ async def asyncio(
 
     Args:
         id (str):
-        after (Union[Unset, str]):
-        limit (Union[Unset, str]):
-        repo (Union[Unset, str]):
+        after (str | Unset):
+        limit (str | Unset):
+        repo (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, GetShiprRunsIdEventsResponse200]
+        Error | GetShiprRunsIdEventsResponse200
     """
 
     return (

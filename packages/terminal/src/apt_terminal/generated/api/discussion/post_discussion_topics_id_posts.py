@@ -1,5 +1,6 @@
 from http import HTTPStatus
 from typing import Any
+from urllib.parse import quote
 
 import httpx
 
@@ -8,22 +9,25 @@ from ...client import AuthenticatedClient, Client
 from ...models.discussion_post import DiscussionPost
 from ...models.error import Error
 from ...models.post_discussion_topics_id_posts_body import PostDiscussionTopicsIdPostsBody
-from ...types import Response
+from ...types import UNSET, Response, Unset
 
 
 def _get_kwargs(
     id: str,
     *,
-    body: PostDiscussionTopicsIdPostsBody,
+    body: PostDiscussionTopicsIdPostsBody | Unset = UNSET,
 ) -> dict[str, Any]:
     headers: dict[str, Any] = {}
 
     _kwargs: dict[str, Any] = {
         "method": "post",
-        "url": f"/discussion/topics/{id}/posts",
+        "url": "/discussion/topics/{id}/posts".format(
+            id=quote(str(id), safe=""),
+        ),
     }
 
-    _kwargs["json"] = body.to_dict()
+    if not isinstance(body, Unset):
+        _kwargs["json"] = body.to_dict()
 
     headers["Content-Type"] = "application/json"
 
@@ -80,20 +84,20 @@ def sync_detailed(
     id: str,
     *,
     client: AuthenticatedClient,
-    body: PostDiscussionTopicsIdPostsBody,
+    body: PostDiscussionTopicsIdPostsBody | Unset = UNSET,
 ) -> Response[DiscussionPost | Error]:
     """Reply to a topic (bumps the topic’s reply count + last activity)
 
     Args:
         id (str):
-        body (PostDiscussionTopicsIdPostsBody):
+        body (PostDiscussionTopicsIdPostsBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[DiscussionPost, Error]]
+        Response[DiscussionPost | Error]
     """
 
     kwargs = _get_kwargs(
@@ -112,20 +116,20 @@ def sync(
     id: str,
     *,
     client: AuthenticatedClient,
-    body: PostDiscussionTopicsIdPostsBody,
+    body: PostDiscussionTopicsIdPostsBody | Unset = UNSET,
 ) -> DiscussionPost | Error | None:
     """Reply to a topic (bumps the topic’s reply count + last activity)
 
     Args:
         id (str):
-        body (PostDiscussionTopicsIdPostsBody):
+        body (PostDiscussionTopicsIdPostsBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[DiscussionPost, Error]
+        DiscussionPost | Error
     """
 
     return sync_detailed(
@@ -139,20 +143,20 @@ async def asyncio_detailed(
     id: str,
     *,
     client: AuthenticatedClient,
-    body: PostDiscussionTopicsIdPostsBody,
+    body: PostDiscussionTopicsIdPostsBody | Unset = UNSET,
 ) -> Response[DiscussionPost | Error]:
     """Reply to a topic (bumps the topic’s reply count + last activity)
 
     Args:
         id (str):
-        body (PostDiscussionTopicsIdPostsBody):
+        body (PostDiscussionTopicsIdPostsBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[DiscussionPost, Error]]
+        Response[DiscussionPost | Error]
     """
 
     kwargs = _get_kwargs(
@@ -169,20 +173,20 @@ async def asyncio(
     id: str,
     *,
     client: AuthenticatedClient,
-    body: PostDiscussionTopicsIdPostsBody,
+    body: PostDiscussionTopicsIdPostsBody | Unset = UNSET,
 ) -> DiscussionPost | Error | None:
     """Reply to a topic (bumps the topic’s reply count + last activity)
 
     Args:
         id (str):
-        body (PostDiscussionTopicsIdPostsBody):
+        body (PostDiscussionTopicsIdPostsBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[DiscussionPost, Error]
+        DiscussionPost | Error
     """
 
     return (

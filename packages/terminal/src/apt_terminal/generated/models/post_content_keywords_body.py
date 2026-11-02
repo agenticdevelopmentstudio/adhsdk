@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar
 
@@ -13,17 +15,17 @@ class PostContentKeywordsBody:
     """
     Attributes:
         label (str):
-        ecosystem_id (Union[Unset, str]):
-        color (Union[Unset, str]):
-        description (Union[Unset, str]):
-        sync_txid (Union[Unset, int]):
+        ecosystem_id (str | Unset):
+        color (str | Unset):
+        description (str | Unset):
+        sync_txid (int | Unset):
     """
 
     label: str
-    ecosystem_id: Unset | str = UNSET
-    color: Unset | str = UNSET
-    description: Unset | str = UNSET
-    sync_txid: Unset | int = UNSET
+    ecosystem_id: str | Unset = UNSET
+    color: str | Unset = UNSET
+    description: str | Unset = UNSET
+    sync_txid: int | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
         label = self.label

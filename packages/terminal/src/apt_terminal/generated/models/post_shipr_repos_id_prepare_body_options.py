@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar
 
@@ -14,14 +16,14 @@ class PostShiprReposIdPrepareBodyOptions:
     """Per-operation arguments. Read defensively; unknown keys are ignored.
 
     Attributes:
-        sha (Union[Unset, str]): prepare: the tip to pin. Absent means the dev repo’s main as it stands.
-        shard (Union[Unset, str]): register: which [deployments] key this mirror is.
-        group_id (Union[Unset, str]): register: the folder a FIRST registration files its new mirrors under.
+        sha (str | Unset): prepare: the tip to pin. Absent means the dev repo’s main as it stands.
+        shard (str | Unset): register: which [deployments] key this mirror is.
+        group_id (str | Unset): register: the folder a FIRST registration files its new mirrors under.
     """
 
-    sha: Unset | str = UNSET
-    shard: Unset | str = UNSET
-    group_id: Unset | str = UNSET
+    sha: str | Unset = UNSET
+    shard: str | Unset = UNSET
+    group_id: str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:

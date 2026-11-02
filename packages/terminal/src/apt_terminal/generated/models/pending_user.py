@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -19,20 +21,20 @@ class PendingUser:
         ecosystem_id (str):
         user_number (int): Sequential within the ecosystem, assigned on insert
         name (str):
-        email (Union[None, str]):
-        phone (Union[None, str]):
+        email (None | str):
+        phone (None | str):
         status (PendingUserStatus):
         request_count (int):
         invited_count (int):
-        last_request_at (Union[None, str]):
-        last_invite_sent_at (Union[None, str]):
+        last_request_at (None | str):
+        last_invite_sent_at (None | str):
         first_requested_at (str):
-        last_source (Union[None, str]):
-        last_note (Union[None, str]):
-        accepted_customer_id (Union[None, str]):
+        last_source (None | str):
+        last_note (None | str):
+        accepted_customer_id (None | str):
         created_at (str):
         updated_at (str):
-        contact_id (Union[None, Unset, str]):
+        contact_id (None | str | Unset):
     """
 
     id: str
@@ -52,7 +54,7 @@ class PendingUser:
     accepted_customer_id: None | str
     created_at: str
     updated_at: str
-    contact_id: None | Unset | str = UNSET
+    contact_id: None | str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -97,7 +99,7 @@ class PendingUser:
 
         updated_at = self.updated_at
 
-        contact_id: None | Unset | str
+        contact_id: None | str | Unset
         if isinstance(self.contact_id, Unset):
             contact_id = UNSET
         else:
@@ -203,12 +205,12 @@ class PendingUser:
 
         updated_at = d.pop("updatedAt")
 
-        def _parse_contact_id(data: object) -> None | Unset | str:
+        def _parse_contact_id(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         contact_id = _parse_contact_id(d.pop("contactId", UNSET))
 

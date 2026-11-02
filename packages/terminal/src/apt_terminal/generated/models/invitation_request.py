@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -16,12 +18,12 @@ class InvitationRequest:
         ecosystem_id (str):
         pending_user_id (str):
         name (str):
-        email (Union[None, str]):
-        phone (Union[None, str]):
-        source (Union[None, str]):
-        note (Union[None, str]):
+        email (None | str):
+        phone (None | str):
+        source (None | str):
+        note (None | str):
         created_at (str):
-        user_number (Union[None, int]):
+        user_number (int | None):
     """
 
     id: str
@@ -33,7 +35,7 @@ class InvitationRequest:
     source: None | str
     note: None | str
     created_at: str
-    user_number: None | int
+    user_number: int | None
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -59,7 +61,7 @@ class InvitationRequest:
 
         created_at = self.created_at
 
-        user_number: None | int
+        user_number: int | None
         user_number = self.user_number
 
         field_dict: dict[str, Any] = {}
@@ -122,10 +124,10 @@ class InvitationRequest:
 
         created_at = d.pop("createdAt")
 
-        def _parse_user_number(data: object) -> None | int:
+        def _parse_user_number(data: object) -> int | None:
             if data is None:
                 return data
-            return cast(None | int, data)
+            return cast(int | None, data)
 
         user_number = _parse_user_number(d.pop("userNumber"))
 

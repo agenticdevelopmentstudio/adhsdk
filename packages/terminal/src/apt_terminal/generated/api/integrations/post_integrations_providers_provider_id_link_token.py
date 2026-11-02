@@ -1,5 +1,6 @@
 from http import HTTPStatus
 from typing import Any
+from urllib.parse import quote
 
 import httpx
 
@@ -12,22 +13,25 @@ from ...models.post_integrations_providers_provider_id_link_token_response_200 i
     PostIntegrationsProvidersProviderIdLinkTokenResponse200,
 )
 from ...models.problem_details import ProblemDetails
-from ...types import Response
+from ...types import UNSET, Response, Unset
 
 
 def _get_kwargs(
     provider_id: str,
     *,
-    body: PostIntegrationsProvidersProviderIdLinkTokenBody,
+    body: PostIntegrationsProvidersProviderIdLinkTokenBody | Unset = UNSET,
 ) -> dict[str, Any]:
     headers: dict[str, Any] = {}
 
     _kwargs: dict[str, Any] = {
         "method": "post",
-        "url": f"/integrations/providers/{provider_id}/link-token",
+        "url": "/integrations/providers/{provider_id}/link-token".format(
+            provider_id=quote(str(provider_id), safe=""),
+        ),
     }
 
-    _kwargs["json"] = body.to_dict()
+    if not isinstance(body, Unset):
+        _kwargs["json"] = body.to_dict()
 
     headers["Content-Type"] = "application/json"
 
@@ -86,7 +90,7 @@ def sync_detailed(
     provider_id: str,
     *,
     client: AuthenticatedClient,
-    body: PostIntegrationsProvidersProviderIdLinkTokenBody,
+    body: PostIntegrationsProvidersProviderIdLinkTokenBody | Unset = UNSET,
 ) -> Response[PostIntegrationsProvidersProviderIdLinkTokenResponse200 | ProblemDetails]:
     """Mint a Plaid Link token
 
@@ -96,14 +100,14 @@ def sync_detailed(
 
     Args:
         provider_id (str):
-        body (PostIntegrationsProvidersProviderIdLinkTokenBody):
+        body (PostIntegrationsProvidersProviderIdLinkTokenBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[PostIntegrationsProvidersProviderIdLinkTokenResponse200, ProblemDetails]]
+        Response[PostIntegrationsProvidersProviderIdLinkTokenResponse200 | ProblemDetails]
     """
 
     kwargs = _get_kwargs(
@@ -122,7 +126,7 @@ def sync(
     provider_id: str,
     *,
     client: AuthenticatedClient,
-    body: PostIntegrationsProvidersProviderIdLinkTokenBody,
+    body: PostIntegrationsProvidersProviderIdLinkTokenBody | Unset = UNSET,
 ) -> PostIntegrationsProvidersProviderIdLinkTokenResponse200 | ProblemDetails | None:
     """Mint a Plaid Link token
 
@@ -132,14 +136,14 @@ def sync(
 
     Args:
         provider_id (str):
-        body (PostIntegrationsProvidersProviderIdLinkTokenBody):
+        body (PostIntegrationsProvidersProviderIdLinkTokenBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[PostIntegrationsProvidersProviderIdLinkTokenResponse200, ProblemDetails]
+        PostIntegrationsProvidersProviderIdLinkTokenResponse200 | ProblemDetails
     """
 
     return sync_detailed(
@@ -153,7 +157,7 @@ async def asyncio_detailed(
     provider_id: str,
     *,
     client: AuthenticatedClient,
-    body: PostIntegrationsProvidersProviderIdLinkTokenBody,
+    body: PostIntegrationsProvidersProviderIdLinkTokenBody | Unset = UNSET,
 ) -> Response[PostIntegrationsProvidersProviderIdLinkTokenResponse200 | ProblemDetails]:
     """Mint a Plaid Link token
 
@@ -163,14 +167,14 @@ async def asyncio_detailed(
 
     Args:
         provider_id (str):
-        body (PostIntegrationsProvidersProviderIdLinkTokenBody):
+        body (PostIntegrationsProvidersProviderIdLinkTokenBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[PostIntegrationsProvidersProviderIdLinkTokenResponse200, ProblemDetails]]
+        Response[PostIntegrationsProvidersProviderIdLinkTokenResponse200 | ProblemDetails]
     """
 
     kwargs = _get_kwargs(
@@ -187,7 +191,7 @@ async def asyncio(
     provider_id: str,
     *,
     client: AuthenticatedClient,
-    body: PostIntegrationsProvidersProviderIdLinkTokenBody,
+    body: PostIntegrationsProvidersProviderIdLinkTokenBody | Unset = UNSET,
 ) -> PostIntegrationsProvidersProviderIdLinkTokenResponse200 | ProblemDetails | None:
     """Mint a Plaid Link token
 
@@ -197,14 +201,14 @@ async def asyncio(
 
     Args:
         provider_id (str):
-        body (PostIntegrationsProvidersProviderIdLinkTokenBody):
+        body (PostIntegrationsProvidersProviderIdLinkTokenBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[PostIntegrationsProvidersProviderIdLinkTokenResponse200, ProblemDetails]
+        PostIntegrationsProvidersProviderIdLinkTokenResponse200 | ProblemDetails
     """
 
     return (

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -31,28 +33,28 @@ class WorkItem:
         created_at (str):
         updated_at (str):
         is_deleted (bool):
-        assignee_kind (Union[None, Unset, WorkItemAssigneeKindType1, WorkItemAssigneeKindType2Type1,
-            WorkItemAssigneeKindType3Type1]):
-        assignee_id (Union[None, Unset, str]):
-        start_date (Union[None, Unset, str]): date (YYYY-MM-DD)
-        due_date (Union[None, Unset, str]): date (YYYY-MM-DD)
-        parent_id (Union[None, Unset, str]): a parent work item in the same project
-        iteration_id (Union[None, Unset, str]): the time-box this card is committed to; null is the BACKLOG — a real
-            state, not an absence. The iteration belongs to the project OWNER, not the project, so a workspace can run one
-            cycle across several boards.
-        milestone_id (Union[None, Unset, str]): the milestone this card counts toward; null = it counts toward none.
-            UNLIKE `iterationId` — which names a time-box the project's OWNER holds — this must be a milestone of the card's
-            OWN project (400 otherwise): a milestone is a point in one plan, and a card counts toward the plan of the board
-            it sits on.
-        estimate (Union[None, Unset, int]): the card's size, in whatever unit the project's `estimateScale` names. A
-            non-negative integer; null is UNESTIMATED, which is distinct from 0 (estimated as trivial).
-        triaged_at (Union[None, Unset, str]): when this card was ACCEPTED onto the board. null = it is sitting in the
-            triage inbox and the board’s list omits it (GET /project/projects/{id}/work-items?includeUntriaged=true shows it
+        assignee_kind (None | Unset | WorkItemAssigneeKindType1 | WorkItemAssigneeKindType2Type1 |
+            WorkItemAssigneeKindType3Type1):
+        assignee_id (None | str | Unset):
+        start_date (None | str | Unset): date (YYYY-MM-DD)
+        due_date (None | str | Unset): date (YYYY-MM-DD)
+        parent_id (None | str | Unset): a parent work item in the same project
+        iteration_id (None | str | Unset): the time-box this card is committed to; null is the BACKLOG — a real state,
+            not an absence. The iteration belongs to the project OWNER, not the project, so a workspace can run one cycle
+            across several boards.
+        milestone_id (None | str | Unset): the milestone this card counts toward; null = it counts toward none. UNLIKE
+            `iterationId` — which names a time-box the project's OWNER holds — this must be a milestone of the card's OWN
+            project (400 otherwise): a milestone is a point in one plan, and a card counts toward the plan of the board it
+            sits on.
+        estimate (int | None | Unset): the card's size, in whatever unit the project's `estimateScale` names. A non-
+            negative integer; null is UNESTIMATED, which is distinct from 0 (estimated as trivial).
+        triaged_at (None | str | Unset): when this card was ACCEPTED onto the board. null = it is sitting in the triage
+            inbox and the board’s list omits it (GET /project/projects/{id}/work-items?includeUntriaged=true shows it
             anyway). Every card created without `triage: true` is accepted at creation, so a board that never used an intake
             queue has none of these. Server-set: POST /project/work-items/{id}/triage stamps it once and nothing un-stamps
             it.
-        created_by (Union[None, Unset, str]):
-        deleted_at (Union[None, Unset, str]):
+        created_by (None | str | Unset):
+        deleted_at (None | str | Unset):
     """
 
     id: str
@@ -74,16 +76,16 @@ class WorkItem:
         | WorkItemAssigneeKindType2Type1
         | WorkItemAssigneeKindType3Type1
     ) = UNSET
-    assignee_id: None | Unset | str = UNSET
-    start_date: None | Unset | str = UNSET
-    due_date: None | Unset | str = UNSET
-    parent_id: None | Unset | str = UNSET
-    iteration_id: None | Unset | str = UNSET
-    milestone_id: None | Unset | str = UNSET
-    estimate: None | Unset | int = UNSET
-    triaged_at: None | Unset | str = UNSET
-    created_by: None | Unset | str = UNSET
-    deleted_at: None | Unset | str = UNSET
+    assignee_id: None | str | Unset = UNSET
+    start_date: None | str | Unset = UNSET
+    due_date: None | str | Unset = UNSET
+    parent_id: None | str | Unset = UNSET
+    iteration_id: None | str | Unset = UNSET
+    milestone_id: None | str | Unset = UNSET
+    estimate: int | None | Unset = UNSET
+    triaged_at: None | str | Unset = UNSET
+    created_by: None | str | Unset = UNSET
+    deleted_at: None | str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -111,7 +113,7 @@ class WorkItem:
 
         is_deleted = self.is_deleted
 
-        assignee_kind: None | Unset | str
+        assignee_kind: None | str | Unset
         if isinstance(self.assignee_kind, Unset):
             assignee_kind = UNSET
         elif (
@@ -123,61 +125,61 @@ class WorkItem:
         else:
             assignee_kind = self.assignee_kind
 
-        assignee_id: None | Unset | str
+        assignee_id: None | str | Unset
         if isinstance(self.assignee_id, Unset):
             assignee_id = UNSET
         else:
             assignee_id = self.assignee_id
 
-        start_date: None | Unset | str
+        start_date: None | str | Unset
         if isinstance(self.start_date, Unset):
             start_date = UNSET
         else:
             start_date = self.start_date
 
-        due_date: None | Unset | str
+        due_date: None | str | Unset
         if isinstance(self.due_date, Unset):
             due_date = UNSET
         else:
             due_date = self.due_date
 
-        parent_id: None | Unset | str
+        parent_id: None | str | Unset
         if isinstance(self.parent_id, Unset):
             parent_id = UNSET
         else:
             parent_id = self.parent_id
 
-        iteration_id: None | Unset | str
+        iteration_id: None | str | Unset
         if isinstance(self.iteration_id, Unset):
             iteration_id = UNSET
         else:
             iteration_id = self.iteration_id
 
-        milestone_id: None | Unset | str
+        milestone_id: None | str | Unset
         if isinstance(self.milestone_id, Unset):
             milestone_id = UNSET
         else:
             milestone_id = self.milestone_id
 
-        estimate: None | Unset | int
+        estimate: int | None | Unset
         if isinstance(self.estimate, Unset):
             estimate = UNSET
         else:
             estimate = self.estimate
 
-        triaged_at: None | Unset | str
+        triaged_at: None | str | Unset
         if isinstance(self.triaged_at, Unset):
             triaged_at = UNSET
         else:
             triaged_at = self.triaged_at
 
-        created_by: None | Unset | str
+        created_by: None | str | Unset
         if isinstance(self.created_by, Unset):
             created_by = UNSET
         else:
             created_by = self.created_by
 
-        deleted_at: None | Unset | str
+        deleted_at: None | str | Unset
         if isinstance(self.deleted_at, Unset):
             deleted_at = UNSET
         else:
@@ -272,7 +274,7 @@ class WorkItem:
                 assignee_kind_type_1 = WorkItemAssigneeKindType1(data)
 
                 return assignee_kind_type_1
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
             try:
                 if not isinstance(data, str):
@@ -280,7 +282,7 @@ class WorkItem:
                 assignee_kind_type_2_type_1 = WorkItemAssigneeKindType2Type1(data)
 
                 return assignee_kind_type_2_type_1
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
             try:
                 if not isinstance(data, str):
@@ -288,7 +290,7 @@ class WorkItem:
                 assignee_kind_type_3_type_1 = WorkItemAssigneeKindType3Type1(data)
 
                 return assignee_kind_type_3_type_1
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
             return cast(
                 None
@@ -301,93 +303,93 @@ class WorkItem:
 
         assignee_kind = _parse_assignee_kind(d.pop("assigneeKind", UNSET))
 
-        def _parse_assignee_id(data: object) -> None | Unset | str:
+        def _parse_assignee_id(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         assignee_id = _parse_assignee_id(d.pop("assigneeId", UNSET))
 
-        def _parse_start_date(data: object) -> None | Unset | str:
+        def _parse_start_date(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         start_date = _parse_start_date(d.pop("startDate", UNSET))
 
-        def _parse_due_date(data: object) -> None | Unset | str:
+        def _parse_due_date(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         due_date = _parse_due_date(d.pop("dueDate", UNSET))
 
-        def _parse_parent_id(data: object) -> None | Unset | str:
+        def _parse_parent_id(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         parent_id = _parse_parent_id(d.pop("parentId", UNSET))
 
-        def _parse_iteration_id(data: object) -> None | Unset | str:
+        def _parse_iteration_id(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         iteration_id = _parse_iteration_id(d.pop("iterationId", UNSET))
 
-        def _parse_milestone_id(data: object) -> None | Unset | str:
+        def _parse_milestone_id(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         milestone_id = _parse_milestone_id(d.pop("milestoneId", UNSET))
 
-        def _parse_estimate(data: object) -> None | Unset | int:
+        def _parse_estimate(data: object) -> int | None | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | int, data)
+            return cast(int | None | Unset, data)
 
         estimate = _parse_estimate(d.pop("estimate", UNSET))
 
-        def _parse_triaged_at(data: object) -> None | Unset | str:
+        def _parse_triaged_at(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         triaged_at = _parse_triaged_at(d.pop("triagedAt", UNSET))
 
-        def _parse_created_by(data: object) -> None | Unset | str:
+        def _parse_created_by(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         created_by = _parse_created_by(d.pop("createdBy", UNSET))
 
-        def _parse_deleted_at(data: object) -> None | Unset | str:
+        def _parse_deleted_at(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         deleted_at = _parse_deleted_at(d.pop("deletedAt", UNSET))
 

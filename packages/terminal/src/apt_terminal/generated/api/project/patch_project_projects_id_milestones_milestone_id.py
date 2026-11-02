@@ -1,5 +1,6 @@
 from http import HTTPStatus
 from typing import Any
+from urllib.parse import quote
 
 import httpx
 
@@ -10,23 +11,27 @@ from ...models.patch_project_projects_id_milestones_milestone_id_body import (
     PatchProjectProjectsIdMilestonesMilestoneIdBody,
 )
 from ...models.project_milestone import ProjectMilestone
-from ...types import Response
+from ...types import UNSET, Response, Unset
 
 
 def _get_kwargs(
     id: str,
     milestone_id: str,
     *,
-    body: PatchProjectProjectsIdMilestonesMilestoneIdBody,
+    body: PatchProjectProjectsIdMilestonesMilestoneIdBody | Unset = UNSET,
 ) -> dict[str, Any]:
     headers: dict[str, Any] = {}
 
     _kwargs: dict[str, Any] = {
         "method": "patch",
-        "url": f"/project/projects/{id}/milestones/{milestone_id}",
+        "url": "/project/projects/{id}/milestones/{milestone_id}".format(
+            id=quote(str(id), safe=""),
+            milestone_id=quote(str(milestone_id), safe=""),
+        ),
     }
 
-    _kwargs["json"] = body.to_dict()
+    if not isinstance(body, Unset):
+        _kwargs["json"] = body.to_dict()
 
     headers["Content-Type"] = "application/json"
 
@@ -89,7 +94,7 @@ def sync_detailed(
     milestone_id: str,
     *,
     client: AuthenticatedClient,
-    body: PatchProjectProjectsIdMilestonesMilestoneIdBody,
+    body: PatchProjectProjectsIdMilestonesMilestoneIdBody | Unset = UNSET,
 ) -> Response[Error | ProjectMilestone]:
     """Rename a milestone or move its date (+ a milestone.updated activity)
 
@@ -99,15 +104,15 @@ def sync_detailed(
     Args:
         id (str):
         milestone_id (str):
-        body (PatchProjectProjectsIdMilestonesMilestoneIdBody): At least one field is required (a
-            no-op patch is a 400). A null targetDate un-dates it.
+        body (PatchProjectProjectsIdMilestonesMilestoneIdBody | Unset): At least one field is
+            required (a no-op patch is a 400). A null targetDate un-dates it.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, ProjectMilestone]]
+        Response[Error | ProjectMilestone]
     """
 
     kwargs = _get_kwargs(
@@ -128,7 +133,7 @@ def sync(
     milestone_id: str,
     *,
     client: AuthenticatedClient,
-    body: PatchProjectProjectsIdMilestonesMilestoneIdBody,
+    body: PatchProjectProjectsIdMilestonesMilestoneIdBody | Unset = UNSET,
 ) -> Error | ProjectMilestone | None:
     """Rename a milestone or move its date (+ a milestone.updated activity)
 
@@ -138,15 +143,15 @@ def sync(
     Args:
         id (str):
         milestone_id (str):
-        body (PatchProjectProjectsIdMilestonesMilestoneIdBody): At least one field is required (a
-            no-op patch is a 400). A null targetDate un-dates it.
+        body (PatchProjectProjectsIdMilestonesMilestoneIdBody | Unset): At least one field is
+            required (a no-op patch is a 400). A null targetDate un-dates it.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, ProjectMilestone]
+        Error | ProjectMilestone
     """
 
     return sync_detailed(
@@ -162,7 +167,7 @@ async def asyncio_detailed(
     milestone_id: str,
     *,
     client: AuthenticatedClient,
-    body: PatchProjectProjectsIdMilestonesMilestoneIdBody,
+    body: PatchProjectProjectsIdMilestonesMilestoneIdBody | Unset = UNSET,
 ) -> Response[Error | ProjectMilestone]:
     """Rename a milestone or move its date (+ a milestone.updated activity)
 
@@ -172,15 +177,15 @@ async def asyncio_detailed(
     Args:
         id (str):
         milestone_id (str):
-        body (PatchProjectProjectsIdMilestonesMilestoneIdBody): At least one field is required (a
-            no-op patch is a 400). A null targetDate un-dates it.
+        body (PatchProjectProjectsIdMilestonesMilestoneIdBody | Unset): At least one field is
+            required (a no-op patch is a 400). A null targetDate un-dates it.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, ProjectMilestone]]
+        Response[Error | ProjectMilestone]
     """
 
     kwargs = _get_kwargs(
@@ -199,7 +204,7 @@ async def asyncio(
     milestone_id: str,
     *,
     client: AuthenticatedClient,
-    body: PatchProjectProjectsIdMilestonesMilestoneIdBody,
+    body: PatchProjectProjectsIdMilestonesMilestoneIdBody | Unset = UNSET,
 ) -> Error | ProjectMilestone | None:
     """Rename a milestone or move its date (+ a milestone.updated activity)
 
@@ -209,15 +214,15 @@ async def asyncio(
     Args:
         id (str):
         milestone_id (str):
-        body (PatchProjectProjectsIdMilestonesMilestoneIdBody): At least one field is required (a
-            no-op patch is a 400). A null targetDate un-dates it.
+        body (PatchProjectProjectsIdMilestonesMilestoneIdBody | Unset): At least one field is
+            required (a no-op patch is a 400). A null targetDate un-dates it.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, ProjectMilestone]
+        Error | ProjectMilestone
     """
 
     return (

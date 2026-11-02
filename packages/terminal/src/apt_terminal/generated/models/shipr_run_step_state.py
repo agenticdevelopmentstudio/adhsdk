@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class ShiprRunStepState(str, Enum):
+class ShiprRunStepState(StrEnum):
     FAILED = "failed"
     PENDING = "pending"
     RUNNING = "running"

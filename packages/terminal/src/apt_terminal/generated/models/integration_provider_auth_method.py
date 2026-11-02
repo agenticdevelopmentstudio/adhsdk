@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class IntegrationProviderAuthMethod(str, Enum):
+class IntegrationProviderAuthMethod(StrEnum):
     API_KEY = "api_key"
     APP_PASSWORD = "app_password"
     GITHUB_APP = "github_app"

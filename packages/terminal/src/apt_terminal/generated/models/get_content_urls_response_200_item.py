@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -12,25 +14,25 @@ class GetContentUrlsResponse200Item:
     Attributes:
         id (str):
         customer_id (str):
-        deleted_at (Union[None, str]):
+        deleted_at (None | str):
         ecosystem_id (str):
         original_url (str):
         canonical_url (str):
         canonical_url_hash (str):
-        title (Union[None, str]):
-        description (Union[None, str]):
-        note (Union[None, str]):
-        preview_storage_key (Union[None, str]):
-        preview_url (Union[None, str]):
+        title (None | str):
+        description (None | str):
+        note (None | str):
+        preview_storage_key (None | str):
+        preview_url (None | str):
         preview_status (str):
-        preview_error (Union[None, str]):
-        preview_generated_at (Union[None, str]):
+        preview_error (None | str):
+        preview_generated_at (None | str):
         preview_attempts (int):
         created_at (str):
         updated_at (str):
         is_deleted (bool):
         sync_version (int):
-        sync_stamped_at (Union[None, str]):
+        sync_stamped_at (None | str):
         sync_txid (int):
     """
 

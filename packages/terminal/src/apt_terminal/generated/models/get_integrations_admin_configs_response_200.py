@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import TYPE_CHECKING, Any, TypeVar
 
@@ -15,13 +17,13 @@ T = TypeVar("T", bound="GetIntegrationsAdminConfigsResponse200")
 class GetIntegrationsAdminConfigsResponse200:
     """
     Attributes:
-        items (list['IntegrationGlobalConfig']):
+        items (list[IntegrationGlobalConfig]):
         total (int): Unfiltered count of provider configs
         limit (int):
         offset (int):
     """
 
-    items: list["IntegrationGlobalConfig"]
+    items: list[IntegrationGlobalConfig]
     total: int
     limit: int
     offset: int

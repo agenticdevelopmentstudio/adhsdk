@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar
 
@@ -17,16 +19,16 @@ class GamificationRealmEventType:
         ecosystem_id (str):
         name (str): The custom event_type key
         stat_key (str): The gamification stat this event bumps
-        created_at (Union[Unset, str]):
-        updated_at (Union[Unset, str]):
+        created_at (str | Unset):
+        updated_at (str | Unset):
     """
 
     id: str
     ecosystem_id: str
     name: str
     stat_key: str
-    created_at: Unset | str = UNSET
-    updated_at: Unset | str = UNSET
+    created_at: str | Unset = UNSET
+    updated_at: str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:

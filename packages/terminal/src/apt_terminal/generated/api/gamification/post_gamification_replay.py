@@ -8,12 +8,12 @@ from ...client import AuthenticatedClient, Client
 from ...models.error import Error
 from ...models.gamification_replay_result import GamificationReplayResult
 from ...models.post_gamification_replay_body import PostGamificationReplayBody
-from ...types import Response
+from ...types import UNSET, Response, Unset
 
 
 def _get_kwargs(
     *,
-    body: PostGamificationReplayBody,
+    body: PostGamificationReplayBody | Unset = UNSET,
 ) -> dict[str, Any]:
     headers: dict[str, Any] = {}
 
@@ -22,7 +22,8 @@ def _get_kwargs(
         "url": "/gamification/replay",
     }
 
-    _kwargs["json"] = body.to_dict()
+    if not isinstance(body, Unset):
+        _kwargs["json"] = body.to_dict()
 
     headers["Content-Type"] = "application/json"
 
@@ -73,20 +74,20 @@ def _build_response(
 def sync_detailed(
     *,
     client: AuthenticatedClient,
-    body: PostGamificationReplayBody,
+    body: PostGamificationReplayBody | Unset = UNSET,
 ) -> Response[Error | GamificationReplayResult]:
     """Retroactively backfill awards a subject’s telemetry already earned (admin) — `{ecosystemId}` replays
     the whole realm, `{subjectType, subjectId, ecosystemId}` replays one subject
 
     Args:
-        body (PostGamificationReplayBody):
+        body (PostGamificationReplayBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, GamificationReplayResult]]
+        Response[Error | GamificationReplayResult]
     """
 
     kwargs = _get_kwargs(
@@ -103,20 +104,20 @@ def sync_detailed(
 def sync(
     *,
     client: AuthenticatedClient,
-    body: PostGamificationReplayBody,
+    body: PostGamificationReplayBody | Unset = UNSET,
 ) -> Error | GamificationReplayResult | None:
     """Retroactively backfill awards a subject’s telemetry already earned (admin) — `{ecosystemId}` replays
     the whole realm, `{subjectType, subjectId, ecosystemId}` replays one subject
 
     Args:
-        body (PostGamificationReplayBody):
+        body (PostGamificationReplayBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, GamificationReplayResult]
+        Error | GamificationReplayResult
     """
 
     return sync_detailed(
@@ -128,20 +129,20 @@ def sync(
 async def asyncio_detailed(
     *,
     client: AuthenticatedClient,
-    body: PostGamificationReplayBody,
+    body: PostGamificationReplayBody | Unset = UNSET,
 ) -> Response[Error | GamificationReplayResult]:
     """Retroactively backfill awards a subject’s telemetry already earned (admin) — `{ecosystemId}` replays
     the whole realm, `{subjectType, subjectId, ecosystemId}` replays one subject
 
     Args:
-        body (PostGamificationReplayBody):
+        body (PostGamificationReplayBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, GamificationReplayResult]]
+        Response[Error | GamificationReplayResult]
     """
 
     kwargs = _get_kwargs(
@@ -156,20 +157,20 @@ async def asyncio_detailed(
 async def asyncio(
     *,
     client: AuthenticatedClient,
-    body: PostGamificationReplayBody,
+    body: PostGamificationReplayBody | Unset = UNSET,
 ) -> Error | GamificationReplayResult | None:
     """Retroactively backfill awards a subject’s telemetry already earned (admin) — `{ecosystemId}` replays
     the whole realm, `{subjectType, subjectId, ecosystemId}` replays one subject
 
     Args:
-        body (PostGamificationReplayBody):
+        body (PostGamificationReplayBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, GamificationReplayResult]
+        Error | GamificationReplayResult
     """
 
     return (

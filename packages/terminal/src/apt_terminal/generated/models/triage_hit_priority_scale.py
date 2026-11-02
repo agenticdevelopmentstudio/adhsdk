@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class TriageHitPriorityScale(str, Enum):
+class TriageHitPriorityScale(StrEnum):
     NONE = "none"
     STANDARD = "standard"
 

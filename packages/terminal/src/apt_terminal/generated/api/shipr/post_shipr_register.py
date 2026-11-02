@@ -14,8 +14,8 @@ from ...types import UNSET, Response, Unset
 
 def _get_kwargs(
     *,
-    body: PostShiprRegisterBody,
-    workspace: Unset | str = UNSET,
+    body: PostShiprRegisterBody | Unset = UNSET,
+    workspace: str | Unset = UNSET,
 ) -> dict[str, Any]:
     headers: dict[str, Any] = {}
 
@@ -31,7 +31,8 @@ def _get_kwargs(
         "params": params,
     }
 
-    _kwargs["json"] = body.to_dict()
+    if not isinstance(body, Unset):
+        _kwargs["json"] = body.to_dict()
 
     headers["Content-Type"] = "application/json"
 
@@ -97,8 +98,8 @@ def _build_response(
 def sync_detailed(
     *,
     client: AuthenticatedClient,
-    body: PostShiprRegisterBody,
-    workspace: Unset | str = UNSET,
+    body: PostShiprRegisterBody | Unset = UNSET,
+    workspace: str | Unset = UNSET,
 ) -> Response[Error | PostShiprRegisterResponse201 | PostShiprRegisterResponse202]:
     """Register a source repository and queue its provisioning
 
@@ -107,15 +108,15 @@ def sync_detailed(
     under what names) is read from its own `.shipr` by the run, not supplied here.
 
     Args:
-        workspace (Union[Unset, str]):
-        body (PostShiprRegisterBody):
+        workspace (str | Unset):
+        body (PostShiprRegisterBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, PostShiprRegisterResponse201, PostShiprRegisterResponse202]]
+        Response[Error | PostShiprRegisterResponse201 | PostShiprRegisterResponse202]
     """
 
     kwargs = _get_kwargs(
@@ -133,8 +134,8 @@ def sync_detailed(
 def sync(
     *,
     client: AuthenticatedClient,
-    body: PostShiprRegisterBody,
-    workspace: Unset | str = UNSET,
+    body: PostShiprRegisterBody | Unset = UNSET,
+    workspace: str | Unset = UNSET,
 ) -> Error | PostShiprRegisterResponse201 | PostShiprRegisterResponse202 | None:
     """Register a source repository and queue its provisioning
 
@@ -143,15 +144,15 @@ def sync(
     under what names) is read from its own `.shipr` by the run, not supplied here.
 
     Args:
-        workspace (Union[Unset, str]):
-        body (PostShiprRegisterBody):
+        workspace (str | Unset):
+        body (PostShiprRegisterBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, PostShiprRegisterResponse201, PostShiprRegisterResponse202]
+        Error | PostShiprRegisterResponse201 | PostShiprRegisterResponse202
     """
 
     return sync_detailed(
@@ -164,8 +165,8 @@ def sync(
 async def asyncio_detailed(
     *,
     client: AuthenticatedClient,
-    body: PostShiprRegisterBody,
-    workspace: Unset | str = UNSET,
+    body: PostShiprRegisterBody | Unset = UNSET,
+    workspace: str | Unset = UNSET,
 ) -> Response[Error | PostShiprRegisterResponse201 | PostShiprRegisterResponse202]:
     """Register a source repository and queue its provisioning
 
@@ -174,15 +175,15 @@ async def asyncio_detailed(
     under what names) is read from its own `.shipr` by the run, not supplied here.
 
     Args:
-        workspace (Union[Unset, str]):
-        body (PostShiprRegisterBody):
+        workspace (str | Unset):
+        body (PostShiprRegisterBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, PostShiprRegisterResponse201, PostShiprRegisterResponse202]]
+        Response[Error | PostShiprRegisterResponse201 | PostShiprRegisterResponse202]
     """
 
     kwargs = _get_kwargs(
@@ -198,8 +199,8 @@ async def asyncio_detailed(
 async def asyncio(
     *,
     client: AuthenticatedClient,
-    body: PostShiprRegisterBody,
-    workspace: Unset | str = UNSET,
+    body: PostShiprRegisterBody | Unset = UNSET,
+    workspace: str | Unset = UNSET,
 ) -> Error | PostShiprRegisterResponse201 | PostShiprRegisterResponse202 | None:
     """Register a source repository and queue its provisioning
 
@@ -208,15 +209,15 @@ async def asyncio(
     under what names) is read from its own `.shipr` by the run, not supplied here.
 
     Args:
-        workspace (Union[Unset, str]):
-        body (PostShiprRegisterBody):
+        workspace (str | Unset):
+        body (PostShiprRegisterBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, PostShiprRegisterResponse201, PostShiprRegisterResponse202]
+        Error | PostShiprRegisterResponse201 | PostShiprRegisterResponse202
     """
 
     return (

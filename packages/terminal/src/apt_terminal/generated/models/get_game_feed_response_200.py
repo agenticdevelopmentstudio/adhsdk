@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import TYPE_CHECKING, Any, TypeVar
 
@@ -17,14 +19,14 @@ class GetGameFeedResponse200:
     """
     Attributes:
         game (GameRef):
-        items (list['GameFeedItem']):
+        items (list[GameFeedItem]):
         total (int):
         page (int):
         page_size (int):
     """
 
-    game: "GameRef"
-    items: list["GameFeedItem"]
+    game: GameRef
+    items: list[GameFeedItem]
     total: int
     page: int
     page_size: int

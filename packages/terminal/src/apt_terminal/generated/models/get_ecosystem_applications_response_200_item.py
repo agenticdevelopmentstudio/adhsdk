@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -18,9 +20,9 @@ class GetEcosystemApplicationsResponse200Item:
         created_at (str):
         updated_at (str):
         is_deleted (bool):
-        deleted_at (Union[None, str]):
+        deleted_at (None | str):
         sync_version (int):
-        sync_stamped_at (Union[None, str]):
+        sync_stamped_at (None | str):
         sync_txid (int):
     """
 

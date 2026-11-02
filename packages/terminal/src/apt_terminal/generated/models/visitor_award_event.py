@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import TYPE_CHECKING, Any, TypeVar, cast
 
@@ -16,14 +18,14 @@ class VisitorAwardEvent:
     """award — the turn earned badges or XP
 
     Attributes:
-        badges (list['VisitorAwardBadge']):
+        badges (list[VisitorAwardBadge]):
         xp_gained (int):
-        leveled_up_to (Union[None, int]):
+        leveled_up_to (int | None):
     """
 
-    badges: list["VisitorAwardBadge"]
+    badges: list[VisitorAwardBadge]
     xp_gained: int
-    leveled_up_to: None | int
+    leveled_up_to: int | None
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -34,7 +36,7 @@ class VisitorAwardEvent:
 
         xp_gained = self.xp_gained
 
-        leveled_up_to: None | int
+        leveled_up_to: int | None
         leveled_up_to = self.leveled_up_to
 
         field_dict: dict[str, Any] = {}
@@ -63,10 +65,10 @@ class VisitorAwardEvent:
 
         xp_gained = d.pop("xpGained")
 
-        def _parse_leveled_up_to(data: object) -> None | int:
+        def _parse_leveled_up_to(data: object) -> int | None:
             if data is None:
                 return data
-            return cast(None | int, data)
+            return cast(int | None, data)
 
         leveled_up_to = _parse_leveled_up_to(d.pop("leveledUpTo"))
 

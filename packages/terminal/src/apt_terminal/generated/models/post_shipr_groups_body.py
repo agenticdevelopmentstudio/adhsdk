@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -13,28 +15,28 @@ class PostShiprGroupsBody:
     """
     Attributes:
         name (str):
-        ecosystem_id (Union[Unset, str]):
-        parent_id (Union[None, Unset, str]):
-        path (Union[Unset, str]):
-        depth (Union[Unset, int]):
-        position (Union[Unset, int]):
-        deleted_at (Union[None, Unset, str]):
+        ecosystem_id (str | Unset):
+        parent_id (None | str | Unset):
+        path (str | Unset):
+        depth (int | Unset):
+        position (int | Unset):
+        deleted_at (None | str | Unset):
     """
 
     name: str
-    ecosystem_id: Unset | str = UNSET
-    parent_id: None | Unset | str = UNSET
-    path: Unset | str = UNSET
-    depth: Unset | int = UNSET
-    position: Unset | int = UNSET
-    deleted_at: None | Unset | str = UNSET
+    ecosystem_id: str | Unset = UNSET
+    parent_id: None | str | Unset = UNSET
+    path: str | Unset = UNSET
+    depth: int | Unset = UNSET
+    position: int | Unset = UNSET
+    deleted_at: None | str | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
         name = self.name
 
         ecosystem_id = self.ecosystem_id
 
-        parent_id: None | Unset | str
+        parent_id: None | str | Unset
         if isinstance(self.parent_id, Unset):
             parent_id = UNSET
         else:
@@ -46,7 +48,7 @@ class PostShiprGroupsBody:
 
         position = self.position
 
-        deleted_at: None | Unset | str
+        deleted_at: None | str | Unset
         if isinstance(self.deleted_at, Unset):
             deleted_at = UNSET
         else:
@@ -81,12 +83,12 @@ class PostShiprGroupsBody:
 
         ecosystem_id = d.pop("ecosystemId", UNSET)
 
-        def _parse_parent_id(data: object) -> None | Unset | str:
+        def _parse_parent_id(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         parent_id = _parse_parent_id(d.pop("parentId", UNSET))
 
@@ -96,12 +98,12 @@ class PostShiprGroupsBody:
 
         position = d.pop("position", UNSET)
 
-        def _parse_deleted_at(data: object) -> None | Unset | str:
+        def _parse_deleted_at(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         deleted_at = _parse_deleted_at(d.pop("deletedAt", UNSET))
 

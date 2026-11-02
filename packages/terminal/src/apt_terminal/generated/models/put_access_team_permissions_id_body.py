@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar
 
@@ -12,16 +14,16 @@ T = TypeVar("T", bound="PutAccessTeamPermissionsIdBody")
 class PutAccessTeamPermissionsIdBody:
     """
     Attributes:
-        ecosystem_id (Union[Unset, str]):
-        team_id (Union[Unset, str]):
-        permission (Union[Unset, str]):
-        granted_at (Union[Unset, str]):
+        ecosystem_id (str | Unset):
+        team_id (str | Unset):
+        permission (str | Unset):
+        granted_at (str | Unset):
     """
 
-    ecosystem_id: Unset | str = UNSET
-    team_id: Unset | str = UNSET
-    permission: Unset | str = UNSET
-    granted_at: Unset | str = UNSET
+    ecosystem_id: str | Unset = UNSET
+    team_id: str | Unset = UNSET
+    permission: str | Unset = UNSET
+    granted_at: str | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
         ecosystem_id = self.ecosystem_id

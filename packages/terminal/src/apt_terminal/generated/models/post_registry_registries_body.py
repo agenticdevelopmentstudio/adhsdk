@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -19,26 +21,26 @@ class PostRegistryRegistriesBody:
     Attributes:
         slug (str):
         name (str):
-        purpose (Union[Unset, str]):
-        description (Union[Unset, str]):
-        category_root (Union[Unset, str]):
-        entry_term (Union[Unset, str]):
-        tags (Union[Unset, list[str]]): Discovery labels; trimmed and de-duplicated server-side.
-        visibility (Union[Unset, PostRegistryRegistriesBodyVisibility]):
-        submission_policy (Union[Unset, PostRegistryRegistriesBodySubmissionPolicy]):
-        services_enabled (Union[Unset, bool]):
+        purpose (str | Unset):
+        description (str | Unset):
+        category_root (str | Unset):
+        entry_term (str | Unset):
+        tags (list[str] | Unset): Discovery labels; trimmed and de-duplicated server-side.
+        visibility (PostRegistryRegistriesBodyVisibility | Unset):
+        submission_policy (PostRegistryRegistriesBodySubmissionPolicy | Unset):
+        services_enabled (bool | Unset):
     """
 
     slug: str
     name: str
-    purpose: Unset | str = UNSET
-    description: Unset | str = UNSET
-    category_root: Unset | str = UNSET
-    entry_term: Unset | str = UNSET
-    tags: Unset | list[str] = UNSET
-    visibility: Unset | PostRegistryRegistriesBodyVisibility = UNSET
-    submission_policy: Unset | PostRegistryRegistriesBodySubmissionPolicy = UNSET
-    services_enabled: Unset | bool = UNSET
+    purpose: str | Unset = UNSET
+    description: str | Unset = UNSET
+    category_root: str | Unset = UNSET
+    entry_term: str | Unset = UNSET
+    tags: list[str] | Unset = UNSET
+    visibility: PostRegistryRegistriesBodyVisibility | Unset = UNSET
+    submission_policy: PostRegistryRegistriesBodySubmissionPolicy | Unset = UNSET
+    services_enabled: bool | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -54,15 +56,15 @@ class PostRegistryRegistriesBody:
 
         entry_term = self.entry_term
 
-        tags: Unset | list[str] = UNSET
+        tags: list[str] | Unset = UNSET
         if not isinstance(self.tags, Unset):
             tags = self.tags
 
-        visibility: Unset | str = UNSET
+        visibility: str | Unset = UNSET
         if not isinstance(self.visibility, Unset):
             visibility = self.visibility.value
 
-        submission_policy: Unset | str = UNSET
+        submission_policy: str | Unset = UNSET
         if not isinstance(self.submission_policy, Unset):
             submission_policy = self.submission_policy.value
 
@@ -113,14 +115,14 @@ class PostRegistryRegistriesBody:
         tags = cast(list[str], d.pop("tags", UNSET))
 
         _visibility = d.pop("visibility", UNSET)
-        visibility: Unset | PostRegistryRegistriesBodyVisibility
+        visibility: PostRegistryRegistriesBodyVisibility | Unset
         if isinstance(_visibility, Unset):
             visibility = UNSET
         else:
             visibility = PostRegistryRegistriesBodyVisibility(_visibility)
 
         _submission_policy = d.pop("submissionPolicy", UNSET)
-        submission_policy: Unset | PostRegistryRegistriesBodySubmissionPolicy
+        submission_policy: PostRegistryRegistriesBodySubmissionPolicy | Unset
         if isinstance(_submission_policy, Unset):
             submission_policy = UNSET
         else:

@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class UserProfileVisibility(str, Enum):
+class UserProfileVisibility(StrEnum):
     HUB = "hub"
     PRIVATE = "private"
     PUBLIC = "public"

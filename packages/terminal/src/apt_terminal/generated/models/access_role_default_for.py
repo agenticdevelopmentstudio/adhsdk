@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class AccessRoleDefaultFor(str, Enum):
+class AccessRoleDefaultFor(StrEnum):
     CUSTOMER = "customer"
     PERSONA = "persona"
     VALUE_0 = ""

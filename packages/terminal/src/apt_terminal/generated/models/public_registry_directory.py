@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import TYPE_CHECKING, Any, TypeVar
 
@@ -15,14 +17,14 @@ T = TypeVar("T", bound="PublicRegistryDirectory")
 class PublicRegistryDirectory:
     """
     Attributes:
-        items (list['PublicRegistrySummary']):
+        items (list[PublicRegistrySummary]):
         total (int): Public registries in total, not just on this page — so a caller reading only page 1 can tell a
             short directory from a truncated one.
         page (int):
         page_size (int):
     """
 
-    items: list["PublicRegistrySummary"]
+    items: list[PublicRegistrySummary]
     total: int
     page: int
     page_size: int

@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class PostRegistryRegistriesBodySubmissionPolicy(str, Enum):
+class PostRegistryRegistriesBodySubmissionPolicy(StrEnum):
     OPEN = "open"
     REVIEWED = "reviewed"
 

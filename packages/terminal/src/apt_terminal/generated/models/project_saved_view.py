@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import TYPE_CHECKING, Any, TypeVar, cast
 
@@ -25,17 +27,17 @@ class ProjectSavedView:
             interpreted; must be a JSON object and serialize to at most 8192 bytes.
         created_at (str):
         updated_at (str):
-        created_by (Union[None, Unset, str]): who saved it; confers nothing
+        created_by (None | str | Unset): who saved it; confers nothing
     """
 
     id: str
     ecosystem_id: str
     project_id: str
     name: str
-    config: "ProjectSavedViewConfig"
+    config: ProjectSavedViewConfig
     created_at: str
     updated_at: str
-    created_by: None | Unset | str = UNSET
+    created_by: None | str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -53,7 +55,7 @@ class ProjectSavedView:
 
         updated_at = self.updated_at
 
-        created_by: None | Unset | str
+        created_by: None | str | Unset
         if isinstance(self.created_by, Unset):
             created_by = UNSET
         else:
@@ -96,12 +98,12 @@ class ProjectSavedView:
 
         updated_at = d.pop("updatedAt")
 
-        def _parse_created_by(data: object) -> None | Unset | str:
+        def _parse_created_by(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         created_by = _parse_created_by(d.pop("createdBy", UNSET))
 

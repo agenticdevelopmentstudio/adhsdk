@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import TYPE_CHECKING, Any, TypeVar
 
@@ -15,11 +17,11 @@ T = TypeVar("T", bound="SyncPushResponse")
 class SyncPushResponse:
     """
     Attributes:
-        results (list['SyncPushResult']):
+        results (list[SyncPushResult]):
         watermark (str):
     """
 
-    results: list["SyncPushResult"]
+    results: list[SyncPushResult]
     watermark: str
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 

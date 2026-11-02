@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -20,7 +22,7 @@ class PostUsageUsageEventsBody:
         request_bytes (int):
         response_bytes (int):
         occurred_at (str):
-        ecosystem_id (Union[None, Unset, str]):
+        ecosystem_id (None | str | Unset):
     """
 
     scope: str
@@ -31,7 +33,7 @@ class PostUsageUsageEventsBody:
     request_bytes: int
     response_bytes: int
     occurred_at: str
-    ecosystem_id: None | Unset | str = UNSET
+    ecosystem_id: None | str | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
         scope = self.scope
@@ -50,7 +52,7 @@ class PostUsageUsageEventsBody:
 
         occurred_at = self.occurred_at
 
-        ecosystem_id: None | Unset | str
+        ecosystem_id: None | str | Unset
         if isinstance(self.ecosystem_id, Unset):
             ecosystem_id = UNSET
         else:
@@ -94,12 +96,12 @@ class PostUsageUsageEventsBody:
 
         occurred_at = d.pop("occurredAt")
 
-        def _parse_ecosystem_id(data: object) -> None | Unset | str:
+        def _parse_ecosystem_id(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         ecosystem_id = _parse_ecosystem_id(d.pop("ecosystemId", UNSET))
 

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -12,32 +14,32 @@ class GetIntegrationIntegrationCalendarEventsResponse200Item:
     Attributes:
         id (str):
         title (str):
-        description (Union[None, str]):
-        start_time (Union[None, str]):
-        end_time (Union[None, str]):
-        start_date (Union[None, str]):
-        end_date (Union[None, str]):
+        description (None | str):
+        start_time (None | str):
+        end_time (None | str):
+        start_date (None | str):
+        end_date (None | str):
         is_all_day (bool):
-        location (Union[None, str]):
+        location (None | str):
         source (str):
         external_id (str):
-        connection_id (Union[None, str]):
-        calendar_name (Union[None, str]):
-        calendar_color (Union[None, str]):
+        connection_id (None | str):
+        calendar_name (None | str):
+        calendar_color (None | str):
         status (str):
-        organizer (Union[None, str]):
-        attendees (Union[None, str]):
-        reminders (Union[None, str]):
-        url (Union[None, str]):
-        ai_extraction (Union[None, str]):
+        organizer (None | str):
+        attendees (None | str):
+        reminders (None | str):
+        url (None | str):
+        ai_extraction (None | str):
         created_at (str):
         updated_at (str):
         is_deleted (bool):
         customer_id (str):
-        deleted_at (Union[None, str]):
+        deleted_at (None | str):
         ecosystem_id (str):
         sync_version (int):
-        sync_stamped_at (Union[None, str]):
+        sync_stamped_at (None | str):
         sync_txid (int):
     """
 

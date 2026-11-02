@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar
 
@@ -13,14 +15,14 @@ T = TypeVar("T", bound="PutAuthUserMethodsIdBody")
 class PutAuthUserMethodsIdBody:
     """
     Attributes:
-        provider_id (Union[Unset, str]):
-        credential (Union[Unset, str]):
-        clear_credential (Union[Unset, bool]):
+        provider_id (str | Unset):
+        credential (str | Unset):
+        clear_credential (bool | Unset):
     """
 
-    provider_id: Unset | str = UNSET
-    credential: Unset | str = UNSET
-    clear_credential: Unset | bool = UNSET
+    provider_id: str | Unset = UNSET
+    credential: str | Unset = UNSET
+    clear_credential: bool | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:

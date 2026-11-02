@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class GameSessionActorType(str, Enum):
+class GameSessionActorType(StrEnum):
     USER = "user"
     VISITOR = "visitor"
 

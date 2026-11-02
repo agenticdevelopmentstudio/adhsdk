@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar
 
@@ -15,12 +17,12 @@ class PostCustomerTransferBody:
     Attributes:
         user_id (str): the customer's uuid
         target (str): destination ecosystem (uuid or rdid)
-        dry_run (Union[Unset, bool]): report conflicts without writing
+        dry_run (bool | Unset): report conflicts without writing
     """
 
     user_id: str
     target: str
-    dry_run: Unset | bool = UNSET
+    dry_run: bool | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:

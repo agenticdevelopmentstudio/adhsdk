@@ -1,5 +1,6 @@
 from http import HTTPStatus
 from typing import Any
+from urllib.parse import quote
 
 import httpx
 
@@ -12,22 +13,25 @@ from ...models.post_integrations_providers_provider_id_adopt_installations_respo
     PostIntegrationsProvidersProviderIdAdoptInstallationsResponse200,
 )
 from ...models.problem_details import ProblemDetails
-from ...types import Response
+from ...types import UNSET, Response, Unset
 
 
 def _get_kwargs(
     provider_id: str,
     *,
-    body: PostIntegrationsProvidersProviderIdAdoptInstallationsBody,
+    body: PostIntegrationsProvidersProviderIdAdoptInstallationsBody | Unset = UNSET,
 ) -> dict[str, Any]:
     headers: dict[str, Any] = {}
 
     _kwargs: dict[str, Any] = {
         "method": "post",
-        "url": f"/integrations/providers/{provider_id}/adopt-installations",
+        "url": "/integrations/providers/{provider_id}/adopt-installations".format(
+            provider_id=quote(str(provider_id), safe=""),
+        ),
     }
 
-    _kwargs["json"] = body.to_dict()
+    if not isinstance(body, Unset):
+        _kwargs["json"] = body.to_dict()
 
     headers["Content-Type"] = "application/json"
 
@@ -86,7 +90,7 @@ def sync_detailed(
     provider_id: str,
     *,
     client: AuthenticatedClient,
-    body: PostIntegrationsProvidersProviderIdAdoptInstallationsBody,
+    body: PostIntegrationsProvidersProviderIdAdoptInstallationsBody | Unset = UNSET,
 ) -> Response[PostIntegrationsProvidersProviderIdAdoptInstallationsResponse200 | ProblemDetails]:
     """Connect every installation the saved GitHub App can already see
 
@@ -107,14 +111,14 @@ def sync_detailed(
 
     Args:
         provider_id (str):
-        body (PostIntegrationsProvidersProviderIdAdoptInstallationsBody):
+        body (PostIntegrationsProvidersProviderIdAdoptInstallationsBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[PostIntegrationsProvidersProviderIdAdoptInstallationsResponse200, ProblemDetails]]
+        Response[PostIntegrationsProvidersProviderIdAdoptInstallationsResponse200 | ProblemDetails]
     """
 
     kwargs = _get_kwargs(
@@ -133,7 +137,7 @@ def sync(
     provider_id: str,
     *,
     client: AuthenticatedClient,
-    body: PostIntegrationsProvidersProviderIdAdoptInstallationsBody,
+    body: PostIntegrationsProvidersProviderIdAdoptInstallationsBody | Unset = UNSET,
 ) -> PostIntegrationsProvidersProviderIdAdoptInstallationsResponse200 | ProblemDetails | None:
     """Connect every installation the saved GitHub App can already see
 
@@ -154,14 +158,14 @@ def sync(
 
     Args:
         provider_id (str):
-        body (PostIntegrationsProvidersProviderIdAdoptInstallationsBody):
+        body (PostIntegrationsProvidersProviderIdAdoptInstallationsBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[PostIntegrationsProvidersProviderIdAdoptInstallationsResponse200, ProblemDetails]
+        PostIntegrationsProvidersProviderIdAdoptInstallationsResponse200 | ProblemDetails
     """
 
     return sync_detailed(
@@ -175,7 +179,7 @@ async def asyncio_detailed(
     provider_id: str,
     *,
     client: AuthenticatedClient,
-    body: PostIntegrationsProvidersProviderIdAdoptInstallationsBody,
+    body: PostIntegrationsProvidersProviderIdAdoptInstallationsBody | Unset = UNSET,
 ) -> Response[PostIntegrationsProvidersProviderIdAdoptInstallationsResponse200 | ProblemDetails]:
     """Connect every installation the saved GitHub App can already see
 
@@ -196,14 +200,14 @@ async def asyncio_detailed(
 
     Args:
         provider_id (str):
-        body (PostIntegrationsProvidersProviderIdAdoptInstallationsBody):
+        body (PostIntegrationsProvidersProviderIdAdoptInstallationsBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[PostIntegrationsProvidersProviderIdAdoptInstallationsResponse200, ProblemDetails]]
+        Response[PostIntegrationsProvidersProviderIdAdoptInstallationsResponse200 | ProblemDetails]
     """
 
     kwargs = _get_kwargs(
@@ -220,7 +224,7 @@ async def asyncio(
     provider_id: str,
     *,
     client: AuthenticatedClient,
-    body: PostIntegrationsProvidersProviderIdAdoptInstallationsBody,
+    body: PostIntegrationsProvidersProviderIdAdoptInstallationsBody | Unset = UNSET,
 ) -> PostIntegrationsProvidersProviderIdAdoptInstallationsResponse200 | ProblemDetails | None:
     """Connect every installation the saved GitHub App can already see
 
@@ -241,14 +245,14 @@ async def asyncio(
 
     Args:
         provider_id (str):
-        body (PostIntegrationsProvidersProviderIdAdoptInstallationsBody):
+        body (PostIntegrationsProvidersProviderIdAdoptInstallationsBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[PostIntegrationsProvidersProviderIdAdoptInstallationsResponse200, ProblemDetails]
+        PostIntegrationsProvidersProviderIdAdoptInstallationsResponse200 | ProblemDetails
     """
 
     return (

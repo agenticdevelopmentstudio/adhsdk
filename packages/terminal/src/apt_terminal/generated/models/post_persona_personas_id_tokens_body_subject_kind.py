@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class PostPersonaPersonasIdTokensBodySubjectKind(str, Enum):
+class PostPersonaPersonasIdTokensBodySubjectKind(StrEnum):
     ORG = "org"
     SELF = "self"
     TEAM = "team"

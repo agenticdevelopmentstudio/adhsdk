@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, TypeVar, Union, cast
+from typing import TYPE_CHECKING, Any, TypeVar, cast
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -27,40 +29,38 @@ class PutIntegrationsEcosystemsEcosystemIdProviderConfigsConfigIdBody:
     `enabled`). `name` (optional) renames the instance. The route branches by the stored config's auth method.
 
         Attributes:
-            name (Union[Unset, str]): Rename the instance (the rdid stays stable)
-            client_id (Union[Unset, str]):
-            scopes (Union[Unset, list[str]]):
-            auth_url (Union[Unset, str]):
-            token_url (Union[Unset, str]):
-            userinfo_url (Union[Unset, str]):
-            validate_url (Union[Unset, str]):
-            credential_style (Union[Unset, PutIntegrationsEcosystemsEcosystemIdProviderConfigsConfigIdBodyCredentialStyle]):
-            endpoints (Union[Unset, PutIntegrationsEcosystemsEcosystemIdProviderConfigsConfigIdBodyEndpoints]):
-            client_secret (Union[Unset, str]): Blank/absent preserves the existing secret
-            fields (Union[Unset, PutIntegrationsEcosystemsEcosystemIdProviderConfigsConfigIdBodyFields]): api_key providers:
-                the provider's configFields keyed by field key (the one secret is split into the encrypted slot; a blank/absent
+            name (str | Unset): Rename the instance (the rdid stays stable)
+            client_id (str | Unset):
+            scopes (list[str] | Unset):
+            auth_url (str | Unset):
+            token_url (str | Unset):
+            userinfo_url (str | Unset):
+            validate_url (str | Unset):
+            credential_style (PutIntegrationsEcosystemsEcosystemIdProviderConfigsConfigIdBodyCredentialStyle | Unset):
+            endpoints (PutIntegrationsEcosystemsEcosystemIdProviderConfigsConfigIdBodyEndpoints | Unset):
+            client_secret (str | Unset): Blank/absent preserves the existing secret
+            fields (PutIntegrationsEcosystemsEcosystemIdProviderConfigsConfigIdBodyFields | Unset): api_key providers: the
+                provider's configFields keyed by field key (the one secret is split into the encrypted slot; a blank/absent
                 secret preserves the stored one).
-            enabled (Union[Unset, bool]): api_key providers: false pauses the provider without deleting its secret.
+            enabled (bool | Unset): api_key providers: false pauses the provider without deleting its secret.
     """
 
-    name: Unset | str = UNSET
-    client_id: Unset | str = UNSET
-    scopes: Unset | list[str] = UNSET
-    auth_url: Unset | str = UNSET
-    token_url: Unset | str = UNSET
-    userinfo_url: Unset | str = UNSET
-    validate_url: Unset | str = UNSET
+    name: str | Unset = UNSET
+    client_id: str | Unset = UNSET
+    scopes: list[str] | Unset = UNSET
+    auth_url: str | Unset = UNSET
+    token_url: str | Unset = UNSET
+    userinfo_url: str | Unset = UNSET
+    validate_url: str | Unset = UNSET
     credential_style: (
-        Unset | PutIntegrationsEcosystemsEcosystemIdProviderConfigsConfigIdBodyCredentialStyle
+        PutIntegrationsEcosystemsEcosystemIdProviderConfigsConfigIdBodyCredentialStyle | Unset
     ) = UNSET
-    endpoints: Union[
-        Unset, "PutIntegrationsEcosystemsEcosystemIdProviderConfigsConfigIdBodyEndpoints"
-    ] = UNSET
-    client_secret: Unset | str = UNSET
-    fields: Union[
-        Unset, "PutIntegrationsEcosystemsEcosystemIdProviderConfigsConfigIdBodyFields"
-    ] = UNSET
-    enabled: Unset | bool = UNSET
+    endpoints: PutIntegrationsEcosystemsEcosystemIdProviderConfigsConfigIdBodyEndpoints | Unset = (
+        UNSET
+    )
+    client_secret: str | Unset = UNSET
+    fields: PutIntegrationsEcosystemsEcosystemIdProviderConfigsConfigIdBodyFields | Unset = UNSET
+    enabled: bool | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -68,7 +68,7 @@ class PutIntegrationsEcosystemsEcosystemIdProviderConfigsConfigIdBody:
 
         client_id = self.client_id
 
-        scopes: Unset | list[str] = UNSET
+        scopes: list[str] | Unset = UNSET
         if not isinstance(self.scopes, Unset):
             scopes = self.scopes
 
@@ -80,17 +80,17 @@ class PutIntegrationsEcosystemsEcosystemIdProviderConfigsConfigIdBody:
 
         validate_url = self.validate_url
 
-        credential_style: Unset | str = UNSET
+        credential_style: str | Unset = UNSET
         if not isinstance(self.credential_style, Unset):
             credential_style = self.credential_style.value
 
-        endpoints: Unset | dict[str, Any] = UNSET
+        endpoints: dict[str, Any] | Unset = UNSET
         if not isinstance(self.endpoints, Unset):
             endpoints = self.endpoints.to_dict()
 
         client_secret = self.client_secret
 
-        fields: Unset | dict[str, Any] = UNSET
+        fields: dict[str, Any] | Unset = UNSET
         if not isinstance(self.fields, Unset):
             fields = self.fields.to_dict()
 
@@ -152,7 +152,7 @@ class PutIntegrationsEcosystemsEcosystemIdProviderConfigsConfigIdBody:
 
         _credential_style = d.pop("credentialStyle", UNSET)
         credential_style: (
-            Unset | PutIntegrationsEcosystemsEcosystemIdProviderConfigsConfigIdBodyCredentialStyle
+            PutIntegrationsEcosystemsEcosystemIdProviderConfigsConfigIdBodyCredentialStyle | Unset
         )
         if isinstance(_credential_style, Unset):
             credential_style = UNSET
@@ -164,7 +164,7 @@ class PutIntegrationsEcosystemsEcosystemIdProviderConfigsConfigIdBody:
             )
 
         _endpoints = d.pop("endpoints", UNSET)
-        endpoints: Unset | PutIntegrationsEcosystemsEcosystemIdProviderConfigsConfigIdBodyEndpoints
+        endpoints: PutIntegrationsEcosystemsEcosystemIdProviderConfigsConfigIdBodyEndpoints | Unset
         if isinstance(_endpoints, Unset):
             endpoints = UNSET
         else:
@@ -177,7 +177,7 @@ class PutIntegrationsEcosystemsEcosystemIdProviderConfigsConfigIdBody:
         client_secret = d.pop("clientSecret", UNSET)
 
         _fields = d.pop("fields", UNSET)
-        fields: Unset | PutIntegrationsEcosystemsEcosystemIdProviderConfigsConfigIdBodyFields
+        fields: PutIntegrationsEcosystemsEcosystemIdProviderConfigsConfigIdBodyFields | Unset
         if isinstance(_fields, Unset):
             fields = UNSET
         else:

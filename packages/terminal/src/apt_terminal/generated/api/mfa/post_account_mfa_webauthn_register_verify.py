@@ -12,12 +12,12 @@ from ...models.post_account_mfa_webauthn_register_verify_body import (
 from ...models.post_account_mfa_webauthn_register_verify_response_201 import (
     PostAccountMfaWebauthnRegisterVerifyResponse201,
 )
-from ...types import Response
+from ...types import UNSET, Response, Unset
 
 
 def _get_kwargs(
     *,
-    body: PostAccountMfaWebauthnRegisterVerifyBody,
+    body: PostAccountMfaWebauthnRegisterVerifyBody | Unset = UNSET,
 ) -> dict[str, Any]:
     headers: dict[str, Any] = {}
 
@@ -26,7 +26,8 @@ def _get_kwargs(
         "url": "/account/mfa/webauthn/register/verify",
     }
 
-    _kwargs["json"] = body.to_dict()
+    if not isinstance(body, Unset):
+        _kwargs["json"] = body.to_dict()
 
     headers["Content-Type"] = "application/json"
 
@@ -77,19 +78,19 @@ def _build_response(
 def sync_detailed(
     *,
     client: AuthenticatedClient,
-    body: PostAccountMfaWebauthnRegisterVerifyBody,
+    body: PostAccountMfaWebauthnRegisterVerifyBody | Unset = UNSET,
 ) -> Response[Error | PostAccountMfaWebauthnRegisterVerifyResponse201]:
     """Complete passkey/security-key registration
 
     Args:
-        body (PostAccountMfaWebauthnRegisterVerifyBody):
+        body (PostAccountMfaWebauthnRegisterVerifyBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, PostAccountMfaWebauthnRegisterVerifyResponse201]]
+        Response[Error | PostAccountMfaWebauthnRegisterVerifyResponse201]
     """
 
     kwargs = _get_kwargs(
@@ -106,19 +107,19 @@ def sync_detailed(
 def sync(
     *,
     client: AuthenticatedClient,
-    body: PostAccountMfaWebauthnRegisterVerifyBody,
+    body: PostAccountMfaWebauthnRegisterVerifyBody | Unset = UNSET,
 ) -> Error | PostAccountMfaWebauthnRegisterVerifyResponse201 | None:
     """Complete passkey/security-key registration
 
     Args:
-        body (PostAccountMfaWebauthnRegisterVerifyBody):
+        body (PostAccountMfaWebauthnRegisterVerifyBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, PostAccountMfaWebauthnRegisterVerifyResponse201]
+        Error | PostAccountMfaWebauthnRegisterVerifyResponse201
     """
 
     return sync_detailed(
@@ -130,19 +131,19 @@ def sync(
 async def asyncio_detailed(
     *,
     client: AuthenticatedClient,
-    body: PostAccountMfaWebauthnRegisterVerifyBody,
+    body: PostAccountMfaWebauthnRegisterVerifyBody | Unset = UNSET,
 ) -> Response[Error | PostAccountMfaWebauthnRegisterVerifyResponse201]:
     """Complete passkey/security-key registration
 
     Args:
-        body (PostAccountMfaWebauthnRegisterVerifyBody):
+        body (PostAccountMfaWebauthnRegisterVerifyBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, PostAccountMfaWebauthnRegisterVerifyResponse201]]
+        Response[Error | PostAccountMfaWebauthnRegisterVerifyResponse201]
     """
 
     kwargs = _get_kwargs(
@@ -157,19 +158,19 @@ async def asyncio_detailed(
 async def asyncio(
     *,
     client: AuthenticatedClient,
-    body: PostAccountMfaWebauthnRegisterVerifyBody,
+    body: PostAccountMfaWebauthnRegisterVerifyBody | Unset = UNSET,
 ) -> Error | PostAccountMfaWebauthnRegisterVerifyResponse201 | None:
     """Complete passkey/security-key registration
 
     Args:
-        body (PostAccountMfaWebauthnRegisterVerifyBody):
+        body (PostAccountMfaWebauthnRegisterVerifyBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, PostAccountMfaWebauthnRegisterVerifyResponse201]
+        Error | PostAccountMfaWebauthnRegisterVerifyResponse201
     """
 
     return (

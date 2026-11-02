@@ -1,5 +1,6 @@
 from http import HTTPStatus
 from typing import Any
+from urllib.parse import quote
 
 import httpx
 
@@ -13,8 +14,8 @@ from ...types import UNSET, Response, Unset
 def _get_kwargs(
     chat_id: str,
     *,
-    page: Unset | int = 1,
-    page_size: Unset | int = 50,
+    page: int | Unset = 1,
+    page_size: int | Unset = 50,
 ) -> dict[str, Any]:
     params: dict[str, Any] = {}
 
@@ -26,7 +27,9 @@ def _get_kwargs(
 
     _kwargs: dict[str, Any] = {
         "method": "get",
-        "url": f"/chat/dms/{chat_id}/messages",
+        "url": "/chat/dms/{chat_id}/messages".format(
+            chat_id=quote(str(chat_id), safe=""),
+        ),
         "params": params,
     }
 
@@ -77,8 +80,8 @@ def sync_detailed(
     chat_id: str,
     *,
     client: AuthenticatedClient,
-    page: Unset | int = 1,
-    page_size: Unset | int = 50,
+    page: int | Unset = 1,
+    page_size: int | Unset = 50,
 ) -> Response[DmMessageList | Error]:
     """List the messages in a DM chat, oldest first
 
@@ -88,15 +91,15 @@ def sync_detailed(
 
     Args:
         chat_id (str):
-        page (Union[Unset, int]):  Default: 1.
-        page_size (Union[Unset, int]):  Default: 50.
+        page (int | Unset):  Default: 1.
+        page_size (int | Unset):  Default: 50.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[DmMessageList, Error]]
+        Response[DmMessageList | Error]
     """
 
     kwargs = _get_kwargs(
@@ -116,8 +119,8 @@ def sync(
     chat_id: str,
     *,
     client: AuthenticatedClient,
-    page: Unset | int = 1,
-    page_size: Unset | int = 50,
+    page: int | Unset = 1,
+    page_size: int | Unset = 50,
 ) -> DmMessageList | Error | None:
     """List the messages in a DM chat, oldest first
 
@@ -127,15 +130,15 @@ def sync(
 
     Args:
         chat_id (str):
-        page (Union[Unset, int]):  Default: 1.
-        page_size (Union[Unset, int]):  Default: 50.
+        page (int | Unset):  Default: 1.
+        page_size (int | Unset):  Default: 50.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[DmMessageList, Error]
+        DmMessageList | Error
     """
 
     return sync_detailed(
@@ -150,8 +153,8 @@ async def asyncio_detailed(
     chat_id: str,
     *,
     client: AuthenticatedClient,
-    page: Unset | int = 1,
-    page_size: Unset | int = 50,
+    page: int | Unset = 1,
+    page_size: int | Unset = 50,
 ) -> Response[DmMessageList | Error]:
     """List the messages in a DM chat, oldest first
 
@@ -161,15 +164,15 @@ async def asyncio_detailed(
 
     Args:
         chat_id (str):
-        page (Union[Unset, int]):  Default: 1.
-        page_size (Union[Unset, int]):  Default: 50.
+        page (int | Unset):  Default: 1.
+        page_size (int | Unset):  Default: 50.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[DmMessageList, Error]]
+        Response[DmMessageList | Error]
     """
 
     kwargs = _get_kwargs(
@@ -187,8 +190,8 @@ async def asyncio(
     chat_id: str,
     *,
     client: AuthenticatedClient,
-    page: Unset | int = 1,
-    page_size: Unset | int = 50,
+    page: int | Unset = 1,
+    page_size: int | Unset = 50,
 ) -> DmMessageList | Error | None:
     """List the messages in a DM chat, oldest first
 
@@ -198,15 +201,15 @@ async def asyncio(
 
     Args:
         chat_id (str):
-        page (Union[Unset, int]):  Default: 1.
-        page_size (Union[Unset, int]):  Default: 50.
+        page (int | Unset):  Default: 1.
+        page_size (int | Unset):  Default: 50.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[DmMessageList, Error]
+        DmMessageList | Error
     """
 
     return (

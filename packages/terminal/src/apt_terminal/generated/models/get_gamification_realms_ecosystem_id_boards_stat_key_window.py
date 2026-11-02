@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class GetGamificationRealmsEcosystemIdBoardsStatKeyWindow(str, Enum):
+class GetGamificationRealmsEcosystemIdBoardsStatKeyWindow(StrEnum):
     ALLTIME = "allTime"
     ROLLING30 = "rolling30"
     SEASON = "season"

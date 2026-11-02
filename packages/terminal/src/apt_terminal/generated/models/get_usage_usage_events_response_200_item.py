@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -13,7 +15,7 @@ class GetUsageUsageEventsResponse200Item:
         id (int):
         scope (str):
         principal_id (str):
-        ecosystem_id (Union[None, str]):
+        ecosystem_id (None | str):
         route (str):
         method (str):
         status (int):

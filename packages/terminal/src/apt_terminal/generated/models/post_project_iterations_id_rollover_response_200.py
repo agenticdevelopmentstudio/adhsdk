@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -12,7 +14,7 @@ class PostProjectIterationsIdRolloverResponse200:
     """
     Attributes:
         moved (int): how many unfinished cards were moved
-        to_iteration_id (Union[None, str]): where they went; null = the backlog
+        to_iteration_id (None | str): where they went; null = the backlog
     """
 
     moved: int

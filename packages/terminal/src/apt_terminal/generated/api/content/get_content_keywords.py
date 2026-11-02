@@ -21,7 +21,7 @@ def _get_kwargs() -> dict[str, Any]:
 
 def _parse_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> Error | list["GetContentKeywordsResponse200Item"] | None:
+) -> Error | list[GetContentKeywordsResponse200Item] | None:
     if response.status_code == 200:
         response_200 = []
         _response_200 = response.json()
@@ -45,7 +45,7 @@ def _parse_response(
 
 def _build_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> Response[Error | list["GetContentKeywordsResponse200Item"]]:
+) -> Response[Error | list[GetContentKeywordsResponse200Item]]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -57,7 +57,7 @@ def _build_response(
 def sync_detailed(
     *,
     client: AuthenticatedClient,
-) -> Response[Error | list["GetContentKeywordsResponse200Item"]]:
+) -> Response[Error | list[GetContentKeywordsResponse200Item]]:
     """List keywords
 
     Raises:
@@ -65,7 +65,7 @@ def sync_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, list['GetContentKeywordsResponse200Item']]]
+        Response[Error | list[GetContentKeywordsResponse200Item]]
     """
 
     kwargs = _get_kwargs()
@@ -80,7 +80,7 @@ def sync_detailed(
 def sync(
     *,
     client: AuthenticatedClient,
-) -> Error | list["GetContentKeywordsResponse200Item"] | None:
+) -> Error | list[GetContentKeywordsResponse200Item] | None:
     """List keywords
 
     Raises:
@@ -88,7 +88,7 @@ def sync(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, list['GetContentKeywordsResponse200Item']]
+        Error | list[GetContentKeywordsResponse200Item]
     """
 
     return sync_detailed(
@@ -99,7 +99,7 @@ def sync(
 async def asyncio_detailed(
     *,
     client: AuthenticatedClient,
-) -> Response[Error | list["GetContentKeywordsResponse200Item"]]:
+) -> Response[Error | list[GetContentKeywordsResponse200Item]]:
     """List keywords
 
     Raises:
@@ -107,7 +107,7 @@ async def asyncio_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, list['GetContentKeywordsResponse200Item']]]
+        Response[Error | list[GetContentKeywordsResponse200Item]]
     """
 
     kwargs = _get_kwargs()
@@ -120,7 +120,7 @@ async def asyncio_detailed(
 async def asyncio(
     *,
     client: AuthenticatedClient,
-) -> Error | list["GetContentKeywordsResponse200Item"] | None:
+) -> Error | list[GetContentKeywordsResponse200Item] | None:
     """List keywords
 
     Raises:
@@ -128,7 +128,7 @@ async def asyncio(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, list['GetContentKeywordsResponse200Item']]
+        Error | list[GetContentKeywordsResponse200Item]
     """
 
     return (

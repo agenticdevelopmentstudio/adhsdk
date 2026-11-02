@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 from uuid import UUID
@@ -15,7 +17,7 @@ class ChatConversation:
         id (UUID):
         title (str):
         model (str):
-        persona_slug (Union[None, str]):
+        persona_slug (None | str):
         created_at (str):
         updated_at (str):
     """

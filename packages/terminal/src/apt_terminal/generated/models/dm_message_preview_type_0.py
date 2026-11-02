@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -13,7 +15,7 @@ class DmMessagePreviewType0:
 
     Attributes:
         id (str):
-        sender_participant_id (Union[None, str]):
+        sender_participant_id (None | str):
         body (str):
         seq (int):
         date_sent (str):

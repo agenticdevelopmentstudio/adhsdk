@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import TYPE_CHECKING, Any, TypeVar, cast
 
@@ -16,11 +18,11 @@ class MarkdownCategoryTree:
     """
     Attributes:
         items (list[str]): Distinct category names, alphabetical.
-        nodes (list['MarkdownCategoryNode']): The category rows, by sortOrder then name.
+        nodes (list[MarkdownCategoryNode]): The category rows, by sortOrder then name.
     """
 
     items: list[str]
-    nodes: list["MarkdownCategoryNode"]
+    nodes: list[MarkdownCategoryNode]
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:

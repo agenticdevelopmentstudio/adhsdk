@@ -1,5 +1,6 @@
 from http import HTTPStatus
 from typing import Any
+from urllib.parse import quote
 
 import httpx
 
@@ -8,22 +9,25 @@ from ...client import AuthenticatedClient, Client
 from ...models.error import Error
 from ...models.patch_shipr_repos_id_body import PatchShiprReposIdBody
 from ...models.shipr_repo import ShiprRepo
-from ...types import Response
+from ...types import UNSET, Response, Unset
 
 
 def _get_kwargs(
     id: str,
     *,
-    body: PatchShiprReposIdBody,
+    body: PatchShiprReposIdBody | Unset = UNSET,
 ) -> dict[str, Any]:
     headers: dict[str, Any] = {}
 
     _kwargs: dict[str, Any] = {
         "method": "patch",
-        "url": f"/shipr/repos/{id}",
+        "url": "/shipr/repos/{id}".format(
+            id=quote(str(id), safe=""),
+        ),
     }
 
-    _kwargs["json"] = body.to_dict()
+    if not isinstance(body, Unset):
+        _kwargs["json"] = body.to_dict()
 
     headers["Content-Type"] = "application/json"
 
@@ -80,7 +84,7 @@ def sync_detailed(
     id: str,
     *,
     client: AuthenticatedClient,
-    body: PatchShiprReposIdBody,
+    body: PatchShiprReposIdBody | Unset = UNSET,
 ) -> Response[Error | ShiprRepo]:
     """Move it, reorder it, rename it, or change which branches it ships to
 
@@ -92,14 +96,14 @@ def sync_detailed(
 
     Args:
         id (str):
-        body (PatchShiprReposIdBody):
+        body (PatchShiprReposIdBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, ShiprRepo]]
+        Response[Error | ShiprRepo]
     """
 
     kwargs = _get_kwargs(
@@ -118,7 +122,7 @@ def sync(
     id: str,
     *,
     client: AuthenticatedClient,
-    body: PatchShiprReposIdBody,
+    body: PatchShiprReposIdBody | Unset = UNSET,
 ) -> Error | ShiprRepo | None:
     """Move it, reorder it, rename it, or change which branches it ships to
 
@@ -130,14 +134,14 @@ def sync(
 
     Args:
         id (str):
-        body (PatchShiprReposIdBody):
+        body (PatchShiprReposIdBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, ShiprRepo]
+        Error | ShiprRepo
     """
 
     return sync_detailed(
@@ -151,7 +155,7 @@ async def asyncio_detailed(
     id: str,
     *,
     client: AuthenticatedClient,
-    body: PatchShiprReposIdBody,
+    body: PatchShiprReposIdBody | Unset = UNSET,
 ) -> Response[Error | ShiprRepo]:
     """Move it, reorder it, rename it, or change which branches it ships to
 
@@ -163,14 +167,14 @@ async def asyncio_detailed(
 
     Args:
         id (str):
-        body (PatchShiprReposIdBody):
+        body (PatchShiprReposIdBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, ShiprRepo]]
+        Response[Error | ShiprRepo]
     """
 
     kwargs = _get_kwargs(
@@ -187,7 +191,7 @@ async def asyncio(
     id: str,
     *,
     client: AuthenticatedClient,
-    body: PatchShiprReposIdBody,
+    body: PatchShiprReposIdBody | Unset = UNSET,
 ) -> Error | ShiprRepo | None:
     """Move it, reorder it, rename it, or change which branches it ships to
 
@@ -199,14 +203,14 @@ async def asyncio(
 
     Args:
         id (str):
-        body (PatchShiprReposIdBody):
+        body (PatchShiprReposIdBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, ShiprRepo]
+        Error | ShiprRepo
     """
 
     return (

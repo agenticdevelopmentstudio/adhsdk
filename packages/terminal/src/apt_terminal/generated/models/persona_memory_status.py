@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class PersonaMemoryStatus(str, Enum):
+class PersonaMemoryStatus(StrEnum):
     ACTIVE = "active"
     ARCHIVED = "archived"
     SUPERSEDED = "superseded"

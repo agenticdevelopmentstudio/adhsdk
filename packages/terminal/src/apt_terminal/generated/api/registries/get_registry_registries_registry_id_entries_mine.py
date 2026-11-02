@@ -1,5 +1,6 @@
 from http import HTTPStatus
 from typing import Any
+from urllib.parse import quote
 
 import httpx
 
@@ -13,7 +14,7 @@ from ...types import UNSET, Response, Unset
 def _get_kwargs(
     registry_id: str,
     *,
-    workspace: Unset | str = UNSET,
+    workspace: str | Unset = UNSET,
 ) -> dict[str, Any]:
     params: dict[str, Any] = {}
 
@@ -23,7 +24,9 @@ def _get_kwargs(
 
     _kwargs: dict[str, Any] = {
         "method": "get",
-        "url": f"/registry/registries/{registry_id}/entries/mine",
+        "url": "/registry/registries/{registry_id}/entries/mine".format(
+            registry_id=quote(str(registry_id), safe=""),
+        ),
         "params": params,
     }
 
@@ -69,26 +72,26 @@ def sync_detailed(
     registry_id: str,
     *,
     client: AuthenticatedClient,
-    workspace: Unset | str = UNSET,
+    workspace: str | Unset = UNSET,
 ) -> Response[Error | RegistryEntry]:
-    r"""The caller's own entry in this registry, or 404 if they have none — a pure read that never creates
+    """The caller's own entry in this registry, or 404 if they have none — a pure read that never creates
     one
 
      The creating half is POST on this same path. Splitting them is what keeps a GET from writing: this
     route is reachable by anyone who can read the registry, so a get-or-create GET planted a draft entry
     for every signed-in passer-by, and those drafts are visible to the registry's owner through GET
-    /entries. 404 here means \"you have no entry yet\", which is a normal state, not an error.
+    /entries. 404 here means "you have no entry yet", which is a normal state, not an error.
 
     Args:
         registry_id (str):
-        workspace (Union[Unset, str]):
+        workspace (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, RegistryEntry]]
+        Response[Error | RegistryEntry]
     """
 
     kwargs = _get_kwargs(
@@ -107,26 +110,26 @@ def sync(
     registry_id: str,
     *,
     client: AuthenticatedClient,
-    workspace: Unset | str = UNSET,
+    workspace: str | Unset = UNSET,
 ) -> Error | RegistryEntry | None:
-    r"""The caller's own entry in this registry, or 404 if they have none — a pure read that never creates
+    """The caller's own entry in this registry, or 404 if they have none — a pure read that never creates
     one
 
      The creating half is POST on this same path. Splitting them is what keeps a GET from writing: this
     route is reachable by anyone who can read the registry, so a get-or-create GET planted a draft entry
     for every signed-in passer-by, and those drafts are visible to the registry's owner through GET
-    /entries. 404 here means \"you have no entry yet\", which is a normal state, not an error.
+    /entries. 404 here means "you have no entry yet", which is a normal state, not an error.
 
     Args:
         registry_id (str):
-        workspace (Union[Unset, str]):
+        workspace (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, RegistryEntry]
+        Error | RegistryEntry
     """
 
     return sync_detailed(
@@ -140,26 +143,26 @@ async def asyncio_detailed(
     registry_id: str,
     *,
     client: AuthenticatedClient,
-    workspace: Unset | str = UNSET,
+    workspace: str | Unset = UNSET,
 ) -> Response[Error | RegistryEntry]:
-    r"""The caller's own entry in this registry, or 404 if they have none — a pure read that never creates
+    """The caller's own entry in this registry, or 404 if they have none — a pure read that never creates
     one
 
      The creating half is POST on this same path. Splitting them is what keeps a GET from writing: this
     route is reachable by anyone who can read the registry, so a get-or-create GET planted a draft entry
     for every signed-in passer-by, and those drafts are visible to the registry's owner through GET
-    /entries. 404 here means \"you have no entry yet\", which is a normal state, not an error.
+    /entries. 404 here means "you have no entry yet", which is a normal state, not an error.
 
     Args:
         registry_id (str):
-        workspace (Union[Unset, str]):
+        workspace (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, RegistryEntry]]
+        Response[Error | RegistryEntry]
     """
 
     kwargs = _get_kwargs(
@@ -176,26 +179,26 @@ async def asyncio(
     registry_id: str,
     *,
     client: AuthenticatedClient,
-    workspace: Unset | str = UNSET,
+    workspace: str | Unset = UNSET,
 ) -> Error | RegistryEntry | None:
-    r"""The caller's own entry in this registry, or 404 if they have none — a pure read that never creates
+    """The caller's own entry in this registry, or 404 if they have none — a pure read that never creates
     one
 
      The creating half is POST on this same path. Splitting them is what keeps a GET from writing: this
     route is reachable by anyone who can read the registry, so a get-or-create GET planted a draft entry
     for every signed-in passer-by, and those drafts are visible to the registry's owner through GET
-    /entries. 404 here means \"you have no entry yet\", which is a normal state, not an error.
+    /entries. 404 here means "you have no entry yet", which is a normal state, not an error.
 
     Args:
         registry_id (str):
-        workspace (Union[Unset, str]):
+        workspace (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, RegistryEntry]
+        Error | RegistryEntry
     """
 
     return (

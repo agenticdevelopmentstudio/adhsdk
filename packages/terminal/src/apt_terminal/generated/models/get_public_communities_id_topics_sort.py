@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class GetPublicCommunitiesIdTopicsSort(str, Enum):
+class GetPublicCommunitiesIdTopicsSort(StrEnum):
     POPULAR = "popular"
     RECENT = "recent"
     TRENDING = "trending"

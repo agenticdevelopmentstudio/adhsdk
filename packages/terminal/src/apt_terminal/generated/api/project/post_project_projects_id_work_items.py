@@ -1,5 +1,6 @@
 from http import HTTPStatus
 from typing import Any
+from urllib.parse import quote
 
 import httpx
 
@@ -17,14 +18,14 @@ from ...types import UNSET, Response, Unset
 def _get_kwargs(
     id: str,
     *,
-    body: PostProjectProjectsIdWorkItemsBody,
-    include_untriaged: Unset | PostProjectProjectsIdWorkItemsIncludeUntriaged = UNSET,
+    body: PostProjectProjectsIdWorkItemsBody | Unset = UNSET,
+    include_untriaged: PostProjectProjectsIdWorkItemsIncludeUntriaged | Unset = UNSET,
 ) -> dict[str, Any]:
     headers: dict[str, Any] = {}
 
     params: dict[str, Any] = {}
 
-    json_include_untriaged: Unset | str = UNSET
+    json_include_untriaged: str | Unset = UNSET
     if not isinstance(include_untriaged, Unset):
         json_include_untriaged = include_untriaged.value
 
@@ -34,11 +35,14 @@ def _get_kwargs(
 
     _kwargs: dict[str, Any] = {
         "method": "post",
-        "url": f"/project/projects/{id}/work-items",
+        "url": "/project/projects/{id}/work-items".format(
+            id=quote(str(id), safe=""),
+        ),
         "params": params,
     }
 
-    _kwargs["json"] = body.to_dict()
+    if not isinstance(body, Unset):
+        _kwargs["json"] = body.to_dict()
 
     headers["Content-Type"] = "application/json"
 
@@ -90,22 +94,22 @@ def sync_detailed(
     id: str,
     *,
     client: AuthenticatedClient,
-    body: PostProjectProjectsIdWorkItemsBody,
-    include_untriaged: Unset | PostProjectProjectsIdWorkItemsIncludeUntriaged = UNSET,
+    body: PostProjectProjectsIdWorkItemsBody | Unset = UNSET,
+    include_untriaged: PostProjectProjectsIdWorkItemsIncludeUntriaged | Unset = UNSET,
 ) -> Response[Error | WorkItem]:
     """Create a work item (refs validated in-project; + a work_item.created activity)
 
     Args:
         id (str):
-        include_untriaged (Union[Unset, PostProjectProjectsIdWorkItemsIncludeUntriaged]):
-        body (PostProjectProjectsIdWorkItemsBody):
+        include_untriaged (PostProjectProjectsIdWorkItemsIncludeUntriaged | Unset):
+        body (PostProjectProjectsIdWorkItemsBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, WorkItem]]
+        Response[Error | WorkItem]
     """
 
     kwargs = _get_kwargs(
@@ -125,22 +129,22 @@ def sync(
     id: str,
     *,
     client: AuthenticatedClient,
-    body: PostProjectProjectsIdWorkItemsBody,
-    include_untriaged: Unset | PostProjectProjectsIdWorkItemsIncludeUntriaged = UNSET,
+    body: PostProjectProjectsIdWorkItemsBody | Unset = UNSET,
+    include_untriaged: PostProjectProjectsIdWorkItemsIncludeUntriaged | Unset = UNSET,
 ) -> Error | WorkItem | None:
     """Create a work item (refs validated in-project; + a work_item.created activity)
 
     Args:
         id (str):
-        include_untriaged (Union[Unset, PostProjectProjectsIdWorkItemsIncludeUntriaged]):
-        body (PostProjectProjectsIdWorkItemsBody):
+        include_untriaged (PostProjectProjectsIdWorkItemsIncludeUntriaged | Unset):
+        body (PostProjectProjectsIdWorkItemsBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, WorkItem]
+        Error | WorkItem
     """
 
     return sync_detailed(
@@ -155,22 +159,22 @@ async def asyncio_detailed(
     id: str,
     *,
     client: AuthenticatedClient,
-    body: PostProjectProjectsIdWorkItemsBody,
-    include_untriaged: Unset | PostProjectProjectsIdWorkItemsIncludeUntriaged = UNSET,
+    body: PostProjectProjectsIdWorkItemsBody | Unset = UNSET,
+    include_untriaged: PostProjectProjectsIdWorkItemsIncludeUntriaged | Unset = UNSET,
 ) -> Response[Error | WorkItem]:
     """Create a work item (refs validated in-project; + a work_item.created activity)
 
     Args:
         id (str):
-        include_untriaged (Union[Unset, PostProjectProjectsIdWorkItemsIncludeUntriaged]):
-        body (PostProjectProjectsIdWorkItemsBody):
+        include_untriaged (PostProjectProjectsIdWorkItemsIncludeUntriaged | Unset):
+        body (PostProjectProjectsIdWorkItemsBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, WorkItem]]
+        Response[Error | WorkItem]
     """
 
     kwargs = _get_kwargs(
@@ -188,22 +192,22 @@ async def asyncio(
     id: str,
     *,
     client: AuthenticatedClient,
-    body: PostProjectProjectsIdWorkItemsBody,
-    include_untriaged: Unset | PostProjectProjectsIdWorkItemsIncludeUntriaged = UNSET,
+    body: PostProjectProjectsIdWorkItemsBody | Unset = UNSET,
+    include_untriaged: PostProjectProjectsIdWorkItemsIncludeUntriaged | Unset = UNSET,
 ) -> Error | WorkItem | None:
     """Create a work item (refs validated in-project; + a work_item.created activity)
 
     Args:
         id (str):
-        include_untriaged (Union[Unset, PostProjectProjectsIdWorkItemsIncludeUntriaged]):
-        body (PostProjectProjectsIdWorkItemsBody):
+        include_untriaged (PostProjectProjectsIdWorkItemsIncludeUntriaged | Unset):
+        body (PostProjectProjectsIdWorkItemsBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, WorkItem]
+        Error | WorkItem
     """
 
     return (

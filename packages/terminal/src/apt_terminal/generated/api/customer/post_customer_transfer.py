@@ -8,12 +8,12 @@ from ...client import AuthenticatedClient, Client
 from ...models.error import Error
 from ...models.post_customer_transfer_body import PostCustomerTransferBody
 from ...models.post_customer_transfer_response_200 import PostCustomerTransferResponse200
-from ...types import Response
+from ...types import UNSET, Response, Unset
 
 
 def _get_kwargs(
     *,
-    body: PostCustomerTransferBody,
+    body: PostCustomerTransferBody | Unset = UNSET,
 ) -> dict[str, Any]:
     headers: dict[str, Any] = {}
 
@@ -22,7 +22,8 @@ def _get_kwargs(
         "url": "/customer/transfer",
     }
 
-    _kwargs["json"] = body.to_dict()
+    if not isinstance(body, Unset):
+        _kwargs["json"] = body.to_dict()
 
     headers["Content-Type"] = "application/json"
 
@@ -83,7 +84,7 @@ def _build_response(
 def sync_detailed(
     *,
     client: AuthenticatedClient,
-    body: PostCustomerTransferBody,
+    body: PostCustomerTransferBody | Unset = UNSET,
 ) -> Response[Error | PostCustomerTransferResponse200]:
     """Move one customer (and the workspace they own) to another ecosystem (admin)
 
@@ -92,14 +93,14 @@ def sync_detailed(
     parent chain. Old addresses remain resolvable as aliases.
 
     Args:
-        body (PostCustomerTransferBody):
+        body (PostCustomerTransferBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, PostCustomerTransferResponse200]]
+        Response[Error | PostCustomerTransferResponse200]
     """
 
     kwargs = _get_kwargs(
@@ -116,7 +117,7 @@ def sync_detailed(
 def sync(
     *,
     client: AuthenticatedClient,
-    body: PostCustomerTransferBody,
+    body: PostCustomerTransferBody | Unset = UNSET,
 ) -> Error | PostCustomerTransferResponse200 | None:
     """Move one customer (and the workspace they own) to another ecosystem (admin)
 
@@ -125,14 +126,14 @@ def sync(
     parent chain. Old addresses remain resolvable as aliases.
 
     Args:
-        body (PostCustomerTransferBody):
+        body (PostCustomerTransferBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, PostCustomerTransferResponse200]
+        Error | PostCustomerTransferResponse200
     """
 
     return sync_detailed(
@@ -144,7 +145,7 @@ def sync(
 async def asyncio_detailed(
     *,
     client: AuthenticatedClient,
-    body: PostCustomerTransferBody,
+    body: PostCustomerTransferBody | Unset = UNSET,
 ) -> Response[Error | PostCustomerTransferResponse200]:
     """Move one customer (and the workspace they own) to another ecosystem (admin)
 
@@ -153,14 +154,14 @@ async def asyncio_detailed(
     parent chain. Old addresses remain resolvable as aliases.
 
     Args:
-        body (PostCustomerTransferBody):
+        body (PostCustomerTransferBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, PostCustomerTransferResponse200]]
+        Response[Error | PostCustomerTransferResponse200]
     """
 
     kwargs = _get_kwargs(
@@ -175,7 +176,7 @@ async def asyncio_detailed(
 async def asyncio(
     *,
     client: AuthenticatedClient,
-    body: PostCustomerTransferBody,
+    body: PostCustomerTransferBody | Unset = UNSET,
 ) -> Error | PostCustomerTransferResponse200 | None:
     """Move one customer (and the workspace they own) to another ecosystem (admin)
 
@@ -184,14 +185,14 @@ async def asyncio(
     parent chain. Old addresses remain resolvable as aliases.
 
     Args:
-        body (PostCustomerTransferBody):
+        body (PostCustomerTransferBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, PostCustomerTransferResponse200]
+        Error | PostCustomerTransferResponse200
     """
 
     return (

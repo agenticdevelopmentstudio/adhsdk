@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -21,9 +23,9 @@ T = TypeVar("T", bound="GetAccountMfaPreferenceResponse200")
 class GetAccountMfaPreferenceResponse200:
     """
     Attributes:
-        preferred_method (Union[GetAccountMfaPreferenceResponse200PreferredMethodType1,
-            GetAccountMfaPreferenceResponse200PreferredMethodType2Type1,
-            GetAccountMfaPreferenceResponse200PreferredMethodType3Type1, None]):
+        preferred_method (GetAccountMfaPreferenceResponse200PreferredMethodType1 |
+            GetAccountMfaPreferenceResponse200PreferredMethodType2Type1 |
+            GetAccountMfaPreferenceResponse200PreferredMethodType3Type1 | None):
     """
 
     preferred_method: (
@@ -83,7 +85,7 @@ class GetAccountMfaPreferenceResponse200:
                 )
 
                 return preferred_method_type_1
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
             try:
                 if not isinstance(data, str):
@@ -93,7 +95,7 @@ class GetAccountMfaPreferenceResponse200:
                 )
 
                 return preferred_method_type_2_type_1
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
             try:
                 if not isinstance(data, str):
@@ -103,7 +105,7 @@ class GetAccountMfaPreferenceResponse200:
                 )
 
                 return preferred_method_type_3_type_1
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
             return cast(
                 GetAccountMfaPreferenceResponse200PreferredMethodType1

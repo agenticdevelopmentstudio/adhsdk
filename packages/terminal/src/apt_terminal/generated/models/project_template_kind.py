@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class ProjectTemplateKind(str, Enum):
+class ProjectTemplateKind(StrEnum):
     PROJECT = "project"
     WORK_ITEM = "work_item"
 

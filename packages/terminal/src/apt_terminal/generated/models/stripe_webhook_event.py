@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, TypeVar, Union
+from typing import TYPE_CHECKING, Any, TypeVar
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -19,14 +21,14 @@ class StripeWebhookEvent:
     Attributes:
         id (str):
         type_ (str):
-        created (Union[Unset, int]):
-        data (Union[Unset, StripeWebhookEventData]):
+        created (int | Unset):
+        data (StripeWebhookEventData | Unset):
     """
 
     id: str
     type_: str
-    created: Unset | int = UNSET
-    data: Union[Unset, "StripeWebhookEventData"] = UNSET
+    created: int | Unset = UNSET
+    data: StripeWebhookEventData | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -36,7 +38,7 @@ class StripeWebhookEvent:
 
         created = self.created
 
-        data: Unset | dict[str, Any] = UNSET
+        data: dict[str, Any] | Unset = UNSET
         if not isinstance(self.data, Unset):
             data = self.data.to_dict()
 
@@ -67,7 +69,7 @@ class StripeWebhookEvent:
         created = d.pop("created", UNSET)
 
         _data = d.pop("data", UNSET)
-        data: Unset | StripeWebhookEventData
+        data: StripeWebhookEventData | Unset
         if isinstance(_data, Unset):
             data = UNSET
         else:

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -28,10 +30,10 @@ class ProjectIteration:
         created_at (str):
         updated_at (str):
         is_deleted (bool):
-        customer_id (Union[Unset, str]): the customer (user) who created the iteration
-        created_by (Union[None, Unset, str]):
-        deleted_at (Union[None, Unset, str]):
-        sync_version (Union[Unset, int]):
+        customer_id (str | Unset): the customer (user) who created the iteration
+        created_by (None | str | Unset):
+        deleted_at (None | str | Unset):
+        sync_version (int | Unset):
     """
 
     id: str
@@ -46,10 +48,10 @@ class ProjectIteration:
     created_at: str
     updated_at: str
     is_deleted: bool
-    customer_id: Unset | str = UNSET
-    created_by: None | Unset | str = UNSET
-    deleted_at: None | Unset | str = UNSET
-    sync_version: Unset | int = UNSET
+    customer_id: str | Unset = UNSET
+    created_by: None | str | Unset = UNSET
+    deleted_at: None | str | Unset = UNSET
+    sync_version: int | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -79,13 +81,13 @@ class ProjectIteration:
 
         customer_id = self.customer_id
 
-        created_by: None | Unset | str
+        created_by: None | str | Unset
         if isinstance(self.created_by, Unset):
             created_by = UNSET
         else:
             created_by = self.created_by
 
-        deleted_at: None | Unset | str
+        deleted_at: None | str | Unset
         if isinstance(self.deleted_at, Unset):
             deleted_at = UNSET
         else:
@@ -151,21 +153,21 @@ class ProjectIteration:
 
         customer_id = d.pop("customerId", UNSET)
 
-        def _parse_created_by(data: object) -> None | Unset | str:
+        def _parse_created_by(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         created_by = _parse_created_by(d.pop("createdBy", UNSET))
 
-        def _parse_deleted_at(data: object) -> None | Unset | str:
+        def _parse_deleted_at(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         deleted_at = _parse_deleted_at(d.pop("deletedAt", UNSET))
 

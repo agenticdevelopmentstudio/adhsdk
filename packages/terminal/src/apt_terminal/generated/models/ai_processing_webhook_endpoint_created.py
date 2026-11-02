@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 from uuid import UUID
@@ -24,7 +26,7 @@ class AiProcessingWebhookEndpointCreated:
         updated_at (str): ISO 8601 timestamp of last modification
         secret (str): whsec_-prefixed Standard Webhooks signing secret — returned exactly once. Store it; it cannot be
             retrieved again.
-        description (Union[None, Unset, str]): Human-readable label
+        description (None | str | Unset): Human-readable label
     """
 
     id: UUID
@@ -36,7 +38,7 @@ class AiProcessingWebhookEndpointCreated:
     created_at: str
     updated_at: str
     secret: str
-    description: None | Unset | str = UNSET
+    description: None | str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -58,7 +60,7 @@ class AiProcessingWebhookEndpointCreated:
 
         secret = self.secret
 
-        description: None | Unset | str
+        description: None | str | Unset
         if isinstance(self.description, Unset):
             description = UNSET
         else:
@@ -105,12 +107,12 @@ class AiProcessingWebhookEndpointCreated:
 
         secret = d.pop("secret")
 
-        def _parse_description(data: object) -> None | Unset | str:
+        def _parse_description(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         description = _parse_description(d.pop("description", UNSET))
 

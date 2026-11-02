@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -18,9 +20,9 @@ class EcosystemSigninApp:
             name (str):
             allowed_return_origins (list[str]):
             default_ecosystem_id (str):
-            jwt_audience (Union[None, str]):
+            jwt_audience (None | str):
             is_internal (bool): Always false here — internal clients are not listed or editable
-            app_token_prefix (Union[None, str]):
+            app_token_prefix (None | str):
             github_enabled (bool):
     """
 

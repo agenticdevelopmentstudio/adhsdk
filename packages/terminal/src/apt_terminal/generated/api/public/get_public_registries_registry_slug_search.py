@@ -1,5 +1,6 @@
 from http import HTTPStatus
 from typing import Any
+from urllib.parse import quote
 
 import httpx
 
@@ -12,12 +13,12 @@ from ...types import UNSET, Response, Unset
 def _get_kwargs(
     registry_slug: str,
     *,
-    q: Unset | str = UNSET,
-    category: Unset | str = UNSET,
-    delivery_mode: Unset | str = UNSET,
-    pricing_model: Unset | str = UNSET,
-    page: Unset | str = UNSET,
-    page_size: Unset | str = UNSET,
+    q: str | Unset = UNSET,
+    category: str | Unset = UNSET,
+    delivery_mode: str | Unset = UNSET,
+    pricing_model: str | Unset = UNSET,
+    page: str | Unset = UNSET,
+    page_size: str | Unset = UNSET,
 ) -> dict[str, Any]:
     params: dict[str, Any] = {}
 
@@ -37,7 +38,9 @@ def _get_kwargs(
 
     _kwargs: dict[str, Any] = {
         "method": "get",
-        "url": f"/public/registries/{registry_slug}/search",
+        "url": "/public/registries/{registry_slug}/search".format(
+            registry_slug=quote(str(registry_slug), safe=""),
+        ),
         "params": params,
     }
 
@@ -73,23 +76,23 @@ def sync_detailed(
     registry_slug: str,
     *,
     client: AuthenticatedClient | Client,
-    q: Unset | str = UNSET,
-    category: Unset | str = UNSET,
-    delivery_mode: Unset | str = UNSET,
-    pricing_model: Unset | str = UNSET,
-    page: Unset | str = UNSET,
-    page_size: Unset | str = UNSET,
+    q: str | Unset = UNSET,
+    category: str | Unset = UNSET,
+    delivery_mode: str | Unset = UNSET,
+    pricing_model: str | Unset = UNSET,
+    page: str | Unset = UNSET,
+    page_size: str | Unset = UNSET,
 ) -> Response[PublicRegistryEntryList]:
     """Full-text search a registry’s published, public entries
 
     Args:
         registry_slug (str):
-        q (Union[Unset, str]):
-        category (Union[Unset, str]):
-        delivery_mode (Union[Unset, str]):
-        pricing_model (Union[Unset, str]):
-        page (Union[Unset, str]):
-        page_size (Union[Unset, str]):
+        q (str | Unset):
+        category (str | Unset):
+        delivery_mode (str | Unset):
+        pricing_model (str | Unset):
+        page (str | Unset):
+        page_size (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -120,23 +123,23 @@ def sync(
     registry_slug: str,
     *,
     client: AuthenticatedClient | Client,
-    q: Unset | str = UNSET,
-    category: Unset | str = UNSET,
-    delivery_mode: Unset | str = UNSET,
-    pricing_model: Unset | str = UNSET,
-    page: Unset | str = UNSET,
-    page_size: Unset | str = UNSET,
+    q: str | Unset = UNSET,
+    category: str | Unset = UNSET,
+    delivery_mode: str | Unset = UNSET,
+    pricing_model: str | Unset = UNSET,
+    page: str | Unset = UNSET,
+    page_size: str | Unset = UNSET,
 ) -> PublicRegistryEntryList | None:
     """Full-text search a registry’s published, public entries
 
     Args:
         registry_slug (str):
-        q (Union[Unset, str]):
-        category (Union[Unset, str]):
-        delivery_mode (Union[Unset, str]):
-        pricing_model (Union[Unset, str]):
-        page (Union[Unset, str]):
-        page_size (Union[Unset, str]):
+        q (str | Unset):
+        category (str | Unset):
+        delivery_mode (str | Unset):
+        pricing_model (str | Unset):
+        page (str | Unset):
+        page_size (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -162,23 +165,23 @@ async def asyncio_detailed(
     registry_slug: str,
     *,
     client: AuthenticatedClient | Client,
-    q: Unset | str = UNSET,
-    category: Unset | str = UNSET,
-    delivery_mode: Unset | str = UNSET,
-    pricing_model: Unset | str = UNSET,
-    page: Unset | str = UNSET,
-    page_size: Unset | str = UNSET,
+    q: str | Unset = UNSET,
+    category: str | Unset = UNSET,
+    delivery_mode: str | Unset = UNSET,
+    pricing_model: str | Unset = UNSET,
+    page: str | Unset = UNSET,
+    page_size: str | Unset = UNSET,
 ) -> Response[PublicRegistryEntryList]:
     """Full-text search a registry’s published, public entries
 
     Args:
         registry_slug (str):
-        q (Union[Unset, str]):
-        category (Union[Unset, str]):
-        delivery_mode (Union[Unset, str]):
-        pricing_model (Union[Unset, str]):
-        page (Union[Unset, str]):
-        page_size (Union[Unset, str]):
+        q (str | Unset):
+        category (str | Unset):
+        delivery_mode (str | Unset):
+        pricing_model (str | Unset):
+        page (str | Unset):
+        page_size (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -207,23 +210,23 @@ async def asyncio(
     registry_slug: str,
     *,
     client: AuthenticatedClient | Client,
-    q: Unset | str = UNSET,
-    category: Unset | str = UNSET,
-    delivery_mode: Unset | str = UNSET,
-    pricing_model: Unset | str = UNSET,
-    page: Unset | str = UNSET,
-    page_size: Unset | str = UNSET,
+    q: str | Unset = UNSET,
+    category: str | Unset = UNSET,
+    delivery_mode: str | Unset = UNSET,
+    pricing_model: str | Unset = UNSET,
+    page: str | Unset = UNSET,
+    page_size: str | Unset = UNSET,
 ) -> PublicRegistryEntryList | None:
     """Full-text search a registry’s published, public entries
 
     Args:
         registry_slug (str):
-        q (Union[Unset, str]):
-        category (Union[Unset, str]):
-        delivery_mode (Union[Unset, str]):
-        pricing_model (Union[Unset, str]):
-        page (Union[Unset, str]):
-        page_size (Union[Unset, str]):
+        q (str | Unset):
+        category (str | Unset):
+        delivery_mode (str | Unset):
+        pricing_model (str | Unset):
+        page (str | Unset):
+        page_size (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.

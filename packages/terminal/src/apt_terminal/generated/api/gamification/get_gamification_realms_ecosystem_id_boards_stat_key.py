@@ -1,5 +1,6 @@
 from http import HTTPStatus
 from typing import Any
+from urllib.parse import quote
 
 import httpx
 
@@ -17,13 +18,13 @@ def _get_kwargs(
     ecosystem_id: str,
     stat_key: str,
     *,
-    window: Unset
-    | GetGamificationRealmsEcosystemIdBoardsStatKeyWindow = GetGamificationRealmsEcosystemIdBoardsStatKeyWindow.TRENDING,
-    limit: Unset | int = 20,
+    window: GetGamificationRealmsEcosystemIdBoardsStatKeyWindow
+    | Unset = GetGamificationRealmsEcosystemIdBoardsStatKeyWindow.TRENDING,
+    limit: int | Unset = 20,
 ) -> dict[str, Any]:
     params: dict[str, Any] = {}
 
-    json_window: Unset | str = UNSET
+    json_window: str | Unset = UNSET
     if not isinstance(window, Unset):
         json_window = window.value
 
@@ -35,7 +36,10 @@ def _get_kwargs(
 
     _kwargs: dict[str, Any] = {
         "method": "get",
-        "url": f"/gamification/realms/{ecosystem_id}/boards/{stat_key}",
+        "url": "/gamification/realms/{ecosystem_id}/boards/{stat_key}".format(
+            ecosystem_id=quote(str(ecosystem_id), safe=""),
+            stat_key=quote(str(stat_key), safe=""),
+        ),
         "params": params,
     }
 
@@ -92,25 +96,25 @@ def sync_detailed(
     stat_key: str,
     *,
     client: AuthenticatedClient,
-    window: Unset
-    | GetGamificationRealmsEcosystemIdBoardsStatKeyWindow = GetGamificationRealmsEcosystemIdBoardsStatKeyWindow.TRENDING,
-    limit: Unset | int = 20,
+    window: GetGamificationRealmsEcosystemIdBoardsStatKeyWindow
+    | Unset = GetGamificationRealmsEcosystemIdBoardsStatKeyWindow.TRENDING,
+    limit: int | Unset = 20,
 ) -> Response[Error | GamificationBoard]:
     """Per-realm leaderboard for one boardable stat (admin)
 
     Args:
         ecosystem_id (str):
         stat_key (str):
-        window (Union[Unset, GetGamificationRealmsEcosystemIdBoardsStatKeyWindow]):  Default:
+        window (GetGamificationRealmsEcosystemIdBoardsStatKeyWindow | Unset):  Default:
             GetGamificationRealmsEcosystemIdBoardsStatKeyWindow.TRENDING.
-        limit (Union[Unset, int]):  Default: 20.
+        limit (int | Unset):  Default: 20.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, GamificationBoard]]
+        Response[Error | GamificationBoard]
     """
 
     kwargs = _get_kwargs(
@@ -132,25 +136,25 @@ def sync(
     stat_key: str,
     *,
     client: AuthenticatedClient,
-    window: Unset
-    | GetGamificationRealmsEcosystemIdBoardsStatKeyWindow = GetGamificationRealmsEcosystemIdBoardsStatKeyWindow.TRENDING,
-    limit: Unset | int = 20,
+    window: GetGamificationRealmsEcosystemIdBoardsStatKeyWindow
+    | Unset = GetGamificationRealmsEcosystemIdBoardsStatKeyWindow.TRENDING,
+    limit: int | Unset = 20,
 ) -> Error | GamificationBoard | None:
     """Per-realm leaderboard for one boardable stat (admin)
 
     Args:
         ecosystem_id (str):
         stat_key (str):
-        window (Union[Unset, GetGamificationRealmsEcosystemIdBoardsStatKeyWindow]):  Default:
+        window (GetGamificationRealmsEcosystemIdBoardsStatKeyWindow | Unset):  Default:
             GetGamificationRealmsEcosystemIdBoardsStatKeyWindow.TRENDING.
-        limit (Union[Unset, int]):  Default: 20.
+        limit (int | Unset):  Default: 20.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, GamificationBoard]
+        Error | GamificationBoard
     """
 
     return sync_detailed(
@@ -167,25 +171,25 @@ async def asyncio_detailed(
     stat_key: str,
     *,
     client: AuthenticatedClient,
-    window: Unset
-    | GetGamificationRealmsEcosystemIdBoardsStatKeyWindow = GetGamificationRealmsEcosystemIdBoardsStatKeyWindow.TRENDING,
-    limit: Unset | int = 20,
+    window: GetGamificationRealmsEcosystemIdBoardsStatKeyWindow
+    | Unset = GetGamificationRealmsEcosystemIdBoardsStatKeyWindow.TRENDING,
+    limit: int | Unset = 20,
 ) -> Response[Error | GamificationBoard]:
     """Per-realm leaderboard for one boardable stat (admin)
 
     Args:
         ecosystem_id (str):
         stat_key (str):
-        window (Union[Unset, GetGamificationRealmsEcosystemIdBoardsStatKeyWindow]):  Default:
+        window (GetGamificationRealmsEcosystemIdBoardsStatKeyWindow | Unset):  Default:
             GetGamificationRealmsEcosystemIdBoardsStatKeyWindow.TRENDING.
-        limit (Union[Unset, int]):  Default: 20.
+        limit (int | Unset):  Default: 20.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, GamificationBoard]]
+        Response[Error | GamificationBoard]
     """
 
     kwargs = _get_kwargs(
@@ -205,25 +209,25 @@ async def asyncio(
     stat_key: str,
     *,
     client: AuthenticatedClient,
-    window: Unset
-    | GetGamificationRealmsEcosystemIdBoardsStatKeyWindow = GetGamificationRealmsEcosystemIdBoardsStatKeyWindow.TRENDING,
-    limit: Unset | int = 20,
+    window: GetGamificationRealmsEcosystemIdBoardsStatKeyWindow
+    | Unset = GetGamificationRealmsEcosystemIdBoardsStatKeyWindow.TRENDING,
+    limit: int | Unset = 20,
 ) -> Error | GamificationBoard | None:
     """Per-realm leaderboard for one boardable stat (admin)
 
     Args:
         ecosystem_id (str):
         stat_key (str):
-        window (Union[Unset, GetGamificationRealmsEcosystemIdBoardsStatKeyWindow]):  Default:
+        window (GetGamificationRealmsEcosystemIdBoardsStatKeyWindow | Unset):  Default:
             GetGamificationRealmsEcosystemIdBoardsStatKeyWindow.TRENDING.
-        limit (Union[Unset, int]):  Default: 20.
+        limit (int | Unset):  Default: 20.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, GamificationBoard]
+        Error | GamificationBoard
     """
 
     return (

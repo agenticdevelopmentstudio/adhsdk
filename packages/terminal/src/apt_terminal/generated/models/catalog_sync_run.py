@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, TypeVar, Union, cast
+from typing import TYPE_CHECKING, Any, TypeVar, cast
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -20,17 +22,19 @@ class CatalogSyncRun:
         source (str):
         last_run_at (str):
         ok (bool):
-        detail (Union['CatalogSyncRunDetailType0', None, Unset]):
+        detail (CatalogSyncRunDetailType0 | None | Unset):
     """
 
     source: str
     last_run_at: str
     ok: bool
-    detail: Union["CatalogSyncRunDetailType0", None, Unset] = UNSET
+    detail: CatalogSyncRunDetailType0 | None | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
-        from ..models.catalog_sync_run_detail_type_0 import CatalogSyncRunDetailType0
+        from ..models.catalog_sync_run_detail_type_0 import (
+            CatalogSyncRunDetailType0,
+        )
 
         source = self.source
 
@@ -38,7 +42,7 @@ class CatalogSyncRun:
 
         ok = self.ok
 
-        detail: None | Unset | dict[str, Any]
+        detail: dict[str, Any] | None | Unset
         if isinstance(self.detail, Unset):
             detail = UNSET
         elif isinstance(self.detail, CatalogSyncRunDetailType0):
@@ -62,7 +66,9 @@ class CatalogSyncRun:
 
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
-        from ..models.catalog_sync_run_detail_type_0 import CatalogSyncRunDetailType0
+        from ..models.catalog_sync_run_detail_type_0 import (
+            CatalogSyncRunDetailType0,
+        )
 
         d = dict(src_dict)
         source = d.pop("source")
@@ -71,7 +77,7 @@ class CatalogSyncRun:
 
         ok = d.pop("ok")
 
-        def _parse_detail(data: object) -> Union["CatalogSyncRunDetailType0", None, Unset]:
+        def _parse_detail(data: object) -> CatalogSyncRunDetailType0 | None | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
@@ -82,9 +88,9 @@ class CatalogSyncRun:
                 detail_type_0 = CatalogSyncRunDetailType0.from_dict(data)
 
                 return detail_type_0
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
-            return cast(Union["CatalogSyncRunDetailType0", None, Unset], data)
+            return cast(CatalogSyncRunDetailType0 | None | Unset, data)
 
         detail = _parse_detail(d.pop("detail", UNSET))
 

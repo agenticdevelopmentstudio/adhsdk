@@ -12,7 +12,7 @@ from ...types import UNSET, Response, Unset
 
 def _get_kwargs(
     *,
-    workspace: Unset | str = UNSET,
+    workspace: str | Unset = UNSET,
 ) -> dict[str, Any]:
     params: dict[str, Any] = {}
 
@@ -62,7 +62,7 @@ def _build_response(
 def sync_detailed(
     *,
     client: AuthenticatedClient,
-    workspace: Unset | str = UNSET,
+    workspace: str | Unset = UNSET,
 ) -> Response[Error | MarkdownCategoryTree]:
     """List the caller's existing categories (names + the category HIERARCHY)
 
@@ -73,14 +73,14 @@ def sync_detailed(
     any number of parents, or none.
 
     Args:
-        workspace (Union[Unset, str]):
+        workspace (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, MarkdownCategoryTree]]
+        Response[Error | MarkdownCategoryTree]
     """
 
     kwargs = _get_kwargs(
@@ -97,7 +97,7 @@ def sync_detailed(
 def sync(
     *,
     client: AuthenticatedClient,
-    workspace: Unset | str = UNSET,
+    workspace: str | Unset = UNSET,
 ) -> Error | MarkdownCategoryTree | None:
     """List the caller's existing categories (names + the category HIERARCHY)
 
@@ -108,14 +108,14 @@ def sync(
     any number of parents, or none.
 
     Args:
-        workspace (Union[Unset, str]):
+        workspace (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, MarkdownCategoryTree]
+        Error | MarkdownCategoryTree
     """
 
     return sync_detailed(
@@ -127,7 +127,7 @@ def sync(
 async def asyncio_detailed(
     *,
     client: AuthenticatedClient,
-    workspace: Unset | str = UNSET,
+    workspace: str | Unset = UNSET,
 ) -> Response[Error | MarkdownCategoryTree]:
     """List the caller's existing categories (names + the category HIERARCHY)
 
@@ -138,14 +138,14 @@ async def asyncio_detailed(
     any number of parents, or none.
 
     Args:
-        workspace (Union[Unset, str]):
+        workspace (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, MarkdownCategoryTree]]
+        Response[Error | MarkdownCategoryTree]
     """
 
     kwargs = _get_kwargs(
@@ -160,7 +160,7 @@ async def asyncio_detailed(
 async def asyncio(
     *,
     client: AuthenticatedClient,
-    workspace: Unset | str = UNSET,
+    workspace: str | Unset = UNSET,
 ) -> Error | MarkdownCategoryTree | None:
     """List the caller's existing categories (names + the category HIERARCHY)
 
@@ -171,14 +171,14 @@ async def asyncio(
     any number of parents, or none.
 
     Args:
-        workspace (Union[Unset, str]):
+        workspace (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, MarkdownCategoryTree]
+        Error | MarkdownCategoryTree
     """
 
     return (

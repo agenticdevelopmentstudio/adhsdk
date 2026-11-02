@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -12,29 +14,29 @@ T = TypeVar("T", bound="PutGamePlayersIdBody")
 class PutGamePlayersIdBody:
     """
     Attributes:
-        ecosystem_id (Union[Unset, str]):
-        game_id (Union[Unset, str]):
-        character_avatar_url (Union[None, Unset, str]):
-        visibility (Union[Unset, str]):
-        first_played_at (Union[Unset, str]):
-        last_played_at (Union[Unset, str]):
-        sync_txid (Union[Unset, int]):
+        ecosystem_id (str | Unset):
+        game_id (str | Unset):
+        character_avatar_url (None | str | Unset):
+        visibility (str | Unset):
+        first_played_at (str | Unset):
+        last_played_at (str | Unset):
+        sync_txid (int | Unset):
     """
 
-    ecosystem_id: Unset | str = UNSET
-    game_id: Unset | str = UNSET
-    character_avatar_url: None | Unset | str = UNSET
-    visibility: Unset | str = UNSET
-    first_played_at: Unset | str = UNSET
-    last_played_at: Unset | str = UNSET
-    sync_txid: Unset | int = UNSET
+    ecosystem_id: str | Unset = UNSET
+    game_id: str | Unset = UNSET
+    character_avatar_url: None | str | Unset = UNSET
+    visibility: str | Unset = UNSET
+    first_played_at: str | Unset = UNSET
+    last_played_at: str | Unset = UNSET
+    sync_txid: int | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
         ecosystem_id = self.ecosystem_id
 
         game_id = self.game_id
 
-        character_avatar_url: None | Unset | str
+        character_avatar_url: None | str | Unset
         if isinstance(self.character_avatar_url, Unset):
             character_avatar_url = UNSET
         else:
@@ -75,12 +77,12 @@ class PutGamePlayersIdBody:
 
         game_id = d.pop("gameId", UNSET)
 
-        def _parse_character_avatar_url(data: object) -> None | Unset | str:
+        def _parse_character_avatar_url(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         character_avatar_url = _parse_character_avatar_url(d.pop("characterAvatarUrl", UNSET))
 

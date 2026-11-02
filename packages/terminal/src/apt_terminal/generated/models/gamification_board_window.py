@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class GamificationBoardWindow(str, Enum):
+class GamificationBoardWindow(StrEnum):
     ALLTIME = "allTime"
     ROLLING30 = "rolling30"
     SEASON = "season"

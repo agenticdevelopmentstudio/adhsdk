@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class WorkspaceType(str, Enum):
+class WorkspaceType(StrEnum):
     INDIVIDUAL = "individual"
     ORGANIZATION = "organization"
     TEAM = "team"

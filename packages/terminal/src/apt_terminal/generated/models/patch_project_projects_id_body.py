@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -20,52 +22,52 @@ T = TypeVar("T", bound="PatchProjectProjectsIdBody")
 class PatchProjectProjectsIdBody:
     """
     Attributes:
-        name (Union[Unset, str]):
-        description (Union[Unset, str]):
-        status (Union[Unset, str]):
-        color (Union[Unset, str]):
-        archived_at (Union[None, Unset, str]): an ISO timestamp archives; null un-archives
-        estimate_scale (Union[Unset, PatchProjectProjectsIdBodyEstimateScale]): which estimate vocabulary this board
-            writes in. Changing it NEVER invalidates an estimate already stored — the column takes any non-negative integer
+        name (str | Unset):
+        description (str | Unset):
+        status (str | Unset):
+        color (str | Unset):
+        archived_at (None | str | Unset): an ISO timestamp archives; null un-archives
+        estimate_scale (PatchProjectProjectsIdBodyEstimateScale | Unset): which estimate vocabulary this board writes
+            in. Changing it NEVER invalidates an estimate already stored — the column takes any non-negative integer
             whatever the scale is — so this is safe to switch mid-flight. 'none' turns estimating off.
-        priority_scale (Union[Unset, PatchProjectProjectsIdBodyPriorityScale]): whether this board ranks its work. Safe
-            to switch for the same reason as the scale above: 'none' hides the priority control and the priority column and
+        priority_scale (PatchProjectProjectsIdBodyPriorityScale | Unset): whether this board ranks its work. Safe to
+            switch for the same reason as the scale above: 'none' hides the priority control and the priority column and
             keeps every rank already recorded, so turning ranking back on restores the order rather than an empty one.
-        item_noun (Union[Unset, str]): what this board calls ONE of its items, e.g. 'recipe'. Lower case by convention —
-            the client capitalises where a sentence needs it, and a stored 'Recipe' would read as 'Delete 3 Recipes'.
-        item_noun_plural (Union[Unset, str]): what this board calls MANY, e.g. 'recipes'. Accepted on its OWN, unlike in
-            a template body: this patch edits words the board already has, so correcting a plural the client guessed
+        item_noun (str | Unset): what this board calls ONE of its items, e.g. 'recipe'. Lower case by convention — the
+            client capitalises where a sentence needs it, and a stored 'Recipe' would read as 'Delete 3 Recipes'.
+        item_noun_plural (str | Unset): what this board calls MANY, e.g. 'recipes'. Accepted on its OWN, unlike in a
+            template body: this patch edits words the board already has, so correcting a plural the client guessed
             ('storys') is a real request rather than half a rename.
-        key_prefix (Union[Unset, str]): the prefix this board's keys render from. Upper-cased before it is checked, so
-            `adh` and `ADH` are not two claims on the same prefix; 409 if another live board of the same owner already holds
-            it. Renaming it re-renders every key at once — which is why the prefix is stored here and not on each card.
-        start_date (Union[None, Unset, str]): null clears it — a project that turns out to have no committed start must
-            be able to say so again
-        target_date (Union[None, Unset, str]): null clears it. The pair is checked as it WILL BE, not as it was sent, so
+        key_prefix (str | Unset): the prefix this board's keys render from. Upper-cased before it is checked, so `adh`
+            and `ADH` are not two claims on the same prefix; 409 if another live board of the same owner already holds it.
+            Renaming it re-renders every key at once — which is why the prefix is stored here and not on each card.
+        start_date (None | str | Unset): null clears it — a project that turns out to have no committed start must be
+            able to say so again
+        target_date (None | str | Unset): null clears it. The pair is checked as it WILL BE, not as it was sent, so
             moving one end of a dated project is an ordinary one-key edit; 400 if the target would precede the start.
-        lead_kind (Union[Unset, PatchProjectProjectsIdBodyLeadKind]): set WITH leadId, or send both as null to clear. A
-            half — a kind naming nobody, or an id with no kind — is a 400 here rather than the projects_lead_kind_chk
-            violation it would otherwise become.
-        lead_id (Union[None, Unset, str]):
-        program_id (Union[None, Unset, str]): a live program of this project's OWN workspace (400 otherwise — the same
+        lead_kind (PatchProjectProjectsIdBodyLeadKind | Unset): set WITH leadId, or send both as null to clear. A half —
+            a kind naming nobody, or an id with no kind — is a 400 here rather than the projects_lead_kind_chk violation it
+            would otherwise become.
+        lead_id (None | str | Unset):
+        program_id (None | str | Unset): a live program of this project's OWN workspace (400 otherwise — the same
             relational rule a card's iteration follows); null takes the board out of its program
     """
 
-    name: Unset | str = UNSET
-    description: Unset | str = UNSET
-    status: Unset | str = UNSET
-    color: Unset | str = UNSET
-    archived_at: None | Unset | str = UNSET
-    estimate_scale: Unset | PatchProjectProjectsIdBodyEstimateScale = UNSET
-    priority_scale: Unset | PatchProjectProjectsIdBodyPriorityScale = UNSET
-    item_noun: Unset | str = UNSET
-    item_noun_plural: Unset | str = UNSET
-    key_prefix: Unset | str = UNSET
-    start_date: None | Unset | str = UNSET
-    target_date: None | Unset | str = UNSET
-    lead_kind: Unset | PatchProjectProjectsIdBodyLeadKind = UNSET
-    lead_id: None | Unset | str = UNSET
-    program_id: None | Unset | str = UNSET
+    name: str | Unset = UNSET
+    description: str | Unset = UNSET
+    status: str | Unset = UNSET
+    color: str | Unset = UNSET
+    archived_at: None | str | Unset = UNSET
+    estimate_scale: PatchProjectProjectsIdBodyEstimateScale | Unset = UNSET
+    priority_scale: PatchProjectProjectsIdBodyPriorityScale | Unset = UNSET
+    item_noun: str | Unset = UNSET
+    item_noun_plural: str | Unset = UNSET
+    key_prefix: str | Unset = UNSET
+    start_date: None | str | Unset = UNSET
+    target_date: None | str | Unset = UNSET
+    lead_kind: PatchProjectProjectsIdBodyLeadKind | Unset = UNSET
+    lead_id: None | str | Unset = UNSET
+    program_id: None | str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -77,17 +79,17 @@ class PatchProjectProjectsIdBody:
 
         color = self.color
 
-        archived_at: None | Unset | str
+        archived_at: None | str | Unset
         if isinstance(self.archived_at, Unset):
             archived_at = UNSET
         else:
             archived_at = self.archived_at
 
-        estimate_scale: Unset | str = UNSET
+        estimate_scale: str | Unset = UNSET
         if not isinstance(self.estimate_scale, Unset):
             estimate_scale = self.estimate_scale.value
 
-        priority_scale: Unset | str = UNSET
+        priority_scale: str | Unset = UNSET
         if not isinstance(self.priority_scale, Unset):
             priority_scale = self.priority_scale.value
 
@@ -97,29 +99,29 @@ class PatchProjectProjectsIdBody:
 
         key_prefix = self.key_prefix
 
-        start_date: None | Unset | str
+        start_date: None | str | Unset
         if isinstance(self.start_date, Unset):
             start_date = UNSET
         else:
             start_date = self.start_date
 
-        target_date: None | Unset | str
+        target_date: None | str | Unset
         if isinstance(self.target_date, Unset):
             target_date = UNSET
         else:
             target_date = self.target_date
 
-        lead_kind: Unset | str = UNSET
+        lead_kind: str | Unset = UNSET
         if not isinstance(self.lead_kind, Unset):
             lead_kind = self.lead_kind.value
 
-        lead_id: None | Unset | str
+        lead_id: None | str | Unset
         if isinstance(self.lead_id, Unset):
             lead_id = UNSET
         else:
             lead_id = self.lead_id
 
-        program_id: None | Unset | str
+        program_id: None | str | Unset
         if isinstance(self.program_id, Unset):
             program_id = UNSET
         else:
@@ -172,24 +174,24 @@ class PatchProjectProjectsIdBody:
 
         color = d.pop("color", UNSET)
 
-        def _parse_archived_at(data: object) -> None | Unset | str:
+        def _parse_archived_at(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         archived_at = _parse_archived_at(d.pop("archivedAt", UNSET))
 
         _estimate_scale = d.pop("estimateScale", UNSET)
-        estimate_scale: Unset | PatchProjectProjectsIdBodyEstimateScale
+        estimate_scale: PatchProjectProjectsIdBodyEstimateScale | Unset
         if isinstance(_estimate_scale, Unset):
             estimate_scale = UNSET
         else:
             estimate_scale = PatchProjectProjectsIdBodyEstimateScale(_estimate_scale)
 
         _priority_scale = d.pop("priorityScale", UNSET)
-        priority_scale: Unset | PatchProjectProjectsIdBodyPriorityScale
+        priority_scale: PatchProjectProjectsIdBodyPriorityScale | Unset
         if isinstance(_priority_scale, Unset):
             priority_scale = UNSET
         else:
@@ -201,46 +203,46 @@ class PatchProjectProjectsIdBody:
 
         key_prefix = d.pop("keyPrefix", UNSET)
 
-        def _parse_start_date(data: object) -> None | Unset | str:
+        def _parse_start_date(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         start_date = _parse_start_date(d.pop("startDate", UNSET))
 
-        def _parse_target_date(data: object) -> None | Unset | str:
+        def _parse_target_date(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         target_date = _parse_target_date(d.pop("targetDate", UNSET))
 
         _lead_kind = d.pop("leadKind", UNSET)
-        lead_kind: Unset | PatchProjectProjectsIdBodyLeadKind
+        lead_kind: PatchProjectProjectsIdBodyLeadKind | Unset
         if isinstance(_lead_kind, Unset):
             lead_kind = UNSET
         else:
             lead_kind = PatchProjectProjectsIdBodyLeadKind(_lead_kind)
 
-        def _parse_lead_id(data: object) -> None | Unset | str:
+        def _parse_lead_id(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         lead_id = _parse_lead_id(d.pop("leadId", UNSET))
 
-        def _parse_program_id(data: object) -> None | Unset | str:
+        def _parse_program_id(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         program_id = _parse_program_id(d.pop("programId", UNSET))
 

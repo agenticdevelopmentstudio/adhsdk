@@ -8,12 +8,12 @@ from ...client import AuthenticatedClient, Client
 from ...models.contact_method import ContactMethod
 from ...models.error import Error
 from ...models.post_account_contacts_body import PostAccountContactsBody
-from ...types import Response
+from ...types import UNSET, Response, Unset
 
 
 def _get_kwargs(
     *,
-    body: PostAccountContactsBody,
+    body: PostAccountContactsBody | Unset = UNSET,
 ) -> dict[str, Any]:
     headers: dict[str, Any] = {}
 
@@ -22,7 +22,8 @@ def _get_kwargs(
         "url": "/account/contacts",
     }
 
-    _kwargs["json"] = body.to_dict()
+    if not isinstance(body, Unset):
+        _kwargs["json"] = body.to_dict()
 
     headers["Content-Type"] = "application/json"
 
@@ -73,19 +74,19 @@ def _build_response(
 def sync_detailed(
     *,
     client: AuthenticatedClient,
-    body: PostAccountContactsBody,
+    body: PostAccountContactsBody | Unset = UNSET,
 ) -> Response[ContactMethod | Error]:
     """Add a contact method (unverified). First of a kind becomes primary.
 
     Args:
-        body (PostAccountContactsBody):
+        body (PostAccountContactsBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[ContactMethod, Error]]
+        Response[ContactMethod | Error]
     """
 
     kwargs = _get_kwargs(
@@ -102,19 +103,19 @@ def sync_detailed(
 def sync(
     *,
     client: AuthenticatedClient,
-    body: PostAccountContactsBody,
+    body: PostAccountContactsBody | Unset = UNSET,
 ) -> ContactMethod | Error | None:
     """Add a contact method (unverified). First of a kind becomes primary.
 
     Args:
-        body (PostAccountContactsBody):
+        body (PostAccountContactsBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[ContactMethod, Error]
+        ContactMethod | Error
     """
 
     return sync_detailed(
@@ -126,19 +127,19 @@ def sync(
 async def asyncio_detailed(
     *,
     client: AuthenticatedClient,
-    body: PostAccountContactsBody,
+    body: PostAccountContactsBody | Unset = UNSET,
 ) -> Response[ContactMethod | Error]:
     """Add a contact method (unverified). First of a kind becomes primary.
 
     Args:
-        body (PostAccountContactsBody):
+        body (PostAccountContactsBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[ContactMethod, Error]]
+        Response[ContactMethod | Error]
     """
 
     kwargs = _get_kwargs(
@@ -153,19 +154,19 @@ async def asyncio_detailed(
 async def asyncio(
     *,
     client: AuthenticatedClient,
-    body: PostAccountContactsBody,
+    body: PostAccountContactsBody | Unset = UNSET,
 ) -> ContactMethod | Error | None:
     """Add a contact method (unverified). First of a kind becomes primary.
 
     Args:
-        body (PostAccountContactsBody):
+        body (PostAccountContactsBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[ContactMethod, Error]
+        ContactMethod | Error
     """
 
     return (

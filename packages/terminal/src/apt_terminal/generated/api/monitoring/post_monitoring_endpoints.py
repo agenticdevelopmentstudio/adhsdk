@@ -8,12 +8,12 @@ from ...client import AuthenticatedClient, Client
 from ...models.error import Error
 from ...models.post_monitoring_endpoints_body import PostMonitoringEndpointsBody
 from ...models.post_monitoring_endpoints_response_201 import PostMonitoringEndpointsResponse201
-from ...types import Response
+from ...types import UNSET, Response, Unset
 
 
 def _get_kwargs(
     *,
-    body: PostMonitoringEndpointsBody,
+    body: PostMonitoringEndpointsBody | Unset = UNSET,
 ) -> dict[str, Any]:
     headers: dict[str, Any] = {}
 
@@ -22,7 +22,8 @@ def _get_kwargs(
         "url": "/monitoring/endpoints",
     }
 
-    _kwargs["json"] = body.to_dict()
+    if not isinstance(body, Unset):
+        _kwargs["json"] = body.to_dict()
 
     headers["Content-Type"] = "application/json"
 
@@ -68,19 +69,19 @@ def _build_response(
 def sync_detailed(
     *,
     client: AuthenticatedClient,
-    body: PostMonitoringEndpointsBody,
+    body: PostMonitoringEndpointsBody | Unset = UNSET,
 ) -> Response[Error | PostMonitoringEndpointsResponse201]:
     """Create endpoints
 
     Args:
-        body (PostMonitoringEndpointsBody):
+        body (PostMonitoringEndpointsBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, PostMonitoringEndpointsResponse201]]
+        Response[Error | PostMonitoringEndpointsResponse201]
     """
 
     kwargs = _get_kwargs(
@@ -97,19 +98,19 @@ def sync_detailed(
 def sync(
     *,
     client: AuthenticatedClient,
-    body: PostMonitoringEndpointsBody,
+    body: PostMonitoringEndpointsBody | Unset = UNSET,
 ) -> Error | PostMonitoringEndpointsResponse201 | None:
     """Create endpoints
 
     Args:
-        body (PostMonitoringEndpointsBody):
+        body (PostMonitoringEndpointsBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, PostMonitoringEndpointsResponse201]
+        Error | PostMonitoringEndpointsResponse201
     """
 
     return sync_detailed(
@@ -121,19 +122,19 @@ def sync(
 async def asyncio_detailed(
     *,
     client: AuthenticatedClient,
-    body: PostMonitoringEndpointsBody,
+    body: PostMonitoringEndpointsBody | Unset = UNSET,
 ) -> Response[Error | PostMonitoringEndpointsResponse201]:
     """Create endpoints
 
     Args:
-        body (PostMonitoringEndpointsBody):
+        body (PostMonitoringEndpointsBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, PostMonitoringEndpointsResponse201]]
+        Response[Error | PostMonitoringEndpointsResponse201]
     """
 
     kwargs = _get_kwargs(
@@ -148,19 +149,19 @@ async def asyncio_detailed(
 async def asyncio(
     *,
     client: AuthenticatedClient,
-    body: PostMonitoringEndpointsBody,
+    body: PostMonitoringEndpointsBody | Unset = UNSET,
 ) -> Error | PostMonitoringEndpointsResponse201 | None:
     """Create endpoints
 
     Args:
-        body (PostMonitoringEndpointsBody):
+        body (PostMonitoringEndpointsBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, PostMonitoringEndpointsResponse201]
+        Error | PostMonitoringEndpointsResponse201
     """
 
     return (

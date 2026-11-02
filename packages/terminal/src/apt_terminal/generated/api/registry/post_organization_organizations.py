@@ -13,8 +13,8 @@ from ...types import UNSET, Response, Unset
 
 def _get_kwargs(
     *,
-    body: PostOrganizationOrganizationsBody,
-    workspace: Unset | str = UNSET,
+    body: PostOrganizationOrganizationsBody | Unset = UNSET,
+    workspace: str | Unset = UNSET,
 ) -> dict[str, Any]:
     headers: dict[str, Any] = {}
 
@@ -30,7 +30,8 @@ def _get_kwargs(
         "params": params,
     }
 
-    _kwargs["json"] = body.to_dict()
+    if not isinstance(body, Unset):
+        _kwargs["json"] = body.to_dict()
 
     headers["Content-Type"] = "application/json"
 
@@ -86,8 +87,8 @@ def _build_response(
 def sync_detailed(
     *,
     client: AuthenticatedClient,
-    body: PostOrganizationOrganizationsBody,
-    workspace: Unset | str = UNSET,
+    body: PostOrganizationOrganizationsBody | Unset = UNSET,
+    workspace: str | Unset = UNSET,
 ) -> Response[Error | RegistryProvisionedOrganization]:
     """Create + provision an organization and its ownership chain
 
@@ -97,15 +98,15 @@ def sync_detailed(
     governed through its chain.
 
     Args:
-        workspace (Union[Unset, str]):
-        body (PostOrganizationOrganizationsBody):
+        workspace (str | Unset):
+        body (PostOrganizationOrganizationsBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, RegistryProvisionedOrganization]]
+        Response[Error | RegistryProvisionedOrganization]
     """
 
     kwargs = _get_kwargs(
@@ -123,8 +124,8 @@ def sync_detailed(
 def sync(
     *,
     client: AuthenticatedClient,
-    body: PostOrganizationOrganizationsBody,
-    workspace: Unset | str = UNSET,
+    body: PostOrganizationOrganizationsBody | Unset = UNSET,
+    workspace: str | Unset = UNSET,
 ) -> Error | RegistryProvisionedOrganization | None:
     """Create + provision an organization and its ownership chain
 
@@ -134,15 +135,15 @@ def sync(
     governed through its chain.
 
     Args:
-        workspace (Union[Unset, str]):
-        body (PostOrganizationOrganizationsBody):
+        workspace (str | Unset):
+        body (PostOrganizationOrganizationsBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, RegistryProvisionedOrganization]
+        Error | RegistryProvisionedOrganization
     """
 
     return sync_detailed(
@@ -155,8 +156,8 @@ def sync(
 async def asyncio_detailed(
     *,
     client: AuthenticatedClient,
-    body: PostOrganizationOrganizationsBody,
-    workspace: Unset | str = UNSET,
+    body: PostOrganizationOrganizationsBody | Unset = UNSET,
+    workspace: str | Unset = UNSET,
 ) -> Response[Error | RegistryProvisionedOrganization]:
     """Create + provision an organization and its ownership chain
 
@@ -166,15 +167,15 @@ async def asyncio_detailed(
     governed through its chain.
 
     Args:
-        workspace (Union[Unset, str]):
-        body (PostOrganizationOrganizationsBody):
+        workspace (str | Unset):
+        body (PostOrganizationOrganizationsBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, RegistryProvisionedOrganization]]
+        Response[Error | RegistryProvisionedOrganization]
     """
 
     kwargs = _get_kwargs(
@@ -190,8 +191,8 @@ async def asyncio_detailed(
 async def asyncio(
     *,
     client: AuthenticatedClient,
-    body: PostOrganizationOrganizationsBody,
-    workspace: Unset | str = UNSET,
+    body: PostOrganizationOrganizationsBody | Unset = UNSET,
+    workspace: str | Unset = UNSET,
 ) -> Error | RegistryProvisionedOrganization | None:
     """Create + provision an organization and its ownership chain
 
@@ -201,15 +202,15 @@ async def asyncio(
     governed through its chain.
 
     Args:
-        workspace (Union[Unset, str]):
-        body (PostOrganizationOrganizationsBody):
+        workspace (str | Unset):
+        body (PostOrganizationOrganizationsBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, RegistryProvisionedOrganization]
+        Error | RegistryProvisionedOrganization
     """
 
     return (

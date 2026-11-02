@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar
 
@@ -14,21 +16,21 @@ class PostmarkDeliverabilityEvent:
     """
     Attributes:
         record_type (str): 'Bounce' | 'SpamComplaint' | 'SubscriptionChange' | anything else (ignored)
-        type_ (Union[Unset, str]): e.g. 'HardBounce', 'SoftBounce', 'BadEmailAddress'
-        email (Union[Unset, str]):
-        recipient (Union[Unset, str]):
-        description (Union[Unset, str]):
-        suppress_sending (Union[Unset, bool]): Only meaningful on a 'SubscriptionChange' event: Postmark sends this both
-            when an address ENTERS its suppression list (true) and when it LEAVES (false). Only true suppresses — acting on
-            false would permanently silence a re-subscribe.
+        type_ (str | Unset): e.g. 'HardBounce', 'SoftBounce', 'BadEmailAddress'
+        email (str | Unset):
+        recipient (str | Unset):
+        description (str | Unset):
+        suppress_sending (bool | Unset): Only meaningful on a 'SubscriptionChange' event: Postmark sends this both when
+            an address ENTERS its suppression list (true) and when it LEAVES (false). Only true suppresses — acting on false
+            would permanently silence a re-subscribe.
     """
 
     record_type: str
-    type_: Unset | str = UNSET
-    email: Unset | str = UNSET
-    recipient: Unset | str = UNSET
-    description: Unset | str = UNSET
-    suppress_sending: Unset | bool = UNSET
+    type_: str | Unset = UNSET
+    email: str | Unset = UNSET
+    recipient: str | Unset = UNSET
+    description: str | Unset = UNSET
+    suppress_sending: bool | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:

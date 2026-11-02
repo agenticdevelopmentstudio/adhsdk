@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class ProjectIterationState(str, Enum):
+class ProjectIterationState(StrEnum):
     ACTIVE = "active"
     COMPLETED = "completed"
     UPCOMING = "upcoming"

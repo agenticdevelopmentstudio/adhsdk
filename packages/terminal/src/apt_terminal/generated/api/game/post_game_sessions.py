@@ -8,12 +8,12 @@ from ...client import AuthenticatedClient, Client
 from ...models.error import Error
 from ...models.game_session import GameSession
 from ...models.game_session_start import GameSessionStart
-from ...types import Response
+from ...types import UNSET, Response, Unset
 
 
 def _get_kwargs(
     *,
-    body: GameSessionStart,
+    body: GameSessionStart | Unset = UNSET,
 ) -> dict[str, Any]:
     headers: dict[str, Any] = {}
 
@@ -22,7 +22,8 @@ def _get_kwargs(
         "url": "/game/sessions",
     }
 
-    _kwargs["json"] = body.to_dict()
+    if not isinstance(body, Unset):
+        _kwargs["json"] = body.to_dict()
 
     headers["Content-Type"] = "application/json"
 
@@ -83,7 +84,7 @@ def _build_response(
 def sync_detailed(
     *,
     client: AuthenticatedClient,
-    body: GameSessionStart,
+    body: GameSessionStart | Unset = UNSET,
 ) -> Response[Error | GameSession]:
     """Start a session, or resume the caller’s active one for a chat
 
@@ -95,15 +96,15 @@ def sync_detailed(
     owner predicate is part of that lookup, so a guessed `chat_id` resumes nothing.
 
     Args:
-        body (GameSessionStart): Exactly one of `game_id` / `slug` names the game. `chat_id` makes
-            the call a resume.
+        body (GameSessionStart | Unset): Exactly one of `game_id` / `slug` names the game.
+            `chat_id` makes the call a resume.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, GameSession]]
+        Response[Error | GameSession]
     """
 
     kwargs = _get_kwargs(
@@ -120,7 +121,7 @@ def sync_detailed(
 def sync(
     *,
     client: AuthenticatedClient,
-    body: GameSessionStart,
+    body: GameSessionStart | Unset = UNSET,
 ) -> Error | GameSession | None:
     """Start a session, or resume the caller’s active one for a chat
 
@@ -132,15 +133,15 @@ def sync(
     owner predicate is part of that lookup, so a guessed `chat_id` resumes nothing.
 
     Args:
-        body (GameSessionStart): Exactly one of `game_id` / `slug` names the game. `chat_id` makes
-            the call a resume.
+        body (GameSessionStart | Unset): Exactly one of `game_id` / `slug` names the game.
+            `chat_id` makes the call a resume.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, GameSession]
+        Error | GameSession
     """
 
     return sync_detailed(
@@ -152,7 +153,7 @@ def sync(
 async def asyncio_detailed(
     *,
     client: AuthenticatedClient,
-    body: GameSessionStart,
+    body: GameSessionStart | Unset = UNSET,
 ) -> Response[Error | GameSession]:
     """Start a session, or resume the caller’s active one for a chat
 
@@ -164,15 +165,15 @@ async def asyncio_detailed(
     owner predicate is part of that lookup, so a guessed `chat_id` resumes nothing.
 
     Args:
-        body (GameSessionStart): Exactly one of `game_id` / `slug` names the game. `chat_id` makes
-            the call a resume.
+        body (GameSessionStart | Unset): Exactly one of `game_id` / `slug` names the game.
+            `chat_id` makes the call a resume.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, GameSession]]
+        Response[Error | GameSession]
     """
 
     kwargs = _get_kwargs(
@@ -187,7 +188,7 @@ async def asyncio_detailed(
 async def asyncio(
     *,
     client: AuthenticatedClient,
-    body: GameSessionStart,
+    body: GameSessionStart | Unset = UNSET,
 ) -> Error | GameSession | None:
     """Start a session, or resume the caller’s active one for a chat
 
@@ -199,15 +200,15 @@ async def asyncio(
     owner predicate is part of that lookup, so a guessed `chat_id` resumes nothing.
 
     Args:
-        body (GameSessionStart): Exactly one of `game_id` / `slug` names the game. `chat_id` makes
-            the call a resume.
+        body (GameSessionStart | Unset): Exactly one of `game_id` / `slug` names the game.
+            `chat_id` makes the call a resume.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, GameSession]
+        Error | GameSession
     """
 
     return (

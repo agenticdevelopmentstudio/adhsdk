@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -12,28 +14,28 @@ class PostIntegrationIntegrationFinancialTransactionsResponse201:
     Attributes:
         id (str):
         customer_id (str):
-        deleted_at (Union[None, str]):
+        deleted_at (None | str):
         ecosystem_id (str):
         connection_id (str):
         external_id (str):
         account_id (str):
-        account_name (Union[None, str]):
-        institution_name (Union[None, str]):
+        account_name (None | str):
+        institution_name (None | str):
         amount (str):
         currency (str):
         name (str):
-        merchant_name (Union[None, str]):
-        category (Union[None, str]):
-        category_detailed (Union[None, str]):
+        merchant_name (None | str):
+        category (None | str):
+        category_detailed (None | str):
         transaction_date (str):
-        authorized_date (Union[None, str]):
+        authorized_date (None | str):
         pending (bool):
-        logo_url (Union[None, str]):
+        logo_url (None | str):
         is_deleted (bool):
         created_at (str):
         updated_at (str):
         sync_version (int):
-        sync_stamped_at (Union[None, str]):
+        sync_stamped_at (None | str):
         sync_txid (int):
     """
 

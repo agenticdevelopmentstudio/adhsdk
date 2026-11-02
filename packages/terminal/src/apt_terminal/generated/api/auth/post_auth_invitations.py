@@ -8,12 +8,12 @@ from ...client import AuthenticatedClient, Client
 from ...models.error import Error
 from ...models.invitation import Invitation
 from ...models.send_invites_body import SendInvitesBody
-from ...types import Response
+from ...types import UNSET, Response, Unset
 
 
 def _get_kwargs(
     *,
-    body: SendInvitesBody,
+    body: SendInvitesBody | Unset = UNSET,
 ) -> dict[str, Any]:
     headers: dict[str, Any] = {}
 
@@ -22,7 +22,8 @@ def _get_kwargs(
         "url": "/auth/invitations",
     }
 
-    _kwargs["json"] = body.to_dict()
+    if not isinstance(body, Unset):
+        _kwargs["json"] = body.to_dict()
 
     headers["Content-Type"] = "application/json"
 
@@ -32,7 +33,7 @@ def _get_kwargs(
 
 def _parse_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> Error | list["Invitation"] | None:
+) -> Error | list[Invitation] | None:
     if response.status_code == 201:
         response_201 = []
         _response_201 = response.json()
@@ -76,7 +77,7 @@ def _parse_response(
 
 def _build_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> Response[Error | list["Invitation"]]:
+) -> Response[Error | list[Invitation]]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -88,8 +89,8 @@ def _build_response(
 def sync_detailed(
     *,
     client: AuthenticatedClient,
-    body: SendInvitesBody,
-) -> Response[Error | list["Invitation"]]:
+    body: SendInvitesBody | Unset = UNSET,
+) -> Response[Error | list[Invitation]]:
     """Send invitations to pending users
 
      One invitation per person per requested channel that they have a destination for — so naming three
@@ -97,15 +98,15 @@ def sync_detailed(
     sent: one unknown id fails the whole call with 404.
 
     Args:
-        body (SendInvitesBody): Names the people to invite and the channels to reach them on. At
-            least one channel is required.
+        body (SendInvitesBody | Unset): Names the people to invite and the channels to reach them
+            on. At least one channel is required.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, list['Invitation']]]
+        Response[Error | list[Invitation]]
     """
 
     kwargs = _get_kwargs(
@@ -122,8 +123,8 @@ def sync_detailed(
 def sync(
     *,
     client: AuthenticatedClient,
-    body: SendInvitesBody,
-) -> Error | list["Invitation"] | None:
+    body: SendInvitesBody | Unset = UNSET,
+) -> Error | list[Invitation] | None:
     """Send invitations to pending users
 
      One invitation per person per requested channel that they have a destination for — so naming three
@@ -131,15 +132,15 @@ def sync(
     sent: one unknown id fails the whole call with 404.
 
     Args:
-        body (SendInvitesBody): Names the people to invite and the channels to reach them on. At
-            least one channel is required.
+        body (SendInvitesBody | Unset): Names the people to invite and the channels to reach them
+            on. At least one channel is required.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, list['Invitation']]
+        Error | list[Invitation]
     """
 
     return sync_detailed(
@@ -151,8 +152,8 @@ def sync(
 async def asyncio_detailed(
     *,
     client: AuthenticatedClient,
-    body: SendInvitesBody,
-) -> Response[Error | list["Invitation"]]:
+    body: SendInvitesBody | Unset = UNSET,
+) -> Response[Error | list[Invitation]]:
     """Send invitations to pending users
 
      One invitation per person per requested channel that they have a destination for — so naming three
@@ -160,15 +161,15 @@ async def asyncio_detailed(
     sent: one unknown id fails the whole call with 404.
 
     Args:
-        body (SendInvitesBody): Names the people to invite and the channels to reach them on. At
-            least one channel is required.
+        body (SendInvitesBody | Unset): Names the people to invite and the channels to reach them
+            on. At least one channel is required.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, list['Invitation']]]
+        Response[Error | list[Invitation]]
     """
 
     kwargs = _get_kwargs(
@@ -183,8 +184,8 @@ async def asyncio_detailed(
 async def asyncio(
     *,
     client: AuthenticatedClient,
-    body: SendInvitesBody,
-) -> Error | list["Invitation"] | None:
+    body: SendInvitesBody | Unset = UNSET,
+) -> Error | list[Invitation] | None:
     """Send invitations to pending users
 
      One invitation per person per requested channel that they have a destination for — so naming three
@@ -192,15 +193,15 @@ async def asyncio(
     sent: one unknown id fails the whole call with 404.
 
     Args:
-        body (SendInvitesBody): Names the people to invite and the channels to reach them on. At
-            least one channel is required.
+        body (SendInvitesBody | Unset): Names the people to invite and the channels to reach them
+            on. At least one channel is required.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, list['Invitation']]
+        Error | list[Invitation]
     """
 
     return (

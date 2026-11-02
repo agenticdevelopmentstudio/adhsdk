@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar
 
@@ -15,13 +17,13 @@ class PostAccessTeamPermissionsBody:
         team_id (str):
         permission (str):
         granted_at (str):
-        ecosystem_id (Union[Unset, str]):
+        ecosystem_id (str | Unset):
     """
 
     team_id: str
     permission: str
     granted_at: str
-    ecosystem_id: Unset | str = UNSET
+    ecosystem_id: str | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
         team_id = self.team_id

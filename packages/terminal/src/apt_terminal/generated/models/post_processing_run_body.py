@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar
 
@@ -15,12 +17,12 @@ class PostProcessingRunBody:
     Attributes:
         target_kind (str): Saved entity kind, e.g. 'content.markdown'
         target_id (str): Row id of the saved entity
-        job_type (Union[Unset, str]): Optional; defaults to the registered job for the targetKind
+        job_type (str | Unset): Optional; defaults to the registered job for the targetKind
     """
 
     target_kind: str
     target_id: str
-    job_type: Unset | str = UNSET
+    job_type: str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:

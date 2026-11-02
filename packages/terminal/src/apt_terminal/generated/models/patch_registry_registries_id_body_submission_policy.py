@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class PatchRegistryRegistriesIdBodySubmissionPolicy(str, Enum):
+class PatchRegistryRegistriesIdBodySubmissionPolicy(StrEnum):
     OPEN = "open"
     REVIEWED = "reviewed"
 

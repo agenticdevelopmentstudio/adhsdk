@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class ArchivedWorkspaceType(str, Enum):
+class ArchivedWorkspaceType(StrEnum):
     ORGANIZATION = "organization"
 
     def __str__(self) -> str:

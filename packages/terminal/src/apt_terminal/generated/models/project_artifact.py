@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, TypeVar, Union, cast
+from typing import TYPE_CHECKING, Any, TypeVar, cast
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -26,8 +28,8 @@ class ProjectArtifact:
         target_id (str): the opaque target id
         created_at (str):
         updated_at (str):
-        target (Union['TargetDescriptor', None]):
-        deleted_at (Union[None, Unset, str]): set when un-linked (soft delete); null for a live link
+        target (None | TargetDescriptor):
+        deleted_at (None | str | Unset): set when un-linked (soft delete); null for a live link
     """
 
     id: str
@@ -38,8 +40,8 @@ class ProjectArtifact:
     target_id: str
     created_at: str
     updated_at: str
-    target: Union["TargetDescriptor", None]
-    deleted_at: None | Unset | str = UNSET
+    target: None | TargetDescriptor
+    deleted_at: None | str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -61,13 +63,13 @@ class ProjectArtifact:
 
         updated_at = self.updated_at
 
-        target: None | dict[str, Any]
+        target: dict[str, Any] | None
         if isinstance(self.target, TargetDescriptor):
             target = self.target.to_dict()
         else:
             target = self.target
 
-        deleted_at: None | Unset | str
+        deleted_at: None | str | Unset
         if isinstance(self.deleted_at, Unset):
             deleted_at = UNSET
         else:
@@ -114,7 +116,7 @@ class ProjectArtifact:
 
         updated_at = d.pop("updatedAt")
 
-        def _parse_target(data: object) -> Union["TargetDescriptor", None]:
+        def _parse_target(data: object) -> None | TargetDescriptor:
             if data is None:
                 return data
             try:
@@ -123,18 +125,18 @@ class ProjectArtifact:
                 target_type_0 = TargetDescriptor.from_dict(data)
 
                 return target_type_0
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
-            return cast(Union["TargetDescriptor", None], data)
+            return cast(None | TargetDescriptor, data)
 
         target = _parse_target(d.pop("target"))
 
-        def _parse_deleted_at(data: object) -> None | Unset | str:
+        def _parse_deleted_at(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         deleted_at = _parse_deleted_at(d.pop("deletedAt", UNSET))
 

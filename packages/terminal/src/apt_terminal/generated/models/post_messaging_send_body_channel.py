@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class PostMessagingSendBodyChannel(str, Enum):
+class PostMessagingSendBodyChannel(StrEnum):
     EMAIL = "email"
     SMS = "sms"
 

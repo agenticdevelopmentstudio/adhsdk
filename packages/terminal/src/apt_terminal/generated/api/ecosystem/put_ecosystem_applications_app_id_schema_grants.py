@@ -1,5 +1,6 @@
 from http import HTTPStatus
 from typing import Any, cast
+from urllib.parse import quote
 
 import httpx
 
@@ -9,22 +10,25 @@ from ...models.error import Error
 from ...models.put_ecosystem_applications_app_id_schema_grants_body import (
     PutEcosystemApplicationsAppIdSchemaGrantsBody,
 )
-from ...types import Response
+from ...types import UNSET, Response, Unset
 
 
 def _get_kwargs(
     app_id: str,
     *,
-    body: PutEcosystemApplicationsAppIdSchemaGrantsBody,
+    body: PutEcosystemApplicationsAppIdSchemaGrantsBody | Unset = UNSET,
 ) -> dict[str, Any]:
     headers: dict[str, Any] = {}
 
     _kwargs: dict[str, Any] = {
         "method": "put",
-        "url": f"/ecosystem/applications/{app_id}/schema-grants",
+        "url": "/ecosystem/applications/{app_id}/schema-grants".format(
+            app_id=quote(str(app_id), safe=""),
+        ),
     }
 
-    _kwargs["json"] = body.to_dict()
+    if not isinstance(body, Unset):
+        _kwargs["json"] = body.to_dict()
 
     headers["Content-Type"] = "application/json"
 
@@ -75,7 +79,7 @@ def sync_detailed(
     app_id: str,
     *,
     client: AuthenticatedClient,
-    body: PutEcosystemApplicationsAppIdSchemaGrantsBody,
+    body: PutEcosystemApplicationsAppIdSchemaGrantsBody | Unset = UNSET,
 ) -> Response[Any | Error]:
     """Reconcile an application’s schema permissions
 
@@ -84,14 +88,14 @@ def sync_detailed(
 
     Args:
         app_id (str):
-        body (PutEcosystemApplicationsAppIdSchemaGrantsBody):
+        body (PutEcosystemApplicationsAppIdSchemaGrantsBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Any, Error]]
+        Response[Any | Error]
     """
 
     kwargs = _get_kwargs(
@@ -110,7 +114,7 @@ def sync(
     app_id: str,
     *,
     client: AuthenticatedClient,
-    body: PutEcosystemApplicationsAppIdSchemaGrantsBody,
+    body: PutEcosystemApplicationsAppIdSchemaGrantsBody | Unset = UNSET,
 ) -> Any | Error | None:
     """Reconcile an application’s schema permissions
 
@@ -119,14 +123,14 @@ def sync(
 
     Args:
         app_id (str):
-        body (PutEcosystemApplicationsAppIdSchemaGrantsBody):
+        body (PutEcosystemApplicationsAppIdSchemaGrantsBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Any, Error]
+        Any | Error
     """
 
     return sync_detailed(
@@ -140,7 +144,7 @@ async def asyncio_detailed(
     app_id: str,
     *,
     client: AuthenticatedClient,
-    body: PutEcosystemApplicationsAppIdSchemaGrantsBody,
+    body: PutEcosystemApplicationsAppIdSchemaGrantsBody | Unset = UNSET,
 ) -> Response[Any | Error]:
     """Reconcile an application’s schema permissions
 
@@ -149,14 +153,14 @@ async def asyncio_detailed(
 
     Args:
         app_id (str):
-        body (PutEcosystemApplicationsAppIdSchemaGrantsBody):
+        body (PutEcosystemApplicationsAppIdSchemaGrantsBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Any, Error]]
+        Response[Any | Error]
     """
 
     kwargs = _get_kwargs(
@@ -173,7 +177,7 @@ async def asyncio(
     app_id: str,
     *,
     client: AuthenticatedClient,
-    body: PutEcosystemApplicationsAppIdSchemaGrantsBody,
+    body: PutEcosystemApplicationsAppIdSchemaGrantsBody | Unset = UNSET,
 ) -> Any | Error | None:
     """Reconcile an application’s schema permissions
 
@@ -182,14 +186,14 @@ async def asyncio(
 
     Args:
         app_id (str):
-        body (PutEcosystemApplicationsAppIdSchemaGrantsBody):
+        body (PutEcosystemApplicationsAppIdSchemaGrantsBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Any, Error]
+        Any | Error
     """
 
     return (

@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class PersonaMemoryMatchScope(str, Enum):
+class PersonaMemoryMatchScope(StrEnum):
     PERSONA = "persona"
     USER = "user"
 

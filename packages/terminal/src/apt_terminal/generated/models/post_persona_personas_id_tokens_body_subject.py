@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar
 
@@ -21,16 +23,16 @@ class PostPersonaPersonasIdTokensBodySubject:
             team `id` in the target `ecosystemId`, gated on `may_act team` + persona team-membership + the team’s reach into
             that ecosystem) or `org` (owner-gated; the persona acts AS the organization `id` it is OWNED BY, gated on
             `may_act org` + org-ownership; the acting ecosystem is the org’s own, derived server-side).
-        id (Union[Unset, str]): The team id for a `team` subject (required for `team`) or the org id for an `org`
-            subject (required for `org`). Ignored for `self` (derived from the persona) and `user` (always the authenticated
-            caller, never a param).
-        ecosystem_id (Union[Unset, str]): The TARGET ecosystem a `team` subject acts in (required for `team`); ignored
-            for the other kinds (an `org` subject’s ecosystem is derived from the org, never taken from the request).
+        id (str | Unset): The team id for a `team` subject (required for `team`) or the org id for an `org` subject
+            (required for `org`). Ignored for `self` (derived from the persona) and `user` (always the authenticated caller,
+            never a param).
+        ecosystem_id (str | Unset): The TARGET ecosystem a `team` subject acts in (required for `team`); ignored for the
+            other kinds (an `org` subject’s ecosystem is derived from the org, never taken from the request).
     """
 
     kind: PostPersonaPersonasIdTokensBodySubjectKind
-    id: Unset | str = UNSET
-    ecosystem_id: Unset | str = UNSET
+    id: str | Unset = UNSET
+    ecosystem_id: str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:

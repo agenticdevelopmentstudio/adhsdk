@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class PostProjectProjectsIdFieldsBodyType(str, Enum):
+class PostProjectProjectsIdFieldsBodyType(StrEnum):
     CHECKBOX = "checkbox"
     DATE = "date"
     NUMBER = "number"

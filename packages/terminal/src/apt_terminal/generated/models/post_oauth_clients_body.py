@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -16,15 +18,15 @@ class PostOauthClientsBody:
         slug (str):
         name (str):
         default_ecosystem_id (str):
-        allowed_return_origins (Union[Unset, list[str]]):
-        jwt_audience (Union[None, Unset, str]):
+        allowed_return_origins (list[str] | Unset):
+        jwt_audience (None | str | Unset):
     """
 
     slug: str
     name: str
     default_ecosystem_id: str
-    allowed_return_origins: Unset | list[str] = UNSET
-    jwt_audience: None | Unset | str = UNSET
+    allowed_return_origins: list[str] | Unset = UNSET
+    jwt_audience: None | str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -34,11 +36,11 @@ class PostOauthClientsBody:
 
         default_ecosystem_id = self.default_ecosystem_id
 
-        allowed_return_origins: Unset | list[str] = UNSET
+        allowed_return_origins: list[str] | Unset = UNSET
         if not isinstance(self.allowed_return_origins, Unset):
             allowed_return_origins = self.allowed_return_origins
 
-        jwt_audience: None | Unset | str
+        jwt_audience: None | str | Unset
         if isinstance(self.jwt_audience, Unset):
             jwt_audience = UNSET
         else:
@@ -71,12 +73,12 @@ class PostOauthClientsBody:
 
         allowed_return_origins = cast(list[str], d.pop("allowedReturnOrigins", UNSET))
 
-        def _parse_jwt_audience(data: object) -> None | Unset | str:
+        def _parse_jwt_audience(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         jwt_audience = _parse_jwt_audience(d.pop("jwtAudience", UNSET))
 

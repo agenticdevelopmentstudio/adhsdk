@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, TypeVar, Union, cast
+from typing import TYPE_CHECKING, Any, TypeVar, cast
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -24,16 +26,16 @@ class ProjectMilestone:
         description (str):
         created_at (str):
         updated_at (str):
-        customer_id (Union[Unset, str]): inherited from the owning project by trigger, never sent
-        target_date (Union[None, Unset, str]): date (YYYY-MM-DD); null = undated, an ordinary state — an ordered-but-
-            undated plan is a real thing, and requiring a date would only get one invented. Undated milestones sort LAST.
-        counts (Union[Unset, ProjectMilestoneCounts]): the milestone’s live cards counted by status CATEGORY, every
-            category present (0 included) so a client never has to distinguish an absent key from an empty column. DERIVED
-            on every read, never stored. The API deliberately reports no percentage: whether a `canceled` card belongs in
-            the denominator is a product question, and answering it here would freeze one answer into the wire format.
-        created_by (Union[None, Unset, str]):
-        deleted_at (Union[None, Unset, str]):
-        sync_version (Union[Unset, int]):
+        customer_id (str | Unset): inherited from the owning project by trigger, never sent
+        target_date (None | str | Unset): date (YYYY-MM-DD); null = undated, an ordinary state — an ordered-but-undated
+            plan is a real thing, and requiring a date would only get one invented. Undated milestones sort LAST.
+        counts (ProjectMilestoneCounts | Unset): the milestone’s live cards counted by status CATEGORY, every category
+            present (0 included) so a client never has to distinguish an absent key from an empty column. DERIVED on every
+            read, never stored. The API deliberately reports no percentage: whether a `canceled` card belongs in the
+            denominator is a product question, and answering it here would freeze one answer into the wire format.
+        created_by (None | str | Unset):
+        deleted_at (None | str | Unset):
+        sync_version (int | Unset):
     """
 
     id: str
@@ -43,12 +45,12 @@ class ProjectMilestone:
     description: str
     created_at: str
     updated_at: str
-    customer_id: Unset | str = UNSET
-    target_date: None | Unset | str = UNSET
-    counts: Union[Unset, "ProjectMilestoneCounts"] = UNSET
-    created_by: None | Unset | str = UNSET
-    deleted_at: None | Unset | str = UNSET
-    sync_version: Unset | int = UNSET
+    customer_id: str | Unset = UNSET
+    target_date: None | str | Unset = UNSET
+    counts: ProjectMilestoneCounts | Unset = UNSET
+    created_by: None | str | Unset = UNSET
+    deleted_at: None | str | Unset = UNSET
+    sync_version: int | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -68,23 +70,23 @@ class ProjectMilestone:
 
         customer_id = self.customer_id
 
-        target_date: None | Unset | str
+        target_date: None | str | Unset
         if isinstance(self.target_date, Unset):
             target_date = UNSET
         else:
             target_date = self.target_date
 
-        counts: Unset | dict[str, Any] = UNSET
+        counts: dict[str, Any] | Unset = UNSET
         if not isinstance(self.counts, Unset):
             counts = self.counts.to_dict()
 
-        created_by: None | Unset | str
+        created_by: None | str | Unset
         if isinstance(self.created_by, Unset):
             created_by = UNSET
         else:
             created_by = self.created_by
 
-        deleted_at: None | Unset | str
+        deleted_at: None | str | Unset
         if isinstance(self.deleted_at, Unset):
             deleted_at = UNSET
         else:
@@ -141,37 +143,37 @@ class ProjectMilestone:
 
         customer_id = d.pop("customerId", UNSET)
 
-        def _parse_target_date(data: object) -> None | Unset | str:
+        def _parse_target_date(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         target_date = _parse_target_date(d.pop("targetDate", UNSET))
 
         _counts = d.pop("counts", UNSET)
-        counts: Unset | ProjectMilestoneCounts
+        counts: ProjectMilestoneCounts | Unset
         if isinstance(_counts, Unset):
             counts = UNSET
         else:
             counts = ProjectMilestoneCounts.from_dict(_counts)
 
-        def _parse_created_by(data: object) -> None | Unset | str:
+        def _parse_created_by(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         created_by = _parse_created_by(d.pop("createdBy", UNSET))
 
-        def _parse_deleted_at(data: object) -> None | Unset | str:
+        def _parse_deleted_at(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         deleted_at = _parse_deleted_at(d.pop("deletedAt", UNSET))
 

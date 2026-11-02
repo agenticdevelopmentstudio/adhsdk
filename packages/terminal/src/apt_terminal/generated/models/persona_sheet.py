@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import TYPE_CHECKING, Any, TypeVar, cast
 
@@ -24,14 +26,14 @@ class PersonaSheet:
         skin (str):
         xp (int):
         level (int):
-        level_title (Union[None, str]):
+        level_title (None | str):
         xp_into_level (int):
         xp_for_next (int):
         tenure_days (int):
         streak_days (int):
         stats (PersonaSheetStats):
         trend (PersonaSheetTrend):
-        badges (list['PersonaSheetBadgesItem']):
+        badges (list[PersonaSheetBadgesItem]):
     """
 
     subject_type: PersonaSheetSubjectType
@@ -44,9 +46,9 @@ class PersonaSheet:
     xp_for_next: int
     tenure_days: int
     streak_days: int
-    stats: "PersonaSheetStats"
-    trend: "PersonaSheetTrend"
-    badges: list["PersonaSheetBadgesItem"]
+    stats: PersonaSheetStats
+    trend: PersonaSheetTrend
+    badges: list[PersonaSheetBadgesItem]
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:

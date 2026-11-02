@@ -12,11 +12,11 @@ from ...types import UNSET, Response, Unset
 
 def _get_kwargs(
     *,
-    game_id: Unset | str = UNSET,
-    slug: Unset | str = UNSET,
-    kind: Unset | str = UNSET,
-    page: Unset | str = UNSET,
-    page_size: Unset | str = UNSET,
+    game_id: str | Unset = UNSET,
+    slug: str | Unset = UNSET,
+    kind: str | Unset = UNSET,
+    page: str | Unset = UNSET,
+    page_size: str | Unset = UNSET,
 ) -> dict[str, Any]:
     params: dict[str, Any] = {}
 
@@ -89,11 +89,11 @@ def _build_response(
 def sync_detailed(
     *,
     client: AuthenticatedClient,
-    game_id: Unset | str = UNSET,
-    slug: Unset | str = UNSET,
-    kind: Unset | str = UNSET,
-    page: Unset | str = UNSET,
-    page_size: Unset | str = UNSET,
+    game_id: str | Unset = UNSET,
+    slug: str | Unset = UNSET,
+    kind: str | Unset = UNSET,
+    page: str | Unset = UNSET,
+    page_size: str | Unset = UNSET,
 ) -> Response[Error | GetGameHoldingsResponse200]:
     """What the caller has acquired in one game
 
@@ -102,18 +102,18 @@ def sync_detailed(
     away, so it returns if the artifact is restored.
 
     Args:
-        game_id (Union[Unset, str]):
-        slug (Union[Unset, str]):
-        kind (Union[Unset, str]):
-        page (Union[Unset, str]):
-        page_size (Union[Unset, str]):
+        game_id (str | Unset):
+        slug (str | Unset):
+        kind (str | Unset):
+        page (str | Unset):
+        page_size (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, GetGameHoldingsResponse200]]
+        Response[Error | GetGameHoldingsResponse200]
     """
 
     kwargs = _get_kwargs(
@@ -134,11 +134,11 @@ def sync_detailed(
 def sync(
     *,
     client: AuthenticatedClient,
-    game_id: Unset | str = UNSET,
-    slug: Unset | str = UNSET,
-    kind: Unset | str = UNSET,
-    page: Unset | str = UNSET,
-    page_size: Unset | str = UNSET,
+    game_id: str | Unset = UNSET,
+    slug: str | Unset = UNSET,
+    kind: str | Unset = UNSET,
+    page: str | Unset = UNSET,
+    page_size: str | Unset = UNSET,
 ) -> Error | GetGameHoldingsResponse200 | None:
     """What the caller has acquired in one game
 
@@ -147,18 +147,18 @@ def sync(
     away, so it returns if the artifact is restored.
 
     Args:
-        game_id (Union[Unset, str]):
-        slug (Union[Unset, str]):
-        kind (Union[Unset, str]):
-        page (Union[Unset, str]):
-        page_size (Union[Unset, str]):
+        game_id (str | Unset):
+        slug (str | Unset):
+        kind (str | Unset):
+        page (str | Unset):
+        page_size (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, GetGameHoldingsResponse200]
+        Error | GetGameHoldingsResponse200
     """
 
     return sync_detailed(
@@ -174,11 +174,11 @@ def sync(
 async def asyncio_detailed(
     *,
     client: AuthenticatedClient,
-    game_id: Unset | str = UNSET,
-    slug: Unset | str = UNSET,
-    kind: Unset | str = UNSET,
-    page: Unset | str = UNSET,
-    page_size: Unset | str = UNSET,
+    game_id: str | Unset = UNSET,
+    slug: str | Unset = UNSET,
+    kind: str | Unset = UNSET,
+    page: str | Unset = UNSET,
+    page_size: str | Unset = UNSET,
 ) -> Response[Error | GetGameHoldingsResponse200]:
     """What the caller has acquired in one game
 
@@ -187,18 +187,18 @@ async def asyncio_detailed(
     away, so it returns if the artifact is restored.
 
     Args:
-        game_id (Union[Unset, str]):
-        slug (Union[Unset, str]):
-        kind (Union[Unset, str]):
-        page (Union[Unset, str]):
-        page_size (Union[Unset, str]):
+        game_id (str | Unset):
+        slug (str | Unset):
+        kind (str | Unset):
+        page (str | Unset):
+        page_size (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, GetGameHoldingsResponse200]]
+        Response[Error | GetGameHoldingsResponse200]
     """
 
     kwargs = _get_kwargs(
@@ -217,11 +217,11 @@ async def asyncio_detailed(
 async def asyncio(
     *,
     client: AuthenticatedClient,
-    game_id: Unset | str = UNSET,
-    slug: Unset | str = UNSET,
-    kind: Unset | str = UNSET,
-    page: Unset | str = UNSET,
-    page_size: Unset | str = UNSET,
+    game_id: str | Unset = UNSET,
+    slug: str | Unset = UNSET,
+    kind: str | Unset = UNSET,
+    page: str | Unset = UNSET,
+    page_size: str | Unset = UNSET,
 ) -> Error | GetGameHoldingsResponse200 | None:
     """What the caller has acquired in one game
 
@@ -230,18 +230,18 @@ async def asyncio(
     away, so it returns if the artifact is restored.
 
     Args:
-        game_id (Union[Unset, str]):
-        slug (Union[Unset, str]):
-        kind (Union[Unset, str]):
-        page (Union[Unset, str]):
-        page_size (Union[Unset, str]):
+        game_id (str | Unset):
+        slug (str | Unset):
+        kind (str | Unset):
+        page (str | Unset):
+        page_size (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, GetGameHoldingsResponse200]
+        Error | GetGameHoldingsResponse200
     """
 
     return (

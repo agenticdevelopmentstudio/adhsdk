@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class PutMeAppearanceBodyContrast(str, Enum):
+class PutMeAppearanceBodyContrast(StrEnum):
     DEFAULT = "default"
     EXTRA_HIGH = "extra-high"
     HIGH = "high"

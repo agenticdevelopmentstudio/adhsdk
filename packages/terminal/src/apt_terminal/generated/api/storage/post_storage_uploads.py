@@ -10,12 +10,12 @@ from ...models.post_storage_uploads_body import PostStorageUploadsBody
 from ...models.storage_deduplicated import StorageDeduplicated
 from ...models.storage_presigned_upload import StoragePresignedUpload
 from ...models.storage_quota_exceeded import StorageQuotaExceeded
-from ...types import Response
+from ...types import UNSET, Response, Unset
 
 
 def _get_kwargs(
     *,
-    body: PostStorageUploadsBody,
+    body: PostStorageUploadsBody | Unset = UNSET,
 ) -> dict[str, Any]:
     headers: dict[str, Any] = {}
 
@@ -24,7 +24,8 @@ def _get_kwargs(
         "url": "/storage/uploads",
     }
 
-    _kwargs["json"] = body.to_dict()
+    if not isinstance(body, Unset):
+        _kwargs["json"] = body.to_dict()
 
     headers["Content-Type"] = "application/json"
 
@@ -80,19 +81,19 @@ def _build_response(
 def sync_detailed(
     *,
     client: AuthenticatedClient,
-    body: PostStorageUploadsBody,
+    body: PostStorageUploadsBody | Unset = UNSET,
 ) -> Response[Error | StorageDeduplicated | StoragePresignedUpload | StorageQuotaExceeded]:
     """Begin an upload: reserve an attachment + presigned PUT URL
 
     Args:
-        body (PostStorageUploadsBody):
+        body (PostStorageUploadsBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, StorageDeduplicated, StoragePresignedUpload, StorageQuotaExceeded]]
+        Response[Error | StorageDeduplicated | StoragePresignedUpload | StorageQuotaExceeded]
     """
 
     kwargs = _get_kwargs(
@@ -109,19 +110,19 @@ def sync_detailed(
 def sync(
     *,
     client: AuthenticatedClient,
-    body: PostStorageUploadsBody,
+    body: PostStorageUploadsBody | Unset = UNSET,
 ) -> Error | StorageDeduplicated | StoragePresignedUpload | StorageQuotaExceeded | None:
     """Begin an upload: reserve an attachment + presigned PUT URL
 
     Args:
-        body (PostStorageUploadsBody):
+        body (PostStorageUploadsBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, StorageDeduplicated, StoragePresignedUpload, StorageQuotaExceeded]
+        Error | StorageDeduplicated | StoragePresignedUpload | StorageQuotaExceeded
     """
 
     return sync_detailed(
@@ -133,19 +134,19 @@ def sync(
 async def asyncio_detailed(
     *,
     client: AuthenticatedClient,
-    body: PostStorageUploadsBody,
+    body: PostStorageUploadsBody | Unset = UNSET,
 ) -> Response[Error | StorageDeduplicated | StoragePresignedUpload | StorageQuotaExceeded]:
     """Begin an upload: reserve an attachment + presigned PUT URL
 
     Args:
-        body (PostStorageUploadsBody):
+        body (PostStorageUploadsBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, StorageDeduplicated, StoragePresignedUpload, StorageQuotaExceeded]]
+        Response[Error | StorageDeduplicated | StoragePresignedUpload | StorageQuotaExceeded]
     """
 
     kwargs = _get_kwargs(
@@ -160,19 +161,19 @@ async def asyncio_detailed(
 async def asyncio(
     *,
     client: AuthenticatedClient,
-    body: PostStorageUploadsBody,
+    body: PostStorageUploadsBody | Unset = UNSET,
 ) -> Error | StorageDeduplicated | StoragePresignedUpload | StorageQuotaExceeded | None:
     """Begin an upload: reserve an attachment + presigned PUT URL
 
     Args:
-        body (PostStorageUploadsBody):
+        body (PostStorageUploadsBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, StorageDeduplicated, StoragePresignedUpload, StorageQuotaExceeded]
+        Error | StorageDeduplicated | StoragePresignedUpload | StorageQuotaExceeded
     """
 
     return (

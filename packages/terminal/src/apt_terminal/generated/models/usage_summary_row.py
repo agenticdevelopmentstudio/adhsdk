@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import TYPE_CHECKING, Any, TypeVar
 
@@ -39,7 +41,7 @@ class UsageSummaryRow:
     period_start: str
     period_days: int
     tier: str
-    limits: "UsageLimits"
+    limits: UsageLimits
     requests: int
     bytes_: int
     tokens: int

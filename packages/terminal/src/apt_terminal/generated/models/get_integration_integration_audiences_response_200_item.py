@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, TypeVar, Union, cast
+from typing import TYPE_CHECKING, Any, TypeVar, cast
 
 from attrs import define as _attrs_define
 
@@ -25,15 +27,14 @@ class GetIntegrationIntegrationAudiencesResponse200Item:
         provider (str):
         external_id (str):
         name (str):
-        member_count (Union[None, int]):
-        raw (Union['GetIntegrationIntegrationAudiencesResponse200ItemRawType0Type1', None, bool, float, list[Any],
-            str]):
+        member_count (int | None):
+        raw (bool | float | GetIntegrationIntegrationAudiencesResponse200ItemRawType0Type1 | list[Any] | None | str):
         is_deleted (bool):
-        deleted_at (Union[None, str]):
+        deleted_at (None | str):
         created_at (str):
         updated_at (str):
         sync_version (int):
-        sync_stamped_at (Union[None, str]):
+        sync_stamped_at (None | str):
         sync_txid (int):
     """
 
@@ -46,15 +47,15 @@ class GetIntegrationIntegrationAudiencesResponse200Item:
     provider: str
     external_id: str
     name: str
-    member_count: None | int
-    raw: Union[
-        "GetIntegrationIntegrationAudiencesResponse200ItemRawType0Type1",
-        None,
-        bool,
-        float,
-        list[Any],
-        str,
-    ]
+    member_count: int | None
+    raw: (
+        bool
+        | float
+        | GetIntegrationIntegrationAudiencesResponse200ItemRawType0Type1
+        | list[Any]
+        | None
+        | str
+    )
     is_deleted: bool
     deleted_at: None | str
     created_at: str
@@ -86,10 +87,10 @@ class GetIntegrationIntegrationAudiencesResponse200Item:
 
         name = self.name
 
-        member_count: None | int
+        member_count: int | None
         member_count = self.member_count
 
-        raw: None | bool | dict[str, Any] | float | list[Any] | str
+        raw: bool | dict[str, Any] | float | list[Any] | None | str
         if isinstance(self.raw, GetIntegrationIntegrationAudiencesResponse200ItemRawType0Type1):
             raw = self.raw.to_dict()
         elif isinstance(self.raw, list):
@@ -166,23 +167,23 @@ class GetIntegrationIntegrationAudiencesResponse200Item:
 
         name = d.pop("name")
 
-        def _parse_member_count(data: object) -> None | int:
+        def _parse_member_count(data: object) -> int | None:
             if data is None:
                 return data
-            return cast(None | int, data)
+            return cast(int | None, data)
 
         member_count = _parse_member_count(d.pop("memberCount"))
 
         def _parse_raw(
             data: object,
-        ) -> Union[
-            "GetIntegrationIntegrationAudiencesResponse200ItemRawType0Type1",
-            None,
-            bool,
-            float,
-            list[Any],
-            str,
-        ]:
+        ) -> (
+            bool
+            | float
+            | GetIntegrationIntegrationAudiencesResponse200ItemRawType0Type1
+            | list[Any]
+            | None
+            | str
+        ):
             if data is None:
                 return data
             try:
@@ -193,7 +194,7 @@ class GetIntegrationIntegrationAudiencesResponse200Item:
                 )
 
                 return raw_type_0_type_1
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
             try:
                 if not isinstance(data, list):
@@ -201,17 +202,15 @@ class GetIntegrationIntegrationAudiencesResponse200Item:
                 raw_type_0_type_2 = cast(list[Any], data)
 
                 return raw_type_0_type_2
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
             return cast(
-                Union[
-                    "GetIntegrationIntegrationAudiencesResponse200ItemRawType0Type1",
-                    None,
-                    bool,
-                    float,
-                    list[Any],
-                    str,
-                ],
+                bool
+                | float
+                | GetIntegrationIntegrationAudiencesResponse200ItemRawType0Type1
+                | list[Any]
+                | None
+                | str,
                 data,
             )
 

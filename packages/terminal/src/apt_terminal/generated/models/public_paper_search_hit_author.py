@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -12,7 +14,7 @@ class PublicPaperSearchHitAuthor:
     """
     Attributes:
         slug (str):
-        display_name (Union[None, str]):
+        display_name (None | str):
     """
 
     slug: str

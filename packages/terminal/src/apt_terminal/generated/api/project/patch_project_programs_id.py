@@ -1,5 +1,6 @@
 from http import HTTPStatus
 from typing import Any
+from urllib.parse import quote
 
 import httpx
 
@@ -8,22 +9,25 @@ from ...client import AuthenticatedClient, Client
 from ...models.error import Error
 from ...models.patch_project_programs_id_body import PatchProjectProgramsIdBody
 from ...models.project_program import ProjectProgram
-from ...types import Response
+from ...types import UNSET, Response, Unset
 
 
 def _get_kwargs(
     id: str,
     *,
-    body: PatchProjectProgramsIdBody,
+    body: PatchProjectProgramsIdBody | Unset = UNSET,
 ) -> dict[str, Any]:
     headers: dict[str, Any] = {}
 
     _kwargs: dict[str, Any] = {
         "method": "patch",
-        "url": f"/project/programs/{id}",
+        "url": "/project/programs/{id}".format(
+            id=quote(str(id), safe=""),
+        ),
     }
 
-    _kwargs["json"] = body.to_dict()
+    if not isinstance(body, Unset):
+        _kwargs["json"] = body.to_dict()
 
     headers["Content-Type"] = "application/json"
 
@@ -85,7 +89,7 @@ def sync_detailed(
     id: str,
     *,
     client: AuthenticatedClient,
-    body: PatchProjectProgramsIdBody,
+    body: PatchProjectProgramsIdBody | Unset = UNSET,
 ) -> Response[Error | ProjectProgram]:
     """Rename a program, recolour it, or move either of its dates
 
@@ -93,16 +97,16 @@ def sync_detailed(
 
     Args:
         id (str):
-        body (PatchProjectProgramsIdBody): Every key is optional and a patch that changes nothing
-            returns the program unchanged. Either date may be sent as null to CLEAR it; the pair is
-            checked as it WILL BE.
+        body (PatchProjectProgramsIdBody | Unset): Every key is optional and a patch that changes
+            nothing returns the program unchanged. Either date may be sent as null to CLEAR it; the
+            pair is checked as it WILL BE.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, ProjectProgram]]
+        Response[Error | ProjectProgram]
     """
 
     kwargs = _get_kwargs(
@@ -121,7 +125,7 @@ def sync(
     id: str,
     *,
     client: AuthenticatedClient,
-    body: PatchProjectProgramsIdBody,
+    body: PatchProjectProgramsIdBody | Unset = UNSET,
 ) -> Error | ProjectProgram | None:
     """Rename a program, recolour it, or move either of its dates
 
@@ -129,16 +133,16 @@ def sync(
 
     Args:
         id (str):
-        body (PatchProjectProgramsIdBody): Every key is optional and a patch that changes nothing
-            returns the program unchanged. Either date may be sent as null to CLEAR it; the pair is
-            checked as it WILL BE.
+        body (PatchProjectProgramsIdBody | Unset): Every key is optional and a patch that changes
+            nothing returns the program unchanged. Either date may be sent as null to CLEAR it; the
+            pair is checked as it WILL BE.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, ProjectProgram]
+        Error | ProjectProgram
     """
 
     return sync_detailed(
@@ -152,7 +156,7 @@ async def asyncio_detailed(
     id: str,
     *,
     client: AuthenticatedClient,
-    body: PatchProjectProgramsIdBody,
+    body: PatchProjectProgramsIdBody | Unset = UNSET,
 ) -> Response[Error | ProjectProgram]:
     """Rename a program, recolour it, or move either of its dates
 
@@ -160,16 +164,16 @@ async def asyncio_detailed(
 
     Args:
         id (str):
-        body (PatchProjectProgramsIdBody): Every key is optional and a patch that changes nothing
-            returns the program unchanged. Either date may be sent as null to CLEAR it; the pair is
-            checked as it WILL BE.
+        body (PatchProjectProgramsIdBody | Unset): Every key is optional and a patch that changes
+            nothing returns the program unchanged. Either date may be sent as null to CLEAR it; the
+            pair is checked as it WILL BE.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, ProjectProgram]]
+        Response[Error | ProjectProgram]
     """
 
     kwargs = _get_kwargs(
@@ -186,7 +190,7 @@ async def asyncio(
     id: str,
     *,
     client: AuthenticatedClient,
-    body: PatchProjectProgramsIdBody,
+    body: PatchProjectProgramsIdBody | Unset = UNSET,
 ) -> Error | ProjectProgram | None:
     """Rename a program, recolour it, or move either of its dates
 
@@ -194,16 +198,16 @@ async def asyncio(
 
     Args:
         id (str):
-        body (PatchProjectProgramsIdBody): Every key is optional and a patch that changes nothing
-            returns the program unchanged. Either date may be sent as null to CLEAR it; the pair is
-            checked as it WILL BE.
+        body (PatchProjectProgramsIdBody | Unset): Every key is optional and a patch that changes
+            nothing returns the program unchanged. Either date may be sent as null to CLEAR it; the
+            pair is checked as it WILL BE.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, ProjectProgram]
+        Error | ProjectProgram
     """
 
     return (

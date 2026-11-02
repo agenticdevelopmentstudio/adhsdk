@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, TypeVar, Union, cast
+from typing import TYPE_CHECKING, Any, TypeVar, cast
 
 from attrs import define as _attrs_define
 
@@ -21,40 +23,40 @@ T = TypeVar("T", bound="PutPersonaPersonasIdBody")
 class PutPersonaPersonasIdBody:
     """
     Attributes:
-        slug (Union[Unset, str]):
-        name (Union[Unset, str]):
-        description (Union[None, Unset, str]):
-        visibility (Union[Unset, str]):
-        model (Union[Unset, str]):
-        service_id (Union[None, Unset, str]):
-        app_id (Union[None, Unset, str]):
-        avatar_attachment_id (Union[None, Unset, str]):
-        model_prompt (Union[Unset, str]):
-        voice (Union[None, Unset, str]):
-        character (Union[None, Unset, str]):
-        examples (Union[None, Unset, str]):
-        canned_chat (Union['PutPersonaPersonasIdBodyCannedChatType0Type1', None, Unset, bool, float, list[Any], str]):
-        chat_status (Union['PutPersonaPersonasIdBodyChatStatusType0Type1', None, Unset, bool, float, list[Any], str]):
+        slug (str | Unset):
+        name (str | Unset):
+        description (None | str | Unset):
+        visibility (str | Unset):
+        model (str | Unset):
+        service_id (None | str | Unset):
+        app_id (None | str | Unset):
+        avatar_attachment_id (None | str | Unset):
+        model_prompt (str | Unset):
+        voice (None | str | Unset):
+        character (None | str | Unset):
+        examples (None | str | Unset):
+        canned_chat (bool | float | list[Any] | None | PutPersonaPersonasIdBodyCannedChatType0Type1 | str | Unset):
+        chat_status (bool | float | list[Any] | None | PutPersonaPersonasIdBodyChatStatusType0Type1 | str | Unset):
     """
 
-    slug: Unset | str = UNSET
-    name: Unset | str = UNSET
-    description: None | Unset | str = UNSET
-    visibility: Unset | str = UNSET
-    model: Unset | str = UNSET
-    service_id: None | Unset | str = UNSET
-    app_id: None | Unset | str = UNSET
-    avatar_attachment_id: None | Unset | str = UNSET
-    model_prompt: Unset | str = UNSET
-    voice: None | Unset | str = UNSET
-    character: None | Unset | str = UNSET
-    examples: None | Unset | str = UNSET
-    canned_chat: Union[
-        "PutPersonaPersonasIdBodyCannedChatType0Type1", None, Unset, bool, float, list[Any], str
-    ] = UNSET
-    chat_status: Union[
-        "PutPersonaPersonasIdBodyChatStatusType0Type1", None, Unset, bool, float, list[Any], str
-    ] = UNSET
+    slug: str | Unset = UNSET
+    name: str | Unset = UNSET
+    description: None | str | Unset = UNSET
+    visibility: str | Unset = UNSET
+    model: str | Unset = UNSET
+    service_id: None | str | Unset = UNSET
+    app_id: None | str | Unset = UNSET
+    avatar_attachment_id: None | str | Unset = UNSET
+    model_prompt: str | Unset = UNSET
+    voice: None | str | Unset = UNSET
+    character: None | str | Unset = UNSET
+    examples: None | str | Unset = UNSET
+    canned_chat: (
+        bool | float | list[Any] | None | PutPersonaPersonasIdBodyCannedChatType0Type1 | str | Unset
+    ) = UNSET
+    chat_status: (
+        bool | float | list[Any] | None | PutPersonaPersonasIdBodyChatStatusType0Type1 | str | Unset
+    ) = UNSET
 
     def to_dict(self) -> dict[str, Any]:
         from ..models.put_persona_personas_id_body_canned_chat_type_0_type_1 import (
@@ -68,7 +70,7 @@ class PutPersonaPersonasIdBody:
 
         name = self.name
 
-        description: None | Unset | str
+        description: None | str | Unset
         if isinstance(self.description, Unset):
             description = UNSET
         else:
@@ -78,19 +80,19 @@ class PutPersonaPersonasIdBody:
 
         model = self.model
 
-        service_id: None | Unset | str
+        service_id: None | str | Unset
         if isinstance(self.service_id, Unset):
             service_id = UNSET
         else:
             service_id = self.service_id
 
-        app_id: None | Unset | str
+        app_id: None | str | Unset
         if isinstance(self.app_id, Unset):
             app_id = UNSET
         else:
             app_id = self.app_id
 
-        avatar_attachment_id: None | Unset | str
+        avatar_attachment_id: None | str | Unset
         if isinstance(self.avatar_attachment_id, Unset):
             avatar_attachment_id = UNSET
         else:
@@ -98,25 +100,25 @@ class PutPersonaPersonasIdBody:
 
         model_prompt = self.model_prompt
 
-        voice: None | Unset | str
+        voice: None | str | Unset
         if isinstance(self.voice, Unset):
             voice = UNSET
         else:
             voice = self.voice
 
-        character: None | Unset | str
+        character: None | str | Unset
         if isinstance(self.character, Unset):
             character = UNSET
         else:
             character = self.character
 
-        examples: None | Unset | str
+        examples: None | str | Unset
         if isinstance(self.examples, Unset):
             examples = UNSET
         else:
             examples = self.examples
 
-        canned_chat: None | Unset | bool | dict[str, Any] | float | list[Any] | str
+        canned_chat: bool | dict[str, Any] | float | list[Any] | None | str | Unset
         if isinstance(self.canned_chat, Unset):
             canned_chat = UNSET
         elif isinstance(self.canned_chat, PutPersonaPersonasIdBodyCannedChatType0Type1):
@@ -127,7 +129,7 @@ class PutPersonaPersonasIdBody:
         else:
             canned_chat = self.canned_chat
 
-        chat_status: None | Unset | bool | dict[str, Any] | float | list[Any] | str
+        chat_status: bool | dict[str, Any] | float | list[Any] | None | str | Unset
         if isinstance(self.chat_status, Unset):
             chat_status = UNSET
         elif isinstance(self.chat_status, PutPersonaPersonasIdBodyChatStatusType0Type1):
@@ -186,12 +188,12 @@ class PutPersonaPersonasIdBody:
 
         name = d.pop("name", UNSET)
 
-        def _parse_description(data: object) -> None | Unset | str:
+        def _parse_description(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         description = _parse_description(d.pop("description", UNSET))
 
@@ -199,67 +201,73 @@ class PutPersonaPersonasIdBody:
 
         model = d.pop("model", UNSET)
 
-        def _parse_service_id(data: object) -> None | Unset | str:
+        def _parse_service_id(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         service_id = _parse_service_id(d.pop("serviceId", UNSET))
 
-        def _parse_app_id(data: object) -> None | Unset | str:
+        def _parse_app_id(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         app_id = _parse_app_id(d.pop("appId", UNSET))
 
-        def _parse_avatar_attachment_id(data: object) -> None | Unset | str:
+        def _parse_avatar_attachment_id(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         avatar_attachment_id = _parse_avatar_attachment_id(d.pop("avatarAttachmentId", UNSET))
 
         model_prompt = d.pop("modelPrompt", UNSET)
 
-        def _parse_voice(data: object) -> None | Unset | str:
+        def _parse_voice(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         voice = _parse_voice(d.pop("voice", UNSET))
 
-        def _parse_character(data: object) -> None | Unset | str:
+        def _parse_character(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         character = _parse_character(d.pop("character", UNSET))
 
-        def _parse_examples(data: object) -> None | Unset | str:
+        def _parse_examples(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         examples = _parse_examples(d.pop("examples", UNSET))
 
         def _parse_canned_chat(
             data: object,
-        ) -> Union[
-            "PutPersonaPersonasIdBodyCannedChatType0Type1", None, Unset, bool, float, list[Any], str
-        ]:
+        ) -> (
+            bool
+            | float
+            | list[Any]
+            | None
+            | PutPersonaPersonasIdBodyCannedChatType0Type1
+            | str
+            | Unset
+        ):
             if data is None:
                 return data
             if isinstance(data, Unset):
@@ -272,7 +280,7 @@ class PutPersonaPersonasIdBody:
                 )
 
                 return canned_chat_type_0_type_1
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
             try:
                 if not isinstance(data, list):
@@ -280,18 +288,16 @@ class PutPersonaPersonasIdBody:
                 canned_chat_type_0_type_2 = cast(list[Any], data)
 
                 return canned_chat_type_0_type_2
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
             return cast(
-                Union[
-                    "PutPersonaPersonasIdBodyCannedChatType0Type1",
-                    None,
-                    Unset,
-                    bool,
-                    float,
-                    list[Any],
-                    str,
-                ],
+                bool
+                | float
+                | list[Any]
+                | None
+                | PutPersonaPersonasIdBodyCannedChatType0Type1
+                | str
+                | Unset,
                 data,
             )
 
@@ -299,9 +305,15 @@ class PutPersonaPersonasIdBody:
 
         def _parse_chat_status(
             data: object,
-        ) -> Union[
-            "PutPersonaPersonasIdBodyChatStatusType0Type1", None, Unset, bool, float, list[Any], str
-        ]:
+        ) -> (
+            bool
+            | float
+            | list[Any]
+            | None
+            | PutPersonaPersonasIdBodyChatStatusType0Type1
+            | str
+            | Unset
+        ):
             if data is None:
                 return data
             if isinstance(data, Unset):
@@ -314,7 +326,7 @@ class PutPersonaPersonasIdBody:
                 )
 
                 return chat_status_type_0_type_1
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
             try:
                 if not isinstance(data, list):
@@ -322,18 +334,16 @@ class PutPersonaPersonasIdBody:
                 chat_status_type_0_type_2 = cast(list[Any], data)
 
                 return chat_status_type_0_type_2
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
             return cast(
-                Union[
-                    "PutPersonaPersonasIdBodyChatStatusType0Type1",
-                    None,
-                    Unset,
-                    bool,
-                    float,
-                    list[Any],
-                    str,
-                ],
+                bool
+                | float
+                | list[Any]
+                | None
+                | PutPersonaPersonasIdBodyChatStatusType0Type1
+                | str
+                | Unset,
                 data,
             )
 

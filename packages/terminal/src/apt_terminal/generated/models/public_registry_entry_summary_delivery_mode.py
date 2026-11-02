@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class PublicRegistryEntrySummaryDeliveryMode(str, Enum):
+class PublicRegistryEntrySummaryDeliveryMode(StrEnum):
     HYBRID = "hybrid"
     IN_PERSON = "in_person"
     VIRTUAL = "virtual"

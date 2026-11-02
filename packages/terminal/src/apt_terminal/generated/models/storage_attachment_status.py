@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class StorageAttachmentStatus(str, Enum):
+class StorageAttachmentStatus(StrEnum):
     PENDING = "pending"
     READY = "ready"
 

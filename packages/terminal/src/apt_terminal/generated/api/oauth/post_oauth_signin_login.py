@@ -9,12 +9,12 @@ from ...models.error import Error
 from ...models.mfa_challenge import MfaChallenge
 from ...models.post_oauth_signin_login_body import PostOauthSigninLoginBody
 from ...models.post_oauth_signin_login_response_200 import PostOauthSigninLoginResponse200
-from ...types import Response
+from ...types import UNSET, Response, Unset
 
 
 def _get_kwargs(
     *,
-    body: PostOauthSigninLoginBody,
+    body: PostOauthSigninLoginBody | Unset = UNSET,
 ) -> dict[str, Any]:
     headers: dict[str, Any] = {}
 
@@ -23,7 +23,8 @@ def _get_kwargs(
         "url": "/oauth/signin/login",
     }
 
-    _kwargs["json"] = body.to_dict()
+    if not isinstance(body, Unset):
+        _kwargs["json"] = body.to_dict()
 
     headers["Content-Type"] = "application/json"
 
@@ -89,19 +90,19 @@ def _build_response(
 def sync_detailed(
     *,
     client: AuthenticatedClient | Client,
-    body: PostOauthSigninLoginBody,
+    body: PostOauthSigninLoginBody | Unset = UNSET,
 ) -> Response[Error | MfaChallenge | PostOauthSigninLoginResponse200]:
     """Central credential login → sets the SSO session, returns the brand redirect URL
 
     Args:
-        body (PostOauthSigninLoginBody):
+        body (PostOauthSigninLoginBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, MfaChallenge, PostOauthSigninLoginResponse200]]
+        Response[Error | MfaChallenge | PostOauthSigninLoginResponse200]
     """
 
     kwargs = _get_kwargs(
@@ -118,19 +119,19 @@ def sync_detailed(
 def sync(
     *,
     client: AuthenticatedClient | Client,
-    body: PostOauthSigninLoginBody,
+    body: PostOauthSigninLoginBody | Unset = UNSET,
 ) -> Error | MfaChallenge | PostOauthSigninLoginResponse200 | None:
     """Central credential login → sets the SSO session, returns the brand redirect URL
 
     Args:
-        body (PostOauthSigninLoginBody):
+        body (PostOauthSigninLoginBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, MfaChallenge, PostOauthSigninLoginResponse200]
+        Error | MfaChallenge | PostOauthSigninLoginResponse200
     """
 
     return sync_detailed(
@@ -142,19 +143,19 @@ def sync(
 async def asyncio_detailed(
     *,
     client: AuthenticatedClient | Client,
-    body: PostOauthSigninLoginBody,
+    body: PostOauthSigninLoginBody | Unset = UNSET,
 ) -> Response[Error | MfaChallenge | PostOauthSigninLoginResponse200]:
     """Central credential login → sets the SSO session, returns the brand redirect URL
 
     Args:
-        body (PostOauthSigninLoginBody):
+        body (PostOauthSigninLoginBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, MfaChallenge, PostOauthSigninLoginResponse200]]
+        Response[Error | MfaChallenge | PostOauthSigninLoginResponse200]
     """
 
     kwargs = _get_kwargs(
@@ -169,19 +170,19 @@ async def asyncio_detailed(
 async def asyncio(
     *,
     client: AuthenticatedClient | Client,
-    body: PostOauthSigninLoginBody,
+    body: PostOauthSigninLoginBody | Unset = UNSET,
 ) -> Error | MfaChallenge | PostOauthSigninLoginResponse200 | None:
     """Central credential login → sets the SSO session, returns the brand redirect URL
 
     Args:
-        body (PostOauthSigninLoginBody):
+        body (PostOauthSigninLoginBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, MfaChallenge, PostOauthSigninLoginResponse200]
+        Error | MfaChallenge | PostOauthSigninLoginResponse200
     """
 
     return (

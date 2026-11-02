@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, TypeVar, Union, cast
+from typing import TYPE_CHECKING, Any, TypeVar, cast
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -19,26 +21,26 @@ T = TypeVar("T", bound="PostOwnershipTransferResponse200")
 class PostOwnershipTransferResponse200:
     """
     Attributes:
-        id (Union[None, Unset, str]): the rdid the object now has
-        previous_id (Union[None, Unset, str]):
-        rewritten (Union[Unset, int]): addresses re-derived by the cascade
-        revoked (Union[Unset, PostOwnershipTransferResponse200Revoked]):
+        id (None | str | Unset): the rdid the object now has
+        previous_id (None | str | Unset):
+        rewritten (int | Unset): addresses re-derived by the cascade
+        revoked (PostOwnershipTransferResponse200Revoked | Unset):
     """
 
-    id: None | Unset | str = UNSET
-    previous_id: None | Unset | str = UNSET
-    rewritten: Unset | int = UNSET
-    revoked: Union[Unset, "PostOwnershipTransferResponse200Revoked"] = UNSET
+    id: None | str | Unset = UNSET
+    previous_id: None | str | Unset = UNSET
+    rewritten: int | Unset = UNSET
+    revoked: PostOwnershipTransferResponse200Revoked | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
-        id: None | Unset | str
+        id: None | str | Unset
         if isinstance(self.id, Unset):
             id = UNSET
         else:
             id = self.id
 
-        previous_id: None | Unset | str
+        previous_id: None | str | Unset
         if isinstance(self.previous_id, Unset):
             previous_id = UNSET
         else:
@@ -46,7 +48,7 @@ class PostOwnershipTransferResponse200:
 
         rewritten = self.rewritten
 
-        revoked: Unset | dict[str, Any] = UNSET
+        revoked: dict[str, Any] | Unset = UNSET
         if not isinstance(self.revoked, Unset):
             revoked = self.revoked.to_dict()
 
@@ -72,28 +74,28 @@ class PostOwnershipTransferResponse200:
 
         d = dict(src_dict)
 
-        def _parse_id(data: object) -> None | Unset | str:
+        def _parse_id(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         id = _parse_id(d.pop("id", UNSET))
 
-        def _parse_previous_id(data: object) -> None | Unset | str:
+        def _parse_previous_id(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         previous_id = _parse_previous_id(d.pop("previousId", UNSET))
 
         rewritten = d.pop("rewritten", UNSET)
 
         _revoked = d.pop("revoked", UNSET)
-        revoked: Unset | PostOwnershipTransferResponse200Revoked
+        revoked: PostOwnershipTransferResponse200Revoked | Unset
         if isinstance(_revoked, Unset):
             revoked = UNSET
         else:

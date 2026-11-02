@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class PostRegistryRegistriesRegistryIdEntriesBodyContactMode(str, Enum):
+class PostRegistryRegistriesRegistryIdEntriesBodyContactMode(StrEnum):
     DM = "dm"
     NONE = "none"
 

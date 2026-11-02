@@ -8,12 +8,12 @@ from ...client import AuthenticatedClient, Client
 from ...models.error import Error
 from ...models.privacy_grant import PrivacyGrant
 from ...models.put_account_privacy_body import PutAccountPrivacyBody
-from ...types import Response
+from ...types import UNSET, Response, Unset
 
 
 def _get_kwargs(
     *,
-    body: PutAccountPrivacyBody,
+    body: PutAccountPrivacyBody | Unset = UNSET,
 ) -> dict[str, Any]:
     headers: dict[str, Any] = {}
 
@@ -22,7 +22,8 @@ def _get_kwargs(
         "url": "/account/privacy",
     }
 
-    _kwargs["json"] = body.to_dict()
+    if not isinstance(body, Unset):
+        _kwargs["json"] = body.to_dict()
 
     headers["Content-Type"] = "application/json"
 
@@ -73,19 +74,19 @@ def _build_response(
 def sync_detailed(
     *,
     client: AuthenticatedClient,
-    body: PutAccountPrivacyBody,
+    body: PutAccountPrivacyBody | Unset = UNSET,
 ) -> Response[Error | PrivacyGrant]:
     """Set one card row's audience (upsert; PUBLIC/HUB only, 0 = only-me)
 
     Args:
-        body (PutAccountPrivacyBody):
+        body (PutAccountPrivacyBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, PrivacyGrant]]
+        Response[Error | PrivacyGrant]
     """
 
     kwargs = _get_kwargs(
@@ -102,19 +103,19 @@ def sync_detailed(
 def sync(
     *,
     client: AuthenticatedClient,
-    body: PutAccountPrivacyBody,
+    body: PutAccountPrivacyBody | Unset = UNSET,
 ) -> Error | PrivacyGrant | None:
     """Set one card row's audience (upsert; PUBLIC/HUB only, 0 = only-me)
 
     Args:
-        body (PutAccountPrivacyBody):
+        body (PutAccountPrivacyBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, PrivacyGrant]
+        Error | PrivacyGrant
     """
 
     return sync_detailed(
@@ -126,19 +127,19 @@ def sync(
 async def asyncio_detailed(
     *,
     client: AuthenticatedClient,
-    body: PutAccountPrivacyBody,
+    body: PutAccountPrivacyBody | Unset = UNSET,
 ) -> Response[Error | PrivacyGrant]:
     """Set one card row's audience (upsert; PUBLIC/HUB only, 0 = only-me)
 
     Args:
-        body (PutAccountPrivacyBody):
+        body (PutAccountPrivacyBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, PrivacyGrant]]
+        Response[Error | PrivacyGrant]
     """
 
     kwargs = _get_kwargs(
@@ -153,19 +154,19 @@ async def asyncio_detailed(
 async def asyncio(
     *,
     client: AuthenticatedClient,
-    body: PutAccountPrivacyBody,
+    body: PutAccountPrivacyBody | Unset = UNSET,
 ) -> Error | PrivacyGrant | None:
     """Set one card row's audience (upsert; PUBLIC/HUB only, 0 = only-me)
 
     Args:
-        body (PutAccountPrivacyBody):
+        body (PutAccountPrivacyBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, PrivacyGrant]
+        Error | PrivacyGrant
     """
 
     return (

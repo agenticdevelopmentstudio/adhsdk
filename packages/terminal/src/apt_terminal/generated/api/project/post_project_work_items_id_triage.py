@@ -1,5 +1,6 @@
 from http import HTTPStatus
 from typing import Any
+from urllib.parse import quote
 
 import httpx
 
@@ -8,22 +9,25 @@ from ...client import AuthenticatedClient, Client
 from ...models.error import Error
 from ...models.post_project_work_items_id_triage_body import PostProjectWorkItemsIdTriageBody
 from ...models.work_item import WorkItem
-from ...types import Response
+from ...types import UNSET, Response, Unset
 
 
 def _get_kwargs(
     id: str,
     *,
-    body: PostProjectWorkItemsIdTriageBody,
+    body: PostProjectWorkItemsIdTriageBody | Unset = UNSET,
 ) -> dict[str, Any]:
     headers: dict[str, Any] = {}
 
     _kwargs: dict[str, Any] = {
         "method": "post",
-        "url": f"/project/work-items/{id}/triage",
+        "url": "/project/work-items/{id}/triage".format(
+            id=quote(str(id), safe=""),
+        ),
     }
 
-    _kwargs["json"] = body.to_dict()
+    if not isinstance(body, Unset):
+        _kwargs["json"] = body.to_dict()
 
     headers["Content-Type"] = "application/json"
 
@@ -80,7 +84,7 @@ def sync_detailed(
     id: str,
     *,
     client: AuthenticatedClient,
-    body: PostProjectWorkItemsIdTriageBody,
+    body: PostProjectWorkItemsIdTriageBody | Unset = UNSET,
 ) -> Response[Error | WorkItem]:
     """Accept a card out of the inbox (+ a work_item.triaged activity)
 
@@ -94,19 +98,19 @@ def sync_detailed(
 
     Args:
         id (str):
-        body (PostProjectWorkItemsIdTriageBody): Accepting a card out of the inbox, with the
-            placement carried in the same request. Every key is optional — accepting a card that is
-            already where it belongs is the common case — and each is applied through the same writer
-            a PATCH uses, so it validates and records identically. There is no `decline`: declining is
-            naming a status in the `canceled` category, which leaves the card findable in a column
-            that says what happened to it.
+        body (PostProjectWorkItemsIdTriageBody | Unset): Accepting a card out of the inbox, with
+            the placement carried in the same request. Every key is optional — accepting a card that
+            is already where it belongs is the common case — and each is applied through the same
+            writer a PATCH uses, so it validates and records identically. There is no `decline`:
+            declining is naming a status in the `canceled` category, which leaves the card findable in
+            a column that says what happened to it.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, WorkItem]]
+        Response[Error | WorkItem]
     """
 
     kwargs = _get_kwargs(
@@ -125,7 +129,7 @@ def sync(
     id: str,
     *,
     client: AuthenticatedClient,
-    body: PostProjectWorkItemsIdTriageBody,
+    body: PostProjectWorkItemsIdTriageBody | Unset = UNSET,
 ) -> Error | WorkItem | None:
     """Accept a card out of the inbox (+ a work_item.triaged activity)
 
@@ -139,19 +143,19 @@ def sync(
 
     Args:
         id (str):
-        body (PostProjectWorkItemsIdTriageBody): Accepting a card out of the inbox, with the
-            placement carried in the same request. Every key is optional — accepting a card that is
-            already where it belongs is the common case — and each is applied through the same writer
-            a PATCH uses, so it validates and records identically. There is no `decline`: declining is
-            naming a status in the `canceled` category, which leaves the card findable in a column
-            that says what happened to it.
+        body (PostProjectWorkItemsIdTriageBody | Unset): Accepting a card out of the inbox, with
+            the placement carried in the same request. Every key is optional — accepting a card that
+            is already where it belongs is the common case — and each is applied through the same
+            writer a PATCH uses, so it validates and records identically. There is no `decline`:
+            declining is naming a status in the `canceled` category, which leaves the card findable in
+            a column that says what happened to it.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, WorkItem]
+        Error | WorkItem
     """
 
     return sync_detailed(
@@ -165,7 +169,7 @@ async def asyncio_detailed(
     id: str,
     *,
     client: AuthenticatedClient,
-    body: PostProjectWorkItemsIdTriageBody,
+    body: PostProjectWorkItemsIdTriageBody | Unset = UNSET,
 ) -> Response[Error | WorkItem]:
     """Accept a card out of the inbox (+ a work_item.triaged activity)
 
@@ -179,19 +183,19 @@ async def asyncio_detailed(
 
     Args:
         id (str):
-        body (PostProjectWorkItemsIdTriageBody): Accepting a card out of the inbox, with the
-            placement carried in the same request. Every key is optional — accepting a card that is
-            already where it belongs is the common case — and each is applied through the same writer
-            a PATCH uses, so it validates and records identically. There is no `decline`: declining is
-            naming a status in the `canceled` category, which leaves the card findable in a column
-            that says what happened to it.
+        body (PostProjectWorkItemsIdTriageBody | Unset): Accepting a card out of the inbox, with
+            the placement carried in the same request. Every key is optional — accepting a card that
+            is already where it belongs is the common case — and each is applied through the same
+            writer a PATCH uses, so it validates and records identically. There is no `decline`:
+            declining is naming a status in the `canceled` category, which leaves the card findable in
+            a column that says what happened to it.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, WorkItem]]
+        Response[Error | WorkItem]
     """
 
     kwargs = _get_kwargs(
@@ -208,7 +212,7 @@ async def asyncio(
     id: str,
     *,
     client: AuthenticatedClient,
-    body: PostProjectWorkItemsIdTriageBody,
+    body: PostProjectWorkItemsIdTriageBody | Unset = UNSET,
 ) -> Error | WorkItem | None:
     """Accept a card out of the inbox (+ a work_item.triaged activity)
 
@@ -222,19 +226,19 @@ async def asyncio(
 
     Args:
         id (str):
-        body (PostProjectWorkItemsIdTriageBody): Accepting a card out of the inbox, with the
-            placement carried in the same request. Every key is optional — accepting a card that is
-            already where it belongs is the common case — and each is applied through the same writer
-            a PATCH uses, so it validates and records identically. There is no `decline`: declining is
-            naming a status in the `canceled` category, which leaves the card findable in a column
-            that says what happened to it.
+        body (PostProjectWorkItemsIdTriageBody | Unset): Accepting a card out of the inbox, with
+            the placement carried in the same request. Every key is optional — accepting a card that
+            is already where it belongs is the common case — and each is applied through the same
+            writer a PATCH uses, so it validates and records identically. There is no `decline`:
+            declining is naming a status in the `canceled` category, which leaves the card findable in
+            a column that says what happened to it.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, WorkItem]
+        Error | WorkItem
     """
 
     return (

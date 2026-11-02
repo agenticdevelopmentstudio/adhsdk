@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class CampaignStatus(str, Enum):
+class CampaignStatus(StrEnum):
     CANCELLED = "cancelled"
     DRAFT = "draft"
     FAILED = "failed"

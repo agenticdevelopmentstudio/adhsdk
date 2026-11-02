@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class MarkdownDocumentVersionOwnerKind(str, Enum):
+class MarkdownDocumentVersionOwnerKind(StrEnum):
     CUSTOMER = "customer"
     ORGANIZATION = "organization"
 

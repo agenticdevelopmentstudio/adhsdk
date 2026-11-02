@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, TypeVar, Union, cast
+from typing import TYPE_CHECKING, Any, TypeVar, cast
 
 from attrs import define as _attrs_define
 
@@ -19,15 +21,15 @@ class PostContentKeyValuePairsBody:
     """
     Attributes:
         key (str):
-        value (Union['PostContentKeyValuePairsBodyValueType1', None, bool, float, list[Any], str]):
-        ecosystem_id (Union[Unset, str]):
-        sync_txid (Union[Unset, int]):
+        value (bool | float | list[Any] | None | PostContentKeyValuePairsBodyValueType1 | str):
+        ecosystem_id (str | Unset):
+        sync_txid (int | Unset):
     """
 
     key: str
-    value: Union["PostContentKeyValuePairsBodyValueType1", None, bool, float, list[Any], str]
-    ecosystem_id: Unset | str = UNSET
-    sync_txid: Unset | int = UNSET
+    value: bool | float | list[Any] | None | PostContentKeyValuePairsBodyValueType1 | str
+    ecosystem_id: str | Unset = UNSET
+    sync_txid: int | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
         from ..models.post_content_key_value_pairs_body_value_type_1 import (
@@ -36,7 +38,7 @@ class PostContentKeyValuePairsBody:
 
         key = self.key
 
-        value: None | bool | dict[str, Any] | float | list[Any] | str
+        value: bool | dict[str, Any] | float | list[Any] | None | str
         if isinstance(self.value, PostContentKeyValuePairsBodyValueType1):
             value = self.value.to_dict()
         elif isinstance(self.value, list):
@@ -75,7 +77,7 @@ class PostContentKeyValuePairsBody:
 
         def _parse_value(
             data: object,
-        ) -> Union["PostContentKeyValuePairsBodyValueType1", None, bool, float, list[Any], str]:
+        ) -> bool | float | list[Any] | None | PostContentKeyValuePairsBodyValueType1 | str:
             if data is None:
                 return data
             try:
@@ -84,7 +86,7 @@ class PostContentKeyValuePairsBody:
                 value_type_1 = PostContentKeyValuePairsBodyValueType1.from_dict(data)
 
                 return value_type_1
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
             try:
                 if not isinstance(data, list):
@@ -92,11 +94,10 @@ class PostContentKeyValuePairsBody:
                 value_type_2 = cast(list[Any], data)
 
                 return value_type_2
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
             return cast(
-                Union["PostContentKeyValuePairsBodyValueType1", None, bool, float, list[Any], str],
-                data,
+                bool | float | list[Any] | None | PostContentKeyValuePairsBodyValueType1 | str, data
             )
 
         value = _parse_value(d.pop("value"))

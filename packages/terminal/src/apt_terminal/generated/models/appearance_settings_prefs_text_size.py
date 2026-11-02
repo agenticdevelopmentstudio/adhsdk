@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class AppearanceSettingsPrefsTextSize(str, Enum):
+class AppearanceSettingsPrefsTextSize(StrEnum):
     DEFAULT = "default"
     EXTRA_LARGE = "extra-large"
     LARGE = "large"

@@ -8,12 +8,12 @@ from ...client import AuthenticatedClient, Client
 from ...models.error import Error
 from ...models.post_access_team_reach_body import PostAccessTeamReachBody
 from ...models.team_reach_grant import TeamReachGrant
-from ...types import Response
+from ...types import UNSET, Response, Unset
 
 
 def _get_kwargs(
     *,
-    body: PostAccessTeamReachBody,
+    body: PostAccessTeamReachBody | Unset = UNSET,
 ) -> dict[str, Any]:
     headers: dict[str, Any] = {}
 
@@ -22,7 +22,8 @@ def _get_kwargs(
         "url": "/access/team-reach",
     }
 
-    _kwargs["json"] = body.to_dict()
+    if not isinstance(body, Unset):
+        _kwargs["json"] = body.to_dict()
 
     headers["Content-Type"] = "application/json"
 
@@ -83,19 +84,19 @@ def _build_response(
 def sync_detailed(
     *,
     client: AuthenticatedClient,
-    body: PostAccessTeamReachBody,
+    body: PostAccessTeamReachBody | Unset = UNSET,
 ) -> Response[Error | TeamReachGrant]:
     """Grant a team reach into an ecosystem you manage
 
     Args:
-        body (PostAccessTeamReachBody):
+        body (PostAccessTeamReachBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, TeamReachGrant]]
+        Response[Error | TeamReachGrant]
     """
 
     kwargs = _get_kwargs(
@@ -112,19 +113,19 @@ def sync_detailed(
 def sync(
     *,
     client: AuthenticatedClient,
-    body: PostAccessTeamReachBody,
+    body: PostAccessTeamReachBody | Unset = UNSET,
 ) -> Error | TeamReachGrant | None:
     """Grant a team reach into an ecosystem you manage
 
     Args:
-        body (PostAccessTeamReachBody):
+        body (PostAccessTeamReachBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, TeamReachGrant]
+        Error | TeamReachGrant
     """
 
     return sync_detailed(
@@ -136,19 +137,19 @@ def sync(
 async def asyncio_detailed(
     *,
     client: AuthenticatedClient,
-    body: PostAccessTeamReachBody,
+    body: PostAccessTeamReachBody | Unset = UNSET,
 ) -> Response[Error | TeamReachGrant]:
     """Grant a team reach into an ecosystem you manage
 
     Args:
-        body (PostAccessTeamReachBody):
+        body (PostAccessTeamReachBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, TeamReachGrant]]
+        Response[Error | TeamReachGrant]
     """
 
     kwargs = _get_kwargs(
@@ -163,19 +164,19 @@ async def asyncio_detailed(
 async def asyncio(
     *,
     client: AuthenticatedClient,
-    body: PostAccessTeamReachBody,
+    body: PostAccessTeamReachBody | Unset = UNSET,
 ) -> Error | TeamReachGrant | None:
     """Grant a team reach into an ecosystem you manage
 
     Args:
-        body (PostAccessTeamReachBody):
+        body (PostAccessTeamReachBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, TeamReachGrant]
+        Error | TeamReachGrant
     """
 
     return (

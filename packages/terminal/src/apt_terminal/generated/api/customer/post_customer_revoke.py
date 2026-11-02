@@ -7,12 +7,12 @@ from ... import errors
 from ...client import AuthenticatedClient, Client
 from ...models.error import Error
 from ...models.post_customer_revoke_body import PostCustomerRevokeBody
-from ...types import Response
+from ...types import UNSET, Response, Unset
 
 
 def _get_kwargs(
     *,
-    body: PostCustomerRevokeBody,
+    body: PostCustomerRevokeBody | Unset = UNSET,
 ) -> dict[str, Any]:
     headers: dict[str, Any] = {}
 
@@ -21,7 +21,8 @@ def _get_kwargs(
         "url": "/customer/revoke",
     }
 
-    _kwargs["json"] = body.to_dict()
+    if not isinstance(body, Unset):
+        _kwargs["json"] = body.to_dict()
 
     headers["Content-Type"] = "application/json"
 
@@ -66,19 +67,19 @@ def _build_response(
 def sync_detailed(
     *,
     client: AuthenticatedClient,
-    body: PostCustomerRevokeBody,
+    body: PostCustomerRevokeBody | Unset = UNSET,
 ) -> Response[Any | Error]:
     """Revoke a customer refresh session (logout); idempotent
 
     Args:
-        body (PostCustomerRevokeBody):
+        body (PostCustomerRevokeBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Any, Error]]
+        Response[Any | Error]
     """
 
     kwargs = _get_kwargs(
@@ -95,19 +96,19 @@ def sync_detailed(
 def sync(
     *,
     client: AuthenticatedClient,
-    body: PostCustomerRevokeBody,
+    body: PostCustomerRevokeBody | Unset = UNSET,
 ) -> Any | Error | None:
     """Revoke a customer refresh session (logout); idempotent
 
     Args:
-        body (PostCustomerRevokeBody):
+        body (PostCustomerRevokeBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Any, Error]
+        Any | Error
     """
 
     return sync_detailed(
@@ -119,19 +120,19 @@ def sync(
 async def asyncio_detailed(
     *,
     client: AuthenticatedClient,
-    body: PostCustomerRevokeBody,
+    body: PostCustomerRevokeBody | Unset = UNSET,
 ) -> Response[Any | Error]:
     """Revoke a customer refresh session (logout); idempotent
 
     Args:
-        body (PostCustomerRevokeBody):
+        body (PostCustomerRevokeBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Any, Error]]
+        Response[Any | Error]
     """
 
     kwargs = _get_kwargs(
@@ -146,19 +147,19 @@ async def asyncio_detailed(
 async def asyncio(
     *,
     client: AuthenticatedClient,
-    body: PostCustomerRevokeBody,
+    body: PostCustomerRevokeBody | Unset = UNSET,
 ) -> Any | Error | None:
     """Revoke a customer refresh session (logout); idempotent
 
     Args:
-        body (PostCustomerRevokeBody):
+        body (PostCustomerRevokeBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Any, Error]
+        Any | Error
     """
 
     return (

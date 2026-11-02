@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar
 
@@ -14,15 +16,15 @@ class PostAuthLoginBody:
     """
     Attributes:
         password (str):
-        email (Union[Unset, str]): Email address
-        slug (Union[Unset, str]): User id (login handle)
-        identifier (Union[Unset, str]): Email, user id, or a verified phone number (E.164) — classified server-side
+        email (str | Unset): Email address
+        slug (str | Unset): User id (login handle)
+        identifier (str | Unset): Email, user id, or a verified phone number (E.164) — classified server-side
     """
 
     password: str
-    email: Unset | str = UNSET
-    slug: Unset | str = UNSET
-    identifier: Unset | str = UNSET
+    email: str | Unset = UNSET
+    slug: str | Unset = UNSET
+    identifier: str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:

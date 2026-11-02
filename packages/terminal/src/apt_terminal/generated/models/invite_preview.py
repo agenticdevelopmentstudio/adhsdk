@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -15,25 +17,25 @@ class InvitePreview:
     """
     Attributes:
         state (InvitePreviewState):
-        ecosystem_name (Union[None, Unset, str]):
-        masked_destination (Union[None, Unset, str]):
+        ecosystem_name (None | str | Unset):
+        masked_destination (None | str | Unset):
     """
 
     state: InvitePreviewState
-    ecosystem_name: None | Unset | str = UNSET
-    masked_destination: None | Unset | str = UNSET
+    ecosystem_name: None | str | Unset = UNSET
+    masked_destination: None | str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
         state = self.state.value
 
-        ecosystem_name: None | Unset | str
+        ecosystem_name: None | str | Unset
         if isinstance(self.ecosystem_name, Unset):
             ecosystem_name = UNSET
         else:
             ecosystem_name = self.ecosystem_name
 
-        masked_destination: None | Unset | str
+        masked_destination: None | str | Unset
         if isinstance(self.masked_destination, Unset):
             masked_destination = UNSET
         else:
@@ -58,21 +60,21 @@ class InvitePreview:
         d = dict(src_dict)
         state = InvitePreviewState(d.pop("state"))
 
-        def _parse_ecosystem_name(data: object) -> None | Unset | str:
+        def _parse_ecosystem_name(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         ecosystem_name = _parse_ecosystem_name(d.pop("ecosystemName", UNSET))
 
-        def _parse_masked_destination(data: object) -> None | Unset | str:
+        def _parse_masked_destination(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         masked_destination = _parse_masked_destination(d.pop("maskedDestination", UNSET))
 

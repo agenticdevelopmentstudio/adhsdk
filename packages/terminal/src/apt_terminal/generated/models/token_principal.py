@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -17,12 +19,12 @@ class TokenPrincipal:
         slug (str):
         description (str):
         prefix (str): Non-secret leading chars of the secret, for display
-        rdid (Union[None, str]): reverse-domain id, e.g. token.<owner-slug>.<name>; null if it has no canonical mapping
-        bucket_rdid (Union[None, str]): the token’s own isolated bucket, e.g. storage.<owner-slug>.<name>; null if it
-            has no canonical mapping
+        rdid (None | str): reverse-domain id, e.g. token.<owner-slug>.<name>; null if it has no canonical mapping
+        bucket_rdid (None | str): the token’s own isolated bucket, e.g. storage.<owner-slug>.<name>; null if it has no
+            canonical mapping
         created_at (str):
-        expires_at (Union[None, Unset, str]):
-        last_used_at (Union[None, Unset, str]):
+        expires_at (None | str | Unset):
+        last_used_at (None | str | Unset):
     """
 
     id: str
@@ -32,8 +34,8 @@ class TokenPrincipal:
     rdid: None | str
     bucket_rdid: None | str
     created_at: str
-    expires_at: None | Unset | str = UNSET
-    last_used_at: None | Unset | str = UNSET
+    expires_at: None | str | Unset = UNSET
+    last_used_at: None | str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -53,13 +55,13 @@ class TokenPrincipal:
 
         created_at = self.created_at
 
-        expires_at: None | Unset | str
+        expires_at: None | str | Unset
         if isinstance(self.expires_at, Unset):
             expires_at = UNSET
         else:
             expires_at = self.expires_at
 
-        last_used_at: None | Unset | str
+        last_used_at: None | str | Unset
         if isinstance(self.last_used_at, Unset):
             last_used_at = UNSET
         else:
@@ -112,21 +114,21 @@ class TokenPrincipal:
 
         created_at = d.pop("createdAt")
 
-        def _parse_expires_at(data: object) -> None | Unset | str:
+        def _parse_expires_at(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         expires_at = _parse_expires_at(d.pop("expiresAt", UNSET))
 
-        def _parse_last_used_at(data: object) -> None | Unset | str:
+        def _parse_last_used_at(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         last_used_at = _parse_last_used_at(d.pop("lastUsedAt", UNSET))
 

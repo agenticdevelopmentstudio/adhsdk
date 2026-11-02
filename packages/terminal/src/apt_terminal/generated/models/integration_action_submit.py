@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar
 
@@ -17,14 +19,14 @@ class IntegrationActionSubmit:
         Attributes:
             subreddit (str): Subreddit name without the r/ prefix
             title (str):
-            url (Union[Unset, str]): Link post target (mutually exclusive with text)
-            text (Union[Unset, str]): Self-post body (mutually exclusive with url)
+            url (str | Unset): Link post target (mutually exclusive with text)
+            text (str | Unset): Self-post body (mutually exclusive with url)
     """
 
     subreddit: str
     title: str
-    url: Unset | str = UNSET
-    text: Unset | str = UNSET
+    url: str | Unset = UNSET
+    text: str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:

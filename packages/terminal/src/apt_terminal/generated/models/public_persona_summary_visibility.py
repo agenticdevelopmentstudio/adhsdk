@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class PublicPersonaSummaryVisibility(str, Enum):
+class PublicPersonaSummaryVisibility(StrEnum):
     HUB = "hub"
     PUBLIC = "public"
 

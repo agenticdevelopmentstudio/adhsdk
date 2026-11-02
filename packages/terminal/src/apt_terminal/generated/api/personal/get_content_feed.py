@@ -12,14 +12,14 @@ from ...types import UNSET, Response, Unset
 
 def _get_kwargs(
     *,
-    entity_type: Unset | str = UNSET,
-    action: Unset | str = UNSET,
-    source: Unset | str = UNSET,
-    since: Unset | str = UNSET,
-    until: Unset | str = UNSET,
-    unread: Unset | str = UNSET,
-    page: Unset | str = UNSET,
-    page_size: Unset | str = UNSET,
+    entity_type: str | Unset = UNSET,
+    action: str | Unset = UNSET,
+    source: str | Unset = UNSET,
+    since: str | Unset = UNSET,
+    until: str | Unset = UNSET,
+    unread: str | Unset = UNSET,
+    page: str | Unset = UNSET,
+    page_size: str | Unset = UNSET,
 ) -> dict[str, Any]:
     params: dict[str, Any] = {}
 
@@ -88,33 +88,33 @@ def _build_response(
 def sync_detailed(
     *,
     client: AuthenticatedClient,
-    entity_type: Unset | str = UNSET,
-    action: Unset | str = UNSET,
-    source: Unset | str = UNSET,
-    since: Unset | str = UNSET,
-    until: Unset | str = UNSET,
-    unread: Unset | str = UNSET,
-    page: Unset | str = UNSET,
-    page_size: Unset | str = UNSET,
+    entity_type: str | Unset = UNSET,
+    action: str | Unset = UNSET,
+    source: str | Unset = UNSET,
+    since: str | Unset = UNSET,
+    until: str | Unset = UNSET,
+    unread: str | Unset = UNSET,
+    page: str | Unset = UNSET,
+    page_size: str | Unset = UNSET,
 ) -> Response[Error | FeedPage]:
     """List the caller's activity feed (filterable, paginated)
 
     Args:
-        entity_type (Union[Unset, str]):
-        action (Union[Unset, str]):
-        source (Union[Unset, str]):
-        since (Union[Unset, str]):
-        until (Union[Unset, str]):
-        unread (Union[Unset, str]):
-        page (Union[Unset, str]):
-        page_size (Union[Unset, str]):
+        entity_type (str | Unset):
+        action (str | Unset):
+        source (str | Unset):
+        since (str | Unset):
+        until (str | Unset):
+        unread (str | Unset):
+        page (str | Unset):
+        page_size (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, FeedPage]]
+        Response[Error | FeedPage]
     """
 
     kwargs = _get_kwargs(
@@ -138,33 +138,33 @@ def sync_detailed(
 def sync(
     *,
     client: AuthenticatedClient,
-    entity_type: Unset | str = UNSET,
-    action: Unset | str = UNSET,
-    source: Unset | str = UNSET,
-    since: Unset | str = UNSET,
-    until: Unset | str = UNSET,
-    unread: Unset | str = UNSET,
-    page: Unset | str = UNSET,
-    page_size: Unset | str = UNSET,
+    entity_type: str | Unset = UNSET,
+    action: str | Unset = UNSET,
+    source: str | Unset = UNSET,
+    since: str | Unset = UNSET,
+    until: str | Unset = UNSET,
+    unread: str | Unset = UNSET,
+    page: str | Unset = UNSET,
+    page_size: str | Unset = UNSET,
 ) -> Error | FeedPage | None:
     """List the caller's activity feed (filterable, paginated)
 
     Args:
-        entity_type (Union[Unset, str]):
-        action (Union[Unset, str]):
-        source (Union[Unset, str]):
-        since (Union[Unset, str]):
-        until (Union[Unset, str]):
-        unread (Union[Unset, str]):
-        page (Union[Unset, str]):
-        page_size (Union[Unset, str]):
+        entity_type (str | Unset):
+        action (str | Unset):
+        source (str | Unset):
+        since (str | Unset):
+        until (str | Unset):
+        unread (str | Unset):
+        page (str | Unset):
+        page_size (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, FeedPage]
+        Error | FeedPage
     """
 
     return sync_detailed(
@@ -183,33 +183,33 @@ def sync(
 async def asyncio_detailed(
     *,
     client: AuthenticatedClient,
-    entity_type: Unset | str = UNSET,
-    action: Unset | str = UNSET,
-    source: Unset | str = UNSET,
-    since: Unset | str = UNSET,
-    until: Unset | str = UNSET,
-    unread: Unset | str = UNSET,
-    page: Unset | str = UNSET,
-    page_size: Unset | str = UNSET,
+    entity_type: str | Unset = UNSET,
+    action: str | Unset = UNSET,
+    source: str | Unset = UNSET,
+    since: str | Unset = UNSET,
+    until: str | Unset = UNSET,
+    unread: str | Unset = UNSET,
+    page: str | Unset = UNSET,
+    page_size: str | Unset = UNSET,
 ) -> Response[Error | FeedPage]:
     """List the caller's activity feed (filterable, paginated)
 
     Args:
-        entity_type (Union[Unset, str]):
-        action (Union[Unset, str]):
-        source (Union[Unset, str]):
-        since (Union[Unset, str]):
-        until (Union[Unset, str]):
-        unread (Union[Unset, str]):
-        page (Union[Unset, str]):
-        page_size (Union[Unset, str]):
+        entity_type (str | Unset):
+        action (str | Unset):
+        source (str | Unset):
+        since (str | Unset):
+        until (str | Unset):
+        unread (str | Unset):
+        page (str | Unset):
+        page_size (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, FeedPage]]
+        Response[Error | FeedPage]
     """
 
     kwargs = _get_kwargs(
@@ -231,33 +231,33 @@ async def asyncio_detailed(
 async def asyncio(
     *,
     client: AuthenticatedClient,
-    entity_type: Unset | str = UNSET,
-    action: Unset | str = UNSET,
-    source: Unset | str = UNSET,
-    since: Unset | str = UNSET,
-    until: Unset | str = UNSET,
-    unread: Unset | str = UNSET,
-    page: Unset | str = UNSET,
-    page_size: Unset | str = UNSET,
+    entity_type: str | Unset = UNSET,
+    action: str | Unset = UNSET,
+    source: str | Unset = UNSET,
+    since: str | Unset = UNSET,
+    until: str | Unset = UNSET,
+    unread: str | Unset = UNSET,
+    page: str | Unset = UNSET,
+    page_size: str | Unset = UNSET,
 ) -> Error | FeedPage | None:
     """List the caller's activity feed (filterable, paginated)
 
     Args:
-        entity_type (Union[Unset, str]):
-        action (Union[Unset, str]):
-        source (Union[Unset, str]):
-        since (Union[Unset, str]):
-        until (Union[Unset, str]):
-        unread (Union[Unset, str]):
-        page (Union[Unset, str]):
-        page_size (Union[Unset, str]):
+        entity_type (str | Unset):
+        action (str | Unset):
+        source (str | Unset):
+        since (str | Unset):
+        until (str | Unset):
+        unread (str | Unset):
+        page (str | Unset):
+        page_size (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, FeedPage]
+        Error | FeedPage
     """
 
     return (

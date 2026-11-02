@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import TYPE_CHECKING, Any, TypeVar, cast
 
@@ -28,12 +30,12 @@ class Notification:
         is_read (bool):
         created_at (str):
         updated_at (str):
-        actor_id (Union[None, Unset, str]):
-        entity_kind (Union[None, Unset, str]):
-        entity_id (Union[None, Unset, str]):
-        body (Union[None, Unset, str]):
-        dedupe_key (Union[None, Unset, str]):
-        read_at (Union[None, Unset, str]):
+        actor_id (None | str | Unset):
+        entity_kind (None | str | Unset):
+        entity_id (None | str | Unset):
+        body (None | str | Unset):
+        dedupe_key (None | str | Unset):
+        read_at (None | str | Unset):
     """
 
     id: str
@@ -41,17 +43,17 @@ class Notification:
     user_id: str
     category: str
     title: str
-    data: "NotificationData"
+    data: NotificationData
     status: NotificationStatus
     is_read: bool
     created_at: str
     updated_at: str
-    actor_id: None | Unset | str = UNSET
-    entity_kind: None | Unset | str = UNSET
-    entity_id: None | Unset | str = UNSET
-    body: None | Unset | str = UNSET
-    dedupe_key: None | Unset | str = UNSET
-    read_at: None | Unset | str = UNSET
+    actor_id: None | str | Unset = UNSET
+    entity_kind: None | str | Unset = UNSET
+    entity_id: None | str | Unset = UNSET
+    body: None | str | Unset = UNSET
+    dedupe_key: None | str | Unset = UNSET
+    read_at: None | str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -75,37 +77,37 @@ class Notification:
 
         updated_at = self.updated_at
 
-        actor_id: None | Unset | str
+        actor_id: None | str | Unset
         if isinstance(self.actor_id, Unset):
             actor_id = UNSET
         else:
             actor_id = self.actor_id
 
-        entity_kind: None | Unset | str
+        entity_kind: None | str | Unset
         if isinstance(self.entity_kind, Unset):
             entity_kind = UNSET
         else:
             entity_kind = self.entity_kind
 
-        entity_id: None | Unset | str
+        entity_id: None | str | Unset
         if isinstance(self.entity_id, Unset):
             entity_id = UNSET
         else:
             entity_id = self.entity_id
 
-        body: None | Unset | str
+        body: None | str | Unset
         if isinstance(self.body, Unset):
             body = UNSET
         else:
             body = self.body
 
-        dedupe_key: None | Unset | str
+        dedupe_key: None | str | Unset
         if isinstance(self.dedupe_key, Unset):
             dedupe_key = UNSET
         else:
             dedupe_key = self.dedupe_key
 
-        read_at: None | Unset | str
+        read_at: None | str | Unset
         if isinstance(self.read_at, Unset):
             read_at = UNSET
         else:
@@ -167,57 +169,57 @@ class Notification:
 
         updated_at = d.pop("updatedAt")
 
-        def _parse_actor_id(data: object) -> None | Unset | str:
+        def _parse_actor_id(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         actor_id = _parse_actor_id(d.pop("actorId", UNSET))
 
-        def _parse_entity_kind(data: object) -> None | Unset | str:
+        def _parse_entity_kind(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         entity_kind = _parse_entity_kind(d.pop("entityKind", UNSET))
 
-        def _parse_entity_id(data: object) -> None | Unset | str:
+        def _parse_entity_id(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         entity_id = _parse_entity_id(d.pop("entityId", UNSET))
 
-        def _parse_body(data: object) -> None | Unset | str:
+        def _parse_body(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         body = _parse_body(d.pop("body", UNSET))
 
-        def _parse_dedupe_key(data: object) -> None | Unset | str:
+        def _parse_dedupe_key(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         dedupe_key = _parse_dedupe_key(d.pop("dedupeKey", UNSET))
 
-        def _parse_read_at(data: object) -> None | Unset | str:
+        def _parse_read_at(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         read_at = _parse_read_at(d.pop("readAt", UNSET))
 

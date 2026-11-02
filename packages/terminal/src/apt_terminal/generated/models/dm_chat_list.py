@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import TYPE_CHECKING, Any, TypeVar
 
@@ -15,13 +17,13 @@ T = TypeVar("T", bound="DmChatList")
 class DmChatList:
     """
     Attributes:
-        chats (list['DmChatSummary']):
+        chats (list[DmChatSummary]):
         total (int):
         page (int):
         page_size (int):
     """
 
-    chats: list["DmChatSummary"]
+    chats: list[DmChatSummary]
     total: int
     page: int
     page_size: int

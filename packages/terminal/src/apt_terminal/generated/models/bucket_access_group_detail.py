@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, TypeVar, Union, cast
+from typing import TYPE_CHECKING, Any, TypeVar, cast
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -27,9 +29,9 @@ class BucketAccessGroupDetail:
         kind (str): 'everyone' (seeded) or 'custom'
         created_at (str):
         updated_at (str):
-        members (list['BucketAccessGroupMember']):
-        grants (list['BucketGrant']):
-        metadata (Union['BucketAccessGroupMetadataType0', None, Unset]):
+        members (list[BucketAccessGroupMember]):
+        grants (list[BucketGrant]):
+        metadata (BucketAccessGroupMetadataType0 | None | Unset):
     """
 
     id: str
@@ -40,9 +42,9 @@ class BucketAccessGroupDetail:
     kind: str
     created_at: str
     updated_at: str
-    members: list["BucketAccessGroupMember"]
-    grants: list["BucketGrant"]
-    metadata: Union["BucketAccessGroupMetadataType0", None, Unset] = UNSET
+    members: list[BucketAccessGroupMember]
+    grants: list[BucketGrant]
+    metadata: BucketAccessGroupMetadataType0 | None | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -74,7 +76,7 @@ class BucketAccessGroupDetail:
             grants_item = grants_item_data.to_dict()
             grants.append(grants_item)
 
-        metadata: None | Unset | dict[str, Any]
+        metadata: dict[str, Any] | None | Unset
         if isinstance(self.metadata, Unset):
             metadata = UNSET
         elif isinstance(self.metadata, BucketAccessGroupMetadataType0):
@@ -106,7 +108,9 @@ class BucketAccessGroupDetail:
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
         from ..models.bucket_access_group_member import BucketAccessGroupMember
-        from ..models.bucket_access_group_metadata_type_0 import BucketAccessGroupMetadataType0
+        from ..models.bucket_access_group_metadata_type_0 import (
+            BucketAccessGroupMetadataType0,
+        )
         from ..models.bucket_grant import BucketGrant
 
         d = dict(src_dict)
@@ -140,7 +144,7 @@ class BucketAccessGroupDetail:
 
             grants.append(grants_item)
 
-        def _parse_metadata(data: object) -> Union["BucketAccessGroupMetadataType0", None, Unset]:
+        def _parse_metadata(data: object) -> BucketAccessGroupMetadataType0 | None | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
@@ -151,9 +155,9 @@ class BucketAccessGroupDetail:
                 metadata_type_0 = BucketAccessGroupMetadataType0.from_dict(data)
 
                 return metadata_type_0
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
-            return cast(Union["BucketAccessGroupMetadataType0", None, Unset], data)
+            return cast(BucketAccessGroupMetadataType0 | None | Unset, data)
 
         metadata = _parse_metadata(d.pop("metadata", UNSET))
 

@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, TypeVar, Union
+from typing import TYPE_CHECKING, Any, TypeVar
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -19,17 +21,17 @@ class GamificationRealmConfigUpdate:
     """
     Attributes:
         config (GamificationRealmConfig):
-        replayed (Union[Unset, GamificationReplayResult]):
+        replayed (GamificationReplayResult | Unset):
     """
 
-    config: "GamificationRealmConfig"
-    replayed: Union[Unset, "GamificationReplayResult"] = UNSET
+    config: GamificationRealmConfig
+    replayed: GamificationReplayResult | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
         config = self.config.to_dict()
 
-        replayed: Unset | dict[str, Any] = UNSET
+        replayed: dict[str, Any] | Unset = UNSET
         if not isinstance(self.replayed, Unset):
             replayed = self.replayed.to_dict()
 
@@ -54,7 +56,7 @@ class GamificationRealmConfigUpdate:
         config = GamificationRealmConfig.from_dict(d.pop("config"))
 
         _replayed = d.pop("replayed", UNSET)
-        replayed: Unset | GamificationReplayResult
+        replayed: GamificationReplayResult | Unset
         if isinstance(_replayed, Unset):
             replayed = UNSET
         else:

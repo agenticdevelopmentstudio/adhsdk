@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -16,7 +18,7 @@ class GetMonitoringSiteGroupsIdResponse200:
         owner_id (str):
         name (str):
         slug (str):
-        description (Union[None, str]):
+        description (None | str):
         retention_days (int):
         display_order (int):
         created_at (str):

@@ -1,5 +1,6 @@
 from http import HTTPStatus
 from typing import Any
+from urllib.parse import quote
 
 import httpx
 
@@ -10,22 +11,25 @@ from ...models.put_persona_memory_memories_id_body import PutPersonaMemoryMemori
 from ...models.put_persona_memory_memories_id_response_200 import (
     PutPersonaMemoryMemoriesIdResponse200,
 )
-from ...types import Response
+from ...types import UNSET, Response, Unset
 
 
 def _get_kwargs(
     id: str,
     *,
-    body: PutPersonaMemoryMemoriesIdBody,
+    body: PutPersonaMemoryMemoriesIdBody | Unset = UNSET,
 ) -> dict[str, Any]:
     headers: dict[str, Any] = {}
 
     _kwargs: dict[str, Any] = {
         "method": "put",
-        "url": f"/persona-memory/memories/{id}",
+        "url": "/persona-memory/memories/{id}".format(
+            id=quote(str(id), safe=""),
+        ),
     }
 
-    _kwargs["json"] = body.to_dict()
+    if not isinstance(body, Unset):
+        _kwargs["json"] = body.to_dict()
 
     headers["Content-Type"] = "application/json"
 
@@ -77,20 +81,20 @@ def sync_detailed(
     id: str,
     *,
     client: AuthenticatedClient,
-    body: PutPersonaMemoryMemoriesIdBody,
+    body: PutPersonaMemoryMemoriesIdBody | Unset = UNSET,
 ) -> Response[Error | PutPersonaMemoryMemoriesIdResponse200]:
     """Update memories
 
     Args:
         id (str):
-        body (PutPersonaMemoryMemoriesIdBody):
+        body (PutPersonaMemoryMemoriesIdBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, PutPersonaMemoryMemoriesIdResponse200]]
+        Response[Error | PutPersonaMemoryMemoriesIdResponse200]
     """
 
     kwargs = _get_kwargs(
@@ -109,20 +113,20 @@ def sync(
     id: str,
     *,
     client: AuthenticatedClient,
-    body: PutPersonaMemoryMemoriesIdBody,
+    body: PutPersonaMemoryMemoriesIdBody | Unset = UNSET,
 ) -> Error | PutPersonaMemoryMemoriesIdResponse200 | None:
     """Update memories
 
     Args:
         id (str):
-        body (PutPersonaMemoryMemoriesIdBody):
+        body (PutPersonaMemoryMemoriesIdBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, PutPersonaMemoryMemoriesIdResponse200]
+        Error | PutPersonaMemoryMemoriesIdResponse200
     """
 
     return sync_detailed(
@@ -136,20 +140,20 @@ async def asyncio_detailed(
     id: str,
     *,
     client: AuthenticatedClient,
-    body: PutPersonaMemoryMemoriesIdBody,
+    body: PutPersonaMemoryMemoriesIdBody | Unset = UNSET,
 ) -> Response[Error | PutPersonaMemoryMemoriesIdResponse200]:
     """Update memories
 
     Args:
         id (str):
-        body (PutPersonaMemoryMemoriesIdBody):
+        body (PutPersonaMemoryMemoriesIdBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, PutPersonaMemoryMemoriesIdResponse200]]
+        Response[Error | PutPersonaMemoryMemoriesIdResponse200]
     """
 
     kwargs = _get_kwargs(
@@ -166,20 +170,20 @@ async def asyncio(
     id: str,
     *,
     client: AuthenticatedClient,
-    body: PutPersonaMemoryMemoriesIdBody,
+    body: PutPersonaMemoryMemoriesIdBody | Unset = UNSET,
 ) -> Error | PutPersonaMemoryMemoriesIdResponse200 | None:
     """Update memories
 
     Args:
         id (str):
-        body (PutPersonaMemoryMemoriesIdBody):
+        body (PutPersonaMemoryMemoriesIdBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, PutPersonaMemoryMemoriesIdResponse200]
+        Error | PutPersonaMemoryMemoriesIdResponse200
     """
 
     return (

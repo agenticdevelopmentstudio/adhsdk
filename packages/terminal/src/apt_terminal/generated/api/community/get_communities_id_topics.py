@@ -1,5 +1,6 @@
 from http import HTTPStatus
 from typing import Any
+from urllib.parse import quote
 
 import httpx
 
@@ -14,16 +15,16 @@ from ...types import UNSET, Response, Unset
 def _get_kwargs(
     id: str,
     *,
-    category: Unset | str = UNSET,
-    sort: Unset | GetCommunitiesIdTopicsSort = UNSET,
-    page: Unset | str = UNSET,
-    page_size: Unset | str = UNSET,
+    category: str | Unset = UNSET,
+    sort: GetCommunitiesIdTopicsSort | Unset = UNSET,
+    page: str | Unset = UNSET,
+    page_size: str | Unset = UNSET,
 ) -> dict[str, Any]:
     params: dict[str, Any] = {}
 
     params["category"] = category
 
-    json_sort: Unset | str = UNSET
+    json_sort: str | Unset = UNSET
     if not isinstance(sort, Unset):
         json_sort = sort.value
 
@@ -37,7 +38,9 @@ def _get_kwargs(
 
     _kwargs: dict[str, Any] = {
         "method": "get",
-        "url": f"/communities/{id}/topics",
+        "url": "/communities/{id}/topics".format(
+            id=quote(str(id), safe=""),
+        ),
         "params": params,
     }
 
@@ -83,27 +86,27 @@ def sync_detailed(
     id: str,
     *,
     client: AuthenticatedClient,
-    category: Unset | str = UNSET,
-    sort: Unset | GetCommunitiesIdTopicsSort = UNSET,
-    page: Unset | str = UNSET,
-    page_size: Unset | str = UNSET,
+    category: str | Unset = UNSET,
+    sort: GetCommunitiesIdTopicsSort | Unset = UNSET,
+    page: str | Unset = UNSET,
+    page_size: str | Unset = UNSET,
 ) -> Response[Error | GetCommunitiesIdTopicsResponse200]:
     """List a community’s live topics (filter by category, sort, paged; private instance: members only →
     404)
 
     Args:
         id (str):
-        category (Union[Unset, str]):
-        sort (Union[Unset, GetCommunitiesIdTopicsSort]):
-        page (Union[Unset, str]):
-        page_size (Union[Unset, str]):
+        category (str | Unset):
+        sort (GetCommunitiesIdTopicsSort | Unset):
+        page (str | Unset):
+        page_size (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, GetCommunitiesIdTopicsResponse200]]
+        Response[Error | GetCommunitiesIdTopicsResponse200]
     """
 
     kwargs = _get_kwargs(
@@ -125,27 +128,27 @@ def sync(
     id: str,
     *,
     client: AuthenticatedClient,
-    category: Unset | str = UNSET,
-    sort: Unset | GetCommunitiesIdTopicsSort = UNSET,
-    page: Unset | str = UNSET,
-    page_size: Unset | str = UNSET,
+    category: str | Unset = UNSET,
+    sort: GetCommunitiesIdTopicsSort | Unset = UNSET,
+    page: str | Unset = UNSET,
+    page_size: str | Unset = UNSET,
 ) -> Error | GetCommunitiesIdTopicsResponse200 | None:
     """List a community’s live topics (filter by category, sort, paged; private instance: members only →
     404)
 
     Args:
         id (str):
-        category (Union[Unset, str]):
-        sort (Union[Unset, GetCommunitiesIdTopicsSort]):
-        page (Union[Unset, str]):
-        page_size (Union[Unset, str]):
+        category (str | Unset):
+        sort (GetCommunitiesIdTopicsSort | Unset):
+        page (str | Unset):
+        page_size (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, GetCommunitiesIdTopicsResponse200]
+        Error | GetCommunitiesIdTopicsResponse200
     """
 
     return sync_detailed(
@@ -162,27 +165,27 @@ async def asyncio_detailed(
     id: str,
     *,
     client: AuthenticatedClient,
-    category: Unset | str = UNSET,
-    sort: Unset | GetCommunitiesIdTopicsSort = UNSET,
-    page: Unset | str = UNSET,
-    page_size: Unset | str = UNSET,
+    category: str | Unset = UNSET,
+    sort: GetCommunitiesIdTopicsSort | Unset = UNSET,
+    page: str | Unset = UNSET,
+    page_size: str | Unset = UNSET,
 ) -> Response[Error | GetCommunitiesIdTopicsResponse200]:
     """List a community’s live topics (filter by category, sort, paged; private instance: members only →
     404)
 
     Args:
         id (str):
-        category (Union[Unset, str]):
-        sort (Union[Unset, GetCommunitiesIdTopicsSort]):
-        page (Union[Unset, str]):
-        page_size (Union[Unset, str]):
+        category (str | Unset):
+        sort (GetCommunitiesIdTopicsSort | Unset):
+        page (str | Unset):
+        page_size (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, GetCommunitiesIdTopicsResponse200]]
+        Response[Error | GetCommunitiesIdTopicsResponse200]
     """
 
     kwargs = _get_kwargs(
@@ -202,27 +205,27 @@ async def asyncio(
     id: str,
     *,
     client: AuthenticatedClient,
-    category: Unset | str = UNSET,
-    sort: Unset | GetCommunitiesIdTopicsSort = UNSET,
-    page: Unset | str = UNSET,
-    page_size: Unset | str = UNSET,
+    category: str | Unset = UNSET,
+    sort: GetCommunitiesIdTopicsSort | Unset = UNSET,
+    page: str | Unset = UNSET,
+    page_size: str | Unset = UNSET,
 ) -> Error | GetCommunitiesIdTopicsResponse200 | None:
     """List a community’s live topics (filter by category, sort, paged; private instance: members only →
     404)
 
     Args:
         id (str):
-        category (Union[Unset, str]):
-        sort (Union[Unset, GetCommunitiesIdTopicsSort]):
-        page (Union[Unset, str]):
-        page_size (Union[Unset, str]):
+        category (str | Unset):
+        sort (GetCommunitiesIdTopicsSort | Unset):
+        page (str | Unset):
+        page_size (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, GetCommunitiesIdTopicsResponse200]
+        Error | GetCommunitiesIdTopicsResponse200
     """
 
     return (

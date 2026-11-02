@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class MessagingSendResultStatus(str, Enum):
+class MessagingSendResultStatus(StrEnum):
     FAILED = "failed"
     SENT = "sent"
 

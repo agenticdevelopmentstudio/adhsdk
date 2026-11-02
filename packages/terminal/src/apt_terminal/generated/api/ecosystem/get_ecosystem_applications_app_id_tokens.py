@@ -1,5 +1,6 @@
 from http import HTTPStatus
 from typing import Any
+from urllib.parse import quote
 
 import httpx
 
@@ -15,7 +16,9 @@ def _get_kwargs(
 ) -> dict[str, Any]:
     _kwargs: dict[str, Any] = {
         "method": "get",
-        "url": f"/ecosystem/applications/{app_id}/tokens",
+        "url": "/ecosystem/applications/{app_id}/tokens".format(
+            app_id=quote(str(app_id), safe=""),
+        ),
     }
 
     return _kwargs
@@ -23,7 +26,7 @@ def _get_kwargs(
 
 def _parse_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> Error | list["ApiToken"] | None:
+) -> Error | list[ApiToken] | None:
     if response.status_code == 200:
         response_200 = []
         _response_200 = response.json()
@@ -52,7 +55,7 @@ def _parse_response(
 
 def _build_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> Response[Error | list["ApiToken"]]:
+) -> Response[Error | list[ApiToken]]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -65,7 +68,7 @@ def sync_detailed(
     app_id: str,
     *,
     client: AuthenticatedClient,
-) -> Response[Error | list["ApiToken"]]:
+) -> Response[Error | list[ApiToken]]:
     """List an application’s API tokens (metadata only; raw values never returned)
 
     Args:
@@ -76,7 +79,7 @@ def sync_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, list['ApiToken']]]
+        Response[Error | list[ApiToken]]
     """
 
     kwargs = _get_kwargs(
@@ -94,7 +97,7 @@ def sync(
     app_id: str,
     *,
     client: AuthenticatedClient,
-) -> Error | list["ApiToken"] | None:
+) -> Error | list[ApiToken] | None:
     """List an application’s API tokens (metadata only; raw values never returned)
 
     Args:
@@ -105,7 +108,7 @@ def sync(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, list['ApiToken']]
+        Error | list[ApiToken]
     """
 
     return sync_detailed(
@@ -118,7 +121,7 @@ async def asyncio_detailed(
     app_id: str,
     *,
     client: AuthenticatedClient,
-) -> Response[Error | list["ApiToken"]]:
+) -> Response[Error | list[ApiToken]]:
     """List an application’s API tokens (metadata only; raw values never returned)
 
     Args:
@@ -129,7 +132,7 @@ async def asyncio_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, list['ApiToken']]]
+        Response[Error | list[ApiToken]]
     """
 
     kwargs = _get_kwargs(
@@ -145,7 +148,7 @@ async def asyncio(
     app_id: str,
     *,
     client: AuthenticatedClient,
-) -> Error | list["ApiToken"] | None:
+) -> Error | list[ApiToken] | None:
     """List an application’s API tokens (metadata only; raw values never returned)
 
     Args:
@@ -156,7 +159,7 @@ async def asyncio(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, list['ApiToken']]
+        Error | list[ApiToken]
     """
 
     return (

@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class PutIntegrationsAdminConfigsProviderIdBodyCredentialStyle(str, Enum):
+class PutIntegrationsAdminConfigsProviderIdBodyCredentialStyle(StrEnum):
     BASIC_AUTH = "basic_auth"
     FORM_BODY = "form_body"
 

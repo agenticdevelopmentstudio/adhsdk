@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -13,7 +15,7 @@ class PostBillingSubscriptionTiersResponse201:
         id (str):
         key (str):
         name (str):
-        description (Union[None, str]):
+        description (None | str):
         display_order (int):
         is_active (bool):
         created_at (str):

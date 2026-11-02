@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -12,22 +14,22 @@ class GetCustomerCustomersResponse200Item:
     Attributes:
         id (str):
         ecosystem_id (str):
-        external_id (Union[None, str]):
-        email (Union[None, str]):
-        display_name (Union[None, str]):
+        external_id (None | str):
+        email (None | str):
+        display_name (None | str):
         slug (str):
         avatar_url (str):
         public_profile_enabled (bool):
         profile_visibility (str):
         token_version (int):
-        preferred_mfa_method (Union[None, str]):
+        preferred_mfa_method (None | str):
         mfa_failed_attempts (int):
-        mfa_locked_until (Union[None, str]):
-        deleted_at (Union[None, str]):
+        mfa_locked_until (None | str):
+        deleted_at (None | str):
         created_at (str):
         updated_at (str):
         sync_version (int):
-        sync_stamped_at (Union[None, str]):
+        sync_stamped_at (None | str):
         sync_txid (int):
     """
 

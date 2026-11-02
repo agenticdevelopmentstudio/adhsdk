@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar
 
@@ -12,16 +14,16 @@ T = TypeVar("T", bound="PutBillingTierEntitlementsIdBody")
 class PutBillingTierEntitlementsIdBody:
     """
     Attributes:
-        tier_id (Union[Unset, str]):
-        entitlement_key (Union[Unset, str]):
-        value_type (Union[Unset, str]):
-        value (Union[Unset, str]):
+        tier_id (str | Unset):
+        entitlement_key (str | Unset):
+        value_type (str | Unset):
+        value (str | Unset):
     """
 
-    tier_id: Unset | str = UNSET
-    entitlement_key: Unset | str = UNSET
-    value_type: Unset | str = UNSET
-    value: Unset | str = UNSET
+    tier_id: str | Unset = UNSET
+    entitlement_key: str | Unset = UNSET
+    value_type: str | Unset = UNSET
+    value: str | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
         tier_id = self.tier_id

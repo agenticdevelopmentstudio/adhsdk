@@ -8,12 +8,12 @@ from ...client import AuthenticatedClient, Client
 from ...models.ai_processing_webhook_endpoint_created import AiProcessingWebhookEndpointCreated
 from ...models.error import Error
 from ...models.post_processing_webhooks_body import PostProcessingWebhooksBody
-from ...types import Response
+from ...types import UNSET, Response, Unset
 
 
 def _get_kwargs(
     *,
-    body: PostProcessingWebhooksBody,
+    body: PostProcessingWebhooksBody | Unset = UNSET,
 ) -> dict[str, Any]:
     headers: dict[str, Any] = {}
 
@@ -22,7 +22,8 @@ def _get_kwargs(
         "url": "/processing/webhooks",
     }
 
-    _kwargs["json"] = body.to_dict()
+    if not isinstance(body, Unset):
+        _kwargs["json"] = body.to_dict()
 
     headers["Content-Type"] = "application/json"
 
@@ -68,7 +69,7 @@ def _build_response(
 def sync_detailed(
     *,
     client: AuthenticatedClient,
-    body: PostProcessingWebhooksBody,
+    body: PostProcessingWebhooksBody | Unset = UNSET,
 ) -> Response[AiProcessingWebhookEndpointCreated | Error]:
     """Register a webhook endpoint
 
@@ -77,14 +78,14 @@ def sync_detailed(
     publicly routable address (SSRF guard).
 
     Args:
-        body (PostProcessingWebhooksBody):
+        body (PostProcessingWebhooksBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[AiProcessingWebhookEndpointCreated, Error]]
+        Response[AiProcessingWebhookEndpointCreated | Error]
     """
 
     kwargs = _get_kwargs(
@@ -101,7 +102,7 @@ def sync_detailed(
 def sync(
     *,
     client: AuthenticatedClient,
-    body: PostProcessingWebhooksBody,
+    body: PostProcessingWebhooksBody | Unset = UNSET,
 ) -> AiProcessingWebhookEndpointCreated | Error | None:
     """Register a webhook endpoint
 
@@ -110,14 +111,14 @@ def sync(
     publicly routable address (SSRF guard).
 
     Args:
-        body (PostProcessingWebhooksBody):
+        body (PostProcessingWebhooksBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[AiProcessingWebhookEndpointCreated, Error]
+        AiProcessingWebhookEndpointCreated | Error
     """
 
     return sync_detailed(
@@ -129,7 +130,7 @@ def sync(
 async def asyncio_detailed(
     *,
     client: AuthenticatedClient,
-    body: PostProcessingWebhooksBody,
+    body: PostProcessingWebhooksBody | Unset = UNSET,
 ) -> Response[AiProcessingWebhookEndpointCreated | Error]:
     """Register a webhook endpoint
 
@@ -138,14 +139,14 @@ async def asyncio_detailed(
     publicly routable address (SSRF guard).
 
     Args:
-        body (PostProcessingWebhooksBody):
+        body (PostProcessingWebhooksBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[AiProcessingWebhookEndpointCreated, Error]]
+        Response[AiProcessingWebhookEndpointCreated | Error]
     """
 
     kwargs = _get_kwargs(
@@ -160,7 +161,7 @@ async def asyncio_detailed(
 async def asyncio(
     *,
     client: AuthenticatedClient,
-    body: PostProcessingWebhooksBody,
+    body: PostProcessingWebhooksBody | Unset = UNSET,
 ) -> AiProcessingWebhookEndpointCreated | Error | None:
     """Register a webhook endpoint
 
@@ -169,14 +170,14 @@ async def asyncio(
     publicly routable address (SSRF guard).
 
     Args:
-        body (PostProcessingWebhooksBody):
+        body (PostProcessingWebhooksBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[AiProcessingWebhookEndpointCreated, Error]
+        AiProcessingWebhookEndpointCreated | Error
     """
 
     return (

@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class PatchRegistryRegistriesRegistryIdEntriesEntryIdBodyProviderType(str, Enum):
+class PatchRegistryRegistriesRegistryIdEntriesEntryIdBodyProviderType(StrEnum):
     ORGANIZATION = "organization"
     PERSON = "person"
     PERSONA = "persona"

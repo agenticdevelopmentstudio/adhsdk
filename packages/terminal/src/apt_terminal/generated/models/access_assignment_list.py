@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import TYPE_CHECKING, Any, TypeVar
 
@@ -17,12 +19,12 @@ T = TypeVar("T", bound="AccessAssignmentList")
 class AccessAssignmentList:
     """
     Attributes:
-        assignments (list['AccessAssignment']):
-        restricted (Union[Unset, bool]): present on item-scoped listings: whether the item is RESTRICTED
+        assignments (list[AccessAssignment]):
+        restricted (bool | Unset): present on item-scoped listings: whether the item is RESTRICTED
     """
 
-    assignments: list["AccessAssignment"]
-    restricted: Unset | bool = UNSET
+    assignments: list[AccessAssignment]
+    restricted: bool | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar
 
@@ -14,11 +16,11 @@ class PostDiscussionTopicsIdPostsBody:
     """
     Attributes:
         body (str): Reply markdown; stored as a content.markdown body document.
-        parent_post_id (Union[Unset, str]): Id of the post this reply nests under (a flat reply when omitted).
+        parent_post_id (str | Unset): Id of the post this reply nests under (a flat reply when omitted).
     """
 
     body: str
-    parent_post_id: Unset | str = UNSET
+    parent_post_id: str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:

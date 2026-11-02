@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, TypeVar, Union, cast
+from typing import TYPE_CHECKING, Any, TypeVar, cast
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -22,22 +24,22 @@ class GameArtifact:
         id (str):
         game_id (str):
         kind (str):
-        role (Union[None, str]):
+        role (None | str):
         origin (str):
         visibility (GameArtifactVisibility):
         status (str):
         created_at (str):
         updated_at (str):
-        slot (Union[None, Unset, str]):
-        data (Union['GameArtifactDataType0', None, Unset]):
-        text (Union[None, Unset, str]):
-        content_format (Union[None, Unset, str]):
-        engine_version (Union[None, Unset, str]):
-        summary (Union['GameArtifactSummaryType0', None, Unset]):
-        exposure_count (Union[Unset, int]):
-        score (Union[Unset, int]):
-        published_at (Union[None, Unset, str]):
-        last_active_at (Union[None, Unset, str]):
+        slot (None | str | Unset):
+        data (GameArtifactDataType0 | None | Unset):
+        text (None | str | Unset):
+        content_format (None | str | Unset):
+        engine_version (None | str | Unset):
+        summary (GameArtifactSummaryType0 | None | Unset):
+        exposure_count (int | Unset):
+        score (int | Unset):
+        published_at (None | str | Unset):
+        last_active_at (None | str | Unset):
     """
 
     id: str
@@ -49,16 +51,16 @@ class GameArtifact:
     status: str
     created_at: str
     updated_at: str
-    slot: None | Unset | str = UNSET
-    data: Union["GameArtifactDataType0", None, Unset] = UNSET
-    text: None | Unset | str = UNSET
-    content_format: None | Unset | str = UNSET
-    engine_version: None | Unset | str = UNSET
-    summary: Union["GameArtifactSummaryType0", None, Unset] = UNSET
-    exposure_count: Unset | int = UNSET
-    score: Unset | int = UNSET
-    published_at: None | Unset | str = UNSET
-    last_active_at: None | Unset | str = UNSET
+    slot: None | str | Unset = UNSET
+    data: GameArtifactDataType0 | None | Unset = UNSET
+    text: None | str | Unset = UNSET
+    content_format: None | str | Unset = UNSET
+    engine_version: None | str | Unset = UNSET
+    summary: GameArtifactSummaryType0 | None | Unset = UNSET
+    exposure_count: int | Unset = UNSET
+    score: int | Unset = UNSET
+    published_at: None | str | Unset = UNSET
+    last_active_at: None | str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -84,13 +86,13 @@ class GameArtifact:
 
         updated_at = self.updated_at
 
-        slot: None | Unset | str
+        slot: None | str | Unset
         if isinstance(self.slot, Unset):
             slot = UNSET
         else:
             slot = self.slot
 
-        data: None | Unset | dict[str, Any]
+        data: dict[str, Any] | None | Unset
         if isinstance(self.data, Unset):
             data = UNSET
         elif isinstance(self.data, GameArtifactDataType0):
@@ -98,25 +100,25 @@ class GameArtifact:
         else:
             data = self.data
 
-        text: None | Unset | str
+        text: None | str | Unset
         if isinstance(self.text, Unset):
             text = UNSET
         else:
             text = self.text
 
-        content_format: None | Unset | str
+        content_format: None | str | Unset
         if isinstance(self.content_format, Unset):
             content_format = UNSET
         else:
             content_format = self.content_format
 
-        engine_version: None | Unset | str
+        engine_version: None | str | Unset
         if isinstance(self.engine_version, Unset):
             engine_version = UNSET
         else:
             engine_version = self.engine_version
 
-        summary: None | Unset | dict[str, Any]
+        summary: dict[str, Any] | None | Unset
         if isinstance(self.summary, Unset):
             summary = UNSET
         elif isinstance(self.summary, GameArtifactSummaryType0):
@@ -128,13 +130,13 @@ class GameArtifact:
 
         score = self.score
 
-        published_at: None | Unset | str
+        published_at: None | str | Unset
         if isinstance(self.published_at, Unset):
             published_at = UNSET
         else:
             published_at = self.published_at
 
-        last_active_at: None | Unset | str
+        last_active_at: None | str | Unset
         if isinstance(self.last_active_at, Unset):
             last_active_at = UNSET
         else:
@@ -207,16 +209,16 @@ class GameArtifact:
 
         updated_at = d.pop("updatedAt")
 
-        def _parse_slot(data: object) -> None | Unset | str:
+        def _parse_slot(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         slot = _parse_slot(d.pop("slot", UNSET))
 
-        def _parse_data(data: object) -> Union["GameArtifactDataType0", None, Unset]:
+        def _parse_data(data: object) -> GameArtifactDataType0 | None | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
@@ -227,40 +229,40 @@ class GameArtifact:
                 data_type_0 = GameArtifactDataType0.from_dict(data)
 
                 return data_type_0
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
-            return cast(Union["GameArtifactDataType0", None, Unset], data)
+            return cast(GameArtifactDataType0 | None | Unset, data)
 
         data = _parse_data(d.pop("data", UNSET))
 
-        def _parse_text(data: object) -> None | Unset | str:
+        def _parse_text(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         text = _parse_text(d.pop("text", UNSET))
 
-        def _parse_content_format(data: object) -> None | Unset | str:
+        def _parse_content_format(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         content_format = _parse_content_format(d.pop("contentFormat", UNSET))
 
-        def _parse_engine_version(data: object) -> None | Unset | str:
+        def _parse_engine_version(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         engine_version = _parse_engine_version(d.pop("engineVersion", UNSET))
 
-        def _parse_summary(data: object) -> Union["GameArtifactSummaryType0", None, Unset]:
+        def _parse_summary(data: object) -> GameArtifactSummaryType0 | None | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
@@ -271,9 +273,9 @@ class GameArtifact:
                 summary_type_0 = GameArtifactSummaryType0.from_dict(data)
 
                 return summary_type_0
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
-            return cast(Union["GameArtifactSummaryType0", None, Unset], data)
+            return cast(GameArtifactSummaryType0 | None | Unset, data)
 
         summary = _parse_summary(d.pop("summary", UNSET))
 
@@ -281,21 +283,21 @@ class GameArtifact:
 
         score = d.pop("score", UNSET)
 
-        def _parse_published_at(data: object) -> None | Unset | str:
+        def _parse_published_at(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         published_at = _parse_published_at(d.pop("publishedAt", UNSET))
 
-        def _parse_last_active_at(data: object) -> None | Unset | str:
+        def _parse_last_active_at(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         last_active_at = _parse_last_active_at(d.pop("lastActiveAt", UNSET))
 

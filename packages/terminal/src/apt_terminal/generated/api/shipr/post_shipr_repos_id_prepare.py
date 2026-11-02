@@ -1,5 +1,6 @@
 from http import HTTPStatus
 from typing import Any
+from urllib.parse import quote
 
 import httpx
 
@@ -8,22 +9,25 @@ from ...client import AuthenticatedClient, Client
 from ...models.error import Error
 from ...models.post_shipr_repos_id_prepare_body import PostShiprReposIdPrepareBody
 from ...models.post_shipr_repos_id_prepare_response_202 import PostShiprReposIdPrepareResponse202
-from ...types import Response
+from ...types import UNSET, Response, Unset
 
 
 def _get_kwargs(
     id: str,
     *,
-    body: PostShiprReposIdPrepareBody,
+    body: PostShiprReposIdPrepareBody | Unset = UNSET,
 ) -> dict[str, Any]:
     headers: dict[str, Any] = {}
 
     _kwargs: dict[str, Any] = {
         "method": "post",
-        "url": f"/shipr/repos/{id}/prepare",
+        "url": "/shipr/repos/{id}/prepare".format(
+            id=quote(str(id), safe=""),
+        ),
     }
 
-    _kwargs["json"] = body.to_dict()
+    if not isinstance(body, Unset):
+        _kwargs["json"] = body.to_dict()
 
     headers["Content-Type"] = "application/json"
 
@@ -80,7 +84,7 @@ def sync_detailed(
     id: str,
     *,
     client: AuthenticatedClient,
-    body: PostShiprReposIdPrepareBody,
+    body: PostShiprReposIdPrepareBody | Unset = UNSET,
 ) -> Response[Error | PostShiprReposIdPrepareResponse202]:
     """Queue a prepare for this repository
 
@@ -89,14 +93,14 @@ def sync_detailed(
 
     Args:
         id (str):
-        body (PostShiprReposIdPrepareBody):
+        body (PostShiprReposIdPrepareBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, PostShiprReposIdPrepareResponse202]]
+        Response[Error | PostShiprReposIdPrepareResponse202]
     """
 
     kwargs = _get_kwargs(
@@ -115,7 +119,7 @@ def sync(
     id: str,
     *,
     client: AuthenticatedClient,
-    body: PostShiprReposIdPrepareBody,
+    body: PostShiprReposIdPrepareBody | Unset = UNSET,
 ) -> Error | PostShiprReposIdPrepareResponse202 | None:
     """Queue a prepare for this repository
 
@@ -124,14 +128,14 @@ def sync(
 
     Args:
         id (str):
-        body (PostShiprReposIdPrepareBody):
+        body (PostShiprReposIdPrepareBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, PostShiprReposIdPrepareResponse202]
+        Error | PostShiprReposIdPrepareResponse202
     """
 
     return sync_detailed(
@@ -145,7 +149,7 @@ async def asyncio_detailed(
     id: str,
     *,
     client: AuthenticatedClient,
-    body: PostShiprReposIdPrepareBody,
+    body: PostShiprReposIdPrepareBody | Unset = UNSET,
 ) -> Response[Error | PostShiprReposIdPrepareResponse202]:
     """Queue a prepare for this repository
 
@@ -154,14 +158,14 @@ async def asyncio_detailed(
 
     Args:
         id (str):
-        body (PostShiprReposIdPrepareBody):
+        body (PostShiprReposIdPrepareBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, PostShiprReposIdPrepareResponse202]]
+        Response[Error | PostShiprReposIdPrepareResponse202]
     """
 
     kwargs = _get_kwargs(
@@ -178,7 +182,7 @@ async def asyncio(
     id: str,
     *,
     client: AuthenticatedClient,
-    body: PostShiprReposIdPrepareBody,
+    body: PostShiprReposIdPrepareBody | Unset = UNSET,
 ) -> Error | PostShiprReposIdPrepareResponse202 | None:
     """Queue a prepare for this repository
 
@@ -187,14 +191,14 @@ async def asyncio(
 
     Args:
         id (str):
-        body (PostShiprReposIdPrepareBody):
+        body (PostShiprReposIdPrepareBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, PostShiprReposIdPrepareResponse202]
+        Error | PostShiprReposIdPrepareResponse202
     """
 
     return (

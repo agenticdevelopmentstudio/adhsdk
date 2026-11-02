@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class UsageEnforcementUnknownPricePolicy(str, Enum):
+class UsageEnforcementUnknownPricePolicy(StrEnum):
     CEILING = "ceiling"
     FREE = "free"
     REFUSE = "refuse"

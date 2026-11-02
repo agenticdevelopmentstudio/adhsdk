@@ -12,7 +12,7 @@ from ...types import UNSET, Response, Unset
 
 def _get_kwargs(
     *,
-    workspace: Unset | str = UNSET,
+    workspace: str | Unset = UNSET,
 ) -> dict[str, Any]:
     params: dict[str, Any] = {}
 
@@ -31,7 +31,7 @@ def _get_kwargs(
 
 def _parse_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> Error | list["ProjectProgram"] | None:
+) -> Error | list[ProjectProgram] | None:
     if response.status_code == 200:
         response_200 = []
         _response_200 = response.json()
@@ -60,7 +60,7 @@ def _parse_response(
 
 def _build_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> Response[Error | list["ProjectProgram"]]:
+) -> Response[Error | list[ProjectProgram]]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -72,22 +72,22 @@ def _build_response(
 def sync_detailed(
     *,
     client: AuthenticatedClient,
-    workspace: Unset | str = UNSET,
-) -> Response[Error | list["ProjectProgram"]]:
-    r"""List the programs in the caller's reach (non-deleted, by name)
+    workspace: str | Unset = UNSET,
+) -> Response[Error | list[ProjectProgram]]:
+    """List the programs in the caller's reach (non-deleted, by name)
 
-     Ordered by name, case-folded — a program list is a picker, and a byte-wise sort would put \"Zebra\"
-    before \"apple\". NOT by date: most programs have none.
+     Ordered by name, case-folded — a program list is a picker, and a byte-wise sort would put "Zebra"
+    before "apple". NOT by date: most programs have none.
 
     Args:
-        workspace (Union[Unset, str]):
+        workspace (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, list['ProjectProgram']]]
+        Response[Error | list[ProjectProgram]]
     """
 
     kwargs = _get_kwargs(
@@ -104,22 +104,22 @@ def sync_detailed(
 def sync(
     *,
     client: AuthenticatedClient,
-    workspace: Unset | str = UNSET,
-) -> Error | list["ProjectProgram"] | None:
-    r"""List the programs in the caller's reach (non-deleted, by name)
+    workspace: str | Unset = UNSET,
+) -> Error | list[ProjectProgram] | None:
+    """List the programs in the caller's reach (non-deleted, by name)
 
-     Ordered by name, case-folded — a program list is a picker, and a byte-wise sort would put \"Zebra\"
-    before \"apple\". NOT by date: most programs have none.
+     Ordered by name, case-folded — a program list is a picker, and a byte-wise sort would put "Zebra"
+    before "apple". NOT by date: most programs have none.
 
     Args:
-        workspace (Union[Unset, str]):
+        workspace (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, list['ProjectProgram']]
+        Error | list[ProjectProgram]
     """
 
     return sync_detailed(
@@ -131,22 +131,22 @@ def sync(
 async def asyncio_detailed(
     *,
     client: AuthenticatedClient,
-    workspace: Unset | str = UNSET,
-) -> Response[Error | list["ProjectProgram"]]:
-    r"""List the programs in the caller's reach (non-deleted, by name)
+    workspace: str | Unset = UNSET,
+) -> Response[Error | list[ProjectProgram]]:
+    """List the programs in the caller's reach (non-deleted, by name)
 
-     Ordered by name, case-folded — a program list is a picker, and a byte-wise sort would put \"Zebra\"
-    before \"apple\". NOT by date: most programs have none.
+     Ordered by name, case-folded — a program list is a picker, and a byte-wise sort would put "Zebra"
+    before "apple". NOT by date: most programs have none.
 
     Args:
-        workspace (Union[Unset, str]):
+        workspace (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, list['ProjectProgram']]]
+        Response[Error | list[ProjectProgram]]
     """
 
     kwargs = _get_kwargs(
@@ -161,22 +161,22 @@ async def asyncio_detailed(
 async def asyncio(
     *,
     client: AuthenticatedClient,
-    workspace: Unset | str = UNSET,
-) -> Error | list["ProjectProgram"] | None:
-    r"""List the programs in the caller's reach (non-deleted, by name)
+    workspace: str | Unset = UNSET,
+) -> Error | list[ProjectProgram] | None:
+    """List the programs in the caller's reach (non-deleted, by name)
 
-     Ordered by name, case-folded — a program list is a picker, and a byte-wise sort would put \"Zebra\"
-    before \"apple\". NOT by date: most programs have none.
+     Ordered by name, case-folded — a program list is a picker, and a byte-wise sort would put "Zebra"
+    before "apple". NOT by date: most programs have none.
 
     Args:
-        workspace (Union[Unset, str]):
+        workspace (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, list['ProjectProgram']]
+        Error | list[ProjectProgram]
     """
 
     return (

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar
 
@@ -19,20 +21,20 @@ T = TypeVar("T", bound="PostOwnershipTransferResponse200RevokedSubjectsItem")
 class PostOwnershipTransferResponse200RevokedSubjectsItem:
     """
     Attributes:
-        kind (Union[Unset, PostOwnershipTransferResponse200RevokedSubjectsItemKind]):
-        id (Union[Unset, str]):
-        name (Union[Unset, str]):
-        via (Union[Unset, PostOwnershipTransferResponse200RevokedSubjectsItemVia]): where the access came from
+        kind (PostOwnershipTransferResponse200RevokedSubjectsItemKind | Unset):
+        id (str | Unset):
+        name (str | Unset):
+        via (PostOwnershipTransferResponse200RevokedSubjectsItemVia | Unset): where the access came from
     """
 
-    kind: Unset | PostOwnershipTransferResponse200RevokedSubjectsItemKind = UNSET
-    id: Unset | str = UNSET
-    name: Unset | str = UNSET
-    via: Unset | PostOwnershipTransferResponse200RevokedSubjectsItemVia = UNSET
+    kind: PostOwnershipTransferResponse200RevokedSubjectsItemKind | Unset = UNSET
+    id: str | Unset = UNSET
+    name: str | Unset = UNSET
+    via: PostOwnershipTransferResponse200RevokedSubjectsItemVia | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
-        kind: Unset | str = UNSET
+        kind: str | Unset = UNSET
         if not isinstance(self.kind, Unset):
             kind = self.kind.value
 
@@ -40,7 +42,7 @@ class PostOwnershipTransferResponse200RevokedSubjectsItem:
 
         name = self.name
 
-        via: Unset | str = UNSET
+        via: str | Unset = UNSET
         if not isinstance(self.via, Unset):
             via = self.via.value
 
@@ -62,7 +64,7 @@ class PostOwnershipTransferResponse200RevokedSubjectsItem:
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
         d = dict(src_dict)
         _kind = d.pop("kind", UNSET)
-        kind: Unset | PostOwnershipTransferResponse200RevokedSubjectsItemKind
+        kind: PostOwnershipTransferResponse200RevokedSubjectsItemKind | Unset
         if isinstance(_kind, Unset):
             kind = UNSET
         else:
@@ -73,7 +75,7 @@ class PostOwnershipTransferResponse200RevokedSubjectsItem:
         name = d.pop("name", UNSET)
 
         _via = d.pop("via", UNSET)
-        via: Unset | PostOwnershipTransferResponse200RevokedSubjectsItemVia
+        via: PostOwnershipTransferResponse200RevokedSubjectsItemVia | Unset
         if isinstance(_via, Unset):
             via = UNSET
         else:

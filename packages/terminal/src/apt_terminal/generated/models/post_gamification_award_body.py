@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar
 
@@ -17,16 +19,16 @@ class PostGamificationAwardBody:
         subject_id (str):
         amount (int):
         reason (str):
-        source_type (Union[Unset, str]):
-        source_id (Union[Unset, str]):
+        source_type (str | Unset):
+        source_id (str | Unset):
     """
 
     subject_type: str
     subject_id: str
     amount: int
     reason: str
-    source_type: Unset | str = UNSET
-    source_id: Unset | str = UNSET
+    source_type: str | Unset = UNSET
+    source_id: str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:

@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, TypeVar, Union, cast
+from typing import TYPE_CHECKING, Any, TypeVar, cast
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -43,7 +45,7 @@ class RegistryEntry:
         region_code (str):
         area_served (RegistryEntryAreaServed):
         delivery_mode (RegistryEntryDeliveryMode):
-        links (list['RegistryEntryLinksItem']):
+        links (list[RegistryEntryLinksItem]):
         contact_mode (RegistryEntryContactMode): never a raw email or phone — see the schema column comment
         languages (list[str]):
         status (RegistryEntryStatus):
@@ -57,10 +59,10 @@ class RegistryEntry:
         created_at (str):
         updated_at (str):
         sync_version (int):
-        photo_attachment_id (Union[None, Unset, str]):
-        geo (Union['RegistryEntryGeoType0', None, Unset]):
-        published_at (Union[None, Unset, str]):
-        deleted_at (Union[None, Unset, str]):
+        photo_attachment_id (None | str | Unset):
+        geo (None | RegistryEntryGeoType0 | Unset):
+        published_at (None | str | Unset):
+        deleted_at (None | str | Unset):
     """
 
     id: str
@@ -77,24 +79,24 @@ class RegistryEntry:
     location_text: str
     country_code: str
     region_code: str
-    area_served: "RegistryEntryAreaServed"
+    area_served: RegistryEntryAreaServed
     delivery_mode: RegistryEntryDeliveryMode
-    links: list["RegistryEntryLinksItem"]
+    links: list[RegistryEntryLinksItem]
     contact_mode: RegistryEntryContactMode
     languages: list[str]
     status: RegistryEntryStatus
     visibility: RegistryEntryVisibility
-    values: "RegistryEntryValues"
-    value_visibility: "RegistryEntryValueVisibility"
+    values: RegistryEntryValues
+    value_visibility: RegistryEntryValueVisibility
     schema_version: int
     search_text: str
     created_at: str
     updated_at: str
     sync_version: int
-    photo_attachment_id: None | Unset | str = UNSET
-    geo: Union["RegistryEntryGeoType0", None, Unset] = UNSET
-    published_at: None | Unset | str = UNSET
-    deleted_at: None | Unset | str = UNSET
+    photo_attachment_id: None | str | Unset = UNSET
+    geo: None | RegistryEntryGeoType0 | Unset = UNSET
+    published_at: None | str | Unset = UNSET
+    deleted_at: None | str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -159,13 +161,13 @@ class RegistryEntry:
 
         sync_version = self.sync_version
 
-        photo_attachment_id: None | Unset | str
+        photo_attachment_id: None | str | Unset
         if isinstance(self.photo_attachment_id, Unset):
             photo_attachment_id = UNSET
         else:
             photo_attachment_id = self.photo_attachment_id
 
-        geo: None | Unset | dict[str, Any]
+        geo: dict[str, Any] | None | Unset
         if isinstance(self.geo, Unset):
             geo = UNSET
         elif isinstance(self.geo, RegistryEntryGeoType0):
@@ -173,13 +175,13 @@ class RegistryEntry:
         else:
             geo = self.geo
 
-        published_at: None | Unset | str
+        published_at: None | str | Unset
         if isinstance(self.published_at, Unset):
             published_at = UNSET
         else:
             published_at = self.published_at
 
-        deleted_at: None | Unset | str
+        deleted_at: None | str | Unset
         if isinstance(self.deleted_at, Unset):
             deleted_at = UNSET
         else:
@@ -235,7 +237,9 @@ class RegistryEntry:
         from ..models.registry_entry_area_served import RegistryEntryAreaServed
         from ..models.registry_entry_geo_type_0 import RegistryEntryGeoType0
         from ..models.registry_entry_links_item import RegistryEntryLinksItem
-        from ..models.registry_entry_value_visibility import RegistryEntryValueVisibility
+        from ..models.registry_entry_value_visibility import (
+            RegistryEntryValueVisibility,
+        )
         from ..models.registry_entry_values import RegistryEntryValues
 
         d = dict(src_dict)
@@ -300,16 +304,16 @@ class RegistryEntry:
 
         sync_version = d.pop("syncVersion")
 
-        def _parse_photo_attachment_id(data: object) -> None | Unset | str:
+        def _parse_photo_attachment_id(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         photo_attachment_id = _parse_photo_attachment_id(d.pop("photoAttachmentId", UNSET))
 
-        def _parse_geo(data: object) -> Union["RegistryEntryGeoType0", None, Unset]:
+        def _parse_geo(data: object) -> None | RegistryEntryGeoType0 | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
@@ -320,27 +324,27 @@ class RegistryEntry:
                 geo_type_0 = RegistryEntryGeoType0.from_dict(data)
 
                 return geo_type_0
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
-            return cast(Union["RegistryEntryGeoType0", None, Unset], data)
+            return cast(None | RegistryEntryGeoType0 | Unset, data)
 
         geo = _parse_geo(d.pop("geo", UNSET))
 
-        def _parse_published_at(data: object) -> None | Unset | str:
+        def _parse_published_at(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         published_at = _parse_published_at(d.pop("publishedAt", UNSET))
 
-        def _parse_deleted_at(data: object) -> None | Unset | str:
+        def _parse_deleted_at(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         deleted_at = _parse_deleted_at(d.pop("deletedAt", UNSET))
 

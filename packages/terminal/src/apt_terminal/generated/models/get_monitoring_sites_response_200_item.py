@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -17,7 +19,7 @@ class GetMonitoringSitesResponse200Item:
         owner_id (str):
         name (str):
         slug (str):
-        description (Union[None, str]):
+        description (None | str):
         display_order (int):
         created_at (str):
         updated_at (str):

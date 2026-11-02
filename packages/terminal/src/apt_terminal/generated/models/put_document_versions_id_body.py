@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar
 
@@ -12,22 +14,22 @@ T = TypeVar("T", bound="PutDocumentVersionsIdBody")
 class PutDocumentVersionsIdBody:
     """
     Attributes:
-        document_id (Union[Unset, str]):
-        ecosystem_id (Union[Unset, str]):
-        name (Union[Unset, str]):
-        description (Union[Unset, str]):
-        pinned_op_id (Union[Unset, str]):
-        pinned_sync_version (Union[Unset, int]):
-        sync_txid (Union[Unset, int]):
+        document_id (str | Unset):
+        ecosystem_id (str | Unset):
+        name (str | Unset):
+        description (str | Unset):
+        pinned_op_id (str | Unset):
+        pinned_sync_version (int | Unset):
+        sync_txid (int | Unset):
     """
 
-    document_id: Unset | str = UNSET
-    ecosystem_id: Unset | str = UNSET
-    name: Unset | str = UNSET
-    description: Unset | str = UNSET
-    pinned_op_id: Unset | str = UNSET
-    pinned_sync_version: Unset | int = UNSET
-    sync_txid: Unset | int = UNSET
+    document_id: str | Unset = UNSET
+    ecosystem_id: str | Unset = UNSET
+    name: str | Unset = UNSET
+    description: str | Unset = UNSET
+    pinned_op_id: str | Unset = UNSET
+    pinned_sync_version: int | Unset = UNSET
+    sync_txid: int | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
         document_id = self.document_id

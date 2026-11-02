@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class GamificationCatalogBadgeSource(str, Enum):
+class GamificationCatalogBadgeSource(StrEnum):
     DEFAULT = "default"
     REALM = "realm"
 

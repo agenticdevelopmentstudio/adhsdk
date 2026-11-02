@@ -13,8 +13,8 @@ from ...types import UNSET, Response, Unset
 
 def _get_kwargs(
     *,
-    body: PostContentMarkdownCategoriesBody,
-    workspace: Unset | str = UNSET,
+    body: PostContentMarkdownCategoriesBody | Unset = UNSET,
+    workspace: str | Unset = UNSET,
 ) -> dict[str, Any]:
     headers: dict[str, Any] = {}
 
@@ -30,7 +30,8 @@ def _get_kwargs(
         "params": params,
     }
 
-    _kwargs["json"] = body.to_dict()
+    if not isinstance(body, Unset):
+        _kwargs["json"] = body.to_dict()
 
     headers["Content-Type"] = "application/json"
 
@@ -91,8 +92,8 @@ def _build_response(
 def sync_detailed(
     *,
     client: AuthenticatedClient,
-    body: PostContentMarkdownCategoriesBody,
-    workspace: Unset | str = UNSET,
+    body: PostContentMarkdownCategoriesBody | Unset = UNSET,
+    workspace: str | Unset = UNSET,
 ) -> Response[Error | MarkdownCategoryNode]:
     """Create a category, optionally nested under one or more others
 
@@ -104,15 +105,15 @@ def sync_detailed(
     `parentIds` that isn't one of this owner's live categories is a 404.
 
     Args:
-        workspace (Union[Unset, str]):
-        body (PostContentMarkdownCategoriesBody):
+        workspace (str | Unset):
+        body (PostContentMarkdownCategoriesBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, MarkdownCategoryNode]]
+        Response[Error | MarkdownCategoryNode]
     """
 
     kwargs = _get_kwargs(
@@ -130,8 +131,8 @@ def sync_detailed(
 def sync(
     *,
     client: AuthenticatedClient,
-    body: PostContentMarkdownCategoriesBody,
-    workspace: Unset | str = UNSET,
+    body: PostContentMarkdownCategoriesBody | Unset = UNSET,
+    workspace: str | Unset = UNSET,
 ) -> Error | MarkdownCategoryNode | None:
     """Create a category, optionally nested under one or more others
 
@@ -143,15 +144,15 @@ def sync(
     `parentIds` that isn't one of this owner's live categories is a 404.
 
     Args:
-        workspace (Union[Unset, str]):
-        body (PostContentMarkdownCategoriesBody):
+        workspace (str | Unset):
+        body (PostContentMarkdownCategoriesBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, MarkdownCategoryNode]
+        Error | MarkdownCategoryNode
     """
 
     return sync_detailed(
@@ -164,8 +165,8 @@ def sync(
 async def asyncio_detailed(
     *,
     client: AuthenticatedClient,
-    body: PostContentMarkdownCategoriesBody,
-    workspace: Unset | str = UNSET,
+    body: PostContentMarkdownCategoriesBody | Unset = UNSET,
+    workspace: str | Unset = UNSET,
 ) -> Response[Error | MarkdownCategoryNode]:
     """Create a category, optionally nested under one or more others
 
@@ -177,15 +178,15 @@ async def asyncio_detailed(
     `parentIds` that isn't one of this owner's live categories is a 404.
 
     Args:
-        workspace (Union[Unset, str]):
-        body (PostContentMarkdownCategoriesBody):
+        workspace (str | Unset):
+        body (PostContentMarkdownCategoriesBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, MarkdownCategoryNode]]
+        Response[Error | MarkdownCategoryNode]
     """
 
     kwargs = _get_kwargs(
@@ -201,8 +202,8 @@ async def asyncio_detailed(
 async def asyncio(
     *,
     client: AuthenticatedClient,
-    body: PostContentMarkdownCategoriesBody,
-    workspace: Unset | str = UNSET,
+    body: PostContentMarkdownCategoriesBody | Unset = UNSET,
+    workspace: str | Unset = UNSET,
 ) -> Error | MarkdownCategoryNode | None:
     """Create a category, optionally nested under one or more others
 
@@ -214,15 +215,15 @@ async def asyncio(
     `parentIds` that isn't one of this owner's live categories is a 404.
 
     Args:
-        workspace (Union[Unset, str]):
-        body (PostContentMarkdownCategoriesBody):
+        workspace (str | Unset):
+        body (PostContentMarkdownCategoriesBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, MarkdownCategoryNode]
+        Error | MarkdownCategoryNode
     """
 
     return (

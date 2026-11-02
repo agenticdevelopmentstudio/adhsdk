@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -26,8 +28,8 @@ class GetAccountMfaResponse200:
         webauthn (bool):
         totp_pending (bool): A TOTP enrollment awaits confirmation
         recovery_remaining (int): Unused recovery codes
-        preferred_method (Union[GetAccountMfaResponse200PreferredMethodType1,
-            GetAccountMfaResponse200PreferredMethodType2Type1, GetAccountMfaResponse200PreferredMethodType3Type1, None]):
+        preferred_method (GetAccountMfaResponse200PreferredMethodType1 |
+            GetAccountMfaResponse200PreferredMethodType2Type1 | GetAccountMfaResponse200PreferredMethodType3Type1 | None):
     """
 
     sms: bool
@@ -108,7 +110,7 @@ class GetAccountMfaResponse200:
                 preferred_method_type_1 = GetAccountMfaResponse200PreferredMethodType1(data)
 
                 return preferred_method_type_1
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
             try:
                 if not isinstance(data, str):
@@ -118,7 +120,7 @@ class GetAccountMfaResponse200:
                 )
 
                 return preferred_method_type_2_type_1
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
             try:
                 if not isinstance(data, str):
@@ -128,7 +130,7 @@ class GetAccountMfaResponse200:
                 )
 
                 return preferred_method_type_3_type_1
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
             return cast(
                 GetAccountMfaResponse200PreferredMethodType1

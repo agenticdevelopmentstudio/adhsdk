@@ -1,5 +1,6 @@
 from http import HTTPStatus
 from typing import Any
+from urllib.parse import quote
 
 import httpx
 
@@ -8,22 +9,25 @@ from ...client import AuthenticatedClient, Client
 from ...models.error import Error
 from ...models.put_project_work_items_id_fields_body import PutProjectWorkItemsIdFieldsBody
 from ...models.work_item_field_value import WorkItemFieldValue
-from ...types import Response
+from ...types import UNSET, Response, Unset
 
 
 def _get_kwargs(
     id: str,
     *,
-    body: PutProjectWorkItemsIdFieldsBody,
+    body: PutProjectWorkItemsIdFieldsBody | Unset = UNSET,
 ) -> dict[str, Any]:
     headers: dict[str, Any] = {}
 
     _kwargs: dict[str, Any] = {
         "method": "put",
-        "url": f"/project/work-items/{id}/fields",
+        "url": "/project/work-items/{id}/fields".format(
+            id=quote(str(id), safe=""),
+        ),
     }
 
-    _kwargs["json"] = body.to_dict()
+    if not isinstance(body, Unset):
+        _kwargs["json"] = body.to_dict()
 
     headers["Content-Type"] = "application/json"
 
@@ -33,7 +37,7 @@ def _get_kwargs(
 
 def _parse_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> Error | list["WorkItemFieldValue"] | None:
+) -> Error | list[WorkItemFieldValue] | None:
     if response.status_code == 200:
         response_200 = []
         _response_200 = response.json()
@@ -67,7 +71,7 @@ def _parse_response(
 
 def _build_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> Response[Error | list["WorkItemFieldValue"]]:
+) -> Response[Error | list[WorkItemFieldValue]]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -80,20 +84,20 @@ def sync_detailed(
     id: str,
     *,
     client: AuthenticatedClient,
-    body: PutProjectWorkItemsIdFieldsBody,
-) -> Response[Error | list["WorkItemFieldValue"]]:
+    body: PutProjectWorkItemsIdFieldsBody | Unset = UNSET,
+) -> Response[Error | list[WorkItemFieldValue]]:
     """Set / clear a batch of field values (+ a work_item.fields_updated activity)
 
     Args:
         id (str):
-        body (PutProjectWorkItemsIdFieldsBody):
+        body (PutProjectWorkItemsIdFieldsBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, list['WorkItemFieldValue']]]
+        Response[Error | list[WorkItemFieldValue]]
     """
 
     kwargs = _get_kwargs(
@@ -112,20 +116,20 @@ def sync(
     id: str,
     *,
     client: AuthenticatedClient,
-    body: PutProjectWorkItemsIdFieldsBody,
-) -> Error | list["WorkItemFieldValue"] | None:
+    body: PutProjectWorkItemsIdFieldsBody | Unset = UNSET,
+) -> Error | list[WorkItemFieldValue] | None:
     """Set / clear a batch of field values (+ a work_item.fields_updated activity)
 
     Args:
         id (str):
-        body (PutProjectWorkItemsIdFieldsBody):
+        body (PutProjectWorkItemsIdFieldsBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, list['WorkItemFieldValue']]
+        Error | list[WorkItemFieldValue]
     """
 
     return sync_detailed(
@@ -139,20 +143,20 @@ async def asyncio_detailed(
     id: str,
     *,
     client: AuthenticatedClient,
-    body: PutProjectWorkItemsIdFieldsBody,
-) -> Response[Error | list["WorkItemFieldValue"]]:
+    body: PutProjectWorkItemsIdFieldsBody | Unset = UNSET,
+) -> Response[Error | list[WorkItemFieldValue]]:
     """Set / clear a batch of field values (+ a work_item.fields_updated activity)
 
     Args:
         id (str):
-        body (PutProjectWorkItemsIdFieldsBody):
+        body (PutProjectWorkItemsIdFieldsBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, list['WorkItemFieldValue']]]
+        Response[Error | list[WorkItemFieldValue]]
     """
 
     kwargs = _get_kwargs(
@@ -169,20 +173,20 @@ async def asyncio(
     id: str,
     *,
     client: AuthenticatedClient,
-    body: PutProjectWorkItemsIdFieldsBody,
-) -> Error | list["WorkItemFieldValue"] | None:
+    body: PutProjectWorkItemsIdFieldsBody | Unset = UNSET,
+) -> Error | list[WorkItemFieldValue] | None:
     """Set / clear a batch of field values (+ a work_item.fields_updated activity)
 
     Args:
         id (str):
-        body (PutProjectWorkItemsIdFieldsBody):
+        body (PutProjectWorkItemsIdFieldsBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, list['WorkItemFieldValue']]
+        Error | list[WorkItemFieldValue]
     """
 
     return (

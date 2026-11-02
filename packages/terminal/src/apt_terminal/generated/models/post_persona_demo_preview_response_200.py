@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import TYPE_CHECKING, Any, TypeVar, cast
 
@@ -16,12 +18,12 @@ T = TypeVar("T", bound="PostPersonaDemoPreviewResponse200")
 class PostPersonaDemoPreviewResponse200:
     """
     Attributes:
-        text (Union[None, str]): Null ⇒ the turn ESCALATES: the real model answers and the demo says nothing
+        text (None | str): Null ⇒ the turn ESCALATES: the real model answers and the demo says nothing
         on_script (bool): False ⇒ the message matched no standing choice
         sign_in_line (bool): The reply is the sign-in line, not the script
         budget_exhausted (bool): The story does not terminate
-        choices (list['PersonaDemoPreviewChoice']):
-        diagnostics (list['PersonaDemoPreviewDiagnostic']):
+        choices (list[PersonaDemoPreviewChoice]):
+        diagnostics (list[PersonaDemoPreviewDiagnostic]):
         tag_placement_hint (str): The one sentence about where `# match:` and `# off_script` go
     """
 
@@ -29,8 +31,8 @@ class PostPersonaDemoPreviewResponse200:
     on_script: bool
     sign_in_line: bool
     budget_exhausted: bool
-    choices: list["PersonaDemoPreviewChoice"]
-    diagnostics: list["PersonaDemoPreviewDiagnostic"]
+    choices: list[PersonaDemoPreviewChoice]
+    diagnostics: list[PersonaDemoPreviewDiagnostic]
     tag_placement_hint: str
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
@@ -75,7 +77,9 @@ class PostPersonaDemoPreviewResponse200:
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
         from ..models.persona_demo_preview_choice import PersonaDemoPreviewChoice
-        from ..models.persona_demo_preview_diagnostic import PersonaDemoPreviewDiagnostic
+        from ..models.persona_demo_preview_diagnostic import (
+            PersonaDemoPreviewDiagnostic,
+        )
 
         d = dict(src_dict)
 

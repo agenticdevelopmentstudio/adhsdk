@@ -34,7 +34,7 @@ def _get_kwargs(
 
 def _parse_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> Error | list["AdminNote"] | None:
+) -> Error | list[AdminNote] | None:
     if response.status_code == 200:
         response_200 = []
         _response_200 = response.json()
@@ -68,7 +68,7 @@ def _parse_response(
 
 def _build_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> Response[Error | list["AdminNote"]]:
+) -> Response[Error | list[AdminNote]]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -82,7 +82,7 @@ def sync_detailed(
     client: AuthenticatedClient,
     subject_table: str,
     subject_id: str,
-) -> Response[Error | list["AdminNote"]]:
+) -> Response[Error | list[AdminNote]]:
     """Read a subject's admin notes, oldest first
 
     Args:
@@ -94,7 +94,7 @@ def sync_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, list['AdminNote']]]
+        Response[Error | list[AdminNote]]
     """
 
     kwargs = _get_kwargs(
@@ -114,7 +114,7 @@ def sync(
     client: AuthenticatedClient,
     subject_table: str,
     subject_id: str,
-) -> Error | list["AdminNote"] | None:
+) -> Error | list[AdminNote] | None:
     """Read a subject's admin notes, oldest first
 
     Args:
@@ -126,7 +126,7 @@ def sync(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, list['AdminNote']]
+        Error | list[AdminNote]
     """
 
     return sync_detailed(
@@ -141,7 +141,7 @@ async def asyncio_detailed(
     client: AuthenticatedClient,
     subject_table: str,
     subject_id: str,
-) -> Response[Error | list["AdminNote"]]:
+) -> Response[Error | list[AdminNote]]:
     """Read a subject's admin notes, oldest first
 
     Args:
@@ -153,7 +153,7 @@ async def asyncio_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, list['AdminNote']]]
+        Response[Error | list[AdminNote]]
     """
 
     kwargs = _get_kwargs(
@@ -171,7 +171,7 @@ async def asyncio(
     client: AuthenticatedClient,
     subject_table: str,
     subject_id: str,
-) -> Error | list["AdminNote"] | None:
+) -> Error | list[AdminNote] | None:
     """Read a subject's admin notes, oldest first
 
     Args:
@@ -183,7 +183,7 @@ async def asyncio(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, list['AdminNote']]
+        Error | list[AdminNote]
     """
 
     return (

@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class GetShiprReposResponse200VerbsItem(str, Enum):
+class GetShiprReposResponse200VerbsItem(StrEnum):
     C = "C"
     D = "D"
     M = "M"

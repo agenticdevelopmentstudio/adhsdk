@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import enum
 import json
+import sys
 import types
 import typing
 from collections.abc import Callable
@@ -53,6 +54,23 @@ def enum_type(annotation: object) -> type[enum.Enum] | None:
     return None
 
 
+def field_type(model: type, field: attrs.Attribute[Any]) -> object:
+    """A field's annotation as a type, not as the string `from __future__ import annotations` leaves.
+
+    Since openapi-python-client 0.29 the generated models postpone their annotations, so
+    `field.type` is source text such as `"PostPersonaServicesBodyProviderKind"`. It is
+    evaluated in the model's own module, where the generator imported every enum it names.
+    A name that module imports only under TYPE_CHECKING (nested models, never enums)
+    cannot resolve and comes back as None, which `enum_type` already treats as "not an enum".
+    """
+    if not isinstance(field.type, str):
+        return field.type
+    try:
+        return eval(field.type, vars(sys.modules[model.__module__]))  # generator-written text
+    except NameError:
+        return None
+
+
 def coerce_enums(model: type, kwargs: dict[str, object]) -> dict[str, object]:
     """Turn `--set` strings into the Enum members the generated models declare.
 
@@ -69,7 +87,7 @@ def coerce_enums(model: type, kwargs: dict[str, object]) -> dict[str, object]:
     """
     out = dict(kwargs)
     for field in attrs.fields(model):
-        want = enum_type(field.type)
+        want = enum_type(field_type(model, field))
         if want is None or field.name not in out:
             continue
         given = out[field.name]

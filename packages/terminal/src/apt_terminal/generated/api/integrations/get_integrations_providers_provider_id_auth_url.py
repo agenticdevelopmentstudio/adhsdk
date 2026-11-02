@@ -1,5 +1,6 @@
 from http import HTTPStatus
 from typing import Any
+from urllib.parse import quote
 
 import httpx
 
@@ -17,8 +18,8 @@ def _get_kwargs(
     *,
     ecosystem_id: str,
     redirect_uri: str,
-    service_type: Unset | str = UNSET,
-    scopes: Unset | str = UNSET,
+    service_type: str | Unset = UNSET,
+    scopes: str | Unset = UNSET,
 ) -> dict[str, Any]:
     params: dict[str, Any] = {}
 
@@ -34,7 +35,9 @@ def _get_kwargs(
 
     _kwargs: dict[str, Any] = {
         "method": "get",
-        "url": f"/integrations/providers/{provider_id}/auth-url",
+        "url": "/integrations/providers/{provider_id}/auth-url".format(
+            provider_id=quote(str(provider_id), safe=""),
+        ),
         "params": params,
     }
 
@@ -94,8 +97,8 @@ def sync_detailed(
     client: AuthenticatedClient,
     ecosystem_id: str,
     redirect_uri: str,
-    service_type: Unset | str = UNSET,
-    scopes: Unset | str = UNSET,
+    service_type: str | Unset = UNSET,
+    scopes: str | Unset = UNSET,
 ) -> Response[GetIntegrationsProvidersProviderIdAuthUrlResponse200 | ProblemDetails]:
     """Get the OAuth authorize URL for a provider
 
@@ -107,15 +110,15 @@ def sync_detailed(
         provider_id (str):
         ecosystem_id (str):
         redirect_uri (str):
-        service_type (Union[Unset, str]):
-        scopes (Union[Unset, str]):
+        service_type (str | Unset):
+        scopes (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[GetIntegrationsProvidersProviderIdAuthUrlResponse200, ProblemDetails]]
+        Response[GetIntegrationsProvidersProviderIdAuthUrlResponse200 | ProblemDetails]
     """
 
     kwargs = _get_kwargs(
@@ -139,8 +142,8 @@ def sync(
     client: AuthenticatedClient,
     ecosystem_id: str,
     redirect_uri: str,
-    service_type: Unset | str = UNSET,
-    scopes: Unset | str = UNSET,
+    service_type: str | Unset = UNSET,
+    scopes: str | Unset = UNSET,
 ) -> GetIntegrationsProvidersProviderIdAuthUrlResponse200 | ProblemDetails | None:
     """Get the OAuth authorize URL for a provider
 
@@ -152,15 +155,15 @@ def sync(
         provider_id (str):
         ecosystem_id (str):
         redirect_uri (str):
-        service_type (Union[Unset, str]):
-        scopes (Union[Unset, str]):
+        service_type (str | Unset):
+        scopes (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[GetIntegrationsProvidersProviderIdAuthUrlResponse200, ProblemDetails]
+        GetIntegrationsProvidersProviderIdAuthUrlResponse200 | ProblemDetails
     """
 
     return sync_detailed(
@@ -179,8 +182,8 @@ async def asyncio_detailed(
     client: AuthenticatedClient,
     ecosystem_id: str,
     redirect_uri: str,
-    service_type: Unset | str = UNSET,
-    scopes: Unset | str = UNSET,
+    service_type: str | Unset = UNSET,
+    scopes: str | Unset = UNSET,
 ) -> Response[GetIntegrationsProvidersProviderIdAuthUrlResponse200 | ProblemDetails]:
     """Get the OAuth authorize URL for a provider
 
@@ -192,15 +195,15 @@ async def asyncio_detailed(
         provider_id (str):
         ecosystem_id (str):
         redirect_uri (str):
-        service_type (Union[Unset, str]):
-        scopes (Union[Unset, str]):
+        service_type (str | Unset):
+        scopes (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[GetIntegrationsProvidersProviderIdAuthUrlResponse200, ProblemDetails]]
+        Response[GetIntegrationsProvidersProviderIdAuthUrlResponse200 | ProblemDetails]
     """
 
     kwargs = _get_kwargs(
@@ -222,8 +225,8 @@ async def asyncio(
     client: AuthenticatedClient,
     ecosystem_id: str,
     redirect_uri: str,
-    service_type: Unset | str = UNSET,
-    scopes: Unset | str = UNSET,
+    service_type: str | Unset = UNSET,
+    scopes: str | Unset = UNSET,
 ) -> GetIntegrationsProvidersProviderIdAuthUrlResponse200 | ProblemDetails | None:
     """Get the OAuth authorize URL for a provider
 
@@ -235,15 +238,15 @@ async def asyncio(
         provider_id (str):
         ecosystem_id (str):
         redirect_uri (str):
-        service_type (Union[Unset, str]):
-        scopes (Union[Unset, str]):
+        service_type (str | Unset):
+        scopes (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[GetIntegrationsProvidersProviderIdAuthUrlResponse200, ProblemDetails]
+        GetIntegrationsProvidersProviderIdAuthUrlResponse200 | ProblemDetails
     """
 
     return (

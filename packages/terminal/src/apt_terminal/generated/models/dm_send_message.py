@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar
 
@@ -14,11 +16,11 @@ class DmSendMessage:
     """
     Attributes:
         body (str):
-        client_message_id (Union[Unset, str]): Idempotency key; a replay returns 200
+        client_message_id (str | Unset): Idempotency key; a replay returns 200
     """
 
     body: str
-    client_message_id: Unset | str = UNSET
+    client_message_id: str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:

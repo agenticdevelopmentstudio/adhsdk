@@ -13,16 +13,16 @@ from ...types import UNSET, Response, Unset
 
 def _get_kwargs(
     *,
-    subject_type: Unset | str = "user",
-    period: Unset | GetGamificationLeaderboardPeriod = GetGamificationLeaderboardPeriod.ALL,
-    page: Unset | str = UNSET,
-    page_size: Unset | str = UNSET,
+    subject_type: str | Unset = "user",
+    period: GetGamificationLeaderboardPeriod | Unset = GetGamificationLeaderboardPeriod.ALL,
+    page: str | Unset = UNSET,
+    page_size: str | Unset = UNSET,
 ) -> dict[str, Any]:
     params: dict[str, Any] = {}
 
     params["subjectType"] = subject_type
 
-    json_period: Unset | str = UNSET
+    json_period: str | Unset = UNSET
     if not isinstance(period, Unset):
         json_period = period.value
 
@@ -76,26 +76,26 @@ def _build_response(
 def sync_detailed(
     *,
     client: AuthenticatedClient,
-    subject_type: Unset | str = "user",
-    period: Unset | GetGamificationLeaderboardPeriod = GetGamificationLeaderboardPeriod.ALL,
-    page: Unset | str = UNSET,
-    page_size: Unset | str = UNSET,
+    subject_type: str | Unset = "user",
+    period: GetGamificationLeaderboardPeriod | Unset = GetGamificationLeaderboardPeriod.ALL,
+    page: str | Unset = UNSET,
+    page_size: str | Unset = UNSET,
 ) -> Response[Error | GamificationLeaderboard]:
     """Ranked leaderboard by summed points for a subject kind
 
     Args:
-        subject_type (Union[Unset, str]):  Default: 'user'.
-        period (Union[Unset, GetGamificationLeaderboardPeriod]):  Default:
+        subject_type (str | Unset):  Default: 'user'.
+        period (GetGamificationLeaderboardPeriod | Unset):  Default:
             GetGamificationLeaderboardPeriod.ALL.
-        page (Union[Unset, str]):
-        page_size (Union[Unset, str]):
+        page (str | Unset):
+        page_size (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, GamificationLeaderboard]]
+        Response[Error | GamificationLeaderboard]
     """
 
     kwargs = _get_kwargs(
@@ -115,26 +115,26 @@ def sync_detailed(
 def sync(
     *,
     client: AuthenticatedClient,
-    subject_type: Unset | str = "user",
-    period: Unset | GetGamificationLeaderboardPeriod = GetGamificationLeaderboardPeriod.ALL,
-    page: Unset | str = UNSET,
-    page_size: Unset | str = UNSET,
+    subject_type: str | Unset = "user",
+    period: GetGamificationLeaderboardPeriod | Unset = GetGamificationLeaderboardPeriod.ALL,
+    page: str | Unset = UNSET,
+    page_size: str | Unset = UNSET,
 ) -> Error | GamificationLeaderboard | None:
     """Ranked leaderboard by summed points for a subject kind
 
     Args:
-        subject_type (Union[Unset, str]):  Default: 'user'.
-        period (Union[Unset, GetGamificationLeaderboardPeriod]):  Default:
+        subject_type (str | Unset):  Default: 'user'.
+        period (GetGamificationLeaderboardPeriod | Unset):  Default:
             GetGamificationLeaderboardPeriod.ALL.
-        page (Union[Unset, str]):
-        page_size (Union[Unset, str]):
+        page (str | Unset):
+        page_size (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, GamificationLeaderboard]
+        Error | GamificationLeaderboard
     """
 
     return sync_detailed(
@@ -149,26 +149,26 @@ def sync(
 async def asyncio_detailed(
     *,
     client: AuthenticatedClient,
-    subject_type: Unset | str = "user",
-    period: Unset | GetGamificationLeaderboardPeriod = GetGamificationLeaderboardPeriod.ALL,
-    page: Unset | str = UNSET,
-    page_size: Unset | str = UNSET,
+    subject_type: str | Unset = "user",
+    period: GetGamificationLeaderboardPeriod | Unset = GetGamificationLeaderboardPeriod.ALL,
+    page: str | Unset = UNSET,
+    page_size: str | Unset = UNSET,
 ) -> Response[Error | GamificationLeaderboard]:
     """Ranked leaderboard by summed points for a subject kind
 
     Args:
-        subject_type (Union[Unset, str]):  Default: 'user'.
-        period (Union[Unset, GetGamificationLeaderboardPeriod]):  Default:
+        subject_type (str | Unset):  Default: 'user'.
+        period (GetGamificationLeaderboardPeriod | Unset):  Default:
             GetGamificationLeaderboardPeriod.ALL.
-        page (Union[Unset, str]):
-        page_size (Union[Unset, str]):
+        page (str | Unset):
+        page_size (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, GamificationLeaderboard]]
+        Response[Error | GamificationLeaderboard]
     """
 
     kwargs = _get_kwargs(
@@ -186,26 +186,26 @@ async def asyncio_detailed(
 async def asyncio(
     *,
     client: AuthenticatedClient,
-    subject_type: Unset | str = "user",
-    period: Unset | GetGamificationLeaderboardPeriod = GetGamificationLeaderboardPeriod.ALL,
-    page: Unset | str = UNSET,
-    page_size: Unset | str = UNSET,
+    subject_type: str | Unset = "user",
+    period: GetGamificationLeaderboardPeriod | Unset = GetGamificationLeaderboardPeriod.ALL,
+    page: str | Unset = UNSET,
+    page_size: str | Unset = UNSET,
 ) -> Error | GamificationLeaderboard | None:
     """Ranked leaderboard by summed points for a subject kind
 
     Args:
-        subject_type (Union[Unset, str]):  Default: 'user'.
-        period (Union[Unset, GetGamificationLeaderboardPeriod]):  Default:
+        subject_type (str | Unset):  Default: 'user'.
+        period (GetGamificationLeaderboardPeriod | Unset):  Default:
             GetGamificationLeaderboardPeriod.ALL.
-        page (Union[Unset, str]):
-        page_size (Union[Unset, str]):
+        page (str | Unset):
+        page_size (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, GamificationLeaderboard]
+        Error | GamificationLeaderboard
     """
 
     return (

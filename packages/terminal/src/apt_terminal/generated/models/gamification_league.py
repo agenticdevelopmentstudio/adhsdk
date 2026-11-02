@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import TYPE_CHECKING, Any, TypeVar
 
@@ -19,12 +21,12 @@ class GamificationLeague:
     Attributes:
         stat_key (GamificationLeagueStatKey):
         league (int): Zero-based league cohort (30 ranks each, by season standing).
-        entries (list['GamificationBoardEntry']):
+        entries (list[GamificationBoardEntry]):
     """
 
     stat_key: GamificationLeagueStatKey
     league: int
-    entries: list["GamificationBoardEntry"]
+    entries: list[GamificationBoardEntry]
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:

@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class EcosystemAuthSettingsSignupMode(str, Enum):
+class EcosystemAuthSettingsSignupMode(StrEnum):
     CLOSED = "closed"
     INVITE_ONLY = "invite_only"
     OPEN = "open"

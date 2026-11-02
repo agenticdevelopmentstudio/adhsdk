@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class IntegrationConnectApiKeyType(str, Enum):
+class IntegrationConnectApiKeyType(StrEnum):
     API_KEY = "api_key"
 
     def __str__(self) -> str:

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar
 
@@ -19,7 +21,7 @@ class ContactMethod:
         value (str):
         verified (bool):
         is_primary (bool):
-        created_at (Union[Unset, str]):
+        created_at (str | Unset):
     """
 
     id: str
@@ -27,7 +29,7 @@ class ContactMethod:
     value: str
     verified: bool
     is_primary: bool
-    created_at: Unset | str = UNSET
+    created_at: str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:

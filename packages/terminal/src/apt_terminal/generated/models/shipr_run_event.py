@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -15,30 +17,30 @@ class ShiprRunEvent:
     """One line of a run’s log. `seq` is per-run and monotone — use it as a cursor.
 
     Attributes:
-        seq (Union[Unset, int]):
-        step_id (Union[None, Unset, str]):
-        stream (Union[Unset, ShiprRunEventStream]):
-        text (Union[Unset, str]):
-        at (Union[Unset, str]):
+        seq (int | Unset):
+        step_id (None | str | Unset):
+        stream (ShiprRunEventStream | Unset):
+        text (str | Unset):
+        at (str | Unset):
     """
 
-    seq: Unset | int = UNSET
-    step_id: None | Unset | str = UNSET
-    stream: Unset | ShiprRunEventStream = UNSET
-    text: Unset | str = UNSET
-    at: Unset | str = UNSET
+    seq: int | Unset = UNSET
+    step_id: None | str | Unset = UNSET
+    stream: ShiprRunEventStream | Unset = UNSET
+    text: str | Unset = UNSET
+    at: str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
         seq = self.seq
 
-        step_id: None | Unset | str
+        step_id: None | str | Unset
         if isinstance(self.step_id, Unset):
             step_id = UNSET
         else:
             step_id = self.step_id
 
-        stream: Unset | str = UNSET
+        stream: str | Unset = UNSET
         if not isinstance(self.stream, Unset):
             stream = self.stream.value
 
@@ -67,17 +69,17 @@ class ShiprRunEvent:
         d = dict(src_dict)
         seq = d.pop("seq", UNSET)
 
-        def _parse_step_id(data: object) -> None | Unset | str:
+        def _parse_step_id(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         step_id = _parse_step_id(d.pop("stepId", UNSET))
 
         _stream = d.pop("stream", UNSET)
-        stream: Unset | ShiprRunEventStream
+        stream: ShiprRunEventStream | Unset
         if isinstance(_stream, Unset):
             stream = UNSET
         else:

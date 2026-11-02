@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import TYPE_CHECKING, Any, TypeVar
 
@@ -16,7 +18,7 @@ T = TypeVar("T", bound="PublicRegistryEntryList")
 class PublicRegistryEntryList:
     """
     Attributes:
-        items (list['PublicRegistryEntrySummary']):
+        items (list[PublicRegistryEntrySummary]):
         total (int):
         page (int):
         page_size (int):
@@ -26,11 +28,11 @@ class PublicRegistryEntryList:
             configured.
     """
 
-    items: list["PublicRegistryEntrySummary"]
+    items: list[PublicRegistryEntrySummary]
     total: int
     page: int
     page_size: int
-    image_urls: "PublicRegistryEntryListImageUrls"
+    image_urls: PublicRegistryEntryListImageUrls
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -63,8 +65,12 @@ class PublicRegistryEntryList:
 
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
-        from ..models.public_registry_entry_list_image_urls import PublicRegistryEntryListImageUrls
-        from ..models.public_registry_entry_summary import PublicRegistryEntrySummary
+        from ..models.public_registry_entry_list_image_urls import (
+            PublicRegistryEntryListImageUrls,
+        )
+        from ..models.public_registry_entry_summary import (
+            PublicRegistryEntrySummary,
+        )
 
         d = dict(src_dict)
         items = []

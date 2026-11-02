@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -49,21 +51,21 @@ class Project:
         key_prefix (str): the prefix every card's key is rendered from (ADH-42) — 2–8 chars, a letter then letters or
             digits, stored upper-cased and unique among the OWNER's live boards. '' = unassigned (a project predating
             migration 0181, until the backfill reaches it); its cards render an empty key rather than a broken one.
-        health (Union[None, ProjectHealthType1, ProjectHealthType2Type1, ProjectHealthType3Type1]): DERIVED, never
-            stored: the health on the NEWEST live status update (GET /project/projects/{id}/status-updates returns it
-            first). null means no update has been posted — which is not "on track", and the distinction is the reason this
-            is not a column with a default. Retracting the newest update moves it back to the previous one, or to null.
-        health_updated_at (Union[None, str]): when the update that decided `health` was posted; null exactly when
-            `health` is null. A dashboard needs this to say whether a green board is green or merely stale.
-        deleted_at (Union[None, Unset, str]):
-        archived_at (Union[None, Unset, str]): ISO timestamp when archived; null = not archived
-        start_date (Union[None, Unset, str]): date (YYYY-MM-DD); null = no committed start
-        target_date (Union[None, Unset, str]): date (YYYY-MM-DD); never before startDate; null = no committed target
-        lead_kind (Union[None, ProjectLeadKindType1, ProjectLeadKindType2Type1, ProjectLeadKindType3Type1, Unset]): the
+        health (None | ProjectHealthType1 | ProjectHealthType2Type1 | ProjectHealthType3Type1): DERIVED, never stored:
+            the health on the NEWEST live status update (GET /project/projects/{id}/status-updates returns it first). null
+            means no update has been posted — which is not "on track", and the distinction is the reason this is not a
+            column with a default. Retracting the newest update moves it back to the previous one, or to null.
+        health_updated_at (None | str): when the update that decided `health` was posted; null exactly when `health` is
+            null. A dashboard needs this to say whether a green board is green or merely stale.
+        deleted_at (None | str | Unset):
+        archived_at (None | str | Unset): ISO timestamp when archived; null = not archived
+        start_date (None | str | Unset): date (YYYY-MM-DD); null = no committed start
+        target_date (None | str | Unset): date (YYYY-MM-DD); never before startDate; null = no committed target
+        lead_kind (None | ProjectLeadKindType1 | ProjectLeadKindType2Type1 | ProjectLeadKindType3Type1 | Unset): the
             kind of principal that ANSWERS for the project. Whole or absent: a lead is always a kind AND an id, never half
             of one.
-        lead_id (Union[None, Unset, str]): set with leadKind (both or neither)
-        program_id (Union[None, Unset, str]): the program this board rolls up into; null = it stands alone. The program
+        lead_id (None | str | Unset): set with leadKind (both or neither)
+        program_id (None | str | Unset): the program this board rolls up into; null = it stands alone. The program
             belongs to the project's OWNER, so a workspace can group boards without a project ever naming a container
             another workspace runs.
     """
@@ -88,15 +90,15 @@ class Project:
     key_prefix: str
     health: None | ProjectHealthType1 | ProjectHealthType2Type1 | ProjectHealthType3Type1
     health_updated_at: None | str
-    deleted_at: None | Unset | str = UNSET
-    archived_at: None | Unset | str = UNSET
-    start_date: None | Unset | str = UNSET
-    target_date: None | Unset | str = UNSET
+    deleted_at: None | str | Unset = UNSET
+    archived_at: None | str | Unset = UNSET
+    start_date: None | str | Unset = UNSET
+    target_date: None | str | Unset = UNSET
     lead_kind: (
         None | ProjectLeadKindType1 | ProjectLeadKindType2Type1 | ProjectLeadKindType3Type1 | Unset
     ) = UNSET
-    lead_id: None | Unset | str = UNSET
-    program_id: None | Unset | str = UNSET
+    lead_id: None | str | Unset = UNSET
+    program_id: None | str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -149,31 +151,31 @@ class Project:
         health_updated_at: None | str
         health_updated_at = self.health_updated_at
 
-        deleted_at: None | Unset | str
+        deleted_at: None | str | Unset
         if isinstance(self.deleted_at, Unset):
             deleted_at = UNSET
         else:
             deleted_at = self.deleted_at
 
-        archived_at: None | Unset | str
+        archived_at: None | str | Unset
         if isinstance(self.archived_at, Unset):
             archived_at = UNSET
         else:
             archived_at = self.archived_at
 
-        start_date: None | Unset | str
+        start_date: None | str | Unset
         if isinstance(self.start_date, Unset):
             start_date = UNSET
         else:
             start_date = self.start_date
 
-        target_date: None | Unset | str
+        target_date: None | str | Unset
         if isinstance(self.target_date, Unset):
             target_date = UNSET
         else:
             target_date = self.target_date
 
-        lead_kind: None | Unset | str
+        lead_kind: None | str | Unset
         if isinstance(self.lead_kind, Unset):
             lead_kind = UNSET
         elif (
@@ -185,13 +187,13 @@ class Project:
         else:
             lead_kind = self.lead_kind
 
-        lead_id: None | Unset | str
+        lead_id: None | str | Unset
         if isinstance(self.lead_id, Unset):
             lead_id = UNSET
         else:
             lead_id = self.lead_id
 
-        program_id: None | Unset | str
+        program_id: None | str | Unset
         if isinstance(self.program_id, Unset):
             program_id = UNSET
         else:
@@ -290,7 +292,7 @@ class Project:
                 health_type_1 = ProjectHealthType1(data)
 
                 return health_type_1
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
             try:
                 if not isinstance(data, str):
@@ -298,7 +300,7 @@ class Project:
                 health_type_2_type_1 = ProjectHealthType2Type1(data)
 
                 return health_type_2_type_1
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
             try:
                 if not isinstance(data, str):
@@ -306,7 +308,7 @@ class Project:
                 health_type_3_type_1 = ProjectHealthType3Type1(data)
 
                 return health_type_3_type_1
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
             return cast(
                 None | ProjectHealthType1 | ProjectHealthType2Type1 | ProjectHealthType3Type1, data
@@ -321,39 +323,39 @@ class Project:
 
         health_updated_at = _parse_health_updated_at(d.pop("healthUpdatedAt"))
 
-        def _parse_deleted_at(data: object) -> None | Unset | str:
+        def _parse_deleted_at(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         deleted_at = _parse_deleted_at(d.pop("deletedAt", UNSET))
 
-        def _parse_archived_at(data: object) -> None | Unset | str:
+        def _parse_archived_at(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         archived_at = _parse_archived_at(d.pop("archivedAt", UNSET))
 
-        def _parse_start_date(data: object) -> None | Unset | str:
+        def _parse_start_date(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         start_date = _parse_start_date(d.pop("startDate", UNSET))
 
-        def _parse_target_date(data: object) -> None | Unset | str:
+        def _parse_target_date(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         target_date = _parse_target_date(d.pop("targetDate", UNSET))
 
@@ -376,7 +378,7 @@ class Project:
                 lead_kind_type_1 = ProjectLeadKindType1(data)
 
                 return lead_kind_type_1
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
             try:
                 if not isinstance(data, str):
@@ -384,7 +386,7 @@ class Project:
                 lead_kind_type_2_type_1 = ProjectLeadKindType2Type1(data)
 
                 return lead_kind_type_2_type_1
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
             try:
                 if not isinstance(data, str):
@@ -392,7 +394,7 @@ class Project:
                 lead_kind_type_3_type_1 = ProjectLeadKindType3Type1(data)
 
                 return lead_kind_type_3_type_1
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
             return cast(
                 None
@@ -405,21 +407,21 @@ class Project:
 
         lead_kind = _parse_lead_kind(d.pop("leadKind", UNSET))
 
-        def _parse_lead_id(data: object) -> None | Unset | str:
+        def _parse_lead_id(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         lead_id = _parse_lead_id(d.pop("leadId", UNSET))
 
-        def _parse_program_id(data: object) -> None | Unset | str:
+        def _parse_program_id(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         program_id = _parse_program_id(d.pop("programId", UNSET))
 

@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, TypeVar, Union
+from typing import TYPE_CHECKING, Any, TypeVar
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -17,14 +19,14 @@ T = TypeVar("T", bound="Error")
 class Error:
     """
     Attributes:
-        error (Union[Unset, ErrorError]):
+        error (ErrorError | Unset):
     """
 
-    error: Union[Unset, "ErrorError"] = UNSET
+    error: ErrorError | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
-        error: Unset | dict[str, Any] = UNSET
+        error: dict[str, Any] | Unset = UNSET
         if not isinstance(self.error, Unset):
             error = self.error.to_dict()
 
@@ -42,7 +44,7 @@ class Error:
 
         d = dict(src_dict)
         _error = d.pop("error", UNSET)
-        error: Unset | ErrorError
+        error: ErrorError | Unset
         if isinstance(_error, Unset):
             error = UNSET
         else:

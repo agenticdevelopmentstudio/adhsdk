@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar
 
@@ -14,11 +16,11 @@ class PostIntegrationsProvidersProviderIdLinkTokenBody:
     """
     Attributes:
         ecosystem_id (str): Target ecosystem id (the caller must manage it)
-        service_type (Union[Unset, str]): Defaults to the provider primary service type
+        service_type (str | Unset): Defaults to the provider primary service type
     """
 
     ecosystem_id: str
-    service_type: Unset | str = UNSET
+    service_type: str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:

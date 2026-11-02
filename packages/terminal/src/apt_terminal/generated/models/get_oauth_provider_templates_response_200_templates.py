@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import TYPE_CHECKING, Any, TypeVar
 
@@ -15,10 +17,8 @@ T = TypeVar("T", bound="GetOauthProviderTemplatesResponse200Templates")
 
 @_attrs_define
 class GetOauthProviderTemplatesResponse200Templates:
-    """ """
-
     additional_properties: dict[
-        str, "GetOauthProviderTemplatesResponse200TemplatesAdditionalProperty"
+        str, GetOauthProviderTemplatesResponse200TemplatesAdditionalProperty
     ] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -56,11 +56,11 @@ class GetOauthProviderTemplatesResponse200Templates:
 
     def __getitem__(
         self, key: str
-    ) -> "GetOauthProviderTemplatesResponse200TemplatesAdditionalProperty":
+    ) -> GetOauthProviderTemplatesResponse200TemplatesAdditionalProperty:
         return self.additional_properties[key]
 
     def __setitem__(
-        self, key: str, value: "GetOauthProviderTemplatesResponse200TemplatesAdditionalProperty"
+        self, key: str, value: GetOauthProviderTemplatesResponse200TemplatesAdditionalProperty
     ) -> None:
         self.additional_properties[key] = value
 

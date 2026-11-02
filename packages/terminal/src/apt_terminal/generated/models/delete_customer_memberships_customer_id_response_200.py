@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar
 
@@ -13,14 +15,14 @@ T = TypeVar("T", bound="DeleteCustomerMembershipsCustomerIdResponse200")
 class DeleteCustomerMembershipsCustomerIdResponse200:
     """
     Attributes:
-        customer_id (Union[Unset, str]):
-        ecosystem_id (Union[Unset, str]):
-        removed (Union[Unset, bool]):
+        customer_id (str | Unset):
+        ecosystem_id (str | Unset):
+        removed (bool | Unset):
     """
 
-    customer_id: Unset | str = UNSET
-    ecosystem_id: Unset | str = UNSET
-    removed: Unset | bool = UNSET
+    customer_id: str | Unset = UNSET
+    ecosystem_id: str | Unset = UNSET
+    removed: bool | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:

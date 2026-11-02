@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, TypeVar, Union, cast
+from typing import TYPE_CHECKING, Any, TypeVar, cast
 
 from attrs import define as _attrs_define
 
@@ -22,27 +24,27 @@ class PostPersonaPersonasResponse201:
     """
     Attributes:
         id (str):
-        user_id (Union[None, str]):
+        user_id (None | str):
         owner_kind (str):
         owner_id (str):
         slug (str):
         name (str):
-        description (Union[None, str]):
+        description (None | str):
         visibility (str):
         model (str):
-        service_id (Union[None, str]):
-        app_id (Union[None, str]):
-        avatar_attachment_id (Union[None, str]):
+        service_id (None | str):
+        app_id (None | str):
+        avatar_attachment_id (None | str):
         model_prompt (str):
-        voice (Union[None, str]):
-        character (Union[None, str]):
-        examples (Union[None, str]):
-        canned_chat (Union['PostPersonaPersonasResponse201CannedChatType0Type1', None, bool, float, list[Any], str]):
-        chat_status (Union['PostPersonaPersonasResponse201ChatStatusType0Type1', None, bool, float, list[Any], str]):
+        voice (None | str):
+        character (None | str):
+        examples (None | str):
+        canned_chat (bool | float | list[Any] | None | PostPersonaPersonasResponse201CannedChatType0Type1 | str):
+        chat_status (bool | float | list[Any] | None | PostPersonaPersonasResponse201ChatStatusType0Type1 | str):
         created_at (str):
         updated_at (str):
-        owned_ecosystem_id (Union[None, Unset, str]):
-        corpus_ecosystem_id (Union[None, Unset, str]):
+        owned_ecosystem_id (None | str | Unset):
+        corpus_ecosystem_id (None | str | Unset):
     """
 
     id: str
@@ -61,16 +63,16 @@ class PostPersonaPersonasResponse201:
     voice: None | str
     character: None | str
     examples: None | str
-    canned_chat: Union[
-        "PostPersonaPersonasResponse201CannedChatType0Type1", None, bool, float, list[Any], str
-    ]
-    chat_status: Union[
-        "PostPersonaPersonasResponse201ChatStatusType0Type1", None, bool, float, list[Any], str
-    ]
+    canned_chat: (
+        bool | float | list[Any] | None | PostPersonaPersonasResponse201CannedChatType0Type1 | str
+    )
+    chat_status: (
+        bool | float | list[Any] | None | PostPersonaPersonasResponse201ChatStatusType0Type1 | str
+    )
     created_at: str
     updated_at: str
-    owned_ecosystem_id: None | Unset | str = UNSET
-    corpus_ecosystem_id: None | Unset | str = UNSET
+    owned_ecosystem_id: None | str | Unset = UNSET
+    corpus_ecosystem_id: None | str | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
         from ..models.post_persona_personas_response_201_canned_chat_type_0_type_1 import (
@@ -120,7 +122,7 @@ class PostPersonaPersonasResponse201:
         examples: None | str
         examples = self.examples
 
-        canned_chat: None | bool | dict[str, Any] | float | list[Any] | str
+        canned_chat: bool | dict[str, Any] | float | list[Any] | None | str
         if isinstance(self.canned_chat, PostPersonaPersonasResponse201CannedChatType0Type1):
             canned_chat = self.canned_chat.to_dict()
         elif isinstance(self.canned_chat, list):
@@ -129,7 +131,7 @@ class PostPersonaPersonasResponse201:
         else:
             canned_chat = self.canned_chat
 
-        chat_status: None | bool | dict[str, Any] | float | list[Any] | str
+        chat_status: bool | dict[str, Any] | float | list[Any] | None | str
         if isinstance(self.chat_status, PostPersonaPersonasResponse201ChatStatusType0Type1):
             chat_status = self.chat_status.to_dict()
         elif isinstance(self.chat_status, list):
@@ -142,13 +144,13 @@ class PostPersonaPersonasResponse201:
 
         updated_at = self.updated_at
 
-        owned_ecosystem_id: None | Unset | str
+        owned_ecosystem_id: None | str | Unset
         if isinstance(self.owned_ecosystem_id, Unset):
             owned_ecosystem_id = UNSET
         else:
             owned_ecosystem_id = self.owned_ecosystem_id
 
-        corpus_ecosystem_id: None | Unset | str
+        corpus_ecosystem_id: None | str | Unset
         if isinstance(self.corpus_ecosystem_id, Unset):
             corpus_ecosystem_id = UNSET
         else:
@@ -271,9 +273,14 @@ class PostPersonaPersonasResponse201:
 
         def _parse_canned_chat(
             data: object,
-        ) -> Union[
-            "PostPersonaPersonasResponse201CannedChatType0Type1", None, bool, float, list[Any], str
-        ]:
+        ) -> (
+            bool
+            | float
+            | list[Any]
+            | None
+            | PostPersonaPersonasResponse201CannedChatType0Type1
+            | str
+        ):
             if data is None:
                 return data
             try:
@@ -284,7 +291,7 @@ class PostPersonaPersonasResponse201:
                 )
 
                 return canned_chat_type_0_type_1
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
             try:
                 if not isinstance(data, list):
@@ -292,17 +299,15 @@ class PostPersonaPersonasResponse201:
                 canned_chat_type_0_type_2 = cast(list[Any], data)
 
                 return canned_chat_type_0_type_2
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
             return cast(
-                Union[
-                    "PostPersonaPersonasResponse201CannedChatType0Type1",
-                    None,
-                    bool,
-                    float,
-                    list[Any],
-                    str,
-                ],
+                bool
+                | float
+                | list[Any]
+                | None
+                | PostPersonaPersonasResponse201CannedChatType0Type1
+                | str,
                 data,
             )
 
@@ -310,9 +315,14 @@ class PostPersonaPersonasResponse201:
 
         def _parse_chat_status(
             data: object,
-        ) -> Union[
-            "PostPersonaPersonasResponse201ChatStatusType0Type1", None, bool, float, list[Any], str
-        ]:
+        ) -> (
+            bool
+            | float
+            | list[Any]
+            | None
+            | PostPersonaPersonasResponse201ChatStatusType0Type1
+            | str
+        ):
             if data is None:
                 return data
             try:
@@ -323,7 +333,7 @@ class PostPersonaPersonasResponse201:
                 )
 
                 return chat_status_type_0_type_1
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
             try:
                 if not isinstance(data, list):
@@ -331,17 +341,15 @@ class PostPersonaPersonasResponse201:
                 chat_status_type_0_type_2 = cast(list[Any], data)
 
                 return chat_status_type_0_type_2
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
             return cast(
-                Union[
-                    "PostPersonaPersonasResponse201ChatStatusType0Type1",
-                    None,
-                    bool,
-                    float,
-                    list[Any],
-                    str,
-                ],
+                bool
+                | float
+                | list[Any]
+                | None
+                | PostPersonaPersonasResponse201ChatStatusType0Type1
+                | str,
                 data,
             )
 
@@ -351,21 +359,21 @@ class PostPersonaPersonasResponse201:
 
         updated_at = d.pop("updatedAt")
 
-        def _parse_owned_ecosystem_id(data: object) -> None | Unset | str:
+        def _parse_owned_ecosystem_id(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         owned_ecosystem_id = _parse_owned_ecosystem_id(d.pop("ownedEcosystemId", UNSET))
 
-        def _parse_corpus_ecosystem_id(data: object) -> None | Unset | str:
+        def _parse_corpus_ecosystem_id(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         corpus_ecosystem_id = _parse_corpus_ecosystem_id(d.pop("corpusEcosystemId", UNSET))
 

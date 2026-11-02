@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -17,7 +19,7 @@ class BillingRedriveResult:
         still_pending (int):
         unreadable (int):
         failed (int):
-        next_offset (Union[None, int]):
+        next_offset (int | None):
     """
 
     examined: int
@@ -26,7 +28,7 @@ class BillingRedriveResult:
     still_pending: int
     unreadable: int
     failed: int
-    next_offset: None | int
+    next_offset: int | None
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -42,7 +44,7 @@ class BillingRedriveResult:
 
         failed = self.failed
 
-        next_offset: None | int
+        next_offset: int | None
         next_offset = self.next_offset
 
         field_dict: dict[str, Any] = {}
@@ -76,10 +78,10 @@ class BillingRedriveResult:
 
         failed = d.pop("failed")
 
-        def _parse_next_offset(data: object) -> None | int:
+        def _parse_next_offset(data: object) -> int | None:
             if data is None:
                 return data
-            return cast(None | int, data)
+            return cast(int | None, data)
 
         next_offset = _parse_next_offset(d.pop("nextOffset"))
 

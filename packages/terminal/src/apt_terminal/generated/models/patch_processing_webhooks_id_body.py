@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -13,18 +15,18 @@ T = TypeVar("T", bound="PatchProcessingWebhooksIdBody")
 class PatchProcessingWebhooksIdBody:
     """
     Attributes:
-        active (Union[Unset, bool]): Enable or disable delivery
-        event_types (Union[Unset, list[str]]): Replace the subscribed event-type list
+        active (bool | Unset): Enable or disable delivery
+        event_types (list[str] | Unset): Replace the subscribed event-type list
     """
 
-    active: Unset | bool = UNSET
-    event_types: Unset | list[str] = UNSET
+    active: bool | Unset = UNSET
+    event_types: list[str] | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
         active = self.active
 
-        event_types: Unset | list[str] = UNSET
+        event_types: list[str] | Unset = UNSET
         if not isinstance(self.event_types, Unset):
             event_types = self.event_types
 

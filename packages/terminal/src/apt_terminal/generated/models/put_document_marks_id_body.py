@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar
 
@@ -12,22 +14,22 @@ T = TypeVar("T", bound="PutDocumentMarksIdBody")
 class PutDocumentMarksIdBody:
     """
     Attributes:
-        block_id (Union[Unset, str]):
-        ecosystem_id (Union[Unset, str]):
-        mark_type (Union[Unset, str]):
-        start_anchor (Union[Unset, str]):
-        end_anchor (Union[Unset, str]):
-        mark_data (Union[Unset, str]):
-        sync_txid (Union[Unset, int]):
+        block_id (str | Unset):
+        ecosystem_id (str | Unset):
+        mark_type (str | Unset):
+        start_anchor (str | Unset):
+        end_anchor (str | Unset):
+        mark_data (str | Unset):
+        sync_txid (int | Unset):
     """
 
-    block_id: Unset | str = UNSET
-    ecosystem_id: Unset | str = UNSET
-    mark_type: Unset | str = UNSET
-    start_anchor: Unset | str = UNSET
-    end_anchor: Unset | str = UNSET
-    mark_data: Unset | str = UNSET
-    sync_txid: Unset | int = UNSET
+    block_id: str | Unset = UNSET
+    ecosystem_id: str | Unset = UNSET
+    mark_type: str | Unset = UNSET
+    start_anchor: str | Unset = UNSET
+    end_anchor: str | Unset = UNSET
+    mark_data: str | Unset = UNSET
+    sync_txid: int | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
         block_id = self.block_id

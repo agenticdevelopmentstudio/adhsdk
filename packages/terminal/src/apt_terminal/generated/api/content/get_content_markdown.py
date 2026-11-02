@@ -12,15 +12,15 @@ from ...types import UNSET, Response, Unset
 
 def _get_kwargs(
     *,
-    page: Unset | int = UNSET,
-    page_size: Unset | int = 50,
-    q: Unset | str = UNSET,
-    category: Unset | str = UNSET,
-    tag: Unset | str = UNSET,
-    source: Unset | str = UNSET,
-    noted: Unset | bool = UNSET,
-    doc: Unset | bool = UNSET,
-    workspace: Unset | str = UNSET,
+    page: int | Unset = UNSET,
+    page_size: int | Unset = 50,
+    q: str | Unset = UNSET,
+    category: str | Unset = UNSET,
+    tag: str | Unset = UNSET,
+    source: str | Unset = UNSET,
+    noted: bool | Unset = UNSET,
+    doc: bool | Unset = UNSET,
+    workspace: str | Unset = UNSET,
 ) -> dict[str, Any]:
     params: dict[str, Any] = {}
 
@@ -86,15 +86,15 @@ def _build_response(
 def sync_detailed(
     *,
     client: AuthenticatedClient,
-    page: Unset | int = UNSET,
-    page_size: Unset | int = 50,
-    q: Unset | str = UNSET,
-    category: Unset | str = UNSET,
-    tag: Unset | str = UNSET,
-    source: Unset | str = UNSET,
-    noted: Unset | bool = UNSET,
-    doc: Unset | bool = UNSET,
-    workspace: Unset | str = UNSET,
+    page: int | Unset = UNSET,
+    page_size: int | Unset = 50,
+    q: str | Unset = UNSET,
+    category: str | Unset = UNSET,
+    tag: str | Unset = UNSET,
+    source: str | Unset = UNSET,
+    noted: bool | Unset = UNSET,
+    doc: bool | Unset = UNSET,
+    workspace: str | Unset = UNSET,
 ) -> Response[Error | GetContentMarkdownResponse200]:
     """List/search the caller's markdown documents (metadata only)
 
@@ -103,22 +103,22 @@ def sync_detailed(
     match), and `tag` (set membership).
 
     Args:
-        page (Union[Unset, int]):
-        page_size (Union[Unset, int]):  Default: 50.
-        q (Union[Unset, str]):
-        category (Union[Unset, str]):
-        tag (Union[Unset, str]):
-        source (Union[Unset, str]):
-        noted (Union[Unset, bool]):
-        doc (Union[Unset, bool]):
-        workspace (Union[Unset, str]):
+        page (int | Unset):
+        page_size (int | Unset):  Default: 50.
+        q (str | Unset):
+        category (str | Unset):
+        tag (str | Unset):
+        source (str | Unset):
+        noted (bool | Unset):
+        doc (bool | Unset):
+        workspace (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, GetContentMarkdownResponse200]]
+        Response[Error | GetContentMarkdownResponse200]
     """
 
     kwargs = _get_kwargs(
@@ -143,15 +143,15 @@ def sync_detailed(
 def sync(
     *,
     client: AuthenticatedClient,
-    page: Unset | int = UNSET,
-    page_size: Unset | int = 50,
-    q: Unset | str = UNSET,
-    category: Unset | str = UNSET,
-    tag: Unset | str = UNSET,
-    source: Unset | str = UNSET,
-    noted: Unset | bool = UNSET,
-    doc: Unset | bool = UNSET,
-    workspace: Unset | str = UNSET,
+    page: int | Unset = UNSET,
+    page_size: int | Unset = 50,
+    q: str | Unset = UNSET,
+    category: str | Unset = UNSET,
+    tag: str | Unset = UNSET,
+    source: str | Unset = UNSET,
+    noted: bool | Unset = UNSET,
+    doc: bool | Unset = UNSET,
+    workspace: str | Unset = UNSET,
 ) -> Error | GetContentMarkdownResponse200 | None:
     """List/search the caller's markdown documents (metadata only)
 
@@ -160,22 +160,22 @@ def sync(
     match), and `tag` (set membership).
 
     Args:
-        page (Union[Unset, int]):
-        page_size (Union[Unset, int]):  Default: 50.
-        q (Union[Unset, str]):
-        category (Union[Unset, str]):
-        tag (Union[Unset, str]):
-        source (Union[Unset, str]):
-        noted (Union[Unset, bool]):
-        doc (Union[Unset, bool]):
-        workspace (Union[Unset, str]):
+        page (int | Unset):
+        page_size (int | Unset):  Default: 50.
+        q (str | Unset):
+        category (str | Unset):
+        tag (str | Unset):
+        source (str | Unset):
+        noted (bool | Unset):
+        doc (bool | Unset):
+        workspace (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, GetContentMarkdownResponse200]
+        Error | GetContentMarkdownResponse200
     """
 
     return sync_detailed(
@@ -195,15 +195,15 @@ def sync(
 async def asyncio_detailed(
     *,
     client: AuthenticatedClient,
-    page: Unset | int = UNSET,
-    page_size: Unset | int = 50,
-    q: Unset | str = UNSET,
-    category: Unset | str = UNSET,
-    tag: Unset | str = UNSET,
-    source: Unset | str = UNSET,
-    noted: Unset | bool = UNSET,
-    doc: Unset | bool = UNSET,
-    workspace: Unset | str = UNSET,
+    page: int | Unset = UNSET,
+    page_size: int | Unset = 50,
+    q: str | Unset = UNSET,
+    category: str | Unset = UNSET,
+    tag: str | Unset = UNSET,
+    source: str | Unset = UNSET,
+    noted: bool | Unset = UNSET,
+    doc: bool | Unset = UNSET,
+    workspace: str | Unset = UNSET,
 ) -> Response[Error | GetContentMarkdownResponse200]:
     """List/search the caller's markdown documents (metadata only)
 
@@ -212,22 +212,22 @@ async def asyncio_detailed(
     match), and `tag` (set membership).
 
     Args:
-        page (Union[Unset, int]):
-        page_size (Union[Unset, int]):  Default: 50.
-        q (Union[Unset, str]):
-        category (Union[Unset, str]):
-        tag (Union[Unset, str]):
-        source (Union[Unset, str]):
-        noted (Union[Unset, bool]):
-        doc (Union[Unset, bool]):
-        workspace (Union[Unset, str]):
+        page (int | Unset):
+        page_size (int | Unset):  Default: 50.
+        q (str | Unset):
+        category (str | Unset):
+        tag (str | Unset):
+        source (str | Unset):
+        noted (bool | Unset):
+        doc (bool | Unset):
+        workspace (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, GetContentMarkdownResponse200]]
+        Response[Error | GetContentMarkdownResponse200]
     """
 
     kwargs = _get_kwargs(
@@ -250,15 +250,15 @@ async def asyncio_detailed(
 async def asyncio(
     *,
     client: AuthenticatedClient,
-    page: Unset | int = UNSET,
-    page_size: Unset | int = 50,
-    q: Unset | str = UNSET,
-    category: Unset | str = UNSET,
-    tag: Unset | str = UNSET,
-    source: Unset | str = UNSET,
-    noted: Unset | bool = UNSET,
-    doc: Unset | bool = UNSET,
-    workspace: Unset | str = UNSET,
+    page: int | Unset = UNSET,
+    page_size: int | Unset = 50,
+    q: str | Unset = UNSET,
+    category: str | Unset = UNSET,
+    tag: str | Unset = UNSET,
+    source: str | Unset = UNSET,
+    noted: bool | Unset = UNSET,
+    doc: bool | Unset = UNSET,
+    workspace: str | Unset = UNSET,
 ) -> Error | GetContentMarkdownResponse200 | None:
     """List/search the caller's markdown documents (metadata only)
 
@@ -267,22 +267,22 @@ async def asyncio(
     match), and `tag` (set membership).
 
     Args:
-        page (Union[Unset, int]):
-        page_size (Union[Unset, int]):  Default: 50.
-        q (Union[Unset, str]):
-        category (Union[Unset, str]):
-        tag (Union[Unset, str]):
-        source (Union[Unset, str]):
-        noted (Union[Unset, bool]):
-        doc (Union[Unset, bool]):
-        workspace (Union[Unset, str]):
+        page (int | Unset):
+        page_size (int | Unset):  Default: 50.
+        q (str | Unset):
+        category (str | Unset):
+        tag (str | Unset):
+        source (str | Unset):
+        noted (bool | Unset):
+        doc (bool | Unset):
+        workspace (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, GetContentMarkdownResponse200]
+        Error | GetContentMarkdownResponse200
     """
 
     return (

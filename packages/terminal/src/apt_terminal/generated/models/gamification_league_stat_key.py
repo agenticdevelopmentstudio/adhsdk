@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class GamificationLeagueStatKey(str, Enum):
+class GamificationLeagueStatKey(StrEnum):
     ADVENTURES = "adventures"
     ALLIES = "allies"
     DAYS_ACTIVE = "days_active"

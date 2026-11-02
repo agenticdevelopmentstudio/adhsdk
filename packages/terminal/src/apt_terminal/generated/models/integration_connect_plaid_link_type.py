@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class IntegrationConnectPlaidLinkType(str, Enum):
+class IntegrationConnectPlaidLinkType(StrEnum):
     PLAID_LINK = "plaid_link"
 
     def __str__(self) -> str:

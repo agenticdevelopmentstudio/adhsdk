@@ -1,5 +1,6 @@
 from http import HTTPStatus
 from typing import Any, cast
+from urllib.parse import quote
 
 import httpx
 
@@ -12,7 +13,7 @@ from ...types import UNSET, Response, Unset
 def _get_kwargs(
     id: str,
     *,
-    workspace: Unset | str = UNSET,
+    workspace: str | Unset = UNSET,
 ) -> dict[str, Any]:
     params: dict[str, Any] = {}
 
@@ -22,7 +23,9 @@ def _get_kwargs(
 
     _kwargs: dict[str, Any] = {
         "method": "get",
-        "url": f"/content/markdown/{id}/raw",
+        "url": "/content/markdown/{id}/raw".format(
+            id=quote(str(id), safe=""),
+        ),
         "params": params,
     }
 
@@ -71,7 +74,7 @@ def sync_detailed(
     id: str,
     *,
     client: AuthenticatedClient,
-    workspace: Unset | str = UNSET,
+    workspace: str | Unset = UNSET,
 ) -> Response[Any | Error | str]:
     """Get the raw markdown bytes (text/markdown), with an ETag
 
@@ -79,14 +82,14 @@ def sync_detailed(
 
     Args:
         id (str):
-        workspace (Union[Unset, str]):
+        workspace (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Any, Error, str]]
+        Response[Any | Error | str]
     """
 
     kwargs = _get_kwargs(
@@ -105,7 +108,7 @@ def sync(
     id: str,
     *,
     client: AuthenticatedClient,
-    workspace: Unset | str = UNSET,
+    workspace: str | Unset = UNSET,
 ) -> Any | Error | str | None:
     """Get the raw markdown bytes (text/markdown), with an ETag
 
@@ -113,14 +116,14 @@ def sync(
 
     Args:
         id (str):
-        workspace (Union[Unset, str]):
+        workspace (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Any, Error, str]
+        Any | Error | str
     """
 
     return sync_detailed(
@@ -134,7 +137,7 @@ async def asyncio_detailed(
     id: str,
     *,
     client: AuthenticatedClient,
-    workspace: Unset | str = UNSET,
+    workspace: str | Unset = UNSET,
 ) -> Response[Any | Error | str]:
     """Get the raw markdown bytes (text/markdown), with an ETag
 
@@ -142,14 +145,14 @@ async def asyncio_detailed(
 
     Args:
         id (str):
-        workspace (Union[Unset, str]):
+        workspace (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Any, Error, str]]
+        Response[Any | Error | str]
     """
 
     kwargs = _get_kwargs(
@@ -166,7 +169,7 @@ async def asyncio(
     id: str,
     *,
     client: AuthenticatedClient,
-    workspace: Unset | str = UNSET,
+    workspace: str | Unset = UNSET,
 ) -> Any | Error | str | None:
     """Get the raw markdown bytes (text/markdown), with an ETag
 
@@ -174,14 +177,14 @@ async def asyncio(
 
     Args:
         id (str):
-        workspace (Union[Unset, str]):
+        workspace (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Any, Error, str]
+        Any | Error | str
     """
 
     return (

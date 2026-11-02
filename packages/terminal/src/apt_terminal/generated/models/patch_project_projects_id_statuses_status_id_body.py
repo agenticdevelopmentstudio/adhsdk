@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar
 
@@ -16,20 +18,20 @@ T = TypeVar("T", bound="PatchProjectProjectsIdStatusesStatusIdBody")
 class PatchProjectProjectsIdStatusesStatusIdBody:
     """
     Attributes:
-        label (Union[Unset, str]):
-        category (Union[Unset, PatchProjectProjectsIdStatusesStatusIdBodyCategory]):
-        position (Union[Unset, int]):
+        label (str | Unset):
+        category (PatchProjectProjectsIdStatusesStatusIdBodyCategory | Unset):
+        position (int | Unset):
     """
 
-    label: Unset | str = UNSET
-    category: Unset | PatchProjectProjectsIdStatusesStatusIdBodyCategory = UNSET
-    position: Unset | int = UNSET
+    label: str | Unset = UNSET
+    category: PatchProjectProjectsIdStatusesStatusIdBodyCategory | Unset = UNSET
+    position: int | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
         label = self.label
 
-        category: Unset | str = UNSET
+        category: str | Unset = UNSET
         if not isinstance(self.category, Unset):
             category = self.category.value
 
@@ -53,7 +55,7 @@ class PatchProjectProjectsIdStatusesStatusIdBody:
         label = d.pop("label", UNSET)
 
         _category = d.pop("category", UNSET)
-        category: Unset | PatchProjectProjectsIdStatusesStatusIdBodyCategory
+        category: PatchProjectProjectsIdStatusesStatusIdBodyCategory | Unset
         if isinstance(_category, Unset):
             category = UNSET
         else:

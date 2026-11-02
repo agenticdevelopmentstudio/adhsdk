@@ -13,9 +13,9 @@ from ...types import UNSET, Response, Unset
 
 def _get_kwargs(
     *,
-    body: PostProjectTemplatesBody,
-    workspace: Unset | str = UNSET,
-    kind: Unset | str = UNSET,
+    body: PostProjectTemplatesBody | Unset = UNSET,
+    workspace: str | Unset = UNSET,
+    kind: str | Unset = UNSET,
 ) -> dict[str, Any]:
     headers: dict[str, Any] = {}
 
@@ -33,7 +33,8 @@ def _get_kwargs(
         "params": params,
     }
 
-    _kwargs["json"] = body.to_dict()
+    if not isinstance(body, Unset):
+        _kwargs["json"] = body.to_dict()
 
     headers["Content-Type"] = "application/json"
 
@@ -94,30 +95,30 @@ def _build_response(
 def sync_detailed(
     *,
     client: AuthenticatedClient,
-    body: PostProjectTemplatesBody,
-    workspace: Unset | str = UNSET,
-    kind: Unset | str = UNSET,
+    body: PostProjectTemplatesBody | Unset = UNSET,
+    workspace: str | Unset = UNSET,
+    kind: str | Unset = UNSET,
 ) -> Response[Error | ProjectTemplate]:
-    r"""Create a template in the workspace
+    """Create a template in the workspace
 
      The body is validated against `kind` before it is stored, STRICTLY: an unrecognized key is a 400,
-    because every key in a template body becomes something and silently dropping one would answer \"your
-    template is fine\" and then build a board without the columns the author wrote. It is also what
-    makes a kind mismatch detectable at all — a project body’s keys are all optional, so a work-item
-    body sent under `kind: project` would otherwise be an empty-but-valid one. Requires the workspace’s
-    projects C verb when creating into someone else’s workspace.
+    because every key in a template body becomes something and silently dropping one would answer "your
+    template is fine" and then build a board without the columns the author wrote. It is also what makes
+    a kind mismatch detectable at all — a project body’s keys are all optional, so a work-item body sent
+    under `kind: project` would otherwise be an empty-but-valid one. Requires the workspace’s projects C
+    verb when creating into someone else’s workspace.
 
     Args:
-        workspace (Union[Unset, str]):
-        kind (Union[Unset, str]):
-        body (PostProjectTemplatesBody):
+        workspace (str | Unset):
+        kind (str | Unset):
+        body (PostProjectTemplatesBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, ProjectTemplate]]
+        Response[Error | ProjectTemplate]
     """
 
     kwargs = _get_kwargs(
@@ -136,30 +137,30 @@ def sync_detailed(
 def sync(
     *,
     client: AuthenticatedClient,
-    body: PostProjectTemplatesBody,
-    workspace: Unset | str = UNSET,
-    kind: Unset | str = UNSET,
+    body: PostProjectTemplatesBody | Unset = UNSET,
+    workspace: str | Unset = UNSET,
+    kind: str | Unset = UNSET,
 ) -> Error | ProjectTemplate | None:
-    r"""Create a template in the workspace
+    """Create a template in the workspace
 
      The body is validated against `kind` before it is stored, STRICTLY: an unrecognized key is a 400,
-    because every key in a template body becomes something and silently dropping one would answer \"your
-    template is fine\" and then build a board without the columns the author wrote. It is also what
-    makes a kind mismatch detectable at all — a project body’s keys are all optional, so a work-item
-    body sent under `kind: project` would otherwise be an empty-but-valid one. Requires the workspace’s
-    projects C verb when creating into someone else’s workspace.
+    because every key in a template body becomes something and silently dropping one would answer "your
+    template is fine" and then build a board without the columns the author wrote. It is also what makes
+    a kind mismatch detectable at all — a project body’s keys are all optional, so a work-item body sent
+    under `kind: project` would otherwise be an empty-but-valid one. Requires the workspace’s projects C
+    verb when creating into someone else’s workspace.
 
     Args:
-        workspace (Union[Unset, str]):
-        kind (Union[Unset, str]):
-        body (PostProjectTemplatesBody):
+        workspace (str | Unset):
+        kind (str | Unset):
+        body (PostProjectTemplatesBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, ProjectTemplate]
+        Error | ProjectTemplate
     """
 
     return sync_detailed(
@@ -173,30 +174,30 @@ def sync(
 async def asyncio_detailed(
     *,
     client: AuthenticatedClient,
-    body: PostProjectTemplatesBody,
-    workspace: Unset | str = UNSET,
-    kind: Unset | str = UNSET,
+    body: PostProjectTemplatesBody | Unset = UNSET,
+    workspace: str | Unset = UNSET,
+    kind: str | Unset = UNSET,
 ) -> Response[Error | ProjectTemplate]:
-    r"""Create a template in the workspace
+    """Create a template in the workspace
 
      The body is validated against `kind` before it is stored, STRICTLY: an unrecognized key is a 400,
-    because every key in a template body becomes something and silently dropping one would answer \"your
-    template is fine\" and then build a board without the columns the author wrote. It is also what
-    makes a kind mismatch detectable at all — a project body’s keys are all optional, so a work-item
-    body sent under `kind: project` would otherwise be an empty-but-valid one. Requires the workspace’s
-    projects C verb when creating into someone else’s workspace.
+    because every key in a template body becomes something and silently dropping one would answer "your
+    template is fine" and then build a board without the columns the author wrote. It is also what makes
+    a kind mismatch detectable at all — a project body’s keys are all optional, so a work-item body sent
+    under `kind: project` would otherwise be an empty-but-valid one. Requires the workspace’s projects C
+    verb when creating into someone else’s workspace.
 
     Args:
-        workspace (Union[Unset, str]):
-        kind (Union[Unset, str]):
-        body (PostProjectTemplatesBody):
+        workspace (str | Unset):
+        kind (str | Unset):
+        body (PostProjectTemplatesBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, ProjectTemplate]]
+        Response[Error | ProjectTemplate]
     """
 
     kwargs = _get_kwargs(
@@ -213,30 +214,30 @@ async def asyncio_detailed(
 async def asyncio(
     *,
     client: AuthenticatedClient,
-    body: PostProjectTemplatesBody,
-    workspace: Unset | str = UNSET,
-    kind: Unset | str = UNSET,
+    body: PostProjectTemplatesBody | Unset = UNSET,
+    workspace: str | Unset = UNSET,
+    kind: str | Unset = UNSET,
 ) -> Error | ProjectTemplate | None:
-    r"""Create a template in the workspace
+    """Create a template in the workspace
 
      The body is validated against `kind` before it is stored, STRICTLY: an unrecognized key is a 400,
-    because every key in a template body becomes something and silently dropping one would answer \"your
-    template is fine\" and then build a board without the columns the author wrote. It is also what
-    makes a kind mismatch detectable at all — a project body’s keys are all optional, so a work-item
-    body sent under `kind: project` would otherwise be an empty-but-valid one. Requires the workspace’s
-    projects C verb when creating into someone else’s workspace.
+    because every key in a template body becomes something and silently dropping one would answer "your
+    template is fine" and then build a board without the columns the author wrote. It is also what makes
+    a kind mismatch detectable at all — a project body’s keys are all optional, so a work-item body sent
+    under `kind: project` would otherwise be an empty-but-valid one. Requires the workspace’s projects C
+    verb when creating into someone else’s workspace.
 
     Args:
-        workspace (Union[Unset, str]):
-        kind (Union[Unset, str]):
-        body (PostProjectTemplatesBody):
+        workspace (str | Unset):
+        kind (str | Unset):
+        body (PostProjectTemplatesBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, ProjectTemplate]
+        Error | ProjectTemplate
     """
 
     return (

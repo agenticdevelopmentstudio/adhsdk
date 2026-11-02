@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar
 
@@ -16,17 +18,17 @@ class ProviderConnectionAuth:
     """
     Attributes:
         type_ (ProviderConnectionAuthType):
-        header (Union[Unset, str]): header auth: the header name (e.g. api-key)
-        scheme (Union[Unset, ProviderConnectionAuthScheme]):
-        region (Union[Unset, str]): sigv4 (reserved)
-        token_url (Union[Unset, str]): oauth2 (reserved)
+        header (str | Unset): header auth: the header name (e.g. api-key)
+        scheme (ProviderConnectionAuthScheme | Unset):
+        region (str | Unset): sigv4 (reserved)
+        token_url (str | Unset): oauth2 (reserved)
     """
 
     type_: ProviderConnectionAuthType
-    header: Unset | str = UNSET
-    scheme: Unset | ProviderConnectionAuthScheme = UNSET
-    region: Unset | str = UNSET
-    token_url: Unset | str = UNSET
+    header: str | Unset = UNSET
+    scheme: ProviderConnectionAuthScheme | Unset = UNSET
+    region: str | Unset = UNSET
+    token_url: str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -34,7 +36,7 @@ class ProviderConnectionAuth:
 
         header = self.header
 
-        scheme: Unset | str = UNSET
+        scheme: str | Unset = UNSET
         if not isinstance(self.scheme, Unset):
             scheme = self.scheme.value
 
@@ -68,7 +70,7 @@ class ProviderConnectionAuth:
         header = d.pop("header", UNSET)
 
         _scheme = d.pop("scheme", UNSET)
-        scheme: Unset | ProviderConnectionAuthScheme
+        scheme: ProviderConnectionAuthScheme | Unset
         if isinstance(_scheme, Unset):
             scheme = UNSET
         else:

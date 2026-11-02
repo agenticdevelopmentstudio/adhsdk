@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, TypeVar, Union, cast
+from typing import TYPE_CHECKING, Any, TypeVar, cast
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -21,19 +23,19 @@ T = TypeVar("T", bound="GetShiprReposIdResponse200")
 class GetShiprReposIdResponse200:
     """
     Attributes:
-        repo (Union[Unset, ShiprRepo]): One deployment repository — a mirror. A dev repo with several `[deployments]`
-            shards has one of these per shard.
-        dev_repo (Union['ShiprDevRepo', None, Unset]):
-        group (Union['ShiprGroup', None, Unset]):
-        ladder (Union['ShiprLadder', None, Unset]):
-        runs (Union[Unset, list['ShiprRun']]):
+        repo (ShiprRepo | Unset): One deployment repository — a mirror. A dev repo with several `[deployments]` shards
+            has one of these per shard.
+        dev_repo (None | ShiprDevRepo | Unset):
+        group (None | ShiprGroup | Unset):
+        ladder (None | ShiprLadder | Unset):
+        runs (list[ShiprRun] | Unset):
     """
 
-    repo: Union[Unset, "ShiprRepo"] = UNSET
-    dev_repo: Union["ShiprDevRepo", None, Unset] = UNSET
-    group: Union["ShiprGroup", None, Unset] = UNSET
-    ladder: Union["ShiprLadder", None, Unset] = UNSET
-    runs: Unset | list["ShiprRun"] = UNSET
+    repo: ShiprRepo | Unset = UNSET
+    dev_repo: None | ShiprDevRepo | Unset = UNSET
+    group: None | ShiprGroup | Unset = UNSET
+    ladder: None | ShiprLadder | Unset = UNSET
+    runs: list[ShiprRun] | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -41,11 +43,11 @@ class GetShiprReposIdResponse200:
         from ..models.shipr_group import ShiprGroup
         from ..models.shipr_ladder import ShiprLadder
 
-        repo: Unset | dict[str, Any] = UNSET
+        repo: dict[str, Any] | Unset = UNSET
         if not isinstance(self.repo, Unset):
             repo = self.repo.to_dict()
 
-        dev_repo: None | Unset | dict[str, Any]
+        dev_repo: dict[str, Any] | None | Unset
         if isinstance(self.dev_repo, Unset):
             dev_repo = UNSET
         elif isinstance(self.dev_repo, ShiprDevRepo):
@@ -53,7 +55,7 @@ class GetShiprReposIdResponse200:
         else:
             dev_repo = self.dev_repo
 
-        group: None | Unset | dict[str, Any]
+        group: dict[str, Any] | None | Unset
         if isinstance(self.group, Unset):
             group = UNSET
         elif isinstance(self.group, ShiprGroup):
@@ -61,7 +63,7 @@ class GetShiprReposIdResponse200:
         else:
             group = self.group
 
-        ladder: None | Unset | dict[str, Any]
+        ladder: dict[str, Any] | None | Unset
         if isinstance(self.ladder, Unset):
             ladder = UNSET
         elif isinstance(self.ladder, ShiprLadder):
@@ -69,7 +71,7 @@ class GetShiprReposIdResponse200:
         else:
             ladder = self.ladder
 
-        runs: Unset | list[dict[str, Any]] = UNSET
+        runs: list[dict[str, Any]] | Unset = UNSET
         if not isinstance(self.runs, Unset):
             runs = []
             for runs_item_data in self.runs:
@@ -102,13 +104,13 @@ class GetShiprReposIdResponse200:
 
         d = dict(src_dict)
         _repo = d.pop("repo", UNSET)
-        repo: Unset | ShiprRepo
+        repo: ShiprRepo | Unset
         if isinstance(_repo, Unset):
             repo = UNSET
         else:
             repo = ShiprRepo.from_dict(_repo)
 
-        def _parse_dev_repo(data: object) -> Union["ShiprDevRepo", None, Unset]:
+        def _parse_dev_repo(data: object) -> None | ShiprDevRepo | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
@@ -119,13 +121,13 @@ class GetShiprReposIdResponse200:
                 dev_repo_type_0 = ShiprDevRepo.from_dict(data)
 
                 return dev_repo_type_0
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
-            return cast(Union["ShiprDevRepo", None, Unset], data)
+            return cast(None | ShiprDevRepo | Unset, data)
 
         dev_repo = _parse_dev_repo(d.pop("devRepo", UNSET))
 
-        def _parse_group(data: object) -> Union["ShiprGroup", None, Unset]:
+        def _parse_group(data: object) -> None | ShiprGroup | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
@@ -136,13 +138,13 @@ class GetShiprReposIdResponse200:
                 group_type_0 = ShiprGroup.from_dict(data)
 
                 return group_type_0
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
-            return cast(Union["ShiprGroup", None, Unset], data)
+            return cast(None | ShiprGroup | Unset, data)
 
         group = _parse_group(d.pop("group", UNSET))
 
-        def _parse_ladder(data: object) -> Union["ShiprLadder", None, Unset]:
+        def _parse_ladder(data: object) -> None | ShiprLadder | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
@@ -153,18 +155,20 @@ class GetShiprReposIdResponse200:
                 ladder_type_0 = ShiprLadder.from_dict(data)
 
                 return ladder_type_0
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
-            return cast(Union["ShiprLadder", None, Unset], data)
+            return cast(None | ShiprLadder | Unset, data)
 
         ladder = _parse_ladder(d.pop("ladder", UNSET))
 
-        runs = []
         _runs = d.pop("runs", UNSET)
-        for runs_item_data in _runs or []:
-            runs_item = ShiprRun.from_dict(runs_item_data)
+        runs: list[ShiprRun] | Unset = UNSET
+        if _runs is not UNSET:
+            runs = []
+            for runs_item_data in _runs:
+                runs_item = ShiprRun.from_dict(runs_item_data)
 
-            runs.append(runs_item)
+                runs.append(runs_item)
 
         get_shipr_repos_id_response_200 = cls(
             repo=repo,

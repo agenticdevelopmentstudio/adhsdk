@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class PersonaBootstrapChatStreaming(str, Enum):
+class PersonaBootstrapChatStreaming(StrEnum):
     SSE = "sse"
 
     def __str__(self) -> str:

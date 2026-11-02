@@ -1,5 +1,6 @@
 from http import HTTPStatus
 from typing import Any
+from urllib.parse import quote
 
 import httpx
 
@@ -8,22 +9,25 @@ from ...client import AuthenticatedClient, Client
 from ...models.error import Error
 from ...models.patch_registry_identifiers_rdid_body import PatchRegistryIdentifiersRdidBody
 from ...models.registry_identifier import RegistryIdentifier
-from ...types import Response
+from ...types import UNSET, Response, Unset
 
 
 def _get_kwargs(
     rdid: str,
     *,
-    body: PatchRegistryIdentifiersRdidBody,
+    body: PatchRegistryIdentifiersRdidBody | Unset = UNSET,
 ) -> dict[str, Any]:
     headers: dict[str, Any] = {}
 
     _kwargs: dict[str, Any] = {
         "method": "patch",
-        "url": f"/registry/identifiers/{rdid}",
+        "url": "/registry/identifiers/{rdid}".format(
+            rdid=quote(str(rdid), safe=""),
+        ),
     }
 
-    _kwargs["json"] = body.to_dict()
+    if not isinstance(body, Unset):
+        _kwargs["json"] = body.to_dict()
 
     headers["Content-Type"] = "application/json"
 
@@ -80,20 +84,20 @@ def sync_detailed(
     rdid: str,
     *,
     client: AuthenticatedClient,
-    body: PatchRegistryIdentifiersRdidBody,
+    body: PatchRegistryIdentifiersRdidBody | Unset = UNSET,
 ) -> Response[Error | RegistryIdentifier]:
     """Rename an rdid (entity/uuid unchanged)
 
     Args:
         rdid (str):
-        body (PatchRegistryIdentifiersRdidBody):
+        body (PatchRegistryIdentifiersRdidBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, RegistryIdentifier]]
+        Response[Error | RegistryIdentifier]
     """
 
     kwargs = _get_kwargs(
@@ -112,20 +116,20 @@ def sync(
     rdid: str,
     *,
     client: AuthenticatedClient,
-    body: PatchRegistryIdentifiersRdidBody,
+    body: PatchRegistryIdentifiersRdidBody | Unset = UNSET,
 ) -> Error | RegistryIdentifier | None:
     """Rename an rdid (entity/uuid unchanged)
 
     Args:
         rdid (str):
-        body (PatchRegistryIdentifiersRdidBody):
+        body (PatchRegistryIdentifiersRdidBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, RegistryIdentifier]
+        Error | RegistryIdentifier
     """
 
     return sync_detailed(
@@ -139,20 +143,20 @@ async def asyncio_detailed(
     rdid: str,
     *,
     client: AuthenticatedClient,
-    body: PatchRegistryIdentifiersRdidBody,
+    body: PatchRegistryIdentifiersRdidBody | Unset = UNSET,
 ) -> Response[Error | RegistryIdentifier]:
     """Rename an rdid (entity/uuid unchanged)
 
     Args:
         rdid (str):
-        body (PatchRegistryIdentifiersRdidBody):
+        body (PatchRegistryIdentifiersRdidBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, RegistryIdentifier]]
+        Response[Error | RegistryIdentifier]
     """
 
     kwargs = _get_kwargs(
@@ -169,20 +173,20 @@ async def asyncio(
     rdid: str,
     *,
     client: AuthenticatedClient,
-    body: PatchRegistryIdentifiersRdidBody,
+    body: PatchRegistryIdentifiersRdidBody | Unset = UNSET,
 ) -> Error | RegistryIdentifier | None:
     """Rename an rdid (entity/uuid unchanged)
 
     Args:
         rdid (str):
-        body (PatchRegistryIdentifiersRdidBody):
+        body (PatchRegistryIdentifiersRdidBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, RegistryIdentifier]
+        Error | RegistryIdentifier
     """
 
     return (

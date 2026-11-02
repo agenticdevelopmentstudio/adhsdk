@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar
 
@@ -14,12 +16,12 @@ class PutEcosystemFeatureFlagsIdKeyBody:
     """At least one of enabled, description is required
 
     Attributes:
-        enabled (Union[Unset, bool]):
-        description (Union[Unset, str]):
+        enabled (bool | Unset):
+        description (str | Unset):
     """
 
-    enabled: Unset | bool = UNSET
-    description: Unset | str = UNSET
+    enabled: bool | Unset = UNSET
+    description: str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:

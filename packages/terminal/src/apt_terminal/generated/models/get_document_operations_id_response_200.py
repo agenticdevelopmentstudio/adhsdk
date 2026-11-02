@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -12,20 +14,20 @@ class GetDocumentOperationsIdResponse200:
     Attributes:
         id (str):
         document_id (str):
-        block_id (Union[None, str]):
+        block_id (None | str):
         customer_id (str):
-        deleted_at (Union[None, str]):
+        deleted_at (None | str):
         ecosystem_id (str):
         client_id (str):
         client_seq (int):
         op_type (str):
         op_payload (str):
         created_at (str):
-        undo_group_id (Union[None, str]):
-        inverse_of_op_id (Union[None, str]):
+        undo_group_id (None | str):
+        inverse_of_op_id (None | str):
         updated_at (str):
         sync_version (int):
-        sync_stamped_at (Union[None, str]):
+        sync_stamped_at (None | str):
         sync_txid (int):
     """
 

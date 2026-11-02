@@ -33,7 +33,7 @@ def _get_kwargs(
 
 def _parse_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> Error | list["GetCustomerMembershipsResponse200Item"] | None:
+) -> Error | list[GetCustomerMembershipsResponse200Item] | None:
     if response.status_code == 200:
         response_200 = []
         _response_200 = response.json()
@@ -69,7 +69,7 @@ def _parse_response(
 
 def _build_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> Response[Error | list["GetCustomerMembershipsResponse200Item"]]:
+) -> Response[Error | list[GetCustomerMembershipsResponse200Item]]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -82,7 +82,7 @@ def sync_detailed(
     *,
     client: AuthenticatedClient,
     user_ids: str,
-) -> Response[Error | list["GetCustomerMembershipsResponse200Item"]]:
+) -> Response[Error | list[GetCustomerMembershipsResponse200Item]]:
     """Which ecosystems these people are customers of (admin)
 
      `customer.customers` is per-ecosystem, so one person is several rows and this answers a question
@@ -99,7 +99,7 @@ def sync_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, list['GetCustomerMembershipsResponse200Item']]]
+        Response[Error | list[GetCustomerMembershipsResponse200Item]]
     """
 
     kwargs = _get_kwargs(
@@ -117,7 +117,7 @@ def sync(
     *,
     client: AuthenticatedClient,
     user_ids: str,
-) -> Error | list["GetCustomerMembershipsResponse200Item"] | None:
+) -> Error | list[GetCustomerMembershipsResponse200Item] | None:
     """Which ecosystems these people are customers of (admin)
 
      `customer.customers` is per-ecosystem, so one person is several rows and this answers a question
@@ -134,7 +134,7 @@ def sync(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, list['GetCustomerMembershipsResponse200Item']]
+        Error | list[GetCustomerMembershipsResponse200Item]
     """
 
     return sync_detailed(
@@ -147,7 +147,7 @@ async def asyncio_detailed(
     *,
     client: AuthenticatedClient,
     user_ids: str,
-) -> Response[Error | list["GetCustomerMembershipsResponse200Item"]]:
+) -> Response[Error | list[GetCustomerMembershipsResponse200Item]]:
     """Which ecosystems these people are customers of (admin)
 
      `customer.customers` is per-ecosystem, so one person is several rows and this answers a question
@@ -164,7 +164,7 @@ async def asyncio_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, list['GetCustomerMembershipsResponse200Item']]]
+        Response[Error | list[GetCustomerMembershipsResponse200Item]]
     """
 
     kwargs = _get_kwargs(
@@ -180,7 +180,7 @@ async def asyncio(
     *,
     client: AuthenticatedClient,
     user_ids: str,
-) -> Error | list["GetCustomerMembershipsResponse200Item"] | None:
+) -> Error | list[GetCustomerMembershipsResponse200Item] | None:
     """Which ecosystems these people are customers of (admin)
 
      `customer.customers` is per-ecosystem, so one person is several rows and this answers a question
@@ -197,7 +197,7 @@ async def asyncio(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, list['GetCustomerMembershipsResponse200Item']]
+        Error | list[GetCustomerMembershipsResponse200Item]
     """
 
     return (

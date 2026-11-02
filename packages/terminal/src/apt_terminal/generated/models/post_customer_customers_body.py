@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -12,45 +14,45 @@ T = TypeVar("T", bound="PostCustomerCustomersBody")
 class PostCustomerCustomersBody:
     """
     Attributes:
-        ecosystem_id (Union[Unset, str]):
-        external_id (Union[None, Unset, str]):
-        email (Union[None, Unset, str]):
-        display_name (Union[None, Unset, str]):
-        slug (Union[Unset, str]):
-        avatar_url (Union[Unset, str]):
-        profile_visibility (Union[Unset, str]):
-        token_version (Union[Unset, int]):
-        preferred_mfa_method (Union[None, Unset, str]):
-        sync_txid (Union[Unset, int]):
+        ecosystem_id (str | Unset):
+        external_id (None | str | Unset):
+        email (None | str | Unset):
+        display_name (None | str | Unset):
+        slug (str | Unset):
+        avatar_url (str | Unset):
+        profile_visibility (str | Unset):
+        token_version (int | Unset):
+        preferred_mfa_method (None | str | Unset):
+        sync_txid (int | Unset):
     """
 
-    ecosystem_id: Unset | str = UNSET
-    external_id: None | Unset | str = UNSET
-    email: None | Unset | str = UNSET
-    display_name: None | Unset | str = UNSET
-    slug: Unset | str = UNSET
-    avatar_url: Unset | str = UNSET
-    profile_visibility: Unset | str = UNSET
-    token_version: Unset | int = UNSET
-    preferred_mfa_method: None | Unset | str = UNSET
-    sync_txid: Unset | int = UNSET
+    ecosystem_id: str | Unset = UNSET
+    external_id: None | str | Unset = UNSET
+    email: None | str | Unset = UNSET
+    display_name: None | str | Unset = UNSET
+    slug: str | Unset = UNSET
+    avatar_url: str | Unset = UNSET
+    profile_visibility: str | Unset = UNSET
+    token_version: int | Unset = UNSET
+    preferred_mfa_method: None | str | Unset = UNSET
+    sync_txid: int | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
         ecosystem_id = self.ecosystem_id
 
-        external_id: None | Unset | str
+        external_id: None | str | Unset
         if isinstance(self.external_id, Unset):
             external_id = UNSET
         else:
             external_id = self.external_id
 
-        email: None | Unset | str
+        email: None | str | Unset
         if isinstance(self.email, Unset):
             email = UNSET
         else:
             email = self.email
 
-        display_name: None | Unset | str
+        display_name: None | str | Unset
         if isinstance(self.display_name, Unset):
             display_name = UNSET
         else:
@@ -64,7 +66,7 @@ class PostCustomerCustomersBody:
 
         token_version = self.token_version
 
-        preferred_mfa_method: None | Unset | str
+        preferred_mfa_method: None | str | Unset
         if isinstance(self.preferred_mfa_method, Unset):
             preferred_mfa_method = UNSET
         else:
@@ -103,30 +105,30 @@ class PostCustomerCustomersBody:
         d = dict(src_dict)
         ecosystem_id = d.pop("ecosystemId", UNSET)
 
-        def _parse_external_id(data: object) -> None | Unset | str:
+        def _parse_external_id(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         external_id = _parse_external_id(d.pop("externalId", UNSET))
 
-        def _parse_email(data: object) -> None | Unset | str:
+        def _parse_email(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         email = _parse_email(d.pop("email", UNSET))
 
-        def _parse_display_name(data: object) -> None | Unset | str:
+        def _parse_display_name(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         display_name = _parse_display_name(d.pop("displayName", UNSET))
 
@@ -138,12 +140,12 @@ class PostCustomerCustomersBody:
 
         token_version = d.pop("tokenVersion", UNSET)
 
-        def _parse_preferred_mfa_method(data: object) -> None | Unset | str:
+        def _parse_preferred_mfa_method(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         preferred_mfa_method = _parse_preferred_mfa_method(d.pop("preferredMfaMethod", UNSET))
 

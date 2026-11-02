@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import TYPE_CHECKING, Any, TypeVar
 
@@ -23,9 +25,9 @@ class GameState:
         has_profile (bool):
     """
 
-    game: "GameRef"
-    state: "GameStateState"
-    game_state: "GameStateGameState"
+    game: GameRef
+    state: GameStateState
+    game_state: GameStateGameState
     has_profile: bool
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 

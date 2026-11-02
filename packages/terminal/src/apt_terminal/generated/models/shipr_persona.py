@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar
 
@@ -15,14 +17,14 @@ class ShiprPersona:
     everything else about a persona is read where personas are read.
 
         Attributes:
-            id (Union[Unset, str]):
-            slug (Union[Unset, str]):
-            name (Union[Unset, str]):
+            id (str | Unset):
+            slug (str | Unset):
+            name (str | Unset):
     """
 
-    id: Unset | str = UNSET
-    slug: Unset | str = UNSET
-    name: Unset | str = UNSET
+    id: str | Unset = UNSET
+    slug: str | Unset = UNSET
+    name: str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:

@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, TypeVar, Union, cast
+from typing import TYPE_CHECKING, Any, TypeVar, cast
 
 from attrs import define as _attrs_define
 
@@ -22,28 +24,28 @@ class PostIntegrationIntegrationAudiencesBody:
         provider (str):
         external_id (str):
         name (str):
-        ecosystem_id (Union[Unset, str]):
-        member_count (Union[None, Unset, int]):
-        raw (Union['PostIntegrationIntegrationAudiencesBodyRawType0Type1', None, Unset, bool, float, list[Any], str]):
-        sync_txid (Union[Unset, int]):
+        ecosystem_id (str | Unset):
+        member_count (int | None | Unset):
+        raw (bool | float | list[Any] | None | PostIntegrationIntegrationAudiencesBodyRawType0Type1 | str | Unset):
+        sync_txid (int | Unset):
     """
 
     connection_id: str
     provider: str
     external_id: str
     name: str
-    ecosystem_id: Unset | str = UNSET
-    member_count: None | Unset | int = UNSET
-    raw: Union[
-        "PostIntegrationIntegrationAudiencesBodyRawType0Type1",
-        None,
-        Unset,
-        bool,
-        float,
-        list[Any],
-        str,
-    ] = UNSET
-    sync_txid: Unset | int = UNSET
+    ecosystem_id: str | Unset = UNSET
+    member_count: int | None | Unset = UNSET
+    raw: (
+        bool
+        | float
+        | list[Any]
+        | None
+        | PostIntegrationIntegrationAudiencesBodyRawType0Type1
+        | str
+        | Unset
+    ) = UNSET
+    sync_txid: int | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
         from ..models.post_integration_integration_audiences_body_raw_type_0_type_1 import (
@@ -60,13 +62,13 @@ class PostIntegrationIntegrationAudiencesBody:
 
         ecosystem_id = self.ecosystem_id
 
-        member_count: None | Unset | int
+        member_count: int | None | Unset
         if isinstance(self.member_count, Unset):
             member_count = UNSET
         else:
             member_count = self.member_count
 
-        raw: None | Unset | bool | dict[str, Any] | float | list[Any] | str
+        raw: bool | dict[str, Any] | float | list[Any] | None | str | Unset
         if isinstance(self.raw, Unset):
             raw = UNSET
         elif isinstance(self.raw, PostIntegrationIntegrationAudiencesBodyRawType0Type1):
@@ -117,26 +119,26 @@ class PostIntegrationIntegrationAudiencesBody:
 
         ecosystem_id = d.pop("ecosystemId", UNSET)
 
-        def _parse_member_count(data: object) -> None | Unset | int:
+        def _parse_member_count(data: object) -> int | None | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | int, data)
+            return cast(int | None | Unset, data)
 
         member_count = _parse_member_count(d.pop("memberCount", UNSET))
 
         def _parse_raw(
             data: object,
-        ) -> Union[
-            "PostIntegrationIntegrationAudiencesBodyRawType0Type1",
-            None,
-            Unset,
-            bool,
-            float,
-            list[Any],
-            str,
-        ]:
+        ) -> (
+            bool
+            | float
+            | list[Any]
+            | None
+            | PostIntegrationIntegrationAudiencesBodyRawType0Type1
+            | str
+            | Unset
+        ):
             if data is None:
                 return data
             if isinstance(data, Unset):
@@ -149,7 +151,7 @@ class PostIntegrationIntegrationAudiencesBody:
                 )
 
                 return raw_type_0_type_1
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
             try:
                 if not isinstance(data, list):
@@ -157,18 +159,16 @@ class PostIntegrationIntegrationAudiencesBody:
                 raw_type_0_type_2 = cast(list[Any], data)
 
                 return raw_type_0_type_2
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
             return cast(
-                Union[
-                    "PostIntegrationIntegrationAudiencesBodyRawType0Type1",
-                    None,
-                    Unset,
-                    bool,
-                    float,
-                    list[Any],
-                    str,
-                ],
+                bool
+                | float
+                | list[Any]
+                | None
+                | PostIntegrationIntegrationAudiencesBodyRawType0Type1
+                | str
+                | Unset,
                 data,
             )
 

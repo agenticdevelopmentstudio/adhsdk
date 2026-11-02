@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class PostRegistryRegistriesRegistryIdEntriesBodyValueVisibilityAdditionalProperty(str, Enum):
+class PostRegistryRegistriesRegistryIdEntriesBodyValueVisibilityAdditionalProperty(StrEnum):
     AUTHENTICATED = "authenticated"
     PRIVATE = "private"
     PUBLIC = "public"

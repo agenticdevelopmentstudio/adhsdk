@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import TYPE_CHECKING, Any, TypeVar
 
@@ -18,7 +20,7 @@ class PostAccessPersonasIdToolsResponse201:
         tool (RegistryPersonaToolCatalogItem):
     """
 
-    tool: "RegistryPersonaToolCatalogItem"
+    tool: RegistryPersonaToolCatalogItem
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -36,7 +38,9 @@ class PostAccessPersonasIdToolsResponse201:
 
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
-        from ..models.registry_persona_tool_catalog_item import RegistryPersonaToolCatalogItem
+        from ..models.registry_persona_tool_catalog_item import (
+            RegistryPersonaToolCatalogItem,
+        )
 
         d = dict(src_dict)
         tool = RegistryPersonaToolCatalogItem.from_dict(d.pop("tool"))

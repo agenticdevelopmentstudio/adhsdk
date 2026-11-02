@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class GameInstanceLocationType(str, Enum):
+class GameInstanceLocationType(StrEnum):
     GAME = "game"
     INSTANCE = "instance"
     PLAYER = "player"

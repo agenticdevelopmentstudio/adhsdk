@@ -8,12 +8,12 @@ from ...client import AuthenticatedClient, Client
 from ...models.error import Error
 from ...models.post_customer_memberships_body import PostCustomerMembershipsBody
 from ...models.post_customer_memberships_response_200 import PostCustomerMembershipsResponse200
-from ...types import Response
+from ...types import UNSET, Response, Unset
 
 
 def _get_kwargs(
     *,
-    body: PostCustomerMembershipsBody,
+    body: PostCustomerMembershipsBody | Unset = UNSET,
 ) -> dict[str, Any]:
     headers: dict[str, Any] = {}
 
@@ -22,7 +22,8 @@ def _get_kwargs(
         "url": "/customer/memberships",
     }
 
-    _kwargs["json"] = body.to_dict()
+    if not isinstance(body, Unset):
+        _kwargs["json"] = body.to_dict()
 
     headers["Content-Type"] = "application/json"
 
@@ -78,7 +79,7 @@ def _build_response(
 def sync_detailed(
     *,
     client: AuthenticatedClient,
-    body: PostCustomerMembershipsBody,
+    body: PostCustomerMembershipsBody | Unset = UNSET,
 ) -> Response[Error | PostCustomerMembershipsResponse200]:
     """Make this person a customer of another ecosystem too (admin)
 
@@ -88,14 +89,14 @@ def sync_detailed(
     who has no email, since nothing could ever tie the new row back to this person.
 
     Args:
-        body (PostCustomerMembershipsBody):
+        body (PostCustomerMembershipsBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, PostCustomerMembershipsResponse200]]
+        Response[Error | PostCustomerMembershipsResponse200]
     """
 
     kwargs = _get_kwargs(
@@ -112,7 +113,7 @@ def sync_detailed(
 def sync(
     *,
     client: AuthenticatedClient,
-    body: PostCustomerMembershipsBody,
+    body: PostCustomerMembershipsBody | Unset = UNSET,
 ) -> Error | PostCustomerMembershipsResponse200 | None:
     """Make this person a customer of another ecosystem too (admin)
 
@@ -122,14 +123,14 @@ def sync(
     who has no email, since nothing could ever tie the new row back to this person.
 
     Args:
-        body (PostCustomerMembershipsBody):
+        body (PostCustomerMembershipsBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, PostCustomerMembershipsResponse200]
+        Error | PostCustomerMembershipsResponse200
     """
 
     return sync_detailed(
@@ -141,7 +142,7 @@ def sync(
 async def asyncio_detailed(
     *,
     client: AuthenticatedClient,
-    body: PostCustomerMembershipsBody,
+    body: PostCustomerMembershipsBody | Unset = UNSET,
 ) -> Response[Error | PostCustomerMembershipsResponse200]:
     """Make this person a customer of another ecosystem too (admin)
 
@@ -151,14 +152,14 @@ async def asyncio_detailed(
     who has no email, since nothing could ever tie the new row back to this person.
 
     Args:
-        body (PostCustomerMembershipsBody):
+        body (PostCustomerMembershipsBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, PostCustomerMembershipsResponse200]]
+        Response[Error | PostCustomerMembershipsResponse200]
     """
 
     kwargs = _get_kwargs(
@@ -173,7 +174,7 @@ async def asyncio_detailed(
 async def asyncio(
     *,
     client: AuthenticatedClient,
-    body: PostCustomerMembershipsBody,
+    body: PostCustomerMembershipsBody | Unset = UNSET,
 ) -> Error | PostCustomerMembershipsResponse200 | None:
     """Make this person a customer of another ecosystem too (admin)
 
@@ -183,14 +184,14 @@ async def asyncio(
     who has no email, since nothing could ever tie the new row back to this person.
 
     Args:
-        body (PostCustomerMembershipsBody):
+        body (PostCustomerMembershipsBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, PostCustomerMembershipsResponse200]
+        Error | PostCustomerMembershipsResponse200
     """
 
     return (

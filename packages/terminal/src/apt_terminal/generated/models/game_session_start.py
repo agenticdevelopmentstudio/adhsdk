@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar
 
@@ -15,17 +17,17 @@ class GameSessionStart:
 
     Attributes:
         kind (str):
-        game_id (Union[Unset, str]):
-        slug (Union[Unset, str]):
-        chat_id (Union[Unset, str]):
-        subject_artifact_id (Union[Unset, str]):
+        game_id (str | Unset):
+        slug (str | Unset):
+        chat_id (str | Unset):
+        subject_artifact_id (str | Unset):
     """
 
     kind: str
-    game_id: Unset | str = UNSET
-    slug: Unset | str = UNSET
-    chat_id: Unset | str = UNSET
-    subject_artifact_id: Unset | str = UNSET
+    game_id: str | Unset = UNSET
+    slug: str | Unset = UNSET
+    chat_id: str | Unset = UNSET
+    subject_artifact_id: str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:

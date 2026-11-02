@@ -1,5 +1,6 @@
 from http import HTTPStatus
 from typing import Any
+from urllib.parse import quote
 
 import httpx
 
@@ -14,11 +15,11 @@ from ...types import UNSET, Response, Unset
 def _get_kwargs(
     id: str,
     *,
-    kind: Unset | GetProjectWorkItemsIdRelationsKind = UNSET,
+    kind: GetProjectWorkItemsIdRelationsKind | Unset = UNSET,
 ) -> dict[str, Any]:
     params: dict[str, Any] = {}
 
-    json_kind: Unset | str = UNSET
+    json_kind: str | Unset = UNSET
     if not isinstance(kind, Unset):
         json_kind = kind.value
 
@@ -28,7 +29,9 @@ def _get_kwargs(
 
     _kwargs: dict[str, Any] = {
         "method": "get",
-        "url": f"/project/work-items/{id}/relations",
+        "url": "/project/work-items/{id}/relations".format(
+            id=quote(str(id), safe=""),
+        ),
         "params": params,
     }
 
@@ -37,7 +40,7 @@ def _get_kwargs(
 
 def _parse_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> Error | list["WorkItemRelation"] | None:
+) -> Error | list[WorkItemRelation] | None:
     if response.status_code == 200:
         response_200 = []
         _response_200 = response.json()
@@ -71,7 +74,7 @@ def _parse_response(
 
 def _build_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> Response[Error | list["WorkItemRelation"]]:
+) -> Response[Error | list[WorkItemRelation]]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -84,20 +87,20 @@ def sync_detailed(
     id: str,
     *,
     client: AuthenticatedClient,
-    kind: Unset | GetProjectWorkItemsIdRelationsKind = UNSET,
-) -> Response[Error | list["WorkItemRelation"]]:
+    kind: GetProjectWorkItemsIdRelationsKind | Unset = UNSET,
+) -> Response[Error | list[WorkItemRelation]]:
     """Every live link touching this work item, both directions (by createdAt)
 
     Args:
         id (str):
-        kind (Union[Unset, GetProjectWorkItemsIdRelationsKind]):
+        kind (GetProjectWorkItemsIdRelationsKind | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, list['WorkItemRelation']]]
+        Response[Error | list[WorkItemRelation]]
     """
 
     kwargs = _get_kwargs(
@@ -116,20 +119,20 @@ def sync(
     id: str,
     *,
     client: AuthenticatedClient,
-    kind: Unset | GetProjectWorkItemsIdRelationsKind = UNSET,
-) -> Error | list["WorkItemRelation"] | None:
+    kind: GetProjectWorkItemsIdRelationsKind | Unset = UNSET,
+) -> Error | list[WorkItemRelation] | None:
     """Every live link touching this work item, both directions (by createdAt)
 
     Args:
         id (str):
-        kind (Union[Unset, GetProjectWorkItemsIdRelationsKind]):
+        kind (GetProjectWorkItemsIdRelationsKind | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, list['WorkItemRelation']]
+        Error | list[WorkItemRelation]
     """
 
     return sync_detailed(
@@ -143,20 +146,20 @@ async def asyncio_detailed(
     id: str,
     *,
     client: AuthenticatedClient,
-    kind: Unset | GetProjectWorkItemsIdRelationsKind = UNSET,
-) -> Response[Error | list["WorkItemRelation"]]:
+    kind: GetProjectWorkItemsIdRelationsKind | Unset = UNSET,
+) -> Response[Error | list[WorkItemRelation]]:
     """Every live link touching this work item, both directions (by createdAt)
 
     Args:
         id (str):
-        kind (Union[Unset, GetProjectWorkItemsIdRelationsKind]):
+        kind (GetProjectWorkItemsIdRelationsKind | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, list['WorkItemRelation']]]
+        Response[Error | list[WorkItemRelation]]
     """
 
     kwargs = _get_kwargs(
@@ -173,20 +176,20 @@ async def asyncio(
     id: str,
     *,
     client: AuthenticatedClient,
-    kind: Unset | GetProjectWorkItemsIdRelationsKind = UNSET,
-) -> Error | list["WorkItemRelation"] | None:
+    kind: GetProjectWorkItemsIdRelationsKind | Unset = UNSET,
+) -> Error | list[WorkItemRelation] | None:
     """Every live link touching this work item, both directions (by createdAt)
 
     Args:
         id (str):
-        kind (Union[Unset, GetProjectWorkItemsIdRelationsKind]):
+        kind (GetProjectWorkItemsIdRelationsKind | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, list['WorkItemRelation']]
+        Error | list[WorkItemRelation]
     """
 
     return (

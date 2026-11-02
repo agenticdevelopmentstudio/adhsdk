@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -17,25 +19,25 @@ class EcosystemAuthSettingsUpdate:
     """A partial update — supply at least one field. Anything omitted is left as it was.
 
     Attributes:
-        signup_mode (Union[Unset, EcosystemAuthSettingsUpdateSignupMode]):
-        login_enabled (Union[Unset, bool]):
-        allowed_providers (Union[None, Unset, list[str]]): Every slug must name a configured provider, or the call is a
-            400. An empty array is coerced to null (all providers) rather than locking everyone out.
+        signup_mode (EcosystemAuthSettingsUpdateSignupMode | Unset):
+        login_enabled (bool | Unset):
+        allowed_providers (list[str] | None | Unset): Every slug must name a configured provider, or the call is a 400.
+            An empty array is coerced to null (all providers) rather than locking everyone out.
     """
 
-    signup_mode: Unset | EcosystemAuthSettingsUpdateSignupMode = UNSET
-    login_enabled: Unset | bool = UNSET
-    allowed_providers: None | Unset | list[str] = UNSET
+    signup_mode: EcosystemAuthSettingsUpdateSignupMode | Unset = UNSET
+    login_enabled: bool | Unset = UNSET
+    allowed_providers: list[str] | None | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
-        signup_mode: Unset | str = UNSET
+        signup_mode: str | Unset = UNSET
         if not isinstance(self.signup_mode, Unset):
             signup_mode = self.signup_mode.value
 
         login_enabled = self.login_enabled
 
-        allowed_providers: None | Unset | list[str]
+        allowed_providers: list[str] | None | Unset
         if isinstance(self.allowed_providers, Unset):
             allowed_providers = UNSET
         elif isinstance(self.allowed_providers, list):
@@ -60,7 +62,7 @@ class EcosystemAuthSettingsUpdate:
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
         d = dict(src_dict)
         _signup_mode = d.pop("signupMode", UNSET)
-        signup_mode: Unset | EcosystemAuthSettingsUpdateSignupMode
+        signup_mode: EcosystemAuthSettingsUpdateSignupMode | Unset
         if isinstance(_signup_mode, Unset):
             signup_mode = UNSET
         else:
@@ -68,7 +70,7 @@ class EcosystemAuthSettingsUpdate:
 
         login_enabled = d.pop("loginEnabled", UNSET)
 
-        def _parse_allowed_providers(data: object) -> None | Unset | list[str]:
+        def _parse_allowed_providers(data: object) -> list[str] | None | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
@@ -79,9 +81,9 @@ class EcosystemAuthSettingsUpdate:
                 allowed_providers_type_0 = cast(list[str], data)
 
                 return allowed_providers_type_0
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
-            return cast(None | Unset | list[str], data)
+            return cast(list[str] | None | Unset, data)
 
         allowed_providers = _parse_allowed_providers(d.pop("allowedProviders", UNSET))
 

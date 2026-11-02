@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar
 
@@ -15,18 +17,18 @@ class PostPublicSignupListsPublicKeySignupsBody:
     Attributes:
         email (str):
         nonce (str):
-        name (Union[Unset, str]):
-        source_url (Union[Unset, str]):
-        website (Union[Unset, str]): Honeypot. The real form renders it hidden and never fills it — any value means a
-            bot. Documented because a client that omits it entirely is fine, and one that FILLS it is silently accepted-and-
+        name (str | Unset):
+        source_url (str | Unset):
+        website (str | Unset): Honeypot. The real form renders it hidden and never fills it — any value means a bot.
+            Documented because a client that omits it entirely is fine, and one that FILLS it is silently accepted-and-
             discarded rather than rejected.
     """
 
     email: str
     nonce: str
-    name: Unset | str = UNSET
-    source_url: Unset | str = UNSET
-    website: Unset | str = UNSET
+    name: str | Unset = UNSET
+    source_url: str | Unset = UNSET
+    website: str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:

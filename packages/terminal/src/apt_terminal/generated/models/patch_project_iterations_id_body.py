@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar
 
@@ -15,16 +17,16 @@ class PatchProjectIterationsIdBody:
     pair sent, so pushing only `endDate` out is an ordinary edit.
 
         Attributes:
-            name (Union[Unset, str]):
-            description (Union[Unset, str]):
-            start_date (Union[Unset, str]):
-            end_date (Union[Unset, str]):
+            name (str | Unset):
+            description (str | Unset):
+            start_date (str | Unset):
+            end_date (str | Unset):
     """
 
-    name: Unset | str = UNSET
-    description: Unset | str = UNSET
-    start_date: Unset | str = UNSET
-    end_date: Unset | str = UNSET
+    name: str | Unset = UNSET
+    description: str | Unset = UNSET
+    start_date: str | Unset = UNSET
+    end_date: str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -16,30 +18,30 @@ class PostIntegrationIntegrationSocialNotificationsBody:
         external_id (str):
         source_provider (str):
         notification_type (str):
-        ecosystem_id (Union[Unset, str]):
-        title (Union[None, Unset, str]):
-        body (Union[None, Unset, str]):
-        author_handle (Union[None, Unset, str]):
-        author_display_name (Union[None, Unset, str]):
-        item_url (Union[None, Unset, str]):
-        is_read (Union[Unset, bool]):
-        external_created_at (Union[None, Unset, str]):
-        sync_txid (Union[Unset, int]):
+        ecosystem_id (str | Unset):
+        title (None | str | Unset):
+        body (None | str | Unset):
+        author_handle (None | str | Unset):
+        author_display_name (None | str | Unset):
+        item_url (None | str | Unset):
+        is_read (bool | Unset):
+        external_created_at (None | str | Unset):
+        sync_txid (int | Unset):
     """
 
     connection_id: str
     external_id: str
     source_provider: str
     notification_type: str
-    ecosystem_id: Unset | str = UNSET
-    title: None | Unset | str = UNSET
-    body: None | Unset | str = UNSET
-    author_handle: None | Unset | str = UNSET
-    author_display_name: None | Unset | str = UNSET
-    item_url: None | Unset | str = UNSET
-    is_read: Unset | bool = UNSET
-    external_created_at: None | Unset | str = UNSET
-    sync_txid: Unset | int = UNSET
+    ecosystem_id: str | Unset = UNSET
+    title: None | str | Unset = UNSET
+    body: None | str | Unset = UNSET
+    author_handle: None | str | Unset = UNSET
+    author_display_name: None | str | Unset = UNSET
+    item_url: None | str | Unset = UNSET
+    is_read: bool | Unset = UNSET
+    external_created_at: None | str | Unset = UNSET
+    sync_txid: int | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
         connection_id = self.connection_id
@@ -52,31 +54,31 @@ class PostIntegrationIntegrationSocialNotificationsBody:
 
         ecosystem_id = self.ecosystem_id
 
-        title: None | Unset | str
+        title: None | str | Unset
         if isinstance(self.title, Unset):
             title = UNSET
         else:
             title = self.title
 
-        body: None | Unset | str
+        body: None | str | Unset
         if isinstance(self.body, Unset):
             body = UNSET
         else:
             body = self.body
 
-        author_handle: None | Unset | str
+        author_handle: None | str | Unset
         if isinstance(self.author_handle, Unset):
             author_handle = UNSET
         else:
             author_handle = self.author_handle
 
-        author_display_name: None | Unset | str
+        author_display_name: None | str | Unset
         if isinstance(self.author_display_name, Unset):
             author_display_name = UNSET
         else:
             author_display_name = self.author_display_name
 
-        item_url: None | Unset | str
+        item_url: None | str | Unset
         if isinstance(self.item_url, Unset):
             item_url = UNSET
         else:
@@ -84,7 +86,7 @@ class PostIntegrationIntegrationSocialNotificationsBody:
 
         is_read = self.is_read
 
-        external_created_at: None | Unset | str
+        external_created_at: None | str | Unset
         if isinstance(self.external_created_at, Unset):
             external_created_at = UNSET
         else:
@@ -136,59 +138,59 @@ class PostIntegrationIntegrationSocialNotificationsBody:
 
         ecosystem_id = d.pop("ecosystemId", UNSET)
 
-        def _parse_title(data: object) -> None | Unset | str:
+        def _parse_title(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         title = _parse_title(d.pop("title", UNSET))
 
-        def _parse_body(data: object) -> None | Unset | str:
+        def _parse_body(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         body = _parse_body(d.pop("body", UNSET))
 
-        def _parse_author_handle(data: object) -> None | Unset | str:
+        def _parse_author_handle(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         author_handle = _parse_author_handle(d.pop("authorHandle", UNSET))
 
-        def _parse_author_display_name(data: object) -> None | Unset | str:
+        def _parse_author_display_name(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         author_display_name = _parse_author_display_name(d.pop("authorDisplayName", UNSET))
 
-        def _parse_item_url(data: object) -> None | Unset | str:
+        def _parse_item_url(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         item_url = _parse_item_url(d.pop("itemUrl", UNSET))
 
         is_read = d.pop("isRead", UNSET)
 
-        def _parse_external_created_at(data: object) -> None | Unset | str:
+        def _parse_external_created_at(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         external_created_at = _parse_external_created_at(d.pop("externalCreatedAt", UNSET))
 

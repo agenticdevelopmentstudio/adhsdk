@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -12,23 +14,23 @@ class GetIntegrationIntegrationPagesResponse200Item:
     Attributes:
         id (str):
         customer_id (str):
-        deleted_at (Union[None, str]):
+        deleted_at (None | str):
         ecosystem_id (str):
         connection_id (str):
         external_id (str):
         title (str):
         object_type (str):
-        url (Union[None, str]):
-        icon (Union[None, str]):
-        parent_type (Union[None, str]):
-        parent_id (Union[None, str]):
+        url (None | str):
+        icon (None | str):
+        parent_type (None | str):
+        parent_id (None | str):
         is_archived (bool):
-        last_edited_at (Union[None, str]):
+        last_edited_at (None | str):
         is_deleted (bool):
         created_at (str):
         updated_at (str):
         sync_version (int):
-        sync_stamped_at (Union[None, str]):
+        sync_stamped_at (None | str):
         sync_txid (int):
     """
 

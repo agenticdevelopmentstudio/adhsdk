@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -17,9 +19,9 @@ class IntegrationActionResult:
         ok (bool): true when status is ok
         status (IntegrationActionResultStatus):
         action_log_id (str): The integration_action_logs row id
-        external_id (Union[None, str]): Provider-side id produced, if any
+        external_id (None | str): Provider-side id produced, if any
         deduped (bool): true when an Idempotency-Key replay returned a prior row
-        error (Union[Unset, str]): Failure message when status is error
+        error (str | Unset): Failure message when status is error
     """
 
     ok: bool
@@ -27,7 +29,7 @@ class IntegrationActionResult:
     action_log_id: str
     external_id: None | str
     deduped: bool
-    error: Unset | str = UNSET
+    error: str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:

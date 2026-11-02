@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, TypeVar, Union, cast
+from typing import TYPE_CHECKING, Any, TypeVar, cast
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -20,12 +22,11 @@ class EntityHistoryEntry:
         ecosystem_id (str):
         subject_table (str):
         subject_id (str):
-        actor_id (Union[None, str]):
-        actor_label (Union[None, str]):
+        actor_id (None | str):
+        actor_label (None | str):
         action (str): Free text, not an enum — each subsystem names its own. Emitted today: request_received,
             invite_sent, note_added, status_changed, accepted, notes_updated.
-        detail (Union['EntityHistoryEntryDetailType0', None]): Action-specific payload; the shape is whatever emitted
-            the entry.
+        detail (EntityHistoryEntryDetailType0 | None): Action-specific payload; the shape is whatever emitted the entry.
         created_at (str):
     """
 
@@ -36,12 +37,14 @@ class EntityHistoryEntry:
     actor_id: None | str
     actor_label: None | str
     action: str
-    detail: Union["EntityHistoryEntryDetailType0", None]
+    detail: EntityHistoryEntryDetailType0 | None
     created_at: str
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
-        from ..models.entity_history_entry_detail_type_0 import EntityHistoryEntryDetailType0
+        from ..models.entity_history_entry_detail_type_0 import (
+            EntityHistoryEntryDetailType0,
+        )
 
         id = self.id
 
@@ -59,7 +62,7 @@ class EntityHistoryEntry:
 
         action = self.action
 
-        detail: None | dict[str, Any]
+        detail: dict[str, Any] | None
         if isinstance(self.detail, EntityHistoryEntryDetailType0):
             detail = self.detail.to_dict()
         else:
@@ -87,7 +90,9 @@ class EntityHistoryEntry:
 
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
-        from ..models.entity_history_entry_detail_type_0 import EntityHistoryEntryDetailType0
+        from ..models.entity_history_entry_detail_type_0 import (
+            EntityHistoryEntryDetailType0,
+        )
 
         d = dict(src_dict)
         id = d.pop("id")
@@ -114,7 +119,7 @@ class EntityHistoryEntry:
 
         action = d.pop("action")
 
-        def _parse_detail(data: object) -> Union["EntityHistoryEntryDetailType0", None]:
+        def _parse_detail(data: object) -> EntityHistoryEntryDetailType0 | None:
             if data is None:
                 return data
             try:
@@ -123,9 +128,9 @@ class EntityHistoryEntry:
                 detail_type_0 = EntityHistoryEntryDetailType0.from_dict(data)
 
                 return detail_type_0
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
-            return cast(Union["EntityHistoryEntryDetailType0", None], data)
+            return cast(EntityHistoryEntryDetailType0 | None, data)
 
         detail = _parse_detail(d.pop("detail"))
 

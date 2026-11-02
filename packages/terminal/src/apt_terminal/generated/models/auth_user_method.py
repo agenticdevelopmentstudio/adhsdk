@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -14,7 +16,7 @@ class AuthUserMethod:
         id (str):
         user_id (str):
         provider (str):
-        provider_id (Union[None, str]):
+        provider_id (None | str):
         has_credential (bool):
         created_at (str):
         updated_at (str):

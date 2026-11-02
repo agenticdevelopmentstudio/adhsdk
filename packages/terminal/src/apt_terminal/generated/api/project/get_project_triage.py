@@ -12,8 +12,8 @@ from ...types import UNSET, Response, Unset
 
 def _get_kwargs(
     *,
-    workspace: Unset | str = UNSET,
-    limit: Unset | int = 50,
+    workspace: str | Unset = UNSET,
+    limit: int | Unset = 50,
 ) -> dict[str, Any]:
     params: dict[str, Any] = {}
 
@@ -70,8 +70,8 @@ def _build_response(
 def sync_detailed(
     *,
     client: AuthenticatedClient,
-    workspace: Unset | str = UNSET,
-    limit: Unset | int = 50,
+    workspace: str | Unset = UNSET,
+    limit: int | Unset = 50,
 ) -> Response[Error | GetProjectTriageResponse200]:
     """Every reachable board's untriaged cards, oldest first
 
@@ -81,15 +81,15 @@ def sync_detailed(
     that reads a board the caller cannot open. Rows are thinner than a WorkItem — see TriageHit.
 
     Args:
-        workspace (Union[Unset, str]):
-        limit (Union[Unset, int]):  Default: 50.
+        workspace (str | Unset):
+        limit (int | Unset):  Default: 50.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, GetProjectTriageResponse200]]
+        Response[Error | GetProjectTriageResponse200]
     """
 
     kwargs = _get_kwargs(
@@ -107,8 +107,8 @@ def sync_detailed(
 def sync(
     *,
     client: AuthenticatedClient,
-    workspace: Unset | str = UNSET,
-    limit: Unset | int = 50,
+    workspace: str | Unset = UNSET,
+    limit: int | Unset = 50,
 ) -> Error | GetProjectTriageResponse200 | None:
     """Every reachable board's untriaged cards, oldest first
 
@@ -118,15 +118,15 @@ def sync(
     that reads a board the caller cannot open. Rows are thinner than a WorkItem — see TriageHit.
 
     Args:
-        workspace (Union[Unset, str]):
-        limit (Union[Unset, int]):  Default: 50.
+        workspace (str | Unset):
+        limit (int | Unset):  Default: 50.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, GetProjectTriageResponse200]
+        Error | GetProjectTriageResponse200
     """
 
     return sync_detailed(
@@ -139,8 +139,8 @@ def sync(
 async def asyncio_detailed(
     *,
     client: AuthenticatedClient,
-    workspace: Unset | str = UNSET,
-    limit: Unset | int = 50,
+    workspace: str | Unset = UNSET,
+    limit: int | Unset = 50,
 ) -> Response[Error | GetProjectTriageResponse200]:
     """Every reachable board's untriaged cards, oldest first
 
@@ -150,15 +150,15 @@ async def asyncio_detailed(
     that reads a board the caller cannot open. Rows are thinner than a WorkItem — see TriageHit.
 
     Args:
-        workspace (Union[Unset, str]):
-        limit (Union[Unset, int]):  Default: 50.
+        workspace (str | Unset):
+        limit (int | Unset):  Default: 50.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, GetProjectTriageResponse200]]
+        Response[Error | GetProjectTriageResponse200]
     """
 
     kwargs = _get_kwargs(
@@ -174,8 +174,8 @@ async def asyncio_detailed(
 async def asyncio(
     *,
     client: AuthenticatedClient,
-    workspace: Unset | str = UNSET,
-    limit: Unset | int = 50,
+    workspace: str | Unset = UNSET,
+    limit: int | Unset = 50,
 ) -> Error | GetProjectTriageResponse200 | None:
     """Every reachable board's untriaged cards, oldest first
 
@@ -185,15 +185,15 @@ async def asyncio(
     that reads a board the caller cannot open. Rows are thinner than a WorkItem — see TriageHit.
 
     Args:
-        workspace (Union[Unset, str]):
-        limit (Union[Unset, int]):  Default: 50.
+        workspace (str | Unset):
+        limit (int | Unset):  Default: 50.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, GetProjectTriageResponse200]
+        Error | GetProjectTriageResponse200
     """
 
     return (

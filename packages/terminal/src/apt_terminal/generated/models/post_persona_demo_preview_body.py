@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import TYPE_CHECKING, Any, TypeVar
 
@@ -20,21 +22,21 @@ class PostPersonaDemoPreviewBody:
     """
     Attributes:
         source (str): The draft ink source, exactly as it sits in the editor
-        sign_in_line (Union[Unset, str]): What the persona says to an anonymous visitor it cannot answer. Blank ⇒ the
-            platform default.
-        message (Union[Unset, str]): The visitor's message this turn. Omit it with an empty `history` to lint the script
-            and see the opening block — the story plays its opening without consulting the message.
-        history (Union[Unset, list['PostPersonaDemoPreviewBodyHistoryItem']]): The transcript BEFORE this message. The
-            story is replayed over it.
-        can_escalate (Union[Unset, bool]): Preview the SIGNED-IN visitor's demo, where an off-script message falls
-            through to the real model (`text: null`). Default previews the anonymous one. Default: False.
+        sign_in_line (str | Unset): What the persona says to an anonymous visitor it cannot answer. Blank ⇒ the platform
+            default.
+        message (str | Unset): The visitor's message this turn. Omit it with an empty `history` to lint the script and
+            see the opening block — the story plays its opening without consulting the message.
+        history (list[PostPersonaDemoPreviewBodyHistoryItem] | Unset): The transcript BEFORE this message. The story is
+            replayed over it.
+        can_escalate (bool | Unset): Preview the SIGNED-IN visitor's demo, where an off-script message falls through to
+            the real model (`text: null`). Default previews the anonymous one. Default: False.
     """
 
     source: str
-    sign_in_line: Unset | str = UNSET
-    message: Unset | str = UNSET
-    history: Unset | list["PostPersonaDemoPreviewBodyHistoryItem"] = UNSET
-    can_escalate: Unset | bool = False
+    sign_in_line: str | Unset = UNSET
+    message: str | Unset = UNSET
+    history: list[PostPersonaDemoPreviewBodyHistoryItem] | Unset = UNSET
+    can_escalate: bool | Unset = False
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -44,7 +46,7 @@ class PostPersonaDemoPreviewBody:
 
         message = self.message
 
-        history: Unset | list[dict[str, Any]] = UNSET
+        history: list[dict[str, Any]] | Unset = UNSET
         if not isinstance(self.history, Unset):
             history = []
             for history_item_data in self.history:
@@ -84,12 +86,14 @@ class PostPersonaDemoPreviewBody:
 
         message = d.pop("message", UNSET)
 
-        history = []
         _history = d.pop("history", UNSET)
-        for history_item_data in _history or []:
-            history_item = PostPersonaDemoPreviewBodyHistoryItem.from_dict(history_item_data)
+        history: list[PostPersonaDemoPreviewBodyHistoryItem] | Unset = UNSET
+        if _history is not UNSET:
+            history = []
+            for history_item_data in _history:
+                history_item = PostPersonaDemoPreviewBodyHistoryItem.from_dict(history_item_data)
 
-            history.append(history_item)
+                history.append(history_item)
 
         can_escalate = d.pop("canEscalate", UNSET)
 

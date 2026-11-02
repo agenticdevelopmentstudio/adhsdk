@@ -13,13 +13,13 @@ from ...types import UNSET, Response, Unset
 
 def _get_kwargs(
     *,
-    direction: Unset | GetFriendsRequestsDirection = GetFriendsRequestsDirection.RECEIVED,
-    page: Unset | str = UNSET,
-    page_size: Unset | str = UNSET,
+    direction: GetFriendsRequestsDirection | Unset = GetFriendsRequestsDirection.RECEIVED,
+    page: str | Unset = UNSET,
+    page_size: str | Unset = UNSET,
 ) -> dict[str, Any]:
     params: dict[str, Any] = {}
 
-    json_direction: Unset | str = UNSET
+    json_direction: str | Unset = UNSET
     if not isinstance(direction, Unset):
         json_direction = direction.value
 
@@ -78,24 +78,24 @@ def _build_response(
 def sync_detailed(
     *,
     client: AuthenticatedClient,
-    direction: Unset | GetFriendsRequestsDirection = GetFriendsRequestsDirection.RECEIVED,
-    page: Unset | str = UNSET,
-    page_size: Unset | str = UNSET,
+    direction: GetFriendsRequestsDirection | Unset = GetFriendsRequestsDirection.RECEIVED,
+    page: str | Unset = UNSET,
+    page_size: str | Unset = UNSET,
 ) -> Response[Error | GetFriendsRequestsResponse200]:
     """Pending friend requests — ?direction=received (default, the caller's inbox) | sent
 
     Args:
-        direction (Union[Unset, GetFriendsRequestsDirection]):  Default:
+        direction (GetFriendsRequestsDirection | Unset):  Default:
             GetFriendsRequestsDirection.RECEIVED.
-        page (Union[Unset, str]):
-        page_size (Union[Unset, str]):
+        page (str | Unset):
+        page_size (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, GetFriendsRequestsResponse200]]
+        Response[Error | GetFriendsRequestsResponse200]
     """
 
     kwargs = _get_kwargs(
@@ -114,24 +114,24 @@ def sync_detailed(
 def sync(
     *,
     client: AuthenticatedClient,
-    direction: Unset | GetFriendsRequestsDirection = GetFriendsRequestsDirection.RECEIVED,
-    page: Unset | str = UNSET,
-    page_size: Unset | str = UNSET,
+    direction: GetFriendsRequestsDirection | Unset = GetFriendsRequestsDirection.RECEIVED,
+    page: str | Unset = UNSET,
+    page_size: str | Unset = UNSET,
 ) -> Error | GetFriendsRequestsResponse200 | None:
     """Pending friend requests — ?direction=received (default, the caller's inbox) | sent
 
     Args:
-        direction (Union[Unset, GetFriendsRequestsDirection]):  Default:
+        direction (GetFriendsRequestsDirection | Unset):  Default:
             GetFriendsRequestsDirection.RECEIVED.
-        page (Union[Unset, str]):
-        page_size (Union[Unset, str]):
+        page (str | Unset):
+        page_size (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, GetFriendsRequestsResponse200]
+        Error | GetFriendsRequestsResponse200
     """
 
     return sync_detailed(
@@ -145,24 +145,24 @@ def sync(
 async def asyncio_detailed(
     *,
     client: AuthenticatedClient,
-    direction: Unset | GetFriendsRequestsDirection = GetFriendsRequestsDirection.RECEIVED,
-    page: Unset | str = UNSET,
-    page_size: Unset | str = UNSET,
+    direction: GetFriendsRequestsDirection | Unset = GetFriendsRequestsDirection.RECEIVED,
+    page: str | Unset = UNSET,
+    page_size: str | Unset = UNSET,
 ) -> Response[Error | GetFriendsRequestsResponse200]:
     """Pending friend requests — ?direction=received (default, the caller's inbox) | sent
 
     Args:
-        direction (Union[Unset, GetFriendsRequestsDirection]):  Default:
+        direction (GetFriendsRequestsDirection | Unset):  Default:
             GetFriendsRequestsDirection.RECEIVED.
-        page (Union[Unset, str]):
-        page_size (Union[Unset, str]):
+        page (str | Unset):
+        page_size (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, GetFriendsRequestsResponse200]]
+        Response[Error | GetFriendsRequestsResponse200]
     """
 
     kwargs = _get_kwargs(
@@ -179,24 +179,24 @@ async def asyncio_detailed(
 async def asyncio(
     *,
     client: AuthenticatedClient,
-    direction: Unset | GetFriendsRequestsDirection = GetFriendsRequestsDirection.RECEIVED,
-    page: Unset | str = UNSET,
-    page_size: Unset | str = UNSET,
+    direction: GetFriendsRequestsDirection | Unset = GetFriendsRequestsDirection.RECEIVED,
+    page: str | Unset = UNSET,
+    page_size: str | Unset = UNSET,
 ) -> Error | GetFriendsRequestsResponse200 | None:
     """Pending friend requests — ?direction=received (default, the caller's inbox) | sent
 
     Args:
-        direction (Union[Unset, GetFriendsRequestsDirection]):  Default:
+        direction (GetFriendsRequestsDirection | Unset):  Default:
             GetFriendsRequestsDirection.RECEIVED.
-        page (Union[Unset, str]):
-        page_size (Union[Unset, str]):
+        page (str | Unset):
+        page_size (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, GetFriendsRequestsResponse200]
+        Error | GetFriendsRequestsResponse200
     """
 
     return (

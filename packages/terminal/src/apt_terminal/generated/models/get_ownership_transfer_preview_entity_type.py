@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class GetOwnershipTransferPreviewEntityType(str, Enum):
+class GetOwnershipTransferPreviewEntityType(StrEnum):
     APPLICATION = "application"
     BUCKET = "bucket"
     ECOSYSTEM = "ecosystem"

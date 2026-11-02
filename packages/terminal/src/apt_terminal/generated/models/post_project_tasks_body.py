@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -16,34 +18,34 @@ class PostProjectTasksBody:
         external_id (str):
         source_provider (str):
         title (str):
-        ecosystem_id (Union[Unset, str]):
-        description (Union[None, Unset, str]):
-        is_completed (Union[Unset, bool]):
-        priority (Union[Unset, int]):
-        due_date (Union[None, Unset, str]):
-        due_datetime (Union[None, Unset, str]):
-        external_project_id (Union[None, Unset, str]):
-        external_project_name (Union[None, Unset, str]):
-        labels (Union[None, Unset, str]):
-        url (Union[None, Unset, str]):
-        sync_txid (Union[Unset, int]):
+        ecosystem_id (str | Unset):
+        description (None | str | Unset):
+        is_completed (bool | Unset):
+        priority (int | Unset):
+        due_date (None | str | Unset):
+        due_datetime (None | str | Unset):
+        external_project_id (None | str | Unset):
+        external_project_name (None | str | Unset):
+        labels (None | str | Unset):
+        url (None | str | Unset):
+        sync_txid (int | Unset):
     """
 
     connection_id: str
     external_id: str
     source_provider: str
     title: str
-    ecosystem_id: Unset | str = UNSET
-    description: None | Unset | str = UNSET
-    is_completed: Unset | bool = UNSET
-    priority: Unset | int = UNSET
-    due_date: None | Unset | str = UNSET
-    due_datetime: None | Unset | str = UNSET
-    external_project_id: None | Unset | str = UNSET
-    external_project_name: None | Unset | str = UNSET
-    labels: None | Unset | str = UNSET
-    url: None | Unset | str = UNSET
-    sync_txid: Unset | int = UNSET
+    ecosystem_id: str | Unset = UNSET
+    description: None | str | Unset = UNSET
+    is_completed: bool | Unset = UNSET
+    priority: int | Unset = UNSET
+    due_date: None | str | Unset = UNSET
+    due_datetime: None | str | Unset = UNSET
+    external_project_id: None | str | Unset = UNSET
+    external_project_name: None | str | Unset = UNSET
+    labels: None | str | Unset = UNSET
+    url: None | str | Unset = UNSET
+    sync_txid: int | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
         connection_id = self.connection_id
@@ -56,7 +58,7 @@ class PostProjectTasksBody:
 
         ecosystem_id = self.ecosystem_id
 
-        description: None | Unset | str
+        description: None | str | Unset
         if isinstance(self.description, Unset):
             description = UNSET
         else:
@@ -66,37 +68,37 @@ class PostProjectTasksBody:
 
         priority = self.priority
 
-        due_date: None | Unset | str
+        due_date: None | str | Unset
         if isinstance(self.due_date, Unset):
             due_date = UNSET
         else:
             due_date = self.due_date
 
-        due_datetime: None | Unset | str
+        due_datetime: None | str | Unset
         if isinstance(self.due_datetime, Unset):
             due_datetime = UNSET
         else:
             due_datetime = self.due_datetime
 
-        external_project_id: None | Unset | str
+        external_project_id: None | str | Unset
         if isinstance(self.external_project_id, Unset):
             external_project_id = UNSET
         else:
             external_project_id = self.external_project_id
 
-        external_project_name: None | Unset | str
+        external_project_name: None | str | Unset
         if isinstance(self.external_project_name, Unset):
             external_project_name = UNSET
         else:
             external_project_name = self.external_project_name
 
-        labels: None | Unset | str
+        labels: None | str | Unset
         if isinstance(self.labels, Unset):
             labels = UNSET
         else:
             labels = self.labels
 
-        url: None | Unset | str
+        url: None | str | Unset
         if isinstance(self.url, Unset):
             url = UNSET
         else:
@@ -152,12 +154,12 @@ class PostProjectTasksBody:
 
         ecosystem_id = d.pop("ecosystemId", UNSET)
 
-        def _parse_description(data: object) -> None | Unset | str:
+        def _parse_description(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         description = _parse_description(d.pop("description", UNSET))
 
@@ -165,57 +167,57 @@ class PostProjectTasksBody:
 
         priority = d.pop("priority", UNSET)
 
-        def _parse_due_date(data: object) -> None | Unset | str:
+        def _parse_due_date(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         due_date = _parse_due_date(d.pop("dueDate", UNSET))
 
-        def _parse_due_datetime(data: object) -> None | Unset | str:
+        def _parse_due_datetime(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         due_datetime = _parse_due_datetime(d.pop("dueDatetime", UNSET))
 
-        def _parse_external_project_id(data: object) -> None | Unset | str:
+        def _parse_external_project_id(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         external_project_id = _parse_external_project_id(d.pop("externalProjectId", UNSET))
 
-        def _parse_external_project_name(data: object) -> None | Unset | str:
+        def _parse_external_project_name(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         external_project_name = _parse_external_project_name(d.pop("externalProjectName", UNSET))
 
-        def _parse_labels(data: object) -> None | Unset | str:
+        def _parse_labels(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         labels = _parse_labels(d.pop("labels", UNSET))
 
-        def _parse_url(data: object) -> None | Unset | str:
+        def _parse_url(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         url = _parse_url(d.pop("url", UNSET))
 

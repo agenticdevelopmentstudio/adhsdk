@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class PostAccountMfaWebauthnRegisterOptionsBodyKind(str, Enum):
+class PostAccountMfaWebauthnRegisterOptionsBodyKind(StrEnum):
     PASSKEY = "passkey"
     SECURITY_KEY = "security_key"
 

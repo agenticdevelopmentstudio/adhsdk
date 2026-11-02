@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar
 
@@ -15,18 +17,18 @@ class PostAuthLinkProviderBody:
     Attributes:
         client_slug (str):
         provider_slug (str):
-        code (Union[Unset, str]):
-        access_token (Union[Unset, str]):
-        id_token (Union[Unset, str]):
-        redirect_uri (Union[Unset, str]):
+        code (str | Unset):
+        access_token (str | Unset):
+        id_token (str | Unset):
+        redirect_uri (str | Unset):
     """
 
     client_slug: str
     provider_slug: str
-    code: Unset | str = UNSET
-    access_token: Unset | str = UNSET
-    id_token: Unset | str = UNSET
-    redirect_uri: Unset | str = UNSET
+    code: str | Unset = UNSET
+    access_token: str | Unset = UNSET
+    id_token: str | Unset = UNSET
+    redirect_uri: str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:

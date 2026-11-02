@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class GamificationRealmBadgeInputTier(str, Enum):
+class GamificationRealmBadgeInputTier(StrEnum):
     BRONZE = "bronze"
     GOLD = "gold"
     NONE = "none"

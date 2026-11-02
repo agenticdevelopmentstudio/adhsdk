@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar
 
@@ -14,30 +16,30 @@ class PostShiprRegisterBody:
     """
     Attributes:
         slug (str): owner/name on the forge.
-        connection_id (Union[Unset, str]): A GitHub App installation belonging to the caller, from `GET
-            /shipr/connections`. Omitted, the repository is read anonymously — status works, nothing that writes does.
-        group_id (Union[Unset, str]): Where a FIRST registration files the mirrors it invents.
-        main_branch (Union[Unset, str]):
-        prepared_branch (Union[Unset, str]):
-        deployment_owner (Union[Unset, str]): Where the ONE mirror goes when `.shipr` declares no shards. Read only on
-            that fallback — a declared shard’s slug is never overridden, because the file and the form must not be able to
-            say two different things.
-        deployment_name (Union[Unset, str]): The mirror’s name on the same fallback. Defaults to `<name>-deployment`;
+        connection_id (str | Unset): A GitHub App installation belonging to the caller, from `GET /shipr/connections`.
+            Omitted, the repository is read anonymously — status works, nothing that writes does.
+        group_id (str | Unset): Where a FIRST registration files the mirrors it invents.
+        main_branch (str | Unset):
+        prepared_branch (str | Unset):
+        deployment_owner (str | Unset): Where the ONE mirror goes when `.shipr` declares no shards. Read only on that
+            fallback — a declared shard’s slug is never overridden, because the file and the form must not be able to say
+            two different things.
+        deployment_name (str | Unset): The mirror’s name on the same fallback. Defaults to `<name>-deployment`;
             overridable independently of the owner, because changing the org almost always keeps the name.
-        provision (Union[Unset, bool]): Whether to GO AND MAKE IT, or only write down where it goes. `false` writes the
-            rows synchronously, leaves `registeredAt` null and queues no run, so nothing is created on the forge under a
-            name nobody has looked at yet; the operator then sets the org, the name and the environments and presses
-            Provision, which is `POST /shipr/runs` with the same `register` operation. Defaults to true.
+        provision (bool | Unset): Whether to GO AND MAKE IT, or only write down where it goes. `false` writes the rows
+            synchronously, leaves `registeredAt` null and queues no run, so nothing is created on the forge under a name
+            nobody has looked at yet; the operator then sets the org, the name and the environments and presses Provision,
+            which is `POST /shipr/runs` with the same `register` operation. Defaults to true.
     """
 
     slug: str
-    connection_id: Unset | str = UNSET
-    group_id: Unset | str = UNSET
-    main_branch: Unset | str = UNSET
-    prepared_branch: Unset | str = UNSET
-    deployment_owner: Unset | str = UNSET
-    deployment_name: Unset | str = UNSET
-    provision: Unset | bool = UNSET
+    connection_id: str | Unset = UNSET
+    group_id: str | Unset = UNSET
+    main_branch: str | Unset = UNSET
+    prepared_branch: str | Unset = UNSET
+    deployment_owner: str | Unset = UNSET
+    deployment_name: str | Unset = UNSET
+    provision: bool | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:

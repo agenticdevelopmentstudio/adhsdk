@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class PutGamificationRealmsEcosystemIdConfigBodySkin(str, Enum):
+class PutGamificationRealmsEcosystemIdConfigBodySkin(StrEnum):
     PLAIN = "plain"
     RPG = "rpg"
 

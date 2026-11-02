@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import TYPE_CHECKING, Any, TypeVar, cast
 
@@ -18,25 +20,25 @@ class PublicUserProfile:
     """
     Attributes:
         slug (str):
-        display_name (Union[None, str]):
-        avatar_url (Union[None, str]):
+        display_name (None | str):
+        avatar_url (None | str):
         created_at (str):
-        social_links (list['PublicSocialLink']):
+        social_links (list[PublicSocialLink]):
         emails (list[str]):
         phones (list[str]):
-        addresses (list['PublicAddress']):
-        personas (list['PublicPersonaSummary']):
+        addresses (list[PublicAddress]):
+        personas (list[PublicPersonaSummary]):
     """
 
     slug: str
     display_name: None | str
     avatar_url: None | str
     created_at: str
-    social_links: list["PublicSocialLink"]
+    social_links: list[PublicSocialLink]
     emails: list[str]
     phones: list[str]
-    addresses: list["PublicAddress"]
-    personas: list["PublicPersonaSummary"]
+    addresses: list[PublicAddress]
+    personas: list[PublicPersonaSummary]
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:

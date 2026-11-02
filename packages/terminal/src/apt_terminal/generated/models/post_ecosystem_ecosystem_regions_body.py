@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar
 
@@ -13,15 +15,15 @@ class PostEcosystemEcosystemRegionsBody:
     """
     Attributes:
         display_name (str):
-        postgres_host (Union[Unset, str]):
-        railway_service_id (Union[Unset, str]):
-        is_default_for_new_projects (Union[Unset, bool]):
+        postgres_host (str | Unset):
+        railway_service_id (str | Unset):
+        is_default_for_new_projects (bool | Unset):
     """
 
     display_name: str
-    postgres_host: Unset | str = UNSET
-    railway_service_id: Unset | str = UNSET
-    is_default_for_new_projects: Unset | bool = UNSET
+    postgres_host: str | Unset = UNSET
+    railway_service_id: str | Unset = UNSET
+    is_default_for_new_projects: bool | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
         display_name = self.display_name

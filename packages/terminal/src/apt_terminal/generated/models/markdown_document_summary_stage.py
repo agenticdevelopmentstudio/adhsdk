@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class MarkdownDocumentSummaryStage(str, Enum):
+class MarkdownDocumentSummaryStage(StrEnum):
     DRAFT = "draft"
     FINAL = "final"
 

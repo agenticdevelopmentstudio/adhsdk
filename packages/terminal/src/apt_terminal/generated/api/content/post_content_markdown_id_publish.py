@@ -1,5 +1,6 @@
 from http import HTTPStatus
 from typing import Any
+from urllib.parse import quote
 
 import httpx
 
@@ -14,8 +15,8 @@ from ...types import UNSET, Response, Unset
 def _get_kwargs(
     id: str,
     *,
-    body: PostContentMarkdownIdPublishBody,
-    workspace: Unset | str = UNSET,
+    body: PostContentMarkdownIdPublishBody | Unset = UNSET,
+    workspace: str | Unset = UNSET,
 ) -> dict[str, Any]:
     headers: dict[str, Any] = {}
 
@@ -27,11 +28,14 @@ def _get_kwargs(
 
     _kwargs: dict[str, Any] = {
         "method": "post",
-        "url": f"/content/markdown/{id}/publish",
+        "url": "/content/markdown/{id}/publish".format(
+            id=quote(str(id), safe=""),
+        ),
         "params": params,
     }
 
-    _kwargs["json"] = body.to_dict()
+    if not isinstance(body, Unset):
+        _kwargs["json"] = body.to_dict()
 
     headers["Content-Type"] = "application/json"
 
@@ -88,8 +92,8 @@ def sync_detailed(
     id: str,
     *,
     client: AuthenticatedClient,
-    body: PostContentMarkdownIdPublishBody,
-    workspace: Unset | str = UNSET,
+    body: PostContentMarkdownIdPublishBody | Unset = UNSET,
+    workspace: str | Unset = UNSET,
 ) -> Response[Error | MarkdownDocument]:
     """Publish a document under an author-defined public route slug
 
@@ -99,15 +103,15 @@ def sync_detailed(
 
     Args:
         id (str):
-        workspace (Union[Unset, str]):
-        body (PostContentMarkdownIdPublishBody):
+        workspace (str | Unset):
+        body (PostContentMarkdownIdPublishBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, MarkdownDocument]]
+        Response[Error | MarkdownDocument]
     """
 
     kwargs = _get_kwargs(
@@ -127,8 +131,8 @@ def sync(
     id: str,
     *,
     client: AuthenticatedClient,
-    body: PostContentMarkdownIdPublishBody,
-    workspace: Unset | str = UNSET,
+    body: PostContentMarkdownIdPublishBody | Unset = UNSET,
+    workspace: str | Unset = UNSET,
 ) -> Error | MarkdownDocument | None:
     """Publish a document under an author-defined public route slug
 
@@ -138,15 +142,15 @@ def sync(
 
     Args:
         id (str):
-        workspace (Union[Unset, str]):
-        body (PostContentMarkdownIdPublishBody):
+        workspace (str | Unset):
+        body (PostContentMarkdownIdPublishBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, MarkdownDocument]
+        Error | MarkdownDocument
     """
 
     return sync_detailed(
@@ -161,8 +165,8 @@ async def asyncio_detailed(
     id: str,
     *,
     client: AuthenticatedClient,
-    body: PostContentMarkdownIdPublishBody,
-    workspace: Unset | str = UNSET,
+    body: PostContentMarkdownIdPublishBody | Unset = UNSET,
+    workspace: str | Unset = UNSET,
 ) -> Response[Error | MarkdownDocument]:
     """Publish a document under an author-defined public route slug
 
@@ -172,15 +176,15 @@ async def asyncio_detailed(
 
     Args:
         id (str):
-        workspace (Union[Unset, str]):
-        body (PostContentMarkdownIdPublishBody):
+        workspace (str | Unset):
+        body (PostContentMarkdownIdPublishBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, MarkdownDocument]]
+        Response[Error | MarkdownDocument]
     """
 
     kwargs = _get_kwargs(
@@ -198,8 +202,8 @@ async def asyncio(
     id: str,
     *,
     client: AuthenticatedClient,
-    body: PostContentMarkdownIdPublishBody,
-    workspace: Unset | str = UNSET,
+    body: PostContentMarkdownIdPublishBody | Unset = UNSET,
+    workspace: str | Unset = UNSET,
 ) -> Error | MarkdownDocument | None:
     """Publish a document under an author-defined public route slug
 
@@ -209,15 +213,15 @@ async def asyncio(
 
     Args:
         id (str):
-        workspace (Union[Unset, str]):
-        body (PostContentMarkdownIdPublishBody):
+        workspace (str | Unset):
+        body (PostContentMarkdownIdPublishBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, MarkdownDocument]
+        Error | MarkdownDocument
     """
 
     return (

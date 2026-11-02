@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class UsageSummaryRowScope(str, Enum):
+class UsageSummaryRowScope(StrEnum):
     APPLICATION = "application"
     ECOSYSTEM = "ecosystem"
     PERSONA = "persona"

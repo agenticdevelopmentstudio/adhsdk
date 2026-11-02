@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class WorkItemFieldValueType(str, Enum):
+class WorkItemFieldValueType(StrEnum):
     CHECKBOX = "checkbox"
     DATE = "date"
     NUMBER = "number"

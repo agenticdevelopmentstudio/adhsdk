@@ -1,5 +1,6 @@
 from http import HTTPStatus
 from typing import Any
+from urllib.parse import quote
 
 import httpx
 
@@ -14,7 +15,7 @@ def _get_kwargs(
     id: str,
     version: str,
     *,
-    workspace: Unset | str = UNSET,
+    workspace: str | Unset = UNSET,
 ) -> dict[str, Any]:
     params: dict[str, Any] = {}
 
@@ -24,7 +25,10 @@ def _get_kwargs(
 
     _kwargs: dict[str, Any] = {
         "method": "post",
-        "url": f"/content/markdown/{id}/versions/{version}/restore",
+        "url": "/content/markdown/{id}/versions/{version}/restore".format(
+            id=quote(str(id), safe=""),
+            version=quote(str(version), safe=""),
+        ),
         "params": params,
     }
 
@@ -76,21 +80,21 @@ def sync_detailed(
     version: str,
     *,
     client: AuthenticatedClient,
-    workspace: Unset | str = UNSET,
+    workspace: str | Unset = UNSET,
 ) -> Response[Error | MarkdownDocument]:
     """Restore a version (re-applies its full state as a new version; non-destructive)
 
     Args:
         id (str):
         version (str):
-        workspace (Union[Unset, str]):
+        workspace (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, MarkdownDocument]]
+        Response[Error | MarkdownDocument]
     """
 
     kwargs = _get_kwargs(
@@ -111,21 +115,21 @@ def sync(
     version: str,
     *,
     client: AuthenticatedClient,
-    workspace: Unset | str = UNSET,
+    workspace: str | Unset = UNSET,
 ) -> Error | MarkdownDocument | None:
     """Restore a version (re-applies its full state as a new version; non-destructive)
 
     Args:
         id (str):
         version (str):
-        workspace (Union[Unset, str]):
+        workspace (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, MarkdownDocument]
+        Error | MarkdownDocument
     """
 
     return sync_detailed(
@@ -141,21 +145,21 @@ async def asyncio_detailed(
     version: str,
     *,
     client: AuthenticatedClient,
-    workspace: Unset | str = UNSET,
+    workspace: str | Unset = UNSET,
 ) -> Response[Error | MarkdownDocument]:
     """Restore a version (re-applies its full state as a new version; non-destructive)
 
     Args:
         id (str):
         version (str):
-        workspace (Union[Unset, str]):
+        workspace (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, MarkdownDocument]]
+        Response[Error | MarkdownDocument]
     """
 
     kwargs = _get_kwargs(
@@ -174,21 +178,21 @@ async def asyncio(
     version: str,
     *,
     client: AuthenticatedClient,
-    workspace: Unset | str = UNSET,
+    workspace: str | Unset = UNSET,
 ) -> Error | MarkdownDocument | None:
     """Restore a version (re-applies its full state as a new version; non-destructive)
 
     Args:
         id (str):
         version (str):
-        workspace (Union[Unset, str]):
+        workspace (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, MarkdownDocument]
+        Error | MarkdownDocument
     """
 
     return (

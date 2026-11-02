@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -14,16 +16,16 @@ class PostGamePlayersResponse201:
         ecosystem_id (str):
         customer_id (str):
         game_id (str):
-        character_name (Union[None, str]):
-        character_avatar_url (Union[None, str]):
+        character_name (None | str):
+        character_avatar_url (None | str):
         visibility (str):
         first_played_at (str):
         last_played_at (str):
         created_at (str):
         updated_at (str):
-        deleted_at (Union[None, str]):
+        deleted_at (None | str):
         sync_version (int):
-        sync_stamped_at (Union[None, str]):
+        sync_stamped_at (None | str):
         sync_txid (int):
     """
 

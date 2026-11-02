@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class RegistryOwnerKind(str, Enum):
+class RegistryOwnerKind(StrEnum):
     CUSTOMER = "customer"
     ORGANIZATION = "organization"
 

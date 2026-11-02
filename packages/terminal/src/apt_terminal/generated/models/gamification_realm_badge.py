@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -34,17 +36,17 @@ class GamificationRealmBadge:
         description (str):
         icon (str):
         point_value (int): XP granted when earned
-        stat_key (Union[None, Unset, str]): The stat the rule watches
-        comparator (Union[GamificationRealmBadgeComparatorType1, GamificationRealmBadgeComparatorType2Type1,
-            GamificationRealmBadgeComparatorType3Type1, None, Unset]):
-        threshold (Union[None, Unset, int]):
-        badge_line (Union[None, Unset, str]): Groups the tiers of one line
-        tier (Union[GamificationRealmBadgeTierType1, GamificationRealmBadgeTierType2Type1,
-            GamificationRealmBadgeTierType3Type1, None, Unset]):
-        hidden (Union[Unset, bool]):
-        active (Union[Unset, bool]):
-        subject_type (Union[None, Unset, str]):
-        ecosystem_id (Union[None, Unset, str]): NULL = platform default; else the realm
+        stat_key (None | str | Unset): The stat the rule watches
+        comparator (GamificationRealmBadgeComparatorType1 | GamificationRealmBadgeComparatorType2Type1 |
+            GamificationRealmBadgeComparatorType3Type1 | None | Unset):
+        threshold (int | None | Unset):
+        badge_line (None | str | Unset): Groups the tiers of one line
+        tier (GamificationRealmBadgeTierType1 | GamificationRealmBadgeTierType2Type1 |
+            GamificationRealmBadgeTierType3Type1 | None | Unset):
+        hidden (bool | Unset):
+        active (bool | Unset):
+        subject_type (None | str | Unset):
+        ecosystem_id (None | str | Unset): NULL = platform default; else the realm
     """
 
     id: str
@@ -52,7 +54,7 @@ class GamificationRealmBadge:
     description: str
     icon: str
     point_value: int
-    stat_key: None | Unset | str = UNSET
+    stat_key: None | str | Unset = UNSET
     comparator: (
         GamificationRealmBadgeComparatorType1
         | GamificationRealmBadgeComparatorType2Type1
@@ -60,8 +62,8 @@ class GamificationRealmBadge:
         | None
         | Unset
     ) = UNSET
-    threshold: None | Unset | int = UNSET
-    badge_line: None | Unset | str = UNSET
+    threshold: int | None | Unset = UNSET
+    badge_line: None | str | Unset = UNSET
     tier: (
         GamificationRealmBadgeTierType1
         | GamificationRealmBadgeTierType2Type1
@@ -69,10 +71,10 @@ class GamificationRealmBadge:
         | None
         | Unset
     ) = UNSET
-    hidden: Unset | bool = UNSET
-    active: Unset | bool = UNSET
-    subject_type: None | Unset | str = UNSET
-    ecosystem_id: None | Unset | str = UNSET
+    hidden: bool | Unset = UNSET
+    active: bool | Unset = UNSET
+    subject_type: None | str | Unset = UNSET
+    ecosystem_id: None | str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -86,13 +88,13 @@ class GamificationRealmBadge:
 
         point_value = self.point_value
 
-        stat_key: None | Unset | str
+        stat_key: None | str | Unset
         if isinstance(self.stat_key, Unset):
             stat_key = UNSET
         else:
             stat_key = self.stat_key
 
-        comparator: None | Unset | str
+        comparator: None | str | Unset
         if isinstance(self.comparator, Unset):
             comparator = UNSET
         elif (
@@ -104,19 +106,19 @@ class GamificationRealmBadge:
         else:
             comparator = self.comparator
 
-        threshold: None | Unset | int
+        threshold: int | None | Unset
         if isinstance(self.threshold, Unset):
             threshold = UNSET
         else:
             threshold = self.threshold
 
-        badge_line: None | Unset | str
+        badge_line: None | str | Unset
         if isinstance(self.badge_line, Unset):
             badge_line = UNSET
         else:
             badge_line = self.badge_line
 
-        tier: None | Unset | str
+        tier: None | str | Unset
         if isinstance(self.tier, Unset):
             tier = UNSET
         elif (
@@ -132,13 +134,13 @@ class GamificationRealmBadge:
 
         active = self.active
 
-        subject_type: None | Unset | str
+        subject_type: None | str | Unset
         if isinstance(self.subject_type, Unset):
             subject_type = UNSET
         else:
             subject_type = self.subject_type
 
-        ecosystem_id: None | Unset | str
+        ecosystem_id: None | str | Unset
         if isinstance(self.ecosystem_id, Unset):
             ecosystem_id = UNSET
         else:
@@ -189,12 +191,12 @@ class GamificationRealmBadge:
 
         point_value = d.pop("pointValue")
 
-        def _parse_stat_key(data: object) -> None | Unset | str:
+        def _parse_stat_key(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         stat_key = _parse_stat_key(d.pop("statKey", UNSET))
 
@@ -217,7 +219,7 @@ class GamificationRealmBadge:
                 comparator_type_1 = GamificationRealmBadgeComparatorType1(data)
 
                 return comparator_type_1
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
             try:
                 if not isinstance(data, str):
@@ -225,7 +227,7 @@ class GamificationRealmBadge:
                 comparator_type_2_type_1 = GamificationRealmBadgeComparatorType2Type1(data)
 
                 return comparator_type_2_type_1
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
             try:
                 if not isinstance(data, str):
@@ -233,7 +235,7 @@ class GamificationRealmBadge:
                 comparator_type_3_type_1 = GamificationRealmBadgeComparatorType3Type1(data)
 
                 return comparator_type_3_type_1
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
             return cast(
                 GamificationRealmBadgeComparatorType1
@@ -246,21 +248,21 @@ class GamificationRealmBadge:
 
         comparator = _parse_comparator(d.pop("comparator", UNSET))
 
-        def _parse_threshold(data: object) -> None | Unset | int:
+        def _parse_threshold(data: object) -> int | None | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | int, data)
+            return cast(int | None | Unset, data)
 
         threshold = _parse_threshold(d.pop("threshold", UNSET))
 
-        def _parse_badge_line(data: object) -> None | Unset | str:
+        def _parse_badge_line(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         badge_line = _parse_badge_line(d.pop("badgeLine", UNSET))
 
@@ -283,7 +285,7 @@ class GamificationRealmBadge:
                 tier_type_1 = GamificationRealmBadgeTierType1(data)
 
                 return tier_type_1
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
             try:
                 if not isinstance(data, str):
@@ -291,7 +293,7 @@ class GamificationRealmBadge:
                 tier_type_2_type_1 = GamificationRealmBadgeTierType2Type1(data)
 
                 return tier_type_2_type_1
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
             try:
                 if not isinstance(data, str):
@@ -299,7 +301,7 @@ class GamificationRealmBadge:
                 tier_type_3_type_1 = GamificationRealmBadgeTierType3Type1(data)
 
                 return tier_type_3_type_1
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
             return cast(
                 GamificationRealmBadgeTierType1
@@ -316,21 +318,21 @@ class GamificationRealmBadge:
 
         active = d.pop("active", UNSET)
 
-        def _parse_subject_type(data: object) -> None | Unset | str:
+        def _parse_subject_type(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         subject_type = _parse_subject_type(d.pop("subjectType", UNSET))
 
-        def _parse_ecosystem_id(data: object) -> None | Unset | str:
+        def _parse_ecosystem_id(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         ecosystem_id = _parse_ecosystem_id(d.pop("ecosystemId", UNSET))
 

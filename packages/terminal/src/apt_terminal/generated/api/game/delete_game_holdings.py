@@ -71,12 +71,12 @@ def sync_detailed(
     artifact_id: str,
     kind: str,
 ) -> Response[Any | Error]:
-    r"""Revoke a holding (no-op when not held)
+    """Revoke a holding (no-op when not held)
 
      The selector is on the query string rather than in a body: a DELETE body is legal but is dropped by
     enough proxies that a route depending on one fails intermittently, in somebody else’s
-    infrastructure. 204 whether or not a row was hit — a 404 would distinguish \"you never held this\"
-    from \"you did\".
+    infrastructure. 204 whether or not a row was hit — a 404 would distinguish "you never held this"
+    from "you did".
 
     Args:
         artifact_id (str):
@@ -87,7 +87,7 @@ def sync_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Any, Error]]
+        Response[Any | Error]
     """
 
     kwargs = _get_kwargs(
@@ -108,12 +108,12 @@ def sync(
     artifact_id: str,
     kind: str,
 ) -> Any | Error | None:
-    r"""Revoke a holding (no-op when not held)
+    """Revoke a holding (no-op when not held)
 
      The selector is on the query string rather than in a body: a DELETE body is legal but is dropped by
     enough proxies that a route depending on one fails intermittently, in somebody else’s
-    infrastructure. 204 whether or not a row was hit — a 404 would distinguish \"you never held this\"
-    from \"you did\".
+    infrastructure. 204 whether or not a row was hit — a 404 would distinguish "you never held this"
+    from "you did".
 
     Args:
         artifact_id (str):
@@ -124,7 +124,7 @@ def sync(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Any, Error]
+        Any | Error
     """
 
     return sync_detailed(
@@ -140,12 +140,12 @@ async def asyncio_detailed(
     artifact_id: str,
     kind: str,
 ) -> Response[Any | Error]:
-    r"""Revoke a holding (no-op when not held)
+    """Revoke a holding (no-op when not held)
 
      The selector is on the query string rather than in a body: a DELETE body is legal but is dropped by
     enough proxies that a route depending on one fails intermittently, in somebody else’s
-    infrastructure. 204 whether or not a row was hit — a 404 would distinguish \"you never held this\"
-    from \"you did\".
+    infrastructure. 204 whether or not a row was hit — a 404 would distinguish "you never held this"
+    from "you did".
 
     Args:
         artifact_id (str):
@@ -156,7 +156,7 @@ async def asyncio_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Any, Error]]
+        Response[Any | Error]
     """
 
     kwargs = _get_kwargs(
@@ -175,12 +175,12 @@ async def asyncio(
     artifact_id: str,
     kind: str,
 ) -> Any | Error | None:
-    r"""Revoke a holding (no-op when not held)
+    """Revoke a holding (no-op when not held)
 
      The selector is on the query string rather than in a body: a DELETE body is legal but is dropped by
     enough proxies that a route depending on one fails intermittently, in somebody else’s
-    infrastructure. 204 whether or not a row was hit — a 404 would distinguish \"you never held this\"
-    from \"you did\".
+    infrastructure. 204 whether or not a row was hit — a 404 would distinguish "you never held this"
+    from "you did".
 
     Args:
         artifact_id (str):
@@ -191,7 +191,7 @@ async def asyncio(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Any, Error]
+        Any | Error
     """
 
     return (

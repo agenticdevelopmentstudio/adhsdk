@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import TYPE_CHECKING, Any, TypeVar
 
@@ -17,12 +19,12 @@ class GamificationAwardResult:
     Attributes:
         awarded (bool): false when the subject has opted out
         total (int): The subject’s new point total
-        new_badges (list['GamificationBadge']):
+        new_badges (list[GamificationBadge]):
     """
 
     awarded: bool
     total: int
-    new_badges: list["GamificationBadge"]
+    new_badges: list[GamificationBadge]
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:

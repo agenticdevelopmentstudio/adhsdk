@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar
 
@@ -14,13 +16,13 @@ class PostCustomerResolveBody:
     """
     Attributes:
         external_id (str): The developer's own end-user id (the BYO join key).
-        email (Union[Unset, str]):
-        display_name (Union[Unset, str]):
+        email (str | Unset):
+        display_name (str | Unset):
     """
 
     external_id: str
-    email: Unset | str = UNSET
-    display_name: Unset | str = UNSET
+    email: str | Unset = UNSET
+    display_name: str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:

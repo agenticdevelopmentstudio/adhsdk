@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, TypeVar, Union, cast
+from typing import TYPE_CHECKING, Any, TypeVar, cast
 
 from attrs import define as _attrs_define
 
@@ -19,14 +21,14 @@ class GetPersonaMemoryBlocksResponse200Item:
         id (str):
         ecosystem_id (str):
         customer_id (str):
-        deleted_at (Union[None, str]):
+        deleted_at (None | str):
         name (str):
-        content (Union['GetPersonaMemoryBlocksResponse200ItemContentType1', None, bool, float, list[Any], str]):
-        size_limit (Union[None, int]):
+        content (bool | float | GetPersonaMemoryBlocksResponse200ItemContentType1 | list[Any] | None | str):
+        size_limit (int | None):
         created_at (str):
         updated_at (str):
         sync_version (int):
-        sync_stamped_at (Union[None, str]):
+        sync_stamped_at (None | str):
         sync_txid (int):
     """
 
@@ -35,10 +37,10 @@ class GetPersonaMemoryBlocksResponse200Item:
     customer_id: str
     deleted_at: None | str
     name: str
-    content: Union[
-        "GetPersonaMemoryBlocksResponse200ItemContentType1", None, bool, float, list[Any], str
-    ]
-    size_limit: None | int
+    content: (
+        bool | float | GetPersonaMemoryBlocksResponse200ItemContentType1 | list[Any] | None | str
+    )
+    size_limit: int | None
     created_at: str
     updated_at: str
     sync_version: int
@@ -61,7 +63,7 @@ class GetPersonaMemoryBlocksResponse200Item:
 
         name = self.name
 
-        content: None | bool | dict[str, Any] | float | list[Any] | str
+        content: bool | dict[str, Any] | float | list[Any] | None | str
         if isinstance(self.content, GetPersonaMemoryBlocksResponse200ItemContentType1):
             content = self.content.to_dict()
         elif isinstance(self.content, list):
@@ -70,7 +72,7 @@ class GetPersonaMemoryBlocksResponse200Item:
         else:
             content = self.content
 
-        size_limit: None | int
+        size_limit: int | None
         size_limit = self.size_limit
 
         created_at = self.created_at
@@ -129,9 +131,14 @@ class GetPersonaMemoryBlocksResponse200Item:
 
         def _parse_content(
             data: object,
-        ) -> Union[
-            "GetPersonaMemoryBlocksResponse200ItemContentType1", None, bool, float, list[Any], str
-        ]:
+        ) -> (
+            bool
+            | float
+            | GetPersonaMemoryBlocksResponse200ItemContentType1
+            | list[Any]
+            | None
+            | str
+        ):
             if data is None:
                 return data
             try:
@@ -140,7 +147,7 @@ class GetPersonaMemoryBlocksResponse200Item:
                 content_type_1 = GetPersonaMemoryBlocksResponse200ItemContentType1.from_dict(data)
 
                 return content_type_1
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
             try:
                 if not isinstance(data, list):
@@ -148,26 +155,24 @@ class GetPersonaMemoryBlocksResponse200Item:
                 content_type_2 = cast(list[Any], data)
 
                 return content_type_2
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
             return cast(
-                Union[
-                    "GetPersonaMemoryBlocksResponse200ItemContentType1",
-                    None,
-                    bool,
-                    float,
-                    list[Any],
-                    str,
-                ],
+                bool
+                | float
+                | GetPersonaMemoryBlocksResponse200ItemContentType1
+                | list[Any]
+                | None
+                | str,
                 data,
             )
 
         content = _parse_content(d.pop("content"))
 
-        def _parse_size_limit(data: object) -> None | int:
+        def _parse_size_limit(data: object) -> int | None:
             if data is None:
                 return data
-            return cast(None | int, data)
+            return cast(int | None, data)
 
         size_limit = _parse_size_limit(d.pop("sizeLimit"))
 

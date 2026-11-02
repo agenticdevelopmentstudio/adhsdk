@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar
 
@@ -15,18 +17,18 @@ class PostProjectTemplatesIdWorkItemsBody:
 
     Attributes:
         project_id (str): the board to build on; the caller needs projects C (subitem) there
-        title (Union[Unset, str]): overrides the body’s title for THIS card only. The children are never re-titled —
-            renaming a checklist’s steps at instantiation is editing the template, not using it.
-        status_id (Union[Unset, str]): a status of this project; omitted uses the lowest-position column
-        milestone_id (Union[Unset, str]): a live milestone of THIS project (400 otherwise)
-        iteration_id (Union[Unset, str]): a live iteration of this project's OWNER (400 otherwise)
+        title (str | Unset): overrides the body’s title for THIS card only. The children are never re-titled — renaming
+            a checklist’s steps at instantiation is editing the template, not using it.
+        status_id (str | Unset): a status of this project; omitted uses the lowest-position column
+        milestone_id (str | Unset): a live milestone of THIS project (400 otherwise)
+        iteration_id (str | Unset): a live iteration of this project's OWNER (400 otherwise)
     """
 
     project_id: str
-    title: Unset | str = UNSET
-    status_id: Unset | str = UNSET
-    milestone_id: Unset | str = UNSET
-    iteration_id: Unset | str = UNSET
+    title: str | Unset = UNSET
+    status_id: str | Unset = UNSET
+    milestone_id: str | Unset = UNSET
+    iteration_id: str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:

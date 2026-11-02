@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar
 
@@ -14,11 +16,11 @@ class AdminNoteInput:
     """
     Attributes:
         content (str):
-        id (Union[Unset, str]): Omit to create; supply to update in place
+        id (str | Unset): Omit to create; supply to update in place
     """
 
     content: str
-    id: Unset | str = UNSET
+    id: str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:

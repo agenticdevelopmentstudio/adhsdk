@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class PatchRegistryRegistriesRegistryIdEntriesEntryIdBodyStatus(str, Enum):
+class PatchRegistryRegistriesRegistryIdEntriesEntryIdBodyStatus(StrEnum):
     DRAFT = "draft"
     PENDING = "pending"
     PUBLISHED = "published"

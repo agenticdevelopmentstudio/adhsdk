@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar
 
@@ -18,15 +20,14 @@ class WorkItemFieldValue:
         key (str):
         label (str):
         type_ (WorkItemFieldValueType):
-        value (Union[Unset, Any]): the field's stored value for this item (type matches the field's type); null when
-            unset
+        value (Any | Unset): the field's stored value for this item (type matches the field's type); null when unset
     """
 
     field_id: str
     key: str
     label: str
     type_: WorkItemFieldValueType
-    value: Unset | Any = UNSET
+    value: Any | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:

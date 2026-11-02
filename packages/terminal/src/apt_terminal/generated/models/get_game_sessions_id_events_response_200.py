@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import TYPE_CHECKING, Any, TypeVar
 
@@ -15,13 +17,13 @@ T = TypeVar("T", bound="GetGameSessionsIdEventsResponse200")
 class GetGameSessionsIdEventsResponse200:
     """
     Attributes:
-        items (list['GameEvent']):
+        items (list[GameEvent]):
         total (int):
         page (int):
         page_size (int):
     """
 
-    items: list["GameEvent"]
+    items: list[GameEvent]
     total: int
     page: int
     page_size: int

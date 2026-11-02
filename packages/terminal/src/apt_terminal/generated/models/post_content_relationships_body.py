@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar
 
@@ -13,23 +15,23 @@ class PostContentRelationshipsBody:
     """
     Attributes:
         contact_id (str):
-        ecosystem_id (Union[Unset, str]):
-        owner_kind (Union[Unset, str]):
-        owner_id (Union[Unset, str]):
-        relationship_kind (Union[Unset, str]):
-        since_date (Union[Unset, str]):
-        notes (Union[Unset, str]):
-        sync_txid (Union[Unset, int]):
+        ecosystem_id (str | Unset):
+        owner_kind (str | Unset):
+        owner_id (str | Unset):
+        relationship_kind (str | Unset):
+        since_date (str | Unset):
+        notes (str | Unset):
+        sync_txid (int | Unset):
     """
 
     contact_id: str
-    ecosystem_id: Unset | str = UNSET
-    owner_kind: Unset | str = UNSET
-    owner_id: Unset | str = UNSET
-    relationship_kind: Unset | str = UNSET
-    since_date: Unset | str = UNSET
-    notes: Unset | str = UNSET
-    sync_txid: Unset | int = UNSET
+    ecosystem_id: str | Unset = UNSET
+    owner_kind: str | Unset = UNSET
+    owner_id: str | Unset = UNSET
+    relationship_kind: str | Unset = UNSET
+    since_date: str | Unset = UNSET
+    notes: str | Unset = UNSET
+    sync_txid: int | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
         contact_id = self.contact_id

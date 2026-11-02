@@ -11,7 +11,7 @@ from ...types import UNSET, Response, Unset
 
 def _get_kwargs(
     *,
-    key: Unset | str = UNSET,
+    key: str | Unset = UNSET,
 ) -> dict[str, Any]:
     params: dict[str, Any] = {}
 
@@ -30,7 +30,7 @@ def _get_kwargs(
 
 def _parse_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> list["ServerBag"] | None:
+) -> list[ServerBag] | None:
     if response.status_code == 200:
         response_200 = []
         _response_200 = response.json()
@@ -49,7 +49,7 @@ def _parse_response(
 
 def _build_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> Response[list["ServerBag"]]:
+) -> Response[list[ServerBag]]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -61,19 +61,19 @@ def _build_response(
 def sync_detailed(
     *,
     client: AuthenticatedClient | Client,
-    key: Unset | str = UNSET,
-) -> Response[list["ServerBag"]]:
+    key: str | Unset = UNSET,
+) -> Response[list[ServerBag]]:
     """List server-bag entries (public; optional ?key= exact-match filter)
 
     Args:
-        key (Union[Unset, str]):
+        key (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[list['ServerBag']]
+        Response[list[ServerBag]]
     """
 
     kwargs = _get_kwargs(
@@ -90,19 +90,19 @@ def sync_detailed(
 def sync(
     *,
     client: AuthenticatedClient | Client,
-    key: Unset | str = UNSET,
-) -> list["ServerBag"] | None:
+    key: str | Unset = UNSET,
+) -> list[ServerBag] | None:
     """List server-bag entries (public; optional ?key= exact-match filter)
 
     Args:
-        key (Union[Unset, str]):
+        key (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        list['ServerBag']
+        list[ServerBag]
     """
 
     return sync_detailed(
@@ -114,19 +114,19 @@ def sync(
 async def asyncio_detailed(
     *,
     client: AuthenticatedClient | Client,
-    key: Unset | str = UNSET,
-) -> Response[list["ServerBag"]]:
+    key: str | Unset = UNSET,
+) -> Response[list[ServerBag]]:
     """List server-bag entries (public; optional ?key= exact-match filter)
 
     Args:
-        key (Union[Unset, str]):
+        key (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[list['ServerBag']]
+        Response[list[ServerBag]]
     """
 
     kwargs = _get_kwargs(
@@ -141,19 +141,19 @@ async def asyncio_detailed(
 async def asyncio(
     *,
     client: AuthenticatedClient | Client,
-    key: Unset | str = UNSET,
-) -> list["ServerBag"] | None:
+    key: str | Unset = UNSET,
+) -> list[ServerBag] | None:
     """List server-bag entries (public; optional ?key= exact-match filter)
 
     Args:
-        key (Union[Unset, str]):
+        key (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        list['ServerBag']
+        list[ServerBag]
     """
 
     return (

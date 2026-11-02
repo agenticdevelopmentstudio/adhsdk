@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, TypeVar, Union, cast
+from typing import TYPE_CHECKING, Any, TypeVar, cast
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -19,23 +21,23 @@ class SendInvitesBody:
 
     Attributes:
         pending_user_ids (list[str]):
-        email (Union[Unset, SendInviteChannel]): Send on this channel. `note` is added to the message body.
-        sms (Union[Unset, SendInviteChannel]): Send on this channel. `note` is added to the message body.
+        email (SendInviteChannel | Unset): Send on this channel. `note` is added to the message body.
+        sms (SendInviteChannel | Unset): Send on this channel. `note` is added to the message body.
     """
 
     pending_user_ids: list[str]
-    email: Union[Unset, "SendInviteChannel"] = UNSET
-    sms: Union[Unset, "SendInviteChannel"] = UNSET
+    email: SendInviteChannel | Unset = UNSET
+    sms: SendInviteChannel | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
         pending_user_ids = self.pending_user_ids
 
-        email: Unset | dict[str, Any] = UNSET
+        email: dict[str, Any] | Unset = UNSET
         if not isinstance(self.email, Unset):
             email = self.email.to_dict()
 
-        sms: Unset | dict[str, Any] = UNSET
+        sms: dict[str, Any] | Unset = UNSET
         if not isinstance(self.sms, Unset):
             sms = self.sms.to_dict()
 
@@ -61,14 +63,14 @@ class SendInvitesBody:
         pending_user_ids = cast(list[str], d.pop("pendingUserIds"))
 
         _email = d.pop("email", UNSET)
-        email: Unset | SendInviteChannel
+        email: SendInviteChannel | Unset
         if isinstance(_email, Unset):
             email = UNSET
         else:
             email = SendInviteChannel.from_dict(_email)
 
         _sms = d.pop("sms", UNSET)
-        sms: Unset | SendInviteChannel
+        sms: SendInviteChannel | Unset
         if isinstance(_sms, Unset):
             sms = UNSET
         else:

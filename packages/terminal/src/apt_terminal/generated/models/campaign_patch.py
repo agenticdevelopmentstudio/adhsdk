@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -14,18 +16,18 @@ class CampaignPatch:
     """All fields optional; only present on a campaign still in draft.
 
     Attributes:
-        name (Union[Unset, str]):
-        subject (Union[Unset, str]):
-        html_body (Union[Unset, str]):
-        text_body (Union[Unset, str]):
-        from_name (Union[None, Unset, str]):
+        name (str | Unset):
+        subject (str | Unset):
+        html_body (str | Unset):
+        text_body (str | Unset):
+        from_name (None | str | Unset):
     """
 
-    name: Unset | str = UNSET
-    subject: Unset | str = UNSET
-    html_body: Unset | str = UNSET
-    text_body: Unset | str = UNSET
-    from_name: None | Unset | str = UNSET
+    name: str | Unset = UNSET
+    subject: str | Unset = UNSET
+    html_body: str | Unset = UNSET
+    text_body: str | Unset = UNSET
+    from_name: None | str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -37,7 +39,7 @@ class CampaignPatch:
 
         text_body = self.text_body
 
-        from_name: None | Unset | str
+        from_name: None | str | Unset
         if isinstance(self.from_name, Unset):
             from_name = UNSET
         else:
@@ -70,12 +72,12 @@ class CampaignPatch:
 
         text_body = d.pop("textBody", UNSET)
 
-        def _parse_from_name(data: object) -> None | Unset | str:
+        def _parse_from_name(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         from_name = _parse_from_name(d.pop("fromName", UNSET))
 

@@ -1,5 +1,6 @@
 from http import HTTPStatus
 from typing import Any
+from urllib.parse import quote
 
 import httpx
 
@@ -10,22 +11,25 @@ from ...models.post_processing_jobs_id_complete_body import PostProcessingJobsId
 from ...models.post_processing_jobs_id_complete_response_200 import (
     PostProcessingJobsIdCompleteResponse200,
 )
-from ...types import Response
+from ...types import UNSET, Response, Unset
 
 
 def _get_kwargs(
     id: str,
     *,
-    body: PostProcessingJobsIdCompleteBody,
+    body: PostProcessingJobsIdCompleteBody | Unset = UNSET,
 ) -> dict[str, Any]:
     headers: dict[str, Any] = {}
 
     _kwargs: dict[str, Any] = {
         "method": "post",
-        "url": f"/processing/jobs/{id}/complete",
+        "url": "/processing/jobs/{id}/complete".format(
+            id=quote(str(id), safe=""),
+        ),
     }
 
-    _kwargs["json"] = body.to_dict()
+    if not isinstance(body, Unset):
+        _kwargs["json"] = body.to_dict()
 
     headers["Content-Type"] = "application/json"
 
@@ -77,7 +81,7 @@ def sync_detailed(
     id: str,
     *,
     client: AuthenticatedClient,
-    body: PostProcessingJobsIdCompleteBody,
+    body: PostProcessingJobsIdCompleteBody | Unset = UNSET,
 ) -> Response[Error | PostProcessingJobsIdCompleteResponse200]:
     """Mark a claimed job succeeded
 
@@ -86,14 +90,14 @@ def sync_detailed(
 
     Args:
         id (str):
-        body (PostProcessingJobsIdCompleteBody):
+        body (PostProcessingJobsIdCompleteBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, PostProcessingJobsIdCompleteResponse200]]
+        Response[Error | PostProcessingJobsIdCompleteResponse200]
     """
 
     kwargs = _get_kwargs(
@@ -112,7 +116,7 @@ def sync(
     id: str,
     *,
     client: AuthenticatedClient,
-    body: PostProcessingJobsIdCompleteBody,
+    body: PostProcessingJobsIdCompleteBody | Unset = UNSET,
 ) -> Error | PostProcessingJobsIdCompleteResponse200 | None:
     """Mark a claimed job succeeded
 
@@ -121,14 +125,14 @@ def sync(
 
     Args:
         id (str):
-        body (PostProcessingJobsIdCompleteBody):
+        body (PostProcessingJobsIdCompleteBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, PostProcessingJobsIdCompleteResponse200]
+        Error | PostProcessingJobsIdCompleteResponse200
     """
 
     return sync_detailed(
@@ -142,7 +146,7 @@ async def asyncio_detailed(
     id: str,
     *,
     client: AuthenticatedClient,
-    body: PostProcessingJobsIdCompleteBody,
+    body: PostProcessingJobsIdCompleteBody | Unset = UNSET,
 ) -> Response[Error | PostProcessingJobsIdCompleteResponse200]:
     """Mark a claimed job succeeded
 
@@ -151,14 +155,14 @@ async def asyncio_detailed(
 
     Args:
         id (str):
-        body (PostProcessingJobsIdCompleteBody):
+        body (PostProcessingJobsIdCompleteBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, PostProcessingJobsIdCompleteResponse200]]
+        Response[Error | PostProcessingJobsIdCompleteResponse200]
     """
 
     kwargs = _get_kwargs(
@@ -175,7 +179,7 @@ async def asyncio(
     id: str,
     *,
     client: AuthenticatedClient,
-    body: PostProcessingJobsIdCompleteBody,
+    body: PostProcessingJobsIdCompleteBody | Unset = UNSET,
 ) -> Error | PostProcessingJobsIdCompleteResponse200 | None:
     """Mark a claimed job succeeded
 
@@ -184,14 +188,14 @@ async def asyncio(
 
     Args:
         id (str):
-        body (PostProcessingJobsIdCompleteBody):
+        body (PostProcessingJobsIdCompleteBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, PostProcessingJobsIdCompleteResponse200]
+        Error | PostProcessingJobsIdCompleteResponse200
     """
 
     return (

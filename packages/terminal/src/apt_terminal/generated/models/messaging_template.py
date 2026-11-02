@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar
 
@@ -19,7 +21,7 @@ class MessagingTemplate:
         html_body (str):
         text_body (str):
         category (str):
-        sms_body (Union[Unset, str]):
+        sms_body (str | Unset):
     """
 
     id: str
@@ -28,7 +30,7 @@ class MessagingTemplate:
     html_body: str
     text_body: str
     category: str
-    sms_body: Unset | str = UNSET
+    sms_body: str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:

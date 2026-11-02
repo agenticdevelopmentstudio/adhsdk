@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, TypeVar, Union, cast
+from typing import TYPE_CHECKING, Any, TypeVar, cast
 
 from attrs import define as _attrs_define
 
@@ -19,13 +21,13 @@ class PostContentEventsResponse201:
         id (str):
         ecosystem_id (str):
         customer_id (str):
-        deleted_at (Union[None, str]):
+        deleted_at (None | str):
         type_ (str):
-        payload (Union['PostContentEventsResponse201PayloadType1', None, bool, float, list[Any], str]):
+        payload (bool | float | list[Any] | None | PostContentEventsResponse201PayloadType1 | str):
         created_at (str):
         updated_at (str):
         sync_version (int):
-        sync_stamped_at (Union[None, str]):
+        sync_stamped_at (None | str):
         sync_txid (int):
     """
 
@@ -34,7 +36,7 @@ class PostContentEventsResponse201:
     customer_id: str
     deleted_at: None | str
     type_: str
-    payload: Union["PostContentEventsResponse201PayloadType1", None, bool, float, list[Any], str]
+    payload: bool | float | list[Any] | None | PostContentEventsResponse201PayloadType1 | str
     created_at: str
     updated_at: str
     sync_version: int
@@ -57,7 +59,7 @@ class PostContentEventsResponse201:
 
         type_ = self.type_
 
-        payload: None | bool | dict[str, Any] | float | list[Any] | str
+        payload: bool | dict[str, Any] | float | list[Any] | None | str
         if isinstance(self.payload, PostContentEventsResponse201PayloadType1):
             payload = self.payload.to_dict()
         elif isinstance(self.payload, list):
@@ -121,7 +123,7 @@ class PostContentEventsResponse201:
 
         def _parse_payload(
             data: object,
-        ) -> Union["PostContentEventsResponse201PayloadType1", None, bool, float, list[Any], str]:
+        ) -> bool | float | list[Any] | None | PostContentEventsResponse201PayloadType1 | str:
             if data is None:
                 return data
             try:
@@ -130,7 +132,7 @@ class PostContentEventsResponse201:
                 payload_type_1 = PostContentEventsResponse201PayloadType1.from_dict(data)
 
                 return payload_type_1
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
             try:
                 if not isinstance(data, list):
@@ -138,12 +140,10 @@ class PostContentEventsResponse201:
                 payload_type_2 = cast(list[Any], data)
 
                 return payload_type_2
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
             return cast(
-                Union[
-                    "PostContentEventsResponse201PayloadType1", None, bool, float, list[Any], str
-                ],
+                bool | float | list[Any] | None | PostContentEventsResponse201PayloadType1 | str,
                 data,
             )
 

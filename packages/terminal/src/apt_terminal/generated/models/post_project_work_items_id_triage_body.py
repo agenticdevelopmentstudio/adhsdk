@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar
 
@@ -20,28 +22,28 @@ class PostProjectWorkItemsIdTriageBody:
     category, which leaves the card findable in a column that says what happened to it.
 
         Attributes:
-            status_id (Union[Unset, str]):
-            assignee_kind (Union[Unset, PostProjectWorkItemsIdTriageBodyAssigneeKind]):
-            assignee_id (Union[Unset, str]):
-            milestone_id (Union[Unset, str]):
-            iteration_id (Union[Unset, str]):
-            priority (Union[Unset, int]): rank, 0 (none) to 4 (urgent); higher is more urgent
-            estimate (Union[Unset, int]):
+            status_id (str | Unset):
+            assignee_kind (PostProjectWorkItemsIdTriageBodyAssigneeKind | Unset):
+            assignee_id (str | Unset):
+            milestone_id (str | Unset):
+            iteration_id (str | Unset):
+            priority (int | Unset): rank, 0 (none) to 4 (urgent); higher is more urgent
+            estimate (int | Unset):
     """
 
-    status_id: Unset | str = UNSET
-    assignee_kind: Unset | PostProjectWorkItemsIdTriageBodyAssigneeKind = UNSET
-    assignee_id: Unset | str = UNSET
-    milestone_id: Unset | str = UNSET
-    iteration_id: Unset | str = UNSET
-    priority: Unset | int = UNSET
-    estimate: Unset | int = UNSET
+    status_id: str | Unset = UNSET
+    assignee_kind: PostProjectWorkItemsIdTriageBodyAssigneeKind | Unset = UNSET
+    assignee_id: str | Unset = UNSET
+    milestone_id: str | Unset = UNSET
+    iteration_id: str | Unset = UNSET
+    priority: int | Unset = UNSET
+    estimate: int | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
         status_id = self.status_id
 
-        assignee_kind: Unset | str = UNSET
+        assignee_kind: str | Unset = UNSET
         if not isinstance(self.assignee_kind, Unset):
             assignee_kind = self.assignee_kind.value
 
@@ -81,7 +83,7 @@ class PostProjectWorkItemsIdTriageBody:
         status_id = d.pop("statusId", UNSET)
 
         _assignee_kind = d.pop("assigneeKind", UNSET)
-        assignee_kind: Unset | PostProjectWorkItemsIdTriageBodyAssigneeKind
+        assignee_kind: PostProjectWorkItemsIdTriageBodyAssigneeKind | Unset
         if isinstance(_assignee_kind, Unset):
             assignee_kind = UNSET
         else:

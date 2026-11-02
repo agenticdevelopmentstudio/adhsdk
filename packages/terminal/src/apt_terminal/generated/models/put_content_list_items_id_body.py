@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, TypeVar, Union, cast
+from typing import TYPE_CHECKING, Any, TypeVar, cast
 
 from attrs import define as _attrs_define
 
@@ -18,20 +20,20 @@ T = TypeVar("T", bound="PutContentListItemsIdBody")
 class PutContentListItemsIdBody:
     """
     Attributes:
-        ecosystem_id (Union[Unset, str]):
-        list_id (Union[Unset, str]):
-        position (Union[Unset, int]):
-        value (Union['PutContentListItemsIdBodyValueType1', None, Unset, bool, float, list[Any], str]):
-        sync_txid (Union[Unset, int]):
+        ecosystem_id (str | Unset):
+        list_id (str | Unset):
+        position (int | Unset):
+        value (bool | float | list[Any] | None | PutContentListItemsIdBodyValueType1 | str | Unset):
+        sync_txid (int | Unset):
     """
 
-    ecosystem_id: Unset | str = UNSET
-    list_id: Unset | str = UNSET
-    position: Unset | int = UNSET
-    value: Union[
-        "PutContentListItemsIdBodyValueType1", None, Unset, bool, float, list[Any], str
-    ] = UNSET
-    sync_txid: Unset | int = UNSET
+    ecosystem_id: str | Unset = UNSET
+    list_id: str | Unset = UNSET
+    position: int | Unset = UNSET
+    value: bool | float | list[Any] | None | PutContentListItemsIdBodyValueType1 | str | Unset = (
+        UNSET
+    )
+    sync_txid: int | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
         from ..models.put_content_list_items_id_body_value_type_1 import (
@@ -44,7 +46,7 @@ class PutContentListItemsIdBody:
 
         position = self.position
 
-        value: None | Unset | bool | dict[str, Any] | float | list[Any] | str
+        value: bool | dict[str, Any] | float | list[Any] | None | str | Unset
         if isinstance(self.value, Unset):
             value = UNSET
         elif isinstance(self.value, PutContentListItemsIdBodyValueType1):
@@ -88,7 +90,7 @@ class PutContentListItemsIdBody:
 
         def _parse_value(
             data: object,
-        ) -> Union["PutContentListItemsIdBodyValueType1", None, Unset, bool, float, list[Any], str]:
+        ) -> bool | float | list[Any] | None | PutContentListItemsIdBodyValueType1 | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
@@ -99,7 +101,7 @@ class PutContentListItemsIdBody:
                 value_type_1 = PutContentListItemsIdBodyValueType1.from_dict(data)
 
                 return value_type_1
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
             try:
                 if not isinstance(data, list):
@@ -107,12 +109,10 @@ class PutContentListItemsIdBody:
                 value_type_2 = cast(list[Any], data)
 
                 return value_type_2
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
             return cast(
-                Union[
-                    "PutContentListItemsIdBodyValueType1", None, Unset, bool, float, list[Any], str
-                ],
+                bool | float | list[Any] | None | PutContentListItemsIdBodyValueType1 | str | Unset,
                 data,
             )
 

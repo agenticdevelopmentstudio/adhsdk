@@ -1,5 +1,6 @@
 from http import HTTPStatus
 from typing import Any
+from urllib.parse import quote
 
 import httpx
 
@@ -8,23 +9,27 @@ from ...client import AuthenticatedClient, Client
 from ...models.ecosystem_signin_app import EcosystemSigninApp
 from ...models.ecosystem_signin_app_update import EcosystemSigninAppUpdate
 from ...models.error import Error
-from ...types import Response
+from ...types import UNSET, Response, Unset
 
 
 def _get_kwargs(
     id: str,
     client_id: str,
     *,
-    body: EcosystemSigninAppUpdate,
+    body: EcosystemSigninAppUpdate | Unset = UNSET,
 ) -> dict[str, Any]:
     headers: dict[str, Any] = {}
 
     _kwargs: dict[str, Any] = {
         "method": "patch",
-        "url": f"/ecosystem/signin-apps/{id}/{client_id}",
+        "url": "/ecosystem/signin-apps/{id}/{client_id}".format(
+            id=quote(str(id), safe=""),
+            client_id=quote(str(client_id), safe=""),
+        ),
     }
 
-    _kwargs["json"] = body.to_dict()
+    if not isinstance(body, Unset):
+        _kwargs["json"] = body.to_dict()
 
     headers["Content-Type"] = "application/json"
 
@@ -82,7 +87,7 @@ def sync_detailed(
     client_id: str,
     *,
     client: AuthenticatedClient,
-    body: EcosystemSigninAppUpdate,
+    body: EcosystemSigninAppUpdate | Unset = UNSET,
 ) -> Response[EcosystemSigninApp | Error]:
     """Update a sign-in app
 
@@ -92,15 +97,16 @@ def sync_detailed(
     Args:
         id (str):
         client_id (str):
-        body (EcosystemSigninAppUpdate): A partial update — supply at least one field. `slug` and
-            the owning ecosystem are deliberately not patchable: both are identity, not configuration.
+        body (EcosystemSigninAppUpdate | Unset): A partial update — supply at least one field.
+            `slug` and the owning ecosystem are deliberately not patchable: both are identity, not
+            configuration.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[EcosystemSigninApp, Error]]
+        Response[EcosystemSigninApp | Error]
     """
 
     kwargs = _get_kwargs(
@@ -121,7 +127,7 @@ def sync(
     client_id: str,
     *,
     client: AuthenticatedClient,
-    body: EcosystemSigninAppUpdate,
+    body: EcosystemSigninAppUpdate | Unset = UNSET,
 ) -> EcosystemSigninApp | Error | None:
     """Update a sign-in app
 
@@ -131,15 +137,16 @@ def sync(
     Args:
         id (str):
         client_id (str):
-        body (EcosystemSigninAppUpdate): A partial update — supply at least one field. `slug` and
-            the owning ecosystem are deliberately not patchable: both are identity, not configuration.
+        body (EcosystemSigninAppUpdate | Unset): A partial update — supply at least one field.
+            `slug` and the owning ecosystem are deliberately not patchable: both are identity, not
+            configuration.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[EcosystemSigninApp, Error]
+        EcosystemSigninApp | Error
     """
 
     return sync_detailed(
@@ -155,7 +162,7 @@ async def asyncio_detailed(
     client_id: str,
     *,
     client: AuthenticatedClient,
-    body: EcosystemSigninAppUpdate,
+    body: EcosystemSigninAppUpdate | Unset = UNSET,
 ) -> Response[EcosystemSigninApp | Error]:
     """Update a sign-in app
 
@@ -165,15 +172,16 @@ async def asyncio_detailed(
     Args:
         id (str):
         client_id (str):
-        body (EcosystemSigninAppUpdate): A partial update — supply at least one field. `slug` and
-            the owning ecosystem are deliberately not patchable: both are identity, not configuration.
+        body (EcosystemSigninAppUpdate | Unset): A partial update — supply at least one field.
+            `slug` and the owning ecosystem are deliberately not patchable: both are identity, not
+            configuration.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[EcosystemSigninApp, Error]]
+        Response[EcosystemSigninApp | Error]
     """
 
     kwargs = _get_kwargs(
@@ -192,7 +200,7 @@ async def asyncio(
     client_id: str,
     *,
     client: AuthenticatedClient,
-    body: EcosystemSigninAppUpdate,
+    body: EcosystemSigninAppUpdate | Unset = UNSET,
 ) -> EcosystemSigninApp | Error | None:
     """Update a sign-in app
 
@@ -202,15 +210,16 @@ async def asyncio(
     Args:
         id (str):
         client_id (str):
-        body (EcosystemSigninAppUpdate): A partial update — supply at least one field. `slug` and
-            the owning ecosystem are deliberately not patchable: both are identity, not configuration.
+        body (EcosystemSigninAppUpdate | Unset): A partial update — supply at least one field.
+            `slug` and the owning ecosystem are deliberately not patchable: both are identity, not
+            configuration.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[EcosystemSigninApp, Error]
+        EcosystemSigninApp | Error
     """
 
     return (

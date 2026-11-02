@@ -1,5 +1,6 @@
 from http import HTTPStatus
 from typing import Any
+from urllib.parse import quote
 
 import httpx
 
@@ -10,22 +11,25 @@ from ...models.post_persona_provider_templates_id_verify_body import (
     PostPersonaProviderTemplatesIdVerifyBody,
 )
 from ...models.provider_template_verify_result import ProviderTemplateVerifyResult
-from ...types import Response
+from ...types import UNSET, Response, Unset
 
 
 def _get_kwargs(
     id: str,
     *,
-    body: PostPersonaProviderTemplatesIdVerifyBody,
+    body: PostPersonaProviderTemplatesIdVerifyBody | Unset = UNSET,
 ) -> dict[str, Any]:
     headers: dict[str, Any] = {}
 
     _kwargs: dict[str, Any] = {
         "method": "post",
-        "url": f"/persona/provider-templates/{id}/verify",
+        "url": "/persona/provider-templates/{id}/verify".format(
+            id=quote(str(id), safe=""),
+        ),
     }
 
-    _kwargs["json"] = body.to_dict()
+    if not isinstance(body, Unset):
+        _kwargs["json"] = body.to_dict()
 
     headers["Content-Type"] = "application/json"
 
@@ -82,21 +86,21 @@ def sync_detailed(
     id: str,
     *,
     client: AuthenticatedClient,
-    body: PostPersonaProviderTemplatesIdVerifyBody,
+    body: PostPersonaProviderTemplatesIdVerifyBody | Unset = UNSET,
 ) -> Response[Error | ProviderTemplateVerifyResult]:
     """Probe the live provider with a caller-supplied key — never stored — to verify kind/baseUrl speak the
     claimed contract (admin)
 
     Args:
         id (str):
-        body (PostPersonaProviderTemplatesIdVerifyBody):
+        body (PostPersonaProviderTemplatesIdVerifyBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, ProviderTemplateVerifyResult]]
+        Response[Error | ProviderTemplateVerifyResult]
     """
 
     kwargs = _get_kwargs(
@@ -115,21 +119,21 @@ def sync(
     id: str,
     *,
     client: AuthenticatedClient,
-    body: PostPersonaProviderTemplatesIdVerifyBody,
+    body: PostPersonaProviderTemplatesIdVerifyBody | Unset = UNSET,
 ) -> Error | ProviderTemplateVerifyResult | None:
     """Probe the live provider with a caller-supplied key — never stored — to verify kind/baseUrl speak the
     claimed contract (admin)
 
     Args:
         id (str):
-        body (PostPersonaProviderTemplatesIdVerifyBody):
+        body (PostPersonaProviderTemplatesIdVerifyBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, ProviderTemplateVerifyResult]
+        Error | ProviderTemplateVerifyResult
     """
 
     return sync_detailed(
@@ -143,21 +147,21 @@ async def asyncio_detailed(
     id: str,
     *,
     client: AuthenticatedClient,
-    body: PostPersonaProviderTemplatesIdVerifyBody,
+    body: PostPersonaProviderTemplatesIdVerifyBody | Unset = UNSET,
 ) -> Response[Error | ProviderTemplateVerifyResult]:
     """Probe the live provider with a caller-supplied key — never stored — to verify kind/baseUrl speak the
     claimed contract (admin)
 
     Args:
         id (str):
-        body (PostPersonaProviderTemplatesIdVerifyBody):
+        body (PostPersonaProviderTemplatesIdVerifyBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, ProviderTemplateVerifyResult]]
+        Response[Error | ProviderTemplateVerifyResult]
     """
 
     kwargs = _get_kwargs(
@@ -174,21 +178,21 @@ async def asyncio(
     id: str,
     *,
     client: AuthenticatedClient,
-    body: PostPersonaProviderTemplatesIdVerifyBody,
+    body: PostPersonaProviderTemplatesIdVerifyBody | Unset = UNSET,
 ) -> Error | ProviderTemplateVerifyResult | None:
     """Probe the live provider with a caller-supplied key — never stored — to verify kind/baseUrl speak the
     claimed contract (admin)
 
     Args:
         id (str):
-        body (PostPersonaProviderTemplatesIdVerifyBody):
+        body (PostPersonaProviderTemplatesIdVerifyBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, ProviderTemplateVerifyResult]
+        Error | ProviderTemplateVerifyResult
     """
 
     return (

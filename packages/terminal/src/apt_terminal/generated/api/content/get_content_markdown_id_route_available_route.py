@@ -1,5 +1,6 @@
 from http import HTTPStatus
 from typing import Any
+from urllib.parse import quote
 
 import httpx
 
@@ -16,7 +17,7 @@ def _get_kwargs(
     id: str,
     route: str,
     *,
-    workspace: Unset | str = UNSET,
+    workspace: str | Unset = UNSET,
 ) -> dict[str, Any]:
     params: dict[str, Any] = {}
 
@@ -26,7 +27,10 @@ def _get_kwargs(
 
     _kwargs: dict[str, Any] = {
         "method": "get",
-        "url": f"/content/markdown/{id}/route-available/{route}",
+        "url": "/content/markdown/{id}/route-available/{route}".format(
+            id=quote(str(id), safe=""),
+            route=quote(str(route), safe=""),
+        ),
         "params": params,
     }
 
@@ -73,7 +77,7 @@ def sync_detailed(
     route: str,
     *,
     client: AuthenticatedClient,
-    workspace: Unset | str = UNSET,
+    workspace: str | Unset = UNSET,
 ) -> Response[Error | GetContentMarkdownIdRouteAvailableRouteResponse200]:
     """Check whether a public route slug is free for this document
 
@@ -86,14 +90,14 @@ def sync_detailed(
     Args:
         id (str):
         route (str):
-        workspace (Union[Unset, str]):
+        workspace (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, GetContentMarkdownIdRouteAvailableRouteResponse200]]
+        Response[Error | GetContentMarkdownIdRouteAvailableRouteResponse200]
     """
 
     kwargs = _get_kwargs(
@@ -114,7 +118,7 @@ def sync(
     route: str,
     *,
     client: AuthenticatedClient,
-    workspace: Unset | str = UNSET,
+    workspace: str | Unset = UNSET,
 ) -> Error | GetContentMarkdownIdRouteAvailableRouteResponse200 | None:
     """Check whether a public route slug is free for this document
 
@@ -127,14 +131,14 @@ def sync(
     Args:
         id (str):
         route (str):
-        workspace (Union[Unset, str]):
+        workspace (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, GetContentMarkdownIdRouteAvailableRouteResponse200]
+        Error | GetContentMarkdownIdRouteAvailableRouteResponse200
     """
 
     return sync_detailed(
@@ -150,7 +154,7 @@ async def asyncio_detailed(
     route: str,
     *,
     client: AuthenticatedClient,
-    workspace: Unset | str = UNSET,
+    workspace: str | Unset = UNSET,
 ) -> Response[Error | GetContentMarkdownIdRouteAvailableRouteResponse200]:
     """Check whether a public route slug is free for this document
 
@@ -163,14 +167,14 @@ async def asyncio_detailed(
     Args:
         id (str):
         route (str):
-        workspace (Union[Unset, str]):
+        workspace (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, GetContentMarkdownIdRouteAvailableRouteResponse200]]
+        Response[Error | GetContentMarkdownIdRouteAvailableRouteResponse200]
     """
 
     kwargs = _get_kwargs(
@@ -189,7 +193,7 @@ async def asyncio(
     route: str,
     *,
     client: AuthenticatedClient,
-    workspace: Unset | str = UNSET,
+    workspace: str | Unset = UNSET,
 ) -> Error | GetContentMarkdownIdRouteAvailableRouteResponse200 | None:
     """Check whether a public route slug is free for this document
 
@@ -202,14 +206,14 @@ async def asyncio(
     Args:
         id (str):
         route (str):
-        workspace (Union[Unset, str]):
+        workspace (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, GetContentMarkdownIdRouteAvailableRouteResponse200]
+        Error | GetContentMarkdownIdRouteAvailableRouteResponse200
     """
 
     return (

@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class PutMeAppearanceBodyColorMode(str, Enum):
+class PutMeAppearanceBodyColorMode(StrEnum):
     AUTO = "auto"
     DARK = "dark"
     LIGHT = "light"

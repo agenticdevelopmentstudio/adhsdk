@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class PrivacyGrantTargetTable(str, Enum):
+class PrivacyGrantTargetTable(StrEnum):
     ADDRESSES = "addresses"
     AVATAR = "avatar"
     CONTACT_METHODS = "contact_methods"

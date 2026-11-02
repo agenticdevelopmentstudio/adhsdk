@@ -1,5 +1,6 @@
 from http import HTTPStatus
 from typing import Any
+from urllib.parse import quote
 
 import httpx
 
@@ -12,22 +13,25 @@ from ...models.post_account_contacts_id_verify_confirm_body import (
 from ...models.post_account_contacts_id_verify_confirm_response_200 import (
     PostAccountContactsIdVerifyConfirmResponse200,
 )
-from ...types import Response
+from ...types import UNSET, Response, Unset
 
 
 def _get_kwargs(
     id: str,
     *,
-    body: PostAccountContactsIdVerifyConfirmBody,
+    body: PostAccountContactsIdVerifyConfirmBody | Unset = UNSET,
 ) -> dict[str, Any]:
     headers: dict[str, Any] = {}
 
     _kwargs: dict[str, Any] = {
         "method": "post",
-        "url": f"/account/contacts/{id}/verify/confirm",
+        "url": "/account/contacts/{id}/verify/confirm".format(
+            id=quote(str(id), safe=""),
+        ),
     }
 
-    _kwargs["json"] = body.to_dict()
+    if not isinstance(body, Unset):
+        _kwargs["json"] = body.to_dict()
 
     headers["Content-Type"] = "application/json"
 
@@ -74,20 +78,20 @@ def sync_detailed(
     id: str,
     *,
     client: AuthenticatedClient,
-    body: PostAccountContactsIdVerifyConfirmBody,
+    body: PostAccountContactsIdVerifyConfirmBody | Unset = UNSET,
 ) -> Response[Error | PostAccountContactsIdVerifyConfirmResponse200]:
     """Confirm a contact with the code that was sent
 
     Args:
         id (str):
-        body (PostAccountContactsIdVerifyConfirmBody):
+        body (PostAccountContactsIdVerifyConfirmBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, PostAccountContactsIdVerifyConfirmResponse200]]
+        Response[Error | PostAccountContactsIdVerifyConfirmResponse200]
     """
 
     kwargs = _get_kwargs(
@@ -106,20 +110,20 @@ def sync(
     id: str,
     *,
     client: AuthenticatedClient,
-    body: PostAccountContactsIdVerifyConfirmBody,
+    body: PostAccountContactsIdVerifyConfirmBody | Unset = UNSET,
 ) -> Error | PostAccountContactsIdVerifyConfirmResponse200 | None:
     """Confirm a contact with the code that was sent
 
     Args:
         id (str):
-        body (PostAccountContactsIdVerifyConfirmBody):
+        body (PostAccountContactsIdVerifyConfirmBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, PostAccountContactsIdVerifyConfirmResponse200]
+        Error | PostAccountContactsIdVerifyConfirmResponse200
     """
 
     return sync_detailed(
@@ -133,20 +137,20 @@ async def asyncio_detailed(
     id: str,
     *,
     client: AuthenticatedClient,
-    body: PostAccountContactsIdVerifyConfirmBody,
+    body: PostAccountContactsIdVerifyConfirmBody | Unset = UNSET,
 ) -> Response[Error | PostAccountContactsIdVerifyConfirmResponse200]:
     """Confirm a contact with the code that was sent
 
     Args:
         id (str):
-        body (PostAccountContactsIdVerifyConfirmBody):
+        body (PostAccountContactsIdVerifyConfirmBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, PostAccountContactsIdVerifyConfirmResponse200]]
+        Response[Error | PostAccountContactsIdVerifyConfirmResponse200]
     """
 
     kwargs = _get_kwargs(
@@ -163,20 +167,20 @@ async def asyncio(
     id: str,
     *,
     client: AuthenticatedClient,
-    body: PostAccountContactsIdVerifyConfirmBody,
+    body: PostAccountContactsIdVerifyConfirmBody | Unset = UNSET,
 ) -> Error | PostAccountContactsIdVerifyConfirmResponse200 | None:
     """Confirm a contact with the code that was sent
 
     Args:
         id (str):
-        body (PostAccountContactsIdVerifyConfirmBody):
+        body (PostAccountContactsIdVerifyConfirmBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, PostAccountContactsIdVerifyConfirmResponse200]
+        Error | PostAccountContactsIdVerifyConfirmResponse200
     """
 
     return (

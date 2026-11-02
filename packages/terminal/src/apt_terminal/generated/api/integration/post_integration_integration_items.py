@@ -10,12 +10,12 @@ from ...models.post_integration_integration_items_body import PostIntegrationInt
 from ...models.post_integration_integration_items_response_201 import (
     PostIntegrationIntegrationItemsResponse201,
 )
-from ...types import Response
+from ...types import UNSET, Response, Unset
 
 
 def _get_kwargs(
     *,
-    body: PostIntegrationIntegrationItemsBody,
+    body: PostIntegrationIntegrationItemsBody | Unset = UNSET,
 ) -> dict[str, Any]:
     headers: dict[str, Any] = {}
 
@@ -24,7 +24,8 @@ def _get_kwargs(
         "url": "/integration/integration-items",
     }
 
-    _kwargs["json"] = body.to_dict()
+    if not isinstance(body, Unset):
+        _kwargs["json"] = body.to_dict()
 
     headers["Content-Type"] = "application/json"
 
@@ -70,19 +71,19 @@ def _build_response(
 def sync_detailed(
     *,
     client: AuthenticatedClient,
-    body: PostIntegrationIntegrationItemsBody,
+    body: PostIntegrationIntegrationItemsBody | Unset = UNSET,
 ) -> Response[Error | PostIntegrationIntegrationItemsResponse201]:
     """Create integration_items
 
     Args:
-        body (PostIntegrationIntegrationItemsBody):
+        body (PostIntegrationIntegrationItemsBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, PostIntegrationIntegrationItemsResponse201]]
+        Response[Error | PostIntegrationIntegrationItemsResponse201]
     """
 
     kwargs = _get_kwargs(
@@ -99,19 +100,19 @@ def sync_detailed(
 def sync(
     *,
     client: AuthenticatedClient,
-    body: PostIntegrationIntegrationItemsBody,
+    body: PostIntegrationIntegrationItemsBody | Unset = UNSET,
 ) -> Error | PostIntegrationIntegrationItemsResponse201 | None:
     """Create integration_items
 
     Args:
-        body (PostIntegrationIntegrationItemsBody):
+        body (PostIntegrationIntegrationItemsBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, PostIntegrationIntegrationItemsResponse201]
+        Error | PostIntegrationIntegrationItemsResponse201
     """
 
     return sync_detailed(
@@ -123,19 +124,19 @@ def sync(
 async def asyncio_detailed(
     *,
     client: AuthenticatedClient,
-    body: PostIntegrationIntegrationItemsBody,
+    body: PostIntegrationIntegrationItemsBody | Unset = UNSET,
 ) -> Response[Error | PostIntegrationIntegrationItemsResponse201]:
     """Create integration_items
 
     Args:
-        body (PostIntegrationIntegrationItemsBody):
+        body (PostIntegrationIntegrationItemsBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, PostIntegrationIntegrationItemsResponse201]]
+        Response[Error | PostIntegrationIntegrationItemsResponse201]
     """
 
     kwargs = _get_kwargs(
@@ -150,19 +151,19 @@ async def asyncio_detailed(
 async def asyncio(
     *,
     client: AuthenticatedClient,
-    body: PostIntegrationIntegrationItemsBody,
+    body: PostIntegrationIntegrationItemsBody | Unset = UNSET,
 ) -> Error | PostIntegrationIntegrationItemsResponse201 | None:
     """Create integration_items
 
     Args:
-        body (PostIntegrationIntegrationItemsBody):
+        body (PostIntegrationIntegrationItemsBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, PostIntegrationIntegrationItemsResponse201]
+        Error | PostIntegrationIntegrationItemsResponse201
     """
 
     return (

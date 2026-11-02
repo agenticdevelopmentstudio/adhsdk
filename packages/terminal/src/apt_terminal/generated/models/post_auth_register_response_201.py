@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import TYPE_CHECKING, Any, TypeVar
 
@@ -21,14 +23,14 @@ class PostAuthRegisterResponse201:
         refresh_token (str): Opaque refresh token (rotated on use)
         user (User):
         email_verification_required (bool):
-        email_in_use (Union[Unset, bool]):
+        email_in_use (bool | Unset):
     """
 
     token: str
     refresh_token: str
-    user: "User"
+    user: User
     email_verification_required: bool
-    email_in_use: Unset | bool = UNSET
+    email_in_use: bool | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:

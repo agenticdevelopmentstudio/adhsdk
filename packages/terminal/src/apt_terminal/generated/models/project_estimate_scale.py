@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class ProjectEstimateScale(str, Enum):
+class ProjectEstimateScale(StrEnum):
     EXPONENTIAL = "exponential"
     FIBONACCI = "fibonacci"
     LINEAR = "linear"

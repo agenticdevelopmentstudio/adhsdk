@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import TYPE_CHECKING, Any, TypeVar
 
@@ -15,11 +17,11 @@ T = TypeVar("T", bound="GetCommunitiesIdTopicsResponse200")
 class GetCommunitiesIdTopicsResponse200:
     """
     Attributes:
-        items (list['DiscussionTopic']):
+        items (list[DiscussionTopic]):
         total (int):
     """
 
-    items: list["DiscussionTopic"]
+    items: list[DiscussionTopic]
     total: int
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 

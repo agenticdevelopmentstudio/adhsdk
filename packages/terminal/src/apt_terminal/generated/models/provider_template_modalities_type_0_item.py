@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class ProviderTemplateModalitiesType0Item(str, Enum):
+class ProviderTemplateModalitiesType0Item(StrEnum):
     CHAT = "chat"
     IMAGE = "image"
     VIDEO = "video"

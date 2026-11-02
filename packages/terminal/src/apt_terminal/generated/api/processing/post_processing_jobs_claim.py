@@ -8,12 +8,12 @@ from ...client import AuthenticatedClient, Client
 from ...models.error import Error
 from ...models.post_processing_jobs_claim_body import PostProcessingJobsClaimBody
 from ...models.post_processing_jobs_claim_response_200 import PostProcessingJobsClaimResponse200
-from ...types import Response
+from ...types import UNSET, Response, Unset
 
 
 def _get_kwargs(
     *,
-    body: PostProcessingJobsClaimBody,
+    body: PostProcessingJobsClaimBody | Unset = UNSET,
 ) -> dict[str, Any]:
     headers: dict[str, Any] = {}
 
@@ -22,7 +22,8 @@ def _get_kwargs(
         "url": "/processing/jobs/claim",
     }
 
-    _kwargs["json"] = body.to_dict()
+    if not isinstance(body, Unset):
+        _kwargs["json"] = body.to_dict()
 
     headers["Content-Type"] = "application/json"
 
@@ -68,7 +69,7 @@ def _build_response(
 def sync_detailed(
     *,
     client: AuthenticatedClient,
-    body: PostProcessingJobsClaimBody,
+    body: PostProcessingJobsClaimBody | Unset = UNSET,
 ) -> Response[Error | PostProcessingJobsClaimResponse200]:
     """Claim queued jobs (worker pull)
 
@@ -76,14 +77,14 @@ def sync_detailed(
     available — never blocks. Ecosystem-scoped via RLS to the caller's api-token.
 
     Args:
-        body (PostProcessingJobsClaimBody):
+        body (PostProcessingJobsClaimBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, PostProcessingJobsClaimResponse200]]
+        Response[Error | PostProcessingJobsClaimResponse200]
     """
 
     kwargs = _get_kwargs(
@@ -100,7 +101,7 @@ def sync_detailed(
 def sync(
     *,
     client: AuthenticatedClient,
-    body: PostProcessingJobsClaimBody,
+    body: PostProcessingJobsClaimBody | Unset = UNSET,
 ) -> Error | PostProcessingJobsClaimResponse200 | None:
     """Claim queued jobs (worker pull)
 
@@ -108,14 +109,14 @@ def sync(
     available — never blocks. Ecosystem-scoped via RLS to the caller's api-token.
 
     Args:
-        body (PostProcessingJobsClaimBody):
+        body (PostProcessingJobsClaimBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, PostProcessingJobsClaimResponse200]
+        Error | PostProcessingJobsClaimResponse200
     """
 
     return sync_detailed(
@@ -127,7 +128,7 @@ def sync(
 async def asyncio_detailed(
     *,
     client: AuthenticatedClient,
-    body: PostProcessingJobsClaimBody,
+    body: PostProcessingJobsClaimBody | Unset = UNSET,
 ) -> Response[Error | PostProcessingJobsClaimResponse200]:
     """Claim queued jobs (worker pull)
 
@@ -135,14 +136,14 @@ async def asyncio_detailed(
     available — never blocks. Ecosystem-scoped via RLS to the caller's api-token.
 
     Args:
-        body (PostProcessingJobsClaimBody):
+        body (PostProcessingJobsClaimBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, PostProcessingJobsClaimResponse200]]
+        Response[Error | PostProcessingJobsClaimResponse200]
     """
 
     kwargs = _get_kwargs(
@@ -157,7 +158,7 @@ async def asyncio_detailed(
 async def asyncio(
     *,
     client: AuthenticatedClient,
-    body: PostProcessingJobsClaimBody,
+    body: PostProcessingJobsClaimBody | Unset = UNSET,
 ) -> Error | PostProcessingJobsClaimResponse200 | None:
     """Claim queued jobs (worker pull)
 
@@ -165,14 +166,14 @@ async def asyncio(
     available — never blocks. Ecosystem-scoped via RLS to the caller's api-token.
 
     Args:
-        body (PostProcessingJobsClaimBody):
+        body (PostProcessingJobsClaimBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, PostProcessingJobsClaimResponse200]
+        Error | PostProcessingJobsClaimResponse200
     """
 
     return (

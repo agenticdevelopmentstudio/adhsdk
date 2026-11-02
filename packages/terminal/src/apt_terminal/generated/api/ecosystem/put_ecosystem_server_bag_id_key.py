@@ -1,5 +1,6 @@
 from http import HTTPStatus
 from typing import Any
+from urllib.parse import quote
 
 import httpx
 
@@ -8,23 +9,27 @@ from ...client import AuthenticatedClient, Client
 from ...models.ecosystem_server_bag_entry import EcosystemServerBagEntry
 from ...models.error import Error
 from ...models.put_ecosystem_server_bag_id_key_body import PutEcosystemServerBagIdKeyBody
-from ...types import Response
+from ...types import UNSET, Response, Unset
 
 
 def _get_kwargs(
     id: str,
     key: str,
     *,
-    body: PutEcosystemServerBagIdKeyBody,
+    body: PutEcosystemServerBagIdKeyBody | Unset = UNSET,
 ) -> dict[str, Any]:
     headers: dict[str, Any] = {}
 
     _kwargs: dict[str, Any] = {
         "method": "put",
-        "url": f"/ecosystem/server-bag/{id}/{key}",
+        "url": "/ecosystem/server-bag/{id}/{key}".format(
+            id=quote(str(id), safe=""),
+            key=quote(str(key), safe=""),
+        ),
     }
 
-    _kwargs["json"] = body.to_dict()
+    if not isinstance(body, Unset):
+        _kwargs["json"] = body.to_dict()
 
     headers["Content-Type"] = "application/json"
 
@@ -82,21 +87,22 @@ def sync_detailed(
     key: str,
     *,
     client: AuthenticatedClient,
-    body: PutEcosystemServerBagIdKeyBody,
+    body: PutEcosystemServerBagIdKeyBody | Unset = UNSET,
 ) -> Response[EcosystemServerBagEntry | Error]:
     """Update one existing bag entry (404 if missing)
 
     Args:
         id (str):
         key (str):
-        body (PutEcosystemServerBagIdKeyBody): At least one of value, description is required
+        body (PutEcosystemServerBagIdKeyBody | Unset): At least one of value, description is
+            required
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[EcosystemServerBagEntry, Error]]
+        Response[EcosystemServerBagEntry | Error]
     """
 
     kwargs = _get_kwargs(
@@ -117,21 +123,22 @@ def sync(
     key: str,
     *,
     client: AuthenticatedClient,
-    body: PutEcosystemServerBagIdKeyBody,
+    body: PutEcosystemServerBagIdKeyBody | Unset = UNSET,
 ) -> EcosystemServerBagEntry | Error | None:
     """Update one existing bag entry (404 if missing)
 
     Args:
         id (str):
         key (str):
-        body (PutEcosystemServerBagIdKeyBody): At least one of value, description is required
+        body (PutEcosystemServerBagIdKeyBody | Unset): At least one of value, description is
+            required
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[EcosystemServerBagEntry, Error]
+        EcosystemServerBagEntry | Error
     """
 
     return sync_detailed(
@@ -147,21 +154,22 @@ async def asyncio_detailed(
     key: str,
     *,
     client: AuthenticatedClient,
-    body: PutEcosystemServerBagIdKeyBody,
+    body: PutEcosystemServerBagIdKeyBody | Unset = UNSET,
 ) -> Response[EcosystemServerBagEntry | Error]:
     """Update one existing bag entry (404 if missing)
 
     Args:
         id (str):
         key (str):
-        body (PutEcosystemServerBagIdKeyBody): At least one of value, description is required
+        body (PutEcosystemServerBagIdKeyBody | Unset): At least one of value, description is
+            required
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[EcosystemServerBagEntry, Error]]
+        Response[EcosystemServerBagEntry | Error]
     """
 
     kwargs = _get_kwargs(
@@ -180,21 +188,22 @@ async def asyncio(
     key: str,
     *,
     client: AuthenticatedClient,
-    body: PutEcosystemServerBagIdKeyBody,
+    body: PutEcosystemServerBagIdKeyBody | Unset = UNSET,
 ) -> EcosystemServerBagEntry | Error | None:
     """Update one existing bag entry (404 if missing)
 
     Args:
         id (str):
         key (str):
-        body (PutEcosystemServerBagIdKeyBody): At least one of value, description is required
+        body (PutEcosystemServerBagIdKeyBody | Unset): At least one of value, description is
+            required
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[EcosystemServerBagEntry, Error]
+        EcosystemServerBagEntry | Error
     """
 
     return (

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -9,9 +11,7 @@ T = TypeVar("T", bound="SubjectSheetStats")
 
 @_attrs_define
 class SubjectSheetStats:
-    """ """
-
-    additional_properties: dict[str, None | int] = _attrs_field(init=False, factory=dict)
+    additional_properties: dict[str, int | None] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
         field_dict: dict[str, Any] = {}
@@ -28,10 +28,10 @@ class SubjectSheetStats:
         additional_properties = {}
         for prop_name, prop_dict in d.items():
 
-            def _parse_additional_property(data: object) -> None | int:
+            def _parse_additional_property(data: object) -> int | None:
                 if data is None:
                     return data
-                return cast(None | int, data)
+                return cast(int | None, data)
 
             additional_property = _parse_additional_property(prop_dict)
 
@@ -44,10 +44,10 @@ class SubjectSheetStats:
     def additional_keys(self) -> list[str]:
         return list(self.additional_properties.keys())
 
-    def __getitem__(self, key: str) -> None | int:
+    def __getitem__(self, key: str) -> int | None:
         return self.additional_properties[key]
 
-    def __setitem__(self, key: str, value: None | int) -> None:
+    def __setitem__(self, key: str, value: int | None) -> None:
         self.additional_properties[key] = value
 
     def __delitem__(self, key: str) -> None:

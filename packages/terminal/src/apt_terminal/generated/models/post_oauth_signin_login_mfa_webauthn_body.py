@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import TYPE_CHECKING, Any, TypeVar
 
@@ -24,7 +26,7 @@ class PostOauthSigninLoginMfaWebauthnBody:
     """
 
     token: str
-    response: "PostOauthSigninLoginMfaWebauthnBodyResponse"
+    response: PostOauthSigninLoginMfaWebauthnBodyResponse
     client_id: str
     return_: str
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)

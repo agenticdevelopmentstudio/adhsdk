@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import TYPE_CHECKING, Any, TypeVar
 
@@ -23,7 +25,7 @@ class GamificationBoardEntry:
 
     rank: int
     value: int
-    persona: "GamificationBoardEntryPersona"
+    persona: GamificationBoardEntryPersona
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -47,7 +49,9 @@ class GamificationBoardEntry:
 
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
-        from ..models.gamification_board_entry_persona import GamificationBoardEntryPersona
+        from ..models.gamification_board_entry_persona import (
+            GamificationBoardEntryPersona,
+        )
 
         d = dict(src_dict)
         rank = d.pop("rank")

@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class SignupListPublicStatus(str, Enum):
+class SignupListPublicStatus(StrEnum):
     CLOSED = "closed"
     OPEN = "open"
 

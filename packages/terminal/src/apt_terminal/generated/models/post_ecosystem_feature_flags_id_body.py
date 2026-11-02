@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar
 
@@ -14,13 +16,13 @@ class PostEcosystemFeatureFlagsIdBody:
     """
     Attributes:
         key (str):
-        enabled (Union[Unset, bool]):  Default: False.
-        description (Union[Unset, str]):
+        enabled (bool | Unset):  Default: False.
+        description (str | Unset):
     """
 
     key: str
-    enabled: Unset | bool = False
-    description: Unset | str = UNSET
+    enabled: bool | Unset = False
+    description: str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:

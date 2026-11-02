@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class IntegrationConnectOAuthInstanceType(str, Enum):
+class IntegrationConnectOAuthInstanceType(StrEnum):
     OAUTH_INSTANCE = "oauth_instance"
 
     def __str__(self) -> str:

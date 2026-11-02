@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -16,18 +18,18 @@ class IntegrationActionSend:
     Attributes:
         to (list[str]):
         subject (str):
-        cc (Union[Unset, list[str]]):
-        bcc (Union[Unset, list[str]]):
-        body_text (Union[Unset, str]):
-        body_html (Union[Unset, str]):
+        cc (list[str] | Unset):
+        bcc (list[str] | Unset):
+        body_text (str | Unset):
+        body_html (str | Unset):
     """
 
     to: list[str]
     subject: str
-    cc: Unset | list[str] = UNSET
-    bcc: Unset | list[str] = UNSET
-    body_text: Unset | str = UNSET
-    body_html: Unset | str = UNSET
+    cc: list[str] | Unset = UNSET
+    bcc: list[str] | Unset = UNSET
+    body_text: str | Unset = UNSET
+    body_html: str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -35,11 +37,11 @@ class IntegrationActionSend:
 
         subject = self.subject
 
-        cc: Unset | list[str] = UNSET
+        cc: list[str] | Unset = UNSET
         if not isinstance(self.cc, Unset):
             cc = self.cc
 
-        bcc: Unset | list[str] = UNSET
+        bcc: list[str] | Unset = UNSET
         if not isinstance(self.bcc, Unset):
             bcc = self.bcc
 

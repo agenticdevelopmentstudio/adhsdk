@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -14,14 +16,14 @@ class PersonaWeeklyRecap:
         week_start (str):
         adventures (int):
         new_allies (int):
-        reflexes_delta_pct (Union[None, float]):
+        reflexes_delta_pct (float | None):
         levels_gained (int):
     """
 
     week_start: str
     adventures: int
     new_allies: int
-    reflexes_delta_pct: None | float
+    reflexes_delta_pct: float | None
     levels_gained: int
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
@@ -32,7 +34,7 @@ class PersonaWeeklyRecap:
 
         new_allies = self.new_allies
 
-        reflexes_delta_pct: None | float
+        reflexes_delta_pct: float | None
         reflexes_delta_pct = self.reflexes_delta_pct
 
         levels_gained = self.levels_gained
@@ -60,10 +62,10 @@ class PersonaWeeklyRecap:
 
         new_allies = d.pop("newAllies")
 
-        def _parse_reflexes_delta_pct(data: object) -> None | float:
+        def _parse_reflexes_delta_pct(data: object) -> float | None:
             if data is None:
                 return data
-            return cast(None | float, data)
+            return cast(float | None, data)
 
         reflexes_delta_pct = _parse_reflexes_delta_pct(d.pop("reflexesDeltaPct"))
 

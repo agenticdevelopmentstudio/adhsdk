@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -14,19 +16,19 @@ class PersonaDemoPreviewDiagnostic:
     """
     Attributes:
         severity (PersonaDemoPreviewDiagnosticSeverity):
-        line (Union[None, int]): 1-based source line, if the compiler gave one
+        line (int | None): 1-based source line, if the compiler gave one
         message (str):
     """
 
     severity: PersonaDemoPreviewDiagnosticSeverity
-    line: None | int
+    line: int | None
     message: str
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
         severity = self.severity.value
 
-        line: None | int
+        line: int | None
         line = self.line
 
         message = self.message
@@ -48,10 +50,10 @@ class PersonaDemoPreviewDiagnostic:
         d = dict(src_dict)
         severity = PersonaDemoPreviewDiagnosticSeverity(d.pop("severity"))
 
-        def _parse_line(data: object) -> None | int:
+        def _parse_line(data: object) -> int | None:
             if data is None:
                 return data
-            return cast(None | int, data)
+            return cast(int | None, data)
 
         line = _parse_line(d.pop("line"))
 

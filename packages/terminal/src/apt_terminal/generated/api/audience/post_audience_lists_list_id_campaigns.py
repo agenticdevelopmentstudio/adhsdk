@@ -1,5 +1,6 @@
 from http import HTTPStatus
 from typing import Any
+from urllib.parse import quote
 
 import httpx
 
@@ -8,22 +9,25 @@ from ...client import AuthenticatedClient, Client
 from ...models.campaign import Campaign
 from ...models.campaign_create import CampaignCreate
 from ...models.error import Error
-from ...types import Response
+from ...types import UNSET, Response, Unset
 
 
 def _get_kwargs(
     list_id: str,
     *,
-    body: CampaignCreate,
+    body: CampaignCreate | Unset = UNSET,
 ) -> dict[str, Any]:
     headers: dict[str, Any] = {}
 
     _kwargs: dict[str, Any] = {
         "method": "post",
-        "url": f"/audience/lists/{list_id}/campaigns",
+        "url": "/audience/lists/{list_id}/campaigns".format(
+            list_id=quote(str(list_id), safe=""),
+        ),
     }
 
-    _kwargs["json"] = body.to_dict()
+    if not isinstance(body, Unset):
+        _kwargs["json"] = body.to_dict()
 
     headers["Content-Type"] = "application/json"
 
@@ -80,20 +84,20 @@ def sync_detailed(
     list_id: str,
     *,
     client: AuthenticatedClient,
-    body: CampaignCreate,
+    body: CampaignCreate | Unset = UNSET,
 ) -> Response[Campaign | Error]:
     """Create a draft campaign for this list
 
     Args:
         list_id (str):
-        body (CampaignCreate):
+        body (CampaignCreate | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Campaign, Error]]
+        Response[Campaign | Error]
     """
 
     kwargs = _get_kwargs(
@@ -112,20 +116,20 @@ def sync(
     list_id: str,
     *,
     client: AuthenticatedClient,
-    body: CampaignCreate,
+    body: CampaignCreate | Unset = UNSET,
 ) -> Campaign | Error | None:
     """Create a draft campaign for this list
 
     Args:
         list_id (str):
-        body (CampaignCreate):
+        body (CampaignCreate | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Campaign, Error]
+        Campaign | Error
     """
 
     return sync_detailed(
@@ -139,20 +143,20 @@ async def asyncio_detailed(
     list_id: str,
     *,
     client: AuthenticatedClient,
-    body: CampaignCreate,
+    body: CampaignCreate | Unset = UNSET,
 ) -> Response[Campaign | Error]:
     """Create a draft campaign for this list
 
     Args:
         list_id (str):
-        body (CampaignCreate):
+        body (CampaignCreate | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Campaign, Error]]
+        Response[Campaign | Error]
     """
 
     kwargs = _get_kwargs(
@@ -169,20 +173,20 @@ async def asyncio(
     list_id: str,
     *,
     client: AuthenticatedClient,
-    body: CampaignCreate,
+    body: CampaignCreate | Unset = UNSET,
 ) -> Campaign | Error | None:
     """Create a draft campaign for this list
 
     Args:
         list_id (str):
-        body (CampaignCreate):
+        body (CampaignCreate | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Campaign, Error]
+        Campaign | Error
     """
 
     return (

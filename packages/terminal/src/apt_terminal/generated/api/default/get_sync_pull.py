@@ -12,8 +12,8 @@ from ...types import UNSET, Response, Unset
 
 def _get_kwargs(
     *,
-    cursor: Unset | str = UNSET,
-    limit: Unset | int = 500,
+    cursor: str | Unset = UNSET,
+    limit: int | Unset = 500,
 ) -> dict[str, Any]:
     params: dict[str, Any] = {}
 
@@ -75,21 +75,21 @@ def _build_response(
 def sync_detailed(
     *,
     client: AuthenticatedClient,
-    cursor: Unset | str = UNSET,
-    limit: Unset | int = 500,
+    cursor: str | Unset = UNSET,
+    limit: int | Unset = 500,
 ) -> Response[Error | SyncPullResponse]:
     """Delta-pull all changed rows for the caller across sync-registered resources
 
     Args:
-        cursor (Union[Unset, str]):
-        limit (Union[Unset, int]):  Default: 500.
+        cursor (str | Unset):
+        limit (int | Unset):  Default: 500.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, SyncPullResponse]]
+        Response[Error | SyncPullResponse]
     """
 
     kwargs = _get_kwargs(
@@ -107,21 +107,21 @@ def sync_detailed(
 def sync(
     *,
     client: AuthenticatedClient,
-    cursor: Unset | str = UNSET,
-    limit: Unset | int = 500,
+    cursor: str | Unset = UNSET,
+    limit: int | Unset = 500,
 ) -> Error | SyncPullResponse | None:
     """Delta-pull all changed rows for the caller across sync-registered resources
 
     Args:
-        cursor (Union[Unset, str]):
-        limit (Union[Unset, int]):  Default: 500.
+        cursor (str | Unset):
+        limit (int | Unset):  Default: 500.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, SyncPullResponse]
+        Error | SyncPullResponse
     """
 
     return sync_detailed(
@@ -134,21 +134,21 @@ def sync(
 async def asyncio_detailed(
     *,
     client: AuthenticatedClient,
-    cursor: Unset | str = UNSET,
-    limit: Unset | int = 500,
+    cursor: str | Unset = UNSET,
+    limit: int | Unset = 500,
 ) -> Response[Error | SyncPullResponse]:
     """Delta-pull all changed rows for the caller across sync-registered resources
 
     Args:
-        cursor (Union[Unset, str]):
-        limit (Union[Unset, int]):  Default: 500.
+        cursor (str | Unset):
+        limit (int | Unset):  Default: 500.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, SyncPullResponse]]
+        Response[Error | SyncPullResponse]
     """
 
     kwargs = _get_kwargs(
@@ -164,21 +164,21 @@ async def asyncio_detailed(
 async def asyncio(
     *,
     client: AuthenticatedClient,
-    cursor: Unset | str = UNSET,
-    limit: Unset | int = 500,
+    cursor: str | Unset = UNSET,
+    limit: int | Unset = 500,
 ) -> Error | SyncPullResponse | None:
     """Delta-pull all changed rows for the caller across sync-registered resources
 
     Args:
-        cursor (Union[Unset, str]):
-        limit (Union[Unset, int]):  Default: 500.
+        cursor (str | Unset):
+        limit (int | Unset):  Default: 500.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, SyncPullResponse]
+        Error | SyncPullResponse
     """
 
     return (

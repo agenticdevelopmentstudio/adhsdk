@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import TYPE_CHECKING, Any, TypeVar
 
@@ -16,14 +18,14 @@ T = TypeVar("T", bound="SyncPullResponse")
 class SyncPullResponse:
     """
     Attributes:
-        manifest (list['SyncManifestEntry']):
-        changes (list['SyncChange']):
+        manifest (list[SyncManifestEntry]):
+        changes (list[SyncChange]):
         cursor (str): Opaque; echo back on the next pull
         has_more (bool):
     """
 
-    manifest: list["SyncManifestEntry"]
-    changes: list["SyncChange"]
+    manifest: list[SyncManifestEntry]
+    changes: list[SyncChange]
     cursor: str
     has_more: bool
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)

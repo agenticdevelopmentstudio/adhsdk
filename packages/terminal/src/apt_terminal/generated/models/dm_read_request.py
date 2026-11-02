@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar
 
@@ -13,10 +15,10 @@ T = TypeVar("T", bound="DmReadRequest")
 class DmReadRequest:
     """
     Attributes:
-        message_id (Union[Unset, str]): Mark read through this message; omit for the latest
+        message_id (str | Unset): Mark read through this message; omit for the latest
     """
 
-    message_id: Unset | str = UNSET
+    message_id: str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:

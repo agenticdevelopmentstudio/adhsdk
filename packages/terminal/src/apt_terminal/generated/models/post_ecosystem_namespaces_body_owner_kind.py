@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class PostEcosystemNamespacesBodyOwnerKind(str, Enum):
+class PostEcosystemNamespacesBodyOwnerKind(StrEnum):
     CUSTOMER = "customer"
     ECOSYSTEM = "ecosystem"
     ORGANIZATION = "organization"

@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, TypeVar, Union, cast
+from typing import TYPE_CHECKING, Any, TypeVar, cast
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -24,8 +26,8 @@ class GameInstance:
         location_id (str):
         quantity (int):
         depth (int):
-        slot (Union[None, Unset, str]):
-        data (Union['GameInstanceDataType0', None, Unset]):
+        slot (None | str | Unset):
+        data (GameInstanceDataType0 | None | Unset):
     """
 
     id: str
@@ -34,8 +36,8 @@ class GameInstance:
     location_id: str
     quantity: int
     depth: int
-    slot: None | Unset | str = UNSET
-    data: Union["GameInstanceDataType0", None, Unset] = UNSET
+    slot: None | str | Unset = UNSET
+    data: GameInstanceDataType0 | None | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -53,13 +55,13 @@ class GameInstance:
 
         depth = self.depth
 
-        slot: None | Unset | str
+        slot: None | str | Unset
         if isinstance(self.slot, Unset):
             slot = UNSET
         else:
             slot = self.slot
 
-        data: None | Unset | dict[str, Any]
+        data: dict[str, Any] | None | Unset
         if isinstance(self.data, Unset):
             data = UNSET
         elif isinstance(self.data, GameInstanceDataType0):
@@ -103,16 +105,16 @@ class GameInstance:
 
         depth = d.pop("depth")
 
-        def _parse_slot(data: object) -> None | Unset | str:
+        def _parse_slot(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         slot = _parse_slot(d.pop("slot", UNSET))
 
-        def _parse_data(data: object) -> Union["GameInstanceDataType0", None, Unset]:
+        def _parse_data(data: object) -> GameInstanceDataType0 | None | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
@@ -123,9 +125,9 @@ class GameInstance:
                 data_type_0 = GameInstanceDataType0.from_dict(data)
 
                 return data_type_0
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
-            return cast(Union["GameInstanceDataType0", None, Unset], data)
+            return cast(GameInstanceDataType0 | None | Unset, data)
 
         data = _parse_data(d.pop("data", UNSET))
 

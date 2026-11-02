@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -14,7 +16,7 @@ class PostAudienceTemplatesResponse201:
         ecosystem_id (str):
         owner_kind (str):
         owner_id (str):
-        created_by (Union[None, str]):
+        created_by (None | str):
         name (str):
         subject (str):
         html_body (str):

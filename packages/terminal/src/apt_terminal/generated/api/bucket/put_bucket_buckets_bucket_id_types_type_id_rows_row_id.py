@@ -1,5 +1,6 @@
 from http import HTTPStatus
 from typing import Any
+from urllib.parse import quote
 
 import httpx
 
@@ -7,7 +8,7 @@ from ... import errors
 from ...client import AuthenticatedClient, Client
 from ...models.bucket_row import BucketRow
 from ...models.error import Error
-from ...types import UNSET, Response
+from ...types import UNSET, Response, Unset
 
 
 def _get_kwargs(
@@ -15,7 +16,7 @@ def _get_kwargs(
     type_id: str,
     row_id: str,
     *,
-    body: BucketRow,
+    body: BucketRow | Unset = UNSET,
     as_type: str,
     as_id: str,
 ) -> dict[str, Any]:
@@ -31,11 +32,16 @@ def _get_kwargs(
 
     _kwargs: dict[str, Any] = {
         "method": "put",
-        "url": f"/bucket/buckets/{bucket_id}/types/{type_id}/rows/{row_id}",
+        "url": "/bucket/buckets/{bucket_id}/types/{type_id}/rows/{row_id}".format(
+            bucket_id=quote(str(bucket_id), safe=""),
+            type_id=quote(str(type_id), safe=""),
+            row_id=quote(str(row_id), safe=""),
+        ),
         "params": params,
     }
 
-    _kwargs["json"] = body.to_dict()
+    if not isinstance(body, Unset):
+        _kwargs["json"] = body.to_dict()
 
     headers["Content-Type"] = "application/json"
 
@@ -94,7 +100,7 @@ def sync_detailed(
     row_id: str,
     *,
     client: AuthenticatedClient,
-    body: BucketRow,
+    body: BucketRow | Unset = UNSET,
     as_type: str,
     as_id: str,
 ) -> Response[BucketRow | Error]:
@@ -106,16 +112,16 @@ def sync_detailed(
         row_id (str):
         as_type (str):
         as_id (str):
-        body (BucketRow): A bucket-table row. Intentionally open — the column set is defined at
-            runtime by the developer-managed table this bucket points at, so no fixed property schema
-            applies.
+        body (BucketRow | Unset): A bucket-table row. Intentionally open — the column set is
+            defined at runtime by the developer-managed table this bucket points at, so no fixed
+            property schema applies.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[BucketRow, Error]]
+        Response[BucketRow | Error]
     """
 
     kwargs = _get_kwargs(
@@ -140,7 +146,7 @@ def sync(
     row_id: str,
     *,
     client: AuthenticatedClient,
-    body: BucketRow,
+    body: BucketRow | Unset = UNSET,
     as_type: str,
     as_id: str,
 ) -> BucketRow | Error | None:
@@ -152,16 +158,16 @@ def sync(
         row_id (str):
         as_type (str):
         as_id (str):
-        body (BucketRow): A bucket-table row. Intentionally open — the column set is defined at
-            runtime by the developer-managed table this bucket points at, so no fixed property schema
-            applies.
+        body (BucketRow | Unset): A bucket-table row. Intentionally open — the column set is
+            defined at runtime by the developer-managed table this bucket points at, so no fixed
+            property schema applies.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[BucketRow, Error]
+        BucketRow | Error
     """
 
     return sync_detailed(
@@ -181,7 +187,7 @@ async def asyncio_detailed(
     row_id: str,
     *,
     client: AuthenticatedClient,
-    body: BucketRow,
+    body: BucketRow | Unset = UNSET,
     as_type: str,
     as_id: str,
 ) -> Response[BucketRow | Error]:
@@ -193,16 +199,16 @@ async def asyncio_detailed(
         row_id (str):
         as_type (str):
         as_id (str):
-        body (BucketRow): A bucket-table row. Intentionally open — the column set is defined at
-            runtime by the developer-managed table this bucket points at, so no fixed property schema
-            applies.
+        body (BucketRow | Unset): A bucket-table row. Intentionally open — the column set is
+            defined at runtime by the developer-managed table this bucket points at, so no fixed
+            property schema applies.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[BucketRow, Error]]
+        Response[BucketRow | Error]
     """
 
     kwargs = _get_kwargs(
@@ -225,7 +231,7 @@ async def asyncio(
     row_id: str,
     *,
     client: AuthenticatedClient,
-    body: BucketRow,
+    body: BucketRow | Unset = UNSET,
     as_type: str,
     as_id: str,
 ) -> BucketRow | Error | None:
@@ -237,16 +243,16 @@ async def asyncio(
         row_id (str):
         as_type (str):
         as_id (str):
-        body (BucketRow): A bucket-table row. Intentionally open — the column set is defined at
-            runtime by the developer-managed table this bucket points at, so no fixed property schema
-            applies.
+        body (BucketRow | Unset): A bucket-table row. Intentionally open — the column set is
+            defined at runtime by the developer-managed table this bucket points at, so no fixed
+            property schema applies.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[BucketRow, Error]
+        BucketRow | Error
     """
 
     return (

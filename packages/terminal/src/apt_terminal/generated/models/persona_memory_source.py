@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class PersonaMemorySource(str, Enum):
+class PersonaMemorySource(StrEnum):
     INFERRED = "inferred"
     TOOL = "tool"
     USER_STATED = "user_stated"

@@ -1,5 +1,6 @@
 from http import HTTPStatus
 from typing import Any
+from urllib.parse import quote
 
 import httpx
 
@@ -8,22 +9,25 @@ from ...client import AuthenticatedClient, Client
 from ...models.error import Error
 from ...models.post_access_personas_id_may_act_body import PostAccessPersonasIdMayActBody
 from ...models.registry_persona_may_act import RegistryPersonaMayAct
-from ...types import Response
+from ...types import UNSET, Response, Unset
 
 
 def _get_kwargs(
     id: str,
     *,
-    body: PostAccessPersonasIdMayActBody,
+    body: PostAccessPersonasIdMayActBody | Unset = UNSET,
 ) -> dict[str, Any]:
     headers: dict[str, Any] = {}
 
     _kwargs: dict[str, Any] = {
         "method": "post",
-        "url": f"/access/personas/{id}/may-act",
+        "url": "/access/personas/{id}/may-act".format(
+            id=quote(str(id), safe=""),
+        ),
     }
 
-    _kwargs["json"] = body.to_dict()
+    if not isinstance(body, Unset):
+        _kwargs["json"] = body.to_dict()
 
     headers["Content-Type"] = "application/json"
 
@@ -80,20 +84,20 @@ def sync_detailed(
     id: str,
     *,
     client: AuthenticatedClient,
-    body: PostAccessPersonasIdMayActBody,
+    body: PostAccessPersonasIdMayActBody | Unset = UNSET,
 ) -> Response[Error | RegistryPersonaMayAct]:
     """Grant a may_act subject kind (user/team/org) to a persona (owner/admin)
 
     Args:
         id (str):
-        body (PostAccessPersonasIdMayActBody):
+        body (PostAccessPersonasIdMayActBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, RegistryPersonaMayAct]]
+        Response[Error | RegistryPersonaMayAct]
     """
 
     kwargs = _get_kwargs(
@@ -112,20 +116,20 @@ def sync(
     id: str,
     *,
     client: AuthenticatedClient,
-    body: PostAccessPersonasIdMayActBody,
+    body: PostAccessPersonasIdMayActBody | Unset = UNSET,
 ) -> Error | RegistryPersonaMayAct | None:
     """Grant a may_act subject kind (user/team/org) to a persona (owner/admin)
 
     Args:
         id (str):
-        body (PostAccessPersonasIdMayActBody):
+        body (PostAccessPersonasIdMayActBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, RegistryPersonaMayAct]
+        Error | RegistryPersonaMayAct
     """
 
     return sync_detailed(
@@ -139,20 +143,20 @@ async def asyncio_detailed(
     id: str,
     *,
     client: AuthenticatedClient,
-    body: PostAccessPersonasIdMayActBody,
+    body: PostAccessPersonasIdMayActBody | Unset = UNSET,
 ) -> Response[Error | RegistryPersonaMayAct]:
     """Grant a may_act subject kind (user/team/org) to a persona (owner/admin)
 
     Args:
         id (str):
-        body (PostAccessPersonasIdMayActBody):
+        body (PostAccessPersonasIdMayActBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, RegistryPersonaMayAct]]
+        Response[Error | RegistryPersonaMayAct]
     """
 
     kwargs = _get_kwargs(
@@ -169,20 +173,20 @@ async def asyncio(
     id: str,
     *,
     client: AuthenticatedClient,
-    body: PostAccessPersonasIdMayActBody,
+    body: PostAccessPersonasIdMayActBody | Unset = UNSET,
 ) -> Error | RegistryPersonaMayAct | None:
     """Grant a may_act subject kind (user/team/org) to a persona (owner/admin)
 
     Args:
         id (str):
-        body (PostAccessPersonasIdMayActBody):
+        body (PostAccessPersonasIdMayActBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, RegistryPersonaMayAct]
+        Error | RegistryPersonaMayAct
     """
 
     return (

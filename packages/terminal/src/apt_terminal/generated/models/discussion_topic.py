@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -23,18 +25,18 @@ class DiscussionTopic:
         last_activity_at (str):
         created_at (str):
         updated_at (str):
-        customer_id (Union[Unset, str]): Author (server-stamped principal). Omitted on the public surface.
-        category_id (Union[None, Unset, str]):
-        answered_post_id (Union[None, Unset, str]):
-        excerpt (Union[None, Unset, str]): LIST routes only: the opening post’s leading prose, flattened from markdown
+        customer_id (str | Unset): Author (server-stamped principal). Omitted on the public surface.
+        category_id (None | str | Unset):
+        answered_post_id (None | str | Unset):
+        excerpt (None | str | Unset): LIST routes only: the opening post’s leading prose, flattened from markdown
             server-side (≤240 chars; null when its body doc was soft-deleted). Absent on single-topic reads and
             create/update responses.
-        author_name (Union[None, Unset, str]): Authed COMMUNITY list route only: the author’s display name. Never on the
+        author_name (None | str | Unset): Authed COMMUNITY list route only: the author’s display name. Never on the
             public surface or the flat /discussion/topics list.
-        author_slug (Union[None, Unset, str]): Authed COMMUNITY list route only: the author’s public handle. Never on
-            the public surface or the flat /discussion/topics list.
-        author_avatar_url (Union[None, Unset, str]): Authed COMMUNITY list route only: the author’s avatar URL. Never on
-            the public surface or the flat /discussion/topics list.
+        author_slug (None | str | Unset): Authed COMMUNITY list route only: the author’s public handle. Never on the
+            public surface or the flat /discussion/topics list.
+        author_avatar_url (None | str | Unset): Authed COMMUNITY list route only: the author’s avatar URL. Never on the
+            public surface or the flat /discussion/topics list.
     """
 
     id: str
@@ -47,13 +49,13 @@ class DiscussionTopic:
     last_activity_at: str
     created_at: str
     updated_at: str
-    customer_id: Unset | str = UNSET
-    category_id: None | Unset | str = UNSET
-    answered_post_id: None | Unset | str = UNSET
-    excerpt: None | Unset | str = UNSET
-    author_name: None | Unset | str = UNSET
-    author_slug: None | Unset | str = UNSET
-    author_avatar_url: None | Unset | str = UNSET
+    customer_id: str | Unset = UNSET
+    category_id: None | str | Unset = UNSET
+    answered_post_id: None | str | Unset = UNSET
+    excerpt: None | str | Unset = UNSET
+    author_name: None | str | Unset = UNSET
+    author_slug: None | str | Unset = UNSET
+    author_avatar_url: None | str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -79,37 +81,37 @@ class DiscussionTopic:
 
         customer_id = self.customer_id
 
-        category_id: None | Unset | str
+        category_id: None | str | Unset
         if isinstance(self.category_id, Unset):
             category_id = UNSET
         else:
             category_id = self.category_id
 
-        answered_post_id: None | Unset | str
+        answered_post_id: None | str | Unset
         if isinstance(self.answered_post_id, Unset):
             answered_post_id = UNSET
         else:
             answered_post_id = self.answered_post_id
 
-        excerpt: None | Unset | str
+        excerpt: None | str | Unset
         if isinstance(self.excerpt, Unset):
             excerpt = UNSET
         else:
             excerpt = self.excerpt
 
-        author_name: None | Unset | str
+        author_name: None | str | Unset
         if isinstance(self.author_name, Unset):
             author_name = UNSET
         else:
             author_name = self.author_name
 
-        author_slug: None | Unset | str
+        author_slug: None | str | Unset
         if isinstance(self.author_slug, Unset):
             author_slug = UNSET
         else:
             author_slug = self.author_slug
 
-        author_avatar_url: None | Unset | str
+        author_avatar_url: None | str | Unset
         if isinstance(self.author_avatar_url, Unset):
             author_avatar_url = UNSET
         else:
@@ -173,57 +175,57 @@ class DiscussionTopic:
 
         customer_id = d.pop("customerId", UNSET)
 
-        def _parse_category_id(data: object) -> None | Unset | str:
+        def _parse_category_id(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         category_id = _parse_category_id(d.pop("categoryId", UNSET))
 
-        def _parse_answered_post_id(data: object) -> None | Unset | str:
+        def _parse_answered_post_id(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         answered_post_id = _parse_answered_post_id(d.pop("answeredPostId", UNSET))
 
-        def _parse_excerpt(data: object) -> None | Unset | str:
+        def _parse_excerpt(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         excerpt = _parse_excerpt(d.pop("excerpt", UNSET))
 
-        def _parse_author_name(data: object) -> None | Unset | str:
+        def _parse_author_name(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         author_name = _parse_author_name(d.pop("authorName", UNSET))
 
-        def _parse_author_slug(data: object) -> None | Unset | str:
+        def _parse_author_slug(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         author_slug = _parse_author_slug(d.pop("authorSlug", UNSET))
 
-        def _parse_author_avatar_url(data: object) -> None | Unset | str:
+        def _parse_author_avatar_url(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         author_avatar_url = _parse_author_avatar_url(d.pop("authorAvatarUrl", UNSET))
 

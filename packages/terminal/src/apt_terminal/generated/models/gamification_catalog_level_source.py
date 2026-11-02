@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class GamificationCatalogLevelSource(str, Enum):
+class GamificationCatalogLevelSource(StrEnum):
     DEFAULT = "default"
     REALM = "realm"
 

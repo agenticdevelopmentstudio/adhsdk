@@ -1,5 +1,6 @@
 from http import HTTPStatus
 from typing import Any
+from urllib.parse import quote
 
 import httpx
 
@@ -8,22 +9,25 @@ from ...client import AuthenticatedClient, Client
 from ...models.community_member import CommunityMember
 from ...models.error import Error
 from ...models.put_communities_id_members_me_body import PutCommunitiesIdMembersMeBody
-from ...types import Response
+from ...types import UNSET, Response, Unset
 
 
 def _get_kwargs(
     id: str,
     *,
-    body: PutCommunitiesIdMembersMeBody,
+    body: PutCommunitiesIdMembersMeBody | Unset = UNSET,
 ) -> dict[str, Any]:
     headers: dict[str, Any] = {}
 
     _kwargs: dict[str, Any] = {
         "method": "put",
-        "url": f"/communities/{id}/members/me",
+        "url": "/communities/{id}/members/me".format(
+            id=quote(str(id), safe=""),
+        ),
     }
 
-    _kwargs["json"] = body.to_dict()
+    if not isinstance(body, Unset):
+        _kwargs["json"] = body.to_dict()
 
     headers["Content-Type"] = "application/json"
 
@@ -75,20 +79,20 @@ def sync_detailed(
     id: str,
     *,
     client: AuthenticatedClient,
-    body: PutCommunitiesIdMembersMeBody,
+    body: PutCommunitiesIdMembersMeBody | Unset = UNSET,
 ) -> Response[CommunityMember | Error]:
-    r"""Update the caller’s OWN membership bio (members only; \"\" clears it)
+    """Update the caller’s OWN membership bio (members only; "" clears it)
 
     Args:
         id (str):
-        body (PutCommunitiesIdMembersMeBody):
+        body (PutCommunitiesIdMembersMeBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[CommunityMember, Error]]
+        Response[CommunityMember | Error]
     """
 
     kwargs = _get_kwargs(
@@ -107,20 +111,20 @@ def sync(
     id: str,
     *,
     client: AuthenticatedClient,
-    body: PutCommunitiesIdMembersMeBody,
+    body: PutCommunitiesIdMembersMeBody | Unset = UNSET,
 ) -> CommunityMember | Error | None:
-    r"""Update the caller’s OWN membership bio (members only; \"\" clears it)
+    """Update the caller’s OWN membership bio (members only; "" clears it)
 
     Args:
         id (str):
-        body (PutCommunitiesIdMembersMeBody):
+        body (PutCommunitiesIdMembersMeBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[CommunityMember, Error]
+        CommunityMember | Error
     """
 
     return sync_detailed(
@@ -134,20 +138,20 @@ async def asyncio_detailed(
     id: str,
     *,
     client: AuthenticatedClient,
-    body: PutCommunitiesIdMembersMeBody,
+    body: PutCommunitiesIdMembersMeBody | Unset = UNSET,
 ) -> Response[CommunityMember | Error]:
-    r"""Update the caller’s OWN membership bio (members only; \"\" clears it)
+    """Update the caller’s OWN membership bio (members only; "" clears it)
 
     Args:
         id (str):
-        body (PutCommunitiesIdMembersMeBody):
+        body (PutCommunitiesIdMembersMeBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[CommunityMember, Error]]
+        Response[CommunityMember | Error]
     """
 
     kwargs = _get_kwargs(
@@ -164,20 +168,20 @@ async def asyncio(
     id: str,
     *,
     client: AuthenticatedClient,
-    body: PutCommunitiesIdMembersMeBody,
+    body: PutCommunitiesIdMembersMeBody | Unset = UNSET,
 ) -> CommunityMember | Error | None:
-    r"""Update the caller’s OWN membership bio (members only; \"\" clears it)
+    """Update the caller’s OWN membership bio (members only; "" clears it)
 
     Args:
         id (str):
-        body (PutCommunitiesIdMembersMeBody):
+        body (PutCommunitiesIdMembersMeBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[CommunityMember, Error]
+        CommunityMember | Error
     """
 
     return (

@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, TypeVar, Union, cast
+from typing import TYPE_CHECKING, Any, TypeVar, cast
 
 from attrs import define as _attrs_define
 
@@ -23,15 +25,15 @@ class GetGameDefinitionsResponse200Item:
         kind (str):
         key (str):
         name (str):
-        description (Union[None, str]):
+        description (None | str):
         status (str):
         sort_order (int):
-        data (Union['GetGameDefinitionsResponse200ItemDataType0Type1', None, bool, float, list[Any], str]):
+        data (bool | float | GetGameDefinitionsResponse200ItemDataType0Type1 | list[Any] | None | str):
         created_at (str):
         updated_at (str):
-        deleted_at (Union[None, str]):
+        deleted_at (None | str):
         sync_version (int):
-        sync_stamped_at (Union[None, str]):
+        sync_stamped_at (None | str):
         sync_txid (int):
     """
 
@@ -45,9 +47,7 @@ class GetGameDefinitionsResponse200Item:
     description: None | str
     status: str
     sort_order: int
-    data: Union[
-        "GetGameDefinitionsResponse200ItemDataType0Type1", None, bool, float, list[Any], str
-    ]
+    data: bool | float | GetGameDefinitionsResponse200ItemDataType0Type1 | list[Any] | None | str
     created_at: str
     updated_at: str
     deleted_at: None | str
@@ -81,7 +81,7 @@ class GetGameDefinitionsResponse200Item:
 
         sort_order = self.sort_order
 
-        data: None | bool | dict[str, Any] | float | list[Any] | str
+        data: bool | dict[str, Any] | float | list[Any] | None | str
         if isinstance(self.data, GetGameDefinitionsResponse200ItemDataType0Type1):
             data = self.data.to_dict()
         elif isinstance(self.data, list):
@@ -164,9 +164,9 @@ class GetGameDefinitionsResponse200Item:
 
         def _parse_data(
             data: object,
-        ) -> Union[
-            "GetGameDefinitionsResponse200ItemDataType0Type1", None, bool, float, list[Any], str
-        ]:
+        ) -> (
+            bool | float | GetGameDefinitionsResponse200ItemDataType0Type1 | list[Any] | None | str
+        ):
             if data is None:
                 return data
             try:
@@ -175,7 +175,7 @@ class GetGameDefinitionsResponse200Item:
                 data_type_0_type_1 = GetGameDefinitionsResponse200ItemDataType0Type1.from_dict(data)
 
                 return data_type_0_type_1
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
             try:
                 if not isinstance(data, list):
@@ -183,17 +183,15 @@ class GetGameDefinitionsResponse200Item:
                 data_type_0_type_2 = cast(list[Any], data)
 
                 return data_type_0_type_2
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
             return cast(
-                Union[
-                    "GetGameDefinitionsResponse200ItemDataType0Type1",
-                    None,
-                    bool,
-                    float,
-                    list[Any],
-                    str,
-                ],
+                bool
+                | float
+                | GetGameDefinitionsResponse200ItemDataType0Type1
+                | list[Any]
+                | None
+                | str,
                 data,
             )
 

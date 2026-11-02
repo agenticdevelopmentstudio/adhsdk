@@ -9,12 +9,12 @@ from ...models.customer_auth_result import CustomerAuthResult
 from ...models.error import Error
 from ...models.mfa_challenge import MfaChallenge
 from ...models.post_customer_login_body import PostCustomerLoginBody
-from ...types import Response
+from ...types import UNSET, Response, Unset
 
 
 def _get_kwargs(
     *,
-    body: PostCustomerLoginBody,
+    body: PostCustomerLoginBody | Unset = UNSET,
 ) -> dict[str, Any]:
     headers: dict[str, Any] = {}
 
@@ -23,7 +23,8 @@ def _get_kwargs(
         "url": "/customer/login",
     }
 
-    _kwargs["json"] = body.to_dict()
+    if not isinstance(body, Unset):
+        _kwargs["json"] = body.to_dict()
 
     headers["Content-Type"] = "application/json"
 
@@ -74,20 +75,20 @@ def _build_response(
 def sync_detailed(
     *,
     client: AuthenticatedClient,
-    body: PostCustomerLoginBody,
+    body: PostCustomerLoginBody | Unset = UNSET,
 ) -> Response[CustomerAuthResult | Error | MfaChallenge]:
     """Authenticate one of the caller's end-customers (email + password)
 
     Args:
-        body (PostCustomerLoginBody): email or identifier is required (identifier is the generic
-            alias).
+        body (PostCustomerLoginBody | Unset): email or identifier is required (identifier is the
+            generic alias).
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[CustomerAuthResult, Error, MfaChallenge]]
+        Response[CustomerAuthResult | Error | MfaChallenge]
     """
 
     kwargs = _get_kwargs(
@@ -104,20 +105,20 @@ def sync_detailed(
 def sync(
     *,
     client: AuthenticatedClient,
-    body: PostCustomerLoginBody,
+    body: PostCustomerLoginBody | Unset = UNSET,
 ) -> CustomerAuthResult | Error | MfaChallenge | None:
     """Authenticate one of the caller's end-customers (email + password)
 
     Args:
-        body (PostCustomerLoginBody): email or identifier is required (identifier is the generic
-            alias).
+        body (PostCustomerLoginBody | Unset): email or identifier is required (identifier is the
+            generic alias).
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[CustomerAuthResult, Error, MfaChallenge]
+        CustomerAuthResult | Error | MfaChallenge
     """
 
     return sync_detailed(
@@ -129,20 +130,20 @@ def sync(
 async def asyncio_detailed(
     *,
     client: AuthenticatedClient,
-    body: PostCustomerLoginBody,
+    body: PostCustomerLoginBody | Unset = UNSET,
 ) -> Response[CustomerAuthResult | Error | MfaChallenge]:
     """Authenticate one of the caller's end-customers (email + password)
 
     Args:
-        body (PostCustomerLoginBody): email or identifier is required (identifier is the generic
-            alias).
+        body (PostCustomerLoginBody | Unset): email or identifier is required (identifier is the
+            generic alias).
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[CustomerAuthResult, Error, MfaChallenge]]
+        Response[CustomerAuthResult | Error | MfaChallenge]
     """
 
     kwargs = _get_kwargs(
@@ -157,20 +158,20 @@ async def asyncio_detailed(
 async def asyncio(
     *,
     client: AuthenticatedClient,
-    body: PostCustomerLoginBody,
+    body: PostCustomerLoginBody | Unset = UNSET,
 ) -> CustomerAuthResult | Error | MfaChallenge | None:
     """Authenticate one of the caller's end-customers (email + password)
 
     Args:
-        body (PostCustomerLoginBody): email or identifier is required (identifier is the generic
-            alias).
+        body (PostCustomerLoginBody | Unset): email or identifier is required (identifier is the
+            generic alias).
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[CustomerAuthResult, Error, MfaChallenge]
+        CustomerAuthResult | Error | MfaChallenge
     """
 
     return (

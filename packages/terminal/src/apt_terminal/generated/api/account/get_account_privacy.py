@@ -12,7 +12,7 @@ from ...types import UNSET, Response, Unset
 
 def _get_kwargs(
     *,
-    target_table: Unset | str = UNSET,
+    target_table: str | Unset = UNSET,
 ) -> dict[str, Any]:
     params: dict[str, Any] = {}
 
@@ -67,19 +67,19 @@ def _build_response(
 def sync_detailed(
     *,
     client: AuthenticatedClient,
-    target_table: Unset | str = UNSET,
+    target_table: str | Unset = UNSET,
 ) -> Response[Error | GetAccountPrivacyResponse200]:
     """List the caller's per-row privacy grants (optionally one target table)
 
     Args:
-        target_table (Union[Unset, str]):
+        target_table (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, GetAccountPrivacyResponse200]]
+        Response[Error | GetAccountPrivacyResponse200]
     """
 
     kwargs = _get_kwargs(
@@ -96,19 +96,19 @@ def sync_detailed(
 def sync(
     *,
     client: AuthenticatedClient,
-    target_table: Unset | str = UNSET,
+    target_table: str | Unset = UNSET,
 ) -> Error | GetAccountPrivacyResponse200 | None:
     """List the caller's per-row privacy grants (optionally one target table)
 
     Args:
-        target_table (Union[Unset, str]):
+        target_table (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, GetAccountPrivacyResponse200]
+        Error | GetAccountPrivacyResponse200
     """
 
     return sync_detailed(
@@ -120,19 +120,19 @@ def sync(
 async def asyncio_detailed(
     *,
     client: AuthenticatedClient,
-    target_table: Unset | str = UNSET,
+    target_table: str | Unset = UNSET,
 ) -> Response[Error | GetAccountPrivacyResponse200]:
     """List the caller's per-row privacy grants (optionally one target table)
 
     Args:
-        target_table (Union[Unset, str]):
+        target_table (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, GetAccountPrivacyResponse200]]
+        Response[Error | GetAccountPrivacyResponse200]
     """
 
     kwargs = _get_kwargs(
@@ -147,19 +147,19 @@ async def asyncio_detailed(
 async def asyncio(
     *,
     client: AuthenticatedClient,
-    target_table: Unset | str = UNSET,
+    target_table: str | Unset = UNSET,
 ) -> Error | GetAccountPrivacyResponse200 | None:
     """List the caller's per-row privacy grants (optionally one target table)
 
     Args:
-        target_table (Union[Unset, str]):
+        target_table (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, GetAccountPrivacyResponse200]
+        Error | GetAccountPrivacyResponse200
     """
 
     return (

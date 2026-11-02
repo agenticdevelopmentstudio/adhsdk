@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class PutMeAppearanceBodySpacing(str, Enum):
+class PutMeAppearanceBodySpacing(StrEnum):
     COMFORTABLE = "comfortable"
     COMPACT = "compact"
     SPACIOUS = "spacious"

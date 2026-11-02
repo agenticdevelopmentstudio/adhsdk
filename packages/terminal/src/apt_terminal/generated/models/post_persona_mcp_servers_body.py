@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar
 
@@ -16,15 +18,15 @@ class PostPersonaMcpServersBody:
         slug (str): The globally-unique `<server>` handle in `mcp.<server>.<tool>`
         name (str):
         url (str): The remote MCP server's http(s) endpoint URL
-        auth_secret (Union[Unset, str]): Optional per-server bearer secret; stored encrypted, never returned
-        enabled (Union[Unset, bool]): Opt-in; defaults to disabled (contributes no tools until enabled) Default: False.
+        auth_secret (str | Unset): Optional per-server bearer secret; stored encrypted, never returned
+        enabled (bool | Unset): Opt-in; defaults to disabled (contributes no tools until enabled) Default: False.
     """
 
     slug: str
     name: str
     url: str
-    auth_secret: Unset | str = UNSET
-    enabled: Unset | bool = False
+    auth_secret: str | Unset = UNSET
+    enabled: bool | Unset = False
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:

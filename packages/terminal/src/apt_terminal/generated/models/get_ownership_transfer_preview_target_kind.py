@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class GetOwnershipTransferPreviewTargetKind(str, Enum):
+class GetOwnershipTransferPreviewTargetKind(StrEnum):
     CUSTOMER = "customer"
     ORGANIZATION = "organization"
 

@@ -1,5 +1,6 @@
 from http import HTTPStatus
 from typing import Any
+from urllib.parse import quote
 
 import httpx
 
@@ -15,7 +16,9 @@ def _get_kwargs(
 ) -> dict[str, Any]:
     _kwargs: dict[str, Any] = {
         "method": "post",
-        "url": f"/billing/accounts/{id}/resend-claim",
+        "url": "/billing/accounts/{id}/resend-claim".format(
+            id=quote(str(id), safe=""),
+        ),
     }
 
     return _kwargs
@@ -71,7 +74,7 @@ def sync_detailed(
     *,
     client: AuthenticatedClient,
 ) -> Response[BillingResendClaim | Error]:
-    r"""Mint a fresh claim token for one account and mail it again
+    """Mint a fresh claim token for one account and mail it again
 
      It MINTS rather than resends: the stored value is a one-way hash, so the original token is
     unrecoverable and there is nothing to re-send. A fresh token restarts the claim TTL — which is what
@@ -79,7 +82,7 @@ def sync_detailed(
     operator who suspects the first link leaked wants. Delivery happens after the transaction commits
     and cannot fail the call: the mailer never throws and logs every path that does not send, so a
     second failure is visible in the logs and this route can simply be called again. A 200 therefore
-    means \"a new token exists\", not \"the payer received it\".
+    means "a new token exists", not "the payer received it".
 
     Args:
         id (str):
@@ -89,7 +92,7 @@ def sync_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[BillingResendClaim, Error]]
+        Response[BillingResendClaim | Error]
     """
 
     kwargs = _get_kwargs(
@@ -108,7 +111,7 @@ def sync(
     *,
     client: AuthenticatedClient,
 ) -> BillingResendClaim | Error | None:
-    r"""Mint a fresh claim token for one account and mail it again
+    """Mint a fresh claim token for one account and mail it again
 
      It MINTS rather than resends: the stored value is a one-way hash, so the original token is
     unrecoverable and there is nothing to re-send. A fresh token restarts the claim TTL — which is what
@@ -116,7 +119,7 @@ def sync(
     operator who suspects the first link leaked wants. Delivery happens after the transaction commits
     and cannot fail the call: the mailer never throws and logs every path that does not send, so a
     second failure is visible in the logs and this route can simply be called again. A 200 therefore
-    means \"a new token exists\", not \"the payer received it\".
+    means "a new token exists", not "the payer received it".
 
     Args:
         id (str):
@@ -126,7 +129,7 @@ def sync(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[BillingResendClaim, Error]
+        BillingResendClaim | Error
     """
 
     return sync_detailed(
@@ -140,7 +143,7 @@ async def asyncio_detailed(
     *,
     client: AuthenticatedClient,
 ) -> Response[BillingResendClaim | Error]:
-    r"""Mint a fresh claim token for one account and mail it again
+    """Mint a fresh claim token for one account and mail it again
 
      It MINTS rather than resends: the stored value is a one-way hash, so the original token is
     unrecoverable and there is nothing to re-send. A fresh token restarts the claim TTL — which is what
@@ -148,7 +151,7 @@ async def asyncio_detailed(
     operator who suspects the first link leaked wants. Delivery happens after the transaction commits
     and cannot fail the call: the mailer never throws and logs every path that does not send, so a
     second failure is visible in the logs and this route can simply be called again. A 200 therefore
-    means \"a new token exists\", not \"the payer received it\".
+    means "a new token exists", not "the payer received it".
 
     Args:
         id (str):
@@ -158,7 +161,7 @@ async def asyncio_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[BillingResendClaim, Error]]
+        Response[BillingResendClaim | Error]
     """
 
     kwargs = _get_kwargs(
@@ -175,7 +178,7 @@ async def asyncio(
     *,
     client: AuthenticatedClient,
 ) -> BillingResendClaim | Error | None:
-    r"""Mint a fresh claim token for one account and mail it again
+    """Mint a fresh claim token for one account and mail it again
 
      It MINTS rather than resends: the stored value is a one-way hash, so the original token is
     unrecoverable and there is nothing to re-send. A fresh token restarts the claim TTL — which is what
@@ -183,7 +186,7 @@ async def asyncio(
     operator who suspects the first link leaked wants. Delivery happens after the transaction commits
     and cannot fail the call: the mailer never throws and logs every path that does not send, so a
     second failure is visible in the logs and this route can simply be called again. A 200 therefore
-    means \"a new token exists\", not \"the payer received it\".
+    means "a new token exists", not "the payer received it".
 
     Args:
         id (str):
@@ -193,7 +196,7 @@ async def asyncio(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[BillingResendClaim, Error]
+        BillingResendClaim | Error
     """
 
     return (

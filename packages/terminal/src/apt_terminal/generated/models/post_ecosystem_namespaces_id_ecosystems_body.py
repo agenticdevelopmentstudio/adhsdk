@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar
 
@@ -15,12 +17,12 @@ class PostEcosystemNamespacesIdEcosystemsBody:
     Attributes:
         slug (str):
         name (str):
-        rdid (Union[Unset, str]): Override; defaults to <namespace-prefix>.<slug>
+        rdid (str | Unset): Override; defaults to <namespace-prefix>.<slug>
     """
 
     slug: str
     name: str
-    rdid: Unset | str = UNSET
+    rdid: str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:

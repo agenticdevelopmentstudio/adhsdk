@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, TypeVar, Union, cast
+from typing import TYPE_CHECKING, Any, TypeVar, cast
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -19,26 +21,26 @@ class ShiprOrgDefaults:
     first written; changing it re-aims the next repository and moves nothing already registered.
 
         Attributes:
-            id (Union[Unset, str]):
-            org (Union[Unset, str]): The forge account login.
-            deployment_owner (Union[None, Unset, str]): Which org the deployment repositories go in. Null is “the same org”,
+            id (str | Unset):
+            org (str | Unset): The forge account login.
+            deployment_owner (None | str | Unset): Which org the deployment repositories go in. Null is “the same org”,
                 stored as null rather than as a copy so that an operator who never chose stays distinguishable from one who
                 chose the org they were already in.
-            name_suffix (Union[Unset, str]): `-deployment`, spelled per-org. Appended to the source repository’s name when
-                its `.shipr` declares no shards.
-            env_branches (Union[Unset, ShiprOrgDefaultsEnvBranches]): The ladder a new mirror starts with. Empty means the
-                built-in default (every environment, named after itself), not a repository that deploys nowhere.
-            created_at (Union[Unset, str]):
-            updated_at (Union[Unset, str]):
+            name_suffix (str | Unset): `-deployment`, spelled per-org. Appended to the source repository’s name when its
+                `.shipr` declares no shards.
+            env_branches (ShiprOrgDefaultsEnvBranches | Unset): The ladder a new mirror starts with. Empty means the built-
+                in default (every environment, named after itself), not a repository that deploys nowhere.
+            created_at (str | Unset):
+            updated_at (str | Unset):
     """
 
-    id: Unset | str = UNSET
-    org: Unset | str = UNSET
-    deployment_owner: None | Unset | str = UNSET
-    name_suffix: Unset | str = UNSET
-    env_branches: Union[Unset, "ShiprOrgDefaultsEnvBranches"] = UNSET
-    created_at: Unset | str = UNSET
-    updated_at: Unset | str = UNSET
+    id: str | Unset = UNSET
+    org: str | Unset = UNSET
+    deployment_owner: None | str | Unset = UNSET
+    name_suffix: str | Unset = UNSET
+    env_branches: ShiprOrgDefaultsEnvBranches | Unset = UNSET
+    created_at: str | Unset = UNSET
+    updated_at: str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -46,7 +48,7 @@ class ShiprOrgDefaults:
 
         org = self.org
 
-        deployment_owner: None | Unset | str
+        deployment_owner: None | str | Unset
         if isinstance(self.deployment_owner, Unset):
             deployment_owner = UNSET
         else:
@@ -54,7 +56,7 @@ class ShiprOrgDefaults:
 
         name_suffix = self.name_suffix
 
-        env_branches: Unset | dict[str, Any] = UNSET
+        env_branches: dict[str, Any] | Unset = UNSET
         if not isinstance(self.env_branches, Unset):
             env_branches = self.env_branches.to_dict()
 
@@ -84,26 +86,28 @@ class ShiprOrgDefaults:
 
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
-        from ..models.shipr_org_defaults_env_branches import ShiprOrgDefaultsEnvBranches
+        from ..models.shipr_org_defaults_env_branches import (
+            ShiprOrgDefaultsEnvBranches,
+        )
 
         d = dict(src_dict)
         id = d.pop("id", UNSET)
 
         org = d.pop("org", UNSET)
 
-        def _parse_deployment_owner(data: object) -> None | Unset | str:
+        def _parse_deployment_owner(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         deployment_owner = _parse_deployment_owner(d.pop("deploymentOwner", UNSET))
 
         name_suffix = d.pop("nameSuffix", UNSET)
 
         _env_branches = d.pop("envBranches", UNSET)
-        env_branches: Unset | ShiprOrgDefaultsEnvBranches
+        env_branches: ShiprOrgDefaultsEnvBranches | Unset
         if isinstance(_env_branches, Unset):
             env_branches = UNSET
         else:

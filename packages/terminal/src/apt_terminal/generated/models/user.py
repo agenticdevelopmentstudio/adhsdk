@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -17,7 +19,7 @@ class User:
         email (str):
         name (str):
         avatar_url (str):
-        slug (Union[None, str]):
+        slug (None | str):
         public_profile_enabled (bool): Whether the public profile card is visible at /public/users/:slug
         profile_visibility (UserProfileVisibility): The principal's page-level profile visibility. Supersedes
             publicProfileEnabled, which is retained during the expand phase and written in parallel.

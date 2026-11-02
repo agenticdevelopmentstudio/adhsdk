@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class PersonaBootstrapBucketScope(str, Enum):
+class PersonaBootstrapBucketScope(StrEnum):
     GLOBAL = "global"
 
     def __str__(self) -> str:

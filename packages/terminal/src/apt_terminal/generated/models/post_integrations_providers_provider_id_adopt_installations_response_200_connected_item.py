@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar
 
@@ -18,22 +20,22 @@ class PostIntegrationsProvidersProviderIdAdoptInstallationsResponse200ConnectedI
         installation_id (str):
         account_login (str): The account the app is installed on — the org whose repositories it reaches.
         target_type (str): `Organization` or `User`.
-        connection_id (Union[Unset, str]): The connection holding it — set when this call made one, AND when a previous
-            call already had. Adoption is idempotent, so a second call over the same installations reports them connected
-            rather than connecting them again.
-        skipped (Union[Unset, str]): Why it was not connected. Absent on success.
-        warning (Union[Unset, str]): The connection stands, and the prefetch that rides along behind it — caching what
-            this installation was granted — did not finish. NOT a skip: everything that needs a connection works, and only
-            the repository picker opening instantly does not. It is reported because this call is what the Test button runs,
-            and a picker that will open empty should say so now rather than at the moment somebody needs it.
+        connection_id (str | Unset): The connection holding it — set when this call made one, AND when a previous call
+            already had. Adoption is idempotent, so a second call over the same installations reports them connected rather
+            than connecting them again.
+        skipped (str | Unset): Why it was not connected. Absent on success.
+        warning (str | Unset): The connection stands, and the prefetch that rides along behind it — caching what this
+            installation was granted — did not finish. NOT a skip: everything that needs a connection works, and only the
+            repository picker opening instantly does not. It is reported because this call is what the Test button runs, and
+            a picker that will open empty should say so now rather than at the moment somebody needs it.
     """
 
     installation_id: str
     account_login: str
     target_type: str
-    connection_id: Unset | str = UNSET
-    skipped: Unset | str = UNSET
-    warning: Unset | str = UNSET
+    connection_id: str | Unset = UNSET
+    skipped: str | Unset = UNSET
+    warning: str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:

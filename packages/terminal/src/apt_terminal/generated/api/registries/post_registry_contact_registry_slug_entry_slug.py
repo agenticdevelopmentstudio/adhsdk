@@ -1,5 +1,6 @@
 from http import HTTPStatus
 from typing import Any
+from urllib.parse import quote
 
 import httpx
 
@@ -10,23 +11,27 @@ from ...models.post_registry_contact_registry_slug_entry_slug_body import (
     PostRegistryContactRegistrySlugEntrySlugBody,
 )
 from ...models.registry_contact_result import RegistryContactResult
-from ...types import Response
+from ...types import UNSET, Response, Unset
 
 
 def _get_kwargs(
     registry_slug: str,
     entry_slug: str,
     *,
-    body: PostRegistryContactRegistrySlugEntrySlugBody,
+    body: PostRegistryContactRegistrySlugEntrySlugBody | Unset = UNSET,
 ) -> dict[str, Any]:
     headers: dict[str, Any] = {}
 
     _kwargs: dict[str, Any] = {
         "method": "post",
-        "url": f"/registry/contact/{registry_slug}/{entry_slug}",
+        "url": "/registry/contact/{registry_slug}/{entry_slug}".format(
+            registry_slug=quote(str(registry_slug), safe=""),
+            entry_slug=quote(str(entry_slug), safe=""),
+        ),
     }
 
-    _kwargs["json"] = body.to_dict()
+    if not isinstance(body, Unset):
+        _kwargs["json"] = body.to_dict()
 
     headers["Content-Type"] = "application/json"
 
@@ -89,26 +94,26 @@ def sync_detailed(
     entry_slug: str,
     *,
     client: AuthenticatedClient,
-    body: PostRegistryContactRegistrySlugEntrySlugBody,
+    body: PostRegistryContactRegistrySlugEntrySlugBody | Unset = UNSET,
 ) -> Response[Error | RegistryContactResult]:
-    r"""Open a DM with a public entry's owner and send the opening message
+    """Open a DM with a public entry's owner and send the opening message
 
      Resolves the entry server-side from its two slugs — the visitor never learns the owner id unless the
-    owner answers. Only a published entry with contactMode \"dm\" on a public registry is contactable;
-    an org- or persona-owned entry has no user to DM (409). Gated behind the per-ecosystem `messaging`
-    opt-in (403 when off).
+    owner answers. Only a published entry with contactMode "dm" on a public registry is contactable; an
+    org- or persona-owned entry has no user to DM (409). Gated behind the per-ecosystem `messaging` opt-
+    in (403 when off).
 
     Args:
         registry_slug (str):
         entry_slug (str):
-        body (PostRegistryContactRegistrySlugEntrySlugBody):
+        body (PostRegistryContactRegistrySlugEntrySlugBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, RegistryContactResult]]
+        Response[Error | RegistryContactResult]
     """
 
     kwargs = _get_kwargs(
@@ -129,26 +134,26 @@ def sync(
     entry_slug: str,
     *,
     client: AuthenticatedClient,
-    body: PostRegistryContactRegistrySlugEntrySlugBody,
+    body: PostRegistryContactRegistrySlugEntrySlugBody | Unset = UNSET,
 ) -> Error | RegistryContactResult | None:
-    r"""Open a DM with a public entry's owner and send the opening message
+    """Open a DM with a public entry's owner and send the opening message
 
      Resolves the entry server-side from its two slugs — the visitor never learns the owner id unless the
-    owner answers. Only a published entry with contactMode \"dm\" on a public registry is contactable;
-    an org- or persona-owned entry has no user to DM (409). Gated behind the per-ecosystem `messaging`
-    opt-in (403 when off).
+    owner answers. Only a published entry with contactMode "dm" on a public registry is contactable; an
+    org- or persona-owned entry has no user to DM (409). Gated behind the per-ecosystem `messaging` opt-
+    in (403 when off).
 
     Args:
         registry_slug (str):
         entry_slug (str):
-        body (PostRegistryContactRegistrySlugEntrySlugBody):
+        body (PostRegistryContactRegistrySlugEntrySlugBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, RegistryContactResult]
+        Error | RegistryContactResult
     """
 
     return sync_detailed(
@@ -164,26 +169,26 @@ async def asyncio_detailed(
     entry_slug: str,
     *,
     client: AuthenticatedClient,
-    body: PostRegistryContactRegistrySlugEntrySlugBody,
+    body: PostRegistryContactRegistrySlugEntrySlugBody | Unset = UNSET,
 ) -> Response[Error | RegistryContactResult]:
-    r"""Open a DM with a public entry's owner and send the opening message
+    """Open a DM with a public entry's owner and send the opening message
 
      Resolves the entry server-side from its two slugs — the visitor never learns the owner id unless the
-    owner answers. Only a published entry with contactMode \"dm\" on a public registry is contactable;
-    an org- or persona-owned entry has no user to DM (409). Gated behind the per-ecosystem `messaging`
-    opt-in (403 when off).
+    owner answers. Only a published entry with contactMode "dm" on a public registry is contactable; an
+    org- or persona-owned entry has no user to DM (409). Gated behind the per-ecosystem `messaging` opt-
+    in (403 when off).
 
     Args:
         registry_slug (str):
         entry_slug (str):
-        body (PostRegistryContactRegistrySlugEntrySlugBody):
+        body (PostRegistryContactRegistrySlugEntrySlugBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, RegistryContactResult]]
+        Response[Error | RegistryContactResult]
     """
 
     kwargs = _get_kwargs(
@@ -202,26 +207,26 @@ async def asyncio(
     entry_slug: str,
     *,
     client: AuthenticatedClient,
-    body: PostRegistryContactRegistrySlugEntrySlugBody,
+    body: PostRegistryContactRegistrySlugEntrySlugBody | Unset = UNSET,
 ) -> Error | RegistryContactResult | None:
-    r"""Open a DM with a public entry's owner and send the opening message
+    """Open a DM with a public entry's owner and send the opening message
 
      Resolves the entry server-side from its two slugs — the visitor never learns the owner id unless the
-    owner answers. Only a published entry with contactMode \"dm\" on a public registry is contactable;
-    an org- or persona-owned entry has no user to DM (409). Gated behind the per-ecosystem `messaging`
-    opt-in (403 when off).
+    owner answers. Only a published entry with contactMode "dm" on a public registry is contactable; an
+    org- or persona-owned entry has no user to DM (409). Gated behind the per-ecosystem `messaging` opt-
+    in (403 when off).
 
     Args:
         registry_slug (str):
         entry_slug (str):
-        body (PostRegistryContactRegistrySlugEntrySlugBody):
+        body (PostRegistryContactRegistrySlugEntrySlugBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, RegistryContactResult]
+        Error | RegistryContactResult
     """
 
     return (

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import TYPE_CHECKING, Any, TypeVar
 
@@ -17,13 +19,13 @@ class GamificationCustomEventResult:
     Attributes:
         ingested (bool): false ⇒ the dedupeKey was already seen (no-op)
         stat_key (str):
-        new_badges (list['GamificationBadge']):
+        new_badges (list[GamificationBadge]):
         xp_gained (int):
     """
 
     ingested: bool
     stat_key: str
-    new_badges: list["GamificationBadge"]
+    new_badges: list[GamificationBadge]
     xp_gained: int
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 

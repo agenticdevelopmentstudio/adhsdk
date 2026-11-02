@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar
 
@@ -19,14 +21,14 @@ class PostNotificationsPreferencesBody:
         category (PostNotificationsPreferencesBodyCategory):
         email (bool):
         sms (bool):
-        in_app (Union[Unset, bool]): In-app (inbox) delivery for this category. Omitted means true — the PUT replaces
-            the row wholesale, so a client that edits only email/sms must send back the value it read.
+        in_app (bool | Unset): In-app (inbox) delivery for this category. Omitted means true — the PUT replaces the row
+            wholesale, so a client that edits only email/sms must send back the value it read.
     """
 
     category: PostNotificationsPreferencesBodyCategory
     email: bool
     sms: bool
-    in_app: Unset | bool = UNSET
+    in_app: bool | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:

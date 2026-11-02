@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, TypeVar, Union, cast
+from typing import TYPE_CHECKING, Any, TypeVar, cast
 
 from attrs import define as _attrs_define
 
@@ -19,13 +21,13 @@ class GetContentEventsResponse200Item:
         id (str):
         ecosystem_id (str):
         customer_id (str):
-        deleted_at (Union[None, str]):
+        deleted_at (None | str):
         type_ (str):
-        payload (Union['GetContentEventsResponse200ItemPayloadType1', None, bool, float, list[Any], str]):
+        payload (bool | float | GetContentEventsResponse200ItemPayloadType1 | list[Any] | None | str):
         created_at (str):
         updated_at (str):
         sync_version (int):
-        sync_stamped_at (Union[None, str]):
+        sync_stamped_at (None | str):
         sync_txid (int):
     """
 
@@ -34,7 +36,7 @@ class GetContentEventsResponse200Item:
     customer_id: str
     deleted_at: None | str
     type_: str
-    payload: Union["GetContentEventsResponse200ItemPayloadType1", None, bool, float, list[Any], str]
+    payload: bool | float | GetContentEventsResponse200ItemPayloadType1 | list[Any] | None | str
     created_at: str
     updated_at: str
     sync_version: int
@@ -57,7 +59,7 @@ class GetContentEventsResponse200Item:
 
         type_ = self.type_
 
-        payload: None | bool | dict[str, Any] | float | list[Any] | str
+        payload: bool | dict[str, Any] | float | list[Any] | None | str
         if isinstance(self.payload, GetContentEventsResponse200ItemPayloadType1):
             payload = self.payload.to_dict()
         elif isinstance(self.payload, list):
@@ -121,9 +123,7 @@ class GetContentEventsResponse200Item:
 
         def _parse_payload(
             data: object,
-        ) -> Union[
-            "GetContentEventsResponse200ItemPayloadType1", None, bool, float, list[Any], str
-        ]:
+        ) -> bool | float | GetContentEventsResponse200ItemPayloadType1 | list[Any] | None | str:
             if data is None:
                 return data
             try:
@@ -132,7 +132,7 @@ class GetContentEventsResponse200Item:
                 payload_type_1 = GetContentEventsResponse200ItemPayloadType1.from_dict(data)
 
                 return payload_type_1
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
             try:
                 if not isinstance(data, list):
@@ -140,12 +140,10 @@ class GetContentEventsResponse200Item:
                 payload_type_2 = cast(list[Any], data)
 
                 return payload_type_2
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
             return cast(
-                Union[
-                    "GetContentEventsResponse200ItemPayloadType1", None, bool, float, list[Any], str
-                ],
+                bool | float | GetContentEventsResponse200ItemPayloadType1 | list[Any] | None | str,
                 data,
             )
 

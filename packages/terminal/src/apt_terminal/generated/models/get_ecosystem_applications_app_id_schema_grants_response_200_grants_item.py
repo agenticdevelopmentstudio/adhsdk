@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import TYPE_CHECKING, Any, TypeVar
 
@@ -19,12 +21,12 @@ class GetEcosystemApplicationsAppIdSchemaGrantsResponse200GrantsItem:
     Attributes:
         schema_id (str): the bucket id the grant is for
         crud (str):
-        tables (list['GetEcosystemApplicationsAppIdSchemaGrantsResponse200GrantsItemTablesItem']):
+        tables (list[GetEcosystemApplicationsAppIdSchemaGrantsResponse200GrantsItemTablesItem]):
     """
 
     schema_id: str
     crud: str
-    tables: list["GetEcosystemApplicationsAppIdSchemaGrantsResponse200GrantsItemTablesItem"]
+    tables: list[GetEcosystemApplicationsAppIdSchemaGrantsResponse200GrantsItemTablesItem]
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:

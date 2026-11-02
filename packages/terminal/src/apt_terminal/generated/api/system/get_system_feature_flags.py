@@ -12,12 +12,12 @@ from ...types import UNSET, Response, Unset
 
 def _get_kwargs(
     *,
-    scope: Unset | GetSystemFeatureFlagsScope = UNSET,
-    key: Unset | str = UNSET,
+    scope: GetSystemFeatureFlagsScope | Unset = UNSET,
+    key: str | Unset = UNSET,
 ) -> dict[str, Any]:
     params: dict[str, Any] = {}
 
-    json_scope: Unset | str = UNSET
+    json_scope: str | Unset = UNSET
     if not isinstance(scope, Unset):
         json_scope = scope.value
 
@@ -38,7 +38,7 @@ def _get_kwargs(
 
 def _parse_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> list["FeatureFlag"] | None:
+) -> list[FeatureFlag] | None:
     if response.status_code == 200:
         response_200 = []
         _response_200 = response.json()
@@ -57,7 +57,7 @@ def _parse_response(
 
 def _build_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> Response[list["FeatureFlag"]]:
+) -> Response[list[FeatureFlag]]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -69,21 +69,21 @@ def _build_response(
 def sync_detailed(
     *,
     client: AuthenticatedClient | Client,
-    scope: Unset | GetSystemFeatureFlagsScope = UNSET,
-    key: Unset | str = UNSET,
-) -> Response[list["FeatureFlag"]]:
+    scope: GetSystemFeatureFlagsScope | Unset = UNSET,
+    key: str | Unset = UNSET,
+) -> Response[list[FeatureFlag]]:
     """List feature flags (public; optional ?scope=system and ?key= exact-match filter)
 
     Args:
-        scope (Union[Unset, GetSystemFeatureFlagsScope]):
-        key (Union[Unset, str]):
+        scope (GetSystemFeatureFlagsScope | Unset):
+        key (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[list['FeatureFlag']]
+        Response[list[FeatureFlag]]
     """
 
     kwargs = _get_kwargs(
@@ -101,21 +101,21 @@ def sync_detailed(
 def sync(
     *,
     client: AuthenticatedClient | Client,
-    scope: Unset | GetSystemFeatureFlagsScope = UNSET,
-    key: Unset | str = UNSET,
-) -> list["FeatureFlag"] | None:
+    scope: GetSystemFeatureFlagsScope | Unset = UNSET,
+    key: str | Unset = UNSET,
+) -> list[FeatureFlag] | None:
     """List feature flags (public; optional ?scope=system and ?key= exact-match filter)
 
     Args:
-        scope (Union[Unset, GetSystemFeatureFlagsScope]):
-        key (Union[Unset, str]):
+        scope (GetSystemFeatureFlagsScope | Unset):
+        key (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        list['FeatureFlag']
+        list[FeatureFlag]
     """
 
     return sync_detailed(
@@ -128,21 +128,21 @@ def sync(
 async def asyncio_detailed(
     *,
     client: AuthenticatedClient | Client,
-    scope: Unset | GetSystemFeatureFlagsScope = UNSET,
-    key: Unset | str = UNSET,
-) -> Response[list["FeatureFlag"]]:
+    scope: GetSystemFeatureFlagsScope | Unset = UNSET,
+    key: str | Unset = UNSET,
+) -> Response[list[FeatureFlag]]:
     """List feature flags (public; optional ?scope=system and ?key= exact-match filter)
 
     Args:
-        scope (Union[Unset, GetSystemFeatureFlagsScope]):
-        key (Union[Unset, str]):
+        scope (GetSystemFeatureFlagsScope | Unset):
+        key (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[list['FeatureFlag']]
+        Response[list[FeatureFlag]]
     """
 
     kwargs = _get_kwargs(
@@ -158,21 +158,21 @@ async def asyncio_detailed(
 async def asyncio(
     *,
     client: AuthenticatedClient | Client,
-    scope: Unset | GetSystemFeatureFlagsScope = UNSET,
-    key: Unset | str = UNSET,
-) -> list["FeatureFlag"] | None:
+    scope: GetSystemFeatureFlagsScope | Unset = UNSET,
+    key: str | Unset = UNSET,
+) -> list[FeatureFlag] | None:
     """List feature flags (public; optional ?scope=system and ?key= exact-match filter)
 
     Args:
-        scope (Union[Unset, GetSystemFeatureFlagsScope]):
-        key (Union[Unset, str]):
+        scope (GetSystemFeatureFlagsScope | Unset):
+        key (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        list['FeatureFlag']
+        list[FeatureFlag]
     """
 
     return (

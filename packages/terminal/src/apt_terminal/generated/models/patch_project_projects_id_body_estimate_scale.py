@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class PatchProjectProjectsIdBodyEstimateScale(str, Enum):
+class PatchProjectProjectsIdBodyEstimateScale(StrEnum):
     EXPONENTIAL = "exponential"
     FIBONACCI = "fibonacci"
     LINEAR = "linear"

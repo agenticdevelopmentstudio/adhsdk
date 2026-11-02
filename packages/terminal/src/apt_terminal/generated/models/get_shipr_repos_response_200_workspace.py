@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar
 
@@ -13,12 +15,12 @@ T = TypeVar("T", bound="GetShiprReposResponse200Workspace")
 class GetShiprReposResponse200Workspace:
     """
     Attributes:
-        kind (Union[Unset, str]):
-        owner_id (Union[Unset, str]):
+        kind (str | Unset):
+        owner_id (str | Unset):
     """
 
-    kind: Unset | str = UNSET
-    owner_id: Unset | str = UNSET
+    kind: str | Unset = UNSET
+    owner_id: str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:

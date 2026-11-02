@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar
 
@@ -17,13 +19,13 @@ class PostContentFeedbackBody:
         subject (str):
         body (str):
         platform (str):
-        ecosystem_id (Union[Unset, str]):
-        app_version (Union[Unset, str]):
-        os_version (Union[Unset, str]):
-        device_info (Union[Unset, str]):
-        status (Union[Unset, str]):
-        admin_notes (Union[Unset, str]):
-        sync_txid (Union[Unset, int]):
+        ecosystem_id (str | Unset):
+        app_version (str | Unset):
+        os_version (str | Unset):
+        device_info (str | Unset):
+        status (str | Unset):
+        admin_notes (str | Unset):
+        sync_txid (int | Unset):
     """
 
     user_email: str
@@ -31,13 +33,13 @@ class PostContentFeedbackBody:
     subject: str
     body: str
     platform: str
-    ecosystem_id: Unset | str = UNSET
-    app_version: Unset | str = UNSET
-    os_version: Unset | str = UNSET
-    device_info: Unset | str = UNSET
-    status: Unset | str = UNSET
-    admin_notes: Unset | str = UNSET
-    sync_txid: Unset | int = UNSET
+    ecosystem_id: str | Unset = UNSET
+    app_version: str | Unset = UNSET
+    os_version: str | Unset = UNSET
+    device_info: str | Unset = UNSET
+    status: str | Unset = UNSET
+    admin_notes: str | Unset = UNSET
+    sync_txid: int | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
         user_email = self.user_email

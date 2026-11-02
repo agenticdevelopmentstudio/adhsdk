@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, TypeVar, Union, cast
+from typing import TYPE_CHECKING, Any, TypeVar, cast
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -25,7 +27,7 @@ class BucketAccessGroup:
         kind (str): 'everyone' (seeded) or 'custom'
         created_at (str):
         updated_at (str):
-        metadata (Union['BucketAccessGroupMetadataType0', None, Unset]):
+        metadata (BucketAccessGroupMetadataType0 | None | Unset):
     """
 
     id: str
@@ -36,11 +38,13 @@ class BucketAccessGroup:
     kind: str
     created_at: str
     updated_at: str
-    metadata: Union["BucketAccessGroupMetadataType0", None, Unset] = UNSET
+    metadata: BucketAccessGroupMetadataType0 | None | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
-        from ..models.bucket_access_group_metadata_type_0 import BucketAccessGroupMetadataType0
+        from ..models.bucket_access_group_metadata_type_0 import (
+            BucketAccessGroupMetadataType0,
+        )
 
         id = self.id
 
@@ -58,7 +62,7 @@ class BucketAccessGroup:
 
         updated_at = self.updated_at
 
-        metadata: None | Unset | dict[str, Any]
+        metadata: dict[str, Any] | None | Unset
         if isinstance(self.metadata, Unset):
             metadata = UNSET
         elif isinstance(self.metadata, BucketAccessGroupMetadataType0):
@@ -87,7 +91,9 @@ class BucketAccessGroup:
 
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
-        from ..models.bucket_access_group_metadata_type_0 import BucketAccessGroupMetadataType0
+        from ..models.bucket_access_group_metadata_type_0 import (
+            BucketAccessGroupMetadataType0,
+        )
 
         d = dict(src_dict)
         id = d.pop("id")
@@ -106,7 +112,7 @@ class BucketAccessGroup:
 
         updated_at = d.pop("updatedAt")
 
-        def _parse_metadata(data: object) -> Union["BucketAccessGroupMetadataType0", None, Unset]:
+        def _parse_metadata(data: object) -> BucketAccessGroupMetadataType0 | None | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
@@ -117,9 +123,9 @@ class BucketAccessGroup:
                 metadata_type_0 = BucketAccessGroupMetadataType0.from_dict(data)
 
                 return metadata_type_0
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
-            return cast(Union["BucketAccessGroupMetadataType0", None, Unset], data)
+            return cast(BucketAccessGroupMetadataType0 | None | Unset, data)
 
         metadata = _parse_metadata(d.pop("metadata", UNSET))
 

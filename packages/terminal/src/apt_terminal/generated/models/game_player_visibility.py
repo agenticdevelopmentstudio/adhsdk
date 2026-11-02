@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class GamePlayerVisibility(str, Enum):
+class GamePlayerVisibility(StrEnum):
     PRIVATE = "private"
     PUBLIC = "public"
     UNLISTED = "unlisted"

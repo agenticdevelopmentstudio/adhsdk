@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -17,27 +19,27 @@ class PatchProjectProjectsIdFieldsFieldIdBody:
     """At least one mutable field is required (a no-op patch is a 400). `key` is immutable.
 
     Attributes:
-        label (Union[Unset, str]):
-        type_ (Union[Unset, PatchProjectProjectsIdFieldsFieldIdBodyType]):
-        options (Union[None, Unset, list[str]]): null clears the list; a select field requires a non-empty list on the
+        label (str | Unset):
+        type_ (PatchProjectProjectsIdFieldsFieldIdBodyType | Unset):
+        options (list[str] | None | Unset): null clears the list; a select field requires a non-empty list on the
             effective (post-patch) type
-        position (Union[Unset, int]):
+        position (int | Unset):
     """
 
-    label: Unset | str = UNSET
-    type_: Unset | PatchProjectProjectsIdFieldsFieldIdBodyType = UNSET
-    options: None | Unset | list[str] = UNSET
-    position: Unset | int = UNSET
+    label: str | Unset = UNSET
+    type_: PatchProjectProjectsIdFieldsFieldIdBodyType | Unset = UNSET
+    options: list[str] | None | Unset = UNSET
+    position: int | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
         label = self.label
 
-        type_: Unset | str = UNSET
+        type_: str | Unset = UNSET
         if not isinstance(self.type_, Unset):
             type_ = self.type_.value
 
-        options: None | Unset | list[str]
+        options: list[str] | None | Unset
         if isinstance(self.options, Unset):
             options = UNSET
         elif isinstance(self.options, list):
@@ -68,13 +70,13 @@ class PatchProjectProjectsIdFieldsFieldIdBody:
         label = d.pop("label", UNSET)
 
         _type_ = d.pop("type", UNSET)
-        type_: Unset | PatchProjectProjectsIdFieldsFieldIdBodyType
+        type_: PatchProjectProjectsIdFieldsFieldIdBodyType | Unset
         if isinstance(_type_, Unset):
             type_ = UNSET
         else:
             type_ = PatchProjectProjectsIdFieldsFieldIdBodyType(_type_)
 
-        def _parse_options(data: object) -> None | Unset | list[str]:
+        def _parse_options(data: object) -> list[str] | None | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
@@ -85,9 +87,9 @@ class PatchProjectProjectsIdFieldsFieldIdBody:
                 options_type_0 = cast(list[str], data)
 
                 return options_type_0
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
-            return cast(None | Unset | list[str], data)
+            return cast(list[str] | None | Unset, data)
 
         options = _parse_options(d.pop("options", UNSET))
 

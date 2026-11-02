@@ -1,5 +1,6 @@
 from http import HTTPStatus
 from typing import Any
+from urllib.parse import quote
 
 import httpx
 
@@ -10,22 +11,25 @@ from ...models.post_project_projects_id_status_updates_body import (
     PostProjectProjectsIdStatusUpdatesBody,
 )
 from ...models.project_status_update import ProjectStatusUpdate
-from ...types import Response
+from ...types import UNSET, Response, Unset
 
 
 def _get_kwargs(
     id: str,
     *,
-    body: PostProjectProjectsIdStatusUpdatesBody,
+    body: PostProjectProjectsIdStatusUpdatesBody | Unset = UNSET,
 ) -> dict[str, Any]:
     headers: dict[str, Any] = {}
 
     _kwargs: dict[str, Any] = {
         "method": "post",
-        "url": f"/project/projects/{id}/status-updates",
+        "url": "/project/projects/{id}/status-updates".format(
+            id=quote(str(id), safe=""),
+        ),
     }
 
-    _kwargs["json"] = body.to_dict()
+    if not isinstance(body, Unset):
+        _kwargs["json"] = body.to_dict()
 
     headers["Content-Type"] = "application/json"
 
@@ -82,7 +86,7 @@ def sync_detailed(
     id: str,
     *,
     client: AuthenticatedClient,
-    body: PostProjectProjectsIdStatusUpdatesBody,
+    body: PostProjectProjectsIdStatusUpdatesBody | Unset = UNSET,
 ) -> Response[Error | ProjectStatusUpdate]:
     """Post a status update — this MOVES the project's health
 
@@ -92,14 +96,14 @@ def sync_detailed(
 
     Args:
         id (str):
-        body (PostProjectProjectsIdStatusUpdatesBody):
+        body (PostProjectProjectsIdStatusUpdatesBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, ProjectStatusUpdate]]
+        Response[Error | ProjectStatusUpdate]
     """
 
     kwargs = _get_kwargs(
@@ -118,7 +122,7 @@ def sync(
     id: str,
     *,
     client: AuthenticatedClient,
-    body: PostProjectProjectsIdStatusUpdatesBody,
+    body: PostProjectProjectsIdStatusUpdatesBody | Unset = UNSET,
 ) -> Error | ProjectStatusUpdate | None:
     """Post a status update — this MOVES the project's health
 
@@ -128,14 +132,14 @@ def sync(
 
     Args:
         id (str):
-        body (PostProjectProjectsIdStatusUpdatesBody):
+        body (PostProjectProjectsIdStatusUpdatesBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, ProjectStatusUpdate]
+        Error | ProjectStatusUpdate
     """
 
     return sync_detailed(
@@ -149,7 +153,7 @@ async def asyncio_detailed(
     id: str,
     *,
     client: AuthenticatedClient,
-    body: PostProjectProjectsIdStatusUpdatesBody,
+    body: PostProjectProjectsIdStatusUpdatesBody | Unset = UNSET,
 ) -> Response[Error | ProjectStatusUpdate]:
     """Post a status update — this MOVES the project's health
 
@@ -159,14 +163,14 @@ async def asyncio_detailed(
 
     Args:
         id (str):
-        body (PostProjectProjectsIdStatusUpdatesBody):
+        body (PostProjectProjectsIdStatusUpdatesBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, ProjectStatusUpdate]]
+        Response[Error | ProjectStatusUpdate]
     """
 
     kwargs = _get_kwargs(
@@ -183,7 +187,7 @@ async def asyncio(
     id: str,
     *,
     client: AuthenticatedClient,
-    body: PostProjectProjectsIdStatusUpdatesBody,
+    body: PostProjectProjectsIdStatusUpdatesBody | Unset = UNSET,
 ) -> Error | ProjectStatusUpdate | None:
     """Post a status update — this MOVES the project's health
 
@@ -193,14 +197,14 @@ async def asyncio(
 
     Args:
         id (str):
-        body (PostProjectProjectsIdStatusUpdatesBody):
+        body (PostProjectProjectsIdStatusUpdatesBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, ProjectStatusUpdate]
+        Error | ProjectStatusUpdate
     """
 
     return (

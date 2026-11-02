@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class PostRegistryRegistriesIdFieldDefsBodyType(str, Enum):
+class PostRegistryRegistriesIdFieldDefsBodyType(StrEnum):
     ADDRESS = "address"
     BOOLEAN = "boolean"
     DATE = "date"

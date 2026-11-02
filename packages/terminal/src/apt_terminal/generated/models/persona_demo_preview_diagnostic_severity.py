@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class PersonaDemoPreviewDiagnosticSeverity(str, Enum):
+class PersonaDemoPreviewDiagnosticSeverity(StrEnum):
     ERROR = "error"
     INFO = "info"
     WARNING = "warning"

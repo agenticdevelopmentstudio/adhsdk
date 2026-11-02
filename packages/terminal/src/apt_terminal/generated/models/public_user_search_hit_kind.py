@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class PublicUserSearchHitKind(str, Enum):
+class PublicUserSearchHitKind(StrEnum):
     ORGANIZATION = "organization"
     USER = "user"
 

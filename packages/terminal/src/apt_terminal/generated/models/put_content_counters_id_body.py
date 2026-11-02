@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar
 
@@ -12,16 +14,16 @@ T = TypeVar("T", bound="PutContentCountersIdBody")
 class PutContentCountersIdBody:
     """
     Attributes:
-        ecosystem_id (Union[Unset, str]):
-        name (Union[Unset, str]):
-        value (Union[Unset, int]):
-        sync_txid (Union[Unset, int]):
+        ecosystem_id (str | Unset):
+        name (str | Unset):
+        value (int | Unset):
+        sync_txid (int | Unset):
     """
 
-    ecosystem_id: Unset | str = UNSET
-    name: Unset | str = UNSET
-    value: Unset | int = UNSET
-    sync_txid: Unset | int = UNSET
+    ecosystem_id: str | Unset = UNSET
+    name: str | Unset = UNSET
+    value: int | Unset = UNSET
+    sync_txid: int | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
         ecosystem_id = self.ecosystem_id

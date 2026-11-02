@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 from uuid import UUID
@@ -13,47 +15,47 @@ T = TypeVar("T", bound="PutPersonaMemoryMemoriesIdBody")
 class PutPersonaMemoryMemoriesIdBody:
     """
     Attributes:
-        ecosystem_id (Union[Unset, str]):
-        persona_id (Union[Unset, UUID]):
-        scope (Union[Unset, str]):
-        slug (Union[Unset, str]):
-        memory_type (Union[Unset, str]):
-        description (Union[Unset, str]):
-        body (Union[Unset, str]):
-        subject_table (Union[None, Unset, str]):
-        subject_id (Union[None, Unset, str]):
-        status (Union[Unset, str]):
-        supersedes_id (Union[None, Unset, str]):
-        source (Union[Unset, str]):
-        confidence (Union[Unset, int]):
-        tags (Union[Unset, list[str]]):
-        valid_from (Union[None, Unset, str]):
-        valid_to (Union[None, Unset, str]):
-        sync_txid (Union[Unset, int]):
+        ecosystem_id (str | Unset):
+        persona_id (UUID | Unset):
+        scope (str | Unset):
+        slug (str | Unset):
+        memory_type (str | Unset):
+        description (str | Unset):
+        body (str | Unset):
+        subject_table (None | str | Unset):
+        subject_id (None | str | Unset):
+        status (str | Unset):
+        supersedes_id (None | str | Unset):
+        source (str | Unset):
+        confidence (int | Unset):
+        tags (list[str] | Unset):
+        valid_from (None | str | Unset):
+        valid_to (None | str | Unset):
+        sync_txid (int | Unset):
     """
 
-    ecosystem_id: Unset | str = UNSET
-    persona_id: Unset | UUID = UNSET
-    scope: Unset | str = UNSET
-    slug: Unset | str = UNSET
-    memory_type: Unset | str = UNSET
-    description: Unset | str = UNSET
-    body: Unset | str = UNSET
-    subject_table: None | Unset | str = UNSET
-    subject_id: None | Unset | str = UNSET
-    status: Unset | str = UNSET
-    supersedes_id: None | Unset | str = UNSET
-    source: Unset | str = UNSET
-    confidence: Unset | int = UNSET
-    tags: Unset | list[str] = UNSET
-    valid_from: None | Unset | str = UNSET
-    valid_to: None | Unset | str = UNSET
-    sync_txid: Unset | int = UNSET
+    ecosystem_id: str | Unset = UNSET
+    persona_id: UUID | Unset = UNSET
+    scope: str | Unset = UNSET
+    slug: str | Unset = UNSET
+    memory_type: str | Unset = UNSET
+    description: str | Unset = UNSET
+    body: str | Unset = UNSET
+    subject_table: None | str | Unset = UNSET
+    subject_id: None | str | Unset = UNSET
+    status: str | Unset = UNSET
+    supersedes_id: None | str | Unset = UNSET
+    source: str | Unset = UNSET
+    confidence: int | Unset = UNSET
+    tags: list[str] | Unset = UNSET
+    valid_from: None | str | Unset = UNSET
+    valid_to: None | str | Unset = UNSET
+    sync_txid: int | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
         ecosystem_id = self.ecosystem_id
 
-        persona_id: Unset | str = UNSET
+        persona_id: str | Unset = UNSET
         if not isinstance(self.persona_id, Unset):
             persona_id = str(self.persona_id)
 
@@ -67,13 +69,13 @@ class PutPersonaMemoryMemoriesIdBody:
 
         body = self.body
 
-        subject_table: None | Unset | str
+        subject_table: None | str | Unset
         if isinstance(self.subject_table, Unset):
             subject_table = UNSET
         else:
             subject_table = self.subject_table
 
-        subject_id: None | Unset | str
+        subject_id: None | str | Unset
         if isinstance(self.subject_id, Unset):
             subject_id = UNSET
         else:
@@ -81,7 +83,7 @@ class PutPersonaMemoryMemoriesIdBody:
 
         status = self.status
 
-        supersedes_id: None | Unset | str
+        supersedes_id: None | str | Unset
         if isinstance(self.supersedes_id, Unset):
             supersedes_id = UNSET
         else:
@@ -91,17 +93,17 @@ class PutPersonaMemoryMemoriesIdBody:
 
         confidence = self.confidence
 
-        tags: Unset | list[str] = UNSET
+        tags: list[str] | Unset = UNSET
         if not isinstance(self.tags, Unset):
             tags = self.tags
 
-        valid_from: None | Unset | str
+        valid_from: None | str | Unset
         if isinstance(self.valid_from, Unset):
             valid_from = UNSET
         else:
             valid_from = self.valid_from
 
-        valid_to: None | Unset | str
+        valid_to: None | str | Unset
         if isinstance(self.valid_to, Unset):
             valid_to = UNSET
         else:
@@ -155,7 +157,7 @@ class PutPersonaMemoryMemoriesIdBody:
         ecosystem_id = d.pop("ecosystemId", UNSET)
 
         _persona_id = d.pop("personaId", UNSET)
-        persona_id: Unset | UUID
+        persona_id: UUID | Unset
         if isinstance(_persona_id, Unset):
             persona_id = UNSET
         else:
@@ -171,32 +173,32 @@ class PutPersonaMemoryMemoriesIdBody:
 
         body = d.pop("body", UNSET)
 
-        def _parse_subject_table(data: object) -> None | Unset | str:
+        def _parse_subject_table(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         subject_table = _parse_subject_table(d.pop("subjectTable", UNSET))
 
-        def _parse_subject_id(data: object) -> None | Unset | str:
+        def _parse_subject_id(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         subject_id = _parse_subject_id(d.pop("subjectId", UNSET))
 
         status = d.pop("status", UNSET)
 
-        def _parse_supersedes_id(data: object) -> None | Unset | str:
+        def _parse_supersedes_id(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         supersedes_id = _parse_supersedes_id(d.pop("supersedesId", UNSET))
 
@@ -206,21 +208,21 @@ class PutPersonaMemoryMemoriesIdBody:
 
         tags = cast(list[str], d.pop("tags", UNSET))
 
-        def _parse_valid_from(data: object) -> None | Unset | str:
+        def _parse_valid_from(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         valid_from = _parse_valid_from(d.pop("validFrom", UNSET))
 
-        def _parse_valid_to(data: object) -> None | Unset | str:
+        def _parse_valid_to(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         valid_to = _parse_valid_to(d.pop("validTo", UNSET))
 

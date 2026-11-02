@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class PendingUserStatus(str, Enum):
+class PendingUserStatus(StrEnum):
     ACCEPTED = "accepted"
     DECLINED = "declined"
     INVITED = "invited"

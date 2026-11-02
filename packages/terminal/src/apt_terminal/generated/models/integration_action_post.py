@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import TYPE_CHECKING, Any, TypeVar
 
@@ -18,20 +20,20 @@ class IntegrationActionPost:
     """actionType=post — an outbound social post; requires text or media
 
     Attributes:
-        text (Union[Unset, str]):
-        media (Union[Unset, list['IntegrationActionMediaItem']]):
-        reply_to (Union[Unset, str]):
+        text (str | Unset):
+        media (list[IntegrationActionMediaItem] | Unset):
+        reply_to (str | Unset):
     """
 
-    text: Unset | str = UNSET
-    media: Unset | list["IntegrationActionMediaItem"] = UNSET
-    reply_to: Unset | str = UNSET
+    text: str | Unset = UNSET
+    media: list[IntegrationActionMediaItem] | Unset = UNSET
+    reply_to: str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
         text = self.text
 
-        media: Unset | list[dict[str, Any]] = UNSET
+        media: list[dict[str, Any]] | Unset = UNSET
         if not isinstance(self.media, Unset):
             media = []
             for media_item_data in self.media:
@@ -54,17 +56,21 @@ class IntegrationActionPost:
 
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
-        from ..models.integration_action_media_item import IntegrationActionMediaItem
+        from ..models.integration_action_media_item import (
+            IntegrationActionMediaItem,
+        )
 
         d = dict(src_dict)
         text = d.pop("text", UNSET)
 
-        media = []
         _media = d.pop("media", UNSET)
-        for media_item_data in _media or []:
-            media_item = IntegrationActionMediaItem.from_dict(media_item_data)
+        media: list[IntegrationActionMediaItem] | Unset = UNSET
+        if _media is not UNSET:
+            media = []
+            for media_item_data in _media:
+                media_item = IntegrationActionMediaItem.from_dict(media_item_data)
 
-            media.append(media_item)
+                media.append(media_item)
 
         reply_to = d.pop("replyTo", UNSET)
 

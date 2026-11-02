@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar
 
@@ -17,17 +19,17 @@ class IntegrationActionBroadcast:
         audience_id (str): Provider list id
         subject (str):
         body_html (str):
-        from_name (Union[Unset, str]):
-        reply_to (Union[Unset, str]):
-        body_text (Union[Unset, str]):
+        from_name (str | Unset):
+        reply_to (str | Unset):
+        body_text (str | Unset):
     """
 
     audience_id: str
     subject: str
     body_html: str
-    from_name: Unset | str = UNSET
-    reply_to: Unset | str = UNSET
-    body_text: Unset | str = UNSET
+    from_name: str | Unset = UNSET
+    reply_to: str | Unset = UNSET
+    body_text: str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:

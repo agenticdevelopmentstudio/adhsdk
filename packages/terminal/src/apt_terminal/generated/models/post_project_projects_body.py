@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar
 
@@ -14,16 +16,16 @@ class PostProjectProjectsBody:
     """
     Attributes:
         name (str):
-        description (Union[Unset, str]):
-        color (Union[Unset, str]):
-        ecosystem_id (Union[Unset, str]): the owning ecosystem; defaulted to the caller ecosystem when omitted. A non-
-            admin passing a foreign owner is rejected by RLS.
+        description (str | Unset):
+        color (str | Unset):
+        ecosystem_id (str | Unset): the owning ecosystem; defaulted to the caller ecosystem when omitted. A non-admin
+            passing a foreign owner is rejected by RLS.
     """
 
     name: str
-    description: Unset | str = UNSET
-    color: Unset | str = UNSET
-    ecosystem_id: Unset | str = UNSET
+    description: str | Unset = UNSET
+    color: str | Unset = UNSET
+    ecosystem_id: str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:

@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class BucketGrantTargetType(str, Enum):
+class BucketGrantTargetType(StrEnum):
     BUCKET = "bucket"
     BUCKET_TYPE = "bucket_type"
     ROW = "row"

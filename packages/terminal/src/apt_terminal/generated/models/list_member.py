@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -16,16 +18,16 @@ class ListMember:
     Attributes:
         id (str): the list_members row id
         contact_id (str):
-        email (Union[None, str]):
-        name (Union[None, str]):
+        email (None | str):
+        name (None | str):
         delivery_status (ListMemberDeliveryStatus):
         bounce_count (int):
         status (ListMemberStatus):
-        consent_source_url (Union[None, str]):
+        consent_source_url (None | str):
         consent_at (str):
-        unsubscribed_at (Union[None, str]): When they LAST unsubscribed. Durable — a later resubscribe never clears it,
-            so a currently-subscribed member may carry one.
-        resubscribed_at (Union[None, str]): When they last signed up again after unsubscribing. Null if they never did.
+        unsubscribed_at (None | str): When they LAST unsubscribed. Durable — a later resubscribe never clears it, so a
+            currently-subscribed member may carry one.
+        resubscribed_at (None | str): When they last signed up again after unsubscribing. Null if they never did.
         unsubscribe_count (int): Opt-out transitions for this membership. A mailbox provider retrying the one-click
             unsubscribe does not increment it; a resubscribe does not reset it.
         emails_sent_count (int):

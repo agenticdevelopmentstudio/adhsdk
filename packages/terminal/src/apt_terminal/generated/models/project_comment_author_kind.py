@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class ProjectCommentAuthorKind(str, Enum):
+class ProjectCommentAuthorKind(StrEnum):
     CUSTOMER = "customer"
     PERSONA = "persona"
     TEAM = "team"

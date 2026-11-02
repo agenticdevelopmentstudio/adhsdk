@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class IntegrationActionResultStatus(str, Enum):
+class IntegrationActionResultStatus(StrEnum):
     ERROR = "error"
     OK = "ok"
 

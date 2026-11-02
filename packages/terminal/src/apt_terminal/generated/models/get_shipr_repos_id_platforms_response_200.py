@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import TYPE_CHECKING, Any, TypeVar
 
@@ -17,10 +19,10 @@ T = TypeVar("T", bound="GetShiprReposIdPlatformsResponse200")
 class GetShiprReposIdPlatformsResponse200:
     """
     Attributes:
-        platforms (list['GetShiprReposIdPlatformsResponse200PlatformsItem']):
+        platforms (list[GetShiprReposIdPlatformsResponse200PlatformsItem]):
     """
 
-    platforms: list["GetShiprReposIdPlatformsResponse200PlatformsItem"]
+    platforms: list[GetShiprReposIdPlatformsResponse200PlatformsItem]
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:

@@ -1,5 +1,6 @@
 from http import HTTPStatus
 from typing import Any
+from urllib.parse import quote
 
 import httpx
 
@@ -16,13 +17,13 @@ from ...types import UNSET, Response, Unset
 def _get_kwargs(
     id: str,
     *,
-    kind: Unset | GetProjectProjectsIdAttachableKind = UNSET,
-    q: Unset | str = UNSET,
-    limit: Unset | int = 20,
+    kind: GetProjectProjectsIdAttachableKind | Unset = UNSET,
+    q: str | Unset = UNSET,
+    limit: int | Unset = 20,
 ) -> dict[str, Any]:
     params: dict[str, Any] = {}
 
-    json_kind: Unset | str = UNSET
+    json_kind: str | Unset = UNSET
     if not isinstance(kind, Unset):
         json_kind = kind.value
 
@@ -36,7 +37,9 @@ def _get_kwargs(
 
     _kwargs: dict[str, Any] = {
         "method": "get",
-        "url": f"/project/projects/{id}/attachable",
+        "url": "/project/projects/{id}/attachable".format(
+            id=quote(str(id), safe=""),
+        ),
         "params": params,
     }
 
@@ -87,9 +90,9 @@ def sync_detailed(
     id: str,
     *,
     client: AuthenticatedClient,
-    kind: Unset | GetProjectProjectsIdAttachableKind = UNSET,
-    q: Unset | str = UNSET,
-    limit: Unset | int = 20,
+    kind: GetProjectProjectsIdAttachableKind | Unset = UNSET,
+    q: str | Unset = UNSET,
+    limit: int | Unset = 20,
 ) -> Response[Error | GetProjectProjectsIdAttachableResponse200]:
     """Targets this project could attach — the candidate list an attach picker reads
 
@@ -100,16 +103,16 @@ def sync_detailed(
 
     Args:
         id (str):
-        kind (Union[Unset, GetProjectProjectsIdAttachableKind]):
-        q (Union[Unset, str]):
-        limit (Union[Unset, int]):  Default: 20.
+        kind (GetProjectProjectsIdAttachableKind | Unset):
+        q (str | Unset):
+        limit (int | Unset):  Default: 20.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, GetProjectProjectsIdAttachableResponse200]]
+        Response[Error | GetProjectProjectsIdAttachableResponse200]
     """
 
     kwargs = _get_kwargs(
@@ -130,9 +133,9 @@ def sync(
     id: str,
     *,
     client: AuthenticatedClient,
-    kind: Unset | GetProjectProjectsIdAttachableKind = UNSET,
-    q: Unset | str = UNSET,
-    limit: Unset | int = 20,
+    kind: GetProjectProjectsIdAttachableKind | Unset = UNSET,
+    q: str | Unset = UNSET,
+    limit: int | Unset = 20,
 ) -> Error | GetProjectProjectsIdAttachableResponse200 | None:
     """Targets this project could attach — the candidate list an attach picker reads
 
@@ -143,16 +146,16 @@ def sync(
 
     Args:
         id (str):
-        kind (Union[Unset, GetProjectProjectsIdAttachableKind]):
-        q (Union[Unset, str]):
-        limit (Union[Unset, int]):  Default: 20.
+        kind (GetProjectProjectsIdAttachableKind | Unset):
+        q (str | Unset):
+        limit (int | Unset):  Default: 20.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, GetProjectProjectsIdAttachableResponse200]
+        Error | GetProjectProjectsIdAttachableResponse200
     """
 
     return sync_detailed(
@@ -168,9 +171,9 @@ async def asyncio_detailed(
     id: str,
     *,
     client: AuthenticatedClient,
-    kind: Unset | GetProjectProjectsIdAttachableKind = UNSET,
-    q: Unset | str = UNSET,
-    limit: Unset | int = 20,
+    kind: GetProjectProjectsIdAttachableKind | Unset = UNSET,
+    q: str | Unset = UNSET,
+    limit: int | Unset = 20,
 ) -> Response[Error | GetProjectProjectsIdAttachableResponse200]:
     """Targets this project could attach — the candidate list an attach picker reads
 
@@ -181,16 +184,16 @@ async def asyncio_detailed(
 
     Args:
         id (str):
-        kind (Union[Unset, GetProjectProjectsIdAttachableKind]):
-        q (Union[Unset, str]):
-        limit (Union[Unset, int]):  Default: 20.
+        kind (GetProjectProjectsIdAttachableKind | Unset):
+        q (str | Unset):
+        limit (int | Unset):  Default: 20.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, GetProjectProjectsIdAttachableResponse200]]
+        Response[Error | GetProjectProjectsIdAttachableResponse200]
     """
 
     kwargs = _get_kwargs(
@@ -209,9 +212,9 @@ async def asyncio(
     id: str,
     *,
     client: AuthenticatedClient,
-    kind: Unset | GetProjectProjectsIdAttachableKind = UNSET,
-    q: Unset | str = UNSET,
-    limit: Unset | int = 20,
+    kind: GetProjectProjectsIdAttachableKind | Unset = UNSET,
+    q: str | Unset = UNSET,
+    limit: int | Unset = 20,
 ) -> Error | GetProjectProjectsIdAttachableResponse200 | None:
     """Targets this project could attach — the candidate list an attach picker reads
 
@@ -222,16 +225,16 @@ async def asyncio(
 
     Args:
         id (str):
-        kind (Union[Unset, GetProjectProjectsIdAttachableKind]):
-        q (Union[Unset, str]):
-        limit (Union[Unset, int]):  Default: 20.
+        kind (GetProjectProjectsIdAttachableKind | Unset):
+        q (str | Unset):
+        limit (int | Unset):  Default: 20.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, GetProjectProjectsIdAttachableResponse200]
+        Error | GetProjectProjectsIdAttachableResponse200
     """
 
     return (

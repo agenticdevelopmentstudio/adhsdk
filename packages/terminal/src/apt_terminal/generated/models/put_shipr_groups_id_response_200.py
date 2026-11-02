@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -15,14 +17,14 @@ class PutShiprGroupsIdResponse200:
         user_id (str):
         owner_kind (str):
         owner_id (str):
-        parent_id (Union[None, str]):
+        parent_id (None | str):
         name (str):
         path (str):
         depth (int):
         position (int):
         created_at (str):
         updated_at (str):
-        deleted_at (Union[None, str]):
+        deleted_at (None | str):
     """
 
     id: str

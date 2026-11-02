@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -17,10 +19,10 @@ class ApiToken:
         name (str):
         prefix (str): Non-secret leading chars, for display
         created_at (str):
-        expires_at (Union[None, str]):
-        last_used_at (Union[None, str]):
-        scope (Union[None, Unset, list[str]]): REST path prefixes this token may reach (e.g. ["/content/markdown"],
-            optional ":read" suffix, "*" = all). null = legacy curated-only.
+        expires_at (None | str):
+        last_used_at (None | str):
+        scope (list[str] | None | Unset): REST path prefixes this token may reach (e.g. ["/content/markdown"], optional
+            ":read" suffix, "*" = all). null = legacy curated-only.
     """
 
     id: str
@@ -29,7 +31,7 @@ class ApiToken:
     created_at: str
     expires_at: None | str
     last_used_at: None | str
-    scope: None | Unset | list[str] = UNSET
+    scope: list[str] | None | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -47,7 +49,7 @@ class ApiToken:
         last_used_at: None | str
         last_used_at = self.last_used_at
 
-        scope: None | Unset | list[str]
+        scope: list[str] | None | Unset
         if isinstance(self.scope, Unset):
             scope = UNSET
         elif isinstance(self.scope, list):
@@ -98,7 +100,7 @@ class ApiToken:
 
         last_used_at = _parse_last_used_at(d.pop("lastUsedAt"))
 
-        def _parse_scope(data: object) -> None | Unset | list[str]:
+        def _parse_scope(data: object) -> list[str] | None | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
@@ -109,9 +111,9 @@ class ApiToken:
                 scope_type_0 = cast(list[str], data)
 
                 return scope_type_0
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
-            return cast(None | Unset | list[str], data)
+            return cast(list[str] | None | Unset, data)
 
         scope = _parse_scope(d.pop("scope", UNSET))
 

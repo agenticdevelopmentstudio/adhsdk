@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -12,26 +14,26 @@ T = TypeVar("T", bound="PostPersonalEducationBody")
 class PostPersonalEducationBody:
     """
     Attributes:
-        ecosystem_id (Union[Unset, str]):
-        institution (Union[Unset, str]):
-        degree (Union[Unset, str]):
-        field_of_study (Union[Unset, str]):
-        start_date (Union[Unset, str]):
-        end_date (Union[None, Unset, str]):
-        location (Union[Unset, str]):
-        description (Union[Unset, str]):
-        sync_txid (Union[Unset, int]):
+        ecosystem_id (str | Unset):
+        institution (str | Unset):
+        degree (str | Unset):
+        field_of_study (str | Unset):
+        start_date (str | Unset):
+        end_date (None | str | Unset):
+        location (str | Unset):
+        description (str | Unset):
+        sync_txid (int | Unset):
     """
 
-    ecosystem_id: Unset | str = UNSET
-    institution: Unset | str = UNSET
-    degree: Unset | str = UNSET
-    field_of_study: Unset | str = UNSET
-    start_date: Unset | str = UNSET
-    end_date: None | Unset | str = UNSET
-    location: Unset | str = UNSET
-    description: Unset | str = UNSET
-    sync_txid: Unset | int = UNSET
+    ecosystem_id: str | Unset = UNSET
+    institution: str | Unset = UNSET
+    degree: str | Unset = UNSET
+    field_of_study: str | Unset = UNSET
+    start_date: str | Unset = UNSET
+    end_date: None | str | Unset = UNSET
+    location: str | Unset = UNSET
+    description: str | Unset = UNSET
+    sync_txid: int | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
         ecosystem_id = self.ecosystem_id
@@ -44,7 +46,7 @@ class PostPersonalEducationBody:
 
         start_date = self.start_date
 
-        end_date: None | Unset | str
+        end_date: None | str | Unset
         if isinstance(self.end_date, Unset):
             end_date = UNSET
         else:
@@ -93,12 +95,12 @@ class PostPersonalEducationBody:
 
         start_date = d.pop("startDate", UNSET)
 
-        def _parse_end_date(data: object) -> None | Unset | str:
+        def _parse_end_date(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         end_date = _parse_end_date(d.pop("endDate", UNSET))
 

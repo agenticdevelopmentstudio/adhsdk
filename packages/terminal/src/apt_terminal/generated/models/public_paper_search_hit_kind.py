@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class PublicPaperSearchHitKind(str, Enum):
+class PublicPaperSearchHitKind(StrEnum):
     PAPER = "paper"
     RESEARCH = "research"
 

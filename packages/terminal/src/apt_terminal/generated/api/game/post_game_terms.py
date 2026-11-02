@@ -8,12 +8,12 @@ from ...client import AuthenticatedClient, Client
 from ...models.error import Error
 from ...models.game_definition import GameDefinition
 from ...models.game_term_post import GameTermPost
-from ...types import Response
+from ...types import UNSET, Response, Unset
 
 
 def _get_kwargs(
     *,
-    body: GameTermPost,
+    body: GameTermPost | Unset = UNSET,
 ) -> dict[str, Any]:
     headers: dict[str, Any] = {}
 
@@ -22,7 +22,8 @@ def _get_kwargs(
         "url": "/game/terms",
     }
 
-    _kwargs["json"] = body.to_dict()
+    if not isinstance(body, Unset):
+        _kwargs["json"] = body.to_dict()
 
     headers["Content-Type"] = "application/json"
 
@@ -88,9 +89,9 @@ def _build_response(
 def sync_detailed(
     *,
     client: AuthenticatedClient,
-    body: GameTermPost,
+    body: GameTermPost | Unset = UNSET,
 ) -> Response[Error | GameDefinition]:
-    r"""Coin a term (screened; idempotent on the normalised key)
+    """Coin a term (screened; idempotent on the normalised key)
 
      The one route in this feature that exists for a safety reason rather than a data one. A term is
     minted by a player and then appears in every OTHER player’s composer, so it is screened BEFORE the
@@ -98,21 +99,21 @@ def sync_detailed(
     cannot carry two write settings, so the restriction that used to live on the table lives on this
     path. Write-only: reading the roster is a `kind=term` read of `game.definitions` through generic
     CRUD. The `key` is the name lowercased with runs of non-alphanumerics collapsed to one hyphen, which
-    is what makes \"Fire Ball\", \"fire ball\" and \"fire-ball\" one term; a name that normalises to
-    nothing is 422. A term already coined returns the EXISTING row with 200 — the first coiner keeps the
+    is what makes "Fire Ball", "fire ball" and "fire-ball" one term; a name that normalises to nothing
+    is 422. A term already coined returns the EXISTING row with 200 — the first coiner keeps the
     authorship credit — rather than a 409, because two players reaching the same word is the ordinary
     case for a shared vocabulary. `artifact_id` is recorded as `data.coined_from_artifact_id`, written
     over any caller-supplied value.
 
     Args:
-        body (GameTermPost):
+        body (GameTermPost | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, GameDefinition]]
+        Response[Error | GameDefinition]
     """
 
     kwargs = _get_kwargs(
@@ -129,9 +130,9 @@ def sync_detailed(
 def sync(
     *,
     client: AuthenticatedClient,
-    body: GameTermPost,
+    body: GameTermPost | Unset = UNSET,
 ) -> Error | GameDefinition | None:
-    r"""Coin a term (screened; idempotent on the normalised key)
+    """Coin a term (screened; idempotent on the normalised key)
 
      The one route in this feature that exists for a safety reason rather than a data one. A term is
     minted by a player and then appears in every OTHER player’s composer, so it is screened BEFORE the
@@ -139,21 +140,21 @@ def sync(
     cannot carry two write settings, so the restriction that used to live on the table lives on this
     path. Write-only: reading the roster is a `kind=term` read of `game.definitions` through generic
     CRUD. The `key` is the name lowercased with runs of non-alphanumerics collapsed to one hyphen, which
-    is what makes \"Fire Ball\", \"fire ball\" and \"fire-ball\" one term; a name that normalises to
-    nothing is 422. A term already coined returns the EXISTING row with 200 — the first coiner keeps the
+    is what makes "Fire Ball", "fire ball" and "fire-ball" one term; a name that normalises to nothing
+    is 422. A term already coined returns the EXISTING row with 200 — the first coiner keeps the
     authorship credit — rather than a 409, because two players reaching the same word is the ordinary
     case for a shared vocabulary. `artifact_id` is recorded as `data.coined_from_artifact_id`, written
     over any caller-supplied value.
 
     Args:
-        body (GameTermPost):
+        body (GameTermPost | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, GameDefinition]
+        Error | GameDefinition
     """
 
     return sync_detailed(
@@ -165,9 +166,9 @@ def sync(
 async def asyncio_detailed(
     *,
     client: AuthenticatedClient,
-    body: GameTermPost,
+    body: GameTermPost | Unset = UNSET,
 ) -> Response[Error | GameDefinition]:
-    r"""Coin a term (screened; idempotent on the normalised key)
+    """Coin a term (screened; idempotent on the normalised key)
 
      The one route in this feature that exists for a safety reason rather than a data one. A term is
     minted by a player and then appears in every OTHER player’s composer, so it is screened BEFORE the
@@ -175,21 +176,21 @@ async def asyncio_detailed(
     cannot carry two write settings, so the restriction that used to live on the table lives on this
     path. Write-only: reading the roster is a `kind=term` read of `game.definitions` through generic
     CRUD. The `key` is the name lowercased with runs of non-alphanumerics collapsed to one hyphen, which
-    is what makes \"Fire Ball\", \"fire ball\" and \"fire-ball\" one term; a name that normalises to
-    nothing is 422. A term already coined returns the EXISTING row with 200 — the first coiner keeps the
+    is what makes "Fire Ball", "fire ball" and "fire-ball" one term; a name that normalises to nothing
+    is 422. A term already coined returns the EXISTING row with 200 — the first coiner keeps the
     authorship credit — rather than a 409, because two players reaching the same word is the ordinary
     case for a shared vocabulary. `artifact_id` is recorded as `data.coined_from_artifact_id`, written
     over any caller-supplied value.
 
     Args:
-        body (GameTermPost):
+        body (GameTermPost | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, GameDefinition]]
+        Response[Error | GameDefinition]
     """
 
     kwargs = _get_kwargs(
@@ -204,9 +205,9 @@ async def asyncio_detailed(
 async def asyncio(
     *,
     client: AuthenticatedClient,
-    body: GameTermPost,
+    body: GameTermPost | Unset = UNSET,
 ) -> Error | GameDefinition | None:
-    r"""Coin a term (screened; idempotent on the normalised key)
+    """Coin a term (screened; idempotent on the normalised key)
 
      The one route in this feature that exists for a safety reason rather than a data one. A term is
     minted by a player and then appears in every OTHER player’s composer, so it is screened BEFORE the
@@ -214,21 +215,21 @@ async def asyncio(
     cannot carry two write settings, so the restriction that used to live on the table lives on this
     path. Write-only: reading the roster is a `kind=term` read of `game.definitions` through generic
     CRUD. The `key` is the name lowercased with runs of non-alphanumerics collapsed to one hyphen, which
-    is what makes \"Fire Ball\", \"fire ball\" and \"fire-ball\" one term; a name that normalises to
-    nothing is 422. A term already coined returns the EXISTING row with 200 — the first coiner keeps the
+    is what makes "Fire Ball", "fire ball" and "fire-ball" one term; a name that normalises to nothing
+    is 422. A term already coined returns the EXISTING row with 200 — the first coiner keeps the
     authorship credit — rather than a 409, because two players reaching the same word is the ordinary
     case for a shared vocabulary. `artifact_id` is recorded as `data.coined_from_artifact_id`, written
     over any caller-supplied value.
 
     Args:
-        body (GameTermPost):
+        body (GameTermPost | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, GameDefinition]
+        Error | GameDefinition
     """
 
     return (

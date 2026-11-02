@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -14,7 +16,7 @@ class DmMessage:
     Attributes:
         id (str):
         chat_id (str):
-        sender_participant_id (Union[None, str]):
+        sender_participant_id (None | str):
         sender_user_id (str):
         seq (int): Per-chat monotonic sequence; the stream cursor
         role (str):

@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, TypeVar, Union, cast
+from typing import TYPE_CHECKING, Any, TypeVar, cast
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -28,12 +30,12 @@ class RegistryPersonaApproval:
         args (RegistryPersonaApprovalArgs): the frozen invocation payload
         status (RegistryPersonaApprovalStatus):
         created_at (str):
-        subject_id (Union[None, Unset, str]): null for self/eco-scoped subjects
-        requested_by (Union[None, Unset, str]):
-        decided_by (Union[None, Unset, str]): the human who decided (null until then)
-        decided_at (Union[None, Unset, str]):
-        result (Union['RegistryPersonaApprovalResultType0', None, Unset]): the outcome once an approved action runs
-            (null until then)
+        subject_id (None | str | Unset): null for self/eco-scoped subjects
+        requested_by (None | str | Unset):
+        decided_by (None | str | Unset): the human who decided (null until then)
+        decided_at (None | str | Unset):
+        result (None | RegistryPersonaApprovalResultType0 | Unset): the outcome once an approved action runs (null until
+            then)
     """
 
     id: str
@@ -41,14 +43,14 @@ class RegistryPersonaApproval:
     subject_kind: RegistryPersonaApprovalSubjectKind
     subject_eco: str
     tool_name: str
-    args: "RegistryPersonaApprovalArgs"
+    args: RegistryPersonaApprovalArgs
     status: RegistryPersonaApprovalStatus
     created_at: str
-    subject_id: None | Unset | str = UNSET
-    requested_by: None | Unset | str = UNSET
-    decided_by: None | Unset | str = UNSET
-    decided_at: None | Unset | str = UNSET
-    result: Union["RegistryPersonaApprovalResultType0", None, Unset] = UNSET
+    subject_id: None | str | Unset = UNSET
+    requested_by: None | str | Unset = UNSET
+    decided_by: None | str | Unset = UNSET
+    decided_at: None | str | Unset = UNSET
+    result: None | RegistryPersonaApprovalResultType0 | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -72,31 +74,31 @@ class RegistryPersonaApproval:
 
         created_at = self.created_at
 
-        subject_id: None | Unset | str
+        subject_id: None | str | Unset
         if isinstance(self.subject_id, Unset):
             subject_id = UNSET
         else:
             subject_id = self.subject_id
 
-        requested_by: None | Unset | str
+        requested_by: None | str | Unset
         if isinstance(self.requested_by, Unset):
             requested_by = UNSET
         else:
             requested_by = self.requested_by
 
-        decided_by: None | Unset | str
+        decided_by: None | str | Unset
         if isinstance(self.decided_by, Unset):
             decided_by = UNSET
         else:
             decided_by = self.decided_by
 
-        decided_at: None | Unset | str
+        decided_at: None | str | Unset
         if isinstance(self.decided_at, Unset):
             decided_at = UNSET
         else:
             decided_at = self.decided_at
 
-        result: None | Unset | dict[str, Any]
+        result: dict[str, Any] | None | Unset
         if isinstance(self.result, Unset):
             result = UNSET
         elif isinstance(self.result, RegistryPersonaApprovalResultType0):
@@ -133,7 +135,9 @@ class RegistryPersonaApproval:
 
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
-        from ..models.registry_persona_approval_args import RegistryPersonaApprovalArgs
+        from ..models.registry_persona_approval_args import (
+            RegistryPersonaApprovalArgs,
+        )
         from ..models.registry_persona_approval_result_type_0 import (
             RegistryPersonaApprovalResultType0,
         )
@@ -155,43 +159,43 @@ class RegistryPersonaApproval:
 
         created_at = d.pop("createdAt")
 
-        def _parse_subject_id(data: object) -> None | Unset | str:
+        def _parse_subject_id(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         subject_id = _parse_subject_id(d.pop("subjectId", UNSET))
 
-        def _parse_requested_by(data: object) -> None | Unset | str:
+        def _parse_requested_by(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         requested_by = _parse_requested_by(d.pop("requestedBy", UNSET))
 
-        def _parse_decided_by(data: object) -> None | Unset | str:
+        def _parse_decided_by(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         decided_by = _parse_decided_by(d.pop("decidedBy", UNSET))
 
-        def _parse_decided_at(data: object) -> None | Unset | str:
+        def _parse_decided_at(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         decided_at = _parse_decided_at(d.pop("decidedAt", UNSET))
 
-        def _parse_result(data: object) -> Union["RegistryPersonaApprovalResultType0", None, Unset]:
+        def _parse_result(data: object) -> None | RegistryPersonaApprovalResultType0 | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
@@ -202,9 +206,9 @@ class RegistryPersonaApproval:
                 result_type_0 = RegistryPersonaApprovalResultType0.from_dict(data)
 
                 return result_type_0
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
-            return cast(Union["RegistryPersonaApprovalResultType0", None, Unset], data)
+            return cast(None | RegistryPersonaApprovalResultType0 | Unset, data)
 
         result = _parse_result(d.pop("result", UNSET))
 

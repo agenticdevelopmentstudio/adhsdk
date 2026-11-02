@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -16,9 +18,9 @@ class PostMonitoringHealthChecksResponse201:
         owner_kind (str):
         owner_id (str):
         status (str):
-        response_time_ms (Union[None, int]):
-        status_code (Union[None, int]):
-        error_message (Union[None, str]):
+        response_time_ms (int | None):
+        status_code (int | None):
+        error_message (None | str):
         checked_at (str):
     """
 
@@ -28,8 +30,8 @@ class PostMonitoringHealthChecksResponse201:
     owner_kind: str
     owner_id: str
     status: str
-    response_time_ms: None | int
-    status_code: None | int
+    response_time_ms: int | None
+    status_code: int | None
     error_message: None | str
     checked_at: str
 
@@ -46,10 +48,10 @@ class PostMonitoringHealthChecksResponse201:
 
         status = self.status
 
-        response_time_ms: None | int
+        response_time_ms: int | None
         response_time_ms = self.response_time_ms
 
-        status_code: None | int
+        status_code: int | None
         status_code = self.status_code
 
         error_message: None | str
@@ -91,17 +93,17 @@ class PostMonitoringHealthChecksResponse201:
 
         status = d.pop("status")
 
-        def _parse_response_time_ms(data: object) -> None | int:
+        def _parse_response_time_ms(data: object) -> int | None:
             if data is None:
                 return data
-            return cast(None | int, data)
+            return cast(int | None, data)
 
         response_time_ms = _parse_response_time_ms(d.pop("responseTimeMs"))
 
-        def _parse_status_code(data: object) -> None | int:
+        def _parse_status_code(data: object) -> int | None:
             if data is None:
                 return data
-            return cast(None | int, data)
+            return cast(int | None, data)
 
         status_code = _parse_status_code(d.pop("statusCode"))
 

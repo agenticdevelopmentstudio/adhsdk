@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -19,13 +21,13 @@ class GetGameEffectsResponse200Item:
         target (str):
         operation (str):
         value (int):
-        duration (Union[None, int]):
+        duration (int | None):
         sort_order (int):
         created_at (str):
         updated_at (str):
-        deleted_at (Union[None, str]):
+        deleted_at (None | str):
         sync_version (int):
-        sync_stamped_at (Union[None, str]):
+        sync_stamped_at (None | str):
         sync_txid (int):
     """
 
@@ -38,7 +40,7 @@ class GetGameEffectsResponse200Item:
     target: str
     operation: str
     value: int
-    duration: None | int
+    duration: int | None
     sort_order: int
     created_at: str
     updated_at: str
@@ -66,7 +68,7 @@ class GetGameEffectsResponse200Item:
 
         value = self.value
 
-        duration: None | int
+        duration: int | None
         duration = self.duration
 
         sort_order = self.sort_order
@@ -132,10 +134,10 @@ class GetGameEffectsResponse200Item:
 
         value = d.pop("value")
 
-        def _parse_duration(data: object) -> None | int:
+        def _parse_duration(data: object) -> int | None:
             if data is None:
                 return data
-            return cast(None | int, data)
+            return cast(int | None, data)
 
         duration = _parse_duration(d.pop("duration"))
 

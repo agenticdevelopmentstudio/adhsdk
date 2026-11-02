@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, TypeVar, Union
+from typing import TYPE_CHECKING, Any, TypeVar
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -25,20 +27,20 @@ class PostMessagingEcosystemsIdSendBody:
     Attributes:
         user_id (str): Target customer id (within this ecosystem)
         channel (PostMessagingEcosystemsIdSendBodyChannel):
-        subject (Union[Unset, str]): Email subject (freeform)
-        body (Union[Unset, str]): Freeform message body
-        template_id (Union[Unset, str]): Template id (alternative to body)
-        template_vars (Union[Unset, PostMessagingEcosystemsIdSendBodyTemplateVars]): Template placeholder values
-        recipient (Union[Unset, str]): Override recipient; required for SMS, optional for email
+        subject (str | Unset): Email subject (freeform)
+        body (str | Unset): Freeform message body
+        template_id (str | Unset): Template id (alternative to body)
+        template_vars (PostMessagingEcosystemsIdSendBodyTemplateVars | Unset): Template placeholder values
+        recipient (str | Unset): Override recipient; required for SMS, optional for email
     """
 
     user_id: str
     channel: PostMessagingEcosystemsIdSendBodyChannel
-    subject: Unset | str = UNSET
-    body: Unset | str = UNSET
-    template_id: Unset | str = UNSET
-    template_vars: Union[Unset, "PostMessagingEcosystemsIdSendBodyTemplateVars"] = UNSET
-    recipient: Unset | str = UNSET
+    subject: str | Unset = UNSET
+    body: str | Unset = UNSET
+    template_id: str | Unset = UNSET
+    template_vars: PostMessagingEcosystemsIdSendBodyTemplateVars | Unset = UNSET
+    recipient: str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -52,7 +54,7 @@ class PostMessagingEcosystemsIdSendBody:
 
         template_id = self.template_id
 
-        template_vars: Unset | dict[str, Any] = UNSET
+        template_vars: dict[str, Any] | Unset = UNSET
         if not isinstance(self.template_vars, Unset):
             template_vars = self.template_vars.to_dict()
 
@@ -97,7 +99,7 @@ class PostMessagingEcosystemsIdSendBody:
         template_id = d.pop("templateId", UNSET)
 
         _template_vars = d.pop("templateVars", UNSET)
-        template_vars: Unset | PostMessagingEcosystemsIdSendBodyTemplateVars
+        template_vars: PostMessagingEcosystemsIdSendBodyTemplateVars | Unset
         if isinstance(_template_vars, Unset):
             template_vars = UNSET
         else:

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import TYPE_CHECKING, Any, TypeVar, cast
 
@@ -22,23 +24,23 @@ class GamePublicProfile:
         game (GameRef):
         slug (str):
         visibility (GamePublicProfileVisibility):
-        stats (list['GamePlayerStat']):
-        name (Union[None, Unset, str]):
-        character_name (Union[None, Unset, str]):
-        character_avatar_url (Union[None, Unset, str]):
-        first_played_at (Union[Unset, str]):
-        last_played_at (Union[None, Unset, str]):
+        stats (list[GamePlayerStat]):
+        name (None | str | Unset):
+        character_name (None | str | Unset):
+        character_avatar_url (None | str | Unset):
+        first_played_at (str | Unset):
+        last_played_at (None | str | Unset):
     """
 
-    game: "GameRef"
+    game: GameRef
     slug: str
     visibility: GamePublicProfileVisibility
-    stats: list["GamePlayerStat"]
-    name: None | Unset | str = UNSET
-    character_name: None | Unset | str = UNSET
-    character_avatar_url: None | Unset | str = UNSET
-    first_played_at: Unset | str = UNSET
-    last_played_at: None | Unset | str = UNSET
+    stats: list[GamePlayerStat]
+    name: None | str | Unset = UNSET
+    character_name: None | str | Unset = UNSET
+    character_avatar_url: None | str | Unset = UNSET
+    first_played_at: str | Unset = UNSET
+    last_played_at: None | str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -53,19 +55,19 @@ class GamePublicProfile:
             stats_item = stats_item_data.to_dict()
             stats.append(stats_item)
 
-        name: None | Unset | str
+        name: None | str | Unset
         if isinstance(self.name, Unset):
             name = UNSET
         else:
             name = self.name
 
-        character_name: None | Unset | str
+        character_name: None | str | Unset
         if isinstance(self.character_name, Unset):
             character_name = UNSET
         else:
             character_name = self.character_name
 
-        character_avatar_url: None | Unset | str
+        character_avatar_url: None | str | Unset
         if isinstance(self.character_avatar_url, Unset):
             character_avatar_url = UNSET
         else:
@@ -73,7 +75,7 @@ class GamePublicProfile:
 
         first_played_at = self.first_played_at
 
-        last_played_at: None | Unset | str
+        last_played_at: None | str | Unset
         if isinstance(self.last_played_at, Unset):
             last_played_at = UNSET
         else:
@@ -121,41 +123,41 @@ class GamePublicProfile:
 
             stats.append(stats_item)
 
-        def _parse_name(data: object) -> None | Unset | str:
+        def _parse_name(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         name = _parse_name(d.pop("name", UNSET))
 
-        def _parse_character_name(data: object) -> None | Unset | str:
+        def _parse_character_name(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         character_name = _parse_character_name(d.pop("characterName", UNSET))
 
-        def _parse_character_avatar_url(data: object) -> None | Unset | str:
+        def _parse_character_avatar_url(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         character_avatar_url = _parse_character_avatar_url(d.pop("characterAvatarUrl", UNSET))
 
         first_played_at = d.pop("firstPlayedAt", UNSET)
 
-        def _parse_last_played_at(data: object) -> None | Unset | str:
+        def _parse_last_played_at(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         last_played_at = _parse_last_played_at(d.pop("lastPlayedAt", UNSET))
 

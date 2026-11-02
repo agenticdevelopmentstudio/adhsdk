@@ -30,7 +30,7 @@ def _get_kwargs(
 
 def _parse_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> list["PublicUserSearchHit"] | None:
+) -> list[PublicUserSearchHit] | None:
     if response.status_code == 200:
         response_200 = []
         _response_200 = response.json()
@@ -49,7 +49,7 @@ def _parse_response(
 
 def _build_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> Response[list["PublicUserSearchHit"]]:
+) -> Response[list[PublicUserSearchHit]]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -62,7 +62,7 @@ def sync_detailed(
     *,
     client: AuthenticatedClient | Client,
     q: str,
-) -> Response[list["PublicUserSearchHit"]]:
+) -> Response[list[PublicUserSearchHit]]:
     """Search visible user and organization profiles by slug or display name
 
     Args:
@@ -73,7 +73,7 @@ def sync_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[list['PublicUserSearchHit']]
+        Response[list[PublicUserSearchHit]]
     """
 
     kwargs = _get_kwargs(
@@ -91,7 +91,7 @@ def sync(
     *,
     client: AuthenticatedClient | Client,
     q: str,
-) -> list["PublicUserSearchHit"] | None:
+) -> list[PublicUserSearchHit] | None:
     """Search visible user and organization profiles by slug or display name
 
     Args:
@@ -102,7 +102,7 @@ def sync(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        list['PublicUserSearchHit']
+        list[PublicUserSearchHit]
     """
 
     return sync_detailed(
@@ -115,7 +115,7 @@ async def asyncio_detailed(
     *,
     client: AuthenticatedClient | Client,
     q: str,
-) -> Response[list["PublicUserSearchHit"]]:
+) -> Response[list[PublicUserSearchHit]]:
     """Search visible user and organization profiles by slug or display name
 
     Args:
@@ -126,7 +126,7 @@ async def asyncio_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[list['PublicUserSearchHit']]
+        Response[list[PublicUserSearchHit]]
     """
 
     kwargs = _get_kwargs(
@@ -142,7 +142,7 @@ async def asyncio(
     *,
     client: AuthenticatedClient | Client,
     q: str,
-) -> list["PublicUserSearchHit"] | None:
+) -> list[PublicUserSearchHit] | None:
     """Search visible user and organization profiles by slug or display name
 
     Args:
@@ -153,7 +153,7 @@ async def asyncio(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        list['PublicUserSearchHit']
+        list[PublicUserSearchHit]
     """
 
     return (

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar
 
@@ -12,24 +14,24 @@ T = TypeVar("T", bound="PutContentSocialLinksIdBody")
 class PutContentSocialLinksIdBody:
     """
     Attributes:
-        ecosystem_id (Union[Unset, str]):
-        owner_kind (Union[Unset, str]):
-        owner_id (Union[Unset, str]):
-        platform (Union[Unset, str]):
-        url (Union[Unset, str]):
-        handle (Union[Unset, str]):
-        sort_order (Union[Unset, int]):
-        sync_txid (Union[Unset, int]):
+        ecosystem_id (str | Unset):
+        owner_kind (str | Unset):
+        owner_id (str | Unset):
+        platform (str | Unset):
+        url (str | Unset):
+        handle (str | Unset):
+        sort_order (int | Unset):
+        sync_txid (int | Unset):
     """
 
-    ecosystem_id: Unset | str = UNSET
-    owner_kind: Unset | str = UNSET
-    owner_id: Unset | str = UNSET
-    platform: Unset | str = UNSET
-    url: Unset | str = UNSET
-    handle: Unset | str = UNSET
-    sort_order: Unset | int = UNSET
-    sync_txid: Unset | int = UNSET
+    ecosystem_id: str | Unset = UNSET
+    owner_kind: str | Unset = UNSET
+    owner_id: str | Unset = UNSET
+    platform: str | Unset = UNSET
+    url: str | Unset = UNSET
+    handle: str | Unset = UNSET
+    sort_order: int | Unset = UNSET
+    sync_txid: int | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
         ecosystem_id = self.ecosystem_id

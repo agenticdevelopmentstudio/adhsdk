@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -20,9 +22,9 @@ class GamePlayer:
         first_played_at (str):
         created_at (str):
         updated_at (str):
-        character_name (Union[None, Unset, str]):
-        character_avatar_url (Union[None, Unset, str]):
-        last_played_at (Union[None, Unset, str]):
+        character_name (None | str | Unset):
+        character_avatar_url (None | str | Unset):
+        last_played_at (None | str | Unset):
     """
 
     id: str
@@ -31,9 +33,9 @@ class GamePlayer:
     first_played_at: str
     created_at: str
     updated_at: str
-    character_name: None | Unset | str = UNSET
-    character_avatar_url: None | Unset | str = UNSET
-    last_played_at: None | Unset | str = UNSET
+    character_name: None | str | Unset = UNSET
+    character_avatar_url: None | str | Unset = UNSET
+    last_played_at: None | str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -49,19 +51,19 @@ class GamePlayer:
 
         updated_at = self.updated_at
 
-        character_name: None | Unset | str
+        character_name: None | str | Unset
         if isinstance(self.character_name, Unset):
             character_name = UNSET
         else:
             character_name = self.character_name
 
-        character_avatar_url: None | Unset | str
+        character_avatar_url: None | str | Unset
         if isinstance(self.character_avatar_url, Unset):
             character_avatar_url = UNSET
         else:
             character_avatar_url = self.character_avatar_url
 
-        last_played_at: None | Unset | str
+        last_played_at: None | str | Unset
         if isinstance(self.last_played_at, Unset):
             last_played_at = UNSET
         else:
@@ -103,30 +105,30 @@ class GamePlayer:
 
         updated_at = d.pop("updatedAt")
 
-        def _parse_character_name(data: object) -> None | Unset | str:
+        def _parse_character_name(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         character_name = _parse_character_name(d.pop("characterName", UNSET))
 
-        def _parse_character_avatar_url(data: object) -> None | Unset | str:
+        def _parse_character_avatar_url(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         character_avatar_url = _parse_character_avatar_url(d.pop("characterAvatarUrl", UNSET))
 
-        def _parse_last_played_at(data: object) -> None | Unset | str:
+        def _parse_last_played_at(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         last_played_at = _parse_last_played_at(d.pop("lastPlayedAt", UNSET))
 

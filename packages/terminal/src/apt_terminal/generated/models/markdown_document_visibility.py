@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class MarkdownDocumentVisibility(str, Enum):
+class MarkdownDocumentVisibility(StrEnum):
     PRIVATE = "private"
     PUBLIC = "public"
 

@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, TypeVar, Union, cast
+from typing import TYPE_CHECKING, Any, TypeVar, cast
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -33,21 +35,21 @@ class PublicRegistryEntryDetail:
         slug (str):
         display_name (str):
         summary (str):
-        photo_attachment_id (Union[None, str]):
+        photo_attachment_id (None | str):
         provider_type (PublicRegistryEntryDetailProviderType):
         category (str):
         keywords (list[str]):
         location_text (str):
         country_code (str):
         region_code (str):
-        geo (Union['PublicRegistryEntryDetailGeoType0', None]):
+        geo (None | PublicRegistryEntryDetailGeoType0):
         area_served (PublicRegistryEntryDetailAreaServed):
         delivery_mode (PublicRegistryEntryDetailDeliveryMode):
-        links (list['PublicRegistryEntryDetailLinksItem']):
+        links (list[PublicRegistryEntryDetailLinksItem]):
         contact_mode (PublicRegistryEntryDetailContactMode): Never a raw email or phone — contact is DM-only.
         languages (list[str]):
-        fields (list['PublicRegistryField']):
-        services (list['PublicRegistryService']):
+        fields (list[PublicRegistryField]):
+        services (list[PublicRegistryService]):
         image_urls (PublicRegistryEntryDetailImageUrls): Attachment id -> presigned GET URL, for the photo and every
             public image field. Short-lived (15 min); absent entirely when object storage is not configured.
     """
@@ -62,15 +64,15 @@ class PublicRegistryEntryDetail:
     location_text: str
     country_code: str
     region_code: str
-    geo: Union["PublicRegistryEntryDetailGeoType0", None]
-    area_served: "PublicRegistryEntryDetailAreaServed"
+    geo: None | PublicRegistryEntryDetailGeoType0
+    area_served: PublicRegistryEntryDetailAreaServed
     delivery_mode: PublicRegistryEntryDetailDeliveryMode
-    links: list["PublicRegistryEntryDetailLinksItem"]
+    links: list[PublicRegistryEntryDetailLinksItem]
     contact_mode: PublicRegistryEntryDetailContactMode
     languages: list[str]
-    fields: list["PublicRegistryField"]
-    services: list["PublicRegistryService"]
-    image_urls: "PublicRegistryEntryDetailImageUrls"
+    fields: list[PublicRegistryField]
+    services: list[PublicRegistryService]
+    image_urls: PublicRegistryEntryDetailImageUrls
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -99,7 +101,7 @@ class PublicRegistryEntryDetail:
 
         region_code = self.region_code
 
-        geo: None | dict[str, Any]
+        geo: dict[str, Any] | None
         if isinstance(self.geo, PublicRegistryEntryDetailGeoType0):
             geo = self.geo.to_dict()
         else:
@@ -201,7 +203,7 @@ class PublicRegistryEntryDetail:
 
         region_code = d.pop("regionCode")
 
-        def _parse_geo(data: object) -> Union["PublicRegistryEntryDetailGeoType0", None]:
+        def _parse_geo(data: object) -> None | PublicRegistryEntryDetailGeoType0:
             if data is None:
                 return data
             try:
@@ -210,9 +212,9 @@ class PublicRegistryEntryDetail:
                 geo_type_0 = PublicRegistryEntryDetailGeoType0.from_dict(data)
 
                 return geo_type_0
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
-            return cast(Union["PublicRegistryEntryDetailGeoType0", None], data)
+            return cast(None | PublicRegistryEntryDetailGeoType0, data)
 
         geo = _parse_geo(d.pop("geo"))
 

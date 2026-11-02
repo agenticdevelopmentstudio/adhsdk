@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, TypeVar, Union, cast
+from typing import TYPE_CHECKING, Any, TypeVar, cast
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -19,31 +21,31 @@ class ShiprRepo:
     """One deployment repository — a mirror. A dev repo with several `[deployments]` shards has one of these per shard.
 
     Attributes:
-        id (Union[Unset, str]):
-        dev_repo_id (Union[Unset, str]):
-        group_id (Union[None, Unset, str]):
-        slug (Union[Unset, str]): owner/name on the forge.
-        shard (Union[Unset, str]):
-        ship_branch (Union[Unset, str]):
-        ci_context (Union[Unset, str]):
-        env_branches (Union[Unset, ShiprRepoEnvBranches]): environment → branch. An environment absent here is one this
+        id (str | Unset):
+        dev_repo_id (str | Unset):
+        group_id (None | str | Unset):
+        slug (str | Unset): owner/name on the forge.
+        shard (str | Unset):
+        ship_branch (str | Unset):
+        ci_context (str | Unset):
+        env_branches (ShiprRepoEnvBranches | Unset): environment → branch. An environment absent here is one this
             repository does not deploy to, and its ladder column is not drawn.
-        registered_at (Union[None, Unset, str]):
-        provisioned (Union['ShiprRepoProvisionedType0', None, Unset]):
-        position (Union[Unset, int]):
+        registered_at (None | str | Unset):
+        provisioned (None | ShiprRepoProvisionedType0 | Unset):
+        position (int | Unset):
     """
 
-    id: Unset | str = UNSET
-    dev_repo_id: Unset | str = UNSET
-    group_id: None | Unset | str = UNSET
-    slug: Unset | str = UNSET
-    shard: Unset | str = UNSET
-    ship_branch: Unset | str = UNSET
-    ci_context: Unset | str = UNSET
-    env_branches: Union[Unset, "ShiprRepoEnvBranches"] = UNSET
-    registered_at: None | Unset | str = UNSET
-    provisioned: Union["ShiprRepoProvisionedType0", None, Unset] = UNSET
-    position: Unset | int = UNSET
+    id: str | Unset = UNSET
+    dev_repo_id: str | Unset = UNSET
+    group_id: None | str | Unset = UNSET
+    slug: str | Unset = UNSET
+    shard: str | Unset = UNSET
+    ship_branch: str | Unset = UNSET
+    ci_context: str | Unset = UNSET
+    env_branches: ShiprRepoEnvBranches | Unset = UNSET
+    registered_at: None | str | Unset = UNSET
+    provisioned: None | ShiprRepoProvisionedType0 | Unset = UNSET
+    position: int | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -53,7 +55,7 @@ class ShiprRepo:
 
         dev_repo_id = self.dev_repo_id
 
-        group_id: None | Unset | str
+        group_id: None | str | Unset
         if isinstance(self.group_id, Unset):
             group_id = UNSET
         else:
@@ -67,17 +69,17 @@ class ShiprRepo:
 
         ci_context = self.ci_context
 
-        env_branches: Unset | dict[str, Any] = UNSET
+        env_branches: dict[str, Any] | Unset = UNSET
         if not isinstance(self.env_branches, Unset):
             env_branches = self.env_branches.to_dict()
 
-        registered_at: None | Unset | str
+        registered_at: None | str | Unset
         if isinstance(self.registered_at, Unset):
             registered_at = UNSET
         else:
             registered_at = self.registered_at
 
-        provisioned: None | Unset | dict[str, Any]
+        provisioned: dict[str, Any] | None | Unset
         if isinstance(self.provisioned, Unset):
             provisioned = UNSET
         elif isinstance(self.provisioned, ShiprRepoProvisionedType0):
@@ -118,19 +120,21 @@ class ShiprRepo:
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
         from ..models.shipr_repo_env_branches import ShiprRepoEnvBranches
-        from ..models.shipr_repo_provisioned_type_0 import ShiprRepoProvisionedType0
+        from ..models.shipr_repo_provisioned_type_0 import (
+            ShiprRepoProvisionedType0,
+        )
 
         d = dict(src_dict)
         id = d.pop("id", UNSET)
 
         dev_repo_id = d.pop("devRepoId", UNSET)
 
-        def _parse_group_id(data: object) -> None | Unset | str:
+        def _parse_group_id(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         group_id = _parse_group_id(d.pop("groupId", UNSET))
 
@@ -143,22 +147,22 @@ class ShiprRepo:
         ci_context = d.pop("ciContext", UNSET)
 
         _env_branches = d.pop("envBranches", UNSET)
-        env_branches: Unset | ShiprRepoEnvBranches
+        env_branches: ShiprRepoEnvBranches | Unset
         if isinstance(_env_branches, Unset):
             env_branches = UNSET
         else:
             env_branches = ShiprRepoEnvBranches.from_dict(_env_branches)
 
-        def _parse_registered_at(data: object) -> None | Unset | str:
+        def _parse_registered_at(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         registered_at = _parse_registered_at(d.pop("registeredAt", UNSET))
 
-        def _parse_provisioned(data: object) -> Union["ShiprRepoProvisionedType0", None, Unset]:
+        def _parse_provisioned(data: object) -> None | ShiprRepoProvisionedType0 | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
@@ -169,9 +173,9 @@ class ShiprRepo:
                 provisioned_type_0 = ShiprRepoProvisionedType0.from_dict(data)
 
                 return provisioned_type_0
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
-            return cast(Union["ShiprRepoProvisionedType0", None, Unset], data)
+            return cast(None | ShiprRepoProvisionedType0 | Unset, data)
 
         provisioned = _parse_provisioned(d.pop("provisioned", UNSET))
 

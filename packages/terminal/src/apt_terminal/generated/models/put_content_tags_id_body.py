@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar
 
@@ -12,26 +14,26 @@ T = TypeVar("T", bound="PutContentTagsIdBody")
 class PutContentTagsIdBody:
     """
     Attributes:
-        ecosystem_id (Union[Unset, str]):
-        owner_kind (Union[Unset, str]):
-        owner_id (Union[Unset, str]):
-        kind (Union[Unset, str]):
-        label (Union[Unset, str]):
-        level (Union[Unset, str]):
-        since_date (Union[Unset, str]):
-        notes (Union[Unset, str]):
-        sync_txid (Union[Unset, int]):
+        ecosystem_id (str | Unset):
+        owner_kind (str | Unset):
+        owner_id (str | Unset):
+        kind (str | Unset):
+        label (str | Unset):
+        level (str | Unset):
+        since_date (str | Unset):
+        notes (str | Unset):
+        sync_txid (int | Unset):
     """
 
-    ecosystem_id: Unset | str = UNSET
-    owner_kind: Unset | str = UNSET
-    owner_id: Unset | str = UNSET
-    kind: Unset | str = UNSET
-    label: Unset | str = UNSET
-    level: Unset | str = UNSET
-    since_date: Unset | str = UNSET
-    notes: Unset | str = UNSET
-    sync_txid: Unset | int = UNSET
+    ecosystem_id: str | Unset = UNSET
+    owner_kind: str | Unset = UNSET
+    owner_id: str | Unset = UNSET
+    kind: str | Unset = UNSET
+    label: str | Unset = UNSET
+    level: str | Unset = UNSET
+    since_date: str | Unset = UNSET
+    notes: str | Unset = UNSET
+    sync_txid: int | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
         ecosystem_id = self.ecosystem_id

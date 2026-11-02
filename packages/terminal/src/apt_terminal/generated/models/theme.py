@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import TYPE_CHECKING, Any, TypeVar, cast
 
@@ -17,7 +19,7 @@ class Theme:
     Attributes:
         key (str):
         label (str):
-        based_on (Union[None, str]):
+        based_on (None | str):
         data (ThemeData):
         created_at (str):
         updated_at (str):
@@ -26,7 +28,7 @@ class Theme:
     key: str
     label: str
     based_on: None | str
-    data: "ThemeData"
+    data: ThemeData
     created_at: str
     updated_at: str
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)

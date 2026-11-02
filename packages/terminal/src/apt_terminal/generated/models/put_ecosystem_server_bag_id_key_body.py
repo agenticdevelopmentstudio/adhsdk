@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar
 
@@ -14,12 +16,12 @@ class PutEcosystemServerBagIdKeyBody:
     """At least one of value, description is required
 
     Attributes:
-        value (Union[Unset, Any]): Arbitrary JSON value
-        description (Union[Unset, str]):
+        value (Any | Unset): Arbitrary JSON value
+        description (str | Unset):
     """
 
-    value: Unset | Any = UNSET
-    description: Unset | str = UNSET
+    value: Any | Unset = UNSET
+    description: str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:

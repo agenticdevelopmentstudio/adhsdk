@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar
 
@@ -12,18 +14,18 @@ T = TypeVar("T", bound="PutContentCategoryEdgesIdBody")
 class PutContentCategoryEdgesIdBody:
     """
     Attributes:
-        ecosystem_id (Union[Unset, str]):
-        parent_id (Union[Unset, str]):
-        child_id (Union[Unset, str]):
-        sort_order (Union[Unset, int]):
-        sync_txid (Union[Unset, int]):
+        ecosystem_id (str | Unset):
+        parent_id (str | Unset):
+        child_id (str | Unset):
+        sort_order (int | Unset):
+        sync_txid (int | Unset):
     """
 
-    ecosystem_id: Unset | str = UNSET
-    parent_id: Unset | str = UNSET
-    child_id: Unset | str = UNSET
-    sort_order: Unset | int = UNSET
-    sync_txid: Unset | int = UNSET
+    ecosystem_id: str | Unset = UNSET
+    parent_id: str | Unset = UNSET
+    child_id: str | Unset = UNSET
+    sort_order: int | Unset = UNSET
+    sync_txid: int | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
         ecosystem_id = self.ecosystem_id

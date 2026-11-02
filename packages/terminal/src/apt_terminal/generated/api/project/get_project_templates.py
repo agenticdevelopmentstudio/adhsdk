@@ -12,8 +12,8 @@ from ...types import UNSET, Response, Unset
 
 def _get_kwargs(
     *,
-    workspace: Unset | str = UNSET,
-    kind: Unset | str = UNSET,
+    workspace: str | Unset = UNSET,
+    kind: str | Unset = UNSET,
 ) -> dict[str, Any]:
     params: dict[str, Any] = {}
 
@@ -34,7 +34,7 @@ def _get_kwargs(
 
 def _parse_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> Error | list["ProjectTemplate"] | None:
+) -> Error | list[ProjectTemplate] | None:
     if response.status_code == 200:
         response_200 = []
         _response_200 = response.json()
@@ -68,7 +68,7 @@ def _parse_response(
 
 def _build_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> Response[Error | list["ProjectTemplate"]]:
+) -> Response[Error | list[ProjectTemplate]]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -80,9 +80,9 @@ def _build_response(
 def sync_detailed(
     *,
     client: AuthenticatedClient,
-    workspace: Unset | str = UNSET,
-    kind: Unset | str = UNSET,
-) -> Response[Error | list["ProjectTemplate"]]:
+    workspace: str | Unset = UNSET,
+    kind: str | Unset = UNSET,
+) -> Response[Error | list[ProjectTemplate]]:
     """List the templates in the caller's reach (non-deleted, by name)
 
      Ordered by name, case-folded — this list is a picker, like the programs list. Capped lower than the
@@ -90,15 +90,15 @@ def sync_detailed(
     preview and the one thing that makes a template row big.
 
     Args:
-        workspace (Union[Unset, str]):
-        kind (Union[Unset, str]):
+        workspace (str | Unset):
+        kind (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, list['ProjectTemplate']]]
+        Response[Error | list[ProjectTemplate]]
     """
 
     kwargs = _get_kwargs(
@@ -116,9 +116,9 @@ def sync_detailed(
 def sync(
     *,
     client: AuthenticatedClient,
-    workspace: Unset | str = UNSET,
-    kind: Unset | str = UNSET,
-) -> Error | list["ProjectTemplate"] | None:
+    workspace: str | Unset = UNSET,
+    kind: str | Unset = UNSET,
+) -> Error | list[ProjectTemplate] | None:
     """List the templates in the caller's reach (non-deleted, by name)
 
      Ordered by name, case-folded — this list is a picker, like the programs list. Capped lower than the
@@ -126,15 +126,15 @@ def sync(
     preview and the one thing that makes a template row big.
 
     Args:
-        workspace (Union[Unset, str]):
-        kind (Union[Unset, str]):
+        workspace (str | Unset):
+        kind (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, list['ProjectTemplate']]
+        Error | list[ProjectTemplate]
     """
 
     return sync_detailed(
@@ -147,9 +147,9 @@ def sync(
 async def asyncio_detailed(
     *,
     client: AuthenticatedClient,
-    workspace: Unset | str = UNSET,
-    kind: Unset | str = UNSET,
-) -> Response[Error | list["ProjectTemplate"]]:
+    workspace: str | Unset = UNSET,
+    kind: str | Unset = UNSET,
+) -> Response[Error | list[ProjectTemplate]]:
     """List the templates in the caller's reach (non-deleted, by name)
 
      Ordered by name, case-folded — this list is a picker, like the programs list. Capped lower than the
@@ -157,15 +157,15 @@ async def asyncio_detailed(
     preview and the one thing that makes a template row big.
 
     Args:
-        workspace (Union[Unset, str]):
-        kind (Union[Unset, str]):
+        workspace (str | Unset):
+        kind (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, list['ProjectTemplate']]]
+        Response[Error | list[ProjectTemplate]]
     """
 
     kwargs = _get_kwargs(
@@ -181,9 +181,9 @@ async def asyncio_detailed(
 async def asyncio(
     *,
     client: AuthenticatedClient,
-    workspace: Unset | str = UNSET,
-    kind: Unset | str = UNSET,
-) -> Error | list["ProjectTemplate"] | None:
+    workspace: str | Unset = UNSET,
+    kind: str | Unset = UNSET,
+) -> Error | list[ProjectTemplate] | None:
     """List the templates in the caller's reach (non-deleted, by name)
 
      Ordered by name, case-folded — this list is a picker, like the programs list. Capped lower than the
@@ -191,15 +191,15 @@ async def asyncio(
     preview and the one thing that makes a template row big.
 
     Args:
-        workspace (Union[Unset, str]):
-        kind (Union[Unset, str]):
+        workspace (str | Unset):
+        kind (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, list['ProjectTemplate']]
+        Error | list[ProjectTemplate]
     """
 
     return (

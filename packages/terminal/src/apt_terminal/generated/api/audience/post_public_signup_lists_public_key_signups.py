@@ -1,5 +1,6 @@
 from http import HTTPStatus
 from typing import Any
+from urllib.parse import quote
 
 import httpx
 
@@ -12,22 +13,25 @@ from ...models.post_public_signup_lists_public_key_signups_body import (
 from ...models.post_public_signup_lists_public_key_signups_response_200 import (
     PostPublicSignupListsPublicKeySignupsResponse200,
 )
-from ...types import Response
+from ...types import UNSET, Response, Unset
 
 
 def _get_kwargs(
     public_key: str,
     *,
-    body: PostPublicSignupListsPublicKeySignupsBody,
+    body: PostPublicSignupListsPublicKeySignupsBody | Unset = UNSET,
 ) -> dict[str, Any]:
     headers: dict[str, Any] = {}
 
     _kwargs: dict[str, Any] = {
         "method": "post",
-        "url": f"/public/signup-lists/{public_key}/signups",
+        "url": "/public/signup-lists/{public_key}/signups".format(
+            public_key=quote(str(public_key), safe=""),
+        ),
     }
 
-    _kwargs["json"] = body.to_dict()
+    if not isinstance(body, Unset):
+        _kwargs["json"] = body.to_dict()
 
     headers["Content-Type"] = "application/json"
 
@@ -79,20 +83,20 @@ def sync_detailed(
     public_key: str,
     *,
     client: AuthenticatedClient | Client,
-    body: PostPublicSignupListsPublicKeySignupsBody,
+    body: PostPublicSignupListsPublicKeySignupsBody | Unset = UNSET,
 ) -> Response[Error | PostPublicSignupListsPublicKeySignupsResponse200]:
     """Join a signup list (unauthenticated; nonce + honeypot + per-IP cap)
 
     Args:
         public_key (str):
-        body (PostPublicSignupListsPublicKeySignupsBody):
+        body (PostPublicSignupListsPublicKeySignupsBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, PostPublicSignupListsPublicKeySignupsResponse200]]
+        Response[Error | PostPublicSignupListsPublicKeySignupsResponse200]
     """
 
     kwargs = _get_kwargs(
@@ -111,20 +115,20 @@ def sync(
     public_key: str,
     *,
     client: AuthenticatedClient | Client,
-    body: PostPublicSignupListsPublicKeySignupsBody,
+    body: PostPublicSignupListsPublicKeySignupsBody | Unset = UNSET,
 ) -> Error | PostPublicSignupListsPublicKeySignupsResponse200 | None:
     """Join a signup list (unauthenticated; nonce + honeypot + per-IP cap)
 
     Args:
         public_key (str):
-        body (PostPublicSignupListsPublicKeySignupsBody):
+        body (PostPublicSignupListsPublicKeySignupsBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, PostPublicSignupListsPublicKeySignupsResponse200]
+        Error | PostPublicSignupListsPublicKeySignupsResponse200
     """
 
     return sync_detailed(
@@ -138,20 +142,20 @@ async def asyncio_detailed(
     public_key: str,
     *,
     client: AuthenticatedClient | Client,
-    body: PostPublicSignupListsPublicKeySignupsBody,
+    body: PostPublicSignupListsPublicKeySignupsBody | Unset = UNSET,
 ) -> Response[Error | PostPublicSignupListsPublicKeySignupsResponse200]:
     """Join a signup list (unauthenticated; nonce + honeypot + per-IP cap)
 
     Args:
         public_key (str):
-        body (PostPublicSignupListsPublicKeySignupsBody):
+        body (PostPublicSignupListsPublicKeySignupsBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, PostPublicSignupListsPublicKeySignupsResponse200]]
+        Response[Error | PostPublicSignupListsPublicKeySignupsResponse200]
     """
 
     kwargs = _get_kwargs(
@@ -168,20 +172,20 @@ async def asyncio(
     public_key: str,
     *,
     client: AuthenticatedClient | Client,
-    body: PostPublicSignupListsPublicKeySignupsBody,
+    body: PostPublicSignupListsPublicKeySignupsBody | Unset = UNSET,
 ) -> Error | PostPublicSignupListsPublicKeySignupsResponse200 | None:
     """Join a signup list (unauthenticated; nonce + honeypot + per-IP cap)
 
     Args:
         public_key (str):
-        body (PostPublicSignupListsPublicKeySignupsBody):
+        body (PostPublicSignupListsPublicKeySignupsBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, PostPublicSignupListsPublicKeySignupsResponse200]
+        Error | PostPublicSignupListsPublicKeySignupsResponse200
     """
 
     return (

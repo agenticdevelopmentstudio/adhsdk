@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class RegistryFieldDefType(str, Enum):
+class RegistryFieldDefType(StrEnum):
     ADDRESS = "address"
     BOOLEAN = "boolean"
     DATE = "date"

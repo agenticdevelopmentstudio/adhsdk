@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class PostOwnershipTransferBodyEntityType(str, Enum):
+class PostOwnershipTransferBodyEntityType(StrEnum):
     APPLICATION = "application"
     BUCKET = "bucket"
     ECOSYSTEM = "ecosystem"

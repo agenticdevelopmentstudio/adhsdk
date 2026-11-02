@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -23,7 +25,7 @@ class RegistrySection:
         created_at (str):
         updated_at (str):
         sync_version (int):
-        deleted_at (Union[None, Unset, str]):
+        deleted_at (None | str | Unset):
     """
 
     id: str
@@ -36,7 +38,7 @@ class RegistrySection:
     created_at: str
     updated_at: str
     sync_version: int
-    deleted_at: None | Unset | str = UNSET
+    deleted_at: None | str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -60,7 +62,7 @@ class RegistrySection:
 
         sync_version = self.sync_version
 
-        deleted_at: None | Unset | str
+        deleted_at: None | str | Unset
         if isinstance(self.deleted_at, Unset):
             deleted_at = UNSET
         else:
@@ -110,12 +112,12 @@ class RegistrySection:
 
         sync_version = d.pop("syncVersion")
 
-        def _parse_deleted_at(data: object) -> None | Unset | str:
+        def _parse_deleted_at(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         deleted_at = _parse_deleted_at(d.pop("deletedAt", UNSET))
 

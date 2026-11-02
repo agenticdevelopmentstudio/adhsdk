@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar
 
@@ -20,7 +22,7 @@ class IntegrationConnectAppPassword:
         ecosystem_id (str): Target ecosystem id (the caller must manage it)
         identifier (str):
         password (str):
-        instance_url (Union[Unset, str]):
+        instance_url (str | Unset):
     """
 
     type_: IntegrationConnectAppPasswordType
@@ -29,7 +31,7 @@ class IntegrationConnectAppPassword:
     ecosystem_id: str
     identifier: str
     password: str
-    instance_url: Unset | str = UNSET
+    instance_url: str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import TYPE_CHECKING, Any, TypeVar
 
@@ -20,16 +22,16 @@ class PostAccessRolesBody:
     Attributes:
         slug (str):
         name (str):
-        grants (list['AccessGrant']):
-        description (Union[Unset, str]):
-        default_for (Union[Unset, PostAccessRolesBodyDefaultFor]):
+        grants (list[AccessGrant]):
+        description (str | Unset):
+        default_for (PostAccessRolesBodyDefaultFor | Unset):
     """
 
     slug: str
     name: str
-    grants: list["AccessGrant"]
-    description: Unset | str = UNSET
-    default_for: Unset | PostAccessRolesBodyDefaultFor = UNSET
+    grants: list[AccessGrant]
+    description: str | Unset = UNSET
+    default_for: PostAccessRolesBodyDefaultFor | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -44,7 +46,7 @@ class PostAccessRolesBody:
 
         description = self.description
 
-        default_for: Unset | str = UNSET
+        default_for: str | Unset = UNSET
         if not isinstance(self.default_for, Unset):
             default_for = self.default_for.value
 
@@ -83,7 +85,7 @@ class PostAccessRolesBody:
         description = d.pop("description", UNSET)
 
         _default_for = d.pop("defaultFor", UNSET)
-        default_for: Unset | PostAccessRolesBodyDefaultFor
+        default_for: PostAccessRolesBodyDefaultFor | Unset
         if isinstance(_default_for, Unset):
             default_for = UNSET
         else:

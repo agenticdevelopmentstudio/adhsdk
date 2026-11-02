@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -13,7 +15,7 @@ class PublicRegistryEntryResponseRegistry:
     Attributes:
         slug (str):
         name (str):
-        bound_site_id (Union[None, str]):
+        bound_site_id (None | str):
     """
 
     slug: str

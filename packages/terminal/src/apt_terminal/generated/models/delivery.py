@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -15,11 +17,11 @@ class Delivery:
     Attributes:
         id (str):
         email (str):
-        name (Union[None, str]):
+        name (None | str):
         status (DeliveryStatus):
         attempts (int):
-        last_error (Union[None, str]):
-        sent_at (Union[None, str]):
+        last_error (None | str):
+        sent_at (None | str):
     """
 
     id: str

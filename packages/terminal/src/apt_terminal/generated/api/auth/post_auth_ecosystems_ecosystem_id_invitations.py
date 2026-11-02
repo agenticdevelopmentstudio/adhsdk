@@ -1,5 +1,6 @@
 from http import HTTPStatus
 from typing import Any
+from urllib.parse import quote
 
 import httpx
 
@@ -8,22 +9,25 @@ from ...client import AuthenticatedClient, Client
 from ...models.error import Error
 from ...models.invitation import Invitation
 from ...models.send_invites_body import SendInvitesBody
-from ...types import Response
+from ...types import UNSET, Response, Unset
 
 
 def _get_kwargs(
     ecosystem_id: str,
     *,
-    body: SendInvitesBody,
+    body: SendInvitesBody | Unset = UNSET,
 ) -> dict[str, Any]:
     headers: dict[str, Any] = {}
 
     _kwargs: dict[str, Any] = {
         "method": "post",
-        "url": f"/auth/ecosystems/{ecosystem_id}/invitations",
+        "url": "/auth/ecosystems/{ecosystem_id}/invitations".format(
+            ecosystem_id=quote(str(ecosystem_id), safe=""),
+        ),
     }
 
-    _kwargs["json"] = body.to_dict()
+    if not isinstance(body, Unset):
+        _kwargs["json"] = body.to_dict()
 
     headers["Content-Type"] = "application/json"
 
@@ -33,7 +37,7 @@ def _get_kwargs(
 
 def _parse_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> Error | list["Invitation"] | None:
+) -> Error | list[Invitation] | None:
     if response.status_code == 201:
         response_201 = []
         _response_201 = response.json()
@@ -72,7 +76,7 @@ def _parse_response(
 
 def _build_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> Response[Error | list["Invitation"]]:
+) -> Response[Error | list[Invitation]]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -85,21 +89,21 @@ def sync_detailed(
     ecosystem_id: str,
     *,
     client: AuthenticatedClient,
-    body: SendInvitesBody,
-) -> Response[Error | list["Invitation"]]:
+    body: SendInvitesBody | Unset = UNSET,
+) -> Response[Error | list[Invitation]]:
     """Send invitations (email/SMS) for an ecosystem (owner-scoped)
 
     Args:
         ecosystem_id (str):
-        body (SendInvitesBody): Names the people to invite and the channels to reach them on. At
-            least one channel is required.
+        body (SendInvitesBody | Unset): Names the people to invite and the channels to reach them
+            on. At least one channel is required.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, list['Invitation']]]
+        Response[Error | list[Invitation]]
     """
 
     kwargs = _get_kwargs(
@@ -118,21 +122,21 @@ def sync(
     ecosystem_id: str,
     *,
     client: AuthenticatedClient,
-    body: SendInvitesBody,
-) -> Error | list["Invitation"] | None:
+    body: SendInvitesBody | Unset = UNSET,
+) -> Error | list[Invitation] | None:
     """Send invitations (email/SMS) for an ecosystem (owner-scoped)
 
     Args:
         ecosystem_id (str):
-        body (SendInvitesBody): Names the people to invite and the channels to reach them on. At
-            least one channel is required.
+        body (SendInvitesBody | Unset): Names the people to invite and the channels to reach them
+            on. At least one channel is required.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, list['Invitation']]
+        Error | list[Invitation]
     """
 
     return sync_detailed(
@@ -146,21 +150,21 @@ async def asyncio_detailed(
     ecosystem_id: str,
     *,
     client: AuthenticatedClient,
-    body: SendInvitesBody,
-) -> Response[Error | list["Invitation"]]:
+    body: SendInvitesBody | Unset = UNSET,
+) -> Response[Error | list[Invitation]]:
     """Send invitations (email/SMS) for an ecosystem (owner-scoped)
 
     Args:
         ecosystem_id (str):
-        body (SendInvitesBody): Names the people to invite and the channels to reach them on. At
-            least one channel is required.
+        body (SendInvitesBody | Unset): Names the people to invite and the channels to reach them
+            on. At least one channel is required.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, list['Invitation']]]
+        Response[Error | list[Invitation]]
     """
 
     kwargs = _get_kwargs(
@@ -177,21 +181,21 @@ async def asyncio(
     ecosystem_id: str,
     *,
     client: AuthenticatedClient,
-    body: SendInvitesBody,
-) -> Error | list["Invitation"] | None:
+    body: SendInvitesBody | Unset = UNSET,
+) -> Error | list[Invitation] | None:
     """Send invitations (email/SMS) for an ecosystem (owner-scoped)
 
     Args:
         ecosystem_id (str):
-        body (SendInvitesBody): Names the people to invite and the channels to reach them on. At
-            least one channel is required.
+        body (SendInvitesBody | Unset): Names the people to invite and the channels to reach them
+            on. At least one channel is required.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, list['Invitation']]
+        Error | list[Invitation]
     """
 
     return (

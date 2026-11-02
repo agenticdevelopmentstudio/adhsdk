@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -12,26 +14,26 @@ T = TypeVar("T", bound="PostContentDatesBody")
 class PostContentDatesBody:
     """
     Attributes:
-        ecosystem_id (Union[Unset, str]):
-        owner_kind (Union[Unset, str]):
-        owner_id (Union[Unset, str]):
-        label (Union[Unset, str]):
-        date (Union[Unset, str]):
-        recurrence (Union[Unset, str]):
-        contact_id (Union[None, Unset, str]):
-        notes (Union[Unset, str]):
-        sync_txid (Union[Unset, int]):
+        ecosystem_id (str | Unset):
+        owner_kind (str | Unset):
+        owner_id (str | Unset):
+        label (str | Unset):
+        date (str | Unset):
+        recurrence (str | Unset):
+        contact_id (None | str | Unset):
+        notes (str | Unset):
+        sync_txid (int | Unset):
     """
 
-    ecosystem_id: Unset | str = UNSET
-    owner_kind: Unset | str = UNSET
-    owner_id: Unset | str = UNSET
-    label: Unset | str = UNSET
-    date: Unset | str = UNSET
-    recurrence: Unset | str = UNSET
-    contact_id: None | Unset | str = UNSET
-    notes: Unset | str = UNSET
-    sync_txid: Unset | int = UNSET
+    ecosystem_id: str | Unset = UNSET
+    owner_kind: str | Unset = UNSET
+    owner_id: str | Unset = UNSET
+    label: str | Unset = UNSET
+    date: str | Unset = UNSET
+    recurrence: str | Unset = UNSET
+    contact_id: None | str | Unset = UNSET
+    notes: str | Unset = UNSET
+    sync_txid: int | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
         ecosystem_id = self.ecosystem_id
@@ -46,7 +48,7 @@ class PostContentDatesBody:
 
         recurrence = self.recurrence
 
-        contact_id: None | Unset | str
+        contact_id: None | str | Unset
         if isinstance(self.contact_id, Unset):
             contact_id = UNSET
         else:
@@ -95,12 +97,12 @@ class PostContentDatesBody:
 
         recurrence = d.pop("recurrence", UNSET)
 
-        def _parse_contact_id(data: object) -> None | Unset | str:
+        def _parse_contact_id(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         contact_id = _parse_contact_id(d.pop("contactId", UNSET))
 

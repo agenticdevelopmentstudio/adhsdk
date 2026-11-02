@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -22,11 +24,10 @@ class TeamMember:
         user_id (str): the member principal id — a customer id, or a persona id when memberKind is 'persona'
         role (str):
         added_at (str):
-        email (Union[None, Unset, str]): the member's email (resolved; null for a persona member or a foreign customer)
-        display_name (Union[None, Unset, str]):
-        persona_slug (Union[None, Unset, str]): the persona's slug when memberKind is 'persona' (null for a customer
-            member)
-        persona_name (Union[None, Unset, str]):
+        email (None | str | Unset): the member's email (resolved; null for a persona member or a foreign customer)
+        display_name (None | str | Unset):
+        persona_slug (None | str | Unset): the persona's slug when memberKind is 'persona' (null for a customer member)
+        persona_name (None | str | Unset):
     """
 
     id: str
@@ -35,10 +36,10 @@ class TeamMember:
     user_id: str
     role: str
     added_at: str
-    email: None | Unset | str = UNSET
-    display_name: None | Unset | str = UNSET
-    persona_slug: None | Unset | str = UNSET
-    persona_name: None | Unset | str = UNSET
+    email: None | str | Unset = UNSET
+    display_name: None | str | Unset = UNSET
+    persona_slug: None | str | Unset = UNSET
+    persona_name: None | str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -54,25 +55,25 @@ class TeamMember:
 
         added_at = self.added_at
 
-        email: None | Unset | str
+        email: None | str | Unset
         if isinstance(self.email, Unset):
             email = UNSET
         else:
             email = self.email
 
-        display_name: None | Unset | str
+        display_name: None | str | Unset
         if isinstance(self.display_name, Unset):
             display_name = UNSET
         else:
             display_name = self.display_name
 
-        persona_slug: None | Unset | str
+        persona_slug: None | str | Unset
         if isinstance(self.persona_slug, Unset):
             persona_slug = UNSET
         else:
             persona_slug = self.persona_slug
 
-        persona_name: None | Unset | str
+        persona_name: None | str | Unset
         if isinstance(self.persona_name, Unset):
             persona_name = UNSET
         else:
@@ -116,39 +117,39 @@ class TeamMember:
 
         added_at = d.pop("addedAt")
 
-        def _parse_email(data: object) -> None | Unset | str:
+        def _parse_email(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         email = _parse_email(d.pop("email", UNSET))
 
-        def _parse_display_name(data: object) -> None | Unset | str:
+        def _parse_display_name(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         display_name = _parse_display_name(d.pop("displayName", UNSET))
 
-        def _parse_persona_slug(data: object) -> None | Unset | str:
+        def _parse_persona_slug(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         persona_slug = _parse_persona_slug(d.pop("personaSlug", UNSET))
 
-        def _parse_persona_name(data: object) -> None | Unset | str:
+        def _parse_persona_name(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         persona_name = _parse_persona_name(d.pop("personaName", UNSET))
 

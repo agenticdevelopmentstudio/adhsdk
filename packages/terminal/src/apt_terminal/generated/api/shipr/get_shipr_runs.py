@@ -12,8 +12,8 @@ from ...types import UNSET, Response, Unset
 
 def _get_kwargs(
     *,
-    workspace: Unset | str = UNSET,
-    limit: Unset | str = UNSET,
+    workspace: str | Unset = UNSET,
+    limit: str | Unset = UNSET,
 ) -> dict[str, Any]:
     params: dict[str, Any] = {}
 
@@ -75,21 +75,21 @@ def _build_response(
 def sync_detailed(
     *,
     client: AuthenticatedClient,
-    workspace: Unset | str = UNSET,
-    limit: Unset | str = UNSET,
+    workspace: str | Unset = UNSET,
+    limit: str | Unset = UNSET,
 ) -> Response[Error | GetShiprRunsResponse200]:
     """The runs the caller may watch, newest first
 
     Args:
-        workspace (Union[Unset, str]):
-        limit (Union[Unset, str]):
+        workspace (str | Unset):
+        limit (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, GetShiprRunsResponse200]]
+        Response[Error | GetShiprRunsResponse200]
     """
 
     kwargs = _get_kwargs(
@@ -107,21 +107,21 @@ def sync_detailed(
 def sync(
     *,
     client: AuthenticatedClient,
-    workspace: Unset | str = UNSET,
-    limit: Unset | str = UNSET,
+    workspace: str | Unset = UNSET,
+    limit: str | Unset = UNSET,
 ) -> Error | GetShiprRunsResponse200 | None:
     """The runs the caller may watch, newest first
 
     Args:
-        workspace (Union[Unset, str]):
-        limit (Union[Unset, str]):
+        workspace (str | Unset):
+        limit (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, GetShiprRunsResponse200]
+        Error | GetShiprRunsResponse200
     """
 
     return sync_detailed(
@@ -134,21 +134,21 @@ def sync(
 async def asyncio_detailed(
     *,
     client: AuthenticatedClient,
-    workspace: Unset | str = UNSET,
-    limit: Unset | str = UNSET,
+    workspace: str | Unset = UNSET,
+    limit: str | Unset = UNSET,
 ) -> Response[Error | GetShiprRunsResponse200]:
     """The runs the caller may watch, newest first
 
     Args:
-        workspace (Union[Unset, str]):
-        limit (Union[Unset, str]):
+        workspace (str | Unset):
+        limit (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, GetShiprRunsResponse200]]
+        Response[Error | GetShiprRunsResponse200]
     """
 
     kwargs = _get_kwargs(
@@ -164,21 +164,21 @@ async def asyncio_detailed(
 async def asyncio(
     *,
     client: AuthenticatedClient,
-    workspace: Unset | str = UNSET,
-    limit: Unset | str = UNSET,
+    workspace: str | Unset = UNSET,
+    limit: str | Unset = UNSET,
 ) -> Error | GetShiprRunsResponse200 | None:
     """The runs the caller may watch, newest first
 
     Args:
-        workspace (Union[Unset, str]):
-        limit (Union[Unset, str]):
+        workspace (str | Unset):
+        limit (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, GetShiprRunsResponse200]
+        Error | GetShiprRunsResponse200
     """
 
     return (

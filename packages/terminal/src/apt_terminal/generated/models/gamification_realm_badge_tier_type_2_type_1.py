@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class GamificationRealmBadgeTierType2Type1(str, Enum):
+class GamificationRealmBadgeTierType2Type1(StrEnum):
     BRONZE = "bronze"
     GOLD = "gold"
     NONE = "none"

@@ -16,7 +16,7 @@ def _get_kwargs(
     feature: str,
     subject_kind: str,
     subject_id: str,
-    item_id: Unset | str = UNSET,
+    item_id: str | Unset = UNSET,
 ) -> dict[str, Any]:
     params: dict[str, Any] = {}
 
@@ -93,7 +93,7 @@ def sync_detailed(
     feature: str,
     subject_kind: str,
     subject_id: str,
-    item_id: Unset | str = UNSET,
+    item_id: str | Unset = UNSET,
 ) -> Response[AccessEffective | Error]:
     """A subject's effective verbs + provenance (the explainer; requires M)
 
@@ -102,14 +102,14 @@ def sync_detailed(
         feature (str):
         subject_kind (str):
         subject_id (str):
-        item_id (Union[Unset, str]):
+        item_id (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[AccessEffective, Error]]
+        Response[AccessEffective | Error]
     """
 
     kwargs = _get_kwargs(
@@ -134,7 +134,7 @@ def sync(
     feature: str,
     subject_kind: str,
     subject_id: str,
-    item_id: Unset | str = UNSET,
+    item_id: str | Unset = UNSET,
 ) -> AccessEffective | Error | None:
     """A subject's effective verbs + provenance (the explainer; requires M)
 
@@ -143,14 +143,14 @@ def sync(
         feature (str):
         subject_kind (str):
         subject_id (str):
-        item_id (Union[Unset, str]):
+        item_id (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[AccessEffective, Error]
+        AccessEffective | Error
     """
 
     return sync_detailed(
@@ -170,7 +170,7 @@ async def asyncio_detailed(
     feature: str,
     subject_kind: str,
     subject_id: str,
-    item_id: Unset | str = UNSET,
+    item_id: str | Unset = UNSET,
 ) -> Response[AccessEffective | Error]:
     """A subject's effective verbs + provenance (the explainer; requires M)
 
@@ -179,14 +179,14 @@ async def asyncio_detailed(
         feature (str):
         subject_kind (str):
         subject_id (str):
-        item_id (Union[Unset, str]):
+        item_id (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[AccessEffective, Error]]
+        Response[AccessEffective | Error]
     """
 
     kwargs = _get_kwargs(
@@ -209,7 +209,7 @@ async def asyncio(
     feature: str,
     subject_kind: str,
     subject_id: str,
-    item_id: Unset | str = UNSET,
+    item_id: str | Unset = UNSET,
 ) -> AccessEffective | Error | None:
     """A subject's effective verbs + provenance (the explainer; requires M)
 
@@ -218,14 +218,14 @@ async def asyncio(
         feature (str):
         subject_kind (str):
         subject_id (str):
-        item_id (Union[Unset, str]):
+        item_id (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[AccessEffective, Error]
+        AccessEffective | Error
     """
 
     return (

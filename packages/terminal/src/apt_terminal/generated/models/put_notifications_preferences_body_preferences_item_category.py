@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class PutNotificationsPreferencesBodyPreferencesItemCategory(str, Enum):
+class PutNotificationsPreferencesBodyPreferencesItemCategory(StrEnum):
     ACCOUNT = "account"
     ADMIN_ANNOUNCEMENT = "admin_announcement"
     COMMUNITY_MENTION = "community_mention"

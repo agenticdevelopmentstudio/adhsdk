@@ -13,7 +13,7 @@ from ...types import UNSET, Response, Unset
 def _get_kwargs(
     *,
     ecosystem_id: str,
-    team_id: Unset | str = UNSET,
+    team_id: str | Unset = UNSET,
 ) -> dict[str, Any]:
     params: dict[str, Any] = {}
 
@@ -81,20 +81,20 @@ def sync_detailed(
     *,
     client: AuthenticatedClient,
     ecosystem_id: str,
-    team_id: Unset | str = UNSET,
+    team_id: str | Unset = UNSET,
 ) -> Response[Error | TeamReachGrantList]:
     """List the team reach grants INTO one ecosystem
 
     Args:
         ecosystem_id (str):
-        team_id (Union[Unset, str]):
+        team_id (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, TeamReachGrantList]]
+        Response[Error | TeamReachGrantList]
     """
 
     kwargs = _get_kwargs(
@@ -113,20 +113,20 @@ def sync(
     *,
     client: AuthenticatedClient,
     ecosystem_id: str,
-    team_id: Unset | str = UNSET,
+    team_id: str | Unset = UNSET,
 ) -> Error | TeamReachGrantList | None:
     """List the team reach grants INTO one ecosystem
 
     Args:
         ecosystem_id (str):
-        team_id (Union[Unset, str]):
+        team_id (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, TeamReachGrantList]
+        Error | TeamReachGrantList
     """
 
     return sync_detailed(
@@ -140,20 +140,20 @@ async def asyncio_detailed(
     *,
     client: AuthenticatedClient,
     ecosystem_id: str,
-    team_id: Unset | str = UNSET,
+    team_id: str | Unset = UNSET,
 ) -> Response[Error | TeamReachGrantList]:
     """List the team reach grants INTO one ecosystem
 
     Args:
         ecosystem_id (str):
-        team_id (Union[Unset, str]):
+        team_id (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, TeamReachGrantList]]
+        Response[Error | TeamReachGrantList]
     """
 
     kwargs = _get_kwargs(
@@ -170,20 +170,20 @@ async def asyncio(
     *,
     client: AuthenticatedClient,
     ecosystem_id: str,
-    team_id: Unset | str = UNSET,
+    team_id: str | Unset = UNSET,
 ) -> Error | TeamReachGrantList | None:
     """List the team reach grants INTO one ecosystem
 
     Args:
         ecosystem_id (str):
-        team_id (Union[Unset, str]):
+        team_id (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, TeamReachGrantList]
+        Error | TeamReachGrantList
     """
 
     return (

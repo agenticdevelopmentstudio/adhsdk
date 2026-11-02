@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar
 
@@ -14,15 +16,15 @@ class ProviderConnectionUrlVar:
     """
     Attributes:
         name (str):
-        label (Union[Unset, str]):
-        example (Union[Unset, str]):
-        secret (Union[Unset, bool]):
+        label (str | Unset):
+        example (str | Unset):
+        secret (bool | Unset):
     """
 
     name: str
-    label: Unset | str = UNSET
-    example: Unset | str = UNSET
-    secret: Unset | bool = UNSET
+    label: str | Unset = UNSET
+    example: str | Unset = UNSET
+    secret: bool | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:

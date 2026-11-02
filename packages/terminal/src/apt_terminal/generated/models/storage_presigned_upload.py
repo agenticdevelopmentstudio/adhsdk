@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import TYPE_CHECKING, Any, TypeVar
 
@@ -19,7 +21,7 @@ class StoragePresignedUpload:
         upload_url (str): Presigned PUT URL — upload the bytes directly to R2.
     """
 
-    attachment: "StorageAttachment"
+    attachment: StorageAttachment
     upload_url: str
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 

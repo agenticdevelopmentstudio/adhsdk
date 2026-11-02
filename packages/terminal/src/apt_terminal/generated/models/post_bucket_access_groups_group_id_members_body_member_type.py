@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class PostBucketAccessGroupsGroupIdMembersBodyMemberType(str, Enum):
+class PostBucketAccessGroupsGroupIdMembersBodyMemberType(StrEnum):
     APP = "app"
     ORGANIZATION = "organization"
     PERSONA = "persona"

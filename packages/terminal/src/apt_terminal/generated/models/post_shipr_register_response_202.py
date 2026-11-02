@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, TypeVar, Union
+from typing import TYPE_CHECKING, Any, TypeVar
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -18,17 +20,17 @@ class PostShiprRegisterResponse202:
     """
     Attributes:
         run_id (str):
-        dev_repo (Union[Unset, ShiprDevRepo]): The source repository a mirror is fed from.
+        dev_repo (ShiprDevRepo | Unset): The source repository a mirror is fed from.
     """
 
     run_id: str
-    dev_repo: Union[Unset, "ShiprDevRepo"] = UNSET
+    dev_repo: ShiprDevRepo | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
         run_id = self.run_id
 
-        dev_repo: Unset | dict[str, Any] = UNSET
+        dev_repo: dict[str, Any] | Unset = UNSET
         if not isinstance(self.dev_repo, Unset):
             dev_repo = self.dev_repo.to_dict()
 
@@ -52,7 +54,7 @@ class PostShiprRegisterResponse202:
         run_id = d.pop("runId")
 
         _dev_repo = d.pop("devRepo", UNSET)
-        dev_repo: Unset | ShiprDevRepo
+        dev_repo: ShiprDevRepo | Unset
         if isinstance(_dev_repo, Unset):
             dev_repo = UNSET
         else:

@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, TypeVar, Union, cast
+from typing import TYPE_CHECKING, Any, TypeVar, cast
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -17,20 +19,22 @@ T = TypeVar("T", bound="PatchPersonaServicesIdBody")
 class PatchPersonaServicesIdBody:
     """
     Attributes:
-        name (Union[Unset, str]):
-        base_url (Union[Unset, str]):
-        api_key (Union[Unset, str]): Plaintext provider key; stored, never returned
-        connection_spec (Union['ProviderConnectionSpecType0', None, Unset]):
+        name (str | Unset):
+        base_url (str | Unset):
+        api_key (str | Unset): Plaintext provider key; stored, never returned
+        connection_spec (None | ProviderConnectionSpecType0 | Unset):
     """
 
-    name: Unset | str = UNSET
-    base_url: Unset | str = UNSET
-    api_key: Unset | str = UNSET
-    connection_spec: Union["ProviderConnectionSpecType0", None, Unset] = UNSET
+    name: str | Unset = UNSET
+    base_url: str | Unset = UNSET
+    api_key: str | Unset = UNSET
+    connection_spec: None | ProviderConnectionSpecType0 | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
-        from ..models.provider_connection_spec_type_0 import ProviderConnectionSpecType0
+        from ..models.provider_connection_spec_type_0 import (
+            ProviderConnectionSpecType0,
+        )
 
         name = self.name
 
@@ -38,7 +42,7 @@ class PatchPersonaServicesIdBody:
 
         api_key = self.api_key
 
-        connection_spec: None | Unset | dict[str, Any]
+        connection_spec: dict[str, Any] | None | Unset
         if isinstance(self.connection_spec, Unset):
             connection_spec = UNSET
         elif isinstance(self.connection_spec, ProviderConnectionSpecType0):
@@ -62,7 +66,9 @@ class PatchPersonaServicesIdBody:
 
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
-        from ..models.provider_connection_spec_type_0 import ProviderConnectionSpecType0
+        from ..models.provider_connection_spec_type_0 import (
+            ProviderConnectionSpecType0,
+        )
 
         d = dict(src_dict)
         name = d.pop("name", UNSET)
@@ -71,9 +77,7 @@ class PatchPersonaServicesIdBody:
 
         api_key = d.pop("apiKey", UNSET)
 
-        def _parse_connection_spec(
-            data: object,
-        ) -> Union["ProviderConnectionSpecType0", None, Unset]:
+        def _parse_connection_spec(data: object) -> None | ProviderConnectionSpecType0 | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
@@ -86,9 +90,9 @@ class PatchPersonaServicesIdBody:
                 )
 
                 return componentsschemas_provider_connection_spec_type_0
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
-            return cast(Union["ProviderConnectionSpecType0", None, Unset], data)
+            return cast(None | ProviderConnectionSpecType0 | Unset, data)
 
         connection_spec = _parse_connection_spec(d.pop("connectionSpec", UNSET))
 

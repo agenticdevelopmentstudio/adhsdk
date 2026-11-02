@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class PostOauthSigninLoginMfaBodyMethod(str, Enum):
+class PostOauthSigninLoginMfaBodyMethod(StrEnum):
     RECOVERY = "recovery"
     SMS = "sms"
     TOTP = "totp"

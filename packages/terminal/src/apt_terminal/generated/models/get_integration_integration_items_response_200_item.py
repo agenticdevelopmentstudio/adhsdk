@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -12,29 +14,29 @@ class GetIntegrationIntegrationItemsResponse200Item:
     Attributes:
         id (str):
         customer_id (str):
-        deleted_at (Union[None, str]):
+        deleted_at (None | str):
         ecosystem_id (str):
         connection_id (str):
         external_id (str):
         item_type (str):
         title (str):
-        body (Union[None, str]):
+        body (None | str):
         state (str):
         repo_full_name (str):
-        repo_url (Union[None, str]):
-        item_url (Union[None, str]):
-        number (Union[None, int]):
-        labels (Union[None, str]):
-        assignees (Union[None, str]):
+        repo_url (None | str):
+        item_url (None | str):
+        number (int | None):
+        labels (None | str):
+        assignees (None | str):
         is_read (bool):
-        notification_reason (Union[None, str]):
+        notification_reason (None | str):
         is_deleted (bool):
-        external_created_at (Union[None, str]):
-        external_updated_at (Union[None, str]):
+        external_created_at (None | str):
+        external_updated_at (None | str):
         created_at (str):
         updated_at (str):
         sync_version (int):
-        sync_stamped_at (Union[None, str]):
+        sync_stamped_at (None | str):
         sync_txid (int):
     """
 
@@ -51,7 +53,7 @@ class GetIntegrationIntegrationItemsResponse200Item:
     repo_full_name: str
     repo_url: None | str
     item_url: None | str
-    number: None | int
+    number: int | None
     labels: None | str
     assignees: None | str
     is_read: bool
@@ -96,7 +98,7 @@ class GetIntegrationIntegrationItemsResponse200Item:
         item_url: None | str
         item_url = self.item_url
 
-        number: None | int
+        number: int | None
         number = self.number
 
         labels: None | str
@@ -213,10 +215,10 @@ class GetIntegrationIntegrationItemsResponse200Item:
 
         item_url = _parse_item_url(d.pop("itemUrl"))
 
-        def _parse_number(data: object) -> None | int:
+        def _parse_number(data: object) -> int | None:
             if data is None:
                 return data
-            return cast(None | int, data)
+            return cast(int | None, data)
 
         number = _parse_number(d.pop("number"))
 

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -30,8 +32,8 @@ class TriageHit:
             single project to read it off. The board's item NOUN is deliberately absent: a queue mixing recipes and stories
             has no single word for what it holds.
         created_at (str): when it arrived; the queue is ordered by this, oldest first
-        item_number (Union[Unset, int]):
-        created_by (Union[None, Unset, str]):
+        item_number (int | Unset):
+        created_by (None | str | Unset):
     """
 
     id: str
@@ -44,8 +46,8 @@ class TriageHit:
     priority: int
     priority_scale: TriageHitPriorityScale
     created_at: str
-    item_number: Unset | int = UNSET
-    created_by: None | Unset | str = UNSET
+    item_number: int | Unset = UNSET
+    created_by: None | str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -71,7 +73,7 @@ class TriageHit:
 
         item_number = self.item_number
 
-        created_by: None | Unset | str
+        created_by: None | str | Unset
         if isinstance(self.created_by, Unset):
             created_by = UNSET
         else:
@@ -125,12 +127,12 @@ class TriageHit:
 
         item_number = d.pop("itemNumber", UNSET)
 
-        def _parse_created_by(data: object) -> None | Unset | str:
+        def _parse_created_by(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         created_by = _parse_created_by(d.pop("createdBy", UNSET))
 

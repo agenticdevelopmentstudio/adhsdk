@@ -1,5 +1,6 @@
 from http import HTTPStatus
 from typing import Any
+from urllib.parse import quote
 
 import httpx
 
@@ -13,7 +14,7 @@ from ...types import UNSET, Response, Unset
 def _get_kwargs(
     stat_key: str,
     *,
-    league: Unset | int = 0,
+    league: int | Unset = 0,
 ) -> dict[str, Any]:
     params: dict[str, Any] = {}
 
@@ -23,7 +24,9 @@ def _get_kwargs(
 
     _kwargs: dict[str, Any] = {
         "method": "get",
-        "url": f"/public/boards/{stat_key}/leagues",
+        "url": "/public/boards/{stat_key}/leagues".format(
+            stat_key=quote(str(stat_key), safe=""),
+        ),
         "params": params,
     }
 
@@ -69,20 +72,20 @@ def sync_detailed(
     stat_key: str,
     *,
     client: AuthenticatedClient | Client,
-    league: Unset | int = 0,
+    league: int | Unset = 0,
 ) -> Response[Error | GamificationLeague]:
     """Public hub league cohort of the current season board (surface-gated)
 
     Args:
         stat_key (str):
-        league (Union[Unset, int]):  Default: 0.
+        league (int | Unset):  Default: 0.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, GamificationLeague]]
+        Response[Error | GamificationLeague]
     """
 
     kwargs = _get_kwargs(
@@ -101,20 +104,20 @@ def sync(
     stat_key: str,
     *,
     client: AuthenticatedClient | Client,
-    league: Unset | int = 0,
+    league: int | Unset = 0,
 ) -> Error | GamificationLeague | None:
     """Public hub league cohort of the current season board (surface-gated)
 
     Args:
         stat_key (str):
-        league (Union[Unset, int]):  Default: 0.
+        league (int | Unset):  Default: 0.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, GamificationLeague]
+        Error | GamificationLeague
     """
 
     return sync_detailed(
@@ -128,20 +131,20 @@ async def asyncio_detailed(
     stat_key: str,
     *,
     client: AuthenticatedClient | Client,
-    league: Unset | int = 0,
+    league: int | Unset = 0,
 ) -> Response[Error | GamificationLeague]:
     """Public hub league cohort of the current season board (surface-gated)
 
     Args:
         stat_key (str):
-        league (Union[Unset, int]):  Default: 0.
+        league (int | Unset):  Default: 0.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, GamificationLeague]]
+        Response[Error | GamificationLeague]
     """
 
     kwargs = _get_kwargs(
@@ -158,20 +161,20 @@ async def asyncio(
     stat_key: str,
     *,
     client: AuthenticatedClient | Client,
-    league: Unset | int = 0,
+    league: int | Unset = 0,
 ) -> Error | GamificationLeague | None:
     """Public hub league cohort of the current season board (surface-gated)
 
     Args:
         stat_key (str):
-        league (Union[Unset, int]):  Default: 0.
+        league (int | Unset):  Default: 0.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, GamificationLeague]
+        Error | GamificationLeague
     """
 
     return (

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import TYPE_CHECKING, Any, TypeVar, cast
 
@@ -23,7 +25,7 @@ class OrgSheet:
         slug (str):
         skin (str):
         level (int):
-        level_title (Union[None, str]):
+        level_title (None | str):
         xp (int):
         xp_into_level (int):
         xp_for_next (int):
@@ -42,7 +44,7 @@ class OrgSheet:
     xp_into_level: int
     xp_for_next: int
     member_count: int
-    stats: "OrgSheetStats"
+    stats: OrgSheetStats
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:

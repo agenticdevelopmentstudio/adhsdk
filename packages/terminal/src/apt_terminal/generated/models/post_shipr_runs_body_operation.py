@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class PostShiprRunsBodyOperation(str, Enum):
+class PostShiprRunsBodyOperation(StrEnum):
     DEPLOY = "deploy"
     PREPARE = "prepare"
     REGISTER = "register"

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -19,7 +21,7 @@ class ReservedIdentifier:
         reason (ReservedIdentifierReason): What is holding the name, and therefore what releasing it does: an in-window
             rename alias and an orphaned mapping are deleted; a deleted entity is RENAMED to a placeholder and its subtree
             moves with it.
-        held_since (Union[None, str]): When the name got stuck: an alias's supersede instant, else the row's last write
+        held_since (None | str): When the name got stuck: an alias's supersede instant, else the row's last write
         releasable (bool): False for names this surface can only report — a revoked token slug (reserved by policy) and
             legacy reverse-domain handles. Releasing one answers 403.
     """

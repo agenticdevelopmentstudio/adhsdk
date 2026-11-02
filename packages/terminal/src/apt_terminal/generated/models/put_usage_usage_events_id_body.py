@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -12,33 +14,33 @@ T = TypeVar("T", bound="PutUsageUsageEventsIdBody")
 class PutUsageUsageEventsIdBody:
     """
     Attributes:
-        scope (Union[Unset, str]):
-        principal_id (Union[Unset, str]):
-        ecosystem_id (Union[None, Unset, str]):
-        route (Union[Unset, str]):
-        method (Union[Unset, str]):
-        status (Union[Unset, int]):
-        request_bytes (Union[Unset, int]):
-        response_bytes (Union[Unset, int]):
-        occurred_at (Union[Unset, str]):
+        scope (str | Unset):
+        principal_id (str | Unset):
+        ecosystem_id (None | str | Unset):
+        route (str | Unset):
+        method (str | Unset):
+        status (int | Unset):
+        request_bytes (int | Unset):
+        response_bytes (int | Unset):
+        occurred_at (str | Unset):
     """
 
-    scope: Unset | str = UNSET
-    principal_id: Unset | str = UNSET
-    ecosystem_id: None | Unset | str = UNSET
-    route: Unset | str = UNSET
-    method: Unset | str = UNSET
-    status: Unset | int = UNSET
-    request_bytes: Unset | int = UNSET
-    response_bytes: Unset | int = UNSET
-    occurred_at: Unset | str = UNSET
+    scope: str | Unset = UNSET
+    principal_id: str | Unset = UNSET
+    ecosystem_id: None | str | Unset = UNSET
+    route: str | Unset = UNSET
+    method: str | Unset = UNSET
+    status: int | Unset = UNSET
+    request_bytes: int | Unset = UNSET
+    response_bytes: int | Unset = UNSET
+    occurred_at: str | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
         scope = self.scope
 
         principal_id = self.principal_id
 
-        ecosystem_id: None | Unset | str
+        ecosystem_id: None | str | Unset
         if isinstance(self.ecosystem_id, Unset):
             ecosystem_id = UNSET
         else:
@@ -87,12 +89,12 @@ class PutUsageUsageEventsIdBody:
 
         principal_id = d.pop("principalId", UNSET)
 
-        def _parse_ecosystem_id(data: object) -> None | Unset | str:
+        def _parse_ecosystem_id(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         ecosystem_id = _parse_ecosystem_id(d.pop("ecosystemId", UNSET))
 

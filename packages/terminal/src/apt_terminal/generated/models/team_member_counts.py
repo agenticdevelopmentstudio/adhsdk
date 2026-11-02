@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import TYPE_CHECKING, Any, TypeVar
 
@@ -15,10 +17,10 @@ T = TypeVar("T", bound="TeamMemberCounts")
 class TeamMemberCounts:
     """
     Attributes:
-        counts (list['TeamMemberCountsCountsItem']):
+        counts (list[TeamMemberCountsCountsItem]):
     """
 
-    counts: list["TeamMemberCountsCountsItem"]
+    counts: list[TeamMemberCountsCountsItem]
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -39,7 +41,9 @@ class TeamMemberCounts:
 
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
-        from ..models.team_member_counts_counts_item import TeamMemberCountsCountsItem
+        from ..models.team_member_counts_counts_item import (
+            TeamMemberCountsCountsItem,
+        )
 
         d = dict(src_dict)
         counts = []

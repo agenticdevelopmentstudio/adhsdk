@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, TypeVar, Union, cast
+from typing import TYPE_CHECKING, Any, TypeVar, cast
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -22,18 +24,17 @@ class PostShiprRunsBody:
     Attributes:
         operation (PostShiprRunsBodyOperation):
         scope_kind (PostShiprRunsBodyScopeKind):
-        scope_id (Union[None, Unset, str]): The mirror, dev repo or folder id. Null (or absent) for scopeKind=all.
-        environments (Union[Unset, list[PostShiprRunsBodyEnvironmentsItem]]): Which environments a deploy walks, in
-            pipeline order. Ignored by every other operation; required (non-empty) by deploy.
-        options (Union[Unset, PostShiprRunsBodyOptions]): Per-operation arguments. Read defensively; unknown keys are
-            ignored.
+        scope_id (None | str | Unset): The mirror, dev repo or folder id. Null (or absent) for scopeKind=all.
+        environments (list[PostShiprRunsBodyEnvironmentsItem] | Unset): Which environments a deploy walks, in pipeline
+            order. Ignored by every other operation; required (non-empty) by deploy.
+        options (PostShiprRunsBodyOptions | Unset): Per-operation arguments. Read defensively; unknown keys are ignored.
     """
 
     operation: PostShiprRunsBodyOperation
     scope_kind: PostShiprRunsBodyScopeKind
-    scope_id: None | Unset | str = UNSET
-    environments: Unset | list[PostShiprRunsBodyEnvironmentsItem] = UNSET
-    options: Union[Unset, "PostShiprRunsBodyOptions"] = UNSET
+    scope_id: None | str | Unset = UNSET
+    environments: list[PostShiprRunsBodyEnvironmentsItem] | Unset = UNSET
+    options: PostShiprRunsBodyOptions | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -41,20 +42,20 @@ class PostShiprRunsBody:
 
         scope_kind = self.scope_kind.value
 
-        scope_id: None | Unset | str
+        scope_id: None | str | Unset
         if isinstance(self.scope_id, Unset):
             scope_id = UNSET
         else:
             scope_id = self.scope_id
 
-        environments: Unset | list[str] = UNSET
+        environments: list[str] | Unset = UNSET
         if not isinstance(self.environments, Unset):
             environments = []
             for environments_item_data in self.environments:
                 environments_item = environments_item_data.value
                 environments.append(environments_item)
 
-        options: Unset | dict[str, Any] = UNSET
+        options: dict[str, Any] | Unset = UNSET
         if not isinstance(self.options, Unset):
             options = self.options.to_dict()
 
@@ -84,24 +85,26 @@ class PostShiprRunsBody:
 
         scope_kind = PostShiprRunsBodyScopeKind(d.pop("scopeKind"))
 
-        def _parse_scope_id(data: object) -> None | Unset | str:
+        def _parse_scope_id(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         scope_id = _parse_scope_id(d.pop("scopeId", UNSET))
 
-        environments = []
         _environments = d.pop("environments", UNSET)
-        for environments_item_data in _environments or []:
-            environments_item = PostShiprRunsBodyEnvironmentsItem(environments_item_data)
+        environments: list[PostShiprRunsBodyEnvironmentsItem] | Unset = UNSET
+        if _environments is not UNSET:
+            environments = []
+            for environments_item_data in _environments:
+                environments_item = PostShiprRunsBodyEnvironmentsItem(environments_item_data)
 
-            environments.append(environments_item)
+                environments.append(environments_item)
 
         _options = d.pop("options", UNSET)
-        options: Unset | PostShiprRunsBodyOptions
+        options: PostShiprRunsBodyOptions | Unset
         if isinstance(_options, Unset):
             options = UNSET
         else:

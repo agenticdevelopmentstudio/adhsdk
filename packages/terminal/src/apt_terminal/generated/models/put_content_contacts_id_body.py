@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -12,28 +14,28 @@ T = TypeVar("T", bound="PutContentContactsIdBody")
 class PutContentContactsIdBody:
     """
     Attributes:
-        ecosystem_id (Union[Unset, str]):
-        owner_kind (Union[Unset, str]):
-        owner_id (Union[Unset, str]):
-        person_user_id (Union[None, Unset, str]):
-        full_name (Union[Unset, str]):
-        nickname (Union[Unset, str]):
-        email (Union[Unset, str]):
-        phone (Union[Unset, str]):
-        notes (Union[Unset, str]):
-        sync_txid (Union[Unset, int]):
+        ecosystem_id (str | Unset):
+        owner_kind (str | Unset):
+        owner_id (str | Unset):
+        person_user_id (None | str | Unset):
+        full_name (str | Unset):
+        nickname (str | Unset):
+        email (str | Unset):
+        phone (str | Unset):
+        notes (str | Unset):
+        sync_txid (int | Unset):
     """
 
-    ecosystem_id: Unset | str = UNSET
-    owner_kind: Unset | str = UNSET
-    owner_id: Unset | str = UNSET
-    person_user_id: None | Unset | str = UNSET
-    full_name: Unset | str = UNSET
-    nickname: Unset | str = UNSET
-    email: Unset | str = UNSET
-    phone: Unset | str = UNSET
-    notes: Unset | str = UNSET
-    sync_txid: Unset | int = UNSET
+    ecosystem_id: str | Unset = UNSET
+    owner_kind: str | Unset = UNSET
+    owner_id: str | Unset = UNSET
+    person_user_id: None | str | Unset = UNSET
+    full_name: str | Unset = UNSET
+    nickname: str | Unset = UNSET
+    email: str | Unset = UNSET
+    phone: str | Unset = UNSET
+    notes: str | Unset = UNSET
+    sync_txid: int | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
         ecosystem_id = self.ecosystem_id
@@ -42,7 +44,7 @@ class PutContentContactsIdBody:
 
         owner_id = self.owner_id
 
-        person_user_id: None | Unset | str
+        person_user_id: None | str | Unset
         if isinstance(self.person_user_id, Unset):
             person_user_id = UNSET
         else:
@@ -95,12 +97,12 @@ class PutContentContactsIdBody:
 
         owner_id = d.pop("ownerId", UNSET)
 
-        def _parse_person_user_id(data: object) -> None | Unset | str:
+        def _parse_person_user_id(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         person_user_id = _parse_person_user_id(d.pop("personUserId", UNSET))
 

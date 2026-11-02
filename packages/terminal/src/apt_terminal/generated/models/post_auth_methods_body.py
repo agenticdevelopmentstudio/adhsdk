@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar
 
@@ -14,11 +16,11 @@ class PostAuthMethodsBody:
     """
     Attributes:
         method (str):
-        enabled (Union[Unset, bool]):  Default: True.
+        enabled (bool | Unset):  Default: True.
     """
 
     method: str
-    enabled: Unset | bool = True
+    enabled: bool | Unset = True
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:

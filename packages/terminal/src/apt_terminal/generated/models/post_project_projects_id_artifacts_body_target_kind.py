@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class PostProjectProjectsIdArtifactsBodyTargetKind(str, Enum):
+class PostProjectProjectsIdArtifactsBodyTargetKind(StrEnum):
     CONTENT_MARKDOWN = "content.markdown"
     CONTENT_URLS = "content.urls"
 

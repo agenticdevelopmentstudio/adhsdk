@@ -8,12 +8,12 @@ from ...client import AuthenticatedClient, Client
 from ...models.access_role_envelope import AccessRoleEnvelope
 from ...models.error import Error
 from ...models.post_access_roles_body import PostAccessRolesBody
-from ...types import UNSET, Response
+from ...types import UNSET, Response, Unset
 
 
 def _get_kwargs(
     *,
-    body: PostAccessRolesBody,
+    body: PostAccessRolesBody | Unset = UNSET,
     workspace: str,
 ) -> dict[str, Any]:
     headers: dict[str, Any] = {}
@@ -30,7 +30,8 @@ def _get_kwargs(
         "params": params,
     }
 
-    _kwargs["json"] = body.to_dict()
+    if not isinstance(body, Unset):
+        _kwargs["json"] = body.to_dict()
 
     headers["Content-Type"] = "application/json"
 
@@ -91,21 +92,21 @@ def _build_response(
 def sync_detailed(
     *,
     client: AuthenticatedClient,
-    body: PostAccessRolesBody,
+    body: PostAccessRolesBody | Unset = UNSET,
     workspace: str,
 ) -> Response[AccessRoleEnvelope | Error]:
     """Create a custom role (workspace admins; ≤20 live custom roles)
 
     Args:
         workspace (str):
-        body (PostAccessRolesBody):
+        body (PostAccessRolesBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[AccessRoleEnvelope, Error]]
+        Response[AccessRoleEnvelope | Error]
     """
 
     kwargs = _get_kwargs(
@@ -123,21 +124,21 @@ def sync_detailed(
 def sync(
     *,
     client: AuthenticatedClient,
-    body: PostAccessRolesBody,
+    body: PostAccessRolesBody | Unset = UNSET,
     workspace: str,
 ) -> AccessRoleEnvelope | Error | None:
     """Create a custom role (workspace admins; ≤20 live custom roles)
 
     Args:
         workspace (str):
-        body (PostAccessRolesBody):
+        body (PostAccessRolesBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[AccessRoleEnvelope, Error]
+        AccessRoleEnvelope | Error
     """
 
     return sync_detailed(
@@ -150,21 +151,21 @@ def sync(
 async def asyncio_detailed(
     *,
     client: AuthenticatedClient,
-    body: PostAccessRolesBody,
+    body: PostAccessRolesBody | Unset = UNSET,
     workspace: str,
 ) -> Response[AccessRoleEnvelope | Error]:
     """Create a custom role (workspace admins; ≤20 live custom roles)
 
     Args:
         workspace (str):
-        body (PostAccessRolesBody):
+        body (PostAccessRolesBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[AccessRoleEnvelope, Error]]
+        Response[AccessRoleEnvelope | Error]
     """
 
     kwargs = _get_kwargs(
@@ -180,21 +181,21 @@ async def asyncio_detailed(
 async def asyncio(
     *,
     client: AuthenticatedClient,
-    body: PostAccessRolesBody,
+    body: PostAccessRolesBody | Unset = UNSET,
     workspace: str,
 ) -> AccessRoleEnvelope | Error | None:
     """Create a custom role (workspace admins; ≤20 live custom roles)
 
     Args:
         workspace (str):
-        body (PostAccessRolesBody):
+        body (PostAccessRolesBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[AccessRoleEnvelope, Error]
+        AccessRoleEnvelope | Error
     """
 
     return (

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar
 
@@ -16,20 +18,20 @@ class PostGameMappingsBody:
         from_id (str):
         kind (str):
         to_id (str):
-        ecosystem_id (Union[Unset, str]):
-        amount (Union[Unset, int]):
-        sort_order (Union[Unset, int]):
-        sync_txid (Union[Unset, int]):
+        ecosystem_id (str | Unset):
+        amount (int | Unset):
+        sort_order (int | Unset):
+        sync_txid (int | Unset):
     """
 
     game_id: str
     from_id: str
     kind: str
     to_id: str
-    ecosystem_id: Unset | str = UNSET
-    amount: Unset | int = UNSET
-    sort_order: Unset | int = UNSET
-    sync_txid: Unset | int = UNSET
+    ecosystem_id: str | Unset = UNSET
+    amount: int | Unset = UNSET
+    sort_order: int | Unset = UNSET
+    sync_txid: int | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
         game_id = self.game_id

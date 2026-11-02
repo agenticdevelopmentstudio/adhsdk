@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, TypeVar, Union
+from typing import TYPE_CHECKING, Any, TypeVar
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -21,16 +23,16 @@ class PostProjectTemplatesBody:
     Attributes:
         kind (PostProjectTemplatesBodyKind):
         name (str): unique among the workspace’s live templates OF THIS KIND (409 otherwise)
-        body (Union['ProjectTemplateBody', 'WorkItemTemplateBody']): must match `kind` (400 otherwise), and must
-            serialize to at most 16384 bytes. Validated STRICTLY — unlike a saved view’s opaque `config`, every key here
-            BECOMES something, so an unrecognized one is refused rather than silently dropped.
-        description (Union[Unset, str]):
+        body (ProjectTemplateBody | WorkItemTemplateBody): must match `kind` (400 otherwise), and must serialize to at
+            most 16384 bytes. Validated STRICTLY — unlike a saved view’s opaque `config`, every key here BECOMES something,
+            so an unrecognized one is refused rather than silently dropped.
+        description (str | Unset):
     """
 
     kind: PostProjectTemplatesBodyKind
     name: str
-    body: Union["ProjectTemplateBody", "WorkItemTemplateBody"]
-    description: Unset | str = UNSET
+    body: ProjectTemplateBody | WorkItemTemplateBody
+    description: str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -72,14 +74,14 @@ class PostProjectTemplatesBody:
 
         name = d.pop("name")
 
-        def _parse_body(data: object) -> Union["ProjectTemplateBody", "WorkItemTemplateBody"]:
+        def _parse_body(data: object) -> ProjectTemplateBody | WorkItemTemplateBody:
             try:
                 if not isinstance(data, dict):
                     raise TypeError()
                 body_type_0 = WorkItemTemplateBody.from_dict(data)
 
                 return body_type_0
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
             if not isinstance(data, dict):
                 raise TypeError()

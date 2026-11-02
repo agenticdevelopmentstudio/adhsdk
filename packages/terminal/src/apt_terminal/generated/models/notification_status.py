@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class NotificationStatus(str, Enum):
+class NotificationStatus(StrEnum):
     ARCHIVED = "archived"
     INBOX = "inbox"
     TRASHED = "trashed"

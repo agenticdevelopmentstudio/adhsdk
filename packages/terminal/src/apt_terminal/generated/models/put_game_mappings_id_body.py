@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar
 
@@ -12,24 +14,24 @@ T = TypeVar("T", bound="PutGameMappingsIdBody")
 class PutGameMappingsIdBody:
     """
     Attributes:
-        ecosystem_id (Union[Unset, str]):
-        game_id (Union[Unset, str]):
-        from_id (Union[Unset, str]):
-        kind (Union[Unset, str]):
-        to_id (Union[Unset, str]):
-        amount (Union[Unset, int]):
-        sort_order (Union[Unset, int]):
-        sync_txid (Union[Unset, int]):
+        ecosystem_id (str | Unset):
+        game_id (str | Unset):
+        from_id (str | Unset):
+        kind (str | Unset):
+        to_id (str | Unset):
+        amount (int | Unset):
+        sort_order (int | Unset):
+        sync_txid (int | Unset):
     """
 
-    ecosystem_id: Unset | str = UNSET
-    game_id: Unset | str = UNSET
-    from_id: Unset | str = UNSET
-    kind: Unset | str = UNSET
-    to_id: Unset | str = UNSET
-    amount: Unset | int = UNSET
-    sort_order: Unset | int = UNSET
-    sync_txid: Unset | int = UNSET
+    ecosystem_id: str | Unset = UNSET
+    game_id: str | Unset = UNSET
+    from_id: str | Unset = UNSET
+    kind: str | Unset = UNSET
+    to_id: str | Unset = UNSET
+    amount: int | Unset = UNSET
+    sort_order: int | Unset = UNSET
+    sync_txid: int | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
         ecosystem_id = self.ecosystem_id

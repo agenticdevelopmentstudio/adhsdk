@@ -1,5 +1,6 @@
 from http import HTTPStatus
 from typing import Any
+from urllib.parse import quote
 
 import httpx
 
@@ -10,23 +11,27 @@ from ...models.patch_project_projects_id_status_updates_update_id_body import (
     PatchProjectProjectsIdStatusUpdatesUpdateIdBody,
 )
 from ...models.project_status_update import ProjectStatusUpdate
-from ...types import Response
+from ...types import UNSET, Response, Unset
 
 
 def _get_kwargs(
     id: str,
     update_id: str,
     *,
-    body: PatchProjectProjectsIdStatusUpdatesUpdateIdBody,
+    body: PatchProjectProjectsIdStatusUpdatesUpdateIdBody | Unset = UNSET,
 ) -> dict[str, Any]:
     headers: dict[str, Any] = {}
 
     _kwargs: dict[str, Any] = {
         "method": "patch",
-        "url": f"/project/projects/{id}/status-updates/{update_id}",
+        "url": "/project/projects/{id}/status-updates/{update_id}".format(
+            id=quote(str(id), safe=""),
+            update_id=quote(str(update_id), safe=""),
+        ),
     }
 
-    _kwargs["json"] = body.to_dict()
+    if not isinstance(body, Unset):
+        _kwargs["json"] = body.to_dict()
 
     headers["Content-Type"] = "application/json"
 
@@ -84,7 +89,7 @@ def sync_detailed(
     update_id: str,
     *,
     client: AuthenticatedClient,
-    body: PatchProjectProjectsIdStatusUpdatesUpdateIdBody,
+    body: PatchProjectProjectsIdStatusUpdatesUpdateIdBody | Unset = UNSET,
 ) -> Response[Error | ProjectStatusUpdate]:
     """Revise a status update — AUTHOR ONLY (+ a status_update.edited activity)
 
@@ -98,16 +103,16 @@ def sync_detailed(
     Args:
         id (str):
         update_id (str):
-        body (PatchProjectProjectsIdStatusUpdatesUpdateIdBody): At least one field is required (a
-            no-op patch is a 400). AUTHOR ONLY — 403 for anyone else, whatever verbs they hold on the
-            project, because a status update carries the reporter’s name.
+        body (PatchProjectProjectsIdStatusUpdatesUpdateIdBody | Unset): At least one field is
+            required (a no-op patch is a 400). AUTHOR ONLY — 403 for anyone else, whatever verbs they
+            hold on the project, because a status update carries the reporter’s name.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, ProjectStatusUpdate]]
+        Response[Error | ProjectStatusUpdate]
     """
 
     kwargs = _get_kwargs(
@@ -128,7 +133,7 @@ def sync(
     update_id: str,
     *,
     client: AuthenticatedClient,
-    body: PatchProjectProjectsIdStatusUpdatesUpdateIdBody,
+    body: PatchProjectProjectsIdStatusUpdatesUpdateIdBody | Unset = UNSET,
 ) -> Error | ProjectStatusUpdate | None:
     """Revise a status update — AUTHOR ONLY (+ a status_update.edited activity)
 
@@ -142,16 +147,16 @@ def sync(
     Args:
         id (str):
         update_id (str):
-        body (PatchProjectProjectsIdStatusUpdatesUpdateIdBody): At least one field is required (a
-            no-op patch is a 400). AUTHOR ONLY — 403 for anyone else, whatever verbs they hold on the
-            project, because a status update carries the reporter’s name.
+        body (PatchProjectProjectsIdStatusUpdatesUpdateIdBody | Unset): At least one field is
+            required (a no-op patch is a 400). AUTHOR ONLY — 403 for anyone else, whatever verbs they
+            hold on the project, because a status update carries the reporter’s name.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, ProjectStatusUpdate]
+        Error | ProjectStatusUpdate
     """
 
     return sync_detailed(
@@ -167,7 +172,7 @@ async def asyncio_detailed(
     update_id: str,
     *,
     client: AuthenticatedClient,
-    body: PatchProjectProjectsIdStatusUpdatesUpdateIdBody,
+    body: PatchProjectProjectsIdStatusUpdatesUpdateIdBody | Unset = UNSET,
 ) -> Response[Error | ProjectStatusUpdate]:
     """Revise a status update — AUTHOR ONLY (+ a status_update.edited activity)
 
@@ -181,16 +186,16 @@ async def asyncio_detailed(
     Args:
         id (str):
         update_id (str):
-        body (PatchProjectProjectsIdStatusUpdatesUpdateIdBody): At least one field is required (a
-            no-op patch is a 400). AUTHOR ONLY — 403 for anyone else, whatever verbs they hold on the
-            project, because a status update carries the reporter’s name.
+        body (PatchProjectProjectsIdStatusUpdatesUpdateIdBody | Unset): At least one field is
+            required (a no-op patch is a 400). AUTHOR ONLY — 403 for anyone else, whatever verbs they
+            hold on the project, because a status update carries the reporter’s name.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, ProjectStatusUpdate]]
+        Response[Error | ProjectStatusUpdate]
     """
 
     kwargs = _get_kwargs(
@@ -209,7 +214,7 @@ async def asyncio(
     update_id: str,
     *,
     client: AuthenticatedClient,
-    body: PatchProjectProjectsIdStatusUpdatesUpdateIdBody,
+    body: PatchProjectProjectsIdStatusUpdatesUpdateIdBody | Unset = UNSET,
 ) -> Error | ProjectStatusUpdate | None:
     """Revise a status update — AUTHOR ONLY (+ a status_update.edited activity)
 
@@ -223,16 +228,16 @@ async def asyncio(
     Args:
         id (str):
         update_id (str):
-        body (PatchProjectProjectsIdStatusUpdatesUpdateIdBody): At least one field is required (a
-            no-op patch is a 400). AUTHOR ONLY — 403 for anyone else, whatever verbs they hold on the
-            project, because a status update carries the reporter’s name.
+        body (PatchProjectProjectsIdStatusUpdatesUpdateIdBody | Unset): At least one field is
+            required (a no-op patch is a 400). AUTHOR ONLY — 403 for anyone else, whatever verbs they
+            hold on the project, because a status update carries the reporter’s name.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, ProjectStatusUpdate]
+        Error | ProjectStatusUpdate
     """
 
     return (

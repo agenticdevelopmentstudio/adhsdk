@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import TYPE_CHECKING, Any, TypeVar
 
@@ -26,19 +28,19 @@ class PersonaBootstrap:
             persona (PersonaBootstrapPersona):
             prompt (PersonaBootstrapPrompt):
             auth (PersonaBootstrapAuth): What the presented token is. A `visitor` token is the anonymous, read-shaped class.
-            buckets (list['PersonaBootstrapBucket']):
+            buckets (list[PersonaBootstrapBucket]):
             memory (PersonaBootstrapMemory): Both false for a visitor token.
-            tools (list['PersonaBootstrapTool']):
+            tools (list[PersonaBootstrapTool]):
             chat (PersonaBootstrapChat):
     """
 
-    persona: "PersonaBootstrapPersona"
-    prompt: "PersonaBootstrapPrompt"
-    auth: "PersonaBootstrapAuth"
-    buckets: list["PersonaBootstrapBucket"]
-    memory: "PersonaBootstrapMemory"
-    tools: list["PersonaBootstrapTool"]
-    chat: "PersonaBootstrapChat"
+    persona: PersonaBootstrapPersona
+    prompt: PersonaBootstrapPrompt
+    auth: PersonaBootstrapAuth
+    buckets: list[PersonaBootstrapBucket]
+    memory: PersonaBootstrapMemory
+    tools: list[PersonaBootstrapTool]
+    chat: PersonaBootstrapChat
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:

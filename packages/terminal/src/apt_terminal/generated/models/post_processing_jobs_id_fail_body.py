@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar
 
@@ -15,12 +17,12 @@ class PostProcessingJobsIdFailBody:
     Attributes:
         lease_token (str): Opaque lease token returned by /claim
         error (str): Human-readable error stored as last_error
-        retry (Union[Unset, bool]): Re-queue if attempts remain (default true)
+        retry (bool | Unset): Re-queue if attempts remain (default true)
     """
 
     lease_token: str
     error: str
-    retry: Unset | bool = UNSET
+    retry: bool | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:

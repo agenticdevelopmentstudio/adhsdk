@@ -1,5 +1,6 @@
 from http import HTTPStatus
 from typing import Any
+from urllib.parse import quote
 
 import httpx
 
@@ -8,22 +9,25 @@ from ...client import AuthenticatedClient, Client
 from ...models.error import Error
 from ...models.patch_registry_registries_id_body import PatchRegistryRegistriesIdBody
 from ...models.registry import Registry
-from ...types import Response
+from ...types import UNSET, Response, Unset
 
 
 def _get_kwargs(
     id: str,
     *,
-    body: PatchRegistryRegistriesIdBody,
+    body: PatchRegistryRegistriesIdBody | Unset = UNSET,
 ) -> dict[str, Any]:
     headers: dict[str, Any] = {}
 
     _kwargs: dict[str, Any] = {
         "method": "patch",
-        "url": f"/registry/registries/{id}",
+        "url": "/registry/registries/{id}".format(
+            id=quote(str(id), safe=""),
+        ),
     }
 
-    _kwargs["json"] = body.to_dict()
+    if not isinstance(body, Unset):
+        _kwargs["json"] = body.to_dict()
 
     headers["Content-Type"] = "application/json"
 
@@ -80,20 +84,20 @@ def sync_detailed(
     id: str,
     *,
     client: AuthenticatedClient,
-    body: PatchRegistryRegistriesIdBody,
+    body: PatchRegistryRegistriesIdBody | Unset = UNSET,
 ) -> Response[Error | Registry]:
     """Update a registry
 
     Args:
         id (str):
-        body (PatchRegistryRegistriesIdBody):
+        body (PatchRegistryRegistriesIdBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, Registry]]
+        Response[Error | Registry]
     """
 
     kwargs = _get_kwargs(
@@ -112,20 +116,20 @@ def sync(
     id: str,
     *,
     client: AuthenticatedClient,
-    body: PatchRegistryRegistriesIdBody,
+    body: PatchRegistryRegistriesIdBody | Unset = UNSET,
 ) -> Error | Registry | None:
     """Update a registry
 
     Args:
         id (str):
-        body (PatchRegistryRegistriesIdBody):
+        body (PatchRegistryRegistriesIdBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, Registry]
+        Error | Registry
     """
 
     return sync_detailed(
@@ -139,20 +143,20 @@ async def asyncio_detailed(
     id: str,
     *,
     client: AuthenticatedClient,
-    body: PatchRegistryRegistriesIdBody,
+    body: PatchRegistryRegistriesIdBody | Unset = UNSET,
 ) -> Response[Error | Registry]:
     """Update a registry
 
     Args:
         id (str):
-        body (PatchRegistryRegistriesIdBody):
+        body (PatchRegistryRegistriesIdBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, Registry]]
+        Response[Error | Registry]
     """
 
     kwargs = _get_kwargs(
@@ -169,20 +173,20 @@ async def asyncio(
     id: str,
     *,
     client: AuthenticatedClient,
-    body: PatchRegistryRegistriesIdBody,
+    body: PatchRegistryRegistriesIdBody | Unset = UNSET,
 ) -> Error | Registry | None:
     """Update a registry
 
     Args:
         id (str):
-        body (PatchRegistryRegistriesIdBody):
+        body (PatchRegistryRegistriesIdBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, Registry]
+        Error | Registry
     """
 
     return (

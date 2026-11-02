@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -18,7 +20,7 @@ class PollVote:
         customer_id (str):
         option_id (str):
         created_at (str):
-        deleted_at (Union[None, Unset, str]):
+        deleted_at (None | str | Unset):
     """
 
     id: str
@@ -26,7 +28,7 @@ class PollVote:
     customer_id: str
     option_id: str
     created_at: str
-    deleted_at: None | Unset | str = UNSET
+    deleted_at: None | str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -40,7 +42,7 @@ class PollVote:
 
         created_at = self.created_at
 
-        deleted_at: None | Unset | str
+        deleted_at: None | str | Unset
         if isinstance(self.deleted_at, Unset):
             deleted_at = UNSET
         else:
@@ -75,12 +77,12 @@ class PollVote:
 
         created_at = d.pop("createdAt")
 
-        def _parse_deleted_at(data: object) -> None | Unset | str:
+        def _parse_deleted_at(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         deleted_at = _parse_deleted_at(d.pop("deletedAt", UNSET))
 

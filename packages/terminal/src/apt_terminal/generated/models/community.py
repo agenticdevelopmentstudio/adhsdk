@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, TypeVar, Union, cast
+from typing import TYPE_CHECKING, Any, TypeVar, cast
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -21,16 +23,16 @@ class Community:
         slug (str):
         name (str):
         is_public (bool):
-        description (Union[None, Unset, str]):
-        settings (Union['CommunitySettingsType0', None, Unset]): Opaque per-instance config bag.
+        description (None | str | Unset):
+        settings (CommunitySettingsType0 | None | Unset): Opaque per-instance config bag.
     """
 
     id: str
     slug: str
     name: str
     is_public: bool
-    description: None | Unset | str = UNSET
-    settings: Union["CommunitySettingsType0", None, Unset] = UNSET
+    description: None | str | Unset = UNSET
+    settings: CommunitySettingsType0 | None | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -44,13 +46,13 @@ class Community:
 
         is_public = self.is_public
 
-        description: None | Unset | str
+        description: None | str | Unset
         if isinstance(self.description, Unset):
             description = UNSET
         else:
             description = self.description
 
-        settings: None | Unset | dict[str, Any]
+        settings: dict[str, Any] | None | Unset
         if isinstance(self.settings, Unset):
             settings = UNSET
         elif isinstance(self.settings, CommunitySettingsType0):
@@ -88,16 +90,16 @@ class Community:
 
         is_public = d.pop("isPublic")
 
-        def _parse_description(data: object) -> None | Unset | str:
+        def _parse_description(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         description = _parse_description(d.pop("description", UNSET))
 
-        def _parse_settings(data: object) -> Union["CommunitySettingsType0", None, Unset]:
+        def _parse_settings(data: object) -> CommunitySettingsType0 | None | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
@@ -108,9 +110,9 @@ class Community:
                 settings_type_0 = CommunitySettingsType0.from_dict(data)
 
                 return settings_type_0
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
-            return cast(Union["CommunitySettingsType0", None, Unset], data)
+            return cast(CommunitySettingsType0 | None | Unset, data)
 
         settings = _parse_settings(d.pop("settings", UNSET))
 

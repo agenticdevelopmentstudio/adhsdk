@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar
 
@@ -14,12 +16,12 @@ class PatchEcosystemNamespacesIdBody:
     """At least one of name or slug is required.
 
     Attributes:
-        name (Union[Unset, str]):
-        slug (Union[Unset, str]):
+        name (str | Unset):
+        slug (str | Unset):
     """
 
-    name: Unset | str = UNSET
-    slug: Unset | str = UNSET
+    name: str | Unset = UNSET
+    slug: str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:

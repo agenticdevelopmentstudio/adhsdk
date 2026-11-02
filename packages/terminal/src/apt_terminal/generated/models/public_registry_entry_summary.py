@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -22,10 +24,10 @@ class PublicRegistryEntrySummary:
         keywords (list[str]):
         location_text (str):
         delivery_mode (PublicRegistryEntrySummaryDeliveryMode):
-        photo_attachment_id (Union[None, str]): An attachment id, not a URL — look it up in the response's `imageUrls`.
-            Null whenever no URL could be produced for THIS entry (no photo set, or one that is missing, unready, not owned
-            by this entry, or unpresignable — including a deployment with no object store), so an id that is present always
-            has a URL in the map. Render the card without a picture when it is null.
+        photo_attachment_id (None | str): An attachment id, not a URL — look it up in the response's `imageUrls`. Null
+            whenever no URL could be produced for THIS entry (no photo set, or one that is missing, unready, not owned by
+            this entry, or unpresignable — including a deployment with no object store), so an id that is present always has
+            a URL in the map. Render the card without a picture when it is null.
     """
 
     slug: str

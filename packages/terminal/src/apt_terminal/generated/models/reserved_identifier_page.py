@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import TYPE_CHECKING, Any, TypeVar
 
@@ -15,7 +17,7 @@ T = TypeVar("T", bound="ReservedIdentifierPage")
 class ReservedIdentifierPage:
     """
     Attributes:
-        items (list['ReservedIdentifier']):
+        items (list[ReservedIdentifier]):
         page (int):
         page_size (int): Clamped 1..200
         total (int): Saturates at a 2,000-row cap: the list merges heterogeneous sources and cannot be paged by a single
@@ -25,7 +27,7 @@ class ReservedIdentifierPage:
             not evidence that a name is free.
     """
 
-    items: list["ReservedIdentifier"]
+    items: list[ReservedIdentifier]
     page: int
     page_size: int
     total: int

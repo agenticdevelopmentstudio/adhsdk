@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class AppearanceSettingsPrefsColorMode(str, Enum):
+class AppearanceSettingsPrefsColorMode(StrEnum):
     AUTO = "auto"
     DARK = "dark"
     LIGHT = "light"

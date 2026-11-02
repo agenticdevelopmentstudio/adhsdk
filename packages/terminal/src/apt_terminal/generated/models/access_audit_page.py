@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import TYPE_CHECKING, Any, TypeVar
 
@@ -15,13 +17,13 @@ T = TypeVar("T", bound="AccessAuditPage")
 class AccessAuditPage:
     """
     Attributes:
-        items (list['AccessAuditEntry']):
+        items (list[AccessAuditEntry]):
         page (int):
         page_size (int): Clamped 1..200
         total (int): Saturates at a 10,000-row count cap
     """
 
-    items: list["AccessAuditEntry"]
+    items: list[AccessAuditEntry]
     page: int
     page_size: int
     total: int

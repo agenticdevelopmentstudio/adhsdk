@@ -1,5 +1,6 @@
 from http import HTTPStatus
 from typing import Any
+from urllib.parse import quote
 
 import httpx
 
@@ -14,8 +15,8 @@ from ...types import UNSET, Response, Unset
 def _get_kwargs(
     id: str,
     *,
-    body: PutContentSocialLinksIdBody,
-    workspace: Unset | str = UNSET,
+    body: PutContentSocialLinksIdBody | Unset = UNSET,
+    workspace: str | Unset = UNSET,
 ) -> dict[str, Any]:
     headers: dict[str, Any] = {}
 
@@ -27,11 +28,14 @@ def _get_kwargs(
 
     _kwargs: dict[str, Any] = {
         "method": "put",
-        "url": f"/content/social-links/{id}",
+        "url": "/content/social-links/{id}".format(
+            id=quote(str(id), safe=""),
+        ),
         "params": params,
     }
 
-    _kwargs["json"] = body.to_dict()
+    if not isinstance(body, Unset):
+        _kwargs["json"] = body.to_dict()
 
     headers["Content-Type"] = "application/json"
 
@@ -88,22 +92,22 @@ def sync_detailed(
     id: str,
     *,
     client: AuthenticatedClient,
-    body: PutContentSocialLinksIdBody,
-    workspace: Unset | str = UNSET,
+    body: PutContentSocialLinksIdBody | Unset = UNSET,
+    workspace: str | Unset = UNSET,
 ) -> Response[Error | PutContentSocialLinksIdResponse200]:
     """Update social_links
 
     Args:
         id (str):
-        workspace (Union[Unset, str]):
-        body (PutContentSocialLinksIdBody):
+        workspace (str | Unset):
+        body (PutContentSocialLinksIdBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, PutContentSocialLinksIdResponse200]]
+        Response[Error | PutContentSocialLinksIdResponse200]
     """
 
     kwargs = _get_kwargs(
@@ -123,22 +127,22 @@ def sync(
     id: str,
     *,
     client: AuthenticatedClient,
-    body: PutContentSocialLinksIdBody,
-    workspace: Unset | str = UNSET,
+    body: PutContentSocialLinksIdBody | Unset = UNSET,
+    workspace: str | Unset = UNSET,
 ) -> Error | PutContentSocialLinksIdResponse200 | None:
     """Update social_links
 
     Args:
         id (str):
-        workspace (Union[Unset, str]):
-        body (PutContentSocialLinksIdBody):
+        workspace (str | Unset):
+        body (PutContentSocialLinksIdBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, PutContentSocialLinksIdResponse200]
+        Error | PutContentSocialLinksIdResponse200
     """
 
     return sync_detailed(
@@ -153,22 +157,22 @@ async def asyncio_detailed(
     id: str,
     *,
     client: AuthenticatedClient,
-    body: PutContentSocialLinksIdBody,
-    workspace: Unset | str = UNSET,
+    body: PutContentSocialLinksIdBody | Unset = UNSET,
+    workspace: str | Unset = UNSET,
 ) -> Response[Error | PutContentSocialLinksIdResponse200]:
     """Update social_links
 
     Args:
         id (str):
-        workspace (Union[Unset, str]):
-        body (PutContentSocialLinksIdBody):
+        workspace (str | Unset):
+        body (PutContentSocialLinksIdBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, PutContentSocialLinksIdResponse200]]
+        Response[Error | PutContentSocialLinksIdResponse200]
     """
 
     kwargs = _get_kwargs(
@@ -186,22 +190,22 @@ async def asyncio(
     id: str,
     *,
     client: AuthenticatedClient,
-    body: PutContentSocialLinksIdBody,
-    workspace: Unset | str = UNSET,
+    body: PutContentSocialLinksIdBody | Unset = UNSET,
+    workspace: str | Unset = UNSET,
 ) -> Error | PutContentSocialLinksIdResponse200 | None:
     """Update social_links
 
     Args:
         id (str):
-        workspace (Union[Unset, str]):
-        body (PutContentSocialLinksIdBody):
+        workspace (str | Unset):
+        body (PutContentSocialLinksIdBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, PutContentSocialLinksIdResponse200]
+        Error | PutContentSocialLinksIdResponse200
     """
 
     return (

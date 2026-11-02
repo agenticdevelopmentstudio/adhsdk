@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -21,17 +23,17 @@ class Campaign:
         subject (str):
         html_body (str):
         text_body (str):
-        from_name (Union[None, str]):
+        from_name (None | str):
         status (CampaignStatus):
         recipient_count (int):
         sent_count (int):
         failed_count (int):
         created_at (str):
         updated_at (str):
-        created_by (Union[None, Unset, str]):
-        scheduled_at (Union[None, Unset, str]):
-        started_at (Union[None, Unset, str]):
-        completed_at (Union[None, Unset, str]):
+        created_by (None | str | Unset):
+        scheduled_at (None | str | Unset):
+        started_at (None | str | Unset):
+        completed_at (None | str | Unset):
     """
 
     id: str
@@ -48,10 +50,10 @@ class Campaign:
     failed_count: int
     created_at: str
     updated_at: str
-    created_by: None | Unset | str = UNSET
-    scheduled_at: None | Unset | str = UNSET
-    started_at: None | Unset | str = UNSET
-    completed_at: None | Unset | str = UNSET
+    created_by: None | str | Unset = UNSET
+    scheduled_at: None | str | Unset = UNSET
+    started_at: None | str | Unset = UNSET
+    completed_at: None | str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -84,25 +86,25 @@ class Campaign:
 
         updated_at = self.updated_at
 
-        created_by: None | Unset | str
+        created_by: None | str | Unset
         if isinstance(self.created_by, Unset):
             created_by = UNSET
         else:
             created_by = self.created_by
 
-        scheduled_at: None | Unset | str
+        scheduled_at: None | str | Unset
         if isinstance(self.scheduled_at, Unset):
             scheduled_at = UNSET
         else:
             scheduled_at = self.scheduled_at
 
-        started_at: None | Unset | str
+        started_at: None | str | Unset
         if isinstance(self.started_at, Unset):
             started_at = UNSET
         else:
             started_at = self.started_at
 
-        completed_at: None | Unset | str
+        completed_at: None | str | Unset
         if isinstance(self.completed_at, Unset):
             completed_at = UNSET
         else:
@@ -175,39 +177,39 @@ class Campaign:
 
         updated_at = d.pop("updatedAt")
 
-        def _parse_created_by(data: object) -> None | Unset | str:
+        def _parse_created_by(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         created_by = _parse_created_by(d.pop("createdBy", UNSET))
 
-        def _parse_scheduled_at(data: object) -> None | Unset | str:
+        def _parse_scheduled_at(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         scheduled_at = _parse_scheduled_at(d.pop("scheduledAt", UNSET))
 
-        def _parse_started_at(data: object) -> None | Unset | str:
+        def _parse_started_at(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         started_at = _parse_started_at(d.pop("startedAt", UNSET))
 
-        def _parse_completed_at(data: object) -> None | Unset | str:
+        def _parse_completed_at(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         completed_at = _parse_completed_at(d.pop("completedAt", UNSET))
 

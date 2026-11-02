@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, TypeVar, Union
+from typing import TYPE_CHECKING, Any, TypeVar
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -22,26 +24,26 @@ T = TypeVar("T", bound="PostCustomerTransferResponse200")
 class PostCustomerTransferResponse200:
     """
     Attributes:
-        user_id (Union[Unset, str]):
-        from_ (Union[Unset, str]):
-        to (Union[Unset, str]):
-        dry_run (Union[Unset, bool]):
-        moved (Union[Unset, PostCustomerTransferResponse200Moved]):
-        revoked (Union[Unset, int]): API tokens deleted
-        ecosystems_reparented (Union[Unset, int]):
-        rewritten (Union[Unset, int]): addresses re-derived by the cascade
-        conflicts (Union[Unset, list['PostCustomerTransferResponse200ConflictsItem']]):
+        user_id (str | Unset):
+        from_ (str | Unset):
+        to (str | Unset):
+        dry_run (bool | Unset):
+        moved (PostCustomerTransferResponse200Moved | Unset):
+        revoked (int | Unset): API tokens deleted
+        ecosystems_reparented (int | Unset):
+        rewritten (int | Unset): addresses re-derived by the cascade
+        conflicts (list[PostCustomerTransferResponse200ConflictsItem] | Unset):
     """
 
-    user_id: Unset | str = UNSET
-    from_: Unset | str = UNSET
-    to: Unset | str = UNSET
-    dry_run: Unset | bool = UNSET
-    moved: Union[Unset, "PostCustomerTransferResponse200Moved"] = UNSET
-    revoked: Unset | int = UNSET
-    ecosystems_reparented: Unset | int = UNSET
-    rewritten: Unset | int = UNSET
-    conflicts: Unset | list["PostCustomerTransferResponse200ConflictsItem"] = UNSET
+    user_id: str | Unset = UNSET
+    from_: str | Unset = UNSET
+    to: str | Unset = UNSET
+    dry_run: bool | Unset = UNSET
+    moved: PostCustomerTransferResponse200Moved | Unset = UNSET
+    revoked: int | Unset = UNSET
+    ecosystems_reparented: int | Unset = UNSET
+    rewritten: int | Unset = UNSET
+    conflicts: list[PostCustomerTransferResponse200ConflictsItem] | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -53,7 +55,7 @@ class PostCustomerTransferResponse200:
 
         dry_run = self.dry_run
 
-        moved: Unset | dict[str, Any] = UNSET
+        moved: dict[str, Any] | Unset = UNSET
         if not isinstance(self.moved, Unset):
             moved = self.moved.to_dict()
 
@@ -63,7 +65,7 @@ class PostCustomerTransferResponse200:
 
         rewritten = self.rewritten
 
-        conflicts: Unset | list[dict[str, Any]] = UNSET
+        conflicts: list[dict[str, Any]] | Unset = UNSET
         if not isinstance(self.conflicts, Unset):
             conflicts = []
             for conflicts_item_data in self.conflicts:
@@ -113,7 +115,7 @@ class PostCustomerTransferResponse200:
         dry_run = d.pop("dryRun", UNSET)
 
         _moved = d.pop("moved", UNSET)
-        moved: Unset | PostCustomerTransferResponse200Moved
+        moved: PostCustomerTransferResponse200Moved | Unset
         if isinstance(_moved, Unset):
             moved = UNSET
         else:
@@ -125,14 +127,16 @@ class PostCustomerTransferResponse200:
 
         rewritten = d.pop("rewritten", UNSET)
 
-        conflicts = []
         _conflicts = d.pop("conflicts", UNSET)
-        for conflicts_item_data in _conflicts or []:
-            conflicts_item = PostCustomerTransferResponse200ConflictsItem.from_dict(
-                conflicts_item_data
-            )
+        conflicts: list[PostCustomerTransferResponse200ConflictsItem] | Unset = UNSET
+        if _conflicts is not UNSET:
+            conflicts = []
+            for conflicts_item_data in _conflicts:
+                conflicts_item = PostCustomerTransferResponse200ConflictsItem.from_dict(
+                    conflicts_item_data
+                )
 
-            conflicts.append(conflicts_item)
+                conflicts.append(conflicts_item)
 
         post_customer_transfer_response_200 = cls(
             user_id=user_id,

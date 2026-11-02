@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, TypeVar, Union, cast
+from typing import TYPE_CHECKING, Any, TypeVar, cast
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -29,14 +31,14 @@ class ProjectTemplate:
             schema it was never written for.
         name (str): unique among the workspace’s live templates OF THIS KIND
         description (str):
-        body (Union['ProjectTemplateBody', 'WorkItemTemplateBody']): the stored shape, read against `kind`
+        body (ProjectTemplateBody | WorkItemTemplateBody): the stored shape, read against `kind`
         created_at (str):
         updated_at (str):
         is_deleted (bool):
-        customer_id (Union[Unset, str]): the customer (user) who created the template
-        created_by (Union[None, Unset, str]):
-        deleted_at (Union[None, Unset, str]):
-        sync_version (Union[Unset, int]):
+        customer_id (str | Unset): the customer (user) who created the template
+        created_by (None | str | Unset):
+        deleted_at (None | str | Unset):
+        sync_version (int | Unset):
     """
 
     id: str
@@ -46,14 +48,14 @@ class ProjectTemplate:
     kind: ProjectTemplateKind
     name: str
     description: str
-    body: Union["ProjectTemplateBody", "WorkItemTemplateBody"]
+    body: ProjectTemplateBody | WorkItemTemplateBody
     created_at: str
     updated_at: str
     is_deleted: bool
-    customer_id: Unset | str = UNSET
-    created_by: None | Unset | str = UNSET
-    deleted_at: None | Unset | str = UNSET
-    sync_version: Unset | int = UNSET
+    customer_id: str | Unset = UNSET
+    created_by: None | str | Unset = UNSET
+    deleted_at: None | str | Unset = UNSET
+    sync_version: int | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -87,13 +89,13 @@ class ProjectTemplate:
 
         customer_id = self.customer_id
 
-        created_by: None | Unset | str
+        created_by: None | str | Unset
         if isinstance(self.created_by, Unset):
             created_by = UNSET
         else:
             created_by = self.created_by
 
-        deleted_at: None | Unset | str
+        deleted_at: None | str | Unset
         if isinstance(self.deleted_at, Unset):
             deleted_at = UNSET
         else:
@@ -149,14 +151,14 @@ class ProjectTemplate:
 
         description = d.pop("description")
 
-        def _parse_body(data: object) -> Union["ProjectTemplateBody", "WorkItemTemplateBody"]:
+        def _parse_body(data: object) -> ProjectTemplateBody | WorkItemTemplateBody:
             try:
                 if not isinstance(data, dict):
                     raise TypeError()
                 body_type_0 = WorkItemTemplateBody.from_dict(data)
 
                 return body_type_0
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
             if not isinstance(data, dict):
                 raise TypeError()
@@ -174,21 +176,21 @@ class ProjectTemplate:
 
         customer_id = d.pop("customerId", UNSET)
 
-        def _parse_created_by(data: object) -> None | Unset | str:
+        def _parse_created_by(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         created_by = _parse_created_by(d.pop("createdBy", UNSET))
 
-        def _parse_deleted_at(data: object) -> None | Unset | str:
+        def _parse_deleted_at(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         deleted_at = _parse_deleted_at(d.pop("deletedAt", UNSET))
 

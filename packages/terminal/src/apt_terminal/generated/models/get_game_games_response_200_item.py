@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, TypeVar, Union, cast
+from typing import TYPE_CHECKING, Any, TypeVar, cast
 
 from attrs import define as _attrs_define
 
@@ -20,18 +22,18 @@ class GetGameGamesResponse200Item:
         ecosystem_id (str):
         slug (str):
         name (str):
-        description (Union[None, str]):
+        description (None | str):
         engine (str):
-        engine_config (Union['GetGameGamesResponse200ItemEngineConfigType1', None, bool, float, list[Any], str]):
+        engine_config (bool | float | GetGameGamesResponse200ItemEngineConfigType1 | list[Any] | None | str):
         character_names (str):
         status (str):
         event_log (str):
         event_retention_days (int):
         created_at (str):
         updated_at (str):
-        deleted_at (Union[None, str]):
+        deleted_at (None | str):
         sync_version (int):
-        sync_stamped_at (Union[None, str]):
+        sync_stamped_at (None | str):
         sync_txid (int):
     """
 
@@ -41,9 +43,9 @@ class GetGameGamesResponse200Item:
     name: str
     description: None | str
     engine: str
-    engine_config: Union[
-        "GetGameGamesResponse200ItemEngineConfigType1", None, bool, float, list[Any], str
-    ]
+    engine_config: (
+        bool | float | GetGameGamesResponse200ItemEngineConfigType1 | list[Any] | None | str
+    )
     character_names: str
     status: str
     event_log: str
@@ -73,7 +75,7 @@ class GetGameGamesResponse200Item:
 
         engine = self.engine
 
-        engine_config: None | bool | dict[str, Any] | float | list[Any] | str
+        engine_config: bool | dict[str, Any] | float | list[Any] | None | str
         if isinstance(self.engine_config, GetGameGamesResponse200ItemEngineConfigType1):
             engine_config = self.engine_config.to_dict()
         elif isinstance(self.engine_config, list):
@@ -156,9 +158,7 @@ class GetGameGamesResponse200Item:
 
         def _parse_engine_config(
             data: object,
-        ) -> Union[
-            "GetGameGamesResponse200ItemEngineConfigType1", None, bool, float, list[Any], str
-        ]:
+        ) -> bool | float | GetGameGamesResponse200ItemEngineConfigType1 | list[Any] | None | str:
             if data is None:
                 return data
             try:
@@ -167,7 +167,7 @@ class GetGameGamesResponse200Item:
                 engine_config_type_1 = GetGameGamesResponse200ItemEngineConfigType1.from_dict(data)
 
                 return engine_config_type_1
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
             try:
                 if not isinstance(data, list):
@@ -175,17 +175,15 @@ class GetGameGamesResponse200Item:
                 engine_config_type_2 = cast(list[Any], data)
 
                 return engine_config_type_2
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
             return cast(
-                Union[
-                    "GetGameGamesResponse200ItemEngineConfigType1",
-                    None,
-                    bool,
-                    float,
-                    list[Any],
-                    str,
-                ],
+                bool
+                | float
+                | GetGameGamesResponse200ItemEngineConfigType1
+                | list[Any]
+                | None
+                | str,
                 data,
             )
 

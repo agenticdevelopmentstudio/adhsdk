@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -17,8 +19,8 @@ class PublicRegistryService:
         title (str):
         description (str):
         pricing_model (PublicRegistryServicePricingModel):
-        price_min (Union[None, int]):
-        price_max (Union[None, int]):
+        price_min (int | None):
+        price_max (int | None):
         currency (str):
         unit (str):
         delivery_mode (PublicRegistryServiceDeliveryMode):
@@ -27,8 +29,8 @@ class PublicRegistryService:
     title: str
     description: str
     pricing_model: PublicRegistryServicePricingModel
-    price_min: None | int
-    price_max: None | int
+    price_min: int | None
+    price_max: int | None
     currency: str
     unit: str
     delivery_mode: PublicRegistryServiceDeliveryMode
@@ -41,10 +43,10 @@ class PublicRegistryService:
 
         pricing_model = self.pricing_model.value
 
-        price_min: None | int
+        price_min: int | None
         price_min = self.price_min
 
-        price_max: None | int
+        price_max: int | None
         price_max = self.price_max
 
         currency = self.currency
@@ -79,17 +81,17 @@ class PublicRegistryService:
 
         pricing_model = PublicRegistryServicePricingModel(d.pop("pricingModel"))
 
-        def _parse_price_min(data: object) -> None | int:
+        def _parse_price_min(data: object) -> int | None:
             if data is None:
                 return data
-            return cast(None | int, data)
+            return cast(int | None, data)
 
         price_min = _parse_price_min(d.pop("priceMin"))
 
-        def _parse_price_max(data: object) -> None | int:
+        def _parse_price_max(data: object) -> int | None:
             if data is None:
                 return data
-            return cast(None | int, data)
+            return cast(int | None, data)
 
         price_max = _parse_price_max(d.pop("priceMax"))
 

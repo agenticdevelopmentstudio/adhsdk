@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class GetPublicBoardsStatKeyWindow(str, Enum):
+class GetPublicBoardsStatKeyWindow(StrEnum):
     ALLTIME = "allTime"
     ROLLING30 = "rolling30"
     SEASON = "season"

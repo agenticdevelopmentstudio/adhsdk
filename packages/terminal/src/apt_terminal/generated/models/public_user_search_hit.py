@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -14,8 +16,8 @@ class PublicUserSearchHit:
     """
     Attributes:
         slug (str):
-        display_name (Union[None, str]):
-        avatar_url (Union[None, str]):
+        display_name (None | str):
+        avatar_url (None | str):
         kind (PublicUserSearchHitKind):
     """
 

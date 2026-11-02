@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -19,10 +21,10 @@ class PostGameEffectsBody:
         target (str):
         operation (str):
         value (int):
-        ecosystem_id (Union[Unset, str]):
-        duration (Union[None, Unset, int]):
-        sort_order (Union[Unset, int]):
-        sync_txid (Union[Unset, int]):
+        ecosystem_id (str | Unset):
+        duration (int | None | Unset):
+        sort_order (int | Unset):
+        sync_txid (int | Unset):
     """
 
     game_id: str
@@ -32,10 +34,10 @@ class PostGameEffectsBody:
     target: str
     operation: str
     value: int
-    ecosystem_id: Unset | str = UNSET
-    duration: None | Unset | int = UNSET
-    sort_order: Unset | int = UNSET
-    sync_txid: Unset | int = UNSET
+    ecosystem_id: str | Unset = UNSET
+    duration: int | None | Unset = UNSET
+    sort_order: int | Unset = UNSET
+    sync_txid: int | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
         game_id = self.game_id
@@ -54,7 +56,7 @@ class PostGameEffectsBody:
 
         ecosystem_id = self.ecosystem_id
 
-        duration: None | Unset | int
+        duration: int | None | Unset
         if isinstance(self.duration, Unset):
             duration = UNSET
         else:
@@ -107,12 +109,12 @@ class PostGameEffectsBody:
 
         ecosystem_id = d.pop("ecosystemId", UNSET)
 
-        def _parse_duration(data: object) -> None | Unset | int:
+        def _parse_duration(data: object) -> int | None | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | int, data)
+            return cast(int | None | Unset, data)
 
         duration = _parse_duration(d.pop("duration", UNSET))
 

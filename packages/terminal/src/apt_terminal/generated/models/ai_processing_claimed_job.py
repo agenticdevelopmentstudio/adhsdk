@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import TYPE_CHECKING, Any, TypeVar
 from uuid import UUID
@@ -30,7 +32,7 @@ class AiProcessingClaimedJob:
     job_type: str
     target_kind: str
     target_id: str
-    payload: "AiProcessingClaimedJobPayload"
+    payload: AiProcessingClaimedJobPayload
     claimed_at: str
     lease_expires_at: str
     lease_token: str
@@ -72,7 +74,9 @@ class AiProcessingClaimedJob:
 
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
-        from ..models.ai_processing_claimed_job_payload import AiProcessingClaimedJobPayload
+        from ..models.ai_processing_claimed_job_payload import (
+            AiProcessingClaimedJobPayload,
+        )
 
         d = dict(src_dict)
         id = UUID(d.pop("id"))

@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class GetProjectProjectsIdArtifactsDirection(str, Enum):
+class GetProjectProjectsIdArtifactsDirection(StrEnum):
     INGESTED = "ingested"
     PRODUCED = "produced"
 

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import TYPE_CHECKING, Any, TypeVar
 
@@ -15,13 +17,13 @@ T = TypeVar("T", bound="FeedPage")
 class FeedPage:
     """
     Attributes:
-        items (list['FeedItem']):
+        items (list[FeedItem]):
         total (int):
         page (int):
         page_size (int):
     """
 
-    items: list["FeedItem"]
+    items: list[FeedItem]
     total: int
     page: int
     page_size: int

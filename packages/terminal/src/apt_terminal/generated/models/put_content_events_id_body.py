@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, TypeVar, Union, cast
+from typing import TYPE_CHECKING, Any, TypeVar, cast
 
 from attrs import define as _attrs_define
 
@@ -18,18 +20,18 @@ T = TypeVar("T", bound="PutContentEventsIdBody")
 class PutContentEventsIdBody:
     """
     Attributes:
-        ecosystem_id (Union[Unset, str]):
-        type_ (Union[Unset, str]):
-        payload (Union['PutContentEventsIdBodyPayloadType1', None, Unset, bool, float, list[Any], str]):
-        sync_txid (Union[Unset, int]):
+        ecosystem_id (str | Unset):
+        type_ (str | Unset):
+        payload (bool | float | list[Any] | None | PutContentEventsIdBodyPayloadType1 | str | Unset):
+        sync_txid (int | Unset):
     """
 
-    ecosystem_id: Unset | str = UNSET
-    type_: Unset | str = UNSET
-    payload: Union[
-        "PutContentEventsIdBodyPayloadType1", None, Unset, bool, float, list[Any], str
-    ] = UNSET
-    sync_txid: Unset | int = UNSET
+    ecosystem_id: str | Unset = UNSET
+    type_: str | Unset = UNSET
+    payload: bool | float | list[Any] | None | PutContentEventsIdBodyPayloadType1 | str | Unset = (
+        UNSET
+    )
+    sync_txid: int | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
         from ..models.put_content_events_id_body_payload_type_1 import (
@@ -40,7 +42,7 @@ class PutContentEventsIdBody:
 
         type_ = self.type_
 
-        payload: None | Unset | bool | dict[str, Any] | float | list[Any] | str
+        payload: bool | dict[str, Any] | float | list[Any] | None | str | Unset
         if isinstance(self.payload, Unset):
             payload = UNSET
         elif isinstance(self.payload, PutContentEventsIdBodyPayloadType1):
@@ -80,7 +82,7 @@ class PutContentEventsIdBody:
 
         def _parse_payload(
             data: object,
-        ) -> Union["PutContentEventsIdBodyPayloadType1", None, Unset, bool, float, list[Any], str]:
+        ) -> bool | float | list[Any] | None | PutContentEventsIdBodyPayloadType1 | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
@@ -91,7 +93,7 @@ class PutContentEventsIdBody:
                 payload_type_1 = PutContentEventsIdBodyPayloadType1.from_dict(data)
 
                 return payload_type_1
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
             try:
                 if not isinstance(data, list):
@@ -99,12 +101,10 @@ class PutContentEventsIdBody:
                 payload_type_2 = cast(list[Any], data)
 
                 return payload_type_2
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
             return cast(
-                Union[
-                    "PutContentEventsIdBodyPayloadType1", None, Unset, bool, float, list[Any], str
-                ],
+                bool | float | list[Any] | None | PutContentEventsIdBodyPayloadType1 | str | Unset,
                 data,
             )
 

@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, TypeVar, Union, cast
+from typing import TYPE_CHECKING, Any, TypeVar, cast
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -26,9 +28,9 @@ class GameDefinition:
         status (GameDefinitionStatus):
         created_at (str):
         updated_at (str):
-        description (Union[None, Unset, str]):
-        author_customer_id (Union[None, Unset, str]):
-        data (Union['GameDefinitionDataType0', None, Unset]):
+        description (None | str | Unset):
+        author_customer_id (None | str | Unset):
+        data (GameDefinitionDataType0 | None | Unset):
     """
 
     id: str
@@ -39,9 +41,9 @@ class GameDefinition:
     status: GameDefinitionStatus
     created_at: str
     updated_at: str
-    description: None | Unset | str = UNSET
-    author_customer_id: None | Unset | str = UNSET
-    data: Union["GameDefinitionDataType0", None, Unset] = UNSET
+    description: None | str | Unset = UNSET
+    author_customer_id: None | str | Unset = UNSET
+    data: GameDefinitionDataType0 | None | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -63,19 +65,19 @@ class GameDefinition:
 
         updated_at = self.updated_at
 
-        description: None | Unset | str
+        description: None | str | Unset
         if isinstance(self.description, Unset):
             description = UNSET
         else:
             description = self.description
 
-        author_customer_id: None | Unset | str
+        author_customer_id: None | str | Unset
         if isinstance(self.author_customer_id, Unset):
             author_customer_id = UNSET
         else:
             author_customer_id = self.author_customer_id
 
-        data: None | Unset | dict[str, Any]
+        data: dict[str, Any] | None | Unset
         if isinstance(self.data, Unset):
             data = UNSET
         elif isinstance(self.data, GameDefinitionDataType0):
@@ -127,25 +129,25 @@ class GameDefinition:
 
         updated_at = d.pop("updatedAt")
 
-        def _parse_description(data: object) -> None | Unset | str:
+        def _parse_description(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         description = _parse_description(d.pop("description", UNSET))
 
-        def _parse_author_customer_id(data: object) -> None | Unset | str:
+        def _parse_author_customer_id(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         author_customer_id = _parse_author_customer_id(d.pop("authorCustomerId", UNSET))
 
-        def _parse_data(data: object) -> Union["GameDefinitionDataType0", None, Unset]:
+        def _parse_data(data: object) -> GameDefinitionDataType0 | None | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
@@ -156,9 +158,9 @@ class GameDefinition:
                 data_type_0 = GameDefinitionDataType0.from_dict(data)
 
                 return data_type_0
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
-            return cast(Union["GameDefinitionDataType0", None, Unset], data)
+            return cast(GameDefinitionDataType0 | None | Unset, data)
 
         data = _parse_data(d.pop("data", UNSET))
 

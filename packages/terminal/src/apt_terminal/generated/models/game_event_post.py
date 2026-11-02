@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, TypeVar, Union
+from typing import TYPE_CHECKING, Any, TypeVar
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -23,18 +25,18 @@ class GameEventPost:
         Attributes:
             kind (str):
             client_event_id (str):
-            input_ (Union[Unset, GameEventPostInput]):
-            output (Union[Unset, GameEventPostOutput]):
-            cost (Union[Unset, GameEventPostCost]):
-            artifact_id (Union[Unset, str]):
+            input_ (GameEventPostInput | Unset):
+            output (GameEventPostOutput | Unset):
+            cost (GameEventPostCost | Unset):
+            artifact_id (str | Unset):
     """
 
     kind: str
     client_event_id: str
-    input_: Union[Unset, "GameEventPostInput"] = UNSET
-    output: Union[Unset, "GameEventPostOutput"] = UNSET
-    cost: Union[Unset, "GameEventPostCost"] = UNSET
-    artifact_id: Unset | str = UNSET
+    input_: GameEventPostInput | Unset = UNSET
+    output: GameEventPostOutput | Unset = UNSET
+    cost: GameEventPostCost | Unset = UNSET
+    artifact_id: str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -42,15 +44,15 @@ class GameEventPost:
 
         client_event_id = self.client_event_id
 
-        input_: Unset | dict[str, Any] = UNSET
+        input_: dict[str, Any] | Unset = UNSET
         if not isinstance(self.input_, Unset):
             input_ = self.input_.to_dict()
 
-        output: Unset | dict[str, Any] = UNSET
+        output: dict[str, Any] | Unset = UNSET
         if not isinstance(self.output, Unset):
             output = self.output.to_dict()
 
-        cost: Unset | dict[str, Any] = UNSET
+        cost: dict[str, Any] | Unset = UNSET
         if not isinstance(self.cost, Unset):
             cost = self.cost.to_dict()
 
@@ -87,21 +89,21 @@ class GameEventPost:
         client_event_id = d.pop("client_event_id")
 
         _input_ = d.pop("input", UNSET)
-        input_: Unset | GameEventPostInput
+        input_: GameEventPostInput | Unset
         if isinstance(_input_, Unset):
             input_ = UNSET
         else:
             input_ = GameEventPostInput.from_dict(_input_)
 
         _output = d.pop("output", UNSET)
-        output: Unset | GameEventPostOutput
+        output: GameEventPostOutput | Unset
         if isinstance(_output, Unset):
             output = UNSET
         else:
             output = GameEventPostOutput.from_dict(_output)
 
         _cost = d.pop("cost", UNSET)
-        cost: Unset | GameEventPostCost
+        cost: GameEventPostCost | Unset
         if isinstance(_cost, Unset):
             cost = UNSET
         else:

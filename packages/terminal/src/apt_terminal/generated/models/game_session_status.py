@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class GameSessionStatus(str, Enum):
+class GameSessionStatus(StrEnum):
     ABANDONED = "abandoned"
     ACTIVE = "active"
     ENDED = "ended"

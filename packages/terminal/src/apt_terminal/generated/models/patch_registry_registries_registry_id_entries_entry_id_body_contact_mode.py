@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class PatchRegistryRegistriesRegistryIdEntriesEntryIdBodyContactMode(str, Enum):
+class PatchRegistryRegistriesRegistryIdEntriesEntryIdBodyContactMode(StrEnum):
     DM = "dm"
     NONE = "none"
 

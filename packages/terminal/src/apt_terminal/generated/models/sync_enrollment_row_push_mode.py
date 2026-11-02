@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class SyncEnrollmentRowPushMode(str, Enum):
+class SyncEnrollmentRowPushMode(StrEnum):
     GENERIC = "generic"
     ROUTE = "route"
 

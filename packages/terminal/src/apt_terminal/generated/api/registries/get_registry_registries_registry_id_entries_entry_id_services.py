@@ -1,5 +1,6 @@
 from http import HTTPStatus
 from typing import Any
+from urllib.parse import quote
 
 import httpx
 
@@ -16,7 +17,7 @@ def _get_kwargs(
     registry_id: str,
     entry_id: str,
     *,
-    workspace: Unset | str = UNSET,
+    workspace: str | Unset = UNSET,
 ) -> dict[str, Any]:
     params: dict[str, Any] = {}
 
@@ -26,7 +27,10 @@ def _get_kwargs(
 
     _kwargs: dict[str, Any] = {
         "method": "get",
-        "url": f"/registry/registries/{registry_id}/entries/{entry_id}/services",
+        "url": "/registry/registries/{registry_id}/entries/{entry_id}/services".format(
+            registry_id=quote(str(registry_id), safe=""),
+            entry_id=quote(str(entry_id), safe=""),
+        ),
         "params": params,
     }
 
@@ -80,21 +84,21 @@ def sync_detailed(
     entry_id: str,
     *,
     client: AuthenticatedClient,
-    workspace: Unset | str = UNSET,
+    workspace: str | Unset = UNSET,
 ) -> Response[Error | GetRegistryRegistriesRegistryIdEntriesEntryIdServicesResponse200]:
     """List an entry's services (non-deleted, by sortOrder)
 
     Args:
         registry_id (str):
         entry_id (str):
-        workspace (Union[Unset, str]):
+        workspace (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, GetRegistryRegistriesRegistryIdEntriesEntryIdServicesResponse200]]
+        Response[Error | GetRegistryRegistriesRegistryIdEntriesEntryIdServicesResponse200]
     """
 
     kwargs = _get_kwargs(
@@ -115,21 +119,21 @@ def sync(
     entry_id: str,
     *,
     client: AuthenticatedClient,
-    workspace: Unset | str = UNSET,
+    workspace: str | Unset = UNSET,
 ) -> Error | GetRegistryRegistriesRegistryIdEntriesEntryIdServicesResponse200 | None:
     """List an entry's services (non-deleted, by sortOrder)
 
     Args:
         registry_id (str):
         entry_id (str):
-        workspace (Union[Unset, str]):
+        workspace (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, GetRegistryRegistriesRegistryIdEntriesEntryIdServicesResponse200]
+        Error | GetRegistryRegistriesRegistryIdEntriesEntryIdServicesResponse200
     """
 
     return sync_detailed(
@@ -145,21 +149,21 @@ async def asyncio_detailed(
     entry_id: str,
     *,
     client: AuthenticatedClient,
-    workspace: Unset | str = UNSET,
+    workspace: str | Unset = UNSET,
 ) -> Response[Error | GetRegistryRegistriesRegistryIdEntriesEntryIdServicesResponse200]:
     """List an entry's services (non-deleted, by sortOrder)
 
     Args:
         registry_id (str):
         entry_id (str):
-        workspace (Union[Unset, str]):
+        workspace (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, GetRegistryRegistriesRegistryIdEntriesEntryIdServicesResponse200]]
+        Response[Error | GetRegistryRegistriesRegistryIdEntriesEntryIdServicesResponse200]
     """
 
     kwargs = _get_kwargs(
@@ -178,21 +182,21 @@ async def asyncio(
     entry_id: str,
     *,
     client: AuthenticatedClient,
-    workspace: Unset | str = UNSET,
+    workspace: str | Unset = UNSET,
 ) -> Error | GetRegistryRegistriesRegistryIdEntriesEntryIdServicesResponse200 | None:
     """List an entry's services (non-deleted, by sortOrder)
 
     Args:
         registry_id (str):
         entry_id (str):
-        workspace (Union[Unset, str]):
+        workspace (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, GetRegistryRegistriesRegistryIdEntriesEntryIdServicesResponse200]
+        Error | GetRegistryRegistriesRegistryIdEntriesEntryIdServicesResponse200
     """
 
     return (

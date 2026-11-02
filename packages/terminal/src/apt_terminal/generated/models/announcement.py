@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -19,7 +21,7 @@ class Announcement:
         status (str): e.g. sending, sent
         created_at (str):
         updated_at (str):
-        sent_at (Union[None, str]): null until the fan-out finishes
+        sent_at (None | str): null until the fan-out finishes
         total_recipients (int):
         sent_count (int):
     """

@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, TypeVar, Union, cast
+from typing import TYPE_CHECKING, Any, TypeVar, cast
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -20,24 +22,24 @@ class ShiprRunStep:
     """One repository within a run — and, for a deploy, one stage of it. A failed step does not fail the run.
 
     Attributes:
-        id (Union[Unset, str]):
-        run_id (Union[Unset, str]):
-        deploy_repo_id (Union[None, Unset, str]):
-        ordinal (Union[Unset, int]):
-        environment (Union[None, Unset, str]):
-        stage (Union[Unset, ShiprRunStepStage]):
-        state (Union[Unset, ShiprRunStepState]):
-        detail (Union['ShiprRunStepDetailType0', None, Unset]):
+        id (str | Unset):
+        run_id (str | Unset):
+        deploy_repo_id (None | str | Unset):
+        ordinal (int | Unset):
+        environment (None | str | Unset):
+        stage (ShiprRunStepStage | Unset):
+        state (ShiprRunStepState | Unset):
+        detail (None | ShiprRunStepDetailType0 | Unset):
     """
 
-    id: Unset | str = UNSET
-    run_id: Unset | str = UNSET
-    deploy_repo_id: None | Unset | str = UNSET
-    ordinal: Unset | int = UNSET
-    environment: None | Unset | str = UNSET
-    stage: Unset | ShiprRunStepStage = UNSET
-    state: Unset | ShiprRunStepState = UNSET
-    detail: Union["ShiprRunStepDetailType0", None, Unset] = UNSET
+    id: str | Unset = UNSET
+    run_id: str | Unset = UNSET
+    deploy_repo_id: None | str | Unset = UNSET
+    ordinal: int | Unset = UNSET
+    environment: None | str | Unset = UNSET
+    stage: ShiprRunStepStage | Unset = UNSET
+    state: ShiprRunStepState | Unset = UNSET
+    detail: None | ShiprRunStepDetailType0 | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -47,7 +49,7 @@ class ShiprRunStep:
 
         run_id = self.run_id
 
-        deploy_repo_id: None | Unset | str
+        deploy_repo_id: None | str | Unset
         if isinstance(self.deploy_repo_id, Unset):
             deploy_repo_id = UNSET
         else:
@@ -55,21 +57,21 @@ class ShiprRunStep:
 
         ordinal = self.ordinal
 
-        environment: None | Unset | str
+        environment: None | str | Unset
         if isinstance(self.environment, Unset):
             environment = UNSET
         else:
             environment = self.environment
 
-        stage: Unset | str = UNSET
+        stage: str | Unset = UNSET
         if not isinstance(self.stage, Unset):
             stage = self.stage.value
 
-        state: Unset | str = UNSET
+        state: str | Unset = UNSET
         if not isinstance(self.state, Unset):
             state = self.state.value
 
-        detail: None | Unset | dict[str, Any]
+        detail: dict[str, Any] | None | Unset
         if isinstance(self.detail, Unset):
             detail = UNSET
         elif isinstance(self.detail, ShiprRunStepDetailType0):
@@ -108,41 +110,41 @@ class ShiprRunStep:
 
         run_id = d.pop("runId", UNSET)
 
-        def _parse_deploy_repo_id(data: object) -> None | Unset | str:
+        def _parse_deploy_repo_id(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         deploy_repo_id = _parse_deploy_repo_id(d.pop("deployRepoId", UNSET))
 
         ordinal = d.pop("ordinal", UNSET)
 
-        def _parse_environment(data: object) -> None | Unset | str:
+        def _parse_environment(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         environment = _parse_environment(d.pop("environment", UNSET))
 
         _stage = d.pop("stage", UNSET)
-        stage: Unset | ShiprRunStepStage
+        stage: ShiprRunStepStage | Unset
         if isinstance(_stage, Unset):
             stage = UNSET
         else:
             stage = ShiprRunStepStage(_stage)
 
         _state = d.pop("state", UNSET)
-        state: Unset | ShiprRunStepState
+        state: ShiprRunStepState | Unset
         if isinstance(_state, Unset):
             state = UNSET
         else:
             state = ShiprRunStepState(_state)
 
-        def _parse_detail(data: object) -> Union["ShiprRunStepDetailType0", None, Unset]:
+        def _parse_detail(data: object) -> None | ShiprRunStepDetailType0 | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
@@ -153,9 +155,9 @@ class ShiprRunStep:
                 detail_type_0 = ShiprRunStepDetailType0.from_dict(data)
 
                 return detail_type_0
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
-            return cast(Union["ShiprRunStepDetailType0", None, Unset], data)
+            return cast(None | ShiprRunStepDetailType0 | Unset, data)
 
         detail = _parse_detail(d.pop("detail", UNSET))
 

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -18,18 +20,18 @@ class PostIntegrationIntegrationItemsBody:
         title (str):
         state (str):
         repo_full_name (str):
-        ecosystem_id (Union[Unset, str]):
-        body (Union[None, Unset, str]):
-        repo_url (Union[None, Unset, str]):
-        item_url (Union[None, Unset, str]):
-        number (Union[None, Unset, int]):
-        labels (Union[None, Unset, str]):
-        assignees (Union[None, Unset, str]):
-        is_read (Union[Unset, bool]):
-        notification_reason (Union[None, Unset, str]):
-        external_created_at (Union[None, Unset, str]):
-        external_updated_at (Union[None, Unset, str]):
-        sync_txid (Union[Unset, int]):
+        ecosystem_id (str | Unset):
+        body (None | str | Unset):
+        repo_url (None | str | Unset):
+        item_url (None | str | Unset):
+        number (int | None | Unset):
+        labels (None | str | Unset):
+        assignees (None | str | Unset):
+        is_read (bool | Unset):
+        notification_reason (None | str | Unset):
+        external_created_at (None | str | Unset):
+        external_updated_at (None | str | Unset):
+        sync_txid (int | Unset):
     """
 
     connection_id: str
@@ -38,18 +40,18 @@ class PostIntegrationIntegrationItemsBody:
     title: str
     state: str
     repo_full_name: str
-    ecosystem_id: Unset | str = UNSET
-    body: None | Unset | str = UNSET
-    repo_url: None | Unset | str = UNSET
-    item_url: None | Unset | str = UNSET
-    number: None | Unset | int = UNSET
-    labels: None | Unset | str = UNSET
-    assignees: None | Unset | str = UNSET
-    is_read: Unset | bool = UNSET
-    notification_reason: None | Unset | str = UNSET
-    external_created_at: None | Unset | str = UNSET
-    external_updated_at: None | Unset | str = UNSET
-    sync_txid: Unset | int = UNSET
+    ecosystem_id: str | Unset = UNSET
+    body: None | str | Unset = UNSET
+    repo_url: None | str | Unset = UNSET
+    item_url: None | str | Unset = UNSET
+    number: int | None | Unset = UNSET
+    labels: None | str | Unset = UNSET
+    assignees: None | str | Unset = UNSET
+    is_read: bool | Unset = UNSET
+    notification_reason: None | str | Unset = UNSET
+    external_created_at: None | str | Unset = UNSET
+    external_updated_at: None | str | Unset = UNSET
+    sync_txid: int | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
         connection_id = self.connection_id
@@ -66,37 +68,37 @@ class PostIntegrationIntegrationItemsBody:
 
         ecosystem_id = self.ecosystem_id
 
-        body: None | Unset | str
+        body: None | str | Unset
         if isinstance(self.body, Unset):
             body = UNSET
         else:
             body = self.body
 
-        repo_url: None | Unset | str
+        repo_url: None | str | Unset
         if isinstance(self.repo_url, Unset):
             repo_url = UNSET
         else:
             repo_url = self.repo_url
 
-        item_url: None | Unset | str
+        item_url: None | str | Unset
         if isinstance(self.item_url, Unset):
             item_url = UNSET
         else:
             item_url = self.item_url
 
-        number: None | Unset | int
+        number: int | None | Unset
         if isinstance(self.number, Unset):
             number = UNSET
         else:
             number = self.number
 
-        labels: None | Unset | str
+        labels: None | str | Unset
         if isinstance(self.labels, Unset):
             labels = UNSET
         else:
             labels = self.labels
 
-        assignees: None | Unset | str
+        assignees: None | str | Unset
         if isinstance(self.assignees, Unset):
             assignees = UNSET
         else:
@@ -104,19 +106,19 @@ class PostIntegrationIntegrationItemsBody:
 
         is_read = self.is_read
 
-        notification_reason: None | Unset | str
+        notification_reason: None | str | Unset
         if isinstance(self.notification_reason, Unset):
             notification_reason = UNSET
         else:
             notification_reason = self.notification_reason
 
-        external_created_at: None | Unset | str
+        external_created_at: None | str | Unset
         if isinstance(self.external_created_at, Unset):
             external_created_at = UNSET
         else:
             external_created_at = self.external_created_at
 
-        external_updated_at: None | Unset | str
+        external_updated_at: None | str | Unset
         if isinstance(self.external_updated_at, Unset):
             external_updated_at = UNSET
         else:
@@ -180,86 +182,86 @@ class PostIntegrationIntegrationItemsBody:
 
         ecosystem_id = d.pop("ecosystemId", UNSET)
 
-        def _parse_body(data: object) -> None | Unset | str:
+        def _parse_body(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         body = _parse_body(d.pop("body", UNSET))
 
-        def _parse_repo_url(data: object) -> None | Unset | str:
+        def _parse_repo_url(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         repo_url = _parse_repo_url(d.pop("repoUrl", UNSET))
 
-        def _parse_item_url(data: object) -> None | Unset | str:
+        def _parse_item_url(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         item_url = _parse_item_url(d.pop("itemUrl", UNSET))
 
-        def _parse_number(data: object) -> None | Unset | int:
+        def _parse_number(data: object) -> int | None | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | int, data)
+            return cast(int | None | Unset, data)
 
         number = _parse_number(d.pop("number", UNSET))
 
-        def _parse_labels(data: object) -> None | Unset | str:
+        def _parse_labels(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         labels = _parse_labels(d.pop("labels", UNSET))
 
-        def _parse_assignees(data: object) -> None | Unset | str:
+        def _parse_assignees(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         assignees = _parse_assignees(d.pop("assignees", UNSET))
 
         is_read = d.pop("isRead", UNSET)
 
-        def _parse_notification_reason(data: object) -> None | Unset | str:
+        def _parse_notification_reason(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         notification_reason = _parse_notification_reason(d.pop("notificationReason", UNSET))
 
-        def _parse_external_created_at(data: object) -> None | Unset | str:
+        def _parse_external_created_at(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         external_created_at = _parse_external_created_at(d.pop("externalCreatedAt", UNSET))
 
-        def _parse_external_updated_at(data: object) -> None | Unset | str:
+        def _parse_external_updated_at(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         external_updated_at = _parse_external_updated_at(d.pop("externalUpdatedAt", UNSET))
 

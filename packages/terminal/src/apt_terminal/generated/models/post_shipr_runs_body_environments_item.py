@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class PostShiprRunsBodyEnvironmentsItem(str, Enum):
+class PostShiprRunsBodyEnvironmentsItem(StrEnum):
     PRODUCTION = "production"
     STAGING = "staging"
     TESTING = "testing"

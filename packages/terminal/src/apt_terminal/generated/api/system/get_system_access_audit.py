@@ -12,8 +12,8 @@ from ...types import UNSET, Response, Unset
 
 def _get_kwargs(
     *,
-    page: Unset | str = UNSET,
-    page_size: Unset | str = UNSET,
+    page: str | Unset = UNSET,
+    page_size: str | Unset = UNSET,
 ) -> dict[str, Any]:
     params: dict[str, Any] = {}
 
@@ -70,21 +70,21 @@ def _build_response(
 def sync_detailed(
     *,
     client: AuthenticatedClient,
-    page: Unset | str = UNSET,
-    page_size: Unset | str = UNSET,
+    page: str | Unset = UNSET,
+    page_size: str | Unset = UNSET,
 ) -> Response[AccessAuditPage | Error]:
     """Admin-only, cross-workspace access-audit trail (paginated, newest first)
 
     Args:
-        page (Union[Unset, str]):
-        page_size (Union[Unset, str]):
+        page (str | Unset):
+        page_size (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[AccessAuditPage, Error]]
+        Response[AccessAuditPage | Error]
     """
 
     kwargs = _get_kwargs(
@@ -102,21 +102,21 @@ def sync_detailed(
 def sync(
     *,
     client: AuthenticatedClient,
-    page: Unset | str = UNSET,
-    page_size: Unset | str = UNSET,
+    page: str | Unset = UNSET,
+    page_size: str | Unset = UNSET,
 ) -> AccessAuditPage | Error | None:
     """Admin-only, cross-workspace access-audit trail (paginated, newest first)
 
     Args:
-        page (Union[Unset, str]):
-        page_size (Union[Unset, str]):
+        page (str | Unset):
+        page_size (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[AccessAuditPage, Error]
+        AccessAuditPage | Error
     """
 
     return sync_detailed(
@@ -129,21 +129,21 @@ def sync(
 async def asyncio_detailed(
     *,
     client: AuthenticatedClient,
-    page: Unset | str = UNSET,
-    page_size: Unset | str = UNSET,
+    page: str | Unset = UNSET,
+    page_size: str | Unset = UNSET,
 ) -> Response[AccessAuditPage | Error]:
     """Admin-only, cross-workspace access-audit trail (paginated, newest first)
 
     Args:
-        page (Union[Unset, str]):
-        page_size (Union[Unset, str]):
+        page (str | Unset):
+        page_size (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[AccessAuditPage, Error]]
+        Response[AccessAuditPage | Error]
     """
 
     kwargs = _get_kwargs(
@@ -159,21 +159,21 @@ async def asyncio_detailed(
 async def asyncio(
     *,
     client: AuthenticatedClient,
-    page: Unset | str = UNSET,
-    page_size: Unset | str = UNSET,
+    page: str | Unset = UNSET,
+    page_size: str | Unset = UNSET,
 ) -> AccessAuditPage | Error | None:
     """Admin-only, cross-workspace access-audit trail (paginated, newest first)
 
     Args:
-        page (Union[Unset, str]):
-        page_size (Union[Unset, str]):
+        page (str | Unset):
+        page_size (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[AccessAuditPage, Error]
+        AccessAuditPage | Error
     """
 
     return (

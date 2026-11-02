@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class RegistryPersonaApprovalSubjectKind(str, Enum):
+class RegistryPersonaApprovalSubjectKind(StrEnum):
     ORG = "org"
     SELF = "self"
     TEAM = "team"

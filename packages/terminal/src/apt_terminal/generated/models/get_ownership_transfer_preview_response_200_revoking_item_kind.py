@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class GetOwnershipTransferPreviewResponse200RevokingItemKind(str, Enum):
+class GetOwnershipTransferPreviewResponse200RevokingItemKind(StrEnum):
     APP = "app"
     ORGANIZATION = "organization"
     PERSONA = "persona"

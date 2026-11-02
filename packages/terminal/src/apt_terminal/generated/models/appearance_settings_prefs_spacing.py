@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class AppearanceSettingsPrefsSpacing(str, Enum):
+class AppearanceSettingsPrefsSpacing(StrEnum):
     COMFORTABLE = "comfortable"
     COMPACT = "compact"
     SPACIOUS = "spacious"

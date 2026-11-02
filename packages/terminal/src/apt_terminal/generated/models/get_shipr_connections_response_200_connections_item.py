@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -13,9 +15,9 @@ class GetShiprConnectionsResponse200ConnectionsItem:
     Attributes:
         id (str):
         label (str):
-        account_login (Union[None, str]): The GitHub account the app is installed on. This is the register form’s ORG
-            CHOOSER: creating a repository under an org needs the app installed there, so an org with no connection is an
-            org the run would fail in.
+        account_login (None | str): The GitHub account the app is installed on. This is the register form’s ORG CHOOSER:
+            creating a repository under an org needs the app installed there, so an org with no connection is an org the run
+            would fail in.
     """
 
     id: str

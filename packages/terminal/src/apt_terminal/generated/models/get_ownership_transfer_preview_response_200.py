@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import TYPE_CHECKING, Any, TypeVar, cast
 
@@ -19,19 +21,19 @@ T = TypeVar("T", bound="GetOwnershipTransferPreviewResponse200")
 class GetOwnershipTransferPreviewResponse200:
     """
     Attributes:
-        previous_id (Union[None, Unset, str]):
-        tokens (Union[Unset, int]): API tokens the transfer would revoke
-        revoking (Union[Unset, list['GetOwnershipTransferPreviewResponse200RevokingItem']]): principals that lose reach
-            over the object once it moves
+        previous_id (None | str | Unset):
+        tokens (int | Unset): API tokens the transfer would revoke
+        revoking (list[GetOwnershipTransferPreviewResponse200RevokingItem] | Unset): principals that lose reach over the
+            object once it moves
     """
 
-    previous_id: None | Unset | str = UNSET
-    tokens: Unset | int = UNSET
-    revoking: Unset | list["GetOwnershipTransferPreviewResponse200RevokingItem"] = UNSET
+    previous_id: None | str | Unset = UNSET
+    tokens: int | Unset = UNSET
+    revoking: list[GetOwnershipTransferPreviewResponse200RevokingItem] | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
-        previous_id: None | Unset | str
+        previous_id: None | str | Unset
         if isinstance(self.previous_id, Unset):
             previous_id = UNSET
         else:
@@ -39,7 +41,7 @@ class GetOwnershipTransferPreviewResponse200:
 
         tokens = self.tokens
 
-        revoking: Unset | list[dict[str, Any]] = UNSET
+        revoking: list[dict[str, Any]] | Unset = UNSET
         if not isinstance(self.revoking, Unset):
             revoking = []
             for revoking_item_data in self.revoking:
@@ -66,25 +68,27 @@ class GetOwnershipTransferPreviewResponse200:
 
         d = dict(src_dict)
 
-        def _parse_previous_id(data: object) -> None | Unset | str:
+        def _parse_previous_id(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         previous_id = _parse_previous_id(d.pop("previousId", UNSET))
 
         tokens = d.pop("tokens", UNSET)
 
-        revoking = []
         _revoking = d.pop("revoking", UNSET)
-        for revoking_item_data in _revoking or []:
-            revoking_item = GetOwnershipTransferPreviewResponse200RevokingItem.from_dict(
-                revoking_item_data
-            )
+        revoking: list[GetOwnershipTransferPreviewResponse200RevokingItem] | Unset = UNSET
+        if _revoking is not UNSET:
+            revoking = []
+            for revoking_item_data in _revoking:
+                revoking_item = GetOwnershipTransferPreviewResponse200RevokingItem.from_dict(
+                    revoking_item_data
+                )
 
-            revoking.append(revoking_item)
+                revoking.append(revoking_item)
 
         get_ownership_transfer_preview_response_200 = cls(
             previous_id=previous_id,

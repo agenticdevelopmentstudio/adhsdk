@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar
 
@@ -12,20 +14,20 @@ T = TypeVar("T", bound="PutAudienceTemplatesIdBody")
 class PutAudienceTemplatesIdBody:
     """
     Attributes:
-        ecosystem_id (Union[Unset, str]):
-        name (Union[Unset, str]):
-        subject (Union[Unset, str]):
-        html_body (Union[Unset, str]):
-        text_body (Union[Unset, str]):
-        kind (Union[Unset, str]):
+        ecosystem_id (str | Unset):
+        name (str | Unset):
+        subject (str | Unset):
+        html_body (str | Unset):
+        text_body (str | Unset):
+        kind (str | Unset):
     """
 
-    ecosystem_id: Unset | str = UNSET
-    name: Unset | str = UNSET
-    subject: Unset | str = UNSET
-    html_body: Unset | str = UNSET
-    text_body: Unset | str = UNSET
-    kind: Unset | str = UNSET
+    ecosystem_id: str | Unset = UNSET
+    name: str | Unset = UNSET
+    subject: str | Unset = UNSET
+    html_body: str | Unset = UNSET
+    text_body: str | Unset = UNSET
+    kind: str | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
         ecosystem_id = self.ecosystem_id

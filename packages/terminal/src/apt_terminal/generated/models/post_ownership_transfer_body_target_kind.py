@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class PostOwnershipTransferBodyTargetKind(str, Enum):
+class PostOwnershipTransferBodyTargetKind(StrEnum):
     CUSTOMER = "customer"
     ORGANIZATION = "organization"
 

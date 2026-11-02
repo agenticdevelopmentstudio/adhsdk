@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar
 
@@ -14,15 +16,15 @@ class AddPendingUser:
     """
     Attributes:
         name (str):
-        email (Union[Unset, str]):
-        phone (Union[Unset, str]):
-        note (Union[Unset, str]):
+        email (str | Unset):
+        phone (str | Unset):
+        note (str | Unset):
     """
 
     name: str
-    email: Unset | str = UNSET
-    phone: Unset | str = UNSET
-    note: Unset | str = UNSET
+    email: str | Unset = UNSET
+    phone: str | Unset = UNSET
+    note: str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:

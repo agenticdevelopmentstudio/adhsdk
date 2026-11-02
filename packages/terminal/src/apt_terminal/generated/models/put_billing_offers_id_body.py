@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -12,34 +14,34 @@ T = TypeVar("T", bound="PutBillingOffersIdBody")
 class PutBillingOffersIdBody:
     """
     Attributes:
-        ecosystem_id (Union[Unset, str]):
-        slug (Union[Unset, str]):
-        name (Union[Unset, str]):
-        description (Union[None, Unset, str]):
-        purpose (Union[Unset, str]):
-        stripe_price_id (Union[Unset, str]):
-        stripe_product_id (Union[None, Unset, str]):
-        collection_method (Union[Unset, str]):
-        days_until_due (Union[None, Unset, int]):
-        grants_ecosystem_id (Union[None, Unset, str]):
-        lapse_action (Union[Unset, str]):
-        grace_days (Union[Unset, int]):
-        is_active (Union[Unset, bool]):
+        ecosystem_id (str | Unset):
+        slug (str | Unset):
+        name (str | Unset):
+        description (None | str | Unset):
+        purpose (str | Unset):
+        stripe_price_id (str | Unset):
+        stripe_product_id (None | str | Unset):
+        collection_method (str | Unset):
+        days_until_due (int | None | Unset):
+        grants_ecosystem_id (None | str | Unset):
+        lapse_action (str | Unset):
+        grace_days (int | Unset):
+        is_active (bool | Unset):
     """
 
-    ecosystem_id: Unset | str = UNSET
-    slug: Unset | str = UNSET
-    name: Unset | str = UNSET
-    description: None | Unset | str = UNSET
-    purpose: Unset | str = UNSET
-    stripe_price_id: Unset | str = UNSET
-    stripe_product_id: None | Unset | str = UNSET
-    collection_method: Unset | str = UNSET
-    days_until_due: None | Unset | int = UNSET
-    grants_ecosystem_id: None | Unset | str = UNSET
-    lapse_action: Unset | str = UNSET
-    grace_days: Unset | int = UNSET
-    is_active: Unset | bool = UNSET
+    ecosystem_id: str | Unset = UNSET
+    slug: str | Unset = UNSET
+    name: str | Unset = UNSET
+    description: None | str | Unset = UNSET
+    purpose: str | Unset = UNSET
+    stripe_price_id: str | Unset = UNSET
+    stripe_product_id: None | str | Unset = UNSET
+    collection_method: str | Unset = UNSET
+    days_until_due: int | None | Unset = UNSET
+    grants_ecosystem_id: None | str | Unset = UNSET
+    lapse_action: str | Unset = UNSET
+    grace_days: int | Unset = UNSET
+    is_active: bool | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
         ecosystem_id = self.ecosystem_id
@@ -48,7 +50,7 @@ class PutBillingOffersIdBody:
 
         name = self.name
 
-        description: None | Unset | str
+        description: None | str | Unset
         if isinstance(self.description, Unset):
             description = UNSET
         else:
@@ -58,7 +60,7 @@ class PutBillingOffersIdBody:
 
         stripe_price_id = self.stripe_price_id
 
-        stripe_product_id: None | Unset | str
+        stripe_product_id: None | str | Unset
         if isinstance(self.stripe_product_id, Unset):
             stripe_product_id = UNSET
         else:
@@ -66,13 +68,13 @@ class PutBillingOffersIdBody:
 
         collection_method = self.collection_method
 
-        days_until_due: None | Unset | int
+        days_until_due: int | None | Unset
         if isinstance(self.days_until_due, Unset):
             days_until_due = UNSET
         else:
             days_until_due = self.days_until_due
 
-        grants_ecosystem_id: None | Unset | str
+        grants_ecosystem_id: None | str | Unset
         if isinstance(self.grants_ecosystem_id, Unset):
             grants_ecosystem_id = UNSET
         else:
@@ -125,12 +127,12 @@ class PutBillingOffersIdBody:
 
         name = d.pop("name", UNSET)
 
-        def _parse_description(data: object) -> None | Unset | str:
+        def _parse_description(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         description = _parse_description(d.pop("description", UNSET))
 
@@ -138,32 +140,32 @@ class PutBillingOffersIdBody:
 
         stripe_price_id = d.pop("stripePriceId", UNSET)
 
-        def _parse_stripe_product_id(data: object) -> None | Unset | str:
+        def _parse_stripe_product_id(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         stripe_product_id = _parse_stripe_product_id(d.pop("stripeProductId", UNSET))
 
         collection_method = d.pop("collectionMethod", UNSET)
 
-        def _parse_days_until_due(data: object) -> None | Unset | int:
+        def _parse_days_until_due(data: object) -> int | None | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | int, data)
+            return cast(int | None | Unset, data)
 
         days_until_due = _parse_days_until_due(d.pop("daysUntilDue", UNSET))
 
-        def _parse_grants_ecosystem_id(data: object) -> None | Unset | str:
+        def _parse_grants_ecosystem_id(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         grants_ecosystem_id = _parse_grants_ecosystem_id(d.pop("grantsEcosystemId", UNSET))
 

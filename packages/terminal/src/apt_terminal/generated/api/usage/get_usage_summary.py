@@ -12,7 +12,7 @@ from ...types import UNSET, Response, Unset
 
 def _get_kwargs(
     *,
-    workspace: Unset | str = UNSET,
+    workspace: str | Unset = UNSET,
 ) -> dict[str, Any]:
     params: dict[str, Any] = {}
 
@@ -72,7 +72,7 @@ def _build_response(
 def sync_detailed(
     *,
     client: AuthenticatedClient,
-    workspace: Unset | str = UNSET,
+    workspace: str | Unset = UNSET,
 ) -> Response[Error | UsageSummary]:
     """Current-period usage per principal (self, or a workspace)
 
@@ -82,14 +82,14 @@ def sync_detailed(
     is appended for platform admins only.
 
     Args:
-        workspace (Union[Unset, str]):
+        workspace (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, UsageSummary]]
+        Response[Error | UsageSummary]
     """
 
     kwargs = _get_kwargs(
@@ -106,7 +106,7 @@ def sync_detailed(
 def sync(
     *,
     client: AuthenticatedClient,
-    workspace: Unset | str = UNSET,
+    workspace: str | Unset = UNSET,
 ) -> Error | UsageSummary | None:
     """Current-period usage per principal (self, or a workspace)
 
@@ -116,14 +116,14 @@ def sync(
     is appended for platform admins only.
 
     Args:
-        workspace (Union[Unset, str]):
+        workspace (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, UsageSummary]
+        Error | UsageSummary
     """
 
     return sync_detailed(
@@ -135,7 +135,7 @@ def sync(
 async def asyncio_detailed(
     *,
     client: AuthenticatedClient,
-    workspace: Unset | str = UNSET,
+    workspace: str | Unset = UNSET,
 ) -> Response[Error | UsageSummary]:
     """Current-period usage per principal (self, or a workspace)
 
@@ -145,14 +145,14 @@ async def asyncio_detailed(
     is appended for platform admins only.
 
     Args:
-        workspace (Union[Unset, str]):
+        workspace (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, UsageSummary]]
+        Response[Error | UsageSummary]
     """
 
     kwargs = _get_kwargs(
@@ -167,7 +167,7 @@ async def asyncio_detailed(
 async def asyncio(
     *,
     client: AuthenticatedClient,
-    workspace: Unset | str = UNSET,
+    workspace: str | Unset = UNSET,
 ) -> Error | UsageSummary | None:
     """Current-period usage per principal (self, or a workspace)
 
@@ -177,14 +177,14 @@ async def asyncio(
     is appended for platform admins only.
 
     Args:
-        workspace (Union[Unset, str]):
+        workspace (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, UsageSummary]
+        Error | UsageSummary
     """
 
     return (

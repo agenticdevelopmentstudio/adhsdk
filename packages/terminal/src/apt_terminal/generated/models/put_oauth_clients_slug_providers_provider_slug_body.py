@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -13,22 +15,22 @@ T = TypeVar("T", bound="PutOauthClientsSlugProvidersProviderSlugBody")
 class PutOauthClientsSlugProvidersProviderSlugBody:
     """
     Attributes:
-        client_id_override (Union[None, Unset, str]):
-        client_secret_override (Union[None, Unset, str]):
+        client_id_override (None | str | Unset):
+        client_secret_override (None | str | Unset):
     """
 
-    client_id_override: None | Unset | str = UNSET
-    client_secret_override: None | Unset | str = UNSET
+    client_id_override: None | str | Unset = UNSET
+    client_secret_override: None | str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
-        client_id_override: None | Unset | str
+        client_id_override: None | str | Unset
         if isinstance(self.client_id_override, Unset):
             client_id_override = UNSET
         else:
             client_id_override = self.client_id_override
 
-        client_secret_override: None | Unset | str
+        client_secret_override: None | str | Unset
         if isinstance(self.client_secret_override, Unset):
             client_secret_override = UNSET
         else:
@@ -48,21 +50,21 @@ class PutOauthClientsSlugProvidersProviderSlugBody:
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
         d = dict(src_dict)
 
-        def _parse_client_id_override(data: object) -> None | Unset | str:
+        def _parse_client_id_override(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         client_id_override = _parse_client_id_override(d.pop("clientIdOverride", UNSET))
 
-        def _parse_client_secret_override(data: object) -> None | Unset | str:
+        def _parse_client_secret_override(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         client_secret_override = _parse_client_secret_override(d.pop("clientSecretOverride", UNSET))
 

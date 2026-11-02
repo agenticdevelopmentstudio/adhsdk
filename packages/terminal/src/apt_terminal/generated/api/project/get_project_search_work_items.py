@@ -15,8 +15,8 @@ from ...types import UNSET, Response, Unset
 def _get_kwargs(
     *,
     q: str,
-    workspace: Unset | str = UNSET,
-    limit: Unset | int = 20,
+    workspace: str | Unset = UNSET,
+    limit: int | Unset = 20,
 ) -> dict[str, Any]:
     params: dict[str, Any] = {}
 
@@ -81,8 +81,8 @@ def sync_detailed(
     *,
     client: AuthenticatedClient,
     q: str,
-    workspace: Unset | str = UNSET,
-    limit: Unset | int = 20,
+    workspace: str | Unset = UNSET,
+    limit: int | Unset = 20,
 ) -> Response[Error | GetProjectSearchWorkItemsResponse200]:
     """Search the caller's work items across every board they reach
 
@@ -96,15 +96,15 @@ def sync_detailed(
 
     Args:
         q (str):
-        workspace (Union[Unset, str]):
-        limit (Union[Unset, int]):  Default: 20.
+        workspace (str | Unset):
+        limit (int | Unset):  Default: 20.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, GetProjectSearchWorkItemsResponse200]]
+        Response[Error | GetProjectSearchWorkItemsResponse200]
     """
 
     kwargs = _get_kwargs(
@@ -124,8 +124,8 @@ def sync(
     *,
     client: AuthenticatedClient,
     q: str,
-    workspace: Unset | str = UNSET,
-    limit: Unset | int = 20,
+    workspace: str | Unset = UNSET,
+    limit: int | Unset = 20,
 ) -> Error | GetProjectSearchWorkItemsResponse200 | None:
     """Search the caller's work items across every board they reach
 
@@ -139,15 +139,15 @@ def sync(
 
     Args:
         q (str):
-        workspace (Union[Unset, str]):
-        limit (Union[Unset, int]):  Default: 20.
+        workspace (str | Unset):
+        limit (int | Unset):  Default: 20.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, GetProjectSearchWorkItemsResponse200]
+        Error | GetProjectSearchWorkItemsResponse200
     """
 
     return sync_detailed(
@@ -162,8 +162,8 @@ async def asyncio_detailed(
     *,
     client: AuthenticatedClient,
     q: str,
-    workspace: Unset | str = UNSET,
-    limit: Unset | int = 20,
+    workspace: str | Unset = UNSET,
+    limit: int | Unset = 20,
 ) -> Response[Error | GetProjectSearchWorkItemsResponse200]:
     """Search the caller's work items across every board they reach
 
@@ -177,15 +177,15 @@ async def asyncio_detailed(
 
     Args:
         q (str):
-        workspace (Union[Unset, str]):
-        limit (Union[Unset, int]):  Default: 20.
+        workspace (str | Unset):
+        limit (int | Unset):  Default: 20.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, GetProjectSearchWorkItemsResponse200]]
+        Response[Error | GetProjectSearchWorkItemsResponse200]
     """
 
     kwargs = _get_kwargs(
@@ -203,8 +203,8 @@ async def asyncio(
     *,
     client: AuthenticatedClient,
     q: str,
-    workspace: Unset | str = UNSET,
-    limit: Unset | int = 20,
+    workspace: str | Unset = UNSET,
+    limit: int | Unset = 20,
 ) -> Error | GetProjectSearchWorkItemsResponse200 | None:
     """Search the caller's work items across every board they reach
 
@@ -218,15 +218,15 @@ async def asyncio(
 
     Args:
         q (str):
-        workspace (Union[Unset, str]):
-        limit (Union[Unset, int]):  Default: 20.
+        workspace (str | Unset):
+        limit (int | Unset):  Default: 20.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, GetProjectSearchWorkItemsResponse200]
+        Error | GetProjectSearchWorkItemsResponse200
     """
 
     return (

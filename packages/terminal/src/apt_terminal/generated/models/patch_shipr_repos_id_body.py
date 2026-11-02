@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, TypeVar, Union, cast
+from typing import TYPE_CHECKING, Any, TypeVar, cast
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -17,27 +19,27 @@ T = TypeVar("T", bound="PatchShiprReposIdBody")
 class PatchShiprReposIdBody:
     """
     Attributes:
-        group_id (Union[None, Unset, str]):
-        position (Union[Unset, int]):
-        slug (Union[Unset, str]): owner/name of the DEPLOYMENT repository. 409 once it is provisioned.
-        display_name (Union[None, Unset, str]): The source repository’s label, shown in the console instead of its slug.
-            Null clears it.
-        ship_branch (Union[Unset, str]):
-        ci_context (Union[Unset, str]):
-        env_branches (Union[Unset, PatchShiprReposIdBodyEnvBranches]):
+        group_id (None | str | Unset):
+        position (int | Unset):
+        slug (str | Unset): owner/name of the DEPLOYMENT repository. 409 once it is provisioned.
+        display_name (None | str | Unset): The source repository’s label, shown in the console instead of its slug. Null
+            clears it.
+        ship_branch (str | Unset):
+        ci_context (str | Unset):
+        env_branches (PatchShiprReposIdBodyEnvBranches | Unset):
     """
 
-    group_id: None | Unset | str = UNSET
-    position: Unset | int = UNSET
-    slug: Unset | str = UNSET
-    display_name: None | Unset | str = UNSET
-    ship_branch: Unset | str = UNSET
-    ci_context: Unset | str = UNSET
-    env_branches: Union[Unset, "PatchShiprReposIdBodyEnvBranches"] = UNSET
+    group_id: None | str | Unset = UNSET
+    position: int | Unset = UNSET
+    slug: str | Unset = UNSET
+    display_name: None | str | Unset = UNSET
+    ship_branch: str | Unset = UNSET
+    ci_context: str | Unset = UNSET
+    env_branches: PatchShiprReposIdBodyEnvBranches | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
-        group_id: None | Unset | str
+        group_id: None | str | Unset
         if isinstance(self.group_id, Unset):
             group_id = UNSET
         else:
@@ -47,7 +49,7 @@ class PatchShiprReposIdBody:
 
         slug = self.slug
 
-        display_name: None | Unset | str
+        display_name: None | str | Unset
         if isinstance(self.display_name, Unset):
             display_name = UNSET
         else:
@@ -57,7 +59,7 @@ class PatchShiprReposIdBody:
 
         ci_context = self.ci_context
 
-        env_branches: Unset | dict[str, Any] = UNSET
+        env_branches: dict[str, Any] | Unset = UNSET
         if not isinstance(self.env_branches, Unset):
             env_branches = self.env_branches.to_dict()
 
@@ -83,16 +85,18 @@ class PatchShiprReposIdBody:
 
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
-        from ..models.patch_shipr_repos_id_body_env_branches import PatchShiprReposIdBodyEnvBranches
+        from ..models.patch_shipr_repos_id_body_env_branches import (
+            PatchShiprReposIdBodyEnvBranches,
+        )
 
         d = dict(src_dict)
 
-        def _parse_group_id(data: object) -> None | Unset | str:
+        def _parse_group_id(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         group_id = _parse_group_id(d.pop("groupId", UNSET))
 
@@ -100,12 +104,12 @@ class PatchShiprReposIdBody:
 
         slug = d.pop("slug", UNSET)
 
-        def _parse_display_name(data: object) -> None | Unset | str:
+        def _parse_display_name(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         display_name = _parse_display_name(d.pop("displayName", UNSET))
 
@@ -114,7 +118,7 @@ class PatchShiprReposIdBody:
         ci_context = d.pop("ciContext", UNSET)
 
         _env_branches = d.pop("envBranches", UNSET)
-        env_branches: Unset | PatchShiprReposIdBodyEnvBranches
+        env_branches: PatchShiprReposIdBodyEnvBranches | Unset
         if isinstance(_env_branches, Unset):
             env_branches = UNSET
         else:

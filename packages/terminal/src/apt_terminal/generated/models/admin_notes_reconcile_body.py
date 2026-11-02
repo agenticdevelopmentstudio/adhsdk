@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import TYPE_CHECKING, Any, TypeVar
 
@@ -17,12 +19,12 @@ class AdminNotesReconcileBody:
     Attributes:
         subject_table (str):
         subject_id (str):
-        notes (list['AdminNoteInput']): The complete set for this subject. Anything absent is deleted.
+        notes (list[AdminNoteInput]): The complete set for this subject. Anything absent is deleted.
     """
 
     subject_table: str
     subject_id: str
-    notes: list["AdminNoteInput"]
+    notes: list[AdminNoteInput]
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:

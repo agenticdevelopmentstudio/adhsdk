@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -13,22 +15,22 @@ T = TypeVar("T", bound="PostProcessingJobsClaimBody")
 class PostProcessingJobsClaimBody:
     """
     Attributes:
-        job_types (Union[Unset, list[str]]): Filter to specific job types; absent = any type
-        min_priority (Union[Unset, int]): Claim only jobs with priority >= this value (interactive lane = 100)
-        batch (Union[Unset, int]): Max jobs to claim (default 1)
-        lease_ms (Union[Unset, int]): Lease duration in ms (default 30 000)
-        worker_id (Union[Unset, str]): Label for the claimed rows; defaults to api-token name or userId
+        job_types (list[str] | Unset): Filter to specific job types; absent = any type
+        min_priority (int | Unset): Claim only jobs with priority >= this value (interactive lane = 100)
+        batch (int | Unset): Max jobs to claim (default 1)
+        lease_ms (int | Unset): Lease duration in ms (default 30 000)
+        worker_id (str | Unset): Label for the claimed rows; defaults to api-token name or userId
     """
 
-    job_types: Unset | list[str] = UNSET
-    min_priority: Unset | int = UNSET
-    batch: Unset | int = UNSET
-    lease_ms: Unset | int = UNSET
-    worker_id: Unset | str = UNSET
+    job_types: list[str] | Unset = UNSET
+    min_priority: int | Unset = UNSET
+    batch: int | Unset = UNSET
+    lease_ms: int | Unset = UNSET
+    worker_id: str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
-        job_types: Unset | list[str] = UNSET
+        job_types: list[str] | Unset = UNSET
         if not isinstance(self.job_types, Unset):
             job_types = self.job_types
 

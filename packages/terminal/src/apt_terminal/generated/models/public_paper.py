@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -13,7 +15,7 @@ class PublicPaper:
     Attributes:
         route (str):
         title (str):
-        category (Union[None, str]):
+        category (None | str):
         tags (list[str]):
         content (str): Full raw markdown, byte-exact.
         created_at (str):

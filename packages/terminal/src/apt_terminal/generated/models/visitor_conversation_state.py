@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class VisitorConversationState(str, Enum):
+class VisitorConversationState(StrEnum):
     CLOSED = "closed"
     OPEN = "open"
 

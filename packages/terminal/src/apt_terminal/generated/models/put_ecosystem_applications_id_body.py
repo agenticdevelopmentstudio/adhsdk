@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar
 
@@ -12,18 +14,18 @@ T = TypeVar("T", bound="PutEcosystemApplicationsIdBody")
 class PutEcosystemApplicationsIdBody:
     """
     Attributes:
-        ecosystem_id (Union[Unset, str]):
-        slug (Union[Unset, str]):
-        display_name (Union[Unset, str]):
-        consumer_kind (Union[Unset, str]):
-        sync_txid (Union[Unset, int]):
+        ecosystem_id (str | Unset):
+        slug (str | Unset):
+        display_name (str | Unset):
+        consumer_kind (str | Unset):
+        sync_txid (int | Unset):
     """
 
-    ecosystem_id: Unset | str = UNSET
-    slug: Unset | str = UNSET
-    display_name: Unset | str = UNSET
-    consumer_kind: Unset | str = UNSET
-    sync_txid: Unset | int = UNSET
+    ecosystem_id: str | Unset = UNSET
+    slug: str | Unset = UNSET
+    display_name: str | Unset = UNSET
+    consumer_kind: str | Unset = UNSET
+    sync_txid: int | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
         ecosystem_id = self.ecosystem_id

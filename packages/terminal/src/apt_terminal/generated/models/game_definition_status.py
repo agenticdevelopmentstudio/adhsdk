@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class GameDefinitionStatus(str, Enum):
+class GameDefinitionStatus(StrEnum):
     ACTIVE = "active"
     RETIRED = "retired"
 

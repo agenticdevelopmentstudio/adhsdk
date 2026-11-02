@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar
 
@@ -15,12 +17,12 @@ class PostContentBookmarksBody:
     Attributes:
         target_kind (str):
         target_id (str):
-        notify (Union[Unset, bool]): Also subscribe to the target’s activity notifications (default false)
+        notify (bool | Unset): Also subscribe to the target’s activity notifications (default false)
     """
 
     target_kind: str
     target_id: str
-    notify: Unset | bool = UNSET
+    notify: bool | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:

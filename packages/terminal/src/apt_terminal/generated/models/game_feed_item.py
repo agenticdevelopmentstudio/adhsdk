@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, TypeVar, Union, cast
+from typing import TYPE_CHECKING, Any, TypeVar, cast
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -21,29 +23,29 @@ class GameFeedItem:
         id (str):
         game_id (str):
         kind (str):
-        role (Union[None, str]):
-        slot (Union[None, Unset, str]):
-        data (Union['GameFeedItemDataType0', None, Unset]):
-        text (Union[None, Unset, str]):
-        content_format (Union[None, Unset, str]):
-        summary (Union['GameFeedItemSummaryType0', None, Unset]):
-        score (Union[Unset, int]):
-        exposure_count (Union[Unset, int]):
-        published_at (Union[None, Unset, str]):
+        role (None | str):
+        slot (None | str | Unset):
+        data (GameFeedItemDataType0 | None | Unset):
+        text (None | str | Unset):
+        content_format (None | str | Unset):
+        summary (GameFeedItemSummaryType0 | None | Unset):
+        score (int | Unset):
+        exposure_count (int | Unset):
+        published_at (None | str | Unset):
     """
 
     id: str
     game_id: str
     kind: str
     role: None | str
-    slot: None | Unset | str = UNSET
-    data: Union["GameFeedItemDataType0", None, Unset] = UNSET
-    text: None | Unset | str = UNSET
-    content_format: None | Unset | str = UNSET
-    summary: Union["GameFeedItemSummaryType0", None, Unset] = UNSET
-    score: Unset | int = UNSET
-    exposure_count: Unset | int = UNSET
-    published_at: None | Unset | str = UNSET
+    slot: None | str | Unset = UNSET
+    data: GameFeedItemDataType0 | None | Unset = UNSET
+    text: None | str | Unset = UNSET
+    content_format: None | str | Unset = UNSET
+    summary: GameFeedItemSummaryType0 | None | Unset = UNSET
+    score: int | Unset = UNSET
+    exposure_count: int | Unset = UNSET
+    published_at: None | str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -59,13 +61,13 @@ class GameFeedItem:
         role: None | str
         role = self.role
 
-        slot: None | Unset | str
+        slot: None | str | Unset
         if isinstance(self.slot, Unset):
             slot = UNSET
         else:
             slot = self.slot
 
-        data: None | Unset | dict[str, Any]
+        data: dict[str, Any] | None | Unset
         if isinstance(self.data, Unset):
             data = UNSET
         elif isinstance(self.data, GameFeedItemDataType0):
@@ -73,19 +75,19 @@ class GameFeedItem:
         else:
             data = self.data
 
-        text: None | Unset | str
+        text: None | str | Unset
         if isinstance(self.text, Unset):
             text = UNSET
         else:
             text = self.text
 
-        content_format: None | Unset | str
+        content_format: None | str | Unset
         if isinstance(self.content_format, Unset):
             content_format = UNSET
         else:
             content_format = self.content_format
 
-        summary: None | Unset | dict[str, Any]
+        summary: dict[str, Any] | None | Unset
         if isinstance(self.summary, Unset):
             summary = UNSET
         elif isinstance(self.summary, GameFeedItemSummaryType0):
@@ -97,7 +99,7 @@ class GameFeedItem:
 
         exposure_count = self.exposure_count
 
-        published_at: None | Unset | str
+        published_at: None | str | Unset
         if isinstance(self.published_at, Unset):
             published_at = UNSET
         else:
@@ -151,16 +153,16 @@ class GameFeedItem:
 
         role = _parse_role(d.pop("role"))
 
-        def _parse_slot(data: object) -> None | Unset | str:
+        def _parse_slot(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         slot = _parse_slot(d.pop("slot", UNSET))
 
-        def _parse_data(data: object) -> Union["GameFeedItemDataType0", None, Unset]:
+        def _parse_data(data: object) -> GameFeedItemDataType0 | None | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
@@ -171,31 +173,31 @@ class GameFeedItem:
                 data_type_0 = GameFeedItemDataType0.from_dict(data)
 
                 return data_type_0
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
-            return cast(Union["GameFeedItemDataType0", None, Unset], data)
+            return cast(GameFeedItemDataType0 | None | Unset, data)
 
         data = _parse_data(d.pop("data", UNSET))
 
-        def _parse_text(data: object) -> None | Unset | str:
+        def _parse_text(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         text = _parse_text(d.pop("text", UNSET))
 
-        def _parse_content_format(data: object) -> None | Unset | str:
+        def _parse_content_format(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         content_format = _parse_content_format(d.pop("contentFormat", UNSET))
 
-        def _parse_summary(data: object) -> Union["GameFeedItemSummaryType0", None, Unset]:
+        def _parse_summary(data: object) -> GameFeedItemSummaryType0 | None | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
@@ -206,9 +208,9 @@ class GameFeedItem:
                 summary_type_0 = GameFeedItemSummaryType0.from_dict(data)
 
                 return summary_type_0
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
-            return cast(Union["GameFeedItemSummaryType0", None, Unset], data)
+            return cast(GameFeedItemSummaryType0 | None | Unset, data)
 
         summary = _parse_summary(d.pop("summary", UNSET))
 
@@ -216,12 +218,12 @@ class GameFeedItem:
 
         exposure_count = d.pop("exposureCount", UNSET)
 
-        def _parse_published_at(data: object) -> None | Unset | str:
+        def _parse_published_at(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         published_at = _parse_published_at(d.pop("publishedAt", UNSET))
 

@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class RegistryEntryValueVisibilityAdditionalProperty(str, Enum):
+class RegistryEntryValueVisibilityAdditionalProperty(StrEnum):
     AUTHENTICATED = "authenticated"
     PRIVATE = "private"
     PUBLIC = "public"

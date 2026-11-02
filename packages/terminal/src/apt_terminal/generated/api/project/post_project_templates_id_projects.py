@@ -1,5 +1,6 @@
 from http import HTTPStatus
 from typing import Any
+from urllib.parse import quote
 
 import httpx
 
@@ -16,8 +17,8 @@ from ...types import UNSET, Response, Unset
 def _get_kwargs(
     id: str,
     *,
-    body: PostProjectTemplatesIdProjectsBody,
-    workspace: Unset | str = UNSET,
+    body: PostProjectTemplatesIdProjectsBody | Unset = UNSET,
+    workspace: str | Unset = UNSET,
 ) -> dict[str, Any]:
     headers: dict[str, Any] = {}
 
@@ -29,11 +30,14 @@ def _get_kwargs(
 
     _kwargs: dict[str, Any] = {
         "method": "post",
-        "url": f"/project/templates/{id}/projects",
+        "url": "/project/templates/{id}/projects".format(
+            id=quote(str(id), safe=""),
+        ),
         "params": params,
     }
 
-    _kwargs["json"] = body.to_dict()
+    if not isinstance(body, Unset):
+        _kwargs["json"] = body.to_dict()
 
     headers["Content-Type"] = "application/json"
 
@@ -90,8 +94,8 @@ def sync_detailed(
     id: str,
     *,
     client: AuthenticatedClient,
-    body: PostProjectTemplatesIdProjectsBody,
-    workspace: Unset | str = UNSET,
+    body: PostProjectTemplatesIdProjectsBody | Unset = UNSET,
+    workspace: str | Unset = UNSET,
 ) -> Response[Error | PostProjectTemplatesIdProjectsResponse201]:
     """Build a board (columns, estimate scale, plan) from a project template
 
@@ -101,15 +105,15 @@ def sync_detailed(
 
     Args:
         id (str):
-        workspace (Union[Unset, str]):
-        body (PostProjectTemplatesIdProjectsBody):
+        workspace (str | Unset):
+        body (PostProjectTemplatesIdProjectsBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, PostProjectTemplatesIdProjectsResponse201]]
+        Response[Error | PostProjectTemplatesIdProjectsResponse201]
     """
 
     kwargs = _get_kwargs(
@@ -129,8 +133,8 @@ def sync(
     id: str,
     *,
     client: AuthenticatedClient,
-    body: PostProjectTemplatesIdProjectsBody,
-    workspace: Unset | str = UNSET,
+    body: PostProjectTemplatesIdProjectsBody | Unset = UNSET,
+    workspace: str | Unset = UNSET,
 ) -> Error | PostProjectTemplatesIdProjectsResponse201 | None:
     """Build a board (columns, estimate scale, plan) from a project template
 
@@ -140,15 +144,15 @@ def sync(
 
     Args:
         id (str):
-        workspace (Union[Unset, str]):
-        body (PostProjectTemplatesIdProjectsBody):
+        workspace (str | Unset):
+        body (PostProjectTemplatesIdProjectsBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, PostProjectTemplatesIdProjectsResponse201]
+        Error | PostProjectTemplatesIdProjectsResponse201
     """
 
     return sync_detailed(
@@ -163,8 +167,8 @@ async def asyncio_detailed(
     id: str,
     *,
     client: AuthenticatedClient,
-    body: PostProjectTemplatesIdProjectsBody,
-    workspace: Unset | str = UNSET,
+    body: PostProjectTemplatesIdProjectsBody | Unset = UNSET,
+    workspace: str | Unset = UNSET,
 ) -> Response[Error | PostProjectTemplatesIdProjectsResponse201]:
     """Build a board (columns, estimate scale, plan) from a project template
 
@@ -174,15 +178,15 @@ async def asyncio_detailed(
 
     Args:
         id (str):
-        workspace (Union[Unset, str]):
-        body (PostProjectTemplatesIdProjectsBody):
+        workspace (str | Unset):
+        body (PostProjectTemplatesIdProjectsBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, PostProjectTemplatesIdProjectsResponse201]]
+        Response[Error | PostProjectTemplatesIdProjectsResponse201]
     """
 
     kwargs = _get_kwargs(
@@ -200,8 +204,8 @@ async def asyncio(
     id: str,
     *,
     client: AuthenticatedClient,
-    body: PostProjectTemplatesIdProjectsBody,
-    workspace: Unset | str = UNSET,
+    body: PostProjectTemplatesIdProjectsBody | Unset = UNSET,
+    workspace: str | Unset = UNSET,
 ) -> Error | PostProjectTemplatesIdProjectsResponse201 | None:
     """Build a board (columns, estimate scale, plan) from a project template
 
@@ -211,15 +215,15 @@ async def asyncio(
 
     Args:
         id (str):
-        workspace (Union[Unset, str]):
-        body (PostProjectTemplatesIdProjectsBody):
+        workspace (str | Unset):
+        body (PostProjectTemplatesIdProjectsBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, PostProjectTemplatesIdProjectsResponse201]
+        Error | PostProjectTemplatesIdProjectsResponse201
     """
 
     return (

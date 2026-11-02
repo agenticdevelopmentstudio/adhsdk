@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -14,7 +16,7 @@ class SignupListPublic:
     """
     Attributes:
         name (str):
-        description (Union[None, str]):
+        description (None | str):
         status (SignupListPublicStatus):
         min_age_ms (int): How long after this response a submit carrying the nonce is accepted. A client MUST wait it
             out: submitting sooner is rejected as an opaque `400 invalid submission`, and because a retry needs a fresh

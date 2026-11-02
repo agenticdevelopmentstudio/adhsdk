@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class PutMeAppearanceBodyTextSize(str, Enum):
+class PutMeAppearanceBodyTextSize(StrEnum):
     DEFAULT = "default"
     EXTRA_LARGE = "extra-large"
     LARGE = "large"

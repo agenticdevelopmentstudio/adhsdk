@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class PostShiprRunsBodyScopeKind(str, Enum):
+class PostShiprRunsBodyScopeKind(StrEnum):
     ALL = "all"
     DEPLOY_REPO = "deploy_repo"
     DEV_REPO = "dev_repo"

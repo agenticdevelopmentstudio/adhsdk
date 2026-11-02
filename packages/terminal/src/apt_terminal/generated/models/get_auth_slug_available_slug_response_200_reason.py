@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class GetAuthSlugAvailableSlugResponse200Reason(str, Enum):
+class GetAuthSlugAvailableSlugResponse200Reason(StrEnum):
     FORMAT = "format"
     TAKEN = "taken"
 

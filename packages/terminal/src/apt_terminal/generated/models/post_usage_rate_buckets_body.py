@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar
 
@@ -15,13 +17,13 @@ class PostUsageRateBucketsBody:
         scope (str):
         principal_id (str):
         tokens_avail (int):
-        refilled_at (Union[Unset, str]):
+        refilled_at (str | Unset):
     """
 
     scope: str
     principal_id: str
     tokens_avail: int
-    refilled_at: Unset | str = UNSET
+    refilled_at: str | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
         scope = self.scope

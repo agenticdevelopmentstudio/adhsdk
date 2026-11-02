@@ -12,12 +12,12 @@ from ...models.post_integration_integration_calendar_events_body import (
 from ...models.post_integration_integration_calendar_events_response_201 import (
     PostIntegrationIntegrationCalendarEventsResponse201,
 )
-from ...types import Response
+from ...types import UNSET, Response, Unset
 
 
 def _get_kwargs(
     *,
-    body: PostIntegrationIntegrationCalendarEventsBody,
+    body: PostIntegrationIntegrationCalendarEventsBody | Unset = UNSET,
 ) -> dict[str, Any]:
     headers: dict[str, Any] = {}
 
@@ -26,7 +26,8 @@ def _get_kwargs(
         "url": "/integration/integration-calendar-events",
     }
 
-    _kwargs["json"] = body.to_dict()
+    if not isinstance(body, Unset):
+        _kwargs["json"] = body.to_dict()
 
     headers["Content-Type"] = "application/json"
 
@@ -74,19 +75,19 @@ def _build_response(
 def sync_detailed(
     *,
     client: AuthenticatedClient,
-    body: PostIntegrationIntegrationCalendarEventsBody,
+    body: PostIntegrationIntegrationCalendarEventsBody | Unset = UNSET,
 ) -> Response[Error | PostIntegrationIntegrationCalendarEventsResponse201]:
     """Create integration_calendar_events
 
     Args:
-        body (PostIntegrationIntegrationCalendarEventsBody):
+        body (PostIntegrationIntegrationCalendarEventsBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, PostIntegrationIntegrationCalendarEventsResponse201]]
+        Response[Error | PostIntegrationIntegrationCalendarEventsResponse201]
     """
 
     kwargs = _get_kwargs(
@@ -103,19 +104,19 @@ def sync_detailed(
 def sync(
     *,
     client: AuthenticatedClient,
-    body: PostIntegrationIntegrationCalendarEventsBody,
+    body: PostIntegrationIntegrationCalendarEventsBody | Unset = UNSET,
 ) -> Error | PostIntegrationIntegrationCalendarEventsResponse201 | None:
     """Create integration_calendar_events
 
     Args:
-        body (PostIntegrationIntegrationCalendarEventsBody):
+        body (PostIntegrationIntegrationCalendarEventsBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, PostIntegrationIntegrationCalendarEventsResponse201]
+        Error | PostIntegrationIntegrationCalendarEventsResponse201
     """
 
     return sync_detailed(
@@ -127,19 +128,19 @@ def sync(
 async def asyncio_detailed(
     *,
     client: AuthenticatedClient,
-    body: PostIntegrationIntegrationCalendarEventsBody,
+    body: PostIntegrationIntegrationCalendarEventsBody | Unset = UNSET,
 ) -> Response[Error | PostIntegrationIntegrationCalendarEventsResponse201]:
     """Create integration_calendar_events
 
     Args:
-        body (PostIntegrationIntegrationCalendarEventsBody):
+        body (PostIntegrationIntegrationCalendarEventsBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, PostIntegrationIntegrationCalendarEventsResponse201]]
+        Response[Error | PostIntegrationIntegrationCalendarEventsResponse201]
     """
 
     kwargs = _get_kwargs(
@@ -154,19 +155,19 @@ async def asyncio_detailed(
 async def asyncio(
     *,
     client: AuthenticatedClient,
-    body: PostIntegrationIntegrationCalendarEventsBody,
+    body: PostIntegrationIntegrationCalendarEventsBody | Unset = UNSET,
 ) -> Error | PostIntegrationIntegrationCalendarEventsResponse201 | None:
     """Create integration_calendar_events
 
     Args:
-        body (PostIntegrationIntegrationCalendarEventsBody):
+        body (PostIntegrationIntegrationCalendarEventsBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, PostIntegrationIntegrationCalendarEventsResponse201]
+        Error | PostIntegrationIntegrationCalendarEventsResponse201
     """
 
     return (

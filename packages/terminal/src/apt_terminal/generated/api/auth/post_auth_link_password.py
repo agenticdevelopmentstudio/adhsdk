@@ -7,12 +7,12 @@ from ... import errors
 from ...client import AuthenticatedClient, Client
 from ...models.error import Error
 from ...models.post_auth_link_password_body import PostAuthLinkPasswordBody
-from ...types import Response
+from ...types import UNSET, Response, Unset
 
 
 def _get_kwargs(
     *,
-    body: PostAuthLinkPasswordBody,
+    body: PostAuthLinkPasswordBody | Unset = UNSET,
 ) -> dict[str, Any]:
     headers: dict[str, Any] = {}
 
@@ -21,7 +21,8 @@ def _get_kwargs(
         "url": "/auth/link-password",
     }
 
-    _kwargs["json"] = body.to_dict()
+    if not isinstance(body, Unset):
+        _kwargs["json"] = body.to_dict()
 
     headers["Content-Type"] = "application/json"
 
@@ -71,19 +72,19 @@ def _build_response(
 def sync_detailed(
     *,
     client: AuthenticatedClient,
-    body: PostAuthLinkPasswordBody,
+    body: PostAuthLinkPasswordBody | Unset = UNSET,
 ) -> Response[Any | Error]:
     """Set or replace the caller's email/password credential
 
     Args:
-        body (PostAuthLinkPasswordBody):
+        body (PostAuthLinkPasswordBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Any, Error]]
+        Response[Any | Error]
     """
 
     kwargs = _get_kwargs(
@@ -100,19 +101,19 @@ def sync_detailed(
 def sync(
     *,
     client: AuthenticatedClient,
-    body: PostAuthLinkPasswordBody,
+    body: PostAuthLinkPasswordBody | Unset = UNSET,
 ) -> Any | Error | None:
     """Set or replace the caller's email/password credential
 
     Args:
-        body (PostAuthLinkPasswordBody):
+        body (PostAuthLinkPasswordBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Any, Error]
+        Any | Error
     """
 
     return sync_detailed(
@@ -124,19 +125,19 @@ def sync(
 async def asyncio_detailed(
     *,
     client: AuthenticatedClient,
-    body: PostAuthLinkPasswordBody,
+    body: PostAuthLinkPasswordBody | Unset = UNSET,
 ) -> Response[Any | Error]:
     """Set or replace the caller's email/password credential
 
     Args:
-        body (PostAuthLinkPasswordBody):
+        body (PostAuthLinkPasswordBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Any, Error]]
+        Response[Any | Error]
     """
 
     kwargs = _get_kwargs(
@@ -151,19 +152,19 @@ async def asyncio_detailed(
 async def asyncio(
     *,
     client: AuthenticatedClient,
-    body: PostAuthLinkPasswordBody,
+    body: PostAuthLinkPasswordBody | Unset = UNSET,
 ) -> Any | Error | None:
     """Set or replace the caller's email/password credential
 
     Args:
-        body (PostAuthLinkPasswordBody):
+        body (PostAuthLinkPasswordBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Any, Error]
+        Any | Error
     """
 
     return (

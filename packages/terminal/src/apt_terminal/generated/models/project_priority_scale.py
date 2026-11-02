@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class ProjectPriorityScale(str, Enum):
+class ProjectPriorityScale(StrEnum):
     NONE = "none"
     STANDARD = "standard"
 

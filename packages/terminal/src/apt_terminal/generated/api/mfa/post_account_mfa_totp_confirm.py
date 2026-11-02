@@ -10,12 +10,12 @@ from ...models.post_account_mfa_totp_confirm_body import PostAccountMfaTotpConfi
 from ...models.post_account_mfa_totp_confirm_response_200 import (
     PostAccountMfaTotpConfirmResponse200,
 )
-from ...types import Response
+from ...types import UNSET, Response, Unset
 
 
 def _get_kwargs(
     *,
-    body: PostAccountMfaTotpConfirmBody,
+    body: PostAccountMfaTotpConfirmBody | Unset = UNSET,
 ) -> dict[str, Any]:
     headers: dict[str, Any] = {}
 
@@ -24,7 +24,8 @@ def _get_kwargs(
         "url": "/account/mfa/totp/confirm",
     }
 
-    _kwargs["json"] = body.to_dict()
+    if not isinstance(body, Unset):
+        _kwargs["json"] = body.to_dict()
 
     headers["Content-Type"] = "application/json"
 
@@ -80,19 +81,19 @@ def _build_response(
 def sync_detailed(
     *,
     client: AuthenticatedClient,
-    body: PostAccountMfaTotpConfirmBody,
+    body: PostAccountMfaTotpConfirmBody | Unset = UNSET,
 ) -> Response[Error | PostAccountMfaTotpConfirmResponse200]:
     """Confirm TOTP enrollment with a current code
 
     Args:
-        body (PostAccountMfaTotpConfirmBody):
+        body (PostAccountMfaTotpConfirmBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, PostAccountMfaTotpConfirmResponse200]]
+        Response[Error | PostAccountMfaTotpConfirmResponse200]
     """
 
     kwargs = _get_kwargs(
@@ -109,19 +110,19 @@ def sync_detailed(
 def sync(
     *,
     client: AuthenticatedClient,
-    body: PostAccountMfaTotpConfirmBody,
+    body: PostAccountMfaTotpConfirmBody | Unset = UNSET,
 ) -> Error | PostAccountMfaTotpConfirmResponse200 | None:
     """Confirm TOTP enrollment with a current code
 
     Args:
-        body (PostAccountMfaTotpConfirmBody):
+        body (PostAccountMfaTotpConfirmBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, PostAccountMfaTotpConfirmResponse200]
+        Error | PostAccountMfaTotpConfirmResponse200
     """
 
     return sync_detailed(
@@ -133,19 +134,19 @@ def sync(
 async def asyncio_detailed(
     *,
     client: AuthenticatedClient,
-    body: PostAccountMfaTotpConfirmBody,
+    body: PostAccountMfaTotpConfirmBody | Unset = UNSET,
 ) -> Response[Error | PostAccountMfaTotpConfirmResponse200]:
     """Confirm TOTP enrollment with a current code
 
     Args:
-        body (PostAccountMfaTotpConfirmBody):
+        body (PostAccountMfaTotpConfirmBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, PostAccountMfaTotpConfirmResponse200]]
+        Response[Error | PostAccountMfaTotpConfirmResponse200]
     """
 
     kwargs = _get_kwargs(
@@ -160,19 +161,19 @@ async def asyncio_detailed(
 async def asyncio(
     *,
     client: AuthenticatedClient,
-    body: PostAccountMfaTotpConfirmBody,
+    body: PostAccountMfaTotpConfirmBody | Unset = UNSET,
 ) -> Error | PostAccountMfaTotpConfirmResponse200 | None:
     """Confirm TOTP enrollment with a current code
 
     Args:
-        body (PostAccountMfaTotpConfirmBody):
+        body (PostAccountMfaTotpConfirmBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, PostAccountMfaTotpConfirmResponse200]
+        Error | PostAccountMfaTotpConfirmResponse200
     """
 
     return (

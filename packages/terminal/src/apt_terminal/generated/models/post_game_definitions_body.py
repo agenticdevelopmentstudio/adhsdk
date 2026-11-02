@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, TypeVar, Union, cast
+from typing import TYPE_CHECKING, Any, TypeVar, cast
 
 from attrs import define as _attrs_define
 
@@ -22,26 +24,26 @@ class PostGameDefinitionsBody:
         kind (str):
         key (str):
         name (str):
-        ecosystem_id (Union[Unset, str]):
-        description (Union[None, Unset, str]):
-        status (Union[Unset, str]):
-        sort_order (Union[Unset, int]):
-        data (Union['PostGameDefinitionsBodyDataType0Type1', None, Unset, bool, float, list[Any], str]):
-        sync_txid (Union[Unset, int]):
+        ecosystem_id (str | Unset):
+        description (None | str | Unset):
+        status (str | Unset):
+        sort_order (int | Unset):
+        data (bool | float | list[Any] | None | PostGameDefinitionsBodyDataType0Type1 | str | Unset):
+        sync_txid (int | Unset):
     """
 
     game_id: str
     kind: str
     key: str
     name: str
-    ecosystem_id: Unset | str = UNSET
-    description: None | Unset | str = UNSET
-    status: Unset | str = UNSET
-    sort_order: Unset | int = UNSET
-    data: Union[
-        "PostGameDefinitionsBodyDataType0Type1", None, Unset, bool, float, list[Any], str
-    ] = UNSET
-    sync_txid: Unset | int = UNSET
+    ecosystem_id: str | Unset = UNSET
+    description: None | str | Unset = UNSET
+    status: str | Unset = UNSET
+    sort_order: int | Unset = UNSET
+    data: bool | float | list[Any] | None | PostGameDefinitionsBodyDataType0Type1 | str | Unset = (
+        UNSET
+    )
+    sync_txid: int | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
         from ..models.post_game_definitions_body_data_type_0_type_1 import (
@@ -58,7 +60,7 @@ class PostGameDefinitionsBody:
 
         ecosystem_id = self.ecosystem_id
 
-        description: None | Unset | str
+        description: None | str | Unset
         if isinstance(self.description, Unset):
             description = UNSET
         else:
@@ -68,7 +70,7 @@ class PostGameDefinitionsBody:
 
         sort_order = self.sort_order
 
-        data: None | Unset | bool | dict[str, Any] | float | list[Any] | str
+        data: bool | dict[str, Any] | float | list[Any] | None | str | Unset
         if isinstance(self.data, Unset):
             data = UNSET
         elif isinstance(self.data, PostGameDefinitionsBodyDataType0Type1):
@@ -123,12 +125,12 @@ class PostGameDefinitionsBody:
 
         ecosystem_id = d.pop("ecosystemId", UNSET)
 
-        def _parse_description(data: object) -> None | Unset | str:
+        def _parse_description(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         description = _parse_description(d.pop("description", UNSET))
 
@@ -138,9 +140,7 @@ class PostGameDefinitionsBody:
 
         def _parse_data(
             data: object,
-        ) -> Union[
-            "PostGameDefinitionsBodyDataType0Type1", None, Unset, bool, float, list[Any], str
-        ]:
+        ) -> bool | float | list[Any] | None | PostGameDefinitionsBodyDataType0Type1 | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
@@ -151,7 +151,7 @@ class PostGameDefinitionsBody:
                 data_type_0_type_1 = PostGameDefinitionsBodyDataType0Type1.from_dict(data)
 
                 return data_type_0_type_1
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
             try:
                 if not isinstance(data, list):
@@ -159,18 +159,16 @@ class PostGameDefinitionsBody:
                 data_type_0_type_2 = cast(list[Any], data)
 
                 return data_type_0_type_2
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
             return cast(
-                Union[
-                    "PostGameDefinitionsBodyDataType0Type1",
-                    None,
-                    Unset,
-                    bool,
-                    float,
-                    list[Any],
-                    str,
-                ],
+                bool
+                | float
+                | list[Any]
+                | None
+                | PostGameDefinitionsBodyDataType0Type1
+                | str
+                | Unset,
                 data,
             )
 

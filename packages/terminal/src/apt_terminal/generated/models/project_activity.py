@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, TypeVar, Union, cast
+from typing import TYPE_CHECKING, Any, TypeVar, cast
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -26,11 +28,11 @@ class ProjectActivity:
             committing a card to a box writes work_item.iteration_changed on that card's project, which is where the history
             is legible.
         created_at (str):
-        work_item_id (Union[None, Unset, str]): set when the event is card-scoped
-        actor_kind (Union[None, Unset, str]):
-        actor_id (Union[None, Unset, str]):
-        actor_label (Union[None, Unset, str]):
-        detail (Union['ProjectActivityDetailType0', None, Unset]): action-specific payload (jsonb)
+        work_item_id (None | str | Unset): set when the event is card-scoped
+        actor_kind (None | str | Unset):
+        actor_id (None | str | Unset):
+        actor_label (None | str | Unset):
+        detail (None | ProjectActivityDetailType0 | Unset): action-specific payload (jsonb)
     """
 
     id: str
@@ -38,15 +40,17 @@ class ProjectActivity:
     project_id: str
     action: str
     created_at: str
-    work_item_id: None | Unset | str = UNSET
-    actor_kind: None | Unset | str = UNSET
-    actor_id: None | Unset | str = UNSET
-    actor_label: None | Unset | str = UNSET
-    detail: Union["ProjectActivityDetailType0", None, Unset] = UNSET
+    work_item_id: None | str | Unset = UNSET
+    actor_kind: None | str | Unset = UNSET
+    actor_id: None | str | Unset = UNSET
+    actor_label: None | str | Unset = UNSET
+    detail: None | ProjectActivityDetailType0 | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
-        from ..models.project_activity_detail_type_0 import ProjectActivityDetailType0
+        from ..models.project_activity_detail_type_0 import (
+            ProjectActivityDetailType0,
+        )
 
         id = self.id
 
@@ -58,31 +62,31 @@ class ProjectActivity:
 
         created_at = self.created_at
 
-        work_item_id: None | Unset | str
+        work_item_id: None | str | Unset
         if isinstance(self.work_item_id, Unset):
             work_item_id = UNSET
         else:
             work_item_id = self.work_item_id
 
-        actor_kind: None | Unset | str
+        actor_kind: None | str | Unset
         if isinstance(self.actor_kind, Unset):
             actor_kind = UNSET
         else:
             actor_kind = self.actor_kind
 
-        actor_id: None | Unset | str
+        actor_id: None | str | Unset
         if isinstance(self.actor_id, Unset):
             actor_id = UNSET
         else:
             actor_id = self.actor_id
 
-        actor_label: None | Unset | str
+        actor_label: None | str | Unset
         if isinstance(self.actor_label, Unset):
             actor_label = UNSET
         else:
             actor_label = self.actor_label
 
-        detail: None | Unset | dict[str, Any]
+        detail: dict[str, Any] | None | Unset
         if isinstance(self.detail, Unset):
             detail = UNSET
         elif isinstance(self.detail, ProjectActivityDetailType0):
@@ -116,7 +120,9 @@ class ProjectActivity:
 
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
-        from ..models.project_activity_detail_type_0 import ProjectActivityDetailType0
+        from ..models.project_activity_detail_type_0 import (
+            ProjectActivityDetailType0,
+        )
 
         d = dict(src_dict)
         id = d.pop("id")
@@ -129,43 +135,43 @@ class ProjectActivity:
 
         created_at = d.pop("createdAt")
 
-        def _parse_work_item_id(data: object) -> None | Unset | str:
+        def _parse_work_item_id(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         work_item_id = _parse_work_item_id(d.pop("workItemId", UNSET))
 
-        def _parse_actor_kind(data: object) -> None | Unset | str:
+        def _parse_actor_kind(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         actor_kind = _parse_actor_kind(d.pop("actorKind", UNSET))
 
-        def _parse_actor_id(data: object) -> None | Unset | str:
+        def _parse_actor_id(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         actor_id = _parse_actor_id(d.pop("actorId", UNSET))
 
-        def _parse_actor_label(data: object) -> None | Unset | str:
+        def _parse_actor_label(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         actor_label = _parse_actor_label(d.pop("actorLabel", UNSET))
 
-        def _parse_detail(data: object) -> Union["ProjectActivityDetailType0", None, Unset]:
+        def _parse_detail(data: object) -> None | ProjectActivityDetailType0 | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
@@ -176,9 +182,9 @@ class ProjectActivity:
                 detail_type_0 = ProjectActivityDetailType0.from_dict(data)
 
                 return detail_type_0
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
-            return cast(Union["ProjectActivityDetailType0", None, Unset], data)
+            return cast(None | ProjectActivityDetailType0 | Unset, data)
 
         detail = _parse_detail(d.pop("detail", UNSET))
 

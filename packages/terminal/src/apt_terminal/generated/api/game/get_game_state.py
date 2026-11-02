@@ -12,8 +12,8 @@ from ...types import UNSET, Response, Unset
 
 def _get_kwargs(
     *,
-    game_id: Unset | str = UNSET,
-    slug: Unset | str = UNSET,
+    game_id: str | Unset = UNSET,
+    slug: str | Unset = UNSET,
 ) -> dict[str, Any]:
     params: dict[str, Any] = {}
 
@@ -80,29 +80,29 @@ def _build_response(
 def sync_detailed(
     *,
     client: AuthenticatedClient,
-    game_id: Unset | str = UNSET,
-    slug: Unset | str = UNSET,
+    game_id: str | Unset = UNSET,
+    slug: str | Unset = UNSET,
 ) -> Response[Error | GameState]:
-    r"""The caller’s own scalars and lists, plus the game-wide ones
+    """The caller’s own scalars and lists, plus the game-wide ones
 
      Two sets with different owners, and they are NOT merged. The `player`-subject rows are the caller’s
     alone; the `game`-subject rows are shared configuration (limits, global settings). A flat map would
     let a player-owned key silently shadow a global of the same name — a per-player rules change nobody
     authored — and the two have different lifetimes, so a merged map has no coherent cache policy.
-    Values are ARRAYS throughout, including for a key with one row: §4.11 stores a scalar as \"one row
-    at ordinal 0\" and a one-element list as the same thing, so collapsing single values would invent a
+    Values are ARRAYS throughout, including for a key with one row: §4.11 stores a scalar as "one row at
+    ordinal 0" and a one-element list as the same thing, so collapsing single values would invent a
     distinction the storage does not carry.
 
     Args:
-        game_id (Union[Unset, str]):
-        slug (Union[Unset, str]):
+        game_id (str | Unset):
+        slug (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, GameState]]
+        Response[Error | GameState]
     """
 
     kwargs = _get_kwargs(
@@ -120,29 +120,29 @@ def sync_detailed(
 def sync(
     *,
     client: AuthenticatedClient,
-    game_id: Unset | str = UNSET,
-    slug: Unset | str = UNSET,
+    game_id: str | Unset = UNSET,
+    slug: str | Unset = UNSET,
 ) -> Error | GameState | None:
-    r"""The caller’s own scalars and lists, plus the game-wide ones
+    """The caller’s own scalars and lists, plus the game-wide ones
 
      Two sets with different owners, and they are NOT merged. The `player`-subject rows are the caller’s
     alone; the `game`-subject rows are shared configuration (limits, global settings). A flat map would
     let a player-owned key silently shadow a global of the same name — a per-player rules change nobody
     authored — and the two have different lifetimes, so a merged map has no coherent cache policy.
-    Values are ARRAYS throughout, including for a key with one row: §4.11 stores a scalar as \"one row
-    at ordinal 0\" and a one-element list as the same thing, so collapsing single values would invent a
+    Values are ARRAYS throughout, including for a key with one row: §4.11 stores a scalar as "one row at
+    ordinal 0" and a one-element list as the same thing, so collapsing single values would invent a
     distinction the storage does not carry.
 
     Args:
-        game_id (Union[Unset, str]):
-        slug (Union[Unset, str]):
+        game_id (str | Unset):
+        slug (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, GameState]
+        Error | GameState
     """
 
     return sync_detailed(
@@ -155,29 +155,29 @@ def sync(
 async def asyncio_detailed(
     *,
     client: AuthenticatedClient,
-    game_id: Unset | str = UNSET,
-    slug: Unset | str = UNSET,
+    game_id: str | Unset = UNSET,
+    slug: str | Unset = UNSET,
 ) -> Response[Error | GameState]:
-    r"""The caller’s own scalars and lists, plus the game-wide ones
+    """The caller’s own scalars and lists, plus the game-wide ones
 
      Two sets with different owners, and they are NOT merged. The `player`-subject rows are the caller’s
     alone; the `game`-subject rows are shared configuration (limits, global settings). A flat map would
     let a player-owned key silently shadow a global of the same name — a per-player rules change nobody
     authored — and the two have different lifetimes, so a merged map has no coherent cache policy.
-    Values are ARRAYS throughout, including for a key with one row: §4.11 stores a scalar as \"one row
-    at ordinal 0\" and a one-element list as the same thing, so collapsing single values would invent a
+    Values are ARRAYS throughout, including for a key with one row: §4.11 stores a scalar as "one row at
+    ordinal 0" and a one-element list as the same thing, so collapsing single values would invent a
     distinction the storage does not carry.
 
     Args:
-        game_id (Union[Unset, str]):
-        slug (Union[Unset, str]):
+        game_id (str | Unset):
+        slug (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, GameState]]
+        Response[Error | GameState]
     """
 
     kwargs = _get_kwargs(
@@ -193,29 +193,29 @@ async def asyncio_detailed(
 async def asyncio(
     *,
     client: AuthenticatedClient,
-    game_id: Unset | str = UNSET,
-    slug: Unset | str = UNSET,
+    game_id: str | Unset = UNSET,
+    slug: str | Unset = UNSET,
 ) -> Error | GameState | None:
-    r"""The caller’s own scalars and lists, plus the game-wide ones
+    """The caller’s own scalars and lists, plus the game-wide ones
 
      Two sets with different owners, and they are NOT merged. The `player`-subject rows are the caller’s
     alone; the `game`-subject rows are shared configuration (limits, global settings). A flat map would
     let a player-owned key silently shadow a global of the same name — a per-player rules change nobody
     authored — and the two have different lifetimes, so a merged map has no coherent cache policy.
-    Values are ARRAYS throughout, including for a key with one row: §4.11 stores a scalar as \"one row
-    at ordinal 0\" and a one-element list as the same thing, so collapsing single values would invent a
+    Values are ARRAYS throughout, including for a key with one row: §4.11 stores a scalar as "one row at
+    ordinal 0" and a one-element list as the same thing, so collapsing single values would invent a
     distinction the storage does not carry.
 
     Args:
-        game_id (Union[Unset, str]):
-        slug (Union[Unset, str]):
+        game_id (str | Unset):
+        slug (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, GameState]
+        Error | GameState
     """
 
     return (

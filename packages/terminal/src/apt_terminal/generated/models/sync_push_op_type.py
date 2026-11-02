@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class SyncPushOpType(str, Enum):
+class SyncPushOpType(StrEnum):
     DELETE = "delete"
     UPSERT = "upsert"
 

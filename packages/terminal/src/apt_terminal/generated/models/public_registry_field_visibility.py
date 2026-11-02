@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class PublicRegistryFieldVisibility(str, Enum):
+class PublicRegistryFieldVisibility(StrEnum):
     AUTHENTICATED = "authenticated"
     PUBLIC = "public"
 

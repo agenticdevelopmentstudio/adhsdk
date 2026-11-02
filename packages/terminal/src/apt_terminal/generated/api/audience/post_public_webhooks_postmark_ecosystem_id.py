@@ -1,5 +1,6 @@
 from http import HTTPStatus
 from typing import Any
+from urllib.parse import quote
 
 import httpx
 
@@ -10,22 +11,25 @@ from ...models.post_public_webhooks_postmark_ecosystem_id_response_200 import (
     PostPublicWebhooksPostmarkEcosystemIdResponse200,
 )
 from ...models.postmark_deliverability_event import PostmarkDeliverabilityEvent
-from ...types import Response
+from ...types import UNSET, Response, Unset
 
 
 def _get_kwargs(
     ecosystem_id: str,
     *,
-    body: PostmarkDeliverabilityEvent,
+    body: PostmarkDeliverabilityEvent | Unset = UNSET,
 ) -> dict[str, Any]:
     headers: dict[str, Any] = {}
 
     _kwargs: dict[str, Any] = {
         "method": "post",
-        "url": f"/public/webhooks/postmark/{ecosystem_id}",
+        "url": "/public/webhooks/postmark/{ecosystem_id}".format(
+            ecosystem_id=quote(str(ecosystem_id), safe=""),
+        ),
     }
 
-    _kwargs["json"] = body.to_dict()
+    if not isinstance(body, Unset):
+        _kwargs["json"] = body.to_dict()
 
     headers["Content-Type"] = "application/json"
 
@@ -77,20 +81,20 @@ def sync_detailed(
     ecosystem_id: str,
     *,
     client: AuthenticatedClient | Client,
-    body: PostmarkDeliverabilityEvent,
+    body: PostmarkDeliverabilityEvent | Unset = UNSET,
 ) -> Response[Error | PostPublicWebhooksPostmarkEcosystemIdResponse200]:
     """Deliverability events from Postmark (per-ecosystem secret header, not a JWT)
 
     Args:
         ecosystem_id (str):
-        body (PostmarkDeliverabilityEvent):
+        body (PostmarkDeliverabilityEvent | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, PostPublicWebhooksPostmarkEcosystemIdResponse200]]
+        Response[Error | PostPublicWebhooksPostmarkEcosystemIdResponse200]
     """
 
     kwargs = _get_kwargs(
@@ -109,20 +113,20 @@ def sync(
     ecosystem_id: str,
     *,
     client: AuthenticatedClient | Client,
-    body: PostmarkDeliverabilityEvent,
+    body: PostmarkDeliverabilityEvent | Unset = UNSET,
 ) -> Error | PostPublicWebhooksPostmarkEcosystemIdResponse200 | None:
     """Deliverability events from Postmark (per-ecosystem secret header, not a JWT)
 
     Args:
         ecosystem_id (str):
-        body (PostmarkDeliverabilityEvent):
+        body (PostmarkDeliverabilityEvent | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, PostPublicWebhooksPostmarkEcosystemIdResponse200]
+        Error | PostPublicWebhooksPostmarkEcosystemIdResponse200
     """
 
     return sync_detailed(
@@ -136,20 +140,20 @@ async def asyncio_detailed(
     ecosystem_id: str,
     *,
     client: AuthenticatedClient | Client,
-    body: PostmarkDeliverabilityEvent,
+    body: PostmarkDeliverabilityEvent | Unset = UNSET,
 ) -> Response[Error | PostPublicWebhooksPostmarkEcosystemIdResponse200]:
     """Deliverability events from Postmark (per-ecosystem secret header, not a JWT)
 
     Args:
         ecosystem_id (str):
-        body (PostmarkDeliverabilityEvent):
+        body (PostmarkDeliverabilityEvent | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, PostPublicWebhooksPostmarkEcosystemIdResponse200]]
+        Response[Error | PostPublicWebhooksPostmarkEcosystemIdResponse200]
     """
 
     kwargs = _get_kwargs(
@@ -166,20 +170,20 @@ async def asyncio(
     ecosystem_id: str,
     *,
     client: AuthenticatedClient | Client,
-    body: PostmarkDeliverabilityEvent,
+    body: PostmarkDeliverabilityEvent | Unset = UNSET,
 ) -> Error | PostPublicWebhooksPostmarkEcosystemIdResponse200 | None:
     """Deliverability events from Postmark (per-ecosystem secret header, not a JWT)
 
     Args:
         ecosystem_id (str):
-        body (PostmarkDeliverabilityEvent):
+        body (PostmarkDeliverabilityEvent | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, PostPublicWebhooksPostmarkEcosystemIdResponse200]
+        Error | PostPublicWebhooksPostmarkEcosystemIdResponse200
     """
 
     return (

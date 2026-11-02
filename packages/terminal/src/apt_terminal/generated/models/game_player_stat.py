@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -15,16 +17,16 @@ class GamePlayerStat:
     Attributes:
         key (str):
         value (int):
-        label (Union[None, Unset, str]):
-        period_type (Union[Unset, str]):
-        period_start (Union[Unset, str]):
+        label (None | str | Unset):
+        period_type (str | Unset):
+        period_start (str | Unset):
     """
 
     key: str
     value: int
-    label: None | Unset | str = UNSET
-    period_type: Unset | str = UNSET
-    period_start: Unset | str = UNSET
+    label: None | str | Unset = UNSET
+    period_type: str | Unset = UNSET
+    period_start: str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -32,7 +34,7 @@ class GamePlayerStat:
 
         value = self.value
 
-        label: None | Unset | str
+        label: None | str | Unset
         if isinstance(self.label, Unset):
             label = UNSET
         else:
@@ -66,12 +68,12 @@ class GamePlayerStat:
 
         value = d.pop("value")
 
-        def _parse_label(data: object) -> None | Unset | str:
+        def _parse_label(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         label = _parse_label(d.pop("label", UNSET))
 

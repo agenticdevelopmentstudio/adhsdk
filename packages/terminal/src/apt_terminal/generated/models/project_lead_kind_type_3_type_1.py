@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class ProjectLeadKindType3Type1(str, Enum):
+class ProjectLeadKindType3Type1(StrEnum):
     CUSTOMER = "customer"
     PERSONA = "persona"
     TEAM = "team"

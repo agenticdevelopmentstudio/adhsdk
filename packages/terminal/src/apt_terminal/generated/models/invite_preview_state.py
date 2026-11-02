@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class InvitePreviewState(str, Enum):
+class InvitePreviewState(StrEnum):
     ACCEPTED = "accepted"
     EXPIRED = "expired"
     INVALID = "invalid"

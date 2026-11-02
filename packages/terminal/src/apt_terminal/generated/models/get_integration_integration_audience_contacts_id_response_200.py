@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, TypeVar, Union, cast
+from typing import TYPE_CHECKING, Any, TypeVar, cast
 
 from attrs import define as _attrs_define
 
@@ -33,21 +35,21 @@ class GetIntegrationIntegrationAudienceContactsIdResponse200:
         external_id (str):
         email (str):
         status (str):
-        first_name (Union[None, str]):
-        last_name (Union[None, str]):
-        tags (Union['GetIntegrationIntegrationAudienceContactsIdResponse200TagsType0Type1', None, bool, float,
-            list[Any], str]):
-        fields (Union['GetIntegrationIntegrationAudienceContactsIdResponse200FieldsType0Type1', None, bool, float,
-            list[Any], str]):
-        subscribed_at (Union[None, str]):
-        raw (Union['GetIntegrationIntegrationAudienceContactsIdResponse200RawType0Type1', None, bool, float, list[Any],
-            str]):
+        first_name (None | str):
+        last_name (None | str):
+        tags (bool | float | GetIntegrationIntegrationAudienceContactsIdResponse200TagsType0Type1 | list[Any] | None |
+            str):
+        fields (bool | float | GetIntegrationIntegrationAudienceContactsIdResponse200FieldsType0Type1 | list[Any] | None
+            | str):
+        subscribed_at (None | str):
+        raw (bool | float | GetIntegrationIntegrationAudienceContactsIdResponse200RawType0Type1 | list[Any] | None |
+            str):
         is_deleted (bool):
-        deleted_at (Union[None, str]):
+        deleted_at (None | str):
         created_at (str):
         updated_at (str):
         sync_version (int):
-        sync_stamped_at (Union[None, str]):
+        sync_stamped_at (None | str):
         sync_txid (int):
     """
 
@@ -64,31 +66,31 @@ class GetIntegrationIntegrationAudienceContactsIdResponse200:
     status: str
     first_name: None | str
     last_name: None | str
-    tags: Union[
-        "GetIntegrationIntegrationAudienceContactsIdResponse200TagsType0Type1",
-        None,
-        bool,
-        float,
-        list[Any],
-        str,
-    ]
-    fields: Union[
-        "GetIntegrationIntegrationAudienceContactsIdResponse200FieldsType0Type1",
-        None,
-        bool,
-        float,
-        list[Any],
-        str,
-    ]
+    tags: (
+        bool
+        | float
+        | GetIntegrationIntegrationAudienceContactsIdResponse200TagsType0Type1
+        | list[Any]
+        | None
+        | str
+    )
+    fields: (
+        bool
+        | float
+        | GetIntegrationIntegrationAudienceContactsIdResponse200FieldsType0Type1
+        | list[Any]
+        | None
+        | str
+    )
     subscribed_at: None | str
-    raw: Union[
-        "GetIntegrationIntegrationAudienceContactsIdResponse200RawType0Type1",
-        None,
-        bool,
-        float,
-        list[Any],
-        str,
-    ]
+    raw: (
+        bool
+        | float
+        | GetIntegrationIntegrationAudienceContactsIdResponse200RawType0Type1
+        | list[Any]
+        | None
+        | str
+    )
     is_deleted: bool
     deleted_at: None | str
     created_at: str
@@ -136,7 +138,7 @@ class GetIntegrationIntegrationAudienceContactsIdResponse200:
         last_name: None | str
         last_name = self.last_name
 
-        tags: None | bool | dict[str, Any] | float | list[Any] | str
+        tags: bool | dict[str, Any] | float | list[Any] | None | str
         if isinstance(
             self.tags, GetIntegrationIntegrationAudienceContactsIdResponse200TagsType0Type1
         ):
@@ -147,7 +149,7 @@ class GetIntegrationIntegrationAudienceContactsIdResponse200:
         else:
             tags = self.tags
 
-        fields: None | bool | dict[str, Any] | float | list[Any] | str
+        fields: bool | dict[str, Any] | float | list[Any] | None | str
         if isinstance(
             self.fields, GetIntegrationIntegrationAudienceContactsIdResponse200FieldsType0Type1
         ):
@@ -161,7 +163,7 @@ class GetIntegrationIntegrationAudienceContactsIdResponse200:
         subscribed_at: None | str
         subscribed_at = self.subscribed_at
 
-        raw: None | bool | dict[str, Any] | float | list[Any] | str
+        raw: bool | dict[str, Any] | float | list[Any] | None | str
         if isinstance(
             self.raw, GetIntegrationIntegrationAudienceContactsIdResponse200RawType0Type1
         ):
@@ -272,14 +274,14 @@ class GetIntegrationIntegrationAudienceContactsIdResponse200:
 
         def _parse_tags(
             data: object,
-        ) -> Union[
-            "GetIntegrationIntegrationAudienceContactsIdResponse200TagsType0Type1",
-            None,
-            bool,
-            float,
-            list[Any],
-            str,
-        ]:
+        ) -> (
+            bool
+            | float
+            | GetIntegrationIntegrationAudienceContactsIdResponse200TagsType0Type1
+            | list[Any]
+            | None
+            | str
+        ):
             if data is None:
                 return data
             try:
@@ -292,7 +294,7 @@ class GetIntegrationIntegrationAudienceContactsIdResponse200:
                 )
 
                 return tags_type_0_type_1
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
             try:
                 if not isinstance(data, list):
@@ -300,17 +302,15 @@ class GetIntegrationIntegrationAudienceContactsIdResponse200:
                 tags_type_0_type_2 = cast(list[Any], data)
 
                 return tags_type_0_type_2
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
             return cast(
-                Union[
-                    "GetIntegrationIntegrationAudienceContactsIdResponse200TagsType0Type1",
-                    None,
-                    bool,
-                    float,
-                    list[Any],
-                    str,
-                ],
+                bool
+                | float
+                | GetIntegrationIntegrationAudienceContactsIdResponse200TagsType0Type1
+                | list[Any]
+                | None
+                | str,
                 data,
             )
 
@@ -318,14 +318,14 @@ class GetIntegrationIntegrationAudienceContactsIdResponse200:
 
         def _parse_fields(
             data: object,
-        ) -> Union[
-            "GetIntegrationIntegrationAudienceContactsIdResponse200FieldsType0Type1",
-            None,
-            bool,
-            float,
-            list[Any],
-            str,
-        ]:
+        ) -> (
+            bool
+            | float
+            | GetIntegrationIntegrationAudienceContactsIdResponse200FieldsType0Type1
+            | list[Any]
+            | None
+            | str
+        ):
             if data is None:
                 return data
             try:
@@ -336,7 +336,7 @@ class GetIntegrationIntegrationAudienceContactsIdResponse200:
                 )
 
                 return fields_type_0_type_1
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
             try:
                 if not isinstance(data, list):
@@ -344,17 +344,15 @@ class GetIntegrationIntegrationAudienceContactsIdResponse200:
                 fields_type_0_type_2 = cast(list[Any], data)
 
                 return fields_type_0_type_2
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
             return cast(
-                Union[
-                    "GetIntegrationIntegrationAudienceContactsIdResponse200FieldsType0Type1",
-                    None,
-                    bool,
-                    float,
-                    list[Any],
-                    str,
-                ],
+                bool
+                | float
+                | GetIntegrationIntegrationAudienceContactsIdResponse200FieldsType0Type1
+                | list[Any]
+                | None
+                | str,
                 data,
             )
 
@@ -369,14 +367,14 @@ class GetIntegrationIntegrationAudienceContactsIdResponse200:
 
         def _parse_raw(
             data: object,
-        ) -> Union[
-            "GetIntegrationIntegrationAudienceContactsIdResponse200RawType0Type1",
-            None,
-            bool,
-            float,
-            list[Any],
-            str,
-        ]:
+        ) -> (
+            bool
+            | float
+            | GetIntegrationIntegrationAudienceContactsIdResponse200RawType0Type1
+            | list[Any]
+            | None
+            | str
+        ):
             if data is None:
                 return data
             try:
@@ -389,7 +387,7 @@ class GetIntegrationIntegrationAudienceContactsIdResponse200:
                 )
 
                 return raw_type_0_type_1
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
             try:
                 if not isinstance(data, list):
@@ -397,17 +395,15 @@ class GetIntegrationIntegrationAudienceContactsIdResponse200:
                 raw_type_0_type_2 = cast(list[Any], data)
 
                 return raw_type_0_type_2
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
             return cast(
-                Union[
-                    "GetIntegrationIntegrationAudienceContactsIdResponse200RawType0Type1",
-                    None,
-                    bool,
-                    float,
-                    list[Any],
-                    str,
-                ],
+                bool
+                | float
+                | GetIntegrationIntegrationAudienceContactsIdResponse200RawType0Type1
+                | list[Any]
+                | None
+                | str,
                 data,
             )
 

@@ -8,12 +8,12 @@ from ...client import AuthenticatedClient, Client
 from ...models.error import Error
 from ...models.feature_flag import FeatureFlag
 from ...models.post_system_feature_flags_body import PostSystemFeatureFlagsBody
-from ...types import Response
+from ...types import UNSET, Response, Unset
 
 
 def _get_kwargs(
     *,
-    body: PostSystemFeatureFlagsBody,
+    body: PostSystemFeatureFlagsBody | Unset = UNSET,
 ) -> dict[str, Any]:
     headers: dict[str, Any] = {}
 
@@ -22,7 +22,8 @@ def _get_kwargs(
         "url": "/system/feature-flags",
     }
 
-    _kwargs["json"] = body.to_dict()
+    if not isinstance(body, Unset):
+        _kwargs["json"] = body.to_dict()
 
     headers["Content-Type"] = "application/json"
 
@@ -78,19 +79,19 @@ def _build_response(
 def sync_detailed(
     *,
     client: AuthenticatedClient,
-    body: PostSystemFeatureFlagsBody,
+    body: PostSystemFeatureFlagsBody | Unset = UNSET,
 ) -> Response[Error | FeatureFlag]:
     """Create a feature flag (admin)
 
     Args:
-        body (PostSystemFeatureFlagsBody):
+        body (PostSystemFeatureFlagsBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, FeatureFlag]]
+        Response[Error | FeatureFlag]
     """
 
     kwargs = _get_kwargs(
@@ -107,19 +108,19 @@ def sync_detailed(
 def sync(
     *,
     client: AuthenticatedClient,
-    body: PostSystemFeatureFlagsBody,
+    body: PostSystemFeatureFlagsBody | Unset = UNSET,
 ) -> Error | FeatureFlag | None:
     """Create a feature flag (admin)
 
     Args:
-        body (PostSystemFeatureFlagsBody):
+        body (PostSystemFeatureFlagsBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, FeatureFlag]
+        Error | FeatureFlag
     """
 
     return sync_detailed(
@@ -131,19 +132,19 @@ def sync(
 async def asyncio_detailed(
     *,
     client: AuthenticatedClient,
-    body: PostSystemFeatureFlagsBody,
+    body: PostSystemFeatureFlagsBody | Unset = UNSET,
 ) -> Response[Error | FeatureFlag]:
     """Create a feature flag (admin)
 
     Args:
-        body (PostSystemFeatureFlagsBody):
+        body (PostSystemFeatureFlagsBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, FeatureFlag]]
+        Response[Error | FeatureFlag]
     """
 
     kwargs = _get_kwargs(
@@ -158,19 +159,19 @@ async def asyncio_detailed(
 async def asyncio(
     *,
     client: AuthenticatedClient,
-    body: PostSystemFeatureFlagsBody,
+    body: PostSystemFeatureFlagsBody | Unset = UNSET,
 ) -> Error | FeatureFlag | None:
     """Create a feature flag (admin)
 
     Args:
-        body (PostSystemFeatureFlagsBody):
+        body (PostSystemFeatureFlagsBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, FeatureFlag]
+        Error | FeatureFlag
     """
 
     return (

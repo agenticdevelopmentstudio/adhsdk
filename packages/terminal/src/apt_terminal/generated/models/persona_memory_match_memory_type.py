@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class PersonaMemoryMatchMemoryType(str, Enum):
+class PersonaMemoryMatchMemoryType(StrEnum):
     FEEDBACK = "feedback"
     PROJECT = "project"
     REFERENCE = "reference"

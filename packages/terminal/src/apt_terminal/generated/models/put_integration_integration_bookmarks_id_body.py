@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -12,38 +14,38 @@ T = TypeVar("T", bound="PutIntegrationIntegrationBookmarksIdBody")
 class PutIntegrationIntegrationBookmarksIdBody:
     """
     Attributes:
-        ecosystem_id (Union[Unset, str]):
-        connection_id (Union[Unset, str]):
-        external_id (Union[Unset, str]):
-        source_provider (Union[Unset, str]):
-        title (Union[Unset, str]):
-        url (Union[Unset, str]):
-        excerpt (Union[None, Unset, str]):
-        note (Union[None, Unset, str]):
-        tags (Union[None, Unset, str]):
-        image_url (Union[None, Unset, str]):
-        collection_id (Union[None, Unset, str]):
-        collection_name (Union[None, Unset, str]):
-        is_favorite (Union[Unset, bool]):
-        external_created_at (Union[None, Unset, str]):
-        sync_txid (Union[Unset, int]):
+        ecosystem_id (str | Unset):
+        connection_id (str | Unset):
+        external_id (str | Unset):
+        source_provider (str | Unset):
+        title (str | Unset):
+        url (str | Unset):
+        excerpt (None | str | Unset):
+        note (None | str | Unset):
+        tags (None | str | Unset):
+        image_url (None | str | Unset):
+        collection_id (None | str | Unset):
+        collection_name (None | str | Unset):
+        is_favorite (bool | Unset):
+        external_created_at (None | str | Unset):
+        sync_txid (int | Unset):
     """
 
-    ecosystem_id: Unset | str = UNSET
-    connection_id: Unset | str = UNSET
-    external_id: Unset | str = UNSET
-    source_provider: Unset | str = UNSET
-    title: Unset | str = UNSET
-    url: Unset | str = UNSET
-    excerpt: None | Unset | str = UNSET
-    note: None | Unset | str = UNSET
-    tags: None | Unset | str = UNSET
-    image_url: None | Unset | str = UNSET
-    collection_id: None | Unset | str = UNSET
-    collection_name: None | Unset | str = UNSET
-    is_favorite: Unset | bool = UNSET
-    external_created_at: None | Unset | str = UNSET
-    sync_txid: Unset | int = UNSET
+    ecosystem_id: str | Unset = UNSET
+    connection_id: str | Unset = UNSET
+    external_id: str | Unset = UNSET
+    source_provider: str | Unset = UNSET
+    title: str | Unset = UNSET
+    url: str | Unset = UNSET
+    excerpt: None | str | Unset = UNSET
+    note: None | str | Unset = UNSET
+    tags: None | str | Unset = UNSET
+    image_url: None | str | Unset = UNSET
+    collection_id: None | str | Unset = UNSET
+    collection_name: None | str | Unset = UNSET
+    is_favorite: bool | Unset = UNSET
+    external_created_at: None | str | Unset = UNSET
+    sync_txid: int | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
         ecosystem_id = self.ecosystem_id
@@ -58,37 +60,37 @@ class PutIntegrationIntegrationBookmarksIdBody:
 
         url = self.url
 
-        excerpt: None | Unset | str
+        excerpt: None | str | Unset
         if isinstance(self.excerpt, Unset):
             excerpt = UNSET
         else:
             excerpt = self.excerpt
 
-        note: None | Unset | str
+        note: None | str | Unset
         if isinstance(self.note, Unset):
             note = UNSET
         else:
             note = self.note
 
-        tags: None | Unset | str
+        tags: None | str | Unset
         if isinstance(self.tags, Unset):
             tags = UNSET
         else:
             tags = self.tags
 
-        image_url: None | Unset | str
+        image_url: None | str | Unset
         if isinstance(self.image_url, Unset):
             image_url = UNSET
         else:
             image_url = self.image_url
 
-        collection_id: None | Unset | str
+        collection_id: None | str | Unset
         if isinstance(self.collection_id, Unset):
             collection_id = UNSET
         else:
             collection_id = self.collection_id
 
-        collection_name: None | Unset | str
+        collection_name: None | str | Unset
         if isinstance(self.collection_name, Unset):
             collection_name = UNSET
         else:
@@ -96,7 +98,7 @@ class PutIntegrationIntegrationBookmarksIdBody:
 
         is_favorite = self.is_favorite
 
-        external_created_at: None | Unset | str
+        external_created_at: None | str | Unset
         if isinstance(self.external_created_at, Unset):
             external_created_at = UNSET
         else:
@@ -155,68 +157,68 @@ class PutIntegrationIntegrationBookmarksIdBody:
 
         url = d.pop("url", UNSET)
 
-        def _parse_excerpt(data: object) -> None | Unset | str:
+        def _parse_excerpt(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         excerpt = _parse_excerpt(d.pop("excerpt", UNSET))
 
-        def _parse_note(data: object) -> None | Unset | str:
+        def _parse_note(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         note = _parse_note(d.pop("note", UNSET))
 
-        def _parse_tags(data: object) -> None | Unset | str:
+        def _parse_tags(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         tags = _parse_tags(d.pop("tags", UNSET))
 
-        def _parse_image_url(data: object) -> None | Unset | str:
+        def _parse_image_url(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         image_url = _parse_image_url(d.pop("imageUrl", UNSET))
 
-        def _parse_collection_id(data: object) -> None | Unset | str:
+        def _parse_collection_id(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         collection_id = _parse_collection_id(d.pop("collectionId", UNSET))
 
-        def _parse_collection_name(data: object) -> None | Unset | str:
+        def _parse_collection_name(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         collection_name = _parse_collection_name(d.pop("collectionName", UNSET))
 
         is_favorite = d.pop("isFavorite", UNSET)
 
-        def _parse_external_created_at(data: object) -> None | Unset | str:
+        def _parse_external_created_at(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         external_created_at = _parse_external_created_at(d.pop("externalCreatedAt", UNSET))
 

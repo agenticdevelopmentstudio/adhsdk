@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, TypeVar, Union, cast
+from typing import TYPE_CHECKING, Any, TypeVar, cast
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -25,15 +27,15 @@ class GamificationRealmConfig:
             it
         skin (GamificationRealmConfigSkin):
         surfaces (GamificationRealmConfigSurfaces): Per-surface toggles; a surface is ON unless set false
-        seasons (Union['GamificationSeasonsType0', None]):
+        seasons (GamificationSeasonsType0 | None):
         timezone (str): IANA timezone for the realm's day/streak boundary (Night Owl); defaults to 'UTC'
     """
 
     ecosystem_id: str
     mode: GamificationRealmConfigMode
     skin: GamificationRealmConfigSkin
-    surfaces: "GamificationRealmConfigSurfaces"
-    seasons: Union["GamificationSeasonsType0", None]
+    surfaces: GamificationRealmConfigSurfaces
+    seasons: GamificationSeasonsType0 | None
     timezone: str
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
@@ -48,7 +50,7 @@ class GamificationRealmConfig:
 
         surfaces = self.surfaces.to_dict()
 
-        seasons: None | dict[str, Any]
+        seasons: dict[str, Any] | None
         if isinstance(self.seasons, GamificationSeasonsType0):
             seasons = self.seasons.to_dict()
         else:
@@ -73,7 +75,9 @@ class GamificationRealmConfig:
 
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
-        from ..models.gamification_realm_config_surfaces import GamificationRealmConfigSurfaces
+        from ..models.gamification_realm_config_surfaces import (
+            GamificationRealmConfigSurfaces,
+        )
         from ..models.gamification_seasons_type_0 import GamificationSeasonsType0
 
         d = dict(src_dict)
@@ -85,7 +89,7 @@ class GamificationRealmConfig:
 
         surfaces = GamificationRealmConfigSurfaces.from_dict(d.pop("surfaces"))
 
-        def _parse_seasons(data: object) -> Union["GamificationSeasonsType0", None]:
+        def _parse_seasons(data: object) -> GamificationSeasonsType0 | None:
             if data is None:
                 return data
             try:
@@ -96,9 +100,9 @@ class GamificationRealmConfig:
                 )
 
                 return componentsschemas_gamification_seasons_type_0
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
-            return cast(Union["GamificationSeasonsType0", None], data)
+            return cast(GamificationSeasonsType0 | None, data)
 
         seasons = _parse_seasons(d.pop("seasons"))
 

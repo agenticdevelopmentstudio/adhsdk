@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -14,7 +16,7 @@ class VisitorMessage:
         id (str):
         role (str):
         content (str):
-        tool_name (Union[None, str]):
+        tool_name (None | str):
         created_at (str):
     """
 

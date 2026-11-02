@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, TypeVar, Union
+from typing import TYPE_CHECKING, Any, TypeVar
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -18,20 +20,20 @@ T = TypeVar("T", bound="GetShiprRunsIdResponse200")
 class GetShiprRunsIdResponse200:
     """
     Attributes:
-        run (Union[Unset, ShiprRun]): One queued or completed operation over a scope.
-        steps (Union[Unset, list['ShiprRunStep']]):
+        run (ShiprRun | Unset): One queued or completed operation over a scope.
+        steps (list[ShiprRunStep] | Unset):
     """
 
-    run: Union[Unset, "ShiprRun"] = UNSET
-    steps: Unset | list["ShiprRunStep"] = UNSET
+    run: ShiprRun | Unset = UNSET
+    steps: list[ShiprRunStep] | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
-        run: Unset | dict[str, Any] = UNSET
+        run: dict[str, Any] | Unset = UNSET
         if not isinstance(self.run, Unset):
             run = self.run.to_dict()
 
-        steps: Unset | list[dict[str, Any]] = UNSET
+        steps: list[dict[str, Any]] | Unset = UNSET
         if not isinstance(self.steps, Unset):
             steps = []
             for steps_item_data in self.steps:
@@ -55,18 +57,20 @@ class GetShiprRunsIdResponse200:
 
         d = dict(src_dict)
         _run = d.pop("run", UNSET)
-        run: Unset | ShiprRun
+        run: ShiprRun | Unset
         if isinstance(_run, Unset):
             run = UNSET
         else:
             run = ShiprRun.from_dict(_run)
 
-        steps = []
         _steps = d.pop("steps", UNSET)
-        for steps_item_data in _steps or []:
-            steps_item = ShiprRunStep.from_dict(steps_item_data)
+        steps: list[ShiprRunStep] | Unset = UNSET
+        if _steps is not UNSET:
+            steps = []
+            for steps_item_data in _steps:
+                steps_item = ShiprRunStep.from_dict(steps_item_data)
 
-            steps.append(steps_item)
+                steps.append(steps_item)
 
         get_shipr_runs_id_response_200 = cls(
             run=run,

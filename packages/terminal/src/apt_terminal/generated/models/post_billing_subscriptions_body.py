@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -14,18 +16,18 @@ class PostBillingSubscriptionsBody:
     Attributes:
         tier_id (str):
         started_at (str):
-        ecosystem_id (Union[Unset, str]):
-        status (Union[Unset, str]):
-        source (Union[Unset, str]):
-        expires_at (Union[None, Unset, str]):
+        ecosystem_id (str | Unset):
+        status (str | Unset):
+        source (str | Unset):
+        expires_at (None | str | Unset):
     """
 
     tier_id: str
     started_at: str
-    ecosystem_id: Unset | str = UNSET
-    status: Unset | str = UNSET
-    source: Unset | str = UNSET
-    expires_at: None | Unset | str = UNSET
+    ecosystem_id: str | Unset = UNSET
+    status: str | Unset = UNSET
+    source: str | Unset = UNSET
+    expires_at: None | str | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
         tier_id = self.tier_id
@@ -38,7 +40,7 @@ class PostBillingSubscriptionsBody:
 
         source = self.source
 
-        expires_at: None | Unset | str
+        expires_at: None | str | Unset
         if isinstance(self.expires_at, Unset):
             expires_at = UNSET
         else:
@@ -76,12 +78,12 @@ class PostBillingSubscriptionsBody:
 
         source = d.pop("source", UNSET)
 
-        def _parse_expires_at(data: object) -> None | Unset | str:
+        def _parse_expires_at(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         expires_at = _parse_expires_at(d.pop("expiresAt", UNSET))
 

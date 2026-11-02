@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import TYPE_CHECKING, Any, TypeVar
 
@@ -15,11 +17,11 @@ T = TypeVar("T", bound="GamificationRealmLevelsUpdate")
 class GamificationRealmLevelsUpdate:
     """
     Attributes:
-        levels (list['GamificationCatalogLevel']):
+        levels (list[GamificationCatalogLevel]):
         replay_hint (str): The owner may POST /replay to backfill retroactively
     """
 
-    levels: list["GamificationCatalogLevel"]
+    levels: list[GamificationCatalogLevel]
     replay_hint: str
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 

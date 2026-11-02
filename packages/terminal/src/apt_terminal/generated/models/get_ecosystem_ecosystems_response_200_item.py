@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -16,16 +18,16 @@ class GetEcosystemEcosystemsResponse200Item:
         name (str):
         description (str):
         region (str):
-        dedicated_db_connection_id (Union[None, str]):
+        dedicated_db_connection_id (None | str):
         primary_domain (str):
         created_at (str):
         updated_at (str):
         is_deleted (bool):
         is_default (bool):
         is_infrastructure (bool):
-        namespace_id (Union[None, str]):
-        parent_id (Union[None, str]):
-        archived_at (Union[None, str]):
+        namespace_id (None | str):
+        parent_id (None | str):
+        archived_at (None | str):
     """
 
     id: str

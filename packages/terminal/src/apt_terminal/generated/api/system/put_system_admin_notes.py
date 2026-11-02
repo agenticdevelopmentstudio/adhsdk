@@ -8,12 +8,12 @@ from ...client import AuthenticatedClient, Client
 from ...models.admin_notes_reconcile_body import AdminNotesReconcileBody
 from ...models.error import Error
 from ...models.put_system_admin_notes_response_200 import PutSystemAdminNotesResponse200
-from ...types import Response
+from ...types import UNSET, Response, Unset
 
 
 def _get_kwargs(
     *,
-    body: AdminNotesReconcileBody,
+    body: AdminNotesReconcileBody | Unset = UNSET,
 ) -> dict[str, Any]:
     headers: dict[str, Any] = {}
 
@@ -22,7 +22,8 @@ def _get_kwargs(
         "url": "/system/admin-notes",
     }
 
-    _kwargs["json"] = body.to_dict()
+    if not isinstance(body, Unset):
+        _kwargs["json"] = body.to_dict()
 
     headers["Content-Type"] = "application/json"
 
@@ -73,7 +74,7 @@ def _build_response(
 def sync_detailed(
     *,
     client: AuthenticatedClient,
-    body: AdminNotesReconcileBody,
+    body: AdminNotesReconcileBody | Unset = UNSET,
 ) -> Response[Error | PutSystemAdminNotesResponse200]:
     """Reconcile a subject's admin notes
 
@@ -82,14 +83,14 @@ def sync_detailed(
     array clears them all. Appends one `notes_updated` entry to the subject's history.
 
     Args:
-        body (AdminNotesReconcileBody):
+        body (AdminNotesReconcileBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, PutSystemAdminNotesResponse200]]
+        Response[Error | PutSystemAdminNotesResponse200]
     """
 
     kwargs = _get_kwargs(
@@ -106,7 +107,7 @@ def sync_detailed(
 def sync(
     *,
     client: AuthenticatedClient,
-    body: AdminNotesReconcileBody,
+    body: AdminNotesReconcileBody | Unset = UNSET,
 ) -> Error | PutSystemAdminNotesResponse200 | None:
     """Reconcile a subject's admin notes
 
@@ -115,14 +116,14 @@ def sync(
     array clears them all. Appends one `notes_updated` entry to the subject's history.
 
     Args:
-        body (AdminNotesReconcileBody):
+        body (AdminNotesReconcileBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, PutSystemAdminNotesResponse200]
+        Error | PutSystemAdminNotesResponse200
     """
 
     return sync_detailed(
@@ -134,7 +135,7 @@ def sync(
 async def asyncio_detailed(
     *,
     client: AuthenticatedClient,
-    body: AdminNotesReconcileBody,
+    body: AdminNotesReconcileBody | Unset = UNSET,
 ) -> Response[Error | PutSystemAdminNotesResponse200]:
     """Reconcile a subject's admin notes
 
@@ -143,14 +144,14 @@ async def asyncio_detailed(
     array clears them all. Appends one `notes_updated` entry to the subject's history.
 
     Args:
-        body (AdminNotesReconcileBody):
+        body (AdminNotesReconcileBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, PutSystemAdminNotesResponse200]]
+        Response[Error | PutSystemAdminNotesResponse200]
     """
 
     kwargs = _get_kwargs(
@@ -165,7 +166,7 @@ async def asyncio_detailed(
 async def asyncio(
     *,
     client: AuthenticatedClient,
-    body: AdminNotesReconcileBody,
+    body: AdminNotesReconcileBody | Unset = UNSET,
 ) -> Error | PutSystemAdminNotesResponse200 | None:
     """Reconcile a subject's admin notes
 
@@ -174,14 +175,14 @@ async def asyncio(
     array clears them all. Appends one `notes_updated` entry to the subject's history.
 
     Args:
-        body (AdminNotesReconcileBody):
+        body (AdminNotesReconcileBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, PutSystemAdminNotesResponse200]
+        Error | PutSystemAdminNotesResponse200
     """
 
     return (

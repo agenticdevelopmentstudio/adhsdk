@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, TypeVar, Union, cast
+from typing import TYPE_CHECKING, Any, TypeVar, cast
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -32,27 +34,27 @@ class PostRegistryRegistriesIdFieldDefsBody:
         key (str):
         type_ (PostRegistryRegistriesIdFieldDefsBodyType):
         label (str):
-        help_ (Union[Unset, str]):
-        required (Union[Unset, bool]):
-        sort_order (Union[Unset, int]):
-        config (Union[Unset, PostRegistryRegistriesIdFieldDefsBodyConfig]):
-        visibility (Union[Unset, PostRegistryRegistriesIdFieldDefsBodyVisibility]): Omitted: derived from `type` by
+        help_ (str | Unset):
+        required (bool | Unset):
+        sort_order (int | Unset):
+        config (PostRegistryRegistriesIdFieldDefsBodyConfig | Unset):
+        visibility (PostRegistryRegistriesIdFieldDefsBodyVisibility | Unset): Omitted: derived from `type` by
             `defaultVisibilityForType` — a contact type (email, phone, address) starts 'private', everything else 'public'.
             The default is where the contact-privacy protection lives; publishing a phone number is a decision the owner
             makes, not one they inherit.
-        show_if (Union['PostRegistryRegistriesIdFieldDefsBodyShowIfType0', None, Unset]):
+        show_if (None | PostRegistryRegistriesIdFieldDefsBodyShowIfType0 | Unset):
     """
 
     section_id: str
     key: str
     type_: PostRegistryRegistriesIdFieldDefsBodyType
     label: str
-    help_: Unset | str = UNSET
-    required: Unset | bool = UNSET
-    sort_order: Unset | int = UNSET
-    config: Union[Unset, "PostRegistryRegistriesIdFieldDefsBodyConfig"] = UNSET
-    visibility: Unset | PostRegistryRegistriesIdFieldDefsBodyVisibility = UNSET
-    show_if: Union["PostRegistryRegistriesIdFieldDefsBodyShowIfType0", None, Unset] = UNSET
+    help_: str | Unset = UNSET
+    required: bool | Unset = UNSET
+    sort_order: int | Unset = UNSET
+    config: PostRegistryRegistriesIdFieldDefsBodyConfig | Unset = UNSET
+    visibility: PostRegistryRegistriesIdFieldDefsBodyVisibility | Unset = UNSET
+    show_if: None | PostRegistryRegistriesIdFieldDefsBodyShowIfType0 | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -74,15 +76,15 @@ class PostRegistryRegistriesIdFieldDefsBody:
 
         sort_order = self.sort_order
 
-        config: Unset | dict[str, Any] = UNSET
+        config: dict[str, Any] | Unset = UNSET
         if not isinstance(self.config, Unset):
             config = self.config.to_dict()
 
-        visibility: Unset | str = UNSET
+        visibility: str | Unset = UNSET
         if not isinstance(self.visibility, Unset):
             visibility = self.visibility.value
 
-        show_if: None | Unset | dict[str, Any]
+        show_if: dict[str, Any] | None | Unset
         if isinstance(self.show_if, Unset):
             show_if = UNSET
         elif isinstance(self.show_if, PostRegistryRegistriesIdFieldDefsBodyShowIfType0):
@@ -140,14 +142,14 @@ class PostRegistryRegistriesIdFieldDefsBody:
         sort_order = d.pop("sortOrder", UNSET)
 
         _config = d.pop("config", UNSET)
-        config: Unset | PostRegistryRegistriesIdFieldDefsBodyConfig
+        config: PostRegistryRegistriesIdFieldDefsBodyConfig | Unset
         if isinstance(_config, Unset):
             config = UNSET
         else:
             config = PostRegistryRegistriesIdFieldDefsBodyConfig.from_dict(_config)
 
         _visibility = d.pop("visibility", UNSET)
-        visibility: Unset | PostRegistryRegistriesIdFieldDefsBodyVisibility
+        visibility: PostRegistryRegistriesIdFieldDefsBodyVisibility | Unset
         if isinstance(_visibility, Unset):
             visibility = UNSET
         else:
@@ -155,7 +157,7 @@ class PostRegistryRegistriesIdFieldDefsBody:
 
         def _parse_show_if(
             data: object,
-        ) -> Union["PostRegistryRegistriesIdFieldDefsBodyShowIfType0", None, Unset]:
+        ) -> None | PostRegistryRegistriesIdFieldDefsBodyShowIfType0 | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
@@ -166,11 +168,9 @@ class PostRegistryRegistriesIdFieldDefsBody:
                 show_if_type_0 = PostRegistryRegistriesIdFieldDefsBodyShowIfType0.from_dict(data)
 
                 return show_if_type_0
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
-            return cast(
-                Union["PostRegistryRegistriesIdFieldDefsBodyShowIfType0", None, Unset], data
-            )
+            return cast(None | PostRegistryRegistriesIdFieldDefsBodyShowIfType0 | Unset, data)
 
         show_if = _parse_show_if(d.pop("showIf", UNSET))
 

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -17,14 +19,14 @@ class CampaignCreate:
         subject (str):
         html_body (str):
         text_body (str):
-        from_name (Union[None, Unset, str]):
+        from_name (None | str | Unset):
     """
 
     name: str
     subject: str
     html_body: str
     text_body: str
-    from_name: None | Unset | str = UNSET
+    from_name: None | str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -36,7 +38,7 @@ class CampaignCreate:
 
         text_body = self.text_body
 
-        from_name: None | Unset | str
+        from_name: None | str | Unset
         if isinstance(self.from_name, Unset):
             from_name = UNSET
         else:
@@ -68,12 +70,12 @@ class CampaignCreate:
 
         text_body = d.pop("textBody")
 
-        def _parse_from_name(data: object) -> None | Unset | str:
+        def _parse_from_name(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         from_name = _parse_from_name(d.pop("fromName", UNSET))
 

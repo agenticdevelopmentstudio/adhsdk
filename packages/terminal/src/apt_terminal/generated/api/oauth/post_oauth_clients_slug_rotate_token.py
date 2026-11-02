@@ -1,5 +1,6 @@
 from http import HTTPStatus
 from typing import Any
+from urllib.parse import quote
 
 import httpx
 
@@ -17,7 +18,9 @@ def _get_kwargs(
 ) -> dict[str, Any]:
     _kwargs: dict[str, Any] = {
         "method": "post",
-        "url": f"/oauth/clients/{slug}/rotate-token",
+        "url": "/oauth/clients/{slug}/rotate-token".format(
+            slug=quote(str(slug), safe=""),
+        ),
     }
 
     return _kwargs
@@ -78,7 +81,7 @@ def sync_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, PostOauthClientsSlugRotateTokenResponse200]]
+        Response[Error | PostOauthClientsSlugRotateTokenResponse200]
     """
 
     kwargs = _get_kwargs(
@@ -107,7 +110,7 @@ def sync(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, PostOauthClientsSlugRotateTokenResponse200]
+        Error | PostOauthClientsSlugRotateTokenResponse200
     """
 
     return sync_detailed(
@@ -131,7 +134,7 @@ async def asyncio_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, PostOauthClientsSlugRotateTokenResponse200]]
+        Response[Error | PostOauthClientsSlugRotateTokenResponse200]
     """
 
     kwargs = _get_kwargs(
@@ -158,7 +161,7 @@ async def asyncio(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, PostOauthClientsSlugRotateTokenResponse200]
+        Error | PostOauthClientsSlugRotateTokenResponse200
     """
 
     return (

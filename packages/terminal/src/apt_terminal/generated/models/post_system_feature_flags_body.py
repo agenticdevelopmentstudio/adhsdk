@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar
 
@@ -14,13 +16,13 @@ class PostSystemFeatureFlagsBody:
     """
     Attributes:
         key (str):
-        description (Union[Unset, str]):
-        enabled (Union[Unset, bool]):
+        description (str | Unset):
+        enabled (bool | Unset):
     """
 
     key: str
-    description: Unset | str = UNSET
-    enabled: Unset | bool = UNSET
+    description: str | Unset = UNSET
+    enabled: bool | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:

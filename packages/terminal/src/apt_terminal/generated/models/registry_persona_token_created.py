@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -15,9 +17,9 @@ class RegistryPersonaTokenCreated:
         name (str):
         prefix (str): Non-secret leading chars, for display
         created_at (str):
-        expires_at (Union[None, str]):
-        last_used_at (Union[None, str]): null until the token first authenticates
-        persona_id (Union[None, str]): The persona this token authenticates AS
+        expires_at (None | str):
+        last_used_at (None | str): null until the token first authenticates
+        persona_id (None | str): The persona this token authenticates AS
         token (str): The raw token value — shown exactly once, on mint
     """
 

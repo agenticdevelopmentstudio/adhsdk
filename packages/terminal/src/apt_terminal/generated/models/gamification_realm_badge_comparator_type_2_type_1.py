@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class GamificationRealmBadgeComparatorType2Type1(str, Enum):
+class GamificationRealmBadgeComparatorType2Type1(StrEnum):
     VALUE_0 = ">="
     VALUE_1 = ">"
     VALUE_2 = "="

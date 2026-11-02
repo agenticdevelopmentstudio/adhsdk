@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -11,9 +13,9 @@ class GetSystemAuditEventsIdResponse200:
     """
     Attributes:
         id (str):
-        ecosystem_id (Union[None, str]):
-        developer_id (Union[None, str]):
-        actor_user_id (Union[None, str]):
+        ecosystem_id (None | str):
+        developer_id (None | str):
+        actor_user_id (None | str):
         event_type (str):
         payload (str):
         ip_address (str):

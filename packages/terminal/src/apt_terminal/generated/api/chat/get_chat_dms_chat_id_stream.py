@@ -1,5 +1,6 @@
 from http import HTTPStatus
 from typing import Any
+from urllib.parse import quote
 
 import httpx
 
@@ -13,8 +14,8 @@ from ...types import UNSET, Response, Unset
 def _get_kwargs(
     chat_id: str,
     *,
-    after: Unset | int = 0,
-    access_token: Unset | str = UNSET,
+    after: int | Unset = 0,
+    access_token: str | Unset = UNSET,
 ) -> dict[str, Any]:
     params: dict[str, Any] = {}
 
@@ -26,7 +27,9 @@ def _get_kwargs(
 
     _kwargs: dict[str, Any] = {
         "method": "get",
-        "url": f"/chat/dms/{chat_id}/stream",
+        "url": "/chat/dms/{chat_id}/stream".format(
+            chat_id=quote(str(chat_id), safe=""),
+        ),
         "params": params,
     }
 
@@ -77,8 +80,8 @@ def sync_detailed(
     chat_id: str,
     *,
     client: AuthenticatedClient,
-    after: Unset | int = 0,
-    access_token: Unset | str = UNSET,
+    after: int | Unset = 0,
+    access_token: str | Unset = UNSET,
 ) -> Response[DmMessage | Error]:
     """Stream new DMs in a chat (SSE)
 
@@ -94,15 +97,15 @@ def sync_detailed(
 
     Args:
         chat_id (str):
-        after (Union[Unset, int]):  Default: 0.
-        access_token (Union[Unset, str]):
+        after (int | Unset):  Default: 0.
+        access_token (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[DmMessage, Error]]
+        Response[DmMessage | Error]
     """
 
     kwargs = _get_kwargs(
@@ -122,8 +125,8 @@ def sync(
     chat_id: str,
     *,
     client: AuthenticatedClient,
-    after: Unset | int = 0,
-    access_token: Unset | str = UNSET,
+    after: int | Unset = 0,
+    access_token: str | Unset = UNSET,
 ) -> DmMessage | Error | None:
     """Stream new DMs in a chat (SSE)
 
@@ -139,15 +142,15 @@ def sync(
 
     Args:
         chat_id (str):
-        after (Union[Unset, int]):  Default: 0.
-        access_token (Union[Unset, str]):
+        after (int | Unset):  Default: 0.
+        access_token (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[DmMessage, Error]
+        DmMessage | Error
     """
 
     return sync_detailed(
@@ -162,8 +165,8 @@ async def asyncio_detailed(
     chat_id: str,
     *,
     client: AuthenticatedClient,
-    after: Unset | int = 0,
-    access_token: Unset | str = UNSET,
+    after: int | Unset = 0,
+    access_token: str | Unset = UNSET,
 ) -> Response[DmMessage | Error]:
     """Stream new DMs in a chat (SSE)
 
@@ -179,15 +182,15 @@ async def asyncio_detailed(
 
     Args:
         chat_id (str):
-        after (Union[Unset, int]):  Default: 0.
-        access_token (Union[Unset, str]):
+        after (int | Unset):  Default: 0.
+        access_token (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[DmMessage, Error]]
+        Response[DmMessage | Error]
     """
 
     kwargs = _get_kwargs(
@@ -205,8 +208,8 @@ async def asyncio(
     chat_id: str,
     *,
     client: AuthenticatedClient,
-    after: Unset | int = 0,
-    access_token: Unset | str = UNSET,
+    after: int | Unset = 0,
+    access_token: str | Unset = UNSET,
 ) -> DmMessage | Error | None:
     """Stream new DMs in a chat (SSE)
 
@@ -222,15 +225,15 @@ async def asyncio(
 
     Args:
         chat_id (str):
-        after (Union[Unset, int]):  Default: 0.
-        access_token (Union[Unset, str]):
+        after (int | Unset):  Default: 0.
+        access_token (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[DmMessage, Error]
+        DmMessage | Error
     """
 
     return (

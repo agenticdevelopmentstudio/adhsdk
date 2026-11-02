@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 from uuid import UUID
@@ -14,30 +16,30 @@ class GetPersonaMemoryMemoriesIdResponse200:
         id (str):
         ecosystem_id (str):
         customer_id (str):
-        deleted_at (Union[None, str]):
+        deleted_at (None | str):
         persona_id (UUID):
         scope (str):
         slug (str):
         memory_type (str):
         description (str):
         body (str):
-        subject_table (Union[None, str]):
-        subject_id (Union[None, str]):
+        subject_table (None | str):
+        subject_id (None | str):
         status (str):
-        supersedes_id (Union[None, str]):
+        supersedes_id (None | str):
         source (str):
         confidence (int):
         tags (list[str]):
-        valid_from (Union[None, str]):
-        valid_to (Union[None, str]):
+        valid_from (None | str):
+        valid_to (None | str):
         recall_count (int):
-        last_recalled_at (Union[None, str]):
-        embedding (Union[None, list[float]]):
-        embedding_model (Union[None, str]):
+        last_recalled_at (None | str):
+        embedding (list[float] | None):
+        embedding_model (None | str):
         created_at (str):
         updated_at (str):
         sync_version (int):
-        sync_stamped_at (Union[None, str]):
+        sync_stamped_at (None | str):
         sync_txid (int):
     """
 
@@ -62,7 +64,7 @@ class GetPersonaMemoryMemoriesIdResponse200:
     valid_to: None | str
     recall_count: int
     last_recalled_at: None | str
-    embedding: None | list[float]
+    embedding: list[float] | None
     embedding_model: None | str
     created_at: str
     updated_at: str
@@ -120,7 +122,7 @@ class GetPersonaMemoryMemoriesIdResponse200:
         last_recalled_at: None | str
         last_recalled_at = self.last_recalled_at
 
-        embedding: None | list[float]
+        embedding: list[float] | None
         if isinstance(self.embedding, list):
             embedding = self.embedding
 
@@ -258,7 +260,7 @@ class GetPersonaMemoryMemoriesIdResponse200:
 
         last_recalled_at = _parse_last_recalled_at(d.pop("lastRecalledAt"))
 
-        def _parse_embedding(data: object) -> None | list[float]:
+        def _parse_embedding(data: object) -> list[float] | None:
             if data is None:
                 return data
             try:
@@ -267,9 +269,9 @@ class GetPersonaMemoryMemoriesIdResponse200:
                 embedding_type_0 = cast(list[float], data)
 
                 return embedding_type_0
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
-            return cast(None | list[float], data)
+            return cast(list[float] | None, data)
 
         embedding = _parse_embedding(d.pop("embedding"))
 

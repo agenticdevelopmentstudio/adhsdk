@@ -1,5 +1,6 @@
 from http import HTTPStatus
 from typing import Any
+from urllib.parse import quote
 
 import httpx
 
@@ -8,22 +9,25 @@ from ...client import AuthenticatedClient, Client
 from ...models.error import Error
 from ...models.patch_persona_mcp_servers_id_body import PatchPersonaMcpServersIdBody
 from ...models.patch_persona_mcp_servers_id_response_200 import PatchPersonaMcpServersIdResponse200
-from ...types import Response
+from ...types import UNSET, Response, Unset
 
 
 def _get_kwargs(
     id: str,
     *,
-    body: PatchPersonaMcpServersIdBody,
+    body: PatchPersonaMcpServersIdBody | Unset = UNSET,
 ) -> dict[str, Any]:
     headers: dict[str, Any] = {}
 
     _kwargs: dict[str, Any] = {
         "method": "patch",
-        "url": f"/persona/mcp-servers/{id}",
+        "url": "/persona/mcp-servers/{id}".format(
+            id=quote(str(id), safe=""),
+        ),
     }
 
-    _kwargs["json"] = body.to_dict()
+    if not isinstance(body, Unset):
+        _kwargs["json"] = body.to_dict()
 
     headers["Content-Type"] = "application/json"
 
@@ -80,21 +84,21 @@ def sync_detailed(
     id: str,
     *,
     client: AuthenticatedClient,
-    body: PatchPersonaMcpServersIdBody,
+    body: PatchPersonaMcpServersIdBody | Unset = UNSET,
 ) -> Response[Error | PatchPersonaMcpServersIdResponse200]:
     """Update / enable / disable / rotate the secret of an MCP server (site-admin)
 
     Args:
         id (str):
-        body (PatchPersonaMcpServersIdBody): All fields optional. A blank or absent authSecret
-            PRESERVES the stored secret; a present non-empty value rotates it.
+        body (PatchPersonaMcpServersIdBody | Unset): All fields optional. A blank or absent
+            authSecret PRESERVES the stored secret; a present non-empty value rotates it.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, PatchPersonaMcpServersIdResponse200]]
+        Response[Error | PatchPersonaMcpServersIdResponse200]
     """
 
     kwargs = _get_kwargs(
@@ -113,21 +117,21 @@ def sync(
     id: str,
     *,
     client: AuthenticatedClient,
-    body: PatchPersonaMcpServersIdBody,
+    body: PatchPersonaMcpServersIdBody | Unset = UNSET,
 ) -> Error | PatchPersonaMcpServersIdResponse200 | None:
     """Update / enable / disable / rotate the secret of an MCP server (site-admin)
 
     Args:
         id (str):
-        body (PatchPersonaMcpServersIdBody): All fields optional. A blank or absent authSecret
-            PRESERVES the stored secret; a present non-empty value rotates it.
+        body (PatchPersonaMcpServersIdBody | Unset): All fields optional. A blank or absent
+            authSecret PRESERVES the stored secret; a present non-empty value rotates it.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, PatchPersonaMcpServersIdResponse200]
+        Error | PatchPersonaMcpServersIdResponse200
     """
 
     return sync_detailed(
@@ -141,21 +145,21 @@ async def asyncio_detailed(
     id: str,
     *,
     client: AuthenticatedClient,
-    body: PatchPersonaMcpServersIdBody,
+    body: PatchPersonaMcpServersIdBody | Unset = UNSET,
 ) -> Response[Error | PatchPersonaMcpServersIdResponse200]:
     """Update / enable / disable / rotate the secret of an MCP server (site-admin)
 
     Args:
         id (str):
-        body (PatchPersonaMcpServersIdBody): All fields optional. A blank or absent authSecret
-            PRESERVES the stored secret; a present non-empty value rotates it.
+        body (PatchPersonaMcpServersIdBody | Unset): All fields optional. A blank or absent
+            authSecret PRESERVES the stored secret; a present non-empty value rotates it.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, PatchPersonaMcpServersIdResponse200]]
+        Response[Error | PatchPersonaMcpServersIdResponse200]
     """
 
     kwargs = _get_kwargs(
@@ -172,21 +176,21 @@ async def asyncio(
     id: str,
     *,
     client: AuthenticatedClient,
-    body: PatchPersonaMcpServersIdBody,
+    body: PatchPersonaMcpServersIdBody | Unset = UNSET,
 ) -> Error | PatchPersonaMcpServersIdResponse200 | None:
     """Update / enable / disable / rotate the secret of an MCP server (site-admin)
 
     Args:
         id (str):
-        body (PatchPersonaMcpServersIdBody): All fields optional. A blank or absent authSecret
-            PRESERVES the stored secret; a present non-empty value rotates it.
+        body (PatchPersonaMcpServersIdBody | Unset): All fields optional. A blank or absent
+            authSecret PRESERVES the stored secret; a present non-empty value rotates it.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, PatchPersonaMcpServersIdResponse200]
+        Error | PatchPersonaMcpServersIdResponse200
     """
 
     return (

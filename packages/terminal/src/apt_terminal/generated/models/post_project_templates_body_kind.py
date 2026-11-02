@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class PostProjectTemplatesBodyKind(str, Enum):
+class PostProjectTemplatesBodyKind(StrEnum):
     PROJECT = "project"
     WORK_ITEM = "work_item"
 

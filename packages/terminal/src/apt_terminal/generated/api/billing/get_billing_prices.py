@@ -21,7 +21,7 @@ def _get_kwargs() -> dict[str, Any]:
 
 def _parse_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> Error | list["BillingPriceOption"] | None:
+) -> Error | list[BillingPriceOption] | None:
     if response.status_code == 200:
         response_200 = []
         _response_200 = response.json()
@@ -60,7 +60,7 @@ def _parse_response(
 
 def _build_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> Response[Error | list["BillingPriceOption"]]:
+) -> Response[Error | list[BillingPriceOption]]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -72,7 +72,7 @@ def _build_response(
 def sync_detailed(
     *,
     client: AuthenticatedClient,
-) -> Response[Error | list["BillingPriceOption"]]:
+) -> Response[Error | list[BillingPriceOption]]:
     """Active prices on the ecosystem’s connected Stripe account
 
      The list the offer editor picks a `stripe_price_id` from. Active prices only, with their product
@@ -86,7 +86,7 @@ def sync_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, list['BillingPriceOption']]]
+        Response[Error | list[BillingPriceOption]]
     """
 
     kwargs = _get_kwargs()
@@ -101,7 +101,7 @@ def sync_detailed(
 def sync(
     *,
     client: AuthenticatedClient,
-) -> Error | list["BillingPriceOption"] | None:
+) -> Error | list[BillingPriceOption] | None:
     """Active prices on the ecosystem’s connected Stripe account
 
      The list the offer editor picks a `stripe_price_id` from. Active prices only, with their product
@@ -115,7 +115,7 @@ def sync(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, list['BillingPriceOption']]
+        Error | list[BillingPriceOption]
     """
 
     return sync_detailed(
@@ -126,7 +126,7 @@ def sync(
 async def asyncio_detailed(
     *,
     client: AuthenticatedClient,
-) -> Response[Error | list["BillingPriceOption"]]:
+) -> Response[Error | list[BillingPriceOption]]:
     """Active prices on the ecosystem’s connected Stripe account
 
      The list the offer editor picks a `stripe_price_id` from. Active prices only, with their product
@@ -140,7 +140,7 @@ async def asyncio_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, list['BillingPriceOption']]]
+        Response[Error | list[BillingPriceOption]]
     """
 
     kwargs = _get_kwargs()
@@ -153,7 +153,7 @@ async def asyncio_detailed(
 async def asyncio(
     *,
     client: AuthenticatedClient,
-) -> Error | list["BillingPriceOption"] | None:
+) -> Error | list[BillingPriceOption] | None:
     """Active prices on the ecosystem’s connected Stripe account
 
      The list the offer editor picks a `stripe_price_id` from. Active prices only, with their product
@@ -167,7 +167,7 @@ async def asyncio(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, list['BillingPriceOption']]
+        Error | list[BillingPriceOption]
     """
 
     return (

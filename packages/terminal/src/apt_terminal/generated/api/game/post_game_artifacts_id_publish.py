@@ -1,5 +1,6 @@
 from http import HTTPStatus
 from typing import Any
+from urllib.parse import quote
 
 import httpx
 
@@ -15,7 +16,9 @@ def _get_kwargs(
 ) -> dict[str, Any]:
     _kwargs: dict[str, Any] = {
         "method": "post",
-        "url": f"/game/artifacts/{id}/publish",
+        "url": "/game/artifacts/{id}/publish".format(
+            id=quote(str(id), safe=""),
+        ),
     }
 
     return _kwargs
@@ -76,7 +79,7 @@ def sync_detailed(
     *,
     client: AuthenticatedClient,
 ) -> Response[Error | GameArtifact]:
-    r"""Publish the caller’s own artifact to the public feed (screened)
+    """Publish the caller’s own artifact to the public feed (screened)
 
      The write side §6.6 named and §6.3 owed: `visibility` and `published_at` are server-managed on
     `game.artifacts`, so this is the only way an artifact reaches `GET /game/feed`. Screening (§6.5)
@@ -85,8 +88,8 @@ def sync_detailed(
     engine’s job. Long artifacts are screened in CHUNKS rather than truncated to the classifier’s
     character budget, which would publish the tail unjudged; past eight chunks the request is 422 rather
     than silently partly-screened. Idempotent: an already-published artifact returns 200 with the
-    current row and calls no classifier, so a retry is free. 404 covers both \"no such artifact\" and
-    \"not yours\" — the ownership term is in the UPDATE itself, so there is no check-then-write window.
+    current row and calls no classifier, so a retry is free. 404 covers both "no such artifact" and "not
+    yours" — the ownership term is in the UPDATE itself, so there is no check-then-write window.
     Publishing is one-way; withdrawing is `DELETE /game/artifacts/{id}`.
 
     Args:
@@ -97,7 +100,7 @@ def sync_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, GameArtifact]]
+        Response[Error | GameArtifact]
     """
 
     kwargs = _get_kwargs(
@@ -116,7 +119,7 @@ def sync(
     *,
     client: AuthenticatedClient,
 ) -> Error | GameArtifact | None:
-    r"""Publish the caller’s own artifact to the public feed (screened)
+    """Publish the caller’s own artifact to the public feed (screened)
 
      The write side §6.6 named and §6.3 owed: `visibility` and `published_at` are server-managed on
     `game.artifacts`, so this is the only way an artifact reaches `GET /game/feed`. Screening (§6.5)
@@ -125,8 +128,8 @@ def sync(
     engine’s job. Long artifacts are screened in CHUNKS rather than truncated to the classifier’s
     character budget, which would publish the tail unjudged; past eight chunks the request is 422 rather
     than silently partly-screened. Idempotent: an already-published artifact returns 200 with the
-    current row and calls no classifier, so a retry is free. 404 covers both \"no such artifact\" and
-    \"not yours\" — the ownership term is in the UPDATE itself, so there is no check-then-write window.
+    current row and calls no classifier, so a retry is free. 404 covers both "no such artifact" and "not
+    yours" — the ownership term is in the UPDATE itself, so there is no check-then-write window.
     Publishing is one-way; withdrawing is `DELETE /game/artifacts/{id}`.
 
     Args:
@@ -137,7 +140,7 @@ def sync(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, GameArtifact]
+        Error | GameArtifact
     """
 
     return sync_detailed(
@@ -151,7 +154,7 @@ async def asyncio_detailed(
     *,
     client: AuthenticatedClient,
 ) -> Response[Error | GameArtifact]:
-    r"""Publish the caller’s own artifact to the public feed (screened)
+    """Publish the caller’s own artifact to the public feed (screened)
 
      The write side §6.6 named and §6.3 owed: `visibility` and `published_at` are server-managed on
     `game.artifacts`, so this is the only way an artifact reaches `GET /game/feed`. Screening (§6.5)
@@ -160,8 +163,8 @@ async def asyncio_detailed(
     engine’s job. Long artifacts are screened in CHUNKS rather than truncated to the classifier’s
     character budget, which would publish the tail unjudged; past eight chunks the request is 422 rather
     than silently partly-screened. Idempotent: an already-published artifact returns 200 with the
-    current row and calls no classifier, so a retry is free. 404 covers both \"no such artifact\" and
-    \"not yours\" — the ownership term is in the UPDATE itself, so there is no check-then-write window.
+    current row and calls no classifier, so a retry is free. 404 covers both "no such artifact" and "not
+    yours" — the ownership term is in the UPDATE itself, so there is no check-then-write window.
     Publishing is one-way; withdrawing is `DELETE /game/artifacts/{id}`.
 
     Args:
@@ -172,7 +175,7 @@ async def asyncio_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, GameArtifact]]
+        Response[Error | GameArtifact]
     """
 
     kwargs = _get_kwargs(
@@ -189,7 +192,7 @@ async def asyncio(
     *,
     client: AuthenticatedClient,
 ) -> Error | GameArtifact | None:
-    r"""Publish the caller’s own artifact to the public feed (screened)
+    """Publish the caller’s own artifact to the public feed (screened)
 
      The write side §6.6 named and §6.3 owed: `visibility` and `published_at` are server-managed on
     `game.artifacts`, so this is the only way an artifact reaches `GET /game/feed`. Screening (§6.5)
@@ -198,8 +201,8 @@ async def asyncio(
     engine’s job. Long artifacts are screened in CHUNKS rather than truncated to the classifier’s
     character budget, which would publish the tail unjudged; past eight chunks the request is 422 rather
     than silently partly-screened. Idempotent: an already-published artifact returns 200 with the
-    current row and calls no classifier, so a retry is free. 404 covers both \"no such artifact\" and
-    \"not yours\" — the ownership term is in the UPDATE itself, so there is no check-then-write window.
+    current row and calls no classifier, so a retry is free. 404 covers both "no such artifact" and "not
+    yours" — the ownership term is in the UPDATE itself, so there is no check-then-write window.
     Publishing is one-way; withdrawing is `DELETE /game/artifacts/{id}`.
 
     Args:
@@ -210,7 +213,7 @@ async def asyncio(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, GameArtifact]
+        Error | GameArtifact
     """
 
     return (

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar
 
@@ -18,16 +20,16 @@ class PatchProjectProjectsIdStatusUpdatesUpdateIdBody:
     on the project, because a status update carries the reporter’s name.
 
         Attributes:
-            health (Union[Unset, PatchProjectProjectsIdStatusUpdatesUpdateIdBodyHealth]):
-            body (Union[Unset, str]):
+            health (PatchProjectProjectsIdStatusUpdatesUpdateIdBodyHealth | Unset):
+            body (str | Unset):
     """
 
-    health: Unset | PatchProjectProjectsIdStatusUpdatesUpdateIdBodyHealth = UNSET
-    body: Unset | str = UNSET
+    health: PatchProjectProjectsIdStatusUpdatesUpdateIdBodyHealth | Unset = UNSET
+    body: str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
-        health: Unset | str = UNSET
+        health: str | Unset = UNSET
         if not isinstance(self.health, Unset):
             health = self.health.value
 
@@ -47,7 +49,7 @@ class PatchProjectProjectsIdStatusUpdatesUpdateIdBody:
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
         d = dict(src_dict)
         _health = d.pop("health", UNSET)
-        health: Unset | PatchProjectProjectsIdStatusUpdatesUpdateIdBodyHealth
+        health: PatchProjectProjectsIdStatusUpdatesUpdateIdBodyHealth | Unset
         if isinstance(_health, Unset):
             health = UNSET
         else:

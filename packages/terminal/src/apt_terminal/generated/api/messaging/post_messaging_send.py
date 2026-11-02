@@ -8,12 +8,12 @@ from ...client import AuthenticatedClient, Client
 from ...models.error import Error
 from ...models.messaging_send_result import MessagingSendResult
 from ...models.post_messaging_send_body import PostMessagingSendBody
-from ...types import Response
+from ...types import UNSET, Response, Unset
 
 
 def _get_kwargs(
     *,
-    body: PostMessagingSendBody,
+    body: PostMessagingSendBody | Unset = UNSET,
 ) -> dict[str, Any]:
     headers: dict[str, Any] = {}
 
@@ -22,7 +22,8 @@ def _get_kwargs(
         "url": "/messaging/send",
     }
 
-    _kwargs["json"] = body.to_dict()
+    if not isinstance(body, Unset):
+        _kwargs["json"] = body.to_dict()
 
     headers["Content-Type"] = "application/json"
 
@@ -78,19 +79,19 @@ def _build_response(
 def sync_detailed(
     *,
     client: AuthenticatedClient,
-    body: PostMessagingSendBody,
+    body: PostMessagingSendBody | Unset = UNSET,
 ) -> Response[Error | MessagingSendResult]:
     """Send an email/SMS to a user — freeform or via a template (admin)
 
     Args:
-        body (PostMessagingSendBody): Provide either body or templateId, not both.
+        body (PostMessagingSendBody | Unset): Provide either body or templateId, not both.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, MessagingSendResult]]
+        Response[Error | MessagingSendResult]
     """
 
     kwargs = _get_kwargs(
@@ -107,19 +108,19 @@ def sync_detailed(
 def sync(
     *,
     client: AuthenticatedClient,
-    body: PostMessagingSendBody,
+    body: PostMessagingSendBody | Unset = UNSET,
 ) -> Error | MessagingSendResult | None:
     """Send an email/SMS to a user — freeform or via a template (admin)
 
     Args:
-        body (PostMessagingSendBody): Provide either body or templateId, not both.
+        body (PostMessagingSendBody | Unset): Provide either body or templateId, not both.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, MessagingSendResult]
+        Error | MessagingSendResult
     """
 
     return sync_detailed(
@@ -131,19 +132,19 @@ def sync(
 async def asyncio_detailed(
     *,
     client: AuthenticatedClient,
-    body: PostMessagingSendBody,
+    body: PostMessagingSendBody | Unset = UNSET,
 ) -> Response[Error | MessagingSendResult]:
     """Send an email/SMS to a user — freeform or via a template (admin)
 
     Args:
-        body (PostMessagingSendBody): Provide either body or templateId, not both.
+        body (PostMessagingSendBody | Unset): Provide either body or templateId, not both.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, MessagingSendResult]]
+        Response[Error | MessagingSendResult]
     """
 
     kwargs = _get_kwargs(
@@ -158,19 +159,19 @@ async def asyncio_detailed(
 async def asyncio(
     *,
     client: AuthenticatedClient,
-    body: PostMessagingSendBody,
+    body: PostMessagingSendBody | Unset = UNSET,
 ) -> Error | MessagingSendResult | None:
     """Send an email/SMS to a user — freeform or via a template (admin)
 
     Args:
-        body (PostMessagingSendBody): Provide either body or templateId, not both.
+        body (PostMessagingSendBody | Unset): Provide either body or templateId, not both.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, MessagingSendResult]
+        Error | MessagingSendResult
     """
 
     return (

@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class PostRegistryRegistriesRegistryIdEntriesBodyVisibility(str, Enum):
+class PostRegistryRegistriesRegistryIdEntriesBodyVisibility(StrEnum):
     HUB = "hub"
     PRIVATE = "private"
     PUBLIC = "public"

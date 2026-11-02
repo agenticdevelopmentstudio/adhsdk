@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -21,7 +23,7 @@ class ReleaseResult:
         aliases_removed (int):
         still_held_by (list[str]): Canonical addresses still sitting in that space, informational. Read as "these exist
             nearby", never as "the release failed".
-        placeholder (Union[Unset, str]): The name the entity was renamed to, when the release was a rename
+        placeholder (str | Unset): The name the entity was renamed to, when the release was a rename
     """
 
     rdid: str
@@ -29,7 +31,7 @@ class ReleaseResult:
     freed: bool
     aliases_removed: int
     still_held_by: list[str]
-    placeholder: Unset | str = UNSET
+    placeholder: str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:

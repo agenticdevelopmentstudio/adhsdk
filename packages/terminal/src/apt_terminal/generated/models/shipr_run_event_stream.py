@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class ShiprRunEventStream(str, Enum):
+class ShiprRunEventStream(StrEnum):
     ERR = "err"
     META = "meta"
     OUT = "out"

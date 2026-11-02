@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, TypeVar, Union, cast
+from typing import TYPE_CHECKING, Any, TypeVar, cast
 
 from attrs import define as _attrs_define
 
@@ -19,25 +21,25 @@ class PostContentQueueItemsBody:
     """
     Attributes:
         queue_id (str):
-        payload (Union['PostContentQueueItemsBodyPayloadType1', None, bool, float, list[Any], str]):
+        payload (bool | float | list[Any] | None | PostContentQueueItemsBodyPayloadType1 | str):
         status (str):
         enqueued_at (str):
-        ecosystem_id (Union[Unset, str]):
-        dequeued_at (Union[None, Unset, str]):
-        acked_at (Union[None, Unset, str]):
-        nacked_at (Union[None, Unset, str]):
-        sync_txid (Union[Unset, int]):
+        ecosystem_id (str | Unset):
+        dequeued_at (None | str | Unset):
+        acked_at (None | str | Unset):
+        nacked_at (None | str | Unset):
+        sync_txid (int | Unset):
     """
 
     queue_id: str
-    payload: Union["PostContentQueueItemsBodyPayloadType1", None, bool, float, list[Any], str]
+    payload: bool | float | list[Any] | None | PostContentQueueItemsBodyPayloadType1 | str
     status: str
     enqueued_at: str
-    ecosystem_id: Unset | str = UNSET
-    dequeued_at: None | Unset | str = UNSET
-    acked_at: None | Unset | str = UNSET
-    nacked_at: None | Unset | str = UNSET
-    sync_txid: Unset | int = UNSET
+    ecosystem_id: str | Unset = UNSET
+    dequeued_at: None | str | Unset = UNSET
+    acked_at: None | str | Unset = UNSET
+    nacked_at: None | str | Unset = UNSET
+    sync_txid: int | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
         from ..models.post_content_queue_items_body_payload_type_1 import (
@@ -46,7 +48,7 @@ class PostContentQueueItemsBody:
 
         queue_id = self.queue_id
 
-        payload: None | bool | dict[str, Any] | float | list[Any] | str
+        payload: bool | dict[str, Any] | float | list[Any] | None | str
         if isinstance(self.payload, PostContentQueueItemsBodyPayloadType1):
             payload = self.payload.to_dict()
         elif isinstance(self.payload, list):
@@ -61,19 +63,19 @@ class PostContentQueueItemsBody:
 
         ecosystem_id = self.ecosystem_id
 
-        dequeued_at: None | Unset | str
+        dequeued_at: None | str | Unset
         if isinstance(self.dequeued_at, Unset):
             dequeued_at = UNSET
         else:
             dequeued_at = self.dequeued_at
 
-        acked_at: None | Unset | str
+        acked_at: None | str | Unset
         if isinstance(self.acked_at, Unset):
             acked_at = UNSET
         else:
             acked_at = self.acked_at
 
-        nacked_at: None | Unset | str
+        nacked_at: None | str | Unset
         if isinstance(self.nacked_at, Unset):
             nacked_at = UNSET
         else:
@@ -115,7 +117,7 @@ class PostContentQueueItemsBody:
 
         def _parse_payload(
             data: object,
-        ) -> Union["PostContentQueueItemsBodyPayloadType1", None, bool, float, list[Any], str]:
+        ) -> bool | float | list[Any] | None | PostContentQueueItemsBodyPayloadType1 | str:
             if data is None:
                 return data
             try:
@@ -124,7 +126,7 @@ class PostContentQueueItemsBody:
                 payload_type_1 = PostContentQueueItemsBodyPayloadType1.from_dict(data)
 
                 return payload_type_1
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
             try:
                 if not isinstance(data, list):
@@ -132,11 +134,10 @@ class PostContentQueueItemsBody:
                 payload_type_2 = cast(list[Any], data)
 
                 return payload_type_2
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
             return cast(
-                Union["PostContentQueueItemsBodyPayloadType1", None, bool, float, list[Any], str],
-                data,
+                bool | float | list[Any] | None | PostContentQueueItemsBodyPayloadType1 | str, data
             )
 
         payload = _parse_payload(d.pop("payload"))
@@ -147,30 +148,30 @@ class PostContentQueueItemsBody:
 
         ecosystem_id = d.pop("ecosystemId", UNSET)
 
-        def _parse_dequeued_at(data: object) -> None | Unset | str:
+        def _parse_dequeued_at(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         dequeued_at = _parse_dequeued_at(d.pop("dequeuedAt", UNSET))
 
-        def _parse_acked_at(data: object) -> None | Unset | str:
+        def _parse_acked_at(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         acked_at = _parse_acked_at(d.pop("ackedAt", UNSET))
 
-        def _parse_nacked_at(data: object) -> None | Unset | str:
+        def _parse_nacked_at(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         nacked_at = _parse_nacked_at(d.pop("nackedAt", UNSET))
 

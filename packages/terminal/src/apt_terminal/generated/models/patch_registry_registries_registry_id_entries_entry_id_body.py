@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, TypeVar, Union, cast
+from typing import TYPE_CHECKING, Any, TypeVar, cast
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -46,63 +48,61 @@ T = TypeVar("T", bound="PatchRegistryRegistriesRegistryIdEntriesEntryIdBody")
 class PatchRegistryRegistriesRegistryIdEntriesEntryIdBody:
     """
     Attributes:
-        slug (Union[Unset, str]):
-        display_name (Union[Unset, str]):
-        summary (Union[Unset, str]):
-        photo_attachment_id (Union[None, Unset, str]):
-        provider_type (Union[Unset, PatchRegistryRegistriesRegistryIdEntriesEntryIdBodyProviderType]):
-        category (Union[Unset, str]):
-        keywords (Union[Unset, list[str]]):
-        location_text (Union[Unset, str]):
-        country_code (Union[Unset, str]):
-        region_code (Union[Unset, str]):
-        geo (Union['PatchRegistryRegistriesRegistryIdEntriesEntryIdBodyGeoType0', None, Unset]):
-        area_served (Union[Unset, PatchRegistryRegistriesRegistryIdEntriesEntryIdBodyAreaServed]):
-        delivery_mode (Union[Unset, PatchRegistryRegistriesRegistryIdEntriesEntryIdBodyDeliveryMode]):
-        links (Union[Unset, list['PatchRegistryRegistriesRegistryIdEntriesEntryIdBodyLinksItem']]):
-        contact_mode (Union[Unset, PatchRegistryRegistriesRegistryIdEntriesEntryIdBodyContactMode]):
-        languages (Union[Unset, list[str]]):
-        status (Union[Unset, PatchRegistryRegistriesRegistryIdEntriesEntryIdBodyStatus]):
-        visibility (Union[Unset, PatchRegistryRegistriesRegistryIdEntriesEntryIdBodyVisibility]):
-        values (Union[Unset, PatchRegistryRegistriesRegistryIdEntriesEntryIdBodyValues]): shape-checked against the live
-            field defs on every write; required-ness only enforced when the resulting status is (or stays) published. On
-            PATCH this is a JSON Merge Patch (RFC 7386) applied to the STORED values, not a full replace: a key you omit is
-            left untouched; a key you send with a non-null value replaces that one field; a key you send as null DELETES it.
-            Send only the section you are editing — the rest of the entry is preserved. On POST there is no prior state, so
-            this object IS the initial values as given (null has no special meaning here).
-        value_visibility (Union[Unset, PatchRegistryRegistriesRegistryIdEntriesEntryIdBodyValueVisibility]): The
-            registrant's per-field audience overrides on THIS entry, keyed by field_defs.key. Merge-patch like `values`: a
-            key you omit keeps its stored setting, a key sent as null clears the override back to the def's setting. Each
-            override may only TIGHTEN the owner's ceiling (RegistryFieldDef.visibility); asking for a WIDER one is a 400
-            naming the field, never a silent clamp — a 200 would leave the registrant believing they published a field the
-            owner keeps private. A stored override the owner has since tightened past is clamped and written back without
-            erroring, since it was already clamped on every read.
+        slug (str | Unset):
+        display_name (str | Unset):
+        summary (str | Unset):
+        photo_attachment_id (None | str | Unset):
+        provider_type (PatchRegistryRegistriesRegistryIdEntriesEntryIdBodyProviderType | Unset):
+        category (str | Unset):
+        keywords (list[str] | Unset):
+        location_text (str | Unset):
+        country_code (str | Unset):
+        region_code (str | Unset):
+        geo (None | PatchRegistryRegistriesRegistryIdEntriesEntryIdBodyGeoType0 | Unset):
+        area_served (PatchRegistryRegistriesRegistryIdEntriesEntryIdBodyAreaServed | Unset):
+        delivery_mode (PatchRegistryRegistriesRegistryIdEntriesEntryIdBodyDeliveryMode | Unset):
+        links (list[PatchRegistryRegistriesRegistryIdEntriesEntryIdBodyLinksItem] | Unset):
+        contact_mode (PatchRegistryRegistriesRegistryIdEntriesEntryIdBodyContactMode | Unset):
+        languages (list[str] | Unset):
+        status (PatchRegistryRegistriesRegistryIdEntriesEntryIdBodyStatus | Unset):
+        visibility (PatchRegistryRegistriesRegistryIdEntriesEntryIdBodyVisibility | Unset):
+        values (PatchRegistryRegistriesRegistryIdEntriesEntryIdBodyValues | Unset): shape-checked against the live field
+            defs on every write; required-ness only enforced when the resulting status is (or stays) published. On PATCH
+            this is a JSON Merge Patch (RFC 7386) applied to the STORED values, not a full replace: a key you omit is left
+            untouched; a key you send with a non-null value replaces that one field; a key you send as null DELETES it. Send
+            only the section you are editing — the rest of the entry is preserved. On POST there is no prior state, so this
+            object IS the initial values as given (null has no special meaning here).
+        value_visibility (PatchRegistryRegistriesRegistryIdEntriesEntryIdBodyValueVisibility | Unset): The registrant's
+            per-field audience overrides on THIS entry, keyed by field_defs.key. Merge-patch like `values`: a key you omit
+            keeps its stored setting, a key sent as null clears the override back to the def's setting. Each override may
+            only TIGHTEN the owner's ceiling (RegistryFieldDef.visibility); asking for a WIDER one is a 400 naming the
+            field, never a silent clamp — a 200 would leave the registrant believing they published a field the owner keeps
+            private. A stored override the owner has since tightened past is clamped and written back without erroring,
+            since it was already clamped on every read.
     """
 
-    slug: Unset | str = UNSET
-    display_name: Unset | str = UNSET
-    summary: Unset | str = UNSET
-    photo_attachment_id: None | Unset | str = UNSET
-    provider_type: Unset | PatchRegistryRegistriesRegistryIdEntriesEntryIdBodyProviderType = UNSET
-    category: Unset | str = UNSET
-    keywords: Unset | list[str] = UNSET
-    location_text: Unset | str = UNSET
-    country_code: Unset | str = UNSET
-    region_code: Unset | str = UNSET
-    geo: Union["PatchRegistryRegistriesRegistryIdEntriesEntryIdBodyGeoType0", None, Unset] = UNSET
-    area_served: Union[Unset, "PatchRegistryRegistriesRegistryIdEntriesEntryIdBodyAreaServed"] = (
+    slug: str | Unset = UNSET
+    display_name: str | Unset = UNSET
+    summary: str | Unset = UNSET
+    photo_attachment_id: None | str | Unset = UNSET
+    provider_type: PatchRegistryRegistriesRegistryIdEntriesEntryIdBodyProviderType | Unset = UNSET
+    category: str | Unset = UNSET
+    keywords: list[str] | Unset = UNSET
+    location_text: str | Unset = UNSET
+    country_code: str | Unset = UNSET
+    region_code: str | Unset = UNSET
+    geo: None | PatchRegistryRegistriesRegistryIdEntriesEntryIdBodyGeoType0 | Unset = UNSET
+    area_served: PatchRegistryRegistriesRegistryIdEntriesEntryIdBodyAreaServed | Unset = UNSET
+    delivery_mode: PatchRegistryRegistriesRegistryIdEntriesEntryIdBodyDeliveryMode | Unset = UNSET
+    links: list[PatchRegistryRegistriesRegistryIdEntriesEntryIdBodyLinksItem] | Unset = UNSET
+    contact_mode: PatchRegistryRegistriesRegistryIdEntriesEntryIdBodyContactMode | Unset = UNSET
+    languages: list[str] | Unset = UNSET
+    status: PatchRegistryRegistriesRegistryIdEntriesEntryIdBodyStatus | Unset = UNSET
+    visibility: PatchRegistryRegistriesRegistryIdEntriesEntryIdBodyVisibility | Unset = UNSET
+    values: PatchRegistryRegistriesRegistryIdEntriesEntryIdBodyValues | Unset = UNSET
+    value_visibility: PatchRegistryRegistriesRegistryIdEntriesEntryIdBodyValueVisibility | Unset = (
         UNSET
     )
-    delivery_mode: Unset | PatchRegistryRegistriesRegistryIdEntriesEntryIdBodyDeliveryMode = UNSET
-    links: Unset | list["PatchRegistryRegistriesRegistryIdEntriesEntryIdBodyLinksItem"] = UNSET
-    contact_mode: Unset | PatchRegistryRegistriesRegistryIdEntriesEntryIdBodyContactMode = UNSET
-    languages: Unset | list[str] = UNSET
-    status: Unset | PatchRegistryRegistriesRegistryIdEntriesEntryIdBodyStatus = UNSET
-    visibility: Unset | PatchRegistryRegistriesRegistryIdEntriesEntryIdBodyVisibility = UNSET
-    values: Union[Unset, "PatchRegistryRegistriesRegistryIdEntriesEntryIdBodyValues"] = UNSET
-    value_visibility: Union[
-        Unset, "PatchRegistryRegistriesRegistryIdEntriesEntryIdBodyValueVisibility"
-    ] = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -116,19 +116,19 @@ class PatchRegistryRegistriesRegistryIdEntriesEntryIdBody:
 
         summary = self.summary
 
-        photo_attachment_id: None | Unset | str
+        photo_attachment_id: None | str | Unset
         if isinstance(self.photo_attachment_id, Unset):
             photo_attachment_id = UNSET
         else:
             photo_attachment_id = self.photo_attachment_id
 
-        provider_type: Unset | str = UNSET
+        provider_type: str | Unset = UNSET
         if not isinstance(self.provider_type, Unset):
             provider_type = self.provider_type.value
 
         category = self.category
 
-        keywords: Unset | list[str] = UNSET
+        keywords: list[str] | Unset = UNSET
         if not isinstance(self.keywords, Unset):
             keywords = self.keywords
 
@@ -138,7 +138,7 @@ class PatchRegistryRegistriesRegistryIdEntriesEntryIdBody:
 
         region_code = self.region_code
 
-        geo: None | Unset | dict[str, Any]
+        geo: dict[str, Any] | None | Unset
         if isinstance(self.geo, Unset):
             geo = UNSET
         elif isinstance(self.geo, PatchRegistryRegistriesRegistryIdEntriesEntryIdBodyGeoType0):
@@ -146,42 +146,42 @@ class PatchRegistryRegistriesRegistryIdEntriesEntryIdBody:
         else:
             geo = self.geo
 
-        area_served: Unset | dict[str, Any] = UNSET
+        area_served: dict[str, Any] | Unset = UNSET
         if not isinstance(self.area_served, Unset):
             area_served = self.area_served.to_dict()
 
-        delivery_mode: Unset | str = UNSET
+        delivery_mode: str | Unset = UNSET
         if not isinstance(self.delivery_mode, Unset):
             delivery_mode = self.delivery_mode.value
 
-        links: Unset | list[dict[str, Any]] = UNSET
+        links: list[dict[str, Any]] | Unset = UNSET
         if not isinstance(self.links, Unset):
             links = []
             for links_item_data in self.links:
                 links_item = links_item_data.to_dict()
                 links.append(links_item)
 
-        contact_mode: Unset | str = UNSET
+        contact_mode: str | Unset = UNSET
         if not isinstance(self.contact_mode, Unset):
             contact_mode = self.contact_mode.value
 
-        languages: Unset | list[str] = UNSET
+        languages: list[str] | Unset = UNSET
         if not isinstance(self.languages, Unset):
             languages = self.languages
 
-        status: Unset | str = UNSET
+        status: str | Unset = UNSET
         if not isinstance(self.status, Unset):
             status = self.status.value
 
-        visibility: Unset | str = UNSET
+        visibility: str | Unset = UNSET
         if not isinstance(self.visibility, Unset):
             visibility = self.visibility.value
 
-        values: Unset | dict[str, Any] = UNSET
+        values: dict[str, Any] | Unset = UNSET
         if not isinstance(self.values, Unset):
             values = self.values.to_dict()
 
-        value_visibility: Unset | dict[str, Any] = UNSET
+        value_visibility: dict[str, Any] | Unset = UNSET
         if not isinstance(self.value_visibility, Unset):
             value_visibility = self.value_visibility.to_dict()
 
@@ -256,17 +256,17 @@ class PatchRegistryRegistriesRegistryIdEntriesEntryIdBody:
 
         summary = d.pop("summary", UNSET)
 
-        def _parse_photo_attachment_id(data: object) -> None | Unset | str:
+        def _parse_photo_attachment_id(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         photo_attachment_id = _parse_photo_attachment_id(d.pop("photoAttachmentId", UNSET))
 
         _provider_type = d.pop("providerType", UNSET)
-        provider_type: Unset | PatchRegistryRegistriesRegistryIdEntriesEntryIdBodyProviderType
+        provider_type: PatchRegistryRegistriesRegistryIdEntriesEntryIdBodyProviderType | Unset
         if isinstance(_provider_type, Unset):
             provider_type = UNSET
         else:
@@ -286,7 +286,7 @@ class PatchRegistryRegistriesRegistryIdEntriesEntryIdBody:
 
         def _parse_geo(
             data: object,
-        ) -> Union["PatchRegistryRegistriesRegistryIdEntriesEntryIdBodyGeoType0", None, Unset]:
+        ) -> None | PatchRegistryRegistriesRegistryIdEntriesEntryIdBodyGeoType0 | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
@@ -299,17 +299,16 @@ class PatchRegistryRegistriesRegistryIdEntriesEntryIdBody:
                 )
 
                 return geo_type_0
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
             return cast(
-                Union["PatchRegistryRegistriesRegistryIdEntriesEntryIdBodyGeoType0", None, Unset],
-                data,
+                None | PatchRegistryRegistriesRegistryIdEntriesEntryIdBodyGeoType0 | Unset, data
             )
 
         geo = _parse_geo(d.pop("geo", UNSET))
 
         _area_served = d.pop("areaServed", UNSET)
-        area_served: Unset | PatchRegistryRegistriesRegistryIdEntriesEntryIdBodyAreaServed
+        area_served: PatchRegistryRegistriesRegistryIdEntriesEntryIdBodyAreaServed | Unset
         if isinstance(_area_served, Unset):
             area_served = UNSET
         else:
@@ -318,7 +317,7 @@ class PatchRegistryRegistriesRegistryIdEntriesEntryIdBody:
             )
 
         _delivery_mode = d.pop("deliveryMode", UNSET)
-        delivery_mode: Unset | PatchRegistryRegistriesRegistryIdEntriesEntryIdBodyDeliveryMode
+        delivery_mode: PatchRegistryRegistriesRegistryIdEntriesEntryIdBodyDeliveryMode | Unset
         if isinstance(_delivery_mode, Unset):
             delivery_mode = UNSET
         else:
@@ -326,17 +325,19 @@ class PatchRegistryRegistriesRegistryIdEntriesEntryIdBody:
                 _delivery_mode
             )
 
-        links = []
         _links = d.pop("links", UNSET)
-        for links_item_data in _links or []:
-            links_item = PatchRegistryRegistriesRegistryIdEntriesEntryIdBodyLinksItem.from_dict(
-                links_item_data
-            )
+        links: list[PatchRegistryRegistriesRegistryIdEntriesEntryIdBodyLinksItem] | Unset = UNSET
+        if _links is not UNSET:
+            links = []
+            for links_item_data in _links:
+                links_item = PatchRegistryRegistriesRegistryIdEntriesEntryIdBodyLinksItem.from_dict(
+                    links_item_data
+                )
 
-            links.append(links_item)
+                links.append(links_item)
 
         _contact_mode = d.pop("contactMode", UNSET)
-        contact_mode: Unset | PatchRegistryRegistriesRegistryIdEntriesEntryIdBodyContactMode
+        contact_mode: PatchRegistryRegistriesRegistryIdEntriesEntryIdBodyContactMode | Unset
         if isinstance(_contact_mode, Unset):
             contact_mode = UNSET
         else:
@@ -347,28 +348,28 @@ class PatchRegistryRegistriesRegistryIdEntriesEntryIdBody:
         languages = cast(list[str], d.pop("languages", UNSET))
 
         _status = d.pop("status", UNSET)
-        status: Unset | PatchRegistryRegistriesRegistryIdEntriesEntryIdBodyStatus
+        status: PatchRegistryRegistriesRegistryIdEntriesEntryIdBodyStatus | Unset
         if isinstance(_status, Unset):
             status = UNSET
         else:
             status = PatchRegistryRegistriesRegistryIdEntriesEntryIdBodyStatus(_status)
 
         _visibility = d.pop("visibility", UNSET)
-        visibility: Unset | PatchRegistryRegistriesRegistryIdEntriesEntryIdBodyVisibility
+        visibility: PatchRegistryRegistriesRegistryIdEntriesEntryIdBodyVisibility | Unset
         if isinstance(_visibility, Unset):
             visibility = UNSET
         else:
             visibility = PatchRegistryRegistriesRegistryIdEntriesEntryIdBodyVisibility(_visibility)
 
         _values = d.pop("values", UNSET)
-        values: Unset | PatchRegistryRegistriesRegistryIdEntriesEntryIdBodyValues
+        values: PatchRegistryRegistriesRegistryIdEntriesEntryIdBodyValues | Unset
         if isinstance(_values, Unset):
             values = UNSET
         else:
             values = PatchRegistryRegistriesRegistryIdEntriesEntryIdBodyValues.from_dict(_values)
 
         _value_visibility = d.pop("valueVisibility", UNSET)
-        value_visibility: Unset | PatchRegistryRegistriesRegistryIdEntriesEntryIdBodyValueVisibility
+        value_visibility: PatchRegistryRegistriesRegistryIdEntriesEntryIdBodyValueVisibility | Unset
         if isinstance(_value_visibility, Unset):
             value_visibility = UNSET
         else:

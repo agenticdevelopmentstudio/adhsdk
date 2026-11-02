@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class ReservedIdentifierReason(str, Enum):
+class ReservedIdentifierReason(StrEnum):
     DELETED_ENTITY = "deleted-entity"
     ORPHAN = "orphan"
     RENAME_LEFTOVER = "rename-leftover"

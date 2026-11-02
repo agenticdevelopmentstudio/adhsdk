@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -12,26 +14,26 @@ class PostIntegrationIntegrationMediaItemsResponse201:
     Attributes:
         id (str):
         customer_id (str):
-        deleted_at (Union[None, str]):
+        deleted_at (None | str):
         ecosystem_id (str):
         connection_id (str):
         external_id (str):
         source_provider (str):
         media_type (str):
         title (str):
-        artist (Union[None, str]):
-        album (Union[None, str]):
-        image_url (Union[None, str]):
-        external_url (Union[None, str]):
-        duration_ms (Union[None, int]):
-        popularity (Union[None, int]):
+        artist (None | str):
+        album (None | str):
+        image_url (None | str):
+        external_url (None | str):
+        duration_ms (int | None):
+        popularity (int | None):
         is_saved (bool):
-        last_played_at (Union[None, str]):
+        last_played_at (None | str):
         is_deleted (bool):
         created_at (str):
         updated_at (str):
         sync_version (int):
-        sync_stamped_at (Union[None, str]):
+        sync_stamped_at (None | str):
         sync_txid (int):
     """
 
@@ -48,8 +50,8 @@ class PostIntegrationIntegrationMediaItemsResponse201:
     album: None | str
     image_url: None | str
     external_url: None | str
-    duration_ms: None | int
-    popularity: None | int
+    duration_ms: int | None
+    popularity: int | None
     is_saved: bool
     last_played_at: None | str
     is_deleted: bool
@@ -91,10 +93,10 @@ class PostIntegrationIntegrationMediaItemsResponse201:
         external_url: None | str
         external_url = self.external_url
 
-        duration_ms: None | int
+        duration_ms: int | None
         duration_ms = self.duration_ms
 
-        popularity: None | int
+        popularity: int | None
         popularity = self.popularity
 
         is_saved = self.is_saved
@@ -201,17 +203,17 @@ class PostIntegrationIntegrationMediaItemsResponse201:
 
         external_url = _parse_external_url(d.pop("externalUrl"))
 
-        def _parse_duration_ms(data: object) -> None | int:
+        def _parse_duration_ms(data: object) -> int | None:
             if data is None:
                 return data
-            return cast(None | int, data)
+            return cast(int | None, data)
 
         duration_ms = _parse_duration_ms(d.pop("durationMs"))
 
-        def _parse_popularity(data: object) -> None | int:
+        def _parse_popularity(data: object) -> int | None:
             if data is None:
                 return data
-            return cast(None | int, data)
+            return cast(int | None, data)
 
         popularity = _parse_popularity(d.pop("popularity"))
 

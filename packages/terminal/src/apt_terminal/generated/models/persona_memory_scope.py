@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class PersonaMemoryScope(str, Enum):
+class PersonaMemoryScope(StrEnum):
     PERSONA = "persona"
     USER = "user"
 

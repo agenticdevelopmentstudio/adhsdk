@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class ProjectFieldType(str, Enum):
+class ProjectFieldType(StrEnum):
     CHECKBOX = "checkbox"
     DATE = "date"
     NUMBER = "number"

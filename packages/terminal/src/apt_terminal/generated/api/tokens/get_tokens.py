@@ -12,8 +12,8 @@ from ...types import UNSET, Response, Unset
 
 def _get_kwargs(
     *,
-    ecosystem_id: Unset | str = UNSET,
-    workspace: Unset | str = UNSET,
+    ecosystem_id: str | Unset = UNSET,
+    workspace: str | Unset = UNSET,
 ) -> dict[str, Any]:
     params: dict[str, Any] = {}
 
@@ -34,7 +34,7 @@ def _get_kwargs(
 
 def _parse_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> Error | list["TokenPrincipal"] | None:
+) -> Error | list[TokenPrincipal] | None:
     if response.status_code == 200:
         response_200 = []
         _response_200 = response.json()
@@ -68,7 +68,7 @@ def _parse_response(
 
 def _build_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> Response[Error | list["TokenPrincipal"]]:
+) -> Response[Error | list[TokenPrincipal]]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -80,21 +80,21 @@ def _build_response(
 def sync_detailed(
     *,
     client: AuthenticatedClient,
-    ecosystem_id: Unset | str = UNSET,
-    workspace: Unset | str = UNSET,
-) -> Response[Error | list["TokenPrincipal"]]:
+    ecosystem_id: str | Unset = UNSET,
+    workspace: str | Unset = UNSET,
+) -> Response[Error | list[TokenPrincipal]]:
     """List the caller’s token principals (metadata only; secret never returned)
 
     Args:
-        ecosystem_id (Union[Unset, str]):
-        workspace (Union[Unset, str]):
+        ecosystem_id (str | Unset):
+        workspace (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, list['TokenPrincipal']]]
+        Response[Error | list[TokenPrincipal]]
     """
 
     kwargs = _get_kwargs(
@@ -112,21 +112,21 @@ def sync_detailed(
 def sync(
     *,
     client: AuthenticatedClient,
-    ecosystem_id: Unset | str = UNSET,
-    workspace: Unset | str = UNSET,
-) -> Error | list["TokenPrincipal"] | None:
+    ecosystem_id: str | Unset = UNSET,
+    workspace: str | Unset = UNSET,
+) -> Error | list[TokenPrincipal] | None:
     """List the caller’s token principals (metadata only; secret never returned)
 
     Args:
-        ecosystem_id (Union[Unset, str]):
-        workspace (Union[Unset, str]):
+        ecosystem_id (str | Unset):
+        workspace (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, list['TokenPrincipal']]
+        Error | list[TokenPrincipal]
     """
 
     return sync_detailed(
@@ -139,21 +139,21 @@ def sync(
 async def asyncio_detailed(
     *,
     client: AuthenticatedClient,
-    ecosystem_id: Unset | str = UNSET,
-    workspace: Unset | str = UNSET,
-) -> Response[Error | list["TokenPrincipal"]]:
+    ecosystem_id: str | Unset = UNSET,
+    workspace: str | Unset = UNSET,
+) -> Response[Error | list[TokenPrincipal]]:
     """List the caller’s token principals (metadata only; secret never returned)
 
     Args:
-        ecosystem_id (Union[Unset, str]):
-        workspace (Union[Unset, str]):
+        ecosystem_id (str | Unset):
+        workspace (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, list['TokenPrincipal']]]
+        Response[Error | list[TokenPrincipal]]
     """
 
     kwargs = _get_kwargs(
@@ -169,21 +169,21 @@ async def asyncio_detailed(
 async def asyncio(
     *,
     client: AuthenticatedClient,
-    ecosystem_id: Unset | str = UNSET,
-    workspace: Unset | str = UNSET,
-) -> Error | list["TokenPrincipal"] | None:
+    ecosystem_id: str | Unset = UNSET,
+    workspace: str | Unset = UNSET,
+) -> Error | list[TokenPrincipal] | None:
     """List the caller’s token principals (metadata only; secret never returned)
 
     Args:
-        ecosystem_id (Union[Unset, str]):
-        workspace (Union[Unset, str]):
+        ecosystem_id (str | Unset):
+        workspace (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, list['TokenPrincipal']]
+        Error | list[TokenPrincipal]
     """
 
     return (

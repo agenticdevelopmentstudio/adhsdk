@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -14,14 +16,14 @@ class PostProjectProjectsIdMilestonesBody:
     """
     Attributes:
         name (str): unique among the project’s live milestones (409 otherwise)
-        description (Union[Unset, str]):
-        target_date (Union[None, Unset, str]): date (YYYY-MM-DD); omitted leaves the milestone undated, which is a real
-            state and not a missing one
+        description (str | Unset):
+        target_date (None | str | Unset): date (YYYY-MM-DD); omitted leaves the milestone undated, which is a real state
+            and not a missing one
     """
 
     name: str
-    description: Unset | str = UNSET
-    target_date: None | Unset | str = UNSET
+    description: str | Unset = UNSET
+    target_date: None | str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -29,7 +31,7 @@ class PostProjectProjectsIdMilestonesBody:
 
         description = self.description
 
-        target_date: None | Unset | str
+        target_date: None | str | Unset
         if isinstance(self.target_date, Unset):
             target_date = UNSET
         else:
@@ -56,12 +58,12 @@ class PostProjectProjectsIdMilestonesBody:
 
         description = d.pop("description", UNSET)
 
-        def _parse_target_date(data: object) -> None | Unset | str:
+        def _parse_target_date(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         target_date = _parse_target_date(d.pop("targetDate", UNSET))
 

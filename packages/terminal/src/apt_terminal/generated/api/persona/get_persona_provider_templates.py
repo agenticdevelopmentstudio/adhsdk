@@ -12,10 +12,10 @@ from ...types import UNSET, Response, Unset
 
 def _get_kwargs(
     *,
-    q: Unset | str = UNSET,
-    provider_kind: Unset | str = UNSET,
-    page: Unset | str = UNSET,
-    page_size: Unset | str = UNSET,
+    q: str | Unset = UNSET,
+    provider_kind: str | Unset = UNSET,
+    page: str | Unset = UNSET,
+    page_size: str | Unset = UNSET,
 ) -> dict[str, Any]:
     params: dict[str, Any] = {}
 
@@ -71,26 +71,26 @@ def _build_response(
 def sync_detailed(
     *,
     client: AuthenticatedClient | Client,
-    q: Unset | str = UNSET,
-    provider_kind: Unset | str = UNSET,
-    page: Unset | str = UNSET,
-    page_size: Unset | str = UNSET,
+    q: str | Unset = UNSET,
+    provider_kind: str | Unset = UNSET,
+    page: str | Unset = UNSET,
+    page_size: str | Unset = UNSET,
 ) -> Response[Error | ProviderTemplateList]:
     """List/search LLM provider templates (public; ?q= substring on name/kind, ?providerKind= exact,
     paginated)
 
     Args:
-        q (Union[Unset, str]):
-        provider_kind (Union[Unset, str]):
-        page (Union[Unset, str]):
-        page_size (Union[Unset, str]):
+        q (str | Unset):
+        provider_kind (str | Unset):
+        page (str | Unset):
+        page_size (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, ProviderTemplateList]]
+        Response[Error | ProviderTemplateList]
     """
 
     kwargs = _get_kwargs(
@@ -110,26 +110,26 @@ def sync_detailed(
 def sync(
     *,
     client: AuthenticatedClient | Client,
-    q: Unset | str = UNSET,
-    provider_kind: Unset | str = UNSET,
-    page: Unset | str = UNSET,
-    page_size: Unset | str = UNSET,
+    q: str | Unset = UNSET,
+    provider_kind: str | Unset = UNSET,
+    page: str | Unset = UNSET,
+    page_size: str | Unset = UNSET,
 ) -> Error | ProviderTemplateList | None:
     """List/search LLM provider templates (public; ?q= substring on name/kind, ?providerKind= exact,
     paginated)
 
     Args:
-        q (Union[Unset, str]):
-        provider_kind (Union[Unset, str]):
-        page (Union[Unset, str]):
-        page_size (Union[Unset, str]):
+        q (str | Unset):
+        provider_kind (str | Unset):
+        page (str | Unset):
+        page_size (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, ProviderTemplateList]
+        Error | ProviderTemplateList
     """
 
     return sync_detailed(
@@ -144,26 +144,26 @@ def sync(
 async def asyncio_detailed(
     *,
     client: AuthenticatedClient | Client,
-    q: Unset | str = UNSET,
-    provider_kind: Unset | str = UNSET,
-    page: Unset | str = UNSET,
-    page_size: Unset | str = UNSET,
+    q: str | Unset = UNSET,
+    provider_kind: str | Unset = UNSET,
+    page: str | Unset = UNSET,
+    page_size: str | Unset = UNSET,
 ) -> Response[Error | ProviderTemplateList]:
     """List/search LLM provider templates (public; ?q= substring on name/kind, ?providerKind= exact,
     paginated)
 
     Args:
-        q (Union[Unset, str]):
-        provider_kind (Union[Unset, str]):
-        page (Union[Unset, str]):
-        page_size (Union[Unset, str]):
+        q (str | Unset):
+        provider_kind (str | Unset):
+        page (str | Unset):
+        page_size (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, ProviderTemplateList]]
+        Response[Error | ProviderTemplateList]
     """
 
     kwargs = _get_kwargs(
@@ -181,26 +181,26 @@ async def asyncio_detailed(
 async def asyncio(
     *,
     client: AuthenticatedClient | Client,
-    q: Unset | str = UNSET,
-    provider_kind: Unset | str = UNSET,
-    page: Unset | str = UNSET,
-    page_size: Unset | str = UNSET,
+    q: str | Unset = UNSET,
+    provider_kind: str | Unset = UNSET,
+    page: str | Unset = UNSET,
+    page_size: str | Unset = UNSET,
 ) -> Error | ProviderTemplateList | None:
     """List/search LLM provider templates (public; ?q= substring on name/kind, ?providerKind= exact,
     paginated)
 
     Args:
-        q (Union[Unset, str]):
-        provider_kind (Union[Unset, str]):
-        page (Union[Unset, str]):
-        page_size (Union[Unset, str]):
+        q (str | Unset):
+        provider_kind (str | Unset):
+        page (str | Unset):
+        page_size (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, ProviderTemplateList]
+        Error | ProviderTemplateList
     """
 
     return (

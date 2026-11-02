@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class PostPersonaMemoryRecallBodyMemoryType(str, Enum):
+class PostPersonaMemoryRecallBodyMemoryType(StrEnum):
     FEEDBACK = "feedback"
     PROJECT = "project"
     REFERENCE = "reference"

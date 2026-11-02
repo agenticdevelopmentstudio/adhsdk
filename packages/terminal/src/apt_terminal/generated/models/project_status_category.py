@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class ProjectStatusCategory(str, Enum):
+class ProjectStatusCategory(StrEnum):
     BACKLOG = "backlog"
     CANCELED = "canceled"
     DONE = "done"

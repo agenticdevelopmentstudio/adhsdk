@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -12,26 +14,26 @@ class GetIntegrationIntegrationBookmarksResponse200Item:
     Attributes:
         id (str):
         customer_id (str):
-        deleted_at (Union[None, str]):
+        deleted_at (None | str):
         ecosystem_id (str):
         connection_id (str):
         external_id (str):
         source_provider (str):
         title (str):
         url (str):
-        excerpt (Union[None, str]):
-        note (Union[None, str]):
-        tags (Union[None, str]):
-        image_url (Union[None, str]):
-        collection_id (Union[None, str]):
-        collection_name (Union[None, str]):
+        excerpt (None | str):
+        note (None | str):
+        tags (None | str):
+        image_url (None | str):
+        collection_id (None | str):
+        collection_name (None | str):
         is_favorite (bool):
         is_deleted (bool):
-        external_created_at (Union[None, str]):
+        external_created_at (None | str):
         created_at (str):
         updated_at (str):
         sync_version (int):
-        sync_stamped_at (Union[None, str]):
+        sync_stamped_at (None | str):
         sync_txid (int):
     """
 

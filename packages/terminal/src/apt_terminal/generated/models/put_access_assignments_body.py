@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar
 
@@ -17,15 +19,15 @@ class PutAccessAssignmentsBody:
         subject_kind (PutAccessAssignmentsBodySubjectKind):
         subject_id (str):
         role_id (str):
-        feature (Union[Unset, str]): with itemId: scope the grant to one item
-        item_id (Union[Unset, str]):
+        feature (str | Unset): with itemId: scope the grant to one item
+        item_id (str | Unset):
     """
 
     subject_kind: PutAccessAssignmentsBodySubjectKind
     subject_id: str
     role_id: str
-    feature: Unset | str = UNSET
-    item_id: Unset | str = UNSET
+    feature: str | Unset = UNSET
+    item_id: str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:

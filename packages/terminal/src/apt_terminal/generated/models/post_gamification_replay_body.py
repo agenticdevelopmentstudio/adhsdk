@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar
 
@@ -14,13 +16,13 @@ class PostGamificationReplayBody:
     """
     Attributes:
         ecosystem_id (str): The target realm to replay
-        subject_type (Union[Unset, str]): With subjectId, replay just this one subject instead of the whole realm
-        subject_id (Union[Unset, str]): Must be provided together with subjectType
+        subject_type (str | Unset): With subjectId, replay just this one subject instead of the whole realm
+        subject_id (str | Unset): Must be provided together with subjectType
     """
 
     ecosystem_id: str
-    subject_type: Unset | str = UNSET
-    subject_id: Unset | str = UNSET
+    subject_type: str | Unset = UNSET
+    subject_id: str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:

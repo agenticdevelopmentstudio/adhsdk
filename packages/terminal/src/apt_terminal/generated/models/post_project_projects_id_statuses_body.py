@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar
 
@@ -19,13 +21,13 @@ class PostProjectProjectsIdStatusesBody:
         key (str):
         label (str):
         category (PostProjectProjectsIdStatusesBodyCategory):
-        position (Union[Unset, int]): explicit column order; defaults to append (max+1)
+        position (int | Unset): explicit column order; defaults to append (max+1)
     """
 
     key: str
     label: str
     category: PostProjectProjectsIdStatusesBodyCategory
-    position: Unset | int = UNSET
+    position: int | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import TYPE_CHECKING, Any, TypeVar, cast
 
@@ -20,12 +22,12 @@ class PersonaBootstrapAuth:
     Attributes:
         token_class (PersonaBootstrapAuthTokenClass):
         subject (PersonaBootstrapSubject):
-        expires_at (Union[None, str]):
+        expires_at (None | str):
         scope (list[str]):
     """
 
     token_class: PersonaBootstrapAuthTokenClass
-    subject: "PersonaBootstrapSubject"
+    subject: PersonaBootstrapSubject
     expires_at: None | str
     scope: list[str]
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)

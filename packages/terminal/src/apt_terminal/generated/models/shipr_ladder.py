@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, TypeVar, Union, cast
+from typing import TYPE_CHECKING, Any, TypeVar, cast
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -20,28 +22,28 @@ class ShiprLadder:
     or above it.
 
         Attributes:
-            columns (Union[Unset, list[str]]):
-            rows (Union[Unset, list['ShiprLadderRowsItem']]):
-            settled (Union[Unset, bool]): Every live branch is on the newest commit — nothing is in flight.
-            tips (Union[Unset, ShiprLadderTips]):
-            notes (Union[Unset, list[str]]):
-            read_at (Union[Unset, str]): When the last status run read this.
+            columns (list[str] | Unset):
+            rows (list[ShiprLadderRowsItem] | Unset):
+            settled (bool | Unset): Every live branch is on the newest commit — nothing is in flight.
+            tips (ShiprLadderTips | Unset):
+            notes (list[str] | Unset):
+            read_at (str | Unset): When the last status run read this.
     """
 
-    columns: Unset | list[str] = UNSET
-    rows: Unset | list["ShiprLadderRowsItem"] = UNSET
-    settled: Unset | bool = UNSET
-    tips: Union[Unset, "ShiprLadderTips"] = UNSET
-    notes: Unset | list[str] = UNSET
-    read_at: Unset | str = UNSET
+    columns: list[str] | Unset = UNSET
+    rows: list[ShiprLadderRowsItem] | Unset = UNSET
+    settled: bool | Unset = UNSET
+    tips: ShiprLadderTips | Unset = UNSET
+    notes: list[str] | Unset = UNSET
+    read_at: str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
-        columns: Unset | list[str] = UNSET
+        columns: list[str] | Unset = UNSET
         if not isinstance(self.columns, Unset):
             columns = self.columns
 
-        rows: Unset | list[dict[str, Any]] = UNSET
+        rows: list[dict[str, Any]] | Unset = UNSET
         if not isinstance(self.rows, Unset):
             rows = []
             for rows_item_data in self.rows:
@@ -50,11 +52,11 @@ class ShiprLadder:
 
         settled = self.settled
 
-        tips: Unset | dict[str, Any] = UNSET
+        tips: dict[str, Any] | Unset = UNSET
         if not isinstance(self.tips, Unset):
             tips = self.tips.to_dict()
 
-        notes: Unset | list[str] = UNSET
+        notes: list[str] | Unset = UNSET
         if not isinstance(self.notes, Unset):
             notes = self.notes
 
@@ -86,17 +88,19 @@ class ShiprLadder:
         d = dict(src_dict)
         columns = cast(list[str], d.pop("columns", UNSET))
 
-        rows = []
         _rows = d.pop("rows", UNSET)
-        for rows_item_data in _rows or []:
-            rows_item = ShiprLadderRowsItem.from_dict(rows_item_data)
+        rows: list[ShiprLadderRowsItem] | Unset = UNSET
+        if _rows is not UNSET:
+            rows = []
+            for rows_item_data in _rows:
+                rows_item = ShiprLadderRowsItem.from_dict(rows_item_data)
 
-            rows.append(rows_item)
+                rows.append(rows_item)
 
         settled = d.pop("settled", UNSET)
 
         _tips = d.pop("tips", UNSET)
-        tips: Unset | ShiprLadderTips
+        tips: ShiprLadderTips | Unset
         if isinstance(_tips, Unset):
             tips = UNSET
         else:

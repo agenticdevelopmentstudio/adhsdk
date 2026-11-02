@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class RegistryEntryProviderType(str, Enum):
+class RegistryEntryProviderType(StrEnum):
     ORGANIZATION = "organization"
     PERSON = "person"
     PERSONA = "persona"

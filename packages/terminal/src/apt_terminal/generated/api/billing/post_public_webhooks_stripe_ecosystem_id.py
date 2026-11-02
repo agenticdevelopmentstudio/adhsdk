@@ -1,5 +1,6 @@
 from http import HTTPStatus
 from typing import Any
+from urllib.parse import quote
 
 import httpx
 
@@ -8,22 +9,25 @@ from ...client import AuthenticatedClient, Client
 from ...models.billing_ack import BillingAck
 from ...models.error import Error
 from ...models.stripe_webhook_event import StripeWebhookEvent
-from ...types import Response
+from ...types import UNSET, Response, Unset
 
 
 def _get_kwargs(
     ecosystem_id: str,
     *,
-    body: StripeWebhookEvent,
+    body: StripeWebhookEvent | Unset = UNSET,
 ) -> dict[str, Any]:
     headers: dict[str, Any] = {}
 
     _kwargs: dict[str, Any] = {
         "method": "post",
-        "url": f"/public/webhooks/stripe/{ecosystem_id}",
+        "url": "/public/webhooks/stripe/{ecosystem_id}".format(
+            ecosystem_id=quote(str(ecosystem_id), safe=""),
+        ),
     }
 
-    _kwargs["json"] = body.to_dict()
+    if not isinstance(body, Unset):
+        _kwargs["json"] = body.to_dict()
 
     headers["Content-Type"] = "application/json"
 
@@ -65,7 +69,7 @@ def sync_detailed(
     ecosystem_id: str,
     *,
     client: AuthenticatedClient | Client,
-    body: StripeWebhookEvent,
+    body: StripeWebhookEvent | Unset = UNSET,
 ) -> Response[BillingAck | Error]:
     """Stripe event receiver (HMAC over the raw body, not a JWT)
 
@@ -80,14 +84,14 @@ def sync_detailed(
 
     Args:
         ecosystem_id (str):
-        body (StripeWebhookEvent):
+        body (StripeWebhookEvent | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[BillingAck, Error]]
+        Response[BillingAck | Error]
     """
 
     kwargs = _get_kwargs(
@@ -106,7 +110,7 @@ def sync(
     ecosystem_id: str,
     *,
     client: AuthenticatedClient | Client,
-    body: StripeWebhookEvent,
+    body: StripeWebhookEvent | Unset = UNSET,
 ) -> BillingAck | Error | None:
     """Stripe event receiver (HMAC over the raw body, not a JWT)
 
@@ -121,14 +125,14 @@ def sync(
 
     Args:
         ecosystem_id (str):
-        body (StripeWebhookEvent):
+        body (StripeWebhookEvent | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[BillingAck, Error]
+        BillingAck | Error
     """
 
     return sync_detailed(
@@ -142,7 +146,7 @@ async def asyncio_detailed(
     ecosystem_id: str,
     *,
     client: AuthenticatedClient | Client,
-    body: StripeWebhookEvent,
+    body: StripeWebhookEvent | Unset = UNSET,
 ) -> Response[BillingAck | Error]:
     """Stripe event receiver (HMAC over the raw body, not a JWT)
 
@@ -157,14 +161,14 @@ async def asyncio_detailed(
 
     Args:
         ecosystem_id (str):
-        body (StripeWebhookEvent):
+        body (StripeWebhookEvent | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[BillingAck, Error]]
+        Response[BillingAck | Error]
     """
 
     kwargs = _get_kwargs(
@@ -181,7 +185,7 @@ async def asyncio(
     ecosystem_id: str,
     *,
     client: AuthenticatedClient | Client,
-    body: StripeWebhookEvent,
+    body: StripeWebhookEvent | Unset = UNSET,
 ) -> BillingAck | Error | None:
     """Stripe event receiver (HMAC over the raw body, not a JWT)
 
@@ -196,14 +200,14 @@ async def asyncio(
 
     Args:
         ecosystem_id (str):
-        body (StripeWebhookEvent):
+        body (StripeWebhookEvent | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[BillingAck, Error]
+        BillingAck | Error
     """
 
     return (

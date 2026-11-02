@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class GetProcessingJobsIdResponse200Status(str, Enum):
+class GetProcessingJobsIdResponse200Status(StrEnum):
     CLAIMED = "claimed"
     DEAD = "dead"
     QUEUED = "queued"

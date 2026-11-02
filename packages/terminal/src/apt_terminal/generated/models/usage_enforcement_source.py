@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class UsageEnforcementSource(str, Enum):
+class UsageEnforcementSource(StrEnum):
     ENVIRONMENT = "environment"
     FLAG = "flag"
 

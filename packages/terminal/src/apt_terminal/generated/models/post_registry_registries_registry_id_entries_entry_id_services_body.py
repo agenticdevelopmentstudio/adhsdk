@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -20,29 +22,29 @@ class PostRegistryRegistriesRegistryIdEntriesEntryIdServicesBody:
     """
     Attributes:
         title (str):
-        description (Union[Unset, str]):
-        pricing_model (Union[Unset, PostRegistryRegistriesRegistryIdEntriesEntryIdServicesBodyPricingModel]):
-        price_min (Union[None, Unset, int]):
-        price_max (Union[None, Unset, int]):
-        currency (Union[Unset, str]):
-        unit (Union[Unset, str]):
-        delivery_mode (Union[Unset, PostRegistryRegistriesRegistryIdEntriesEntryIdServicesBodyDeliveryMode]):
-        sort_order (Union[Unset, int]):
+        description (str | Unset):
+        pricing_model (PostRegistryRegistriesRegistryIdEntriesEntryIdServicesBodyPricingModel | Unset):
+        price_min (int | None | Unset):
+        price_max (int | None | Unset):
+        currency (str | Unset):
+        unit (str | Unset):
+        delivery_mode (PostRegistryRegistriesRegistryIdEntriesEntryIdServicesBodyDeliveryMode | Unset):
+        sort_order (int | Unset):
     """
 
     title: str
-    description: Unset | str = UNSET
+    description: str | Unset = UNSET
     pricing_model: (
-        Unset | PostRegistryRegistriesRegistryIdEntriesEntryIdServicesBodyPricingModel
+        PostRegistryRegistriesRegistryIdEntriesEntryIdServicesBodyPricingModel | Unset
     ) = UNSET
-    price_min: None | Unset | int = UNSET
-    price_max: None | Unset | int = UNSET
-    currency: Unset | str = UNSET
-    unit: Unset | str = UNSET
+    price_min: int | None | Unset = UNSET
+    price_max: int | None | Unset = UNSET
+    currency: str | Unset = UNSET
+    unit: str | Unset = UNSET
     delivery_mode: (
-        Unset | PostRegistryRegistriesRegistryIdEntriesEntryIdServicesBodyDeliveryMode
+        PostRegistryRegistriesRegistryIdEntriesEntryIdServicesBodyDeliveryMode | Unset
     ) = UNSET
-    sort_order: Unset | int = UNSET
+    sort_order: int | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -50,17 +52,17 @@ class PostRegistryRegistriesRegistryIdEntriesEntryIdServicesBody:
 
         description = self.description
 
-        pricing_model: Unset | str = UNSET
+        pricing_model: str | Unset = UNSET
         if not isinstance(self.pricing_model, Unset):
             pricing_model = self.pricing_model.value
 
-        price_min: None | Unset | int
+        price_min: int | None | Unset
         if isinstance(self.price_min, Unset):
             price_min = UNSET
         else:
             price_min = self.price_min
 
-        price_max: None | Unset | int
+        price_max: int | None | Unset
         if isinstance(self.price_max, Unset):
             price_max = UNSET
         else:
@@ -70,7 +72,7 @@ class PostRegistryRegistriesRegistryIdEntriesEntryIdServicesBody:
 
         unit = self.unit
 
-        delivery_mode: Unset | str = UNSET
+        delivery_mode: str | Unset = UNSET
         if not isinstance(self.delivery_mode, Unset):
             delivery_mode = self.delivery_mode.value
 
@@ -111,7 +113,7 @@ class PostRegistryRegistriesRegistryIdEntriesEntryIdServicesBody:
 
         _pricing_model = d.pop("pricingModel", UNSET)
         pricing_model: (
-            Unset | PostRegistryRegistriesRegistryIdEntriesEntryIdServicesBodyPricingModel
+            PostRegistryRegistriesRegistryIdEntriesEntryIdServicesBodyPricingModel | Unset
         )
         if isinstance(_pricing_model, Unset):
             pricing_model = UNSET
@@ -120,21 +122,21 @@ class PostRegistryRegistriesRegistryIdEntriesEntryIdServicesBody:
                 _pricing_model
             )
 
-        def _parse_price_min(data: object) -> None | Unset | int:
+        def _parse_price_min(data: object) -> int | None | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | int, data)
+            return cast(int | None | Unset, data)
 
         price_min = _parse_price_min(d.pop("priceMin", UNSET))
 
-        def _parse_price_max(data: object) -> None | Unset | int:
+        def _parse_price_max(data: object) -> int | None | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | int, data)
+            return cast(int | None | Unset, data)
 
         price_max = _parse_price_max(d.pop("priceMax", UNSET))
 
@@ -144,7 +146,7 @@ class PostRegistryRegistriesRegistryIdEntriesEntryIdServicesBody:
 
         _delivery_mode = d.pop("deliveryMode", UNSET)
         delivery_mode: (
-            Unset | PostRegistryRegistriesRegistryIdEntriesEntryIdServicesBodyDeliveryMode
+            PostRegistryRegistriesRegistryIdEntriesEntryIdServicesBodyDeliveryMode | Unset
         )
         if isinstance(_delivery_mode, Unset):
             delivery_mode = UNSET

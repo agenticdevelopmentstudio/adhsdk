@@ -1,10 +1,11 @@
+from __future__ import annotations
+
 import datetime
 from collections.abc import Mapping
 from typing import TYPE_CHECKING, Any, TypeVar
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
-from dateutil.parser import isoparse
 
 if TYPE_CHECKING:
     from ..models.get_shipr_connections_id_repositories_response_200_repositories_item import (
@@ -19,13 +20,13 @@ T = TypeVar("T", bound="GetShiprConnectionsIdRepositoriesResponse200")
 class GetShiprConnectionsIdRepositoriesResponse200:
     """
     Attributes:
-        repositories (list['GetShiprConnectionsIdRepositoriesResponse200RepositoriesItem']):
+        repositories (list[GetShiprConnectionsIdRepositoriesResponse200RepositoriesItem]):
         read_at (datetime.datetime): When GitHub last said this. The picker shows a stored list immediately and
             refreshes behind it, so the list on screen can be older than the request that returned it — this is how a caller
             can say so instead of implying it is current.
     """
 
-    repositories: list["GetShiprConnectionsIdRepositoriesResponse200RepositoriesItem"]
+    repositories: list[GetShiprConnectionsIdRepositoriesResponse200RepositoriesItem]
     read_at: datetime.datetime
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
@@ -66,7 +67,7 @@ class GetShiprConnectionsIdRepositoriesResponse200:
 
             repositories.append(repositories_item)
 
-        read_at = isoparse(d.pop("readAt"))
+        read_at = datetime.datetime.fromisoformat(d.pop("readAt"))
 
         get_shipr_connections_id_repositories_response_200 = cls(
             repositories=repositories,

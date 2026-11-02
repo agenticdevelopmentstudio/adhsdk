@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class PublicRegistryEntryDetailProviderType(str, Enum):
+class PublicRegistryEntryDetailProviderType(StrEnum):
     ORGANIZATION = "organization"
     PERSON = "person"
     PERSONA = "persona"

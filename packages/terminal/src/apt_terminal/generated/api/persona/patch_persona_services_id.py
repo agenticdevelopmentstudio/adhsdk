@@ -1,5 +1,6 @@
 from http import HTTPStatus
 from typing import Any
+from urllib.parse import quote
 
 import httpx
 
@@ -8,22 +9,25 @@ from ...client import AuthenticatedClient, Client
 from ...models.error import Error
 from ...models.patch_persona_services_id_body import PatchPersonaServicesIdBody
 from ...models.persona_service import PersonaService
-from ...types import Response
+from ...types import UNSET, Response, Unset
 
 
 def _get_kwargs(
     id: str,
     *,
-    body: PatchPersonaServicesIdBody,
+    body: PatchPersonaServicesIdBody | Unset = UNSET,
 ) -> dict[str, Any]:
     headers: dict[str, Any] = {}
 
     _kwargs: dict[str, Any] = {
         "method": "patch",
-        "url": f"/persona/services/{id}",
+        "url": "/persona/services/{id}".format(
+            id=quote(str(id), safe=""),
+        ),
     }
 
-    _kwargs["json"] = body.to_dict()
+    if not isinstance(body, Unset):
+        _kwargs["json"] = body.to_dict()
 
     headers["Content-Type"] = "application/json"
 
@@ -75,20 +79,20 @@ def sync_detailed(
     id: str,
     *,
     client: AuthenticatedClient,
-    body: PatchPersonaServicesIdBody,
+    body: PatchPersonaServicesIdBody | Unset = UNSET,
 ) -> Response[Error | PersonaService]:
     """Update an LLM provider connection
 
     Args:
         id (str):
-        body (PatchPersonaServicesIdBody):
+        body (PatchPersonaServicesIdBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, PersonaService]]
+        Response[Error | PersonaService]
     """
 
     kwargs = _get_kwargs(
@@ -107,20 +111,20 @@ def sync(
     id: str,
     *,
     client: AuthenticatedClient,
-    body: PatchPersonaServicesIdBody,
+    body: PatchPersonaServicesIdBody | Unset = UNSET,
 ) -> Error | PersonaService | None:
     """Update an LLM provider connection
 
     Args:
         id (str):
-        body (PatchPersonaServicesIdBody):
+        body (PatchPersonaServicesIdBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, PersonaService]
+        Error | PersonaService
     """
 
     return sync_detailed(
@@ -134,20 +138,20 @@ async def asyncio_detailed(
     id: str,
     *,
     client: AuthenticatedClient,
-    body: PatchPersonaServicesIdBody,
+    body: PatchPersonaServicesIdBody | Unset = UNSET,
 ) -> Response[Error | PersonaService]:
     """Update an LLM provider connection
 
     Args:
         id (str):
-        body (PatchPersonaServicesIdBody):
+        body (PatchPersonaServicesIdBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, PersonaService]]
+        Response[Error | PersonaService]
     """
 
     kwargs = _get_kwargs(
@@ -164,20 +168,20 @@ async def asyncio(
     id: str,
     *,
     client: AuthenticatedClient,
-    body: PatchPersonaServicesIdBody,
+    body: PatchPersonaServicesIdBody | Unset = UNSET,
 ) -> Error | PersonaService | None:
     """Update an LLM provider connection
 
     Args:
         id (str):
-        body (PatchPersonaServicesIdBody):
+        body (PatchPersonaServicesIdBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, PersonaService]
+        Error | PersonaService
     """
 
     return (

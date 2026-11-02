@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -12,24 +14,24 @@ T = TypeVar("T", bound="PutAudienceListsIdBody")
 class PutAudienceListsIdBody:
     """
     Attributes:
-        ecosystem_id (Union[Unset, str]):
-        name (Union[Unset, str]):
-        slug (Union[Unset, str]):
-        description (Union[None, Unset, str]):
-        status (Union[Unset, str]):
-        welcome_template_id (Union[None, Unset, str]):
-        welcome_back_template_id (Union[None, Unset, str]):
-        from_name (Union[None, Unset, str]):
+        ecosystem_id (str | Unset):
+        name (str | Unset):
+        slug (str | Unset):
+        description (None | str | Unset):
+        status (str | Unset):
+        welcome_template_id (None | str | Unset):
+        welcome_back_template_id (None | str | Unset):
+        from_name (None | str | Unset):
     """
 
-    ecosystem_id: Unset | str = UNSET
-    name: Unset | str = UNSET
-    slug: Unset | str = UNSET
-    description: None | Unset | str = UNSET
-    status: Unset | str = UNSET
-    welcome_template_id: None | Unset | str = UNSET
-    welcome_back_template_id: None | Unset | str = UNSET
-    from_name: None | Unset | str = UNSET
+    ecosystem_id: str | Unset = UNSET
+    name: str | Unset = UNSET
+    slug: str | Unset = UNSET
+    description: None | str | Unset = UNSET
+    status: str | Unset = UNSET
+    welcome_template_id: None | str | Unset = UNSET
+    welcome_back_template_id: None | str | Unset = UNSET
+    from_name: None | str | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
         ecosystem_id = self.ecosystem_id
@@ -38,7 +40,7 @@ class PutAudienceListsIdBody:
 
         slug = self.slug
 
-        description: None | Unset | str
+        description: None | str | Unset
         if isinstance(self.description, Unset):
             description = UNSET
         else:
@@ -46,19 +48,19 @@ class PutAudienceListsIdBody:
 
         status = self.status
 
-        welcome_template_id: None | Unset | str
+        welcome_template_id: None | str | Unset
         if isinstance(self.welcome_template_id, Unset):
             welcome_template_id = UNSET
         else:
             welcome_template_id = self.welcome_template_id
 
-        welcome_back_template_id: None | Unset | str
+        welcome_back_template_id: None | str | Unset
         if isinstance(self.welcome_back_template_id, Unset):
             welcome_back_template_id = UNSET
         else:
             welcome_back_template_id = self.welcome_back_template_id
 
-        from_name: None | Unset | str
+        from_name: None | str | Unset
         if isinstance(self.from_name, Unset):
             from_name = UNSET
         else:
@@ -95,43 +97,43 @@ class PutAudienceListsIdBody:
 
         slug = d.pop("slug", UNSET)
 
-        def _parse_description(data: object) -> None | Unset | str:
+        def _parse_description(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         description = _parse_description(d.pop("description", UNSET))
 
         status = d.pop("status", UNSET)
 
-        def _parse_welcome_template_id(data: object) -> None | Unset | str:
+        def _parse_welcome_template_id(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         welcome_template_id = _parse_welcome_template_id(d.pop("welcomeTemplateId", UNSET))
 
-        def _parse_welcome_back_template_id(data: object) -> None | Unset | str:
+        def _parse_welcome_back_template_id(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         welcome_back_template_id = _parse_welcome_back_template_id(
             d.pop("welcomeBackTemplateId", UNSET)
         )
 
-        def _parse_from_name(data: object) -> None | Unset | str:
+        def _parse_from_name(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         from_name = _parse_from_name(d.pop("fromName", UNSET))
 

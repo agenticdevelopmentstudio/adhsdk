@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import TYPE_CHECKING, Any, TypeVar
 
@@ -15,11 +17,11 @@ T = TypeVar("T", bound="GetGameInstancesResponse200")
 class GetGameInstancesResponse200:
     """
     Attributes:
-        items (list['GameInstance']):
+        items (list[GameInstance]):
         total (int):
     """
 
-    items: list["GameInstance"]
+    items: list[GameInstance]
     total: int
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 

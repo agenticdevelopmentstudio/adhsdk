@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -16,19 +18,19 @@ class GetBillingOffersIdResponse200:
         owner_id (str):
         slug (str):
         name (str):
-        description (Union[None, str]):
+        description (None | str):
         purpose (str):
         stripe_price_id (str):
-        stripe_product_id (Union[None, str]):
+        stripe_product_id (None | str):
         collection_method (str):
-        days_until_due (Union[None, int]):
-        grants_ecosystem_id (Union[None, str]):
+        days_until_due (int | None):
+        grants_ecosystem_id (None | str):
         lapse_action (str):
         grace_days (int):
         is_active (bool):
         created_at (str):
         updated_at (str):
-        deleted_at (Union[None, str]):
+        deleted_at (None | str):
     """
 
     id: str
@@ -42,7 +44,7 @@ class GetBillingOffersIdResponse200:
     stripe_price_id: str
     stripe_product_id: None | str
     collection_method: str
-    days_until_due: None | int
+    days_until_due: int | None
     grants_ecosystem_id: None | str
     lapse_action: str
     grace_days: int
@@ -76,7 +78,7 @@ class GetBillingOffersIdResponse200:
 
         collection_method = self.collection_method
 
-        days_until_due: None | int
+        days_until_due: int | None
         days_until_due = self.days_until_due
 
         grants_ecosystem_id: None | str
@@ -158,10 +160,10 @@ class GetBillingOffersIdResponse200:
 
         collection_method = d.pop("collectionMethod")
 
-        def _parse_days_until_due(data: object) -> None | int:
+        def _parse_days_until_due(data: object) -> int | None:
             if data is None:
                 return data
-            return cast(None | int, data)
+            return cast(int | None, data)
 
         days_until_due = _parse_days_until_due(d.pop("daysUntilDue"))
 

@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class PutGamificationRealmsEcosystemIdConfigBodyMode(str, Enum):
+class PutGamificationRealmsEcosystemIdConfigBodyMode(StrEnum):
     GAME = "game"
     GAMIFICATION = "gamification"
     NONE = "none"

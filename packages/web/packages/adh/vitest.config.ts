@@ -13,7 +13,7 @@ export default defineConfig({
       // ONE `next` in the test process, forced by
       // Task 7 (the User Settings overlay): its render tree now crosses into
       // @agentic-toolkit/account and @agentic-toolkit/resource, both pinned to next ^15.1.0,
-      // while this package's own devDependency is next ^16.2.9 — two genuinely different
+      // while this package's own devDependency is next ^16.4.3 — two genuinely different
       // installed copies (confirmed: 15.5.18 vs 16.2.10, resolving to different files under
       // node_modules/.pnpm). Unlike react, that mismatch is silent up to this task: nothing
       // under src/ rendered an account/resource component before. Without this alias,

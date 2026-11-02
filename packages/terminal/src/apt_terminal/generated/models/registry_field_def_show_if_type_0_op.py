@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class RegistryFieldDefShowIfType0Op(str, Enum):
+class RegistryFieldDefShowIfType0Op(StrEnum):
     CONTAINS = "contains"
     EQ = "eq"
     FALSY = "falsy"

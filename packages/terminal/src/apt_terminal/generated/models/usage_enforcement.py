@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, TypeVar, Union, cast
+from typing import TYPE_CHECKING, Any, TypeVar, cast
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -20,18 +22,17 @@ class UsageEnforcement:
     Attributes:
         enabled (bool): Effective switch: false ⇒ every tier's quota_enforced is inert (observe only)
         source (UsageEnforcementSource): Which input decided `enabled` — the env override, or the feature-flag row
-        env_override (Union[None, bool]): USAGE_ENFORCEMENT_ENABLED; null (the normal case) means the flag row decides
-        flag (Union['UsageEnforcementFlagType0', None]): The system.feature_flags 'usage_enforcement' row; null ⇒ never
-            created
+        env_override (bool | None): USAGE_ENFORCEMENT_ENABLED; null (the normal case) means the flag row decides
+        flag (None | UsageEnforcementFlagType0): The system.feature_flags 'usage_enforcement' row; null ⇒ never created
         unknown_price_policy (UsageEnforcementUnknownPricePolicy): What an unpriced model is charged
             (USAGE_UNKNOWN_PRICE_POLICY)
         unknown_price_input_micros_per_m_token (int): Ceiling-policy input rate in µUSD per million tokens
         unknown_price_output_micros_per_m_token (int): Ceiling-policy output rate in µUSD per million tokens
         turn_token_reserve (int): Tokens a signed-in chat turn claims up front (USAGE_TURN_TOKEN_RESERVE)
         event_retention_days (int): Age past which a usage_events row is swept (counters are kept forever)
-        visitor_global_daily_token_budget (Union[None, int]): Anonymous LLM tokens per day per OWNING ECOSYSTEM
+        visitor_global_daily_token_budget (int | None): Anonymous LLM tokens per day per OWNING ECOSYSTEM
             (VISITOR_GLOBAL_DAILY_TOKEN_BUDGET); refuses regardless of `enabled`. null ⇒ lifted (`off`)
-        visitor_global_daily_cost_micros (Union[None, int]): The same daily budget in µUSD of provider spend
+        visitor_global_daily_cost_micros (int | None): The same daily budget in µUSD of provider spend
             (VISITOR_GLOBAL_DAILY_COST_MICROS); refuses regardless of `enabled`. null ⇒ lifted (`off`)
         visitor_turn_token_reserve (int): Tokens an anonymous turn claims up front (VISITOR_TURN_TOKEN_RESERVE); against
             the cost budget the same claim is priced at the output rate
@@ -39,29 +40,31 @@ class UsageEnforcement:
 
     enabled: bool
     source: UsageEnforcementSource
-    env_override: None | bool
-    flag: Union["UsageEnforcementFlagType0", None]
+    env_override: bool | None
+    flag: None | UsageEnforcementFlagType0
     unknown_price_policy: UsageEnforcementUnknownPricePolicy
     unknown_price_input_micros_per_m_token: int
     unknown_price_output_micros_per_m_token: int
     turn_token_reserve: int
     event_retention_days: int
-    visitor_global_daily_token_budget: None | int
-    visitor_global_daily_cost_micros: None | int
+    visitor_global_daily_token_budget: int | None
+    visitor_global_daily_cost_micros: int | None
     visitor_turn_token_reserve: int
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
-        from ..models.usage_enforcement_flag_type_0 import UsageEnforcementFlagType0
+        from ..models.usage_enforcement_flag_type_0 import (
+            UsageEnforcementFlagType0,
+        )
 
         enabled = self.enabled
 
         source = self.source.value
 
-        env_override: None | bool
+        env_override: bool | None
         env_override = self.env_override
 
-        flag: None | dict[str, Any]
+        flag: dict[str, Any] | None
         if isinstance(self.flag, UsageEnforcementFlagType0):
             flag = self.flag.to_dict()
         else:
@@ -77,10 +80,10 @@ class UsageEnforcement:
 
         event_retention_days = self.event_retention_days
 
-        visitor_global_daily_token_budget: None | int
+        visitor_global_daily_token_budget: int | None
         visitor_global_daily_token_budget = self.visitor_global_daily_token_budget
 
-        visitor_global_daily_cost_micros: None | int
+        visitor_global_daily_cost_micros: int | None
         visitor_global_daily_cost_micros = self.visitor_global_daily_cost_micros
 
         visitor_turn_token_reserve = self.visitor_turn_token_reserve
@@ -108,21 +111,23 @@ class UsageEnforcement:
 
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
-        from ..models.usage_enforcement_flag_type_0 import UsageEnforcementFlagType0
+        from ..models.usage_enforcement_flag_type_0 import (
+            UsageEnforcementFlagType0,
+        )
 
         d = dict(src_dict)
         enabled = d.pop("enabled")
 
         source = UsageEnforcementSource(d.pop("source"))
 
-        def _parse_env_override(data: object) -> None | bool:
+        def _parse_env_override(data: object) -> bool | None:
             if data is None:
                 return data
-            return cast(None | bool, data)
+            return cast(bool | None, data)
 
         env_override = _parse_env_override(d.pop("envOverride"))
 
-        def _parse_flag(data: object) -> Union["UsageEnforcementFlagType0", None]:
+        def _parse_flag(data: object) -> None | UsageEnforcementFlagType0:
             if data is None:
                 return data
             try:
@@ -131,9 +136,9 @@ class UsageEnforcement:
                 flag_type_0 = UsageEnforcementFlagType0.from_dict(data)
 
                 return flag_type_0
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
-            return cast(Union["UsageEnforcementFlagType0", None], data)
+            return cast(None | UsageEnforcementFlagType0, data)
 
         flag = _parse_flag(d.pop("flag"))
 
@@ -147,19 +152,19 @@ class UsageEnforcement:
 
         event_retention_days = d.pop("eventRetentionDays")
 
-        def _parse_visitor_global_daily_token_budget(data: object) -> None | int:
+        def _parse_visitor_global_daily_token_budget(data: object) -> int | None:
             if data is None:
                 return data
-            return cast(None | int, data)
+            return cast(int | None, data)
 
         visitor_global_daily_token_budget = _parse_visitor_global_daily_token_budget(
             d.pop("visitorGlobalDailyTokenBudget")
         )
 
-        def _parse_visitor_global_daily_cost_micros(data: object) -> None | int:
+        def _parse_visitor_global_daily_cost_micros(data: object) -> int | None:
             if data is None:
                 return data
-            return cast(None | int, data)
+            return cast(int | None, data)
 
         visitor_global_daily_cost_micros = _parse_visitor_global_daily_cost_micros(
             d.pop("visitorGlobalDailyCostMicros")

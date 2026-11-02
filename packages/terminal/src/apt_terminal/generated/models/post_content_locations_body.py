@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -12,28 +14,28 @@ T = TypeVar("T", bound="PostContentLocationsBody")
 class PostContentLocationsBody:
     """
     Attributes:
-        ecosystem_id (Union[Unset, str]):
-        owner_kind (Union[Unset, str]):
-        owner_id (Union[Unset, str]):
-        place (Union[Unset, str]):
-        region (Union[Unset, str]):
-        country (Union[Unset, str]):
-        start_date (Union[Unset, str]):
-        end_date (Union[None, Unset, str]):
-        notes (Union[Unset, str]):
-        sync_txid (Union[Unset, int]):
+        ecosystem_id (str | Unset):
+        owner_kind (str | Unset):
+        owner_id (str | Unset):
+        place (str | Unset):
+        region (str | Unset):
+        country (str | Unset):
+        start_date (str | Unset):
+        end_date (None | str | Unset):
+        notes (str | Unset):
+        sync_txid (int | Unset):
     """
 
-    ecosystem_id: Unset | str = UNSET
-    owner_kind: Unset | str = UNSET
-    owner_id: Unset | str = UNSET
-    place: Unset | str = UNSET
-    region: Unset | str = UNSET
-    country: Unset | str = UNSET
-    start_date: Unset | str = UNSET
-    end_date: None | Unset | str = UNSET
-    notes: Unset | str = UNSET
-    sync_txid: Unset | int = UNSET
+    ecosystem_id: str | Unset = UNSET
+    owner_kind: str | Unset = UNSET
+    owner_id: str | Unset = UNSET
+    place: str | Unset = UNSET
+    region: str | Unset = UNSET
+    country: str | Unset = UNSET
+    start_date: str | Unset = UNSET
+    end_date: None | str | Unset = UNSET
+    notes: str | Unset = UNSET
+    sync_txid: int | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
         ecosystem_id = self.ecosystem_id
@@ -50,7 +52,7 @@ class PostContentLocationsBody:
 
         start_date = self.start_date
 
-        end_date: None | Unset | str
+        end_date: None | str | Unset
         if isinstance(self.end_date, Unset):
             end_date = UNSET
         else:
@@ -103,12 +105,12 @@ class PostContentLocationsBody:
 
         start_date = d.pop("startDate", UNSET)
 
-        def _parse_end_date(data: object) -> None | Unset | str:
+        def _parse_end_date(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         end_date = _parse_end_date(d.pop("endDate", UNSET))
 

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import TYPE_CHECKING, Any, TypeVar
 
@@ -15,13 +17,13 @@ T = TypeVar("T", bound="MessagingLogPage")
 class MessagingLogPage:
     """
     Attributes:
-        items (list['MessagingLogEntry']):
+        items (list[MessagingLogEntry]):
         total (int):
         page (int):
         page_size (int):
     """
 
-    items: list["MessagingLogEntry"]
+    items: list[MessagingLogEntry]
     total: int
     page: int
     page_size: int

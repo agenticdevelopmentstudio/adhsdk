@@ -13,12 +13,12 @@ from ...types import UNSET, Response, Unset
 
 def _get_kwargs(
     *,
-    status: Unset | GetProcessingJobsStatus = UNSET,
-    limit: Unset | int = UNSET,
+    status: GetProcessingJobsStatus | Unset = UNSET,
+    limit: int | Unset = UNSET,
 ) -> dict[str, Any]:
     params: dict[str, Any] = {}
 
-    json_status: Unset | str = UNSET
+    json_status: str | Unset = UNSET
     if not isinstance(status, Unset):
         json_status = status.value
 
@@ -75,8 +75,8 @@ def _build_response(
 def sync_detailed(
     *,
     client: AuthenticatedClient,
-    status: Unset | GetProcessingJobsStatus = UNSET,
-    limit: Unset | int = UNSET,
+    status: GetProcessingJobsStatus | Unset = UNSET,
+    limit: int | Unset = UNSET,
 ) -> Response[Error | GetProcessingJobsResponse200]:
     """List ecosystem jobs (management)
 
@@ -84,15 +84,15 @@ def sync_detailed(
     ?limit= cap (default 50, max 200).
 
     Args:
-        status (Union[Unset, GetProcessingJobsStatus]):
-        limit (Union[Unset, int]):
+        status (GetProcessingJobsStatus | Unset):
+        limit (int | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, GetProcessingJobsResponse200]]
+        Response[Error | GetProcessingJobsResponse200]
     """
 
     kwargs = _get_kwargs(
@@ -110,8 +110,8 @@ def sync_detailed(
 def sync(
     *,
     client: AuthenticatedClient,
-    status: Unset | GetProcessingJobsStatus = UNSET,
-    limit: Unset | int = UNSET,
+    status: GetProcessingJobsStatus | Unset = UNSET,
+    limit: int | Unset = UNSET,
 ) -> Error | GetProcessingJobsResponse200 | None:
     """List ecosystem jobs (management)
 
@@ -119,15 +119,15 @@ def sync(
     ?limit= cap (default 50, max 200).
 
     Args:
-        status (Union[Unset, GetProcessingJobsStatus]):
-        limit (Union[Unset, int]):
+        status (GetProcessingJobsStatus | Unset):
+        limit (int | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, GetProcessingJobsResponse200]
+        Error | GetProcessingJobsResponse200
     """
 
     return sync_detailed(
@@ -140,8 +140,8 @@ def sync(
 async def asyncio_detailed(
     *,
     client: AuthenticatedClient,
-    status: Unset | GetProcessingJobsStatus = UNSET,
-    limit: Unset | int = UNSET,
+    status: GetProcessingJobsStatus | Unset = UNSET,
+    limit: int | Unset = UNSET,
 ) -> Response[Error | GetProcessingJobsResponse200]:
     """List ecosystem jobs (management)
 
@@ -149,15 +149,15 @@ async def asyncio_detailed(
     ?limit= cap (default 50, max 200).
 
     Args:
-        status (Union[Unset, GetProcessingJobsStatus]):
-        limit (Union[Unset, int]):
+        status (GetProcessingJobsStatus | Unset):
+        limit (int | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, GetProcessingJobsResponse200]]
+        Response[Error | GetProcessingJobsResponse200]
     """
 
     kwargs = _get_kwargs(
@@ -173,8 +173,8 @@ async def asyncio_detailed(
 async def asyncio(
     *,
     client: AuthenticatedClient,
-    status: Unset | GetProcessingJobsStatus = UNSET,
-    limit: Unset | int = UNSET,
+    status: GetProcessingJobsStatus | Unset = UNSET,
+    limit: int | Unset = UNSET,
 ) -> Error | GetProcessingJobsResponse200 | None:
     """List ecosystem jobs (management)
 
@@ -182,15 +182,15 @@ async def asyncio(
     ?limit= cap (default 50, max 200).
 
     Args:
-        status (Union[Unset, GetProcessingJobsStatus]):
-        limit (Union[Unset, int]):
+        status (GetProcessingJobsStatus | Unset):
+        limit (int | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, GetProcessingJobsResponse200]
+        Error | GetProcessingJobsResponse200
     """
 
     return (

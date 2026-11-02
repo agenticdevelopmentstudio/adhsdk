@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, TypeVar, Union, cast
+from typing import TYPE_CHECKING, Any, TypeVar, cast
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -25,10 +27,10 @@ class GameSession:
         status (GameSessionStatus):
         actor_type (GameSessionActorType):
         started_at (str):
-        chat_id (Union[None, Unset, str]):
-        subject_artifact_id (Union[None, Unset, str]):
-        payload (Union['GameSessionPayloadType0', None, Unset]):
-        ended_at (Union[None, Unset, str]):
+        chat_id (None | str | Unset):
+        subject_artifact_id (None | str | Unset):
+        payload (GameSessionPayloadType0 | None | Unset):
+        ended_at (None | str | Unset):
     """
 
     id: str
@@ -37,10 +39,10 @@ class GameSession:
     status: GameSessionStatus
     actor_type: GameSessionActorType
     started_at: str
-    chat_id: None | Unset | str = UNSET
-    subject_artifact_id: None | Unset | str = UNSET
-    payload: Union["GameSessionPayloadType0", None, Unset] = UNSET
-    ended_at: None | Unset | str = UNSET
+    chat_id: None | str | Unset = UNSET
+    subject_artifact_id: None | str | Unset = UNSET
+    payload: GameSessionPayloadType0 | None | Unset = UNSET
+    ended_at: None | str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -58,19 +60,19 @@ class GameSession:
 
         started_at = self.started_at
 
-        chat_id: None | Unset | str
+        chat_id: None | str | Unset
         if isinstance(self.chat_id, Unset):
             chat_id = UNSET
         else:
             chat_id = self.chat_id
 
-        subject_artifact_id: None | Unset | str
+        subject_artifact_id: None | str | Unset
         if isinstance(self.subject_artifact_id, Unset):
             subject_artifact_id = UNSET
         else:
             subject_artifact_id = self.subject_artifact_id
 
-        payload: None | Unset | dict[str, Any]
+        payload: dict[str, Any] | None | Unset
         if isinstance(self.payload, Unset):
             payload = UNSET
         elif isinstance(self.payload, GameSessionPayloadType0):
@@ -78,7 +80,7 @@ class GameSession:
         else:
             payload = self.payload
 
-        ended_at: None | Unset | str
+        ended_at: None | str | Unset
         if isinstance(self.ended_at, Unset):
             ended_at = UNSET
         else:
@@ -124,25 +126,25 @@ class GameSession:
 
         started_at = d.pop("startedAt")
 
-        def _parse_chat_id(data: object) -> None | Unset | str:
+        def _parse_chat_id(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         chat_id = _parse_chat_id(d.pop("chatId", UNSET))
 
-        def _parse_subject_artifact_id(data: object) -> None | Unset | str:
+        def _parse_subject_artifact_id(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         subject_artifact_id = _parse_subject_artifact_id(d.pop("subjectArtifactId", UNSET))
 
-        def _parse_payload(data: object) -> Union["GameSessionPayloadType0", None, Unset]:
+        def _parse_payload(data: object) -> GameSessionPayloadType0 | None | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
@@ -153,18 +155,18 @@ class GameSession:
                 payload_type_0 = GameSessionPayloadType0.from_dict(data)
 
                 return payload_type_0
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
-            return cast(Union["GameSessionPayloadType0", None, Unset], data)
+            return cast(GameSessionPayloadType0 | None | Unset, data)
 
         payload = _parse_payload(d.pop("payload", UNSET))
 
-        def _parse_ended_at(data: object) -> None | Unset | str:
+        def _parse_ended_at(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         ended_at = _parse_ended_at(d.pop("endedAt", UNSET))
 

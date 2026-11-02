@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar
 
@@ -9,8 +11,6 @@ T = TypeVar("T", bound="PutIntegrationIntegrationCampaignStatsIdResponse200RawTy
 
 @_attrs_define
 class PutIntegrationIntegrationCampaignStatsIdResponse200RawType0Type1:
-    """ """
-
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:

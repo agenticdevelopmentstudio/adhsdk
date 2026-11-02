@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -16,13 +18,13 @@ class GamificationLevel:
         name (str):
         min_points (int): Inclusive point floor for this rung
         sort_order (int):
-        subject_type (Union[None, Unset, str]): NULL = applies to any subject kind
+        subject_type (None | str | Unset): NULL = applies to any subject kind
     """
 
     name: str
     min_points: int
     sort_order: int
-    subject_type: None | Unset | str = UNSET
+    subject_type: None | str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -32,7 +34,7 @@ class GamificationLevel:
 
         sort_order = self.sort_order
 
-        subject_type: None | Unset | str
+        subject_type: None | str | Unset
         if isinstance(self.subject_type, Unset):
             subject_type = UNSET
         else:
@@ -61,12 +63,12 @@ class GamificationLevel:
 
         sort_order = d.pop("sortOrder")
 
-        def _parse_subject_type(data: object) -> None | Unset | str:
+        def _parse_subject_type(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         subject_type = _parse_subject_type(d.pop("subjectType", UNSET))
 

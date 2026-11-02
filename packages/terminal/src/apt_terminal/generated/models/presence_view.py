@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -13,7 +15,7 @@ class PresenceView:
     Attributes:
         user_id (str):
         online (bool):
-        last_seen_at (Union[None, str]):
+        last_seen_at (None | str):
     """
 
     user_id: str

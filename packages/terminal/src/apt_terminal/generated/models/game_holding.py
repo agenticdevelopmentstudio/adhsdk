@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, TypeVar, Union, cast
+from typing import TYPE_CHECKING, Any, TypeVar, cast
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -25,7 +27,7 @@ class GameHolding:
         acquired_at (str):
         created_at (str):
         updated_at (str):
-        data (Union['GameHoldingDataType0', None, Unset]):
+        data (GameHoldingDataType0 | None | Unset):
     """
 
     id: str
@@ -36,7 +38,7 @@ class GameHolding:
     acquired_at: str
     created_at: str
     updated_at: str
-    data: Union["GameHoldingDataType0", None, Unset] = UNSET
+    data: GameHoldingDataType0 | None | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -58,7 +60,7 @@ class GameHolding:
 
         updated_at = self.updated_at
 
-        data: None | Unset | dict[str, Any]
+        data: dict[str, Any] | None | Unset
         if isinstance(self.data, Unset):
             data = UNSET
         elif isinstance(self.data, GameHoldingDataType0):
@@ -106,7 +108,7 @@ class GameHolding:
 
         updated_at = d.pop("updatedAt")
 
-        def _parse_data(data: object) -> Union["GameHoldingDataType0", None, Unset]:
+        def _parse_data(data: object) -> GameHoldingDataType0 | None | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
@@ -117,9 +119,9 @@ class GameHolding:
                 data_type_0 = GameHoldingDataType0.from_dict(data)
 
                 return data_type_0
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
-            return cast(Union["GameHoldingDataType0", None, Unset], data)
+            return cast(GameHoldingDataType0 | None | Unset, data)
 
         data = _parse_data(d.pop("data", UNSET))
 

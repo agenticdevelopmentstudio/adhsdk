@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, TypeVar, Union
+from typing import TYPE_CHECKING, Any, TypeVar
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -20,15 +22,15 @@ class PatchProjectTemplatesIdBody:
     template makes is its identity.
 
         Attributes:
-            name (Union[Unset, str]):
-            description (Union[Unset, str]):
-            body (Union['ProjectTemplateBody', 'WorkItemTemplateBody', Unset]): replaces the stored body outright; validated
-                against the STORED kind
+            name (str | Unset):
+            description (str | Unset):
+            body (ProjectTemplateBody | Unset | WorkItemTemplateBody): replaces the stored body outright; validated against
+                the STORED kind
     """
 
-    name: Unset | str = UNSET
-    description: Unset | str = UNSET
-    body: Union["ProjectTemplateBody", "WorkItemTemplateBody", Unset] = UNSET
+    name: str | Unset = UNSET
+    description: str | Unset = UNSET
+    body: ProjectTemplateBody | Unset | WorkItemTemplateBody = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -38,7 +40,7 @@ class PatchProjectTemplatesIdBody:
 
         description = self.description
 
-        body: Unset | dict[str, Any]
+        body: dict[str, Any] | Unset
         if isinstance(self.body, Unset):
             body = UNSET
         elif isinstance(self.body, WorkItemTemplateBody):
@@ -68,9 +70,7 @@ class PatchProjectTemplatesIdBody:
 
         description = d.pop("description", UNSET)
 
-        def _parse_body(
-            data: object,
-        ) -> Union["ProjectTemplateBody", "WorkItemTemplateBody", Unset]:
+        def _parse_body(data: object) -> ProjectTemplateBody | Unset | WorkItemTemplateBody:
             if isinstance(data, Unset):
                 return data
             try:
@@ -79,7 +79,7 @@ class PatchProjectTemplatesIdBody:
                 body_type_0 = WorkItemTemplateBody.from_dict(data)
 
                 return body_type_0
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
             if not isinstance(data, dict):
                 raise TypeError()

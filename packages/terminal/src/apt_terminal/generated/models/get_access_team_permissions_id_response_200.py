@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -14,7 +16,7 @@ class GetAccessTeamPermissionsIdResponse200:
         ecosystem_id (str):
         team_id (str):
         permission (str):
-        granted_by (Union[None, str]):
+        granted_by (None | str):
         granted_at (str):
     """
 

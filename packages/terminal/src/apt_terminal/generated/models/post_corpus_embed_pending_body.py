@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar
 
@@ -14,11 +16,11 @@ class PostCorpusEmbedPendingBody:
     """
     Attributes:
         bucket_type_id (str):
-        limit (Union[Unset, int]):
+        limit (int | Unset):
     """
 
     bucket_type_id: str
-    limit: Unset | int = UNSET
+    limit: int | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:

@@ -64,7 +64,7 @@ def sync_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, MarkdownTagSet]]
+        Response[Error | MarkdownTagSet]
     """
 
     kwargs = _get_kwargs()
@@ -91,7 +91,7 @@ def sync(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, MarkdownTagSet]
+        Error | MarkdownTagSet
     """
 
     return sync_detailed(
@@ -114,7 +114,7 @@ async def asyncio_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, MarkdownTagSet]]
+        Response[Error | MarkdownTagSet]
     """
 
     kwargs = _get_kwargs()
@@ -139,7 +139,7 @@ async def asyncio(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, MarkdownTagSet]
+        Error | MarkdownTagSet
     """
 
     return (

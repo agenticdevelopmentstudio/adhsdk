@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar
 
@@ -18,43 +20,42 @@ T = TypeVar("T", bound="PutMeAppearanceBody")
 class PutMeAppearanceBody:
     """
     Attributes:
-        color_mode (Union[Unset, PutMeAppearanceBodyColorMode]): The user's colour scheme; 'auto' follows the operating
-            system
-        reduce_motion (Union[Unset, PutMeAppearanceBodyReduceMotion]):
-        contrast (Union[Unset, PutMeAppearanceBodyContrast]):
-        text_size (Union[Unset, PutMeAppearanceBodyTextSize]):
-        spacing (Union[Unset, PutMeAppearanceBodySpacing]):
-        focus_outlines (Union[Unset, bool]):
-        underline_links (Union[Unset, bool]):
+        color_mode (PutMeAppearanceBodyColorMode | Unset): The user's colour scheme; 'auto' follows the operating system
+        reduce_motion (PutMeAppearanceBodyReduceMotion | Unset):
+        contrast (PutMeAppearanceBodyContrast | Unset):
+        text_size (PutMeAppearanceBodyTextSize | Unset):
+        spacing (PutMeAppearanceBodySpacing | Unset):
+        focus_outlines (bool | Unset):
+        underline_links (bool | Unset):
     """
 
-    color_mode: Unset | PutMeAppearanceBodyColorMode = UNSET
-    reduce_motion: Unset | PutMeAppearanceBodyReduceMotion = UNSET
-    contrast: Unset | PutMeAppearanceBodyContrast = UNSET
-    text_size: Unset | PutMeAppearanceBodyTextSize = UNSET
-    spacing: Unset | PutMeAppearanceBodySpacing = UNSET
-    focus_outlines: Unset | bool = UNSET
-    underline_links: Unset | bool = UNSET
+    color_mode: PutMeAppearanceBodyColorMode | Unset = UNSET
+    reduce_motion: PutMeAppearanceBodyReduceMotion | Unset = UNSET
+    contrast: PutMeAppearanceBodyContrast | Unset = UNSET
+    text_size: PutMeAppearanceBodyTextSize | Unset = UNSET
+    spacing: PutMeAppearanceBodySpacing | Unset = UNSET
+    focus_outlines: bool | Unset = UNSET
+    underline_links: bool | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
-        color_mode: Unset | str = UNSET
+        color_mode: str | Unset = UNSET
         if not isinstance(self.color_mode, Unset):
             color_mode = self.color_mode.value
 
-        reduce_motion: Unset | str = UNSET
+        reduce_motion: str | Unset = UNSET
         if not isinstance(self.reduce_motion, Unset):
             reduce_motion = self.reduce_motion.value
 
-        contrast: Unset | str = UNSET
+        contrast: str | Unset = UNSET
         if not isinstance(self.contrast, Unset):
             contrast = self.contrast.value
 
-        text_size: Unset | str = UNSET
+        text_size: str | Unset = UNSET
         if not isinstance(self.text_size, Unset):
             text_size = self.text_size.value
 
-        spacing: Unset | str = UNSET
+        spacing: str | Unset = UNSET
         if not isinstance(self.spacing, Unset):
             spacing = self.spacing.value
 
@@ -86,35 +87,35 @@ class PutMeAppearanceBody:
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
         d = dict(src_dict)
         _color_mode = d.pop("colorMode", UNSET)
-        color_mode: Unset | PutMeAppearanceBodyColorMode
+        color_mode: PutMeAppearanceBodyColorMode | Unset
         if isinstance(_color_mode, Unset):
             color_mode = UNSET
         else:
             color_mode = PutMeAppearanceBodyColorMode(_color_mode)
 
         _reduce_motion = d.pop("reduceMotion", UNSET)
-        reduce_motion: Unset | PutMeAppearanceBodyReduceMotion
+        reduce_motion: PutMeAppearanceBodyReduceMotion | Unset
         if isinstance(_reduce_motion, Unset):
             reduce_motion = UNSET
         else:
             reduce_motion = PutMeAppearanceBodyReduceMotion(_reduce_motion)
 
         _contrast = d.pop("contrast", UNSET)
-        contrast: Unset | PutMeAppearanceBodyContrast
+        contrast: PutMeAppearanceBodyContrast | Unset
         if isinstance(_contrast, Unset):
             contrast = UNSET
         else:
             contrast = PutMeAppearanceBodyContrast(_contrast)
 
         _text_size = d.pop("textSize", UNSET)
-        text_size: Unset | PutMeAppearanceBodyTextSize
+        text_size: PutMeAppearanceBodyTextSize | Unset
         if isinstance(_text_size, Unset):
             text_size = UNSET
         else:
             text_size = PutMeAppearanceBodyTextSize(_text_size)
 
         _spacing = d.pop("spacing", UNSET)
-        spacing: Unset | PutMeAppearanceBodySpacing
+        spacing: PutMeAppearanceBodySpacing | Unset
         if isinstance(_spacing, Unset):
             spacing = UNSET
         else:

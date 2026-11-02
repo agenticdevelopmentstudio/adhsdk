@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -24,13 +26,13 @@ class ProjectProgram:
         created_at (str):
         updated_at (str):
         is_deleted (bool):
-        customer_id (Union[Unset, str]): the customer (user) who created the program
-        start_date (Union[None, Unset, str]): date (YYYY-MM-DD); null is ordinary here, UNLIKE an iteration — a standing
+        customer_id (str | Unset): the customer (user) who created the program
+        start_date (None | str | Unset): date (YYYY-MM-DD); null is ordinary here, UNLIKE an iteration — a standing
             program ("Platform") has no start, and a delivery program usually knows its target long before one
-        target_date (Union[None, Unset, str]): date (YYYY-MM-DD); never before startDate
-        created_by (Union[None, Unset, str]):
-        deleted_at (Union[None, Unset, str]):
-        sync_version (Union[Unset, int]):
+        target_date (None | str | Unset): date (YYYY-MM-DD); never before startDate
+        created_by (None | str | Unset):
+        deleted_at (None | str | Unset):
+        sync_version (int | Unset):
     """
 
     id: str
@@ -43,12 +45,12 @@ class ProjectProgram:
     created_at: str
     updated_at: str
     is_deleted: bool
-    customer_id: Unset | str = UNSET
-    start_date: None | Unset | str = UNSET
-    target_date: None | Unset | str = UNSET
-    created_by: None | Unset | str = UNSET
-    deleted_at: None | Unset | str = UNSET
-    sync_version: Unset | int = UNSET
+    customer_id: str | Unset = UNSET
+    start_date: None | str | Unset = UNSET
+    target_date: None | str | Unset = UNSET
+    created_by: None | str | Unset = UNSET
+    deleted_at: None | str | Unset = UNSET
+    sync_version: int | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -74,25 +76,25 @@ class ProjectProgram:
 
         customer_id = self.customer_id
 
-        start_date: None | Unset | str
+        start_date: None | str | Unset
         if isinstance(self.start_date, Unset):
             start_date = UNSET
         else:
             start_date = self.start_date
 
-        target_date: None | Unset | str
+        target_date: None | str | Unset
         if isinstance(self.target_date, Unset):
             target_date = UNSET
         else:
             target_date = self.target_date
 
-        created_by: None | Unset | str
+        created_by: None | str | Unset
         if isinstance(self.created_by, Unset):
             created_by = UNSET
         else:
             created_by = self.created_by
 
-        deleted_at: None | Unset | str
+        deleted_at: None | str | Unset
         if isinstance(self.deleted_at, Unset):
             deleted_at = UNSET
         else:
@@ -156,39 +158,39 @@ class ProjectProgram:
 
         customer_id = d.pop("customerId", UNSET)
 
-        def _parse_start_date(data: object) -> None | Unset | str:
+        def _parse_start_date(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         start_date = _parse_start_date(d.pop("startDate", UNSET))
 
-        def _parse_target_date(data: object) -> None | Unset | str:
+        def _parse_target_date(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         target_date = _parse_target_date(d.pop("targetDate", UNSET))
 
-        def _parse_created_by(data: object) -> None | Unset | str:
+        def _parse_created_by(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         created_by = _parse_created_by(d.pop("createdBy", UNSET))
 
-        def _parse_deleted_at(data: object) -> None | Unset | str:
+        def _parse_deleted_at(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         deleted_at = _parse_deleted_at(d.pop("deletedAt", UNSET))
 

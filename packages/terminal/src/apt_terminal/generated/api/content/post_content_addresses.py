@@ -13,8 +13,8 @@ from ...types import UNSET, Response, Unset
 
 def _get_kwargs(
     *,
-    body: PostContentAddressesBody,
-    workspace: Unset | str = UNSET,
+    body: PostContentAddressesBody | Unset = UNSET,
+    workspace: str | Unset = UNSET,
 ) -> dict[str, Any]:
     headers: dict[str, Any] = {}
 
@@ -30,7 +30,8 @@ def _get_kwargs(
         "params": params,
     }
 
-    _kwargs["json"] = body.to_dict()
+    if not isinstance(body, Unset):
+        _kwargs["json"] = body.to_dict()
 
     headers["Content-Type"] = "application/json"
 
@@ -86,21 +87,21 @@ def _build_response(
 def sync_detailed(
     *,
     client: AuthenticatedClient,
-    body: PostContentAddressesBody,
-    workspace: Unset | str = UNSET,
+    body: PostContentAddressesBody | Unset = UNSET,
+    workspace: str | Unset = UNSET,
 ) -> Response[Error | PostContentAddressesResponse201]:
     """Create addresses
 
     Args:
-        workspace (Union[Unset, str]):
-        body (PostContentAddressesBody):
+        workspace (str | Unset):
+        body (PostContentAddressesBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, PostContentAddressesResponse201]]
+        Response[Error | PostContentAddressesResponse201]
     """
 
     kwargs = _get_kwargs(
@@ -118,21 +119,21 @@ def sync_detailed(
 def sync(
     *,
     client: AuthenticatedClient,
-    body: PostContentAddressesBody,
-    workspace: Unset | str = UNSET,
+    body: PostContentAddressesBody | Unset = UNSET,
+    workspace: str | Unset = UNSET,
 ) -> Error | PostContentAddressesResponse201 | None:
     """Create addresses
 
     Args:
-        workspace (Union[Unset, str]):
-        body (PostContentAddressesBody):
+        workspace (str | Unset):
+        body (PostContentAddressesBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, PostContentAddressesResponse201]
+        Error | PostContentAddressesResponse201
     """
 
     return sync_detailed(
@@ -145,21 +146,21 @@ def sync(
 async def asyncio_detailed(
     *,
     client: AuthenticatedClient,
-    body: PostContentAddressesBody,
-    workspace: Unset | str = UNSET,
+    body: PostContentAddressesBody | Unset = UNSET,
+    workspace: str | Unset = UNSET,
 ) -> Response[Error | PostContentAddressesResponse201]:
     """Create addresses
 
     Args:
-        workspace (Union[Unset, str]):
-        body (PostContentAddressesBody):
+        workspace (str | Unset):
+        body (PostContentAddressesBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, PostContentAddressesResponse201]]
+        Response[Error | PostContentAddressesResponse201]
     """
 
     kwargs = _get_kwargs(
@@ -175,21 +176,21 @@ async def asyncio_detailed(
 async def asyncio(
     *,
     client: AuthenticatedClient,
-    body: PostContentAddressesBody,
-    workspace: Unset | str = UNSET,
+    body: PostContentAddressesBody | Unset = UNSET,
+    workspace: str | Unset = UNSET,
 ) -> Error | PostContentAddressesResponse201 | None:
     """Create addresses
 
     Args:
-        workspace (Union[Unset, str]):
-        body (PostContentAddressesBody):
+        workspace (str | Unset):
+        body (PostContentAddressesBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, PostContentAddressesResponse201]
+        Error | PostContentAddressesResponse201
     """
 
     return (

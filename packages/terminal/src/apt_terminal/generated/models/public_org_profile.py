@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import TYPE_CHECKING, Any, TypeVar, cast
 
@@ -17,16 +19,16 @@ class PublicOrgProfile:
     Attributes:
         slug (str):
         display_name (str):
-        description (Union[None, str]):
+        description (None | str):
         created_at (str):
-        personas (list['PublicPersonaSummary']):
+        personas (list[PublicPersonaSummary]):
     """
 
     slug: str
     display_name: str
     description: None | str
     created_at: str
-    personas: list["PublicPersonaSummary"]
+    personas: list[PublicPersonaSummary]
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:

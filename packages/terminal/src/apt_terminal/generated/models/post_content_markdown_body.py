@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, TypeVar, Union, cast
+from typing import TYPE_CHECKING, Any, TypeVar, cast
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -18,24 +20,24 @@ class PostContentMarkdownBody:
     """
     Attributes:
         content (str): Full raw markdown (stored byte-exact). The title is derived from it — see the response `title`.
-        category (Union[Unset, str]): Optional classification label.
-        tags (Union[Unset, list[str]]): Optional tag set (trimmed + de-duplicated server-side).
-        author (Union[Unset, PostContentMarkdownBodyAuthor]): Author of this revision; omit to attribute to the calling
+        category (str | Unset): Optional classification label.
+        tags (list[str] | Unset): Optional tag set (trimmed + de-duplicated server-side).
+        author (PostContentMarkdownBodyAuthor | Unset): Author of this revision; omit to attribute to the calling
             customer. customer/user are pinned to the caller; other types are caller-asserted (unverified).
-        note (Union[Unset, bool]): Send `true` to file the new document in the owner's `notes` storage bucket (mints its
+        note (bool | Unset): Send `true` to file the new document in the owner's `notes` storage bucket (mints its
             content.notes marker). It stays an ordinary markdown document in every other respect — same versions, same
             category/tags — and `?noted=true` is how you list them back.
-        doc (Union[Unset, bool]): Send `true` to file the new document in the owner's `docs` storage bucket (mints its
+        doc (bool | Unset): Send `true` to file the new document in the owner's `docs` storage bucket (mints its
             content.docs marker). Independent of `note` — the markers are separate rows — and `?doc=true` is how you list
             them back.
     """
 
     content: str
-    category: Unset | str = UNSET
-    tags: Unset | list[str] = UNSET
-    author: Union[Unset, "PostContentMarkdownBodyAuthor"] = UNSET
-    note: Unset | bool = UNSET
-    doc: Unset | bool = UNSET
+    category: str | Unset = UNSET
+    tags: list[str] | Unset = UNSET
+    author: PostContentMarkdownBodyAuthor | Unset = UNSET
+    note: bool | Unset = UNSET
+    doc: bool | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -43,11 +45,11 @@ class PostContentMarkdownBody:
 
         category = self.category
 
-        tags: Unset | list[str] = UNSET
+        tags: list[str] | Unset = UNSET
         if not isinstance(self.tags, Unset):
             tags = self.tags
 
-        author: Unset | dict[str, Any] = UNSET
+        author: dict[str, Any] | Unset = UNSET
         if not isinstance(self.author, Unset):
             author = self.author.to_dict()
 
@@ -77,7 +79,9 @@ class PostContentMarkdownBody:
 
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
-        from ..models.post_content_markdown_body_author import PostContentMarkdownBodyAuthor
+        from ..models.post_content_markdown_body_author import (
+            PostContentMarkdownBodyAuthor,
+        )
 
         d = dict(src_dict)
         content = d.pop("content")
@@ -87,7 +91,7 @@ class PostContentMarkdownBody:
         tags = cast(list[str], d.pop("tags", UNSET))
 
         _author = d.pop("author", UNSET)
-        author: Unset | PostContentMarkdownBodyAuthor
+        author: PostContentMarkdownBodyAuthor | Unset
         if isinstance(_author, Unset):
             author = UNSET
         else:

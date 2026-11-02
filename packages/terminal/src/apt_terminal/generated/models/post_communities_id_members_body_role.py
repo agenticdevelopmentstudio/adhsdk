@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class PostCommunitiesIdMembersBodyRole(str, Enum):
+class PostCommunitiesIdMembersBodyRole(StrEnum):
     ADMIN = "admin"
     MEMBER = "member"
     MODERATOR = "moderator"

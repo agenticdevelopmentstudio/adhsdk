@@ -8,12 +8,12 @@ from ...client import AuthenticatedClient, Client
 from ...models.error import Error
 from ...models.post_auth_register_body import PostAuthRegisterBody
 from ...models.post_auth_register_response_201 import PostAuthRegisterResponse201
-from ...types import Response
+from ...types import UNSET, Response, Unset
 
 
 def _get_kwargs(
     *,
-    body: PostAuthRegisterBody,
+    body: PostAuthRegisterBody | Unset = UNSET,
 ) -> dict[str, Any]:
     headers: dict[str, Any] = {}
 
@@ -22,7 +22,8 @@ def _get_kwargs(
         "url": "/auth/register",
     }
 
-    _kwargs["json"] = body.to_dict()
+    if not isinstance(body, Unset):
+        _kwargs["json"] = body.to_dict()
 
     headers["Content-Type"] = "application/json"
 
@@ -73,19 +74,19 @@ def _build_response(
 def sync_detailed(
     *,
     client: AuthenticatedClient | Client,
-    body: PostAuthRegisterBody,
+    body: PostAuthRegisterBody | Unset = UNSET,
 ) -> Response[Error | PostAuthRegisterResponse201]:
     """Create an account (email + password)
 
     Args:
-        body (PostAuthRegisterBody):
+        body (PostAuthRegisterBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, PostAuthRegisterResponse201]]
+        Response[Error | PostAuthRegisterResponse201]
     """
 
     kwargs = _get_kwargs(
@@ -102,19 +103,19 @@ def sync_detailed(
 def sync(
     *,
     client: AuthenticatedClient | Client,
-    body: PostAuthRegisterBody,
+    body: PostAuthRegisterBody | Unset = UNSET,
 ) -> Error | PostAuthRegisterResponse201 | None:
     """Create an account (email + password)
 
     Args:
-        body (PostAuthRegisterBody):
+        body (PostAuthRegisterBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, PostAuthRegisterResponse201]
+        Error | PostAuthRegisterResponse201
     """
 
     return sync_detailed(
@@ -126,19 +127,19 @@ def sync(
 async def asyncio_detailed(
     *,
     client: AuthenticatedClient | Client,
-    body: PostAuthRegisterBody,
+    body: PostAuthRegisterBody | Unset = UNSET,
 ) -> Response[Error | PostAuthRegisterResponse201]:
     """Create an account (email + password)
 
     Args:
-        body (PostAuthRegisterBody):
+        body (PostAuthRegisterBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, PostAuthRegisterResponse201]]
+        Response[Error | PostAuthRegisterResponse201]
     """
 
     kwargs = _get_kwargs(
@@ -153,19 +154,19 @@ async def asyncio_detailed(
 async def asyncio(
     *,
     client: AuthenticatedClient | Client,
-    body: PostAuthRegisterBody,
+    body: PostAuthRegisterBody | Unset = UNSET,
 ) -> Error | PostAuthRegisterResponse201 | None:
     """Create an account (email + password)
 
     Args:
-        body (PostAuthRegisterBody):
+        body (PostAuthRegisterBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, PostAuthRegisterResponse201]
+        Error | PostAuthRegisterResponse201
     """
 
     return (

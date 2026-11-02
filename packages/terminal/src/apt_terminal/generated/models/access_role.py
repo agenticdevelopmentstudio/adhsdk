@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import TYPE_CHECKING, Any, TypeVar
 
@@ -23,7 +25,7 @@ class AccessRole:
         description (str):
         is_system (bool):
         default_for (AccessRoleDefaultFor): which member kind holds this role implicitly as the workspace default
-        grants (list['AccessGrant']):
+        grants (list[AccessGrant]):
     """
 
     id: str
@@ -32,7 +34,7 @@ class AccessRole:
     description: str
     is_system: bool
     default_for: AccessRoleDefaultFor
-    grants: list["AccessGrant"]
+    grants: list[AccessGrant]
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:

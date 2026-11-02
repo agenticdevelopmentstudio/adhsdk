@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class PatchAuthMeBodyProfileVisibility(str, Enum):
+class PatchAuthMeBodyProfileVisibility(StrEnum):
     HUB = "hub"
     PRIVATE = "private"
     PUBLIC = "public"

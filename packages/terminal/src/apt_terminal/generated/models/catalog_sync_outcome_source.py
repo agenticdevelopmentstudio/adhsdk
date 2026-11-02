@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class CatalogSyncOutcomeSource(str, Enum):
+class CatalogSyncOutcomeSource(StrEnum):
     ARENA = "arena"
     MODELSDEV = "modelsDev"
     OPENROUTER = "openrouter"

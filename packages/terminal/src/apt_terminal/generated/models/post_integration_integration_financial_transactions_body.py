@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -18,17 +20,17 @@ class PostIntegrationIntegrationFinancialTransactionsBody:
         amount (str):
         name (str):
         transaction_date (str):
-        ecosystem_id (Union[Unset, str]):
-        account_name (Union[None, Unset, str]):
-        institution_name (Union[None, Unset, str]):
-        currency (Union[Unset, str]):
-        merchant_name (Union[None, Unset, str]):
-        category (Union[None, Unset, str]):
-        category_detailed (Union[None, Unset, str]):
-        authorized_date (Union[None, Unset, str]):
-        pending (Union[Unset, bool]):
-        logo_url (Union[None, Unset, str]):
-        sync_txid (Union[Unset, int]):
+        ecosystem_id (str | Unset):
+        account_name (None | str | Unset):
+        institution_name (None | str | Unset):
+        currency (str | Unset):
+        merchant_name (None | str | Unset):
+        category (None | str | Unset):
+        category_detailed (None | str | Unset):
+        authorized_date (None | str | Unset):
+        pending (bool | Unset):
+        logo_url (None | str | Unset):
+        sync_txid (int | Unset):
     """
 
     connection_id: str
@@ -37,17 +39,17 @@ class PostIntegrationIntegrationFinancialTransactionsBody:
     amount: str
     name: str
     transaction_date: str
-    ecosystem_id: Unset | str = UNSET
-    account_name: None | Unset | str = UNSET
-    institution_name: None | Unset | str = UNSET
-    currency: Unset | str = UNSET
-    merchant_name: None | Unset | str = UNSET
-    category: None | Unset | str = UNSET
-    category_detailed: None | Unset | str = UNSET
-    authorized_date: None | Unset | str = UNSET
-    pending: Unset | bool = UNSET
-    logo_url: None | Unset | str = UNSET
-    sync_txid: Unset | int = UNSET
+    ecosystem_id: str | Unset = UNSET
+    account_name: None | str | Unset = UNSET
+    institution_name: None | str | Unset = UNSET
+    currency: str | Unset = UNSET
+    merchant_name: None | str | Unset = UNSET
+    category: None | str | Unset = UNSET
+    category_detailed: None | str | Unset = UNSET
+    authorized_date: None | str | Unset = UNSET
+    pending: bool | Unset = UNSET
+    logo_url: None | str | Unset = UNSET
+    sync_txid: int | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
         connection_id = self.connection_id
@@ -64,13 +66,13 @@ class PostIntegrationIntegrationFinancialTransactionsBody:
 
         ecosystem_id = self.ecosystem_id
 
-        account_name: None | Unset | str
+        account_name: None | str | Unset
         if isinstance(self.account_name, Unset):
             account_name = UNSET
         else:
             account_name = self.account_name
 
-        institution_name: None | Unset | str
+        institution_name: None | str | Unset
         if isinstance(self.institution_name, Unset):
             institution_name = UNSET
         else:
@@ -78,25 +80,25 @@ class PostIntegrationIntegrationFinancialTransactionsBody:
 
         currency = self.currency
 
-        merchant_name: None | Unset | str
+        merchant_name: None | str | Unset
         if isinstance(self.merchant_name, Unset):
             merchant_name = UNSET
         else:
             merchant_name = self.merchant_name
 
-        category: None | Unset | str
+        category: None | str | Unset
         if isinstance(self.category, Unset):
             category = UNSET
         else:
             category = self.category
 
-        category_detailed: None | Unset | str
+        category_detailed: None | str | Unset
         if isinstance(self.category_detailed, Unset):
             category_detailed = UNSET
         else:
             category_detailed = self.category_detailed
 
-        authorized_date: None | Unset | str
+        authorized_date: None | str | Unset
         if isinstance(self.authorized_date, Unset):
             authorized_date = UNSET
         else:
@@ -104,7 +106,7 @@ class PostIntegrationIntegrationFinancialTransactionsBody:
 
         pending = self.pending
 
-        logo_url: None | Unset | str
+        logo_url: None | str | Unset
         if isinstance(self.logo_url, Unset):
             logo_url = UNSET
         else:
@@ -166,70 +168,70 @@ class PostIntegrationIntegrationFinancialTransactionsBody:
 
         ecosystem_id = d.pop("ecosystemId", UNSET)
 
-        def _parse_account_name(data: object) -> None | Unset | str:
+        def _parse_account_name(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         account_name = _parse_account_name(d.pop("accountName", UNSET))
 
-        def _parse_institution_name(data: object) -> None | Unset | str:
+        def _parse_institution_name(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         institution_name = _parse_institution_name(d.pop("institutionName", UNSET))
 
         currency = d.pop("currency", UNSET)
 
-        def _parse_merchant_name(data: object) -> None | Unset | str:
+        def _parse_merchant_name(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         merchant_name = _parse_merchant_name(d.pop("merchantName", UNSET))
 
-        def _parse_category(data: object) -> None | Unset | str:
+        def _parse_category(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         category = _parse_category(d.pop("category", UNSET))
 
-        def _parse_category_detailed(data: object) -> None | Unset | str:
+        def _parse_category_detailed(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         category_detailed = _parse_category_detailed(d.pop("categoryDetailed", UNSET))
 
-        def _parse_authorized_date(data: object) -> None | Unset | str:
+        def _parse_authorized_date(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         authorized_date = _parse_authorized_date(d.pop("authorizedDate", UNSET))
 
         pending = d.pop("pending", UNSET)
 
-        def _parse_logo_url(data: object) -> None | Unset | str:
+        def _parse_logo_url(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         logo_url = _parse_logo_url(d.pop("logoUrl", UNSET))
 

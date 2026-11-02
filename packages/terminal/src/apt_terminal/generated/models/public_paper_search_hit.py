@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import TYPE_CHECKING, Any, TypeVar, cast
 
@@ -22,10 +24,10 @@ class PublicPaperSearchHit:
         kind (PublicPaperSearchHitKind): Document kind: 'paper' (ordinary) or 'research' (AI-ingested).
         public_route (str): Published route slug; link as /public/users/{author.slug}/papers/{publicRoute}.
         author (PublicPaperSearchHitAuthor):
-        category (Union[None, str]):
+        category (None | str):
         tags (list[str]):
-        summary (Union[None, str]): Display summary read from the doc frontmatter (jsonb), or null.
-        evaluation (Union[None, str]): Display evaluation read from the doc frontmatter (jsonb), or null.
+        summary (None | str): Display summary read from the doc frontmatter (jsonb), or null.
+        evaluation (None | str): Display evaluation read from the doc frontmatter (jsonb), or null.
         snippet (str): ~200-char match-context excerpt around the first q hit (head of content when q is empty/absent).
         created_at (str):
         updated_at (str):
@@ -35,7 +37,7 @@ class PublicPaperSearchHit:
     title: str
     kind: PublicPaperSearchHitKind
     public_route: str
-    author: "PublicPaperSearchHitAuthor"
+    author: PublicPaperSearchHitAuthor
     category: None | str
     tags: list[str]
     summary: None | str
@@ -96,7 +98,9 @@ class PublicPaperSearchHit:
 
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
-        from ..models.public_paper_search_hit_author import PublicPaperSearchHitAuthor
+        from ..models.public_paper_search_hit_author import (
+            PublicPaperSearchHitAuthor,
+        )
 
         d = dict(src_dict)
         id = d.pop("id")

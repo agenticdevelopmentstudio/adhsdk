@@ -1,10 +1,11 @@
+from __future__ import annotations
+
 import datetime
 from collections.abc import Mapping
 from typing import TYPE_CHECKING, Any, TypeVar, cast
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
-from dateutil.parser import isoparse
 
 from ..types import UNSET, Unset
 
@@ -22,14 +23,14 @@ class PostPersonaPersonasIdTokensBody:
     """
     Attributes:
         subject (PostPersonaPersonasIdTokensBodySubject):
-        name (Union[Unset, str]):
-        expires_at (Union[None, Unset, datetime.datetime]): Omitted/null defaults to a bounded 90-day TTL (never a non-
+        name (str | Unset):
+        expires_at (datetime.datetime | None | Unset): Omitted/null defaults to a bounded 90-day TTL (never a non-
             expiring token); an explicit value is honored.
     """
 
-    subject: "PostPersonaPersonasIdTokensBodySubject"
-    name: Unset | str = UNSET
-    expires_at: None | Unset | datetime.datetime = UNSET
+    subject: PostPersonaPersonasIdTokensBodySubject
+    name: str | Unset = UNSET
+    expires_at: datetime.datetime | None | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -37,7 +38,7 @@ class PostPersonaPersonasIdTokensBody:
 
         name = self.name
 
-        expires_at: None | Unset | str
+        expires_at: None | str | Unset
         if isinstance(self.expires_at, Unset):
             expires_at = UNSET
         elif isinstance(self.expires_at, datetime.datetime):
@@ -70,7 +71,7 @@ class PostPersonaPersonasIdTokensBody:
 
         name = d.pop("name", UNSET)
 
-        def _parse_expires_at(data: object) -> None | Unset | datetime.datetime:
+        def _parse_expires_at(data: object) -> datetime.datetime | None | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
@@ -78,12 +79,12 @@ class PostPersonaPersonasIdTokensBody:
             try:
                 if not isinstance(data, str):
                     raise TypeError()
-                expires_at_type_0 = isoparse(data)
+                expires_at_type_0 = datetime.datetime.fromisoformat(data)
 
                 return expires_at_type_0
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
-            return cast(None | Unset | datetime.datetime, data)
+            return cast(datetime.datetime | None | Unset, data)
 
         expires_at = _parse_expires_at(d.pop("expiresAt", UNSET))
 

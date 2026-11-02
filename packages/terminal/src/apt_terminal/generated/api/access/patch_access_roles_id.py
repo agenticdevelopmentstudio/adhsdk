@@ -1,5 +1,6 @@
 from http import HTTPStatus
 from typing import Any
+from urllib.parse import quote
 
 import httpx
 
@@ -8,13 +9,13 @@ from ...client import AuthenticatedClient, Client
 from ...models.access_role_envelope import AccessRoleEnvelope
 from ...models.error import Error
 from ...models.patch_access_roles_id_body import PatchAccessRolesIdBody
-from ...types import UNSET, Response
+from ...types import UNSET, Response, Unset
 
 
 def _get_kwargs(
     id: str,
     *,
-    body: PatchAccessRolesIdBody,
+    body: PatchAccessRolesIdBody | Unset = UNSET,
     workspace: str,
 ) -> dict[str, Any]:
     headers: dict[str, Any] = {}
@@ -27,11 +28,14 @@ def _get_kwargs(
 
     _kwargs: dict[str, Any] = {
         "method": "patch",
-        "url": f"/access/roles/{id}",
+        "url": "/access/roles/{id}".format(
+            id=quote(str(id), safe=""),
+        ),
         "params": params,
     }
 
-    _kwargs["json"] = body.to_dict()
+    if not isinstance(body, Unset):
+        _kwargs["json"] = body.to_dict()
 
     headers["Content-Type"] = "application/json"
 
@@ -93,7 +97,7 @@ def sync_detailed(
     id: str,
     *,
     client: AuthenticatedClient,
-    body: PatchAccessRolesIdBody,
+    body: PatchAccessRolesIdBody | Unset = UNSET,
     workspace: str,
 ) -> Response[AccessRoleEnvelope | Error]:
     """Edit a role (name/description/default/grants; the system admin role is immutable)
@@ -101,14 +105,14 @@ def sync_detailed(
     Args:
         id (str):
         workspace (str):
-        body (PatchAccessRolesIdBody):
+        body (PatchAccessRolesIdBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[AccessRoleEnvelope, Error]]
+        Response[AccessRoleEnvelope | Error]
     """
 
     kwargs = _get_kwargs(
@@ -128,7 +132,7 @@ def sync(
     id: str,
     *,
     client: AuthenticatedClient,
-    body: PatchAccessRolesIdBody,
+    body: PatchAccessRolesIdBody | Unset = UNSET,
     workspace: str,
 ) -> AccessRoleEnvelope | Error | None:
     """Edit a role (name/description/default/grants; the system admin role is immutable)
@@ -136,14 +140,14 @@ def sync(
     Args:
         id (str):
         workspace (str):
-        body (PatchAccessRolesIdBody):
+        body (PatchAccessRolesIdBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[AccessRoleEnvelope, Error]
+        AccessRoleEnvelope | Error
     """
 
     return sync_detailed(
@@ -158,7 +162,7 @@ async def asyncio_detailed(
     id: str,
     *,
     client: AuthenticatedClient,
-    body: PatchAccessRolesIdBody,
+    body: PatchAccessRolesIdBody | Unset = UNSET,
     workspace: str,
 ) -> Response[AccessRoleEnvelope | Error]:
     """Edit a role (name/description/default/grants; the system admin role is immutable)
@@ -166,14 +170,14 @@ async def asyncio_detailed(
     Args:
         id (str):
         workspace (str):
-        body (PatchAccessRolesIdBody):
+        body (PatchAccessRolesIdBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[AccessRoleEnvelope, Error]]
+        Response[AccessRoleEnvelope | Error]
     """
 
     kwargs = _get_kwargs(
@@ -191,7 +195,7 @@ async def asyncio(
     id: str,
     *,
     client: AuthenticatedClient,
-    body: PatchAccessRolesIdBody,
+    body: PatchAccessRolesIdBody | Unset = UNSET,
     workspace: str,
 ) -> AccessRoleEnvelope | Error | None:
     """Edit a role (name/description/default/grants; the system admin role is immutable)
@@ -199,14 +203,14 @@ async def asyncio(
     Args:
         id (str):
         workspace (str):
-        body (PatchAccessRolesIdBody):
+        body (PatchAccessRolesIdBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[AccessRoleEnvelope, Error]
+        AccessRoleEnvelope | Error
     """
 
     return (

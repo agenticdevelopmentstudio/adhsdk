@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -22,11 +24,11 @@ class PostPersonaMemoryGlobalBody:
         memory_type (PostPersonaMemoryGlobalBodyMemoryType):
         description (str):
         body (str):
-        subject_table (Union[Unset, str]):
-        subject_id (Union[Unset, str]):
-        source (Union[Unset, PostPersonaMemoryGlobalBodySource]):
-        confidence (Union[Unset, int]):
-        tags (Union[Unset, list[str]]):
+        subject_table (str | Unset):
+        subject_id (str | Unset):
+        source (PostPersonaMemoryGlobalBodySource | Unset):
+        confidence (int | Unset):
+        tags (list[str] | Unset):
     """
 
     persona_id: str
@@ -34,11 +36,11 @@ class PostPersonaMemoryGlobalBody:
     memory_type: PostPersonaMemoryGlobalBodyMemoryType
     description: str
     body: str
-    subject_table: Unset | str = UNSET
-    subject_id: Unset | str = UNSET
-    source: Unset | PostPersonaMemoryGlobalBodySource = UNSET
-    confidence: Unset | int = UNSET
-    tags: Unset | list[str] = UNSET
+    subject_table: str | Unset = UNSET
+    subject_id: str | Unset = UNSET
+    source: PostPersonaMemoryGlobalBodySource | Unset = UNSET
+    confidence: int | Unset = UNSET
+    tags: list[str] | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -56,13 +58,13 @@ class PostPersonaMemoryGlobalBody:
 
         subject_id = self.subject_id
 
-        source: Unset | str = UNSET
+        source: str | Unset = UNSET
         if not isinstance(self.source, Unset):
             source = self.source.value
 
         confidence = self.confidence
 
-        tags: Unset | list[str] = UNSET
+        tags: list[str] | Unset = UNSET
         if not isinstance(self.tags, Unset):
             tags = self.tags
 
@@ -108,7 +110,7 @@ class PostPersonaMemoryGlobalBody:
         subject_id = d.pop("subjectId", UNSET)
 
         _source = d.pop("source", UNSET)
-        source: Unset | PostPersonaMemoryGlobalBodySource
+        source: PostPersonaMemoryGlobalBodySource | Unset
         if isinstance(_source, Unset):
             source = UNSET
         else:

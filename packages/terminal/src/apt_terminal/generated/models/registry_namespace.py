@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -16,10 +18,10 @@ class RegistryNamespace:
         id (str):
         owner_kind (RegistryNamespaceOwnerKind):
         owner_id (str):
-        slug (Union[None, str]):
-        name (Union[None, str]):
-        rdid (Union[None, str]): Always null for a namespace created after Task 5 (rdid-addressing-model); non-null only
-            on rows minted before it
+        slug (None | str):
+        name (None | str):
+        rdid (None | str): Always null for a namespace created after Task 5 (rdid-addressing-model); non-null only on
+            rows minted before it
     """
 
     id: str

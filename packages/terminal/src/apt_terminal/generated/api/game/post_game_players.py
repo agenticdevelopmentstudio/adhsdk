@@ -8,12 +8,12 @@ from ...client import AuthenticatedClient, Client
 from ...models.error import Error
 from ...models.post_game_players_body import PostGamePlayersBody
 from ...models.post_game_players_response_201 import PostGamePlayersResponse201
-from ...types import Response
+from ...types import UNSET, Response, Unset
 
 
 def _get_kwargs(
     *,
-    body: PostGamePlayersBody,
+    body: PostGamePlayersBody | Unset = UNSET,
 ) -> dict[str, Any]:
     headers: dict[str, Any] = {}
 
@@ -22,7 +22,8 @@ def _get_kwargs(
         "url": "/game/players",
     }
 
-    _kwargs["json"] = body.to_dict()
+    if not isinstance(body, Unset):
+        _kwargs["json"] = body.to_dict()
 
     headers["Content-Type"] = "application/json"
 
@@ -68,19 +69,19 @@ def _build_response(
 def sync_detailed(
     *,
     client: AuthenticatedClient,
-    body: PostGamePlayersBody,
+    body: PostGamePlayersBody | Unset = UNSET,
 ) -> Response[Error | PostGamePlayersResponse201]:
     """Create players
 
     Args:
-        body (PostGamePlayersBody):
+        body (PostGamePlayersBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, PostGamePlayersResponse201]]
+        Response[Error | PostGamePlayersResponse201]
     """
 
     kwargs = _get_kwargs(
@@ -97,19 +98,19 @@ def sync_detailed(
 def sync(
     *,
     client: AuthenticatedClient,
-    body: PostGamePlayersBody,
+    body: PostGamePlayersBody | Unset = UNSET,
 ) -> Error | PostGamePlayersResponse201 | None:
     """Create players
 
     Args:
-        body (PostGamePlayersBody):
+        body (PostGamePlayersBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, PostGamePlayersResponse201]
+        Error | PostGamePlayersResponse201
     """
 
     return sync_detailed(
@@ -121,19 +122,19 @@ def sync(
 async def asyncio_detailed(
     *,
     client: AuthenticatedClient,
-    body: PostGamePlayersBody,
+    body: PostGamePlayersBody | Unset = UNSET,
 ) -> Response[Error | PostGamePlayersResponse201]:
     """Create players
 
     Args:
-        body (PostGamePlayersBody):
+        body (PostGamePlayersBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, PostGamePlayersResponse201]]
+        Response[Error | PostGamePlayersResponse201]
     """
 
     kwargs = _get_kwargs(
@@ -148,19 +149,19 @@ async def asyncio_detailed(
 async def asyncio(
     *,
     client: AuthenticatedClient,
-    body: PostGamePlayersBody,
+    body: PostGamePlayersBody | Unset = UNSET,
 ) -> Error | PostGamePlayersResponse201 | None:
     """Create players
 
     Args:
-        body (PostGamePlayersBody):
+        body (PostGamePlayersBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, PostGamePlayersResponse201]
+        Error | PostGamePlayersResponse201
     """
 
     return (

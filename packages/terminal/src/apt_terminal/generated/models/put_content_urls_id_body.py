@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -12,36 +14,36 @@ T = TypeVar("T", bound="PutContentUrlsIdBody")
 class PutContentUrlsIdBody:
     """
     Attributes:
-        ecosystem_id (Union[Unset, str]):
-        original_url (Union[Unset, str]):
-        canonical_url (Union[Unset, str]):
-        canonical_url_hash (Union[Unset, str]):
-        title (Union[None, Unset, str]):
-        description (Union[None, Unset, str]):
-        note (Union[None, Unset, str]):
-        preview_storage_key (Union[None, Unset, str]):
-        preview_url (Union[None, Unset, str]):
-        preview_status (Union[Unset, str]):
-        preview_error (Union[None, Unset, str]):
-        preview_generated_at (Union[None, Unset, str]):
-        preview_attempts (Union[Unset, int]):
-        sync_txid (Union[Unset, int]):
+        ecosystem_id (str | Unset):
+        original_url (str | Unset):
+        canonical_url (str | Unset):
+        canonical_url_hash (str | Unset):
+        title (None | str | Unset):
+        description (None | str | Unset):
+        note (None | str | Unset):
+        preview_storage_key (None | str | Unset):
+        preview_url (None | str | Unset):
+        preview_status (str | Unset):
+        preview_error (None | str | Unset):
+        preview_generated_at (None | str | Unset):
+        preview_attempts (int | Unset):
+        sync_txid (int | Unset):
     """
 
-    ecosystem_id: Unset | str = UNSET
-    original_url: Unset | str = UNSET
-    canonical_url: Unset | str = UNSET
-    canonical_url_hash: Unset | str = UNSET
-    title: None | Unset | str = UNSET
-    description: None | Unset | str = UNSET
-    note: None | Unset | str = UNSET
-    preview_storage_key: None | Unset | str = UNSET
-    preview_url: None | Unset | str = UNSET
-    preview_status: Unset | str = UNSET
-    preview_error: None | Unset | str = UNSET
-    preview_generated_at: None | Unset | str = UNSET
-    preview_attempts: Unset | int = UNSET
-    sync_txid: Unset | int = UNSET
+    ecosystem_id: str | Unset = UNSET
+    original_url: str | Unset = UNSET
+    canonical_url: str | Unset = UNSET
+    canonical_url_hash: str | Unset = UNSET
+    title: None | str | Unset = UNSET
+    description: None | str | Unset = UNSET
+    note: None | str | Unset = UNSET
+    preview_storage_key: None | str | Unset = UNSET
+    preview_url: None | str | Unset = UNSET
+    preview_status: str | Unset = UNSET
+    preview_error: None | str | Unset = UNSET
+    preview_generated_at: None | str | Unset = UNSET
+    preview_attempts: int | Unset = UNSET
+    sync_txid: int | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
         ecosystem_id = self.ecosystem_id
@@ -52,31 +54,31 @@ class PutContentUrlsIdBody:
 
         canonical_url_hash = self.canonical_url_hash
 
-        title: None | Unset | str
+        title: None | str | Unset
         if isinstance(self.title, Unset):
             title = UNSET
         else:
             title = self.title
 
-        description: None | Unset | str
+        description: None | str | Unset
         if isinstance(self.description, Unset):
             description = UNSET
         else:
             description = self.description
 
-        note: None | Unset | str
+        note: None | str | Unset
         if isinstance(self.note, Unset):
             note = UNSET
         else:
             note = self.note
 
-        preview_storage_key: None | Unset | str
+        preview_storage_key: None | str | Unset
         if isinstance(self.preview_storage_key, Unset):
             preview_storage_key = UNSET
         else:
             preview_storage_key = self.preview_storage_key
 
-        preview_url: None | Unset | str
+        preview_url: None | str | Unset
         if isinstance(self.preview_url, Unset):
             preview_url = UNSET
         else:
@@ -84,13 +86,13 @@ class PutContentUrlsIdBody:
 
         preview_status = self.preview_status
 
-        preview_error: None | Unset | str
+        preview_error: None | str | Unset
         if isinstance(self.preview_error, Unset):
             preview_error = UNSET
         else:
             preview_error = self.preview_error
 
-        preview_generated_at: None | Unset | str
+        preview_generated_at: None | str | Unset
         if isinstance(self.preview_generated_at, Unset):
             preview_generated_at = UNSET
         else:
@@ -145,68 +147,68 @@ class PutContentUrlsIdBody:
 
         canonical_url_hash = d.pop("canonicalUrlHash", UNSET)
 
-        def _parse_title(data: object) -> None | Unset | str:
+        def _parse_title(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         title = _parse_title(d.pop("title", UNSET))
 
-        def _parse_description(data: object) -> None | Unset | str:
+        def _parse_description(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         description = _parse_description(d.pop("description", UNSET))
 
-        def _parse_note(data: object) -> None | Unset | str:
+        def _parse_note(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         note = _parse_note(d.pop("note", UNSET))
 
-        def _parse_preview_storage_key(data: object) -> None | Unset | str:
+        def _parse_preview_storage_key(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         preview_storage_key = _parse_preview_storage_key(d.pop("previewStorageKey", UNSET))
 
-        def _parse_preview_url(data: object) -> None | Unset | str:
+        def _parse_preview_url(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         preview_url = _parse_preview_url(d.pop("previewUrl", UNSET))
 
         preview_status = d.pop("previewStatus", UNSET)
 
-        def _parse_preview_error(data: object) -> None | Unset | str:
+        def _parse_preview_error(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         preview_error = _parse_preview_error(d.pop("previewError", UNSET))
 
-        def _parse_preview_generated_at(data: object) -> None | Unset | str:
+        def _parse_preview_generated_at(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         preview_generated_at = _parse_preview_generated_at(d.pop("previewGeneratedAt", UNSET))
 

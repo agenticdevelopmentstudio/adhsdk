@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import TYPE_CHECKING, Any, TypeVar
 
@@ -15,10 +17,10 @@ T = TypeVar("T", bound="GetContentMarkdownIdVersionsResponse200")
 class GetContentMarkdownIdVersionsResponse200:
     """
     Attributes:
-        items (list['MarkdownDocumentVersionSummary']):
+        items (list[MarkdownDocumentVersionSummary]):
     """
 
-    items: list["MarkdownDocumentVersionSummary"]
+    items: list[MarkdownDocumentVersionSummary]
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -39,7 +41,9 @@ class GetContentMarkdownIdVersionsResponse200:
 
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
-        from ..models.markdown_document_version_summary import MarkdownDocumentVersionSummary
+        from ..models.markdown_document_version_summary import (
+            MarkdownDocumentVersionSummary,
+        )
 
         d = dict(src_dict)
         items = []

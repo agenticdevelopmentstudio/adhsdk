@@ -1,5 +1,6 @@
 from http import HTTPStatus
-from typing import Any, Union
+from typing import Any
+from urllib.parse import quote
 
 import httpx
 
@@ -16,22 +17,25 @@ from ...models.visitor_token_event import VisitorTokenEvent
 from ...models.visitor_tool_call_completed_event import VisitorToolCallCompletedEvent
 from ...models.visitor_tool_call_started_event import VisitorToolCallStartedEvent
 from ...models.visitor_turn_request import VisitorTurnRequest
-from ...types import Response
+from ...types import UNSET, Response, Unset
 
 
 def _get_kwargs(
     id: str,
     *,
-    body: VisitorTurnRequest,
+    body: VisitorTurnRequest | Unset = UNSET,
 ) -> dict[str, Any]:
     headers: dict[str, Any] = {}
 
     _kwargs: dict[str, Any] = {
         "method": "post",
-        "url": f"/public/visitor-chat/conversations/{id}/turns",
+        "url": "/public/visitor-chat/conversations/{id}/turns".format(
+            id=quote(str(id), safe=""),
+        ),
     }
 
-    _kwargs["json"] = body.to_dict()
+    if not isinstance(body, Unset):
+        _kwargs["json"] = body.to_dict()
 
     headers["Content-Type"] = "application/json"
 
@@ -43,34 +47,32 @@ def _parse_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
 ) -> (
     Error
-    | Union[
-        "VisitorAwardEvent",
-        "VisitorDoneEvent",
-        "VisitorEndedEvent",
-        "VisitorErrorEvent",
-        "VisitorOpenEvent",
-        "VisitorStatusEvent",
-        "VisitorTokenEvent",
-        "VisitorToolCallCompletedEvent",
-        "VisitorToolCallStartedEvent",
-    ]
+    | VisitorAwardEvent
+    | VisitorDoneEvent
+    | VisitorEndedEvent
+    | VisitorErrorEvent
+    | VisitorOpenEvent
+    | VisitorStatusEvent
+    | VisitorTokenEvent
+    | VisitorToolCallCompletedEvent
+    | VisitorToolCallStartedEvent
     | None
 ):
     if response.status_code == 200:
 
         def _parse_response_200(
             data: object,
-        ) -> Union[
-            "VisitorAwardEvent",
-            "VisitorDoneEvent",
-            "VisitorEndedEvent",
-            "VisitorErrorEvent",
-            "VisitorOpenEvent",
-            "VisitorStatusEvent",
-            "VisitorTokenEvent",
-            "VisitorToolCallCompletedEvent",
-            "VisitorToolCallStartedEvent",
-        ]:
+        ) -> (
+            VisitorAwardEvent
+            | VisitorDoneEvent
+            | VisitorEndedEvent
+            | VisitorErrorEvent
+            | VisitorOpenEvent
+            | VisitorStatusEvent
+            | VisitorTokenEvent
+            | VisitorToolCallCompletedEvent
+            | VisitorToolCallStartedEvent
+        ):
             try:
                 if not isinstance(data, dict):
                     raise TypeError()
@@ -79,7 +81,7 @@ def _parse_response(
                 )
 
                 return componentsschemas_visitor_turn_event_visitor_open_event
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
             try:
                 if not isinstance(data, dict):
@@ -89,7 +91,7 @@ def _parse_response(
                 )
 
                 return componentsschemas_visitor_turn_event_visitor_token_event
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
             try:
                 if not isinstance(data, dict):
@@ -99,7 +101,7 @@ def _parse_response(
                 )
 
                 return componentsschemas_visitor_turn_event_visitor_tool_call_started_event
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
             try:
                 if not isinstance(data, dict):
@@ -109,7 +111,7 @@ def _parse_response(
                 )
 
                 return componentsschemas_visitor_turn_event_visitor_tool_call_completed_event
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
             try:
                 if not isinstance(data, dict):
@@ -119,7 +121,7 @@ def _parse_response(
                 )
 
                 return componentsschemas_visitor_turn_event_visitor_status_event
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
             try:
                 if not isinstance(data, dict):
@@ -129,7 +131,7 @@ def _parse_response(
                 )
 
                 return componentsschemas_visitor_turn_event_visitor_award_event
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
             try:
                 if not isinstance(data, dict):
@@ -139,7 +141,7 @@ def _parse_response(
                 )
 
                 return componentsschemas_visitor_turn_event_visitor_done_event
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
             try:
                 if not isinstance(data, dict):
@@ -149,7 +151,7 @@ def _parse_response(
                 )
 
                 return componentsschemas_visitor_turn_event_visitor_ended_event
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
             if not isinstance(data, dict):
                 raise TypeError()
@@ -218,17 +220,15 @@ def _build_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
 ) -> Response[
     Error
-    | Union[
-        "VisitorAwardEvent",
-        "VisitorDoneEvent",
-        "VisitorEndedEvent",
-        "VisitorErrorEvent",
-        "VisitorOpenEvent",
-        "VisitorStatusEvent",
-        "VisitorTokenEvent",
-        "VisitorToolCallCompletedEvent",
-        "VisitorToolCallStartedEvent",
-    ]
+    | VisitorAwardEvent
+    | VisitorDoneEvent
+    | VisitorEndedEvent
+    | VisitorErrorEvent
+    | VisitorOpenEvent
+    | VisitorStatusEvent
+    | VisitorTokenEvent
+    | VisitorToolCallCompletedEvent
+    | VisitorToolCallStartedEvent
 ]:
     return Response(
         status_code=HTTPStatus(response.status_code),
@@ -242,20 +242,18 @@ def sync_detailed(
     id: str,
     *,
     client: AuthenticatedClient,
-    body: VisitorTurnRequest,
+    body: VisitorTurnRequest | Unset = UNSET,
 ) -> Response[
     Error
-    | Union[
-        "VisitorAwardEvent",
-        "VisitorDoneEvent",
-        "VisitorEndedEvent",
-        "VisitorErrorEvent",
-        "VisitorOpenEvent",
-        "VisitorStatusEvent",
-        "VisitorTokenEvent",
-        "VisitorToolCallCompletedEvent",
-        "VisitorToolCallStartedEvent",
-    ]
+    | VisitorAwardEvent
+    | VisitorDoneEvent
+    | VisitorEndedEvent
+    | VisitorErrorEvent
+    | VisitorOpenEvent
+    | VisitorStatusEvent
+    | VisitorTokenEvent
+    | VisitorToolCallCompletedEvent
+    | VisitorToolCallStartedEvent
 ]:
     """Take a turn in a visitor conversation (SSE)
 
@@ -270,14 +268,14 @@ def sync_detailed(
 
     Args:
         id (str):
-        body (VisitorTurnRequest):
+        body (VisitorTurnRequest | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, Union['VisitorAwardEvent', 'VisitorDoneEvent', 'VisitorEndedEvent', 'VisitorErrorEvent', 'VisitorOpenEvent', 'VisitorStatusEvent', 'VisitorTokenEvent', 'VisitorToolCallCompletedEvent', 'VisitorToolCallStartedEvent']]]
+        Response[Error | VisitorAwardEvent | VisitorDoneEvent | VisitorEndedEvent | VisitorErrorEvent | VisitorOpenEvent | VisitorStatusEvent | VisitorTokenEvent | VisitorToolCallCompletedEvent | VisitorToolCallStartedEvent]
     """
 
     kwargs = _get_kwargs(
@@ -296,20 +294,18 @@ def sync(
     id: str,
     *,
     client: AuthenticatedClient,
-    body: VisitorTurnRequest,
+    body: VisitorTurnRequest | Unset = UNSET,
 ) -> (
     Error
-    | Union[
-        "VisitorAwardEvent",
-        "VisitorDoneEvent",
-        "VisitorEndedEvent",
-        "VisitorErrorEvent",
-        "VisitorOpenEvent",
-        "VisitorStatusEvent",
-        "VisitorTokenEvent",
-        "VisitorToolCallCompletedEvent",
-        "VisitorToolCallStartedEvent",
-    ]
+    | VisitorAwardEvent
+    | VisitorDoneEvent
+    | VisitorEndedEvent
+    | VisitorErrorEvent
+    | VisitorOpenEvent
+    | VisitorStatusEvent
+    | VisitorTokenEvent
+    | VisitorToolCallCompletedEvent
+    | VisitorToolCallStartedEvent
     | None
 ):
     """Take a turn in a visitor conversation (SSE)
@@ -325,14 +321,14 @@ def sync(
 
     Args:
         id (str):
-        body (VisitorTurnRequest):
+        body (VisitorTurnRequest | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, Union['VisitorAwardEvent', 'VisitorDoneEvent', 'VisitorEndedEvent', 'VisitorErrorEvent', 'VisitorOpenEvent', 'VisitorStatusEvent', 'VisitorTokenEvent', 'VisitorToolCallCompletedEvent', 'VisitorToolCallStartedEvent']]
+        Error | VisitorAwardEvent | VisitorDoneEvent | VisitorEndedEvent | VisitorErrorEvent | VisitorOpenEvent | VisitorStatusEvent | VisitorTokenEvent | VisitorToolCallCompletedEvent | VisitorToolCallStartedEvent
     """
 
     return sync_detailed(
@@ -346,20 +342,18 @@ async def asyncio_detailed(
     id: str,
     *,
     client: AuthenticatedClient,
-    body: VisitorTurnRequest,
+    body: VisitorTurnRequest | Unset = UNSET,
 ) -> Response[
     Error
-    | Union[
-        "VisitorAwardEvent",
-        "VisitorDoneEvent",
-        "VisitorEndedEvent",
-        "VisitorErrorEvent",
-        "VisitorOpenEvent",
-        "VisitorStatusEvent",
-        "VisitorTokenEvent",
-        "VisitorToolCallCompletedEvent",
-        "VisitorToolCallStartedEvent",
-    ]
+    | VisitorAwardEvent
+    | VisitorDoneEvent
+    | VisitorEndedEvent
+    | VisitorErrorEvent
+    | VisitorOpenEvent
+    | VisitorStatusEvent
+    | VisitorTokenEvent
+    | VisitorToolCallCompletedEvent
+    | VisitorToolCallStartedEvent
 ]:
     """Take a turn in a visitor conversation (SSE)
 
@@ -374,14 +368,14 @@ async def asyncio_detailed(
 
     Args:
         id (str):
-        body (VisitorTurnRequest):
+        body (VisitorTurnRequest | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, Union['VisitorAwardEvent', 'VisitorDoneEvent', 'VisitorEndedEvent', 'VisitorErrorEvent', 'VisitorOpenEvent', 'VisitorStatusEvent', 'VisitorTokenEvent', 'VisitorToolCallCompletedEvent', 'VisitorToolCallStartedEvent']]]
+        Response[Error | VisitorAwardEvent | VisitorDoneEvent | VisitorEndedEvent | VisitorErrorEvent | VisitorOpenEvent | VisitorStatusEvent | VisitorTokenEvent | VisitorToolCallCompletedEvent | VisitorToolCallStartedEvent]
     """
 
     kwargs = _get_kwargs(
@@ -398,20 +392,18 @@ async def asyncio(
     id: str,
     *,
     client: AuthenticatedClient,
-    body: VisitorTurnRequest,
+    body: VisitorTurnRequest | Unset = UNSET,
 ) -> (
     Error
-    | Union[
-        "VisitorAwardEvent",
-        "VisitorDoneEvent",
-        "VisitorEndedEvent",
-        "VisitorErrorEvent",
-        "VisitorOpenEvent",
-        "VisitorStatusEvent",
-        "VisitorTokenEvent",
-        "VisitorToolCallCompletedEvent",
-        "VisitorToolCallStartedEvent",
-    ]
+    | VisitorAwardEvent
+    | VisitorDoneEvent
+    | VisitorEndedEvent
+    | VisitorErrorEvent
+    | VisitorOpenEvent
+    | VisitorStatusEvent
+    | VisitorTokenEvent
+    | VisitorToolCallCompletedEvent
+    | VisitorToolCallStartedEvent
     | None
 ):
     """Take a turn in a visitor conversation (SSE)
@@ -427,14 +419,14 @@ async def asyncio(
 
     Args:
         id (str):
-        body (VisitorTurnRequest):
+        body (VisitorTurnRequest | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, Union['VisitorAwardEvent', 'VisitorDoneEvent', 'VisitorEndedEvent', 'VisitorErrorEvent', 'VisitorOpenEvent', 'VisitorStatusEvent', 'VisitorTokenEvent', 'VisitorToolCallCompletedEvent', 'VisitorToolCallStartedEvent']]
+        Error | VisitorAwardEvent | VisitorDoneEvent | VisitorEndedEvent | VisitorErrorEvent | VisitorOpenEvent | VisitorStatusEvent | VisitorTokenEvent | VisitorToolCallCompletedEvent | VisitorToolCallStartedEvent
     """
 
     return (

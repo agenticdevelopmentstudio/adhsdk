@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -13,18 +15,18 @@ T = TypeVar("T", bound="ShiprLadderRowsItem")
 class ShiprLadderRowsItem:
     """
     Attributes:
-        sha (Union[Unset, str]):
-        when (Union[Unset, str]):
-        subject (Union[Unset, str]):
-        marks (Union[Unset, list[str]]):
-        settled (Union[Unset, bool]):
+        sha (str | Unset):
+        when (str | Unset):
+        subject (str | Unset):
+        marks (list[str] | Unset):
+        settled (bool | Unset):
     """
 
-    sha: Unset | str = UNSET
-    when: Unset | str = UNSET
-    subject: Unset | str = UNSET
-    marks: Unset | list[str] = UNSET
-    settled: Unset | bool = UNSET
+    sha: str | Unset = UNSET
+    when: str | Unset = UNSET
+    subject: str | Unset = UNSET
+    marks: list[str] | Unset = UNSET
+    settled: bool | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -34,7 +36,7 @@ class ShiprLadderRowsItem:
 
         subject = self.subject
 
-        marks: Unset | list[str] = UNSET
+        marks: list[str] | Unset = UNSET
         if not isinstance(self.marks, Unset):
             marks = self.marks
 

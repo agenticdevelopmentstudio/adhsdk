@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, TypeVar, Union, cast
+from typing import TYPE_CHECKING, Any, TypeVar, cast
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -44,11 +46,11 @@ class MarkdownDocument:
         created_at (str):
         updated_at (str):
         is_deleted (bool):
-        deleted_at (Union[None, Unset, str]):
-        frontmatter (Union['MarkdownDocumentFrontmatterType0', None, Unset]):
-        category (Union[None, Unset, str]): Optional classification label.
-        public_route (Union[None, Unset, str]): Public route slug (non-null iff visibility='public'); unique per author.
-        latest_version_id (Union[None, Unset, str]):
+        deleted_at (None | str | Unset):
+        frontmatter (MarkdownDocumentFrontmatterType0 | None | Unset):
+        category (None | str | Unset): Optional classification label.
+        public_route (None | str | Unset): Public route slug (non-null iff visibility='public'); unique per author.
+        latest_version_id (None | str | Unset):
     """
 
     id: str
@@ -68,15 +70,17 @@ class MarkdownDocument:
     created_at: str
     updated_at: str
     is_deleted: bool
-    deleted_at: None | Unset | str = UNSET
-    frontmatter: Union["MarkdownDocumentFrontmatterType0", None, Unset] = UNSET
-    category: None | Unset | str = UNSET
-    public_route: None | Unset | str = UNSET
-    latest_version_id: None | Unset | str = UNSET
+    deleted_at: None | str | Unset = UNSET
+    frontmatter: MarkdownDocumentFrontmatterType0 | None | Unset = UNSET
+    category: None | str | Unset = UNSET
+    public_route: None | str | Unset = UNSET
+    latest_version_id: None | str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
-        from ..models.markdown_document_frontmatter_type_0 import MarkdownDocumentFrontmatterType0
+        from ..models.markdown_document_frontmatter_type_0 import (
+            MarkdownDocumentFrontmatterType0,
+        )
 
         id = self.id
 
@@ -112,13 +116,13 @@ class MarkdownDocument:
 
         is_deleted = self.is_deleted
 
-        deleted_at: None | Unset | str
+        deleted_at: None | str | Unset
         if isinstance(self.deleted_at, Unset):
             deleted_at = UNSET
         else:
             deleted_at = self.deleted_at
 
-        frontmatter: None | Unset | dict[str, Any]
+        frontmatter: dict[str, Any] | None | Unset
         if isinstance(self.frontmatter, Unset):
             frontmatter = UNSET
         elif isinstance(self.frontmatter, MarkdownDocumentFrontmatterType0):
@@ -126,19 +130,19 @@ class MarkdownDocument:
         else:
             frontmatter = self.frontmatter
 
-        category: None | Unset | str
+        category: None | str | Unset
         if isinstance(self.category, Unset):
             category = UNSET
         else:
             category = self.category
 
-        public_route: None | Unset | str
+        public_route: None | str | Unset
         if isinstance(self.public_route, Unset):
             public_route = UNSET
         else:
             public_route = self.public_route
 
-        latest_version_id: None | Unset | str
+        latest_version_id: None | str | Unset
         if isinstance(self.latest_version_id, Unset):
             latest_version_id = UNSET
         else:
@@ -182,7 +186,9 @@ class MarkdownDocument:
 
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
-        from ..models.markdown_document_frontmatter_type_0 import MarkdownDocumentFrontmatterType0
+        from ..models.markdown_document_frontmatter_type_0 import (
+            MarkdownDocumentFrontmatterType0,
+        )
 
         d = dict(src_dict)
         id = d.pop("id")
@@ -219,18 +225,16 @@ class MarkdownDocument:
 
         is_deleted = d.pop("isDeleted")
 
-        def _parse_deleted_at(data: object) -> None | Unset | str:
+        def _parse_deleted_at(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         deleted_at = _parse_deleted_at(d.pop("deletedAt", UNSET))
 
-        def _parse_frontmatter(
-            data: object,
-        ) -> Union["MarkdownDocumentFrontmatterType0", None, Unset]:
+        def _parse_frontmatter(data: object) -> MarkdownDocumentFrontmatterType0 | None | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
@@ -241,36 +245,36 @@ class MarkdownDocument:
                 frontmatter_type_0 = MarkdownDocumentFrontmatterType0.from_dict(data)
 
                 return frontmatter_type_0
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
-            return cast(Union["MarkdownDocumentFrontmatterType0", None, Unset], data)
+            return cast(MarkdownDocumentFrontmatterType0 | None | Unset, data)
 
         frontmatter = _parse_frontmatter(d.pop("frontmatter", UNSET))
 
-        def _parse_category(data: object) -> None | Unset | str:
+        def _parse_category(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         category = _parse_category(d.pop("category", UNSET))
 
-        def _parse_public_route(data: object) -> None | Unset | str:
+        def _parse_public_route(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         public_route = _parse_public_route(d.pop("publicRoute", UNSET))
 
-        def _parse_latest_version_id(data: object) -> None | Unset | str:
+        def _parse_latest_version_id(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         latest_version_id = _parse_latest_version_id(d.pop("latestVersionId", UNSET))
 

@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class InviteAcceptResultStatus(str, Enum):
+class InviteAcceptResultStatus(StrEnum):
     ACCEPTED = "accepted"
     VERIFICATION_REQUIRED = "verification_required"
 

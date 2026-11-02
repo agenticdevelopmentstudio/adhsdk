@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar
 
@@ -15,13 +17,13 @@ class MessagingSendResult:
     """
     Attributes:
         status (MessagingSendResultStatus):
-        provider_id (Union[Unset, str]): Provider message id (on success)
-        error (Union[Unset, str]): Failure reason (on failure)
+        provider_id (str | Unset): Provider message id (on success)
+        error (str | Unset): Failure reason (on failure)
     """
 
     status: MessagingSendResultStatus
-    provider_id: Unset | str = UNSET
-    error: Unset | str = UNSET
+    provider_id: str | Unset = UNSET
+    error: str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:

@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, TypeVar, Union, cast
+from typing import TYPE_CHECKING, Any, TypeVar, cast
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -25,39 +27,43 @@ T = TypeVar("T", bound="PutPersonaProviderTemplatesIdBody")
 class PutPersonaProviderTemplatesIdBody:
     """
     Attributes:
-        provider_kind (Union[Unset, PutPersonaProviderTemplatesIdBodyProviderKind]):
-        name (Union[Unset, str]):
-        base_url (Union[Unset, str]):
-        documentation_url (Union[None, Unset, str]):
-        status_url (Union[None, Unset, str]):
-        connection_spec (Union['ProviderConnectionSpecType0', None, Unset]):
-        sync_keys (Union['TemplateSyncKeysType0', None, Unset]): Operator-only upstream sync mapping — never present on
-            public reads.
-        available_via (Union['TemplateAvailableViaType0', None, Unset]): Set ⇒ informational template: no first-party
-            API; connect via the named templates.
-        modalities (Union[None, Unset, list[PutPersonaProviderTemplatesIdBodyModalitiesType0Item]]):
-        models (Union[Unset, list[str]]): Model names. On create: the initial model list. On update: the FULL desired
-            set (matching rows kept, missing inserted, absent deleted); omit to leave models unchanged.
+        provider_kind (PutPersonaProviderTemplatesIdBodyProviderKind | Unset):
+        name (str | Unset):
+        base_url (str | Unset):
+        documentation_url (None | str | Unset):
+        status_url (None | str | Unset):
+        connection_spec (None | ProviderConnectionSpecType0 | Unset):
+        sync_keys (None | TemplateSyncKeysType0 | Unset): Operator-only upstream sync mapping — never present on public
+            reads.
+        available_via (None | TemplateAvailableViaType0 | Unset): Set ⇒ informational template: no first-party API;
+            connect via the named templates.
+        modalities (list[PutPersonaProviderTemplatesIdBodyModalitiesType0Item] | None | Unset):
+        models (list[str] | Unset): Model names. On create: the initial model list. On update: the FULL desired set
+            (matching rows kept, missing inserted, absent deleted); omit to leave models unchanged.
     """
 
-    provider_kind: Unset | PutPersonaProviderTemplatesIdBodyProviderKind = UNSET
-    name: Unset | str = UNSET
-    base_url: Unset | str = UNSET
-    documentation_url: None | Unset | str = UNSET
-    status_url: None | Unset | str = UNSET
-    connection_spec: Union["ProviderConnectionSpecType0", None, Unset] = UNSET
-    sync_keys: Union["TemplateSyncKeysType0", None, Unset] = UNSET
-    available_via: Union["TemplateAvailableViaType0", None, Unset] = UNSET
-    modalities: None | Unset | list[PutPersonaProviderTemplatesIdBodyModalitiesType0Item] = UNSET
-    models: Unset | list[str] = UNSET
+    provider_kind: PutPersonaProviderTemplatesIdBodyProviderKind | Unset = UNSET
+    name: str | Unset = UNSET
+    base_url: str | Unset = UNSET
+    documentation_url: None | str | Unset = UNSET
+    status_url: None | str | Unset = UNSET
+    connection_spec: None | ProviderConnectionSpecType0 | Unset = UNSET
+    sync_keys: None | TemplateSyncKeysType0 | Unset = UNSET
+    available_via: None | TemplateAvailableViaType0 | Unset = UNSET
+    modalities: list[PutPersonaProviderTemplatesIdBodyModalitiesType0Item] | None | Unset = UNSET
+    models: list[str] | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
-        from ..models.provider_connection_spec_type_0 import ProviderConnectionSpecType0
-        from ..models.template_available_via_type_0 import TemplateAvailableViaType0
+        from ..models.provider_connection_spec_type_0 import (
+            ProviderConnectionSpecType0,
+        )
+        from ..models.template_available_via_type_0 import (
+            TemplateAvailableViaType0,
+        )
         from ..models.template_sync_keys_type_0 import TemplateSyncKeysType0
 
-        provider_kind: Unset | str = UNSET
+        provider_kind: str | Unset = UNSET
         if not isinstance(self.provider_kind, Unset):
             provider_kind = self.provider_kind.value
 
@@ -65,19 +71,19 @@ class PutPersonaProviderTemplatesIdBody:
 
         base_url = self.base_url
 
-        documentation_url: None | Unset | str
+        documentation_url: None | str | Unset
         if isinstance(self.documentation_url, Unset):
             documentation_url = UNSET
         else:
             documentation_url = self.documentation_url
 
-        status_url: None | Unset | str
+        status_url: None | str | Unset
         if isinstance(self.status_url, Unset):
             status_url = UNSET
         else:
             status_url = self.status_url
 
-        connection_spec: None | Unset | dict[str, Any]
+        connection_spec: dict[str, Any] | None | Unset
         if isinstance(self.connection_spec, Unset):
             connection_spec = UNSET
         elif isinstance(self.connection_spec, ProviderConnectionSpecType0):
@@ -85,7 +91,7 @@ class PutPersonaProviderTemplatesIdBody:
         else:
             connection_spec = self.connection_spec
 
-        sync_keys: None | Unset | dict[str, Any]
+        sync_keys: dict[str, Any] | None | Unset
         if isinstance(self.sync_keys, Unset):
             sync_keys = UNSET
         elif isinstance(self.sync_keys, TemplateSyncKeysType0):
@@ -93,7 +99,7 @@ class PutPersonaProviderTemplatesIdBody:
         else:
             sync_keys = self.sync_keys
 
-        available_via: None | Unset | dict[str, Any]
+        available_via: dict[str, Any] | None | Unset
         if isinstance(self.available_via, Unset):
             available_via = UNSET
         elif isinstance(self.available_via, TemplateAvailableViaType0):
@@ -101,7 +107,7 @@ class PutPersonaProviderTemplatesIdBody:
         else:
             available_via = self.available_via
 
-        modalities: None | Unset | list[str]
+        modalities: list[str] | None | Unset
         if isinstance(self.modalities, Unset):
             modalities = UNSET
         elif isinstance(self.modalities, list):
@@ -113,7 +119,7 @@ class PutPersonaProviderTemplatesIdBody:
         else:
             modalities = self.modalities
 
-        models: Unset | list[str] = UNSET
+        models: list[str] | Unset = UNSET
         if not isinstance(self.models, Unset):
             models = self.models
 
@@ -145,13 +151,17 @@ class PutPersonaProviderTemplatesIdBody:
 
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
-        from ..models.provider_connection_spec_type_0 import ProviderConnectionSpecType0
-        from ..models.template_available_via_type_0 import TemplateAvailableViaType0
+        from ..models.provider_connection_spec_type_0 import (
+            ProviderConnectionSpecType0,
+        )
+        from ..models.template_available_via_type_0 import (
+            TemplateAvailableViaType0,
+        )
         from ..models.template_sync_keys_type_0 import TemplateSyncKeysType0
 
         d = dict(src_dict)
         _provider_kind = d.pop("providerKind", UNSET)
-        provider_kind: Unset | PutPersonaProviderTemplatesIdBodyProviderKind
+        provider_kind: PutPersonaProviderTemplatesIdBodyProviderKind | Unset
         if isinstance(_provider_kind, Unset):
             provider_kind = UNSET
         else:
@@ -161,27 +171,25 @@ class PutPersonaProviderTemplatesIdBody:
 
         base_url = d.pop("baseUrl", UNSET)
 
-        def _parse_documentation_url(data: object) -> None | Unset | str:
+        def _parse_documentation_url(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         documentation_url = _parse_documentation_url(d.pop("documentationUrl", UNSET))
 
-        def _parse_status_url(data: object) -> None | Unset | str:
+        def _parse_status_url(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         status_url = _parse_status_url(d.pop("statusUrl", UNSET))
 
-        def _parse_connection_spec(
-            data: object,
-        ) -> Union["ProviderConnectionSpecType0", None, Unset]:
+        def _parse_connection_spec(data: object) -> None | ProviderConnectionSpecType0 | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
@@ -194,13 +202,13 @@ class PutPersonaProviderTemplatesIdBody:
                 )
 
                 return componentsschemas_provider_connection_spec_type_0
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
-            return cast(Union["ProviderConnectionSpecType0", None, Unset], data)
+            return cast(None | ProviderConnectionSpecType0 | Unset, data)
 
         connection_spec = _parse_connection_spec(d.pop("connectionSpec", UNSET))
 
-        def _parse_sync_keys(data: object) -> Union["TemplateSyncKeysType0", None, Unset]:
+        def _parse_sync_keys(data: object) -> None | TemplateSyncKeysType0 | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
@@ -211,13 +219,13 @@ class PutPersonaProviderTemplatesIdBody:
                 componentsschemas_template_sync_keys_type_0 = TemplateSyncKeysType0.from_dict(data)
 
                 return componentsschemas_template_sync_keys_type_0
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
-            return cast(Union["TemplateSyncKeysType0", None, Unset], data)
+            return cast(None | TemplateSyncKeysType0 | Unset, data)
 
         sync_keys = _parse_sync_keys(d.pop("syncKeys", UNSET))
 
-        def _parse_available_via(data: object) -> Union["TemplateAvailableViaType0", None, Unset]:
+        def _parse_available_via(data: object) -> None | TemplateAvailableViaType0 | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
@@ -230,15 +238,15 @@ class PutPersonaProviderTemplatesIdBody:
                 )
 
                 return componentsschemas_template_available_via_type_0
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
-            return cast(Union["TemplateAvailableViaType0", None, Unset], data)
+            return cast(None | TemplateAvailableViaType0 | Unset, data)
 
         available_via = _parse_available_via(d.pop("availableVia", UNSET))
 
         def _parse_modalities(
             data: object,
-        ) -> None | Unset | list[PutPersonaProviderTemplatesIdBodyModalitiesType0Item]:
+        ) -> list[PutPersonaProviderTemplatesIdBodyModalitiesType0Item] | None | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
@@ -256,10 +264,10 @@ class PutPersonaProviderTemplatesIdBody:
                     modalities_type_0.append(modalities_type_0_item)
 
                 return modalities_type_0
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
             return cast(
-                None | Unset | list[PutPersonaProviderTemplatesIdBodyModalitiesType0Item], data
+                list[PutPersonaProviderTemplatesIdBodyModalitiesType0Item] | None | Unset, data
             )
 
         modalities = _parse_modalities(d.pop("modalities", UNSET))

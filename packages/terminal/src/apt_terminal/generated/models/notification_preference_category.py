@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class NotificationPreferenceCategory(str, Enum):
+class NotificationPreferenceCategory(StrEnum):
     ACCOUNT = "account"
     ADMIN_ANNOUNCEMENT = "admin_announcement"
     COMMUNITY_MENTION = "community_mention"

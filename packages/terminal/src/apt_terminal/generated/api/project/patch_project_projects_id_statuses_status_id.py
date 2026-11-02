@@ -1,5 +1,6 @@
 from http import HTTPStatus
 from typing import Any
+from urllib.parse import quote
 
 import httpx
 
@@ -10,23 +11,27 @@ from ...models.patch_project_projects_id_statuses_status_id_body import (
     PatchProjectProjectsIdStatusesStatusIdBody,
 )
 from ...models.project_status import ProjectStatus
-from ...types import Response
+from ...types import UNSET, Response, Unset
 
 
 def _get_kwargs(
     id: str,
     status_id: str,
     *,
-    body: PatchProjectProjectsIdStatusesStatusIdBody,
+    body: PatchProjectProjectsIdStatusesStatusIdBody | Unset = UNSET,
 ) -> dict[str, Any]:
     headers: dict[str, Any] = {}
 
     _kwargs: dict[str, Any] = {
         "method": "patch",
-        "url": f"/project/projects/{id}/statuses/{status_id}",
+        "url": "/project/projects/{id}/statuses/{status_id}".format(
+            id=quote(str(id), safe=""),
+            status_id=quote(str(status_id), safe=""),
+        ),
     }
 
-    _kwargs["json"] = body.to_dict()
+    if not isinstance(body, Unset):
+        _kwargs["json"] = body.to_dict()
 
     headers["Content-Type"] = "application/json"
 
@@ -79,21 +84,21 @@ def sync_detailed(
     status_id: str,
     *,
     client: AuthenticatedClient,
-    body: PatchProjectProjectsIdStatusesStatusIdBody,
+    body: PatchProjectProjectsIdStatusesStatusIdBody | Unset = UNSET,
 ) -> Response[Error | ProjectStatus]:
     """Rename / recategorize / reorder a column (+ a status.updated activity)
 
     Args:
         id (str):
         status_id (str):
-        body (PatchProjectProjectsIdStatusesStatusIdBody):
+        body (PatchProjectProjectsIdStatusesStatusIdBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, ProjectStatus]]
+        Response[Error | ProjectStatus]
     """
 
     kwargs = _get_kwargs(
@@ -114,21 +119,21 @@ def sync(
     status_id: str,
     *,
     client: AuthenticatedClient,
-    body: PatchProjectProjectsIdStatusesStatusIdBody,
+    body: PatchProjectProjectsIdStatusesStatusIdBody | Unset = UNSET,
 ) -> Error | ProjectStatus | None:
     """Rename / recategorize / reorder a column (+ a status.updated activity)
 
     Args:
         id (str):
         status_id (str):
-        body (PatchProjectProjectsIdStatusesStatusIdBody):
+        body (PatchProjectProjectsIdStatusesStatusIdBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, ProjectStatus]
+        Error | ProjectStatus
     """
 
     return sync_detailed(
@@ -144,21 +149,21 @@ async def asyncio_detailed(
     status_id: str,
     *,
     client: AuthenticatedClient,
-    body: PatchProjectProjectsIdStatusesStatusIdBody,
+    body: PatchProjectProjectsIdStatusesStatusIdBody | Unset = UNSET,
 ) -> Response[Error | ProjectStatus]:
     """Rename / recategorize / reorder a column (+ a status.updated activity)
 
     Args:
         id (str):
         status_id (str):
-        body (PatchProjectProjectsIdStatusesStatusIdBody):
+        body (PatchProjectProjectsIdStatusesStatusIdBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, ProjectStatus]]
+        Response[Error | ProjectStatus]
     """
 
     kwargs = _get_kwargs(
@@ -177,21 +182,21 @@ async def asyncio(
     status_id: str,
     *,
     client: AuthenticatedClient,
-    body: PatchProjectProjectsIdStatusesStatusIdBody,
+    body: PatchProjectProjectsIdStatusesStatusIdBody | Unset = UNSET,
 ) -> Error | ProjectStatus | None:
     """Rename / recategorize / reorder a column (+ a status.updated activity)
 
     Args:
         id (str):
         status_id (str):
-        body (PatchProjectProjectsIdStatusesStatusIdBody):
+        body (PatchProjectProjectsIdStatusesStatusIdBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, ProjectStatus]
+        Error | ProjectStatus
     """
 
     return (

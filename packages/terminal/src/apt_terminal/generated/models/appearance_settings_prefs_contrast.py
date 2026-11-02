@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class AppearanceSettingsPrefsContrast(str, Enum):
+class AppearanceSettingsPrefsContrast(StrEnum):
     DEFAULT = "default"
     EXTRA_HIGH = "extra-high"
     HIGH = "high"

@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class PatchProjectProjectsIdStatusUpdatesUpdateIdBodyHealth(str, Enum):
+class PatchProjectProjectsIdStatusUpdatesUpdateIdBodyHealth(StrEnum):
     AT_RISK = "at_risk"
     OFF_TRACK = "off_track"
     ON_TRACK = "on_track"

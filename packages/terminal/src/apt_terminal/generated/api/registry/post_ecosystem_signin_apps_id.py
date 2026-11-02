@@ -1,5 +1,6 @@
 from http import HTTPStatus
 from typing import Any
+from urllib.parse import quote
 
 import httpx
 
@@ -8,22 +9,25 @@ from ...client import AuthenticatedClient, Client
 from ...models.ecosystem_signin_app import EcosystemSigninApp
 from ...models.ecosystem_signin_app_create import EcosystemSigninAppCreate
 from ...models.error import Error
-from ...types import Response
+from ...types import UNSET, Response, Unset
 
 
 def _get_kwargs(
     id: str,
     *,
-    body: EcosystemSigninAppCreate,
+    body: EcosystemSigninAppCreate | Unset = UNSET,
 ) -> dict[str, Any]:
     headers: dict[str, Any] = {}
 
     _kwargs: dict[str, Any] = {
         "method": "post",
-        "url": f"/ecosystem/signin-apps/{id}",
+        "url": "/ecosystem/signin-apps/{id}".format(
+            id=quote(str(id), safe=""),
+        ),
     }
 
-    _kwargs["json"] = body.to_dict()
+    if not isinstance(body, Unset):
+        _kwargs["json"] = body.to_dict()
 
     headers["Content-Type"] = "application/json"
 
@@ -85,7 +89,7 @@ def sync_detailed(
     id: str,
     *,
     client: AuthenticatedClient,
-    body: EcosystemSigninAppCreate,
+    body: EcosystemSigninAppCreate | Unset = UNSET,
 ) -> Response[EcosystemSigninApp | Error]:
     """Create a sign-in app for an ecosystem
 
@@ -95,14 +99,14 @@ def sync_detailed(
 
     Args:
         id (str):
-        body (EcosystemSigninAppCreate):
+        body (EcosystemSigninAppCreate | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[EcosystemSigninApp, Error]]
+        Response[EcosystemSigninApp | Error]
     """
 
     kwargs = _get_kwargs(
@@ -121,7 +125,7 @@ def sync(
     id: str,
     *,
     client: AuthenticatedClient,
-    body: EcosystemSigninAppCreate,
+    body: EcosystemSigninAppCreate | Unset = UNSET,
 ) -> EcosystemSigninApp | Error | None:
     """Create a sign-in app for an ecosystem
 
@@ -131,14 +135,14 @@ def sync(
 
     Args:
         id (str):
-        body (EcosystemSigninAppCreate):
+        body (EcosystemSigninAppCreate | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[EcosystemSigninApp, Error]
+        EcosystemSigninApp | Error
     """
 
     return sync_detailed(
@@ -152,7 +156,7 @@ async def asyncio_detailed(
     id: str,
     *,
     client: AuthenticatedClient,
-    body: EcosystemSigninAppCreate,
+    body: EcosystemSigninAppCreate | Unset = UNSET,
 ) -> Response[EcosystemSigninApp | Error]:
     """Create a sign-in app for an ecosystem
 
@@ -162,14 +166,14 @@ async def asyncio_detailed(
 
     Args:
         id (str):
-        body (EcosystemSigninAppCreate):
+        body (EcosystemSigninAppCreate | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[EcosystemSigninApp, Error]]
+        Response[EcosystemSigninApp | Error]
     """
 
     kwargs = _get_kwargs(
@@ -186,7 +190,7 @@ async def asyncio(
     id: str,
     *,
     client: AuthenticatedClient,
-    body: EcosystemSigninAppCreate,
+    body: EcosystemSigninAppCreate | Unset = UNSET,
 ) -> EcosystemSigninApp | Error | None:
     """Create a sign-in app for an ecosystem
 
@@ -196,14 +200,14 @@ async def asyncio(
 
     Args:
         id (str):
-        body (EcosystemSigninAppCreate):
+        body (EcosystemSigninAppCreate | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[EcosystemSigninApp, Error]
+        EcosystemSigninApp | Error
     """
 
     return (

@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class PostProjectProjectsIdArtifactsBodyDirection(str, Enum):
+class PostProjectProjectsIdArtifactsBodyDirection(StrEnum):
     INGESTED = "ingested"
     PRODUCED = "produced"
 

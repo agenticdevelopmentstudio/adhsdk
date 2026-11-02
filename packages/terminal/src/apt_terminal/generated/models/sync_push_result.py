@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, TypeVar, Union, cast
+from typing import TYPE_CHECKING, Any, TypeVar, cast
 from uuid import UUID
 
 from attrs import define as _attrs_define
@@ -21,22 +23,24 @@ class SyncPushResult:
     Attributes:
         op_id (UUID):
         status (SyncPushResultStatus):
-        reason (Union[Unset, str]):
-        current (Union['SyncPushResultCurrentType0', None, Unset]):
-        new_version (Union[Unset, str]): Post-apply sync_version; present only on `applied` results that wrote a row
-            (absent for an idempotent no-op delete). Clients SHOULD adopt it as the row's new baseVersion for subsequent
-            staged edits.
+        reason (str | Unset):
+        current (None | SyncPushResultCurrentType0 | Unset):
+        new_version (str | Unset): Post-apply sync_version; present only on `applied` results that wrote a row (absent
+            for an idempotent no-op delete). Clients SHOULD adopt it as the row's new baseVersion for subsequent staged
+            edits.
     """
 
     op_id: UUID
     status: SyncPushResultStatus
-    reason: Unset | str = UNSET
-    current: Union["SyncPushResultCurrentType0", None, Unset] = UNSET
-    new_version: Unset | str = UNSET
+    reason: str | Unset = UNSET
+    current: None | SyncPushResultCurrentType0 | Unset = UNSET
+    new_version: str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
-        from ..models.sync_push_result_current_type_0 import SyncPushResultCurrentType0
+        from ..models.sync_push_result_current_type_0 import (
+            SyncPushResultCurrentType0,
+        )
 
         op_id = str(self.op_id)
 
@@ -44,7 +48,7 @@ class SyncPushResult:
 
         reason = self.reason
 
-        current: None | Unset | dict[str, Any]
+        current: dict[str, Any] | None | Unset
         if isinstance(self.current, Unset):
             current = UNSET
         elif isinstance(self.current, SyncPushResultCurrentType0):
@@ -73,7 +77,9 @@ class SyncPushResult:
 
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
-        from ..models.sync_push_result_current_type_0 import SyncPushResultCurrentType0
+        from ..models.sync_push_result_current_type_0 import (
+            SyncPushResultCurrentType0,
+        )
 
         d = dict(src_dict)
         op_id = UUID(d.pop("opId"))
@@ -82,7 +88,7 @@ class SyncPushResult:
 
         reason = d.pop("reason", UNSET)
 
-        def _parse_current(data: object) -> Union["SyncPushResultCurrentType0", None, Unset]:
+        def _parse_current(data: object) -> None | SyncPushResultCurrentType0 | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
@@ -93,9 +99,9 @@ class SyncPushResult:
                 current_type_0 = SyncPushResultCurrentType0.from_dict(data)
 
                 return current_type_0
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
-            return cast(Union["SyncPushResultCurrentType0", None, Unset], data)
+            return cast(None | SyncPushResultCurrentType0 | Unset, data)
 
         current = _parse_current(d.pop("current", UNSET))
 

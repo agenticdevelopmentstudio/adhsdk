@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import TYPE_CHECKING, Any, TypeVar, cast
 
@@ -29,9 +31,9 @@ class PatchOauthProvidersSlugResponse200:
         client_id (str):
         scopes (list[str]):
         identity_mapping (PatchOauthProvidersSlugResponse200IdentityMapping):
-        authorize_url (Union[None, Unset, str]):
-        token_url (Union[None, Unset, str]):
-        userinfo_url (Union[None, Unset, str]):
+        authorize_url (None | str | Unset):
+        token_url (None | str | Unset):
+        userinfo_url (None | str | Unset):
     """
 
     id: str
@@ -40,10 +42,10 @@ class PatchOauthProvidersSlugResponse200:
     auth_type: PatchOauthProvidersSlugResponse200AuthType
     client_id: str
     scopes: list[str]
-    identity_mapping: "PatchOauthProvidersSlugResponse200IdentityMapping"
-    authorize_url: None | Unset | str = UNSET
-    token_url: None | Unset | str = UNSET
-    userinfo_url: None | Unset | str = UNSET
+    identity_mapping: PatchOauthProvidersSlugResponse200IdentityMapping
+    authorize_url: None | str | Unset = UNSET
+    token_url: None | str | Unset = UNSET
+    userinfo_url: None | str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -61,19 +63,19 @@ class PatchOauthProvidersSlugResponse200:
 
         identity_mapping = self.identity_mapping.to_dict()
 
-        authorize_url: None | Unset | str
+        authorize_url: None | str | Unset
         if isinstance(self.authorize_url, Unset):
             authorize_url = UNSET
         else:
             authorize_url = self.authorize_url
 
-        token_url: None | Unset | str
+        token_url: None | str | Unset
         if isinstance(self.token_url, Unset):
             token_url = UNSET
         else:
             token_url = self.token_url
 
-        userinfo_url: None | Unset | str
+        userinfo_url: None | str | Unset
         if isinstance(self.userinfo_url, Unset):
             userinfo_url = UNSET
         else:
@@ -124,30 +126,30 @@ class PatchOauthProvidersSlugResponse200:
             d.pop("identityMapping")
         )
 
-        def _parse_authorize_url(data: object) -> None | Unset | str:
+        def _parse_authorize_url(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         authorize_url = _parse_authorize_url(d.pop("authorizeUrl", UNSET))
 
-        def _parse_token_url(data: object) -> None | Unset | str:
+        def _parse_token_url(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         token_url = _parse_token_url(d.pop("tokenUrl", UNSET))
 
-        def _parse_userinfo_url(data: object) -> None | Unset | str:
+        def _parse_userinfo_url(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         userinfo_url = _parse_userinfo_url(d.pop("userinfoUrl", UNSET))
 

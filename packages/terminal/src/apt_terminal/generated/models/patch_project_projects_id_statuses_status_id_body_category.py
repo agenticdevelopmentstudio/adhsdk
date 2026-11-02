@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class PatchProjectProjectsIdStatusesStatusIdBodyCategory(str, Enum):
+class PatchProjectProjectsIdStatusesStatusIdBodyCategory(StrEnum):
     BACKLOG = "backlog"
     CANCELED = "canceled"
     DONE = "done"

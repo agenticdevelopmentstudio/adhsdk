@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import TYPE_CHECKING, Any, TypeVar
 
@@ -17,16 +19,16 @@ T = TypeVar("T", bound="GetShiprRunsIdEventsResponse200")
 class GetShiprRunsIdEventsResponse200:
     """
     Attributes:
-        events (list['ShiprRunEvent']):
+        events (list[ShiprRunEvent]):
         next_seq (int):
-        state (Union[Unset, str]):
-        done (Union[Unset, bool]): The run has settled and there will never be more lines.
+        state (str | Unset):
+        done (bool | Unset): The run has settled and there will never be more lines.
     """
 
-    events: list["ShiprRunEvent"]
+    events: list[ShiprRunEvent]
     next_seq: int
-    state: Unset | str = UNSET
-    done: Unset | bool = UNSET
+    state: str | Unset = UNSET
+    done: bool | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:

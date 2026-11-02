@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class ProjectTemplateBodyStatusesItemCategory(str, Enum):
+class ProjectTemplateBodyStatusesItemCategory(StrEnum):
     BACKLOG = "backlog"
     CANCELED = "canceled"
     DONE = "done"

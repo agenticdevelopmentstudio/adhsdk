@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -18,9 +20,9 @@ class TeamReachGrant:
         team_id (str):
         permission (str): free-form permission key (max 100 chars)
         granted_at (str):
-        granted_by (Union[None, Unset, str]): the user who granted it; null for rows seeded outside this route
-        team_name (Union[None, Unset, str]):
-        team_slug (Union[None, Unset, str]):
+        granted_by (None | str | Unset): the user who granted it; null for rows seeded outside this route
+        team_name (None | str | Unset):
+        team_slug (None | str | Unset):
     """
 
     id: str
@@ -28,9 +30,9 @@ class TeamReachGrant:
     team_id: str
     permission: str
     granted_at: str
-    granted_by: None | Unset | str = UNSET
-    team_name: None | Unset | str = UNSET
-    team_slug: None | Unset | str = UNSET
+    granted_by: None | str | Unset = UNSET
+    team_name: None | str | Unset = UNSET
+    team_slug: None | str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -44,19 +46,19 @@ class TeamReachGrant:
 
         granted_at = self.granted_at
 
-        granted_by: None | Unset | str
+        granted_by: None | str | Unset
         if isinstance(self.granted_by, Unset):
             granted_by = UNSET
         else:
             granted_by = self.granted_by
 
-        team_name: None | Unset | str
+        team_name: None | str | Unset
         if isinstance(self.team_name, Unset):
             team_name = UNSET
         else:
             team_name = self.team_name
 
-        team_slug: None | Unset | str
+        team_slug: None | str | Unset
         if isinstance(self.team_slug, Unset):
             team_slug = UNSET
         else:
@@ -95,30 +97,30 @@ class TeamReachGrant:
 
         granted_at = d.pop("grantedAt")
 
-        def _parse_granted_by(data: object) -> None | Unset | str:
+        def _parse_granted_by(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         granted_by = _parse_granted_by(d.pop("grantedBy", UNSET))
 
-        def _parse_team_name(data: object) -> None | Unset | str:
+        def _parse_team_name(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         team_name = _parse_team_name(d.pop("teamName", UNSET))
 
-        def _parse_team_slug(data: object) -> None | Unset | str:
+        def _parse_team_slug(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         team_slug = _parse_team_slug(d.pop("teamSlug", UNSET))
 

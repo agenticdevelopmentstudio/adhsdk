@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, TypeVar, Union, cast
+from typing import TYPE_CHECKING, Any, TypeVar, cast
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -24,15 +26,15 @@ class ProviderTemplate:
         provider_kind (ProviderTemplateProviderKind):
         name (str):
         base_url (str):
-        documentation_url (Union[None, str]):
-        status_url (Union[None, str]):
-        connection_spec (Union['ProviderConnectionSpecType0', None]):
-        available_via (Union['TemplateAvailableViaType0', None]): Set ⇒ informational template: no first-party API;
-            connect via the named templates.
-        modalities (Union[None, list[ProviderTemplateModalitiesType0Item]]):
+        documentation_url (None | str):
+        status_url (None | str):
+        connection_spec (None | ProviderConnectionSpecType0):
+        available_via (None | TemplateAvailableViaType0): Set ⇒ informational template: no first-party API; connect via
+            the named templates.
+        modalities (list[ProviderTemplateModalitiesType0Item] | None):
         created_at (str):
         updated_at (str):
-        models (list['ProviderTemplateModel']):
+        models (list[ProviderTemplateModel]):
     """
 
     id: str
@@ -41,17 +43,21 @@ class ProviderTemplate:
     base_url: str
     documentation_url: None | str
     status_url: None | str
-    connection_spec: Union["ProviderConnectionSpecType0", None]
-    available_via: Union["TemplateAvailableViaType0", None]
-    modalities: None | list[ProviderTemplateModalitiesType0Item]
+    connection_spec: None | ProviderConnectionSpecType0
+    available_via: None | TemplateAvailableViaType0
+    modalities: list[ProviderTemplateModalitiesType0Item] | None
     created_at: str
     updated_at: str
-    models: list["ProviderTemplateModel"]
+    models: list[ProviderTemplateModel]
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
-        from ..models.provider_connection_spec_type_0 import ProviderConnectionSpecType0
-        from ..models.template_available_via_type_0 import TemplateAvailableViaType0
+        from ..models.provider_connection_spec_type_0 import (
+            ProviderConnectionSpecType0,
+        )
+        from ..models.template_available_via_type_0 import (
+            TemplateAvailableViaType0,
+        )
 
         id = self.id
 
@@ -67,19 +73,19 @@ class ProviderTemplate:
         status_url: None | str
         status_url = self.status_url
 
-        connection_spec: None | dict[str, Any]
+        connection_spec: dict[str, Any] | None
         if isinstance(self.connection_spec, ProviderConnectionSpecType0):
             connection_spec = self.connection_spec.to_dict()
         else:
             connection_spec = self.connection_spec
 
-        available_via: None | dict[str, Any]
+        available_via: dict[str, Any] | None
         if isinstance(self.available_via, TemplateAvailableViaType0):
             available_via = self.available_via.to_dict()
         else:
             available_via = self.available_via
 
-        modalities: None | list[str]
+        modalities: list[str] | None
         if isinstance(self.modalities, list):
             modalities = []
             for modalities_type_0_item_data in self.modalities:
@@ -121,9 +127,13 @@ class ProviderTemplate:
 
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
-        from ..models.provider_connection_spec_type_0 import ProviderConnectionSpecType0
+        from ..models.provider_connection_spec_type_0 import (
+            ProviderConnectionSpecType0,
+        )
         from ..models.provider_template_model import ProviderTemplateModel
-        from ..models.template_available_via_type_0 import TemplateAvailableViaType0
+        from ..models.template_available_via_type_0 import (
+            TemplateAvailableViaType0,
+        )
 
         d = dict(src_dict)
         id = d.pop("id")
@@ -148,7 +158,7 @@ class ProviderTemplate:
 
         status_url = _parse_status_url(d.pop("statusUrl"))
 
-        def _parse_connection_spec(data: object) -> Union["ProviderConnectionSpecType0", None]:
+        def _parse_connection_spec(data: object) -> None | ProviderConnectionSpecType0:
             if data is None:
                 return data
             try:
@@ -159,13 +169,13 @@ class ProviderTemplate:
                 )
 
                 return componentsschemas_provider_connection_spec_type_0
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
-            return cast(Union["ProviderConnectionSpecType0", None], data)
+            return cast(None | ProviderConnectionSpecType0, data)
 
         connection_spec = _parse_connection_spec(d.pop("connectionSpec"))
 
-        def _parse_available_via(data: object) -> Union["TemplateAvailableViaType0", None]:
+        def _parse_available_via(data: object) -> None | TemplateAvailableViaType0:
             if data is None:
                 return data
             try:
@@ -176,13 +186,13 @@ class ProviderTemplate:
                 )
 
                 return componentsschemas_template_available_via_type_0
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
-            return cast(Union["TemplateAvailableViaType0", None], data)
+            return cast(None | TemplateAvailableViaType0, data)
 
         available_via = _parse_available_via(d.pop("availableVia"))
 
-        def _parse_modalities(data: object) -> None | list[ProviderTemplateModalitiesType0Item]:
+        def _parse_modalities(data: object) -> list[ProviderTemplateModalitiesType0Item] | None:
             if data is None:
                 return data
             try:
@@ -198,9 +208,9 @@ class ProviderTemplate:
                     modalities_type_0.append(modalities_type_0_item)
 
                 return modalities_type_0
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
-            return cast(None | list[ProviderTemplateModalitiesType0Item], data)
+            return cast(list[ProviderTemplateModalitiesType0Item] | None, data)
 
         modalities = _parse_modalities(d.pop("modalities"))
 

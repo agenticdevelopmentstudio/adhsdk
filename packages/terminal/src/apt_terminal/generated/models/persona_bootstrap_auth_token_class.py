@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class PersonaBootstrapAuthTokenClass(str, Enum):
+class PersonaBootstrapAuthTokenClass(StrEnum):
     PERSONA = "persona"
     VISITOR = "visitor"
 

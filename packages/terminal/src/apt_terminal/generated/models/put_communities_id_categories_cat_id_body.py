@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar
 
@@ -13,23 +15,22 @@ T = TypeVar("T", bound="PutCommunitiesIdCategoriesCatIdBody")
 class PutCommunitiesIdCategoriesCatIdBody:
     """
     Attributes:
-        slug (Union[Unset, str]):
-        name (Union[Unset, str]):
-        description (Union[Unset, str]):
-        color (Union[Unset, str]):
-        display_order (Union[Unset, int]):
-        is_public (Union[Unset, bool]):
-        is_archived (Union[Unset, bool]): true archives (the admin "delete") — hidden from every list, discussions
-            retained.
+        slug (str | Unset):
+        name (str | Unset):
+        description (str | Unset):
+        color (str | Unset):
+        display_order (int | Unset):
+        is_public (bool | Unset):
+        is_archived (bool | Unset): true archives (the admin "delete") — hidden from every list, discussions retained.
     """
 
-    slug: Unset | str = UNSET
-    name: Unset | str = UNSET
-    description: Unset | str = UNSET
-    color: Unset | str = UNSET
-    display_order: Unset | int = UNSET
-    is_public: Unset | bool = UNSET
-    is_archived: Unset | bool = UNSET
+    slug: str | Unset = UNSET
+    name: str | Unset = UNSET
+    description: str | Unset = UNSET
+    color: str | Unset = UNSET
+    display_order: int | Unset = UNSET
+    is_public: bool | Unset = UNSET
+    is_archived: bool | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar
 
@@ -14,10 +16,10 @@ class SendInviteChannel:
     """Send on this channel. `note` is added to the message body.
 
     Attributes:
-        note (Union[Unset, str]):
+        note (str | Unset):
     """
 
-    note: Unset | str = UNSET
+    note: str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:

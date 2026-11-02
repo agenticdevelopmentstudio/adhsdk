@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class GetShiprReposIdPlatformsResponse200PlatformsItemKind(str, Enum):
+class GetShiprReposIdPlatformsResponse200PlatformsItemKind(StrEnum):
     VERCEL = "vercel"
 
     def __str__(self) -> str:

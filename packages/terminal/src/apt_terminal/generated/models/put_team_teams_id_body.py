@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar
 
@@ -12,18 +14,18 @@ T = TypeVar("T", bound="PutTeamTeamsIdBody")
 class PutTeamTeamsIdBody:
     """
     Attributes:
-        owner_kind (Union[Unset, str]):
-        owner_id (Union[Unset, str]):
-        slug (Union[Unset, str]):
-        name (Union[Unset, str]):
-        description (Union[Unset, str]):
+        owner_kind (str | Unset):
+        owner_id (str | Unset):
+        slug (str | Unset):
+        name (str | Unset):
+        description (str | Unset):
     """
 
-    owner_kind: Unset | str = UNSET
-    owner_id: Unset | str = UNSET
-    slug: Unset | str = UNSET
-    name: Unset | str = UNSET
-    description: Unset | str = UNSET
+    owner_kind: str | Unset = UNSET
+    owner_id: str | Unset = UNSET
+    slug: str | Unset = UNSET
+    name: str | Unset = UNSET
+    description: str | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
         owner_kind = self.owner_kind

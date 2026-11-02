@@ -1,5 +1,6 @@
 from http import HTTPStatus
 from typing import Any
+from urllib.parse import quote
 
 import httpx
 
@@ -10,22 +11,25 @@ from ...models.gamification_realm_levels_update import GamificationRealmLevelsUp
 from ...models.put_gamification_realms_ecosystem_id_levels_body import (
     PutGamificationRealmsEcosystemIdLevelsBody,
 )
-from ...types import Response
+from ...types import UNSET, Response, Unset
 
 
 def _get_kwargs(
     ecosystem_id: str,
     *,
-    body: PutGamificationRealmsEcosystemIdLevelsBody,
+    body: PutGamificationRealmsEcosystemIdLevelsBody | Unset = UNSET,
 ) -> dict[str, Any]:
     headers: dict[str, Any] = {}
 
     _kwargs: dict[str, Any] = {
         "method": "put",
-        "url": f"/gamification/realms/{ecosystem_id}/levels",
+        "url": "/gamification/realms/{ecosystem_id}/levels".format(
+            ecosystem_id=quote(str(ecosystem_id), safe=""),
+        ),
     }
 
-    _kwargs["json"] = body.to_dict()
+    if not isinstance(body, Unset):
+        _kwargs["json"] = body.to_dict()
 
     headers["Content-Type"] = "application/json"
 
@@ -77,21 +81,21 @@ def sync_detailed(
     ecosystem_id: str,
     *,
     client: AuthenticatedClient,
-    body: PutGamificationRealmsEcosystemIdLevelsBody,
+    body: PutGamificationRealmsEcosystemIdLevelsBody | Unset = UNSET,
 ) -> Response[Error | GamificationRealmLevelsUpdate]:
     """Replace a realm’s level ladder (admin) — must start at 0 and be strictly increasing; POST /replay to
     backfill
 
     Args:
         ecosystem_id (str):
-        body (PutGamificationRealmsEcosystemIdLevelsBody):
+        body (PutGamificationRealmsEcosystemIdLevelsBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, GamificationRealmLevelsUpdate]]
+        Response[Error | GamificationRealmLevelsUpdate]
     """
 
     kwargs = _get_kwargs(
@@ -110,21 +114,21 @@ def sync(
     ecosystem_id: str,
     *,
     client: AuthenticatedClient,
-    body: PutGamificationRealmsEcosystemIdLevelsBody,
+    body: PutGamificationRealmsEcosystemIdLevelsBody | Unset = UNSET,
 ) -> Error | GamificationRealmLevelsUpdate | None:
     """Replace a realm’s level ladder (admin) — must start at 0 and be strictly increasing; POST /replay to
     backfill
 
     Args:
         ecosystem_id (str):
-        body (PutGamificationRealmsEcosystemIdLevelsBody):
+        body (PutGamificationRealmsEcosystemIdLevelsBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, GamificationRealmLevelsUpdate]
+        Error | GamificationRealmLevelsUpdate
     """
 
     return sync_detailed(
@@ -138,21 +142,21 @@ async def asyncio_detailed(
     ecosystem_id: str,
     *,
     client: AuthenticatedClient,
-    body: PutGamificationRealmsEcosystemIdLevelsBody,
+    body: PutGamificationRealmsEcosystemIdLevelsBody | Unset = UNSET,
 ) -> Response[Error | GamificationRealmLevelsUpdate]:
     """Replace a realm’s level ladder (admin) — must start at 0 and be strictly increasing; POST /replay to
     backfill
 
     Args:
         ecosystem_id (str):
-        body (PutGamificationRealmsEcosystemIdLevelsBody):
+        body (PutGamificationRealmsEcosystemIdLevelsBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, GamificationRealmLevelsUpdate]]
+        Response[Error | GamificationRealmLevelsUpdate]
     """
 
     kwargs = _get_kwargs(
@@ -169,21 +173,21 @@ async def asyncio(
     ecosystem_id: str,
     *,
     client: AuthenticatedClient,
-    body: PutGamificationRealmsEcosystemIdLevelsBody,
+    body: PutGamificationRealmsEcosystemIdLevelsBody | Unset = UNSET,
 ) -> Error | GamificationRealmLevelsUpdate | None:
     """Replace a realm’s level ladder (admin) — must start at 0 and be strictly increasing; POST /replay to
     backfill
 
     Args:
         ecosystem_id (str):
-        body (PutGamificationRealmsEcosystemIdLevelsBody):
+        body (PutGamificationRealmsEcosystemIdLevelsBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, GamificationRealmLevelsUpdate]
+        Error | GamificationRealmLevelsUpdate
     """
 
     return (

@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class WorkItemRelationDirection(str, Enum):
+class WorkItemRelationDirection(StrEnum):
     INCOMING = "incoming"
     OUTGOING = "outgoing"
 

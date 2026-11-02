@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class RegistryEntryStatus(str, Enum):
+class RegistryEntryStatus(StrEnum):
     DRAFT = "draft"
     PENDING = "pending"
     PUBLISHED = "published"

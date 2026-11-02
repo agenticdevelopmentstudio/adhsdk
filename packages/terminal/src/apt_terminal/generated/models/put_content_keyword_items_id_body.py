@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar
 
@@ -12,20 +14,20 @@ T = TypeVar("T", bound="PutContentKeywordItemsIdBody")
 class PutContentKeywordItemsIdBody:
     """
     Attributes:
-        ecosystem_id (Union[Unset, str]):
-        keyword_id (Union[Unset, str]):
-        target_kind (Union[Unset, str]):
-        target_id (Union[Unset, str]):
-        sort_order (Union[Unset, int]):
-        sync_txid (Union[Unset, int]):
+        ecosystem_id (str | Unset):
+        keyword_id (str | Unset):
+        target_kind (str | Unset):
+        target_id (str | Unset):
+        sort_order (int | Unset):
+        sync_txid (int | Unset):
     """
 
-    ecosystem_id: Unset | str = UNSET
-    keyword_id: Unset | str = UNSET
-    target_kind: Unset | str = UNSET
-    target_id: Unset | str = UNSET
-    sort_order: Unset | int = UNSET
-    sync_txid: Unset | int = UNSET
+    ecosystem_id: str | Unset = UNSET
+    keyword_id: str | Unset = UNSET
+    target_kind: str | Unset = UNSET
+    target_id: str | Unset = UNSET
+    sort_order: int | Unset = UNSET
+    sync_txid: int | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
         ecosystem_id = self.ecosystem_id

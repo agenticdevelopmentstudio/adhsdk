@@ -1,5 +1,6 @@
 from http import HTTPStatus
 from typing import Any, cast
+from urllib.parse import quote
 
 import httpx
 
@@ -14,7 +15,9 @@ def _get_kwargs(
 ) -> dict[str, Any]:
     _kwargs: dict[str, Any] = {
         "method": "delete",
-        "url": f"/game/artifacts/{id}",
+        "url": "/game/artifacts/{id}".format(
+            id=quote(str(id), safe=""),
+        ),
     }
 
     return _kwargs
@@ -59,10 +62,10 @@ def sync_detailed(
     *,
     client: AuthenticatedClient,
 ) -> Response[Any | Error]:
-    r"""Withdraw the caller’s own artifact (soft delete)
+    """Withdraw the caller’s own artifact (soft delete)
 
      The ownership term is inside the UPDATE itself rather than a preceding read, so there is no check-
-    then-write window. 404 covers both \"no such artifact\" and \"not yours\". Soft, not hard:
+    then-write window. 404 covers both "no such artifact" and "not yours". Soft, not hard:
     `game.holdings` references artifacts with `restrict`, so a withdrawn artifact keeps every holding
     row recoverable.
 
@@ -74,7 +77,7 @@ def sync_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Any, Error]]
+        Response[Any | Error]
     """
 
     kwargs = _get_kwargs(
@@ -93,10 +96,10 @@ def sync(
     *,
     client: AuthenticatedClient,
 ) -> Any | Error | None:
-    r"""Withdraw the caller’s own artifact (soft delete)
+    """Withdraw the caller’s own artifact (soft delete)
 
      The ownership term is inside the UPDATE itself rather than a preceding read, so there is no check-
-    then-write window. 404 covers both \"no such artifact\" and \"not yours\". Soft, not hard:
+    then-write window. 404 covers both "no such artifact" and "not yours". Soft, not hard:
     `game.holdings` references artifacts with `restrict`, so a withdrawn artifact keeps every holding
     row recoverable.
 
@@ -108,7 +111,7 @@ def sync(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Any, Error]
+        Any | Error
     """
 
     return sync_detailed(
@@ -122,10 +125,10 @@ async def asyncio_detailed(
     *,
     client: AuthenticatedClient,
 ) -> Response[Any | Error]:
-    r"""Withdraw the caller’s own artifact (soft delete)
+    """Withdraw the caller’s own artifact (soft delete)
 
      The ownership term is inside the UPDATE itself rather than a preceding read, so there is no check-
-    then-write window. 404 covers both \"no such artifact\" and \"not yours\". Soft, not hard:
+    then-write window. 404 covers both "no such artifact" and "not yours". Soft, not hard:
     `game.holdings` references artifacts with `restrict`, so a withdrawn artifact keeps every holding
     row recoverable.
 
@@ -137,7 +140,7 @@ async def asyncio_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Any, Error]]
+        Response[Any | Error]
     """
 
     kwargs = _get_kwargs(
@@ -154,10 +157,10 @@ async def asyncio(
     *,
     client: AuthenticatedClient,
 ) -> Any | Error | None:
-    r"""Withdraw the caller’s own artifact (soft delete)
+    """Withdraw the caller’s own artifact (soft delete)
 
      The ownership term is inside the UPDATE itself rather than a preceding read, so there is no check-
-    then-write window. 404 covers both \"no such artifact\" and \"not yours\". Soft, not hard:
+    then-write window. 404 covers both "no such artifact" and "not yours". Soft, not hard:
     `game.holdings` references artifacts with `restrict`, so a withdrawn artifact keeps every holding
     row recoverable.
 
@@ -169,7 +172,7 @@ async def asyncio(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Any, Error]
+        Any | Error
     """
 
     return (

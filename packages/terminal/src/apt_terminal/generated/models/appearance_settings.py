@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import TYPE_CHECKING, Any, TypeVar
 
@@ -18,7 +20,7 @@ class AppearanceSettings:
         prefs (AppearanceSettingsPrefs): Empty object when the user has never saved a preference (client defaults apply)
     """
 
-    prefs: "AppearanceSettingsPrefs"
+    prefs: AppearanceSettingsPrefs
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:

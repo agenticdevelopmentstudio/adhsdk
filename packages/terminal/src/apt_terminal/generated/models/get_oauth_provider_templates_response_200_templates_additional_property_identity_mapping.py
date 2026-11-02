@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -15,26 +17,26 @@ T = TypeVar(
 class GetOauthProviderTemplatesResponse200TemplatesAdditionalPropertyIdentityMapping:
     """
     Attributes:
-        subject_field (Union[Unset, str]):
-        email_field (Union[Unset, str]):
-        name_field (Union[Unset, str]):
-        avatar_field (Union[Unset, str]):
-        verification_url (Union[Unset, str]):
-        jwks_url (Union[Unset, str]):
-        require_email_verified (Union[Unset, bool]):
-        allowed_audiences (Union[Unset, list[str]]):
-        secondary_email_url (Union[Unset, str]):
+        subject_field (str | Unset):
+        email_field (str | Unset):
+        name_field (str | Unset):
+        avatar_field (str | Unset):
+        verification_url (str | Unset):
+        jwks_url (str | Unset):
+        require_email_verified (bool | Unset):
+        allowed_audiences (list[str] | Unset):
+        secondary_email_url (str | Unset):
     """
 
-    subject_field: Unset | str = UNSET
-    email_field: Unset | str = UNSET
-    name_field: Unset | str = UNSET
-    avatar_field: Unset | str = UNSET
-    verification_url: Unset | str = UNSET
-    jwks_url: Unset | str = UNSET
-    require_email_verified: Unset | bool = UNSET
-    allowed_audiences: Unset | list[str] = UNSET
-    secondary_email_url: Unset | str = UNSET
+    subject_field: str | Unset = UNSET
+    email_field: str | Unset = UNSET
+    name_field: str | Unset = UNSET
+    avatar_field: str | Unset = UNSET
+    verification_url: str | Unset = UNSET
+    jwks_url: str | Unset = UNSET
+    require_email_verified: bool | Unset = UNSET
+    allowed_audiences: list[str] | Unset = UNSET
+    secondary_email_url: str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -52,7 +54,7 @@ class GetOauthProviderTemplatesResponse200TemplatesAdditionalPropertyIdentityMap
 
         require_email_verified = self.require_email_verified
 
-        allowed_audiences: Unset | list[str] = UNSET
+        allowed_audiences: list[str] | Unset = UNSET
         if not isinstance(self.allowed_audiences, Unset):
             allowed_audiences = self.allowed_audiences
 

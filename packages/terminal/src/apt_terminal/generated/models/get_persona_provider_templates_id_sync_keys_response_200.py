@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, TypeVar, Union, cast
+from typing import TYPE_CHECKING, Any, TypeVar, cast
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -15,17 +17,16 @@ T = TypeVar("T", bound="GetPersonaProviderTemplatesIdSyncKeysResponse200")
 class GetPersonaProviderTemplatesIdSyncKeysResponse200:
     """
     Attributes:
-        sync_keys (Union['TemplateSyncKeysType0', None]): Operator-only upstream sync mapping — never present on public
-            reads.
+        sync_keys (None | TemplateSyncKeysType0): Operator-only upstream sync mapping — never present on public reads.
     """
 
-    sync_keys: Union["TemplateSyncKeysType0", None]
+    sync_keys: None | TemplateSyncKeysType0
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
         from ..models.template_sync_keys_type_0 import TemplateSyncKeysType0
 
-        sync_keys: None | dict[str, Any]
+        sync_keys: dict[str, Any] | None
         if isinstance(self.sync_keys, TemplateSyncKeysType0):
             sync_keys = self.sync_keys.to_dict()
         else:
@@ -47,7 +48,7 @@ class GetPersonaProviderTemplatesIdSyncKeysResponse200:
 
         d = dict(src_dict)
 
-        def _parse_sync_keys(data: object) -> Union["TemplateSyncKeysType0", None]:
+        def _parse_sync_keys(data: object) -> None | TemplateSyncKeysType0:
             if data is None:
                 return data
             try:
@@ -56,9 +57,9 @@ class GetPersonaProviderTemplatesIdSyncKeysResponse200:
                 componentsschemas_template_sync_keys_type_0 = TemplateSyncKeysType0.from_dict(data)
 
                 return componentsschemas_template_sync_keys_type_0
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
-            return cast(Union["TemplateSyncKeysType0", None], data)
+            return cast(None | TemplateSyncKeysType0, data)
 
         sync_keys = _parse_sync_keys(d.pop("syncKeys"))
 

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -17,16 +19,16 @@ class PostIntegrationIntegrationMediaItemsBody:
         source_provider (str):
         media_type (str):
         title (str):
-        ecosystem_id (Union[Unset, str]):
-        artist (Union[None, Unset, str]):
-        album (Union[None, Unset, str]):
-        image_url (Union[None, Unset, str]):
-        external_url (Union[None, Unset, str]):
-        duration_ms (Union[None, Unset, int]):
-        popularity (Union[None, Unset, int]):
-        is_saved (Union[Unset, bool]):
-        last_played_at (Union[None, Unset, str]):
-        sync_txid (Union[Unset, int]):
+        ecosystem_id (str | Unset):
+        artist (None | str | Unset):
+        album (None | str | Unset):
+        image_url (None | str | Unset):
+        external_url (None | str | Unset):
+        duration_ms (int | None | Unset):
+        popularity (int | None | Unset):
+        is_saved (bool | Unset):
+        last_played_at (None | str | Unset):
+        sync_txid (int | Unset):
     """
 
     connection_id: str
@@ -34,16 +36,16 @@ class PostIntegrationIntegrationMediaItemsBody:
     source_provider: str
     media_type: str
     title: str
-    ecosystem_id: Unset | str = UNSET
-    artist: None | Unset | str = UNSET
-    album: None | Unset | str = UNSET
-    image_url: None | Unset | str = UNSET
-    external_url: None | Unset | str = UNSET
-    duration_ms: None | Unset | int = UNSET
-    popularity: None | Unset | int = UNSET
-    is_saved: Unset | bool = UNSET
-    last_played_at: None | Unset | str = UNSET
-    sync_txid: Unset | int = UNSET
+    ecosystem_id: str | Unset = UNSET
+    artist: None | str | Unset = UNSET
+    album: None | str | Unset = UNSET
+    image_url: None | str | Unset = UNSET
+    external_url: None | str | Unset = UNSET
+    duration_ms: int | None | Unset = UNSET
+    popularity: int | None | Unset = UNSET
+    is_saved: bool | Unset = UNSET
+    last_played_at: None | str | Unset = UNSET
+    sync_txid: int | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
         connection_id = self.connection_id
@@ -58,37 +60,37 @@ class PostIntegrationIntegrationMediaItemsBody:
 
         ecosystem_id = self.ecosystem_id
 
-        artist: None | Unset | str
+        artist: None | str | Unset
         if isinstance(self.artist, Unset):
             artist = UNSET
         else:
             artist = self.artist
 
-        album: None | Unset | str
+        album: None | str | Unset
         if isinstance(self.album, Unset):
             album = UNSET
         else:
             album = self.album
 
-        image_url: None | Unset | str
+        image_url: None | str | Unset
         if isinstance(self.image_url, Unset):
             image_url = UNSET
         else:
             image_url = self.image_url
 
-        external_url: None | Unset | str
+        external_url: None | str | Unset
         if isinstance(self.external_url, Unset):
             external_url = UNSET
         else:
             external_url = self.external_url
 
-        duration_ms: None | Unset | int
+        duration_ms: int | None | Unset
         if isinstance(self.duration_ms, Unset):
             duration_ms = UNSET
         else:
             duration_ms = self.duration_ms
 
-        popularity: None | Unset | int
+        popularity: int | None | Unset
         if isinstance(self.popularity, Unset):
             popularity = UNSET
         else:
@@ -96,7 +98,7 @@ class PostIntegrationIntegrationMediaItemsBody:
 
         is_saved = self.is_saved
 
-        last_played_at: None | Unset | str
+        last_played_at: None | str | Unset
         if isinstance(self.last_played_at, Unset):
             last_played_at = UNSET
         else:
@@ -153,68 +155,68 @@ class PostIntegrationIntegrationMediaItemsBody:
 
         ecosystem_id = d.pop("ecosystemId", UNSET)
 
-        def _parse_artist(data: object) -> None | Unset | str:
+        def _parse_artist(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         artist = _parse_artist(d.pop("artist", UNSET))
 
-        def _parse_album(data: object) -> None | Unset | str:
+        def _parse_album(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         album = _parse_album(d.pop("album", UNSET))
 
-        def _parse_image_url(data: object) -> None | Unset | str:
+        def _parse_image_url(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         image_url = _parse_image_url(d.pop("imageUrl", UNSET))
 
-        def _parse_external_url(data: object) -> None | Unset | str:
+        def _parse_external_url(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         external_url = _parse_external_url(d.pop("externalUrl", UNSET))
 
-        def _parse_duration_ms(data: object) -> None | Unset | int:
+        def _parse_duration_ms(data: object) -> int | None | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | int, data)
+            return cast(int | None | Unset, data)
 
         duration_ms = _parse_duration_ms(d.pop("durationMs", UNSET))
 
-        def _parse_popularity(data: object) -> None | Unset | int:
+        def _parse_popularity(data: object) -> int | None | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | int, data)
+            return cast(int | None | Unset, data)
 
         popularity = _parse_popularity(d.pop("popularity", UNSET))
 
         is_saved = d.pop("isSaved", UNSET)
 
-        def _parse_last_played_at(data: object) -> None | Unset | str:
+        def _parse_last_played_at(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         last_played_at = _parse_last_played_at(d.pop("lastPlayedAt", UNSET))
 

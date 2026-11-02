@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -12,22 +14,22 @@ T = TypeVar("T", bound="PutPersonaSpecialInterestsIdBody")
 class PutPersonaSpecialInterestsIdBody:
     """
     Attributes:
-        persona_id (Union[Unset, str]):
-        slug (Union[Unset, str]):
-        general (Union[Unset, str]):
-        topical (Union[None, Unset, str]):
-        specific (Union[None, Unset, str]):
-        stances (Union[None, Unset, str]):
-        position (Union[Unset, int]):
+        persona_id (str | Unset):
+        slug (str | Unset):
+        general (str | Unset):
+        topical (None | str | Unset):
+        specific (None | str | Unset):
+        stances (None | str | Unset):
+        position (int | Unset):
     """
 
-    persona_id: Unset | str = UNSET
-    slug: Unset | str = UNSET
-    general: Unset | str = UNSET
-    topical: None | Unset | str = UNSET
-    specific: None | Unset | str = UNSET
-    stances: None | Unset | str = UNSET
-    position: Unset | int = UNSET
+    persona_id: str | Unset = UNSET
+    slug: str | Unset = UNSET
+    general: str | Unset = UNSET
+    topical: None | str | Unset = UNSET
+    specific: None | str | Unset = UNSET
+    stances: None | str | Unset = UNSET
+    position: int | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
         persona_id = self.persona_id
@@ -36,19 +38,19 @@ class PutPersonaSpecialInterestsIdBody:
 
         general = self.general
 
-        topical: None | Unset | str
+        topical: None | str | Unset
         if isinstance(self.topical, Unset):
             topical = UNSET
         else:
             topical = self.topical
 
-        specific: None | Unset | str
+        specific: None | str | Unset
         if isinstance(self.specific, Unset):
             specific = UNSET
         else:
             specific = self.specific
 
-        stances: None | Unset | str
+        stances: None | str | Unset
         if isinstance(self.stances, Unset):
             stances = UNSET
         else:
@@ -85,30 +87,30 @@ class PutPersonaSpecialInterestsIdBody:
 
         general = d.pop("general", UNSET)
 
-        def _parse_topical(data: object) -> None | Unset | str:
+        def _parse_topical(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         topical = _parse_topical(d.pop("topical", UNSET))
 
-        def _parse_specific(data: object) -> None | Unset | str:
+        def _parse_specific(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         specific = _parse_specific(d.pop("specific", UNSET))
 
-        def _parse_stances(data: object) -> None | Unset | str:
+        def _parse_stances(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         stances = _parse_stances(d.pop("stances", UNSET))
 

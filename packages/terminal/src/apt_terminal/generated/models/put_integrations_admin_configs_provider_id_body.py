@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, TypeVar, Union, cast
+from typing import TYPE_CHECKING, Any, TypeVar, cast
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -22,32 +24,32 @@ T = TypeVar("T", bound="PutIntegrationsAdminConfigsProviderIdBody")
 class PutIntegrationsAdminConfigsProviderIdBody:
     """
     Attributes:
-        client_id (Union[Unset, str]):
-        scopes (Union[Unset, list[str]]):
-        auth_url (Union[Unset, str]):
-        token_url (Union[Unset, str]):
-        userinfo_url (Union[Unset, str]):
-        validate_url (Union[Unset, str]):
-        credential_style (Union[Unset, PutIntegrationsAdminConfigsProviderIdBodyCredentialStyle]):
-        endpoints (Union[Unset, PutIntegrationsAdminConfigsProviderIdBodyEndpoints]):
-        client_secret (Union[Unset, str]): Blank/absent preserves the existing secret
+        client_id (str | Unset):
+        scopes (list[str] | Unset):
+        auth_url (str | Unset):
+        token_url (str | Unset):
+        userinfo_url (str | Unset):
+        validate_url (str | Unset):
+        credential_style (PutIntegrationsAdminConfigsProviderIdBodyCredentialStyle | Unset):
+        endpoints (PutIntegrationsAdminConfigsProviderIdBodyEndpoints | Unset):
+        client_secret (str | Unset): Blank/absent preserves the existing secret
     """
 
-    client_id: Unset | str = UNSET
-    scopes: Unset | list[str] = UNSET
-    auth_url: Unset | str = UNSET
-    token_url: Unset | str = UNSET
-    userinfo_url: Unset | str = UNSET
-    validate_url: Unset | str = UNSET
-    credential_style: Unset | PutIntegrationsAdminConfigsProviderIdBodyCredentialStyle = UNSET
-    endpoints: Union[Unset, "PutIntegrationsAdminConfigsProviderIdBodyEndpoints"] = UNSET
-    client_secret: Unset | str = UNSET
+    client_id: str | Unset = UNSET
+    scopes: list[str] | Unset = UNSET
+    auth_url: str | Unset = UNSET
+    token_url: str | Unset = UNSET
+    userinfo_url: str | Unset = UNSET
+    validate_url: str | Unset = UNSET
+    credential_style: PutIntegrationsAdminConfigsProviderIdBodyCredentialStyle | Unset = UNSET
+    endpoints: PutIntegrationsAdminConfigsProviderIdBodyEndpoints | Unset = UNSET
+    client_secret: str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
         client_id = self.client_id
 
-        scopes: Unset | list[str] = UNSET
+        scopes: list[str] | Unset = UNSET
         if not isinstance(self.scopes, Unset):
             scopes = self.scopes
 
@@ -59,11 +61,11 @@ class PutIntegrationsAdminConfigsProviderIdBody:
 
         validate_url = self.validate_url
 
-        credential_style: Unset | str = UNSET
+        credential_style: str | Unset = UNSET
         if not isinstance(self.credential_style, Unset):
             credential_style = self.credential_style.value
 
-        endpoints: Unset | dict[str, Any] = UNSET
+        endpoints: dict[str, Any] | Unset = UNSET
         if not isinstance(self.endpoints, Unset):
             endpoints = self.endpoints.to_dict()
 
@@ -113,7 +115,7 @@ class PutIntegrationsAdminConfigsProviderIdBody:
         validate_url = d.pop("validateUrl", UNSET)
 
         _credential_style = d.pop("credentialStyle", UNSET)
-        credential_style: Unset | PutIntegrationsAdminConfigsProviderIdBodyCredentialStyle
+        credential_style: PutIntegrationsAdminConfigsProviderIdBodyCredentialStyle | Unset
         if isinstance(_credential_style, Unset):
             credential_style = UNSET
         else:
@@ -122,7 +124,7 @@ class PutIntegrationsAdminConfigsProviderIdBody:
             )
 
         _endpoints = d.pop("endpoints", UNSET)
-        endpoints: Unset | PutIntegrationsAdminConfigsProviderIdBodyEndpoints
+        endpoints: PutIntegrationsAdminConfigsProviderIdBodyEndpoints | Unset
         if isinstance(_endpoints, Unset):
             endpoints = UNSET
         else:

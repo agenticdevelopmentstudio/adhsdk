@@ -8,12 +8,12 @@ from ...client import AuthenticatedClient, Client
 from ...models.error import Error
 from ...models.patch_auth_me_body import PatchAuthMeBody
 from ...models.user import User
-from ...types import Response
+from ...types import UNSET, Response, Unset
 
 
 def _get_kwargs(
     *,
-    body: PatchAuthMeBody,
+    body: PatchAuthMeBody | Unset = UNSET,
 ) -> dict[str, Any]:
     headers: dict[str, Any] = {}
 
@@ -22,7 +22,8 @@ def _get_kwargs(
         "url": "/auth/me",
     }
 
-    _kwargs["json"] = body.to_dict()
+    if not isinstance(body, Unset):
+        _kwargs["json"] = body.to_dict()
 
     headers["Content-Type"] = "application/json"
 
@@ -78,19 +79,19 @@ def _build_response(
 def sync_detailed(
     *,
     client: AuthenticatedClient,
-    body: PatchAuthMeBody,
+    body: PatchAuthMeBody | Unset = UNSET,
 ) -> Response[Error | User]:
     """Update the caller's own profile (name, slug, avatar, public-profile toggle)
 
     Args:
-        body (PatchAuthMeBody): At least one profile field is required.
+        body (PatchAuthMeBody | Unset): At least one profile field is required.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, User]]
+        Response[Error | User]
     """
 
     kwargs = _get_kwargs(
@@ -107,19 +108,19 @@ def sync_detailed(
 def sync(
     *,
     client: AuthenticatedClient,
-    body: PatchAuthMeBody,
+    body: PatchAuthMeBody | Unset = UNSET,
 ) -> Error | User | None:
     """Update the caller's own profile (name, slug, avatar, public-profile toggle)
 
     Args:
-        body (PatchAuthMeBody): At least one profile field is required.
+        body (PatchAuthMeBody | Unset): At least one profile field is required.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, User]
+        Error | User
     """
 
     return sync_detailed(
@@ -131,19 +132,19 @@ def sync(
 async def asyncio_detailed(
     *,
     client: AuthenticatedClient,
-    body: PatchAuthMeBody,
+    body: PatchAuthMeBody | Unset = UNSET,
 ) -> Response[Error | User]:
     """Update the caller's own profile (name, slug, avatar, public-profile toggle)
 
     Args:
-        body (PatchAuthMeBody): At least one profile field is required.
+        body (PatchAuthMeBody | Unset): At least one profile field is required.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, User]]
+        Response[Error | User]
     """
 
     kwargs = _get_kwargs(
@@ -158,19 +159,19 @@ async def asyncio_detailed(
 async def asyncio(
     *,
     client: AuthenticatedClient,
-    body: PatchAuthMeBody,
+    body: PatchAuthMeBody | Unset = UNSET,
 ) -> Error | User | None:
     """Update the caller's own profile (name, slug, avatar, public-profile toggle)
 
     Args:
-        body (PatchAuthMeBody): At least one profile field is required.
+        body (PatchAuthMeBody | Unset): At least one profile field is required.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, User]
+        Error | User
     """
 
     return (

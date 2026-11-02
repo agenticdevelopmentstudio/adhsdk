@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar
 
@@ -14,12 +16,12 @@ class PatchBucketAccessGroupsGroupIdBody:
     """At least one of name or description is required.
 
     Attributes:
-        name (Union[Unset, str]):
-        description (Union[Unset, str]):
+        name (str | Unset):
+        description (str | Unset):
     """
 
-    name: Unset | str = UNSET
-    description: Unset | str = UNSET
+    name: str | Unset = UNSET
+    description: str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:

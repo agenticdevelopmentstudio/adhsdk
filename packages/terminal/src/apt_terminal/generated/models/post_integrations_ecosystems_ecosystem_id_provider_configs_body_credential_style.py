@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class PostIntegrationsEcosystemsEcosystemIdProviderConfigsBodyCredentialStyle(str, Enum):
+class PostIntegrationsEcosystemsEcosystemIdProviderConfigsBodyCredentialStyle(StrEnum):
     BASIC_AUTH = "basic_auth"
     FORM_BODY = "form_body"
 

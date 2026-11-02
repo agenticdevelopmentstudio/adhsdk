@@ -31,7 +31,7 @@ def _get_kwargs(
 
 def _parse_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> Error | list["OrganizationListRow"] | None:
+) -> Error | list[OrganizationListRow] | None:
     if response.status_code == 200:
         response_200 = []
         _response_200 = response.json()
@@ -65,7 +65,7 @@ def _parse_response(
 
 def _build_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> Response[Error | list["OrganizationListRow"]]:
+) -> Response[Error | list[OrganizationListRow]]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -78,7 +78,7 @@ def sync_detailed(
     *,
     client: AuthenticatedClient,
     workspace: str,
-) -> Response[Error | list["OrganizationListRow"]]:
+) -> Response[Error | list[OrganizationListRow]]:
     """List the organizations a workspace owns (personal workspaces also include the ones you belong to)
 
      Scoped by `workspace`, which is REQUIRED — an unscoped organizations list is the same answer in
@@ -96,7 +96,7 @@ def sync_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, list['OrganizationListRow']]]
+        Response[Error | list[OrganizationListRow]]
     """
 
     kwargs = _get_kwargs(
@@ -114,7 +114,7 @@ def sync(
     *,
     client: AuthenticatedClient,
     workspace: str,
-) -> Error | list["OrganizationListRow"] | None:
+) -> Error | list[OrganizationListRow] | None:
     """List the organizations a workspace owns (personal workspaces also include the ones you belong to)
 
      Scoped by `workspace`, which is REQUIRED — an unscoped organizations list is the same answer in
@@ -132,7 +132,7 @@ def sync(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, list['OrganizationListRow']]
+        Error | list[OrganizationListRow]
     """
 
     return sync_detailed(
@@ -145,7 +145,7 @@ async def asyncio_detailed(
     *,
     client: AuthenticatedClient,
     workspace: str,
-) -> Response[Error | list["OrganizationListRow"]]:
+) -> Response[Error | list[OrganizationListRow]]:
     """List the organizations a workspace owns (personal workspaces also include the ones you belong to)
 
      Scoped by `workspace`, which is REQUIRED — an unscoped organizations list is the same answer in
@@ -163,7 +163,7 @@ async def asyncio_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, list['OrganizationListRow']]]
+        Response[Error | list[OrganizationListRow]]
     """
 
     kwargs = _get_kwargs(
@@ -179,7 +179,7 @@ async def asyncio(
     *,
     client: AuthenticatedClient,
     workspace: str,
-) -> Error | list["OrganizationListRow"] | None:
+) -> Error | list[OrganizationListRow] | None:
     """List the organizations a workspace owns (personal workspaces also include the ones you belong to)
 
      Scoped by `workspace`, which is REQUIRED — an unscoped organizations list is the same answer in
@@ -197,7 +197,7 @@ async def asyncio(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, list['OrganizationListRow']]
+        Error | list[OrganizationListRow]
     """
 
     return (

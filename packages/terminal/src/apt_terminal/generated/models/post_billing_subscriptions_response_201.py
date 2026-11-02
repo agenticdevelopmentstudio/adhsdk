@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -17,8 +19,8 @@ class PostBillingSubscriptionsResponse201:
         status (str):
         source (str):
         started_at (str):
-        expires_at (Union[None, str]):
-        assigned_by (Union[None, str]):
+        expires_at (None | str):
+        assigned_by (None | str):
         created_at (str):
         updated_at (str):
     """

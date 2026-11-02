@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import TYPE_CHECKING, Any, TypeVar, cast
 
@@ -20,15 +22,15 @@ class IntegrationGlobalConfig:
         provider_id (str):
         config (IntegrationGlobalConfigConfig): Non-secret config: clientId, scopes, URLs, endpoints, credentialStyle
         has_secret (bool): Whether a client secret is stored (the value is never returned)
-        updated_by (Union[None, Unset, str]):
-        updated_at (Union[None, Unset, str]):
+        updated_by (None | str | Unset):
+        updated_at (None | str | Unset):
     """
 
     provider_id: str
-    config: "IntegrationGlobalConfigConfig"
+    config: IntegrationGlobalConfigConfig
     has_secret: bool
-    updated_by: None | Unset | str = UNSET
-    updated_at: None | Unset | str = UNSET
+    updated_by: None | str | Unset = UNSET
+    updated_at: None | str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -38,13 +40,13 @@ class IntegrationGlobalConfig:
 
         has_secret = self.has_secret
 
-        updated_by: None | Unset | str
+        updated_by: None | str | Unset
         if isinstance(self.updated_by, Unset):
             updated_by = UNSET
         else:
             updated_by = self.updated_by
 
-        updated_at: None | Unset | str
+        updated_at: None | str | Unset
         if isinstance(self.updated_at, Unset):
             updated_at = UNSET
         else:
@@ -68,7 +70,9 @@ class IntegrationGlobalConfig:
 
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
-        from ..models.integration_global_config_config import IntegrationGlobalConfigConfig
+        from ..models.integration_global_config_config import (
+            IntegrationGlobalConfigConfig,
+        )
 
         d = dict(src_dict)
         provider_id = d.pop("providerId")
@@ -77,21 +81,21 @@ class IntegrationGlobalConfig:
 
         has_secret = d.pop("hasSecret")
 
-        def _parse_updated_by(data: object) -> None | Unset | str:
+        def _parse_updated_by(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         updated_by = _parse_updated_by(d.pop("updatedBy", UNSET))
 
-        def _parse_updated_at(data: object) -> None | Unset | str:
+        def _parse_updated_at(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         updated_at = _parse_updated_at(d.pop("updatedAt", UNSET))
 

@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class PostProjectProjectsIdWorkItemsIncludeUntriaged(str, Enum):
+class PostProjectProjectsIdWorkItemsIncludeUntriaged(StrEnum):
     TRUE = "true"
 
     def __str__(self) -> str:

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import TYPE_CHECKING, Any, TypeVar, cast
 
@@ -19,14 +21,14 @@ class PostShiprRegisterResponse201:
     """
     Attributes:
         dev_repo (ShiprDevRepo): The source repository a mirror is fed from.
-        mirrors (list['ShiprRepo']):
-        notes (Union[Unset, list[str]]): What the run would have journalled: a repository carrying no `.shipr`, a
-            malformed one, a slug another repository already spoke for. Present only when there is something to say.
+        mirrors (list[ShiprRepo]):
+        notes (list[str] | Unset): What the run would have journalled: a repository carrying no `.shipr`, a malformed
+            one, a slug another repository already spoke for. Present only when there is something to say.
     """
 
-    dev_repo: "ShiprDevRepo"
-    mirrors: list["ShiprRepo"]
-    notes: Unset | list[str] = UNSET
+    dev_repo: ShiprDevRepo
+    mirrors: list[ShiprRepo]
+    notes: list[str] | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -37,7 +39,7 @@ class PostShiprRegisterResponse201:
             mirrors_item = mirrors_item_data.to_dict()
             mirrors.append(mirrors_item)
 
-        notes: Unset | list[str] = UNSET
+        notes: list[str] | Unset = UNSET
         if not isinstance(self.notes, Unset):
             notes = self.notes
 

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -14,20 +16,19 @@ class PostContentMarkdownCategoriesBody:
     """
     Attributes:
         name (str): The category name (unique per owner).
-        parent_ids (Union[Unset, list[str]]): Ids of the categories this one sits under at creation — up to 8, or none.
-            Omit or send [] for an unfiled category. This cap bounds validation cost on the create call only; a category can
-            end up under any number of parents in total by adding further edges afterwards, via POST /content/category-
-            edges.
+        parent_ids (list[str] | Unset): Ids of the categories this one sits under at creation — up to 8, or none. Omit
+            or send [] for an unfiled category. This cap bounds validation cost on the create call only; a category can end
+            up under any number of parents in total by adding further edges afterwards, via POST /content/category-edges.
     """
 
     name: str
-    parent_ids: Unset | list[str] = UNSET
+    parent_ids: list[str] | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
         name = self.name
 
-        parent_ids: Unset | list[str] = UNSET
+        parent_ids: list[str] | Unset = UNSET
         if not isinstance(self.parent_ids, Unset):
             parent_ids = self.parent_ids
 

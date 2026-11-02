@@ -8,12 +8,12 @@ from ...client import AuthenticatedClient, Client
 from ...models.chat_conversation import ChatConversation
 from ...models.chat_conversation_create import ChatConversationCreate
 from ...models.error import Error
-from ...types import Response
+from ...types import UNSET, Response, Unset
 
 
 def _get_kwargs(
     *,
-    body: ChatConversationCreate,
+    body: ChatConversationCreate | Unset = UNSET,
 ) -> dict[str, Any]:
     headers: dict[str, Any] = {}
 
@@ -22,7 +22,8 @@ def _get_kwargs(
         "url": "/chat/conversations",
     }
 
-    _kwargs["json"] = body.to_dict()
+    if not isinstance(body, Unset):
+        _kwargs["json"] = body.to_dict()
 
     headers["Content-Type"] = "application/json"
 
@@ -68,19 +69,19 @@ def _build_response(
 def sync_detailed(
     *,
     client: AuthenticatedClient,
-    body: ChatConversationCreate,
+    body: ChatConversationCreate | Unset = UNSET,
 ) -> Response[ChatConversation | Error]:
     """Create a chat conversation
 
     Args:
-        body (ChatConversationCreate):
+        body (ChatConversationCreate | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[ChatConversation, Error]]
+        Response[ChatConversation | Error]
     """
 
     kwargs = _get_kwargs(
@@ -97,19 +98,19 @@ def sync_detailed(
 def sync(
     *,
     client: AuthenticatedClient,
-    body: ChatConversationCreate,
+    body: ChatConversationCreate | Unset = UNSET,
 ) -> ChatConversation | Error | None:
     """Create a chat conversation
 
     Args:
-        body (ChatConversationCreate):
+        body (ChatConversationCreate | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[ChatConversation, Error]
+        ChatConversation | Error
     """
 
     return sync_detailed(
@@ -121,19 +122,19 @@ def sync(
 async def asyncio_detailed(
     *,
     client: AuthenticatedClient,
-    body: ChatConversationCreate,
+    body: ChatConversationCreate | Unset = UNSET,
 ) -> Response[ChatConversation | Error]:
     """Create a chat conversation
 
     Args:
-        body (ChatConversationCreate):
+        body (ChatConversationCreate | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[ChatConversation, Error]]
+        Response[ChatConversation | Error]
     """
 
     kwargs = _get_kwargs(
@@ -148,19 +149,19 @@ async def asyncio_detailed(
 async def asyncio(
     *,
     client: AuthenticatedClient,
-    body: ChatConversationCreate,
+    body: ChatConversationCreate | Unset = UNSET,
 ) -> ChatConversation | Error | None:
     """Create a chat conversation
 
     Args:
-        body (ChatConversationCreate):
+        body (ChatConversationCreate | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[ChatConversation, Error]
+        ChatConversation | Error
     """
 
     return (

@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class PostAccountContactsBodyType(str, Enum):
+class PostAccountContactsBodyType(StrEnum):
     EMAIL = "email"
     PHONE = "phone"
 

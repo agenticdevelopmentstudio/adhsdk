@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, TypeVar, Union, cast
+from typing import TYPE_CHECKING, Any, TypeVar, cast
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -17,14 +19,14 @@ class DmChatSummary:
     Attributes:
         chat_id (str):
         other_user_id (str):
-        last_message (Union['DmMessagePreviewType0', None]): The chat's most recent message, trimmed to what a chat list
+        last_message (DmMessagePreviewType0 | None): The chat's most recent message, trimmed to what a chat list
             renders.
         unread_count (int):
     """
 
     chat_id: str
     other_user_id: str
-    last_message: Union["DmMessagePreviewType0", None]
+    last_message: DmMessagePreviewType0 | None
     unread_count: int
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
@@ -35,7 +37,7 @@ class DmChatSummary:
 
         other_user_id = self.other_user_id
 
-        last_message: None | dict[str, Any]
+        last_message: dict[str, Any] | None
         if isinstance(self.last_message, DmMessagePreviewType0):
             last_message = self.last_message.to_dict()
         else:
@@ -65,7 +67,7 @@ class DmChatSummary:
 
         other_user_id = d.pop("otherUserId")
 
-        def _parse_last_message(data: object) -> Union["DmMessagePreviewType0", None]:
+        def _parse_last_message(data: object) -> DmMessagePreviewType0 | None:
             if data is None:
                 return data
             try:
@@ -74,9 +76,9 @@ class DmChatSummary:
                 componentsschemas_dm_message_preview_type_0 = DmMessagePreviewType0.from_dict(data)
 
                 return componentsschemas_dm_message_preview_type_0
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
-            return cast(Union["DmMessagePreviewType0", None], data)
+            return cast(DmMessagePreviewType0 | None, data)
 
         last_message = _parse_last_message(d.pop("lastMessage"))
 

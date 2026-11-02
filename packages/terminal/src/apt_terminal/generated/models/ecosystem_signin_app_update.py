@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -15,20 +17,20 @@ class EcosystemSigninAppUpdate:
     are identity, not configuration.
 
         Attributes:
-            name (Union[Unset, str]):
-            allowed_return_origins (Union[Unset, list[str]]):
-            github_enabled (Union[Unset, bool]):
+            name (str | Unset):
+            allowed_return_origins (list[str] | Unset):
+            github_enabled (bool | Unset):
     """
 
-    name: Unset | str = UNSET
-    allowed_return_origins: Unset | list[str] = UNSET
-    github_enabled: Unset | bool = UNSET
+    name: str | Unset = UNSET
+    allowed_return_origins: list[str] | Unset = UNSET
+    github_enabled: bool | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
         name = self.name
 
-        allowed_return_origins: Unset | list[str] = UNSET
+        allowed_return_origins: list[str] | Unset = UNSET
         if not isinstance(self.allowed_return_origins, Unset):
             allowed_return_origins = self.allowed_return_origins
 

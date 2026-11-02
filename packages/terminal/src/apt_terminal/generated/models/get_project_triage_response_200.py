@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import TYPE_CHECKING, Any, TypeVar
 
@@ -15,12 +17,12 @@ T = TypeVar("T", bound="GetProjectTriageResponse200")
 class GetProjectTriageResponse200:
     """
     Attributes:
-        results (list['TriageHit']):
+        results (list[TriageHit]):
         limit (int):
         has_more (bool):
     """
 
-    results: list["TriageHit"]
+    results: list[TriageHit]
     limit: int
     has_more: bool
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)

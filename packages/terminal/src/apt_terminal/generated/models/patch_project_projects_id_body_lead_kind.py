@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class PatchProjectProjectsIdBodyLeadKind(str, Enum):
+class PatchProjectProjectsIdBodyLeadKind(StrEnum):
     CUSTOMER = "customer"
     PERSONA = "persona"
     TEAM = "team"

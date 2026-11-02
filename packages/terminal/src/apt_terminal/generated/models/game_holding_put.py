@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, TypeVar, Union
+from typing import TYPE_CHECKING, Any, TypeVar
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -19,18 +21,18 @@ class GameHoldingPut:
     Attributes:
         artifact_id (str):
         kind (str):
-        game_id (Union[Unset, str]):
-        slug (Union[Unset, str]):
-        quantity (Union[Unset, int]):
-        data (Union[Unset, GameHoldingPutData]):
+        game_id (str | Unset):
+        slug (str | Unset):
+        quantity (int | Unset):
+        data (GameHoldingPutData | Unset):
     """
 
     artifact_id: str
     kind: str
-    game_id: Unset | str = UNSET
-    slug: Unset | str = UNSET
-    quantity: Unset | int = UNSET
-    data: Union[Unset, "GameHoldingPutData"] = UNSET
+    game_id: str | Unset = UNSET
+    slug: str | Unset = UNSET
+    quantity: int | Unset = UNSET
+    data: GameHoldingPutData | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -44,7 +46,7 @@ class GameHoldingPut:
 
         quantity = self.quantity
 
-        data: Unset | dict[str, Any] = UNSET
+        data: dict[str, Any] | Unset = UNSET
         if not isinstance(self.data, Unset):
             data = self.data.to_dict()
 
@@ -83,7 +85,7 @@ class GameHoldingPut:
         quantity = d.pop("quantity", UNSET)
 
         _data = d.pop("data", UNSET)
-        data: Unset | GameHoldingPutData
+        data: GameHoldingPutData | Unset
         if isinstance(_data, Unset):
             data = UNSET
         else:

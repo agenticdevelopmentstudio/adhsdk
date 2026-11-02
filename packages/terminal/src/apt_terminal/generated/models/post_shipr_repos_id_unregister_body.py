@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, TypeVar, Union
+from typing import TYPE_CHECKING, Any, TypeVar
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -22,25 +24,25 @@ T = TypeVar("T", bound="PostShiprReposIdUnregisterBody")
 class PostShiprReposIdUnregisterBody:
     """
     Attributes:
-        environments (Union[Unset, list[PostShiprReposIdUnregisterBodyEnvironmentsItem]]): Which environments a deploy
-            walks, in pipeline order. Ignored by every other operation; required (non-empty) by deploy.
-        options (Union[Unset, PostShiprReposIdUnregisterBodyOptions]): Per-operation arguments. Read defensively;
-            unknown keys are ignored.
+        environments (list[PostShiprReposIdUnregisterBodyEnvironmentsItem] | Unset): Which environments a deploy walks,
+            in pipeline order. Ignored by every other operation; required (non-empty) by deploy.
+        options (PostShiprReposIdUnregisterBodyOptions | Unset): Per-operation arguments. Read defensively; unknown keys
+            are ignored.
     """
 
-    environments: Unset | list[PostShiprReposIdUnregisterBodyEnvironmentsItem] = UNSET
-    options: Union[Unset, "PostShiprReposIdUnregisterBodyOptions"] = UNSET
+    environments: list[PostShiprReposIdUnregisterBodyEnvironmentsItem] | Unset = UNSET
+    options: PostShiprReposIdUnregisterBodyOptions | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
-        environments: Unset | list[str] = UNSET
+        environments: list[str] | Unset = UNSET
         if not isinstance(self.environments, Unset):
             environments = []
             for environments_item_data in self.environments:
                 environments_item = environments_item_data.value
                 environments.append(environments_item)
 
-        options: Unset | dict[str, Any] = UNSET
+        options: dict[str, Any] | Unset = UNSET
         if not isinstance(self.options, Unset):
             options = self.options.to_dict()
 
@@ -61,17 +63,19 @@ class PostShiprReposIdUnregisterBody:
         )
 
         d = dict(src_dict)
-        environments = []
         _environments = d.pop("environments", UNSET)
-        for environments_item_data in _environments or []:
-            environments_item = PostShiprReposIdUnregisterBodyEnvironmentsItem(
-                environments_item_data
-            )
+        environments: list[PostShiprReposIdUnregisterBodyEnvironmentsItem] | Unset = UNSET
+        if _environments is not UNSET:
+            environments = []
+            for environments_item_data in _environments:
+                environments_item = PostShiprReposIdUnregisterBodyEnvironmentsItem(
+                    environments_item_data
+                )
 
-            environments.append(environments_item)
+                environments.append(environments_item)
 
         _options = d.pop("options", UNSET)
-        options: Unset | PostShiprReposIdUnregisterBodyOptions
+        options: PostShiprReposIdUnregisterBodyOptions | Unset
         if isinstance(_options, Unset):
             options = UNSET
         else:

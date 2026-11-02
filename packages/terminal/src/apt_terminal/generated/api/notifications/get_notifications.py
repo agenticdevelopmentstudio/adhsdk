@@ -13,11 +13,11 @@ from ...types import UNSET, Response, Unset
 
 def _get_kwargs(
     *,
-    page: Unset | str = UNSET,
-    page_size: Unset | str = UNSET,
-    category: Unset | list[str] = UNSET,
-    status: Unset | GetNotificationsStatus = GetNotificationsStatus.INBOX,
-    read: Unset | bool = UNSET,
+    page: str | Unset = UNSET,
+    page_size: str | Unset = UNSET,
+    category: list[str] | Unset = UNSET,
+    status: GetNotificationsStatus | Unset = GetNotificationsStatus.INBOX,
+    read: bool | Unset = UNSET,
 ) -> dict[str, Any]:
     params: dict[str, Any] = {}
 
@@ -25,13 +25,13 @@ def _get_kwargs(
 
     params["pageSize"] = page_size
 
-    json_category: Unset | list[str] = UNSET
+    json_category: list[str] | Unset = UNSET
     if not isinstance(category, Unset):
         json_category = category
 
     params["category"] = json_category
 
-    json_status: Unset | str = UNSET
+    json_status: str | Unset = UNSET
     if not isinstance(status, Unset):
         json_status = status.value
 
@@ -83,27 +83,27 @@ def _build_response(
 def sync_detailed(
     *,
     client: AuthenticatedClient,
-    page: Unset | str = UNSET,
-    page_size: Unset | str = UNSET,
-    category: Unset | list[str] = UNSET,
-    status: Unset | GetNotificationsStatus = GetNotificationsStatus.INBOX,
-    read: Unset | bool = UNSET,
+    page: str | Unset = UNSET,
+    page_size: str | Unset = UNSET,
+    category: list[str] | Unset = UNSET,
+    status: GetNotificationsStatus | Unset = GetNotificationsStatus.INBOX,
+    read: bool | Unset = UNSET,
 ) -> Response[Error | GetNotificationsResponse200]:
     """List the caller's in-app notifications (paginated, filterable)
 
     Args:
-        page (Union[Unset, str]):
-        page_size (Union[Unset, str]):
-        category (Union[Unset, list[str]]):
-        status (Union[Unset, GetNotificationsStatus]):  Default: GetNotificationsStatus.INBOX.
-        read (Union[Unset, bool]):
+        page (str | Unset):
+        page_size (str | Unset):
+        category (list[str] | Unset):
+        status (GetNotificationsStatus | Unset):  Default: GetNotificationsStatus.INBOX.
+        read (bool | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, GetNotificationsResponse200]]
+        Response[Error | GetNotificationsResponse200]
     """
 
     kwargs = _get_kwargs(
@@ -124,27 +124,27 @@ def sync_detailed(
 def sync(
     *,
     client: AuthenticatedClient,
-    page: Unset | str = UNSET,
-    page_size: Unset | str = UNSET,
-    category: Unset | list[str] = UNSET,
-    status: Unset | GetNotificationsStatus = GetNotificationsStatus.INBOX,
-    read: Unset | bool = UNSET,
+    page: str | Unset = UNSET,
+    page_size: str | Unset = UNSET,
+    category: list[str] | Unset = UNSET,
+    status: GetNotificationsStatus | Unset = GetNotificationsStatus.INBOX,
+    read: bool | Unset = UNSET,
 ) -> Error | GetNotificationsResponse200 | None:
     """List the caller's in-app notifications (paginated, filterable)
 
     Args:
-        page (Union[Unset, str]):
-        page_size (Union[Unset, str]):
-        category (Union[Unset, list[str]]):
-        status (Union[Unset, GetNotificationsStatus]):  Default: GetNotificationsStatus.INBOX.
-        read (Union[Unset, bool]):
+        page (str | Unset):
+        page_size (str | Unset):
+        category (list[str] | Unset):
+        status (GetNotificationsStatus | Unset):  Default: GetNotificationsStatus.INBOX.
+        read (bool | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, GetNotificationsResponse200]
+        Error | GetNotificationsResponse200
     """
 
     return sync_detailed(
@@ -160,27 +160,27 @@ def sync(
 async def asyncio_detailed(
     *,
     client: AuthenticatedClient,
-    page: Unset | str = UNSET,
-    page_size: Unset | str = UNSET,
-    category: Unset | list[str] = UNSET,
-    status: Unset | GetNotificationsStatus = GetNotificationsStatus.INBOX,
-    read: Unset | bool = UNSET,
+    page: str | Unset = UNSET,
+    page_size: str | Unset = UNSET,
+    category: list[str] | Unset = UNSET,
+    status: GetNotificationsStatus | Unset = GetNotificationsStatus.INBOX,
+    read: bool | Unset = UNSET,
 ) -> Response[Error | GetNotificationsResponse200]:
     """List the caller's in-app notifications (paginated, filterable)
 
     Args:
-        page (Union[Unset, str]):
-        page_size (Union[Unset, str]):
-        category (Union[Unset, list[str]]):
-        status (Union[Unset, GetNotificationsStatus]):  Default: GetNotificationsStatus.INBOX.
-        read (Union[Unset, bool]):
+        page (str | Unset):
+        page_size (str | Unset):
+        category (list[str] | Unset):
+        status (GetNotificationsStatus | Unset):  Default: GetNotificationsStatus.INBOX.
+        read (bool | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, GetNotificationsResponse200]]
+        Response[Error | GetNotificationsResponse200]
     """
 
     kwargs = _get_kwargs(
@@ -199,27 +199,27 @@ async def asyncio_detailed(
 async def asyncio(
     *,
     client: AuthenticatedClient,
-    page: Unset | str = UNSET,
-    page_size: Unset | str = UNSET,
-    category: Unset | list[str] = UNSET,
-    status: Unset | GetNotificationsStatus = GetNotificationsStatus.INBOX,
-    read: Unset | bool = UNSET,
+    page: str | Unset = UNSET,
+    page_size: str | Unset = UNSET,
+    category: list[str] | Unset = UNSET,
+    status: GetNotificationsStatus | Unset = GetNotificationsStatus.INBOX,
+    read: bool | Unset = UNSET,
 ) -> Error | GetNotificationsResponse200 | None:
     """List the caller's in-app notifications (paginated, filterable)
 
     Args:
-        page (Union[Unset, str]):
-        page_size (Union[Unset, str]):
-        category (Union[Unset, list[str]]):
-        status (Union[Unset, GetNotificationsStatus]):  Default: GetNotificationsStatus.INBOX.
-        read (Union[Unset, bool]):
+        page (str | Unset):
+        page_size (str | Unset):
+        category (list[str] | Unset):
+        status (GetNotificationsStatus | Unset):  Default: GetNotificationsStatus.INBOX.
+        read (bool | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, GetNotificationsResponse200]
+        Error | GetNotificationsResponse200
     """
 
     return (

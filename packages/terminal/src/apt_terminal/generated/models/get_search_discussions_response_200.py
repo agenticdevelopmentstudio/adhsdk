@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import TYPE_CHECKING, Any, TypeVar
 
@@ -16,16 +18,16 @@ T = TypeVar("T", bound="GetSearchDiscussionsResponse200")
 class GetSearchDiscussionsResponse200:
     """
     Attributes:
-        topics (list['SearchDiscussionTopicResult']):
-        posts (list['SearchDiscussionPostResult']):
+        topics (list[SearchDiscussionTopicResult]):
+        posts (list[SearchDiscussionPostResult]):
         page (int):
         page_size (int):
         topics_has_more (bool):
         posts_has_more (bool):
     """
 
-    topics: list["SearchDiscussionTopicResult"]
-    posts: list["SearchDiscussionPostResult"]
+    topics: list[SearchDiscussionTopicResult]
+    posts: list[SearchDiscussionPostResult]
     page: int
     page_size: int
     topics_has_more: bool
@@ -68,8 +70,12 @@ class GetSearchDiscussionsResponse200:
 
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
-        from ..models.search_discussion_post_result import SearchDiscussionPostResult
-        from ..models.search_discussion_topic_result import SearchDiscussionTopicResult
+        from ..models.search_discussion_post_result import (
+            SearchDiscussionPostResult,
+        )
+        from ..models.search_discussion_topic_result import (
+            SearchDiscussionTopicResult,
+        )
 
         d = dict(src_dict)
         topics = []

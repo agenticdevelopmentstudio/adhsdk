@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -14,8 +16,8 @@ class TargetDescriptor:
         kind (str): the target's registry, e.g. 'content.markdown'
         id (str): the opaque target id
         title (str): the row's display title; never empty
-        subtitle (Union[None, str]): one supporting line, or null
-        url (Union[None, str]): set only when the target is a link OUT of the platform (a saved URL)
+        subtitle (None | str): one supporting line, or null
+        url (None | str): set only when the target is a link OUT of the platform (a saved URL)
     """
 
     kind: str

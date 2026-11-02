@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar
 
@@ -17,14 +19,14 @@ class IntegrationProviderConfigFieldsItem:
         label (str):
         secret (bool):
         required (bool):
-        placeholder (Union[Unset, str]):
+        placeholder (str | Unset):
     """
 
     key: str
     label: str
     secret: bool
     required: bool
-    placeholder: Unset | str = UNSET
+    placeholder: str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:

@@ -12,9 +12,9 @@ from ...types import UNSET, Response, Unset
 
 def _get_kwargs(
     *,
-    game_id: Unset | str = UNSET,
-    slug: Unset | str = UNSET,
-    depth: Unset | str = UNSET,
+    game_id: str | Unset = UNSET,
+    slug: str | Unset = UNSET,
+    depth: str | Unset = UNSET,
 ) -> dict[str, Any]:
     params: dict[str, Any] = {}
 
@@ -83,9 +83,9 @@ def _build_response(
 def sync_detailed(
     *,
     client: AuthenticatedClient,
-    game_id: Unset | str = UNSET,
-    slug: Unset | str = UNSET,
-    depth: Unset | str = UNSET,
+    game_id: str | Unset = UNSET,
+    slug: str | Unset = UNSET,
+    depth: str | Unset = UNSET,
 ) -> Response[Error | GetGameInstancesResponse200]:
     """The caller’s own instances, including what is inside what they hold
 
@@ -100,16 +100,16 @@ def sync_detailed(
     resolved profile. A caller who has never played gets an empty list, not a 404.
 
     Args:
-        game_id (Union[Unset, str]):
-        slug (Union[Unset, str]):
-        depth (Union[Unset, str]):
+        game_id (str | Unset):
+        slug (str | Unset):
+        depth (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, GetGameInstancesResponse200]]
+        Response[Error | GetGameInstancesResponse200]
     """
 
     kwargs = _get_kwargs(
@@ -128,9 +128,9 @@ def sync_detailed(
 def sync(
     *,
     client: AuthenticatedClient,
-    game_id: Unset | str = UNSET,
-    slug: Unset | str = UNSET,
-    depth: Unset | str = UNSET,
+    game_id: str | Unset = UNSET,
+    slug: str | Unset = UNSET,
+    depth: str | Unset = UNSET,
 ) -> Error | GetGameInstancesResponse200 | None:
     """The caller’s own instances, including what is inside what they hold
 
@@ -145,16 +145,16 @@ def sync(
     resolved profile. A caller who has never played gets an empty list, not a 404.
 
     Args:
-        game_id (Union[Unset, str]):
-        slug (Union[Unset, str]):
-        depth (Union[Unset, str]):
+        game_id (str | Unset):
+        slug (str | Unset):
+        depth (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, GetGameInstancesResponse200]
+        Error | GetGameInstancesResponse200
     """
 
     return sync_detailed(
@@ -168,9 +168,9 @@ def sync(
 async def asyncio_detailed(
     *,
     client: AuthenticatedClient,
-    game_id: Unset | str = UNSET,
-    slug: Unset | str = UNSET,
-    depth: Unset | str = UNSET,
+    game_id: str | Unset = UNSET,
+    slug: str | Unset = UNSET,
+    depth: str | Unset = UNSET,
 ) -> Response[Error | GetGameInstancesResponse200]:
     """The caller’s own instances, including what is inside what they hold
 
@@ -185,16 +185,16 @@ async def asyncio_detailed(
     resolved profile. A caller who has never played gets an empty list, not a 404.
 
     Args:
-        game_id (Union[Unset, str]):
-        slug (Union[Unset, str]):
-        depth (Union[Unset, str]):
+        game_id (str | Unset):
+        slug (str | Unset):
+        depth (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, GetGameInstancesResponse200]]
+        Response[Error | GetGameInstancesResponse200]
     """
 
     kwargs = _get_kwargs(
@@ -211,9 +211,9 @@ async def asyncio_detailed(
 async def asyncio(
     *,
     client: AuthenticatedClient,
-    game_id: Unset | str = UNSET,
-    slug: Unset | str = UNSET,
-    depth: Unset | str = UNSET,
+    game_id: str | Unset = UNSET,
+    slug: str | Unset = UNSET,
+    depth: str | Unset = UNSET,
 ) -> Error | GetGameInstancesResponse200 | None:
     """The caller’s own instances, including what is inside what they hold
 
@@ -228,16 +228,16 @@ async def asyncio(
     resolved profile. A caller who has never played gets an empty list, not a 404.
 
     Args:
-        game_id (Union[Unset, str]):
-        slug (Union[Unset, str]):
-        depth (Union[Unset, str]):
+        game_id (str | Unset):
+        slug (str | Unset):
+        depth (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, GetGameInstancesResponse200]
+        Error | GetGameInstancesResponse200
     """
 
     return (

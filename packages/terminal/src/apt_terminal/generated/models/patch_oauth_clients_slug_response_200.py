@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -18,8 +20,8 @@ class PatchOauthClientsSlugResponse200:
         name (str):
         allowed_return_origins (list[str]):
         is_internal (bool):
-        default_ecosystem_id (Union[None, Unset, str]):
-        app_token_prefix (Union[None, Unset, str]):
+        default_ecosystem_id (None | str | Unset):
+        app_token_prefix (None | str | Unset):
     """
 
     id: str
@@ -27,8 +29,8 @@ class PatchOauthClientsSlugResponse200:
     name: str
     allowed_return_origins: list[str]
     is_internal: bool
-    default_ecosystem_id: None | Unset | str = UNSET
-    app_token_prefix: None | Unset | str = UNSET
+    default_ecosystem_id: None | str | Unset = UNSET
+    app_token_prefix: None | str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -42,13 +44,13 @@ class PatchOauthClientsSlugResponse200:
 
         is_internal = self.is_internal
 
-        default_ecosystem_id: None | Unset | str
+        default_ecosystem_id: None | str | Unset
         if isinstance(self.default_ecosystem_id, Unset):
             default_ecosystem_id = UNSET
         else:
             default_ecosystem_id = self.default_ecosystem_id
 
-        app_token_prefix: None | Unset | str
+        app_token_prefix: None | str | Unset
         if isinstance(self.app_token_prefix, Unset):
             app_token_prefix = UNSET
         else:
@@ -85,21 +87,21 @@ class PatchOauthClientsSlugResponse200:
 
         is_internal = d.pop("isInternal")
 
-        def _parse_default_ecosystem_id(data: object) -> None | Unset | str:
+        def _parse_default_ecosystem_id(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         default_ecosystem_id = _parse_default_ecosystem_id(d.pop("defaultEcosystemId", UNSET))
 
-        def _parse_app_token_prefix(data: object) -> None | Unset | str:
+        def _parse_app_token_prefix(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         app_token_prefix = _parse_app_token_prefix(d.pop("appTokenPrefix", UNSET))
 

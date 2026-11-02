@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -18,7 +20,7 @@ class SearchDiscussionTopicResult:
         reply_count (int):
         last_activity_at (str):
         created_at (str):
-        category_id (Union[None, Unset, str]):
+        category_id (None | str | Unset):
     """
 
     id: str
@@ -26,7 +28,7 @@ class SearchDiscussionTopicResult:
     reply_count: int
     last_activity_at: str
     created_at: str
-    category_id: None | Unset | str = UNSET
+    category_id: None | str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -40,7 +42,7 @@ class SearchDiscussionTopicResult:
 
         created_at = self.created_at
 
-        category_id: None | Unset | str
+        category_id: None | str | Unset
         if isinstance(self.category_id, Unset):
             category_id = UNSET
         else:
@@ -75,12 +77,12 @@ class SearchDiscussionTopicResult:
 
         created_at = d.pop("createdAt")
 
-        def _parse_category_id(data: object) -> None | Unset | str:
+        def _parse_category_id(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         category_id = _parse_category_id(d.pop("categoryId", UNSET))
 

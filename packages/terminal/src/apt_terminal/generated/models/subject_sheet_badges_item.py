@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -16,9 +18,9 @@ class SubjectSheetBadgesItem:
         description (str):
         icon (str):
         tier (str):
-        badge_line (Union[None, str]):
+        badge_line (None | str):
         awarded_at (str):
-        rarity_pct (Union[None, float]):
+        rarity_pct (float | None):
     """
 
     badge_id: str
@@ -28,7 +30,7 @@ class SubjectSheetBadgesItem:
     tier: str
     badge_line: None | str
     awarded_at: str
-    rarity_pct: None | float
+    rarity_pct: float | None
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -47,7 +49,7 @@ class SubjectSheetBadgesItem:
 
         awarded_at = self.awarded_at
 
-        rarity_pct: None | float
+        rarity_pct: float | None
         rarity_pct = self.rarity_pct
 
         field_dict: dict[str, Any] = {}
@@ -89,10 +91,10 @@ class SubjectSheetBadgesItem:
 
         awarded_at = d.pop("awardedAt")
 
-        def _parse_rarity_pct(data: object) -> None | float:
+        def _parse_rarity_pct(data: object) -> float | None:
             if data is None:
                 return data
-            return cast(None | float, data)
+            return cast(float | None, data)
 
         rarity_pct = _parse_rarity_pct(d.pop("rarityPct"))
 

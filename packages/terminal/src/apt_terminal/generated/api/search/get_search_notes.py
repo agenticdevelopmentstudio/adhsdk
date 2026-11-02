@@ -79,7 +79,7 @@ def sync_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, GetSearchNotesResponse200]]
+        Response[Error | GetSearchNotesResponse200]
     """
 
     kwargs = _get_kwargs(
@@ -108,7 +108,7 @@ def sync(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, GetSearchNotesResponse200]
+        Error | GetSearchNotesResponse200
     """
 
     return sync_detailed(
@@ -132,7 +132,7 @@ async def asyncio_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, GetSearchNotesResponse200]]
+        Response[Error | GetSearchNotesResponse200]
     """
 
     kwargs = _get_kwargs(
@@ -159,7 +159,7 @@ async def asyncio(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, GetSearchNotesResponse200]
+        Error | GetSearchNotesResponse200
     """
 
     return (

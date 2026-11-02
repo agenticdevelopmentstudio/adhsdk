@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 from uuid import UUID
@@ -15,8 +17,8 @@ class PersonaBootstrapPersona:
         id (UUID):
         slug (str):
         name (str):
-        description (Union[None, str]):
-        avatar_url (Union[None, str]):
+        description (None | str):
+        avatar_url (None | str):
     """
 
     id: UUID

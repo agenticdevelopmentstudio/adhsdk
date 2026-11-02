@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class UsageSummaryRowKind(str, Enum):
+class UsageSummaryRowKind(StrEnum):
     APPLICATION = "application"
     ECOSYSTEM = "ecosystem"
     MEMBER = "member"

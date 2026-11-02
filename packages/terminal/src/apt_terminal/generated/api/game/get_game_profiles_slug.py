@@ -1,5 +1,6 @@
 from http import HTTPStatus
 from typing import Any
+from urllib.parse import quote
 
 import httpx
 
@@ -13,9 +14,9 @@ from ...types import UNSET, Response, Unset
 def _get_kwargs(
     slug_path: str,
     *,
-    game_id: Unset | str = UNSET,
-    slug_query: Unset | str = UNSET,
-    ecosystem: Unset | str = UNSET,
+    game_id: str | Unset = UNSET,
+    slug_query: str | Unset = UNSET,
+    ecosystem: str | Unset = UNSET,
 ) -> dict[str, Any]:
     params: dict[str, Any] = {}
 
@@ -29,7 +30,9 @@ def _get_kwargs(
 
     _kwargs: dict[str, Any] = {
         "method": "get",
-        "url": f"/game/profiles/{slug_path}",
+        "url": "/game/profiles/{slug_path}".format(
+            slug_path=quote(str(slug_path), safe=""),
+        ),
         "params": params,
     }
 
@@ -80,9 +83,9 @@ def sync_detailed(
     slug_path: str,
     *,
     client: AuthenticatedClient | Client,
-    game_id: Unset | str = UNSET,
-    slug_query: Unset | str = UNSET,
-    ecosystem: Unset | str = UNSET,
+    game_id: str | Unset = UNSET,
+    slug_query: str | Unset = UNSET,
+    ecosystem: str | Unset = UNSET,
 ) -> Response[Error | GamePublicProfile]:
     """A player’s public per-game profile, by account slug (anonymous)
 
@@ -99,16 +102,16 @@ def sync_detailed(
 
     Args:
         slug_path (str):
-        game_id (Union[Unset, str]):
-        slug_query (Union[Unset, str]):
-        ecosystem (Union[Unset, str]):
+        game_id (str | Unset):
+        slug_query (str | Unset):
+        ecosystem (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, GamePublicProfile]]
+        Response[Error | GamePublicProfile]
     """
 
     kwargs = _get_kwargs(
@@ -129,9 +132,9 @@ def sync(
     slug_path: str,
     *,
     client: AuthenticatedClient | Client,
-    game_id: Unset | str = UNSET,
-    slug_query: Unset | str = UNSET,
-    ecosystem: Unset | str = UNSET,
+    game_id: str | Unset = UNSET,
+    slug_query: str | Unset = UNSET,
+    ecosystem: str | Unset = UNSET,
 ) -> Error | GamePublicProfile | None:
     """A player’s public per-game profile, by account slug (anonymous)
 
@@ -148,16 +151,16 @@ def sync(
 
     Args:
         slug_path (str):
-        game_id (Union[Unset, str]):
-        slug_query (Union[Unset, str]):
-        ecosystem (Union[Unset, str]):
+        game_id (str | Unset):
+        slug_query (str | Unset):
+        ecosystem (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, GamePublicProfile]
+        Error | GamePublicProfile
     """
 
     return sync_detailed(
@@ -173,9 +176,9 @@ async def asyncio_detailed(
     slug_path: str,
     *,
     client: AuthenticatedClient | Client,
-    game_id: Unset | str = UNSET,
-    slug_query: Unset | str = UNSET,
-    ecosystem: Unset | str = UNSET,
+    game_id: str | Unset = UNSET,
+    slug_query: str | Unset = UNSET,
+    ecosystem: str | Unset = UNSET,
 ) -> Response[Error | GamePublicProfile]:
     """A player’s public per-game profile, by account slug (anonymous)
 
@@ -192,16 +195,16 @@ async def asyncio_detailed(
 
     Args:
         slug_path (str):
-        game_id (Union[Unset, str]):
-        slug_query (Union[Unset, str]):
-        ecosystem (Union[Unset, str]):
+        game_id (str | Unset):
+        slug_query (str | Unset):
+        ecosystem (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, GamePublicProfile]]
+        Response[Error | GamePublicProfile]
     """
 
     kwargs = _get_kwargs(
@@ -220,9 +223,9 @@ async def asyncio(
     slug_path: str,
     *,
     client: AuthenticatedClient | Client,
-    game_id: Unset | str = UNSET,
-    slug_query: Unset | str = UNSET,
-    ecosystem: Unset | str = UNSET,
+    game_id: str | Unset = UNSET,
+    slug_query: str | Unset = UNSET,
+    ecosystem: str | Unset = UNSET,
 ) -> Error | GamePublicProfile | None:
     """A player’s public per-game profile, by account slug (anonymous)
 
@@ -239,16 +242,16 @@ async def asyncio(
 
     Args:
         slug_path (str):
-        game_id (Union[Unset, str]):
-        slug_query (Union[Unset, str]):
-        ecosystem (Union[Unset, str]):
+        game_id (str | Unset):
+        slug_query (str | Unset):
+        ecosystem (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, GamePublicProfile]
+        Error | GamePublicProfile
     """
 
     return (

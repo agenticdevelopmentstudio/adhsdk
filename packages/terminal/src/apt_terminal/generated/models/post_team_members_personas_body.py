@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar
 
@@ -15,12 +17,12 @@ class PostTeamMembersPersonasBody:
     Attributes:
         team_id (str):
         persona_key (str): the persona addressed by its registry key: uuid, persona rdid, or owned-namespace rdid
-        role (Union[Unset, str]):
+        role (str | Unset):
     """
 
     team_id: str
     persona_key: str
-    role: Unset | str = UNSET
+    role: str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:

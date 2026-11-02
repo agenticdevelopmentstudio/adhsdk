@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar
 
@@ -14,12 +16,12 @@ class PostPersonaProviderTemplatesIdVerifyBody:
     """
     Attributes:
         api_key (str): Used for this one probe request only; not persisted.
-        base_url (Union[Unset, str]): Optional base_url override for the probe — supply a concrete URL to verify a
-            template whose stored base_url still carries url-var placeholders.
+        base_url (str | Unset): Optional base_url override for the probe — supply a concrete URL to verify a template
+            whose stored base_url still carries url-var placeholders.
     """
 
     api_key: str
-    base_url: Unset | str = UNSET
+    base_url: str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:

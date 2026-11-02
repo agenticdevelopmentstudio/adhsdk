@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class SyncPushResultStatus(str, Enum):
+class SyncPushResultStatus(StrEnum):
     APPLIED = "applied"
     CONFLICT = "conflict"
     REJECTED = "rejected"

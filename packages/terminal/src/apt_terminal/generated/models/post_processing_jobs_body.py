@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar
 
@@ -17,14 +19,14 @@ class PostProcessingJobsBody:
         target_kind (str): Namespace of the target entity (e.g. content.markdown)
         target_id (str): UUID of the target entity
         payload (Any): Arbitrary job-specific input stored as jsonb
-        priority (Union[Unset, int]): Higher value = claimed first; defaults to 0
+        priority (int | Unset): Higher value = claimed first; defaults to 0
     """
 
     job_type: str
     target_kind: str
     target_id: str
     payload: Any
-    priority: Unset | int = UNSET
+    priority: int | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:

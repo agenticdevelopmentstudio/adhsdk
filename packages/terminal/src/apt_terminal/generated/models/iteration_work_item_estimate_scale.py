@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class IterationWorkItemEstimateScale(str, Enum):
+class IterationWorkItemEstimateScale(StrEnum):
     EXPONENTIAL = "exponential"
     FIBONACCI = "fibonacci"
     LINEAR = "linear"

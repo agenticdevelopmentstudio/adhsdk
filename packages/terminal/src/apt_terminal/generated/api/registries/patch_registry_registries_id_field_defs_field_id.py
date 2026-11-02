@@ -1,5 +1,6 @@
 from http import HTTPStatus
 from typing import Any
+from urllib.parse import quote
 
 import httpx
 
@@ -10,23 +11,27 @@ from ...models.patch_registry_registries_id_field_defs_field_id_body import (
     PatchRegistryRegistriesIdFieldDefsFieldIdBody,
 )
 from ...models.registry_field_def import RegistryFieldDef
-from ...types import Response
+from ...types import UNSET, Response, Unset
 
 
 def _get_kwargs(
     id: str,
     field_id: str,
     *,
-    body: PatchRegistryRegistriesIdFieldDefsFieldIdBody,
+    body: PatchRegistryRegistriesIdFieldDefsFieldIdBody | Unset = UNSET,
 ) -> dict[str, Any]:
     headers: dict[str, Any] = {}
 
     _kwargs: dict[str, Any] = {
         "method": "patch",
-        "url": f"/registry/registries/{id}/field-defs/{field_id}",
+        "url": "/registry/registries/{id}/field-defs/{field_id}".format(
+            id=quote(str(id), safe=""),
+            field_id=quote(str(field_id), safe=""),
+        ),
     }
 
-    _kwargs["json"] = body.to_dict()
+    if not isinstance(body, Unset):
+        _kwargs["json"] = body.to_dict()
 
     headers["Content-Type"] = "application/json"
 
@@ -84,21 +89,21 @@ def sync_detailed(
     field_id: str,
     *,
     client: AuthenticatedClient,
-    body: PatchRegistryRegistriesIdFieldDefsFieldIdBody,
+    body: PatchRegistryRegistriesIdFieldDefsFieldIdBody | Unset = UNSET,
 ) -> Response[Error | RegistryFieldDef]:
     """Update a field def (key/type immutable — a type change is a 400, a key change a no-op)
 
     Args:
         id (str):
         field_id (str):
-        body (PatchRegistryRegistriesIdFieldDefsFieldIdBody):
+        body (PatchRegistryRegistriesIdFieldDefsFieldIdBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, RegistryFieldDef]]
+        Response[Error | RegistryFieldDef]
     """
 
     kwargs = _get_kwargs(
@@ -119,21 +124,21 @@ def sync(
     field_id: str,
     *,
     client: AuthenticatedClient,
-    body: PatchRegistryRegistriesIdFieldDefsFieldIdBody,
+    body: PatchRegistryRegistriesIdFieldDefsFieldIdBody | Unset = UNSET,
 ) -> Error | RegistryFieldDef | None:
     """Update a field def (key/type immutable — a type change is a 400, a key change a no-op)
 
     Args:
         id (str):
         field_id (str):
-        body (PatchRegistryRegistriesIdFieldDefsFieldIdBody):
+        body (PatchRegistryRegistriesIdFieldDefsFieldIdBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, RegistryFieldDef]
+        Error | RegistryFieldDef
     """
 
     return sync_detailed(
@@ -149,21 +154,21 @@ async def asyncio_detailed(
     field_id: str,
     *,
     client: AuthenticatedClient,
-    body: PatchRegistryRegistriesIdFieldDefsFieldIdBody,
+    body: PatchRegistryRegistriesIdFieldDefsFieldIdBody | Unset = UNSET,
 ) -> Response[Error | RegistryFieldDef]:
     """Update a field def (key/type immutable — a type change is a 400, a key change a no-op)
 
     Args:
         id (str):
         field_id (str):
-        body (PatchRegistryRegistriesIdFieldDefsFieldIdBody):
+        body (PatchRegistryRegistriesIdFieldDefsFieldIdBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, RegistryFieldDef]]
+        Response[Error | RegistryFieldDef]
     """
 
     kwargs = _get_kwargs(
@@ -182,21 +187,21 @@ async def asyncio(
     field_id: str,
     *,
     client: AuthenticatedClient,
-    body: PatchRegistryRegistriesIdFieldDefsFieldIdBody,
+    body: PatchRegistryRegistriesIdFieldDefsFieldIdBody | Unset = UNSET,
 ) -> Error | RegistryFieldDef | None:
     """Update a field def (key/type immutable — a type change is a 400, a key change a no-op)
 
     Args:
         id (str):
         field_id (str):
-        body (PatchRegistryRegistriesIdFieldDefsFieldIdBody):
+        body (PatchRegistryRegistriesIdFieldDefsFieldIdBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, RegistryFieldDef]
+        Error | RegistryFieldDef
     """
 
     return (

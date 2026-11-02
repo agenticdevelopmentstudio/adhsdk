@@ -13,8 +13,8 @@ from ...types import UNSET, Response, Unset
 
 def _get_kwargs(
     *,
-    body: PostProjectProjectsBody,
-    workspace: Unset | str = UNSET,
+    body: PostProjectProjectsBody | Unset = UNSET,
+    workspace: str | Unset = UNSET,
 ) -> dict[str, Any]:
     headers: dict[str, Any] = {}
 
@@ -30,7 +30,8 @@ def _get_kwargs(
         "params": params,
     }
 
-    _kwargs["json"] = body.to_dict()
+    if not isinstance(body, Unset):
+        _kwargs["json"] = body.to_dict()
 
     headers["Content-Type"] = "application/json"
 
@@ -81,21 +82,21 @@ def _build_response(
 def sync_detailed(
     *,
     client: AuthenticatedClient,
-    body: PostProjectProjectsBody,
-    workspace: Unset | str = UNSET,
+    body: PostProjectProjectsBody | Unset = UNSET,
+    workspace: str | Unset = UNSET,
 ) -> Response[Error | Project]:
     """Create a project (seeds default statuses + a project.created activity)
 
     Args:
-        workspace (Union[Unset, str]):
-        body (PostProjectProjectsBody):
+        workspace (str | Unset):
+        body (PostProjectProjectsBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, Project]]
+        Response[Error | Project]
     """
 
     kwargs = _get_kwargs(
@@ -113,21 +114,21 @@ def sync_detailed(
 def sync(
     *,
     client: AuthenticatedClient,
-    body: PostProjectProjectsBody,
-    workspace: Unset | str = UNSET,
+    body: PostProjectProjectsBody | Unset = UNSET,
+    workspace: str | Unset = UNSET,
 ) -> Error | Project | None:
     """Create a project (seeds default statuses + a project.created activity)
 
     Args:
-        workspace (Union[Unset, str]):
-        body (PostProjectProjectsBody):
+        workspace (str | Unset):
+        body (PostProjectProjectsBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, Project]
+        Error | Project
     """
 
     return sync_detailed(
@@ -140,21 +141,21 @@ def sync(
 async def asyncio_detailed(
     *,
     client: AuthenticatedClient,
-    body: PostProjectProjectsBody,
-    workspace: Unset | str = UNSET,
+    body: PostProjectProjectsBody | Unset = UNSET,
+    workspace: str | Unset = UNSET,
 ) -> Response[Error | Project]:
     """Create a project (seeds default statuses + a project.created activity)
 
     Args:
-        workspace (Union[Unset, str]):
-        body (PostProjectProjectsBody):
+        workspace (str | Unset):
+        body (PostProjectProjectsBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, Project]]
+        Response[Error | Project]
     """
 
     kwargs = _get_kwargs(
@@ -170,21 +171,21 @@ async def asyncio_detailed(
 async def asyncio(
     *,
     client: AuthenticatedClient,
-    body: PostProjectProjectsBody,
-    workspace: Unset | str = UNSET,
+    body: PostProjectProjectsBody | Unset = UNSET,
+    workspace: str | Unset = UNSET,
 ) -> Error | Project | None:
     """Create a project (seeds default statuses + a project.created activity)
 
     Args:
-        workspace (Union[Unset, str]):
-        body (PostProjectProjectsBody):
+        workspace (str | Unset):
+        body (PostProjectProjectsBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, Project]
+        Error | Project
     """
 
     return (

@@ -1,5 +1,6 @@
 from http import HTTPStatus
 from typing import Any
+from urllib.parse import quote
 
 import httpx
 
@@ -16,8 +17,8 @@ from ...types import UNSET, Response, Unset
 def _get_kwargs(
     registry_id: str,
     *,
-    body: PostRegistryRegistriesRegistryIdEntriesBody,
-    workspace: Unset | str = UNSET,
+    body: PostRegistryRegistriesRegistryIdEntriesBody | Unset = UNSET,
+    workspace: str | Unset = UNSET,
 ) -> dict[str, Any]:
     headers: dict[str, Any] = {}
 
@@ -29,11 +30,14 @@ def _get_kwargs(
 
     _kwargs: dict[str, Any] = {
         "method": "post",
-        "url": f"/registry/registries/{registry_id}/entries",
+        "url": "/registry/registries/{registry_id}/entries".format(
+            registry_id=quote(str(registry_id), safe=""),
+        ),
         "params": params,
     }
 
-    _kwargs["json"] = body.to_dict()
+    if not isinstance(body, Unset):
+        _kwargs["json"] = body.to_dict()
 
     headers["Content-Type"] = "application/json"
 
@@ -90,22 +94,22 @@ def sync_detailed(
     registry_id: str,
     *,
     client: AuthenticatedClient,
-    body: PostRegistryRegistriesRegistryIdEntriesBody,
-    workspace: Unset | str = UNSET,
+    body: PostRegistryRegistriesRegistryIdEntriesBody | Unset = UNSET,
+    workspace: str | Unset = UNSET,
 ) -> Response[Error | RegistryEntry]:
     """Create the caller's entry in a registry (one entry per principal per registry)
 
     Args:
         registry_id (str):
-        workspace (Union[Unset, str]):
-        body (PostRegistryRegistriesRegistryIdEntriesBody):
+        workspace (str | Unset):
+        body (PostRegistryRegistriesRegistryIdEntriesBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, RegistryEntry]]
+        Response[Error | RegistryEntry]
     """
 
     kwargs = _get_kwargs(
@@ -125,22 +129,22 @@ def sync(
     registry_id: str,
     *,
     client: AuthenticatedClient,
-    body: PostRegistryRegistriesRegistryIdEntriesBody,
-    workspace: Unset | str = UNSET,
+    body: PostRegistryRegistriesRegistryIdEntriesBody | Unset = UNSET,
+    workspace: str | Unset = UNSET,
 ) -> Error | RegistryEntry | None:
     """Create the caller's entry in a registry (one entry per principal per registry)
 
     Args:
         registry_id (str):
-        workspace (Union[Unset, str]):
-        body (PostRegistryRegistriesRegistryIdEntriesBody):
+        workspace (str | Unset):
+        body (PostRegistryRegistriesRegistryIdEntriesBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, RegistryEntry]
+        Error | RegistryEntry
     """
 
     return sync_detailed(
@@ -155,22 +159,22 @@ async def asyncio_detailed(
     registry_id: str,
     *,
     client: AuthenticatedClient,
-    body: PostRegistryRegistriesRegistryIdEntriesBody,
-    workspace: Unset | str = UNSET,
+    body: PostRegistryRegistriesRegistryIdEntriesBody | Unset = UNSET,
+    workspace: str | Unset = UNSET,
 ) -> Response[Error | RegistryEntry]:
     """Create the caller's entry in a registry (one entry per principal per registry)
 
     Args:
         registry_id (str):
-        workspace (Union[Unset, str]):
-        body (PostRegistryRegistriesRegistryIdEntriesBody):
+        workspace (str | Unset):
+        body (PostRegistryRegistriesRegistryIdEntriesBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, RegistryEntry]]
+        Response[Error | RegistryEntry]
     """
 
     kwargs = _get_kwargs(
@@ -188,22 +192,22 @@ async def asyncio(
     registry_id: str,
     *,
     client: AuthenticatedClient,
-    body: PostRegistryRegistriesRegistryIdEntriesBody,
-    workspace: Unset | str = UNSET,
+    body: PostRegistryRegistriesRegistryIdEntriesBody | Unset = UNSET,
+    workspace: str | Unset = UNSET,
 ) -> Error | RegistryEntry | None:
     """Create the caller's entry in a registry (one entry per principal per registry)
 
     Args:
         registry_id (str):
-        workspace (Union[Unset, str]):
-        body (PostRegistryRegistriesRegistryIdEntriesBody):
+        workspace (str | Unset):
+        body (PostRegistryRegistriesRegistryIdEntriesBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, RegistryEntry]
+        Error | RegistryEntry
     """
 
     return (

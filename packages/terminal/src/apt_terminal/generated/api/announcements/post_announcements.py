@@ -8,12 +8,12 @@ from ...client import AuthenticatedClient, Client
 from ...models.announcement_accepted import AnnouncementAccepted
 from ...models.announcement_create import AnnouncementCreate
 from ...models.error import Error
-from ...types import Response
+from ...types import UNSET, Response, Unset
 
 
 def _get_kwargs(
     *,
-    body: AnnouncementCreate,
+    body: AnnouncementCreate | Unset = UNSET,
 ) -> dict[str, Any]:
     headers: dict[str, Any] = {}
 
@@ -22,7 +22,8 @@ def _get_kwargs(
         "url": "/announcements",
     }
 
-    _kwargs["json"] = body.to_dict()
+    if not isinstance(body, Unset):
+        _kwargs["json"] = body.to_dict()
 
     headers["Content-Type"] = "application/json"
 
@@ -73,7 +74,7 @@ def _build_response(
 def sync_detailed(
     *,
     client: AuthenticatedClient,
-    body: AnnouncementCreate,
+    body: AnnouncementCreate | Unset = UNSET,
 ) -> Response[AnnouncementAccepted | Error]:
     """Compose and send an announcement
 
@@ -82,14 +83,14 @@ def sync_detailed(
     surfaces here.
 
     Args:
-        body (AnnouncementCreate):
+        body (AnnouncementCreate | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[AnnouncementAccepted, Error]]
+        Response[AnnouncementAccepted | Error]
     """
 
     kwargs = _get_kwargs(
@@ -106,7 +107,7 @@ def sync_detailed(
 def sync(
     *,
     client: AuthenticatedClient,
-    body: AnnouncementCreate,
+    body: AnnouncementCreate | Unset = UNSET,
 ) -> AnnouncementAccepted | Error | None:
     """Compose and send an announcement
 
@@ -115,14 +116,14 @@ def sync(
     surfaces here.
 
     Args:
-        body (AnnouncementCreate):
+        body (AnnouncementCreate | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[AnnouncementAccepted, Error]
+        AnnouncementAccepted | Error
     """
 
     return sync_detailed(
@@ -134,7 +135,7 @@ def sync(
 async def asyncio_detailed(
     *,
     client: AuthenticatedClient,
-    body: AnnouncementCreate,
+    body: AnnouncementCreate | Unset = UNSET,
 ) -> Response[AnnouncementAccepted | Error]:
     """Compose and send an announcement
 
@@ -143,14 +144,14 @@ async def asyncio_detailed(
     surfaces here.
 
     Args:
-        body (AnnouncementCreate):
+        body (AnnouncementCreate | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[AnnouncementAccepted, Error]]
+        Response[AnnouncementAccepted | Error]
     """
 
     kwargs = _get_kwargs(
@@ -165,7 +166,7 @@ async def asyncio_detailed(
 async def asyncio(
     *,
     client: AuthenticatedClient,
-    body: AnnouncementCreate,
+    body: AnnouncementCreate | Unset = UNSET,
 ) -> AnnouncementAccepted | Error | None:
     """Compose and send an announcement
 
@@ -174,14 +175,14 @@ async def asyncio(
     surfaces here.
 
     Args:
-        body (AnnouncementCreate):
+        body (AnnouncementCreate | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[AnnouncementAccepted, Error]
+        AnnouncementAccepted | Error
     """
 
     return (

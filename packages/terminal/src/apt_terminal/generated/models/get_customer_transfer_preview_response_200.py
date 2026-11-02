@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import TYPE_CHECKING, Any, TypeVar
 
@@ -19,18 +21,18 @@ T = TypeVar("T", bound="GetCustomerTransferPreviewResponse200")
 class GetCustomerTransferPreviewResponse200:
     """
     Attributes:
-        target (Union[Unset, str]):
-        conflicts (Union[Unset, list['GetCustomerTransferPreviewResponse200ConflictsItem']]):
+        target (str | Unset):
+        conflicts (list[GetCustomerTransferPreviewResponse200ConflictsItem] | Unset):
     """
 
-    target: Unset | str = UNSET
-    conflicts: Unset | list["GetCustomerTransferPreviewResponse200ConflictsItem"] = UNSET
+    target: str | Unset = UNSET
+    conflicts: list[GetCustomerTransferPreviewResponse200ConflictsItem] | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
         target = self.target
 
-        conflicts: Unset | list[dict[str, Any]] = UNSET
+        conflicts: list[dict[str, Any]] | Unset = UNSET
         if not isinstance(self.conflicts, Unset):
             conflicts = []
             for conflicts_item_data in self.conflicts:
@@ -56,14 +58,16 @@ class GetCustomerTransferPreviewResponse200:
         d = dict(src_dict)
         target = d.pop("target", UNSET)
 
-        conflicts = []
         _conflicts = d.pop("conflicts", UNSET)
-        for conflicts_item_data in _conflicts or []:
-            conflicts_item = GetCustomerTransferPreviewResponse200ConflictsItem.from_dict(
-                conflicts_item_data
-            )
+        conflicts: list[GetCustomerTransferPreviewResponse200ConflictsItem] | Unset = UNSET
+        if _conflicts is not UNSET:
+            conflicts = []
+            for conflicts_item_data in _conflicts:
+                conflicts_item = GetCustomerTransferPreviewResponse200ConflictsItem.from_dict(
+                    conflicts_item_data
+                )
 
-            conflicts.append(conflicts_item)
+                conflicts.append(conflicts_item)
 
         get_customer_transfer_preview_response_200 = cls(
             target=target,

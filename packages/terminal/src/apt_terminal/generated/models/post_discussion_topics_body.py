@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar
 
@@ -16,17 +18,16 @@ class PostDiscussionTopicsBody:
         title (str):
         body (str): Opening-post markdown; stored as a content.markdown body document.
         community_id (str): Community instance to create under; the caller must be its admin (else 403).
-        category_id (Union[Unset, str]): Optional category to file the topic under; must belong to the same community
-            (else 400).
-        is_public (Union[Unset, bool]): Whether anonymous callers can read the topic via /public/discussion (default
-            true).
+        category_id (str | Unset): Optional category to file the topic under; must belong to the same community (else
+            400).
+        is_public (bool | Unset): Whether anonymous callers can read the topic via /public/discussion (default true).
     """
 
     title: str
     body: str
     community_id: str
-    category_id: Unset | str = UNSET
-    is_public: Unset | bool = UNSET
+    category_id: str | Unset = UNSET
+    is_public: bool | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:

@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, TypeVar, Union
+from typing import TYPE_CHECKING, Any, TypeVar
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -22,14 +24,14 @@ class SyncChange:
         id (str):
         op (SyncChangeOp):
         sync_version (str): Server-assigned monotonic version (bigint as string)
-        data (Union[Unset, SyncChangeData]): Full row for upserts; absent for deletes
+        data (SyncChangeData | Unset): Full row for upserts; absent for deletes
     """
 
     resource: str
     id: str
     op: SyncChangeOp
     sync_version: str
-    data: Union[Unset, "SyncChangeData"] = UNSET
+    data: SyncChangeData | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -41,7 +43,7 @@ class SyncChange:
 
         sync_version = self.sync_version
 
-        data: Unset | dict[str, Any] = UNSET
+        data: dict[str, Any] | Unset = UNSET
         if not isinstance(self.data, Unset):
             data = self.data.to_dict()
 
@@ -74,7 +76,7 @@ class SyncChange:
         sync_version = d.pop("syncVersion")
 
         _data = d.pop("data", UNSET)
-        data: Unset | SyncChangeData
+        data: SyncChangeData | Unset
         if isinstance(_data, Unset):
             data = UNSET
         else:

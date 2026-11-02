@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class SyncEnrollmentRowScope(str, Enum):
+class SyncEnrollmentRowScope(StrEnum):
     CUSTOMER = "customer"
     ECOSYSTEM = "ecosystem"
 

@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, TypeVar, Union, cast
+from typing import TYPE_CHECKING, Any, TypeVar, cast
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -39,10 +41,10 @@ class MarkdownDocumentSummary:
         current_version (int):
         created_at (str):
         updated_at (str):
-        frontmatter (Union['MarkdownDocumentSummaryFrontmatterType0', None, Unset]):
-        category (Union[None, Unset, str]):
-        public_route (Union[None, Unset, str]):
-        latest_version_id (Union[None, Unset, str]):
+        frontmatter (MarkdownDocumentSummaryFrontmatterType0 | None | Unset):
+        category (None | str | Unset):
+        public_route (None | str | Unset):
+        latest_version_id (None | str | Unset):
     """
 
     id: str
@@ -57,10 +59,10 @@ class MarkdownDocumentSummary:
     current_version: int
     created_at: str
     updated_at: str
-    frontmatter: Union["MarkdownDocumentSummaryFrontmatterType0", None, Unset] = UNSET
-    category: None | Unset | str = UNSET
-    public_route: None | Unset | str = UNSET
-    latest_version_id: None | Unset | str = UNSET
+    frontmatter: MarkdownDocumentSummaryFrontmatterType0 | None | Unset = UNSET
+    category: None | str | Unset = UNSET
+    public_route: None | str | Unset = UNSET
+    latest_version_id: None | str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -92,7 +94,7 @@ class MarkdownDocumentSummary:
 
         updated_at = self.updated_at
 
-        frontmatter: None | Unset | dict[str, Any]
+        frontmatter: dict[str, Any] | None | Unset
         if isinstance(self.frontmatter, Unset):
             frontmatter = UNSET
         elif isinstance(self.frontmatter, MarkdownDocumentSummaryFrontmatterType0):
@@ -100,19 +102,19 @@ class MarkdownDocumentSummary:
         else:
             frontmatter = self.frontmatter
 
-        category: None | Unset | str
+        category: None | str | Unset
         if isinstance(self.category, Unset):
             category = UNSET
         else:
             category = self.category
 
-        public_route: None | Unset | str
+        public_route: None | str | Unset
         if isinstance(self.public_route, Unset):
             public_route = UNSET
         else:
             public_route = self.public_route
 
-        latest_version_id: None | Unset | str
+        latest_version_id: None | str | Unset
         if isinstance(self.latest_version_id, Unset):
             latest_version_id = UNSET
         else:
@@ -180,7 +182,7 @@ class MarkdownDocumentSummary:
 
         def _parse_frontmatter(
             data: object,
-        ) -> Union["MarkdownDocumentSummaryFrontmatterType0", None, Unset]:
+        ) -> MarkdownDocumentSummaryFrontmatterType0 | None | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
@@ -191,36 +193,36 @@ class MarkdownDocumentSummary:
                 frontmatter_type_0 = MarkdownDocumentSummaryFrontmatterType0.from_dict(data)
 
                 return frontmatter_type_0
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
-            return cast(Union["MarkdownDocumentSummaryFrontmatterType0", None, Unset], data)
+            return cast(MarkdownDocumentSummaryFrontmatterType0 | None | Unset, data)
 
         frontmatter = _parse_frontmatter(d.pop("frontmatter", UNSET))
 
-        def _parse_category(data: object) -> None | Unset | str:
+        def _parse_category(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         category = _parse_category(d.pop("category", UNSET))
 
-        def _parse_public_route(data: object) -> None | Unset | str:
+        def _parse_public_route(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         public_route = _parse_public_route(d.pop("publicRoute", UNSET))
 
-        def _parse_latest_version_id(data: object) -> None | Unset | str:
+        def _parse_latest_version_id(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         latest_version_id = _parse_latest_version_id(d.pop("latestVersionId", UNSET))
 

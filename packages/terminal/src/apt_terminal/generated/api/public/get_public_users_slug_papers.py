@@ -1,5 +1,6 @@
 from http import HTTPStatus
 from typing import Any
+from urllib.parse import quote
 
 import httpx
 
@@ -13,7 +14,7 @@ from ...types import UNSET, Response, Unset
 def _get_kwargs(
     slug: str,
     *,
-    q: Unset | str = UNSET,
+    q: str | Unset = UNSET,
 ) -> dict[str, Any]:
     params: dict[str, Any] = {}
 
@@ -23,7 +24,9 @@ def _get_kwargs(
 
     _kwargs: dict[str, Any] = {
         "method": "get",
-        "url": f"/public/users/{slug}/papers",
+        "url": "/public/users/{slug}/papers".format(
+            slug=quote(str(slug), safe=""),
+        ),
         "params": params,
     }
 
@@ -64,20 +67,20 @@ def sync_detailed(
     slug: str,
     *,
     client: AuthenticatedClient | Client,
-    q: Unset | str = UNSET,
+    q: str | Unset = UNSET,
 ) -> Response[Error | GetPublicUsersSlugPapersResponse200]:
     """List an author's published papers (metadata only)
 
     Args:
         slug (str):
-        q (Union[Unset, str]):
+        q (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, GetPublicUsersSlugPapersResponse200]]
+        Response[Error | GetPublicUsersSlugPapersResponse200]
     """
 
     kwargs = _get_kwargs(
@@ -96,20 +99,20 @@ def sync(
     slug: str,
     *,
     client: AuthenticatedClient | Client,
-    q: Unset | str = UNSET,
+    q: str | Unset = UNSET,
 ) -> Error | GetPublicUsersSlugPapersResponse200 | None:
     """List an author's published papers (metadata only)
 
     Args:
         slug (str):
-        q (Union[Unset, str]):
+        q (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, GetPublicUsersSlugPapersResponse200]
+        Error | GetPublicUsersSlugPapersResponse200
     """
 
     return sync_detailed(
@@ -123,20 +126,20 @@ async def asyncio_detailed(
     slug: str,
     *,
     client: AuthenticatedClient | Client,
-    q: Unset | str = UNSET,
+    q: str | Unset = UNSET,
 ) -> Response[Error | GetPublicUsersSlugPapersResponse200]:
     """List an author's published papers (metadata only)
 
     Args:
         slug (str):
-        q (Union[Unset, str]):
+        q (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, GetPublicUsersSlugPapersResponse200]]
+        Response[Error | GetPublicUsersSlugPapersResponse200]
     """
 
     kwargs = _get_kwargs(
@@ -153,20 +156,20 @@ async def asyncio(
     slug: str,
     *,
     client: AuthenticatedClient | Client,
-    q: Unset | str = UNSET,
+    q: str | Unset = UNSET,
 ) -> Error | GetPublicUsersSlugPapersResponse200 | None:
     """List an author's published papers (metadata only)
 
     Args:
         slug (str):
-        q (Union[Unset, str]):
+        q (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, GetPublicUsersSlugPapersResponse200]
+        Error | GetPublicUsersSlugPapersResponse200
     """
 
     return (

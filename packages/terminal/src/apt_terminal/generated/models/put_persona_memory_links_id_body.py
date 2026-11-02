@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar
 
@@ -12,18 +14,18 @@ T = TypeVar("T", bound="PutPersonaMemoryLinksIdBody")
 class PutPersonaMemoryLinksIdBody:
     """
     Attributes:
-        ecosystem_id (Union[Unset, str]):
-        src_id (Union[Unset, str]):
-        dst_id (Union[Unset, str]):
-        relation (Union[Unset, str]):
-        sync_txid (Union[Unset, int]):
+        ecosystem_id (str | Unset):
+        src_id (str | Unset):
+        dst_id (str | Unset):
+        relation (str | Unset):
+        sync_txid (int | Unset):
     """
 
-    ecosystem_id: Unset | str = UNSET
-    src_id: Unset | str = UNSET
-    dst_id: Unset | str = UNSET
-    relation: Unset | str = UNSET
-    sync_txid: Unset | int = UNSET
+    ecosystem_id: str | Unset = UNSET
+    src_id: str | Unset = UNSET
+    dst_id: str | Unset = UNSET
+    relation: str | Unset = UNSET
+    sync_txid: int | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
         ecosystem_id = self.ecosystem_id

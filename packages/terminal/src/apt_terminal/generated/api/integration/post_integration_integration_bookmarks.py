@@ -12,12 +12,12 @@ from ...models.post_integration_integration_bookmarks_body import (
 from ...models.post_integration_integration_bookmarks_response_201 import (
     PostIntegrationIntegrationBookmarksResponse201,
 )
-from ...types import Response
+from ...types import UNSET, Response, Unset
 
 
 def _get_kwargs(
     *,
-    body: PostIntegrationIntegrationBookmarksBody,
+    body: PostIntegrationIntegrationBookmarksBody | Unset = UNSET,
 ) -> dict[str, Any]:
     headers: dict[str, Any] = {}
 
@@ -26,7 +26,8 @@ def _get_kwargs(
         "url": "/integration/integration-bookmarks",
     }
 
-    _kwargs["json"] = body.to_dict()
+    if not isinstance(body, Unset):
+        _kwargs["json"] = body.to_dict()
 
     headers["Content-Type"] = "application/json"
 
@@ -72,19 +73,19 @@ def _build_response(
 def sync_detailed(
     *,
     client: AuthenticatedClient,
-    body: PostIntegrationIntegrationBookmarksBody,
+    body: PostIntegrationIntegrationBookmarksBody | Unset = UNSET,
 ) -> Response[Error | PostIntegrationIntegrationBookmarksResponse201]:
     """Create integration_bookmarks
 
     Args:
-        body (PostIntegrationIntegrationBookmarksBody):
+        body (PostIntegrationIntegrationBookmarksBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, PostIntegrationIntegrationBookmarksResponse201]]
+        Response[Error | PostIntegrationIntegrationBookmarksResponse201]
     """
 
     kwargs = _get_kwargs(
@@ -101,19 +102,19 @@ def sync_detailed(
 def sync(
     *,
     client: AuthenticatedClient,
-    body: PostIntegrationIntegrationBookmarksBody,
+    body: PostIntegrationIntegrationBookmarksBody | Unset = UNSET,
 ) -> Error | PostIntegrationIntegrationBookmarksResponse201 | None:
     """Create integration_bookmarks
 
     Args:
-        body (PostIntegrationIntegrationBookmarksBody):
+        body (PostIntegrationIntegrationBookmarksBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, PostIntegrationIntegrationBookmarksResponse201]
+        Error | PostIntegrationIntegrationBookmarksResponse201
     """
 
     return sync_detailed(
@@ -125,19 +126,19 @@ def sync(
 async def asyncio_detailed(
     *,
     client: AuthenticatedClient,
-    body: PostIntegrationIntegrationBookmarksBody,
+    body: PostIntegrationIntegrationBookmarksBody | Unset = UNSET,
 ) -> Response[Error | PostIntegrationIntegrationBookmarksResponse201]:
     """Create integration_bookmarks
 
     Args:
-        body (PostIntegrationIntegrationBookmarksBody):
+        body (PostIntegrationIntegrationBookmarksBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, PostIntegrationIntegrationBookmarksResponse201]]
+        Response[Error | PostIntegrationIntegrationBookmarksResponse201]
     """
 
     kwargs = _get_kwargs(
@@ -152,19 +153,19 @@ async def asyncio_detailed(
 async def asyncio(
     *,
     client: AuthenticatedClient,
-    body: PostIntegrationIntegrationBookmarksBody,
+    body: PostIntegrationIntegrationBookmarksBody | Unset = UNSET,
 ) -> Error | PostIntegrationIntegrationBookmarksResponse201 | None:
     """Create integration_bookmarks
 
     Args:
-        body (PostIntegrationIntegrationBookmarksBody):
+        body (PostIntegrationIntegrationBookmarksBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, PostIntegrationIntegrationBookmarksResponse201]
+        Error | PostIntegrationIntegrationBookmarksResponse201
     """
 
     return (

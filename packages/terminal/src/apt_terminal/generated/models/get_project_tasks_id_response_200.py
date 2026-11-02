@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -12,26 +14,26 @@ class GetProjectTasksIdResponse200:
     Attributes:
         id (str):
         customer_id (str):
-        deleted_at (Union[None, str]):
+        deleted_at (None | str):
         ecosystem_id (str):
         connection_id (str):
         external_id (str):
         source_provider (str):
         title (str):
-        description (Union[None, str]):
+        description (None | str):
         is_completed (bool):
         priority (int):
-        due_date (Union[None, str]):
-        due_datetime (Union[None, str]):
-        external_project_id (Union[None, str]):
-        external_project_name (Union[None, str]):
-        labels (Union[None, str]):
-        url (Union[None, str]):
+        due_date (None | str):
+        due_datetime (None | str):
+        external_project_id (None | str):
+        external_project_name (None | str):
+        labels (None | str):
+        url (None | str):
         is_deleted (bool):
         created_at (str):
         updated_at (str):
         sync_version (int):
-        sync_stamped_at (Union[None, str]):
+        sync_stamped_at (None | str):
         sync_txid (int):
     """
 

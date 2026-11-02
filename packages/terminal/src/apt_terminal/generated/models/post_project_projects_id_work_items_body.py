@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -17,40 +19,40 @@ class PostProjectProjectsIdWorkItemsBody:
     """
     Attributes:
         title (str):
-        description (Union[Unset, str]):
-        status_id (Union[Unset, str]): must be a status of this project; defaults to the lowest-position column
-        assignee_kind (Union[Unset, PostProjectProjectsIdWorkItemsBodyAssigneeKind]):
-        assignee_id (Union[Unset, str]): set with assigneeKind (both or neither); must be a current participant
-        priority (Union[Unset, int]): rank, 0 (none) to 4 (urgent); higher is more urgent
-        start_date (Union[Unset, str]): date (YYYY-MM-DD)
-        due_date (Union[Unset, str]): date (YYYY-MM-DD)
-        labels (Union[Unset, list[str]]): labels for the card; each is trimmed, blanks are dropped, and a repeat keeps
-            its first position. A label not yet in the owner's vocabulary is created there.
-        parent_id (Union[Unset, str]): a live work item in the same project (not self)
-        iteration_id (Union[Unset, str]): a live iteration of this project's OWNER (400 otherwise); omitted leaves the
-            card in the backlog
-        milestone_id (Union[Unset, str]): a live milestone of THIS project (400 otherwise — narrower than the iteration
-            rule above, because a milestone is a point in one plan); omitted leaves the card counting toward none
-        estimate (Union[Unset, int]): the card’s size; omitted leaves it unestimated
-        triage (Union[Unset, bool]): file this card into the board’s TRIAGE INBOX instead of onto the board (`triagedAt`
-            stays null and the board list omits it until someone accepts it). Defaults false, which is what keeps the inbox
-            opt-in: an intake form or an integration sets it, and every other caller keeps the behaviour it has always had.
+        description (str | Unset):
+        status_id (str | Unset): must be a status of this project; defaults to the lowest-position column
+        assignee_kind (PostProjectProjectsIdWorkItemsBodyAssigneeKind | Unset):
+        assignee_id (str | Unset): set with assigneeKind (both or neither); must be a current participant
+        priority (int | Unset): rank, 0 (none) to 4 (urgent); higher is more urgent
+        start_date (str | Unset): date (YYYY-MM-DD)
+        due_date (str | Unset): date (YYYY-MM-DD)
+        labels (list[str] | Unset): labels for the card; each is trimmed, blanks are dropped, and a repeat keeps its
+            first position. A label not yet in the owner's vocabulary is created there.
+        parent_id (str | Unset): a live work item in the same project (not self)
+        iteration_id (str | Unset): a live iteration of this project's OWNER (400 otherwise); omitted leaves the card in
+            the backlog
+        milestone_id (str | Unset): a live milestone of THIS project (400 otherwise — narrower than the iteration rule
+            above, because a milestone is a point in one plan); omitted leaves the card counting toward none
+        estimate (int | Unset): the card’s size; omitted leaves it unestimated
+        triage (bool | Unset): file this card into the board’s TRIAGE INBOX instead of onto the board (`triagedAt` stays
+            null and the board list omits it until someone accepts it). Defaults false, which is what keeps the inbox opt-
+            in: an intake form or an integration sets it, and every other caller keeps the behaviour it has always had.
     """
 
     title: str
-    description: Unset | str = UNSET
-    status_id: Unset | str = UNSET
-    assignee_kind: Unset | PostProjectProjectsIdWorkItemsBodyAssigneeKind = UNSET
-    assignee_id: Unset | str = UNSET
-    priority: Unset | int = UNSET
-    start_date: Unset | str = UNSET
-    due_date: Unset | str = UNSET
-    labels: Unset | list[str] = UNSET
-    parent_id: Unset | str = UNSET
-    iteration_id: Unset | str = UNSET
-    milestone_id: Unset | str = UNSET
-    estimate: Unset | int = UNSET
-    triage: Unset | bool = UNSET
+    description: str | Unset = UNSET
+    status_id: str | Unset = UNSET
+    assignee_kind: PostProjectProjectsIdWorkItemsBodyAssigneeKind | Unset = UNSET
+    assignee_id: str | Unset = UNSET
+    priority: int | Unset = UNSET
+    start_date: str | Unset = UNSET
+    due_date: str | Unset = UNSET
+    labels: list[str] | Unset = UNSET
+    parent_id: str | Unset = UNSET
+    iteration_id: str | Unset = UNSET
+    milestone_id: str | Unset = UNSET
+    estimate: int | Unset = UNSET
+    triage: bool | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -60,7 +62,7 @@ class PostProjectProjectsIdWorkItemsBody:
 
         status_id = self.status_id
 
-        assignee_kind: Unset | str = UNSET
+        assignee_kind: str | Unset = UNSET
         if not isinstance(self.assignee_kind, Unset):
             assignee_kind = self.assignee_kind.value
 
@@ -72,7 +74,7 @@ class PostProjectProjectsIdWorkItemsBody:
 
         due_date = self.due_date
 
-        labels: Unset | list[str] = UNSET
+        labels: list[str] | Unset = UNSET
         if not isinstance(self.labels, Unset):
             labels = self.labels
 
@@ -132,7 +134,7 @@ class PostProjectProjectsIdWorkItemsBody:
         status_id = d.pop("statusId", UNSET)
 
         _assignee_kind = d.pop("assigneeKind", UNSET)
-        assignee_kind: Unset | PostProjectProjectsIdWorkItemsBodyAssigneeKind
+        assignee_kind: PostProjectProjectsIdWorkItemsBodyAssigneeKind | Unset
         if isinstance(_assignee_kind, Unset):
             assignee_kind = UNSET
         else:

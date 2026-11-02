@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -26,10 +28,10 @@ class Invitation:
         sent_by (str):
         sent_at (str):
         expires_at (str):
-        accepted_at (Union[None, str]):
-        accepted_customer_id (Union[None, str]):
-        message_log_id (Union[None, str]):
-        admin_note (Union[None, str]):
+        accepted_at (None | str):
+        accepted_customer_id (None | str):
+        message_log_id (None | str):
+        admin_note (None | str):
         created_at (str):
     """
 

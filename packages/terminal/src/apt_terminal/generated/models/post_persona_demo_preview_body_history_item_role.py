@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class PostPersonaDemoPreviewBodyHistoryItemRole(str, Enum):
+class PostPersonaDemoPreviewBodyHistoryItemRole(StrEnum):
     ASSISTANT = "assistant"
     USER = "user"
 

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar
 
@@ -13,14 +15,14 @@ class TemplateSyncKeysType0:
     """Operator-only upstream sync mapping — never present on public reads.
 
     Attributes:
-        models_dev (Union[Unset, str]):
-        openrouter (Union[Unset, str]):
-        arena_vendor (Union[Unset, str]):
+        models_dev (str | Unset):
+        openrouter (str | Unset):
+        arena_vendor (str | Unset):
     """
 
-    models_dev: Unset | str = UNSET
-    openrouter: Unset | str = UNSET
-    arena_vendor: Unset | str = UNSET
+    models_dev: str | Unset = UNSET
+    openrouter: str | Unset = UNSET
+    arena_vendor: str | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
         models_dev = self.models_dev

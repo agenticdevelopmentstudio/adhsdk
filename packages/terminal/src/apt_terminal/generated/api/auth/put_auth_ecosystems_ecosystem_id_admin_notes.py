@@ -1,5 +1,6 @@
 from http import HTTPStatus
 from typing import Any
+from urllib.parse import quote
 
 import httpx
 
@@ -10,22 +11,25 @@ from ...models.error import Error
 from ...models.put_auth_ecosystems_ecosystem_id_admin_notes_response_200 import (
     PutAuthEcosystemsEcosystemIdAdminNotesResponse200,
 )
-from ...types import Response
+from ...types import UNSET, Response, Unset
 
 
 def _get_kwargs(
     ecosystem_id: str,
     *,
-    body: AdminNotesReconcileBody,
+    body: AdminNotesReconcileBody | Unset = UNSET,
 ) -> dict[str, Any]:
     headers: dict[str, Any] = {}
 
     _kwargs: dict[str, Any] = {
         "method": "put",
-        "url": f"/auth/ecosystems/{ecosystem_id}/admin-notes",
+        "url": "/auth/ecosystems/{ecosystem_id}/admin-notes".format(
+            ecosystem_id=quote(str(ecosystem_id), safe=""),
+        ),
     }
 
-    _kwargs["json"] = body.to_dict()
+    if not isinstance(body, Unset):
+        _kwargs["json"] = body.to_dict()
 
     headers["Content-Type"] = "application/json"
 
@@ -82,20 +86,20 @@ def sync_detailed(
     ecosystem_id: str,
     *,
     client: AuthenticatedClient,
-    body: AdminNotesReconcileBody,
+    body: AdminNotesReconcileBody | Unset = UNSET,
 ) -> Response[Error | PutAuthEcosystemsEcosystemIdAdminNotesResponse200]:
     """Reconcile a subject’s admin notes within an ecosystem (owner-scoped)
 
     Args:
         ecosystem_id (str):
-        body (AdminNotesReconcileBody):
+        body (AdminNotesReconcileBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, PutAuthEcosystemsEcosystemIdAdminNotesResponse200]]
+        Response[Error | PutAuthEcosystemsEcosystemIdAdminNotesResponse200]
     """
 
     kwargs = _get_kwargs(
@@ -114,20 +118,20 @@ def sync(
     ecosystem_id: str,
     *,
     client: AuthenticatedClient,
-    body: AdminNotesReconcileBody,
+    body: AdminNotesReconcileBody | Unset = UNSET,
 ) -> Error | PutAuthEcosystemsEcosystemIdAdminNotesResponse200 | None:
     """Reconcile a subject’s admin notes within an ecosystem (owner-scoped)
 
     Args:
         ecosystem_id (str):
-        body (AdminNotesReconcileBody):
+        body (AdminNotesReconcileBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, PutAuthEcosystemsEcosystemIdAdminNotesResponse200]
+        Error | PutAuthEcosystemsEcosystemIdAdminNotesResponse200
     """
 
     return sync_detailed(
@@ -141,20 +145,20 @@ async def asyncio_detailed(
     ecosystem_id: str,
     *,
     client: AuthenticatedClient,
-    body: AdminNotesReconcileBody,
+    body: AdminNotesReconcileBody | Unset = UNSET,
 ) -> Response[Error | PutAuthEcosystemsEcosystemIdAdminNotesResponse200]:
     """Reconcile a subject’s admin notes within an ecosystem (owner-scoped)
 
     Args:
         ecosystem_id (str):
-        body (AdminNotesReconcileBody):
+        body (AdminNotesReconcileBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, PutAuthEcosystemsEcosystemIdAdminNotesResponse200]]
+        Response[Error | PutAuthEcosystemsEcosystemIdAdminNotesResponse200]
     """
 
     kwargs = _get_kwargs(
@@ -171,20 +175,20 @@ async def asyncio(
     ecosystem_id: str,
     *,
     client: AuthenticatedClient,
-    body: AdminNotesReconcileBody,
+    body: AdminNotesReconcileBody | Unset = UNSET,
 ) -> Error | PutAuthEcosystemsEcosystemIdAdminNotesResponse200 | None:
     """Reconcile a subject’s admin notes within an ecosystem (owner-scoped)
 
     Args:
         ecosystem_id (str):
-        body (AdminNotesReconcileBody):
+        body (AdminNotesReconcileBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, PutAuthEcosystemsEcosystemIdAdminNotesResponse200]
+        Error | PutAuthEcosystemsEcosystemIdAdminNotesResponse200
     """
 
     return (

@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, TypeVar, Union, cast
+from typing import TYPE_CHECKING, Any, TypeVar, cast
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -19,10 +21,10 @@ class PublicPersonaSummary:
     Attributes:
         slug (str):
         name (str):
-        description (Union[None, str]):
+        description (None | str):
         visibility (PublicPersonaSummaryVisibility):
         created_at (str):
-        owner (Union['PublicOwnerType0', None]):
+        owner (None | PublicOwnerType0):
     """
 
     slug: str
@@ -30,7 +32,7 @@ class PublicPersonaSummary:
     description: None | str
     visibility: PublicPersonaSummaryVisibility
     created_at: str
-    owner: Union["PublicOwnerType0", None]
+    owner: None | PublicOwnerType0
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -47,7 +49,7 @@ class PublicPersonaSummary:
 
         created_at = self.created_at
 
-        owner: None | dict[str, Any]
+        owner: dict[str, Any] | None
         if isinstance(self.owner, PublicOwnerType0):
             owner = self.owner.to_dict()
         else:
@@ -88,7 +90,7 @@ class PublicPersonaSummary:
 
         created_at = d.pop("createdAt")
 
-        def _parse_owner(data: object) -> Union["PublicOwnerType0", None]:
+        def _parse_owner(data: object) -> None | PublicOwnerType0:
             if data is None:
                 return data
             try:
@@ -97,9 +99,9 @@ class PublicPersonaSummary:
                 componentsschemas_public_owner_type_0 = PublicOwnerType0.from_dict(data)
 
                 return componentsschemas_public_owner_type_0
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
-            return cast(Union["PublicOwnerType0", None], data)
+            return cast(None | PublicOwnerType0, data)
 
         owner = _parse_owner(d.pop("owner"))
 

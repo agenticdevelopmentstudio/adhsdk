@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -15,14 +17,14 @@ class PostAuthUserMethodsBody:
     Attributes:
         user_id (str):
         provider (str):
-        provider_id (Union[None, Unset, str]):
-        credential (Union[None, Unset, str]):
+        provider_id (None | str | Unset):
+        credential (None | str | Unset):
     """
 
     user_id: str
     provider: str
-    provider_id: None | Unset | str = UNSET
-    credential: None | Unset | str = UNSET
+    provider_id: None | str | Unset = UNSET
+    credential: None | str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -30,13 +32,13 @@ class PostAuthUserMethodsBody:
 
         provider = self.provider
 
-        provider_id: None | Unset | str
+        provider_id: None | str | Unset
         if isinstance(self.provider_id, Unset):
             provider_id = UNSET
         else:
             provider_id = self.provider_id
 
-        credential: None | Unset | str
+        credential: None | str | Unset
         if isinstance(self.credential, Unset):
             credential = UNSET
         else:
@@ -64,21 +66,21 @@ class PostAuthUserMethodsBody:
 
         provider = d.pop("provider")
 
-        def _parse_provider_id(data: object) -> None | Unset | str:
+        def _parse_provider_id(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         provider_id = _parse_provider_id(d.pop("providerId", UNSET))
 
-        def _parse_credential(data: object) -> None | Unset | str:
+        def _parse_credential(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         credential = _parse_credential(d.pop("credential", UNSET))
 

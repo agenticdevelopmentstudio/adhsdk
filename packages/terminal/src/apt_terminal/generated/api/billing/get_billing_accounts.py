@@ -21,7 +21,7 @@ def _get_kwargs() -> dict[str, Any]:
 
 def _parse_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> Error | list["BillingAccount"] | None:
+) -> Error | list[BillingAccount] | None:
     if response.status_code == 200:
         response_200 = []
         _response_200 = response.json()
@@ -55,7 +55,7 @@ def _parse_response(
 
 def _build_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> Response[Error | list["BillingAccount"]]:
+) -> Response[Error | list[BillingAccount]]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -67,7 +67,7 @@ def _build_response(
 def sync_detailed(
     *,
     client: AuthenticatedClient,
-) -> Response[Error | list["BillingAccount"]]:
+) -> Response[Error | list[BillingAccount]]:
     """The ecosystem’s payer accounts, newest first
 
      Scoped to the acting identity’s ecosystem and to `deleted_at IS NULL`, ordered by `createdAt`
@@ -80,7 +80,7 @@ def sync_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, list['BillingAccount']]]
+        Response[Error | list[BillingAccount]]
     """
 
     kwargs = _get_kwargs()
@@ -95,7 +95,7 @@ def sync_detailed(
 def sync(
     *,
     client: AuthenticatedClient,
-) -> Error | list["BillingAccount"] | None:
+) -> Error | list[BillingAccount] | None:
     """The ecosystem’s payer accounts, newest first
 
      Scoped to the acting identity’s ecosystem and to `deleted_at IS NULL`, ordered by `createdAt`
@@ -108,7 +108,7 @@ def sync(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, list['BillingAccount']]
+        Error | list[BillingAccount]
     """
 
     return sync_detailed(
@@ -119,7 +119,7 @@ def sync(
 async def asyncio_detailed(
     *,
     client: AuthenticatedClient,
-) -> Response[Error | list["BillingAccount"]]:
+) -> Response[Error | list[BillingAccount]]:
     """The ecosystem’s payer accounts, newest first
 
      Scoped to the acting identity’s ecosystem and to `deleted_at IS NULL`, ordered by `createdAt`
@@ -132,7 +132,7 @@ async def asyncio_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, list['BillingAccount']]]
+        Response[Error | list[BillingAccount]]
     """
 
     kwargs = _get_kwargs()
@@ -145,7 +145,7 @@ async def asyncio_detailed(
 async def asyncio(
     *,
     client: AuthenticatedClient,
-) -> Error | list["BillingAccount"] | None:
+) -> Error | list[BillingAccount] | None:
     """The ecosystem’s payer accounts, newest first
 
      Scoped to the acting identity’s ecosystem and to `deleted_at IS NULL`, ordered by `createdAt`
@@ -158,7 +158,7 @@ async def asyncio(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, list['BillingAccount']]
+        Error | list[BillingAccount]
     """
 
     return (

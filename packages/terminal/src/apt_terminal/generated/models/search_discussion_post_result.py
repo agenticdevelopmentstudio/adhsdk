@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -18,7 +20,7 @@ class SearchDiscussionPostResult:
         post_number (int):
         created_at (str):
         rank (float): ts_rank relevance score
-        body_document_id (Union[None, Unset, str]):
+        body_document_id (None | str | Unset):
     """
 
     id: str
@@ -26,7 +28,7 @@ class SearchDiscussionPostResult:
     post_number: int
     created_at: str
     rank: float
-    body_document_id: None | Unset | str = UNSET
+    body_document_id: None | str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -40,7 +42,7 @@ class SearchDiscussionPostResult:
 
         rank = self.rank
 
-        body_document_id: None | Unset | str
+        body_document_id: None | str | Unset
         if isinstance(self.body_document_id, Unset):
             body_document_id = UNSET
         else:
@@ -75,12 +77,12 @@ class SearchDiscussionPostResult:
 
         rank = d.pop("rank")
 
-        def _parse_body_document_id(data: object) -> None | Unset | str:
+        def _parse_body_document_id(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         body_document_id = _parse_body_document_id(d.pop("bodyDocumentId", UNSET))
 

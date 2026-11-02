@@ -1,5 +1,6 @@
 from http import HTTPStatus
 from typing import Any
+from urllib.parse import quote
 
 import httpx
 
@@ -10,22 +11,25 @@ from ...models.error import Error
 from ...models.post_bucket_access_groups_group_id_members_body import (
     PostBucketAccessGroupsGroupIdMembersBody,
 )
-from ...types import Response
+from ...types import UNSET, Response, Unset
 
 
 def _get_kwargs(
     group_id: str,
     *,
-    body: PostBucketAccessGroupsGroupIdMembersBody,
+    body: PostBucketAccessGroupsGroupIdMembersBody | Unset = UNSET,
 ) -> dict[str, Any]:
     headers: dict[str, Any] = {}
 
     _kwargs: dict[str, Any] = {
         "method": "post",
-        "url": f"/bucket/access-groups/{group_id}/members",
+        "url": "/bucket/access-groups/{group_id}/members".format(
+            group_id=quote(str(group_id), safe=""),
+        ),
     }
 
-    _kwargs["json"] = body.to_dict()
+    if not isinstance(body, Unset):
+        _kwargs["json"] = body.to_dict()
 
     headers["Content-Type"] = "application/json"
 
@@ -82,20 +86,20 @@ def sync_detailed(
     group_id: str,
     *,
     client: AuthenticatedClient,
-    body: PostBucketAccessGroupsGroupIdMembersBody,
+    body: PostBucketAccessGroupsGroupIdMembersBody | Unset = UNSET,
 ) -> Response[BucketAccessGroupMember | Error]:
     """Add a member (user/organization/persona/app/token) to an access group
 
     Args:
         group_id (str):
-        body (PostBucketAccessGroupsGroupIdMembersBody):
+        body (PostBucketAccessGroupsGroupIdMembersBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[BucketAccessGroupMember, Error]]
+        Response[BucketAccessGroupMember | Error]
     """
 
     kwargs = _get_kwargs(
@@ -114,20 +118,20 @@ def sync(
     group_id: str,
     *,
     client: AuthenticatedClient,
-    body: PostBucketAccessGroupsGroupIdMembersBody,
+    body: PostBucketAccessGroupsGroupIdMembersBody | Unset = UNSET,
 ) -> BucketAccessGroupMember | Error | None:
     """Add a member (user/organization/persona/app/token) to an access group
 
     Args:
         group_id (str):
-        body (PostBucketAccessGroupsGroupIdMembersBody):
+        body (PostBucketAccessGroupsGroupIdMembersBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[BucketAccessGroupMember, Error]
+        BucketAccessGroupMember | Error
     """
 
     return sync_detailed(
@@ -141,20 +145,20 @@ async def asyncio_detailed(
     group_id: str,
     *,
     client: AuthenticatedClient,
-    body: PostBucketAccessGroupsGroupIdMembersBody,
+    body: PostBucketAccessGroupsGroupIdMembersBody | Unset = UNSET,
 ) -> Response[BucketAccessGroupMember | Error]:
     """Add a member (user/organization/persona/app/token) to an access group
 
     Args:
         group_id (str):
-        body (PostBucketAccessGroupsGroupIdMembersBody):
+        body (PostBucketAccessGroupsGroupIdMembersBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[BucketAccessGroupMember, Error]]
+        Response[BucketAccessGroupMember | Error]
     """
 
     kwargs = _get_kwargs(
@@ -171,20 +175,20 @@ async def asyncio(
     group_id: str,
     *,
     client: AuthenticatedClient,
-    body: PostBucketAccessGroupsGroupIdMembersBody,
+    body: PostBucketAccessGroupsGroupIdMembersBody | Unset = UNSET,
 ) -> BucketAccessGroupMember | Error | None:
     """Add a member (user/organization/persona/app/token) to an access group
 
     Args:
         group_id (str):
-        body (PostBucketAccessGroupsGroupIdMembersBody):
+        body (PostBucketAccessGroupsGroupIdMembersBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[BucketAccessGroupMember, Error]
+        BucketAccessGroupMember | Error
     """
 
     return (

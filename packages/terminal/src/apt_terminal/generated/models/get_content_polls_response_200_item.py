@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -12,17 +14,17 @@ class GetContentPollsResponse200Item:
     Attributes:
         id (str):
         customer_id (str):
-        deleted_at (Union[None, str]):
+        deleted_at (None | str):
         ecosystem_id (str):
-        host_kind (Union[None, str]):
-        host_id (Union[None, str]):
+        host_kind (None | str):
+        host_id (None | str):
         question (str):
         allow_multiple (bool):
-        expires_at (Union[None, str]):
+        expires_at (None | str):
         created_at (str):
         updated_at (str):
         sync_version (int):
-        sync_stamped_at (Union[None, str]):
+        sync_stamped_at (None | str):
         sync_txid (int):
     """
 

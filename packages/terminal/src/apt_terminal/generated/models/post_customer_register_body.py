@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar
 
@@ -15,12 +17,12 @@ class PostCustomerRegisterBody:
     Attributes:
         email (str):
         password (str): Must be at least 8 characters.
-        display_name (Union[Unset, str]):
+        display_name (str | Unset):
     """
 
     email: str
     password: str
-    display_name: Unset | str = UNSET
+    display_name: str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:

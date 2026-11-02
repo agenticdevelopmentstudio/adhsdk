@@ -862,9 +862,9 @@ class AssembleTest(unittest.TestCase):
         # pinned"); a range would let any fresh lockfile float onto it.
         self.assert_ok(self.assemble())
         package = json.loads((self.app / "package.json").read_text())
-        self.assertEqual(package["dependencies"]["next"], "16.2.9")
+        self.assertEqual(package["dependencies"]["next"], "16.4.3")
         # Next's ESLint plugin ships in lockstep with next; a range lets it float onto 16.3.
-        self.assertEqual(package["devDependencies"]["@next/eslint-plugin-next"], "16.2.9")
+        self.assertEqual(package["devDependencies"]["@next/eslint-plugin-next"], "16.4.3")
 
     # --- eslint ------------------------------------------------------------------------------
 

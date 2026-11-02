@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -12,32 +14,32 @@ T = TypeVar("T", bound="PutIntegrationIntegrationPagesIdBody")
 class PutIntegrationIntegrationPagesIdBody:
     """
     Attributes:
-        ecosystem_id (Union[Unset, str]):
-        connection_id (Union[Unset, str]):
-        external_id (Union[Unset, str]):
-        title (Union[Unset, str]):
-        object_type (Union[Unset, str]):
-        url (Union[None, Unset, str]):
-        icon (Union[None, Unset, str]):
-        parent_type (Union[None, Unset, str]):
-        parent_id (Union[None, Unset, str]):
-        is_archived (Union[Unset, bool]):
-        last_edited_at (Union[None, Unset, str]):
-        sync_txid (Union[Unset, int]):
+        ecosystem_id (str | Unset):
+        connection_id (str | Unset):
+        external_id (str | Unset):
+        title (str | Unset):
+        object_type (str | Unset):
+        url (None | str | Unset):
+        icon (None | str | Unset):
+        parent_type (None | str | Unset):
+        parent_id (None | str | Unset):
+        is_archived (bool | Unset):
+        last_edited_at (None | str | Unset):
+        sync_txid (int | Unset):
     """
 
-    ecosystem_id: Unset | str = UNSET
-    connection_id: Unset | str = UNSET
-    external_id: Unset | str = UNSET
-    title: Unset | str = UNSET
-    object_type: Unset | str = UNSET
-    url: None | Unset | str = UNSET
-    icon: None | Unset | str = UNSET
-    parent_type: None | Unset | str = UNSET
-    parent_id: None | Unset | str = UNSET
-    is_archived: Unset | bool = UNSET
-    last_edited_at: None | Unset | str = UNSET
-    sync_txid: Unset | int = UNSET
+    ecosystem_id: str | Unset = UNSET
+    connection_id: str | Unset = UNSET
+    external_id: str | Unset = UNSET
+    title: str | Unset = UNSET
+    object_type: str | Unset = UNSET
+    url: None | str | Unset = UNSET
+    icon: None | str | Unset = UNSET
+    parent_type: None | str | Unset = UNSET
+    parent_id: None | str | Unset = UNSET
+    is_archived: bool | Unset = UNSET
+    last_edited_at: None | str | Unset = UNSET
+    sync_txid: int | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
         ecosystem_id = self.ecosystem_id
@@ -50,25 +52,25 @@ class PutIntegrationIntegrationPagesIdBody:
 
         object_type = self.object_type
 
-        url: None | Unset | str
+        url: None | str | Unset
         if isinstance(self.url, Unset):
             url = UNSET
         else:
             url = self.url
 
-        icon: None | Unset | str
+        icon: None | str | Unset
         if isinstance(self.icon, Unset):
             icon = UNSET
         else:
             icon = self.icon
 
-        parent_type: None | Unset | str
+        parent_type: None | str | Unset
         if isinstance(self.parent_type, Unset):
             parent_type = UNSET
         else:
             parent_type = self.parent_type
 
-        parent_id: None | Unset | str
+        parent_id: None | str | Unset
         if isinstance(self.parent_id, Unset):
             parent_id = UNSET
         else:
@@ -76,7 +78,7 @@ class PutIntegrationIntegrationPagesIdBody:
 
         is_archived = self.is_archived
 
-        last_edited_at: None | Unset | str
+        last_edited_at: None | str | Unset
         if isinstance(self.last_edited_at, Unset):
             last_edited_at = UNSET
         else:
@@ -127,50 +129,50 @@ class PutIntegrationIntegrationPagesIdBody:
 
         object_type = d.pop("objectType", UNSET)
 
-        def _parse_url(data: object) -> None | Unset | str:
+        def _parse_url(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         url = _parse_url(d.pop("url", UNSET))
 
-        def _parse_icon(data: object) -> None | Unset | str:
+        def _parse_icon(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         icon = _parse_icon(d.pop("icon", UNSET))
 
-        def _parse_parent_type(data: object) -> None | Unset | str:
+        def _parse_parent_type(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         parent_type = _parse_parent_type(d.pop("parentType", UNSET))
 
-        def _parse_parent_id(data: object) -> None | Unset | str:
+        def _parse_parent_id(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         parent_id = _parse_parent_id(d.pop("parentId", UNSET))
 
         is_archived = d.pop("isArchived", UNSET)
 
-        def _parse_last_edited_at(data: object) -> None | Unset | str:
+        def _parse_last_edited_at(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         last_edited_at = _parse_last_edited_at(d.pop("lastEditedAt", UNSET))
 

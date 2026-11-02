@@ -1,5 +1,6 @@
 from http import HTTPStatus
 from typing import Any
+from urllib.parse import quote
 
 import httpx
 
@@ -10,22 +11,25 @@ from ...models.problem_details import ProblemDetails
 from ...models.put_integrations_admin_configs_provider_id_body import (
     PutIntegrationsAdminConfigsProviderIdBody,
 )
-from ...types import Response
+from ...types import UNSET, Response, Unset
 
 
 def _get_kwargs(
     provider_id: str,
     *,
-    body: PutIntegrationsAdminConfigsProviderIdBody,
+    body: PutIntegrationsAdminConfigsProviderIdBody | Unset = UNSET,
 ) -> dict[str, Any]:
     headers: dict[str, Any] = {}
 
     _kwargs: dict[str, Any] = {
         "method": "put",
-        "url": f"/integrations/admin/configs/{provider_id}",
+        "url": "/integrations/admin/configs/{provider_id}".format(
+            provider_id=quote(str(provider_id), safe=""),
+        ),
     }
 
-    _kwargs["json"] = body.to_dict()
+    if not isinstance(body, Unset):
+        _kwargs["json"] = body.to_dict()
 
     headers["Content-Type"] = "application/json"
 
@@ -82,7 +86,7 @@ def sync_detailed(
     provider_id: str,
     *,
     client: AuthenticatedClient,
-    body: PutIntegrationsAdminConfigsProviderIdBody,
+    body: PutIntegrationsAdminConfigsProviderIdBody | Unset = UNSET,
 ) -> Response[IntegrationGlobalConfig | ProblemDetails]:
     """Upsert a provider global config (admin)
 
@@ -91,14 +95,14 @@ def sync_detailed(
 
     Args:
         provider_id (str):
-        body (PutIntegrationsAdminConfigsProviderIdBody):
+        body (PutIntegrationsAdminConfigsProviderIdBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[IntegrationGlobalConfig, ProblemDetails]]
+        Response[IntegrationGlobalConfig | ProblemDetails]
     """
 
     kwargs = _get_kwargs(
@@ -117,7 +121,7 @@ def sync(
     provider_id: str,
     *,
     client: AuthenticatedClient,
-    body: PutIntegrationsAdminConfigsProviderIdBody,
+    body: PutIntegrationsAdminConfigsProviderIdBody | Unset = UNSET,
 ) -> IntegrationGlobalConfig | ProblemDetails | None:
     """Upsert a provider global config (admin)
 
@@ -126,14 +130,14 @@ def sync(
 
     Args:
         provider_id (str):
-        body (PutIntegrationsAdminConfigsProviderIdBody):
+        body (PutIntegrationsAdminConfigsProviderIdBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[IntegrationGlobalConfig, ProblemDetails]
+        IntegrationGlobalConfig | ProblemDetails
     """
 
     return sync_detailed(
@@ -147,7 +151,7 @@ async def asyncio_detailed(
     provider_id: str,
     *,
     client: AuthenticatedClient,
-    body: PutIntegrationsAdminConfigsProviderIdBody,
+    body: PutIntegrationsAdminConfigsProviderIdBody | Unset = UNSET,
 ) -> Response[IntegrationGlobalConfig | ProblemDetails]:
     """Upsert a provider global config (admin)
 
@@ -156,14 +160,14 @@ async def asyncio_detailed(
 
     Args:
         provider_id (str):
-        body (PutIntegrationsAdminConfigsProviderIdBody):
+        body (PutIntegrationsAdminConfigsProviderIdBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[IntegrationGlobalConfig, ProblemDetails]]
+        Response[IntegrationGlobalConfig | ProblemDetails]
     """
 
     kwargs = _get_kwargs(
@@ -180,7 +184,7 @@ async def asyncio(
     provider_id: str,
     *,
     client: AuthenticatedClient,
-    body: PutIntegrationsAdminConfigsProviderIdBody,
+    body: PutIntegrationsAdminConfigsProviderIdBody | Unset = UNSET,
 ) -> IntegrationGlobalConfig | ProblemDetails | None:
     """Upsert a provider global config (admin)
 
@@ -189,14 +193,14 @@ async def asyncio(
 
     Args:
         provider_id (str):
-        body (PutIntegrationsAdminConfigsProviderIdBody):
+        body (PutIntegrationsAdminConfigsProviderIdBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[IntegrationGlobalConfig, ProblemDetails]
+        IntegrationGlobalConfig | ProblemDetails
     """
 
     return (

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -14,23 +16,23 @@ class PostBillingSubscriptionTiersBody:
     Attributes:
         key (str):
         name (str):
-        description (Union[None, Unset, str]):
-        display_order (Union[Unset, int]):
-        is_active (Union[Unset, bool]):
+        description (None | str | Unset):
+        display_order (int | Unset):
+        is_active (bool | Unset):
     """
 
     key: str
     name: str
-    description: None | Unset | str = UNSET
-    display_order: Unset | int = UNSET
-    is_active: Unset | bool = UNSET
+    description: None | str | Unset = UNSET
+    display_order: int | Unset = UNSET
+    is_active: bool | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
         key = self.key
 
         name = self.name
 
-        description: None | Unset | str
+        description: None | str | Unset
         if isinstance(self.description, Unset):
             description = UNSET
         else:
@@ -64,12 +66,12 @@ class PostBillingSubscriptionTiersBody:
 
         name = d.pop("name")
 
-        def _parse_description(data: object) -> None | Unset | str:
+        def _parse_description(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         description = _parse_description(d.pop("description", UNSET))
 

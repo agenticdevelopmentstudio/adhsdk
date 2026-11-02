@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class AppearanceSettingsPrefsReduceMotion(str, Enum):
+class AppearanceSettingsPrefsReduceMotion(StrEnum):
     AUTO = "auto"
     OFF = "off"
     ON = "on"

@@ -14,8 +14,8 @@ from ...types import UNSET, Response, Unset
 
 def _get_kwargs(
     *,
-    limit: Unset | str = UNSET,
-    offset: Unset | str = UNSET,
+    limit: str | Unset = UNSET,
+    offset: str | Unset = UNSET,
 ) -> dict[str, Any]:
     params: dict[str, Any] = {}
 
@@ -72,8 +72,8 @@ def _build_response(
 def sync_detailed(
     *,
     client: AuthenticatedClient,
-    limit: Unset | str = UNSET,
-    offset: Unset | str = UNSET,
+    limit: str | Unset = UNSET,
+    offset: str | Unset = UNSET,
 ) -> Response[GetIntegrationsAdminConfigsResponse200 | ProblemDetails]:
     """List provider global configs (admin; secrets masked)
 
@@ -82,15 +82,15 @@ def sync_detailed(
     `limit`/`offset` echo the applied paging.
 
     Args:
-        limit (Union[Unset, str]):
-        offset (Union[Unset, str]):
+        limit (str | Unset):
+        offset (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[GetIntegrationsAdminConfigsResponse200, ProblemDetails]]
+        Response[GetIntegrationsAdminConfigsResponse200 | ProblemDetails]
     """
 
     kwargs = _get_kwargs(
@@ -108,8 +108,8 @@ def sync_detailed(
 def sync(
     *,
     client: AuthenticatedClient,
-    limit: Unset | str = UNSET,
-    offset: Unset | str = UNSET,
+    limit: str | Unset = UNSET,
+    offset: str | Unset = UNSET,
 ) -> GetIntegrationsAdminConfigsResponse200 | ProblemDetails | None:
     """List provider global configs (admin; secrets masked)
 
@@ -118,15 +118,15 @@ def sync(
     `limit`/`offset` echo the applied paging.
 
     Args:
-        limit (Union[Unset, str]):
-        offset (Union[Unset, str]):
+        limit (str | Unset):
+        offset (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[GetIntegrationsAdminConfigsResponse200, ProblemDetails]
+        GetIntegrationsAdminConfigsResponse200 | ProblemDetails
     """
 
     return sync_detailed(
@@ -139,8 +139,8 @@ def sync(
 async def asyncio_detailed(
     *,
     client: AuthenticatedClient,
-    limit: Unset | str = UNSET,
-    offset: Unset | str = UNSET,
+    limit: str | Unset = UNSET,
+    offset: str | Unset = UNSET,
 ) -> Response[GetIntegrationsAdminConfigsResponse200 | ProblemDetails]:
     """List provider global configs (admin; secrets masked)
 
@@ -149,15 +149,15 @@ async def asyncio_detailed(
     `limit`/`offset` echo the applied paging.
 
     Args:
-        limit (Union[Unset, str]):
-        offset (Union[Unset, str]):
+        limit (str | Unset):
+        offset (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[GetIntegrationsAdminConfigsResponse200, ProblemDetails]]
+        Response[GetIntegrationsAdminConfigsResponse200 | ProblemDetails]
     """
 
     kwargs = _get_kwargs(
@@ -173,8 +173,8 @@ async def asyncio_detailed(
 async def asyncio(
     *,
     client: AuthenticatedClient,
-    limit: Unset | str = UNSET,
-    offset: Unset | str = UNSET,
+    limit: str | Unset = UNSET,
+    offset: str | Unset = UNSET,
 ) -> GetIntegrationsAdminConfigsResponse200 | ProblemDetails | None:
     """List provider global configs (admin; secrets masked)
 
@@ -183,15 +183,15 @@ async def asyncio(
     `limit`/`offset` echo the applied paging.
 
     Args:
-        limit (Union[Unset, str]):
-        offset (Union[Unset, str]):
+        limit (str | Unset):
+        offset (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[GetIntegrationsAdminConfigsResponse200, ProblemDetails]
+        GetIntegrationsAdminConfigsResponse200 | ProblemDetails
     """
 
     return (

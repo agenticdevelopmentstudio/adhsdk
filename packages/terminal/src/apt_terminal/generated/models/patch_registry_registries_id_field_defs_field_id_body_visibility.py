@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class PatchRegistryRegistriesIdFieldDefsFieldIdBodyVisibility(str, Enum):
+class PatchRegistryRegistriesIdFieldDefsFieldIdBodyVisibility(StrEnum):
     AUTHENTICATED = "authenticated"
     PRIVATE = "private"
     PUBLIC = "public"

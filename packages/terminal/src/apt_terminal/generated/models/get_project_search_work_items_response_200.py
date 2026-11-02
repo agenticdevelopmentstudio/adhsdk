@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import TYPE_CHECKING, Any, TypeVar
 
@@ -15,12 +17,12 @@ T = TypeVar("T", bound="GetProjectSearchWorkItemsResponse200")
 class GetProjectSearchWorkItemsResponse200:
     """
     Attributes:
-        results (list['WorkItemSearchHit']):
+        results (list[WorkItemSearchHit]):
         limit (int): the limit actually applied, after clamping
         has_more (bool):
     """
 
-    results: list["WorkItemSearchHit"]
+    results: list[WorkItemSearchHit]
     limit: int
     has_more: bool
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)

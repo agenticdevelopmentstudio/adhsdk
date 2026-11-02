@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, TypeVar, Union, cast
+from typing import TYPE_CHECKING, Any, TypeVar, cast
 
 from attrs import define as _attrs_define
 
@@ -18,32 +20,32 @@ T = TypeVar("T", bound="PutGameGamesIdBody")
 class PutGameGamesIdBody:
     """
     Attributes:
-        ecosystem_id (Union[Unset, str]):
-        slug (Union[Unset, str]):
-        name (Union[Unset, str]):
-        description (Union[None, Unset, str]):
-        engine (Union[Unset, str]):
-        engine_config (Union['PutGameGamesIdBodyEngineConfigType1', None, Unset, bool, float, list[Any], str]):
-        character_names (Union[Unset, str]):
-        status (Union[Unset, str]):
-        event_log (Union[Unset, str]):
-        event_retention_days (Union[Unset, int]):
-        sync_txid (Union[Unset, int]):
+        ecosystem_id (str | Unset):
+        slug (str | Unset):
+        name (str | Unset):
+        description (None | str | Unset):
+        engine (str | Unset):
+        engine_config (bool | float | list[Any] | None | PutGameGamesIdBodyEngineConfigType1 | str | Unset):
+        character_names (str | Unset):
+        status (str | Unset):
+        event_log (str | Unset):
+        event_retention_days (int | Unset):
+        sync_txid (int | Unset):
     """
 
-    ecosystem_id: Unset | str = UNSET
-    slug: Unset | str = UNSET
-    name: Unset | str = UNSET
-    description: None | Unset | str = UNSET
-    engine: Unset | str = UNSET
-    engine_config: Union[
-        "PutGameGamesIdBodyEngineConfigType1", None, Unset, bool, float, list[Any], str
-    ] = UNSET
-    character_names: Unset | str = UNSET
-    status: Unset | str = UNSET
-    event_log: Unset | str = UNSET
-    event_retention_days: Unset | int = UNSET
-    sync_txid: Unset | int = UNSET
+    ecosystem_id: str | Unset = UNSET
+    slug: str | Unset = UNSET
+    name: str | Unset = UNSET
+    description: None | str | Unset = UNSET
+    engine: str | Unset = UNSET
+    engine_config: (
+        bool | float | list[Any] | None | PutGameGamesIdBodyEngineConfigType1 | str | Unset
+    ) = UNSET
+    character_names: str | Unset = UNSET
+    status: str | Unset = UNSET
+    event_log: str | Unset = UNSET
+    event_retention_days: int | Unset = UNSET
+    sync_txid: int | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
         from ..models.put_game_games_id_body_engine_config_type_1 import (
@@ -56,7 +58,7 @@ class PutGameGamesIdBody:
 
         name = self.name
 
-        description: None | Unset | str
+        description: None | str | Unset
         if isinstance(self.description, Unset):
             description = UNSET
         else:
@@ -64,7 +66,7 @@ class PutGameGamesIdBody:
 
         engine = self.engine
 
-        engine_config: None | Unset | bool | dict[str, Any] | float | list[Any] | str
+        engine_config: bool | dict[str, Any] | float | list[Any] | None | str | Unset
         if isinstance(self.engine_config, Unset):
             engine_config = UNSET
         elif isinstance(self.engine_config, PutGameGamesIdBodyEngineConfigType1):
@@ -126,12 +128,12 @@ class PutGameGamesIdBody:
 
         name = d.pop("name", UNSET)
 
-        def _parse_description(data: object) -> None | Unset | str:
+        def _parse_description(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         description = _parse_description(d.pop("description", UNSET))
 
@@ -139,7 +141,7 @@ class PutGameGamesIdBody:
 
         def _parse_engine_config(
             data: object,
-        ) -> Union["PutGameGamesIdBodyEngineConfigType1", None, Unset, bool, float, list[Any], str]:
+        ) -> bool | float | list[Any] | None | PutGameGamesIdBodyEngineConfigType1 | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
@@ -150,7 +152,7 @@ class PutGameGamesIdBody:
                 engine_config_type_1 = PutGameGamesIdBodyEngineConfigType1.from_dict(data)
 
                 return engine_config_type_1
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
             try:
                 if not isinstance(data, list):
@@ -158,12 +160,10 @@ class PutGameGamesIdBody:
                 engine_config_type_2 = cast(list[Any], data)
 
                 return engine_config_type_2
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
             return cast(
-                Union[
-                    "PutGameGamesIdBodyEngineConfigType1", None, Unset, bool, float, list[Any], str
-                ],
+                bool | float | list[Any] | None | PutGameGamesIdBodyEngineConfigType1 | str | Unset,
                 data,
             )
 

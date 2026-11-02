@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, TypeVar, Union, cast
+from typing import TYPE_CHECKING, Any, TypeVar, cast
 from uuid import UUID
 
 from attrs import define as _attrs_define
@@ -28,9 +30,9 @@ class IntegrationConnection:
         username (str):
         external_account_id (str): Provider-side account id
         created_at (str):
-        last_sync_at (Union[None, Unset, str]): Last successful sync (null = never)
-        last_error (Union[None, Unset, str]): Last recorded sync error
-        sync_settings (Union['IntegrationConnectionSyncSettingsType0', None, Unset]): Caller-tunable sync settings
+        last_sync_at (None | str | Unset): Last successful sync (null = never)
+        last_error (None | str | Unset): Last recorded sync error
+        sync_settings (IntegrationConnectionSyncSettingsType0 | None | Unset): Caller-tunable sync settings
             (gmailLabelIds / redditSubreddits / …) — non-secret, returned so settings forms can prefill instead of blind-
             overwriting.
     """
@@ -43,9 +45,9 @@ class IntegrationConnection:
     username: str
     external_account_id: str
     created_at: str
-    last_sync_at: None | Unset | str = UNSET
-    last_error: None | Unset | str = UNSET
-    sync_settings: Union["IntegrationConnectionSyncSettingsType0", None, Unset] = UNSET
+    last_sync_at: None | str | Unset = UNSET
+    last_error: None | str | Unset = UNSET
+    sync_settings: IntegrationConnectionSyncSettingsType0 | None | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -69,19 +71,19 @@ class IntegrationConnection:
 
         created_at = self.created_at
 
-        last_sync_at: None | Unset | str
+        last_sync_at: None | str | Unset
         if isinstance(self.last_sync_at, Unset):
             last_sync_at = UNSET
         else:
             last_sync_at = self.last_sync_at
 
-        last_error: None | Unset | str
+        last_error: None | str | Unset
         if isinstance(self.last_error, Unset):
             last_error = UNSET
         else:
             last_error = self.last_error
 
-        sync_settings: None | Unset | dict[str, Any]
+        sync_settings: dict[str, Any] | None | Unset
         if isinstance(self.sync_settings, Unset):
             sync_settings = UNSET
         elif isinstance(self.sync_settings, IntegrationConnectionSyncSettingsType0):
@@ -135,27 +137,27 @@ class IntegrationConnection:
 
         created_at = d.pop("createdAt")
 
-        def _parse_last_sync_at(data: object) -> None | Unset | str:
+        def _parse_last_sync_at(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         last_sync_at = _parse_last_sync_at(d.pop("lastSyncAt", UNSET))
 
-        def _parse_last_error(data: object) -> None | Unset | str:
+        def _parse_last_error(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         last_error = _parse_last_error(d.pop("lastError", UNSET))
 
         def _parse_sync_settings(
             data: object,
-        ) -> Union["IntegrationConnectionSyncSettingsType0", None, Unset]:
+        ) -> IntegrationConnectionSyncSettingsType0 | None | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
@@ -166,9 +168,9 @@ class IntegrationConnection:
                 sync_settings_type_0 = IntegrationConnectionSyncSettingsType0.from_dict(data)
 
                 return sync_settings_type_0
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
-            return cast(Union["IntegrationConnectionSyncSettingsType0", None, Unset], data)
+            return cast(IntegrationConnectionSyncSettingsType0 | None | Unset, data)
 
         sync_settings = _parse_sync_settings(d.pop("syncSettings", UNSET))
 

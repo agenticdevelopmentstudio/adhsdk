@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -12,30 +14,30 @@ T = TypeVar("T", bound="PutGameEffectsIdBody")
 class PutGameEffectsIdBody:
     """
     Attributes:
-        ecosystem_id (Union[Unset, str]):
-        game_id (Union[Unset, str]):
-        definition_id (Union[Unset, str]):
-        key (Union[Unset, str]):
-        trigger (Union[Unset, str]):
-        target (Union[Unset, str]):
-        operation (Union[Unset, str]):
-        value (Union[Unset, int]):
-        duration (Union[None, Unset, int]):
-        sort_order (Union[Unset, int]):
-        sync_txid (Union[Unset, int]):
+        ecosystem_id (str | Unset):
+        game_id (str | Unset):
+        definition_id (str | Unset):
+        key (str | Unset):
+        trigger (str | Unset):
+        target (str | Unset):
+        operation (str | Unset):
+        value (int | Unset):
+        duration (int | None | Unset):
+        sort_order (int | Unset):
+        sync_txid (int | Unset):
     """
 
-    ecosystem_id: Unset | str = UNSET
-    game_id: Unset | str = UNSET
-    definition_id: Unset | str = UNSET
-    key: Unset | str = UNSET
-    trigger: Unset | str = UNSET
-    target: Unset | str = UNSET
-    operation: Unset | str = UNSET
-    value: Unset | int = UNSET
-    duration: None | Unset | int = UNSET
-    sort_order: Unset | int = UNSET
-    sync_txid: Unset | int = UNSET
+    ecosystem_id: str | Unset = UNSET
+    game_id: str | Unset = UNSET
+    definition_id: str | Unset = UNSET
+    key: str | Unset = UNSET
+    trigger: str | Unset = UNSET
+    target: str | Unset = UNSET
+    operation: str | Unset = UNSET
+    value: int | Unset = UNSET
+    duration: int | None | Unset = UNSET
+    sort_order: int | Unset = UNSET
+    sync_txid: int | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
         ecosystem_id = self.ecosystem_id
@@ -54,7 +56,7 @@ class PutGameEffectsIdBody:
 
         value = self.value
 
-        duration: None | Unset | int
+        duration: int | None | Unset
         if isinstance(self.duration, Unset):
             duration = UNSET
         else:
@@ -111,12 +113,12 @@ class PutGameEffectsIdBody:
 
         value = d.pop("value", UNSET)
 
-        def _parse_duration(data: object) -> None | Unset | int:
+        def _parse_duration(data: object) -> int | None | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | int, data)
+            return cast(int | None | Unset, data)
 
         duration = _parse_duration(d.pop("duration", UNSET))
 

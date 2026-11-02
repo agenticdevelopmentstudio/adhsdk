@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -12,24 +14,24 @@ class PostIntegrationIntegrationSocialNotificationsResponse201:
     Attributes:
         id (str):
         customer_id (str):
-        deleted_at (Union[None, str]):
+        deleted_at (None | str):
         ecosystem_id (str):
         connection_id (str):
         external_id (str):
         source_provider (str):
         notification_type (str):
-        title (Union[None, str]):
-        body (Union[None, str]):
-        author_handle (Union[None, str]):
-        author_display_name (Union[None, str]):
-        item_url (Union[None, str]):
+        title (None | str):
+        body (None | str):
+        author_handle (None | str):
+        author_display_name (None | str):
+        item_url (None | str):
         is_read (bool):
         is_deleted (bool):
-        external_created_at (Union[None, str]):
+        external_created_at (None | str):
         created_at (str):
         updated_at (str):
         sync_version (int):
-        sync_stamped_at (Union[None, str]):
+        sync_stamped_at (None | str):
         sync_txid (int):
     """
 

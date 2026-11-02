@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -14,15 +16,15 @@ class GetAudienceListsResponse200Item:
         ecosystem_id (str):
         owner_kind (str):
         owner_id (str):
-        created_by (Union[None, str]):
+        created_by (None | str):
         name (str):
         slug (str):
-        description (Union[None, str]):
+        description (None | str):
         public_key (str):
         status (str):
-        welcome_template_id (Union[None, str]):
-        welcome_back_template_id (Union[None, str]):
-        from_name (Union[None, str]):
+        welcome_template_id (None | str):
+        welcome_back_template_id (None | str):
+        from_name (None | str):
         is_deleted (bool):
         created_at (str):
         updated_at (str):

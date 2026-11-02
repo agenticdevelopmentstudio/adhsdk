@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -15,15 +17,15 @@ class PostMonitoringSitesBody:
         site_group_id (str):
         name (str):
         slug (str):
-        description (Union[None, Unset, str]):
-        display_order (Union[Unset, int]):
+        description (None | str | Unset):
+        display_order (int | Unset):
     """
 
     site_group_id: str
     name: str
     slug: str
-    description: None | Unset | str = UNSET
-    display_order: Unset | int = UNSET
+    description: None | str | Unset = UNSET
+    display_order: int | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
         site_group_id = self.site_group_id
@@ -32,7 +34,7 @@ class PostMonitoringSitesBody:
 
         slug = self.slug
 
-        description: None | Unset | str
+        description: None | str | Unset
         if isinstance(self.description, Unset):
             description = UNSET
         else:
@@ -65,12 +67,12 @@ class PostMonitoringSitesBody:
 
         slug = d.pop("slug")
 
-        def _parse_description(data: object) -> None | Unset | str:
+        def _parse_description(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         description = _parse_description(d.pop("description", UNSET))
 

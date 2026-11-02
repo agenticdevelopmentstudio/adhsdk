@@ -1,5 +1,6 @@
 from http import HTTPStatus
 from typing import Any
+from urllib.parse import quote
 
 import httpx
 
@@ -15,7 +16,9 @@ def _get_kwargs(
 ) -> dict[str, Any]:
     _kwargs: dict[str, Any] = {
         "method": "delete",
-        "url": f"/project/programs/{id}",
+        "url": "/project/programs/{id}".format(
+            id=quote(str(id), safe=""),
+        ),
     }
 
     return _kwargs
@@ -66,9 +69,9 @@ def sync_detailed(
     *,
     client: AuthenticatedClient,
 ) -> Response[DeleteProjectProgramsIdResponse200 | Error]:
-    r"""Soft-delete a program, UN-ASSIGNING every project in it
+    """Soft-delete a program, UN-ASSIGNING every project in it
 
-     The iteration-delete rule, applied one level up: `programId` is nullable and \"in no program\" is an
+     The iteration-delete rule, applied one level up: `programId` is nullable and "in no program" is an
     ordinary state, so removing the container has a defined outcome. Refusing instead would strand the
     workspace behind a program it had to empty by hand, one board at a time. The sweep is NOT reach-
     filtered — the authority is the workspace D verb, and half-emptying it would leave boards pointing
@@ -83,7 +86,7 @@ def sync_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[DeleteProjectProgramsIdResponse200, Error]]
+        Response[DeleteProjectProgramsIdResponse200 | Error]
     """
 
     kwargs = _get_kwargs(
@@ -102,9 +105,9 @@ def sync(
     *,
     client: AuthenticatedClient,
 ) -> DeleteProjectProgramsIdResponse200 | Error | None:
-    r"""Soft-delete a program, UN-ASSIGNING every project in it
+    """Soft-delete a program, UN-ASSIGNING every project in it
 
-     The iteration-delete rule, applied one level up: `programId` is nullable and \"in no program\" is an
+     The iteration-delete rule, applied one level up: `programId` is nullable and "in no program" is an
     ordinary state, so removing the container has a defined outcome. Refusing instead would strand the
     workspace behind a program it had to empty by hand, one board at a time. The sweep is NOT reach-
     filtered — the authority is the workspace D verb, and half-emptying it would leave boards pointing
@@ -119,7 +122,7 @@ def sync(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[DeleteProjectProgramsIdResponse200, Error]
+        DeleteProjectProgramsIdResponse200 | Error
     """
 
     return sync_detailed(
@@ -133,9 +136,9 @@ async def asyncio_detailed(
     *,
     client: AuthenticatedClient,
 ) -> Response[DeleteProjectProgramsIdResponse200 | Error]:
-    r"""Soft-delete a program, UN-ASSIGNING every project in it
+    """Soft-delete a program, UN-ASSIGNING every project in it
 
-     The iteration-delete rule, applied one level up: `programId` is nullable and \"in no program\" is an
+     The iteration-delete rule, applied one level up: `programId` is nullable and "in no program" is an
     ordinary state, so removing the container has a defined outcome. Refusing instead would strand the
     workspace behind a program it had to empty by hand, one board at a time. The sweep is NOT reach-
     filtered — the authority is the workspace D verb, and half-emptying it would leave boards pointing
@@ -150,7 +153,7 @@ async def asyncio_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[DeleteProjectProgramsIdResponse200, Error]]
+        Response[DeleteProjectProgramsIdResponse200 | Error]
     """
 
     kwargs = _get_kwargs(
@@ -167,9 +170,9 @@ async def asyncio(
     *,
     client: AuthenticatedClient,
 ) -> DeleteProjectProgramsIdResponse200 | Error | None:
-    r"""Soft-delete a program, UN-ASSIGNING every project in it
+    """Soft-delete a program, UN-ASSIGNING every project in it
 
-     The iteration-delete rule, applied one level up: `programId` is nullable and \"in no program\" is an
+     The iteration-delete rule, applied one level up: `programId` is nullable and "in no program" is an
     ordinary state, so removing the container has a defined outcome. Refusing instead would strand the
     workspace behind a program it had to empty by hand, one board at a time. The sweep is NOT reach-
     filtered — the authority is the workspace D verb, and half-emptying it would leave boards pointing
@@ -184,7 +187,7 @@ async def asyncio(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[DeleteProjectProgramsIdResponse200, Error]
+        DeleteProjectProgramsIdResponse200 | Error
     """
 
     return (

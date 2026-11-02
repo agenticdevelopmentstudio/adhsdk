@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar
 
@@ -16,12 +18,12 @@ class GetProcessingJobsIdResponse200:
     Attributes:
         id (str):
         status (GetProcessingJobsIdResponse200Status):
-        result (Union[Unset, Any]):
+        result (Any | Unset):
     """
 
     id: str
     status: GetProcessingJobsIdResponse200Status
-    result: Unset | Any = UNSET
+    result: Any | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:

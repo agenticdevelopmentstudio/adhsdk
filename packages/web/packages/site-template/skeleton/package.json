@@ -17,13 +17,13 @@
     "@agenticdevelopertoolkit/landing": "link:landing",
     "@agenticdevelopertoolkit/site-template": "link:site-template",
     "@agenticdevelopertoolkit/themes": "link:themes",
-    "next": "16.2.9",
+    "next": "16.4.3",
     "react": "^19.2.0",
     "react-dom": "^19.2.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.4",
-    "@next/eslint-plugin-next": "16.2.9",
+    "@next/eslint-plugin-next": "16.4.3",
     "@tailwindcss/postcss": "^4.0.0",
     "@types/node": "^22.10.0",
     "@types/react": "^19.2.0",

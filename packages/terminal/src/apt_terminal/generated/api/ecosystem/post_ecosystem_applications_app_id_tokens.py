@@ -1,5 +1,6 @@
 from http import HTTPStatus
 from typing import Any
+from urllib.parse import quote
 
 import httpx
 
@@ -10,22 +11,25 @@ from ...models.error import Error
 from ...models.post_ecosystem_applications_app_id_tokens_body import (
     PostEcosystemApplicationsAppIdTokensBody,
 )
-from ...types import Response
+from ...types import UNSET, Response, Unset
 
 
 def _get_kwargs(
     app_id: str,
     *,
-    body: PostEcosystemApplicationsAppIdTokensBody,
+    body: PostEcosystemApplicationsAppIdTokensBody | Unset = UNSET,
 ) -> dict[str, Any]:
     headers: dict[str, Any] = {}
 
     _kwargs: dict[str, Any] = {
         "method": "post",
-        "url": f"/ecosystem/applications/{app_id}/tokens",
+        "url": "/ecosystem/applications/{app_id}/tokens".format(
+            app_id=quote(str(app_id), safe=""),
+        ),
     }
 
-    _kwargs["json"] = body.to_dict()
+    if not isinstance(body, Unset):
+        _kwargs["json"] = body.to_dict()
 
     headers["Content-Type"] = "application/json"
 
@@ -77,7 +81,7 @@ def sync_detailed(
     app_id: str,
     *,
     client: AuthenticatedClient,
-    body: PostEcosystemApplicationsAppIdTokensBody,
+    body: PostEcosystemApplicationsAppIdTokensBody | Unset = UNSET,
 ) -> Response[ApiTokenCreated | Error]:
     """Mint an API token for the application (raw value shown once)
 
@@ -86,14 +90,14 @@ def sync_detailed(
 
     Args:
         app_id (str):
-        body (PostEcosystemApplicationsAppIdTokensBody):
+        body (PostEcosystemApplicationsAppIdTokensBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[ApiTokenCreated, Error]]
+        Response[ApiTokenCreated | Error]
     """
 
     kwargs = _get_kwargs(
@@ -112,7 +116,7 @@ def sync(
     app_id: str,
     *,
     client: AuthenticatedClient,
-    body: PostEcosystemApplicationsAppIdTokensBody,
+    body: PostEcosystemApplicationsAppIdTokensBody | Unset = UNSET,
 ) -> ApiTokenCreated | Error | None:
     """Mint an API token for the application (raw value shown once)
 
@@ -121,14 +125,14 @@ def sync(
 
     Args:
         app_id (str):
-        body (PostEcosystemApplicationsAppIdTokensBody):
+        body (PostEcosystemApplicationsAppIdTokensBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[ApiTokenCreated, Error]
+        ApiTokenCreated | Error
     """
 
     return sync_detailed(
@@ -142,7 +146,7 @@ async def asyncio_detailed(
     app_id: str,
     *,
     client: AuthenticatedClient,
-    body: PostEcosystemApplicationsAppIdTokensBody,
+    body: PostEcosystemApplicationsAppIdTokensBody | Unset = UNSET,
 ) -> Response[ApiTokenCreated | Error]:
     """Mint an API token for the application (raw value shown once)
 
@@ -151,14 +155,14 @@ async def asyncio_detailed(
 
     Args:
         app_id (str):
-        body (PostEcosystemApplicationsAppIdTokensBody):
+        body (PostEcosystemApplicationsAppIdTokensBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[ApiTokenCreated, Error]]
+        Response[ApiTokenCreated | Error]
     """
 
     kwargs = _get_kwargs(
@@ -175,7 +179,7 @@ async def asyncio(
     app_id: str,
     *,
     client: AuthenticatedClient,
-    body: PostEcosystemApplicationsAppIdTokensBody,
+    body: PostEcosystemApplicationsAppIdTokensBody | Unset = UNSET,
 ) -> ApiTokenCreated | Error | None:
     """Mint an API token for the application (raw value shown once)
 
@@ -184,14 +188,14 @@ async def asyncio(
 
     Args:
         app_id (str):
-        body (PostEcosystemApplicationsAppIdTokensBody):
+        body (PostEcosystemApplicationsAppIdTokensBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[ApiTokenCreated, Error]
+        ApiTokenCreated | Error
     """
 
     return (

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar
 
@@ -12,30 +14,30 @@ T = TypeVar("T", bound="PutContentAddressesIdBody")
 class PutContentAddressesIdBody:
     """
     Attributes:
-        ecosystem_id (Union[Unset, str]):
-        owner_kind (Union[Unset, str]):
-        owner_id (Union[Unset, str]):
-        label (Union[Unset, str]):
-        line1 (Union[Unset, str]):
-        line2 (Union[Unset, str]):
-        city (Union[Unset, str]):
-        region (Union[Unset, str]):
-        postal_code (Union[Unset, str]):
-        country (Union[Unset, str]):
-        sync_txid (Union[Unset, int]):
+        ecosystem_id (str | Unset):
+        owner_kind (str | Unset):
+        owner_id (str | Unset):
+        label (str | Unset):
+        line1 (str | Unset):
+        line2 (str | Unset):
+        city (str | Unset):
+        region (str | Unset):
+        postal_code (str | Unset):
+        country (str | Unset):
+        sync_txid (int | Unset):
     """
 
-    ecosystem_id: Unset | str = UNSET
-    owner_kind: Unset | str = UNSET
-    owner_id: Unset | str = UNSET
-    label: Unset | str = UNSET
-    line1: Unset | str = UNSET
-    line2: Unset | str = UNSET
-    city: Unset | str = UNSET
-    region: Unset | str = UNSET
-    postal_code: Unset | str = UNSET
-    country: Unset | str = UNSET
-    sync_txid: Unset | int = UNSET
+    ecosystem_id: str | Unset = UNSET
+    owner_kind: str | Unset = UNSET
+    owner_id: str | Unset = UNSET
+    label: str | Unset = UNSET
+    line1: str | Unset = UNSET
+    line2: str | Unset = UNSET
+    city: str | Unset = UNSET
+    region: str | Unset = UNSET
+    postal_code: str | Unset = UNSET
+    country: str | Unset = UNSET
+    sync_txid: int | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
         ecosystem_id = self.ecosystem_id

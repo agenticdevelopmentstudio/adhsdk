@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar
 
@@ -15,17 +17,17 @@ class PostEcosystemApplicationsBody:
         slug (str):
         display_name (str):
         consumer_kind (str):
-        ecosystem_id (Union[Unset, str]):
-        sync_txid (Union[Unset, int]):
-        id (Union[Unset, str]):
+        ecosystem_id (str | Unset):
+        sync_txid (int | Unset):
+        id (str | Unset):
     """
 
     slug: str
     display_name: str
     consumer_kind: str
-    ecosystem_id: Unset | str = UNSET
-    sync_txid: Unset | int = UNSET
-    id: Unset | str = UNSET
+    ecosystem_id: str | Unset = UNSET
+    sync_txid: int | Unset = UNSET
+    id: str | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
         slug = self.slug

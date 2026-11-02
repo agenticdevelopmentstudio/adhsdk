@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -14,17 +16,17 @@ class GetOauthSigninPreflightResponse200:
     """
     Attributes:
         allowed (bool):
-        reason (Union[None, Unset, str]): null when allowed; else invalid_return, client_unknown or origin_not_allowed
+        reason (None | str | Unset): null when allowed; else invalid_return, client_unknown or origin_not_allowed
     """
 
     allowed: bool
-    reason: None | Unset | str = UNSET
+    reason: None | str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
         allowed = self.allowed
 
-        reason: None | Unset | str
+        reason: None | str | Unset
         if isinstance(self.reason, Unset):
             reason = UNSET
         else:
@@ -47,12 +49,12 @@ class GetOauthSigninPreflightResponse200:
         d = dict(src_dict)
         allowed = d.pop("allowed")
 
-        def _parse_reason(data: object) -> None | Unset | str:
+        def _parse_reason(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         reason = _parse_reason(d.pop("reason", UNSET))
 

@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class SyncChangeOp(str, Enum):
+class SyncChangeOp(StrEnum):
     DELETE = "delete"
     UPSERT = "upsert"
 

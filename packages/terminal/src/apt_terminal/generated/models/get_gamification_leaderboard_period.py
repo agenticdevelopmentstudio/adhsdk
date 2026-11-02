@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class GetGamificationLeaderboardPeriod(str, Enum):
+class GetGamificationLeaderboardPeriod(StrEnum):
     ALL = "all"
     MONTH = "month"
     WEEK = "week"

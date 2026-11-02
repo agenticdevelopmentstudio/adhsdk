@@ -1,5 +1,6 @@
 from http import HTTPStatus
 from typing import Any
+from urllib.parse import quote
 
 import httpx
 
@@ -14,12 +15,12 @@ from ...types import UNSET, Response, Unset
 def _get_kwargs(
     stat_key: str,
     *,
-    window: Unset | GetPublicBoardsStatKeyWindow = GetPublicBoardsStatKeyWindow.TRENDING,
-    limit: Unset | int = 20,
+    window: GetPublicBoardsStatKeyWindow | Unset = GetPublicBoardsStatKeyWindow.TRENDING,
+    limit: int | Unset = 20,
 ) -> dict[str, Any]:
     params: dict[str, Any] = {}
 
-    json_window: Unset | str = UNSET
+    json_window: str | Unset = UNSET
     if not isinstance(window, Unset):
         json_window = window.value
 
@@ -31,7 +32,9 @@ def _get_kwargs(
 
     _kwargs: dict[str, Any] = {
         "method": "get",
-        "url": f"/public/boards/{stat_key}",
+        "url": "/public/boards/{stat_key}".format(
+            stat_key=quote(str(stat_key), safe=""),
+        ),
         "params": params,
     }
 
@@ -77,23 +80,23 @@ def sync_detailed(
     stat_key: str,
     *,
     client: AuthenticatedClient | Client,
-    window: Unset | GetPublicBoardsStatKeyWindow = GetPublicBoardsStatKeyWindow.TRENDING,
-    limit: Unset | int = 20,
+    window: GetPublicBoardsStatKeyWindow | Unset = GetPublicBoardsStatKeyWindow.TRENDING,
+    limit: int | Unset = 20,
 ) -> Response[Error | GamificationBoard]:
     """Public hub leaderboard for one boardable stat (surface-gated)
 
     Args:
         stat_key (str):
-        window (Union[Unset, GetPublicBoardsStatKeyWindow]):  Default:
+        window (GetPublicBoardsStatKeyWindow | Unset):  Default:
             GetPublicBoardsStatKeyWindow.TRENDING.
-        limit (Union[Unset, int]):  Default: 20.
+        limit (int | Unset):  Default: 20.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, GamificationBoard]]
+        Response[Error | GamificationBoard]
     """
 
     kwargs = _get_kwargs(
@@ -113,23 +116,23 @@ def sync(
     stat_key: str,
     *,
     client: AuthenticatedClient | Client,
-    window: Unset | GetPublicBoardsStatKeyWindow = GetPublicBoardsStatKeyWindow.TRENDING,
-    limit: Unset | int = 20,
+    window: GetPublicBoardsStatKeyWindow | Unset = GetPublicBoardsStatKeyWindow.TRENDING,
+    limit: int | Unset = 20,
 ) -> Error | GamificationBoard | None:
     """Public hub leaderboard for one boardable stat (surface-gated)
 
     Args:
         stat_key (str):
-        window (Union[Unset, GetPublicBoardsStatKeyWindow]):  Default:
+        window (GetPublicBoardsStatKeyWindow | Unset):  Default:
             GetPublicBoardsStatKeyWindow.TRENDING.
-        limit (Union[Unset, int]):  Default: 20.
+        limit (int | Unset):  Default: 20.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, GamificationBoard]
+        Error | GamificationBoard
     """
 
     return sync_detailed(
@@ -144,23 +147,23 @@ async def asyncio_detailed(
     stat_key: str,
     *,
     client: AuthenticatedClient | Client,
-    window: Unset | GetPublicBoardsStatKeyWindow = GetPublicBoardsStatKeyWindow.TRENDING,
-    limit: Unset | int = 20,
+    window: GetPublicBoardsStatKeyWindow | Unset = GetPublicBoardsStatKeyWindow.TRENDING,
+    limit: int | Unset = 20,
 ) -> Response[Error | GamificationBoard]:
     """Public hub leaderboard for one boardable stat (surface-gated)
 
     Args:
         stat_key (str):
-        window (Union[Unset, GetPublicBoardsStatKeyWindow]):  Default:
+        window (GetPublicBoardsStatKeyWindow | Unset):  Default:
             GetPublicBoardsStatKeyWindow.TRENDING.
-        limit (Union[Unset, int]):  Default: 20.
+        limit (int | Unset):  Default: 20.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, GamificationBoard]]
+        Response[Error | GamificationBoard]
     """
 
     kwargs = _get_kwargs(
@@ -178,23 +181,23 @@ async def asyncio(
     stat_key: str,
     *,
     client: AuthenticatedClient | Client,
-    window: Unset | GetPublicBoardsStatKeyWindow = GetPublicBoardsStatKeyWindow.TRENDING,
-    limit: Unset | int = 20,
+    window: GetPublicBoardsStatKeyWindow | Unset = GetPublicBoardsStatKeyWindow.TRENDING,
+    limit: int | Unset = 20,
 ) -> Error | GamificationBoard | None:
     """Public hub leaderboard for one boardable stat (surface-gated)
 
     Args:
         stat_key (str):
-        window (Union[Unset, GetPublicBoardsStatKeyWindow]):  Default:
+        window (GetPublicBoardsStatKeyWindow | Unset):  Default:
             GetPublicBoardsStatKeyWindow.TRENDING.
-        limit (Union[Unset, int]):  Default: 20.
+        limit (int | Unset):  Default: 20.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, GamificationBoard]
+        Error | GamificationBoard
     """
 
     return (

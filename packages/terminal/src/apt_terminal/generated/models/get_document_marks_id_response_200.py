@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -13,7 +15,7 @@ class GetDocumentMarksIdResponse200:
         id (str):
         block_id (str):
         customer_id (str):
-        deleted_at (Union[None, str]):
+        deleted_at (None | str):
         ecosystem_id (str):
         mark_type (str):
         start_anchor (str):
@@ -23,7 +25,7 @@ class GetDocumentMarksIdResponse200:
         updated_at (str):
         is_deleted (bool):
         sync_version (int):
-        sync_stamped_at (Union[None, str]):
+        sync_stamped_at (None | str):
         sync_txid (int):
     """
 

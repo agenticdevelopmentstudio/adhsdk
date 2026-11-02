@@ -1,5 +1,6 @@
 from http import HTTPStatus
 from typing import Any
+from urllib.parse import quote
 
 import httpx
 
@@ -16,11 +17,11 @@ from ...types import UNSET, Response, Unset
 def _get_kwargs(
     id: str,
     *,
-    include_untriaged: Unset | GetProjectProjectsIdWorkItemsIncludeUntriaged = UNSET,
+    include_untriaged: GetProjectProjectsIdWorkItemsIncludeUntriaged | Unset = UNSET,
 ) -> dict[str, Any]:
     params: dict[str, Any] = {}
 
-    json_include_untriaged: Unset | str = UNSET
+    json_include_untriaged: str | Unset = UNSET
     if not isinstance(include_untriaged, Unset):
         json_include_untriaged = include_untriaged.value
 
@@ -30,7 +31,9 @@ def _get_kwargs(
 
     _kwargs: dict[str, Any] = {
         "method": "get",
-        "url": f"/project/projects/{id}/work-items",
+        "url": "/project/projects/{id}/work-items".format(
+            id=quote(str(id), safe=""),
+        ),
         "params": params,
     }
 
@@ -39,7 +42,7 @@ def _get_kwargs(
 
 def _parse_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> Error | list["WorkItem"] | None:
+) -> Error | list[WorkItem] | None:
     if response.status_code == 200:
         response_200 = []
         _response_200 = response.json()
@@ -68,7 +71,7 @@ def _parse_response(
 
 def _build_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> Response[Error | list["WorkItem"]]:
+) -> Response[Error | list[WorkItem]]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -81,8 +84,8 @@ def sync_detailed(
     id: str,
     *,
     client: AuthenticatedClient,
-    include_untriaged: Unset | GetProjectProjectsIdWorkItemsIncludeUntriaged = UNSET,
-) -> Response[Error | list["WorkItem"]]:
+    include_untriaged: GetProjectProjectsIdWorkItemsIncludeUntriaged | Unset = UNSET,
+) -> Response[Error | list[WorkItem]]:
     """List a project's ACCEPTED work items (non-deleted, in board order)
 
      Cards awaiting triage are omitted unless `includeUntriaged=true`. On a board that has never used an
@@ -91,14 +94,14 @@ def sync_detailed(
 
     Args:
         id (str):
-        include_untriaged (Union[Unset, GetProjectProjectsIdWorkItemsIncludeUntriaged]):
+        include_untriaged (GetProjectProjectsIdWorkItemsIncludeUntriaged | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, list['WorkItem']]]
+        Response[Error | list[WorkItem]]
     """
 
     kwargs = _get_kwargs(
@@ -117,8 +120,8 @@ def sync(
     id: str,
     *,
     client: AuthenticatedClient,
-    include_untriaged: Unset | GetProjectProjectsIdWorkItemsIncludeUntriaged = UNSET,
-) -> Error | list["WorkItem"] | None:
+    include_untriaged: GetProjectProjectsIdWorkItemsIncludeUntriaged | Unset = UNSET,
+) -> Error | list[WorkItem] | None:
     """List a project's ACCEPTED work items (non-deleted, in board order)
 
      Cards awaiting triage are omitted unless `includeUntriaged=true`. On a board that has never used an
@@ -127,14 +130,14 @@ def sync(
 
     Args:
         id (str):
-        include_untriaged (Union[Unset, GetProjectProjectsIdWorkItemsIncludeUntriaged]):
+        include_untriaged (GetProjectProjectsIdWorkItemsIncludeUntriaged | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, list['WorkItem']]
+        Error | list[WorkItem]
     """
 
     return sync_detailed(
@@ -148,8 +151,8 @@ async def asyncio_detailed(
     id: str,
     *,
     client: AuthenticatedClient,
-    include_untriaged: Unset | GetProjectProjectsIdWorkItemsIncludeUntriaged = UNSET,
-) -> Response[Error | list["WorkItem"]]:
+    include_untriaged: GetProjectProjectsIdWorkItemsIncludeUntriaged | Unset = UNSET,
+) -> Response[Error | list[WorkItem]]:
     """List a project's ACCEPTED work items (non-deleted, in board order)
 
      Cards awaiting triage are omitted unless `includeUntriaged=true`. On a board that has never used an
@@ -158,14 +161,14 @@ async def asyncio_detailed(
 
     Args:
         id (str):
-        include_untriaged (Union[Unset, GetProjectProjectsIdWorkItemsIncludeUntriaged]):
+        include_untriaged (GetProjectProjectsIdWorkItemsIncludeUntriaged | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, list['WorkItem']]]
+        Response[Error | list[WorkItem]]
     """
 
     kwargs = _get_kwargs(
@@ -182,8 +185,8 @@ async def asyncio(
     id: str,
     *,
     client: AuthenticatedClient,
-    include_untriaged: Unset | GetProjectProjectsIdWorkItemsIncludeUntriaged = UNSET,
-) -> Error | list["WorkItem"] | None:
+    include_untriaged: GetProjectProjectsIdWorkItemsIncludeUntriaged | Unset = UNSET,
+) -> Error | list[WorkItem] | None:
     """List a project's ACCEPTED work items (non-deleted, in board order)
 
      Cards awaiting triage are omitted unless `includeUntriaged=true`. On a board that has never used an
@@ -192,14 +195,14 @@ async def asyncio(
 
     Args:
         id (str):
-        include_untriaged (Union[Unset, GetProjectProjectsIdWorkItemsIncludeUntriaged]):
+        include_untriaged (GetProjectProjectsIdWorkItemsIncludeUntriaged | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, list['WorkItem']]
+        Error | list[WorkItem]
     """
 
     return (

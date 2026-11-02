@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar
 
@@ -13,14 +15,14 @@ T = TypeVar("T", bound="GetCustomerMembershipsResponse200Item")
 class GetCustomerMembershipsResponse200Item:
     """
     Attributes:
-        user_id (Union[Unset, str]): the customer id the caller asked about
-        customer_id (Union[Unset, str]): the customer row that carries this membership — what a removal deletes
-        ecosystem_id (Union[Unset, str]):
+        user_id (str | Unset): the customer id the caller asked about
+        customer_id (str | Unset): the customer row that carries this membership — what a removal deletes
+        ecosystem_id (str | Unset):
     """
 
-    user_id: Unset | str = UNSET
-    customer_id: Unset | str = UNSET
-    ecosystem_id: Unset | str = UNSET
+    user_id: str | Unset = UNSET
+    customer_id: str | Unset = UNSET
+    ecosystem_id: str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:

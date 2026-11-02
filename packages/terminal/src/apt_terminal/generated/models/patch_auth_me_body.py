@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar
 
@@ -15,19 +17,19 @@ class PatchAuthMeBody:
     """At least one profile field is required.
 
     Attributes:
-        name (Union[Unset, str]):
-        slug (Union[Unset, str]):
-        avatar_url (Union[Unset, str]):
-        public_profile_enabled (Union[Unset, bool]):
-        profile_visibility (Union[Unset, PatchAuthMeBodyProfileVisibility]): The principal's page-level profile
-            visibility. Supersedes publicProfileEnabled, which is retained during the expand phase and written in parallel.
+        name (str | Unset):
+        slug (str | Unset):
+        avatar_url (str | Unset):
+        public_profile_enabled (bool | Unset):
+        profile_visibility (PatchAuthMeBodyProfileVisibility | Unset): The principal's page-level profile visibility.
+            Supersedes publicProfileEnabled, which is retained during the expand phase and written in parallel.
     """
 
-    name: Unset | str = UNSET
-    slug: Unset | str = UNSET
-    avatar_url: Unset | str = UNSET
-    public_profile_enabled: Unset | bool = UNSET
-    profile_visibility: Unset | PatchAuthMeBodyProfileVisibility = UNSET
+    name: str | Unset = UNSET
+    slug: str | Unset = UNSET
+    avatar_url: str | Unset = UNSET
+    public_profile_enabled: bool | Unset = UNSET
+    profile_visibility: PatchAuthMeBodyProfileVisibility | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -39,7 +41,7 @@ class PatchAuthMeBody:
 
         public_profile_enabled = self.public_profile_enabled
 
-        profile_visibility: Unset | str = UNSET
+        profile_visibility: str | Unset = UNSET
         if not isinstance(self.profile_visibility, Unset):
             profile_visibility = self.profile_visibility.value
 
@@ -71,7 +73,7 @@ class PatchAuthMeBody:
         public_profile_enabled = d.pop("publicProfileEnabled", UNSET)
 
         _profile_visibility = d.pop("profileVisibility", UNSET)
-        profile_visibility: Unset | PatchAuthMeBodyProfileVisibility
+        profile_visibility: PatchAuthMeBodyProfileVisibility | Unset
         if isinstance(_profile_visibility, Unset):
             profile_visibility = UNSET
         else:

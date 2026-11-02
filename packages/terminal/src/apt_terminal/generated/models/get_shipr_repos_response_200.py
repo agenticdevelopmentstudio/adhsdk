@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, TypeVar, Union
+from typing import TYPE_CHECKING, Any, TypeVar
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -21,20 +23,20 @@ T = TypeVar("T", bound="GetShiprReposResponse200")
 class GetShiprReposResponse200:
     """
     Attributes:
-        groups (list['ShiprGroup']):
-        items (list['GetShiprReposResponse200ItemsItem']):
-        workspace (Union[Unset, GetShiprReposResponse200Workspace]):
-        verbs (Union[Unset, list[GetShiprReposResponse200VerbsItem]]): What the caller may do at workspace level. A hint
-            for what to DRAW — every route re-derives its own verb.
-        personas (Union[Unset, list['ShiprPersona']]): Every persona this workspace owns — the vocabulary for
+        groups (list[ShiprGroup]):
+        items (list[GetShiprReposResponse200ItemsItem]):
+        workspace (GetShiprReposResponse200Workspace | Unset):
+        verbs (list[GetShiprReposResponse200VerbsItem] | Unset): What the caller may do at workspace level. A hint for
+            what to DRAW — every route re-derives its own verb.
+        personas (list[ShiprPersona] | Unset): Every persona this workspace owns — the vocabulary for
             `items[].personaIds`, carried once here rather than repeated on every row.
     """
 
-    groups: list["ShiprGroup"]
-    items: list["GetShiprReposResponse200ItemsItem"]
-    workspace: Union[Unset, "GetShiprReposResponse200Workspace"] = UNSET
-    verbs: Unset | list[GetShiprReposResponse200VerbsItem] = UNSET
-    personas: Unset | list["ShiprPersona"] = UNSET
+    groups: list[ShiprGroup]
+    items: list[GetShiprReposResponse200ItemsItem]
+    workspace: GetShiprReposResponse200Workspace | Unset = UNSET
+    verbs: list[GetShiprReposResponse200VerbsItem] | Unset = UNSET
+    personas: list[ShiprPersona] | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -48,18 +50,18 @@ class GetShiprReposResponse200:
             items_item = items_item_data.to_dict()
             items.append(items_item)
 
-        workspace: Unset | dict[str, Any] = UNSET
+        workspace: dict[str, Any] | Unset = UNSET
         if not isinstance(self.workspace, Unset):
             workspace = self.workspace.to_dict()
 
-        verbs: Unset | list[str] = UNSET
+        verbs: list[str] | Unset = UNSET
         if not isinstance(self.verbs, Unset):
             verbs = []
             for verbs_item_data in self.verbs:
                 verbs_item = verbs_item_data.value
                 verbs.append(verbs_item)
 
-        personas: Unset | list[dict[str, Any]] = UNSET
+        personas: list[dict[str, Any]] | Unset = UNSET
         if not isinstance(self.personas, Unset):
             personas = []
             for personas_item_data in self.personas:
@@ -110,25 +112,29 @@ class GetShiprReposResponse200:
             items.append(items_item)
 
         _workspace = d.pop("workspace", UNSET)
-        workspace: Unset | GetShiprReposResponse200Workspace
+        workspace: GetShiprReposResponse200Workspace | Unset
         if isinstance(_workspace, Unset):
             workspace = UNSET
         else:
             workspace = GetShiprReposResponse200Workspace.from_dict(_workspace)
 
-        verbs = []
         _verbs = d.pop("verbs", UNSET)
-        for verbs_item_data in _verbs or []:
-            verbs_item = GetShiprReposResponse200VerbsItem(verbs_item_data)
+        verbs: list[GetShiprReposResponse200VerbsItem] | Unset = UNSET
+        if _verbs is not UNSET:
+            verbs = []
+            for verbs_item_data in _verbs:
+                verbs_item = GetShiprReposResponse200VerbsItem(verbs_item_data)
 
-            verbs.append(verbs_item)
+                verbs.append(verbs_item)
 
-        personas = []
         _personas = d.pop("personas", UNSET)
-        for personas_item_data in _personas or []:
-            personas_item = ShiprPersona.from_dict(personas_item_data)
+        personas: list[ShiprPersona] | Unset = UNSET
+        if _personas is not UNSET:
+            personas = []
+            for personas_item_data in _personas:
+                personas_item = ShiprPersona.from_dict(personas_item_data)
 
-            personas.append(personas_item)
+                personas.append(personas_item)
 
         get_shipr_repos_response_200 = cls(
             groups=groups,

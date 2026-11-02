@@ -12,8 +12,8 @@ from ...types import UNSET, Response, Unset
 
 def _get_kwargs(
     *,
-    page: Unset | str = UNSET,
-    page_size: Unset | str = UNSET,
+    page: str | Unset = UNSET,
+    page_size: str | Unset = UNSET,
 ) -> dict[str, Any]:
     params: dict[str, Any] = {}
 
@@ -65,21 +65,21 @@ def _build_response(
 def sync_detailed(
     *,
     client: AuthenticatedClient,
-    page: Unset | str = UNSET,
-    page_size: Unset | str = UNSET,
+    page: str | Unset = UNSET,
+    page_size: str | Unset = UNSET,
 ) -> Response[Error | GetBlocksResponse200]:
     """Users the caller has blocked (paginated)
 
     Args:
-        page (Union[Unset, str]):
-        page_size (Union[Unset, str]):
+        page (str | Unset):
+        page_size (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, GetBlocksResponse200]]
+        Response[Error | GetBlocksResponse200]
     """
 
     kwargs = _get_kwargs(
@@ -97,21 +97,21 @@ def sync_detailed(
 def sync(
     *,
     client: AuthenticatedClient,
-    page: Unset | str = UNSET,
-    page_size: Unset | str = UNSET,
+    page: str | Unset = UNSET,
+    page_size: str | Unset = UNSET,
 ) -> Error | GetBlocksResponse200 | None:
     """Users the caller has blocked (paginated)
 
     Args:
-        page (Union[Unset, str]):
-        page_size (Union[Unset, str]):
+        page (str | Unset):
+        page_size (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, GetBlocksResponse200]
+        Error | GetBlocksResponse200
     """
 
     return sync_detailed(
@@ -124,21 +124,21 @@ def sync(
 async def asyncio_detailed(
     *,
     client: AuthenticatedClient,
-    page: Unset | str = UNSET,
-    page_size: Unset | str = UNSET,
+    page: str | Unset = UNSET,
+    page_size: str | Unset = UNSET,
 ) -> Response[Error | GetBlocksResponse200]:
     """Users the caller has blocked (paginated)
 
     Args:
-        page (Union[Unset, str]):
-        page_size (Union[Unset, str]):
+        page (str | Unset):
+        page_size (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, GetBlocksResponse200]]
+        Response[Error | GetBlocksResponse200]
     """
 
     kwargs = _get_kwargs(
@@ -154,21 +154,21 @@ async def asyncio_detailed(
 async def asyncio(
     *,
     client: AuthenticatedClient,
-    page: Unset | str = UNSET,
-    page_size: Unset | str = UNSET,
+    page: str | Unset = UNSET,
+    page_size: str | Unset = UNSET,
 ) -> Error | GetBlocksResponse200 | None:
     """Users the caller has blocked (paginated)
 
     Args:
-        page (Union[Unset, str]):
-        page_size (Union[Unset, str]):
+        page (str | Unset):
+        page_size (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, GetBlocksResponse200]
+        Error | GetBlocksResponse200
     """
 
     return (

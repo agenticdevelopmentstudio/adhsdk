@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -15,7 +17,7 @@ class PersonaSheetStats:
         allies (int):
         turns (int):
         tokens_out (int):
-        avg_latency_ms (Union[None, int]):
+        avg_latency_ms (int | None):
         days_active (int):
     """
 
@@ -23,7 +25,7 @@ class PersonaSheetStats:
     allies: int
     turns: int
     tokens_out: int
-    avg_latency_ms: None | int
+    avg_latency_ms: int | None
     days_active: int
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
@@ -36,7 +38,7 @@ class PersonaSheetStats:
 
         tokens_out = self.tokens_out
 
-        avg_latency_ms: None | int
+        avg_latency_ms: int | None
         avg_latency_ms = self.avg_latency_ms
 
         days_active = self.days_active
@@ -67,10 +69,10 @@ class PersonaSheetStats:
 
         tokens_out = d.pop("tokensOut")
 
-        def _parse_avg_latency_ms(data: object) -> None | int:
+        def _parse_avg_latency_ms(data: object) -> int | None:
             if data is None:
                 return data
-            return cast(None | int, data)
+            return cast(int | None, data)
 
         avg_latency_ms = _parse_avg_latency_ms(d.pop("avgLatencyMs"))
 

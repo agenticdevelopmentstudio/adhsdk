@@ -8,12 +8,12 @@ from ...client import AuthenticatedClient, Client
 from ...models.add_pending_users_body import AddPendingUsersBody
 from ...models.error import Error
 from ...models.pending_user import PendingUser
-from ...types import Response
+from ...types import UNSET, Response, Unset
 
 
 def _get_kwargs(
     *,
-    body: AddPendingUsersBody,
+    body: AddPendingUsersBody | Unset = UNSET,
 ) -> dict[str, Any]:
     headers: dict[str, Any] = {}
 
@@ -22,7 +22,8 @@ def _get_kwargs(
         "url": "/auth/pending-users",
     }
 
-    _kwargs["json"] = body.to_dict()
+    if not isinstance(body, Unset):
+        _kwargs["json"] = body.to_dict()
 
     headers["Content-Type"] = "application/json"
 
@@ -32,7 +33,7 @@ def _get_kwargs(
 
 def _parse_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> Error | list["PendingUser"] | None:
+) -> Error | list[PendingUser] | None:
     if response.status_code == 201:
         response_201 = []
         _response_201 = response.json()
@@ -66,7 +67,7 @@ def _parse_response(
 
 def _build_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> Response[Error | list["PendingUser"]]:
+) -> Response[Error | list[PendingUser]]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -78,22 +79,22 @@ def _build_response(
 def sync_detailed(
     *,
     client: AuthenticatedClient,
-    body: AddPendingUsersBody,
-) -> Response[Error | list["PendingUser"]]:
+    body: AddPendingUsersBody | Unset = UNSET,
+) -> Response[Error | list[PendingUser]]:
     """Add people to the pending list
 
      Adds one or more people without inviting them — sending is a separate step (POST /auth/invitations).
     Each gets the next `userNumber` for the ecosystem.
 
     Args:
-        body (AddPendingUsersBody):
+        body (AddPendingUsersBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, list['PendingUser']]]
+        Response[Error | list[PendingUser]]
     """
 
     kwargs = _get_kwargs(
@@ -110,22 +111,22 @@ def sync_detailed(
 def sync(
     *,
     client: AuthenticatedClient,
-    body: AddPendingUsersBody,
-) -> Error | list["PendingUser"] | None:
+    body: AddPendingUsersBody | Unset = UNSET,
+) -> Error | list[PendingUser] | None:
     """Add people to the pending list
 
      Adds one or more people without inviting them — sending is a separate step (POST /auth/invitations).
     Each gets the next `userNumber` for the ecosystem.
 
     Args:
-        body (AddPendingUsersBody):
+        body (AddPendingUsersBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, list['PendingUser']]
+        Error | list[PendingUser]
     """
 
     return sync_detailed(
@@ -137,22 +138,22 @@ def sync(
 async def asyncio_detailed(
     *,
     client: AuthenticatedClient,
-    body: AddPendingUsersBody,
-) -> Response[Error | list["PendingUser"]]:
+    body: AddPendingUsersBody | Unset = UNSET,
+) -> Response[Error | list[PendingUser]]:
     """Add people to the pending list
 
      Adds one or more people without inviting them — sending is a separate step (POST /auth/invitations).
     Each gets the next `userNumber` for the ecosystem.
 
     Args:
-        body (AddPendingUsersBody):
+        body (AddPendingUsersBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, list['PendingUser']]]
+        Response[Error | list[PendingUser]]
     """
 
     kwargs = _get_kwargs(
@@ -167,22 +168,22 @@ async def asyncio_detailed(
 async def asyncio(
     *,
     client: AuthenticatedClient,
-    body: AddPendingUsersBody,
-) -> Error | list["PendingUser"] | None:
+    body: AddPendingUsersBody | Unset = UNSET,
+) -> Error | list[PendingUser] | None:
     """Add people to the pending list
 
      Adds one or more people without inviting them — sending is a separate step (POST /auth/invitations).
     Each gets the next `userNumber` for the ecosystem.
 
     Args:
-        body (AddPendingUsersBody):
+        body (AddPendingUsersBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, list['PendingUser']]
+        Error | list[PendingUser]
     """
 
     return (

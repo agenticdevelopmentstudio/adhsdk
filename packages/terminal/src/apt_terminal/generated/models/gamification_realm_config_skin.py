@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class GamificationRealmConfigSkin(str, Enum):
+class GamificationRealmConfigSkin(StrEnum):
     PLAIN = "plain"
     RPG = "rpg"
 

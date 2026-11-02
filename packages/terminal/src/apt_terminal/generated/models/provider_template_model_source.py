@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class ProviderTemplateModelSource(str, Enum):
+class ProviderTemplateModelSource(StrEnum):
     CURATED = "curated"
     SYNCED = "synced"
 

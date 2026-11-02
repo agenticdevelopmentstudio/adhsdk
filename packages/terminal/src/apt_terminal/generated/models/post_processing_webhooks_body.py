@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -15,12 +17,12 @@ class PostProcessingWebhooksBody:
     Attributes:
         url (str): HTTPS delivery target. Private/loopback/link-local URLs are rejected.
         event_types (list[str]): Event types to subscribe to (e.g. ["job.succeeded", "job.failed"])
-        description (Union[Unset, str]): Optional human-readable label
+        description (str | Unset): Optional human-readable label
     """
 
     url: str
     event_types: list[str]
-    description: Unset | str = UNSET
+    description: str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:

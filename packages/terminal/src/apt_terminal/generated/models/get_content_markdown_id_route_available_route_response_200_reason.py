@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class GetContentMarkdownIdRouteAvailableRouteResponse200Reason(str, Enum):
+class GetContentMarkdownIdRouteAvailableRouteResponse200Reason(StrEnum):
     INVALID = "invalid"
     OK = "ok"
     RESERVED = "reserved"

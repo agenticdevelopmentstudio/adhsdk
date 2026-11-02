@@ -1,5 +1,6 @@
 from http import HTTPStatus
 from typing import Any
+from urllib.parse import quote
 
 import httpx
 
@@ -10,23 +11,27 @@ from ...models.gamification_preference import GamificationPreference
 from ...models.put_gamification_subjects_subject_type_subject_id_preference_body import (
     PutGamificationSubjectsSubjectTypeSubjectIdPreferenceBody,
 )
-from ...types import Response
+from ...types import UNSET, Response, Unset
 
 
 def _get_kwargs(
     subject_type: str,
     subject_id: str,
     *,
-    body: PutGamificationSubjectsSubjectTypeSubjectIdPreferenceBody,
+    body: PutGamificationSubjectsSubjectTypeSubjectIdPreferenceBody | Unset = UNSET,
 ) -> dict[str, Any]:
     headers: dict[str, Any] = {}
 
     _kwargs: dict[str, Any] = {
         "method": "put",
-        "url": f"/gamification/subjects/{subject_type}/{subject_id}/preference",
+        "url": "/gamification/subjects/{subject_type}/{subject_id}/preference".format(
+            subject_type=quote(str(subject_type), safe=""),
+            subject_id=quote(str(subject_id), safe=""),
+        ),
     }
 
-    _kwargs["json"] = body.to_dict()
+    if not isinstance(body, Unset):
+        _kwargs["json"] = body.to_dict()
 
     headers["Content-Type"] = "application/json"
 
@@ -79,21 +84,21 @@ def sync_detailed(
     subject_id: str,
     *,
     client: AuthenticatedClient,
-    body: PutGamificationSubjectsSubjectTypeSubjectIdPreferenceBody,
+    body: PutGamificationSubjectsSubjectTypeSubjectIdPreferenceBody | Unset = UNSET,
 ) -> Response[Error | GamificationPreference]:
     """Set a subject’s opt-out (self for a user, or admin)
 
     Args:
         subject_type (str):
         subject_id (str):
-        body (PutGamificationSubjectsSubjectTypeSubjectIdPreferenceBody):
+        body (PutGamificationSubjectsSubjectTypeSubjectIdPreferenceBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, GamificationPreference]]
+        Response[Error | GamificationPreference]
     """
 
     kwargs = _get_kwargs(
@@ -114,21 +119,21 @@ def sync(
     subject_id: str,
     *,
     client: AuthenticatedClient,
-    body: PutGamificationSubjectsSubjectTypeSubjectIdPreferenceBody,
+    body: PutGamificationSubjectsSubjectTypeSubjectIdPreferenceBody | Unset = UNSET,
 ) -> Error | GamificationPreference | None:
     """Set a subject’s opt-out (self for a user, or admin)
 
     Args:
         subject_type (str):
         subject_id (str):
-        body (PutGamificationSubjectsSubjectTypeSubjectIdPreferenceBody):
+        body (PutGamificationSubjectsSubjectTypeSubjectIdPreferenceBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, GamificationPreference]
+        Error | GamificationPreference
     """
 
     return sync_detailed(
@@ -144,21 +149,21 @@ async def asyncio_detailed(
     subject_id: str,
     *,
     client: AuthenticatedClient,
-    body: PutGamificationSubjectsSubjectTypeSubjectIdPreferenceBody,
+    body: PutGamificationSubjectsSubjectTypeSubjectIdPreferenceBody | Unset = UNSET,
 ) -> Response[Error | GamificationPreference]:
     """Set a subject’s opt-out (self for a user, or admin)
 
     Args:
         subject_type (str):
         subject_id (str):
-        body (PutGamificationSubjectsSubjectTypeSubjectIdPreferenceBody):
+        body (PutGamificationSubjectsSubjectTypeSubjectIdPreferenceBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, GamificationPreference]]
+        Response[Error | GamificationPreference]
     """
 
     kwargs = _get_kwargs(
@@ -177,21 +182,21 @@ async def asyncio(
     subject_id: str,
     *,
     client: AuthenticatedClient,
-    body: PutGamificationSubjectsSubjectTypeSubjectIdPreferenceBody,
+    body: PutGamificationSubjectsSubjectTypeSubjectIdPreferenceBody | Unset = UNSET,
 ) -> Error | GamificationPreference | None:
     """Set a subject’s opt-out (self for a user, or admin)
 
     Args:
         subject_type (str):
         subject_id (str):
-        body (PutGamificationSubjectsSubjectTypeSubjectIdPreferenceBody):
+        body (PutGamificationSubjectsSubjectTypeSubjectIdPreferenceBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, GamificationPreference]
+        Error | GamificationPreference
     """
 
     return (

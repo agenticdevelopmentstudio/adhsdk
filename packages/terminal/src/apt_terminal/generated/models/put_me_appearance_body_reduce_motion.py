@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class PutMeAppearanceBodyReduceMotion(str, Enum):
+class PutMeAppearanceBodyReduceMotion(StrEnum):
     AUTO = "auto"
     OFF = "off"
     ON = "on"

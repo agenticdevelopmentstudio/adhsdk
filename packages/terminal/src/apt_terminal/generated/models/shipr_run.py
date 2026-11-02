@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, TypeVar, Union, cast
+from typing import TYPE_CHECKING, Any, TypeVar, cast
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -21,28 +23,28 @@ class ShiprRun:
     """One queued or completed operation over a scope.
 
     Attributes:
-        id (Union[Unset, str]):
-        operation (Union[Unset, ShiprRunOperation]):
-        scope_kind (Union[Unset, ShiprRunScopeKind]):
-        scope_id (Union[None, Unset, str]):
-        environments (Union[Unset, list[str]]):
-        state (Union[Unset, ShiprRunState]):
-        summary (Union['ShiprRunSummaryType0', None, Unset]):
-        started_at (Union[None, Unset, str]):
-        finished_at (Union[None, Unset, str]):
-        created_at (Union[Unset, str]):
+        id (str | Unset):
+        operation (ShiprRunOperation | Unset):
+        scope_kind (ShiprRunScopeKind | Unset):
+        scope_id (None | str | Unset):
+        environments (list[str] | Unset):
+        state (ShiprRunState | Unset):
+        summary (None | ShiprRunSummaryType0 | Unset):
+        started_at (None | str | Unset):
+        finished_at (None | str | Unset):
+        created_at (str | Unset):
     """
 
-    id: Unset | str = UNSET
-    operation: Unset | ShiprRunOperation = UNSET
-    scope_kind: Unset | ShiprRunScopeKind = UNSET
-    scope_id: None | Unset | str = UNSET
-    environments: Unset | list[str] = UNSET
-    state: Unset | ShiprRunState = UNSET
-    summary: Union["ShiprRunSummaryType0", None, Unset] = UNSET
-    started_at: None | Unset | str = UNSET
-    finished_at: None | Unset | str = UNSET
-    created_at: Unset | str = UNSET
+    id: str | Unset = UNSET
+    operation: ShiprRunOperation | Unset = UNSET
+    scope_kind: ShiprRunScopeKind | Unset = UNSET
+    scope_id: None | str | Unset = UNSET
+    environments: list[str] | Unset = UNSET
+    state: ShiprRunState | Unset = UNSET
+    summary: None | ShiprRunSummaryType0 | Unset = UNSET
+    started_at: None | str | Unset = UNSET
+    finished_at: None | str | Unset = UNSET
+    created_at: str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -50,29 +52,29 @@ class ShiprRun:
 
         id = self.id
 
-        operation: Unset | str = UNSET
+        operation: str | Unset = UNSET
         if not isinstance(self.operation, Unset):
             operation = self.operation.value
 
-        scope_kind: Unset | str = UNSET
+        scope_kind: str | Unset = UNSET
         if not isinstance(self.scope_kind, Unset):
             scope_kind = self.scope_kind.value
 
-        scope_id: None | Unset | str
+        scope_id: None | str | Unset
         if isinstance(self.scope_id, Unset):
             scope_id = UNSET
         else:
             scope_id = self.scope_id
 
-        environments: Unset | list[str] = UNSET
+        environments: list[str] | Unset = UNSET
         if not isinstance(self.environments, Unset):
             environments = self.environments
 
-        state: Unset | str = UNSET
+        state: str | Unset = UNSET
         if not isinstance(self.state, Unset):
             state = self.state.value
 
-        summary: None | Unset | dict[str, Any]
+        summary: dict[str, Any] | None | Unset
         if isinstance(self.summary, Unset):
             summary = UNSET
         elif isinstance(self.summary, ShiprRunSummaryType0):
@@ -80,13 +82,13 @@ class ShiprRun:
         else:
             summary = self.summary
 
-        started_at: None | Unset | str
+        started_at: None | str | Unset
         if isinstance(self.started_at, Unset):
             started_at = UNSET
         else:
             started_at = self.started_at
 
-        finished_at: None | Unset | str
+        finished_at: None | str | Unset
         if isinstance(self.finished_at, Unset):
             finished_at = UNSET
         else:
@@ -128,38 +130,38 @@ class ShiprRun:
         id = d.pop("id", UNSET)
 
         _operation = d.pop("operation", UNSET)
-        operation: Unset | ShiprRunOperation
+        operation: ShiprRunOperation | Unset
         if isinstance(_operation, Unset):
             operation = UNSET
         else:
             operation = ShiprRunOperation(_operation)
 
         _scope_kind = d.pop("scopeKind", UNSET)
-        scope_kind: Unset | ShiprRunScopeKind
+        scope_kind: ShiprRunScopeKind | Unset
         if isinstance(_scope_kind, Unset):
             scope_kind = UNSET
         else:
             scope_kind = ShiprRunScopeKind(_scope_kind)
 
-        def _parse_scope_id(data: object) -> None | Unset | str:
+        def _parse_scope_id(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         scope_id = _parse_scope_id(d.pop("scopeId", UNSET))
 
         environments = cast(list[str], d.pop("environments", UNSET))
 
         _state = d.pop("state", UNSET)
-        state: Unset | ShiprRunState
+        state: ShiprRunState | Unset
         if isinstance(_state, Unset):
             state = UNSET
         else:
             state = ShiprRunState(_state)
 
-        def _parse_summary(data: object) -> Union["ShiprRunSummaryType0", None, Unset]:
+        def _parse_summary(data: object) -> None | ShiprRunSummaryType0 | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
@@ -170,27 +172,27 @@ class ShiprRun:
                 summary_type_0 = ShiprRunSummaryType0.from_dict(data)
 
                 return summary_type_0
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
-            return cast(Union["ShiprRunSummaryType0", None, Unset], data)
+            return cast(None | ShiprRunSummaryType0 | Unset, data)
 
         summary = _parse_summary(d.pop("summary", UNSET))
 
-        def _parse_started_at(data: object) -> None | Unset | str:
+        def _parse_started_at(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         started_at = _parse_started_at(d.pop("startedAt", UNSET))
 
-        def _parse_finished_at(data: object) -> None | Unset | str:
+        def _parse_finished_at(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         finished_at = _parse_finished_at(d.pop("finishedAt", UNSET))
 

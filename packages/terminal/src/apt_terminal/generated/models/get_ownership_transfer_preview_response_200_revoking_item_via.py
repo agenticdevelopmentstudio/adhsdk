@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class GetOwnershipTransferPreviewResponse200RevokingItemVia(str, Enum):
+class GetOwnershipTransferPreviewResponse200RevokingItemVia(StrEnum):
     DIRECT = "direct"
     GROUP = "group"
     PARTICIPANT = "participant"

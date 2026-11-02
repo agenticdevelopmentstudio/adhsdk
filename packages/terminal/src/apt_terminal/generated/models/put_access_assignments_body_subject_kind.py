@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class PutAccessAssignmentsBodySubjectKind(str, Enum):
+class PutAccessAssignmentsBodySubjectKind(StrEnum):
     CUSTOMER = "customer"
     PERSONA = "persona"
     TEAM = "team"

@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class GetAccountMfaWebauthnResponse200ItemsItemKind(str, Enum):
+class GetAccountMfaWebauthnResponse200ItemsItemKind(StrEnum):
     PASSKEY = "passkey"
     SECURITY_KEY = "security_key"
 

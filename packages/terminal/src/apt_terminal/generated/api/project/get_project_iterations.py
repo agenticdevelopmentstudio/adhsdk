@@ -12,7 +12,7 @@ from ...types import UNSET, Response, Unset
 
 def _get_kwargs(
     *,
-    workspace: Unset | str = UNSET,
+    workspace: str | Unset = UNSET,
 ) -> dict[str, Any]:
     params: dict[str, Any] = {}
 
@@ -31,7 +31,7 @@ def _get_kwargs(
 
 def _parse_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> Error | list["ProjectIteration"] | None:
+) -> Error | list[ProjectIteration] | None:
     if response.status_code == 200:
         response_200 = []
         _response_200 = response.json()
@@ -60,7 +60,7 @@ def _parse_response(
 
 def _build_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> Response[Error | list["ProjectIteration"]]:
+) -> Response[Error | list[ProjectIteration]]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -72,8 +72,8 @@ def _build_response(
 def sync_detailed(
     *,
     client: AuthenticatedClient,
-    workspace: Unset | str = UNSET,
-) -> Response[Error | list["ProjectIteration"]]:
+    workspace: str | Unset = UNSET,
+) -> Response[Error | list[ProjectIteration]]:
     """List the time-boxes in the caller's reach (non-deleted, in calendar order)
 
      Every state is returned — upcoming, active and completed — because a cycle review needs the box that
@@ -81,14 +81,14 @@ def sync_detailed(
     the whole page, so a list can never straddle midnight and report two different instants.
 
     Args:
-        workspace (Union[Unset, str]):
+        workspace (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, list['ProjectIteration']]]
+        Response[Error | list[ProjectIteration]]
     """
 
     kwargs = _get_kwargs(
@@ -105,8 +105,8 @@ def sync_detailed(
 def sync(
     *,
     client: AuthenticatedClient,
-    workspace: Unset | str = UNSET,
-) -> Error | list["ProjectIteration"] | None:
+    workspace: str | Unset = UNSET,
+) -> Error | list[ProjectIteration] | None:
     """List the time-boxes in the caller's reach (non-deleted, in calendar order)
 
      Every state is returned — upcoming, active and completed — because a cycle review needs the box that
@@ -114,14 +114,14 @@ def sync(
     the whole page, so a list can never straddle midnight and report two different instants.
 
     Args:
-        workspace (Union[Unset, str]):
+        workspace (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, list['ProjectIteration']]
+        Error | list[ProjectIteration]
     """
 
     return sync_detailed(
@@ -133,8 +133,8 @@ def sync(
 async def asyncio_detailed(
     *,
     client: AuthenticatedClient,
-    workspace: Unset | str = UNSET,
-) -> Response[Error | list["ProjectIteration"]]:
+    workspace: str | Unset = UNSET,
+) -> Response[Error | list[ProjectIteration]]:
     """List the time-boxes in the caller's reach (non-deleted, in calendar order)
 
      Every state is returned — upcoming, active and completed — because a cycle review needs the box that
@@ -142,14 +142,14 @@ async def asyncio_detailed(
     the whole page, so a list can never straddle midnight and report two different instants.
 
     Args:
-        workspace (Union[Unset, str]):
+        workspace (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, list['ProjectIteration']]]
+        Response[Error | list[ProjectIteration]]
     """
 
     kwargs = _get_kwargs(
@@ -164,8 +164,8 @@ async def asyncio_detailed(
 async def asyncio(
     *,
     client: AuthenticatedClient,
-    workspace: Unset | str = UNSET,
-) -> Error | list["ProjectIteration"] | None:
+    workspace: str | Unset = UNSET,
+) -> Error | list[ProjectIteration] | None:
     """List the time-boxes in the caller's reach (non-deleted, in calendar order)
 
      Every state is returned — upcoming, active and completed — because a cycle review needs the box that
@@ -173,14 +173,14 @@ async def asyncio(
     the whole page, so a list can never straddle midnight and report two different instants.
 
     Args:
-        workspace (Union[Unset, str]):
+        workspace (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, list['ProjectIteration']]
+        Error | list[ProjectIteration]
     """
 
     return (

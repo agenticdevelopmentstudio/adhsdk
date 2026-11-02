@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -22,7 +24,7 @@ class ProjectField:
         type_ (ProjectFieldType):
         position (int): field order (ascending)
         created_at (str):
-        options (Union[None, Unset, list[str]]): the choices for a select field (non-empty); null for every other type
+        options (list[str] | None | Unset): the choices for a select field (non-empty); null for every other type
     """
 
     id: str
@@ -33,7 +35,7 @@ class ProjectField:
     type_: ProjectFieldType
     position: int
     created_at: str
-    options: None | Unset | list[str] = UNSET
+    options: list[str] | None | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -53,7 +55,7 @@ class ProjectField:
 
         created_at = self.created_at
 
-        options: None | Unset | list[str]
+        options: list[str] | None | Unset
         if isinstance(self.options, Unset):
             options = UNSET
         elif isinstance(self.options, list):
@@ -100,7 +102,7 @@ class ProjectField:
 
         created_at = d.pop("createdAt")
 
-        def _parse_options(data: object) -> None | Unset | list[str]:
+        def _parse_options(data: object) -> list[str] | None | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
@@ -111,9 +113,9 @@ class ProjectField:
                 options_type_0 = cast(list[str], data)
 
                 return options_type_0
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
-            return cast(None | Unset | list[str], data)
+            return cast(list[str] | None | Unset, data)
 
         options = _parse_options(d.pop("options", UNSET))
 

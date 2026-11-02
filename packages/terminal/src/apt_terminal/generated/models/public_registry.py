@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import TYPE_CHECKING, Any, TypeVar, cast
 
@@ -24,10 +26,10 @@ class PublicRegistry:
         entry_term (str): What this registry calls an entry — "consultant", "coach", "shop".
         tags (list[str]): The owner's discovery labels.
         services_enabled (bool):
-        bound_site_id (Union[None, str]): A fleet SITE SLUG from the frontend sites registry, when this registry is
-            bound to a dedicated site; null otherwise.
-        sections (list['PublicRegistrySection']):
-        fields (list['PublicRegistryFieldDef']):
+        bound_site_id (None | str): A fleet SITE SLUG from the frontend sites registry, when this registry is bound to a
+            dedicated site; null otherwise.
+        sections (list[PublicRegistrySection]):
+        fields (list[PublicRegistryFieldDef]):
     """
 
     slug: str
@@ -39,8 +41,8 @@ class PublicRegistry:
     tags: list[str]
     services_enabled: bool
     bound_site_id: None | str
-    sections: list["PublicRegistrySection"]
-    fields: list["PublicRegistryFieldDef"]
+    sections: list[PublicRegistrySection]
+    fields: list[PublicRegistryFieldDef]
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:

@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class BillingContextStripeStatus(str, Enum):
+class BillingContextStripeStatus(StrEnum):
     CONNECTED = "connected"
     NOT_CONNECTED = "not_connected"
     UNKNOWN = "unknown"

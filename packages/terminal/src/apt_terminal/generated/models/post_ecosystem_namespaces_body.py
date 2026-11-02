@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar
 
@@ -17,15 +19,15 @@ class PostEcosystemNamespacesBody:
         owner_kind (PostEcosystemNamespacesBodyOwnerKind):
         owner_id (str):
         rdid (str): Reverse-domain prefix
-        slug (Union[Unset, str]):
-        name (Union[Unset, str]):
+        slug (str | Unset):
+        name (str | Unset):
     """
 
     owner_kind: PostEcosystemNamespacesBodyOwnerKind
     owner_id: str
     rdid: str
-    slug: Unset | str = UNSET
-    name: Unset | str = UNSET
+    slug: str | Unset = UNSET
+    name: str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:

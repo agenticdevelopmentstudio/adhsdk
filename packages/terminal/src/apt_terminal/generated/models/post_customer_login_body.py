@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar
 
@@ -15,13 +17,13 @@ class PostCustomerLoginBody:
 
     Attributes:
         password (str):
-        email (Union[Unset, str]):
-        identifier (Union[Unset, str]):
+        email (str | Unset):
+        identifier (str | Unset):
     """
 
     password: str
-    email: Unset | str = UNSET
-    identifier: Unset | str = UNSET
+    email: str | Unset = UNSET
+    identifier: str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:

@@ -1,5 +1,6 @@
 from http import HTTPStatus
 from typing import Any
+from urllib.parse import quote
 
 import httpx
 
@@ -8,22 +9,25 @@ from ...client import AuthenticatedClient, Client
 from ...models.error import Error
 from ...models.put_shipr_repos_id_personas_body import PutShiprReposIdPersonasBody
 from ...models.put_shipr_repos_id_personas_response_200 import PutShiprReposIdPersonasResponse200
-from ...types import Response
+from ...types import UNSET, Response, Unset
 
 
 def _get_kwargs(
     id: str,
     *,
-    body: PutShiprReposIdPersonasBody,
+    body: PutShiprReposIdPersonasBody | Unset = UNSET,
 ) -> dict[str, Any]:
     headers: dict[str, Any] = {}
 
     _kwargs: dict[str, Any] = {
         "method": "put",
-        "url": f"/shipr/repos/{id}/personas",
+        "url": "/shipr/repos/{id}/personas".format(
+            id=quote(str(id), safe=""),
+        ),
     }
 
-    _kwargs["json"] = body.to_dict()
+    if not isinstance(body, Unset):
+        _kwargs["json"] = body.to_dict()
 
     headers["Content-Type"] = "application/json"
 
@@ -80,7 +84,7 @@ def sync_detailed(
     id: str,
     *,
     client: AuthenticatedClient,
-    body: PutShiprReposIdPersonasBody,
+    body: PutShiprReposIdPersonasBody | Unset = UNSET,
 ) -> Response[Error | PutShiprReposIdPersonasResponse200]:
     """Set which personas are on this repository's crew
 
@@ -92,14 +96,14 @@ def sync_detailed(
 
     Args:
         id (str):
-        body (PutShiprReposIdPersonasBody):
+        body (PutShiprReposIdPersonasBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, PutShiprReposIdPersonasResponse200]]
+        Response[Error | PutShiprReposIdPersonasResponse200]
     """
 
     kwargs = _get_kwargs(
@@ -118,7 +122,7 @@ def sync(
     id: str,
     *,
     client: AuthenticatedClient,
-    body: PutShiprReposIdPersonasBody,
+    body: PutShiprReposIdPersonasBody | Unset = UNSET,
 ) -> Error | PutShiprReposIdPersonasResponse200 | None:
     """Set which personas are on this repository's crew
 
@@ -130,14 +134,14 @@ def sync(
 
     Args:
         id (str):
-        body (PutShiprReposIdPersonasBody):
+        body (PutShiprReposIdPersonasBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, PutShiprReposIdPersonasResponse200]
+        Error | PutShiprReposIdPersonasResponse200
     """
 
     return sync_detailed(
@@ -151,7 +155,7 @@ async def asyncio_detailed(
     id: str,
     *,
     client: AuthenticatedClient,
-    body: PutShiprReposIdPersonasBody,
+    body: PutShiprReposIdPersonasBody | Unset = UNSET,
 ) -> Response[Error | PutShiprReposIdPersonasResponse200]:
     """Set which personas are on this repository's crew
 
@@ -163,14 +167,14 @@ async def asyncio_detailed(
 
     Args:
         id (str):
-        body (PutShiprReposIdPersonasBody):
+        body (PutShiprReposIdPersonasBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, PutShiprReposIdPersonasResponse200]]
+        Response[Error | PutShiprReposIdPersonasResponse200]
     """
 
     kwargs = _get_kwargs(
@@ -187,7 +191,7 @@ async def asyncio(
     id: str,
     *,
     client: AuthenticatedClient,
-    body: PutShiprReposIdPersonasBody,
+    body: PutShiprReposIdPersonasBody | Unset = UNSET,
 ) -> Error | PutShiprReposIdPersonasResponse200 | None:
     """Set which personas are on this repository's crew
 
@@ -199,14 +203,14 @@ async def asyncio(
 
     Args:
         id (str):
-        body (PutShiprReposIdPersonasBody):
+        body (PutShiprReposIdPersonasBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, PutShiprReposIdPersonasResponse200]
+        Error | PutShiprReposIdPersonasResponse200
     """
 
     return (

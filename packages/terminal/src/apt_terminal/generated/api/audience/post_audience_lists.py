@@ -8,12 +8,12 @@ from ...client import AuthenticatedClient, Client
 from ...models.error import Error
 from ...models.post_audience_lists_body import PostAudienceListsBody
 from ...models.post_audience_lists_response_201 import PostAudienceListsResponse201
-from ...types import Response
+from ...types import UNSET, Response, Unset
 
 
 def _get_kwargs(
     *,
-    body: PostAudienceListsBody,
+    body: PostAudienceListsBody | Unset = UNSET,
 ) -> dict[str, Any]:
     headers: dict[str, Any] = {}
 
@@ -22,7 +22,8 @@ def _get_kwargs(
         "url": "/audience/lists",
     }
 
-    _kwargs["json"] = body.to_dict()
+    if not isinstance(body, Unset):
+        _kwargs["json"] = body.to_dict()
 
     headers["Content-Type"] = "application/json"
 
@@ -68,19 +69,19 @@ def _build_response(
 def sync_detailed(
     *,
     client: AuthenticatedClient,
-    body: PostAudienceListsBody,
+    body: PostAudienceListsBody | Unset = UNSET,
 ) -> Response[Error | PostAudienceListsResponse201]:
     """Create lists
 
     Args:
-        body (PostAudienceListsBody):
+        body (PostAudienceListsBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, PostAudienceListsResponse201]]
+        Response[Error | PostAudienceListsResponse201]
     """
 
     kwargs = _get_kwargs(
@@ -97,19 +98,19 @@ def sync_detailed(
 def sync(
     *,
     client: AuthenticatedClient,
-    body: PostAudienceListsBody,
+    body: PostAudienceListsBody | Unset = UNSET,
 ) -> Error | PostAudienceListsResponse201 | None:
     """Create lists
 
     Args:
-        body (PostAudienceListsBody):
+        body (PostAudienceListsBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, PostAudienceListsResponse201]
+        Error | PostAudienceListsResponse201
     """
 
     return sync_detailed(
@@ -121,19 +122,19 @@ def sync(
 async def asyncio_detailed(
     *,
     client: AuthenticatedClient,
-    body: PostAudienceListsBody,
+    body: PostAudienceListsBody | Unset = UNSET,
 ) -> Response[Error | PostAudienceListsResponse201]:
     """Create lists
 
     Args:
-        body (PostAudienceListsBody):
+        body (PostAudienceListsBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, PostAudienceListsResponse201]]
+        Response[Error | PostAudienceListsResponse201]
     """
 
     kwargs = _get_kwargs(
@@ -148,19 +149,19 @@ async def asyncio_detailed(
 async def asyncio(
     *,
     client: AuthenticatedClient,
-    body: PostAudienceListsBody,
+    body: PostAudienceListsBody | Unset = UNSET,
 ) -> Error | PostAudienceListsResponse201 | None:
     """Create lists
 
     Args:
-        body (PostAudienceListsBody):
+        body (PostAudienceListsBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, PostAudienceListsResponse201]
+        Error | PostAudienceListsResponse201
     """
 
     return (

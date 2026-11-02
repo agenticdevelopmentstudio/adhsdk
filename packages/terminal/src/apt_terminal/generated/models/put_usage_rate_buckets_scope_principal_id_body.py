@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar
 
@@ -12,16 +14,16 @@ T = TypeVar("T", bound="PutUsageRateBucketsScopePrincipalIdBody")
 class PutUsageRateBucketsScopePrincipalIdBody:
     """
     Attributes:
-        scope (Union[Unset, str]):
-        principal_id (Union[Unset, str]):
-        tokens_avail (Union[Unset, int]):
-        refilled_at (Union[Unset, str]):
+        scope (str | Unset):
+        principal_id (str | Unset):
+        tokens_avail (int | Unset):
+        refilled_at (str | Unset):
     """
 
-    scope: Unset | str = UNSET
-    principal_id: Unset | str = UNSET
-    tokens_avail: Unset | int = UNSET
-    refilled_at: Unset | str = UNSET
+    scope: str | Unset = UNSET
+    principal_id: str | Unset = UNSET
+    tokens_avail: int | Unset = UNSET
+    refilled_at: str | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
         scope = self.scope

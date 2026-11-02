@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class PutAccountMfaPreferenceBodyMethod(str, Enum):
+class PutAccountMfaPreferenceBodyMethod(StrEnum):
     SMS = "sms"
     TOTP = "totp"
     WEBAUTHN = "webauthn"

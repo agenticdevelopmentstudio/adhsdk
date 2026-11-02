@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class PutIntegrationsEcosystemsEcosystemIdProviderConfigsConfigIdBodyCredentialStyle(str, Enum):
+class PutIntegrationsEcosystemsEcosystemIdProviderConfigsConfigIdBodyCredentialStyle(StrEnum):
     BASIC_AUTH = "basic_auth"
     FORM_BODY = "form_body"
 

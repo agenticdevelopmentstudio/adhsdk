@@ -1,5 +1,6 @@
 from http import HTTPStatus
 from typing import Any
+from urllib.parse import quote
 
 import httpx
 
@@ -8,22 +9,25 @@ from ...client import AuthenticatedClient, Client
 from ...models.error import Error
 from ...models.messaging_send_result import MessagingSendResult
 from ...models.post_messaging_ecosystems_id_send_body import PostMessagingEcosystemsIdSendBody
-from ...types import Response
+from ...types import UNSET, Response, Unset
 
 
 def _get_kwargs(
     id: str,
     *,
-    body: PostMessagingEcosystemsIdSendBody,
+    body: PostMessagingEcosystemsIdSendBody | Unset = UNSET,
 ) -> dict[str, Any]:
     headers: dict[str, Any] = {}
 
     _kwargs: dict[str, Any] = {
         "method": "post",
-        "url": f"/messaging/ecosystems/{id}/send",
+        "url": "/messaging/ecosystems/{id}/send".format(
+            id=quote(str(id), safe=""),
+        ),
     }
 
-    _kwargs["json"] = body.to_dict()
+    if not isinstance(body, Unset):
+        _kwargs["json"] = body.to_dict()
 
     headers["Content-Type"] = "application/json"
 
@@ -85,20 +89,21 @@ def sync_detailed(
     id: str,
     *,
     client: AuthenticatedClient,
-    body: PostMessagingEcosystemsIdSendBody,
+    body: PostMessagingEcosystemsIdSendBody | Unset = UNSET,
 ) -> Response[Error | MessagingSendResult]:
     """Send an email/SMS via this ecosystem's providers — freeform or template (owner/admin)
 
     Args:
         id (str):
-        body (PostMessagingEcosystemsIdSendBody): Provide either body or templateId, not both.
+        body (PostMessagingEcosystemsIdSendBody | Unset): Provide either body or templateId, not
+            both.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, MessagingSendResult]]
+        Response[Error | MessagingSendResult]
     """
 
     kwargs = _get_kwargs(
@@ -117,20 +122,21 @@ def sync(
     id: str,
     *,
     client: AuthenticatedClient,
-    body: PostMessagingEcosystemsIdSendBody,
+    body: PostMessagingEcosystemsIdSendBody | Unset = UNSET,
 ) -> Error | MessagingSendResult | None:
     """Send an email/SMS via this ecosystem's providers — freeform or template (owner/admin)
 
     Args:
         id (str):
-        body (PostMessagingEcosystemsIdSendBody): Provide either body or templateId, not both.
+        body (PostMessagingEcosystemsIdSendBody | Unset): Provide either body or templateId, not
+            both.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, MessagingSendResult]
+        Error | MessagingSendResult
     """
 
     return sync_detailed(
@@ -144,20 +150,21 @@ async def asyncio_detailed(
     id: str,
     *,
     client: AuthenticatedClient,
-    body: PostMessagingEcosystemsIdSendBody,
+    body: PostMessagingEcosystemsIdSendBody | Unset = UNSET,
 ) -> Response[Error | MessagingSendResult]:
     """Send an email/SMS via this ecosystem's providers — freeform or template (owner/admin)
 
     Args:
         id (str):
-        body (PostMessagingEcosystemsIdSendBody): Provide either body or templateId, not both.
+        body (PostMessagingEcosystemsIdSendBody | Unset): Provide either body or templateId, not
+            both.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, MessagingSendResult]]
+        Response[Error | MessagingSendResult]
     """
 
     kwargs = _get_kwargs(
@@ -174,20 +181,21 @@ async def asyncio(
     id: str,
     *,
     client: AuthenticatedClient,
-    body: PostMessagingEcosystemsIdSendBody,
+    body: PostMessagingEcosystemsIdSendBody | Unset = UNSET,
 ) -> Error | MessagingSendResult | None:
     """Send an email/SMS via this ecosystem's providers — freeform or template (owner/admin)
 
     Args:
         id (str):
-        body (PostMessagingEcosystemsIdSendBody): Provide either body or templateId, not both.
+        body (PostMessagingEcosystemsIdSendBody | Unset): Provide either body or templateId, not
+            both.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, MessagingSendResult]
+        Error | MessagingSendResult
     """
 
     return (

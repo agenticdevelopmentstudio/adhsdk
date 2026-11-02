@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import TYPE_CHECKING, Any, TypeVar, cast
 
@@ -27,8 +29,8 @@ class IntegrationProvider:
         default_poll_interval_ms (int): Default minimum sync interval (ms)
         subtitle (str): Short human category for the picker list + filter (e.g. Email, Social)
         description (str): What the service is and what enabling it does
-        links (list['IntegrationProviderLinksItem']): Out-links for the info card (homepage / docs / "get your keys")
-        config_fields (Union[Unset, list['IntegrationProviderConfigFieldsItem']]): For api_key providers: declarative
+        links (list[IntegrationProviderLinksItem]): Out-links for the info card (homepage / docs / "get your keys")
+        config_fields (list[IntegrationProviderConfigFieldsItem] | Unset): For api_key providers: declarative
             config/credential fields, rendered + validated identically at ecosystem and user scope (absent for OAuth-style
             providers).
     """
@@ -41,8 +43,8 @@ class IntegrationProvider:
     default_poll_interval_ms: int
     subtitle: str
     description: str
-    links: list["IntegrationProviderLinksItem"]
-    config_fields: Unset | list["IntegrationProviderConfigFieldsItem"] = UNSET
+    links: list[IntegrationProviderLinksItem]
+    config_fields: list[IntegrationProviderConfigFieldsItem] | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -67,7 +69,7 @@ class IntegrationProvider:
             links_item = links_item_data.to_dict()
             links.append(links_item)
 
-        config_fields: Unset | list[dict[str, Any]] = UNSET
+        config_fields: list[dict[str, Any]] | Unset = UNSET
         if not isinstance(self.config_fields, Unset):
             config_fields = []
             for config_fields_item_data in self.config_fields:
@@ -99,7 +101,9 @@ class IntegrationProvider:
         from ..models.integration_provider_config_fields_item import (
             IntegrationProviderConfigFieldsItem,
         )
-        from ..models.integration_provider_links_item import IntegrationProviderLinksItem
+        from ..models.integration_provider_links_item import (
+            IntegrationProviderLinksItem,
+        )
 
         d = dict(src_dict)
         provider_id = d.pop("providerId")
@@ -125,14 +129,16 @@ class IntegrationProvider:
 
             links.append(links_item)
 
-        config_fields = []
         _config_fields = d.pop("configFields", UNSET)
-        for config_fields_item_data in _config_fields or []:
-            config_fields_item = IntegrationProviderConfigFieldsItem.from_dict(
-                config_fields_item_data
-            )
+        config_fields: list[IntegrationProviderConfigFieldsItem] | Unset = UNSET
+        if _config_fields is not UNSET:
+            config_fields = []
+            for config_fields_item_data in _config_fields:
+                config_fields_item = IntegrationProviderConfigFieldsItem.from_dict(
+                    config_fields_item_data
+                )
 
-            config_fields.append(config_fields_item)
+                config_fields.append(config_fields_item)
 
         integration_provider = cls(
             provider_id=provider_id,

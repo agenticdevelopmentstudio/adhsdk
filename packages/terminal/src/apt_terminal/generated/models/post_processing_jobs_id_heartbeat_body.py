@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar
 
@@ -14,11 +16,11 @@ class PostProcessingJobsIdHeartbeatBody:
     """
     Attributes:
         lease_token (str): Opaque lease token returned by /claim
-        lease_ms (Union[Unset, int]): New lease duration in ms (default 30 000)
+        lease_ms (int | Unset): New lease duration in ms (default 30 000)
     """
 
     lease_token: str
-    lease_ms: Unset | int = UNSET
+    lease_ms: int | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:

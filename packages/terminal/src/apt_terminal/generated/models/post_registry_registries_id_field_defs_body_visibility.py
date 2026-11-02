@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class PostRegistryRegistriesIdFieldDefsBodyVisibility(str, Enum):
+class PostRegistryRegistriesIdFieldDefsBodyVisibility(StrEnum):
     AUTHENTICATED = "authenticated"
     PRIVATE = "private"
     PUBLIC = "public"

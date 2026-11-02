@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar
 
@@ -17,17 +19,17 @@ class GetAuthSlugAvailableSlugResponse200:
     """
     Attributes:
         available (bool):
-        reason (Union[Unset, GetAuthSlugAvailableSlugResponse200Reason]):
+        reason (GetAuthSlugAvailableSlugResponse200Reason | Unset):
     """
 
     available: bool
-    reason: Unset | GetAuthSlugAvailableSlugResponse200Reason = UNSET
+    reason: GetAuthSlugAvailableSlugResponse200Reason | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
         available = self.available
 
-        reason: Unset | str = UNSET
+        reason: str | Unset = UNSET
         if not isinstance(self.reason, Unset):
             reason = self.reason.value
 
@@ -49,7 +51,7 @@ class GetAuthSlugAvailableSlugResponse200:
         available = d.pop("available")
 
         _reason = d.pop("reason", UNSET)
-        reason: Unset | GetAuthSlugAvailableSlugResponse200Reason
+        reason: GetAuthSlugAvailableSlugResponse200Reason | Unset
         if isinstance(_reason, Unset):
             reason = UNSET
         else:

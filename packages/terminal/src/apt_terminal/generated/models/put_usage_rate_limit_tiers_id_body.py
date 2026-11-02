@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -12,34 +14,34 @@ T = TypeVar("T", bound="PutUsageRateLimitTiersIdBody")
 class PutUsageRateLimitTiersIdBody:
     """
     Attributes:
-        slug (Union[Unset, str]):
-        name (Union[Unset, str]):
-        rate_capacity (Union[Unset, int]):
-        rate_refill_tokens (Union[Unset, int]):
-        rate_refill_seconds (Union[Unset, int]):
-        quota_requests (Union[None, Unset, int]):
-        quota_bytes (Union[None, Unset, int]):
-        quota_tokens (Union[None, Unset, int]):
-        quota_cost_micros (Union[None, Unset, int]):
-        quota_period_days (Union[Unset, int]):
-        quota_enforced (Union[Unset, bool]):
-        is_default (Union[Unset, bool]):
-        is_active (Union[Unset, bool]):
+        slug (str | Unset):
+        name (str | Unset):
+        rate_capacity (int | Unset):
+        rate_refill_tokens (int | Unset):
+        rate_refill_seconds (int | Unset):
+        quota_requests (int | None | Unset):
+        quota_bytes (int | None | Unset):
+        quota_tokens (int | None | Unset):
+        quota_cost_micros (int | None | Unset):
+        quota_period_days (int | Unset):
+        quota_enforced (bool | Unset):
+        is_default (bool | Unset):
+        is_active (bool | Unset):
     """
 
-    slug: Unset | str = UNSET
-    name: Unset | str = UNSET
-    rate_capacity: Unset | int = UNSET
-    rate_refill_tokens: Unset | int = UNSET
-    rate_refill_seconds: Unset | int = UNSET
-    quota_requests: None | Unset | int = UNSET
-    quota_bytes: None | Unset | int = UNSET
-    quota_tokens: None | Unset | int = UNSET
-    quota_cost_micros: None | Unset | int = UNSET
-    quota_period_days: Unset | int = UNSET
-    quota_enforced: Unset | bool = UNSET
-    is_default: Unset | bool = UNSET
-    is_active: Unset | bool = UNSET
+    slug: str | Unset = UNSET
+    name: str | Unset = UNSET
+    rate_capacity: int | Unset = UNSET
+    rate_refill_tokens: int | Unset = UNSET
+    rate_refill_seconds: int | Unset = UNSET
+    quota_requests: int | None | Unset = UNSET
+    quota_bytes: int | None | Unset = UNSET
+    quota_tokens: int | None | Unset = UNSET
+    quota_cost_micros: int | None | Unset = UNSET
+    quota_period_days: int | Unset = UNSET
+    quota_enforced: bool | Unset = UNSET
+    is_default: bool | Unset = UNSET
+    is_active: bool | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
         slug = self.slug
@@ -52,25 +54,25 @@ class PutUsageRateLimitTiersIdBody:
 
         rate_refill_seconds = self.rate_refill_seconds
 
-        quota_requests: None | Unset | int
+        quota_requests: int | None | Unset
         if isinstance(self.quota_requests, Unset):
             quota_requests = UNSET
         else:
             quota_requests = self.quota_requests
 
-        quota_bytes: None | Unset | int
+        quota_bytes: int | None | Unset
         if isinstance(self.quota_bytes, Unset):
             quota_bytes = UNSET
         else:
             quota_bytes = self.quota_bytes
 
-        quota_tokens: None | Unset | int
+        quota_tokens: int | None | Unset
         if isinstance(self.quota_tokens, Unset):
             quota_tokens = UNSET
         else:
             quota_tokens = self.quota_tokens
 
-        quota_cost_micros: None | Unset | int
+        quota_cost_micros: int | None | Unset
         if isinstance(self.quota_cost_micros, Unset):
             quota_cost_micros = UNSET
         else:
@@ -129,39 +131,39 @@ class PutUsageRateLimitTiersIdBody:
 
         rate_refill_seconds = d.pop("rateRefillSeconds", UNSET)
 
-        def _parse_quota_requests(data: object) -> None | Unset | int:
+        def _parse_quota_requests(data: object) -> int | None | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | int, data)
+            return cast(int | None | Unset, data)
 
         quota_requests = _parse_quota_requests(d.pop("quotaRequests", UNSET))
 
-        def _parse_quota_bytes(data: object) -> None | Unset | int:
+        def _parse_quota_bytes(data: object) -> int | None | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | int, data)
+            return cast(int | None | Unset, data)
 
         quota_bytes = _parse_quota_bytes(d.pop("quotaBytes", UNSET))
 
-        def _parse_quota_tokens(data: object) -> None | Unset | int:
+        def _parse_quota_tokens(data: object) -> int | None | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | int, data)
+            return cast(int | None | Unset, data)
 
         quota_tokens = _parse_quota_tokens(d.pop("quotaTokens", UNSET))
 
-        def _parse_quota_cost_micros(data: object) -> None | Unset | int:
+        def _parse_quota_cost_micros(data: object) -> int | None | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | int, data)
+            return cast(int | None | Unset, data)
 
         quota_cost_micros = _parse_quota_cost_micros(d.pop("quotaCostMicros", UNSET))
 

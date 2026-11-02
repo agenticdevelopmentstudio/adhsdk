@@ -8,12 +8,12 @@ from ...client import AuthenticatedClient, Client
 from ...models.error import Error
 from ...models.put_account_mfa_preference_body import PutAccountMfaPreferenceBody
 from ...models.put_account_mfa_preference_response_200 import PutAccountMfaPreferenceResponse200
-from ...types import Response
+from ...types import UNSET, Response, Unset
 
 
 def _get_kwargs(
     *,
-    body: PutAccountMfaPreferenceBody,
+    body: PutAccountMfaPreferenceBody | Unset = UNSET,
 ) -> dict[str, Any]:
     headers: dict[str, Any] = {}
 
@@ -22,7 +22,8 @@ def _get_kwargs(
         "url": "/account/mfa/preference",
     }
 
-    _kwargs["json"] = body.to_dict()
+    if not isinstance(body, Unset):
+        _kwargs["json"] = body.to_dict()
 
     headers["Content-Type"] = "application/json"
 
@@ -68,19 +69,19 @@ def _build_response(
 def sync_detailed(
     *,
     client: AuthenticatedClient,
-    body: PutAccountMfaPreferenceBody,
+    body: PutAccountMfaPreferenceBody | Unset = UNSET,
 ) -> Response[Error | PutAccountMfaPreferenceResponse200]:
     """Set the preferred 2FA method
 
     Args:
-        body (PutAccountMfaPreferenceBody):
+        body (PutAccountMfaPreferenceBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, PutAccountMfaPreferenceResponse200]]
+        Response[Error | PutAccountMfaPreferenceResponse200]
     """
 
     kwargs = _get_kwargs(
@@ -97,19 +98,19 @@ def sync_detailed(
 def sync(
     *,
     client: AuthenticatedClient,
-    body: PutAccountMfaPreferenceBody,
+    body: PutAccountMfaPreferenceBody | Unset = UNSET,
 ) -> Error | PutAccountMfaPreferenceResponse200 | None:
     """Set the preferred 2FA method
 
     Args:
-        body (PutAccountMfaPreferenceBody):
+        body (PutAccountMfaPreferenceBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, PutAccountMfaPreferenceResponse200]
+        Error | PutAccountMfaPreferenceResponse200
     """
 
     return sync_detailed(
@@ -121,19 +122,19 @@ def sync(
 async def asyncio_detailed(
     *,
     client: AuthenticatedClient,
-    body: PutAccountMfaPreferenceBody,
+    body: PutAccountMfaPreferenceBody | Unset = UNSET,
 ) -> Response[Error | PutAccountMfaPreferenceResponse200]:
     """Set the preferred 2FA method
 
     Args:
-        body (PutAccountMfaPreferenceBody):
+        body (PutAccountMfaPreferenceBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, PutAccountMfaPreferenceResponse200]]
+        Response[Error | PutAccountMfaPreferenceResponse200]
     """
 
     kwargs = _get_kwargs(
@@ -148,19 +149,19 @@ async def asyncio_detailed(
 async def asyncio(
     *,
     client: AuthenticatedClient,
-    body: PutAccountMfaPreferenceBody,
+    body: PutAccountMfaPreferenceBody | Unset = UNSET,
 ) -> Error | PutAccountMfaPreferenceResponse200 | None:
     """Set the preferred 2FA method
 
     Args:
-        body (PutAccountMfaPreferenceBody):
+        body (PutAccountMfaPreferenceBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, PutAccountMfaPreferenceResponse200]
+        Error | PutAccountMfaPreferenceResponse200
     """
 
     return (

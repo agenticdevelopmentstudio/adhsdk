@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar
 
@@ -14,19 +16,19 @@ class PublicInvitationRequest:
     """
     Attributes:
         name (str):
-        email (Union[Unset, str]):
-        phone (Union[Unset, str]):
-        source (Union[Unset, str]):
-        note (Union[Unset, str]):
-        ecosystem (Union[Unset, str]): Target ecosystem address (rdid or uuid). Absent = the hub. Unknown/deleted → 404.
+        email (str | Unset):
+        phone (str | Unset):
+        source (str | Unset):
+        note (str | Unset):
+        ecosystem (str | Unset): Target ecosystem address (rdid or uuid). Absent = the hub. Unknown/deleted → 404.
     """
 
     name: str
-    email: Unset | str = UNSET
-    phone: Unset | str = UNSET
-    source: Unset | str = UNSET
-    note: Unset | str = UNSET
-    ecosystem: Unset | str = UNSET
+    email: str | Unset = UNSET
+    phone: str | Unset = UNSET
+    source: str | Unset = UNSET
+    note: str | Unset = UNSET
+    ecosystem: str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:

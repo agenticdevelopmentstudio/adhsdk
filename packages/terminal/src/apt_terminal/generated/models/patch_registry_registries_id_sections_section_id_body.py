@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar
 
@@ -13,14 +15,14 @@ T = TypeVar("T", bound="PatchRegistryRegistriesIdSectionsSectionIdBody")
 class PatchRegistryRegistriesIdSectionsSectionIdBody:
     """
     Attributes:
-        label (Union[Unset, str]):
-        description (Union[Unset, str]):
-        sort_order (Union[Unset, int]):
+        label (str | Unset):
+        description (str | Unset):
+        sort_order (int | Unset):
     """
 
-    label: Unset | str = UNSET
-    description: Unset | str = UNSET
-    sort_order: Unset | int = UNSET
+    label: str | Unset = UNSET
+    description: str | Unset = UNSET
+    sort_order: int | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:

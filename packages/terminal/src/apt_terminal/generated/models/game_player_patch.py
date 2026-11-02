@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -16,18 +18,18 @@ class GamePlayerPatch:
     profile’s visibility.
 
         Attributes:
-            game_id (Union[Unset, str]):
-            slug (Union[Unset, str]):
-            character_name (Union[None, Unset, str]):
-            character_avatar_url (Union[None, Unset, str]):
-            visibility (Union[Unset, GamePlayerPatchVisibility]):
+            game_id (str | Unset):
+            slug (str | Unset):
+            character_name (None | str | Unset):
+            character_avatar_url (None | str | Unset):
+            visibility (GamePlayerPatchVisibility | Unset):
     """
 
-    game_id: Unset | str = UNSET
-    slug: Unset | str = UNSET
-    character_name: None | Unset | str = UNSET
-    character_avatar_url: None | Unset | str = UNSET
-    visibility: Unset | GamePlayerPatchVisibility = UNSET
+    game_id: str | Unset = UNSET
+    slug: str | Unset = UNSET
+    character_name: None | str | Unset = UNSET
+    character_avatar_url: None | str | Unset = UNSET
+    visibility: GamePlayerPatchVisibility | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -35,19 +37,19 @@ class GamePlayerPatch:
 
         slug = self.slug
 
-        character_name: None | Unset | str
+        character_name: None | str | Unset
         if isinstance(self.character_name, Unset):
             character_name = UNSET
         else:
             character_name = self.character_name
 
-        character_avatar_url: None | Unset | str
+        character_avatar_url: None | str | Unset
         if isinstance(self.character_avatar_url, Unset):
             character_avatar_url = UNSET
         else:
             character_avatar_url = self.character_avatar_url
 
-        visibility: Unset | str = UNSET
+        visibility: str | Unset = UNSET
         if not isinstance(self.visibility, Unset):
             visibility = self.visibility.value
 
@@ -74,26 +76,26 @@ class GamePlayerPatch:
 
         slug = d.pop("slug", UNSET)
 
-        def _parse_character_name(data: object) -> None | Unset | str:
+        def _parse_character_name(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         character_name = _parse_character_name(d.pop("character_name", UNSET))
 
-        def _parse_character_avatar_url(data: object) -> None | Unset | str:
+        def _parse_character_avatar_url(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         character_avatar_url = _parse_character_avatar_url(d.pop("character_avatar_url", UNSET))
 
         _visibility = d.pop("visibility", UNSET)
-        visibility: Unset | GamePlayerPatchVisibility
+        visibility: GamePlayerPatchVisibility | Unset
         if isinstance(_visibility, Unset):
             visibility = UNSET
         else:

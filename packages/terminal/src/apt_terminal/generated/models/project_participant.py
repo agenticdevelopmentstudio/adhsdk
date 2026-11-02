@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -21,7 +23,7 @@ class ProjectParticipant:
         participant_id (str): the attached actor id (opaque)
         role (str): the participant's project role (DB default 'member')
         added_at (str):
-        added_by (Union[None, Unset, str]):
+        added_by (None | str | Unset):
     """
 
     id: str
@@ -31,7 +33,7 @@ class ProjectParticipant:
     participant_id: str
     role: str
     added_at: str
-    added_by: None | Unset | str = UNSET
+    added_by: None | str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -49,7 +51,7 @@ class ProjectParticipant:
 
         added_at = self.added_at
 
-        added_by: None | Unset | str
+        added_by: None | str | Unset
         if isinstance(self.added_by, Unset):
             added_by = UNSET
         else:
@@ -90,12 +92,12 @@ class ProjectParticipant:
 
         added_at = d.pop("addedAt")
 
-        def _parse_added_by(data: object) -> None | Unset | str:
+        def _parse_added_by(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         added_by = _parse_added_by(d.pop("addedBy", UNSET))
 

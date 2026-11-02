@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class RegistryNamespaceOwnerKind(str, Enum):
+class RegistryNamespaceOwnerKind(StrEnum):
     CUSTOMER = "customer"
     ECOSYSTEM = "ecosystem"
     ORGANIZATION = "organization"

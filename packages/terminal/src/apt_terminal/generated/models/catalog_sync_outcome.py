@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar
 
@@ -19,7 +21,7 @@ class CatalogSyncOutcome:
         templates_touched (int):
         models_upserted (int):
         models_deleted (int):
-        error (Union[Unset, str]):
+        error (str | Unset):
     """
 
     source: CatalogSyncOutcomeSource
@@ -27,7 +29,7 @@ class CatalogSyncOutcome:
     templates_touched: int
     models_upserted: int
     models_deleted: int
-    error: Unset | str = UNSET
+    error: str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:

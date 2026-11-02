@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar
 
@@ -15,14 +17,14 @@ class AnnouncementCreate:
     Attributes:
         title (str):
         body (str):
-        audience (Union[Unset, str]): Reserved for targeting. Stored and echoed back, but fan-out currently reaches
-            every live customer of the ecosystem whatever this says — it is not yet an enum, and no value narrows the
-            audience. Default: 'all_hub'.
+        audience (str | Unset): Reserved for targeting. Stored and echoed back, but fan-out currently reaches every live
+            customer of the ecosystem whatever this says — it is not yet an enum, and no value narrows the audience.
+            Default: 'all_hub'.
     """
 
     title: str
     body: str
-    audience: Unset | str = "all_hub"
+    audience: str | Unset = "all_hub"
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:

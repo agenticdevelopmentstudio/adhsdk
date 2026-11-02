@@ -8,12 +8,12 @@ from ...client import AuthenticatedClient, Client
 from ...models.error import Error
 from ...models.post_auth_login_mfa_sms_send_body import PostAuthLoginMfaSmsSendBody
 from ...models.post_auth_login_mfa_sms_send_response_202 import PostAuthLoginMfaSmsSendResponse202
-from ...types import Response
+from ...types import UNSET, Response, Unset
 
 
 def _get_kwargs(
     *,
-    body: PostAuthLoginMfaSmsSendBody,
+    body: PostAuthLoginMfaSmsSendBody | Unset = UNSET,
 ) -> dict[str, Any]:
     headers: dict[str, Any] = {}
 
@@ -22,7 +22,8 @@ def _get_kwargs(
         "url": "/auth/login/mfa/sms/send",
     }
 
-    _kwargs["json"] = body.to_dict()
+    if not isinstance(body, Unset):
+        _kwargs["json"] = body.to_dict()
 
     headers["Content-Type"] = "application/json"
 
@@ -83,19 +84,19 @@ def _build_response(
 def sync_detailed(
     *,
     client: AuthenticatedClient | Client,
-    body: PostAuthLoginMfaSmsSendBody,
+    body: PostAuthLoginMfaSmsSendBody | Unset = UNSET,
 ) -> Response[Error | PostAuthLoginMfaSmsSendResponse202]:
     """Send the SMS login code to the verified primary phone
 
     Args:
-        body (PostAuthLoginMfaSmsSendBody):
+        body (PostAuthLoginMfaSmsSendBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, PostAuthLoginMfaSmsSendResponse202]]
+        Response[Error | PostAuthLoginMfaSmsSendResponse202]
     """
 
     kwargs = _get_kwargs(
@@ -112,19 +113,19 @@ def sync_detailed(
 def sync(
     *,
     client: AuthenticatedClient | Client,
-    body: PostAuthLoginMfaSmsSendBody,
+    body: PostAuthLoginMfaSmsSendBody | Unset = UNSET,
 ) -> Error | PostAuthLoginMfaSmsSendResponse202 | None:
     """Send the SMS login code to the verified primary phone
 
     Args:
-        body (PostAuthLoginMfaSmsSendBody):
+        body (PostAuthLoginMfaSmsSendBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, PostAuthLoginMfaSmsSendResponse202]
+        Error | PostAuthLoginMfaSmsSendResponse202
     """
 
     return sync_detailed(
@@ -136,19 +137,19 @@ def sync(
 async def asyncio_detailed(
     *,
     client: AuthenticatedClient | Client,
-    body: PostAuthLoginMfaSmsSendBody,
+    body: PostAuthLoginMfaSmsSendBody | Unset = UNSET,
 ) -> Response[Error | PostAuthLoginMfaSmsSendResponse202]:
     """Send the SMS login code to the verified primary phone
 
     Args:
-        body (PostAuthLoginMfaSmsSendBody):
+        body (PostAuthLoginMfaSmsSendBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, PostAuthLoginMfaSmsSendResponse202]]
+        Response[Error | PostAuthLoginMfaSmsSendResponse202]
     """
 
     kwargs = _get_kwargs(
@@ -163,19 +164,19 @@ async def asyncio_detailed(
 async def asyncio(
     *,
     client: AuthenticatedClient | Client,
-    body: PostAuthLoginMfaSmsSendBody,
+    body: PostAuthLoginMfaSmsSendBody | Unset = UNSET,
 ) -> Error | PostAuthLoginMfaSmsSendResponse202 | None:
     """Send the SMS login code to the verified primary phone
 
     Args:
-        body (PostAuthLoginMfaSmsSendBody):
+        body (PostAuthLoginMfaSmsSendBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, PostAuthLoginMfaSmsSendResponse202]
+        Error | PostAuthLoginMfaSmsSendResponse202
     """
 
     return (

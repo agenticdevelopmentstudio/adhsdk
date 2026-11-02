@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -14,7 +16,7 @@ class RegistryIdentifier:
         rdid (str): Reverse-domain identifier (e.g. com.acme.app)
         entity_type (str): e.g. 'namespace', 'ecosystem', 'organization'
         entity_id (str): The UUID the rdid resolves to
-        created_by (Union[None, str]): Minter; null for system mappings
+        created_by (None | str): Minter; null for system mappings
     """
 
     rdid: str

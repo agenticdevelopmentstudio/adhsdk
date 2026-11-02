@@ -1,5 +1,6 @@
 from http import HTTPStatus
 from typing import Any
+from urllib.parse import quote
 
 import httpx
 
@@ -18,12 +19,12 @@ from ...types import UNSET, Response, Unset
 def _get_kwargs(
     registry_id: str,
     *,
-    status: Unset | GetRegistryRegistriesRegistryIdEntriesStatus = UNSET,
-    workspace: Unset | str = UNSET,
+    status: GetRegistryRegistriesRegistryIdEntriesStatus | Unset = UNSET,
+    workspace: str | Unset = UNSET,
 ) -> dict[str, Any]:
     params: dict[str, Any] = {}
 
-    json_status: Unset | str = UNSET
+    json_status: str | Unset = UNSET
     if not isinstance(status, Unset):
         json_status = status.value
 
@@ -35,7 +36,9 @@ def _get_kwargs(
 
     _kwargs: dict[str, Any] = {
         "method": "get",
-        "url": f"/registry/registries/{registry_id}/entries",
+        "url": "/registry/registries/{registry_id}/entries".format(
+            registry_id=quote(str(registry_id), safe=""),
+        ),
         "params": params,
     }
 
@@ -91,30 +94,30 @@ def sync_detailed(
     registry_id: str,
     *,
     client: AuthenticatedClient,
-    status: Unset | GetRegistryRegistriesRegistryIdEntriesStatus = UNSET,
-    workspace: Unset | str = UNSET,
+    status: GetRegistryRegistriesRegistryIdEntriesStatus | Unset = UNSET,
+    workspace: str | Unset = UNSET,
 ) -> Response[Error | GetRegistryRegistriesRegistryIdEntriesResponse200]:
-    r"""Every entry in a registry, for whoever administers it — the review queue behind the `reviewed`
-    submission policy. Approving is a PATCH of {status:\"published\"} on an entry by the registry owner;
-    rejecting is the same PATCH with \"draft\"
+    """Every entry in a registry, for whoever administers it — the review queue behind the `reviewed`
+    submission policy. Approving is a PATCH of {status:"published"} on an entry by the registry owner;
+    rejecting is the same PATCH with "draft"
 
      Requires the `registries` sub-item R verb on this registry, because it returns other principals'
     unpublished entries: a registrant reads their own row through /entries/mine, and anonymous visitors
     see only published ones through the public routes. Newest first by createdAt — unlike the
-    alphabetical registry list, since this list's job is \"what came in while I was away\". Soft-deleted
+    alphabetical registry list, since this list's job is "what came in while I was away". Soft-deleted
     entries are never returned.
 
     Args:
         registry_id (str):
-        status (Union[Unset, GetRegistryRegistriesRegistryIdEntriesStatus]):
-        workspace (Union[Unset, str]):
+        status (GetRegistryRegistriesRegistryIdEntriesStatus | Unset):
+        workspace (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, GetRegistryRegistriesRegistryIdEntriesResponse200]]
+        Response[Error | GetRegistryRegistriesRegistryIdEntriesResponse200]
     """
 
     kwargs = _get_kwargs(
@@ -134,30 +137,30 @@ def sync(
     registry_id: str,
     *,
     client: AuthenticatedClient,
-    status: Unset | GetRegistryRegistriesRegistryIdEntriesStatus = UNSET,
-    workspace: Unset | str = UNSET,
+    status: GetRegistryRegistriesRegistryIdEntriesStatus | Unset = UNSET,
+    workspace: str | Unset = UNSET,
 ) -> Error | GetRegistryRegistriesRegistryIdEntriesResponse200 | None:
-    r"""Every entry in a registry, for whoever administers it — the review queue behind the `reviewed`
-    submission policy. Approving is a PATCH of {status:\"published\"} on an entry by the registry owner;
-    rejecting is the same PATCH with \"draft\"
+    """Every entry in a registry, for whoever administers it — the review queue behind the `reviewed`
+    submission policy. Approving is a PATCH of {status:"published"} on an entry by the registry owner;
+    rejecting is the same PATCH with "draft"
 
      Requires the `registries` sub-item R verb on this registry, because it returns other principals'
     unpublished entries: a registrant reads their own row through /entries/mine, and anonymous visitors
     see only published ones through the public routes. Newest first by createdAt — unlike the
-    alphabetical registry list, since this list's job is \"what came in while I was away\". Soft-deleted
+    alphabetical registry list, since this list's job is "what came in while I was away". Soft-deleted
     entries are never returned.
 
     Args:
         registry_id (str):
-        status (Union[Unset, GetRegistryRegistriesRegistryIdEntriesStatus]):
-        workspace (Union[Unset, str]):
+        status (GetRegistryRegistriesRegistryIdEntriesStatus | Unset):
+        workspace (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, GetRegistryRegistriesRegistryIdEntriesResponse200]
+        Error | GetRegistryRegistriesRegistryIdEntriesResponse200
     """
 
     return sync_detailed(
@@ -172,30 +175,30 @@ async def asyncio_detailed(
     registry_id: str,
     *,
     client: AuthenticatedClient,
-    status: Unset | GetRegistryRegistriesRegistryIdEntriesStatus = UNSET,
-    workspace: Unset | str = UNSET,
+    status: GetRegistryRegistriesRegistryIdEntriesStatus | Unset = UNSET,
+    workspace: str | Unset = UNSET,
 ) -> Response[Error | GetRegistryRegistriesRegistryIdEntriesResponse200]:
-    r"""Every entry in a registry, for whoever administers it — the review queue behind the `reviewed`
-    submission policy. Approving is a PATCH of {status:\"published\"} on an entry by the registry owner;
-    rejecting is the same PATCH with \"draft\"
+    """Every entry in a registry, for whoever administers it — the review queue behind the `reviewed`
+    submission policy. Approving is a PATCH of {status:"published"} on an entry by the registry owner;
+    rejecting is the same PATCH with "draft"
 
      Requires the `registries` sub-item R verb on this registry, because it returns other principals'
     unpublished entries: a registrant reads their own row through /entries/mine, and anonymous visitors
     see only published ones through the public routes. Newest first by createdAt — unlike the
-    alphabetical registry list, since this list's job is \"what came in while I was away\". Soft-deleted
+    alphabetical registry list, since this list's job is "what came in while I was away". Soft-deleted
     entries are never returned.
 
     Args:
         registry_id (str):
-        status (Union[Unset, GetRegistryRegistriesRegistryIdEntriesStatus]):
-        workspace (Union[Unset, str]):
+        status (GetRegistryRegistriesRegistryIdEntriesStatus | Unset):
+        workspace (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, GetRegistryRegistriesRegistryIdEntriesResponse200]]
+        Response[Error | GetRegistryRegistriesRegistryIdEntriesResponse200]
     """
 
     kwargs = _get_kwargs(
@@ -213,30 +216,30 @@ async def asyncio(
     registry_id: str,
     *,
     client: AuthenticatedClient,
-    status: Unset | GetRegistryRegistriesRegistryIdEntriesStatus = UNSET,
-    workspace: Unset | str = UNSET,
+    status: GetRegistryRegistriesRegistryIdEntriesStatus | Unset = UNSET,
+    workspace: str | Unset = UNSET,
 ) -> Error | GetRegistryRegistriesRegistryIdEntriesResponse200 | None:
-    r"""Every entry in a registry, for whoever administers it — the review queue behind the `reviewed`
-    submission policy. Approving is a PATCH of {status:\"published\"} on an entry by the registry owner;
-    rejecting is the same PATCH with \"draft\"
+    """Every entry in a registry, for whoever administers it — the review queue behind the `reviewed`
+    submission policy. Approving is a PATCH of {status:"published"} on an entry by the registry owner;
+    rejecting is the same PATCH with "draft"
 
      Requires the `registries` sub-item R verb on this registry, because it returns other principals'
     unpublished entries: a registrant reads their own row through /entries/mine, and anonymous visitors
     see only published ones through the public routes. Newest first by createdAt — unlike the
-    alphabetical registry list, since this list's job is \"what came in while I was away\". Soft-deleted
+    alphabetical registry list, since this list's job is "what came in while I was away". Soft-deleted
     entries are never returned.
 
     Args:
         registry_id (str):
-        status (Union[Unset, GetRegistryRegistriesRegistryIdEntriesStatus]):
-        workspace (Union[Unset, str]):
+        status (GetRegistryRegistriesRegistryIdEntriesStatus | Unset):
+        workspace (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, GetRegistryRegistriesRegistryIdEntriesResponse200]
+        Error | GetRegistryRegistriesRegistryIdEntriesResponse200
     """
 
     return (

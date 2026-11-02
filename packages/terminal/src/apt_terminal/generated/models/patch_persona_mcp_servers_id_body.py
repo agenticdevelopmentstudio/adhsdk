@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar
 
@@ -14,16 +16,16 @@ class PatchPersonaMcpServersIdBody:
     """All fields optional. A blank or absent authSecret PRESERVES the stored secret; a present non-empty value rotates it.
 
     Attributes:
-        name (Union[Unset, str]):
-        url (Union[Unset, str]):
-        enabled (Union[Unset, bool]):
-        auth_secret (Union[Unset, str]): Blank/absent preserves the stored secret; a non-empty value rotates it
+        name (str | Unset):
+        url (str | Unset):
+        enabled (bool | Unset):
+        auth_secret (str | Unset): Blank/absent preserves the stored secret; a non-empty value rotates it
     """
 
-    name: Unset | str = UNSET
-    url: Unset | str = UNSET
-    enabled: Unset | bool = UNSET
-    auth_secret: Unset | str = UNSET
+    name: str | Unset = UNSET
+    url: str | Unset = UNSET
+    enabled: bool | Unset = UNSET
+    auth_secret: str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:

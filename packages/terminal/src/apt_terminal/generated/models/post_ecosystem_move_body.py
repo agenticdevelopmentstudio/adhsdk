@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar
 
@@ -17,14 +19,14 @@ class PostEcosystemMoveBody:
         table (str): table name within the schema
         id (str): row id (uuid, or an rdid for rdid-addressed tables)
         target (str): destination ecosystem (uuid or rdid)
-        dry_run (Union[Unset, bool]): report what would move without writing
+        dry_run (bool | Unset): report what would move without writing
     """
 
     schema: str
     table: str
     id: str
     target: str
-    dry_run: Unset | bool = UNSET
+    dry_run: bool | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:

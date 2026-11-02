@@ -1,5 +1,6 @@
 from http import HTTPStatus
 from typing import Any
+from urllib.parse import quote
 
 import httpx
 
@@ -13,23 +14,27 @@ from ...models.put_shipr_repos_id_platforms_kind_response_200 import (
 from ...models.put_shipr_repos_id_platforms_kind_response_201 import (
     PutShiprReposIdPlatformsKindResponse201,
 )
-from ...types import Response
+from ...types import UNSET, Response, Unset
 
 
 def _get_kwargs(
     id: str,
     kind: str,
     *,
-    body: PutShiprReposIdPlatformsKindBody,
+    body: PutShiprReposIdPlatformsKindBody | Unset = UNSET,
 ) -> dict[str, Any]:
     headers: dict[str, Any] = {}
 
     _kwargs: dict[str, Any] = {
         "method": "put",
-        "url": f"/shipr/repos/{id}/platforms/{kind}",
+        "url": "/shipr/repos/{id}/platforms/{kind}".format(
+            id=quote(str(id), safe=""),
+            kind=quote(str(kind), safe=""),
+        ),
     }
 
-    _kwargs["json"] = body.to_dict()
+    if not isinstance(body, Unset):
+        _kwargs["json"] = body.to_dict()
 
     headers["Content-Type"] = "application/json"
 
@@ -96,7 +101,7 @@ def sync_detailed(
     kind: str,
     *,
     client: AuthenticatedClient,
-    body: PutShiprReposIdPlatformsKindBody,
+    body: PutShiprReposIdPlatformsKindBody | Unset = UNSET,
 ) -> Response[
     Error | PutShiprReposIdPlatformsKindResponse200 | PutShiprReposIdPlatformsKindResponse201
 ]:
@@ -111,14 +116,14 @@ def sync_detailed(
     Args:
         id (str):
         kind (str):
-        body (PutShiprReposIdPlatformsKindBody):
+        body (PutShiprReposIdPlatformsKindBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, PutShiprReposIdPlatformsKindResponse200, PutShiprReposIdPlatformsKindResponse201]]
+        Response[Error | PutShiprReposIdPlatformsKindResponse200 | PutShiprReposIdPlatformsKindResponse201]
     """
 
     kwargs = _get_kwargs(
@@ -139,7 +144,7 @@ def sync(
     kind: str,
     *,
     client: AuthenticatedClient,
-    body: PutShiprReposIdPlatformsKindBody,
+    body: PutShiprReposIdPlatformsKindBody | Unset = UNSET,
 ) -> (
     Error | PutShiprReposIdPlatformsKindResponse200 | PutShiprReposIdPlatformsKindResponse201 | None
 ):
@@ -154,14 +159,14 @@ def sync(
     Args:
         id (str):
         kind (str):
-        body (PutShiprReposIdPlatformsKindBody):
+        body (PutShiprReposIdPlatformsKindBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, PutShiprReposIdPlatformsKindResponse200, PutShiprReposIdPlatformsKindResponse201]
+        Error | PutShiprReposIdPlatformsKindResponse200 | PutShiprReposIdPlatformsKindResponse201
     """
 
     return sync_detailed(
@@ -177,7 +182,7 @@ async def asyncio_detailed(
     kind: str,
     *,
     client: AuthenticatedClient,
-    body: PutShiprReposIdPlatformsKindBody,
+    body: PutShiprReposIdPlatformsKindBody | Unset = UNSET,
 ) -> Response[
     Error | PutShiprReposIdPlatformsKindResponse200 | PutShiprReposIdPlatformsKindResponse201
 ]:
@@ -192,14 +197,14 @@ async def asyncio_detailed(
     Args:
         id (str):
         kind (str):
-        body (PutShiprReposIdPlatformsKindBody):
+        body (PutShiprReposIdPlatformsKindBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, PutShiprReposIdPlatformsKindResponse200, PutShiprReposIdPlatformsKindResponse201]]
+        Response[Error | PutShiprReposIdPlatformsKindResponse200 | PutShiprReposIdPlatformsKindResponse201]
     """
 
     kwargs = _get_kwargs(
@@ -218,7 +223,7 @@ async def asyncio(
     kind: str,
     *,
     client: AuthenticatedClient,
-    body: PutShiprReposIdPlatformsKindBody,
+    body: PutShiprReposIdPlatformsKindBody | Unset = UNSET,
 ) -> (
     Error | PutShiprReposIdPlatformsKindResponse200 | PutShiprReposIdPlatformsKindResponse201 | None
 ):
@@ -233,14 +238,14 @@ async def asyncio(
     Args:
         id (str):
         kind (str):
-        body (PutShiprReposIdPlatformsKindBody):
+        body (PutShiprReposIdPlatformsKindBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, PutShiprReposIdPlatformsKindResponse200, PutShiprReposIdPlatformsKindResponse201]
+        Error | PutShiprReposIdPlatformsKindResponse200 | PutShiprReposIdPlatformsKindResponse201
     """
 
     return (

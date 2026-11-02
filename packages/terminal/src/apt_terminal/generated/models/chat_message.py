@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 from uuid import UUID
@@ -15,7 +17,7 @@ class ChatMessage:
         id (UUID):
         role (str): e.g. user, assistant, tool, system
         content (str):
-        tool_name (Union[None, str]):
+        tool_name (None | str):
         created_at (str):
     """
 

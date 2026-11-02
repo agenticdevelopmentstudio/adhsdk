@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -12,7 +14,7 @@ class RegistryPersonaToolCatalogItem:
     """
     Attributes:
         tool_name (str):
-        source (Union[None, str]): null for curated internal tools; else the source id (e.g. "web", "mcp.<server>")
+        source (None | str): null for curated internal tools; else the source id (e.g. "web", "mcp.<server>")
         display_name (str): human-readable label from the tool catalog (persona.tool_templates); falls back to toolName
             when no catalog row exists
         description (str): human-readable description from the tool catalog; '' when no catalog row exists

@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class GetProjectWorkItemsIdRelationsKind(str, Enum):
+class GetProjectWorkItemsIdRelationsKind(StrEnum):
     DEPENDS_ON = "depends_on"
     DUPLICATES = "duplicates"
     RELATES_TO = "relates_to"

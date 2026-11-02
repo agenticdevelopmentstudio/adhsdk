@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class GetSystemFeatureFlagsScope(str, Enum):
+class GetSystemFeatureFlagsScope(StrEnum):
     SYSTEM = "system"
 
     def __str__(self) -> str:

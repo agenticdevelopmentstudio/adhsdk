@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, TypeVar, Union, cast
+from typing import TYPE_CHECKING, Any, TypeVar, cast
 
 from attrs import define as _attrs_define
 
@@ -17,15 +19,15 @@ class PostContentEventsBody:
     """
     Attributes:
         type_ (str):
-        payload (Union['PostContentEventsBodyPayloadType1', None, bool, float, list[Any], str]):
-        ecosystem_id (Union[Unset, str]):
-        sync_txid (Union[Unset, int]):
+        payload (bool | float | list[Any] | None | PostContentEventsBodyPayloadType1 | str):
+        ecosystem_id (str | Unset):
+        sync_txid (int | Unset):
     """
 
     type_: str
-    payload: Union["PostContentEventsBodyPayloadType1", None, bool, float, list[Any], str]
-    ecosystem_id: Unset | str = UNSET
-    sync_txid: Unset | int = UNSET
+    payload: bool | float | list[Any] | None | PostContentEventsBodyPayloadType1 | str
+    ecosystem_id: str | Unset = UNSET
+    sync_txid: int | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
         from ..models.post_content_events_body_payload_type_1 import (
@@ -34,7 +36,7 @@ class PostContentEventsBody:
 
         type_ = self.type_
 
-        payload: None | bool | dict[str, Any] | float | list[Any] | str
+        payload: bool | dict[str, Any] | float | list[Any] | None | str
         if isinstance(self.payload, PostContentEventsBodyPayloadType1):
             payload = self.payload.to_dict()
         elif isinstance(self.payload, list):
@@ -73,7 +75,7 @@ class PostContentEventsBody:
 
         def _parse_payload(
             data: object,
-        ) -> Union["PostContentEventsBodyPayloadType1", None, bool, float, list[Any], str]:
+        ) -> bool | float | list[Any] | None | PostContentEventsBodyPayloadType1 | str:
             if data is None:
                 return data
             try:
@@ -82,7 +84,7 @@ class PostContentEventsBody:
                 payload_type_1 = PostContentEventsBodyPayloadType1.from_dict(data)
 
                 return payload_type_1
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
             try:
                 if not isinstance(data, list):
@@ -90,10 +92,10 @@ class PostContentEventsBody:
                 payload_type_2 = cast(list[Any], data)
 
                 return payload_type_2
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
             return cast(
-                Union["PostContentEventsBodyPayloadType1", None, bool, float, list[Any], str], data
+                bool | float | list[Any] | None | PostContentEventsBodyPayloadType1 | str, data
             )
 
         payload = _parse_payload(d.pop("payload"))

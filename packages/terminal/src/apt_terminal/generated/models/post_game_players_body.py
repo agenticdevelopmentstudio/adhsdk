@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -15,19 +17,19 @@ class PostGamePlayersBody:
         game_id (str):
         first_played_at (str):
         last_played_at (str):
-        ecosystem_id (Union[Unset, str]):
-        character_avatar_url (Union[None, Unset, str]):
-        visibility (Union[Unset, str]):
-        sync_txid (Union[Unset, int]):
+        ecosystem_id (str | Unset):
+        character_avatar_url (None | str | Unset):
+        visibility (str | Unset):
+        sync_txid (int | Unset):
     """
 
     game_id: str
     first_played_at: str
     last_played_at: str
-    ecosystem_id: Unset | str = UNSET
-    character_avatar_url: None | Unset | str = UNSET
-    visibility: Unset | str = UNSET
-    sync_txid: Unset | int = UNSET
+    ecosystem_id: str | Unset = UNSET
+    character_avatar_url: None | str | Unset = UNSET
+    visibility: str | Unset = UNSET
+    sync_txid: int | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
         game_id = self.game_id
@@ -38,7 +40,7 @@ class PostGamePlayersBody:
 
         ecosystem_id = self.ecosystem_id
 
-        character_avatar_url: None | Unset | str
+        character_avatar_url: None | str | Unset
         if isinstance(self.character_avatar_url, Unset):
             character_avatar_url = UNSET
         else:
@@ -79,12 +81,12 @@ class PostGamePlayersBody:
 
         ecosystem_id = d.pop("ecosystemId", UNSET)
 
-        def _parse_character_avatar_url(data: object) -> None | Unset | str:
+        def _parse_character_avatar_url(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         character_avatar_url = _parse_character_avatar_url(d.pop("characterAvatarUrl", UNSET))
 

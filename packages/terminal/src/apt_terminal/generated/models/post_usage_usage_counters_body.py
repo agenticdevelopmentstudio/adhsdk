@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar
 
@@ -17,8 +19,8 @@ class PostUsageUsageCountersBody:
         period_start (str):
         requests (int):
         bytes_ (int):
-        tokens (Union[Unset, int]):
-        cost_micros (Union[Unset, int]):
+        tokens (int | Unset):
+        cost_micros (int | Unset):
     """
 
     scope: str
@@ -26,8 +28,8 @@ class PostUsageUsageCountersBody:
     period_start: str
     requests: int
     bytes_: int
-    tokens: Unset | int = UNSET
-    cost_micros: Unset | int = UNSET
+    tokens: int | Unset = UNSET
+    cost_micros: int | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
         scope = self.scope

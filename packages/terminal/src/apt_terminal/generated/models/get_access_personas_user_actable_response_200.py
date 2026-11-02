@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import TYPE_CHECKING, Any, TypeVar
 
@@ -15,10 +17,10 @@ T = TypeVar("T", bound="GetAccessPersonasUserActableResponse200")
 class GetAccessPersonasUserActableResponse200:
     """
     Attributes:
-        personas (list['RegistryUserActablePersona']):
+        personas (list[RegistryUserActablePersona]):
     """
 
-    personas: list["RegistryUserActablePersona"]
+    personas: list[RegistryUserActablePersona]
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -39,7 +41,9 @@ class GetAccessPersonasUserActableResponse200:
 
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
-        from ..models.registry_user_actable_persona import RegistryUserActablePersona
+        from ..models.registry_user_actable_persona import (
+            RegistryUserActablePersona,
+        )
 
         d = dict(src_dict)
         personas = []

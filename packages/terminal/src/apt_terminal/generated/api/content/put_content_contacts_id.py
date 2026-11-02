@@ -1,5 +1,6 @@
 from http import HTTPStatus
 from typing import Any
+from urllib.parse import quote
 
 import httpx
 
@@ -8,22 +9,25 @@ from ...client import AuthenticatedClient, Client
 from ...models.error import Error
 from ...models.put_content_contacts_id_body import PutContentContactsIdBody
 from ...models.put_content_contacts_id_response_200 import PutContentContactsIdResponse200
-from ...types import Response
+from ...types import UNSET, Response, Unset
 
 
 def _get_kwargs(
     id: str,
     *,
-    body: PutContentContactsIdBody,
+    body: PutContentContactsIdBody | Unset = UNSET,
 ) -> dict[str, Any]:
     headers: dict[str, Any] = {}
 
     _kwargs: dict[str, Any] = {
         "method": "put",
-        "url": f"/content/contacts/{id}",
+        "url": "/content/contacts/{id}".format(
+            id=quote(str(id), safe=""),
+        ),
     }
 
-    _kwargs["json"] = body.to_dict()
+    if not isinstance(body, Unset):
+        _kwargs["json"] = body.to_dict()
 
     headers["Content-Type"] = "application/json"
 
@@ -75,20 +79,20 @@ def sync_detailed(
     id: str,
     *,
     client: AuthenticatedClient,
-    body: PutContentContactsIdBody,
+    body: PutContentContactsIdBody | Unset = UNSET,
 ) -> Response[Error | PutContentContactsIdResponse200]:
     """Update contacts
 
     Args:
         id (str):
-        body (PutContentContactsIdBody):
+        body (PutContentContactsIdBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, PutContentContactsIdResponse200]]
+        Response[Error | PutContentContactsIdResponse200]
     """
 
     kwargs = _get_kwargs(
@@ -107,20 +111,20 @@ def sync(
     id: str,
     *,
     client: AuthenticatedClient,
-    body: PutContentContactsIdBody,
+    body: PutContentContactsIdBody | Unset = UNSET,
 ) -> Error | PutContentContactsIdResponse200 | None:
     """Update contacts
 
     Args:
         id (str):
-        body (PutContentContactsIdBody):
+        body (PutContentContactsIdBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, PutContentContactsIdResponse200]
+        Error | PutContentContactsIdResponse200
     """
 
     return sync_detailed(
@@ -134,20 +138,20 @@ async def asyncio_detailed(
     id: str,
     *,
     client: AuthenticatedClient,
-    body: PutContentContactsIdBody,
+    body: PutContentContactsIdBody | Unset = UNSET,
 ) -> Response[Error | PutContentContactsIdResponse200]:
     """Update contacts
 
     Args:
         id (str):
-        body (PutContentContactsIdBody):
+        body (PutContentContactsIdBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, PutContentContactsIdResponse200]]
+        Response[Error | PutContentContactsIdResponse200]
     """
 
     kwargs = _get_kwargs(
@@ -164,20 +168,20 @@ async def asyncio(
     id: str,
     *,
     client: AuthenticatedClient,
-    body: PutContentContactsIdBody,
+    body: PutContentContactsIdBody | Unset = UNSET,
 ) -> Error | PutContentContactsIdResponse200 | None:
     """Update contacts
 
     Args:
         id (str):
-        body (PutContentContactsIdBody):
+        body (PutContentContactsIdBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, PutContentContactsIdResponse200]
+        Error | PutContentContactsIdResponse200
     """
 
     return (

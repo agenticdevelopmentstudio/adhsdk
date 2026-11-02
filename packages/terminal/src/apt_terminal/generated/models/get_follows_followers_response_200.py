@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import TYPE_CHECKING, Any, TypeVar
 
@@ -15,13 +17,13 @@ T = TypeVar("T", bound="GetFollowsFollowersResponse200")
 class GetFollowsFollowersResponse200:
     """
     Attributes:
-        items (list['Follow']):
+        items (list[Follow]):
         total (int):
         page (int):
         page_size (int):
     """
 
-    items: list["Follow"]
+    items: list[Follow]
     total: int
     page: int
     page_size: int

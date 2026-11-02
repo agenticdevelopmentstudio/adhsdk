@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class PutAccountMfaPreferenceResponse200PreferredMethod(str, Enum):
+class PutAccountMfaPreferenceResponse200PreferredMethod(StrEnum):
     SMS = "sms"
     TOTP = "totp"
     WEBAUTHN = "webauthn"

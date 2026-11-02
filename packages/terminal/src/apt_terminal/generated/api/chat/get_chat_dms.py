@@ -12,8 +12,8 @@ from ...types import UNSET, Response, Unset
 
 def _get_kwargs(
     *,
-    page: Unset | int = 1,
-    page_size: Unset | int = 50,
+    page: int | Unset = 1,
+    page_size: int | Unset = 50,
 ) -> dict[str, Any]:
     params: dict[str, Any] = {}
 
@@ -70,21 +70,21 @@ def _build_response(
 def sync_detailed(
     *,
     client: AuthenticatedClient,
-    page: Unset | int = 1,
-    page_size: Unset | int = 50,
+    page: int | Unset = 1,
+    page_size: int | Unset = 50,
 ) -> Response[DmChatList | Error]:
     """List the caller's DM chats, newest activity first
 
     Args:
-        page (Union[Unset, int]):  Default: 1.
-        page_size (Union[Unset, int]):  Default: 50.
+        page (int | Unset):  Default: 1.
+        page_size (int | Unset):  Default: 50.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[DmChatList, Error]]
+        Response[DmChatList | Error]
     """
 
     kwargs = _get_kwargs(
@@ -102,21 +102,21 @@ def sync_detailed(
 def sync(
     *,
     client: AuthenticatedClient,
-    page: Unset | int = 1,
-    page_size: Unset | int = 50,
+    page: int | Unset = 1,
+    page_size: int | Unset = 50,
 ) -> DmChatList | Error | None:
     """List the caller's DM chats, newest activity first
 
     Args:
-        page (Union[Unset, int]):  Default: 1.
-        page_size (Union[Unset, int]):  Default: 50.
+        page (int | Unset):  Default: 1.
+        page_size (int | Unset):  Default: 50.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[DmChatList, Error]
+        DmChatList | Error
     """
 
     return sync_detailed(
@@ -129,21 +129,21 @@ def sync(
 async def asyncio_detailed(
     *,
     client: AuthenticatedClient,
-    page: Unset | int = 1,
-    page_size: Unset | int = 50,
+    page: int | Unset = 1,
+    page_size: int | Unset = 50,
 ) -> Response[DmChatList | Error]:
     """List the caller's DM chats, newest activity first
 
     Args:
-        page (Union[Unset, int]):  Default: 1.
-        page_size (Union[Unset, int]):  Default: 50.
+        page (int | Unset):  Default: 1.
+        page_size (int | Unset):  Default: 50.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[DmChatList, Error]]
+        Response[DmChatList | Error]
     """
 
     kwargs = _get_kwargs(
@@ -159,21 +159,21 @@ async def asyncio_detailed(
 async def asyncio(
     *,
     client: AuthenticatedClient,
-    page: Unset | int = 1,
-    page_size: Unset | int = 50,
+    page: int | Unset = 1,
+    page_size: int | Unset = 50,
 ) -> DmChatList | Error | None:
     """List the caller's DM chats, newest activity first
 
     Args:
-        page (Union[Unset, int]):  Default: 1.
-        page_size (Union[Unset, int]):  Default: 50.
+        page (int | Unset):  Default: 1.
+        page_size (int | Unset):  Default: 50.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[DmChatList, Error]
+        DmChatList | Error
     """
 
     return (

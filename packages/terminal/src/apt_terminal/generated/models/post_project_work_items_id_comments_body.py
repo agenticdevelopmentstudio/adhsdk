@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -14,18 +16,18 @@ class PostProjectWorkItemsIdCommentsBody:
     """
     Attributes:
         body (str):
-        parent_id (Union[None, Unset, str]): reply to this comment. Must be a comment on the SAME work item (400
-            otherwise); a reply to a reply is stored against that reply's root, so threads stay one level deep
+        parent_id (None | str | Unset): reply to this comment. Must be a comment on the SAME work item (400 otherwise);
+            a reply to a reply is stored against that reply's root, so threads stay one level deep
     """
 
     body: str
-    parent_id: None | Unset | str = UNSET
+    parent_id: None | str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
         body = self.body
 
-        parent_id: None | Unset | str
+        parent_id: None | str | Unset
         if isinstance(self.parent_id, Unset):
             parent_id = UNSET
         else:
@@ -48,12 +50,12 @@ class PostProjectWorkItemsIdCommentsBody:
         d = dict(src_dict)
         body = d.pop("body")
 
-        def _parse_parent_id(data: object) -> None | Unset | str:
+        def _parse_parent_id(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         parent_id = _parse_parent_id(d.pop("parentId", UNSET))
 

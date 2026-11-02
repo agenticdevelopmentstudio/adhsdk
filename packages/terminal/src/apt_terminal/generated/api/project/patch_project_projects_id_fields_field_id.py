@@ -1,5 +1,6 @@
 from http import HTTPStatus
 from typing import Any
+from urllib.parse import quote
 
 import httpx
 
@@ -10,23 +11,27 @@ from ...models.patch_project_projects_id_fields_field_id_body import (
     PatchProjectProjectsIdFieldsFieldIdBody,
 )
 from ...models.project_field import ProjectField
-from ...types import Response
+from ...types import UNSET, Response, Unset
 
 
 def _get_kwargs(
     id: str,
     field_id: str,
     *,
-    body: PatchProjectProjectsIdFieldsFieldIdBody,
+    body: PatchProjectProjectsIdFieldsFieldIdBody | Unset = UNSET,
 ) -> dict[str, Any]:
     headers: dict[str, Any] = {}
 
     _kwargs: dict[str, Any] = {
         "method": "patch",
-        "url": f"/project/projects/{id}/fields/{field_id}",
+        "url": "/project/projects/{id}/fields/{field_id}".format(
+            id=quote(str(id), safe=""),
+            field_id=quote(str(field_id), safe=""),
+        ),
     }
 
-    _kwargs["json"] = body.to_dict()
+    if not isinstance(body, Unset):
+        _kwargs["json"] = body.to_dict()
 
     headers["Content-Type"] = "application/json"
 
@@ -79,22 +84,22 @@ def sync_detailed(
     field_id: str,
     *,
     client: AuthenticatedClient,
-    body: PatchProjectProjectsIdFieldsFieldIdBody,
+    body: PatchProjectProjectsIdFieldsFieldIdBody | Unset = UNSET,
 ) -> Response[Error | ProjectField]:
     """Relabel / retype / reorder a field (+ a field.updated activity)
 
     Args:
         id (str):
         field_id (str):
-        body (PatchProjectProjectsIdFieldsFieldIdBody): At least one mutable field is required (a
-            no-op patch is a 400). `key` is immutable.
+        body (PatchProjectProjectsIdFieldsFieldIdBody | Unset): At least one mutable field is
+            required (a no-op patch is a 400). `key` is immutable.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, ProjectField]]
+        Response[Error | ProjectField]
     """
 
     kwargs = _get_kwargs(
@@ -115,22 +120,22 @@ def sync(
     field_id: str,
     *,
     client: AuthenticatedClient,
-    body: PatchProjectProjectsIdFieldsFieldIdBody,
+    body: PatchProjectProjectsIdFieldsFieldIdBody | Unset = UNSET,
 ) -> Error | ProjectField | None:
     """Relabel / retype / reorder a field (+ a field.updated activity)
 
     Args:
         id (str):
         field_id (str):
-        body (PatchProjectProjectsIdFieldsFieldIdBody): At least one mutable field is required (a
-            no-op patch is a 400). `key` is immutable.
+        body (PatchProjectProjectsIdFieldsFieldIdBody | Unset): At least one mutable field is
+            required (a no-op patch is a 400). `key` is immutable.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, ProjectField]
+        Error | ProjectField
     """
 
     return sync_detailed(
@@ -146,22 +151,22 @@ async def asyncio_detailed(
     field_id: str,
     *,
     client: AuthenticatedClient,
-    body: PatchProjectProjectsIdFieldsFieldIdBody,
+    body: PatchProjectProjectsIdFieldsFieldIdBody | Unset = UNSET,
 ) -> Response[Error | ProjectField]:
     """Relabel / retype / reorder a field (+ a field.updated activity)
 
     Args:
         id (str):
         field_id (str):
-        body (PatchProjectProjectsIdFieldsFieldIdBody): At least one mutable field is required (a
-            no-op patch is a 400). `key` is immutable.
+        body (PatchProjectProjectsIdFieldsFieldIdBody | Unset): At least one mutable field is
+            required (a no-op patch is a 400). `key` is immutable.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, ProjectField]]
+        Response[Error | ProjectField]
     """
 
     kwargs = _get_kwargs(
@@ -180,22 +185,22 @@ async def asyncio(
     field_id: str,
     *,
     client: AuthenticatedClient,
-    body: PatchProjectProjectsIdFieldsFieldIdBody,
+    body: PatchProjectProjectsIdFieldsFieldIdBody | Unset = UNSET,
 ) -> Error | ProjectField | None:
     """Relabel / retype / reorder a field (+ a field.updated activity)
 
     Args:
         id (str):
         field_id (str):
-        body (PatchProjectProjectsIdFieldsFieldIdBody): At least one mutable field is required (a
-            no-op patch is a 400). `key` is immutable.
+        body (PatchProjectProjectsIdFieldsFieldIdBody | Unset): At least one mutable field is
+            required (a no-op patch is a 400). `key` is immutable.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, ProjectField]
+        Error | ProjectField
     """
 
     return (

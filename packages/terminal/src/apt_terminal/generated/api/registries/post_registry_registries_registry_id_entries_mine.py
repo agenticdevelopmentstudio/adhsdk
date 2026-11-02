@@ -1,5 +1,6 @@
 from http import HTTPStatus
 from typing import Any
+from urllib.parse import quote
 
 import httpx
 
@@ -13,7 +14,7 @@ from ...types import UNSET, Response, Unset
 def _get_kwargs(
     registry_id: str,
     *,
-    workspace: Unset | str = UNSET,
+    workspace: str | Unset = UNSET,
 ) -> dict[str, Any]:
     params: dict[str, Any] = {}
 
@@ -23,7 +24,9 @@ def _get_kwargs(
 
     _kwargs: dict[str, Any] = {
         "method": "post",
-        "url": f"/registry/registries/{registry_id}/entries/mine",
+        "url": "/registry/registries/{registry_id}/entries/mine".format(
+            registry_id=quote(str(registry_id), safe=""),
+        ),
         "params": params,
     }
 
@@ -74,7 +77,7 @@ def sync_detailed(
     registry_id: str,
     *,
     client: AuthenticatedClient,
-    workspace: Unset | str = UNSET,
+    workspace: str | Unset = UNSET,
 ) -> Response[Error | RegistryEntry]:
     """The caller's own entry in this registry, created as a draft if they have none. Idempotent — a
     concurrent first call returns the same row either way, never a 409
@@ -86,14 +89,14 @@ def sync_detailed(
 
     Args:
         registry_id (str):
-        workspace (Union[Unset, str]):
+        workspace (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, RegistryEntry]]
+        Response[Error | RegistryEntry]
     """
 
     kwargs = _get_kwargs(
@@ -112,7 +115,7 @@ def sync(
     registry_id: str,
     *,
     client: AuthenticatedClient,
-    workspace: Unset | str = UNSET,
+    workspace: str | Unset = UNSET,
 ) -> Error | RegistryEntry | None:
     """The caller's own entry in this registry, created as a draft if they have none. Idempotent — a
     concurrent first call returns the same row either way, never a 409
@@ -124,14 +127,14 @@ def sync(
 
     Args:
         registry_id (str):
-        workspace (Union[Unset, str]):
+        workspace (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, RegistryEntry]
+        Error | RegistryEntry
     """
 
     return sync_detailed(
@@ -145,7 +148,7 @@ async def asyncio_detailed(
     registry_id: str,
     *,
     client: AuthenticatedClient,
-    workspace: Unset | str = UNSET,
+    workspace: str | Unset = UNSET,
 ) -> Response[Error | RegistryEntry]:
     """The caller's own entry in this registry, created as a draft if they have none. Idempotent — a
     concurrent first call returns the same row either way, never a 409
@@ -157,14 +160,14 @@ async def asyncio_detailed(
 
     Args:
         registry_id (str):
-        workspace (Union[Unset, str]):
+        workspace (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, RegistryEntry]]
+        Response[Error | RegistryEntry]
     """
 
     kwargs = _get_kwargs(
@@ -181,7 +184,7 @@ async def asyncio(
     registry_id: str,
     *,
     client: AuthenticatedClient,
-    workspace: Unset | str = UNSET,
+    workspace: str | Unset = UNSET,
 ) -> Error | RegistryEntry | None:
     """The caller's own entry in this registry, created as a draft if they have none. Idempotent — a
     concurrent first call returns the same row either way, never a 409
@@ -193,14 +196,14 @@ async def asyncio(
 
     Args:
         registry_id (str):
-        workspace (Union[Unset, str]):
+        workspace (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, RegistryEntry]
+        Error | RegistryEntry
     """
 
     return (

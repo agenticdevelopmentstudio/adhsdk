@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, TypeVar, Union, cast
+from typing import TYPE_CHECKING, Any, TypeVar, cast
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -17,26 +19,26 @@ T = TypeVar("T", bound="PutThemesKeyBody")
 class PutThemesKeyBody:
     """
     Attributes:
-        label (Union[Unset, str]):
-        based_on (Union[None, Unset, str]):
-        data (Union[Unset, PutThemesKeyBodyData]):
+        label (str | Unset):
+        based_on (None | str | Unset):
+        data (PutThemesKeyBodyData | Unset):
     """
 
-    label: Unset | str = UNSET
-    based_on: None | Unset | str = UNSET
-    data: Union[Unset, "PutThemesKeyBodyData"] = UNSET
+    label: str | Unset = UNSET
+    based_on: None | str | Unset = UNSET
+    data: PutThemesKeyBodyData | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
         label = self.label
 
-        based_on: None | Unset | str
+        based_on: None | str | Unset
         if isinstance(self.based_on, Unset):
             based_on = UNSET
         else:
             based_on = self.based_on
 
-        data: Unset | dict[str, Any] = UNSET
+        data: dict[str, Any] | Unset = UNSET
         if not isinstance(self.data, Unset):
             data = self.data.to_dict()
 
@@ -59,17 +61,17 @@ class PutThemesKeyBody:
         d = dict(src_dict)
         label = d.pop("label", UNSET)
 
-        def _parse_based_on(data: object) -> None | Unset | str:
+        def _parse_based_on(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         based_on = _parse_based_on(d.pop("basedOn", UNSET))
 
         _data = d.pop("data", UNSET)
-        data: Unset | PutThemesKeyBodyData
+        data: PutThemesKeyBodyData | Unset
         if isinstance(_data, Unset):
             data = UNSET
         else:

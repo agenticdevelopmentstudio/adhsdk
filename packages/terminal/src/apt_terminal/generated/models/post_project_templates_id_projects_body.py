@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar
 
@@ -15,11 +17,11 @@ class PostProjectTemplatesIdProjectsBody:
     Attributes:
         name (str): the new board’s name — the one thing a project template never stores. Its key prefix is ALLOCATED
             from it, exactly as a plain POST /project/projects does.
-        description (Union[Unset, str]): wins over the body’s description, which is the template author’s fallback
+        description (str | Unset): wins over the body’s description, which is the template author’s fallback
     """
 
     name: str
-    description: Unset | str = UNSET
+    description: str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:

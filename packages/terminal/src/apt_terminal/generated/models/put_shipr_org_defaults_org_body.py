@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, TypeVar, Union, cast
+from typing import TYPE_CHECKING, Any, TypeVar, cast
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -19,18 +21,18 @@ T = TypeVar("T", bound="PutShiprOrgDefaultsOrgBody")
 class PutShiprOrgDefaultsOrgBody:
     """
     Attributes:
-        deployment_owner (Union[None, Unset, str]):
-        name_suffix (Union[Unset, str]):
-        env_branches (Union[Unset, PutShiprOrgDefaultsOrgBodyEnvBranches]):
+        deployment_owner (None | str | Unset):
+        name_suffix (str | Unset):
+        env_branches (PutShiprOrgDefaultsOrgBodyEnvBranches | Unset):
     """
 
-    deployment_owner: None | Unset | str = UNSET
-    name_suffix: Unset | str = UNSET
-    env_branches: Union[Unset, "PutShiprOrgDefaultsOrgBodyEnvBranches"] = UNSET
+    deployment_owner: None | str | Unset = UNSET
+    name_suffix: str | Unset = UNSET
+    env_branches: PutShiprOrgDefaultsOrgBodyEnvBranches | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
-        deployment_owner: None | Unset | str
+        deployment_owner: None | str | Unset
         if isinstance(self.deployment_owner, Unset):
             deployment_owner = UNSET
         else:
@@ -38,7 +40,7 @@ class PutShiprOrgDefaultsOrgBody:
 
         name_suffix = self.name_suffix
 
-        env_branches: Unset | dict[str, Any] = UNSET
+        env_branches: dict[str, Any] | Unset = UNSET
         if not isinstance(self.env_branches, Unset):
             env_branches = self.env_branches.to_dict()
 
@@ -62,19 +64,19 @@ class PutShiprOrgDefaultsOrgBody:
 
         d = dict(src_dict)
 
-        def _parse_deployment_owner(data: object) -> None | Unset | str:
+        def _parse_deployment_owner(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         deployment_owner = _parse_deployment_owner(d.pop("deploymentOwner", UNSET))
 
         name_suffix = d.pop("nameSuffix", UNSET)
 
         _env_branches = d.pop("envBranches", UNSET)
-        env_branches: Unset | PutShiprOrgDefaultsOrgBodyEnvBranches
+        env_branches: PutShiprOrgDefaultsOrgBodyEnvBranches | Unset
         if isinstance(_env_branches, Unset):
             env_branches = UNSET
         else:

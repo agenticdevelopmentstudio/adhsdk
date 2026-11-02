@@ -1,5 +1,6 @@
 from http import HTTPStatus
 from typing import Any
+from urllib.parse import quote
 
 import httpx
 
@@ -13,9 +14,9 @@ from ...types import UNSET, Response, Unset
 def _get_kwargs(
     id: str,
     *,
-    limit: Unset | str = UNSET,
-    before: Unset | str = UNSET,
-    before_id: Unset | str = UNSET,
+    limit: str | Unset = UNSET,
+    before: str | Unset = UNSET,
+    before_id: str | Unset = UNSET,
 ) -> dict[str, Any]:
     params: dict[str, Any] = {}
 
@@ -29,7 +30,9 @@ def _get_kwargs(
 
     _kwargs: dict[str, Any] = {
         "method": "get",
-        "url": f"/project/projects/{id}/activity",
+        "url": "/project/projects/{id}/activity".format(
+            id=quote(str(id), safe=""),
+        ),
         "params": params,
     }
 
@@ -38,7 +41,7 @@ def _get_kwargs(
 
 def _parse_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> Error | list["ProjectActivity"] | None:
+) -> Error | list[ProjectActivity] | None:
     if response.status_code == 200:
         response_200 = []
         _response_200 = response.json()
@@ -67,7 +70,7 @@ def _parse_response(
 
 def _build_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> Response[Error | list["ProjectActivity"]]:
+) -> Response[Error | list[ProjectActivity]]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -80,24 +83,24 @@ def sync_detailed(
     id: str,
     *,
     client: AuthenticatedClient,
-    limit: Unset | str = UNSET,
-    before: Unset | str = UNSET,
-    before_id: Unset | str = UNSET,
-) -> Response[Error | list["ProjectActivity"]]:
+    limit: str | Unset = UNSET,
+    before: str | Unset = UNSET,
+    before_id: str | Unset = UNSET,
+) -> Response[Error | list[ProjectActivity]]:
     """A project's activity trail (newest first, keyset-paginated)
 
     Args:
         id (str):
-        limit (Union[Unset, str]):
-        before (Union[Unset, str]):
-        before_id (Union[Unset, str]):
+        limit (str | Unset):
+        before (str | Unset):
+        before_id (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, list['ProjectActivity']]]
+        Response[Error | list[ProjectActivity]]
     """
 
     kwargs = _get_kwargs(
@@ -118,24 +121,24 @@ def sync(
     id: str,
     *,
     client: AuthenticatedClient,
-    limit: Unset | str = UNSET,
-    before: Unset | str = UNSET,
-    before_id: Unset | str = UNSET,
-) -> Error | list["ProjectActivity"] | None:
+    limit: str | Unset = UNSET,
+    before: str | Unset = UNSET,
+    before_id: str | Unset = UNSET,
+) -> Error | list[ProjectActivity] | None:
     """A project's activity trail (newest first, keyset-paginated)
 
     Args:
         id (str):
-        limit (Union[Unset, str]):
-        before (Union[Unset, str]):
-        before_id (Union[Unset, str]):
+        limit (str | Unset):
+        before (str | Unset):
+        before_id (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, list['ProjectActivity']]
+        Error | list[ProjectActivity]
     """
 
     return sync_detailed(
@@ -151,24 +154,24 @@ async def asyncio_detailed(
     id: str,
     *,
     client: AuthenticatedClient,
-    limit: Unset | str = UNSET,
-    before: Unset | str = UNSET,
-    before_id: Unset | str = UNSET,
-) -> Response[Error | list["ProjectActivity"]]:
+    limit: str | Unset = UNSET,
+    before: str | Unset = UNSET,
+    before_id: str | Unset = UNSET,
+) -> Response[Error | list[ProjectActivity]]:
     """A project's activity trail (newest first, keyset-paginated)
 
     Args:
         id (str):
-        limit (Union[Unset, str]):
-        before (Union[Unset, str]):
-        before_id (Union[Unset, str]):
+        limit (str | Unset):
+        before (str | Unset):
+        before_id (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, list['ProjectActivity']]]
+        Response[Error | list[ProjectActivity]]
     """
 
     kwargs = _get_kwargs(
@@ -187,24 +190,24 @@ async def asyncio(
     id: str,
     *,
     client: AuthenticatedClient,
-    limit: Unset | str = UNSET,
-    before: Unset | str = UNSET,
-    before_id: Unset | str = UNSET,
-) -> Error | list["ProjectActivity"] | None:
+    limit: str | Unset = UNSET,
+    before: str | Unset = UNSET,
+    before_id: str | Unset = UNSET,
+) -> Error | list[ProjectActivity] | None:
     """A project's activity trail (newest first, keyset-paginated)
 
     Args:
         id (str):
-        limit (Union[Unset, str]):
-        before (Union[Unset, str]):
-        before_id (Union[Unset, str]):
+        limit (str | Unset):
+        before (str | Unset):
+        before_id (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, list['ProjectActivity']]
+        Error | list[ProjectActivity]
     """
 
     return (

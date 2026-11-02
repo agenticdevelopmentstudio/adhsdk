@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class PostProjectProjectsIdParticipantsBodyParticipantKind(str, Enum):
+class PostProjectProjectsIdParticipantsBodyParticipantKind(StrEnum):
     CUSTOMER = "customer"
     PERSONA = "persona"
     TEAM = "team"

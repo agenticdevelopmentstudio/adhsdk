@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -12,18 +14,18 @@ T = TypeVar("T", bound="PutMonitoringSitesIdBody")
 class PutMonitoringSitesIdBody:
     """
     Attributes:
-        site_group_id (Union[Unset, str]):
-        name (Union[Unset, str]):
-        slug (Union[Unset, str]):
-        description (Union[None, Unset, str]):
-        display_order (Union[Unset, int]):
+        site_group_id (str | Unset):
+        name (str | Unset):
+        slug (str | Unset):
+        description (None | str | Unset):
+        display_order (int | Unset):
     """
 
-    site_group_id: Unset | str = UNSET
-    name: Unset | str = UNSET
-    slug: Unset | str = UNSET
-    description: None | Unset | str = UNSET
-    display_order: Unset | int = UNSET
+    site_group_id: str | Unset = UNSET
+    name: str | Unset = UNSET
+    slug: str | Unset = UNSET
+    description: None | str | Unset = UNSET
+    display_order: int | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
         site_group_id = self.site_group_id
@@ -32,7 +34,7 @@ class PutMonitoringSitesIdBody:
 
         slug = self.slug
 
-        description: None | Unset | str
+        description: None | str | Unset
         if isinstance(self.description, Unset):
             description = UNSET
         else:
@@ -65,12 +67,12 @@ class PutMonitoringSitesIdBody:
 
         slug = d.pop("slug", UNSET)
 
-        def _parse_description(data: object) -> None | Unset | str:
+        def _parse_description(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         description = _parse_description(d.pop("description", UNSET))
 

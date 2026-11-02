@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar
 
@@ -16,18 +18,18 @@ class PostDocumentMarksBody:
         mark_type (str):
         start_anchor (str):
         end_anchor (str):
-        ecosystem_id (Union[Unset, str]):
-        mark_data (Union[Unset, str]):
-        sync_txid (Union[Unset, int]):
+        ecosystem_id (str | Unset):
+        mark_data (str | Unset):
+        sync_txid (int | Unset):
     """
 
     block_id: str
     mark_type: str
     start_anchor: str
     end_anchor: str
-    ecosystem_id: Unset | str = UNSET
-    mark_data: Unset | str = UNSET
-    sync_txid: Unset | int = UNSET
+    ecosystem_id: str | Unset = UNSET
+    mark_data: str | Unset = UNSET
+    sync_txid: int | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
         block_id = self.block_id

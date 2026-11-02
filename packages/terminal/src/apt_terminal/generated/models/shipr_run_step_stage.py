@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class ShiprRunStepStage(str, Enum):
+class ShiprRunStepStage(StrEnum):
     ADVANCE = "advance"
     ARRIVAL = "arrival"
     VERIFY = "verify"

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -28,9 +30,9 @@ class RegistryEntryService:
         created_at (str):
         updated_at (str):
         sync_version (int):
-        price_min (Union[None, Unset, int]):
-        price_max (Union[None, Unset, int]):
-        deleted_at (Union[None, Unset, str]):
+        price_min (int | None | Unset):
+        price_max (int | None | Unset):
+        deleted_at (None | str | Unset):
     """
 
     id: str
@@ -46,9 +48,9 @@ class RegistryEntryService:
     created_at: str
     updated_at: str
     sync_version: int
-    price_min: None | Unset | int = UNSET
-    price_max: None | Unset | int = UNSET
-    deleted_at: None | Unset | str = UNSET
+    price_min: int | None | Unset = UNSET
+    price_max: int | None | Unset = UNSET
+    deleted_at: None | str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -78,19 +80,19 @@ class RegistryEntryService:
 
         sync_version = self.sync_version
 
-        price_min: None | Unset | int
+        price_min: int | None | Unset
         if isinstance(self.price_min, Unset):
             price_min = UNSET
         else:
             price_min = self.price_min
 
-        price_max: None | Unset | int
+        price_max: int | None | Unset
         if isinstance(self.price_max, Unset):
             price_max = UNSET
         else:
             price_max = self.price_max
 
-        deleted_at: None | Unset | str
+        deleted_at: None | str | Unset
         if isinstance(self.deleted_at, Unset):
             deleted_at = UNSET
         else:
@@ -153,30 +155,30 @@ class RegistryEntryService:
 
         sync_version = d.pop("syncVersion")
 
-        def _parse_price_min(data: object) -> None | Unset | int:
+        def _parse_price_min(data: object) -> int | None | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | int, data)
+            return cast(int | None | Unset, data)
 
         price_min = _parse_price_min(d.pop("priceMin", UNSET))
 
-        def _parse_price_max(data: object) -> None | Unset | int:
+        def _parse_price_max(data: object) -> int | None | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | int, data)
+            return cast(int | None | Unset, data)
 
         price_max = _parse_price_max(d.pop("priceMax", UNSET))
 
-        def _parse_deleted_at(data: object) -> None | Unset | str:
+        def _parse_deleted_at(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         deleted_at = _parse_deleted_at(d.pop("deletedAt", UNSET))
 

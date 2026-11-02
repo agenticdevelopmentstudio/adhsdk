@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -15,18 +17,18 @@ class PostStorageUploadsBody:
     Attributes:
         filename (str):
         content_type (str):
-        owner_type (Union[Unset, str]): Polymorphic owner kind (defaults to 'standalone').
-        ecosystem_id (Union[None, Unset, str]):
-        size_bytes (Union[Unset, int]): Declared size; enforced against the storage quota at init.
-        content_hash (Union[Unset, str]): When it matches an existing ready object, the upload is deduplicated.
+        owner_type (str | Unset): Polymorphic owner kind (defaults to 'standalone').
+        ecosystem_id (None | str | Unset):
+        size_bytes (int | Unset): Declared size; enforced against the storage quota at init.
+        content_hash (str | Unset): When it matches an existing ready object, the upload is deduplicated.
     """
 
     filename: str
     content_type: str
-    owner_type: Unset | str = UNSET
-    ecosystem_id: None | Unset | str = UNSET
-    size_bytes: Unset | int = UNSET
-    content_hash: Unset | str = UNSET
+    owner_type: str | Unset = UNSET
+    ecosystem_id: None | str | Unset = UNSET
+    size_bytes: int | Unset = UNSET
+    content_hash: str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -36,7 +38,7 @@ class PostStorageUploadsBody:
 
         owner_type = self.owner_type
 
-        ecosystem_id: None | Unset | str
+        ecosystem_id: None | str | Unset
         if isinstance(self.ecosystem_id, Unset):
             ecosystem_id = UNSET
         else:
@@ -74,12 +76,12 @@ class PostStorageUploadsBody:
 
         owner_type = d.pop("ownerType", UNSET)
 
-        def _parse_ecosystem_id(data: object) -> None | Unset | str:
+        def _parse_ecosystem_id(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         ecosystem_id = _parse_ecosystem_id(d.pop("ecosystemId", UNSET))
 

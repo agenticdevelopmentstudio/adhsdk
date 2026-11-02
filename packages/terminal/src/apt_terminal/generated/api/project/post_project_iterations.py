@@ -13,8 +13,8 @@ from ...types import UNSET, Response, Unset
 
 def _get_kwargs(
     *,
-    body: PostProjectIterationsBody,
-    workspace: Unset | str = UNSET,
+    body: PostProjectIterationsBody | Unset = UNSET,
+    workspace: str | Unset = UNSET,
 ) -> dict[str, Any]:
     headers: dict[str, Any] = {}
 
@@ -30,7 +30,8 @@ def _get_kwargs(
         "params": params,
     }
 
-    _kwargs["json"] = body.to_dict()
+    if not isinstance(body, Unset):
+        _kwargs["json"] = body.to_dict()
 
     headers["Content-Type"] = "application/json"
 
@@ -91,21 +92,21 @@ def _build_response(
 def sync_detailed(
     *,
     client: AuthenticatedClient,
-    body: PostProjectIterationsBody,
-    workspace: Unset | str = UNSET,
+    body: PostProjectIterationsBody | Unset = UNSET,
+    workspace: str | Unset = UNSET,
 ) -> Response[Error | ProjectIteration]:
     """Create a time-box in the workspace
 
     Args:
-        workspace (Union[Unset, str]):
-        body (PostProjectIterationsBody):
+        workspace (str | Unset):
+        body (PostProjectIterationsBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, ProjectIteration]]
+        Response[Error | ProjectIteration]
     """
 
     kwargs = _get_kwargs(
@@ -123,21 +124,21 @@ def sync_detailed(
 def sync(
     *,
     client: AuthenticatedClient,
-    body: PostProjectIterationsBody,
-    workspace: Unset | str = UNSET,
+    body: PostProjectIterationsBody | Unset = UNSET,
+    workspace: str | Unset = UNSET,
 ) -> Error | ProjectIteration | None:
     """Create a time-box in the workspace
 
     Args:
-        workspace (Union[Unset, str]):
-        body (PostProjectIterationsBody):
+        workspace (str | Unset):
+        body (PostProjectIterationsBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, ProjectIteration]
+        Error | ProjectIteration
     """
 
     return sync_detailed(
@@ -150,21 +151,21 @@ def sync(
 async def asyncio_detailed(
     *,
     client: AuthenticatedClient,
-    body: PostProjectIterationsBody,
-    workspace: Unset | str = UNSET,
+    body: PostProjectIterationsBody | Unset = UNSET,
+    workspace: str | Unset = UNSET,
 ) -> Response[Error | ProjectIteration]:
     """Create a time-box in the workspace
 
     Args:
-        workspace (Union[Unset, str]):
-        body (PostProjectIterationsBody):
+        workspace (str | Unset):
+        body (PostProjectIterationsBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, ProjectIteration]]
+        Response[Error | ProjectIteration]
     """
 
     kwargs = _get_kwargs(
@@ -180,21 +181,21 @@ async def asyncio_detailed(
 async def asyncio(
     *,
     client: AuthenticatedClient,
-    body: PostProjectIterationsBody,
-    workspace: Unset | str = UNSET,
+    body: PostProjectIterationsBody | Unset = UNSET,
+    workspace: str | Unset = UNSET,
 ) -> Error | ProjectIteration | None:
     """Create a time-box in the workspace
 
     Args:
-        workspace (Union[Unset, str]):
-        body (PostProjectIterationsBody):
+        workspace (str | Unset):
+        body (PostProjectIterationsBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, ProjectIteration]
+        Error | ProjectIteration
     """
 
     return (

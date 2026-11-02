@@ -12,11 +12,11 @@ from ...types import UNSET, Response, Unset
 
 def _get_kwargs(
     *,
-    page: Unset | str = UNSET,
-    page_size: Unset | str = UNSET,
-    channel: Unset | str = UNSET,
-    status: Unset | str = UNSET,
-    user_id: Unset | str = UNSET,
+    page: str | Unset = UNSET,
+    page_size: str | Unset = UNSET,
+    channel: str | Unset = UNSET,
+    status: str | Unset = UNSET,
+    user_id: str | Unset = UNSET,
 ) -> dict[str, Any]:
     params: dict[str, Any] = {}
 
@@ -79,27 +79,27 @@ def _build_response(
 def sync_detailed(
     *,
     client: AuthenticatedClient,
-    page: Unset | str = UNSET,
-    page_size: Unset | str = UNSET,
-    channel: Unset | str = UNSET,
-    status: Unset | str = UNSET,
-    user_id: Unset | str = UNSET,
+    page: str | Unset = UNSET,
+    page_size: str | Unset = UNSET,
+    channel: str | Unset = UNSET,
+    status: str | Unset = UNSET,
+    user_id: str | Unset = UNSET,
 ) -> Response[Error | MessagingLogPage]:
     """List the message log (admin), newest first, with optional filters
 
     Args:
-        page (Union[Unset, str]):
-        page_size (Union[Unset, str]):
-        channel (Union[Unset, str]):
-        status (Union[Unset, str]):
-        user_id (Union[Unset, str]):
+        page (str | Unset):
+        page_size (str | Unset):
+        channel (str | Unset):
+        status (str | Unset):
+        user_id (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, MessagingLogPage]]
+        Response[Error | MessagingLogPage]
     """
 
     kwargs = _get_kwargs(
@@ -120,27 +120,27 @@ def sync_detailed(
 def sync(
     *,
     client: AuthenticatedClient,
-    page: Unset | str = UNSET,
-    page_size: Unset | str = UNSET,
-    channel: Unset | str = UNSET,
-    status: Unset | str = UNSET,
-    user_id: Unset | str = UNSET,
+    page: str | Unset = UNSET,
+    page_size: str | Unset = UNSET,
+    channel: str | Unset = UNSET,
+    status: str | Unset = UNSET,
+    user_id: str | Unset = UNSET,
 ) -> Error | MessagingLogPage | None:
     """List the message log (admin), newest first, with optional filters
 
     Args:
-        page (Union[Unset, str]):
-        page_size (Union[Unset, str]):
-        channel (Union[Unset, str]):
-        status (Union[Unset, str]):
-        user_id (Union[Unset, str]):
+        page (str | Unset):
+        page_size (str | Unset):
+        channel (str | Unset):
+        status (str | Unset):
+        user_id (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, MessagingLogPage]
+        Error | MessagingLogPage
     """
 
     return sync_detailed(
@@ -156,27 +156,27 @@ def sync(
 async def asyncio_detailed(
     *,
     client: AuthenticatedClient,
-    page: Unset | str = UNSET,
-    page_size: Unset | str = UNSET,
-    channel: Unset | str = UNSET,
-    status: Unset | str = UNSET,
-    user_id: Unset | str = UNSET,
+    page: str | Unset = UNSET,
+    page_size: str | Unset = UNSET,
+    channel: str | Unset = UNSET,
+    status: str | Unset = UNSET,
+    user_id: str | Unset = UNSET,
 ) -> Response[Error | MessagingLogPage]:
     """List the message log (admin), newest first, with optional filters
 
     Args:
-        page (Union[Unset, str]):
-        page_size (Union[Unset, str]):
-        channel (Union[Unset, str]):
-        status (Union[Unset, str]):
-        user_id (Union[Unset, str]):
+        page (str | Unset):
+        page_size (str | Unset):
+        channel (str | Unset):
+        status (str | Unset):
+        user_id (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, MessagingLogPage]]
+        Response[Error | MessagingLogPage]
     """
 
     kwargs = _get_kwargs(
@@ -195,27 +195,27 @@ async def asyncio_detailed(
 async def asyncio(
     *,
     client: AuthenticatedClient,
-    page: Unset | str = UNSET,
-    page_size: Unset | str = UNSET,
-    channel: Unset | str = UNSET,
-    status: Unset | str = UNSET,
-    user_id: Unset | str = UNSET,
+    page: str | Unset = UNSET,
+    page_size: str | Unset = UNSET,
+    channel: str | Unset = UNSET,
+    status: str | Unset = UNSET,
+    user_id: str | Unset = UNSET,
 ) -> Error | MessagingLogPage | None:
     """List the message log (admin), newest first, with optional filters
 
     Args:
-        page (Union[Unset, str]):
-        page_size (Union[Unset, str]):
-        channel (Union[Unset, str]):
-        status (Union[Unset, str]):
-        user_id (Union[Unset, str]):
+        page (str | Unset):
+        page_size (str | Unset):
+        channel (str | Unset):
+        status (str | Unset):
+        user_id (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, MessagingLogPage]
+        Error | MessagingLogPage
     """
 
     return (

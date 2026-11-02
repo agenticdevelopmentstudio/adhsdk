@@ -12,9 +12,9 @@ from ...types import UNSET, Response, Unset
 
 def _get_kwargs(
     *,
-    page: Unset | str = UNSET,
-    page_size: Unset | str = UNSET,
-    target_kind: Unset | str = UNSET,
+    page: str | Unset = UNSET,
+    page_size: str | Unset = UNSET,
+    target_kind: str | Unset = UNSET,
 ) -> dict[str, Any]:
     params: dict[str, Any] = {}
 
@@ -68,23 +68,23 @@ def _build_response(
 def sync_detailed(
     *,
     client: AuthenticatedClient,
-    page: Unset | str = UNSET,
-    page_size: Unset | str = UNSET,
-    target_kind: Unset | str = UNSET,
+    page: str | Unset = UNSET,
+    page_size: str | Unset = UNSET,
+    target_kind: str | Unset = UNSET,
 ) -> Response[Error | GetContentBookmarksResponse200]:
     """List the caller's bookmarks (newest first, paginated)
 
     Args:
-        page (Union[Unset, str]):
-        page_size (Union[Unset, str]):
-        target_kind (Union[Unset, str]):
+        page (str | Unset):
+        page_size (str | Unset):
+        target_kind (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, GetContentBookmarksResponse200]]
+        Response[Error | GetContentBookmarksResponse200]
     """
 
     kwargs = _get_kwargs(
@@ -103,23 +103,23 @@ def sync_detailed(
 def sync(
     *,
     client: AuthenticatedClient,
-    page: Unset | str = UNSET,
-    page_size: Unset | str = UNSET,
-    target_kind: Unset | str = UNSET,
+    page: str | Unset = UNSET,
+    page_size: str | Unset = UNSET,
+    target_kind: str | Unset = UNSET,
 ) -> Error | GetContentBookmarksResponse200 | None:
     """List the caller's bookmarks (newest first, paginated)
 
     Args:
-        page (Union[Unset, str]):
-        page_size (Union[Unset, str]):
-        target_kind (Union[Unset, str]):
+        page (str | Unset):
+        page_size (str | Unset):
+        target_kind (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, GetContentBookmarksResponse200]
+        Error | GetContentBookmarksResponse200
     """
 
     return sync_detailed(
@@ -133,23 +133,23 @@ def sync(
 async def asyncio_detailed(
     *,
     client: AuthenticatedClient,
-    page: Unset | str = UNSET,
-    page_size: Unset | str = UNSET,
-    target_kind: Unset | str = UNSET,
+    page: str | Unset = UNSET,
+    page_size: str | Unset = UNSET,
+    target_kind: str | Unset = UNSET,
 ) -> Response[Error | GetContentBookmarksResponse200]:
     """List the caller's bookmarks (newest first, paginated)
 
     Args:
-        page (Union[Unset, str]):
-        page_size (Union[Unset, str]):
-        target_kind (Union[Unset, str]):
+        page (str | Unset):
+        page_size (str | Unset):
+        target_kind (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, GetContentBookmarksResponse200]]
+        Response[Error | GetContentBookmarksResponse200]
     """
 
     kwargs = _get_kwargs(
@@ -166,23 +166,23 @@ async def asyncio_detailed(
 async def asyncio(
     *,
     client: AuthenticatedClient,
-    page: Unset | str = UNSET,
-    page_size: Unset | str = UNSET,
-    target_kind: Unset | str = UNSET,
+    page: str | Unset = UNSET,
+    page_size: str | Unset = UNSET,
+    target_kind: str | Unset = UNSET,
 ) -> Error | GetContentBookmarksResponse200 | None:
     """List the caller's bookmarks (newest first, paginated)
 
     Args:
-        page (Union[Unset, str]):
-        page_size (Union[Unset, str]):
-        target_kind (Union[Unset, str]):
+        page (str | Unset):
+        page_size (str | Unset):
+        target_kind (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, GetContentBookmarksResponse200]
+        Error | GetContentBookmarksResponse200
     """
 
     return (

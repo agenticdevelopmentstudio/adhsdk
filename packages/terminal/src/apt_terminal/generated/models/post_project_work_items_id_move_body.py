@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -17,22 +19,22 @@ class PostProjectWorkItemsIdMoveBody:
     project, same parent) — re-parenting is PATCH /project/work-items/{id}.
 
         Attributes:
-            after_id (Union[None, Unset, str]): the card this one goes below (id or key); null = nothing above it
-            before_id (Union[None, Unset, str]): the card this one goes above (id or key); null = nothing below it
+            after_id (None | str | Unset): the card this one goes below (id or key); null = nothing above it
+            before_id (None | str | Unset): the card this one goes above (id or key); null = nothing below it
     """
 
-    after_id: None | Unset | str = UNSET
-    before_id: None | Unset | str = UNSET
+    after_id: None | str | Unset = UNSET
+    before_id: None | str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
-        after_id: None | Unset | str
+        after_id: None | str | Unset
         if isinstance(self.after_id, Unset):
             after_id = UNSET
         else:
             after_id = self.after_id
 
-        before_id: None | Unset | str
+        before_id: None | str | Unset
         if isinstance(self.before_id, Unset):
             before_id = UNSET
         else:
@@ -52,21 +54,21 @@ class PostProjectWorkItemsIdMoveBody:
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
         d = dict(src_dict)
 
-        def _parse_after_id(data: object) -> None | Unset | str:
+        def _parse_after_id(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         after_id = _parse_after_id(d.pop("afterId", UNSET))
 
-        def _parse_before_id(data: object) -> None | Unset | str:
+        def _parse_before_id(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         before_id = _parse_before_id(d.pop("beforeId", UNSET))
 

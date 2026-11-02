@@ -1,5 +1,6 @@
 from http import HTTPStatus
 from typing import Any
+from urllib.parse import quote
 
 import httpx
 
@@ -8,22 +9,25 @@ from ...client import AuthenticatedClient, Client
 from ...models.error import Error
 from ...models.patch_project_templates_id_body import PatchProjectTemplatesIdBody
 from ...models.project_template import ProjectTemplate
-from ...types import Response
+from ...types import UNSET, Response, Unset
 
 
 def _get_kwargs(
     id: str,
     *,
-    body: PatchProjectTemplatesIdBody,
+    body: PatchProjectTemplatesIdBody | Unset = UNSET,
 ) -> dict[str, Any]:
     headers: dict[str, Any] = {}
 
     _kwargs: dict[str, Any] = {
         "method": "patch",
-        "url": f"/project/templates/{id}",
+        "url": "/project/templates/{id}".format(
+            id=quote(str(id), safe=""),
+        ),
     }
 
-    _kwargs["json"] = body.to_dict()
+    if not isinstance(body, Unset):
+        _kwargs["json"] = body.to_dict()
 
     headers["Content-Type"] = "application/json"
 
@@ -85,7 +89,7 @@ def sync_detailed(
     id: str,
     *,
     client: AuthenticatedClient,
-    body: PatchProjectTemplatesIdBody,
+    body: PatchProjectTemplatesIdBody | Unset = UNSET,
 ) -> Response[Error | ProjectTemplate]:
     """Rename a template, re-describe it, or replace its body
 
@@ -94,15 +98,16 @@ def sync_detailed(
 
     Args:
         id (str):
-        body (PatchProjectTemplatesIdBody): Every key is optional and a patch that changes nothing
-            returns the template unchanged. There is no `kind`: what a template makes is its identity.
+        body (PatchProjectTemplatesIdBody | Unset): Every key is optional and a patch that changes
+            nothing returns the template unchanged. There is no `kind`: what a template makes is its
+            identity.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, ProjectTemplate]]
+        Response[Error | ProjectTemplate]
     """
 
     kwargs = _get_kwargs(
@@ -121,7 +126,7 @@ def sync(
     id: str,
     *,
     client: AuthenticatedClient,
-    body: PatchProjectTemplatesIdBody,
+    body: PatchProjectTemplatesIdBody | Unset = UNSET,
 ) -> Error | ProjectTemplate | None:
     """Rename a template, re-describe it, or replace its body
 
@@ -130,15 +135,16 @@ def sync(
 
     Args:
         id (str):
-        body (PatchProjectTemplatesIdBody): Every key is optional and a patch that changes nothing
-            returns the template unchanged. There is no `kind`: what a template makes is its identity.
+        body (PatchProjectTemplatesIdBody | Unset): Every key is optional and a patch that changes
+            nothing returns the template unchanged. There is no `kind`: what a template makes is its
+            identity.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, ProjectTemplate]
+        Error | ProjectTemplate
     """
 
     return sync_detailed(
@@ -152,7 +158,7 @@ async def asyncio_detailed(
     id: str,
     *,
     client: AuthenticatedClient,
-    body: PatchProjectTemplatesIdBody,
+    body: PatchProjectTemplatesIdBody | Unset = UNSET,
 ) -> Response[Error | ProjectTemplate]:
     """Rename a template, re-describe it, or replace its body
 
@@ -161,15 +167,16 @@ async def asyncio_detailed(
 
     Args:
         id (str):
-        body (PatchProjectTemplatesIdBody): Every key is optional and a patch that changes nothing
-            returns the template unchanged. There is no `kind`: what a template makes is its identity.
+        body (PatchProjectTemplatesIdBody | Unset): Every key is optional and a patch that changes
+            nothing returns the template unchanged. There is no `kind`: what a template makes is its
+            identity.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, ProjectTemplate]]
+        Response[Error | ProjectTemplate]
     """
 
     kwargs = _get_kwargs(
@@ -186,7 +193,7 @@ async def asyncio(
     id: str,
     *,
     client: AuthenticatedClient,
-    body: PatchProjectTemplatesIdBody,
+    body: PatchProjectTemplatesIdBody | Unset = UNSET,
 ) -> Error | ProjectTemplate | None:
     """Rename a template, re-describe it, or replace its body
 
@@ -195,15 +202,16 @@ async def asyncio(
 
     Args:
         id (str):
-        body (PatchProjectTemplatesIdBody): Every key is optional and a patch that changes nothing
-            returns the template unchanged. There is no `kind`: what a template makes is its identity.
+        body (PatchProjectTemplatesIdBody | Unset): Every key is optional and a patch that changes
+            nothing returns the template unchanged. There is no `kind`: what a template makes is its
+            identity.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, ProjectTemplate]
+        Error | ProjectTemplate
     """
 
     return (

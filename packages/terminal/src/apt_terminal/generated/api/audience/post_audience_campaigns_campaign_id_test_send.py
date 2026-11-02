@@ -1,5 +1,6 @@
 from http import HTTPStatus
 from typing import Any
+from urllib.parse import quote
 
 import httpx
 
@@ -10,22 +11,25 @@ from ...models.post_audience_campaigns_campaign_id_test_send_response_200 import
     PostAudienceCampaignsCampaignIdTestSendResponse200,
 )
 from ...models.test_send_body import TestSendBody
-from ...types import Response
+from ...types import UNSET, Response, Unset
 
 
 def _get_kwargs(
     campaign_id: str,
     *,
-    body: TestSendBody,
+    body: TestSendBody | Unset = UNSET,
 ) -> dict[str, Any]:
     headers: dict[str, Any] = {}
 
     _kwargs: dict[str, Any] = {
         "method": "post",
-        "url": f"/audience/campaigns/{campaign_id}/test-send",
+        "url": "/audience/campaigns/{campaign_id}/test-send".format(
+            campaign_id=quote(str(campaign_id), safe=""),
+        ),
     }
 
-    _kwargs["json"] = body.to_dict()
+    if not isinstance(body, Unset):
+        _kwargs["json"] = body.to_dict()
 
     headers["Content-Type"] = "application/json"
 
@@ -92,7 +96,7 @@ def sync_detailed(
     campaign_id: str,
     *,
     client: AuthenticatedClient,
-    body: TestSendBody,
+    body: TestSendBody | Unset = UNSET,
 ) -> Response[Error | PostAudienceCampaignsCampaignIdTestSendResponse200]:
     """Send one preview copy to an address of the caller's choosing
 
@@ -104,14 +108,14 @@ def sync_detailed(
 
     Args:
         campaign_id (str):
-        body (TestSendBody):
+        body (TestSendBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, PostAudienceCampaignsCampaignIdTestSendResponse200]]
+        Response[Error | PostAudienceCampaignsCampaignIdTestSendResponse200]
     """
 
     kwargs = _get_kwargs(
@@ -130,7 +134,7 @@ def sync(
     campaign_id: str,
     *,
     client: AuthenticatedClient,
-    body: TestSendBody,
+    body: TestSendBody | Unset = UNSET,
 ) -> Error | PostAudienceCampaignsCampaignIdTestSendResponse200 | None:
     """Send one preview copy to an address of the caller's choosing
 
@@ -142,14 +146,14 @@ def sync(
 
     Args:
         campaign_id (str):
-        body (TestSendBody):
+        body (TestSendBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, PostAudienceCampaignsCampaignIdTestSendResponse200]
+        Error | PostAudienceCampaignsCampaignIdTestSendResponse200
     """
 
     return sync_detailed(
@@ -163,7 +167,7 @@ async def asyncio_detailed(
     campaign_id: str,
     *,
     client: AuthenticatedClient,
-    body: TestSendBody,
+    body: TestSendBody | Unset = UNSET,
 ) -> Response[Error | PostAudienceCampaignsCampaignIdTestSendResponse200]:
     """Send one preview copy to an address of the caller's choosing
 
@@ -175,14 +179,14 @@ async def asyncio_detailed(
 
     Args:
         campaign_id (str):
-        body (TestSendBody):
+        body (TestSendBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, PostAudienceCampaignsCampaignIdTestSendResponse200]]
+        Response[Error | PostAudienceCampaignsCampaignIdTestSendResponse200]
     """
 
     kwargs = _get_kwargs(
@@ -199,7 +203,7 @@ async def asyncio(
     campaign_id: str,
     *,
     client: AuthenticatedClient,
-    body: TestSendBody,
+    body: TestSendBody | Unset = UNSET,
 ) -> Error | PostAudienceCampaignsCampaignIdTestSendResponse200 | None:
     """Send one preview copy to an address of the caller's choosing
 
@@ -211,14 +215,14 @@ async def asyncio(
 
     Args:
         campaign_id (str):
-        body (TestSendBody):
+        body (TestSendBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, PostAudienceCampaignsCampaignIdTestSendResponse200]
+        Error | PostAudienceCampaignsCampaignIdTestSendResponse200
     """
 
     return (

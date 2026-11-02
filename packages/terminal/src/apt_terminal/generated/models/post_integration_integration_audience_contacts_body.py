@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, TypeVar, Union, cast
+from typing import TYPE_CHECKING, Any, TypeVar, cast
 
 from attrs import define as _attrs_define
 
@@ -30,17 +32,17 @@ class PostIntegrationIntegrationAudienceContactsBody:
         external_id (str):
         email (str):
         status (str):
-        ecosystem_id (Union[Unset, str]):
-        first_name (Union[None, Unset, str]):
-        last_name (Union[None, Unset, str]):
-        tags (Union['PostIntegrationIntegrationAudienceContactsBodyTagsType0Type1', None, Unset, bool, float, list[Any],
-            str]):
-        fields (Union['PostIntegrationIntegrationAudienceContactsBodyFieldsType0Type1', None, Unset, bool, float,
-            list[Any], str]):
-        subscribed_at (Union[None, Unset, str]):
-        raw (Union['PostIntegrationIntegrationAudienceContactsBodyRawType0Type1', None, Unset, bool, float, list[Any],
-            str]):
-        sync_txid (Union[Unset, int]):
+        ecosystem_id (str | Unset):
+        first_name (None | str | Unset):
+        last_name (None | str | Unset):
+        tags (bool | float | list[Any] | None | PostIntegrationIntegrationAudienceContactsBodyTagsType0Type1 | str |
+            Unset):
+        fields (bool | float | list[Any] | None | PostIntegrationIntegrationAudienceContactsBodyFieldsType0Type1 | str |
+            Unset):
+        subscribed_at (None | str | Unset):
+        raw (bool | float | list[Any] | None | PostIntegrationIntegrationAudienceContactsBodyRawType0Type1 | str |
+            Unset):
+        sync_txid (int | Unset):
     """
 
     connection_id: str
@@ -49,38 +51,38 @@ class PostIntegrationIntegrationAudienceContactsBody:
     external_id: str
     email: str
     status: str
-    ecosystem_id: Unset | str = UNSET
-    first_name: None | Unset | str = UNSET
-    last_name: None | Unset | str = UNSET
-    tags: Union[
-        "PostIntegrationIntegrationAudienceContactsBodyTagsType0Type1",
-        None,
-        Unset,
-        bool,
-        float,
-        list[Any],
-        str,
-    ] = UNSET
-    fields: Union[
-        "PostIntegrationIntegrationAudienceContactsBodyFieldsType0Type1",
-        None,
-        Unset,
-        bool,
-        float,
-        list[Any],
-        str,
-    ] = UNSET
-    subscribed_at: None | Unset | str = UNSET
-    raw: Union[
-        "PostIntegrationIntegrationAudienceContactsBodyRawType0Type1",
-        None,
-        Unset,
-        bool,
-        float,
-        list[Any],
-        str,
-    ] = UNSET
-    sync_txid: Unset | int = UNSET
+    ecosystem_id: str | Unset = UNSET
+    first_name: None | str | Unset = UNSET
+    last_name: None | str | Unset = UNSET
+    tags: (
+        bool
+        | float
+        | list[Any]
+        | None
+        | PostIntegrationIntegrationAudienceContactsBodyTagsType0Type1
+        | str
+        | Unset
+    ) = UNSET
+    fields: (
+        bool
+        | float
+        | list[Any]
+        | None
+        | PostIntegrationIntegrationAudienceContactsBodyFieldsType0Type1
+        | str
+        | Unset
+    ) = UNSET
+    subscribed_at: None | str | Unset = UNSET
+    raw: (
+        bool
+        | float
+        | list[Any]
+        | None
+        | PostIntegrationIntegrationAudienceContactsBodyRawType0Type1
+        | str
+        | Unset
+    ) = UNSET
+    sync_txid: int | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
         from ..models.post_integration_integration_audience_contacts_body_fields_type_0_type_1 import (
@@ -107,19 +109,19 @@ class PostIntegrationIntegrationAudienceContactsBody:
 
         ecosystem_id = self.ecosystem_id
 
-        first_name: None | Unset | str
+        first_name: None | str | Unset
         if isinstance(self.first_name, Unset):
             first_name = UNSET
         else:
             first_name = self.first_name
 
-        last_name: None | Unset | str
+        last_name: None | str | Unset
         if isinstance(self.last_name, Unset):
             last_name = UNSET
         else:
             last_name = self.last_name
 
-        tags: None | Unset | bool | dict[str, Any] | float | list[Any] | str
+        tags: bool | dict[str, Any] | float | list[Any] | None | str | Unset
         if isinstance(self.tags, Unset):
             tags = UNSET
         elif isinstance(self.tags, PostIntegrationIntegrationAudienceContactsBodyTagsType0Type1):
@@ -130,7 +132,7 @@ class PostIntegrationIntegrationAudienceContactsBody:
         else:
             tags = self.tags
 
-        fields: None | Unset | bool | dict[str, Any] | float | list[Any] | str
+        fields: bool | dict[str, Any] | float | list[Any] | None | str | Unset
         if isinstance(self.fields, Unset):
             fields = UNSET
         elif isinstance(
@@ -143,13 +145,13 @@ class PostIntegrationIntegrationAudienceContactsBody:
         else:
             fields = self.fields
 
-        subscribed_at: None | Unset | str
+        subscribed_at: None | str | Unset
         if isinstance(self.subscribed_at, Unset):
             subscribed_at = UNSET
         else:
             subscribed_at = self.subscribed_at
 
-        raw: None | Unset | bool | dict[str, Any] | float | list[Any] | str
+        raw: bool | dict[str, Any] | float | list[Any] | None | str | Unset
         if isinstance(self.raw, Unset):
             raw = UNSET
         elif isinstance(self.raw, PostIntegrationIntegrationAudienceContactsBodyRawType0Type1):
@@ -220,35 +222,35 @@ class PostIntegrationIntegrationAudienceContactsBody:
 
         ecosystem_id = d.pop("ecosystemId", UNSET)
 
-        def _parse_first_name(data: object) -> None | Unset | str:
+        def _parse_first_name(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         first_name = _parse_first_name(d.pop("firstName", UNSET))
 
-        def _parse_last_name(data: object) -> None | Unset | str:
+        def _parse_last_name(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         last_name = _parse_last_name(d.pop("lastName", UNSET))
 
         def _parse_tags(
             data: object,
-        ) -> Union[
-            "PostIntegrationIntegrationAudienceContactsBodyTagsType0Type1",
-            None,
-            Unset,
-            bool,
-            float,
-            list[Any],
-            str,
-        ]:
+        ) -> (
+            bool
+            | float
+            | list[Any]
+            | None
+            | PostIntegrationIntegrationAudienceContactsBodyTagsType0Type1
+            | str
+            | Unset
+        ):
             if data is None:
                 return data
             if isinstance(data, Unset):
@@ -261,7 +263,7 @@ class PostIntegrationIntegrationAudienceContactsBody:
                 )
 
                 return tags_type_0_type_1
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
             try:
                 if not isinstance(data, list):
@@ -269,18 +271,16 @@ class PostIntegrationIntegrationAudienceContactsBody:
                 tags_type_0_type_2 = cast(list[Any], data)
 
                 return tags_type_0_type_2
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
             return cast(
-                Union[
-                    "PostIntegrationIntegrationAudienceContactsBodyTagsType0Type1",
-                    None,
-                    Unset,
-                    bool,
-                    float,
-                    list[Any],
-                    str,
-                ],
+                bool
+                | float
+                | list[Any]
+                | None
+                | PostIntegrationIntegrationAudienceContactsBodyTagsType0Type1
+                | str
+                | Unset,
                 data,
             )
 
@@ -288,15 +288,15 @@ class PostIntegrationIntegrationAudienceContactsBody:
 
         def _parse_fields(
             data: object,
-        ) -> Union[
-            "PostIntegrationIntegrationAudienceContactsBodyFieldsType0Type1",
-            None,
-            Unset,
-            bool,
-            float,
-            list[Any],
-            str,
-        ]:
+        ) -> (
+            bool
+            | float
+            | list[Any]
+            | None
+            | PostIntegrationIntegrationAudienceContactsBodyFieldsType0Type1
+            | str
+            | Unset
+        ):
             if data is None:
                 return data
             if isinstance(data, Unset):
@@ -309,7 +309,7 @@ class PostIntegrationIntegrationAudienceContactsBody:
                 )
 
                 return fields_type_0_type_1
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
             try:
                 if not isinstance(data, list):
@@ -317,43 +317,41 @@ class PostIntegrationIntegrationAudienceContactsBody:
                 fields_type_0_type_2 = cast(list[Any], data)
 
                 return fields_type_0_type_2
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
             return cast(
-                Union[
-                    "PostIntegrationIntegrationAudienceContactsBodyFieldsType0Type1",
-                    None,
-                    Unset,
-                    bool,
-                    float,
-                    list[Any],
-                    str,
-                ],
+                bool
+                | float
+                | list[Any]
+                | None
+                | PostIntegrationIntegrationAudienceContactsBodyFieldsType0Type1
+                | str
+                | Unset,
                 data,
             )
 
         fields = _parse_fields(d.pop("fields", UNSET))
 
-        def _parse_subscribed_at(data: object) -> None | Unset | str:
+        def _parse_subscribed_at(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         subscribed_at = _parse_subscribed_at(d.pop("subscribedAt", UNSET))
 
         def _parse_raw(
             data: object,
-        ) -> Union[
-            "PostIntegrationIntegrationAudienceContactsBodyRawType0Type1",
-            None,
-            Unset,
-            bool,
-            float,
-            list[Any],
-            str,
-        ]:
+        ) -> (
+            bool
+            | float
+            | list[Any]
+            | None
+            | PostIntegrationIntegrationAudienceContactsBodyRawType0Type1
+            | str
+            | Unset
+        ):
             if data is None:
                 return data
             if isinstance(data, Unset):
@@ -366,7 +364,7 @@ class PostIntegrationIntegrationAudienceContactsBody:
                 )
 
                 return raw_type_0_type_1
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
             try:
                 if not isinstance(data, list):
@@ -374,18 +372,16 @@ class PostIntegrationIntegrationAudienceContactsBody:
                 raw_type_0_type_2 = cast(list[Any], data)
 
                 return raw_type_0_type_2
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
             return cast(
-                Union[
-                    "PostIntegrationIntegrationAudienceContactsBodyRawType0Type1",
-                    None,
-                    Unset,
-                    bool,
-                    float,
-                    list[Any],
-                    str,
-                ],
+                bool
+                | float
+                | list[Any]
+                | None
+                | PostIntegrationIntegrationAudienceContactsBodyRawType0Type1
+                | str
+                | Unset,
                 data,
             )
 

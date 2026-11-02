@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class ProviderConnectionAuthType(str, Enum):
+class ProviderConnectionAuthType(StrEnum):
     BEARER = "bearer"
     HEADER = "header"
     OAUTH2 = "oauth2"

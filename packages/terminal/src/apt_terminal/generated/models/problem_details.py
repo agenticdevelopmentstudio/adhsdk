@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar
 
@@ -15,16 +17,16 @@ class ProblemDetails:
     Attributes:
         title (str): Short, human-readable summary of the problem type
         status (int): HTTP status code, duplicated in the body
-        type_ (Union[Unset, str]): URI identifying the problem type; 'about:blank' when unspecified
-        detail (Union[Unset, str]): Explanation specific to this occurrence
-        instance (Union[Unset, str]): URI reference for this occurrence (the request path)
+        type_ (str | Unset): URI identifying the problem type; 'about:blank' when unspecified
+        detail (str | Unset): Explanation specific to this occurrence
+        instance (str | Unset): URI reference for this occurrence (the request path)
     """
 
     title: str
     status: int
-    type_: Unset | str = UNSET
-    detail: Unset | str = UNSET
-    instance: Unset | str = UNSET
+    type_: str | Unset = UNSET
+    detail: str | Unset = UNSET
+    instance: str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:

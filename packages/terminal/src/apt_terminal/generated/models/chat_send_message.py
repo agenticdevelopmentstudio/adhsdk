@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar
 
@@ -14,11 +16,11 @@ class ChatSendMessage:
     """
     Attributes:
         message (str):
-        client_message_id (Union[Unset, str]): Idempotency key for the user message
+        client_message_id (str | Unset): Idempotency key for the user message
     """
 
     message: str
-    client_message_id: Unset | str = UNSET
+    client_message_id: str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:

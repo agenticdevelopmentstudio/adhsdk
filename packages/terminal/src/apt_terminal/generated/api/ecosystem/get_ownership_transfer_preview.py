@@ -23,7 +23,7 @@ def _get_kwargs(
     entity_type: GetOwnershipTransferPreviewEntityType,
     entity_id: str,
     target: str,
-    target_kind: Unset | GetOwnershipTransferPreviewTargetKind = UNSET,
+    target_kind: GetOwnershipTransferPreviewTargetKind | Unset = UNSET,
 ) -> dict[str, Any]:
     params: dict[str, Any] = {}
 
@@ -34,7 +34,7 @@ def _get_kwargs(
 
     params["target"] = target
 
-    json_target_kind: Unset | str = UNSET
+    json_target_kind: str | Unset = UNSET
     if not isinstance(target_kind, Unset):
         json_target_kind = target_kind.value
 
@@ -107,7 +107,7 @@ def sync_detailed(
     entity_type: GetOwnershipTransferPreviewEntityType,
     entity_id: str,
     target: str,
-    target_kind: Unset | GetOwnershipTransferPreviewTargetKind = UNSET,
+    target_kind: GetOwnershipTransferPreviewTargetKind | Unset = UNSET,
 ) -> Response[Error | GetOwnershipTransferPreviewResponse200]:
     """What a transfer would do, without doing it
 
@@ -116,15 +116,15 @@ def sync_detailed(
             server’s TRANSFER_PLANS registry
         entity_id (str):
         target (str):
-        target_kind (Union[Unset, GetOwnershipTransferPreviewTargetKind]): the namespace `target`
-            names, when the client knows it
+        target_kind (GetOwnershipTransferPreviewTargetKind | Unset): the namespace `target` names,
+            when the client knows it
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, GetOwnershipTransferPreviewResponse200]]
+        Response[Error | GetOwnershipTransferPreviewResponse200]
     """
 
     kwargs = _get_kwargs(
@@ -147,7 +147,7 @@ def sync(
     entity_type: GetOwnershipTransferPreviewEntityType,
     entity_id: str,
     target: str,
-    target_kind: Unset | GetOwnershipTransferPreviewTargetKind = UNSET,
+    target_kind: GetOwnershipTransferPreviewTargetKind | Unset = UNSET,
 ) -> Error | GetOwnershipTransferPreviewResponse200 | None:
     """What a transfer would do, without doing it
 
@@ -156,15 +156,15 @@ def sync(
             server’s TRANSFER_PLANS registry
         entity_id (str):
         target (str):
-        target_kind (Union[Unset, GetOwnershipTransferPreviewTargetKind]): the namespace `target`
-            names, when the client knows it
+        target_kind (GetOwnershipTransferPreviewTargetKind | Unset): the namespace `target` names,
+            when the client knows it
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, GetOwnershipTransferPreviewResponse200]
+        Error | GetOwnershipTransferPreviewResponse200
     """
 
     return sync_detailed(
@@ -182,7 +182,7 @@ async def asyncio_detailed(
     entity_type: GetOwnershipTransferPreviewEntityType,
     entity_id: str,
     target: str,
-    target_kind: Unset | GetOwnershipTransferPreviewTargetKind = UNSET,
+    target_kind: GetOwnershipTransferPreviewTargetKind | Unset = UNSET,
 ) -> Response[Error | GetOwnershipTransferPreviewResponse200]:
     """What a transfer would do, without doing it
 
@@ -191,15 +191,15 @@ async def asyncio_detailed(
             server’s TRANSFER_PLANS registry
         entity_id (str):
         target (str):
-        target_kind (Union[Unset, GetOwnershipTransferPreviewTargetKind]): the namespace `target`
-            names, when the client knows it
+        target_kind (GetOwnershipTransferPreviewTargetKind | Unset): the namespace `target` names,
+            when the client knows it
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, GetOwnershipTransferPreviewResponse200]]
+        Response[Error | GetOwnershipTransferPreviewResponse200]
     """
 
     kwargs = _get_kwargs(
@@ -220,7 +220,7 @@ async def asyncio(
     entity_type: GetOwnershipTransferPreviewEntityType,
     entity_id: str,
     target: str,
-    target_kind: Unset | GetOwnershipTransferPreviewTargetKind = UNSET,
+    target_kind: GetOwnershipTransferPreviewTargetKind | Unset = UNSET,
 ) -> Error | GetOwnershipTransferPreviewResponse200 | None:
     """What a transfer would do, without doing it
 
@@ -229,15 +229,15 @@ async def asyncio(
             server’s TRANSFER_PLANS registry
         entity_id (str):
         target (str):
-        target_kind (Union[Unset, GetOwnershipTransferPreviewTargetKind]): the namespace `target`
-            names, when the client knows it
+        target_kind (GetOwnershipTransferPreviewTargetKind | Unset): the namespace `target` names,
+            when the client knows it
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, GetOwnershipTransferPreviewResponse200]
+        Error | GetOwnershipTransferPreviewResponse200
     """
 
     return (

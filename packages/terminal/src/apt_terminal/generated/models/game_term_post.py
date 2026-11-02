@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, TypeVar, Union
+from typing import TYPE_CHECKING, Any, TypeVar
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -18,19 +20,19 @@ class GameTermPost:
     """
     Attributes:
         name (str):
-        game_id (Union[Unset, str]):
-        slug (Union[Unset, str]):
-        description (Union[Unset, str]):
-        artifact_id (Union[Unset, str]):
-        data (Union[Unset, GameTermPostData]):
+        game_id (str | Unset):
+        slug (str | Unset):
+        description (str | Unset):
+        artifact_id (str | Unset):
+        data (GameTermPostData | Unset):
     """
 
     name: str
-    game_id: Unset | str = UNSET
-    slug: Unset | str = UNSET
-    description: Unset | str = UNSET
-    artifact_id: Unset | str = UNSET
-    data: Union[Unset, "GameTermPostData"] = UNSET
+    game_id: str | Unset = UNSET
+    slug: str | Unset = UNSET
+    description: str | Unset = UNSET
+    artifact_id: str | Unset = UNSET
+    data: GameTermPostData | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -44,7 +46,7 @@ class GameTermPost:
 
         artifact_id = self.artifact_id
 
-        data: Unset | dict[str, Any] = UNSET
+        data: dict[str, Any] | Unset = UNSET
         if not isinstance(self.data, Unset):
             data = self.data.to_dict()
 
@@ -84,7 +86,7 @@ class GameTermPost:
         artifact_id = d.pop("artifact_id", UNSET)
 
         _data = d.pop("data", UNSET)
-        data: Unset | GameTermPostData
+        data: GameTermPostData | Unset
         if isinstance(_data, Unset):
             data = UNSET
         else:

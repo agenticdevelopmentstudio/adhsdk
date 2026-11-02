@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, TypeVar, Union, cast
+from typing import TYPE_CHECKING, Any, TypeVar, cast
 
 from attrs import define as _attrs_define
 
@@ -19,17 +21,17 @@ class PostPersonaMemoryBlocksBody:
     """
     Attributes:
         name (str):
-        content (Union['PostPersonaMemoryBlocksBodyContentType1', None, bool, float, list[Any], str]):
-        ecosystem_id (Union[Unset, str]):
-        size_limit (Union[None, Unset, int]):
-        sync_txid (Union[Unset, int]):
+        content (bool | float | list[Any] | None | PostPersonaMemoryBlocksBodyContentType1 | str):
+        ecosystem_id (str | Unset):
+        size_limit (int | None | Unset):
+        sync_txid (int | Unset):
     """
 
     name: str
-    content: Union["PostPersonaMemoryBlocksBodyContentType1", None, bool, float, list[Any], str]
-    ecosystem_id: Unset | str = UNSET
-    size_limit: None | Unset | int = UNSET
-    sync_txid: Unset | int = UNSET
+    content: bool | float | list[Any] | None | PostPersonaMemoryBlocksBodyContentType1 | str
+    ecosystem_id: str | Unset = UNSET
+    size_limit: int | None | Unset = UNSET
+    sync_txid: int | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
         from ..models.post_persona_memory_blocks_body_content_type_1 import (
@@ -38,7 +40,7 @@ class PostPersonaMemoryBlocksBody:
 
         name = self.name
 
-        content: None | bool | dict[str, Any] | float | list[Any] | str
+        content: bool | dict[str, Any] | float | list[Any] | None | str
         if isinstance(self.content, PostPersonaMemoryBlocksBodyContentType1):
             content = self.content.to_dict()
         elif isinstance(self.content, list):
@@ -49,7 +51,7 @@ class PostPersonaMemoryBlocksBody:
 
         ecosystem_id = self.ecosystem_id
 
-        size_limit: None | Unset | int
+        size_limit: int | None | Unset
         if isinstance(self.size_limit, Unset):
             size_limit = UNSET
         else:
@@ -85,7 +87,7 @@ class PostPersonaMemoryBlocksBody:
 
         def _parse_content(
             data: object,
-        ) -> Union["PostPersonaMemoryBlocksBodyContentType1", None, bool, float, list[Any], str]:
+        ) -> bool | float | list[Any] | None | PostPersonaMemoryBlocksBodyContentType1 | str:
             if data is None:
                 return data
             try:
@@ -94,7 +96,7 @@ class PostPersonaMemoryBlocksBody:
                 content_type_1 = PostPersonaMemoryBlocksBodyContentType1.from_dict(data)
 
                 return content_type_1
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
             try:
                 if not isinstance(data, list):
@@ -102,10 +104,10 @@ class PostPersonaMemoryBlocksBody:
                 content_type_2 = cast(list[Any], data)
 
                 return content_type_2
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
             return cast(
-                Union["PostPersonaMemoryBlocksBodyContentType1", None, bool, float, list[Any], str],
+                bool | float | list[Any] | None | PostPersonaMemoryBlocksBodyContentType1 | str,
                 data,
             )
 
@@ -113,12 +115,12 @@ class PostPersonaMemoryBlocksBody:
 
         ecosystem_id = d.pop("ecosystemId", UNSET)
 
-        def _parse_size_limit(data: object) -> None | Unset | int:
+        def _parse_size_limit(data: object) -> int | None | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | int, data)
+            return cast(int | None | Unset, data)
 
         size_limit = _parse_size_limit(d.pop("sizeLimit", UNSET))
 

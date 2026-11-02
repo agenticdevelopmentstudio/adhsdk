@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -16,7 +18,7 @@ class PutTeamTeamsIdResponse200:
         slug (str):
         name (str):
         description (str):
-        created_by (Union[None, str]):
+        created_by (None | str):
         created_at (str):
         updated_at (str):
         is_deleted (bool):

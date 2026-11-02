@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class ProviderConnectionAuthScheme(str, Enum):
+class ProviderConnectionAuthScheme(StrEnum):
     BEARER = "bearer"
     RAW = "raw"
 

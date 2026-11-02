@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -14,24 +16,24 @@ class ShiprDevRepo:
     """The source repository a mirror is fed from.
 
     Attributes:
-        id (Union[Unset, str]):
-        slug (Union[Unset, str]):
-        display_name (Union[None, Unset, str]): What the operator calls it, which is not always what the forge calls it.
-            Null means no opinion and every reader falls back to `slug`. A LABEL AND NOTHING MORE: no branch, no path and no
+        id (str | Unset):
+        slug (str | Unset):
+        display_name (None | str | Unset): What the operator calls it, which is not always what the forge calls it. Null
+            means no opinion and every reader falls back to `slug`. A LABEL AND NOTHING MORE: no branch, no path and no
             forge call is derived from it.
-        main_branch (Union[Unset, str]):
-        prepared_branch (Union[Unset, str]):
-        declaration_sha (Union[None, Unset, str]):
-        connection_id (Union[None, Unset, str]):
+        main_branch (str | Unset):
+        prepared_branch (str | Unset):
+        declaration_sha (None | str | Unset):
+        connection_id (None | str | Unset):
     """
 
-    id: Unset | str = UNSET
-    slug: Unset | str = UNSET
-    display_name: None | Unset | str = UNSET
-    main_branch: Unset | str = UNSET
-    prepared_branch: Unset | str = UNSET
-    declaration_sha: None | Unset | str = UNSET
-    connection_id: None | Unset | str = UNSET
+    id: str | Unset = UNSET
+    slug: str | Unset = UNSET
+    display_name: None | str | Unset = UNSET
+    main_branch: str | Unset = UNSET
+    prepared_branch: str | Unset = UNSET
+    declaration_sha: None | str | Unset = UNSET
+    connection_id: None | str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -39,7 +41,7 @@ class ShiprDevRepo:
 
         slug = self.slug
 
-        display_name: None | Unset | str
+        display_name: None | str | Unset
         if isinstance(self.display_name, Unset):
             display_name = UNSET
         else:
@@ -49,13 +51,13 @@ class ShiprDevRepo:
 
         prepared_branch = self.prepared_branch
 
-        declaration_sha: None | Unset | str
+        declaration_sha: None | str | Unset
         if isinstance(self.declaration_sha, Unset):
             declaration_sha = UNSET
         else:
             declaration_sha = self.declaration_sha
 
-        connection_id: None | Unset | str
+        connection_id: None | str | Unset
         if isinstance(self.connection_id, Unset):
             connection_id = UNSET
         else:
@@ -88,12 +90,12 @@ class ShiprDevRepo:
 
         slug = d.pop("slug", UNSET)
 
-        def _parse_display_name(data: object) -> None | Unset | str:
+        def _parse_display_name(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         display_name = _parse_display_name(d.pop("displayName", UNSET))
 
@@ -101,21 +103,21 @@ class ShiprDevRepo:
 
         prepared_branch = d.pop("preparedBranch", UNSET)
 
-        def _parse_declaration_sha(data: object) -> None | Unset | str:
+        def _parse_declaration_sha(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         declaration_sha = _parse_declaration_sha(d.pop("declarationSha", UNSET))
 
-        def _parse_connection_id(data: object) -> None | Unset | str:
+        def _parse_connection_id(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         connection_id = _parse_connection_id(d.pop("connectionId", UNSET))
 

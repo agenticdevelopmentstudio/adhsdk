@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import TYPE_CHECKING, Any, TypeVar, cast
 
@@ -17,21 +19,21 @@ class WorkItemTemplateBody:
     """
     Attributes:
         title (str):
-        description (Union[Unset, str]):
-        priority (Union[Unset, int]): rank, 0 (none) to 4 (urgent); higher is more urgent
-        estimate (Union[Unset, int]):
-        labels (Union[Unset, list[str]]):
-        children (Union[Unset, list['WorkItemTemplateBodyChildrenItem']]): the sub-tasks that always come with this card
-            — ONE level deep, because a body that could nest arbitrarily would be a project template wearing the wrong noun.
-            Each child inherits the parent’s column, plan point and cycle at instantiation.
+        description (str | Unset):
+        priority (int | Unset): rank, 0 (none) to 4 (urgent); higher is more urgent
+        estimate (int | Unset):
+        labels (list[str] | Unset):
+        children (list[WorkItemTemplateBodyChildrenItem] | Unset): the sub-tasks that always come with this card — ONE
+            level deep, because a body that could nest arbitrarily would be a project template wearing the wrong noun. Each
+            child inherits the parent’s column, plan point and cycle at instantiation.
     """
 
     title: str
-    description: Unset | str = UNSET
-    priority: Unset | int = UNSET
-    estimate: Unset | int = UNSET
-    labels: Unset | list[str] = UNSET
-    children: Unset | list["WorkItemTemplateBodyChildrenItem"] = UNSET
+    description: str | Unset = UNSET
+    priority: int | Unset = UNSET
+    estimate: int | Unset = UNSET
+    labels: list[str] | Unset = UNSET
+    children: list[WorkItemTemplateBodyChildrenItem] | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
         title = self.title
@@ -42,11 +44,11 @@ class WorkItemTemplateBody:
 
         estimate = self.estimate
 
-        labels: Unset | list[str] = UNSET
+        labels: list[str] | Unset = UNSET
         if not isinstance(self.labels, Unset):
             labels = self.labels
 
-        children: Unset | list[dict[str, Any]] = UNSET
+        children: list[dict[str, Any]] | Unset = UNSET
         if not isinstance(self.children, Unset):
             children = []
             for children_item_data in self.children:
@@ -75,7 +77,9 @@ class WorkItemTemplateBody:
 
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
-        from ..models.work_item_template_body_children_item import WorkItemTemplateBodyChildrenItem
+        from ..models.work_item_template_body_children_item import (
+            WorkItemTemplateBodyChildrenItem,
+        )
 
         d = dict(src_dict)
         title = d.pop("title")
@@ -88,12 +92,14 @@ class WorkItemTemplateBody:
 
         labels = cast(list[str], d.pop("labels", UNSET))
 
-        children = []
         _children = d.pop("children", UNSET)
-        for children_item_data in _children or []:
-            children_item = WorkItemTemplateBodyChildrenItem.from_dict(children_item_data)
+        children: list[WorkItemTemplateBodyChildrenItem] | Unset = UNSET
+        if _children is not UNSET:
+            children = []
+            for children_item_data in _children:
+                children_item = WorkItemTemplateBodyChildrenItem.from_dict(children_item_data)
 
-            children.append(children_item)
+                children.append(children_item)
 
         work_item_template_body = cls(
             title=title,

@@ -8,12 +8,12 @@ from ...client import AuthenticatedClient, Client
 from ...models.dm_create_request import DmCreateRequest
 from ...models.dm_create_result import DmCreateResult
 from ...models.error import Error
-from ...types import Response
+from ...types import UNSET, Response, Unset
 
 
 def _get_kwargs(
     *,
-    body: DmCreateRequest,
+    body: DmCreateRequest | Unset = UNSET,
 ) -> dict[str, Any]:
     headers: dict[str, Any] = {}
 
@@ -22,7 +22,8 @@ def _get_kwargs(
         "url": "/chat/dms",
     }
 
-    _kwargs["json"] = body.to_dict()
+    if not isinstance(body, Unset):
+        _kwargs["json"] = body.to_dict()
 
     headers["Content-Type"] = "application/json"
 
@@ -78,7 +79,7 @@ def _build_response(
 def sync_detailed(
     *,
     client: AuthenticatedClient,
-    body: DmCreateRequest,
+    body: DmCreateRequest | Unset = UNSET,
 ) -> Response[DmCreateResult | Error]:
     """Open (or reuse) a DM chat with another user
 
@@ -86,14 +87,14 @@ def sync_detailed(
     recipient cannot be contacted (a block, or a privacy setting).
 
     Args:
-        body (DmCreateRequest):
+        body (DmCreateRequest | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[DmCreateResult, Error]]
+        Response[DmCreateResult | Error]
     """
 
     kwargs = _get_kwargs(
@@ -110,7 +111,7 @@ def sync_detailed(
 def sync(
     *,
     client: AuthenticatedClient,
-    body: DmCreateRequest,
+    body: DmCreateRequest | Unset = UNSET,
 ) -> DmCreateResult | Error | None:
     """Open (or reuse) a DM chat with another user
 
@@ -118,14 +119,14 @@ def sync(
     recipient cannot be contacted (a block, or a privacy setting).
 
     Args:
-        body (DmCreateRequest):
+        body (DmCreateRequest | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[DmCreateResult, Error]
+        DmCreateResult | Error
     """
 
     return sync_detailed(
@@ -137,7 +138,7 @@ def sync(
 async def asyncio_detailed(
     *,
     client: AuthenticatedClient,
-    body: DmCreateRequest,
+    body: DmCreateRequest | Unset = UNSET,
 ) -> Response[DmCreateResult | Error]:
     """Open (or reuse) a DM chat with another user
 
@@ -145,14 +146,14 @@ async def asyncio_detailed(
     recipient cannot be contacted (a block, or a privacy setting).
 
     Args:
-        body (DmCreateRequest):
+        body (DmCreateRequest | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[DmCreateResult, Error]]
+        Response[DmCreateResult | Error]
     """
 
     kwargs = _get_kwargs(
@@ -167,7 +168,7 @@ async def asyncio_detailed(
 async def asyncio(
     *,
     client: AuthenticatedClient,
-    body: DmCreateRequest,
+    body: DmCreateRequest | Unset = UNSET,
 ) -> DmCreateResult | Error | None:
     """Open (or reuse) a DM chat with another user
 
@@ -175,14 +176,14 @@ async def asyncio(
     recipient cannot be contacted (a block, or a privacy setting).
 
     Args:
-        body (DmCreateRequest):
+        body (DmCreateRequest | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[DmCreateResult, Error]
+        DmCreateResult | Error
     """
 
     return (

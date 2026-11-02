@@ -1,5 +1,6 @@
 from http import HTTPStatus
 from typing import Any
+from urllib.parse import quote
 
 import httpx
 
@@ -14,8 +15,8 @@ from ...types import UNSET, Response, Unset
 def _get_kwargs(
     org: str,
     *,
-    body: PutShiprOrgDefaultsOrgBody,
-    workspace: Unset | str = UNSET,
+    body: PutShiprOrgDefaultsOrgBody | Unset = UNSET,
+    workspace: str | Unset = UNSET,
 ) -> dict[str, Any]:
     headers: dict[str, Any] = {}
 
@@ -27,11 +28,14 @@ def _get_kwargs(
 
     _kwargs: dict[str, Any] = {
         "method": "put",
-        "url": f"/shipr/org-defaults/{org}",
+        "url": "/shipr/org-defaults/{org}".format(
+            org=quote(str(org), safe=""),
+        ),
         "params": params,
     }
 
-    _kwargs["json"] = body.to_dict()
+    if not isinstance(body, Unset):
+        _kwargs["json"] = body.to_dict()
 
     headers["Content-Type"] = "application/json"
 
@@ -88,8 +92,8 @@ def sync_detailed(
     org: str,
     *,
     client: AuthenticatedClient,
-    body: PutShiprOrgDefaultsOrgBody,
-    workspace: Unset | str = UNSET,
+    body: PutShiprOrgDefaultsOrgBody | Unset = UNSET,
+    workspace: str | Unset = UNSET,
 ) -> Response[Error | ShiprOrgDefaults]:
     """Set one org’s defaults
 
@@ -101,15 +105,15 @@ def sync_detailed(
 
     Args:
         org (str):
-        workspace (Union[Unset, str]):
-        body (PutShiprOrgDefaultsOrgBody):
+        workspace (str | Unset):
+        body (PutShiprOrgDefaultsOrgBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, ShiprOrgDefaults]]
+        Response[Error | ShiprOrgDefaults]
     """
 
     kwargs = _get_kwargs(
@@ -129,8 +133,8 @@ def sync(
     org: str,
     *,
     client: AuthenticatedClient,
-    body: PutShiprOrgDefaultsOrgBody,
-    workspace: Unset | str = UNSET,
+    body: PutShiprOrgDefaultsOrgBody | Unset = UNSET,
+    workspace: str | Unset = UNSET,
 ) -> Error | ShiprOrgDefaults | None:
     """Set one org’s defaults
 
@@ -142,15 +146,15 @@ def sync(
 
     Args:
         org (str):
-        workspace (Union[Unset, str]):
-        body (PutShiprOrgDefaultsOrgBody):
+        workspace (str | Unset):
+        body (PutShiprOrgDefaultsOrgBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, ShiprOrgDefaults]
+        Error | ShiprOrgDefaults
     """
 
     return sync_detailed(
@@ -165,8 +169,8 @@ async def asyncio_detailed(
     org: str,
     *,
     client: AuthenticatedClient,
-    body: PutShiprOrgDefaultsOrgBody,
-    workspace: Unset | str = UNSET,
+    body: PutShiprOrgDefaultsOrgBody | Unset = UNSET,
+    workspace: str | Unset = UNSET,
 ) -> Response[Error | ShiprOrgDefaults]:
     """Set one org’s defaults
 
@@ -178,15 +182,15 @@ async def asyncio_detailed(
 
     Args:
         org (str):
-        workspace (Union[Unset, str]):
-        body (PutShiprOrgDefaultsOrgBody):
+        workspace (str | Unset):
+        body (PutShiprOrgDefaultsOrgBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, ShiprOrgDefaults]]
+        Response[Error | ShiprOrgDefaults]
     """
 
     kwargs = _get_kwargs(
@@ -204,8 +208,8 @@ async def asyncio(
     org: str,
     *,
     client: AuthenticatedClient,
-    body: PutShiprOrgDefaultsOrgBody,
-    workspace: Unset | str = UNSET,
+    body: PutShiprOrgDefaultsOrgBody | Unset = UNSET,
+    workspace: str | Unset = UNSET,
 ) -> Error | ShiprOrgDefaults | None:
     """Set one org’s defaults
 
@@ -217,15 +221,15 @@ async def asyncio(
 
     Args:
         org (str):
-        workspace (Union[Unset, str]):
-        body (PutShiprOrgDefaultsOrgBody):
+        workspace (str | Unset):
+        body (PutShiprOrgDefaultsOrgBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, ShiprOrgDefaults]
+        Error | ShiprOrgDefaults
     """
 
     return (

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar
 
@@ -13,14 +15,14 @@ T = TypeVar("T", bound="ChatConversationCreate")
 class ChatConversationCreate:
     """
     Attributes:
-        title (Union[Unset, str]):
-        model (Union[Unset, str]):
-        persona_slug (Union[Unset, str]):
+        title (str | Unset):
+        model (str | Unset):
+        persona_slug (str | Unset):
     """
 
-    title: Unset | str = UNSET
-    model: Unset | str = UNSET
-    persona_slug: Unset | str = UNSET
+    title: str | Unset = UNSET
+    model: str | Unset = UNSET
+    persona_slug: str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:

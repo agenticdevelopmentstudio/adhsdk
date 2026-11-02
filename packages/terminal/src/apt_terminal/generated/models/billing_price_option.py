@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -16,17 +18,17 @@ class BillingPriceOption:
         id (str):
         product_id (str):
         currency (str):
-        product_name (Union[None, Unset, str]):
-        unit_amount (Union[None, Unset, int]):
-        interval (Union[None, Unset, str]):
+        product_name (None | str | Unset):
+        unit_amount (int | None | Unset):
+        interval (None | str | Unset):
     """
 
     id: str
     product_id: str
     currency: str
-    product_name: None | Unset | str = UNSET
-    unit_amount: None | Unset | int = UNSET
-    interval: None | Unset | str = UNSET
+    product_name: None | str | Unset = UNSET
+    unit_amount: int | None | Unset = UNSET
+    interval: None | str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -36,19 +38,19 @@ class BillingPriceOption:
 
         currency = self.currency
 
-        product_name: None | Unset | str
+        product_name: None | str | Unset
         if isinstance(self.product_name, Unset):
             product_name = UNSET
         else:
             product_name = self.product_name
 
-        unit_amount: None | Unset | int
+        unit_amount: int | None | Unset
         if isinstance(self.unit_amount, Unset):
             unit_amount = UNSET
         else:
             unit_amount = self.unit_amount
 
-        interval: None | Unset | str
+        interval: None | str | Unset
         if isinstance(self.interval, Unset):
             interval = UNSET
         else:
@@ -81,30 +83,30 @@ class BillingPriceOption:
 
         currency = d.pop("currency")
 
-        def _parse_product_name(data: object) -> None | Unset | str:
+        def _parse_product_name(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         product_name = _parse_product_name(d.pop("productName", UNSET))
 
-        def _parse_unit_amount(data: object) -> None | Unset | int:
+        def _parse_unit_amount(data: object) -> int | None | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | int, data)
+            return cast(int | None | Unset, data)
 
         unit_amount = _parse_unit_amount(d.pop("unitAmount", UNSET))
 
-        def _parse_interval(data: object) -> None | Unset | str:
+        def _parse_interval(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         interval = _parse_interval(d.pop("interval", UNSET))
 

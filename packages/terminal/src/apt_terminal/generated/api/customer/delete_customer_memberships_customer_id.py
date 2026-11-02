@@ -1,5 +1,6 @@
 from http import HTTPStatus
 from typing import Any
+from urllib.parse import quote
 
 import httpx
 
@@ -17,7 +18,9 @@ def _get_kwargs(
 ) -> dict[str, Any]:
     _kwargs: dict[str, Any] = {
         "method": "delete",
-        "url": f"/customer/memberships/{customer_id}",
+        "url": "/customer/memberships/{customer_id}".format(
+            customer_id=quote(str(customer_id), safe=""),
+        ),
     }
 
     return _kwargs
@@ -73,11 +76,11 @@ def sync_detailed(
     *,
     client: AuthenticatedClient,
 ) -> Response[DeleteCustomerMembershipsCustomerIdResponse200 | Error]:
-    r"""Take this person out of ONE ecosystem (admin)
+    """Take this person out of ONE ecosystem (admin)
 
      Addressed by the customer row that carries the membership, not by the person. Refuses the hub row
     with 400: that row is the person's ACCOUNT — their capabilities, their credentials and their address
-    — so removing it is \"delete this user\", a different operation with a different confirmation.
+    — so removing it is "delete this user", a different operation with a different confirmation.
 
     Args:
         customer_id (str):
@@ -87,7 +90,7 @@ def sync_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[DeleteCustomerMembershipsCustomerIdResponse200, Error]]
+        Response[DeleteCustomerMembershipsCustomerIdResponse200 | Error]
     """
 
     kwargs = _get_kwargs(
@@ -106,11 +109,11 @@ def sync(
     *,
     client: AuthenticatedClient,
 ) -> DeleteCustomerMembershipsCustomerIdResponse200 | Error | None:
-    r"""Take this person out of ONE ecosystem (admin)
+    """Take this person out of ONE ecosystem (admin)
 
      Addressed by the customer row that carries the membership, not by the person. Refuses the hub row
     with 400: that row is the person's ACCOUNT — their capabilities, their credentials and their address
-    — so removing it is \"delete this user\", a different operation with a different confirmation.
+    — so removing it is "delete this user", a different operation with a different confirmation.
 
     Args:
         customer_id (str):
@@ -120,7 +123,7 @@ def sync(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[DeleteCustomerMembershipsCustomerIdResponse200, Error]
+        DeleteCustomerMembershipsCustomerIdResponse200 | Error
     """
 
     return sync_detailed(
@@ -134,11 +137,11 @@ async def asyncio_detailed(
     *,
     client: AuthenticatedClient,
 ) -> Response[DeleteCustomerMembershipsCustomerIdResponse200 | Error]:
-    r"""Take this person out of ONE ecosystem (admin)
+    """Take this person out of ONE ecosystem (admin)
 
      Addressed by the customer row that carries the membership, not by the person. Refuses the hub row
     with 400: that row is the person's ACCOUNT — their capabilities, their credentials and their address
-    — so removing it is \"delete this user\", a different operation with a different confirmation.
+    — so removing it is "delete this user", a different operation with a different confirmation.
 
     Args:
         customer_id (str):
@@ -148,7 +151,7 @@ async def asyncio_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[DeleteCustomerMembershipsCustomerIdResponse200, Error]]
+        Response[DeleteCustomerMembershipsCustomerIdResponse200 | Error]
     """
 
     kwargs = _get_kwargs(
@@ -165,11 +168,11 @@ async def asyncio(
     *,
     client: AuthenticatedClient,
 ) -> DeleteCustomerMembershipsCustomerIdResponse200 | Error | None:
-    r"""Take this person out of ONE ecosystem (admin)
+    """Take this person out of ONE ecosystem (admin)
 
      Addressed by the customer row that carries the membership, not by the person. Refuses the hub row
     with 400: that row is the person's ACCOUNT — their capabilities, their credentials and their address
-    — so removing it is \"delete this user\", a different operation with a different confirmation.
+    — so removing it is "delete this user", a different operation with a different confirmation.
 
     Args:
         customer_id (str):
@@ -179,7 +182,7 @@ async def asyncio(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[DeleteCustomerMembershipsCustomerIdResponse200, Error]
+        DeleteCustomerMembershipsCustomerIdResponse200 | Error
     """
 
     return (

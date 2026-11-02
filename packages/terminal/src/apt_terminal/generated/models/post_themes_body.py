@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import TYPE_CHECKING, Any, TypeVar, cast
 
@@ -20,13 +22,13 @@ class PostThemesBody:
         key (str): DNS-ish slug, unique among live themes
         label (str):
         data (PostThemesBodyData):
-        based_on (Union[None, Unset, str]): the seed theme key this derives from
+        based_on (None | str | Unset): the seed theme key this derives from
     """
 
     key: str
     label: str
-    data: "PostThemesBodyData"
-    based_on: None | Unset | str = UNSET
+    data: PostThemesBodyData
+    based_on: None | str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -36,7 +38,7 @@ class PostThemesBody:
 
         data = self.data.to_dict()
 
-        based_on: None | Unset | str
+        based_on: None | str | Unset
         if isinstance(self.based_on, Unset):
             based_on = UNSET
         else:
@@ -67,12 +69,12 @@ class PostThemesBody:
 
         data = PostThemesBodyData.from_dict(d.pop("data"))
 
-        def _parse_based_on(data: object) -> None | Unset | str:
+        def _parse_based_on(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         based_on = _parse_based_on(d.pop("basedOn", UNSET))
 

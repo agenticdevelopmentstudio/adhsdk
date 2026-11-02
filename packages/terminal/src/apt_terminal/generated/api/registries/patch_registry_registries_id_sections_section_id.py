@@ -1,5 +1,6 @@
 from http import HTTPStatus
 from typing import Any
+from urllib.parse import quote
 
 import httpx
 
@@ -10,23 +11,27 @@ from ...models.patch_registry_registries_id_sections_section_id_body import (
     PatchRegistryRegistriesIdSectionsSectionIdBody,
 )
 from ...models.registry_section import RegistrySection
-from ...types import Response
+from ...types import UNSET, Response, Unset
 
 
 def _get_kwargs(
     id: str,
     section_id: str,
     *,
-    body: PatchRegistryRegistriesIdSectionsSectionIdBody,
+    body: PatchRegistryRegistriesIdSectionsSectionIdBody | Unset = UNSET,
 ) -> dict[str, Any]:
     headers: dict[str, Any] = {}
 
     _kwargs: dict[str, Any] = {
         "method": "patch",
-        "url": f"/registry/registries/{id}/sections/{section_id}",
+        "url": "/registry/registries/{id}/sections/{section_id}".format(
+            id=quote(str(id), safe=""),
+            section_id=quote(str(section_id), safe=""),
+        ),
     }
 
-    _kwargs["json"] = body.to_dict()
+    if not isinstance(body, Unset):
+        _kwargs["json"] = body.to_dict()
 
     headers["Content-Type"] = "application/json"
 
@@ -84,21 +89,21 @@ def sync_detailed(
     section_id: str,
     *,
     client: AuthenticatedClient,
-    body: PatchRegistryRegistriesIdSectionsSectionIdBody,
+    body: PatchRegistryRegistriesIdSectionsSectionIdBody | Unset = UNSET,
 ) -> Response[Error | RegistrySection]:
     """Update a section
 
     Args:
         id (str):
         section_id (str):
-        body (PatchRegistryRegistriesIdSectionsSectionIdBody):
+        body (PatchRegistryRegistriesIdSectionsSectionIdBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, RegistrySection]]
+        Response[Error | RegistrySection]
     """
 
     kwargs = _get_kwargs(
@@ -119,21 +124,21 @@ def sync(
     section_id: str,
     *,
     client: AuthenticatedClient,
-    body: PatchRegistryRegistriesIdSectionsSectionIdBody,
+    body: PatchRegistryRegistriesIdSectionsSectionIdBody | Unset = UNSET,
 ) -> Error | RegistrySection | None:
     """Update a section
 
     Args:
         id (str):
         section_id (str):
-        body (PatchRegistryRegistriesIdSectionsSectionIdBody):
+        body (PatchRegistryRegistriesIdSectionsSectionIdBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, RegistrySection]
+        Error | RegistrySection
     """
 
     return sync_detailed(
@@ -149,21 +154,21 @@ async def asyncio_detailed(
     section_id: str,
     *,
     client: AuthenticatedClient,
-    body: PatchRegistryRegistriesIdSectionsSectionIdBody,
+    body: PatchRegistryRegistriesIdSectionsSectionIdBody | Unset = UNSET,
 ) -> Response[Error | RegistrySection]:
     """Update a section
 
     Args:
         id (str):
         section_id (str):
-        body (PatchRegistryRegistriesIdSectionsSectionIdBody):
+        body (PatchRegistryRegistriesIdSectionsSectionIdBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[Error, RegistrySection]]
+        Response[Error | RegistrySection]
     """
 
     kwargs = _get_kwargs(
@@ -182,21 +187,21 @@ async def asyncio(
     section_id: str,
     *,
     client: AuthenticatedClient,
-    body: PatchRegistryRegistriesIdSectionsSectionIdBody,
+    body: PatchRegistryRegistriesIdSectionsSectionIdBody | Unset = UNSET,
 ) -> Error | RegistrySection | None:
     """Update a section
 
     Args:
         id (str):
         section_id (str):
-        body (PatchRegistryRegistriesIdSectionsSectionIdBody):
+        body (PatchRegistryRegistriesIdSectionsSectionIdBody | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[Error, RegistrySection]
+        Error | RegistrySection
     """
 
     return (

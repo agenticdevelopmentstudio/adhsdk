@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -12,20 +14,20 @@ T = TypeVar("T", bound="PutBillingSubscriptionsIdBody")
 class PutBillingSubscriptionsIdBody:
     """
     Attributes:
-        ecosystem_id (Union[Unset, str]):
-        tier_id (Union[Unset, str]):
-        status (Union[Unset, str]):
-        source (Union[Unset, str]):
-        started_at (Union[Unset, str]):
-        expires_at (Union[None, Unset, str]):
+        ecosystem_id (str | Unset):
+        tier_id (str | Unset):
+        status (str | Unset):
+        source (str | Unset):
+        started_at (str | Unset):
+        expires_at (None | str | Unset):
     """
 
-    ecosystem_id: Unset | str = UNSET
-    tier_id: Unset | str = UNSET
-    status: Unset | str = UNSET
-    source: Unset | str = UNSET
-    started_at: Unset | str = UNSET
-    expires_at: None | Unset | str = UNSET
+    ecosystem_id: str | Unset = UNSET
+    tier_id: str | Unset = UNSET
+    status: str | Unset = UNSET
+    source: str | Unset = UNSET
+    started_at: str | Unset = UNSET
+    expires_at: None | str | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
         ecosystem_id = self.ecosystem_id
@@ -38,7 +40,7 @@ class PutBillingSubscriptionsIdBody:
 
         started_at = self.started_at
 
-        expires_at: None | Unset | str
+        expires_at: None | str | Unset
         if isinstance(self.expires_at, Unset):
             expires_at = UNSET
         else:
@@ -75,12 +77,12 @@ class PutBillingSubscriptionsIdBody:
 
         started_at = d.pop("startedAt", UNSET)
 
-        def _parse_expires_at(data: object) -> None | Unset | str:
+        def _parse_expires_at(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         expires_at = _parse_expires_at(d.pop("expiresAt", UNSET))
 

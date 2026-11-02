@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, TypeVar, Union, cast
+from typing import TYPE_CHECKING, Any, TypeVar, cast
 
 from attrs import define as _attrs_define
 
@@ -18,16 +20,16 @@ class GetBucketBucketsResponse200Item:
     Attributes:
         id (str):
         ecosystem_id (str):
-        parent_id (Union[None, str]):
+        parent_id (None | str):
         name (str):
         description (str):
         kind (str):
-        metadata (Union['GetBucketBucketsResponse200ItemMetadataType0Type1', None, bool, float, list[Any], str]):
+        metadata (bool | float | GetBucketBucketsResponse200ItemMetadataType0Type1 | list[Any] | None | str):
         created_at (str):
         updated_at (str):
-        deleted_at (Union[None, str]):
+        deleted_at (None | str):
         sync_version (int):
-        sync_stamped_at (Union[None, str]):
+        sync_stamped_at (None | str):
         sync_txid (int):
     """
 
@@ -37,9 +39,9 @@ class GetBucketBucketsResponse200Item:
     name: str
     description: str
     kind: str
-    metadata: Union[
-        "GetBucketBucketsResponse200ItemMetadataType0Type1", None, bool, float, list[Any], str
-    ]
+    metadata: (
+        bool | float | GetBucketBucketsResponse200ItemMetadataType0Type1 | list[Any] | None | str
+    )
     created_at: str
     updated_at: str
     deleted_at: None | str
@@ -65,7 +67,7 @@ class GetBucketBucketsResponse200Item:
 
         kind = self.kind
 
-        metadata: None | bool | dict[str, Any] | float | list[Any] | str
+        metadata: bool | dict[str, Any] | float | list[Any] | None | str
         if isinstance(self.metadata, GetBucketBucketsResponse200ItemMetadataType0Type1):
             metadata = self.metadata.to_dict()
         elif isinstance(self.metadata, list):
@@ -136,9 +138,14 @@ class GetBucketBucketsResponse200Item:
 
         def _parse_metadata(
             data: object,
-        ) -> Union[
-            "GetBucketBucketsResponse200ItemMetadataType0Type1", None, bool, float, list[Any], str
-        ]:
+        ) -> (
+            bool
+            | float
+            | GetBucketBucketsResponse200ItemMetadataType0Type1
+            | list[Any]
+            | None
+            | str
+        ):
             if data is None:
                 return data
             try:
@@ -149,7 +156,7 @@ class GetBucketBucketsResponse200Item:
                 )
 
                 return metadata_type_0_type_1
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
             try:
                 if not isinstance(data, list):
@@ -157,17 +164,15 @@ class GetBucketBucketsResponse200Item:
                 metadata_type_0_type_2 = cast(list[Any], data)
 
                 return metadata_type_0_type_2
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
             return cast(
-                Union[
-                    "GetBucketBucketsResponse200ItemMetadataType0Type1",
-                    None,
-                    bool,
-                    float,
-                    list[Any],
-                    str,
-                ],
+                bool
+                | float
+                | GetBucketBucketsResponse200ItemMetadataType0Type1
+                | list[Any]
+                | None
+                | str,
                 data,
             )
 

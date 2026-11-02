@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -17,7 +19,7 @@ class GetShiprReposIdPlatformsResponse200PlatformsItem:
     Attributes:
         kind (GetShiprReposIdPlatformsResponse200PlatformsItemKind):
         connection_id (str):
-        label (Union[None, str]):
+        label (None | str):
     """
 
     kind: GetShiprReposIdPlatformsResponse200PlatformsItemKind

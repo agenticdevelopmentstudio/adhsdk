@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -17,16 +19,16 @@ class BillingEvent:
         stripe_event_id (str):
         type_ (str):
         received_at (str):
-        processed_at (Union[None, Unset, str]):
-        error (Union[None, Unset, str]):
+        processed_at (None | str | Unset):
+        error (None | str | Unset):
     """
 
     id: str
     stripe_event_id: str
     type_: str
     received_at: str
-    processed_at: None | Unset | str = UNSET
-    error: None | Unset | str = UNSET
+    processed_at: None | str | Unset = UNSET
+    error: None | str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -38,13 +40,13 @@ class BillingEvent:
 
         received_at = self.received_at
 
-        processed_at: None | Unset | str
+        processed_at: None | str | Unset
         if isinstance(self.processed_at, Unset):
             processed_at = UNSET
         else:
             processed_at = self.processed_at
 
-        error: None | Unset | str
+        error: None | str | Unset
         if isinstance(self.error, Unset):
             error = UNSET
         else:
@@ -78,21 +80,21 @@ class BillingEvent:
 
         received_at = d.pop("receivedAt")
 
-        def _parse_processed_at(data: object) -> None | Unset | str:
+        def _parse_processed_at(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         processed_at = _parse_processed_at(d.pop("processedAt", UNSET))
 
-        def _parse_error(data: object) -> None | Unset | str:
+        def _parse_error(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         error = _parse_error(d.pop("error", UNSET))
 

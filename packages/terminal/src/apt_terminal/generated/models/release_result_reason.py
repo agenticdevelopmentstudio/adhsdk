@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class ReleaseResultReason(str, Enum):
+class ReleaseResultReason(StrEnum):
     DELETED_ENTITY = "deleted-entity"
     ORPHAN = "orphan"
     RENAME_LEFTOVER = "rename-leftover"

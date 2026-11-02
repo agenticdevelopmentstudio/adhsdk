@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -17,15 +19,15 @@ class PostProjectProjectsIdFieldsBody:
         key (str):
         label (str):
         type_ (PostProjectProjectsIdFieldsBodyType):
-        options (Union[Unset, list[str]]): required (non-empty) for a select field; omitted for every other type
-        position (Union[Unset, int]): explicit field order; defaults to append (max+1)
+        options (list[str] | Unset): required (non-empty) for a select field; omitted for every other type
+        position (int | Unset): explicit field order; defaults to append (max+1)
     """
 
     key: str
     label: str
     type_: PostProjectProjectsIdFieldsBodyType
-    options: Unset | list[str] = UNSET
-    position: Unset | int = UNSET
+    options: list[str] | Unset = UNSET
+    position: int | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -35,7 +37,7 @@ class PostProjectProjectsIdFieldsBody:
 
         type_ = self.type_.value
 
-        options: Unset | list[str] = UNSET
+        options: list[str] | Unset = UNSET
         if not isinstance(self.options, Unset):
             options = self.options
 

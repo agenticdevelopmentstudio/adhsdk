@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class PostRegistryRegistriesIdFieldDefsBodyShowIfType0Op(str, Enum):
+class PostRegistryRegistriesIdFieldDefsBodyShowIfType0Op(StrEnum):
     CONTAINS = "contains"
     EQ = "eq"
     FALSY = "falsy"

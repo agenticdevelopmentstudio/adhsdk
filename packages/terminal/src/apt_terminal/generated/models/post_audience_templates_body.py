@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar
 
@@ -16,16 +18,16 @@ class PostAudienceTemplatesBody:
         subject (str):
         html_body (str):
         text_body (str):
-        ecosystem_id (Union[Unset, str]):
-        kind (Union[Unset, str]):
+        ecosystem_id (str | Unset):
+        kind (str | Unset):
     """
 
     name: str
     subject: str
     html_body: str
     text_body: str
-    ecosystem_id: Unset | str = UNSET
-    kind: Unset | str = UNSET
+    ecosystem_id: str | Unset = UNSET
+    kind: str | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
         name = self.name

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar
 
@@ -16,18 +18,18 @@ class PostDocumentVersionsBody:
         name (str):
         pinned_op_id (str):
         pinned_sync_version (int):
-        ecosystem_id (Union[Unset, str]):
-        description (Union[Unset, str]):
-        sync_txid (Union[Unset, int]):
+        ecosystem_id (str | Unset):
+        description (str | Unset):
+        sync_txid (int | Unset):
     """
 
     document_id: str
     name: str
     pinned_op_id: str
     pinned_sync_version: int
-    ecosystem_id: Unset | str = UNSET
-    description: Unset | str = UNSET
-    sync_txid: Unset | int = UNSET
+    ecosystem_id: str | Unset = UNSET
+    description: str | Unset = UNSET
+    sync_txid: int | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
         document_id = self.document_id

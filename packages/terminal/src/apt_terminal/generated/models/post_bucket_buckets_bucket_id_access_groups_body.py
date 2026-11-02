@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar
 
@@ -14,11 +16,11 @@ class PostBucketBucketsBucketIdAccessGroupsBody:
     """
     Attributes:
         name (str):
-        description (Union[Unset, str]):
+        description (str | Unset):
     """
 
     name: str
-    description: Unset | str = UNSET
+    description: str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:

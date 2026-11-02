@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class PatchRegistryRegistriesRegistryIdEntriesEntryIdServicesServiceIdBodyPricingModel(str, Enum):
+class PatchRegistryRegistriesRegistryIdEntriesEntryIdServicesServiceIdBodyPricingModel(StrEnum):
     BARTER = "barter"
     FREE = "free"
     HOURLY = "hourly"

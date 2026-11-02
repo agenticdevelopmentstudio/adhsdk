@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class BucketAccessGroupMemberMemberType(str, Enum):
+class BucketAccessGroupMemberMemberType(StrEnum):
     APP = "app"
     ORGANIZATION = "organization"
     PERSONA = "persona"

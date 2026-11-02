@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -14,26 +16,26 @@ class ShiprGroup:
     """A folder in the deployment tree. `path` and `depth` are trigger-maintained.
 
     Attributes:
-        id (Union[Unset, str]):
-        parent_id (Union[None, Unset, str]):
-        name (Union[Unset, str]):
-        path (Union[Unset, str]):
-        depth (Union[Unset, int]):
-        position (Union[Unset, int]):
+        id (str | Unset):
+        parent_id (None | str | Unset):
+        name (str | Unset):
+        path (str | Unset):
+        depth (int | Unset):
+        position (int | Unset):
     """
 
-    id: Unset | str = UNSET
-    parent_id: None | Unset | str = UNSET
-    name: Unset | str = UNSET
-    path: Unset | str = UNSET
-    depth: Unset | int = UNSET
-    position: Unset | int = UNSET
+    id: str | Unset = UNSET
+    parent_id: None | str | Unset = UNSET
+    name: str | Unset = UNSET
+    path: str | Unset = UNSET
+    depth: int | Unset = UNSET
+    position: int | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
         id = self.id
 
-        parent_id: None | Unset | str
+        parent_id: None | str | Unset
         if isinstance(self.parent_id, Unset):
             parent_id = UNSET
         else:
@@ -70,12 +72,12 @@ class ShiprGroup:
         d = dict(src_dict)
         id = d.pop("id", UNSET)
 
-        def _parse_parent_id(data: object) -> None | Unset | str:
+        def _parse_parent_id(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         parent_id = _parse_parent_id(d.pop("parentId", UNSET))
 

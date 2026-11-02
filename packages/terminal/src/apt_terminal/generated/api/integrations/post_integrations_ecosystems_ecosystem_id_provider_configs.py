@@ -1,5 +1,6 @@
 from http import HTTPStatus
 from typing import Any
+from urllib.parse import quote
 
 import httpx
 
@@ -10,22 +11,25 @@ from ...models.post_integrations_ecosystems_ecosystem_id_provider_configs_body i
     PostIntegrationsEcosystemsEcosystemIdProviderConfigsBody,
 )
 from ...models.problem_details import ProblemDetails
-from ...types import Response
+from ...types import UNSET, Response, Unset
 
 
 def _get_kwargs(
     ecosystem_id: str,
     *,
-    body: PostIntegrationsEcosystemsEcosystemIdProviderConfigsBody,
+    body: PostIntegrationsEcosystemsEcosystemIdProviderConfigsBody | Unset = UNSET,
 ) -> dict[str, Any]:
     headers: dict[str, Any] = {}
 
     _kwargs: dict[str, Any] = {
         "method": "post",
-        "url": f"/integrations/ecosystems/{ecosystem_id}/provider-configs",
+        "url": "/integrations/ecosystems/{ecosystem_id}/provider-configs".format(
+            ecosystem_id=quote(str(ecosystem_id), safe=""),
+        ),
     }
 
-    _kwargs["json"] = body.to_dict()
+    if not isinstance(body, Unset):
+        _kwargs["json"] = body.to_dict()
 
     headers["Content-Type"] = "application/json"
 
@@ -87,7 +91,7 @@ def sync_detailed(
     ecosystem_id: str,
     *,
     client: AuthenticatedClient,
-    body: PostIntegrationsEcosystemsEcosystemIdProviderConfigsBody,
+    body: PostIntegrationsEcosystemsEcosystemIdProviderConfigsBody | Unset = UNSET,
 ) -> Response[IntegrationProviderConfig | ProblemDetails]:
     """Create a new named provider config for an ecosystem
 
@@ -100,16 +104,16 @@ def sync_detailed(
 
     Args:
         ecosystem_id (str):
-        body (PostIntegrationsEcosystemsEcosystemIdProviderConfigsBody): `providerId` + `name`
-            identify the new instance; the remaining keys are the provider-specific config, validated
-            by auth method.
+        body (PostIntegrationsEcosystemsEcosystemIdProviderConfigsBody | Unset): `providerId` +
+            `name` identify the new instance; the remaining keys are the provider-specific config,
+            validated by auth method.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[IntegrationProviderConfig, ProblemDetails]]
+        Response[IntegrationProviderConfig | ProblemDetails]
     """
 
     kwargs = _get_kwargs(
@@ -128,7 +132,7 @@ def sync(
     ecosystem_id: str,
     *,
     client: AuthenticatedClient,
-    body: PostIntegrationsEcosystemsEcosystemIdProviderConfigsBody,
+    body: PostIntegrationsEcosystemsEcosystemIdProviderConfigsBody | Unset = UNSET,
 ) -> IntegrationProviderConfig | ProblemDetails | None:
     """Create a new named provider config for an ecosystem
 
@@ -141,16 +145,16 @@ def sync(
 
     Args:
         ecosystem_id (str):
-        body (PostIntegrationsEcosystemsEcosystemIdProviderConfigsBody): `providerId` + `name`
-            identify the new instance; the remaining keys are the provider-specific config, validated
-            by auth method.
+        body (PostIntegrationsEcosystemsEcosystemIdProviderConfigsBody | Unset): `providerId` +
+            `name` identify the new instance; the remaining keys are the provider-specific config,
+            validated by auth method.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[IntegrationProviderConfig, ProblemDetails]
+        IntegrationProviderConfig | ProblemDetails
     """
 
     return sync_detailed(
@@ -164,7 +168,7 @@ async def asyncio_detailed(
     ecosystem_id: str,
     *,
     client: AuthenticatedClient,
-    body: PostIntegrationsEcosystemsEcosystemIdProviderConfigsBody,
+    body: PostIntegrationsEcosystemsEcosystemIdProviderConfigsBody | Unset = UNSET,
 ) -> Response[IntegrationProviderConfig | ProblemDetails]:
     """Create a new named provider config for an ecosystem
 
@@ -177,16 +181,16 @@ async def asyncio_detailed(
 
     Args:
         ecosystem_id (str):
-        body (PostIntegrationsEcosystemsEcosystemIdProviderConfigsBody): `providerId` + `name`
-            identify the new instance; the remaining keys are the provider-specific config, validated
-            by auth method.
+        body (PostIntegrationsEcosystemsEcosystemIdProviderConfigsBody | Unset): `providerId` +
+            `name` identify the new instance; the remaining keys are the provider-specific config,
+            validated by auth method.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[IntegrationProviderConfig, ProblemDetails]]
+        Response[IntegrationProviderConfig | ProblemDetails]
     """
 
     kwargs = _get_kwargs(
@@ -203,7 +207,7 @@ async def asyncio(
     ecosystem_id: str,
     *,
     client: AuthenticatedClient,
-    body: PostIntegrationsEcosystemsEcosystemIdProviderConfigsBody,
+    body: PostIntegrationsEcosystemsEcosystemIdProviderConfigsBody | Unset = UNSET,
 ) -> IntegrationProviderConfig | ProblemDetails | None:
     """Create a new named provider config for an ecosystem
 
@@ -216,16 +220,16 @@ async def asyncio(
 
     Args:
         ecosystem_id (str):
-        body (PostIntegrationsEcosystemsEcosystemIdProviderConfigsBody): `providerId` + `name`
-            identify the new instance; the remaining keys are the provider-specific config, validated
-            by auth method.
+        body (PostIntegrationsEcosystemsEcosystemIdProviderConfigsBody | Unset): `providerId` +
+            `name` identify the new instance; the remaining keys are the provider-specific config,
+            validated by auth method.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[IntegrationProviderConfig, ProblemDetails]
+        IntegrationProviderConfig | ProblemDetails
     """
 
     return (

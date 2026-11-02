@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -14,20 +16,20 @@ class GetPersonaSpecialInterestsResponse200Item:
     Attributes:
         id (str):
         persona_id (str):
-        user_id (Union[None, str]):
+        user_id (None | str):
         owner_kind (str):
         owner_id (str):
         slug (str):
         general (str):
-        topical (Union[None, str]):
-        specific (Union[None, str]):
-        stances (Union[None, str]):
-        bucket_id (Union[None, str]):
+        topical (None | str):
+        specific (None | str):
+        stances (None | str):
+        bucket_id (None | str):
         position (int):
         is_deleted (bool):
         created_at (str):
         updated_at (str):
-        bucket_type_id (Union[None, Unset, str]):
+        bucket_type_id (None | str | Unset):
     """
 
     id: str
@@ -45,7 +47,7 @@ class GetPersonaSpecialInterestsResponse200Item:
     is_deleted: bool
     created_at: str
     updated_at: str
-    bucket_type_id: None | Unset | str = UNSET
+    bucket_type_id: None | str | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
         id = self.id
@@ -83,7 +85,7 @@ class GetPersonaSpecialInterestsResponse200Item:
 
         updated_at = self.updated_at
 
-        bucket_type_id: None | Unset | str
+        bucket_type_id: None | str | Unset
         if isinstance(self.bucket_type_id, Unset):
             bucket_type_id = UNSET
         else:
@@ -173,12 +175,12 @@ class GetPersonaSpecialInterestsResponse200Item:
 
         updated_at = d.pop("updatedAt")
 
-        def _parse_bucket_type_id(data: object) -> None | Unset | str:
+        def _parse_bucket_type_id(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         bucket_type_id = _parse_bucket_type_id(d.pop("bucketTypeId", UNSET))
 

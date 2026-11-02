@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar
 
@@ -13,16 +15,16 @@ T = TypeVar("T", bound="PostCustomerMembershipsResponse200")
 class PostCustomerMembershipsResponse200:
     """
     Attributes:
-        user_id (Union[Unset, str]):
-        customer_id (Union[Unset, str]):
-        ecosystem_id (Union[Unset, str]):
-        created (Union[Unset, bool]): false when they were already a member
+        user_id (str | Unset):
+        customer_id (str | Unset):
+        ecosystem_id (str | Unset):
+        created (bool | Unset): false when they were already a member
     """
 
-    user_id: Unset | str = UNSET
-    customer_id: Unset | str = UNSET
-    ecosystem_id: Unset | str = UNSET
-    created: Unset | bool = UNSET
+    user_id: str | Unset = UNSET
+    customer_id: str | Unset = UNSET
+    ecosystem_id: str | Unset = UNSET
+    created: bool | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:

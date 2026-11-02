@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, TypeVar, Union, cast
+from typing import TYPE_CHECKING, Any, TypeVar, cast
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -20,19 +22,18 @@ class IntegrationActionSubscribe:
     Attributes:
         audience_id (str): Provider list id
         email (str):
-        first_name (Union[Unset, str]):
-        last_name (Union[Unset, str]):
-        tags (Union[Unset, list[str]]):
-        fields (Union[Unset, IntegrationActionFields]): Provider merge/custom fields — flat string, number, or boolean
-            values
+        first_name (str | Unset):
+        last_name (str | Unset):
+        tags (list[str] | Unset):
+        fields (IntegrationActionFields | Unset): Provider merge/custom fields — flat string, number, or boolean values
     """
 
     audience_id: str
     email: str
-    first_name: Unset | str = UNSET
-    last_name: Unset | str = UNSET
-    tags: Unset | list[str] = UNSET
-    fields: Union[Unset, "IntegrationActionFields"] = UNSET
+    first_name: str | Unset = UNSET
+    last_name: str | Unset = UNSET
+    tags: list[str] | Unset = UNSET
+    fields: IntegrationActionFields | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -44,11 +45,11 @@ class IntegrationActionSubscribe:
 
         last_name = self.last_name
 
-        tags: Unset | list[str] = UNSET
+        tags: list[str] | Unset = UNSET
         if not isinstance(self.tags, Unset):
             tags = self.tags
 
-        fields: Unset | dict[str, Any] = UNSET
+        fields: dict[str, Any] | Unset = UNSET
         if not isinstance(self.fields, Unset):
             fields = self.fields.to_dict()
 
@@ -87,7 +88,7 @@ class IntegrationActionSubscribe:
         tags = cast(list[str], d.pop("tags", UNSET))
 
         _fields = d.pop("fields", UNSET)
-        fields: Unset | IntegrationActionFields
+        fields: IntegrationActionFields | Unset
         if isinstance(_fields, Unset):
             fields = UNSET
         else:

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -16,15 +18,15 @@ class RegistryOrganization:
         id (str):
         slug (str):
         name (str):
-        description (Union[None, Unset, str]):
-        rdid (Union[Unset, str]): org.<slug> — present on the POST create response; absent on plain GET/PATCH
+        description (None | str | Unset):
+        rdid (str | Unset): org.<slug> — present on the POST create response; absent on plain GET/PATCH
     """
 
     id: str
     slug: str
     name: str
-    description: None | Unset | str = UNSET
-    rdid: Unset | str = UNSET
+    description: None | str | Unset = UNSET
+    rdid: str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -34,7 +36,7 @@ class RegistryOrganization:
 
         name = self.name
 
-        description: None | Unset | str
+        description: None | str | Unset
         if isinstance(self.description, Unset):
             description = UNSET
         else:
@@ -67,12 +69,12 @@ class RegistryOrganization:
 
         name = d.pop("name")
 
-        def _parse_description(data: object) -> None | Unset | str:
+        def _parse_description(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         description = _parse_description(d.pop("description", UNSET))
 

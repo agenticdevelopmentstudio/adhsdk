@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class MarkdownDocumentSummaryKind(str, Enum):
+class MarkdownDocumentSummaryKind(StrEnum):
     PAPER = "paper"
     RESEARCH = "research"
 

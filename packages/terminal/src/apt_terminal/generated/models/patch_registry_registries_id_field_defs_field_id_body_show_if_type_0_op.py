@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class PatchRegistryRegistriesIdFieldDefsFieldIdBodyShowIfType0Op(str, Enum):
+class PatchRegistryRegistriesIdFieldDefsFieldIdBodyShowIfType0Op(StrEnum):
     CONTAINS = "contains"
     EQ = "eq"
     FALSY = "falsy"

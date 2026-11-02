@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, TypeVar, Union, cast
+from typing import TYPE_CHECKING, Any, TypeVar, cast
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -39,9 +41,9 @@ class RegistryFieldDef:
         created_at (str):
         updated_at (str):
         sync_version (int):
-        show_if (Union['RegistryFieldDefShowIfType0', None, Unset]): a declarative visibility rule, evaluated fail-open
+        show_if (None | RegistryFieldDefShowIfType0 | Unset): a declarative visibility rule, evaluated fail-open
             (evaluateShowIf)
-        deleted_at (Union[None, Unset, str]):
+        deleted_at (None | str | Unset):
     """
 
     id: str
@@ -54,13 +56,13 @@ class RegistryFieldDef:
     help_: str
     required: bool
     sort_order: int
-    config: "RegistryFieldDefConfig"
+    config: RegistryFieldDefConfig
     visibility: RegistryFieldDefVisibility
     created_at: str
     updated_at: str
     sync_version: int
-    show_if: Union["RegistryFieldDefShowIfType0", None, Unset] = UNSET
-    deleted_at: None | Unset | str = UNSET
+    show_if: None | RegistryFieldDefShowIfType0 | Unset = UNSET
+    deleted_at: None | str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -96,7 +98,7 @@ class RegistryFieldDef:
 
         sync_version = self.sync_version
 
-        show_if: None | Unset | dict[str, Any]
+        show_if: dict[str, Any] | None | Unset
         if isinstance(self.show_if, Unset):
             show_if = UNSET
         elif isinstance(self.show_if, RegistryFieldDefShowIfType0):
@@ -104,7 +106,7 @@ class RegistryFieldDef:
         else:
             show_if = self.show_if
 
-        deleted_at: None | Unset | str
+        deleted_at: None | str | Unset
         if isinstance(self.deleted_at, Unset):
             deleted_at = UNSET
         else:
@@ -141,7 +143,9 @@ class RegistryFieldDef:
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
         from ..models.registry_field_def_config import RegistryFieldDefConfig
-        from ..models.registry_field_def_show_if_type_0 import RegistryFieldDefShowIfType0
+        from ..models.registry_field_def_show_if_type_0 import (
+            RegistryFieldDefShowIfType0,
+        )
 
         d = dict(src_dict)
         id = d.pop("id")
@@ -174,7 +178,7 @@ class RegistryFieldDef:
 
         sync_version = d.pop("syncVersion")
 
-        def _parse_show_if(data: object) -> Union["RegistryFieldDefShowIfType0", None, Unset]:
+        def _parse_show_if(data: object) -> None | RegistryFieldDefShowIfType0 | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
@@ -185,18 +189,18 @@ class RegistryFieldDef:
                 show_if_type_0 = RegistryFieldDefShowIfType0.from_dict(data)
 
                 return show_if_type_0
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
-            return cast(Union["RegistryFieldDefShowIfType0", None, Unset], data)
+            return cast(None | RegistryFieldDefShowIfType0 | Unset, data)
 
         show_if = _parse_show_if(d.pop("showIf", UNSET))
 
-        def _parse_deleted_at(data: object) -> None | Unset | str:
+        def _parse_deleted_at(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         deleted_at = _parse_deleted_at(d.pop("deletedAt", UNSET))
 

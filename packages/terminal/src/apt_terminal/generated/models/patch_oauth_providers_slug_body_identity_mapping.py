@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 
@@ -17,20 +19,20 @@ class PatchOauthProvidersSlugBodyIdentityMapping:
         email_field (str):
         name_field (str):
         avatar_field (str):
-        verification_url (Union[Unset, str]):
-        require_email_verified (Union[Unset, bool]):
-        allowed_audiences (Union[Unset, list[str]]):
-        secondary_email_url (Union[Unset, str]):
+        verification_url (str | Unset):
+        require_email_verified (bool | Unset):
+        allowed_audiences (list[str] | Unset):
+        secondary_email_url (str | Unset):
     """
 
     subject_field: str
     email_field: str
     name_field: str
     avatar_field: str
-    verification_url: Unset | str = UNSET
-    require_email_verified: Unset | bool = UNSET
-    allowed_audiences: Unset | list[str] = UNSET
-    secondary_email_url: Unset | str = UNSET
+    verification_url: str | Unset = UNSET
+    require_email_verified: bool | Unset = UNSET
+    allowed_audiences: list[str] | Unset = UNSET
+    secondary_email_url: str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -46,7 +48,7 @@ class PatchOauthProvidersSlugBodyIdentityMapping:
 
         require_email_verified = self.require_email_verified
 
-        allowed_audiences: Unset | list[str] = UNSET
+        allowed_audiences: list[str] | Unset = UNSET
         if not isinstance(self.allowed_audiences, Unset):
             allowed_audiences = self.allowed_audiences
 

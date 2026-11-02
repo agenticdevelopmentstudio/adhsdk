@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, TypeVar, Union, cast
+from typing import TYPE_CHECKING, Any, TypeVar, cast
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -33,11 +35,11 @@ class MarkdownDocumentVersion:
         size_bytes (int):
         created_at (str):
         is_deleted (bool):
-        deleted_at (Union[None, Unset, str]):
-        frontmatter (Union['MarkdownDocumentVersionFrontmatterType0', None, Unset]):
-        author_type (Union[None, Unset, str]):
-        author_id (Union[None, Unset, str]):
-        author_name (Union[None, Unset, str]):
+        deleted_at (None | str | Unset):
+        frontmatter (MarkdownDocumentVersionFrontmatterType0 | None | Unset):
+        author_type (None | str | Unset):
+        author_id (None | str | Unset):
+        author_name (None | str | Unset):
     """
 
     id: str
@@ -53,11 +55,11 @@ class MarkdownDocumentVersion:
     size_bytes: int
     created_at: str
     is_deleted: bool
-    deleted_at: None | Unset | str = UNSET
-    frontmatter: Union["MarkdownDocumentVersionFrontmatterType0", None, Unset] = UNSET
-    author_type: None | Unset | str = UNSET
-    author_id: None | Unset | str = UNSET
-    author_name: None | Unset | str = UNSET
+    deleted_at: None | str | Unset = UNSET
+    frontmatter: MarkdownDocumentVersionFrontmatterType0 | None | Unset = UNSET
+    author_type: None | str | Unset = UNSET
+    author_id: None | str | Unset = UNSET
+    author_name: None | str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -91,13 +93,13 @@ class MarkdownDocumentVersion:
 
         is_deleted = self.is_deleted
 
-        deleted_at: None | Unset | str
+        deleted_at: None | str | Unset
         if isinstance(self.deleted_at, Unset):
             deleted_at = UNSET
         else:
             deleted_at = self.deleted_at
 
-        frontmatter: None | Unset | dict[str, Any]
+        frontmatter: dict[str, Any] | None | Unset
         if isinstance(self.frontmatter, Unset):
             frontmatter = UNSET
         elif isinstance(self.frontmatter, MarkdownDocumentVersionFrontmatterType0):
@@ -105,19 +107,19 @@ class MarkdownDocumentVersion:
         else:
             frontmatter = self.frontmatter
 
-        author_type: None | Unset | str
+        author_type: None | str | Unset
         if isinstance(self.author_type, Unset):
             author_type = UNSET
         else:
             author_type = self.author_type
 
-        author_id: None | Unset | str
+        author_id: None | str | Unset
         if isinstance(self.author_id, Unset):
             author_id = UNSET
         else:
             author_id = self.author_id
 
-        author_name: None | Unset | str
+        author_name: None | str | Unset
         if isinstance(self.author_name, Unset):
             author_name = UNSET
         else:
@@ -188,18 +190,18 @@ class MarkdownDocumentVersion:
 
         is_deleted = d.pop("isDeleted")
 
-        def _parse_deleted_at(data: object) -> None | Unset | str:
+        def _parse_deleted_at(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         deleted_at = _parse_deleted_at(d.pop("deletedAt", UNSET))
 
         def _parse_frontmatter(
             data: object,
-        ) -> Union["MarkdownDocumentVersionFrontmatterType0", None, Unset]:
+        ) -> MarkdownDocumentVersionFrontmatterType0 | None | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
@@ -210,36 +212,36 @@ class MarkdownDocumentVersion:
                 frontmatter_type_0 = MarkdownDocumentVersionFrontmatterType0.from_dict(data)
 
                 return frontmatter_type_0
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
-            return cast(Union["MarkdownDocumentVersionFrontmatterType0", None, Unset], data)
+            return cast(MarkdownDocumentVersionFrontmatterType0 | None | Unset, data)
 
         frontmatter = _parse_frontmatter(d.pop("frontmatter", UNSET))
 
-        def _parse_author_type(data: object) -> None | Unset | str:
+        def _parse_author_type(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         author_type = _parse_author_type(d.pop("authorType", UNSET))
 
-        def _parse_author_id(data: object) -> None | Unset | str:
+        def _parse_author_id(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         author_id = _parse_author_id(d.pop("authorId", UNSET))
 
-        def _parse_author_name(data: object) -> None | Unset | str:
+        def _parse_author_name(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | Unset | str, data)
+            return cast(None | str | Unset, data)
 
         author_name = _parse_author_name(d.pop("authorName", UNSET))
 
