@@ -9,15 +9,18 @@ import { menuIcon } from './menu-icons'
 // they must be the same row and the same gear. They were two copies once, identical but for the
 // Help row's section number, and a change to one did not reach the other.
 
-/** The Help row: an ACTION, not a destination — choosing it opens the help panel over the page
- *  and navigates nowhere. `section` is the caller's, because the row closes a different block in
- *  each menu: SiteMenu's auth top section, and a section of its own under WorkspaceMenu's
- *  workspace list. */
-export function helpEntry(openHelp: () => void, section: number): PopoverEntry {
+/** The Help row: a DESTINATION — the help site (help.agenticdeveloperhub.com), resolved for the
+ *  current env by {@link useSiteMenu}'s `helpHref`. It used to be an action that opened the help
+ *  panel over the page; the owner asked (2026-11-02) for the menu's "Help" to GO to the help
+ *  site instead, which is the family's Help destination (see fleetMenuGroups' `hub-help` row).
+ *  `current` is the caller's: on the help site itself the row is "you are here". `section` is
+ *  the caller's, because the row closes a different block in each menu: SiteMenu's auth top
+ *  section, and a section of its own under WorkspaceMenu's workspace list. */
+export function helpEntry(href: string, section: number, current = false): PopoverEntry {
   return {
     kind: 'leaf',
     section,
-    item: { key: 'help', label: 'Help', icon: menuIcon('help'), onSelect: () => openHelp() },
+    item: { key: 'help', label: 'Help', icon: menuIcon('help'), href, current },
   }
 }
 

@@ -10,18 +10,23 @@ import { helpEntry, settingsTrailing } from '../menuChrome'
 afterEach(cleanup)
 
 describe('helpEntry', () => {
-  it('is an action row in the caller’s section, not a destination', () => {
-    const openHelp = vi.fn()
-    const entry = helpEntry(openHelp, 1)
+  it('is a link to the help site in the caller’s section, not an action', () => {
+    const entry = helpEntry('https://help.agenticdeveloperhub.com/', 1)
     expect(entry.kind).toBe('leaf')
     expect(entry.section).toBe(1)
     if (entry.kind !== 'leaf') throw new Error('unreachable')
     expect(entry.item.key).toBe('help')
     expect(entry.item.label).toBe('Help')
-    // No href: choosing it opens the help panel over the page and navigates nowhere.
-    expect(entry.item.href).toBeUndefined()
-    entry.item.onSelect?.()
-    expect(openHelp).toHaveBeenCalledTimes(1)
+    // A destination: choosing it goes to help.adh.com, never opens a panel over the page.
+    expect(entry.item.href).toBe('https://help.agenticdeveloperhub.com/')
+    expect(entry.item.onSelect).toBeUndefined()
+    expect(entry.item.current).toBe(false)
+  })
+
+  it('is "you are here" on the help site itself', () => {
+    const entry = helpEntry('/', 0, true)
+    if (entry.kind !== 'leaf') throw new Error('unreachable')
+    expect(entry.item.current).toBe(true)
   })
 })
 

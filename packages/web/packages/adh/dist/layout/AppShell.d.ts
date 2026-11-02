@@ -23,8 +23,16 @@ export type AppShellProps = {
      *  fine print) in flow in place of the floating copyright, with bitbag beside it; every other
      *  route keeps the floating copyright. For a site whose landing page is under this shell. A templated site's `/` is the
      *  template's own and takes LandingFooter through the template's `footer` slot instead.
-     *  Omitted, every route gets the bar. */
-    landingFooter?: boolean;
+     *  Omitted, every route gets the bar.
+     *
+     *  `{ chat: false }` is the landing footer WITHOUT bitbag in the corner — for a landing page
+     *  whose main area already is a bitbag chat (hub-help's `/`), where a second one in the
+     *  corner is two of him talking over each other. An object rather than a second boolean
+     *  prop, so "no chat" cannot be asked for on a site that has no landing footer for it to
+     *  be missing from. */
+    landingFooter?: boolean | {
+        chat: boolean;
+    };
 };
 /**
  * The shared page shell every adh site renders: header, a flex-growing main region, and the

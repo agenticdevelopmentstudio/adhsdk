@@ -50,82 +50,100 @@ function AvatarMenu({
     /* @__PURE__ */ jsx("span", { className: "adh-avatar-menu__item-label", children: "User Settings" })
   ] });
   const settingsItem = onSettings ? /* @__PURE__ */ jsx(DropdownMenuItem, { onClick: onSettings, className: "adh-avatar-menu__item", children: settingsBody }) : settingsHref ? /* @__PURE__ */ jsx(DropdownMenuLinkItem, { render: /* @__PURE__ */ jsx(Link, { href: settingsHref }), className: "adh-avatar-menu__item", children: settingsBody }) : null;
-  return /* @__PURE__ */ jsxs(DropdownMenu, { children: [
-    /* @__PURE__ */ jsxs(
-      DropdownMenuTrigger,
-      {
-        className: "adh-avatar-menu-trigger",
-        "aria-label": `Open ${user.name} menu`,
-        children: [
-          /* @__PURE__ */ jsx("span", { className: "adh-avatar-menu-trigger__avatar-wrap", children: avatarInner }),
-          /* @__PURE__ */ jsx("span", { className: "adh-avatar-menu-trigger__chevron", "aria-hidden": "true", children: /* @__PURE__ */ jsx(ChevronDown, { className: "adh-avatar-menu-trigger__chevron-icon" }) })
-        ]
-      }
-    ),
-    /* @__PURE__ */ jsxs(DropdownMenuContent, { className: "adh-avatar-menu", align: "end", sideOffset: 8, children: [
-      /* @__PURE__ */ jsx("div", { className: "adh-avatar-menu__header", children: /* @__PURE__ */ jsx("div", { className: "adh-avatar-menu__identity", children: /* @__PURE__ */ jsx("span", { className: "adh-avatar-menu__name", children: user.fullName ? `Welcome ${firstNameOf(user.fullName)}!` : user.name }) }) }),
-      /* @__PURE__ */ jsx(DropdownMenuSeparator, {}),
-      /* @__PURE__ */ jsxs(DropdownMenuLinkItem, { render: /* @__PURE__ */ jsx(Link, { href: homeHref }), className: "adh-avatar-menu__item", children: [
-        /* @__PURE__ */ jsx(Home, { className: "adh-avatar-menu__item-icon" }),
-        /* @__PURE__ */ jsx("span", { className: "adh-avatar-menu__item-label", children: "Home" })
-      ] }),
-      profileHref && /* @__PURE__ */ jsxs(
-        DropdownMenuLinkItem,
+  const barLabel = user.fullName ? firstNameOf(user.fullName) : user.slug || user.name;
+  return (
+    // A SPLIT control, two buttons wearing one outline: the name + avatar half is a plain link
+    // Home (the most common thing anyone wants from their own avatar), the chevron half opens
+    // the account menu. Two real controls rather than one trigger with a click-target
+    // trick, so each has its own role, name and focus stop.
+    /* @__PURE__ */ jsxs("div", { className: "adh-avatar-split", children: [
+      /* @__PURE__ */ jsxs(
+        Link,
         {
-          render: /* @__PURE__ */ jsx(
-            Link,
-            {
-              href: profileHref,
-              onClick: (e) => {
-                if (e.defaultPrevented || isModifiedClick(e)) return;
-                if (slideNavigate(profileHref)) e.preventDefault();
-              }
-            }
-          ),
-          className: "adh-avatar-menu__item",
+          href: homeHref,
+          className: "adh-avatar-split__home",
+          "aria-label": `Home (${barLabel})`,
           children: [
-            /* @__PURE__ */ jsx(UserIcon, { className: "adh-avatar-menu__item-icon" }),
-            /* @__PURE__ */ jsx("span", { className: "adh-avatar-menu__item-label", children: "Profile" })
+            /* @__PURE__ */ jsx("span", { className: "adh-avatar-split__name", children: barLabel }),
+            /* @__PURE__ */ jsx("span", { className: "adh-avatar-menu-trigger__avatar-wrap", children: avatarInner })
           ]
         }
       ),
-      settingsItem && /* @__PURE__ */ jsxs(Fragment, { children: [
-        /* @__PURE__ */ jsx(DropdownMenuSeparator, {}),
-        settingsItem
-      ] }),
-      onLogout && /* @__PURE__ */ jsxs(Fragment, { children: [
-        /* @__PURE__ */ jsx(DropdownMenuSeparator, {}),
-        /* @__PURE__ */ jsxs(
-          DropdownMenuItem,
+      /* @__PURE__ */ jsxs(DropdownMenu, { children: [
+        /* @__PURE__ */ jsx(
+          DropdownMenuTrigger,
           {
-            onClick: onLogout,
-            className: "adh-avatar-menu__item",
-            children: [
-              /* @__PURE__ */ jsx(LogOut, { className: "adh-avatar-menu__item-icon" }),
-              /* @__PURE__ */ jsx("span", { className: "adh-avatar-menu__item-label", children: "Log out" })
-            ]
+            className: "adh-avatar-menu-trigger adh-avatar-split__menu",
+            "aria-label": `Open ${user.name} menu`,
+            children: /* @__PURE__ */ jsx("span", { className: "adh-avatar-menu-trigger__chevron", "aria-hidden": "true", children: /* @__PURE__ */ jsx(ChevronDown, { className: "adh-avatar-menu-trigger__chevron-icon" }) })
           }
-        )
-      ] }),
-      onDebugOptions && /* @__PURE__ */ jsxs(Fragment, { children: [
-        /* @__PURE__ */ jsx(DropdownMenuSeparator, {}),
-        /* @__PURE__ */ jsxs(
-          DropdownMenuItem,
-          {
-            onClick: onDebugOptions,
-            className: "adh-avatar-menu__item",
-            "aria-labelledby": debugLabelId,
-            "aria-describedby": debugOptionsHint ? debugHintId : void 0,
-            children: [
-              /* @__PURE__ */ jsx(Wrench, { className: "adh-avatar-menu__item-icon" }),
-              /* @__PURE__ */ jsx("span", { id: debugLabelId, className: "adh-avatar-menu__item-label", children: "Debug Options" }),
-              debugOptionsHint && /* @__PURE__ */ jsx("span", { id: debugHintId, className: "adh-avatar-menu__item-hint", children: debugOptionsHint })
-            ]
-          }
-        )
+        ),
+        /* @__PURE__ */ jsxs(DropdownMenuContent, { className: "adh-avatar-menu", align: "end", sideOffset: 8, children: [
+          /* @__PURE__ */ jsx("div", { className: "adh-avatar-menu__header", children: /* @__PURE__ */ jsx("div", { className: "adh-avatar-menu__identity", children: /* @__PURE__ */ jsx("span", { className: "adh-avatar-menu__name", children: user.fullName ? `Welcome ${firstNameOf(user.fullName)}!` : user.name }) }) }),
+          /* @__PURE__ */ jsx(DropdownMenuSeparator, {}),
+          /* @__PURE__ */ jsxs(DropdownMenuLinkItem, { render: /* @__PURE__ */ jsx(Link, { href: homeHref }), className: "adh-avatar-menu__item", children: [
+            /* @__PURE__ */ jsx(Home, { className: "adh-avatar-menu__item-icon" }),
+            /* @__PURE__ */ jsx("span", { className: "adh-avatar-menu__item-label", children: "Home" })
+          ] }),
+          profileHref && /* @__PURE__ */ jsxs(
+            DropdownMenuLinkItem,
+            {
+              render: /* @__PURE__ */ jsx(
+                Link,
+                {
+                  href: profileHref,
+                  onClick: (e) => {
+                    if (e.defaultPrevented || isModifiedClick(e)) return;
+                    if (slideNavigate(profileHref)) e.preventDefault();
+                  }
+                }
+              ),
+              className: "adh-avatar-menu__item",
+              children: [
+                /* @__PURE__ */ jsx(UserIcon, { className: "adh-avatar-menu__item-icon" }),
+                /* @__PURE__ */ jsx("span", { className: "adh-avatar-menu__item-label", children: "Profile" })
+              ]
+            }
+          ),
+          settingsItem && /* @__PURE__ */ jsxs(Fragment, { children: [
+            /* @__PURE__ */ jsx(DropdownMenuSeparator, {}),
+            settingsItem
+          ] }),
+          onLogout && /* @__PURE__ */ jsxs(Fragment, { children: [
+            /* @__PURE__ */ jsx(DropdownMenuSeparator, {}),
+            /* @__PURE__ */ jsxs(
+              DropdownMenuItem,
+              {
+                onClick: onLogout,
+                className: "adh-avatar-menu__item",
+                children: [
+                  /* @__PURE__ */ jsx(LogOut, { className: "adh-avatar-menu__item-icon" }),
+                  /* @__PURE__ */ jsx("span", { className: "adh-avatar-menu__item-label", children: "Log out" })
+                ]
+              }
+            )
+          ] }),
+          onDebugOptions && /* @__PURE__ */ jsxs(Fragment, { children: [
+            /* @__PURE__ */ jsx(DropdownMenuSeparator, {}),
+            /* @__PURE__ */ jsxs(
+              DropdownMenuItem,
+              {
+                onClick: onDebugOptions,
+                className: "adh-avatar-menu__item",
+                "aria-labelledby": debugLabelId,
+                "aria-describedby": debugOptionsHint ? debugHintId : void 0,
+                children: [
+                  /* @__PURE__ */ jsx(Wrench, { className: "adh-avatar-menu__item-icon" }),
+                  /* @__PURE__ */ jsx("span", { id: debugLabelId, className: "adh-avatar-menu__item-label", children: "Debug Options" }),
+                  debugOptionsHint && /* @__PURE__ */ jsx("span", { id: debugHintId, className: "adh-avatar-menu__item-hint", children: debugOptionsHint })
+                ]
+              }
+            )
+          ] })
+        ] })
       ] })
     ] })
-  ] });
+  );
 }
 
 // src/header/AuthButtons.tsx

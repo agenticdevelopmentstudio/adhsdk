@@ -20,8 +20,9 @@ export type AvatarMenuUser = {
 };
 export type AvatarMenuProps = {
     user: AvatarMenuUser;
-    /** Where "Home" points. The site's own post-login landing, supplied by the
-     *  registry-aware wrapper; defaults to the site root. */
+    /** Where "Home" points — both the menu's Home row and the name + avatar half of the
+     *  split control. Supplied by the registry-aware wrapper (the hub's `/home`, which lands
+     *  on the visitor's workspace); defaults to the site root. */
     homeHref?: string;
     /** Where the Profile row points, and whether it renders at all — present ⇒ the row
      *  offers it, absent ⇒ the row is omitted. This component resolves no site ids and
@@ -45,7 +46,8 @@ export type AvatarMenuProps = {
     debugOptionsHint?: string;
 };
 /**
- * The signed-in account menu: the avatar in the bar, and under it the user's name
+ * The signed-in account control: a split button in the bar — the account's first name (or
+ * slug) and avatar as a link Home, beside a chevron that opens the menu — and under it the user's name
  * plus the account destinations — Home, Profile, User Settings, Log out — and, for a
  * developer or an adh admin only, Debug Options, last and behind its own divider.
  *

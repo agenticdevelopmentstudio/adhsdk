@@ -381,6 +381,7 @@ var DEV_TOOLS_BUILD_ENABLED = DEV_BUILD;
 function AppShell({ header, children, footer, chromeGate, landingFooter }) {
   const Chrome = chromeGate ?? Fragment4;
   const bar = /* @__PURE__ */ jsx11(SiteFooter, { links: footer?.links, contact: footer?.contact, live: liveBuildIdentity() });
+  const landingChat = typeof landingFooter === "object" ? landingFooter.chat : true;
   return /* @__PURE__ */ jsx11(AppShellProviders, { children: /* @__PURE__ */ jsx11(
     AdhAppShell2,
     {
@@ -395,7 +396,7 @@ function AppShell({ header, children, footer, chromeGate, landingFooter }) {
             // bottom padding clears.
             /* @__PURE__ */ jsxs7("footer", { className: "adh-landing-footer-band", children: [
               /* @__PURE__ */ jsx11(LandingFooter, { contact: footer?.contact }),
-              /* @__PURE__ */ jsx11(FooterChat, {})
+              landingChat && /* @__PURE__ */ jsx11(FooterChat, {})
             ] })
           ),
           rest: bar

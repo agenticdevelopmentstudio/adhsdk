@@ -48,8 +48,11 @@ export declare function useSiteMenu(groups: MenuGroup[], { currentSiteId, resolv
     navigate: (item: PopoverItem) => void;
     /** The signed-in Home destination, resolved by the same route logic as every
      *  config-driven row. The one row SiteMenu still builds by hand that needs a
-     *  resolved href — everything else it renders is either a plain action (Help) or a
+     *  resolved href — everything else it renders is either {@link helpHref} or a
      *  {@link MenuGroup} the `entries` above already resolved. */
     homeHref: string;
+    /** The Help row's destination: the help site (`hub-help`) for the current env, with every
+     *  cross-site row's theme carry and SSO wrap. Help is a link, not a panel (2026-11-02). */
+    helpHref: string;
 };
 //# sourceMappingURL=useSiteMenu.d.ts.map

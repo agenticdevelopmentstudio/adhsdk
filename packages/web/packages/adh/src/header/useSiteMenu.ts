@@ -87,9 +87,12 @@ export function useSiteMenu(
   navigate: (item: PopoverItem) => void
   /** The signed-in Home destination, resolved by the same route logic as every
    *  config-driven row. The one row SiteMenu still builds by hand that needs a
-   *  resolved href — everything else it renders is either a plain action (Help) or a
+   *  resolved href — everything else it renders is either {@link helpHref} or a
    *  {@link MenuGroup} the `entries` above already resolved. */
   homeHref: string
+  /** The Help row's destination: the help site (`hub-help`) for the current env, with every
+   *  cross-site row's theme carry and SSO wrap. Help is a link, not a panel (2026-11-02). */
+  helpHref: string
 } {
   const pathname = usePathname() ?? '/'
   const router = useRouter()
@@ -460,5 +463,11 @@ export function useSiteMenu(
   // HUB_WORKSPACE_SEGMENTS for that reason, so routeHref no longer prefixes it.
   const homeHref = routeHref('/home')
 
-  return { entries, navigate, homeHref }
+  // The menu's "Help" row: the help site's root, as a named PAGE of `hub-help` (hrefFor's `path`
+  // branch), so it gets every site row's per-env host, theme carry and SSO wrap, and no
+  // workspace carry (the help site has no workspaces). On the help site itself, `/`.
+  const helpSite = getSite('hub-help')
+  const helpHref = helpSite ? hrefFor(helpSite, true, '/') : '/'
+
+  return { entries, navigate, homeHref, helpHref }
 }

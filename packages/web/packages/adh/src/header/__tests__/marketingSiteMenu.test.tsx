@@ -42,8 +42,8 @@ describe('MarketingSiteMenu', () => {
     expect(screen.queryByRole('button', { name: 'User settings' })).toBeNull()
     // Nor the "?" that used to stand in for it (Mike, 2026-10-24).
     expect(screen.queryByRole('button', { name: 'About the Agentic Developer family' })).toBeNull()
-    // Nor SiteMenu's own chrome rows: Home and the Help modal row (the one menuitem that
-    // is not a link).
+    // Nor SiteMenu's own chrome rows: Home and the chrome Help row (a second "Help" beside the
+    // help site's own row).
     expect(screen.queryByRole('menuitem', { name: /^Home/ })).toBeNull()
     for (const help of screen.getAllByRole('menuitem', { name: /^Help/ }))
       expect(help).toHaveAttribute('href')

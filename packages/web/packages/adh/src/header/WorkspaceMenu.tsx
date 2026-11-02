@@ -14,7 +14,6 @@ import {
 // Type-only, so erased: a VALUE import of the sibling would bundle a second copy of its context.
 import type { WorkspacesMenu } from './workspaces-menu'
 import { useHubPreferences } from '@agentic-toolkit/adh/header/hub-preferences'
-import { useHelp } from '@agentic-toolkit/adh/help'
 import { useHeaderLinksCollapsed } from './useHeaderLinksCollapsed'
 import { buildSiteNavEntries } from './siteNavEntries'
 import { menuIcon } from './menu-icons'
@@ -90,7 +89,6 @@ export function WorkspaceMenu({
   const router = useRouter()
   const pathname = usePathname() ?? '/'
   const { siteMenuShortcut } = useHubPreferences()
-  const openHelp = useHelp().open
   const current = menu.workspaces.find((w) => w.current)
   const label = current?.label ?? (menu.loading ? 'Loading…' : 'Workspaces')
   // "Workspace" follows a real name only: "Loading… Workspace" and "Workspaces Workspace" are
@@ -139,7 +137,7 @@ export function WorkspaceMenu({
   // Only for its `navigate`, which the phone's nav rows go through: there are no site rows (see
   // NO_SITE_GROUPS). `authenticated: true` because this menu is only ever mounted signed in
   // (SiteMenuSwitcher), so there is no auth state to pass along.
-  const { navigate: navigateSiteRow } = useSiteMenu(NO_SITE_GROUPS, {
+  const { navigate: navigateSiteRow, helpHref } = useSiteMenu(NO_SITE_GROUPS, {
     currentSiteId,
     resolveHref,
     personalSlug,
@@ -157,8 +155,12 @@ export function WorkspaceMenu({
   )
 
   const entries = useMemo<PopoverListEntry[]>(
-    () => [...navSection, ...workspaceRows, helpEntry(openHelp, HELP_SECTION)],
-    [navSection, workspaceRows, openHelp],
+    () => [
+      ...navSection,
+      ...workspaceRows,
+      helpEntry(helpHref, HELP_SECTION, currentSiteId === 'hub-help'),
+    ],
+    [navSection, workspaceRows, helpHref, currentSiteId],
   )
 
   const navigate = useCallback(

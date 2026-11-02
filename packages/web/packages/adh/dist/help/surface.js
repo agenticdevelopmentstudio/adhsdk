@@ -566,7 +566,8 @@ function renderLeaf(topic) {
 function HelpSurface({
   slug,
   basePath = "",
-  rootClearHref
+  rootClearHref,
+  startAtArea = false
 }) {
   const path = topicPathForSlug(slug) ?? [];
   const { levels, activeTopic } = buildTopicLevels(path);
@@ -585,7 +586,16 @@ function HelpSurface({
       clearHref: helpHref(basePath, pathTopics[depth - 1]?.slug ?? "")
     }
   );
-  return /* @__PURE__ */ jsx2(HelpMasterDetail, { levels: routeLevels, rootLabel: "Help", children: renderLeaf(activeTopic) });
+  const area = pathTopics[0];
+  const fromArea = startAtArea && area != null && routeLevels.length > 1;
+  return /* @__PURE__ */ jsx2(
+    HelpMasterDetail,
+    {
+      levels: fromArea ? routeLevels.slice(1) : routeLevels,
+      rootLabel: fromArea ? area.label : "Help",
+      children: renderLeaf(activeTopic)
+    }
+  );
 }
 
 // src/help/topic-icons.tsx

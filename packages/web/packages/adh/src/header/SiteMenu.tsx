@@ -32,18 +32,6 @@ import { helpEntry, settingsTrailing } from './menuChrome'
 // them. The tree itself is the subclasses' to supply (see SiteMenuProps.groups).
 import { ADMIN_MENU_GROUPS, FLEET_SECTION } from './fleetMenuGroups'
 import { StudioWordmark } from './StudioWordmark'
-// Package path (the external help entry) so no bundling cost — this pulls only the light
-// HelpContext hook, never the code-split window. Safe no-op outside a HelpProvider.
-//
-// The help subtree lives in @agentic-toolkit/adh (Task 5.5 ported it there from
-// the pre-rename @adh-shared/adh, which is how this package briefly depended on the husk).
-// Nothing
-// temporary remains: the specifier stays a package path, kept out of this bundle by the
-// `'@agentic-toolkit/adh/*'` wildcard in tsup.config.ts's `external` — not spelled out
-// individually, because that list names only modules holding module-level MUTABLE state
-// (see `header/recents` above). This is a React context, and the wildcard is enough to
-// keep it a single HelpContext shared with whichever AppShell mounted the provider.
-import { useHelp } from '@agentic-toolkit/adh/help'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Declarative config types. A config-only subclass (MarketingSiteMenu /
@@ -257,7 +245,7 @@ export function SiteMenu({
   // The resolved Hub-core rows + navigation + the Home destination — env-aware,
   // SSO-wrapped, `current`-marked, via the shared {@link useSiteMenu} engine (single
   // source of truth for the link logic).
-  const { entries, navigate, homeHref } = useSiteMenu(tree, {
+  const { entries, navigate, homeHref, helpHref } = useSiteMenu(tree, {
     currentSiteId,
     resolveHref,
     personalSlug,
@@ -376,10 +364,9 @@ export function SiteMenu({
     [linksCollapsed, navLinks, authenticated, homeHref, pathname],
   )
 
-  // The Help modal opener — an action row (no navigation), always present regardless of
-  // auth. Sits at the foot of the top section (section 0), just above the first divider.
-  // The row itself is {@link helpEntry}'s, shared with WorkspaceMenu.
-  const openHelp = useHelp().open
+  // The Help row — a link to the help site, always present regardless of auth. Sits at the
+  // foot of the top section (section 0), just above the first divider. The row itself is
+  // {@link helpEntry}'s, shared with WorkspaceMenu.
 
   // The full ordered list: the site's own nav (phone only — see navSection), the auth
   // top section closing on the Help row, then the fleet block — Recents at its head,
@@ -401,11 +388,11 @@ export function SiteMenu({
     () => [
       ...navSection,
       ...topSection,
-      ...(omitChromeRows ? [] : [helpEntry(openHelp, 0)]),
+      ...(omitChromeRows ? [] : [helpEntry(helpHref, 0, currentSiteId === 'hub-help')]),
       ...recentsSection,
       ...entries,
     ],
-    [navSection, topSection, recentsSection, entries, openHelp, omitChromeRows],
+    [navSection, topSection, recentsSection, entries, helpHref, currentSiteId, omitChromeRows],
   )
 
   // Open the single shared sites-overview popover (rendered by the always-present

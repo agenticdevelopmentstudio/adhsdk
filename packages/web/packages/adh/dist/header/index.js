@@ -50,82 +50,100 @@ function AvatarMenu({
     /* @__PURE__ */ jsx("span", { className: "adh-avatar-menu__item-label", children: "User Settings" })
   ] });
   const settingsItem = onSettings ? /* @__PURE__ */ jsx(DropdownMenuItem, { onClick: onSettings, className: "adh-avatar-menu__item", children: settingsBody }) : settingsHref ? /* @__PURE__ */ jsx(DropdownMenuLinkItem, { render: /* @__PURE__ */ jsx(Link, { href: settingsHref }), className: "adh-avatar-menu__item", children: settingsBody }) : null;
-  return /* @__PURE__ */ jsxs(DropdownMenu, { children: [
-    /* @__PURE__ */ jsxs(
-      DropdownMenuTrigger,
-      {
-        className: "adh-avatar-menu-trigger",
-        "aria-label": `Open ${user.name} menu`,
-        children: [
-          /* @__PURE__ */ jsx("span", { className: "adh-avatar-menu-trigger__avatar-wrap", children: avatarInner }),
-          /* @__PURE__ */ jsx("span", { className: "adh-avatar-menu-trigger__chevron", "aria-hidden": "true", children: /* @__PURE__ */ jsx(ChevronDown, { className: "adh-avatar-menu-trigger__chevron-icon" }) })
-        ]
-      }
-    ),
-    /* @__PURE__ */ jsxs(DropdownMenuContent, { className: "adh-avatar-menu", align: "end", sideOffset: 8, children: [
-      /* @__PURE__ */ jsx("div", { className: "adh-avatar-menu__header", children: /* @__PURE__ */ jsx("div", { className: "adh-avatar-menu__identity", children: /* @__PURE__ */ jsx("span", { className: "adh-avatar-menu__name", children: user.fullName ? `Welcome ${firstNameOf(user.fullName)}!` : user.name }) }) }),
-      /* @__PURE__ */ jsx(DropdownMenuSeparator, {}),
-      /* @__PURE__ */ jsxs(DropdownMenuLinkItem, { render: /* @__PURE__ */ jsx(Link, { href: homeHref }), className: "adh-avatar-menu__item", children: [
-        /* @__PURE__ */ jsx(Home, { className: "adh-avatar-menu__item-icon" }),
-        /* @__PURE__ */ jsx("span", { className: "adh-avatar-menu__item-label", children: "Home" })
-      ] }),
-      profileHref && /* @__PURE__ */ jsxs(
-        DropdownMenuLinkItem,
+  const barLabel = user.fullName ? firstNameOf(user.fullName) : user.slug || user.name;
+  return (
+    // A SPLIT control, two buttons wearing one outline: the name + avatar half is a plain link
+    // Home (the most common thing anyone wants from their own avatar), the chevron half opens
+    // the account menu. Two real controls rather than one trigger with a click-target
+    // trick, so each has its own role, name and focus stop.
+    /* @__PURE__ */ jsxs("div", { className: "adh-avatar-split", children: [
+      /* @__PURE__ */ jsxs(
+        Link,
         {
-          render: /* @__PURE__ */ jsx(
-            Link,
-            {
-              href: profileHref,
-              onClick: (e) => {
-                if (e.defaultPrevented || isModifiedClick(e)) return;
-                if (slideNavigate(profileHref)) e.preventDefault();
-              }
-            }
-          ),
-          className: "adh-avatar-menu__item",
+          href: homeHref,
+          className: "adh-avatar-split__home",
+          "aria-label": `Home (${barLabel})`,
           children: [
-            /* @__PURE__ */ jsx(UserIcon, { className: "adh-avatar-menu__item-icon" }),
-            /* @__PURE__ */ jsx("span", { className: "adh-avatar-menu__item-label", children: "Profile" })
+            /* @__PURE__ */ jsx("span", { className: "adh-avatar-split__name", children: barLabel }),
+            /* @__PURE__ */ jsx("span", { className: "adh-avatar-menu-trigger__avatar-wrap", children: avatarInner })
           ]
         }
       ),
-      settingsItem && /* @__PURE__ */ jsxs(Fragment, { children: [
-        /* @__PURE__ */ jsx(DropdownMenuSeparator, {}),
-        settingsItem
-      ] }),
-      onLogout && /* @__PURE__ */ jsxs(Fragment, { children: [
-        /* @__PURE__ */ jsx(DropdownMenuSeparator, {}),
-        /* @__PURE__ */ jsxs(
-          DropdownMenuItem,
+      /* @__PURE__ */ jsxs(DropdownMenu, { children: [
+        /* @__PURE__ */ jsx(
+          DropdownMenuTrigger,
           {
-            onClick: onLogout,
-            className: "adh-avatar-menu__item",
-            children: [
-              /* @__PURE__ */ jsx(LogOut, { className: "adh-avatar-menu__item-icon" }),
-              /* @__PURE__ */ jsx("span", { className: "adh-avatar-menu__item-label", children: "Log out" })
-            ]
+            className: "adh-avatar-menu-trigger adh-avatar-split__menu",
+            "aria-label": `Open ${user.name} menu`,
+            children: /* @__PURE__ */ jsx("span", { className: "adh-avatar-menu-trigger__chevron", "aria-hidden": "true", children: /* @__PURE__ */ jsx(ChevronDown, { className: "adh-avatar-menu-trigger__chevron-icon" }) })
           }
-        )
-      ] }),
-      onDebugOptions && /* @__PURE__ */ jsxs(Fragment, { children: [
-        /* @__PURE__ */ jsx(DropdownMenuSeparator, {}),
-        /* @__PURE__ */ jsxs(
-          DropdownMenuItem,
-          {
-            onClick: onDebugOptions,
-            className: "adh-avatar-menu__item",
-            "aria-labelledby": debugLabelId,
-            "aria-describedby": debugOptionsHint2 ? debugHintId : void 0,
-            children: [
-              /* @__PURE__ */ jsx(Wrench, { className: "adh-avatar-menu__item-icon" }),
-              /* @__PURE__ */ jsx("span", { id: debugLabelId, className: "adh-avatar-menu__item-label", children: "Debug Options" }),
-              debugOptionsHint2 && /* @__PURE__ */ jsx("span", { id: debugHintId, className: "adh-avatar-menu__item-hint", children: debugOptionsHint2 })
-            ]
-          }
-        )
+        ),
+        /* @__PURE__ */ jsxs(DropdownMenuContent, { className: "adh-avatar-menu", align: "end", sideOffset: 8, children: [
+          /* @__PURE__ */ jsx("div", { className: "adh-avatar-menu__header", children: /* @__PURE__ */ jsx("div", { className: "adh-avatar-menu__identity", children: /* @__PURE__ */ jsx("span", { className: "adh-avatar-menu__name", children: user.fullName ? `Welcome ${firstNameOf(user.fullName)}!` : user.name }) }) }),
+          /* @__PURE__ */ jsx(DropdownMenuSeparator, {}),
+          /* @__PURE__ */ jsxs(DropdownMenuLinkItem, { render: /* @__PURE__ */ jsx(Link, { href: homeHref }), className: "adh-avatar-menu__item", children: [
+            /* @__PURE__ */ jsx(Home, { className: "adh-avatar-menu__item-icon" }),
+            /* @__PURE__ */ jsx("span", { className: "adh-avatar-menu__item-label", children: "Home" })
+          ] }),
+          profileHref && /* @__PURE__ */ jsxs(
+            DropdownMenuLinkItem,
+            {
+              render: /* @__PURE__ */ jsx(
+                Link,
+                {
+                  href: profileHref,
+                  onClick: (e) => {
+                    if (e.defaultPrevented || isModifiedClick(e)) return;
+                    if (slideNavigate(profileHref)) e.preventDefault();
+                  }
+                }
+              ),
+              className: "adh-avatar-menu__item",
+              children: [
+                /* @__PURE__ */ jsx(UserIcon, { className: "adh-avatar-menu__item-icon" }),
+                /* @__PURE__ */ jsx("span", { className: "adh-avatar-menu__item-label", children: "Profile" })
+              ]
+            }
+          ),
+          settingsItem && /* @__PURE__ */ jsxs(Fragment, { children: [
+            /* @__PURE__ */ jsx(DropdownMenuSeparator, {}),
+            settingsItem
+          ] }),
+          onLogout && /* @__PURE__ */ jsxs(Fragment, { children: [
+            /* @__PURE__ */ jsx(DropdownMenuSeparator, {}),
+            /* @__PURE__ */ jsxs(
+              DropdownMenuItem,
+              {
+                onClick: onLogout,
+                className: "adh-avatar-menu__item",
+                children: [
+                  /* @__PURE__ */ jsx(LogOut, { className: "adh-avatar-menu__item-icon" }),
+                  /* @__PURE__ */ jsx("span", { className: "adh-avatar-menu__item-label", children: "Log out" })
+                ]
+              }
+            )
+          ] }),
+          onDebugOptions && /* @__PURE__ */ jsxs(Fragment, { children: [
+            /* @__PURE__ */ jsx(DropdownMenuSeparator, {}),
+            /* @__PURE__ */ jsxs(
+              DropdownMenuItem,
+              {
+                onClick: onDebugOptions,
+                className: "adh-avatar-menu__item",
+                "aria-labelledby": debugLabelId,
+                "aria-describedby": debugOptionsHint2 ? debugHintId : void 0,
+                children: [
+                  /* @__PURE__ */ jsx(Wrench, { className: "adh-avatar-menu__item-icon" }),
+                  /* @__PURE__ */ jsx("span", { id: debugLabelId, className: "adh-avatar-menu__item-label", children: "Debug Options" }),
+                  debugOptionsHint2 && /* @__PURE__ */ jsx("span", { id: debugHintId, className: "adh-avatar-menu__item-hint", children: debugOptionsHint2 })
+                ]
+              }
+            )
+          ] })
+        ] })
       ] })
     ] })
-  ] });
+  );
 }
 
 // src/header/AuthButtons.tsx
@@ -1717,7 +1735,9 @@ function useSiteMenu(groups, { currentSiteId, resolveHref, personalSlug, authent
     [router]
   );
   const homeHref = routeHref("/home");
-  return { entries, navigate, homeHref };
+  const helpSite = getSite2("hub-help");
+  const helpHref = helpSite ? hrefFor(helpSite, true, "/") : "/";
+  return { entries, navigate, homeHref, helpHref };
 }
 
 // src/header/useHeaderLinksCollapsed.ts
@@ -1758,11 +1778,11 @@ function buildSiteNavEntries(navLinks, { homeHref, pathname }) {
 // src/header/menuChrome.tsx
 import { Settings as Settings3 } from "lucide-react";
 import { jsx as jsx13 } from "react/jsx-runtime";
-function helpEntry(openHelp, section) {
+function helpEntry(href, section, current = false) {
   return {
     kind: "leaf",
     section,
-    item: { key: "help", label: "Help", icon: menuIcon("help"), onSelect: () => openHelp() }
+    item: { key: "help", label: "Help", icon: menuIcon("help"), href, current }
   };
 }
 function settingsTrailing({
@@ -2001,7 +2021,6 @@ function StudioWordmark() {
 }
 
 // src/header/SiteMenu.tsx
-import { useHelp } from "@agentic-toolkit/adh/help";
 import { jsx as jsx15 } from "react/jsx-runtime";
 function SiteMenu({
   groups,
@@ -2027,7 +2046,7 @@ function SiteMenu({
     () => userIsAdmin === true ? [...groups, ...ADMIN_MENU_GROUPS] : groups,
     [groups, userIsAdmin]
   );
-  const { entries, navigate, homeHref } = useSiteMenu(tree, {
+  const { entries, navigate, homeHref, helpHref } = useSiteMenu(tree, {
     currentSiteId,
     resolveHref,
     personalSlug,
@@ -2110,16 +2129,15 @@ function SiteMenu({
     }) : [],
     [linksCollapsed, navLinks, authenticated, homeHref, pathname]
   );
-  const openHelp = useHelp().open;
   const allEntries = useMemo3(
     () => [
       ...navSection,
       ...topSection,
-      ...omitChromeRows ? [] : [helpEntry(openHelp, 0)],
+      ...omitChromeRows ? [] : [helpEntry(helpHref, 0, currentSiteId === "hub-help")],
       ...recentsSection,
       ...entries
     ],
-    [navSection, topSection, recentsSection, entries, openHelp, omitChromeRows]
+    [navSection, topSection, recentsSection, entries, helpHref, currentSiteId, omitChromeRows]
   );
   function showOverview() {
     requestAnimationFrame(() => {
@@ -2220,7 +2238,6 @@ import {
   NavigationPopover as NavigationPopover3
 } from "@agentic-toolkit/adh/header";
 import { useHubPreferences as useHubPreferences2 } from "@agentic-toolkit/adh/header/hub-preferences";
-import { useHelp as useHelp2 } from "@agentic-toolkit/adh/help";
 import { Fragment as Fragment6, jsx as jsx18, jsxs as jsxs9 } from "react/jsx-runtime";
 var WORKSPACES_SECTION = 0;
 var HELP_SECTION2 = 1;
@@ -2240,7 +2257,6 @@ function WorkspaceMenu({
   const router = useRouter2();
   const pathname = usePathname4() ?? "/";
   const { siteMenuShortcut } = useHubPreferences2();
-  const openHelp = useHelp2().open;
   const current = menu.workspaces.find((w) => w.current);
   const label = current?.label ?? (menu.loading ? "Loading\u2026" : "Workspaces");
   const suffixed = current != null && !/\bworkspace$/i.test(label.trim());
@@ -2270,7 +2286,7 @@ function WorkspaceMenu({
       }
     }));
   }, [menu]);
-  const { navigate: navigateSiteRow } = useSiteMenu(NO_SITE_GROUPS, {
+  const { navigate: navigateSiteRow, helpHref } = useSiteMenu(NO_SITE_GROUPS, {
     currentSiteId,
     resolveHref,
     personalSlug,
@@ -2283,8 +2299,12 @@ function WorkspaceMenu({
     [linksCollapsed, navLinks, pathname]
   );
   const entries = useMemo4(
-    () => [...navSection, ...workspaceRows, helpEntry(openHelp, HELP_SECTION2)],
-    [navSection, workspaceRows, openHelp]
+    () => [
+      ...navSection,
+      ...workspaceRows,
+      helpEntry(helpHref, HELP_SECTION2, currentSiteId === "hub-help")
+    ],
+    [navSection, workspaceRows, helpHref, currentSiteId]
   );
   const navigate = useCallback4(
     (item) => {
@@ -2544,6 +2564,7 @@ function SiteHeader({
   const hubAuthHref = (path) => `${resolveHubHref(path)}?return_to=${encodeURIComponent(selfReturn)}`;
   const resolvedLoginHref = loginHref ?? (onLogin ? void 0 : hubAuthHref("/login"));
   const resolvedSignupHref = signupHref ?? (onSignup ? void 0 : hubAuthHref("/signup"));
+  const accountHomeHref = siteId === "hub" ? "/home" : (resolveSwitchHref ?? ((href) => href))(resolveHubHref("/home"));
   const switcherSettingsHref = resolvedOnSettings ? void 0 : settingsHref ?? resolveHubHref("/settings");
   return /* @__PURE__ */ jsxs11(Fragment8, { children: [
     /* @__PURE__ */ jsx21(
@@ -2576,7 +2597,7 @@ function SiteHeader({
         trailingNavLinks,
         previewNotice,
         previewDetail,
-        homeHref: siteHomePath(siteId),
+        homeHref: accountHomeHref,
         profileHref: user?.slug && hasProfileRoute(siteId) ? `/${encodeURIComponent(user.slug)}/profile` : void 0,
         preAuthLinks: landingDetailsHref !== void 0 && onLandingPage ? /* @__PURE__ */ jsx21("a", { href: landingDetailsHref, className: "adh-header__nav-link adh-header__nav-link--details", children: "Details" }) : void 0,
         accountActions: user != null ? /* @__PURE__ */ jsx21(NotificationBell, {}) : void 0,
