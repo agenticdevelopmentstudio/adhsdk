@@ -147,6 +147,36 @@ public final class ProviderSpool: @unchecked Sendable {
         }
     }
 
+    /// Moves the quarantined rows whose reason starts with one of `reasonPrefixes`
+    /// (every row when nil) back to the spool with attempts 0, oldest first, in one
+    /// transaction. Returns how many moved.
+    @discardableResult
+    public func requeueQuarantined(reasonPrefixes: [String]?) throws -> Int {
+        if let reasonPrefixes, reasonPrefixes.isEmpty { return 0 }
+        let filter = Self.reasonFilter(reasonPrefixes)
+        return try pool.write { conn in
+            try conn.execute(sql: """
+                INSERT INTO spooled_record(source_kind, dedup_key, received_at, payload, attempts)
+                SELECT source_kind, dedup_key, received_at, payload, 0 FROM quarantined_record
+                \(filter.sql) ORDER BY id ASC
+                """, arguments: filter.arguments)
+            try conn.execute(sql: "DELETE FROM quarantined_record \(filter.sql)", arguments: filter.arguments)
+            return conn.changesCount
+        }
+    }
+
+    /// Deletes these quarantined rows. Only for a caller that has proved each
+    /// record's bytes are kept elsewhere (the raw archive): the spool never drops a
+    /// record on its own.
+    public func deleteQuarantined(ids: [Int64]) throws {
+        guard !ids.isEmpty else { return }
+        try pool.write { conn in
+            for id in ids {
+                try conn.execute(sql: "DELETE FROM quarantined_record WHERE id = ?", arguments: [id])
+            }
+        }
+    }
+
     public func setSourceState(_ key: String, _ value: Data) throws {
         try pool.write { conn in try Self.upsertState(key, value, conn) }
     }
@@ -178,13 +208,14 @@ public final class ProviderSpool: @unchecked Sendable {
         }
     }
 
-    public func quarantined(limit: Int) throws -> [QuarantinedRecord] {
+    /// Quarantined rows with ids greater than `afterID`, oldest first, at most `limit`.
+    public func quarantined(limit: Int, afterID: Int64 = 0) throws -> [QuarantinedRecord] {
         guard limit > 0 else { return [] }
         return try pool.read { conn in
             let rows = try Row.fetchAll(conn, sql: """
                 SELECT id, source_kind, dedup_key, received_at, payload, reason, quarantined_at
-                FROM quarantined_record ORDER BY id ASC LIMIT ?
-                """, arguments: [limit])
+                FROM quarantined_record WHERE id > ? ORDER BY id ASC LIMIT ?
+                """, arguments: [afterID, limit])
             return rows.map { row in
                 let when: Double = row["quarantined_at"]
                 return QuarantinedRecord(
@@ -233,6 +264,20 @@ public final class ProviderSpool: @unchecked Sendable {
                     record.sourceKind, record.dedupKey, record.receivedAt.timeIntervalSince1970, record.payload
                 ])
         }
+    }
+
+    /// `WHERE` clause matching a reason prefix (exact characters, no `LIKE`
+    /// wildcards), or no clause for nil.
+    private static func reasonFilter(_ prefixes: [String]?) -> (sql: String, arguments: StatementArguments) {
+        guard let prefixes else { return ("", []) }
+        let clauses = prefixes.map { _ in "substr(reason, 1, ?) = ?" }.joined(separator: " OR ")
+        var values: [any DatabaseValueConvertible] = []
+        for prefix in prefixes {
+            // SQLite's substr counts code points on TEXT.
+            values.append(prefix.unicodeScalars.count)
+            values.append(prefix)
+        }
+        return ("WHERE \(clauses)", StatementArguments(values))
     }
 
     private static func upsertState(_ key: String, _ value: Data, _ conn: Database) throws {

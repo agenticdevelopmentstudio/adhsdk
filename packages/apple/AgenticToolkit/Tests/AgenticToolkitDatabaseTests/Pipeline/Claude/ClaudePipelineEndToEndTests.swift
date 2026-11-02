@@ -125,11 +125,15 @@ final class ClaudePipelineEndToEndTests: XCTestCase {
 
     // MARK: - Dumps
 
+    /// Columns stamped with the wall clock when the row is written (`datetime('now')`),
+    /// so two databases built a second apart differ there and nowhere else.
+    private static let wallClockColumns: Set<String> = ["updated_at", "started_at", "applied_at"]
+
     private func dump(_ database: DaemonDatabase, table: String) throws -> [String] {
         try database.write { conn in
             let columns = try Row.fetchAll(conn, sql: "PRAGMA table_info(\(table))")
                 .map { $0["name"] as String }
-                .filter { $0 != "updated_at" }
+                .filter { !Self.wallClockColumns.contains($0) }
             let list = columns.map { "\"\($0)\"" }.joined(separator: ", ")
             return try Row.fetchAll(conn, sql: "SELECT \(list) FROM \(table) ORDER BY \(list)")
                 .map { row in zip(columns, row.databaseValues).map { "\($0)=\($1)" }.joined(separator: " ") }
@@ -191,6 +195,60 @@ final class ClaudePipelineEndToEndTests: XCTestCase {
         // The database hands Tasks 6-9 the same store and archive.
         XCTAssertTrue(assembly.database.eventReads === assembly.handles.store)
         XCTAssertTrue(assembly.database.rawArchive === assembly.handles.archive)
+
+        // Review M8: session_metrics carries the transcript's token totals, and a
+        // second batch adds to them rather than replacing them. turn_count counts
+        // the user line's turn too, as the legacy transcript_turns count does.
+        XCTAssertEqual(try metrics(assembly.database), Metrics(
+            input: 4, output: 12, cacheRead: 18_000, cacheCreation: 2_400, turns: 2, model: "claude-opus-4-1"))
+        try appendSecondAssistantTurn(assembly)
+        XCTAssertEqual(try assembly.handles.pollTranscripts(), 1)
+        XCTAssertFalse(assembly.handles.drainer.drainUntilEmpty().failed)
+        XCTAssertEqual(try metrics(assembly.database), Metrics(
+            input: 8, output: 24, cacheRead: 36_000, cacheCreation: 4_800, turns: 3, model: "claude-opus-4-1"))
+    }
+
+    // MARK: - Session metrics
+
+    private struct Metrics: Equatable {
+        let input: Int
+        let output: Int
+        let cacheRead: Int
+        let cacheCreation: Int
+        let turns: Int
+        let model: String
+    }
+
+    private func metrics(_ database: DaemonDatabase) throws -> Metrics? {
+        try database.write { conn in
+            try Row.fetchOne(conn, sql: """
+                SELECT total_input_tokens, total_output_tokens, cache_read_tokens, cache_creation_tokens,
+                       turn_count, model
+                FROM session_metrics WHERE session_id = ?
+                """, arguments: [Self.sessionID]).map { row in
+                Metrics(input: row["total_input_tokens"], output: row["total_output_tokens"],
+                        cacheRead: row["cache_read_tokens"], cacheCreation: row["cache_creation_tokens"],
+                        turns: row["turn_count"], model: row["model"])
+            }
+        }
+    }
+
+    /// Appends the assistant fixture again as a new message (its own message id,
+    /// uuid and a later timestamp) to the session's transcript.
+    private func appendSecondAssistantTurn(_ assembly: Assembly) throws {
+        let line = try String(
+            contentsOf: Self.fixtures.appendingPathComponent("transcripts/assistant.jsonl"), encoding: .utf8)
+            .trimmingCharacters(in: .newlines)
+            .replacingOccurrences(of: "msg_01XyZAbCdEfGhIjKlMnOpQrS", with: "msg_02XyZAbCdEfGhIjKlMnOpQrS")
+            .replacingOccurrences(of: "0a1b2c3d-0002-4000-8000-000000000002",
+                                  with: "0a1b2c3d-0003-4000-8000-000000000003")
+            .replacingOccurrences(of: "2026-10-30T12:00:05.000Z", with: "2026-10-30T12:00:09.000Z")
+        let file = assembly.projectsDirectory
+            .appendingPathComponent("-Users-dev-work-myapp/\(Self.sessionID).jsonl")
+        let handle = try FileHandle(forWritingTo: file)
+        defer { try? handle.close() }
+        try handle.seekToEnd()
+        try handle.write(contentsOf: Data((line + "\n").utf8))
     }
 
     func testCaptureSpoolsAHookRecordAndWakesTheDrainer() throws {
@@ -240,5 +298,153 @@ final class ClaudePipelineEndToEndTests: XCTestCase {
             XCTAssertEqual(try restart.archive.count(), Self.hookStems.count + Self.transcriptStems.count, "\(step)")
             XCTAssertEqual(try dumpAll(crashed.database), expected, "\(step): session database differs")
         }
+    }
+}
+
+// MARK: - Recovery: legacy spool, quarantine, deferred drop files
+
+extension ClaudePipelineEndToEndTests {
+
+    private func parsedHook(_ stem: String) throws -> ParsedEvent {
+        let data = try Data(contentsOf: Self.fixtures.appendingPathComponent("hooks/\(stem).json"))
+        guard case .event(let parsed) = ParseResult.parse(envelopeJSON: String(bytes: data, encoding: .utf8) ?? "")
+        else {
+            throw CocoaError(.fileReadCorruptFile)
+        }
+        return parsed
+    }
+
+    /// Appends one record to the spool and quarantines it with `reason`.
+    private func quarantine(_ record: RawRecord, reason: String, in spool: ProviderSpool) throws {
+        try spool.append([record])
+        let pending = try spool.pendingBatch(limit: 100)
+        let id = try XCTUnwrap(pending.last(where: { $0.record.dedupKey == record.dedupKey })?.id)
+        try spool.quarantine(id: id, reason: reason)
+    }
+
+    private func hookRecord(_ key: String, payload: Data) -> RawRecord {
+        RawRecord(provider: ClaudeProvider.name, sourceKind: ClaudeProvider.legacyHookKind,
+                  dedupKey: key, receivedAt: Date(timeIntervalSince1970: 1_793_400_000), payload: payload)
+    }
+
+    /// Review F3: a crash between the Claude-spool append and the legacy delete
+    /// leaves the rows in both; adopting again re-appends them under the same keys,
+    /// and the archive keeps one copy of each.
+    func testLegacySpoolAdoptionIsSafeAcrossACrashBetweenAppendAndDelete() throws {
+        let assembly = try assemble("legacy")
+        let legacy = try IngestSpool(path: assembly.root.appendingPathComponent("ingest.db").path)
+        for stem in ["SessionStart", "UserPromptSubmit", "Stop"] {
+            try legacy.enqueue(try parsedHook(stem))
+        }
+
+        struct Crash: Error {}
+        XCTAssertThrowsError(try assembly.handles.adoptLegacySpool(legacy, afterAppend: { throw Crash() }))
+        XCTAssertEqual(legacy.pendingCount(), 3, "the legacy rows went before the crash")
+        XCTAssertEqual(try assembly.handles.spool.pendingCount(), 3)
+
+        XCTAssertEqual(try assembly.handles.adoptLegacySpool(legacy), 3)
+        XCTAssertEqual(legacy.pendingCount(), 0)
+        XCTAssertEqual(try assembly.handles.spool.pendingCount(), 6)
+        XCTAssertEqual(try assembly.handles.adoptLegacySpool(legacy), 0, "nothing left to move")
+
+        let outcome = assembly.handles.drainer.drainUntilEmpty()
+        XCTAssertFalse(outcome.failed, outcome.failureReason ?? "")
+        XCTAssertEqual(try assembly.handles.spool.quarantinedCount(), 0)
+        XCTAssertEqual(try assembly.handles.archive.count(), 3)
+        let keys = try assembly.handles.archive.records(after: 0, limit: 10).map(\.record.dedupKey)
+        XCTAssertTrue(keys.allSatisfy { $0.hasPrefix("cap-legacy-") }, "\(keys)")
+        XCTAssertEqual(try count(
+            assembly.database, "SELECT COUNT(*) FROM sessions WHERE session_id = '\(Self.sessionID)'"), 1)
+        XCTAssertEqual(try count(assembly.database, "SELECT COUNT(*) FROM event_log"), 0)
+    }
+
+    func testLegacyDedupKeyIsDerivedFromTheRowAlone() {
+        let event = SpooledEvent(id: 42, eventType: "Stop", envelope: Data(), attempts: 0,
+                                 receivedAt: Date(timeIntervalSince1970: 1_793_400_000.1234))
+        XCTAssertEqual(ClaudePipelineHandles.legacyDedupKey(event), "cap-legacy-42-1793400000123")
+        XCTAssertEqual(ClaudePipelineHandles.legacyDedupKey(event), ClaudePipelineHandles.legacyDedupKey(event))
+    }
+
+    /// Review F1(b): the startup requeue takes back what a destination outage
+    /// quarantined (a sink, the events.db write) and leaves what was refused for
+    /// itself; the manual retry (F1(c)) takes back everything, and a record that
+    /// fails again is quarantined again, never lost.
+    func testTransientRequeueTakesBackOnlyOutageFailures() throws {
+        let assembly = try assemble("requeue")
+        let spool = assembly.handles.spool
+        let start = try parsedHook("SessionStart").envelopeJSON()
+        let stop = try parsedHook("Stop").envelopeJSON()
+        try quarantine(hookRecord("sink-1", payload: start),
+                       reason: "\(PipelineDrainer.sinkFailurePrefix)ClaudeMainDBSink failed: busy", in: spool)
+        try quarantine(hookRecord("store-1", payload: stop),
+                       reason: "\(PipelineDrainer.storeFailurePrefix)disk I/O error", in: spool)
+        try quarantine(hookRecord("bad-1", payload: Data("not json".utf8)),
+                       reason: "invalid JSON", in: spool)
+        try quarantine(hookRecord("conflict-1", payload: start),
+                       reason: "dedup-key conflict: conflict-1", in: spool)
+        XCTAssertEqual(assembly.handles.quarantinedCount(), 4)
+
+        XCTAssertEqual(try assembly.handles.requeueTransientQuarantine(), 2)
+        XCTAssertEqual(try spool.pendingCount(), 2)
+        let reasons = try spool.quarantined(limit: 10).map(\.reason)
+        XCTAssertEqual(reasons, ["invalid JSON", "dedup-key conflict: conflict-1"])
+        XCTAssertFalse(assembly.handles.drainer.drainUntilEmpty().failed)
+        XCTAssertNotNil(try assembly.handles.archive.id(forDedupKey: "sink-1"))
+        XCTAssertNotNil(try assembly.handles.archive.id(forDedupKey: "store-1"))
+
+        XCTAssertEqual(assembly.handles.requeueAllQuarantined(), 2)
+        XCTAssertEqual(assembly.handles.quarantinedCount(), 0)
+        // A record that keeps failing burns one attempt per call, so drain once per
+        // attempt it has.
+        for _ in 0..<ProviderSpool.maxAttempts {
+            XCTAssertFalse(assembly.handles.drainer.drainUntilEmpty().failed)
+        }
+        // The bad record fails again and is parked again; the other one drains.
+        XCTAssertEqual(try spool.quarantined(limit: 10).map(\.record.dedupKey), ["bad-1"])
+        XCTAssertEqual(try spool.pendingCount(), 0)
+    }
+
+    /// Review F1(d): clear deletes a quarantined record only when the archive holds
+    /// its key with the same bytes; one never archived, or archived with different
+    /// bytes, stays.
+    func testClearDeletesOnlyQuarantinedRecordsTheArchiveHoldsVerbatim() throws {
+        let assembly = try assemble("clear")
+        let spool = assembly.handles.spool
+        try assembly.handles.capture(try parsedHook("SessionStart"))
+        XCTAssertFalse(assembly.handles.drainer.drainUntilEmpty().failed)
+        let archived = try XCTUnwrap(try assembly.handles.archive.records(after: 0, limit: 1).first?.record)
+
+        try quarantine(archived, reason: "sink X failed: y", in: spool)
+        try quarantine(hookRecord(archived.dedupKey, payload: Data("other bytes".utf8)),
+                       reason: "dedup-key conflict: x", in: spool)
+        try quarantine(hookRecord("never-archived", payload: archived.payload),
+                       reason: "invalid JSON", in: spool)
+
+        XCTAssertEqual(assembly.handles.clearArchivedQuarantine(), 1)
+        let kept = try spool.quarantined(limit: 10)
+        XCTAssertEqual(kept.map(\.record.dedupKey), [archived.dedupKey, "never-archived"])
+        XCTAssertEqual(kept.first?.record.payload, Data("other bytes".utf8))
+        XCTAssertEqual(assembly.handles.clearArchivedQuarantine(), 0)
+    }
+
+    /// Review M6: a drop file too young on the watcher's poll is spooled by the one
+    /// re-wake scheduled after `minimumAge`, with no further poll from outside.
+    func testDeferredDropFileIsSpooledByTheScheduledRewake() throws {
+        let assembly = try assemble("rewake")
+        try FileManager.default.createDirectory(at: assembly.dropDirectory, withIntermediateDirectories: true)
+        let data = try Data(contentsOf: Self.fixtures.appendingPathComponent("hooks/SessionStart.json"))
+        try data.write(to: assembly.dropDirectory.appendingPathComponent("1793400000000-00000000.json"))
+
+        XCTAssertEqual(try assembly.handles.pollHookDrops(), 0, "a fresh file must wait for minimumAge")
+        XCTAssertEqual(try assembly.handles.spool.pendingCount(), 0)
+
+        let deadline = Date().addingTimeInterval(assembly.handles.hookSource.minimumAge + 5)
+        var pending = 0
+        while Date() < deadline {
+            pending = try assembly.handles.spool.pendingCount()
+            if pending > 0 { break }
+            Thread.sleep(forTimeInterval: 0.05)
+        }
+        XCTAssertEqual(pending, 1, "the deferred file was not picked up by the re-wake")
     }
 }

@@ -1,6 +1,7 @@
 #if canImport(AgenticToolkitCore)
 import AgenticToolkitCore
 import Foundation
+import OSLog
 
 /// The running Claude provider pipeline: its spool, archive, event store, drainer
 /// and the two sources that feed it. The runtime builds one when it opens and the
@@ -9,7 +10,7 @@ import Foundation
 /// Every input path ends the same way: append to the spool, then wake the drainer
 /// (`IngestSource`'s waking contract). Transcript polls are serialized, so the
 /// periodic sweep and the tailer's per-file wake never read one file's cursor at
-/// the same time.
+/// the same time; hook-drop polls are serialized the same way.
 public struct ClaudePipelineHandles: Sendable {
     public let spool: ProviderSpool
     public let archive: RawArchive
@@ -18,7 +19,15 @@ public struct ClaudePipelineHandles: Sendable {
     public let hookSource: ClaudeHookDropSource
     public let transcriptSource: ClaudeTranscriptSource
 
-    private let transcriptLock = TranscriptPollLock()
+    private let transcriptLock = PollLock()
+    private let hookLock = PollLock()
+    private let rewake = RewakeGate()
+
+    /// Rows moved from the legacy spool per transaction.
+    static let legacyBatchSize = 200
+    /// Added to the hook source's `minimumAge` before a deferred drop file is
+    /// looked at again, so it is old enough by then.
+    static let rewakeMargin: TimeInterval = 0.05
 
     /// Builds the sources, the main-db sink and the drainer. Throws what
     /// `PipelineDrainer.init` throws. `drainerFaultInjector` is for tests.
@@ -42,12 +51,37 @@ public struct ClaudePipelineHandles: Sendable {
             faultInjector: drainerFaultInjector)
     }
 
-    /// Spools every ready drop file, waking the drainer when any was appended.
+    // MARK: - Sources
+
+    /// Spools every ready drop file, waking the drainer when any was appended. A
+    /// drop file still younger than the source's `minimumAge` is looked at once
+    /// more, on its own, after that age: the directory watcher already fired for it
+    /// and may not fire again.
     @discardableResult
     public func pollHookDrops() throws -> Int {
-        let appended = try hookSource.poll(into: spool)
-        if appended > 0 { drainer.wake() }
-        return appended
+        try pollHookDrops(rewakeDeferred: true)
+    }
+
+    @discardableResult
+    private func pollHookDrops(rewakeDeferred: Bool) throws -> Int {
+        let result = try hookLock.run { try hookSource.pollCountingDeferred(into: spool) }
+        if result.appended > 0 { drainer.wake() }
+        if rewakeDeferred, result.deferred > 0, rewake.claim() {
+            let handles = self
+            let delay = hookSource.minimumAge + Self.rewakeMargin
+            DispatchQueue.global(qos: .utility).asyncAfter(deadline: .now() + delay) {
+                handles.rewake.release()
+                do {
+                    // One look only: a file that is still young now (an mtime in the
+                    // future) waits for the next watcher trigger or restart.
+                    try handles.pollHookDrops(rewakeDeferred: false)
+                } catch {
+                    Self.logger.error(
+                        "Deferred drop-file poll failed: \(error.localizedDescription, privacy: .public)")
+                }
+            }
+        }
+        return result.appended
     }
 
     /// One transcript sweep, waking the drainer when it appended anything.
@@ -73,20 +107,131 @@ public struct ClaudePipelineHandles: Sendable {
         drainer.wake()
     }
 
+    // MARK: - Legacy spool
+
+    /// The dedup key a legacy spool row is adopted under. Derived from the row
+    /// alone, so adopting the same row twice gives the same key.
+    public static func legacyDedupKey(_ event: SpooledEvent) -> String {
+        "cap-legacy-\(event.id)-\(Int64((event.receivedAt.timeIntervalSince1970 * 1000).rounded()))"
+    }
+
+    /// Moves every pending row of the legacy capture spool into this spool, a batch
+    /// at a time: append here first, then delete there. A crash in between leaves
+    /// the rows in both; the next adoption appends them again under the same keys
+    /// and the archive collapses the duplicates. Returns how many rows moved.
+    /// `afterAppend` is for tests: it fires between the two writes.
+    @discardableResult
+    public func adoptLegacySpool(
+        _ legacy: IngestSpool, afterAppend: (() throws -> Void)? = nil
+    ) throws -> Int {
+        var moved = 0
+        while true {
+            let batch = try legacy.pendingBatch(limit: Self.legacyBatchSize)
+            guard !batch.isEmpty else { break }
+            let records = batch.map { event in
+                RawRecord(
+                    provider: ClaudeProvider.name, sourceKind: ClaudeProvider.legacyHookKind,
+                    dedupKey: Self.legacyDedupKey(event), receivedAt: event.receivedAt, payload: event.envelope)
+            }
+            try spool.append(records)
+            try afterAppend?()
+            try legacy.complete(ids: batch.map(\.id))
+            moved += batch.count
+        }
+        if moved > 0 { drainer.wake() }
+        return moved
+    }
+
+    // MARK: - Quarantine
+
+    /// Sends back through the pipeline the quarantined records whose failure was a
+    /// destination outage (a sink or the events.db write), which are already in the
+    /// archive; records refused for themselves (invalid JSON, an archive conflict)
+    /// stay. Returns how many were requeued.
+    @discardableResult
+    public func requeueTransientQuarantine() throws -> Int {
+        let requeued = try spool.requeueQuarantined(reasonPrefixes: PipelineDrainer.transientFailurePrefixes)
+        if requeued > 0 { drainer.wake() }
+        return requeued
+    }
+}
+
+extension ClaudePipelineHandles: PipelineQuarantineControl {
     /// Records the spool has quarantined; 0 when the spool cannot be read.
     public func quarantinedCount() -> Int {
         (try? spool.quarantinedCount()) ?? 0
     }
+
+    @discardableResult
+    public func requeueAllQuarantined() -> Int {
+        do {
+            let requeued = try spool.requeueQuarantined(reasonPrefixes: nil)
+            if requeued > 0 { drainer.wake() }
+            return requeued
+        } catch {
+            Self.logger.error("Quarantine requeue failed: \(error.localizedDescription, privacy: .public)")
+            return 0
+        }
+    }
+
+    @discardableResult
+    public func clearArchivedQuarantine() -> Int {
+        var cleared = 0
+        var afterID: Int64 = 0
+        do {
+            while true {
+                let page = try spool.quarantined(limit: 200, afterID: afterID)
+                guard let last = page.last else { break }
+                afterID = last.id
+                let archived = try page.filter(isArchivedVerbatim).map(\.id)
+                try spool.deleteQuarantined(ids: archived)
+                cleared += archived.count
+            }
+        } catch {
+            Self.logger.error("Quarantine clear stopped: \(error.localizedDescription, privacy: .public)")
+        }
+        return cleared
+    }
+
+    /// Whether the archive holds this record's key with exactly these bytes. An
+    /// unreadable archive row counts as not held.
+    private func isArchivedVerbatim(_ quarantined: QuarantinedRecord) throws -> Bool {
+        guard let id = try archive.id(forDedupKey: quarantined.record.dedupKey) else { return false }
+        guard let archived = try? archive.record(id: id) else { return false }
+        return archived.record.payload == quarantined.record.payload
+    }
 }
 
-/// Serializes transcript polls.
-private final class TranscriptPollLock: @unchecked Sendable {
+extension ClaudePipelineHandles: Loggable {
+    public static nonisolated let logger = makeLogger()
+}
+
+/// Serializes one kind of poll.
+private final class PollLock: @unchecked Sendable {
     private let lock = NSLock()
 
     func run<Value>(_ body: () throws -> Value) rethrows -> Value {
         lock.lock()
         defer { lock.unlock() }
         return try body()
+    }
+}
+
+/// At most one deferred drop-file poll scheduled at a time.
+private final class RewakeGate: @unchecked Sendable {
+    private let lock = NSLock()
+    private var scheduled = false
+
+    func claim() -> Bool {
+        lock.withLock {
+            guard !scheduled else { return false }
+            scheduled = true
+            return true
+        }
+    }
+
+    func release() {
+        lock.withLock { scheduled = false }
     }
 }
 

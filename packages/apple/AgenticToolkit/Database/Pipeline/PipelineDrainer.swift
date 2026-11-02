@@ -109,6 +109,15 @@ public final class PipelineDrainer: @unchecked Sendable {
         let description: String
     }
 
+    /// Prefix of a quarantine reason written when a sink failed.
+    public static let sinkFailurePrefix = "sink "
+    /// Prefix of a quarantine reason written when the events.db write failed.
+    public static let storeFailurePrefix = "store write failed: "
+    /// Quarantine reasons that name a destination outage rather than the record
+    /// itself (invalid JSON, an archive conflict): those records are already in the
+    /// archive and worth sending through again once the destination is back.
+    public static let transientFailurePrefixes = [sinkFailurePrefix, storeFailurePrefix]
+
     private final class WeakObserver {
         weak var observer: (any PipelineObserver)?
         init(_ observer: any PipelineObserver) { self.observer = observer }
@@ -352,7 +361,7 @@ public final class PipelineDrainer: @unchecked Sendable {
             do {
                 try sink.write(merged, records: normalizedRecords, provider: normalizer.provider)
             } catch {
-                let reason = "sink \(type(of: sink)) failed: \(error)"
+                let reason = "\(Self.sinkFailurePrefix)\(type(of: sink)) failed: \(error)"
                 for spooled in normalizedSpooled { try charge(spooled, reason: reason, &outcome) }
                 throw StepFailure(description: reason)
             }
@@ -378,7 +387,7 @@ public final class PipelineDrainer: @unchecked Sendable {
                 _ = try store.write(batch, provider: normalizer.provider)
                 kept.append((item, archived, batch))
             } catch {
-                try charge(item, reason: "store write failed: \(error)", &outcome)
+                try charge(item, reason: "\(Self.storeFailurePrefix)\(error)", &outcome)
             }
         }
         if kept.isEmpty { throw StepFailure(description: "store write failed: \(batchError)") }

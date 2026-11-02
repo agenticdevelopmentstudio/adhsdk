@@ -12,12 +12,18 @@ public struct SpooledEvent: Sendable {
     /// back, so spooling costs no second encoding and no second format.
     public let envelope: Data
     public let attempts: Int
+    /// When the event was spooled.
+    public let receivedAt: Date
 
-    public init(id: Int64, eventType: String, envelope: Data, attempts: Int) {
+    public init(
+        id: Int64, eventType: String, envelope: Data, attempts: Int,
+        receivedAt: Date = Date(timeIntervalSince1970: 0)
+    ) {
         self.id = id
         self.eventType = eventType
         self.envelope = envelope
         self.attempts = attempts
+        self.receivedAt = receivedAt
     }
 }
 
@@ -156,14 +162,16 @@ public final class IngestSpool: @unchecked Sendable {
             try Row.fetchAll(
                 database,
                 sql: """
-                    SELECT id, event_type, envelope, attempts
+                    SELECT id, event_type, envelope, attempts, received_at
                     FROM spooled_event ORDER BY id LIMIT ?
                 """,
                 arguments: [limit]
             ).map {
-                SpooledEvent(
+                let received: Double = $0["received_at"]
+                return SpooledEvent(
                     id: $0["id"], eventType: $0["event_type"],
-                    envelope: $0["envelope"], attempts: $0["attempts"]
+                    envelope: $0["envelope"], attempts: $0["attempts"],
+                    receivedAt: Date(timeIntervalSince1970: received)
                 )
             }
         }

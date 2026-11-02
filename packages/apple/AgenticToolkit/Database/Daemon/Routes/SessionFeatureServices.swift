@@ -3,6 +3,20 @@ import AgenticToolkitCore
 import AIPluginKit
 import Foundation
 
+/// A provider pipeline's spool quarantine, as the ingestion-error routes drive it.
+public protocol PipelineQuarantineControl: Sendable {
+    /// Records parked in quarantine; 0 when it cannot be read.
+    func quarantinedCount() -> Int
+    /// Sends every quarantined record through the pipeline again and wakes its
+    /// drainer. Returns how many were requeued.
+    @discardableResult
+    func requeueAllQuarantined() -> Int
+    /// Deletes only the quarantined records whose exact bytes the raw archive
+    /// already holds, and keeps every other one. Returns how many were deleted.
+    @discardableResult
+    func clearArchivedQuarantine() -> Int
+}
+
 /// Everything the shared session-feature routes need from the daemon that mounts
 /// them: the stores and services they call, the daemon's identity, and closures for
 /// the few things only a daemon can do (read its own process footprint, capture a
@@ -73,9 +87,10 @@ public struct SessionFeatureServices: Sendable {
     /// How the summarize route loads AI plugins. Defaults to `.live` (the default
     /// folders only); `SessionDaemonRuntime.services` passes the daemon's own.
     public let pluginRuntime: DaemonAIChat.PluginRuntime
-    /// Records a provider pipeline's spool has quarantined, added to the
-    /// quarantine count the badge polls. Defaults to none.
-    public let pipelineQuarantinedCount: @Sendable () -> Int
+    /// The provider pipeline's spool quarantine: counted, retried and cleared with
+    /// the file quarantine. Nil when the daemon runs no provider pipeline (or it
+    /// failed to open).
+    public let pipelineQuarantine: (any PipelineQuarantineControl)?
 
     public init(
         database: DaemonDatabase,
@@ -97,7 +112,7 @@ public struct SessionFeatureServices: Sendable {
         captureHook: @escaping @Sendable (ParsedEvent) throws -> Void,
         runImport: @escaping @Sendable (ImportRequestDTO) throws -> ImportSummary,
         pluginRuntime: DaemonAIChat.PluginRuntime = .live,
-        pipelineQuarantinedCount: @escaping @Sendable () -> Int = { 0 }
+        pipelineQuarantine: (any PipelineQuarantineControl)? = nil
     ) {
         self.database = database
         self.conversations = conversations
@@ -118,7 +133,7 @@ public struct SessionFeatureServices: Sendable {
         self.captureHook = captureHook
         self.runImport = runImport
         self.pluginRuntime = pluginRuntime
-        self.pipelineQuarantinedCount = pipelineQuarantinedCount
+        self.pipelineQuarantine = pipelineQuarantine
     }
 }
 #endif

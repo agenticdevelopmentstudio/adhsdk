@@ -95,9 +95,11 @@ public final class SessionDaemonRuntime: @unchecked Sendable {
         var pipeline: IngestionPipeline
         var hookDisabled: Bool
         var preferences: PreferencesService
-        var claude: ClaudePipelineHandles
+        /// Nil when its files could not be opened: the daemon then runs on the
+        /// legacy capture and ingest path.
+        var claude: ClaudePipelineHandles?
         /// Held here because the drainer holds its observers weakly.
-        var claudeObserver: ClaudeLiveObserver
+        var claudeObserver: ClaudeLiveObserver?
     }
     private let lock = NSLock()
     private var opened: Opened?
@@ -147,7 +149,8 @@ public final class SessionDaemonRuntime: @unchecked Sendable {
     /// Whether the user had turned tracking off when the runtime opened.
     public var hookDisabled: Bool { requireOpened("hookDisabled").hookDisabled }
     /// The Claude provider pipeline (spool, archive, event store, drainer and
-    /// sources), or nil before ``openPhaseA()``.
+    /// sources), or nil before ``openPhaseA()`` and when its files could not be
+    /// opened (the daemon then captures and ingests on the legacy path).
     public var claudePipeline: ClaudePipelineHandles? { lock.withLock { opened?.claude } }
 
     /// The conversations feed over the runtime's database.
@@ -198,7 +201,7 @@ public final class SessionDaemonRuntime: @unchecked Sendable {
             captureHook: opened.pipeline.capture,
             runImport: wiring.runImport,
             pluginRuntime: pluginRuntime,
-            pipelineQuarantinedCount: { [claude = opened.claude] in claude.quarantinedCount() }
+            pipelineQuarantine: opened.claude
         )
     }
 
@@ -212,6 +215,12 @@ public final class SessionDaemonRuntime: @unchecked Sendable {
     /// Throws when the spool or the database cannot be opened: without the
     /// spool there is nowhere to put a delivery, and without the pool there is
     /// no database at all. Neither is a migration failure.
+    ///
+    /// The Claude pipeline's files (its spool, raw archive and events.db) are
+    /// opened beside them but are not fatal: if any fails, the failure is logged
+    /// at fault level, ``claudePipeline`` stays nil and the daemon captures and
+    /// ingests on the legacy path, as it did before the pipeline existed. The
+    /// next start tries them again.
     public func openPhaseA() async throws {
         let configuration = configuration
         let installer = hookInstaller
@@ -236,16 +245,24 @@ public final class SessionDaemonRuntime: @unchecked Sendable {
         let spool = try await spoolTask
         let database = try await dbTask
         let hookDisabled = await hookDisabledTask
-        let claudeSpool = try await claudeSpoolTask
-        let archive = try await archiveTask
-        let store = try await storeTask
 
-        database.attachEventReads(store, archive: archive)
-        let claude = try ClaudePipelineHandles(
-            spool: claudeSpool, archive: archive, store: store, database: database,
-            dropDirectory: configuration.dropDirectory,
-            projectsDirectory: configuration.claudeProjectsDirectory
-        )
+        var claude: ClaudePipelineHandles?
+        do {
+            let claudeSpool = try await claudeSpoolTask
+            let archive = try await archiveTask
+            let store = try await storeTask
+            claude = try ClaudePipelineHandles(
+                spool: claudeSpool, archive: archive, store: store, database: database,
+                dropDirectory: configuration.dropDirectory,
+                projectsDirectory: configuration.claudeProjectsDirectory
+            )
+            database.attachEventReads(store, archive: archive)
+        } catch {
+            Self.logger.fault("""
+                Claude pipeline failed to open (\(error.localizedDescription, privacy: .public)); \
+                capturing on the legacy path
+                """)
+        }
 
         let pipeline = IngestionPipeline(
             paths: .init(
@@ -264,10 +281,14 @@ public final class SessionDaemonRuntime: @unchecked Sendable {
         )
         // One enrichment, shared with the legacy ingestor, so both paths drive the
         // same transcript tailer and summarizer.
-        let observer = ClaudeLiveObserver(
-            eventReads: store, sink: behavior.sink, enrichment: pipeline.ingestor.enrichment
-        )
-        claude.drainer.addObserver(observer)
+        var observer: ClaudeLiveObserver?
+        if let claude {
+            let live = ClaudeLiveObserver(
+                eventReads: claude.store, sink: behavior.sink, enrichment: pipeline.ingestor.enrichment
+            )
+            claude.drainer.addObserver(live)
+            observer = live
+        }
         let preferences = PreferencesService(
             database: database, secretStore: secretStore, hookInstaller: installer,
             summariesDefaultEnabled: configuration.summariesDefaultEnabled,
@@ -312,12 +333,43 @@ public final class SessionDaemonRuntime: @unchecked Sendable {
         try database.migrateNow()
     }
 
-    /// Starts emptying the spools into the migrated database: the legacy spool's
-    /// leftovers, and the Claude pipeline's.
+    /// Starts emptying the spools into the migrated database.
+    ///
+    /// With the Claude pipeline, first: its quarantined records that failed on a
+    /// destination outage (a sink or the events.db write) go back into its spool,
+    /// and the legacy capture spool's leftovers move into it too, so they reach the
+    /// raw archive and events.db rather than only `event_log`. The legacy drainer
+    /// then starts over what is left: nothing, unless that move failed, in which
+    /// case it ingests the rows the old way rather than leaving them.
     public func startDrainer() async {
         let opened = requireOpened("startDrainer")
+        if let claude = opened.claude {
+            Self.prepareClaudeSpool(claude, legacy: opened.spool)
+        }
         opened.pipeline.startDraining()
-        opened.claude.drainer.start()
+        opened.claude?.drainer.start()
+    }
+
+    private static func prepareClaudeSpool(_ claude: ClaudePipelineHandles, legacy: IngestSpool) {
+        do {
+            let requeued = try claude.requeueTransientQuarantine()
+            if requeued > 0 {
+                logger.info("Requeued \(requeued, privacy: .public) quarantined Claude record(s)")
+            }
+        } catch {
+            logger.error("Claude quarantine requeue failed: \(error.localizedDescription, privacy: .public)")
+        }
+        do {
+            let moved = try claude.adoptLegacySpool(legacy)
+            if moved > 0 {
+                logger.info("Moved \(moved, privacy: .public) legacy spool row(s) into the Claude spool")
+            }
+        } catch {
+            logger.error("""
+                Legacy spool move failed (\(error.localizedDescription, privacy: .public)); \
+                the legacy drainer ingests what is left
+                """)
+        }
     }
 
     /// Stops the ingestion pipeline: a batch already in flight finishes against
@@ -333,7 +385,7 @@ public final class SessionDaemonRuntime: @unchecked Sendable {
         guard let current else { return }
         // The Claude drainer first: a pass in flight finishes (stop waits up to
         // 5 s), and anything still spooled drains on the next launch.
-        current.claude.drainer.stop()
+        current.claude?.drainer.stop()
         await current.pipeline.stop()
     }
 

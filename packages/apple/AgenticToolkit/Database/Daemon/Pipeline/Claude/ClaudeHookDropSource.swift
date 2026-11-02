@@ -40,7 +40,13 @@ public final class ClaudeHookDropSource: IngestSource {
     /// that throws ends the poll and is rethrown, with that batch's files (and every
     /// later one) left in place.
     public func poll(into spool: ProviderSpool) throws -> Int {
-        let ready = readyFiles()
+        try pollCountingDeferred(into: spool).appended
+    }
+
+    /// `poll(into:)`, also reporting how many drop files it left for being younger
+    /// than `minimumAge`, so the caller can look again once they are old enough.
+    public func pollCountingDeferred(into spool: ProviderSpool) throws -> (appended: Int, deferred: Int) {
+        let (ready, deferred) = readyFiles()
         var appended = 0
         var start = 0
         while start < ready.count {
@@ -68,27 +74,34 @@ public final class ClaudeHookDropSource: IngestSource {
             appended += records.count
             for url in appendedFiles { try? FileManager.default.removeItem(at: url) }
         }
-        return appended
+        return (appended, deferred)
     }
 
-    /// Drop files old enough to be whole, in name order, with their mtimes.
-    private func readyFiles() -> [(url: URL, modified: Date)] {
+    /// Drop files old enough to be whole, in name order, with their mtimes, and how
+    /// many were skipped for being too young.
+    private func readyFiles() -> (ready: [(url: URL, modified: Date)], deferred: Int) {
         guard let entries = try? FileManager.default.contentsOfDirectory(
             at: dropDirectory, includingPropertiesForKeys: [.contentModificationDateKey],
             options: .skipsHiddenFiles
-        ) else { return [] }
+        ) else { return ([], 0) }
         let now = Date()
-        return entries
+        var ready: [(url: URL, modified: Date)] = []
+        var deferred = 0
+        let candidates = entries
             .filter { $0.pathExtension == "json" && !$0.lastPathComponent.hasPrefix("error-") }
             .sorted { $0.lastPathComponent < $1.lastPathComponent }
-            .compactMap { url in
-                autoreleasepool {
-                    guard let modified = (try? url.resourceValues(forKeys: [.contentModificationDateKey]))?
-                        .contentModificationDate,
-                        now.timeIntervalSince(modified) >= minimumAge else { return nil }
-                    return (url, modified)
+        for url in candidates {
+            autoreleasepool {
+                guard let modified = (try? url.resourceValues(forKeys: [.contentModificationDateKey]))?
+                    .contentModificationDate else { return }
+                if now.timeIntervalSince(modified) >= minimumAge {
+                    ready.append((url, modified))
+                } else {
+                    deferred += 1
                 }
             }
+        }
+        return (ready, deferred)
     }
 
     /// Moves an unreadable drop file out of the drop directory, so it is not retried
