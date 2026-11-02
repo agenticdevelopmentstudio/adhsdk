@@ -4,6 +4,23 @@ import Foundation
 import GRDB
 import OSLog
 
+/// What `DaemonDatabase.applySessionState` read from a hook event and stamped on
+/// its session: the fields `ingestEvent` needs back to build its `IngestedEvent`,
+/// and the account the session was attributed to.
+public struct IngestedSessionState: Sendable, Equatable {
+    public let sessionId: String
+    /// The hook's own cwd, as reported (the session row stores its canonical form).
+    public let cwd: String
+    public let toolName: String
+    /// `hook_data.model` when it is a string; empty otherwise (StatusLine's is an object).
+    public let model: String
+    public let source: String
+    /// The account the event carried (token, else oauth); empty when unresolved.
+    public let accountEmail: String
+    /// `token`, `oauth`, or empty when unresolved.
+    public let authMethod: String
+}
+
 // MARK: - Event ingestion
 
 extension DaemonDatabase {
@@ -18,8 +35,9 @@ extension DaemonDatabase {
         return String(cString: resolved)
     }
 
-    /// Ingests an event: upserts the session, inserts into event_log, inserts into
-    /// the per-type table, and optionally inserts tool_input / tool_response rows.
+    /// Ingests an event: applies its session state (`applySessionState`), then
+    /// inserts into event_log, the per-type table, and optionally tool_input /
+    /// tool_response rows.
     /// Synchronous — blocks until all writes are committed. Returns an IngestedEvent
     /// with the new event_log row ID so the caller can broadcast it immediately.
     @discardableResult
@@ -35,34 +53,205 @@ extension DaemonDatabase {
         // (currentEmail() may stat/parse ~/.claude.json — never hold the writer
         // through it). Token wins when present (per-session-immutable, authoritative);
         // else the oauth login the *capture* resolved; else unresolved.
-        // `snapshotAccount` keeps its old meaning (token-else-oauth) for the
-        // rate-limit snapshot stamp below.
         //
         // `oauthAccountEmail` is nil only for an envelope written before the field
         // existed; resolving now is then the best answer left, and it is the old
         // behaviour. For everything else the answer travelled with the event, so a
         // backlog is attributed to who was logged in when it was captured — see
         // `ParsedEvent.oauthAccountEmail`.
-        let sessionAccount: String
-        let authMethod: String
-        if !accountEmail.isEmpty {
-            sessionAccount = accountEmail
-            authMethod = "token"
-        } else {
-            let oauth = oauthAccountEmail ?? accountResolver.currentEmail()
-            sessionAccount = oauth
-            authMethod = oauth.isEmpty ? "" : "oauth"
-        }
-        let snapshotAccount = sessionAccount
+        let account = resolveIngestAccount(accountEmail: accountEmail, oauthAccountEmail: oauthAccountEmail)
         return try write { database in
-            let sessionId  = hookData["session_id"] as? String ?? ""
-            let cwd        = hookData["cwd"]        as? String ?? ""
-            let model      = hookData["model"]      as? String ?? ""
-            let pid        = hookData["pid"]        as? Int    ?? 0
-            let termProg   = hookData["term_program"] as? String ?? ""
-            let termSession = hookData["term_session_id"] as? String ?? ""
-            let toolName   = hookData["tool_name"]  as? String ?? ""
-            let source     = hookData["source"]     as? String ?? ""
+            let state = try applySessionState(
+                eventType: eventType, timestamp: timestamp, hookData: hookData,
+                account: account, routesStatusLine: true
+            )
+            let sessionId = state.sessionId
+            let cwd = state.cwd
+            let toolName = state.toolName
+
+            // 4. Compute display detail
+            let detail = computeDetail(eventType: eventType, hookData: hookData)
+
+            // 5. Insert into event_log
+            let contextJSON = Self.encodeContextJSON(context)
+            try execute(
+                """
+                INSERT INTO event_log(session_id, event_type, timestamp, cwd, detail, context_json)
+                VALUES (?,?,?,?,?,?)
+                """,
+                params: [sessionId, eventType, timestamp, cwd, detail, contextJSON]
+            )
+            let eventLogId = database.lastInsertedRowID
+
+            // 6. Insert into per-type table (scalar fields only)
+            if let knownType = HookEventType(rawValue: eventType) {
+                var perType: [String: Any] = [
+                    "event_log_id": eventLogId,
+                    "session_id": sessionId,
+                    "timestamp": timestamp,
+                    "cwd": cwd
+                ]
+                for (key, value) in hookData {
+                    if key == "session_id" || key == "cwd" || key == "timestamp" { continue }
+                    if value is [String: Any] || value is [Any] { continue }
+                    perType[Self.payloadColumnName(key)] = value
+                }
+                if knownType == .statusLine {
+                    // The status-line payload's substance is all nested — model,
+                    // cost, context_window, prompt_cache, rate_limits — and the
+                    // loop above drops every object it meets, so the table held
+                    // ten housekeeping columns and none of the numbers. Flatten
+                    // the whole tree instead: DynamicSchema issues the ALTER for
+                    // a name it hasn't seen, so a field Anthropic adds next
+                    // release is recorded the first render it arrives on, with
+                    // no migration and no code change here.
+                    //
+                    // Gated to StatusLine on purpose. Most of its payload is a
+                    // published contract with a bounded shape; `tool_input` is
+                    // whatever a tool felt like sending, and flattening that
+                    // would grow a column per distinct key until the table hit
+                    // SQLite's 2000 limit. Those already have `tool_inputs` /
+                    // `tool_responses`.
+                    //
+                    // "Most" because the payload is not bounded everywhere:
+                    // `prompt_cache.miss_causes` is a map keyed by cause name.
+                    // `flattenLeaves` keeps that subtree as JSON text for the
+                    // same reason the gate exists — see `opaquePayloadSubtrees`
+                    // — and `DynamicSchema.maxColumns` catches the next such
+                    // field before it can reach the 2000 either.
+                    for (key, value) in Self.flattenLeaves(hookData) {
+                        if key == "session_id" || key == "cwd" || key == "timestamp" { continue }
+                        perType[Self.payloadColumnName(key)] = value
+                    }
+                }
+                // Both of these name a `file_path` whose *contents* are the
+                // thing we care about — a settings/skill file for ConfigChange,
+                // a CLAUDE.md for InstructionsLoaded — and neither payload
+                // carries a size or hash. Without one, `instructions_loaded_events`
+                // repeats the same paths forever and cannot say whether an edit
+                // to those instructions is what invalidated the prompt cache.
+                if knownType == .configChange || knownType == .instructionsLoaded {
+                    for (key, value) in FileFingerprintEnricher.enrich(hookData: hookData) {
+                        perType[key] = value
+                    }
+                }
+                if knownType == .postToolUse || knownType == .postToolUseFailure {
+                    if let durationMs = computePostToolDurationMs(
+                        sessionId: sessionId,
+                        toolUseId: hookData["tool_use_id"] as? String ?? "",
+                        postTimestamp: timestamp
+                    ) {
+                        perType["duration_ms"] = durationMs
+                    }
+                }
+                try insertDynamic(table: knownType.tableName, fields: perType)
+            }
+
+            // 7. Insert nested tool_input
+            if let toolInput = hookData["tool_input"] as? [String: Any] {
+                var fields: [String: Any] = ["event_log_id": eventLogId, "event_type": eventType]
+                for (key, value) in toolInput {
+                    if !(value is [String: Any]) && !(value is [Any]) {
+                        fields[Self.payloadColumnName(key)] = value
+                    }
+                }
+                if fields.count > 2 {  // more than just the fixed cols
+                    try insertDynamic(table: "tool_inputs", fields: fields)
+                }
+            }
+
+            // 8. Insert nested tool_response
+            if let toolResponse = hookData["tool_response"] as? [String: Any] {
+                var fields: [String: Any] = ["event_log_id": eventLogId]
+                for (key, value) in toolResponse {
+                    if !(value is [String: Any]) && !(value is [Any]) {
+                        fields[Self.payloadColumnName(key)] = value
+                    }
+                }
+                if fields.count > 1 {
+                    try insertDynamic(table: "tool_responses", fields: fields)
+                }
+            }
+
+            return IngestedEvent(
+                id: eventLogId,
+                event: eventType,
+                sessionId: sessionId,
+                timestamp: timestamp,
+                cwd: cwd,
+                detail: detail,
+                toolName: toolName,
+                model: state.model,
+                source: state.source
+            )
+        }
+    }
+
+    // MARK: - Session state
+
+    /// The (account, auth method) a hook event stamps on its session: the token's
+    /// account when one was fingerprinted, else the oauth login the capture
+    /// resolved (or, for an envelope older than that field, the login now), else
+    /// unresolved. Resolved outside the write lane: `currentEmail()` may stat and
+    /// parse `~/.claude.json`, and the writer must never be held through that.
+    func resolveIngestAccount(
+        accountEmail: String, oauthAccountEmail: String?
+    ) -> (email: String, authMethod: String) {
+        if !accountEmail.isEmpty { return (accountEmail, "token") }
+        let oauth = oauthAccountEmail ?? accountResolver.currentEmail()
+        return (oauth, oauth.isEmpty ? "" : "oauth")
+    }
+
+    /// Applies one hook event to the session database's session state — the
+    /// `sessions` upsert, `last_tool`, the `SessionEnd` status, `session_branches`,
+    /// the `statusLineIngest` hook and the `sessionUpsertHook` — and nothing else:
+    /// no `event_log`, per-type, `tool_inputs` or `tool_responses` row.
+    ///
+    /// `ingestEvent` is this plus those inserts. A pipeline sink that keeps the
+    /// event itself in an event store calls this alone. `context` is accepted so a
+    /// caller can hand over a parsed envelope whole; session state does not read it.
+    @discardableResult
+    public func applySessionState(
+        eventType: String,
+        timestamp: String,
+        hookData: [String: Any],
+        context: [String: Any]? = nil,
+        accountEmail: String = "",
+        oauthAccountEmail: String? = nil
+    ) throws -> IngestedSessionState {
+        let account = resolveIngestAccount(accountEmail: accountEmail, oauthAccountEmail: oauthAccountEmail)
+        return try write { _ in
+            try applySessionState(
+                eventType: eventType, timestamp: timestamp, hookData: hookData,
+                account: account, routesStatusLine: true
+            )
+        }
+    }
+
+    /// `applySessionState` with the account already resolved. `routesStatusLine`
+    /// false skips the `statusLineIngest` hook (a redelivered StatusLine).
+    /// Must run inside a write.
+    func applySessionState(
+        eventType: String,
+        timestamp: String,
+        hookData: [String: Any],
+        account: (email: String, authMethod: String),
+        routesStatusLine: Bool
+    ) throws -> IngestedSessionState {
+        let sessionAccount = account.email
+        let authMethod = account.authMethod
+        // `snapshotAccount` keeps its old meaning (token-else-oauth) for the
+        // rate-limit snapshot stamp below.
+        let snapshotAccount = sessionAccount
+        let sessionId  = hookData["session_id"] as? String ?? ""
+        let cwd        = hookData["cwd"]        as? String ?? ""
+        let model      = hookData["model"]      as? String ?? ""
+        let pid        = hookData["pid"]        as? Int    ?? 0
+        let termProg   = hookData["term_program"] as? String ?? ""
+        let termSession = hookData["term_session_id"] as? String ?? ""
+        let toolName   = hookData["tool_name"]  as? String ?? ""
+        let source     = hookData["source"]     as? String ?? ""
+        do {
             // The session is stamped with (account, auth_method) via a source-tagged
             // precedence (see the upsert below): a `token` stamp heals an earlier
             // NON-token (`oauth`/`unknown`) guess, but a differing later token never
@@ -249,109 +438,8 @@ extension DaemonDatabase {
                 )
             }
 
-            // 4. Compute display detail
-            let detail = computeDetail(eventType: eventType, hookData: hookData)
-
-            // 5. Insert into event_log
-            let contextJSON = Self.encodeContextJSON(context)
-            try execute(
-                """
-                INSERT INTO event_log(session_id, event_type, timestamp, cwd, detail, context_json)
-                VALUES (?,?,?,?,?,?)
-                """,
-                params: [sessionId, eventType, timestamp, cwd, detail, contextJSON]
-            )
-            let eventLogId = database.lastInsertedRowID
-
-            // 6. Insert into per-type table (scalar fields only)
-            if let knownType = HookEventType(rawValue: eventType) {
-                var perType: [String: Any] = [
-                    "event_log_id": eventLogId,
-                    "session_id": sessionId,
-                    "timestamp": timestamp,
-                    "cwd": cwd
-                ]
-                for (key, value) in hookData {
-                    if key == "session_id" || key == "cwd" || key == "timestamp" { continue }
-                    if value is [String: Any] || value is [Any] { continue }
-                    perType[Self.payloadColumnName(key)] = value
-                }
-                if knownType == .statusLine {
-                    // The status-line payload's substance is all nested — model,
-                    // cost, context_window, prompt_cache, rate_limits — and the
-                    // loop above drops every object it meets, so the table held
-                    // ten housekeeping columns and none of the numbers. Flatten
-                    // the whole tree instead: DynamicSchema issues the ALTER for
-                    // a name it hasn't seen, so a field Anthropic adds next
-                    // release is recorded the first render it arrives on, with
-                    // no migration and no code change here.
-                    //
-                    // Gated to StatusLine on purpose. Most of its payload is a
-                    // published contract with a bounded shape; `tool_input` is
-                    // whatever a tool felt like sending, and flattening that
-                    // would grow a column per distinct key until the table hit
-                    // SQLite's 2000 limit. Those already have `tool_inputs` /
-                    // `tool_responses`.
-                    //
-                    // "Most" because the payload is not bounded everywhere:
-                    // `prompt_cache.miss_causes` is a map keyed by cause name.
-                    // `flattenLeaves` keeps that subtree as JSON text for the
-                    // same reason the gate exists — see `opaquePayloadSubtrees`
-                    // — and `DynamicSchema.maxColumns` catches the next such
-                    // field before it can reach the 2000 either.
-                    for (key, value) in Self.flattenLeaves(hookData) {
-                        if key == "session_id" || key == "cwd" || key == "timestamp" { continue }
-                        perType[Self.payloadColumnName(key)] = value
-                    }
-                }
-                // Both of these name a `file_path` whose *contents* are the
-                // thing we care about — a settings/skill file for ConfigChange,
-                // a CLAUDE.md for InstructionsLoaded — and neither payload
-                // carries a size or hash. Without one, `instructions_loaded_events`
-                // repeats the same paths forever and cannot say whether an edit
-                // to those instructions is what invalidated the prompt cache.
-                if knownType == .configChange || knownType == .instructionsLoaded {
-                    for (key, value) in FileFingerprintEnricher.enrich(hookData: hookData) {
-                        perType[key] = value
-                    }
-                }
-                if knownType == .postToolUse || knownType == .postToolUseFailure {
-                    if let durationMs = computePostToolDurationMs(
-                        sessionId: sessionId,
-                        toolUseId: hookData["tool_use_id"] as? String ?? "",
-                        postTimestamp: timestamp
-                    ) {
-                        perType["duration_ms"] = durationMs
-                    }
-                }
-                try insertDynamic(table: knownType.tableName, fields: perType)
-            }
-
-            // 7. Insert nested tool_input
-            if let toolInput = hookData["tool_input"] as? [String: Any] {
-                var fields: [String: Any] = ["event_log_id": eventLogId, "event_type": eventType]
-                for (key, value) in toolInput {
-                    if !(value is [String: Any]) && !(value is [Any]) {
-                        fields[Self.payloadColumnName(key)] = value
-                    }
-                }
-                if fields.count > 2 {  // more than just the fixed cols
-                    try insertDynamic(table: "tool_inputs", fields: fields)
-                }
-            }
-
-            // 8. Insert nested tool_response
-            if let toolResponse = hookData["tool_response"] as? [String: Any] {
-                var fields: [String: Any] = ["event_log_id": eventLogId]
-                for (key, value) in toolResponse {
-                    if !(value is [String: Any]) && !(value is [Any]) {
-                        fields[Self.payloadColumnName(key)] = value
-                    }
-                }
-                if fields.count > 1 {
-                    try insertDynamic(table: "tool_responses", fields: fields)
-                }
-            }
+            // (Steps 4–8 — detail, event_log, per-type, tool_inputs,
+            // tool_responses — are `ingestEvent`'s alone.)
 
             // 9. Record branch creations (EnterWorktree / git branch-creating
             // bash commands) so a Stop hook can later block a session that
@@ -376,22 +464,19 @@ extension DaemonDatabase {
             // claude_versions, and the extended session_metrics columns
             // added in migration007. Subsumes what CSL used to write
             // directly to its own SQLite files.
-            if eventType == "StatusLine", let statusLineIngest {
+            if routesStatusLine, eventType == "StatusLine", let statusLineIngest {
                 try statusLineIngest(self, sessionId, hookData, timestamp, snapshotAccount)
             }
-
-            return IngestedEvent(
-                id: eventLogId,
-                event: eventType,
-                sessionId: sessionId,
-                timestamp: timestamp,
-                cwd: cwd,
-                detail: detail,
-                toolName: toolName,
-                model: model,
-                source: source
-            )
         }
+        return IngestedSessionState(
+            sessionId: sessionId,
+            cwd: cwd,
+            toolName: toolName,
+            model: model,
+            source: source,
+            accountEmail: sessionAccount,
+            authMethod: authMethod
+        )
     }
 
     // MARK: - Payload flattening

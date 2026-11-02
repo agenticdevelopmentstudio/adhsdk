@@ -364,6 +364,7 @@
 		18B94515650F8933D9DD9B85 /* PowerTriggerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B3B36A52A8A89162ED27E1DC /* PowerTriggerTests.swift */; };
 		18D8FE0C8715CB85547B06D7 /* HubError.swift in Sources */ = {isa = PBXBuildFile; fileRef = 933CAB9BAA884682C85F5DFA /* HubError.swift */; };
 		18E42C2EA8392EEC10508796 /* CommandRunning.swift in Sources */ = {isa = PBXBuildFile; fileRef = E0C354AFAF25264CB1045812 /* CommandRunning.swift */; };
+		18EA198EAE8E3BBA199A2265 /* ClaudeLiveObserverTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C907A515BEEA950F5471C63 /* ClaudeLiveObserverTests.swift */; };
 		19268E8027ECBCAC1810B587 /* ProgressView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2035AE53EF8F5238E77BF732 /* ProgressView.swift */; };
 		1977596C1D8ABC59BF6DBC18 /* MessagingAdapterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE3FCF754DED0A18FB913EF9 /* MessagingAdapterTests.swift */; };
 		197EF1F3AD5BD0E76D3BB7AB /* push-request.json in Resources */ = {isa = PBXBuildFile; fileRef = EFD2BBCC2012C29FB43AF306 /* push-request.json */; };
@@ -1543,6 +1544,7 @@
 		88FD0A4A749D3C65F5A71833 /* ExtensionWebviewViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 271613E4E46A4CE9F0EADC5C /* ExtensionWebviewViewController.swift */; };
 		890A6C3C670E141DCA8C2598 /* DaemonAssessmentTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C02062A45357E73680D469D4 /* DaemonAssessmentTests.swift */; };
 		891D49B366A30E2BD63C4AD6 /* Slug.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A56CFEF189E66E9852CFF84 /* Slug.swift */; };
+		8920EE2E3BDC8634E9D68F7B /* ClaudeLiveObserver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 010476FF08830724D74CD613 /* ClaudeLiveObserver.swift */; };
 		8942C61B40BDC19BB07E6C20 /* EcosystemConfigAdaptersTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 197D8D39933E47A0133981F5 /* EcosystemConfigAdaptersTests.swift */; };
 		894335C68B355DA2A683C21E /* HTDVModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 732F83B2DC0B77B2784C7B7B /* HTDVModel.swift */; };
 		89609751BE0ACA39496901DC /* PersonaTerminalChatViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 140E640DFF31874AD68913AE /* PersonaTerminalChatViewController.swift */; };
@@ -2164,6 +2166,7 @@
 		C77BB780B915D9167D042078 /* AppUpdaterConfigurationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFD6107B34880BEF9BE2CFC7 /* AppUpdaterConfigurationTests.swift */; };
 		C7811AACDD9CF84B1A3966E5 /* AgenticToolkitSyncGRDB.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 2811A57B61C48C21BD8A4995 /* AgenticToolkitSyncGRDB.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		C7A890893A4479B28E5C3CBB /* GRDB in Frameworks */ = {isa = PBXBuildFile; productRef = 14F85C6998F7EFA09B8D25E0 /* GRDB */; };
+		C7BF53BA03DD59BEE403E8C3 /* ClaudeMainDBSink.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEE340265DE8E077ACB725E5 /* ClaudeMainDBSink.swift */; };
 		C7D30E29FC705764B152051C /* ProviderConformance.swift in Sources */ = {isa = PBXBuildFile; fileRef = 944AEFA936657812855F9D3F /* ProviderConformance.swift */; };
 		C7F03C965556F0C669394526 /* MultiChoiceFilterButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = A87319972A8D5FC214E263BC /* MultiChoiceFilterButton.swift */; };
 		C809A29138DB5B9488FD0D22 /* ExtensionQuickPickModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A8210E21B331ACFCEC3E0E04 /* ExtensionQuickPickModel.swift */; };
@@ -2293,6 +2296,7 @@
 		D5CEBA9410FF2989F7A653F2 /* FileEditorState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0C3B4495F3EFAF3056B2D303 /* FileEditorState.swift */; };
 		D5D289381273A2963EB8ECB7 /* ModeLabels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6476F82D6D5F3D8787988C5E /* ModeLabels.swift */; };
 		D5D4E9CE62787C60D5ECC7D6 /* StatusLineMetricsIngest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13F35A74415EF94DE0B187CA /* StatusLineMetricsIngest.swift */; };
+		D6008CBDCC29FB0FDBA9EF6C /* ClaudeMainDBSinkTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 389DDCF01399326664A5C8B3 /* ClaudeMainDBSinkTests.swift */; };
 		D6165A4B290769F12A628243 /* SessionDaemonRuntimeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C7092A2D398D3807DF2437FF /* SessionDaemonRuntimeTests.swift */; };
 		D640C72B5480939363AA8FD5 /* WindowManagerTerminationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 626FECFD2A90654F819760B3 /* WindowManagerTerminationTests.swift */; };
 		D6607E1A54D5A574D9520CA6 /* IngestSpool.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFFE9A88CCD9915CF803A8B3 /* IngestSpool.swift */; };
@@ -5104,6 +5108,7 @@
 		00E5CF3B075D5048B421103F /* TranscriptStore+Metrics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TranscriptStore+Metrics.swift"; sourceTree = "<group>"; };
 		00E87647C267D0756FF646CD /* SettingsSearchIndex.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsSearchIndex.swift; sourceTree = "<group>"; };
 		00FCBCB8D461FC322A94CF94 /* LanguageServerSessionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LanguageServerSessionTests.swift; sourceTree = "<group>"; };
+		010476FF08830724D74CD613 /* ClaudeLiveObserver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClaudeLiveObserver.swift; sourceTree = "<group>"; };
 		01165DD62579CD00C750A987 /* SelectionSyncTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SelectionSyncTests.swift; sourceTree = "<group>"; };
 		0169BC56FF873645016E4124 /* StenographerSummarizing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StenographerSummarizing.swift; sourceTree = "<group>"; };
 		01CBB4B759149E77798BEF75 /* TopicDialogWindowTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TopicDialogWindowTests.swift; sourceTree = "<group>"; };
@@ -5544,6 +5549,7 @@
 		383E9D7881E3F86C735105DC /* SystemWindowMatcher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemWindowMatcher.swift; sourceTree = "<group>"; };
 		3859A502C8ABBC4175715A1C /* FileSystemService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileSystemService.swift; sourceTree = "<group>"; };
 		389C59AE01B9DA4207DB6467 /* SettingObserving.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingObserving.swift; sourceTree = "<group>"; };
+		389DDCF01399326664A5C8B3 /* ClaudeMainDBSinkTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClaudeMainDBSinkTests.swift; sourceTree = "<group>"; };
 		38E51905C6DBE63117871354 /* MarkdownSchemaTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownSchemaTests.swift; sourceTree = "<group>"; };
 		38F1100C049322DAD042F234 /* BoundedBodyLoader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BoundedBodyLoader.swift; sourceTree = "<group>"; };
 		3908B299DFC11D5CFFD3688C /* FormDetails.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FormDetails.swift; sourceTree = "<group>"; };
@@ -5705,6 +5711,7 @@
 		4C321E26DD1824711F6D1B04 /* ScriptAnalyzerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScriptAnalyzerTests.swift; sourceTree = "<group>"; };
 		4C336BD90D299D4BEBE356FF /* LanguageServerDocumentSyncTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LanguageServerDocumentSyncTests.swift; sourceTree = "<group>"; };
 		4C7FECFF372ADCCC6A90E716 /* AIPluginLanguageModelProviderTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIPluginLanguageModelProviderTests.swift; sourceTree = "<group>"; };
+		4C907A515BEEA950F5471C63 /* ClaudeLiveObserverTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClaudeLiveObserverTests.swift; sourceTree = "<group>"; };
 		4CBDEAC1120C78D1B2462109 /* WhippetChatBackend.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WhippetChatBackend.swift; sourceTree = "<group>"; };
 		4CFFE2671E8B9EB14466D551 /* TimestampParsing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimestampParsing.swift; sourceTree = "<group>"; };
 		4D406955FF116011F2F41462 /* AIPluginsCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIPluginsCoordinator.swift; sourceTree = "<group>"; };
@@ -6895,6 +6902,7 @@
 		DEC2C7DD8FC32A8E5A05D971 /* BranchController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BranchController.swift; sourceTree = "<group>"; };
 		DECB8329E89276F339842617 /* CurrencyCode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CurrencyCode.swift; sourceTree = "<group>"; };
 		DEDC7BF08073469743F6E024 /* SnippetStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SnippetStoreTests.swift; sourceTree = "<group>"; };
+		DEE340265DE8E077ACB725E5 /* ClaudeMainDBSink.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClaudeMainDBSink.swift; sourceTree = "<group>"; };
 		DEEB54E6901DA73B3B6FC1C6 /* HelpDrawerController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HelpDrawerController.swift; sourceTree = "<group>"; };
 		DF2284FA59EDE7DD79365294 /* WebviewPanelPostMessageTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebviewPanelPostMessageTests.swift; sourceTree = "<group>"; };
 		DF2C6BDD6C611B0F5D91707F /* WebviewPanelSerializerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebviewPanelSerializerTests.swift; sourceTree = "<group>"; };
@@ -7929,6 +7937,8 @@
 			children = (
 				DC1C4D5D77EFFDF2F8064192 /* Fixtures */,
 				C3AD9BDDDA2CBD20881E00E7 /* ClaudeHookNormalizerTests.swift */,
+				4C907A515BEEA950F5471C63 /* ClaudeLiveObserverTests.swift */,
+				389DDCF01399326664A5C8B3 /* ClaudeMainDBSinkTests.swift */,
 				03C7F25CE99A8DEC55732B42 /* ClaudeSourcesTests.swift */,
 				0612DBA0239D20691F78C143 /* ClaudeTranscriptNormalizerTests.swift */,
 			);
@@ -11115,6 +11125,8 @@
 				57485B07F69EE725AB0D945C /* ClaudeCapture.swift */,
 				7CB15FFECEFBF1DE437965BA /* ClaudeHookDropSource.swift */,
 				CDF6F289D86E401CCD6419C1 /* ClaudeHookNormalizer.swift */,
+				010476FF08830724D74CD613 /* ClaudeLiveObserver.swift */,
+				DEE340265DE8E077ACB725E5 /* ClaudeMainDBSink.swift */,
 				3024866A1D515CA367CDDF61 /* ClaudeNormalizer.swift */,
 				A49789150F278E704E16B2E2 /* ClaudeProvider.swift */,
 				D2F280EE4B82103FCD6538DD /* ClaudeTranscriptNormalizer.swift */,
@@ -16840,6 +16852,8 @@
 				C41438174EC879D1D8400DC3 /* BoundedDatabaseTests.swift in Sources */,
 				2E383365F9D4607D987EBBFB /* BranchCreationDetectionTests.swift in Sources */,
 				E2CF5D5A6F69FF4E30CD588C /* ClaudeHookNormalizerTests.swift in Sources */,
+				18EA198EAE8E3BBA199A2265 /* ClaudeLiveObserverTests.swift in Sources */,
+				D6008CBDCC29FB0FDBA9EF6C /* ClaudeMainDBSinkTests.swift in Sources */,
 				4214D5A5BD7B5273500D5031 /* ClaudeSourcesTests.swift in Sources */,
 				C3591E724E5E612902B71270 /* ClaudeTranscriptNormalizerTests.swift in Sources */,
 				5BB79A468CB99B925685CE32 /* ConversationExtractCacheTests.swift in Sources */,
@@ -17603,6 +17617,8 @@
 				9C3B418C52916B4534B6F53A /* ClaudeCapture.swift in Sources */,
 				47C73FC61ED242C090D0223C /* ClaudeHookDropSource.swift in Sources */,
 				62782F69819F7C1E7EA00A59 /* ClaudeHookNormalizer.swift in Sources */,
+				8920EE2E3BDC8634E9D68F7B /* ClaudeLiveObserver.swift in Sources */,
+				C7BF53BA03DD59BEE403E8C3 /* ClaudeMainDBSink.swift in Sources */,
 				305D32531B9BED0344D67AA9 /* ClaudeNormalizer.swift in Sources */,
 				0C9C0653116BA352F48B565B /* ClaudeProvider.swift in Sources */,
 				C220B12266286BA39A33D9CE /* ClaudeTranscriptNormalizer.swift in Sources */,
