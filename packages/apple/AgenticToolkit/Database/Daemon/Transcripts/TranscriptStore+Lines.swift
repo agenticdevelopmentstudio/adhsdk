@@ -147,17 +147,17 @@ extension DaemonDatabase {
     /// second means the importer simply hasn't reached this session and the file
     /// is still the only source of truth.
     public enum ImportedTitle: Equatable {
-        /// The most recent `custom-title` line the importer has stored.
+        /// The most recent usable `custom-title` the event store holds.
         case found(String)
-        /// Lines exist for this session and none is a `custom-title` — an
+        /// Messages exist for this session and no usable `custom-title` — an
         /// authoritative "there is no title", so re-reading the file adds nothing.
         case absent
-        /// No lines stored for this session at all; the DB cannot answer.
+        /// No messages stored for this session at all; the DB cannot answer.
         case notImported
     }
 
-    /// The latest `custom-title` for a session, read from the already-imported
-    /// `transcript_lines` instead of the transcript file.
+    /// The latest `custom-title` for a session, read from what the pipeline
+    /// already stored instead of the transcript file.
     ///
     /// The startup enrichment pass used to answer this by streaming the whole
     /// `.jsonl` — and the sessions that reach it are the *worst* case for that:
@@ -172,41 +172,21 @@ extension DaemonDatabase {
     /// Reading it back out of the DB is the same answer for a fraction of the
     /// memory: the importer already stored every one of those lines, so the scan
     /// was re-deriving what the daemon had written down.
+    ///
+    /// Read from the event store: each `custom-title` line is an event whose
+    /// time is the line's own or, as title lines carry none, when it was
+    /// captured plus its line number — so newest by `(time, id)` is the file's
+    /// last occurrence. A line with an empty or unreadable title never became an
+    /// event, so the first one read is the last usable title, which is what the
+    /// whole-file scan returned. Without an event store attached the answer is
+    /// `.notImported`, and the caller falls back to the file.
     public func latestCustomTitle(sessionId: String) throws -> ImportedTitle {
-        try read { _ in
-            var title: String?
-            // Ordered by `line_no` so "latest" matches the file's last occurrence,
-            // which is what the whole-file scan returned.
-            //
-            // Every `custom-title` line, not `LIMIT 1`: the file scan takes the last
-            // line that *parses to a non-empty title*, skipping the rest, so stopping
-            // at the last line full stop disagrees with it whenever the final one is
-            // empty or malformed — the DB path then reports `.absent`, which the
-            // enricher trusts as authoritative and writes no summary at all, dropping
-            // a title the file scan would have found. Sessions carry a handful of
-            // these lines at most (one per rename), so reading them all is cheap.
-            try query("""
-                SELECT raw_json FROM transcript_lines
-                WHERE session_id = ? AND entry_type = 'custom-title'
-                ORDER BY line_no DESC
-            """, params: [sessionId]) { row in
-                guard title == nil,
-                      let raw = optionalString(row, 0),
-                      let parsed = Self.customTitle(fromRawJSON: raw),
-                      !parsed.isEmpty else { return }
-                title = parsed
-            }
-            if let title {
-                return .found(title)
-            }
-            // Distinguish "swept and empty" from "not imported yet": only the
-            // former justifies not falling back to the file.
-            var anyLine = false
-            try query("SELECT 1 FROM transcript_lines WHERE session_id = ? LIMIT 1", params: [sessionId]) { _ in
-                anyLine = true
-            }
-            return anyLine ? .absent : .notImported
+        if let title = try claudeCustomTitles(sessionId: sessionId).first {
+            return .found(title)
         }
+        // Distinguish "swept and empty" from "not imported yet": only the
+        // former justifies not falling back to the file.
+        return try claudeHasMessages(sessionId: sessionId) ? .absent : .notImported
     }
 
     /// Pulls `customTitle` out of one stored `custom-title` line. Returns nil when

@@ -2,24 +2,25 @@
 import AgenticToolkitCore
 import Foundation
 
-/// `ConversationExtractor.extract` results, remembered by transcript line.
+/// `ConversationExtractor` results, remembered by event-store message.
 ///
 /// The Conversations window re-reads its whole feed on every poll, and each read
-/// parses up to `limit × 12` `raw_json` lines — tens of KB of JSON apiece — to
+/// parses up to `limit × 12` messages' `attrs` JSON — tens of KB apiece — to
 /// find the few hundred that are conversation. Almost all of them are the same
-/// lines the previous poll parsed: ~1 of every 20 sampled daemon seconds went to
-/// re-parsing them while the window was open. `transcript_lines` rows are
-/// insert-only (`INSERT OR IGNORE`), so a line's parse never goes stale; the
-/// raw length rides along in the key only so a rowid reused after retention
-/// can't be served another line's text.
+/// messages the previous poll parsed: ~1 of every 20 sampled daemon seconds went
+/// to re-parsing them while the window was open. `messages` rows are
+/// insert-only (`ON CONFLICT DO NOTHING`), so a message's parse never goes
+/// stale; the text and attrs lengths ride along in the key only so a rowid
+/// reused after retention can't be served another message's lines.
 ///
 /// The bounded, lock-guarded store is the toolkit's `LRUCache`; what stays
 /// here is the key and the extractor. Its eviction is O(n) — about 15 µs per
 /// miss at 12,000 entries, well under the JSON parse every miss already pays.
 public final class ConversationExtractCache: Sendable {
     private struct Key: Hashable, Sendable {
-        let lineId: Int
-        let rawLength: Int
+        let messageId: Int64
+        let textLength: Int
+        let attrsLength: Int
     }
 
     private let cache: LRUCache<Key, [ConversationExtractor.Line]>
@@ -30,12 +31,13 @@ public final class ConversationExtractCache: Sendable {
 
     public var capacity: Int { cache.capacity }
 
-    public func lines(lineId: Int, rawJSON: String) -> [ConversationExtractor.Line] {
-        let key = Key(lineId: lineId, rawLength: rawJSON.utf8.count)
+    /// The lines of one message — see ``ConversationExtractor/extract(role:text:attrsJSON:)``.
+    public func lines(messageId: Int64, role: String, text: String, attrsJSON: String) -> [ConversationExtractor.Line] {
+        let key = Key(messageId: messageId, textLength: text.utf8.count, attrsLength: attrsJSON.utf8.count)
         if let hit = cache.value(for: key) { return hit }
         // Parsed outside any lock: concurrent feed reads must not queue behind
         // one another's JSON.
-        let parsed = ConversationExtractor.extract(rawJSON: rawJSON)
+        let parsed = ConversationExtractor.extract(role: role, text: text, attrsJSON: attrsJSON)
         cache.set(parsed, for: key)
         return parsed
     }

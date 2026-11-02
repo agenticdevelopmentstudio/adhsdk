@@ -309,6 +309,9 @@ final class ClaudeTranscriptNormalizerTests: XCTestCase {
                      "input": .object(["file_path": .string("/Users/dev/work/myapp/Sources/Upload.swift")])])
         ]))
         XCTAssertNil(message.attrs["queued_prompt"])
+        XCTAssertNil(message.attrs["stop_reason"], "a null stop_reason is no stop_reason")
+        XCTAssertNil(message.attrs["entrypoint"])
+        XCTAssertNil(message.attrs["is_meta"])
 
         let result = try XCTUnwrap(try Self.normalize("user-tool-result").messages.first)
         XCTAssertEqual(result.role, "user")
@@ -316,6 +319,20 @@ final class ClaudeTranscriptNormalizerTests: XCTestCase {
         XCTAssertEqual(result.attrs["blocks"], .array([.object([
             "tool_use_id": .string("toolu_01A2B3C4D5E6F7G8H9J0K1L2"), "type": .string("tool_result"),
             "content": .string("import Foundation\nstruct Upload {}")])]))
+    }
+
+    func testMessageKeepsTheFactsTheConversationFeedJudgesBy() throws {
+        let line = #"{"type":"assistant","sessionId":"s1","timestamp":"2026-10-30T12:00:00Z","uuid":"f1","#
+            + #""entrypoint":"sdk-cli","isMeta":false,"turnOrigin":"task_notification","isCompactSummary":true,"#
+            + #""message":{"role":"assistant","stop_reason":"end_turn","content":[{"type":"text","text":"hi"}]}}"#
+        let payload = ClaudeTranscriptPayload(file: "/p/s1.jsonl", lineNo: 1, subagentFile: false, line: line)
+        let batch = try ClaudeTranscriptNormalizer().normalize(ArchivedRecord(id: 1, record: try Self.record(payload)))
+        let message = try XCTUnwrap(batch.messages.first)
+        XCTAssertEqual(message.attrs["stop_reason"], .string("end_turn"))
+        XCTAssertEqual(message.attrs["entrypoint"], .string("sdk-cli"))
+        XCTAssertEqual(message.attrs["is_meta"], .bool(false))
+        XCTAssertEqual(message.attrs["turn_origin"], .string("task_notification"))
+        XCTAssertEqual(message.attrs["is_compact_summary"], .bool(true))
     }
 
     func testQueuedPromptIsFlagged() throws {
@@ -355,13 +372,18 @@ final class ClaudeTranscriptNormalizerTests: XCTestCase {
             XCTAssertEqual(event.attrs["title"], .string(title))
             XCTAssertEqual(event.attrs["title_source"], .string(source))
             XCTAssertEqual(event.sessionID, Self.sessionID)
-            // Title lines carry no timestamp: 0 + line_no * 1e-6.
+            // Title lines carry no timestamp, so the event takes the capture
+            // time plus line_no * 1e-6 (never the epoch: the session's title is
+            // read back from these events newest first). The session upsert
+            // keeps 0 + line_no * 1e-6, so a timed observation outranks it.
             let lineNo = Double(try XCTUnwrap(Self.lineNumbers[stem]))
-            XCTAssertEqual(event.time.timeIntervalSince1970, lineNo * 1e-6, accuracy: 1e-7)
+            XCTAssertEqual(
+                event.time.timeIntervalSince1970, Self.receivedAt.timeIntervalSince1970 + lineNo * 1e-6,
+                accuracy: 1e-6)
             let session = try XCTUnwrap(batch.sessions.first, stem)
             XCTAssertEqual(batch.sessions.count, 1, stem)
             XCTAssertEqual(session.title, title)
-            XCTAssertEqual(session.asOf, event.time)
+            XCTAssertEqual(session.asOf.timeIntervalSince1970, lineNo * 1e-6, accuracy: 1e-7)
             XCTAssertNil(session.startedAt)
             XCTAssertTrue(batch.turns.isEmpty && batch.messages.isEmpty, stem)
         }

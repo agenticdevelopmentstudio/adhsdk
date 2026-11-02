@@ -57,7 +57,9 @@ public final class EventStore: @unchecked Sendable {
         ("turns_time", "CREATE INDEX IF NOT EXISTS turns_time ON turns(time)"),
         ("turns_session", "CREATE INDEX IF NOT EXISTS turns_session ON turns(provider, session_id, time)"),
         ("messages_session_time",
-         "CREATE INDEX IF NOT EXISTS messages_session_time ON messages(provider, session_id, time)")
+         "CREATE INDEX IF NOT EXISTS messages_session_time ON messages(provider, session_id, time)"),
+        // The Conversations feed's merged read: every session's messages newest first.
+        ("messages_time", "CREATE INDEX IF NOT EXISTS messages_time ON messages(provider, time)")
     ]
 
     private static let sessionScalarFields = ["cwd", "project", "account", "model", "title", "status"]

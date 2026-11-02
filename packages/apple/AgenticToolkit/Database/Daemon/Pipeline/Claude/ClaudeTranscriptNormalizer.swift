@@ -72,6 +72,10 @@ private struct Line {
     /// `parsedTime`, or the epoch.
     let time: Date
     let asOf: Date
+    /// When the record was captured, plus `line_no` microseconds: the stand-in
+    /// time of an event whose line carries no timestamp. Read from the archived
+    /// record, so a replay derives the same value.
+    let ingestTime: Date
 
     init(payload: ClaudeTranscriptPayload, root: [String: Any], record: ArchivedRecord) {
         self.payload = payload
@@ -85,6 +89,8 @@ private struct Line {
         parsedTime = TimestampParsing.parse(raw.timestamp)
         time = parsedTime ?? Date(timeIntervalSince1970: 0)
         asOf = Date(timeIntervalSince1970: time.timeIntervalSince1970 + Double(payload.lineNo) * 1e-6)
+        ingestTime = Date(
+            timeIntervalSince1970: record.record.receivedAt.timeIntervalSince1970 + Double(payload.lineNo) * 1e-6)
     }
 
     private var cwd: String? { Self.nonEmpty(root["cwd"] as? String) }
@@ -94,7 +100,13 @@ private struct Line {
     // MARK: - Rows
 
     func appendTitle(_ title: JSONLScanner.ParsedTitle, to batch: inout NormalizedBatch) {
-        let eventTime = parsedTime ?? asOf
+        // A title line normally carries no timestamp, and its event is what the
+        // session's title is read back from, newest first: at the epoch, every
+        // untimed title would tie and sort below any timed one. So an untimed
+        // title takes the time it was captured — later titles were captured
+        // later, and `line_no` orders two from one read. The session upsert
+        // keeps `asOf`, so a timed observation still outranks it.
+        let eventTime = parsedTime ?? ingestTime
         batch.events.append(NormalizedEvent(
             dedupKey: dedupKey, sessionID: title.sessionId, kind: .other, providerType: raw.entryType,
             time: eventTime, cwd: cwd, summary: title.title,
@@ -124,10 +136,36 @@ private struct Line {
         if let blocks = content as? [Any] {
             attrs["blocks"] = ClaudeHookNormalizer.value(blocks)
         }
+        appendConversationFacts(to: &attrs)
         batch.messages.append(MessageRow(
             dedupKey: dedupKey, uuid: raw.entryUuid.isEmpty ? dedupKey : raw.entryUuid,
             parentUUID: Self.nonEmpty(raw.parentUuid), sessionID: raw.sessionId, role: role, time: time,
             isSidechain: raw.isSidechain, text: Self.text(content), attrs: attrs, rawRef: recordID))
+    }
+
+    /// The line-level facts the Conversations feed's extractor judges a message
+    /// by, which the message row's own columns do not carry: how the reply
+    /// ended (`stop_reason` — reply versus narration), how the session was
+    /// started (`entrypoint` — an `sdk-` session is a program talking), and
+    /// the harness's own marks on an entry it wrote itself (`is_meta`,
+    /// `turn_origin`, `is_compact_summary`). Each is stored only when the line
+    /// carries it, so an absent key reads exactly as the field's absence did.
+    private func appendConversationFacts(to attrs: inout [String: NormalizedValue]) {
+        if let stopReason = (root["message"] as? [String: Any])?["stop_reason"] as? String {
+            attrs["stop_reason"] = .string(stopReason)
+        }
+        if let entrypoint = root["entrypoint"] as? String {
+            attrs["entrypoint"] = .string(entrypoint)
+        }
+        if let isMeta = root["isMeta"] as? Bool {
+            attrs["is_meta"] = .bool(isMeta)
+        }
+        if let turnOrigin = root["turnOrigin"] as? String {
+            attrs["turn_origin"] = .string(turnOrigin)
+        }
+        if let isCompactSummary = root["isCompactSummary"] as? Bool {
+            attrs["is_compact_summary"] = .bool(isCompactSummary)
+        }
     }
 
     func appendDispatch(to batch: inout NormalizedBatch) {

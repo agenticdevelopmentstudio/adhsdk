@@ -39,6 +39,40 @@ public struct ClaudeEventRow: Sendable, Equatable {
     }
 }
 
+/// One Claude row of the event store's `messages` table, as the Conversations
+/// feed reads it: `time` is epoch seconds (0 for a line that carried no
+/// timestamp) and `attrs` the stored JSON object text.
+public struct ClaudeMessageRow: Sendable, Equatable {
+    public let id: Int64
+    public let sessionId: String
+    public let role: String
+    public let time: Double
+    public let text: String
+    public let attrs: String
+
+    public init(id: Int64, sessionId: String, role: String, time: Double, text: String, attrs: String) {
+        self.id = id
+        self.sessionId = sessionId
+        self.role = role
+        self.time = time
+        self.text = text
+        self.attrs = attrs
+    }
+
+    /// `time` as the feed's wire timestamp: ISO-8601 UTC with milliseconds,
+    /// rounded to the nearest one — the precision transcripts write, and what
+    /// a timestamp read back from a stored `…00.123Z` must render as again
+    /// (the stored double is a hair below it).
+    public var timestamp: String { Self.timestamp(time) }
+
+    public static func timestamp(_ time: Double) -> String {
+        let millis = Int((time * 1000).rounded())
+        let (seconds, fraction) = (millis >= 0 ? millis / 1000 : (millis - 999) / 1000, ((millis % 1000) + 1000) % 1000)
+        let whole = UTCTimestamp.string(epochSeconds: seconds)
+        return String(whole.dropLast()) + String(format: ".%03dZ", fraction)
+    }
+}
+
 /// Every read the session database's readers make of the event store
 /// (`events.db`) and the raw archive. Each binds the Claude provider, and each
 /// answers empty — never throws — when no event store is attached
@@ -262,6 +296,72 @@ extension DaemonDatabase {
         try withEventReads(nil) { conn in
             try Int64.fetchOne(
                 conn, sql: "SELECT seq FROM sqlite_sequence WHERE name = 'events'") ?? 0
+        }
+    }
+
+    // MARK: - Messages and titles
+
+    /// The session's conversation messages and the main sessions' user and
+    /// assistant messages (a sub-agent's sidechain is a different
+    /// conversation), newest first by time, then by id — the order lines were
+    /// stored in, so two untimed lines keep their file order. `sessionId` nil is
+    /// every session; `before` (epoch seconds) keeps only messages strictly
+    /// earlier.
+    ///
+    /// A message whose line carried no timestamp sits at the epoch and is kept:
+    /// the feed shows it at the oldest end rather than losing a real prompt or
+    /// reply.
+    public func claudeConversationMessages(
+        sessionId: String?, before: Double?, limit: Int
+    ) throws -> [ClaudeMessageRow] {
+        var conditions = ["provider = ?", "is_sidechain = 0", "role IN ('user', 'assistant')"]
+        var arguments: [any DatabaseValueConvertible] = [ClaudeProvider.name]
+        if let sessionId {
+            conditions.append("session_id = ?")
+            arguments.append(sessionId)
+        }
+        if let before {
+            conditions.append("time < ?")
+            arguments.append(before)
+        }
+        arguments.append(max(limit, 0))
+        // `messages_session_time (provider, session_id, time)` answers the
+        // scoped read in order and `messages_time (provider, time)` the merged
+        // one, so `LIMIT` stops either scan instead of sorting the table.
+        let sql = """
+            SELECT id, session_id, role, time, COALESCE(text, ''), attrs FROM messages
+            WHERE \(conditions.joined(separator: " AND "))
+            ORDER BY time DESC, id DESC
+            LIMIT ?
+            """
+        return try withEventReads([]) { conn in
+            try Row.fetchAll(conn, sql: sql, arguments: StatementArguments(arguments)).map { row in
+                ClaudeMessageRow(
+                    id: row[0] ?? 0, sessionId: row[1] ?? "", role: row[2] ?? "", time: row[3] ?? 0,
+                    text: row[4] ?? "", attrs: row[5] ?? "{}")
+            }
+        }
+    }
+
+    /// The session's `custom-title` titles, newest first by event time (then
+    /// id). Empty titles are left out.
+    public func claudeCustomTitles(sessionId: String) throws -> [String] {
+        try withEventReads([]) { conn in
+            try String.fetchAll(conn, sql: """
+                SELECT COALESCE(json_extract(attrs, '$.title'), summary, '') FROM events
+                WHERE provider = ? AND session_id = ? AND provider_type = 'custom-title'
+                ORDER BY time DESC, id DESC
+                """, arguments: [ClaudeProvider.name, sessionId])
+            .filter { !$0.isEmpty }
+        }
+    }
+
+    /// Whether the store holds any message for the session.
+    public func claudeHasMessages(sessionId: String) throws -> Bool {
+        try withEventReads(false) { conn in
+            try Bool.fetchOne(conn, sql: """
+                SELECT EXISTS(SELECT 1 FROM messages WHERE provider = ? AND session_id = ?)
+                """, arguments: [ClaudeProvider.name, sessionId]) ?? false
         }
     }
 

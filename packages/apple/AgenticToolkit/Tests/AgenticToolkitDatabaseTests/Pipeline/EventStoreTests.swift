@@ -235,7 +235,7 @@ final class EventStoreTests: XCTestCase {
     }
 
     private let indexNames = ["events_session_time", "events_time", "turns_time", "turns_session",
-                              "messages_session_time"]
+                              "messages_session_time", "messages_time"]
 
     private func presentIndexes(_ path: String) throws -> Set<String> {
         let queue = try DatabaseQueue(path: path)
