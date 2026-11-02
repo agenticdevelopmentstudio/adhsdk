@@ -8,13 +8,14 @@ import { useRouter } from "next/navigation";
 import { HierarchicalDetailView } from "@adh-sdk/ui/blocks";
 
 // src/help/topic-icons.tsx
-import { Braces, FileText, Info, LayoutGrid, Plug } from "lucide-react";
+import { Braces, FileText, GraduationCap, Info, LayoutGrid, Plug } from "lucide-react";
 import { jsx } from "react/jsx-runtime";
 var TOPIC_ICON = {
   overview: /* @__PURE__ */ jsx(Info, { size: 16, "aria-hidden": true }),
   "rest-api": /* @__PURE__ */ jsx(Braces, { size: 16, "aria-hidden": true }),
   mcp: /* @__PURE__ */ jsx(Plug, { size: 16, "aria-hidden": true }),
-  hub: /* @__PURE__ */ jsx(LayoutGrid, { size: 16, "aria-hidden": true })
+  hub: /* @__PURE__ */ jsx(LayoutGrid, { size: 16, "aria-hidden": true }),
+  tutorials: /* @__PURE__ */ jsx(GraduationCap, { size: 16, "aria-hidden": true })
 };
 function topicIcon(id) {
   return TOPIC_ICON[id] ?? /* @__PURE__ */ jsx(FileText, { size: 16, "aria-hidden": true });

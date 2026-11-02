@@ -16,17 +16,18 @@
 // boundary. Keep it directive-free.
 
 import type { ReactNode } from 'react'
-import { Braces, FileText, Info, LayoutGrid, Plug } from 'lucide-react'
+import { Braces, FileText, GraduationCap, Info, LayoutGrid, Plug } from 'lucide-react'
 import type { HelpTopicId } from './topics'
 
 // Keyed by the exact HelpTopic.id (see topics.ts). Glyphs read as the topic: Overview an info
 // mark, REST API the braces of a JSON API, MCP a connector plug, Hub Features a grid of
-// capabilities.
+// capabilities, Tutorials a mortarboard.
 const TOPIC_ICON: Record<string, ReactNode> = {
   overview: <Info size={16} aria-hidden />,
   'rest-api': <Braces size={16} aria-hidden />,
   mcp: <Plug size={16} aria-hidden />,
   hub: <LayoutGrid size={16} aria-hidden />,
+  tutorials: <GraduationCap size={16} aria-hidden />,
 }
 
 /** The leading glyph for a help topic row, by topic id. Unmapped ids fall back to a document glyph,

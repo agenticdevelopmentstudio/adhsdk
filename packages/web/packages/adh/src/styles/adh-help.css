@@ -50,14 +50,14 @@
   overflow: hidden;
 }
 
-/* The Hub Features leaf in the modal: the document lives on the help site, so the modal shows a
- * short line and a link out, centred in the pane. */
-.adh-help-topic--hub {
+/* A document leaf in the modal (Hub Features, Tutorials): the document lives on the help site, so
+ * the modal shows a short line and a link out, centred in the pane. */
+.adh-help-topic--document {
   justify-content: center;
   align-items: center;
   padding: 1.5rem;
 }
-.adh-help-topic--hub > * {
+.adh-help-topic--document > * {
   width: 100%;
   max-width: 44rem;
 }

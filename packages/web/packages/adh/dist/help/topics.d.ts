@@ -44,10 +44,11 @@ export interface HelpTopic {
      *  markdown. May coexist with `children` (section page); mutually exclusive with `view`. */
     contentKey?: string;
     /** A built-in non-markdown detail view. `api` = the REST API reference (a link-out to the
-     *  standalone `/rest-api` reference on the site; the interactive browser in the modal). `hub` =
-     *  the Hub Features document, which the help site serves from its own content tree under `/hub`
-     *  (the modal links out to it). Mutually exclusive with `contentKey`. */
-    view?: 'api' | 'hub';
+     *  standalone `/rest-api` reference on the site; the interactive browser in the modal).
+     *  `document` = a document the help site builds with content-buildr from its own content tree and
+     *  serves under `/<slug>` (Hub Features, Tutorials); the modal links out to it. Mutually exclusive
+     *  with `contentKey`. */
+    view?: 'api' | 'document';
 }
 export declare const HELP_TOPICS: HelpTopic[];
 /** True when the node opens no child level (its detail pane is the frontier). */

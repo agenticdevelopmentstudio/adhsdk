@@ -42,14 +42,24 @@ var HELP_TOPICS = [
   },
   {
     // The Hub Features document is not markdown in this package: the help site builds it with
-    // content-buildr from `content/hub-features/` in adhubwebsite and serves it under `/hub` with
-    // its own cascading lists, one per level of the document. So this is a leaf with a `view`, like
-    // the REST API: on the site the `/hub` route owns it, and the modal links out to it.
+    // content-buildr from adhcontent's `content/adhubwebsite/hub-features/` and serves it under
+    // `/hub` with its own cascading lists, one per level of the document. So this is a leaf with a
+    // `view`, like the REST API: on the site the `/hub` route owns it, and the modal links out to it.
     id: "hub",
     label: "Hub Features",
     slug: "hub",
     description: "Every feature of the Agentic Developer Hub, described one at a time.",
-    view: "hub"
+    view: "document"
+  },
+  {
+    // Tutorials: short how-tos, each doing one specific thing from start to finish. A document like
+    // Hub Features, built from adhcontent's `content/adhubwebsite/tutorials/` and served by the help
+    // site under `/tutorials`.
+    id: "tutorials",
+    label: "Tutorials",
+    slug: "tutorials",
+    description: "Short how-tos, each one task on the Agentic Developer Hub done from start to finish.",
+    view: "document"
   }
 ];
 function isLeaf(topic) {

@@ -44,14 +44,24 @@ var HELP_TOPICS = [
   },
   {
     // The Hub Features document is not markdown in this package: the help site builds it with
-    // content-buildr from `content/hub-features/` in adhubwebsite and serves it under `/hub` with
-    // its own cascading lists, one per level of the document. So this is a leaf with a `view`, like
-    // the REST API: on the site the `/hub` route owns it, and the modal links out to it.
+    // content-buildr from adhcontent's `content/adhubwebsite/hub-features/` and serves it under
+    // `/hub` with its own cascading lists, one per level of the document. So this is a leaf with a
+    // `view`, like the REST API: on the site the `/hub` route owns it, and the modal links out to it.
     id: "hub",
     label: "Hub Features",
     slug: "hub",
     description: "Every feature of the Agentic Developer Hub, described one at a time.",
-    view: "hub"
+    view: "document"
+  },
+  {
+    // Tutorials: short how-tos, each doing one specific thing from start to finish. A document like
+    // Hub Features, built from adhcontent's `content/adhubwebsite/tutorials/` and served by the help
+    // site under `/tutorials`.
+    id: "tutorials",
+    label: "Tutorials",
+    slug: "tutorials",
+    description: "Short how-tos, each one task on the Agentic Developer Hub done from start to finish.",
+    view: "document"
   }
 ];
 function flattenTopics(topics = HELP_TOPICS) {
@@ -92,13 +102,14 @@ function buildTopicLevels(path) {
 }
 
 // src/help/topic-icons.tsx
-import { Braces, FileText, Info, LayoutGrid, Plug } from "lucide-react";
+import { Braces, FileText, GraduationCap, Info, LayoutGrid, Plug } from "lucide-react";
 import { jsx } from "react/jsx-runtime";
 var TOPIC_ICON = {
   overview: /* @__PURE__ */ jsx(Info, { size: 16, "aria-hidden": true }),
   "rest-api": /* @__PURE__ */ jsx(Braces, { size: 16, "aria-hidden": true }),
   mcp: /* @__PURE__ */ jsx(Plug, { size: 16, "aria-hidden": true }),
-  hub: /* @__PURE__ */ jsx(LayoutGrid, { size: 16, "aria-hidden": true })
+  hub: /* @__PURE__ */ jsx(LayoutGrid, { size: 16, "aria-hidden": true }),
+  tutorials: /* @__PURE__ */ jsx(GraduationCap, { size: 16, "aria-hidden": true })
 };
 function topicIcon(id) {
   return TOPIC_ICON[id] ?? /* @__PURE__ */ jsx(FileText, { size: 16, "aria-hidden": true });
@@ -535,7 +546,7 @@ function ApiTopic() {
   return /* @__PURE__ */ jsx4("div", { className: "adh-help-topic adh-help-topic--api", children: /* @__PURE__ */ jsx4(ApiBrowser, {}) });
 }
 
-// src/help/views/HubTopic.tsx
+// src/help/views/DocumentTopic.tsx
 import { siteProdUrl, siteUrl } from "@adh-sdk/adh-registry";
 
 // src/header/useClientHost.ts
@@ -546,16 +557,20 @@ function useClientHost() {
   return host;
 }
 
-// src/help/views/HubTopic.tsx
+// src/help/views/DocumentTopic.tsx
 import { jsx as jsx5, jsxs } from "react/jsx-runtime";
-var HUB_PATH = "/hub";
-function HubTopic() {
+function DocumentTopic({ topic }) {
   const host = useClientHost();
+  const path = `/${topic.slug}`;
   const hostname = host?.split(":")[0];
-  const href = hostname ? siteUrl("hub-help", HUB_PATH, hostname) : siteProdUrl("hub-help", HUB_PATH);
-  return /* @__PURE__ */ jsx5("div", { className: "adh-help-topic adh-help-topic--hub", children: /* @__PURE__ */ jsxs("div", { className: "flex flex-col items-center gap-2 text-center", children: [
-    /* @__PURE__ */ jsx5("p", { children: "Every feature of the Agentic Developer Hub, described one at a time." }),
-    /* @__PURE__ */ jsx5("a", { href, target: "_blank", rel: "noreferrer", className: "adh-help-topic__link", children: "Open Hub Features \u2192" })
+  const href = hostname ? siteUrl("hub-help", path, hostname) : siteProdUrl("hub-help", path);
+  return /* @__PURE__ */ jsx5("div", { className: "adh-help-topic adh-help-topic--document", children: /* @__PURE__ */ jsxs("div", { className: "flex flex-col items-center gap-2 text-center", children: [
+    topic.description ? /* @__PURE__ */ jsx5("p", { children: topic.description }) : null,
+    /* @__PURE__ */ jsxs("a", { href, target: "_blank", rel: "noreferrer", className: "adh-help-topic__link", children: [
+      "Open ",
+      topic.label,
+      " \u2192"
+    ] })
   ] }) });
 }
 
@@ -566,7 +581,7 @@ function topicView(topic) {
     return /* @__PURE__ */ jsx6(EmptyState, { className: "m-4", title: "No topic selected", description: "Choose a help topic to get started." });
   }
   if (topic.view === "api") return /* @__PURE__ */ jsx6(ApiTopic, {});
-  if (topic.view === "hub") return /* @__PURE__ */ jsx6(HubTopic, {});
+  if (topic.view === "document") return /* @__PURE__ */ jsx6(DocumentTopic, { topic });
   if (topic.contentKey) return /* @__PURE__ */ jsx6(MarkdownTopic, { contentKey: topic.contentKey });
   return /* @__PURE__ */ jsx6(EmptyState, { className: "m-4", title: topic.label, description: topic.description ?? "Choose a subtopic." });
 }

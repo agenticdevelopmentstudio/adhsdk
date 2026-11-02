@@ -24,14 +24,19 @@ describe('the root topics', () => {
     expect(isLeaf(first)).toBe(true)
   })
 
-  it('serve Hub Features from the site route, not from markdown here', () => {
+  it.each(['hub', 'tutorials'])('serve the %s document from the site route, not from markdown here', (slug) => {
     // The document is built by the help site with content-buildr, so the topic is a leaf with a
-    // view: on the site `/hub` owns it, and the modal links out to it.
-    const hub = topicBySlug('hub')!
-    expect(hub.view).toBe('hub')
-    expect(hub.contentKey).toBeUndefined()
-    expect(isLeaf(hub)).toBe(true)
-    expect(hasDetail(hub)).toBe(true)
+    // view: on the site `/<slug>` owns it, and the modal links out to it.
+    const doc = topicBySlug(slug)!
+    expect(doc.view).toBe('document')
+    expect(doc.contentKey).toBeUndefined()
+    expect(isLeaf(doc)).toBe(true)
+    expect(hasDetail(doc)).toBe(true)
+  })
+
+  it('list Tutorials right after Hub Features', () => {
+    const ids = HELP_TOPICS.map((t) => t.id)
+    expect(ids.indexOf('tutorials')).toBe(ids.indexOf('hub') + 1)
   })
 })
 
