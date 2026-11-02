@@ -596,10 +596,12 @@ public final class EventStore: @unchecked Sendable {
 // MARK: - Reading
 
 extension EventStore {
-    /// Runs `body` on a read-only reader connection under the store's read
-    /// deadline. A write inside `body` throws ("attempt to write a readonly
-    /// database"); writes go through ``write(_:provider:deadline:)``.
-    public func read<T>(_ body: (Database) throws -> T) throws -> T {
-        try pool.read(body)
+    /// Runs `body` on a read-only reader connection, ejected after `deadline`
+    /// (nil: the store's 30 s read deadline; a whole-store scan such as
+    /// repricing passes a longer one). A write inside `body` throws ("attempt
+    /// to write a readonly database"); writes go through
+    /// ``write(_:provider:deadline:)``.
+    public func read<T>(deadline: Duration? = nil, _ body: (Database) throws -> T) throws -> T {
+        try pool.read(deadline: deadline, body)
     }
 }

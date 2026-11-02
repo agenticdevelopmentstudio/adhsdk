@@ -303,6 +303,29 @@ final class EventStoreTests: XCTestCase {
         try reopened.endBulkLoad()
     }
 
+    func testReadHonoursItsDeadline() throws {
+        let store = try makeStore()
+        // An unbounded counting CTE: reads nothing, writes nothing, runs for
+        // far longer than any deadline here unless the deadline ejects it.
+        let start = Date()
+        XCTAssertThrowsError(
+            try store.read(deadline: .milliseconds(200)) { conn in
+                try Int.fetchOne(conn, sql: """
+                    WITH RECURSIVE seq(n) AS (SELECT 1 UNION ALL SELECT n + 1 FROM seq WHERE n < 10000000000)
+                    SELECT count(*) FROM seq
+                    """)
+            }
+        ) { error in
+            guard case BoundedDatabaseError.deadlineExceeded(let lane, _) = error else {
+                return XCTFail("expected deadlineExceeded, got \(error)")
+            }
+            XCTAssertEqual(lane, "read")
+        }
+        XCTAssertLessThan(Date().timeIntervalSince(start), 3, "ejected near its own deadline")
+        // Without a deadline the store's default applies and a short read completes.
+        XCTAssertEqual(try store.read { conn in try Int.fetchOne(conn, sql: "SELECT 1") }, 1)
+    }
+
     func testAutoVacuumIsIncremental() throws {
         _ = try makeStore()
         let queue = try DatabaseQueue(path: tmpDir.appendingPathComponent(EventStore.fileName).path)

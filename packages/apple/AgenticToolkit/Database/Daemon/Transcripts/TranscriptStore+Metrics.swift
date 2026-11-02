@@ -289,7 +289,8 @@ extension DaemonDatabase {
     ///
     /// Which is why this is maintenance that runs AFTER the listener is up
     /// (the daemon's run loop), never from `runMigrations()`. It did run there,
-    /// and on a 39 GB database the scan exceeded the serving read deadline,
+    /// and on a 39 GB database the scan exceeded the serving read deadline
+    /// (which is why the scan now runs under `maintenanceReadDeadline`),
     /// threw, aborted the daemon's startup phase A, and left launchd restarting
     /// the daemon every ten seconds — the whole daemon down over a cost figure.
     /// A migration gates startup because a wrong schema must not serve; a
@@ -320,7 +321,9 @@ extension DaemonDatabase {
         // own tokens — the same rule `sessionMetricsFromTurns` follows for a
         // single session, which is what keeps the two agreeing.
         var costs: [String: Double] = [:]
-        for group in try claudeTurnTotals(groupBy: .session) {
+        // A whole-store grouped scan: on a converted history it outlives the
+        // store's 30 s read deadline, so it gets the maintenance one.
+        for group in try claudeTurnTotals(groupBy: .session, deadline: Self.maintenanceReadDeadline) {
             costs[group.key, default: 0] += TranscriptPricing.cost(
                 model: group.model,
                 inputTokens: group.inputTokens,

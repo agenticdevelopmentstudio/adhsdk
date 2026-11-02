@@ -138,9 +138,12 @@ extension DaemonDatabase {
     }
 
     /// Runs `body` on the event store's reader, or returns `empty` without one.
-    private func withEventReads<T>(_ empty: T, _ body: (Database) throws -> T) throws -> T {
+    /// `deadline` nil is the store's own read deadline.
+    private func withEventReads<T>(
+        _ empty: T, deadline: Duration? = nil, _ body: (Database) throws -> T
+    ) throws -> T {
         guard let store = eventReads else { return empty }
-        return try store.read(body)
+        return try store.read(deadline: deadline, body)
     }
 
     // MARK: - Counts
@@ -447,13 +450,16 @@ extension DaemonDatabase {
     /// - `topKeys`: keep only the that-many keys with the most turns (ties by
     ///   key), every model row of each. Without session ids the cut is made in
     ///   SQL, so a whole-history read never materialises every group.
+    /// - `deadline`: nil is the store's read deadline; a whole-store scan
+    ///   (repricing) passes `DaemonDatabase.maintenanceReadDeadline`.
     public func claudeTurnTotals(
         since: Double? = nil,
         until: Double? = nil,
         toolName: String? = nil,
         sessionIds: [String]? = nil,
         groupBy: ClaudeTurnGrouping = .all,
-        topKeys: Int? = nil
+        topKeys: Int? = nil,
+        deadline: Duration? = nil
     ) throws -> [ClaudeTurnTotals] {
         let unique = sessionIds.map { Array(Set($0)).sorted() }
         if let unique, unique.isEmpty { return [] }
@@ -478,7 +484,7 @@ extension DaemonDatabase {
                 cacheCreation1hTokens: row[7] ?? 0)
         }
 
-        let rows: [ClaudeTurnTotals] = try withEventReads([]) { conn in
+        let rows: [ClaudeTurnTotals] = try withEventReads([], deadline: deadline) { conn in
             guard let unique else {
                 let whereSQL = filter.conditions.joined(separator: " AND ")
                 if let topKeys, groupBy != .all {
