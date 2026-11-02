@@ -54,6 +54,9 @@ public final class EventStore: @unchecked Sendable {
     private static let indexes: [(name: String, sql: String)] = [
         ("events_session_time", "CREATE INDEX IF NOT EXISTS events_session_time ON events(provider, session_id, time)"),
         ("events_time", "CREATE INDEX IF NOT EXISTS events_time ON events(time)"),
+        // The insights and rollup readers: one hook type over a time range.
+        ("events_type_time",
+         "CREATE INDEX IF NOT EXISTS events_type_time ON events(provider, provider_type, time)"),
         ("turns_time", "CREATE INDEX IF NOT EXISTS turns_time ON turns(time)"),
         ("turns_session", "CREATE INDEX IF NOT EXISTS turns_session ON turns(provider, session_id, time)"),
         ("messages_session_time",

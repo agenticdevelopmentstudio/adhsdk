@@ -138,8 +138,9 @@ extension DaemonDatabase {
     }
 
     /// Runs `body` on the event store's reader, or returns `empty` without one.
-    /// `deadline` nil is the store's own read deadline.
-    private func withEventReads<T>(
+    /// `deadline` nil is the store's own read deadline. Internal so the other
+    /// Claude read extensions in this module share it.
+    func withEventReads<T>(
         _ empty: T, deadline: Duration? = nil, _ body: (Database) throws -> T
     ) throws -> T {
         guard let store = eventReads else { return empty }

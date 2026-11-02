@@ -234,14 +234,30 @@ final class EventStoreTests: XCTestCase {
         XCTAssertEqual(try store.counts(), EventStoreCounts(sessions: 2, events: 2, turns: 2, messages: 2))
     }
 
-    private let indexNames = ["events_session_time", "events_time", "turns_time", "turns_session",
-                              "messages_session_time", "messages_time"]
+    private let indexNames = ["events_session_time", "events_time", "events_type_time", "turns_time",
+                              "turns_session", "messages_session_time", "messages_time"]
 
     private func presentIndexes(_ path: String) throws -> Set<String> {
         let queue = try DatabaseQueue(path: path)
         return try queue.read { conn in
             Set(try String.fetchAll(conn, sql: "SELECT name FROM sqlite_master WHERE type = 'index'"))
         }
+    }
+
+    /// A store file made before `events_type_time` existed gets it on the next
+    /// open: the insights and cache-miss reads filter on (provider, provider_type, time).
+    func testOpeningAnExistingStoreAddsTheTypeTimeIndex() throws {
+        let path = tmpDir.appendingPathComponent(EventStore.fileName).path
+        do {
+            let store = try makeStore()
+            try store.write(sampleBatch(), provider: "mock")
+        }
+        let queue = try DatabaseQueue(path: path)
+        try queue.write { try $0.execute(sql: "DROP INDEX events_type_time") }
+        XCTAssertFalse(try presentIndexes(path).contains("events_type_time"))
+        let reopened = try makeStore()
+        XCTAssertTrue(try presentIndexes(path).contains("events_type_time"))
+        XCTAssertEqual(try reopened.counts().events, 1)
     }
 
     func testBulkLoadDropsAndRebuildsIndexes() throws {
