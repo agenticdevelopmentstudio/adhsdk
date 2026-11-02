@@ -1,4 +1,5 @@
 import AgenticToolkitCore
+import CryptoKit
 import XCTest
 import Foundation
 @testable import AgenticToolkitDatabase
@@ -134,6 +135,77 @@ final class ClaudeEventReadsTests: XCTestCase {
         XCTAssertNil(detail["tool_input"])
     }
 
+    // MARK: - File fingerprints (stamped at capture)
+
+    /// A file under `root` holding `text`, and the fingerprint capture should stamp for it.
+    private func fingerprintedFile(_ text: String) throws -> (path: String, size: Int, sha: String) {
+        let url = root.appendingPathComponent("CLAUDE-\(UUID().uuidString).md")
+        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+        let data = Data(text.utf8)
+        try data.write(to: url)
+        let sha = SHA256.hash(data: data).map { String(format: "%02x", $0) }.joined()
+        return (url.path, data.count, sha)
+    }
+
+    private func assertFingerprint(
+        sessionId: String, eventType: String, size: Int, sha: String,
+        file: StaticString = #filePath, line: UInt = #line
+    ) throws {
+        let event = try XCTUnwrap(try database.fetchEvents(sessionId: sessionId, eventType: eventType).first,
+                                  file: file, line: line)
+        let row = try XCTUnwrap(try database.claudeEvent(id: Int64(event.id)), file: file, line: line)
+        let attrs = try XCTUnwrap(
+            try JSONSerialization.jsonObject(with: Data(row.attrs.utf8)) as? [String: Any], file: file, line: line)
+        XCTAssertEqual(attrs["file_size_bytes"] as? Int, size, "attrs", file: file, line: line)
+        XCTAssertEqual(attrs["file_sha256"] as? String, sha, "attrs", file: file, line: line)
+
+        let detail = try XCTUnwrap(try database.fetchEventDetail(eventLogId: Int64(event.id)), file: file, line: line)
+        let typeFields = try XCTUnwrap(detail["type_fields"] as? [String: Any], file: file, line: line)
+        XCTAssertEqual(typeFields["file_size_bytes"] as? Int, size, "type_fields", file: file, line: line)
+        XCTAssertEqual(typeFields["file_sha256"] as? String, sha, "type_fields", file: file, line: line)
+    }
+
+    func testCaptureStampsTheFingerprintOfAnInstructionsLoadedFile() throws {
+        let target = try fingerprintedFile("# Project rules\n")
+        try harness.ingest(hook("InstructionsLoaded", "s1", "2026-06-01T12:00:00Z", ["file_path": target.path]))
+        // The file changing later does not change what was captured.
+        try Data("rewritten after capture".utf8).write(to: URL(fileURLWithPath: target.path))
+
+        try assertFingerprint(sessionId: "s1", eventType: "InstructionsLoaded", size: target.size, sha: target.sha)
+    }
+
+    func testDropFileOfAConfigChangeIsStampedBeforeTheSpool() throws {
+        let target = try fingerprintedFile(#"{"theme":"dark"}"#)
+        let envelope = try hook("ConfigChange", "s2", "2026-06-01T12:00:00Z", ["file_path": target.path])
+            .envelopeJSON()
+        let drop = harness.dropDirectory.appendingPathComponent("1780000000000-0000abcd.json")
+        try FileManager.default.createDirectory(at: harness.dropDirectory, withIntermediateDirectories: true)
+        try envelope.write(to: drop)
+        try FileManager.default.setAttributes([.modificationDate: Date(timeIntervalSinceNow: -60)],
+                                              ofItemAtPath: drop.path)
+
+        XCTAssertEqual(try harness.handles.pollHookDrops(), 1)
+        try harness.drain()
+
+        try assertFingerprint(sessionId: "s2", eventType: "ConfigChange", size: target.size, sha: target.sha)
+    }
+
+    func testOnlyFingerprintedHooksChangeTheirEnvelopeBytes() throws {
+        let target = try fingerprintedFile("contents")
+        let other = try hook("PreToolUse", "s1", "2026-06-01T12:00:00Z",
+                             ["tool_name": "Read", "file_path": target.path]).envelopeJSON()
+        XCTAssertEqual(ClaudeFileFingerprint.stamped(envelope: other), other, "any other hook stays verbatim")
+
+        let missing = try hook("ConfigChange", "s1", "2026-06-01T12:00:00Z",
+                               ["file_path": root.appendingPathComponent("gone.json").path]).envelopeJSON()
+        XCTAssertEqual(ClaudeFileFingerprint.stamped(envelope: missing), missing, "nothing to measure")
+
+        let stamped = ClaudeFileFingerprint.stamped(["file_path": target.path, "file_sha256": "first"],
+                                                    eventType: "ConfigChange")
+        XCTAssertEqual(stamped["file_sha256"] as? String, "first", "an existing fingerprint is kept")
+        XCTAssertEqual(stamped["file_size_bytes"] as? Int, target.size)
+    }
+
     func testDetailOfAnUnknownIdIsNil() throws {
         XCTAssertNil(try database.fetchEventDetail(eventLogId: 999_999))
     }
@@ -196,6 +268,30 @@ final class ClaudeEventReadsTests: XCTestCase {
         XCTAssertEqual(after.map(\.providerType), ["Stop"])
     }
 
+    // MARK: - An empty store
+
+    /// A store that is attached but holds no events answers empty, not with the
+    /// legacy rows and not with an error: events, session counts and last type.
+    func testAnAttachedButEmptyStoreAnswersEmpty() throws {
+        try database.ingestEvent(eventType: "SessionStart", timestamp: "2026-06-01T12:00:00Z",
+                                 hookData: ["session_id": "s1", "cwd": "/tmp"])
+        XCTAssertNotNil(database.eventReads)
+        XCTAssertEqual(try database.claudeEventTotal(), 0, "the legacy write left the store empty")
+
+        XCTAssertEqual(try database.fetchEvents().count, 0)
+        XCTAssertEqual(try database.fetchEvents(sessionId: "s1").count, 0)
+        XCTAssertEqual(try database.fetchRecentEvents(sessionId: "s1", limit: 10).count, 0)
+        XCTAssertNil(try database.fetchEventDetail(eventLogId: 1))
+        XCTAssertEqual(try database.fetchSessions().map(\.eventCount), [0])
+        XCTAssertEqual(try database.fetchSession(sessionId: "s1")?.eventCount, 0)
+        XCTAssertEqual(try database.totalEventCount(), 0)
+        XCTAssertEqual(try database.claudeEventCounts(sessionIds: ["s1"]), [:])
+        XCTAssertEqual(try database.lastEventType(sessionId: "s1"), "")
+        XCTAssertNil(try database.claudeFirstEventTime(sessionId: "s1"))
+        XCTAssertTrue(try database.claudeEventTimes(sessionId: "s1", afterId: 0).isEmpty)
+        XCTAssertEqual(try database.eventIdHighWater(), 0)
+    }
+
     // MARK: - No event store
 
     /// Without `attachEventReads` every reader answers empty — never throws, and
@@ -227,6 +323,7 @@ final class ClaudeEventReadsTests: XCTestCase {
         XCTAssertNil(try bare.claudeToolDurationMs(sessionId: "s1", toolUseId: "tu-1", postTime: 2e9))
         XCTAssertNil(try bare.claudeFirstEventTime(sessionId: "s1"))
         XCTAssertTrue(try bare.claudeEventTimes(sessionId: "s1", afterId: 0).isEmpty)
+        XCTAssertNil(try bare.eventIdHighWater())
         let archived = bare.claudeArchivedPayload(rawRef: 1)
         XCTAssertNil(archived.hookData)
         XCTAssertNil(archived.line)

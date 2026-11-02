@@ -91,9 +91,12 @@ public final class EventStore: @unchecked Sendable {
                     field_as_of TEXT NOT NULL DEFAULT '{}',
                     PRIMARY KEY (provider, session_id)) WITHOUT ROWID
                 """)
+            // AUTOINCREMENT: an id is never handed out twice, even after the
+            // highest rows are trimmed, so a reader's "events after id N"
+            // cursor can never skip a row written later.
             try conn.execute(sql: """
                 CREATE TABLE IF NOT EXISTS events (
-                    id INTEGER PRIMARY KEY,
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
                     provider TEXT NOT NULL, dedup_key TEXT NOT NULL, session_id TEXT NOT NULL,
                     kind TEXT NOT NULL, provider_type TEXT NOT NULL, time REAL NOT NULL,
                     cwd TEXT, tool_name TEXT, summary TEXT, attrs TEXT NOT NULL DEFAULT '{}',

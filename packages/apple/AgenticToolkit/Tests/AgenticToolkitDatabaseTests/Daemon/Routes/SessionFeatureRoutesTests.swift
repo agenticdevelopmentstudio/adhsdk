@@ -177,6 +177,18 @@ final class SessionFeatureRoutesTests: XCTestCase {
         XCTAssertEqual(try json(response)["error"] as? String, "Invalid event id: abc")
     }
 
+    func testAnUnparseableEventsSinceIs400() async throws {
+        let services = try makeServices()
+        let bad = try await send("GET", "/events", query: ["since": ["not a time"]], services: services)
+        XCTAssertEqual(bad.status, 400)
+        XCTAssertNotNil(try json(bad)["error"] as? String)
+
+        let good = try await send("GET", "/events", query: ["since": ["2026-06-01T12:00:00Z"]], services: services)
+        XCTAssertEqual(good.status, 200)
+        let absent = try await send("GET", "/events", services: services)
+        XCTAssertEqual(absent.status, 200)
+    }
+
     func testAnUnknownEventIs404() async throws {
         let response = try await send("GET", "/events/999999", services: try makeServices())
         XCTAssertEqual(response.status, 404)

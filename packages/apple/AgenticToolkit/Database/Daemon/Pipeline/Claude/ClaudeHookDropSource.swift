@@ -7,7 +7,9 @@ import Foundation
 ///
 /// Each `*.json` file not prefixed `error-`, at least `minimumAge` old by its
 /// mtime, becomes one record (Design Ruling 2): sourceKind `"hook"`, dedupKey = the
-/// file's stem, receivedAt = its mtime, payload = its bytes, verbatim. Files go in
+/// file's stem, receivedAt = its mtime, payload = its bytes, verbatim — except a
+/// `ConfigChange` / `InstructionsLoaded` envelope, which gets its file's
+/// fingerprint stamped into the hook data first (`ClaudeFileFingerprint`). Files go in
 /// name order — the millisecond prefix makes that arrival order — in appends of at
 /// most `batchSize`, and a file is deleted only after the append holding it has
 /// committed. A crash between the two leaves the file to be spooled again under the
@@ -63,7 +65,7 @@ public final class ClaudeHookDropSource: IngestSource {
                     records.append(RawRecord(
                         provider: provider, sourceKind: ClaudeProvider.hookKind,
                         dedupKey: url.deletingPathExtension().lastPathComponent,
-                        receivedAt: modified, payload: data))
+                        receivedAt: modified, payload: ClaudeFileFingerprint.stamped(envelope: data)))
                     appendedFiles.append(url)
                 }
             }

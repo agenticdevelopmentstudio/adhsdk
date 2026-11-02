@@ -217,27 +217,51 @@ extension DaemonDatabase {
 
     // MARK: - Billing
 
-    /// The session's earliest event time (epoch seconds), or nil when it has none.
+    /// The earliest event time (epoch seconds, 2000-01-01T00:00:00Z) a reader
+    /// that derives activity or a time range trusts. The store keeps a
+    /// transcript line that carried no timestamp at about epoch 0 — "time
+    /// unknown" — and such a row must never become a session's start or a
+    /// second of billed work.
+    public static let claudeEarliestKnownEventTime: Double = 946_684_800
+
+    /// The session's earliest known event time (epoch seconds), or nil when it
+    /// has none. Rows before `claudeEarliestKnownEventTime` are ignored.
     public func claudeFirstEventTime(sessionId: String) throws -> Double? {
         try withEventReads(nil) { conn in
             try Double.fetchOne(conn, sql: """
-                SELECT MIN(time) FROM events WHERE provider = ? AND session_id = ?
-                """, arguments: [ClaudeProvider.name, sessionId])
+                SELECT MIN(time) FROM events WHERE provider = ? AND session_id = ? AND time >= ?
+                """, arguments: [ClaudeProvider.name, sessionId, Self.claudeEarliestKnownEventTime])
         }
     }
 
     /// The session's events with an id above `afterId`: id, hook name and event
-    /// time. Unordered; the caller sorts.
+    /// time. Unordered; the caller sorts. Rows before
+    /// `claudeEarliestKnownEventTime` are left out.
     public func claudeEventTimes(
         sessionId: String, afterId: Int64
     ) throws -> [(id: Int64, providerType: String, time: Double)] {
         try withEventReads([]) { conn in
             try Row.fetchAll(conn, sql: """
                 SELECT id, provider_type, time FROM events
-                WHERE provider = ? AND session_id = ? AND id > ?
-                """, arguments: [ClaudeProvider.name, sessionId, afterId]).map { row in
-                (id: row[0] ?? 0, providerType: row[1] ?? "", time: row[2] ?? 0)
-            }
+                WHERE provider = ? AND session_id = ? AND id > ? AND time >= ?
+                """, arguments: [ClaudeProvider.name, sessionId, afterId, Self.claudeEarliestKnownEventTime])
+                .map { row in
+                    (id: row[0] ?? 0, providerType: row[1] ?? "", time: row[2] ?? 0)
+                }
+        }
+    }
+
+    /// The highest event id the store has ever issued (any provider), 0 for a
+    /// store that has issued none, or nil when no store is attached.
+    ///
+    /// Ids are never reused (`AUTOINCREMENT`), and this is SQLite's own record of
+    /// the last one handed out, not `MAX(id)`: retention deleting every row
+    /// leaves it where it was. Only a replaced (rebuilt) store numbers from 1
+    /// again, so a cursor above this means exactly that.
+    public func eventIdHighWater() throws -> Int64? {
+        try withEventReads(nil) { conn in
+            try Int64.fetchOne(
+                conn, sql: "SELECT seq FROM sqlite_sequence WHERE name = 'events'") ?? 0
         }
     }
 

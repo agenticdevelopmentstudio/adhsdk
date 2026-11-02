@@ -190,7 +190,13 @@ enum SessionRoutes {
 
     private static func queryEvents(_ request: RouteRequest, database: DaemonDatabase) -> RouteResponse {
         let eventType = request.query("type")
-        let since = request.query("since")
+        // An unparseable `since` is the caller's mistake, answered 400 like a bad
+        // event id — never an empty list that reads as "no events since then".
+        let since: String?
+        switch request.validatedTimestamp("since") {
+        case .success(let value): since = value
+        case .failure(let invalid): return .error(invalid.message, status: 400)
+        }
 
         do {
             let events = try database.fetchEvents(

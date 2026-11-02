@@ -106,7 +106,9 @@ public struct ClaudeHookNormalizer: Normalizer {
     /// hook_data keys copied verbatim into attrs when present (Ruling 8a).
     private static let passthroughKeys = [
         "tool_use_id", "agent_type", "agent_id", "notification_type", "trigger", "transcript_path",
-        "term_program", "term_session_id", "pid", "permission_mode", "source", "reason"
+        "term_program", "term_session_id", "pid", "permission_mode", "source", "reason",
+        // Stamped at capture (`ClaudeFileFingerprint`) for ConfigChange / InstructionsLoaded.
+        "file_size_bytes", "file_sha256"
     ]
 
     private static func commonAttrs(_ hookData: [String: Any]) -> [String: NormalizedValue] {
