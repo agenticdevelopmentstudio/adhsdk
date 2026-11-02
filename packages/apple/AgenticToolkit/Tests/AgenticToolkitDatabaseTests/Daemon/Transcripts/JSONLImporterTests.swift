@@ -113,8 +113,7 @@ final class JSONLImporterTests: XCTestCase {
         XCTAssertEqual(sessions.first?.status, "ended")
 
         // Events were inserted
-        let events = try database.fetchEvents(sessionId: "s1")
-        XCTAssertEqual(events.count, 2)
+        XCTAssertEqual(try eventLogCount(session: "s1"), 2)
 
         // Metrics computed
         let metrics = try XCTUnwrap(database.metricsForSession(sessionId: "s1"))
@@ -133,7 +132,7 @@ final class JSONLImporterTests: XCTestCase {
         ], at: "s1.jsonl")
 
         _ = try runImport()
-        let before = try database.fetchEvents(sessionId: "s1").count
+        let before = try eventLogCount(session: "s1")
 
         let second = try runImport()
         XCTAssertEqual(second.eventsInserted, 0)
@@ -143,7 +142,7 @@ final class JSONLImporterTests: XCTestCase {
         )
         XCTAssertEqual(second.eventsSkipped, 0, "no lines re-read means nothing to dedup")
 
-        let after = try database.fetchEvents(sessionId: "s1").count
+        let after = try eventLogCount(session: "s1")
         XCTAssertEqual(before, after, "re-import must not duplicate events")
     }
 
@@ -186,7 +185,7 @@ final class JSONLImporterTests: XCTestCase {
         ]
         try writeJSONL(lines, at: "s1.jsonl")
         _ = try runImport()
-        let before = try database.fetchEvents(sessionId: "s1").count
+        let before = try eventLogCount(session: "s1")
 
         // An atomic rewrite swaps the inode, which invalidates the stored cursor:
         // the file must be re-read whole and the duplicate rows dropped by dedup,
@@ -202,7 +201,7 @@ final class JSONLImporterTests: XCTestCase {
         )
         XCTAssertGreaterThan(second.bytesRead, 0)
 
-        XCTAssertEqual(try database.fetchEvents(sessionId: "s1").count, before)
+        XCTAssertEqual(try eventLogCount(session: "s1"), before)
         XCTAssertEqual(
             try transcriptLineCount(session: "s1"), 2, "re-read lines must dedup, not duplicate"
         )
@@ -927,6 +926,16 @@ final class JSONLImporterTests: XCTestCase {
         let summary = try importer.run()
         XCTAssertEqual(summary.linesInserted, 0)
         XCTAssertEqual(try transcriptLineCount(session: "sd"), 0)
+    }
+
+    /// The rows the importer wrote to `event_log` for `session`. The session
+    /// readers (`fetchEvents`) read the event store, which the importer does not feed.
+    private func eventLogCount(session: String) throws -> Int {
+        var count = 0
+        try database.query(
+            "SELECT COUNT(*) FROM event_log WHERE session_id = ?", params: [session]
+        ) { count = database.int($0, 0) }
+        return count
     }
 
     private func transcriptLineCount(session: String) throws -> Int {

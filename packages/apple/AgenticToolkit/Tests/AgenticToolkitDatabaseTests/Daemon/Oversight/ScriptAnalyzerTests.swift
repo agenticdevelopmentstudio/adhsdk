@@ -162,11 +162,13 @@ final class ScriptAnalyzerTests: XCTestCase {
     // MARK: - prompt
 
     func testBuildPromptIncludesContextAndRecentActivity() throws {
-        try database.ingestEvent(
-            eventType: "PreToolUse", timestamp: iso8601(),
-            hookData: ["session_id": "s", "cwd": "/tmp/s", "tool_name": "Edit",
-                       "tool_use_id": "t1", "tool_input": [String: Any]()]
-        )
+        let pipeline = URL(fileURLWithPath: tmpPath).deletingLastPathComponent()
+            .appendingPathComponent("pipeline")
+        let harness = try ClaudePipelineTestHarness(directory: pipeline, database: database)
+        try harness.ingest(ClaudePipelineTestHarness.event(
+            "PreToolUse", sessionId: "s", timestamp: iso8601(), cwd: "/tmp/s",
+            hookData: ["tool_name": "Edit", "tool_use_id": "t1", "tool_input": [String: Any]()]
+        ))
         let prompt = ScriptAnalyzer.buildPrompt(session: snapshot("s", pct: 88), database: database)
         XCTAssertTrue(prompt.contains("88% used"), "prompt states how full the context is")
         XCTAssertTrue(prompt.contains("Branch: feature"))

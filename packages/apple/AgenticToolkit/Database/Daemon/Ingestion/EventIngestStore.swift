@@ -602,59 +602,54 @@ extension DaemonDatabase {
         offset: Int = 0,
         excludeRootCwd: Bool = false
     ) throws -> [SessionEventDTO] {
-        var conditions: [String] = []
-        var params: [any Sendable] = []
-
-        if let sessionId {
-            conditions.append("e.session_id = ?")
-            params.append(sessionId)
-        }
-        if let eventType {
-            conditions.append("e.event_type = ?")
-            params.append(eventType)
-        }
+        // `since` is compared as the instant it names, to the second — what the
+        // legacy `datetime(timestamp) >= datetime(since)` did. A `since` that
+        // names no instant matched nothing there (datetime() of it is NULL), and
+        // matches nothing here.
+        var sinceEpoch: Double?
         if let since {
-            // datetime() normalises both ISO 8601 and SQLite formats for safe comparison
-            conditions.append("datetime(e.timestamp) >= datetime(?)")
-            params.append(since)
+            guard let date = TimestampParsing.parse(since) else { return [] }
+            sinceEpoch = date.timeIntervalSince1970
         }
-        if excludeRootCwd {
-            conditions.append("e.cwd != '/'")
-        }
-
-        var sql = Self.sessionEventSelect
-        if !conditions.isEmpty {
-            sql += " WHERE " + conditions.joined(separator: " AND ")
-        }
-        sql += " ORDER BY e.timestamp DESC LIMIT ? OFFSET ?"
-        params.append(limit)
-        params.append(offset)
-
-        var results: [SessionEventDTO] = []
-        try query(sql, params: params) { row in results.append(sessionEvent(from: row)) }
-        return results
+        let rows = try claudeEvents(
+            sessionId: sessionId, providerType: eventType, since: sinceEpoch,
+            excludeRootCwd: excludeRootCwd, limit: limit, offset: offset)
+        return try sessionEvents(from: rows)
     }
 
-    /// The one column list both event readers select, in the order
-    /// `sessionEvent(from:)` reads it by position. One definition, so the two
-    /// readers cannot drift apart.
-    private static let sessionEventSelect = """
-        SELECT e.id, e.session_id, e.event_type, e.timestamp, e.cwd, e.detail,
-               COALESCE(s.git_branch, '') AS git_branch
-        FROM event_log e
-        LEFT JOIN sessions s ON s.session_id = e.session_id
-        """
+    /// Event rows as the DTOs every event reader answers, each with its
+    /// session's branch from the session database — a second read, never a join
+    /// across the two files.
+    private func sessionEvents(from rows: [ClaudeEventRow]) throws -> [SessionEventDTO] {
+        guard !rows.isEmpty else { return [] }
+        let branches = try gitBranches(sessionIds: rows.map(\.sessionId))
+        return rows.map { row in
+            SessionEventDTO(
+                id: Int(row.id),
+                sessionId: row.sessionId,
+                eventType: row.providerType,
+                timestamp: row.timestamp,
+                cwd: row.cwd,
+                detail: row.summary,
+                gitBranch: branches[row.sessionId] ?? ""
+            )
+        }
+    }
 
-    private func sessionEvent(from row: Row) -> SessionEventDTO {
-        SessionEventDTO(
-            id: Int(int(row, 0)),
-            sessionId: string(row, 1),
-            eventType: string(row, 2),
-            timestamp: string(row, 3),
-            cwd: string(row, 4),
-            detail: string(row, 5),
-            gitBranch: string(row, 6)
-        )
+    /// `sessions.git_branch` for each of the given sessions that has a row.
+    private func gitBranches(sessionIds: [String]) throws -> [String: String] {
+        let unique = Array(Set(sessionIds))
+        var branches: [String: String] = [:]
+        for start in stride(from: 0, to: unique.count, by: Self.claudeReadChunk) {
+            let chunk = Array(unique[start..<min(start + Self.claudeReadChunk, unique.count)])
+            let marks = chunk.map { _ in "?" }.joined(separator: ",")
+            try query("""
+                SELECT session_id, COALESCE(git_branch, '') FROM sessions WHERE session_id IN (\(marks))
+                """, params: chunk) { row in
+                branches[string(row, 0)] = string(row, 1)
+            }
+        }
+        return branches
     }
 
     /// A session with its newest `recentLimit` events (see `fetchRecentEvents`),
@@ -666,132 +661,83 @@ extension DaemonDatabase {
             session: session, recentEvents: try fetchRecentEvents(sessionId: sessionId, limit: recentLimit))
     }
 
-    /// The newest `limit` events of one session, newest first by event time.
-    ///
-    /// `ORDER BY e.timestamp` over the whole session has no index to walk, so
-    /// SQLite reads *every* event of the session (each a random read of a fat
-    /// row) into a temp b-tree before the LIMIT can discard any. Walking
-    /// `idx_event_log_session_id` backwards by rowid stops at a LIMIT instead.
-    /// Measured on a real 51 GB db, newest 500 of a 137k-event session: 1,277 ms
-    /// warm → 8 ms, and seconds of disk when cold.
-    ///
-    /// Capture order is not event order, though: the JSONL sweep of subagent
-    /// transcripts and a quarantine re-ingest insert rows minutes or hours
-    /// after the fact, under their original timestamps, with the highest ids.
-    /// So the index walk takes a *window* of the newest captures, larger than
-    /// `limit` by `recentEventsSlack`, and only that window is sorted by
-    /// time. A late batch up to the slack's size then sorts into its real place
-    /// instead of pushing genuinely newer events out. An exact answer would
-    /// need a `(session_id, timestamp)` index on `event_log` — a build over
-    /// tens of GB at launch, the risk `ensureTranscriptTurnTokenIndex` shows —
-    /// for a read whose callers want "what just happened". Paged API reads keep
-    /// `fetchEvents`.
+    /// The newest `limit` events of one session, newest first by event time
+    /// (then id). The event store's `(provider, session_id, time)` index serves
+    /// the order directly, so a late-captured event — a subagent transcript
+    /// swept minutes after the fact, a quarantine re-feed — sorts into its real
+    /// place with no capture-order window to fall outside of.
     public func fetchRecentEvents(sessionId: String, limit: Int) throws -> [SessionEventDTO] {
-        let window = max(limit * 4, limit + Self.recentEventsSlack)
-        var results: [SessionEventDTO] = []
-        try query("""
-            SELECT * FROM (
-                \(Self.sessionEventSelect)
-                WHERE e.session_id = ?
-                ORDER BY e.id DESC
-                LIMIT ?
-            )
-            ORDER BY timestamp DESC, id DESC
-            LIMIT ?
-        """, params: [sessionId, window, limit]) { row in results.append(sessionEvent(from: row)) }
-        return results
+        try sessionEvents(from: claudeEvents(sessionId: sessionId, limit: limit))
     }
 
-    /// How many late-captured rows `fetchRecentEvents` absorbs beyond `limit`.
+    /// How many late-captured rows the legacy `fetchRecentEvents` absorbed
+    /// beyond `limit`. The event store's time index made the window
+    /// unnecessary; kept for callers that size reads by it.
     public static let recentEventsSlack = 200
 
-    /// Returns a rich event payload: the `event_log` row, its per-type
-    /// detail row (if the `<type>_events` table exists), and any
-    /// associated `tool_inputs` / `tool_responses` rows. Used by the
-    /// menubar log's double-click detail window. Values are returned as
-    /// `[String: Any]` so dynamic per-type columns serialise without a
-    /// bespoke DTO per event variant.
+    /// Returns a rich event payload for one event of the event store: its
+    /// `events` row, plus what the raw archive holds behind it re-parsed —
+    /// `type_fields` (every leaf of the hook payload outside `tool_input` /
+    /// `tool_response`, keyed as the legacy per-type columns were), and
+    /// `tool_input` / `tool_response` (each subtree's leaves). A transcript
+    /// event's `type_fields` are its line's leaves. Used by the menubar log's
+    /// double-click detail window. Values are returned as `[String: Any]` so
+    /// payload fields serialise without a bespoke DTO per event variant.
+    ///
+    /// Without a raw archive (or with its record gone) the answer is the core
+    /// fields alone; without an event store, nil.
     public func fetchEventDetail(eventLogId: Int64) throws -> [String: Any]? {
-        // Read-only (event_log + per-type + tool tables) → read lane, so a
-        // GET /events/:id detail fetch runs on a reader and never blocks ingest.
-        try read { _ in
-            var result: [String: Any]?
-            var eventType = ""
-            try query("""
-                SELECT id, session_id, event_type, timestamp, cwd, detail
-                FROM event_log WHERE id = ?
-            """, params: [eventLogId]) { row in
-                eventType = string(row, 2)
-                result = [
-                    "id": Int(int64(row, 0)),
-                    "session_id": string(row, 1),
-                    "event_type": eventType,
-                    "timestamp": string(row, 3),
-                    "cwd": string(row, 4),
-                    "detail": string(row, 5)
-                ]
+        guard let row = try claudeEvent(id: eventLogId) else { return nil }
+        var core: [String: Any] = [
+            "id": Int(row.id),
+            "session_id": row.sessionId,
+            "event_type": row.providerType,
+            "timestamp": row.timestamp,
+            "cwd": row.cwd,
+            "detail": row.summary
+        ]
+        let archived = claudeArchivedPayload(rawRef: row.rawRef)
+        if let hookData = archived.hookData {
+            var rest = hookData
+            rest.removeValue(forKey: "tool_input")
+            rest.removeValue(forKey: "tool_response")
+            var typeFields = Self.columnKeyed(Self.flattenLeaves(rest))
+            if row.providerType == HookEventType.postToolUse.rawValue
+                || row.providerType == HookEventType.postToolUseFailure.rawValue,
+               let toolUseId = hookData["tool_use_id"] as? String,
+               let durationMs = try claudeToolDurationMs(
+                   sessionId: row.sessionId, toolUseId: toolUseId, postTime: row.time) {
+                typeFields["duration_ms"] = durationMs
             }
-            guard var core = result else { return nil }
-
-            // Pass session_id so the per-type lookup seeks the (session_id, event_log_id)
-            // index instead of full-scanning the table.
-            let sessionId = core["session_id"] as? String
-            if let kind = HookEventType(rawValue: eventType),
-               let row = try? fetchRowByEventLogId(
-                   table: kind.tableName, eventLogId: eventLogId, sessionId: sessionId) {
-                core["type_fields"] = stripRedundantFields(row)
+            if !typeFields.isEmpty { core["type_fields"] = typeFields }
+            for key in ["tool_input", "tool_response"] {
+                guard let subtree = hookData[key] as? [String: Any] else { continue }
+                let fields = Self.columnKeyed(Self.flattenLeaves(subtree))
+                if !fields.isEmpty { core[key] = fields }
             }
-            if let input = try? fetchRowByEventLogId(table: "tool_inputs", eventLogId: eventLogId) {
-                core["tool_input"] = stripRedundantFields(input)
-            }
-            if let response = try? fetchRowByEventLogId(table: "tool_responses", eventLogId: eventLogId) {
-                core["tool_response"] = stripRedundantFields(response)
-            }
-            return core
+        } else if let line = archived.line {
+            let typeFields = Self.columnKeyed(Self.flattenLeaves(line))
+            if !typeFields.isEmpty { core["type_fields"] = typeFields }
         }
+        return core
     }
 
-    /// Selects a single row from `table` by `event_log_id`, additionally constraining on
-    /// `session_id` when provided so the per-type `(session_id, event_log_id)` index
-    /// (migration013) serves the lookup instead of a full table scan. `tool_inputs` /
-    /// `tool_responses` have no `session_id`, so they pass nil and rely on their
-    /// `event_log_id` index (migration014). Returns nil if no row matches (and throws if
-    /// the table doesn't exist — callers wrap in `try?`).
-    private func fetchRowByEventLogId(
-        table: String, eventLogId: Int64, sessionId: String? = nil
-    ) throws -> [String: Any]? {
-        var row: [String: Any]?
-        let sql: String
-        let params: [any Sendable]
-        if let sessionId {
-            sql = #"SELECT * FROM "\#(table)" WHERE session_id = ? AND event_log_id = ? LIMIT 1"#
-            params = [sessionId, eventLogId]
-        } else {
-            sql = #"SELECT * FROM "\#(table)" WHERE event_log_id = ? LIMIT 1"#
-            params = [eventLogId]
+    /// Leaves keyed as the legacy per-type and tool columns were — a key the
+    /// row owned stored as `payload_<key>` — minus the fields the event's core
+    /// already carries.
+    private static func columnKeyed(_ leaves: [String: Any]) -> [String: Any] {
+        var keyed: [String: Any] = [:]
+        for (key, value) in leaves {
+            keyed[payloadColumnName(key)] = value
         }
-        try query(sql, params: params) { dbRow in
-            var fields: [String: Any] = [:]
-            for columnName in dbRow.columnNames {
-                let value: DatabaseValue = dbRow[columnName]
-                switch value.storage {
-                case .int64(let number): fields[columnName] = Int(number)
-                case .double(let number): fields[columnName] = number
-                case .string(let text): fields[columnName] = text
-                case .blob(let data): fields[columnName] = String(data: data, encoding: .utf8) ?? ""
-                case .null: continue
-                }
-            }
-            row = fields
-        }
-        return row
+        return stripRedundantFields(keyed)
     }
 
     /// Removes fields already present on the top-level event payload
     /// (ids, session_id, timestamp, cwd, event_type) so the nested
     /// `type_fields` / `tool_input` / `tool_response` dicts show only
     /// what's unique to that row.
-    private func stripRedundantFields(_ fields: [String: Any]) -> [String: Any] {
+    private static func stripRedundantFields(_ fields: [String: Any]) -> [String: Any] {
         var copy = fields
         for key in ["id", "event_log_id", "session_id", "timestamp", "cwd", "event_type"] {
             copy.removeValue(forKey: key)

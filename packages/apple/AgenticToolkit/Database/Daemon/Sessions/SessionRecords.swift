@@ -298,8 +298,8 @@ extension DaemonDatabase {
         }
     }
 
-    /// `includeEventCount: false` drops the per-row `COUNT(*)` subquery over `event_log`,
-    /// returning `eventCount = 0`. The Sessions-window poll hits this every few
+    /// `includeEventCount: false` skips the event-store count read, returning
+    /// `eventCount = 0`. The Sessions-window poll hits this every few
     /// seconds and discards the count, so it opts out; the CLI/insights keep it.
     /// `sinceHours` keeps only sessions whose `last_activity_at` is within the
     /// last N hours, any status — a sessions list's time filter (nil/0 = all).
@@ -321,29 +321,15 @@ extension DaemonDatabase {
         includeEventCount: Bool = true,
         limit: Int? = nil
     ) throws -> [SessionDTO] {
-        // A correlated subquery, NOT `LEFT JOIN event_log … GROUP BY`. The join
-        // plan aggregates every matching session's events into a temp b-tree
-        // before the ORDER BY/LIMIT can discard any of them, so `limit` bounded
-        // the response but not the work — the same trap `graphSnapshot` was
-        // rewritten to escape. Measured on a real 553 MB db (1,369 sessions /
-        // 66,309 events), `LIMIT 200`:
-        //   join+GROUP BY  → SCAN s USING idx_sessions_session_id
-        //                    + USE TEMP B-TREE FOR ORDER BY   (31 ms)
-        //   subquery       → SCAN s USING idx_sessions_last_activity
-        //                    + CORRELATED SCALAR SUBQUERY      (6 ms)
-        // The rewrite walks `idx_sessions_last_activity` in order (no sorter, so
-        // the LIMIT stops the scan) and probes the covering
-        // `idx_event_log_session_id` only for rows actually returned. The gap
-        // widens with install size, because the old plan's cost is independent
-        // of `limit`.
-        let countExpr = includeEventCount
-            ? "(SELECT COUNT(*) FROM event_log e WHERE e.session_id = s.session_id)"
-            : "0"
+        // The event counts live in the event store, so they are a second read
+        // there — only for the rows this one returns, after the LIMIT, each a
+        // probe of its `(provider, session_id, time)` index — never a join
+        // across the two files.
         var sql = """
             SELECT s.session_id, s.cwd, s.model, s.started_at, s.last_activity_at,
                    s.last_tool, s.status, s.git_branch, s.summary, s.pid, s.term_program,
                    s.project_root, s.term_session_id, s.transcript_title, s.last_output,
-                   s.last_event_type, s.summary_at, \(countExpr) as event_count,
+                   s.last_event_type, s.summary_at, 0 as event_count,
                    \(Self.subagentWorkingColumn)
             FROM sessions s
         """
@@ -411,7 +397,37 @@ extension DaemonDatabase {
                 subagentWorking: int(row, 18) != 0
             ))
         }
-        return results
+        return includeEventCount ? try withEventCounts(results) : results
+    }
+
+    /// The sessions with `eventCount` read from the event store; a session it
+    /// has no events for counts 0, as does every session without a store.
+    func withEventCounts(_ sessions: [SessionDTO]) throws -> [SessionDTO] {
+        guard !sessions.isEmpty else { return sessions }
+        let counts = try claudeEventCounts(sessionIds: sessions.map(\.sessionId))
+        return sessions.map { session in
+            SessionDTO(
+                sessionId: session.sessionId,
+                cwd: session.cwd,
+                model: session.model,
+                startedAt: session.startedAt,
+                lastActivityAt: session.lastActivityAt,
+                lastTool: session.lastTool,
+                status: session.status,
+                gitBranch: session.gitBranch,
+                summary: session.summary,
+                pid: session.pid,
+                termProgram: session.termProgram,
+                projectRoot: session.projectRoot,
+                termSessionId: session.termSessionId,
+                transcriptTitle: session.transcriptTitle,
+                lastOutput: session.lastOutput,
+                lastEventType: session.lastEventType,
+                summaryAt: session.summaryAt,
+                eventCount: counts[session.sessionId] ?? 0,
+                subagentWorking: session.subagentWorking
+            )
+        }
     }
 
     /// The account a session is billed to (`sessions.account_email`), or `""`
@@ -547,21 +563,18 @@ extension DaemonDatabase {
          AND s.subagent_activity_at >= datetime('now', '-5 minutes')) AS subagent_working
         """
 
-    /// `includeEventCount: false` returns `eventCount = 0` without touching
-    /// `event_log`. The count walks every index entry of the session — 148 ms for
-    /// a 137k-event session on a 51 GB db — and the daemon's own callers (the
-    /// summarizer, oversight) never read it; only the client-facing reads keep it.
+    /// `includeEventCount: false` returns `eventCount = 0` without touching the
+    /// event store. The count walks every index entry of the session, and the
+    /// daemon's own callers (the summarizer, oversight) never read it; only the
+    /// client-facing reads keep it.
     public func fetchSession(sessionId: String, includeEventCount: Bool = true) throws -> SessionDTO? {
         var result: SessionDTO?
-        // Same correlated-subquery shape as `fetchSessions`, for the same reason.
-        let countExpr = includeEventCount
-            ? "(SELECT COUNT(*) FROM event_log e WHERE e.session_id = s.session_id)"
-            : "0"
+        // The count is a second read, in the event store, as in `fetchSessions`.
         try query("""
             SELECT s.session_id, s.cwd, s.model, s.started_at, s.last_activity_at,
                    s.last_tool, s.status, s.git_branch, s.summary, s.pid, s.term_program,
                    s.project_root, s.term_session_id, s.transcript_title, s.last_output,
-                   s.last_event_type, s.summary_at, \(countExpr) as event_count,
+                   s.last_event_type, s.summary_at, 0 as event_count,
                    \(Self.subagentWorkingColumn)
             FROM sessions s
             WHERE s.session_id = ?
@@ -587,6 +600,9 @@ extension DaemonDatabase {
                 eventCount: Int(int(row, 17)),
                 subagentWorking: int(row, 18) != 0
             )
+        }
+        if includeEventCount, let session = result {
+            return try withEventCounts([session]).first
         }
         return result
     }
@@ -713,12 +729,9 @@ extension DaemonDatabase {
         return count
     }
 
+    /// Every event the event store holds for this provider; 0 without a store.
     public func totalEventCount() throws -> Int {
-        var count = 0
-        try query("SELECT COUNT(*) FROM event_log") { row in
-            count = Int(int(row, 0))
-        }
-        return count
+        try claudeEventTotal()
     }
 
     // MARK: - Session stub (JSONL import)

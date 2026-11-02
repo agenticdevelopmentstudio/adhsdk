@@ -10,14 +10,19 @@ final class OversightActionServiceTests: XCTestCase {
 
     var tmpPath: String!
     var database: DaemonDatabase!
+    var harness: ClaudePipelineTestHarness!
 
     override func setUpWithError() throws {
         let opened = try TestDaemonDatabase.makeSessionDatabase()
         database = opened.db
         tmpPath = opened.path
+        let pipeline = URL(fileURLWithPath: opened.path).deletingLastPathComponent()
+            .appendingPathComponent("pipeline")
+        harness = try ClaudePipelineTestHarness(directory: pipeline, database: database)
     }
 
     override func tearDownWithError() throws {
+        harness = nil
         database = nil
         TestDaemonDatabase.remove(path: tmpPath)
     }
@@ -30,20 +35,21 @@ final class OversightActionServiceTests: XCTestCase {
         return fmt.string(from: Date())
     }
 
-    /// Ingest one event for `id`, carrying the terminal fields so the session row gets a
-    /// `term_program`/`term_session_id`/`pid` (the UPSERT only writes them when non-empty).
+    /// Ingest one event for `id` through the Claude pipeline, carrying the terminal fields
+    /// so the session row gets a `term_program`/`term_session_id`/`pid` (the UPSERT only
+    /// writes them when non-empty).
     @discardableResult
     private func ingest(
         _ id: String, eventType: String,
         termProgram: String = "iTerm.app", termSessionId: String = "w0t0p0:ABC-123", pid: Int = 4242
     ) throws -> String {
-        try database.ingestEvent(
-            eventType: eventType, timestamp: iso8601(),
+        try harness.ingest(ClaudePipelineTestHarness.event(
+            eventType, sessionId: id, timestamp: iso8601(), cwd: "/tmp/\(id)",
             hookData: [
-                "session_id": id, "cwd": "/tmp/\(id)", "model": "sonnet",
+                "model": "sonnet",
                 "term_program": termProgram, "term_session_id": termSessionId, "pid": pid
             ]
-        )
+        ))
         return id
     }
 

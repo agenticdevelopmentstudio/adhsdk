@@ -67,24 +67,13 @@ final class ClaudePipelineEndToEndTests: XCTestCase {
         let resolver = AccountResolver(claudeJSONPath: root.appendingPathComponent("no-claude.json").path)
         let made = try TestDaemonDatabase.makeSessionDatabase(accountResolver: resolver)
         paths.append(made.path)
-        let spool = try ProviderSpool(
-            path: root.appendingPathComponent(ProviderSpool.fileName(provider: ClaudeProvider.name)).path,
-            provider: ClaudeProvider.name)
-        let archive = try RawArchive(
-            path: root.appendingPathComponent(RawArchive.fileName(provider: ClaudeProvider.name)).path,
-            provider: ClaudeProvider.name)
-        let store = try EventStore(path: root.appendingPathComponent(EventStore.fileName).path)
-        made.db.attachEventReads(store, archive: archive)
-        let handles = try ClaudePipelineHandles(
-            spool: spool, archive: archive, store: store, database: made.db,
-            dropDirectory: root.appendingPathComponent("drop"),
-            projectsDirectory: root.appendingPathComponent("projects"),
-            drainerFaultInjector: fault)
+        let harness = try ClaudePipelineTestHarness(directory: root, database: made.db, drainerFaultInjector: fault)
         let sink = RecordingSink()
         let log = EnrichmentLog()
-        let observer = ClaudeLiveObserver(eventReads: store, sink: sink, enrichment: log.hooks)
-        handles.drainer.addObserver(observer)
-        return Assembly(root: root, database: made.db, handles: handles, sink: sink, log: log, observer: observer)
+        let observer = ClaudeLiveObserver(eventReads: harness.store, sink: sink, enrichment: log.hooks)
+        harness.handles.drainer.addObserver(observer)
+        return Assembly(root: root, database: made.db, handles: harness.handles, sink: sink, log: log,
+                        observer: observer)
     }
 
     /// A fresh drainer over the same files: what a restarted daemon builds.

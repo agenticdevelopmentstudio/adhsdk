@@ -44,6 +44,16 @@ final class IngestionPipelineTests: XCTestCase {
         try? FileManager.default.removeItem(at: tmpDir)
     }
 
+    /// The rows the legacy writer put in `event_log` for `sessionId` (the session
+    /// readers now read the event store, which this writer does not feed).
+    private func eventLogCount(sessionId: String) throws -> Int {
+        var count = 0
+        try database.query(
+            "SELECT COUNT(*) FROM event_log WHERE session_id = ?", params: [sessionId]
+        ) { count = database.int($0, 0) }
+        return count
+    }
+
     private func event(session: String) -> ParsedEvent {
         ParsedEvent(
             eventType: "PreToolUse", timestamp: "2026-01-01T00:00:00Z",
@@ -56,7 +66,7 @@ final class IngestionPipelineTests: XCTestCase {
         try pipeline.capture(event(session: "s-p1"))
 
         XCTAssertEqual(pipeline.spool.pendingCount(), 1)
-        XCTAssertTrue(try database.fetchEvents(sessionId: "s-p1", eventType: nil, limit: 10).isEmpty)
+        XCTAssertEqual(try eventLogCount(sessionId: "s-p1"), 0)
         XCTAssertTrue(sink.events.isEmpty)
     }
 
@@ -66,18 +76,18 @@ final class IngestionPipelineTests: XCTestCase {
 
         let deadline = ContinuousClock.now.advanced(by: .seconds(10))
         while ContinuousClock.now < deadline {
-            if try database.fetchEvents(sessionId: "s-p2", eventType: nil, limit: 10).count == 1 { break }
+            if try eventLogCount(sessionId: "s-p2") == 1 { break }
             try await Task.sleep(for: .milliseconds(20))
         }
 
-        XCTAssertEqual(try database.fetchEvents(sessionId: "s-p2", eventType: nil, limit: 10).count, 1)
+        XCTAssertEqual(try eventLogCount(sessionId: "s-p2"), 1)
         XCTAssertEqual(sink.events.first?.sessionId, "s-p2")
     }
 
     func testRetryIngestWritesStraightToTheDatabase() throws {
         try pipeline.retryIngest(event(session: "s-p3"))
 
-        XCTAssertEqual(try database.fetchEvents(sessionId: "s-p3", eventType: nil, limit: 10).count, 1)
+        XCTAssertEqual(try eventLogCount(sessionId: "s-p3"), 1)
         XCTAssertEqual(pipeline.spool.pendingCount(), 0)
     }
 
@@ -128,7 +138,7 @@ final class IngestionPipelineTests: XCTestCase {
         XCTAssertEqual(pipeline.spool.pendingCount(), 0)
         XCTAssertFalse(handles.drainer.drainUntilEmpty().failed)
         XCTAssertEqual(try handles.store.counts().events, 1)
-        XCTAssertTrue(try database.fetchEvents(sessionId: "s-c1", eventType: nil, limit: 10).isEmpty)
+        XCTAssertEqual(try eventLogCount(sessionId: "s-c1"), 0)
         await pipeline.stop()
     }
 
@@ -137,7 +147,7 @@ final class IngestionPipelineTests: XCTestCase {
         try pipeline.retryIngest(event(session: "s-c2"))
 
         XCTAssertEqual(try handles.spool.pendingCount(), 1)
-        XCTAssertTrue(try database.fetchEvents(sessionId: "s-c2", eventType: nil, limit: 10).isEmpty)
+        XCTAssertEqual(try eventLogCount(sessionId: "s-c2"), 0)
         await pipeline.stop()
     }
 }
