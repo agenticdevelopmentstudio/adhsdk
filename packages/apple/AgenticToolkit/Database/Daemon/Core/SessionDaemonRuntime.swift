@@ -339,18 +339,27 @@ public final class SessionDaemonRuntime: @unchecked Sendable {
     /// destination outage (a sink or the events.db write) go back into its spool,
     /// and the legacy capture spool's leftovers move into it too, so they reach the
     /// raw archive and events.db rather than only `event_log`. The legacy drainer
-    /// then starts over what is left: nothing, unless that move failed, in which
-    /// case it ingests the rows the old way rather than leaving them.
+    /// then starts over what is left, which is nothing. If that move fails, the
+    /// legacy drainer does not start this run: a batch may already be in the Claude
+    /// spool while its legacy rows remain, and draining both would ingest it twice.
+    /// The rows stay in the legacy spool and the next start moves them again.
     public func startDrainer() async {
         let opened = requireOpened("startDrainer")
+        var legacyDrainAllowed = true
         if let claude = opened.claude {
-            Self.prepareClaudeSpool(claude, legacy: opened.spool)
+            legacyDrainAllowed = Self.prepareClaudeSpool(claude, legacy: opened.spool)
         }
-        opened.pipeline.startDraining()
+        if legacyDrainAllowed { opened.pipeline.startDraining() }
         opened.claude?.drainer.start()
     }
 
-    private static func prepareClaudeSpool(_ claude: ClaudePipelineHandles, legacy: IngestSpool) {
+    /// Requeues the transient quarantine and moves the legacy spool into the Claude
+    /// spool. Returns whether the legacy drainer may start: false when the move
+    /// failed. `afterAppend` is for tests; it fires between append and delete.
+    @discardableResult
+    static func prepareClaudeSpool(
+        _ claude: ClaudePipelineHandles, legacy: IngestSpool, afterAppend: (() throws -> Void)? = nil
+    ) -> Bool {
         do {
             let requeued = try claude.requeueTransientQuarantine()
             if requeued > 0 {
@@ -360,15 +369,17 @@ public final class SessionDaemonRuntime: @unchecked Sendable {
             logger.error("Claude quarantine requeue failed: \(error.localizedDescription, privacy: .public)")
         }
         do {
-            let moved = try claude.adoptLegacySpool(legacy)
+            let moved = try claude.adoptLegacySpool(legacy, afterAppend: afterAppend)
             if moved > 0 {
                 logger.info("Moved \(moved, privacy: .public) legacy spool row(s) into the Claude spool")
             }
+            return true
         } catch {
             logger.error("""
                 Legacy spool move failed (\(error.localizedDescription, privacy: .public)); \
-                the legacy drainer ingests what is left
+                the legacy drainer stays off this run and the next start moves the rest
                 """)
+            return false
         }
     }
 

@@ -207,4 +207,22 @@ final class SessionDaemonRuntimeTests: XCTestCase {
         XCTAssertEqual(try eventLogCount(runtime.database), 0, "the legacy writer ingested a moved row")
         await runtime.shutdown()
     }
+
+    /// Review N3: a move that appended to the Claude spool but could not delete the
+    /// legacy rows keeps the legacy drainer off, so those rows are not ingested twice.
+    func testFailedLegacyDeleteKeepsTheLegacyDrainerOff() async throws {
+        let runtime = try makeRuntime()
+        try await runtime.openPhaseA()
+        let claude = try XCTUnwrap(runtime.claudePipeline)
+        try runtime.spool.enqueue(try hookEvent("SessionStart"))
+
+        let allowed = SessionDaemonRuntime.prepareClaudeSpool(
+            claude, legacy: runtime.spool, afterAppend: { throw Undecodable() })
+        XCTAssertFalse(allowed, "the legacy drainer must stay off after a failed move")
+        XCTAssertEqual(runtime.spool.pendingCount(), 1, "the legacy row stays for the next start")
+        XCTAssertEqual(try claude.spool.pendingCount(), 1)
+        XCTAssertTrue(SessionDaemonRuntime.prepareClaudeSpool(claude, legacy: runtime.spool))
+        XCTAssertEqual(runtime.spool.pendingCount(), 0)
+        await runtime.shutdown()
+    }
 }

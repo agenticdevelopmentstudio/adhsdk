@@ -125,15 +125,25 @@ final class ClaudePipelineEndToEndTests: XCTestCase {
 
     // MARK: - Dumps
 
-    /// Columns stamped with the wall clock when the row is written (`datetime('now')`),
-    /// so two databases built a second apart differ there and nowhere else.
-    private static let wallClockColumns: Set<String> = ["updated_at", "started_at", "applied_at"]
+    /// Main-database columns stamped with the wall clock when the row is written
+    /// (`datetime('now')`), so two databases built a second apart differ there and
+    /// nowhere else. `updated_at` is that in every table that has one; otherwise only
+    /// these. `sessions.started_at` is the column default: the hook insert never
+    /// sets it. Event-time columns elsewhere (`agent_dispatches.started_at`) are compared.
+    private static let wallClockColumns: [String: Set<String>] = [
+        "sessions": ["started_at"],
+        "schema_migrations": ["applied_at"]
+    ]
+
+    private static func isWallClock(table: String, column: String) -> Bool {
+        column == "updated_at" || wallClockColumns[table]?.contains(column) == true
+    }
 
     private func dump(_ database: DaemonDatabase, table: String) throws -> [String] {
         try database.write { conn in
             let columns = try Row.fetchAll(conn, sql: "PRAGMA table_info(\(table))")
                 .map { $0["name"] as String }
-                .filter { !Self.wallClockColumns.contains($0) }
+                .filter { !Self.isWallClock(table: table, column: $0) }
             let list = columns.map { "\"\($0)\"" }.joined(separator: ", ")
             return try Row.fetchAll(conn, sql: "SELECT \(list) FROM \(table) ORDER BY \(list)")
                 .map { row in zip(columns, row.databaseValues).map { "\($0)=\($1)" }.joined(separator: " ") }
