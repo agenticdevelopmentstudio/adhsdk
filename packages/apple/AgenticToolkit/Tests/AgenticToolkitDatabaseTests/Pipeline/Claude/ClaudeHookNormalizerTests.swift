@@ -360,9 +360,11 @@ final class ClaudeHookNormalizerTests: XCTestCase {
         XCTAssertEqual(try ClaudeNormalizer().normalize(legacy), try ClaudeHookNormalizer().normalize(legacy))
         XCTAssertEqual(try ClaudeNormalizer().normalize(legacy).events.first?.kind, .toolCall)
 
+        // Transcripts now have their own normalizer: a hook envelope under that
+        // kind is not a transcript payload.
         let transcript = try Self.archived("PreToolUse", sourceKind: ClaudeProvider.transcriptKind)
         XCTAssertThrowsError(try ClaudeNormalizer().normalize(transcript)) { error in
-            XCTAssertEqual(error as? ClaudeNormalizerError, .unsupportedSourceKind("transcript"))
+            XCTAssertEqual(error as? ClaudeNormalizerError, .unparseable(transcript.record.dedupKey))
         }
         let unknown = try Self.archived("PreToolUse", sourceKind: "mystery")
         XCTAssertThrowsError(try ClaudeNormalizer().normalize(unknown)) { error in
