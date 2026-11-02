@@ -42,9 +42,11 @@ public final class ClaudeMainDBSink: PipelineSink {
         // Resolved before the writer is taken: `currentAccountEmail` may stat and
         // parse `~/.claude.json`. Only needed for a session nothing has stamped.
         let fallbackAccount = transcripts.isEmpty ? "" : database.currentAccountEmail
-        // Read from the event store before the writer is taken too: a read made
-        // inside the session database's transaction would run on its connection
-        // (the pool's reentrancy is per thread), which has no `events` table.
+        // Read from the event store before the writer is taken too, so the batch
+        // never holds the session database's writer while it waits on another
+        // database. (Reentrancy is per database, so a nested read would reach the
+        // event store's own connection; it is ordering, not routing, that this
+        // protects.)
         let derived = try derive(transcripts)
 
         try database.transaction {
@@ -84,19 +86,26 @@ public final class ClaudeMainDBSink: PipelineSink {
             : true
         _ = try database.applySessionState(
             eventType: event.eventType, timestamp: event.timestamp, hookData: event.hookData,
-            account: hook.account, routesStatusLine: routesStatusLine)
+            account: hook.account, routesStatusLine: routesStatusLine, ordersByTime: true)
     }
 
-    /// True when a StatusLine this new (or newer) is already in the session's
-    /// `rate_limit_snapshots`: the record is a redelivery, and handing it to
-    /// `statusLineIngest` again would add a duplicate row. A StatusLine older
-    /// than the session's latest snapshot is stale either way.
+    /// True when the session's `rate_limit_snapshots` already holds a row stamped
+    /// with exactly this StatusLine's timestamp (`statusLineIngest` stores it
+    /// verbatim): the record is a redelivery, and its whole routing — snapshot,
+    /// `claude_versions`, the `session_metrics` extended columns — was applied with
+    /// it. Any other StatusLine, older ones included, is routed as `ingestEvent`
+    /// routes it.
+    ///
+    /// Not exact in two cases, both left to `statusLineIngest`'s own dedup: a
+    /// first delivery whose values matched the session's latest row wrote no
+    /// snapshot, so its redelivery is routed again; and two distinct StatusLines
+    /// with the same timestamp string count as one.
     private func statusLineRecorded(_ event: ParsedEvent) throws -> Bool {
         let sessionId = event.hookData["session_id"] as? String ?? ""
         var found = false
         try database.query("""
             SELECT 1 FROM rate_limit_snapshots
-            WHERE session_id = ? AND julianday(timestamp) >= julianday(?)
+            WHERE session_id = ? AND timestamp = ?
             LIMIT 1
             """, params: [sessionId, event.timestamp]) { _ in found = true }
         return found

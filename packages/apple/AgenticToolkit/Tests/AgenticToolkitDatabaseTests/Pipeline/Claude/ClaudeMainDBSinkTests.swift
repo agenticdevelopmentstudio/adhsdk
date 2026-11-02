@@ -52,6 +52,35 @@ final class ClaudeMainDBSinkTests: XCTestCase {
             receivedAt: receivedAt, payload: try hookPayload(stem)))
     }
 
+    /// A copy of a hook fixture under its own dedup key, restamped at `timestamp`
+    /// and with `hookData` merged over its `hook_data`.
+    private static func hookRecord(
+        _ stem: String, id: Int64, key: String, timestamp: String, hookData: [String: Any] = [:]
+    ) throws -> ArchivedRecord {
+        var envelope = try XCTUnwrap(try JSONSerialization.jsonObject(with: try hookPayload(stem)) as? [String: Any])
+        envelope["timestamp"] = timestamp
+        var data = envelope["hook_data"] as? [String: Any] ?? [:]
+        data.merge(hookData) { _, new in new }
+        envelope["hook_data"] = data
+        return ArchivedRecord(id: id, record: RawRecord(
+            provider: ClaudeProvider.name, sourceKind: ClaudeProvider.hookKind, dedupKey: key,
+            receivedAt: receivedAt, payload: try JSONSerialization.data(withJSONObject: envelope)))
+    }
+
+    /// Runs `records`' hook envelopes through `ingestEvent`, in order.
+    private static func ingestLegacy(_ records: [ArchivedRecord], into database: DaemonDatabase) throws {
+        for record in records {
+            guard case .event(let parsed) = ParseResult.parse(
+                envelopeJSON: String(bytes: record.record.payload, encoding: .utf8) ?? "") else {
+                return XCTFail("record \(record.record.dedupKey) did not parse")
+            }
+            try database.ingestEvent(
+                eventType: parsed.eventType, timestamp: parsed.timestamp, hookData: parsed.hookData,
+                context: parsed.context, accountEmail: parsed.accountEmail,
+                oauthAccountEmail: parsed.oauthAccountEmail)
+        }
+    }
+
     private static func transcriptLine(_ stem: String) throws -> String {
         try String(contentsOf: fixtures.appendingPathComponent("transcripts/\(stem).jsonl"), encoding: .utf8)
             .trimmingCharacters(in: .newlines)
@@ -89,10 +118,16 @@ final class ClaudeMainDBSinkTests: XCTestCase {
             params: [timestamp, sessionId])
     }
 
-    private func makeDatabase() throws -> DaemonDatabase {
-        // A resolver pointed at a file that does not exist: no oauth fallback, so
-        // the test never reads the real `~/.claude.json`.
-        let resolver = AccountResolver(claudeJSONPath: tmpDir.appendingPathComponent("no-claude.json").path)
+    /// - Parameter oauthEmail: the login a temp `.claude.json` reports; nil points
+    ///   the resolver at a file that does not exist (no oauth fallback). Either
+    ///   way the test never reads the real `~/.claude.json`.
+    private func makeDatabase(oauthEmail: String? = nil) throws -> DaemonDatabase {
+        let claudeJSON = tmpDir.appendingPathComponent(oauthEmail == nil ? "no-claude.json" : "claude.json")
+        if let oauthEmail {
+            let json = ["oauthAccount": ["emailAddress": oauthEmail]]
+            try JSONSerialization.data(withJSONObject: json).write(to: claudeJSON)
+        }
+        let resolver = AccountResolver(claudeJSONPath: claudeJSON.path)
         let made = try TestDaemonDatabase.makeSessionDatabase(
             accountResolver: resolver, statusLineIngest: Self.statusLineIngest)
         paths.append(made.path)
@@ -120,8 +155,8 @@ final class ClaudeMainDBSinkTests: XCTestCase {
         }
     }
 
-    private func makePipeline() throws -> Pipeline {
-        let database = try makeDatabase()
+    private func makePipeline(oauthEmail: String? = nil) throws -> Pipeline {
+        let database = try makeDatabase(oauthEmail: oauthEmail)
         let store = try EventStore(path: tmpDir.appendingPathComponent("events-\(UUID().uuidString).db").path)
         return Pipeline(database: database, store: store, sink: ClaudeMainDBSink(database: database, eventReads: store))
     }
@@ -313,5 +348,130 @@ final class ClaudeMainDBSinkTests: XCTestCase {
         try pipeline.sink.write(
             NormalizedBatch(), records: [try Self.hookRecord("SessionStart", id: 1)], provider: "other")
         XCTAssertEqual(try dumpAll(pipeline.database), before)
+    }
+
+    // MARK: - Out-of-order and partial redelivery
+
+    private static let snapshots = "SELECT timestamp FROM rate_limit_snapshots ORDER BY id"
+
+    func testOlderStatusLineAfterANewerOneIsRecordedAsIngestEventRecordsIt() throws {
+        let newer = try Self.hookRecord("StatusLine", id: 1)
+        let older = try Self.hookRecord("StatusLine", id: 2, key: "StatusLine-older", timestamp: "2026-10-30T12:10:00Z")
+        let legacy = try makeDatabase()
+        try Self.ingestLegacy([newer, older], into: legacy)
+
+        let pipeline = try makePipeline()
+        try pipeline.deliver([newer])
+        try pipeline.deliver([older])
+        XCTAssertEqual(
+            try rows(pipeline.database, Self.snapshots), [#""2026-10-30T12:20:00.750Z""#, #""2026-10-30T12:10:00Z""#])
+        XCTAssertEqual(
+            try dump(pipeline.database, table: "rate_limit_snapshots"), try dump(legacy, table: "rate_limit_snapshots"))
+
+        // Redelivering either one, in any order, adds nothing.
+        let before = try dumpAll(pipeline.database)
+        try pipeline.deliver([older, newer])
+        XCTAssertEqual(try dumpAll(pipeline.database), before)
+    }
+
+    func testTwoStatusLinesInOneBatchAreBothRecorded() throws {
+        let first = try Self.hookRecord("StatusLine", id: 1, key: "StatusLine-1", timestamp: "2026-10-30T12:20:00Z")
+        let second = try Self.hookRecord(
+            "StatusLine", id: 2, key: "StatusLine-2", timestamp: "2026-10-30T12:20:00.500Z")
+        let legacy = try makeDatabase()
+        try Self.ingestLegacy([first, second], into: legacy)
+
+        let pipeline = try makePipeline()
+        try pipeline.deliver([first, second])
+        XCTAssertEqual(
+            try rows(pipeline.database, Self.snapshots), [#""2026-10-30T12:20:00Z""#, #""2026-10-30T12:20:00.500Z""#])
+        XCTAssertEqual(
+            try dump(pipeline.database, table: "rate_limit_snapshots"), try dump(legacy, table: "rate_limit_snapshots"))
+
+        try pipeline.deliver([first, second])
+        XCTAssertEqual(try rows(pipeline.database, "SELECT COUNT(*) FROM rate_limit_snapshots"), ["2"])
+    }
+
+    func testRedeliveredOlderHooksDoNotReEndTheSessionOrRegressLastTool() throws {
+        let pipeline = try makePipeline()
+        let hooks = try Self.hookStems.enumerated().map { try Self.hookRecord($1, id: Int64($0 + 1)) }
+        try pipeline.deliver(hooks)
+        let state = "SELECT status || '|' || last_tool FROM sessions WHERE session_id = '\(Self.sessionID)'"
+        XCTAssertEqual(try scalar(pipeline.database, state), "ended|Read")
+
+        // The session is resumed after it ended and runs another tool.
+        try pipeline.deliver([
+            try Self.hookRecord("UserPromptSubmit", id: 20, key: "resume-prompt", timestamp: "2026-10-30T14:00:00Z"),
+            try Self.hookRecord(
+                "PreToolUse", id: 21, key: "resume-tool", timestamp: "2026-10-30T14:00:05Z",
+                hookData: ["tool_name": "Edit"])
+        ])
+        XCTAssertEqual(try scalar(pipeline.database, state), "active|Edit")
+        let before = try dumpAll(pipeline.database)
+
+        // A partial redelivery of the first batch, out of order: the old SessionEnd
+        // and the old tool hooks must not end the session or bring back Read.
+        let byStem = Dictionary(uniqueKeysWithValues: zip(Self.hookStems, hooks))
+        for stem in ["SessionEnd", "PreToolUse", "PostToolUse"] {
+            try pipeline.deliver([try XCTUnwrap(byStem[stem])])
+            XCTAssertEqual(try scalar(pipeline.database, state), "active|Edit", stem)
+        }
+        try pipeline.deliver([try XCTUnwrap(byStem["SessionEnd"]), try XCTUnwrap(byStem["PreToolUse"])])
+        XCTAssertEqual(try dumpAll(pipeline.database), before)
+    }
+
+    // MARK: - Accounts
+
+    func testAccountIsFirstWinsAsTheLegacyWritersLeaveIt() throws {
+        // The hooks carry a token login; the machine's current login differs.
+        let hooks = try ["SessionStart", "PreToolUse"].enumerated().map { try Self.hookRecord($1, id: Int64($0 + 1)) }
+        let lines = try Self.transcriptLines.map { try Self.transcriptLine($0.stem) }
+        try FileManager.default.createDirectory(
+            at: transcriptFile.deletingLastPathComponent(), withIntermediateDirectories: true)
+        try (lines.joined(separator: "\n") + "\n").write(to: transcriptFile, atomically: true, encoding: .utf8)
+
+        let legacy = try makeDatabase(oauthEmail: "current@example.com")
+        try Self.ingestLegacy(hooks, into: legacy)
+        _ = try JSONLImporter(
+            sourceDirectory: tmpDir.appendingPathComponent("projects"), database: legacy,
+            options: .init(only: [transcriptFile])
+        ).run()
+
+        let pipeline = try makePipeline(oauthEmail: "current@example.com")
+        try pipeline.deliver(hooks)
+        try pipeline.deliver(try transcriptRecords())
+
+        let accounts = """
+            SELECT s.account_email, s.auth_method, m.account_email
+            FROM sessions s JOIN session_metrics m USING (session_id)
+            """
+        XCTAssertEqual(try rows(pipeline.database, accounts), [#""dev@example.com"|"token"|"dev@example.com""#])
+        XCTAssertEqual(try rows(pipeline.database, accounts), try rows(legacy, accounts))
+    }
+
+    func testTranscriptOnlySessionTakesTheCurrentLoginAsTheImporterDoes() throws {
+        let lines = try Self.transcriptLines.map { try Self.transcriptLine($0.stem) }
+        try FileManager.default.createDirectory(
+            at: transcriptFile.deletingLastPathComponent(), withIntermediateDirectories: true)
+        try (lines.joined(separator: "\n") + "\n").write(to: transcriptFile, atomically: true, encoding: .utf8)
+        let legacy = try makeDatabase(oauthEmail: "current@example.com")
+        _ = try JSONLImporter(
+            sourceDirectory: tmpDir.appendingPathComponent("projects"), database: legacy,
+            options: .init(only: [transcriptFile])
+        ).run()
+
+        let pipeline = try makePipeline(oauthEmail: "current@example.com")
+        try pipeline.deliver(try transcriptRecords())
+        // A later token hook heals the import-time guess; the metrics keep theirs.
+        let token = [try Self.hookRecord("PreToolUse", id: 1)]
+        try Self.ingestLegacy(token, into: legacy)
+        try pipeline.deliver(token)
+
+        let accounts = """
+            SELECT s.account_email, s.auth_method, m.account_email
+            FROM sessions s JOIN session_metrics m USING (session_id)
+            """
+        XCTAssertEqual(try rows(pipeline.database, accounts), try rows(legacy, accounts))
+        XCTAssertEqual(try rows(pipeline.database, accounts), [#""dev@example.com"|"token"|"current@example.com""#])
     }
 }

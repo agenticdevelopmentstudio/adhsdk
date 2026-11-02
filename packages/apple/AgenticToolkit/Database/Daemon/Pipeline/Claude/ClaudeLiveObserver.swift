@@ -2,6 +2,7 @@
 import AgenticToolkitCore
 import Foundation
 import GRDB
+import OSLog
 
 /// What a daemon does for a session after one of its hook events is stored, off
 /// the ingestion path: tail its transcript, enrich it at `SessionStart`, refresh
@@ -217,10 +218,20 @@ public final class ClaudeLiveObserver: PipelineObserver {
                 && !event.sessionID.isEmpty
         }
         guard !hookEvents.isEmpty else { return }
-        let ids = (try? storedIDs(hookEvents.map(\.dedupKey))) ?? [:]
+        // A failed read costs the broadcasts (they need the row id), never the
+        // enrichment, which does not.
+        let ids: [String: Int64]
+        do {
+            ids = try storedIDs(hookEvents.map(\.dedupKey))
+        } catch {
+            ids = [:]
+            let reason = String(describing: error)
+            logger.error("id read failed, \(hookEvents.count) event(s) not broadcast: \(reason, privacy: .public)")
+        }
         for event in hookEvents {
-            guard let id = ids[event.dedupKey] else { continue }
-            publish(event, id: id)
+            if let id = ids[event.dedupKey] {
+                publish(event, id: id)
+            }
             enrichment.run(
                 eventType: event.providerType, sessionId: event.sessionID, cwd: event.cwd ?? "",
                 transcriptPath: Self.string(event.attrs["transcript_path"]))
@@ -242,6 +253,8 @@ public final class ClaudeLiveObserver: PipelineObserver {
         }
     }
 
+    /// The payload's `timestamp` is rebuilt from the event's epoch time (milliseconds
+    /// kept only when non-zero), not forwarded verbatim from the hook envelope.
     private func publish(_ event: NormalizedEvent, id: Int64) {
         let ingested = IngestedEvent(
             id: id,
@@ -262,5 +275,9 @@ public final class ClaudeLiveObserver: PipelineObserver {
         guard case .string(let text)? = value else { return nil }
         return text
     }
+}
+
+extension ClaudeLiveObserver: Loggable {
+    public static nonisolated let logger = makeLogger()
 }
 #endif

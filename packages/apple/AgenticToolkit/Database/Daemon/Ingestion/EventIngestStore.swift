@@ -228,15 +228,22 @@ extension DaemonDatabase {
         }
     }
 
-    /// `applySessionState` with the account already resolved. `routesStatusLine`
-    /// false skips the `statusLineIngest` hook (a redelivered StatusLine).
-    /// Must run inside a write.
+    /// `applySessionState` with the account already resolved. Must run inside a write.
+    ///
+    /// - Parameters:
+    ///   - routesStatusLine: false skips the `statusLineIngest` hook (a redelivered
+    ///     StatusLine).
+    ///   - ordersByTime: true lets `last_tool` and the `SessionEnd` status move only
+    ///     for the session's newest activity, so a redelivered or late older event
+    ///     cannot regress `last_tool` or re-end a session that has moved on. The
+    ///     pipeline sink sets it; `ingestEvent` keeps its unconditional writes.
     func applySessionState(
         eventType: String,
         timestamp: String,
         hookData: [String: Any],
         account: (email: String, authMethod: String),
-        routesStatusLine: Bool
+        routesStatusLine: Bool,
+        ordersByTime: Bool = false
     ) throws -> IngestedSessionState {
         let sessionAccount = account.email
         let authMethod = account.authMethod
@@ -420,11 +427,21 @@ extension DaemonDatabase {
                 try sessionUpsertHook(self, sessionId, timestamp, isActivity == 1)
             }
 
+            // Ordered writes (see `ordersByTime`) apply only when this event is the
+            // session's newest activity: the upsert above has already raised
+            // `last_activity_at` to MAX(stored, this event), so it equals this
+            // event's time exactly when nothing newer has been applied. Compared at
+            // `datetime()`'s one-second grain, like the upsert's own guards.
+            let newestOnly = ordersByTime
+                ? " AND last_activity_at <= COALESCE(datetime(?), last_activity_at)"
+                : ""
+            let orderParams: [any Sendable] = ordersByTime ? [timestamp] : []
+
             // 2. Update last_tool if this is a tool event
             if !toolName.isEmpty {
                 try execute(
-                    "UPDATE sessions SET last_tool = ? WHERE session_id = ?",
-                    params: [toolName, sessionId]
+                    "UPDATE sessions SET last_tool = ? WHERE session_id = ?" + newestOnly,
+                    params: [toolName, sessionId] + orderParams
                 )
             }
 
@@ -433,8 +450,8 @@ extension DaemonDatabase {
             // so ending on it marked every live session "ended".
             if eventType == "SessionEnd" {
                 try execute(
-                    "UPDATE sessions SET status = 'ended' WHERE session_id = ?",
-                    params: [sessionId]
+                    "UPDATE sessions SET status = 'ended' WHERE session_id = ?" + newestOnly,
+                    params: [sessionId] + orderParams
                 )
             }
 

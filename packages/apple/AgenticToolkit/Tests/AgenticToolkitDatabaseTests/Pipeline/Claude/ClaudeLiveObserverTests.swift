@@ -101,6 +101,25 @@ final class ClaudeLiveObserverTests: XCTestCase {
         try XCTUnwrap(try JSONSerialization.jsonObject(with: payload) as? [String: Any])
     }
 
+    /// The payload `EventIngestor` broadcasts for `stem`: legacy `ingestEvent` on a
+    /// temp session db, with the event store's row id in place of event_log's.
+    private func legacyPayload(_ stem: String, id: Int64) throws -> [String: Any] {
+        let made = try TestDaemonDatabase.makeSessionDatabase(
+            accountResolver: AccountResolver(claudeJSONPath: tmpDir.appendingPathComponent("no-claude.json").path))
+        defer { TestDaemonDatabase.remove(path: made.path) }
+        let fixture = try Data(contentsOf: Self.fixtures.appendingPathComponent("hooks/\(stem).json"))
+        guard case .event(let parsed) = ParseResult.parse(envelopeJSON: String(bytes: fixture, encoding: .utf8) ?? "")
+        else { throw XCTSkip("fixture \(stem) did not parse") }
+        let legacy = try made.db.ingestEvent(
+            eventType: parsed.eventType, timestamp: parsed.timestamp, hookData: parsed.hookData,
+            context: parsed.context, accountEmail: parsed.accountEmail, oauthAccountEmail: parsed.oauthAccountEmail)
+        let rebuilt = IngestedEvent(
+            id: id, event: legacy.event, sessionId: legacy.sessionId, timestamp: legacy.timestamp,
+            cwd: legacy.cwd, detail: legacy.detail, toolName: legacy.toolName, model: legacy.model,
+            source: legacy.source)
+        return try decode(try XCTUnwrap(SessionEventEncoding.encode(rebuilt)))
+    }
+
     // MARK: - Tests
 
     func testBroadcastsEachHookEventOnceWithItsStoredID() throws {
@@ -198,5 +217,33 @@ final class ClaudeLiveObserverTests: XCTestCase {
         log.hooks.run(eventType: "Stop", sessionId: "s1", cwd: "/x", transcriptPath: nil)
         log.hooks.run(eventType: "Notification", sessionId: "s1", cwd: "/x", transcriptPath: "/t.jsonl")
         XCTAssertEqual(log.calls, ["heal s1", "stop s1 -", "heal s1", "tail s1 /t.jsonl"])
+    }
+
+    /// StatusLine's `model` is an object, so legacy broadcasts `model: ""`, and the
+    /// tool events carry `tool_name` and a computed detail — the payloads must match.
+    func testStatusLineAndToolPayloadsMatchWhatIngestEventBroadcasts() throws {
+        for stem in ["StatusLine", "PreToolUse", "PostToolUse"] {
+            let harness = try makeHarness()
+            let batch = try store([try Self.hookRecord(stem, id: 1)], in: harness.events)
+            harness.observer.pipelineDidStore(batch, provider: ClaudeProvider.name)
+            let payload = try decode(try XCTUnwrap(harness.sink.events.first, stem).payload)
+            let expected = try legacyPayload(stem, id: try XCTUnwrap(try storedID(stem, in: harness.events)))
+            XCTAssertEqual(NSDictionary(dictionary: payload), NSDictionary(dictionary: expected), stem)
+        }
+    }
+
+    func testFailedIDReadSkipsTheBroadcastButStillEnriches() throws {
+        let harness = try makeHarness()
+        let batch = try store([try Self.hookRecord("SessionStart", id: 1)], in: harness.events)
+        // A different, empty store: the id read finds no events table.
+        let emptyPath = tmpDir.appendingPathComponent("empty.db").path
+        let empty = try EventStore(path: emptyPath)
+        try DatabaseQueue(path: emptyPath).write { conn in try conn.execute(sql: "DROP TABLE events") }
+        let observer = ClaudeLiveObserver(eventReads: empty, sink: harness.sink, enrichment: harness.log.hooks)
+
+        observer.pipelineDidStore(batch, provider: ClaudeProvider.name)
+
+        XCTAssertTrue(harness.sink.events.isEmpty)
+        XCTAssertFalse(harness.log.calls.isEmpty, "enrichment ran despite the failed read")
     }
 }
