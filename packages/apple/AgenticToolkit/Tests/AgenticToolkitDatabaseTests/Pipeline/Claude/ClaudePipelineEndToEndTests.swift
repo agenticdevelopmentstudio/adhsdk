@@ -413,7 +413,7 @@ extension ClaudePipelineEndToEndTests {
         XCTAssertFalse(assembly.handles.drainer.drainUntilEmpty().failed)
         let archived = try XCTUnwrap(try assembly.handles.archive.records(after: 0, limit: 1).first?.record)
 
-        try quarantine(archived, reason: "sink X failed: y", in: spool)
+        try quarantine(archived, reason: "normalize failed: y", in: spool)
         try quarantine(hookRecord(archived.dedupKey, payload: Data("other bytes".utf8)),
                        reason: "dedup-key conflict: x", in: spool)
         try quarantine(hookRecord("never-archived", payload: archived.payload),
@@ -424,6 +424,42 @@ extension ClaudePipelineEndToEndTests {
         XCTAssertEqual(kept.map(\.record.dedupKey), [archived.dedupKey, "never-archived"])
         XCTAssertEqual(kept.first?.record.payload, Data("other bytes".utf8))
         XCTAssertEqual(assembly.handles.clearArchivedQuarantine(), 0)
+    }
+
+    /// Final review finding 2: a record parked by a sink or events.db outage is
+    /// archived verbatim but applied nowhere, so clear must never delete it. It is
+    /// requeued instead, and the drainer then applies it.
+    func testClearRequeuesOutageFailuresInsteadOfDeletingThem() throws {
+        let assembly = try assemble("clear-transient")
+        let spool = assembly.handles.spool
+        try assembly.handles.capture(try parsedHook("SessionStart"))
+        XCTAssertFalse(assembly.handles.drainer.drainUntilEmpty().failed)
+        let archived = try XCTUnwrap(try assembly.handles.archive.records(after: 0, limit: 1).first?.record)
+        let stop = hookRecord("store-outage", payload: try parsedHook("Stop").envelopeJSON())
+        XCTAssertEqual(try archive(stop, in: assembly), 1)
+
+        try quarantine(archived, reason: "\(PipelineDrainer.sinkFailurePrefix)ClaudeMainDBSink failed: busy",
+                       in: spool)
+        try quarantine(stop, reason: "\(PipelineDrainer.storeFailurePrefix)disk I/O error", in: spool)
+        XCTAssertEqual(assembly.handles.quarantinedCount(), 2)
+
+        XCTAssertEqual(assembly.handles.clearArchivedQuarantine(), 0)
+        XCTAssertEqual(assembly.handles.quarantinedCount(), 0)
+        XCTAssertEqual(try spool.pendingCount(), 2)
+        XCTAssertFalse(assembly.handles.drainer.drainUntilEmpty().failed)
+        XCTAssertEqual(try spool.pendingCount(), 0)
+        XCTAssertEqual(assembly.handles.quarantinedCount(), 0)
+    }
+
+    private func archive(_ record: RawRecord, in assembly: Assembly) throws -> Int {
+        try assembly.handles.archive.append([record]).outcomes.count
+    }
+
+    func testOnlySinkAndStoreReasonsAreTransient() {
+        XCTAssertTrue(ClaudePipelineHandles.isTransientFailure("sink ClaudeMainDBSink failed: busy"))
+        XCTAssertTrue(ClaudePipelineHandles.isTransientFailure("store write failed: disk I/O error"))
+        XCTAssertFalse(ClaudePipelineHandles.isTransientFailure("invalid JSON"))
+        XCTAssertFalse(ClaudePipelineHandles.isTransientFailure("dedup-key conflict: x"))
     }
 
     /// Review M6: a drop file too young on the watcher's poll is spooled by the one

@@ -239,6 +239,11 @@ extension ClaudePipelineHandles: PipelineQuarantineControl {
         }
     }
 
+    /// A record quarantined by a destination outage (a sink, or the events.db
+    /// write) is never deleted here, even though its bytes are archived: its
+    /// `events` row and session state exist nowhere until it is applied. It is
+    /// requeued instead, so the clear empties the list and the drainer applies it
+    /// (or parks it again if the outage persists).
     @discardableResult
     public func clearArchivedQuarantine() -> Int {
         var cleared = 0
@@ -248,14 +253,23 @@ extension ClaudePipelineHandles: PipelineQuarantineControl {
                 let page = try spool.quarantined(limit: 200, afterID: afterID)
                 guard let last = page.last else { break }
                 afterID = last.id
-                let archived = try page.filter(isArchivedVerbatim).map(\.id)
+                let archived = try page
+                    .filter { !Self.isTransientFailure($0.reason) }
+                    .filter(isArchivedVerbatim).map(\.id)
                 try spool.deleteQuarantined(ids: archived)
                 cleared += archived.count
             }
+            try requeueTransientQuarantine()
         } catch {
             Self.logger.error("Quarantine clear stopped: \(error.localizedDescription, privacy: .public)")
         }
         return cleared
+    }
+
+    /// Whether a quarantine reason marks a destination outage rather than a record
+    /// refused for itself.
+    static func isTransientFailure(_ reason: String) -> Bool {
+        PipelineDrainer.transientFailurePrefixes.contains { reason.hasPrefix($0) }
     }
 
     /// Whether the archive holds this record's key with exactly these bytes. An

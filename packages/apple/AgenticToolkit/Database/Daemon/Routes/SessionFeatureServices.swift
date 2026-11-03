@@ -12,7 +12,10 @@ public protocol PipelineQuarantineControl: Sendable {
     @discardableResult
     func requeueAllQuarantined() -> Int
     /// Deletes only the quarantined records whose exact bytes the raw archive
-    /// already holds, and keeps every other one. Returns how many were deleted.
+    /// already holds and that were refused for themselves, and keeps every other
+    /// one. Records parked by a destination outage are requeued instead, never
+    /// deleted: they have not been applied anywhere yet. Returns how many were
+    /// deleted.
     @discardableResult
     func clearArchivedQuarantine() -> Int
 }

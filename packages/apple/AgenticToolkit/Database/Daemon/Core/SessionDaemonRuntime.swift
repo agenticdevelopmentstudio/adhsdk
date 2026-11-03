@@ -587,14 +587,41 @@ public final class SessionDaemonRuntime: @unchecked Sendable {
 
     /// The Claude pipeline's three files, through `opener` when one is injected
     /// and otherwise opened at their configured paths in parallel.
+    ///
+    /// Every open runs on ``claudeOpenQueue``, never on a cooperative-pool thread:
+    /// the events.db open can rebuild indexes for a long time, and a blocked pool
+    /// thread would starve the rest of startup. Callers only await.
     private static func openClaudeFiles(
         _ configuration: SessionDaemonConfiguration, opener: ClaudeOpener?
     ) async throws -> ClaudeFiles {
-        if let opener { return try opener(configuration) }
-        async let spool: ProviderSpool = openClaudeSpool(path: configuration.claudeSpoolPath)
-        async let archive: RawArchive = openClaudeArchive(path: configuration.claudeArchivePath)
-        async let store: EventStore = openEventStore(path: configuration.eventStorePath)
+        if let opener { return try await offCooperativePool { try opener(configuration) } }
+        async let spool: ProviderSpool = offCooperativePool {
+            try openClaudeSpool(path: configuration.claudeSpoolPath)
+        }
+        async let archive: RawArchive = offCooperativePool {
+            try openClaudeArchive(path: configuration.claudeArchivePath)
+        }
+        async let store: EventStore = offCooperativePool {
+            try openEventStore(path: configuration.eventStorePath)
+        }
         return try await ClaudeFiles(spool: spool, archive: archive, store: store)
+    }
+
+    /// Where the Claude pipeline's blocking SQLite opens run. Concurrent, so the
+    /// three files still open in parallel.
+    private static let claudeOpenQueue = DispatchQueue(
+        label: "SessionDaemonRuntime.claudeOpen", qos: .utility, attributes: .concurrent)
+
+    /// Runs `body` on ``claudeOpenQueue`` and resumes with its result, so the
+    /// awaiting task suspends instead of holding a cooperative thread.
+    private static func offCooperativePool<Value: Sendable>(
+        _ body: @escaping @Sendable () throws -> Value
+    ) async throws -> Value {
+        try await withCheckedThrowingContinuation { continuation in
+            claudeOpenQueue.async {
+                continuation.resume(with: Result { try body() })
+            }
+        }
     }
 
     /// Opens the pool only; the migration is ``migrate()``'s.
