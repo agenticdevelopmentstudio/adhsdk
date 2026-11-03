@@ -7,8 +7,9 @@ import Foundation
 /// - **Owner of the dedup key.** The source derives every record's `dedupKey`, and
 ///   the same input must always yield the same key; different input must never
 ///   share one. The archive keeps the first bytes for a key and the drainer
-///   quarantines a later record whose bytes differ (`ArchiveAppendOutcome.conflict`),
-///   so a key collision costs a quarantine, never data, but it is a source bug.
+///   quarantines a later record whose bytes differ (`ArchiveAppendOutcome.conflict`)
+///   unless the provider's `Normalizer.isEquivalent` calls it the same record, so a
+///   key collision costs a quarantine, never data, but it is a source bug.
 /// - **Cursor and append are one transaction.** A source that tracks how far it
 ///   has read stores that cursor in the spool's `source_state` through
 ///   `ProviderSpool.append(_:settingSourceState:to:)`, so a crash leaves either

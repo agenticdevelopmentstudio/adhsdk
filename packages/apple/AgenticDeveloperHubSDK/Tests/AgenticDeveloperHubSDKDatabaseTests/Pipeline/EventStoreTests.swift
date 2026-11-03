@@ -234,14 +234,30 @@ final class EventStoreTests: XCTestCase {
         XCTAssertEqual(try store.counts(), EventStoreCounts(sessions: 2, events: 2, turns: 2, messages: 2))
     }
 
-    private let indexNames = ["events_session_time", "events_time", "turns_time", "turns_session",
-                              "messages_session_time"]
+    private let indexNames = ["events_session_time", "events_time", "events_type_time", "turns_time",
+                              "turns_session", "messages_session_time", "messages_time"]
 
     private func presentIndexes(_ path: String) throws -> Set<String> {
         let queue = try DatabaseQueue(path: path)
         return try queue.read { conn in
             Set(try String.fetchAll(conn, sql: "SELECT name FROM sqlite_master WHERE type = 'index'"))
         }
+    }
+
+    /// A store file made before `events_type_time` existed gets it on the next
+    /// open: the insights and cache-miss reads filter on (provider, provider_type, time).
+    func testOpeningAnExistingStoreAddsTheTypeTimeIndex() throws {
+        let path = tmpDir.appendingPathComponent(EventStore.fileName).path
+        do {
+            let store = try makeStore()
+            try store.write(sampleBatch(), provider: "mock")
+        }
+        let queue = try DatabaseQueue(path: path)
+        try queue.write { try $0.execute(sql: "DROP INDEX events_type_time") }
+        XCTAssertFalse(try presentIndexes(path).contains("events_type_time"))
+        let reopened = try makeStore()
+        XCTAssertTrue(try presentIndexes(path).contains("events_type_time"))
+        XCTAssertEqual(try reopened.counts().events, 1)
     }
 
     func testBulkLoadDropsAndRebuildsIndexes() throws {
@@ -301,6 +317,29 @@ final class EventStoreTests: XCTestCase {
         // And a fresh bulk load is allowed again.
         try reopened.beginBulkLoad()
         try reopened.endBulkLoad()
+    }
+
+    func testReadHonoursItsDeadline() throws {
+        let store = try makeStore()
+        // An unbounded counting CTE: reads nothing, writes nothing, runs for
+        // far longer than any deadline here unless the deadline ejects it.
+        let start = Date()
+        XCTAssertThrowsError(
+            try store.read(deadline: .milliseconds(200)) { conn in
+                try Int.fetchOne(conn, sql: """
+                    WITH RECURSIVE seq(n) AS (SELECT 1 UNION ALL SELECT n + 1 FROM seq WHERE n < 10000000000)
+                    SELECT count(*) FROM seq
+                    """)
+            }
+        ) { error in
+            guard case BoundedDatabaseError.deadlineExceeded(let lane, _) = error else {
+                return XCTFail("expected deadlineExceeded, got \(error)")
+            }
+            XCTAssertEqual(lane, "read")
+        }
+        XCTAssertLessThan(Date().timeIntervalSince(start), 3, "ejected near its own deadline")
+        // Without a deadline the store's default applies and a short read completes.
+        XCTAssertEqual(try store.read { conn in try Int.fetchOne(conn, sql: "SELECT 1") }, 1)
     }
 
     func testAutoVacuumIsIncremental() throws {

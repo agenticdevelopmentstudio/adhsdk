@@ -487,11 +487,35 @@ public enum JSONLScanner {
         bufferSize: Int = 1 << 20,
         _ body: ([String]) throws -> Void
     ) throws -> StreamResult {
+        try streamCompleteLineChunks(
+            at: url, startingAtByte: startOffset, linesPerChunk: linesPerChunk, bufferSize: bufferSize
+        ) { lines, _ in try body(lines) }
+    }
+
+    /// ``streamCompleteLines(at:startingAtByte:linesPerChunk:bufferSize:_:)`` that also
+    /// hands `body` the byte offset just past the chunk's last line — the exact place
+    /// a cursor committed with that chunk may resume from.
+    ///
+    /// Summing the emitted lines' lengths cannot give that offset: blank lines and
+    /// lines that are not valid UTF-8 consume bytes but never reach `body`, so a sum
+    /// can land the cursor inside a line and re-read its tail as a new one. The
+    /// offset also covers any blank or skipped lines *before* the chunk's last line;
+    /// those after it are only in the returned ``StreamResult/bytesConsumed``.
+    @discardableResult
+    public static func streamCompleteLineChunks(
+        at url: URL,
+        startingAtByte startOffset: Int64 = 0,
+        linesPerChunk: Int = 500,
+        bufferSize: Int = 1 << 20,
+        _ body: (_ lines: [String], _ consumedThrough: Int64) throws -> Void
+    ) throws -> StreamResult {
         let handle = try FileHandle(forReadingFrom: url)
         defer { try? handle.close() }
         if startOffset > 0 { try handle.seek(toOffset: UInt64(startOffset)) }
 
         var consumed = startOffset
+        /// `consumed` as of the last line put into `chunk`.
+        var consumedThroughLastLine = startOffset
         var emitted = 0
         var skipped = 0
         var pending: [UInt8] = []
@@ -509,7 +533,7 @@ public enum JSONLScanner {
 
         func flushChunk() throws {
             guard !chunk.isEmpty else { return }
-            try body(chunk)
+            try body(chunk, consumedThroughLastLine)
             chunk.removeAll(keepingCapacity: true)
         }
 
@@ -538,6 +562,7 @@ public enum JSONLScanner {
                         continue
                     }
                     chunk.append(text)
+                    consumedThroughLastLine = consumed
                     emitted += 1
                     if chunk.count >= linesPerChunk { try flushChunk() }
                 }
@@ -569,6 +594,7 @@ public enum JSONLScanner {
             chunk.append(tail)
             emitted += 1
             consumed += Int64(pending.count)
+            consumedThroughLastLine = consumed
         }
         try flushChunk()
 

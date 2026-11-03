@@ -41,10 +41,17 @@ public final class BillingActivityCache: Sendable {
     /// The session's full activity history as sorted, de-duplicated epoch
     /// seconds, reading from `database` only what is newer than the cached
     /// cursor.
+    ///
+    /// A returned cursor *below* the one asked from means the event store was
+    /// replaced under it (its id high-water mark fell below the cursor) and the reader
+    /// started over: what it returned is the whole history, so it replaces the
+    /// held seconds instead of merging into them.
     public func activitySeconds(sessionId: String, database: any BillingPersistence) throws -> [Int] {
         let cached = entries.value(for: sessionId)
-        let tail = try database.billingActivitySeconds(sessionId: sessionId, afterId: cached?.cursor ?? 0)
-        let merged = Self.merging(tail.seconds, into: cached?.seconds ?? [])
+        let cursor = cached?.cursor ?? 0
+        let tail = try database.billingActivitySeconds(sessionId: sessionId, afterId: cursor)
+        let held = tail.lastId < cursor ? [] : cached?.seconds ?? []
+        let merged = Self.merging(tail.seconds, into: held)
         entries.set(Entry(cursor: tail.lastId, seconds: merged), for: sessionId)
         return merged
     }

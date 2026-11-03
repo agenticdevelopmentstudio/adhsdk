@@ -196,15 +196,111 @@ final class RetentionServiceTests: XCTestCase {
 
     // MARK: - Empty-session reaping
 
-    func testEndedSessionsWithNoEventsAreReaped() throws {
-        try ingestEvents(count: 1, sessionId: "keeps-events")
-        let hook: [String: Any] = ["session_id": "empty", "cwd": "/tmp", "model": "sonnet", "pid": 0]
-        try database.ingestEvent(eventType: "SessionStart", timestamp: iso8601(), hookData: hook)
-        database.updateSessionStatus(.ended, sessionId: "empty")
-        try database.execute("DELETE FROM event_log WHERE session_id = ?", params: ["empty"])
+    /// Attaches a fresh event store and raw archive beside the session database.
+    @discardableResult
+    private func attachEventStore() throws -> EventStore {
+        let directory = URL(fileURLWithPath: tmpPath).deletingLastPathComponent()
+        let store = try EventStore(path: directory.appendingPathComponent(EventStore.fileName).path)
+        let archive = try RawArchive(
+            path: directory.appendingPathComponent(RawArchive.fileName(provider: ClaudeProvider.name)).path,
+            provider: ClaudeProvider.name)
+        database.attachEventReads(store, archive: archive)
+        return store
+    }
+
+    private func endedSession(_ sessionId: String) throws {
+        _ = try database.createSessionStubIfMissing(
+            sessionId: sessionId, cwd: "/tmp", model: "m",
+            startedAt: "2026-01-01T00:00:00Z", lastActivityAt: "2026-01-01T00:00:00Z", accountEmail: "")
+        database.updateSessionStatus(.ended, sessionId: sessionId)
+    }
+
+    private func storeEvent(_ sessionId: String, in store: EventStore, provider: String = ClaudeProvider.name) throws {
+        var batch = NormalizedBatch()
+        batch.events = [NormalizedEvent(
+            dedupKey: "e-\(sessionId)-\(provider)", sessionID: sessionId, kind: .toolCall,
+            providerType: "PreToolUse", time: Date(), rawRef: 1)]
+        try store.write(batch, provider: provider)
+    }
+
+    private func storeTurn(_ sessionId: String, in store: EventStore) throws {
+        var batch = NormalizedBatch()
+        batch.turns = [TurnRow(
+            dedupKey: "t-\(sessionId)", sessionID: sessionId, time: Date(), model: "m",
+            inputTokens: 1, outputTokens: 1, rawRef: 1)]
+        try store.write(batch, provider: ClaudeProvider.name)
+    }
+
+    func testEndedSessionWithOnlyStoreEventsSurvives() throws {
+        let store = try attachEventStore()
+        try endedSession("events-only")
+        try storeEvent("events-only", in: store)
+
+        XCTAssertEqual(try database.deleteEndedSessionsWithNoEvents(), 0)
+        XCTAssertNotNil(try database.fetchSession(sessionId: "events-only"),
+                       "an ended session with events.db events is kept, though event_log has none")
+    }
+
+    func testEndedSessionWithOnlyStoreTurnsSurvives() throws {
+        let store = try attachEventStore()
+        try endedSession("turns-only")
+        try storeTurn("turns-only", in: store)
+
+        XCTAssertEqual(try database.deleteEndedSessionsWithNoEvents(), 0)
+        XCTAssertNotNil(try database.fetchSession(sessionId: "turns-only"),
+                        "an ended session with only transcript turns is kept")
+    }
+
+    func testEndedSessionWithNeitherIsReaped() throws {
+        let store = try attachEventStore()
+        try endedSession("empty")
+        try storeEvent("empty", in: store, provider: "other")   // another provider's row never protects it
+        try endedSession("events-only")
+        try storeEvent("events-only", in: store)
+        try ingestEvents(count: 0, sessionId: "active")         // active, no events anywhere: not ended
 
         XCTAssertEqual(try database.deleteEndedSessionsWithNoEvents(), 1)
         XCTAssertNil(try database.fetchSession(sessionId: "empty"))
-        XCTAssertNotNil(try database.fetchSession(sessionId: "keeps-events"))
+        XCTAssertNotNil(try database.fetchSession(sessionId: "events-only"))
+        XCTAssertNotNil(try database.fetchSession(sessionId: "active"))
+    }
+
+    func testNoEventStoreReapsNothing() throws {
+        try endedSession("empty")
+        try database.execute("DELETE FROM event_log WHERE session_id = ?", params: ["empty"])
+
+        XCTAssertNil(database.eventReads)
+        XCTAssertEqual(try database.deleteEndedSessionsWithNoEvents(), 0,
+                       "an absent store must never read as 'no events'")
+        XCTAssertNotNil(try database.fetchSession(sessionId: "empty"))
+    }
+
+    func testReapPagesPastSessionsThatHaveEvents() throws {
+        // More kept sessions than one page, ordered before the empty one, so the
+        // reaper has to page past them to find it.
+        let store = try attachEventStore()
+        var batch = NormalizedBatch()
+        for index in 0..<(DaemonDatabase.claudeReadChunk + 5) {
+            let sessionId = String(format: "a-%04d", index)
+            try endedSession(sessionId)
+            batch.events.append(NormalizedEvent(
+                dedupKey: "e-\(sessionId)", sessionID: sessionId, kind: .toolCall,
+                providerType: "PreToolUse", time: Date(), rawRef: 1))
+        }
+        try store.write(batch, provider: ClaudeProvider.name)
+        try endedSession("z-empty")
+
+        XCTAssertEqual(try database.deleteEndedSessionsWithNoEvents(batchSize: 10), 1)
+        XCTAssertNil(try database.fetchSession(sessionId: "z-empty"))
+        XCTAssertEqual(try database.fetchSessions().count, DaemonDatabase.claudeReadChunk + 5)
+    }
+
+    func testReapStopsAtTheBatchSize() throws {
+        try attachEventStore()
+        for index in 0..<3 { try endedSession("empty-\(index)") }
+
+        XCTAssertEqual(try database.deleteEndedSessionsWithNoEvents(batchSize: 2), 2)
+        XCTAssertEqual(try database.deleteEndedSessionsWithNoEvents(batchSize: 2), 1)
+        XCTAssertEqual(try database.fetchSessions().count, 0)
     }
 }

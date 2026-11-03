@@ -1,84 +1,76 @@
 import XCTest
 @testable import AgenticDeveloperHubSDKDatabase
 
-/// Covers reading a session's `custom-title` out of the already-imported
-/// `transcript_lines` instead of re-streaming the `.jsonl`.
+/// Covers reading a session's `custom-title` out of what the Claude pipeline
+/// already stored in the event store, instead of re-streaming the `.jsonl`.
 ///
 /// The distinction these pin down is the one that makes the substitution safe:
-/// an *authoritative* "this session has no title" (lines are stored, none is a
-/// title) must be told apart from "the importer hasn't reached this session",
-/// because only the first justifies skipping the file. Getting that wrong would
-/// silently drop titles rather than merely cost memory.
+/// an *authoritative* "this session has no title" (messages are stored, none
+/// is a title) must be told apart from "the pipeline hasn't reached this
+/// session", because only the first justifies skipping the file. Getting that
+/// wrong would silently drop titles rather than merely cost memory.
 final class ImportedTitleTests: XCTestCase {
 
-    private var database: DaemonDatabase!
-    private var tmpPath: String!
+    private var root: URL!
+    private var harness: ClaudePipelineTestHarness!
+    private var database: DaemonDatabase { harness.database }
 
     override func setUpWithError() throws {
-        let made = try TestDaemonDatabase.makeSessionDatabase()
-        tmpPath = made.path
-        database = made.db
+        root = FileManager.default.temporaryDirectory
+            .appendingPathComponent("imported-title-\(UUID().uuidString)", isDirectory: true)
+        harness = try ClaudePipelineTestHarness(directory: root)
     }
 
     override func tearDownWithError() throws {
-        database = nil
-        TestDaemonDatabase.remove(path: tmpPath)
+        harness = nil
+        try? FileManager.default.removeItem(at: root)
     }
 
     // MARK: - Helpers
 
-    private func line(
-        _ lineNo: Int,
-        session: String,
-        type: String,
-        json: String
-    ) -> JSONLScanner.RawTranscriptLine {
-        JSONLScanner.RawTranscriptLine(
-            lineNo: lineNo,
-            sessionId: session,
-            entryUuid: UUID().uuidString,
-            parentUuid: "",
-            entryType: type,
-            role: "",
-            timestamp: "2026-07-30T00:00:00Z",
-            isSidechain: false,
-            rawJSON: json,
-            isQueuedPrompt: QueuedPrompt.isQueuedPrompt(rawJSON: json)
-        )
+    private func titleLine(session: String, title: String) -> String {
+        #"{"type":"custom-title","customTitle":"\#(title)","sessionId":"\#(session)"}"#
     }
 
-    private func titleLine(_ lineNo: Int, session: String, title: String) -> JSONLScanner.RawTranscriptLine {
-        line(lineNo, session: session, type: "custom-title",
-             json: #"{"type":"custom-title","customTitle":"\#(title)","sessionId":"\#(session)"}"#)
+    private func chatterLine(session: String) -> String {
+        #"{"type":"assistant","sessionId":"\#(session)","uuid":"\#(UUID().uuidString)","#
+            + #""timestamp":"2026-07-30T00:00:00Z","message":{"role":"assistant","content":[]}}"#
     }
 
-    private func chatterLine(_ lineNo: Int, session: String) -> JSONLScanner.RawTranscriptLine {
-        line(lineNo, session: session, type: "assistant",
-             json: #"{"type":"assistant","sessionId":"\#(session)"}"#)
+    private func ingest(_ lines: [String], session: String) throws {
+        try harness.ingestTranscript(lines: lines, file: harness.transcriptFile(sessionId: session))
     }
 
     // MARK: - Tests
 
     func testReturnsTheLatestTitleWhenSeveralWereSet() throws {
         let session = UUID().uuidString
-        try database.insertTranscriptLines([
-            titleLine(1, session: session, title: "first"),
-            chatterLine(2, session: session),
-            titleLine(3, session: session, title: "renamed"),
-            chatterLine(4, session: session)
-        ], filePath: "/tmp/\(session).jsonl")
+        try ingest([
+            titleLine(session: session, title: "first"),
+            chatterLine(session: session),
+            titleLine(session: session, title: "renamed"),
+            chatterLine(session: session)
+        ], session: session)
 
         // "Latest" must match what a whole-file scan returned: the LAST occurrence,
         // not the first — a session retitled mid-run keeps its newest name.
         XCTAssertEqual(try database.latestCustomTitle(sessionId: session), .found("renamed"))
     }
 
-    func testStoredLinesWithNoTitleAreAuthoritativelyAbsent() throws {
+    func testATitleCapturedByALaterReadIsTheLatest() throws {
+        // Title lines carry no timestamp. A rename appended after the file was
+        // first read is captured later, so it is the newer title even though
+        // neither line says when it was written.
         let session = UUID().uuidString
-        try database.insertTranscriptLines([
-            chatterLine(1, session: session),
-            chatterLine(2, session: session)
-        ], filePath: "/tmp/\(session).jsonl")
+        try ingest([titleLine(session: session, title: "first"), chatterLine(session: session)], session: session)
+        try ingest([titleLine(session: session, title: "renamed")], session: session)
+
+        XCTAssertEqual(try database.latestCustomTitle(sessionId: session), .found("renamed"))
+    }
+
+    func testStoredMessagesWithNoTitleAreAuthoritativelyAbsent() throws {
+        let session = UUID().uuidString
+        try ingest([chatterLine(session: session), chatterLine(session: session)], session: session)
 
         // `.absent`, not `.notImported`: this is what lets the startup pass stop
         // re-reading a large transcript that will never yield a title.
@@ -91,13 +83,18 @@ final class ImportedTitleTests: XCTestCase {
         XCTAssertEqual(try database.latestCustomTitle(sessionId: UUID().uuidString), .notImported)
     }
 
+    func testWithoutAnEventStoreNothingIsImported() throws {
+        // A session database with no event store attached cannot answer at all.
+        let made = try TestDaemonDatabase.makeSessionDatabase()
+        defer { TestDaemonDatabase.remove(path: made.path) }
+        XCTAssertEqual(try made.db.latestCustomTitle(sessionId: "s1"), .notImported)
+    }
+
     func testTitlesAreScopedToTheirOwnSession() throws {
         let mine = UUID().uuidString
         let theirs = UUID().uuidString
-        try database.insertTranscriptLines(
-            [titleLine(1, session: theirs, title: "not mine")], filePath: "/tmp/\(theirs).jsonl")
-        try database.insertTranscriptLines(
-            [chatterLine(1, session: mine)], filePath: "/tmp/\(mine).jsonl")
+        try ingest([titleLine(session: theirs, title: "not mine"), chatterLine(session: theirs)], session: theirs)
+        try ingest([chatterLine(session: mine)], session: mine)
 
         XCTAssertEqual(try database.latestCustomTitle(sessionId: mine), .absent)
         XCTAssertEqual(try database.latestCustomTitle(sessionId: theirs), .found("not mine"))
@@ -105,9 +102,10 @@ final class ImportedTitleTests: XCTestCase {
 
     func testAMalformedTitleLineReadsAsAbsentNotAsACrash() throws {
         let session = UUID().uuidString
-        try database.insertTranscriptLines([
-            line(1, session: session, type: "custom-title", json: "{not json at all")
-        ], filePath: "/tmp/\(session).jsonl")
+        try ingest([chatterLine(session: session)], session: session)
+        // A line that is not JSON at all is quarantined by the pipeline, not stored.
+        let file = harness.transcriptFile(sessionId: session)
+        try? harness.ingestTranscript(lines: ["{not json at all"], file: file)
 
         // Same tolerance the file-scanning path has: a line it can't decode is
         // skipped, and the session still counts as imported.
@@ -116,22 +114,31 @@ final class ImportedTitleTests: XCTestCase {
 
     func testAnEmptyTitleIsNotTreatedAsATitle() throws {
         let session = UUID().uuidString
-        try database.insertTranscriptLines([
-            titleLine(1, session: session, title: "")
-        ], filePath: "/tmp/\(session).jsonl")
+        try ingest([titleLine(session: session, title: ""), chatterLine(session: session)], session: session)
 
         // `enrich` only writes non-empty summaries; surfacing "" as `.found`
         // would make the caller overwrite a good summary with nothing.
         XCTAssertEqual(try database.latestCustomTitle(sessionId: session), .absent)
     }
 
+    func testASessionWithOnlyAnUnusableTitleIsNotImported() throws {
+        // An empty title stores nothing at all — no event, no message — so the
+        // store cannot tell this session from one it never saw, and the caller
+        // falls back to the file (which finds no title either).
+        let session = UUID().uuidString
+        try ingest([titleLine(session: session, title: "")], session: session)
+
+        XCTAssertEqual(try database.latestCustomTitle(sessionId: session), .notImported)
+    }
+
     func testAnUnusableLastTitleFallsBackToTheLastUsableOne() throws {
         let session = UUID().uuidString
-        try database.insertTranscriptLines([
-            titleLine(1, session: session, title: "keep me"),
-            titleLine(2, session: session, title: ""),
-            line(3, session: session, type: "custom-title", json: "{not json at all")
-        ], filePath: "/tmp/\(session).jsonl")
+        try ingest([
+            titleLine(session: session, title: "keep me"),
+            titleLine(session: session, title: ""),
+            chatterLine(session: session)
+        ], session: session)
+        try? harness.ingestTranscript(lines: ["{not json at all"], file: harness.transcriptFile(sessionId: session))
 
         // The file scan takes the last line that *parses to a non-empty title* and
         // skips the rest, so stopping at the last `custom-title` line full stop

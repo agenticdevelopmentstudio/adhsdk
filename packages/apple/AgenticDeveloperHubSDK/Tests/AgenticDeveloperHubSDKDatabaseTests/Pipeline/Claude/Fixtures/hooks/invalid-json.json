@@ -1,0 +1,1 @@
+{"event":"PreToolUse","timestamp":"2026-10-30T12:00:09Z","hook_data":{"session_id":"6f1c2a9e-0b7d-4c55-9a3e-2d8f1e4b7a10","tool_name":"Bash","tool_input":{"command":"ls"

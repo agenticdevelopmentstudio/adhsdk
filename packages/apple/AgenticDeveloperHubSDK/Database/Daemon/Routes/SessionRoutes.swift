@@ -84,7 +84,8 @@ enum SessionRoutes {
             startupDurationMs: services.startupDurationMs(),
             memoryFootprintMb: memory?.footprintMB,
             memoryPeakMb: memory?.peakMB,
-            statusLineError: services.hookInstaller.statusLineError
+            statusLineError: services.hookInstaller.statusLineError,
+            claudePipeline: services.claudePipelineState?().rawValue
         )
         return .json(dto)
     }
@@ -98,7 +99,7 @@ enum SessionRoutes {
         }
         let projectFilter = request.query("project")
         // Callers that don't render the per-session event count (e.g. the Sessions-window
-        // poll) pass ?counts=false to skip the event_log COUNT join.
+        // poll) pass ?counts=false to skip the event-store count read.
         let includeCounts = request.query("counts") != "false"
         // `sessions` has no retention, so an unbounded list here is a response whose
         // size tracks how long the install has existed — 5,810 rows / 3.4 MB when
@@ -190,7 +191,13 @@ enum SessionRoutes {
 
     private static func queryEvents(_ request: RouteRequest, database: DaemonDatabase) -> RouteResponse {
         let eventType = request.query("type")
-        let since = request.query("since")
+        // An unparseable `since` is the caller's mistake, answered 400 like a bad
+        // event id — never an empty list that reads as "no events since then".
+        let since: String?
+        switch request.validatedTimestamp("since") {
+        case .success(let value): since = value
+        case .failure(let invalid): return .error(invalid.message, status: 400)
+        }
 
         do {
             let events = try database.fetchEvents(

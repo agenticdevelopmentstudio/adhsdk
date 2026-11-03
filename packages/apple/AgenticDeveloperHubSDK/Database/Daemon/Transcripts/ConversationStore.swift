@@ -3,7 +3,7 @@ import AgenticDeveloperHubSDKCore
 import Foundation
 import GRDB
 
-/// The newest-first conversation feed, read from stored transcript lines.
+/// The newest-first conversation feed, read from the event store's messages.
 ///
 /// Holds the database it reads and the cache of parsed lines, so a poll
 /// re-parses only what is new — see ``ConversationExtractCache``. Value-typed
@@ -21,22 +21,38 @@ public struct ConversationStore: Sendable {
 
     /// The newest conversation lines across every observed session, newest first.
     ///
-    /// Rows are classified by ``ConversationExtractor`` at read time rather than
-    /// materialised into a table of their own. The alternative — a
-    /// `conversation_entries` table filled on ingest — would need a 4.4M-row
-    /// backfill and a second copy of every prompt and reply, to serve a window
-    /// that reads a few hundred rows at a time. Parsing at query time keeps the
-    /// classification rules in one place and disposable: changing what counts as
-    /// a reply is an edit to the extractor, not a migration.
+    /// Read from `events.db`'s `messages` (the Claude provider's user and
+    /// assistant messages, sidechains left out); each is classified by
+    /// ``ConversationExtractor`` at read time rather than materialised into a
+    /// table of its own, which keeps the classification rules in one place and
+    /// disposable: changing what counts as a reply is an edit to the extractor,
+    /// not a migration. The session labels come from the session database in a
+    /// second read, joined here — the two files are never attached.
     ///
-    /// The cost of that choice is that the *kind* filter can only be applied
-    /// after parsing, so a `limit` of showable entries needs more than `limit`
-    /// rows scanned. `scanMultiplier` covers the shortfall: most scanned rows
-    /// are tool calls and tool results, which yield no line at all whatever the
-    /// options say, so the shortfall is large either way. `maxScan` is the
-    /// backstop for a stretch of transcript that is all tool traffic; hitting it
-    /// returns a short page rather than walking the whole table, and the caller
-    /// pages on with `before`.
+    /// The cost of classifying at read time is that the *kind* filter can only
+    /// be applied after parsing, so a `limit` of showable entries needs more
+    /// than `limit` messages scanned. `scanMultiplier` covers the shortfall:
+    /// most scanned messages are tool calls and tool results, which yield no
+    /// line at all whatever the options say. `maxScan` is the backstop for a
+    /// stretch of transcript that is all tool traffic; hitting it returns a
+    /// short page rather than walking the whole table, and the caller pages on
+    /// with `before`.
+    ///
+    /// A prompt typed mid-turn is a user message flagged `queued_prompt`, so it
+    /// arrives in the same scan, in its place in time.
+    ///
+    /// ## Timestamps
+    ///
+    /// Each entry's `timestamp` is the message time as ISO-8601 UTC with
+    /// milliseconds (`2026-09-01T10:00:00.000Z`), and that is the paging
+    /// cursor, so a page never splits a millisecond: once a page holds `limit`
+    /// lines it still takes the rest of its last millisecond, and the next
+    /// page's `before` then excludes exactly what was shown. A message whose
+    /// line carried no timestamp is not on the timeline and is left out, as
+    /// the transcript-line feed left out an empty timestamp.
+    ///
+    /// Without an event store attached, and over one that holds nothing, the
+    /// feed is empty.
     ///
     /// - Parameters:
     ///   - limit: how many entries to return.
@@ -45,12 +61,11 @@ public struct ConversationStore: Sendable {
     ///     conversation only: what the human typed and what the agent said back.
     ///   - before: return only entries strictly older than this ISO-8601
     ///     timestamp — the paging cursor, taken from the oldest entry of the
-    ///     previous page.
+    ///     previous page. One that does not parse returns nothing.
     ///   - sessionId: narrow to one session. Not a filter over the merged
     ///     result: that result is a *page* — the newest few hundred lines across
     ///     every session, of which one session's share may be two — so a
-    ///     conversation sieved out of it has holes in it. Scoped, the query
-    ///     takes a different index and a different order; see below.
+    ///     conversation sieved out of it has holes in it.
     public func conversationEntries(
         limit: Int,
         includeWorkOutput: Bool,
@@ -60,248 +75,142 @@ public struct ConversationStore: Sendable {
         // Measured, not guessed: with work output off, a merged read of 200
         // entries at a multiplier of 6 came back with 42. Most scanned rows
         // yield nothing at all — a tool call, a tool result, a hook's notice —
-        // and turning work output off throws away most of what is left, so the
-        // shortfall is worst exactly where the window spends its time. Twelve
-        // is what it was before it was halved, and the scan is index-ordered,
-        // so the extra rows are read in `LIMIT` order rather than sorted.
+        // and turning work output off throws away most of what is left.
         let scanMultiplier = includeWorkOutput ? 3 : 12
         let maxScan = 20_000
         let scanLimit = min(max(limit, 1) * scanMultiplier, maxScan)
 
-        // `timestamp != ''` because not every captured entry type carries one,
-        // and an empty string sorts below every real timestamp — it would
-        // otherwise fill the oldest page. The `is_sidechain` / `entry_type`
-        // terms are repeated verbatim from migration038's partial index; see
-        // that migration for why the shape matters.
-        //
-        // `INDEXED BY` because repeating those terms is what makes the partial
-        // index *usable*, not what makes it *chosen*. Left to its own costing —
-        // and there is no `sqlite_stat1` here, so costing is guesswork — the
-        // planner preferred `idx_transcript_lines_type (entry_type=?)`, which
-        // answers `ORDER BY timestamp DESC LIMIT n` by reading every user and
-        // assistant row in the table, seeking out each one's `raw_json`, and
-        // sorting the lot in a temp b-tree to keep the newest few thousand. On a
-        // 4.7M-row `transcript_lines` whose `raw_json` is 16.8 GB that is minutes
-        // per call, and the Conversations window asks on a timer: one reader lane
-        // pinned at 100% for as long as the window is open. Named outright, the
-        // partial index supplies the DESC order itself, so `LIMIT` stops the scan
-        // — measured 2400 rows in 0.11s. The name is a hard dependency on
-        // migration038 on purpose: if that index ever goes, this fails loudly
-        // instead of silently falling back to the plan that wedged the daemon.
-        //
-        // Scoped to one session, the index changes but the ORDER BY must not.
-        // `idx_transcript_lines_session (session_id, line_no)` answers
-        // `session_id = ?` with its rows already in `line_no` order, which is
-        // free to walk — but `line_no` is a position within a transcript
-        // *file*, and a session that was resumed has more than one (326 of
-        // them in the live database). Ordered by `line_no DESC`, two files'
-        // lines interleave, so the newest-first page is not in time order and
-        // the `before` cursor — which cuts on `timestamp` — skips whatever sits
-        // on the wrong side of the shuffle. Those rows are then unreachable:
-        // the next page asks for older still.
-        //
-        // So the scoped read sorts on `timestamp` too, and keeps the cheap
-        // index by doing it in two steps: an inner pick that takes the session's
-        // ids in time order (the index supplies the rows; the sort carries two
-        // small columns, not 3 KB of `raw_json` each), and the outer join that
-        // fetches the page those ids name.
-        let scoped = (sessionId?.isEmpty == false) ? sessionId : nil
-        var params: [any Sendable] = []
-        let columns = """
-            t.id, t.session_id, t.timestamp, t.raw_json,
-                   s.project_root, s.cwd, s.git_branch, s.transcript_title,
-                   s.term_program
-            """
-        let sql: String
-        if let scoped {
-            params.append(scoped)
-            var pick = """
-                SELECT id FROM transcript_lines INDEXED BY idx_transcript_lines_session
-                WHERE session_id = ?
-                  AND is_sidechain = 0
-                  AND (entry_type = 'user' OR entry_type = 'assistant')
-                  AND timestamp != ''
-                """
-            if let before, !before.isEmpty {
-                pick += "\n  AND timestamp < ?"
-                params.append(before)
-            }
-            pick += "\nORDER BY timestamp DESC\nLIMIT ?"
-            params.append(scanLimit)
-            sql = """
-                SELECT \(columns)
-                FROM transcript_lines t
-                JOIN (\(pick)) AS pick ON pick.id = t.id
-                LEFT JOIN sessions s ON s.session_id = t.session_id
-                ORDER BY t.timestamp DESC
-                """
-        } else {
-            var merged = """
-                SELECT \(columns)
-                FROM transcript_lines t INDEXED BY idx_transcript_lines_conversation
-                LEFT JOIN sessions s ON s.session_id = t.session_id
-                WHERE t.is_sidechain = 0
-                  AND (t.entry_type = 'user' OR t.entry_type = 'assistant')
-                  AND t.timestamp != ''
-                """
-            if let before, !before.isEmpty {
-                merged += "\n  AND t.timestamp < ?"
-                params.append(before)
-            }
-            merged += "\nORDER BY t.timestamp DESC\nLIMIT ?"
-            params.append(scanLimit)
-            sql = merged
-        }
-
-        // Prompts typed mid-turn are attachment rows, which the scans above
-        // never reach (see migration044), so they come from their own table and
-        // are woven into the timeline below. `limit` of them is as many as a
-        // page can hold, since each yields at least one entry.
-        //
-        // Only their ids and times are read up front: most of them are older
-        // than the page the scan fills and are never shown, and a line's
-        // `raw_json` runs to tens of KB. The few that are woven in are fetched
-        // whole, one primary-key read each, when they are reached.
-        var queuedParams: [any Sendable] = []
-        var queuedSQL = """
-            SELECT q.line_id, q.timestamp
-            FROM conversation_queued_prompts q
-            JOIN transcript_lines t ON t.id = q.line_id
-            WHERE q.timestamp != '' AND t.is_sidechain = 0
-            """
-        if let scoped {
-            queuedSQL += "\n  AND q.session_id = ?"
-            queuedParams.append(scoped)
-        }
+        // The cursor is a rendered timestamp, rounded to the millisecond, so a
+        // message is "older" when it falls below that millisecond: the entry
+        // the cursor came from (and anything that renders the same) is out.
+        var beforeTime: Double?
         if let before, !before.isEmpty {
-            queuedSQL += "\n  AND q.timestamp < ?"
-            queuedParams.append(before)
+            guard let date = TimestampParsing.parse(before) else { return [] }
+            beforeTime = date.timeIntervalSince1970 - 0.0005
         }
-        queuedSQL += "\nORDER BY q.timestamp DESC\nLIMIT ?"
-        queuedParams.append(max(limit, 1))
+        let scoped = (sessionId?.isEmpty == false) ? sessionId : nil
 
-        return try database.read { _ in
-            var queued: [(lineId: Int, timestamp: String)] = []
-            try database.query(queuedSQL, params: queuedParams) { row in
-                queued.append((lineId: self.database.int(row, 0), timestamp: self.database.string(row, 1)))
+        let messages = try database.claudeConversationMessages(
+            sessionId: scoped, before: beforeTime, limit: scanLimit)
+        guard !messages.isEmpty else { return [] }
+        let labels = try sessionLabels(Set(messages.map(\.sessionId)))
+
+        var entries: [ConversationEntryDTO] = []
+        // Set once the page holds `limit` lines: from then on only the rest of
+        // the last entry's millisecond may follow.
+        var full = false
+        var consumedEveryMessage = true
+        for message in messages {
+            let timestamp = message.timestamp
+            if full, timestamp != entries.last?.timestamp {
+                consumedEveryMessage = false
+                break
             }
+            let lines = extractCache.lines(
+                messageId: message.id, role: message.role, text: message.text, attrsJSON: message.attrs)
+            guard !lines.isEmpty else { continue }
+            let label = labels[message.sessionId] ?? SessionLabel()
 
-            var entries: [ConversationEntryDTO] = []
-            var done = false
-            func consume(_ feedRow: FeedRow) {
-                guard !done else { return }
-                let lines = self.extractCache.lines(
-                    lineId: feedRow.id, rawJSON: feedRow.rawJSON
-                )
-                guard !lines.isEmpty else { return }
+            // One message can hold several blocks (a thinking block and the
+            // text that followed it), so ids are suffixed to stay unique — the
+            // window keys its rows on them.
+            //
+            // The index is taken BEFORE the work-output filter, so a block's id
+            // is a property of the transcript rather than of the caller's
+            // options: filtering first renumbered every line whenever the
+            // window's "show work output" toggle moved.
+            //
+            // The cap is on the OFFSET, taken before the filter: an entry whose
+            // thousandth block is one this caller wants would otherwise keep an
+            // offset of 1000+ and collide with the next message's ids.
+            //
+            // Emitted in reverse document order, because this whole result is
+            // newest-first and the reader flips it to render oldest-at-top.
+            let shown = Array(
+                lines
+                    .enumerated()
+                    .prefix(Self.maxLinesPerConversationEntry)
+                    .filter { includeWorkOutput || !$0.element.kind.isWorkOutput }
+                    .reversed()
+            )
+            guard !shown.isEmpty else { continue }
 
-                let sessionId = feedRow.sessionId
-                let timestamp = feedRow.timestamp
+            // Whole millisecond groups only. Pages are cut on the rendered
+            // timestamp, and every block of one message — and every message
+            // of one millisecond — carries the SAME one, so a page that
+            // stopped inside a group would lose the rest: the next page asks
+            // for older than that timestamp. A group that does not fit is
+            // left for the next page; one that has already begun is finished
+            // here, overshooting `limit`, as is an entry bigger than `limit`
+            // by itself, because otherwise paging would wedge at that point.
+            if !entries.isEmpty, entries.count + shown.count > limit, timestamp != entries.last?.timestamp {
+                consumedEveryMessage = false
+                break
+            }
+            for (offset, line) in shown {
+                entries.append(ConversationEntryDTO(
+                    id: Int(message.id) * Self.maxLinesPerConversationEntry + offset,
+                    sessionId: message.sessionId,
+                    kind: line.kind.rawValue,
+                    text: line.text,
+                    timestamp: timestamp,
+                    projectName: label.projectName,
+                    gitBranch: label.gitBranch,
+                    sessionName: label.title,
+                    termProgram: label.termProgram
+                ))
+            }
+            if entries.count >= limit { full = true }
+        }
+        // A scan that came back full may have stopped inside its last
+        // millisecond, with more of that group beyond it. Leave that group to
+        // the next page, whose cursor then reaches all of it — unless it is
+        // everything this page has, when a partial group beats a page that
+        // can never move on.
+        if consumedEveryMessage, messages.count >= scanLimit,
+           let tail = messages.last?.timestamp, entries.last?.timestamp == tail {
+            let complete = entries.filter { $0.timestamp != tail }
+            if !complete.isEmpty { entries = complete }
+        }
+        return entries
+    }
+
+    /// What the feed labels a session's lines with, from the session database.
+    private struct SessionLabel {
+        var projectName = ""
+        var gitBranch = ""
+        /// The title only. `summary` is the summarizer's running line about
+        /// what the session is *doing*, and headed as a name it reads as one
+        /// the session was given — an unnamed session stays unnamed here.
+        var title = ""
+        var termProgram = ""
+    }
+
+    /// The labels of `sessionIds` that have a session row; one without is absent.
+    private func sessionLabels(_ sessionIds: Set<String>) throws -> [String: SessionLabel] {
+        let ids = Array(sessionIds)
+        var labels: [String: SessionLabel] = [:]
+        let chunk = DaemonDatabase.claudeReadChunk
+        for start in stride(from: 0, to: ids.count, by: chunk) {
+            let part = Array(ids[start..<min(start + chunk, ids.count)])
+            let marks = part.map { _ in "?" }.joined(separator: ",")
+            try database.query("""
+                SELECT session_id, project_root, cwd, git_branch, transcript_title, term_program
+                FROM sessions WHERE session_id IN (\(marks))
+                """, params: part) { row in
                 // `project_root` is the enriched value and can still be empty on
                 // a session the enricher hasn't reached; `cwd` is written at
                 // session start and always there.
-                let projectPath = feedRow.projectRoot.isEmpty ? feedRow.cwd : feedRow.projectRoot
-                let projectName = projectPath.isEmpty
-                    ? ""
-                    : (projectPath as NSString).lastPathComponent
-                // The title only. `summary` is the summarizer's running line
-                // about what the session is *doing* ("writing
-                // test_status_cmd.py"), and headed as a name it reads as one the
-                // session was given — an unnamed session stays unnamed here.
-                let sessionName = feedRow.title
-                // One transcript entry can hold several blocks (a thinking block
-                // and the text that followed it), so ids are suffixed to stay
-                // unique — the window keys its rows on them.
-                //
-                // The index is taken BEFORE the work-output filter, so a block's
-                // id is a property of the transcript rather than of the caller's
-                // options: filtering first renumbered every line whenever the
-                // window's "show work output" toggle moved, and the window saw
-                // that as a feed full of brand-new rows.
-                //
-                // Emitted in reverse document order, because this whole result
-                // is newest-first and the reader flips it to render oldest-at-
-                // top: two reversals leave the blocks of one entry in the order
-                // the model produced them.
-                // The cap is on the OFFSET, so it is taken before the filter and
-                // not after it. `prefix` after `filter` counts kept lines, and
-                // the id is built from the offset: an entry whose thousandth
-                // block is the fiftieth one this caller wants would keep an
-                // offset of 1000+ and collide with the next entry's ids — the
-                // exact collision the stride exists to prevent.
-                let shown = Array(
-                    lines
-                        .enumerated()
-                        .prefix(Self.maxLinesPerConversationEntry)
-                        .filter { includeWorkOutput || !$0.element.kind.isWorkOutput }
-                        .reversed()
-                )
-                guard !shown.isEmpty else { return }
-
-                // Whole entries only. Pages are cut on `timestamp`, and every
-                // block of one transcript entry carries the SAME timestamp — so
-                // a page that stopped mid-entry didn't defer the rest, it lost
-                // it: the next page asks for `timestamp < thatTimestamp`, which
-                // excludes the entry it half-rendered. The one exception is an
-                // entry bigger than `limit` all by itself, which is emitted
-                // whole (a short overshoot) because otherwise it would wedge
-                // paging at that point forever.
-                if !entries.isEmpty, entries.count + shown.count > limit {
-                    done = true
-                    return
-                }
-                for (offset, line) in shown {
-                    entries.append(ConversationEntryDTO(
-                        id: feedRow.id * Self.maxLinesPerConversationEntry + offset,
-                        sessionId: sessionId,
-                        kind: line.kind.rawValue,
-                        text: line.text,
-                        timestamp: timestamp,
-                        projectName: projectName,
-                        gitBranch: feedRow.gitBranch,
-                        sessionName: sessionName,
-                        termProgram: feedRow.termProgram
-                    ))
-                }
-                if entries.count >= limit { done = true }
+                let projectRoot = database.string(row, 1)
+                let projectPath = projectRoot.isEmpty ? database.string(row, 2) : projectRoot
+                labels[database.string(row, 0)] = SessionLabel(
+                    projectName: projectPath.isEmpty ? "" : (projectPath as NSString).lastPathComponent,
+                    gitBranch: database.string(row, 3),
+                    title: database.string(row, 4),
+                    termProgram: database.string(row, 5))
             }
-            func consumeQueued(_ lineId: Int) throws {
-                guard !done else { return }
-                try database.query("""
-                    SELECT \(columns)
-                    FROM transcript_lines t
-                    LEFT JOIN sessions s ON s.session_id = t.session_id
-                    WHERE t.id = ?
-                    """, params: [lineId]) { row in
-                    consume(FeedRow(row: row, reader: self.database))
-                }
-            }
-
-            // Both lists are newest first, so the queued prompts newer than each
-            // scanned row go in ahead of it. A scan that came back full stops
-            // short of the older history, so the queued prompts older than its
-            // last row wait for the next page, which starts from there. A scan
-            // that came back short reached the start, so they all belong here.
-            var next = 0
-            var scanned = 0
-            try database.query(sql, params: params) { row in
-                guard !done else { return }
-                scanned += 1
-                let feedRow = FeedRow(row: row, reader: self.database)
-                while next < queued.count, queued[next].timestamp > feedRow.timestamp {
-                    try consumeQueued(queued[next].lineId)
-                    next += 1
-                }
-                consume(feedRow)
-            }
-            if scanned < scanLimit {
-                while next < queued.count, !done {
-                    try consumeQueued(queued[next].lineId)
-                    next += 1
-                }
-            }
-            return entries
         }
+        return labels
     }
 
     // MARK: - One conversation, oldest first
@@ -568,10 +477,10 @@ public struct ConversationStore: Sendable {
         }
     }
 
-    /// The id stride between two transcript entries, and therefore the cap on
-    /// how many lines one entry may contribute.
+    /// The id stride between two messages, and therefore the cap on how many
+    /// lines one message may contribute.
     ///
-    /// `id = transcript_lines.id * stride + blockIndex` only stays unique while
+    /// `id = messages.id * stride + blockIndex` only stays unique while
     /// `blockIndex < stride`; at the old stride of 100, an entry with 100 blocks
     /// produced ids that collided with the next entry's. A thousand is far past
     /// anything a real message holds, and lines beyond it are dropped rather

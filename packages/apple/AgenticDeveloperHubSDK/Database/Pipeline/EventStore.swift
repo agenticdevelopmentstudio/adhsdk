@@ -54,10 +54,15 @@ public final class EventStore: @unchecked Sendable {
     private static let indexes: [(name: String, sql: String)] = [
         ("events_session_time", "CREATE INDEX IF NOT EXISTS events_session_time ON events(provider, session_id, time)"),
         ("events_time", "CREATE INDEX IF NOT EXISTS events_time ON events(time)"),
+        // The insights and rollup readers: one hook type over a time range.
+        ("events_type_time",
+         "CREATE INDEX IF NOT EXISTS events_type_time ON events(provider, provider_type, time)"),
         ("turns_time", "CREATE INDEX IF NOT EXISTS turns_time ON turns(time)"),
         ("turns_session", "CREATE INDEX IF NOT EXISTS turns_session ON turns(provider, session_id, time)"),
         ("messages_session_time",
-         "CREATE INDEX IF NOT EXISTS messages_session_time ON messages(provider, session_id, time)")
+         "CREATE INDEX IF NOT EXISTS messages_session_time ON messages(provider, session_id, time)"),
+        // The Conversations feed's merged read: every session's messages newest first.
+        ("messages_time", "CREATE INDEX IF NOT EXISTS messages_time ON messages(provider, time)")
     ]
 
     private static let sessionScalarFields = ["cwd", "project", "account", "model", "title", "status"]
@@ -91,9 +96,12 @@ public final class EventStore: @unchecked Sendable {
                     field_as_of TEXT NOT NULL DEFAULT '{}',
                     PRIMARY KEY (provider, session_id)) WITHOUT ROWID
                 """)
+            // AUTOINCREMENT: an id is never handed out twice, even after the
+            // highest rows are trimmed, so a reader's "events after id N"
+            // cursor can never skip a row written later.
             try conn.execute(sql: """
                 CREATE TABLE IF NOT EXISTS events (
-                    id INTEGER PRIMARY KEY,
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
                     provider TEXT NOT NULL, dedup_key TEXT NOT NULL, session_id TEXT NOT NULL,
                     kind TEXT NOT NULL, provider_type TEXT NOT NULL, time REAL NOT NULL,
                     cwd TEXT, tool_name TEXT, summary TEXT, attrs TEXT NOT NULL DEFAULT '{}',
@@ -585,5 +593,18 @@ public final class EventStore: @unchecked Sendable {
         var state = TurnState(asOf: row["as_of"])
         state.fields = try MergedFields.load(columns: columns, attrsText: row["attrs"], timesText: row["field_as_of"])
         return state
+    }
+}
+
+// MARK: - Reading
+
+extension EventStore {
+    /// Runs `body` on a read-only reader connection, ejected after `deadline`
+    /// (nil: the store's 30 s read deadline; a whole-store scan such as
+    /// repricing passes a longer one). A write inside `body` throws ("attempt
+    /// to write a readonly database"); writes go through
+    /// ``write(_:provider:deadline:)``.
+    public func read<T>(deadline: Duration? = nil, _ body: (Database) throws -> T) throws -> T {
+        try pool.read(deadline: deadline, body)
     }
 }

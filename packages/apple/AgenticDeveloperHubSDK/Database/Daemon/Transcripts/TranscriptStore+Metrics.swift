@@ -65,20 +65,7 @@ extension DaemonDatabase {
     /// exact-timestamp ties by model name so the result is deterministic.
     /// Returns nil when the session has no turns.
     public func sessionMetricsFromTranscriptTurns(sessionId: String) throws -> SessionMetricsDTO? {
-        struct ModelBucket {
-            var turnCount = 0
-            var input = 0
-            var output = 0
-            var cacheRead = 0
-            var cacheCreate = 0
-            var cacheCreate1h = 0
-            var lastTs = ""
-        }
-        var perModel: [String: ModelBucket] = [:]
-        var totalTurns = 0
-        var firstTs = ""
-        var lastTs = ""
-
+        var groups: [TurnModelGroup] = []
         try query("""
             SELECT model,
                    COUNT(*),
@@ -93,21 +80,111 @@ extension DaemonDatabase {
             WHERE session_id = ?
             GROUP BY model
             """, params: [sessionId]) { row in
-            let model = string(row, 0)
+            groups.append(TurnModelGroup(
+                model: string(row, 0), turnCount: Int(int64(row, 1)),
+                input: Int(int64(row, 2)), output: Int(int64(row, 3)),
+                cacheRead: Int(int64(row, 4)), cacheCreate: Int(int64(row, 5)),
+                cacheCreate1h: Int(int64(row, 6)), firstTs: string(row, 7), lastTs: string(row, 8)))
+        }
+        return Self.sessionMetrics(sessionId: sessionId, groups: groups)
+    }
+
+    /// `sessionMetricsFromTranscriptTurns` over an event store's `turns` (provider
+    /// `claude`) instead of `transcript_turns`: the same GROUP BY model, the same
+    /// pricing and model pick. The store keeps a turn's time as epoch seconds, so
+    /// `firstTurnAt`/`lastTurnAt` are written back in a transcript's own form
+    /// (`yyyy-MM-ddTHH:mm:ss.SSSZ`); a turn from a line with no timestamp sits at
+    /// the epoch and, like an empty `timestamp` there, sets neither.
+    /// Returns nil when the session has no turns.
+    public func sessionMetricsFromTurns(sessionId: String, reads: EventStore) throws -> SessionMetricsDTO? {
+        let rows = try reads.read { conn in
+            try Row.fetchAll(conn, sql: """
+                SELECT COALESCE(model, ''),
+                       COUNT(*),
+                       COALESCE(SUM(input_tokens), 0),
+                       COALESCE(SUM(output_tokens), 0),
+                       COALESCE(SUM(cache_read_tokens), 0),
+                       COALESCE(SUM(cache_write_tokens), 0),
+                       CAST(COALESCE(SUM(json_extract(attrs, '$.cache_creation_1h_tokens')), 0) AS INTEGER),
+                       MIN(CASE WHEN time > 0 THEN time END),
+                       MAX(CASE WHEN time > 0 THEN time END)
+                FROM turns
+                WHERE provider = ? AND session_id = ?
+                GROUP BY COALESCE(model, '')
+                """, arguments: [ClaudeProvider.name, sessionId])
+        }
+        let groups = rows.map { row in
+            TurnModelGroup(
+                model: row[0], turnCount: row[1], input: row[2], output: row[3],
+                cacheRead: row[4], cacheCreate: row[5], cacheCreate1h: row[6],
+                firstTs: (row[7] as Double?).map { Self.transcriptTimestamp($0) } ?? "",
+                lastTs: (row[8] as Double?).map { Self.transcriptTimestamp($0) } ?? "")
+        }
+        return Self.sessionMetrics(sessionId: sessionId, groups: groups)
+    }
+
+    /// Epoch seconds as a transcript writes a time: UTC, millisecond precision
+    /// (`2026-10-30T12:00:01.500Z`). With `omitZeroMilliseconds`, a whole second
+    /// drops the fraction (`2026-10-30T12:00:00Z`), the form a hook envelope uses.
+    static func transcriptTimestamp(_ seconds: Double, omitZeroMilliseconds: Bool = false) -> String {
+        let millis = Int64((seconds * 1000).rounded())
+        // Floor division, so a time before the epoch still gets a 0…999 fraction.
+        let fraction = ((millis % 1000) + 1000) % 1000
+        let whole = Date(timeIntervalSince1970: TimeInterval((millis - fraction) / 1000))
+        let base = transcriptSecondFormatter.string(from: whole)  // "…:ssZ"
+        if fraction == 0 && omitZeroMilliseconds { return base }
+        return String(base.dropLast()) + String(format: ".%03lldZ", fraction)
+    }
+
+    nonisolated(unsafe) private static let transcriptSecondFormatter: ISO8601DateFormatter = {
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime]
+        formatter.timeZone = TimeZone(identifier: "UTC")
+        return formatter
+    }()
+
+    /// One `GROUP BY model` row of a session's turns.
+    private struct TurnModelGroup {
+        let model: String
+        let turnCount: Int
+        let input: Int
+        let output: Int
+        let cacheRead: Int
+        let cacheCreate: Int
+        let cacheCreate1h: Int
+        let firstTs: String
+        let lastTs: String
+    }
+
+    /// Folds a session's per-model turn groups into its `session_metrics` totals.
+    private static func sessionMetrics(sessionId: String, groups: [TurnModelGroup]) -> SessionMetricsDTO? {
+        struct ModelBucket {
+            var turnCount = 0
+            var input = 0
+            var output = 0
+            var cacheRead = 0
+            var cacheCreate = 0
+            var cacheCreate1h = 0
+            var lastTs = ""
+        }
+        var perModel: [String: ModelBucket] = [:]
+        var totalTurns = 0
+        var firstTs = ""
+        var lastTs = ""
+
+        for group in groups {
             var bucket = ModelBucket()
-            bucket.turnCount = Int(int64(row, 1))
-            bucket.input = Int(int64(row, 2))
-            bucket.output = Int(int64(row, 3))
-            bucket.cacheRead = Int(int64(row, 4))
-            bucket.cacheCreate = Int(int64(row, 5))
-            bucket.cacheCreate1h = Int(int64(row, 6))
-            let groupFirst = string(row, 7)
-            let groupLast = string(row, 8)
-            bucket.lastTs = groupLast
-            perModel[model] = bucket
+            bucket.turnCount = group.turnCount
+            bucket.input = group.input
+            bucket.output = group.output
+            bucket.cacheRead = group.cacheRead
+            bucket.cacheCreate = group.cacheCreate
+            bucket.cacheCreate1h = group.cacheCreate1h
+            bucket.lastTs = group.lastTs
+            perModel[group.model] = bucket
             totalTurns += bucket.turnCount
-            if !groupFirst.isEmpty, firstTs.isEmpty || groupFirst < firstTs { firstTs = groupFirst }
-            if groupLast > lastTs { lastTs = groupLast }
+            if !group.firstTs.isEmpty, firstTs.isEmpty || group.firstTs < firstTs { firstTs = group.firstTs }
+            if group.lastTs > lastTs { lastTs = group.lastTs }
         }
 
         guard totalTurns > 0 else { return nil }
@@ -191,8 +268,8 @@ extension DaemonDatabase {
     /// moves, and record the revision that produced the numbers now on disk.
     ///
     /// `total_cost_usd` is the one figure a daemon *stores* rather than
-    /// recomputes: `/turns` and `/insights/usage-rows` price live from
-    /// `transcript_turns` on every request, but `/sessions/:id/metrics` serves
+    /// recomputes: `/turns` and `/insights/usage-rows` price live from the
+    /// event store's turns on every request, but `/sessions/:id/metrics` serves
     /// what the importer wrote. And the importer never revisits a transcript
     /// whose mtime hasn't moved (`JSONLImporter.run`), so a finished session's
     /// `.jsonl` is read exactly once, ever. Without this pass a price
@@ -201,12 +278,19 @@ extension DaemonDatabase {
     /// invisible until someone reconciles two screens.
     ///
     /// Idempotent, and nothing at all on every launch after the first at a given
-    /// revision — but NOT cheap: the scan below groups the whole of
-    /// `transcript_turns`, which on a multi-gigabyte DB takes minutes.
+    /// revision — but NOT cheap: the scan below groups every Claude turn in the
+    /// event store, and the legacy `transcript_turns` scan it replaced took
+    /// minutes on a multi-gigabyte DB.
+    ///
+    /// The costs come from the event store (`events.db` `turns`). Without one
+    /// attached there is nothing to price from, so the pass logs and leaves the
+    /// revision unrecorded — the next launch, with a store, runs it. A session
+    /// with no turns in the store keeps the cost it has.
     ///
     /// Which is why this is maintenance that runs AFTER the listener is up
     /// (the daemon's run loop), never from `runMigrations()`. It did run there,
-    /// and on a 39 GB database the scan exceeded the serving read deadline,
+    /// and on a 39 GB database the scan exceeded the serving read deadline
+    /// (which is why the scan now runs under `maintenanceReadDeadline`),
     /// threw, aborted the daemon's startup phase A, and left launchd restarting
     /// the daemon every ten seconds — the whole daemon down over a cost figure.
     /// A migration gates startup because a wrong schema must not serve; a
@@ -228,39 +312,25 @@ extension DaemonDatabase {
         let recorded = (try? setting(for: Self.pricingRevisionKey)) ?? nil
         guard recorded != String(TranscriptPricing.revision) else { return }
 
-        // A DB whose `transcript_turns` predates these columns holds nothing
-        // this pass could reprice, so there is nothing to do and nothing to
-        // report.
-        let priced = ["session_id", "model", "input_tokens", "output_tokens",
-                      "cache_read_tokens", "cache_creation_tokens", "cache_creation_1h_tokens"]
-        let present = columnNames(of: "transcript_turns")
-        guard priced.allSatisfy(present.contains) else {
-            logger.info("repricing skipped: transcript_turns predates the priced columns")
+        guard eventReads != nil else {
+            logger.info("repricing deferred: no event store attached")
             return
         }
 
         // Group by (session, model) so each model's rate is applied only to its
-        // own tokens — the same rule `sessionMetricsFromTranscriptTurns` follows
-        // for a single session, which is what keeps the two agreeing.
+        // own tokens — the same rule `sessionMetricsFromTurns` follows for a
+        // single session, which is what keeps the two agreeing.
         var costs: [String: Double] = [:]
-        try query("""
-            SELECT session_id, model,
-                   COALESCE(SUM(input_tokens), 0),
-                   COALESCE(SUM(output_tokens), 0),
-                   COALESCE(SUM(cache_read_tokens), 0),
-                   COALESCE(SUM(cache_creation_tokens), 0),
-                   COALESCE(SUM(cache_creation_1h_tokens), 0)
-            FROM transcript_turns
-            GROUP BY session_id, model
-            """, deadline: DaemonDatabase.maintenanceReadDeadline) { row in
-            let sessionId = self.string(row, 0)
-            costs[sessionId, default: 0] += TranscriptPricing.cost(
-                model: self.string(row, 1),
-                inputTokens: Int(self.int64(row, 2)),
-                outputTokens: Int(self.int64(row, 3)),
-                cacheReadTokens: Int(self.int64(row, 4)),
-                cacheCreationTokens: Int(self.int64(row, 5)),
-                cacheCreation1hTokens: Int(self.int64(row, 6))
+        // A whole-store grouped scan: on a converted history it outlives the
+        // store's 30 s read deadline, so it gets the maintenance one.
+        for group in try claudeTurnTotals(groupBy: .session, deadline: Self.maintenanceReadDeadline) {
+            costs[group.key, default: 0] += TranscriptPricing.cost(
+                model: group.model,
+                inputTokens: group.inputTokens,
+                outputTokens: group.outputTokens,
+                cacheReadTokens: group.cacheReadTokens,
+                cacheCreationTokens: group.cacheCreationTokens,
+                cacheCreation1hTokens: group.cacheCreation1hTokens
             )
         }
 
