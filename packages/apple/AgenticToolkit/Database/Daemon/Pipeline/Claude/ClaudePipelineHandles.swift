@@ -137,20 +137,34 @@ public struct ClaudePipelineHandles: Sendable {
         return ImportSummary(filesScanned: files.count, linesSeen: lines, linesInserted: lines, errors: errors)
     }
 
-    /// Spools a quarantined drop file's bytes verbatim, as a hook record keyed
-    /// `quarantine-<file name>` and stamped with the file's modification time, and
-    /// wakes the drainer: the raw archive keeps it whether or not it ever becomes
-    /// an event. The key comes from the file alone, so preserving the same file
-    /// twice (a crash before its delete) collapses into one archive row. An empty
-    /// file has nothing to keep and appends nothing.
+    /// Archives a quarantined drop file's bytes verbatim, straight into the raw
+    /// archive (never the spool), as an archive-only record
+    /// (`ClaudeProvider.quarantineKind`) keyed `quarantine-<file name>` and stamped
+    /// with the file's modification time. Nothing normalizes or applies it, so
+    /// preserving a file adds no event and touches no session; the archive simply
+    /// holds the bytes. It returns only once the archive has committed them.
+    ///
+    /// The key comes from the file alone, so preserving the same file twice (a
+    /// crash before its delete, a retry and then a clear) collapses into one row.
+    /// Should that key already hold other bytes (a file name reused), the record
+    /// goes under the key with its sha256 appended instead; if even that is taken
+    /// by other bytes it throws, and the caller keeps the file. An empty file has
+    /// nothing to keep and appends nothing.
     public func preserveQuarantinedFile(_ file: URL) throws {
         let data = try Data(contentsOf: file)
         guard !data.isEmpty else { return }
         let modified = (try? FileManager.default.attributesOfItem(atPath: file.path)[.modificationDate]) as? Date
-        try spool.append([RawRecord(
-            provider: ClaudeProvider.name, sourceKind: ClaudeProvider.hookKind,
-            dedupKey: Self.quarantineDedupKey(file), receivedAt: modified ?? Date(), payload: data)])
-        drainer.wake()
+        func record(_ key: String) -> RawRecord {
+            RawRecord(
+                provider: ClaudeProvider.name, sourceKind: ClaudeProvider.quarantineKind,
+                dedupKey: key, receivedAt: modified ?? Date(), payload: data)
+        }
+        let first = try archive.append([record(Self.quarantineDedupKey(file))])
+        guard case .conflict(_, _, let sha256)? = first.outcomes.first else { return }
+        let fallback = try archive.append([record("\(Self.quarantineDedupKey(file))-\(sha256)")])
+        if case .conflict? = fallback.outcomes.first {
+            throw QuarantinePreserveConflict(file: file.lastPathComponent)
+        }
     }
 
     /// The dedup key a quarantined file is preserved under.
@@ -255,6 +269,15 @@ extension ClaudePipelineHandles: PipelineQuarantineControl {
 
 extension ClaudePipelineHandles: Loggable {
     public static nonisolated let logger = makeLogger()
+}
+
+/// A quarantined file whose key, and its sha256 fallback key, both already hold
+/// other bytes in the raw archive: the file could not be preserved and is kept.
+public struct QuarantinePreserveConflict: Error, LocalizedError, Sendable {
+    public let file: String
+    public var errorDescription: String? {
+        "the raw archive already holds different bytes under \(file)'s keys"
+    }
 }
 
 /// Serializes one kind of poll.

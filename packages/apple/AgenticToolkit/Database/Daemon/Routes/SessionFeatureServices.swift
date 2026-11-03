@@ -91,6 +91,9 @@ public struct SessionFeatureServices: Sendable {
     /// the file quarantine. Nil when the daemon runs no provider pipeline (or it
     /// failed to open).
     public let pipelineQuarantine: (any PipelineQuarantineControl)?
+    /// Whether the Claude pipeline is open, for `/health`'s `claude_pipeline`.
+    /// Nil for a daemon that runs none, which leaves the field out.
+    public let claudePipelineState: (@Sendable () -> ClaudePipelineSlot.State)?
 
     public init(
         database: DaemonDatabase,
@@ -112,8 +115,10 @@ public struct SessionFeatureServices: Sendable {
         captureHook: @escaping @Sendable (ParsedEvent) throws -> Void,
         runImport: @escaping @Sendable (ImportRequestDTO) throws -> ImportSummary,
         pluginRuntime: DaemonAIChat.PluginRuntime = .live,
-        pipelineQuarantine: (any PipelineQuarantineControl)? = nil
+        pipelineQuarantine: (any PipelineQuarantineControl)? = nil,
+        claudePipelineState: (@Sendable () -> ClaudePipelineSlot.State)? = nil
     ) {
+        self.claudePipelineState = claudePipelineState
         self.database = database
         self.conversations = conversations
         self.quarantine = quarantine

@@ -26,6 +26,9 @@ public struct ClaudeNormalizer: Normalizer {
             return try hooks.normalize(record)
         case ClaudeProvider.transcriptKind:
             return try transcripts.normalize(record)
+        case ClaudeProvider.quarantineKind:
+            // Archive-only: kept for its bytes, never an event (a replay too).
+            return NormalizedBatch()
         default:
             throw ClaudeNormalizerError.unsupportedSourceKind(record.record.sourceKind)
         }

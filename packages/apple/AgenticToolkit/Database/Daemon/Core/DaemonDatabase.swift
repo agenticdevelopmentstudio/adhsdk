@@ -36,7 +36,7 @@ public final class DaemonDatabase: @unchecked Sendable {
     /// Ceiling for a one-time maintenance READ — the read-lane twin of
     /// `migrationWriteDeadline`, and the widest of the four. A maintenance scan
     /// is the one read legitimately allowed to take minutes
-    /// (`repriceSessionMetricsIfNeeded` groups the whole of `transcript_turns`),
+    /// (`repriceSessionMetricsIfNeeded` groups every Claude turn in events.db),
     /// and the serving ceiling above ejects it every time on a large DB.
     ///
     /// Wider than the migration ceiling on purpose: this one runs off both the

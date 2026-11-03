@@ -496,6 +496,7 @@
 		2570E922A85F52453BF08929 /* StatusLineIngestHookTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D98F03820B340445C083743D /* StatusLineIngestHookTests.swift */; };
 		2574598DAD92C7B1127E0465 /* Placeholder.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4C87939516A070CC66803F4 /* Placeholder.swift */; };
 		258BED0097C4E5B5061A54CC /* AIPluginTestSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = 90E578E22F8FAC728439D20A /* AIPluginTestSupport.swift */; };
+		259D9F0692D0324964A41962 /* ClaudePipelineSlot.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDDE2FA4DEAD3F85F2CB7A33 /* ClaudePipelineSlot.swift */; };
 		25D199099DBE8DCDB11681E5 /* TimestampParsingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D50BD18CD5A9FFAF4E575E06 /* TimestampParsingTests.swift */; };
 		260B11537F9FAEE8E9A3F2CB /* EditableTableCardTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 985193AF903CF5BD0E25B3E5 /* EditableTableCardTests.swift */; };
 		26247FC0ED56ECD693F52B7C /* WindowScreenshotTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 839EEDAD633D53FED2A00740 /* WindowScreenshotTests.swift */; };
@@ -7177,6 +7178,7 @@
 		FDCEB7B396A4E38C27573F4F /* MainThreadLanguageModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainThreadLanguageModels.swift; sourceTree = "<group>"; };
 		FDD1080E52B942E291F93461 /* HubLinks.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HubLinks.swift; sourceTree = "<group>"; };
 		FDDBE70011915E0F851687AD /* MainThreadWorkspace.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainThreadWorkspace.swift; sourceTree = "<group>"; };
+		FDDE2FA4DEAD3F85F2CB7A33 /* ClaudePipelineSlot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClaudePipelineSlot.swift; sourceTree = "<group>"; };
 		FDE73B26B7AA0074C2573345 /* ComposableTabsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ComposableTabsViewController.swift; sourceTree = "<group>"; };
 		FE34801C6D23A9DB7F321CCE /* AppLifecycleTrigger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppLifecycleTrigger.swift; sourceTree = "<group>"; };
 		FE4D7CD70F49720EA92F1B42 /* AIChatCommands.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIChatCommands.swift; sourceTree = "<group>"; };
@@ -11148,6 +11150,7 @@
 				DEE340265DE8E077ACB725E5 /* ClaudeMainDBSink.swift */,
 				3024866A1D515CA367CDDF61 /* ClaudeNormalizer.swift */,
 				B892F7DED3A97843C49848F0 /* ClaudePipelineHandles.swift */,
+				FDDE2FA4DEAD3F85F2CB7A33 /* ClaudePipelineSlot.swift */,
 				A49789150F278E704E16B2E2 /* ClaudeProvider.swift */,
 				D2F280EE4B82103FCD6538DD /* ClaudeTranscriptNormalizer.swift */,
 				E4D502336F057A8A7C13D9E5 /* ClaudeTranscriptPayload.swift */,
@@ -17647,6 +17650,7 @@
 				C7BF53BA03DD59BEE403E8C3 /* ClaudeMainDBSink.swift in Sources */,
 				305D32531B9BED0344D67AA9 /* ClaudeNormalizer.swift in Sources */,
 				F65455D98D40EF719F8951BC /* ClaudePipelineHandles.swift in Sources */,
+				259D9F0692D0324964A41962 /* ClaudePipelineSlot.swift in Sources */,
 				0C9C0653116BA352F48B565B /* ClaudeProvider.swift in Sources */,
 				C220B12266286BA39A33D9CE /* ClaudeTranscriptNormalizer.swift in Sources */,
 				C885A76BD9AAC3E865AAF950 /* ClaudeTranscriptPayload.swift in Sources */,

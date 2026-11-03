@@ -126,7 +126,7 @@ final class IngestionPipelineTests: XCTestCase {
             spool: try IngestSpool(path: root.appendingPathComponent("ingest.db").path),
             database: database, sink: sink, queueLabel: { "test.claude.\($0)" },
             decode: { _ in throw SocketDecodeFailure.malformed },
-            claude: handles)
+            claude: ClaudePipelineSlot(handles))
         return (pipeline, handles)
     }
 
@@ -163,9 +163,101 @@ final class IngestionPipelineTests: XCTestCase {
         pipeline.quarantine.clear()
 
         XCTAssertFalse(FileManager.default.fileExists(atPath: file.path))
+        let records = try handles.archive.records(after: 0, limit: 10).map(\.record)
+        XCTAssertEqual(records.map(\.dedupKey), [ClaudePipelineHandles.quarantineDedupKey(file)],
+                       "archived before the delete, with no drain needed")
+        XCTAssertEqual(records.map(\.sourceKind), [ClaudeProvider.quarantineKind])
+        XCTAssertEqual(records.first?.payload, Data(#"{"event":"Stop","hook_data":{}}"#.utf8))
+        await pipeline.stop()
+    }
+
+    /// A cleared file is archive-only: a valid envelope adds no events.db row and
+    /// no session, an unparseable one is not quarantined again, and neither goes
+    /// through the spool.
+    func testWithClaudeAClearedFileIsArchiveOnly() async throws {
+        let (pipeline, handles) = try claudePipeline()
+        let errors = pipeline.quarantine.errorsDirectory
+        try FileManager.default.createDirectory(at: errors, withIntermediateDirectories: true)
+        let valid = """
+            {"event":"SessionStart","timestamp":"2026-01-01T00:00:00Z",\
+            "hook_data":{"session_id":"s-cleared","cwd":"/tmp"}}
+            """
+        try Data(valid.utf8).write(to: errors.appendingPathComponent("error-valid.json"))
+        try Data("not json at all".utf8).write(to: errors.appendingPathComponent("error-garbage.json"))
+
+        pipeline.quarantine.clear()
         XCTAssertFalse(handles.drainer.drainUntilEmpty().failed)
-        let keys = try handles.archive.records(after: 0, limit: 10).map(\.record.dedupKey)
-        XCTAssertEqual(keys, [ClaudePipelineHandles.quarantineDedupKey(file)])
+
+        XCTAssertEqual(pipeline.quarantine.count(), 0)
+        XCTAssertEqual(try handles.archive.count(), 2, "both files' bytes are in the archive")
+        XCTAssertEqual(try handles.spool.pendingCount(), 0, "nothing went through the spool")
+        XCTAssertEqual(handles.quarantinedCount(), 0, "nothing is quarantined again")
+        XCTAssertEqual(try handles.store.counts(), EventStoreCounts(sessions: 0, events: 0, turns: 0, messages: 0))
+        XCTAssertNil(try database.fetchSession(sessionId: "s-cleared"), "never applied to the main db")
+        await pipeline.stop()
+    }
+
+    /// The archive-only kind normalizes to nothing, so a replay of the archive
+    /// never turns a preserved file into an event.
+    func testTheQuarantineKindNormalizesToNothing() throws {
+        let record = RawRecord(
+            provider: ClaudeProvider.name, sourceKind: ClaudeProvider.quarantineKind, dedupKey: "quarantine-x",
+            receivedAt: Date(), payload: Data(#"{"event":"Stop","hook_data":{"session_id":"s"}}"#.utf8))
+        XCTAssertTrue(try ClaudeNormalizer().normalize(ArchivedRecord(id: 1, record: record)).isEmpty)
+    }
+
+    /// Preserving a file whose key already holds other bytes (a reused file name)
+    /// keeps the new bytes under the key with their sha256 appended.
+    func testWithClaudeAReusedFileNameIsPreservedUnderAFallbackKey() async throws {
+        let (pipeline, handles) = try claudePipeline()
+        let errors = pipeline.quarantine.errorsDirectory
+        try FileManager.default.createDirectory(at: errors, withIntermediateDirectories: true)
+        let file = errors.appendingPathComponent("error-reused.json")
+        try Data("first".utf8).write(to: file)
+        try handles.preserveQuarantinedFile(file)
+        try Data("second".utf8).write(to: file)
+        try handles.preserveQuarantinedFile(file)
+        try handles.preserveQuarantinedFile(file)
+
+        let records = try handles.archive.records(after: 0, limit: 10).map(\.record)
+        XCTAssertEqual(records.map { String(bytes: $0.payload, encoding: .utf8) }, ["first", "second"],
+                       "both versions kept, the second once")
+        XCTAssertTrue(records[1].dedupKey.hasPrefix(ClaudePipelineHandles.quarantineDedupKey(file) + "-"))
+        await pipeline.stop()
+    }
+
+    /// A retried quarantine file's exact bytes go to the archive under
+    /// `quarantine-<name>` before the file is deleted, and the re-captured event
+    /// reaches events.db; retrying the same bytes again adds no archive row.
+    func testWithClaudeARetriedFileIsArchivedVerbatimBeforeItIsDeleted() async throws {
+        let (pipeline, handles) = try claudePipeline()
+        let errors = pipeline.quarantine.errorsDirectory
+        try FileManager.default.createDirectory(at: errors, withIntermediateDirectories: true)
+        let bytes = """
+            {"event":"PreToolUse","timestamp":"2026-01-01T00:00:00Z","unknown_top_level":1,\
+            "hook_data":{"session_id":"s-retry","cwd":"/tmp","tool_name":"Bash"}}
+            """
+        let file = errors.appendingPathComponent("error-retry.json")
+        try Data(bytes.utf8).write(to: file)
+        pipeline.quarantine.recordInitialQuarantine(eventURL: file, reason: "r", code: nil, parsed: nil)
+
+        let result = pipeline.quarantine.retryDueBatch(
+            limit: 10, parse: { EventIngestor.parseEventFile(rawJson: $0) }, ingest: pipeline.retryIngest)
+        XCTAssertEqual(result.recovered, 1)
+        XCTAssertFalse(FileManager.default.fileExists(atPath: file.path))
+
+        let keyed = try XCTUnwrap(try handles.archive.id(forDedupKey: ClaudePipelineHandles.quarantineDedupKey(file)))
+        let archived = try XCTUnwrap(try handles.archive.record(id: keyed))
+        XCTAssertEqual(archived.record.payload, Data(bytes.utf8), "the exact bytes, unknown keys and all")
+        XCTAssertEqual(archived.record.sourceKind, ClaudeProvider.quarantineKind)
+        XCTAssertFalse(handles.drainer.drainUntilEmpty().failed)
+        XCTAssertEqual(try handles.store.counts().events, 1, "the retried event itself still reaches events.db")
+
+        // The same file retried again (a crash before its delete) keeps one row.
+        let before = try handles.archive.count()
+        try Data(bytes.utf8).write(to: file)
+        try handles.preserveQuarantinedFile(file)
+        XCTAssertEqual(try handles.archive.count(), before)
         await pipeline.stop()
     }
 

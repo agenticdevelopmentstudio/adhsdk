@@ -11,5 +11,9 @@ public enum ClaudeProvider {
     public static let legacyHookKind = "hook-legacy"
     /// One line of a session transcript (`.jsonl`).
     public static let transcriptKind = "transcript"
+    /// A quarantined drop file's exact bytes, kept in the raw archive only: the
+    /// normalizer turns it into nothing and no sink reads it, so preserving a
+    /// file never applies it to events.db or the session database.
+    public static let quarantineKind = "hook-quarantine"
 }
 #endif

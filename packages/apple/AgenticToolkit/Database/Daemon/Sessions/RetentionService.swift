@@ -146,26 +146,75 @@ extension DaemonDatabase {
     /// so it knows a full batch means "more remain, reschedule".
     public static let emptySessionReapBatch = 500
 
+    /// Deletes up to `batchSize` ended sessions that have nothing in the event
+    /// store: no `events` row and no `turns` row for the Claude provider.
+    ///
+    /// The events live in `events.db`, a separate file, so this is two steps,
+    /// never an `ATTACH`: page through the ended sessions here (keyset by id,
+    /// `claudeReadChunk` at a time, so sessions that do have events never block
+    /// the batch), ask the store which of each page have rows, then delete the
+    /// rest. With no event store attached it reaps nothing: an absent store must
+    /// never read as "no events".
+    ///
+    /// The delete re-checks `status = 'ended'`, so a session resumed between the
+    /// two steps survives, and it keeps any session that still has legacy
+    /// `event_log` rows, which only ever makes it reap less.
     @discardableResult
     public func deleteEndedSessionsWithNoEvents(
         batchSize: Int = DaemonDatabase.emptySessionReapBatch
     ) throws -> Int {
-        try write { database in
-            // `NOT EXISTS` probes idx_event_log_session_id per candidate session,
-            // instead of `NOT IN`'s full scan of event_log (581k+ rows); `LIMIT`
-            // bounds the delete so it stays well under the write eject ceiling and
-            // drains a large backlog across cycles.
-            try execute("""
-                DELETE FROM sessions WHERE session_id IN (
-                    SELECT session_id FROM sessions
-                    WHERE status = 'ended'
+        guard batchSize > 0, let store = eventReads else { return 0 }
+        let page = Self.claudeReadChunk
+        var doomed: [String] = []
+        var after = ""
+        while doomed.count < batchSize {
+            var ids: [String] = []
+            try query("""
+                SELECT session_id FROM sessions
+                WHERE status = 'ended' AND session_id > ?
+                ORDER BY session_id LIMIT ?
+            """, params: [after, page]) { row in ids.append(row[0] ?? "") }
+            guard let last = ids.last else { break }
+            after = last
+            let kept = try Self.sessionsWithStoredRows(ids, in: store)
+            doomed += ids.filter { !kept.contains($0) }
+            if ids.count < page { break }
+        }
+        doomed = Array(doomed.prefix(batchSize))
+        guard !doomed.isEmpty else { return 0 }
+        return try write { database in
+            var deleted = 0
+            for start in stride(from: 0, to: doomed.count, by: page) {
+                let chunk = Array(doomed[start..<min(start + page, doomed.count)])
+                let marks = chunk.map { _ in "?" }.joined(separator: ",")
+                try execute("""
+                    DELETE FROM sessions
+                    WHERE status = 'ended' AND session_id IN (\(marks))
                       AND NOT EXISTS (
                           SELECT 1 FROM event_log WHERE event_log.session_id = sessions.session_id
                       )
-                    LIMIT ?
-                )
-            """, params: [batchSize])
-            return Int(database.changesCount)
+                """, params: chunk)
+                deleted += Int(database.changesCount)
+            }
+            return deleted
+        }
+    }
+
+    /// The ids among `sessionIds` (at most `claudeReadChunk` of them) that have
+    /// at least one Claude `events` or `turns` row in `store`.
+    private static func sessionsWithStoredRows(_ sessionIds: [String], in store: EventStore) throws -> Set<String> {
+        guard !sessionIds.isEmpty else { return [] }
+        precondition(sessionIds.count <= claudeReadChunk, "one IN list binds at most claudeReadChunk ids")
+        let marks = sessionIds.map { _ in "?" }.joined(separator: ",")
+        let provider = ClaudeProvider.name
+        let arguments = StatementArguments([provider] + sessionIds + [provider] + sessionIds)
+        return try store.read { conn in
+            let ids = try String.fetchAll(conn, sql: """
+                SELECT DISTINCT session_id FROM events WHERE provider = ? AND session_id IN (\(marks))
+                UNION
+                SELECT DISTINCT session_id FROM turns WHERE provider = ? AND session_id IN (\(marks))
+                """, arguments: arguments)
+            return Set(ids)
         }
     }
 }

@@ -84,7 +84,8 @@ enum SessionRoutes {
             startupDurationMs: services.startupDurationMs(),
             memoryFootprintMb: memory?.footprintMB,
             memoryPeakMb: memory?.peakMB,
-            statusLineError: services.hookInstaller.statusLineError
+            statusLineError: services.hookInstaller.statusLineError,
+            claudePipeline: services.claudePipelineState?().rawValue
         )
         return .json(dto)
     }

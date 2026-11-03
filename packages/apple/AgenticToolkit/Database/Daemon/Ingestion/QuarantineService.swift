@@ -35,9 +35,10 @@ public final class QuarantineService: @unchecked Sendable {
     private var recovered = 0
     private var stillFailing = 0
 
-    /// Keeps a quarantined file's bytes somewhere durable before the service deletes
-    /// a file it has not ingested: an untrackable event a retry discards, and every
-    /// file `clear()` removes. Nil deletes them outright (the legacy behaviour).
+    /// Keeps a quarantined file's exact bytes somewhere durable before the service
+    /// deletes the file: an event a retry re-feeds, an untrackable event a retry
+    /// discards, and every file `clear()` removes. Nil deletes them outright (the
+    /// legacy behaviour).
     private let preserveRaw: (@Sendable (URL) throws -> Void)?
 
     /// Outcome of re-feeding one quarantined file. `.held` is a file the ingest
@@ -48,8 +49,9 @@ public final class QuarantineService: @unchecked Sendable {
     /// - Parameters:
     ///   - queueLabel: label of the background retry queue, so a daemon can put it
     ///     under its own subsystem.
-    ///   - preserveRaw: called with a quarantined file before the service deletes it
-    ///     without ingesting it. A throw keeps the file.
+    ///   - preserveRaw: called with a quarantined file before the service re-feeds
+    ///     or deletes it. A throw keeps the file (`QuarantineRetryHeld` charges no
+    ///     retry).
     public init(
         errorsDirectory: URL,
         database: DaemonDatabase? = nil,
@@ -121,32 +123,32 @@ public final class QuarantineService: @unchecked Sendable {
         .sorted { $0.quarantinedAt > $1.quarantinedAt }
     }
 
-    /// Deletes every quarantined event file and meta sidecar, and marks the
-    /// corresponding DB-log rows cleared (keeping their history for tracking).
-    /// With `preserveRaw` set, each event file is handed to it first; a file it
-    /// cannot keep stays, with its sidecar, rather than being deleted unkept.
+    /// Deletes every quarantined event file (`error-*.json`) and its meta sidecar,
+    /// and marks the corresponding DB-log rows cleared (keeping their history for
+    /// tracking). With `preserveRaw` set, each event file is handed to it first; a
+    /// file it cannot keep stays, with its sidecar, rather than being deleted
+    /// unkept. Anything else in the errors directory (a stray or renamed file, an
+    /// orphaned sidecar) is not a quarantined event and is left alone.
     public func clear() {
         let fileManager = FileManager.default
-        let entries = (try? fileManager.contentsOfDirectory(
-            at: errorsDirectory, includingPropertiesForKeys: nil
-        )) ?? []
-        var kept: Set<String> = []
-        if let preserveRaw {
-            for url in eventFiles() {
+        var deleted = 0
+        var kept = 0
+        for url in eventFiles() {
+            if let preserveRaw {
                 do {
                     try preserveRaw(url)
                 } catch {
-                    kept.insert(url.lastPathComponent)
-                    kept.insert(metaURL(for: url).lastPathComponent)
+                    kept += 1
                     logger.error("""
                         Kept quarantined \(url.lastPathComponent, privacy: .public): it could not be \
                         preserved (\(error.localizedDescription, privacy: .public))
                         """)
+                    continue
                 }
             }
-        }
-        for url in entries where !kept.contains(url.lastPathComponent) {
             try? fileManager.removeItem(at: url)
+            try? fileManager.removeItem(at: metaURL(for: url))
+            deleted += 1
         }
         do {
             try database?.clearActiveIngestionErrors()
@@ -157,7 +159,7 @@ public final class QuarantineService: @unchecked Sendable {
                 "Failed to mark ingestion-error log rows cleared: \(error.localizedDescription, privacy: .public)"
             )
         }
-        logger.info("Cleared \(entries.count - kept.count, privacy: .public) quarantine entr(ies)")
+        logger.info("Cleared \(deleted, privacy: .public) quarantined event(s), kept \(kept, privacy: .public)")
     }
 
     /// Records a freshly-quarantined event: writes its `.meta.json` sidecar and
@@ -390,6 +392,10 @@ public final class QuarantineService: @unchecked Sendable {
             return .stillFailing
         }
         do {
+            // The file's exact bytes go to the raw archive first, under a key from
+            // the file alone, so the backup holds what was written (the re-capture
+            // below re-encodes it) and a second retry of the same file adds nothing.
+            try preserveRaw?(url)
             try ingest(parsed)
             try? FileManager.default.removeItem(at: url)
             try? FileManager.default.removeItem(at: metaURL(for: url))

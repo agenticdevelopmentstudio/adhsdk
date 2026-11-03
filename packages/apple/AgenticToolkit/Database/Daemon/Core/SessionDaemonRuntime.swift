@@ -86,6 +86,48 @@ public final class SessionDaemonRuntime: @unchecked Sendable {
         }
     }
 
+    /// The three files the Claude pipeline runs on.
+    public struct ClaudeFiles: Sendable {
+        public var spool: ProviderSpool
+        public var archive: RawArchive
+        public var store: EventStore
+
+        public init(spool: ProviderSpool, archive: RawArchive, store: EventStore) {
+            self.spool = spool
+            self.archive = archive
+            self.store = store
+        }
+    }
+
+    /// Opens the Claude pipeline's files. Injected by tests; the default opens
+    /// the three at their configured paths in parallel.
+    public typealias ClaudeOpener = @Sendable (SessionDaemonConfiguration) throws -> ClaudeFiles
+
+    /// How long to wait before each new attempt at opening the Claude pipeline
+    /// after a failure: `initial` after the first, doubling, never above `cap`.
+    public struct ClaudeOpenBackoff: Sendable {
+        public var initial: Duration
+        public var cap: Duration
+
+        /// One minute, doubling, capped at thirty.
+        public static let standard = ClaudeOpenBackoff(initial: .seconds(60), cap: .seconds(1800))
+
+        public init(initial: Duration, cap: Duration) {
+            self.initial = initial
+            self.cap = cap
+        }
+
+        /// The wait before the next attempt once `failures` (1 or more) have failed.
+        public func delay(afterFailures failures: Int) -> Duration {
+            var delay = initial
+            for _ in 1..<max(failures, 1) {
+                delay *= 2
+                if delay >= cap { return cap }
+            }
+            return min(delay, cap)
+        }
+    }
+
     public let configuration: SessionDaemonConfiguration
     public let hookInstaller: ClaudeHookInstaller
     public let secretStore: any SecretStoring
@@ -95,6 +137,8 @@ public final class SessionDaemonRuntime: @unchecked Sendable {
     private let statusLineIngest: DaemonDatabase.StatusLineIngest?
     private let sessionUpsertHook: DaemonDatabase.SessionUpsertHook?
     private let behavior: Behavior
+    private let claudeOpener: ClaudeOpener?
+    private let claudeOpenBackoff: ClaudeOpenBackoff
 
     private struct Opened {
         var spool: IngestSpool
@@ -102,20 +146,25 @@ public final class SessionDaemonRuntime: @unchecked Sendable {
         var pipeline: IngestionPipeline
         var hookDisabled: Bool
         var preferences: PreferencesService
-        /// Nil when its files could not be opened: the daemon then runs on the
-        /// legacy capture and ingest path.
-        var claude: ClaudePipelineHandles?
         /// Held here because the drainer holds its observers weakly.
         var claudeObserver: ClaudeLiveObserver?
     }
     private let lock = NSLock()
     private var opened: Opened?
     private var isShutDown = false
+    /// The Claude pipeline: empty while its files could not be opened, filled at
+    /// ``openPhaseA()`` or by the open retry ``startDrainer()`` starts.
+    private let claudeSlot = ClaudePipelineSlot()
+    private var claudeOpenRetry: Task<Void, Never>?
 
     /// - Parameters:
     ///   - migrations: the schema: unique versions, shared ones 1-45 or 1001 and up, the daemon's own 46-1000.
     ///   - postMigration: ensure steps run after every migration pass.
     ///   - hookInstaller: defaults to one driven by `configuration.hook`.
+    ///   - claudeOpener: opens the Claude pipeline's files; nil opens them at the
+    ///     configured paths. For tests.
+    ///   - claudeOpenBackoff: the waits between attempts at opening the Claude
+    ///     pipeline after a failure.
     public init(
         configuration: SessionDaemonConfiguration,
         migrations: [DaemonMigration] = SessionSchema.migrations,
@@ -124,7 +173,9 @@ public final class SessionDaemonRuntime: @unchecked Sendable {
         sessionUpsertHook: DaemonDatabase.SessionUpsertHook? = nil,
         behavior: Behavior,
         secretStore: any SecretStoring,
-        hookInstaller: ClaudeHookInstaller? = nil
+        hookInstaller: ClaudeHookInstaller? = nil,
+        claudeOpener: ClaudeOpener? = nil,
+        claudeOpenBackoff: ClaudeOpenBackoff = .standard
     ) {
         self.configuration = configuration
         self.migrations = migrations
@@ -134,6 +185,8 @@ public final class SessionDaemonRuntime: @unchecked Sendable {
         self.behavior = behavior
         self.secretStore = secretStore
         self.hookInstaller = hookInstaller ?? ClaudeHookInstaller(configuration: configuration.hook)
+        self.claudeOpener = claudeOpener
+        self.claudeOpenBackoff = claudeOpenBackoff
     }
 
     // MARK: - Opened objects
@@ -156,9 +209,16 @@ public final class SessionDaemonRuntime: @unchecked Sendable {
     /// Whether the user had turned tracking off when the runtime opened.
     public var hookDisabled: Bool { requireOpened("hookDisabled").hookDisabled }
     /// The Claude provider pipeline (spool, archive, event store, drainer and
-    /// sources), or nil before ``openPhaseA()`` and when its files could not be
-    /// opened (the daemon then captures and ingests on the legacy path).
-    public var claudePipeline: ClaudePipelineHandles? { lock.withLock { opened?.claude } }
+    /// sources), or nil while it is not open: before ``openPhaseA()``, and while
+    /// its files cannot be opened. Then, with `Behavior.legacyWriterFallback`, the
+    /// legacy writers run for the whole run; without it, captures wait in the
+    /// legacy spool and the open is retried (``startDrainer()``). A snapshot:
+    /// anything that must see a pipeline opening later reads ``claudePipelineSlot``.
+    public var claudePipeline: ClaudePipelineHandles? { claudeSlot.current }
+
+    /// The Claude pipeline as it is at call time: what the drop-directory wake,
+    /// the transcript sweep, the import route and the quarantine routes read.
+    public var claudePipelineSlot: ClaudePipelineSlot { claudeSlot }
 
     /// The conversations feed over the runtime's database.
     public var conversations: ConversationStore { ConversationStore(database: database) }
@@ -208,7 +268,8 @@ public final class SessionDaemonRuntime: @unchecked Sendable {
             captureHook: opened.pipeline.capture,
             runImport: wiring.runImport,
             pluginRuntime: pluginRuntime,
-            pipelineQuarantine: opened.claude
+            pipelineQuarantine: claudeSlot,
+            claudePipelineState: { [claudeSlot] in claudeSlot.state }
         )
     }
 
@@ -225,9 +286,10 @@ public final class SessionDaemonRuntime: @unchecked Sendable {
     ///
     /// The Claude pipeline's files (its spool, raw archive and events.db) are
     /// opened beside them but are not fatal: if any fails, the failure is logged
-    /// at fault level, ``claudePipeline`` stays nil and the daemon captures and
-    /// ingests on the legacy path, as it did before the pipeline existed. The
-    /// next start tries them again.
+    /// at fault level and ``claudePipeline`` stays nil. With
+    /// `Behavior.legacyWriterFallback` the daemon then captures and ingests on the
+    /// legacy path for this run; without it, captures wait in the legacy spool
+    /// and ``startDrainer()`` retries the open with a backoff.
     public func openPhaseA() async throws {
         let configuration = configuration
         let installer = hookInstaller
@@ -235,6 +297,7 @@ public final class SessionDaemonRuntime: @unchecked Sendable {
         let postMigration = postMigration
         let statusLineIngest = statusLineIngest
         let sessionUpsertHook = sessionUpsertHook
+        let claudeOpener = claudeOpener
 
         try FileManager.default.createDirectory(
             at: configuration.supportDirectory, withIntermediateDirectories: true
@@ -245,9 +308,7 @@ public final class SessionDaemonRuntime: @unchecked Sendable {
             statusLineIngest: statusLineIngest, sessionUpsertHook: sessionUpsertHook
         )
         async let hookDisabledTask: Bool = Self.checkHookDisabled(installer: installer)
-        async let claudeSpoolTask: ProviderSpool = Self.openClaudeSpool(path: configuration.claudeSpoolPath)
-        async let archiveTask: RawArchive = Self.openClaudeArchive(path: configuration.claudeArchivePath)
-        async let storeTask: EventStore = Self.openEventStore(path: configuration.eventStorePath)
+        async let claudeFilesTask: ClaudeFiles = Self.openClaudeFiles(configuration, opener: claudeOpener)
 
         let spool = try await spoolTask
         let database = try await dbTask
@@ -255,21 +316,20 @@ public final class SessionDaemonRuntime: @unchecked Sendable {
 
         var claude: ClaudePipelineHandles?
         do {
-            let claudeSpool = try await claudeSpoolTask
-            let archive = try await archiveTask
-            let store = try await storeTask
-            claude = try ClaudePipelineHandles(
-                spool: claudeSpool, archive: archive, store: store, database: database,
-                dropDirectory: configuration.dropDirectory,
-                projectsDirectory: configuration.claudeProjectsDirectory
-            )
-            database.attachEventReads(store, archive: archive)
+            let files = try await claudeFilesTask
+            claude = try Self.makeHandles(files, database: database, configuration: configuration)
+            database.attachEventReads(files.store, archive: files.archive)
         } catch {
+            claudeSlot.recordFailedOpen()
+            let meanwhile = behavior.legacyWriterFallback
+                ? "capturing on the legacy path"
+                : "captures wait in the legacy spool and the open is retried"
             Self.logger.fault("""
                 Claude pipeline failed to open (\(error.localizedDescription, privacy: .public)); \
-                capturing on the legacy path
+                \(meanwhile, privacy: .public)
                 """)
         }
+        if let claude { claudeSlot.fill(claude) }
 
         let pipeline = IngestionPipeline(
             paths: .init(
@@ -284,19 +344,12 @@ public final class SessionDaemonRuntime: @unchecked Sendable {
             decode: behavior.decode,
             summarizeOnStop: behavior.summarizeOnStop,
             footprintSuffix: behavior.footprintSuffix,
-            claude: claude,
+            claude: claudeSlot,
             legacyWriterFallback: behavior.legacyWriterFallback
         )
         // One enrichment, shared with the legacy ingestor, so both paths drive the
         // same transcript tailer and summarizer.
-        var observer: ClaudeLiveObserver?
-        if let claude {
-            let live = ClaudeLiveObserver(
-                eventReads: claude.store, sink: behavior.sink, enrichment: pipeline.ingestor.enrichment
-            )
-            claude.drainer.addObserver(live)
-            observer = live
-        }
+        let observer = claude.map { Self.observe($0, sink: behavior.sink, pipeline: pipeline) }
         let preferences = PreferencesService(
             database: database, secretStore: secretStore, hookInstaller: installer,
             summariesDefaultEnabled: configuration.summariesDefaultEnabled,
@@ -306,9 +359,31 @@ public final class SessionDaemonRuntime: @unchecked Sendable {
             opened = Opened(
                 spool: spool, database: database, pipeline: pipeline,
                 hookDisabled: hookDisabled, preferences: preferences,
-                claude: claude, claudeObserver: observer
+                claudeObserver: observer
             )
         }
+    }
+
+    /// Builds the pipeline's handles over its opened files.
+    private static func makeHandles(
+        _ files: ClaudeFiles, database: DaemonDatabase, configuration: SessionDaemonConfiguration
+    ) throws -> ClaudePipelineHandles {
+        try ClaudePipelineHandles(
+            spool: files.spool, archive: files.archive, store: files.store, database: database,
+            dropDirectory: configuration.dropDirectory,
+            projectsDirectory: configuration.claudeProjectsDirectory
+        )
+    }
+
+    /// The live observer (SSE, session status, enrichment) on the pipeline's drainer.
+    private static func observe(
+        _ claude: ClaudePipelineHandles, sink: any SessionEventSink, pipeline: IngestionPipeline
+    ) -> ClaudeLiveObserver {
+        let live = ClaudeLiveObserver(
+            eventReads: claude.store, sink: sink, enrichment: pipeline.ingestor.enrichment
+        )
+        claude.drainer.addObserver(live)
+        return live
     }
 
     /// Phase B: binds the capture socket and reconciles the hook registration
@@ -351,24 +426,94 @@ public final class SessionDaemonRuntime: @unchecked Sendable {
     /// the legacy spool only holds leftovers, and if their move fails they stay
     /// there for the next start rather than reaching `event_log` alone.
     ///
-    /// Without the Claude pipeline the legacy drainer starts only when
-    /// `Behavior.legacyWriterFallback` allows it (`IngestionPipeline.startDraining()`);
-    /// otherwise captures wait in the legacy spool.
+    /// Without the Claude pipeline the legacy drainer starts when
+    /// `Behavior.legacyWriterFallback` allows it (`IngestionPipeline.startDraining()`)
+    /// and runs for the whole run. Otherwise captures wait in the legacy spool
+    /// and the open is retried in the background (`ClaudeOpenBackoff`: a minute
+    /// after the first failure, doubling, capped at thirty); the attempt that
+    /// succeeds fills ``claudePipelineSlot``, moves the legacy spool across and
+    /// starts the drainer, exactly as a start that opened it would have.
     public func startDrainer() async {
         let opened = requireOpened("startDrainer")
-        guard let claude = opened.claude else {
+        guard let claude = claudeSlot.current else {
             if opened.pipeline.legacyWriters {
                 opened.pipeline.startDraining()
             } else {
                 Self.logger.fault("""
                     Claude pipeline not open and the legacy writers are off; \
-                    captures wait in the legacy spool for the next start
+                    captures wait in the legacy spool while the open is retried
                     """)
+                startClaudeOpenRetry()
             }
             return
         }
         Self.prepareClaudeSpool(claude, legacy: opened.spool)
         claude.drainer.start()
+    }
+
+    /// Retries the Claude pipeline's open until it succeeds or the runtime shuts
+    /// down. Each failure bumps the slot's step, which is what throttles the
+    /// "not open" logs elsewhere to one per wait.
+    private func startClaudeOpenRetry() {
+        let backoff = claudeOpenBackoff
+        let task = Task.detached { [weak self] in
+            var failures = 1
+            while !Task.isCancelled {
+                let delay = backoff.delay(afterFailures: failures)
+                do { try await Task.sleep(for: delay) } catch { return }
+                guard let self else { return }
+                do {
+                    try await self.openClaudeLate()
+                    return
+                } catch is CancellationError {
+                    return
+                } catch {
+                    failures += 1
+                    self.claudeSlot.recordFailedOpen()
+                    let next = backoff.delay(afterFailures: failures)
+                    Self.logger.error("""
+                        Claude pipeline still failed to open (\(error.localizedDescription, privacy: .public)); \
+                        next attempt in \(next.components.seconds, privacy: .public)s
+                        """)
+                }
+            }
+        }
+        let keep: Bool = lock.withLock {
+            guard !isShutDown else { return false }
+            claudeOpenRetry = task
+            return true
+        }
+        if !keep { task.cancel() }
+    }
+
+    /// One late attempt: opens the files, fills the slot (attaching events.db for
+    /// reads and moving the legacy spool across while captures are held off) and
+    /// starts the drainer. Throws when the files still cannot be opened.
+    private func openClaudeLate() async throws {
+        let opened = requireOpened("openClaudeLate")
+        let files = try await Self.openClaudeFiles(configuration, opener: claudeOpener)
+        let handles = try Self.makeHandles(files, database: opened.database, configuration: configuration)
+        let observer = Self.observe(handles, sink: behavior.sink, pipeline: opened.pipeline)
+        let filled = claudeSlot.fill(handles) {
+            opened.database.attachEventReads(files.store, archive: files.archive)
+            Self.prepareClaudeSpool(handles, legacy: opened.spool)
+        }
+        guard filled else { return }
+        // Started under the lock `shutdown` takes, so a shutdown either sees
+        // nothing to stop or stops this drainer.
+        let started: Bool = lock.withLock {
+            guard !isShutDown else { return false }
+            self.opened?.claudeObserver = observer
+            handles.drainer.start()
+            return true
+        }
+        guard started else { return }
+        Self.logger.info("Claude pipeline opened on a retry; draining")
+        // Drop files that arrived while it was closed wait for a directory event;
+        // read them now rather than on the next one.
+        do { _ = try handles.pollHookDrops() } catch {
+            Self.logger.error("Drop-file spool failed: \(error.localizedDescription, privacy: .public)")
+        }
     }
 
     /// Requeues the transient quarantine and moves the legacy spool into the Claude
@@ -407,15 +552,18 @@ public final class SessionDaemonRuntime: @unchecked Sendable {
     /// Idempotent. The hook registration is deliberately left in place — see
     /// the daemon's own uninstall path.
     public func shutdown() async {
-        let current: Opened? = lock.withLock {
+        let (current, retry): (Opened?, Task<Void, Never>?) = lock.withLock {
             let current = isShutDown ? nil : opened
             isShutDown = true
-            return current
+            let retry = claudeOpenRetry
+            claudeOpenRetry = nil
+            return (current, retry)
         }
+        retry?.cancel()
         guard let current else { return }
         // The Claude drainer first: a pass in flight finishes (stop waits up to
         // 5 s), and anything still spooled drains on the next launch.
-        current.claude?.drainer.stop()
+        claudeSlot.current?.drainer.stop()
         await current.pipeline.stop()
     }
 
@@ -435,6 +583,18 @@ public final class SessionDaemonRuntime: @unchecked Sendable {
 
     private static func openEventStore(path: String) throws -> EventStore {
         try EventStore(path: path)
+    }
+
+    /// The Claude pipeline's three files, through `opener` when one is injected
+    /// and otherwise opened at their configured paths in parallel.
+    private static func openClaudeFiles(
+        _ configuration: SessionDaemonConfiguration, opener: ClaudeOpener?
+    ) async throws -> ClaudeFiles {
+        if let opener { return try opener(configuration) }
+        async let spool: ProviderSpool = openClaudeSpool(path: configuration.claudeSpoolPath)
+        async let archive: RawArchive = openClaudeArchive(path: configuration.claudeArchivePath)
+        async let store: EventStore = openEventStore(path: configuration.eventStorePath)
+        return try await ClaudeFiles(spool: spool, archive: archive, store: store)
     }
 
     /// Opens the pool only; the migration is ``migrate()``'s.
