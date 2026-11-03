@@ -581,8 +581,14 @@ public final class SessionDaemonRuntime: @unchecked Sendable {
         try RawArchive(path: path, provider: ClaudeProvider.name)
     }
 
+    /// Opening finishes a bulk load a killed or crashed replay (`stenographerd
+    /// --replay`) left behind: the indexes are rebuilt before the open returns.
     private static func openEventStore(path: String) throws -> EventStore {
-        try EventStore(path: path)
+        let store = try EventStore(path: path)
+        if store.recoveredBulkLoad {
+            logger.warning("events.db was left in bulk load by an interrupted replay; its indexes were rebuilt")
+        }
+        return store
     }
 
     /// The Claude pipeline's three files, through `opener` when one is injected

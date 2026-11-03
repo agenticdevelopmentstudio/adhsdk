@@ -82,10 +82,10 @@ public final class EventStore: @unchecked Sendable {
     /// Opening runs only `CREATE ... IF NOT EXISTS`, so on a healthy file it does no
     /// index work. A store left in bulk-load state by a crash (the `bulk_load` flag
     /// in `store_meta`) has its indexes rebuilt here and the flag cleared, under
-    /// `bulkDeadline`.
+    /// `bulkDeadline`; ``recoveredBulkLoad`` then reports it.
     public init(path: String) throws {
         self.path = path
-        self.pool = try BoundedDatabase(
+        let pool = try BoundedDatabase(
             path: path, readers: 3,
             readDeadline: .seconds(30), writeDeadline: .seconds(60),
             prepare: { conn in
@@ -99,7 +99,8 @@ public final class EventStore: @unchecked Sendable {
                 try conn.execute(sql: "PRAGMA synchronous=FULL")
             }
         )
-        try pool.write(deadline: Self.bulkDeadline) { conn in
+        self.pool = pool
+        self.recoveredBulkLoad = try pool.write(deadline: Self.bulkDeadline) { conn in
             try conn.execute(sql: """
                 CREATE TABLE IF NOT EXISTS sessions (
                     provider TEXT NOT NULL, session_id TEXT NOT NULL,
@@ -158,12 +159,26 @@ public final class EventStore: @unchecked Sendable {
                     provider TEXT NOT NULL, dedup_key TEXT NOT NULL,
                     PRIMARY KEY (provider, dedup_key)) WITHOUT ROWID
                 """)
+            // Archive records a checkpointed replay could not normalize, kept with
+            // its cursor so a resumed replay still reports them. See `ReplayCheckpoint`.
+            try conn.execute(sql: """
+                CREATE TABLE IF NOT EXISTS replay_failures (
+                    provider TEXT NOT NULL, raw_id INTEGER NOT NULL, error TEXT NOT NULL,
+                    PRIMARY KEY (provider, raw_id)) WITHOUT ROWID
+                """)
+            let leftOver = try String.fetchOne(
+                conn, sql: "SELECT value FROM store_meta WHERE key = ?", arguments: [Self.bulkLoadKey]) != nil
             // On a new file this creates the indexes; on a healthy one it is a
             // no-op; after a crash mid-bulk-load it is the rebuild.
             for index in Self.indexes { try conn.execute(sql: index.sql) }
             try conn.execute(sql: "DELETE FROM store_meta WHERE key = ?", arguments: [Self.bulkLoadKey])
+            return leftOver
         }
     }
+
+    /// True when this open found the file still in bulk load, left by a replay
+    /// that was killed or crashed, and rebuilt its indexes before returning.
+    public let recoveredBulkLoad: Bool
 
     // MARK: - Live writers
 
@@ -187,9 +202,15 @@ public final class EventStore: @unchecked Sendable {
     /// One transaction; safe to repeat and to apply in any order. Returns what the
     /// write changed: events and messages actually inserted (a redelivery inserts
     /// nothing), and turns and sessions whose stored row changed, as merged.
+    ///
+    /// `checkpoint`, when given, commits in the same transaction: its cursor goes to
+    /// `store_meta` and its failures to `replay_failures`, so a replay's position
+    /// and its failed records can never disagree with the rows it wrote.
     @discardableResult
-    public func write(_ batch: NormalizedBatch, provider: String, deadline: Duration? = nil) throws -> NormalizedBatch {
+    public func write(_ batch: NormalizedBatch, provider: String, deadline: Duration? = nil,
+                      checkpoint: ReplayCheckpoint? = nil) throws -> NormalizedBatch {
         try pool.write(deadline: deadline) { conn in
+            if let checkpoint { try Self.commit(checkpoint, provider: provider, conn) }
             var changed = NormalizedBatch()
             changed.events = try batch.events.filter { try Self.insert($0, provider: provider, conn) }
             changed.messages = try batch.messages.filter { try Self.insert($0, provider: provider, conn) }
@@ -269,6 +290,49 @@ public final class EventStore: @unchecked Sendable {
         try pool.write { conn in
             try conn.execute(
                 sql: "INSERT OR REPLACE INTO store_meta(key, value) VALUES(?, ?)", arguments: [key, value])
+        }
+    }
+
+    // MARK: - Replay checkpoints
+
+    private static func commit(_ checkpoint: ReplayCheckpoint, provider: String, _ conn: Database) throws {
+        try conn.execute(
+            sql: "INSERT OR REPLACE INTO store_meta(key, value) VALUES(?, ?)",
+            arguments: [checkpoint.metaKey, String(checkpoint.lastID)])
+        for (rawID, error) in checkpoint.failures {
+            try conn.execute(
+                sql: "INSERT OR REPLACE INTO replay_failures(provider, raw_id, error) VALUES(?, ?, ?)",
+                arguments: [provider, rawID, error])
+        }
+    }
+
+    /// Commits a checkpoint with no rows (a replay that wrote nothing, or a fresh start).
+    public func commit(_ checkpoint: ReplayCheckpoint, provider: String) throws {
+        try pool.write { conn in try Self.commit(checkpoint, provider: provider, conn) }
+    }
+
+    /// How many records a checkpointed replay of `provider` has failed, over every run.
+    public func replayFailureCount(provider: String) throws -> Int {
+        try pool.read { conn in
+            try Int.fetchOne(
+                conn, sql: "SELECT COUNT(*) FROM replay_failures WHERE provider = ?", arguments: [provider]) ?? 0
+        }
+    }
+
+    /// The first `limit` failed records of `provider`, by ascending archive id.
+    public func replayFailures(provider: String, limit: Int) throws -> [(rawID: Int64, error: String)] {
+        try pool.read { conn in
+            try Row.fetchAll(
+                conn, sql: "SELECT raw_id, error FROM replay_failures WHERE provider = ? ORDER BY raw_id LIMIT ?",
+                arguments: [provider, limit]
+            ).map { (rawID: $0["raw_id"], error: $0["error"]) }
+        }
+    }
+
+    /// Forgets every recorded failure of `provider`: a replay starting over from id 0.
+    public func clearReplayFailures(provider: String) throws {
+        try pool.write { conn in
+            try conn.execute(sql: "DELETE FROM replay_failures WHERE provider = ?", arguments: [provider])
         }
     }
 

@@ -18,8 +18,27 @@ public struct ReplayReport: Sendable, Equatable {
     /// back as `after:` to resume an interrupted replay; the starting `after` when
     /// nothing was read.
     public var lastID: Int64 = 0
+    /// True when `shouldContinue` stopped the replay before the archive's end.
+    /// Every chunk up to `lastID` was written; the rest was not read.
+    public var stopped = false
 
     public init() {}
+}
+
+/// What a checkpointed replay commits in each chunk's own transaction: the highest
+/// archive id written, under `metaKey` in `store_meta`, and the records the chunk
+/// failed, in `replay_failures`. See `EventStore.write(_:provider:deadline:checkpoint:)`.
+public struct ReplayCheckpoint: Sendable, Equatable {
+    public let metaKey: String
+    public var lastID: Int64
+    /// Archive id to error description: every failure of the chunk, uncapped.
+    public var failures: [Int64: String]
+
+    public init(metaKey: String, lastID: Int64, failures: [Int64: String] = [:]) {
+        self.metaKey = metaKey
+        self.lastID = lastID
+        self.failures = failures
+    }
 }
 
 /// One archive to replay, with its normalizer and the id to resume after.
@@ -27,11 +46,15 @@ public struct ReplaySource: Sendable {
     public let archive: RawArchive
     public let normalizer: any Normalizer
     public let after: Int64
+    /// When set, every chunk commits a `ReplayCheckpoint` under this `store_meta`
+    /// key in the same transaction as its rows.
+    public let checkpointKey: String?
 
-    public init(archive: RawArchive, normalizer: any Normalizer, after: Int64 = 0) {
+    public init(archive: RawArchive, normalizer: any Normalizer, after: Int64 = 0, checkpointKey: String? = nil) {
         self.archive = archive
         self.normalizer = normalizer
         self.after = after
+        self.checkpointKey = checkpointKey
     }
 }
 
@@ -45,7 +68,10 @@ public struct ReplaySource: Sendable {
 /// A crash mid-replay leaves the store's `bulk_load` flag set; the next
 /// `EventStore` open rebuilds the indexes, and replaying again with
 /// `after: report.lastID` (from the last progress callback) resumes; every write
-/// is idempotent, so overlapping a chunk is harmless.
+/// is idempotent, so overlapping a chunk is harmless. A source with a
+/// `checkpointKey` commits its cursor and failures in each chunk's transaction, so
+/// it never overlaps one. A host that can be interrupted should pass
+/// `shouldContinue` so the replay ends its bulk load itself instead.
 ///
 /// Cost of that recovery: the open that finds the flag rebuilds **every** index
 /// before returning, which on a large migrated store can take hours, and the
@@ -62,22 +88,32 @@ public enum Replayer {
     /// archive id and skipped, never fatal. A store error or an unexpected archive
     /// error throws; secondary indexes are rebuilt either way. `progress` gets the
     /// running report after every chunk.
+    ///
+    /// `shouldContinue` is asked before every chunk; when it answers false the
+    /// replay stops there (`ReplayReport.stopped`), ends the bulk load and returns
+    /// normally, so an interrupted host never leaves the store without indexes.
+    /// `checkpointKey`: see `ReplaySource.checkpointKey`.
     public static func replay(archive: RawArchive, normalizer: any Normalizer, into store: EventStore,
                               after: Int64 = 0, chunk: Int = 5_000,
                               maxBytes: Int = PipelineLimits.defaultMaxBatchBytes,
+                              checkpointKey: String? = nil,
+                              shouldContinue: (@Sendable () -> Bool)? = nil,
                               progress: (@Sendable (ReplayReport) -> Void)? = nil) throws -> ReplayReport {
         let reports = try replay(
-            sources: [ReplaySource(archive: archive, normalizer: normalizer, after: after)],
-            into: store, chunk: chunk, maxBytes: maxBytes, progress: progress)
+            sources: [ReplaySource(archive: archive, normalizer: normalizer, after: after,
+                                   checkpointKey: checkpointKey)],
+            into: store, chunk: chunk, maxBytes: maxBytes, shouldContinue: shouldContinue, progress: progress)
         return reports[0]
     }
 
     /// Replays several archives, one per provider, inside a single bulk-load
-    /// window. Returns one report per source, in order. Throws
+    /// window. Returns one report per source, in order; once `shouldContinue`
+    /// stops it, the sources not reached report `stopped` with nothing read. Throws
     /// `PipelineError.duplicateProvider` or `.normalizerMismatch` before touching
     /// the store.
     public static func replay(sources: [ReplaySource], into store: EventStore, chunk: Int = 5_000,
                               maxBytes: Int = PipelineLimits.defaultMaxBatchBytes,
+                              shouldContinue: (@Sendable () -> Bool)? = nil,
                               progress: (@Sendable (ReplayReport) -> Void)? = nil) throws -> [ReplayReport] {
         var seen = Set<String>()
         for source in sources {
@@ -94,12 +130,17 @@ public enum Replayer {
         try store.beginBulkLoad()
         var replayError: Error?
         do {
+            var stopped = false
             for source in sources {
                 var report = ReplayReport()
                 report.provider = source.archive.provider
                 report.lastID = source.after
+                report.stopped = stopped
                 defer { reports.append(report) }
-                try replay(source, into: store, size: size, maxBytes: maxBytes, report: &report, progress: progress)
+                if stopped { continue }
+                try replay(source, into: store, size: size, maxBytes: maxBytes, report: &report,
+                           shouldContinue: shouldContinue, progress: progress)
+                stopped = report.stopped
             }
         } catch {
             replayError = error
@@ -112,12 +153,18 @@ public enum Replayer {
 
     private static func replay(_ source: ReplaySource, into store: EventStore, size: Int, maxBytes: Int,
                                report: inout ReplayReport,
+                               shouldContinue: (@Sendable () -> Bool)?,
                                progress: (@Sendable (ReplayReport) -> Void)?) throws {
         var cursor = source.after
         while true {
+            if let shouldContinue, !shouldContinue() {
+                report.stopped = true
+                break
+            }
             let ids = try source.archive.ids(after: cursor, limit: size, maxBytes: maxBytes)
             guard let last = ids.last else { break }
-            let page = try readChunk(archive: source.archive, ids: ids, report: &report)
+            var chunkFailures: [Int64: String] = [:]
+            let page = try readChunk(archive: source.archive, ids: ids, report: &report, chunkFailures: &chunkFailures)
             var combined = NormalizedBatch()
             for archived in page {
                 report.records += 1
@@ -137,10 +184,14 @@ public enum Replayer {
                         combined.append(batch)
                     }
                 } catch {
-                    fail(&report, id: archived.id, error)
+                    fail(&report, &chunkFailures, id: archived.id, error)
                 }
             }
-            try store.write(combined, provider: source.archive.provider, deadline: EventStore.bulkDeadline)
+            let checkpoint = source.checkpointKey.map {
+                ReplayCheckpoint(metaKey: $0, lastID: last, failures: chunkFailures)
+            }
+            try store.write(combined, provider: source.archive.provider, deadline: EventStore.bulkDeadline,
+                            checkpoint: checkpoint)
             cursor = last
             report.lastID = last
             progress?(report)
@@ -152,15 +203,18 @@ public enum Replayer {
         if report.skippedIDs.count < maxReportedFailures { report.skippedIDs.append(id) }
     }
 
-    private static func fail(_ report: inout ReplayReport, id: Int64, _ error: Error) {
+    private static func fail(_ report: inout ReplayReport, _ chunkFailures: inout [Int64: String],
+                             id: Int64, _ error: Error) {
+        let description = String(describing: error)
         report.failed += 1
-        if report.failures.count < maxReportedFailures { report.failures[id] = String(describing: error) }
+        chunkFailures[id] = description
+        if report.failures.count < maxReportedFailures { report.failures[id] = description }
     }
 
     /// The records with `ids`. When the chunk read throws `corruptPayload`, falls back
     /// to one read per id so only the bad rows are lost. Other errors propagate.
-    private static func readChunk(archive: RawArchive, ids: [Int64],
-                                  report: inout ReplayReport) throws -> [ArchivedRecord] {
+    private static func readChunk(archive: RawArchive, ids: [Int64], report: inout ReplayReport,
+                                  chunkFailures: inout [Int64: String]) throws -> [ArchivedRecord] {
         do {
             return try archive.records(ids: ids)
         } catch RawArchiveError.corruptPayload {
@@ -170,7 +224,7 @@ public enum Replayer {
                     if let archived = try archive.record(id: id) { page.append(archived) }
                 } catch RawArchiveError.corruptPayload {
                     report.records += 1
-                    fail(&report, id: id, RawArchiveError.corruptPayload(id: id))
+                    fail(&report, &chunkFailures, id: id, RawArchiveError.corruptPayload(id: id))
                 }
             }
             return page

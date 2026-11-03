@@ -196,10 +196,12 @@ final class ClaudeLegacyRecordTests: XCTestCase {
         XCTAssertEqual(counts.turns, 1)
         XCTAssertEqual(counts.messages, 1)
 
-        // Nothing new: nothing replayed again.
+        // Nothing new: nothing replayed again, but the earlier failure is still reported.
         let second = try ClaudeArchiveReplay.run(files: files)
         XCTAssertEqual(second.records, 0)
         XCTAssertEqual(second.lastRawID, 5)
+        XCTAssertEqual(second.failedThisRun, 0)
+        XCTAssertEqual(second.failures.map(\.rawID), [5])
 
         // One more record: only it is read.
         try files.archive.append([
@@ -224,11 +226,103 @@ final class ClaudeLegacyRecordTests: XCTestCase {
         result.seconds = 0.5
         let object = try XCTUnwrap(JSONSerialization.jsonObject(with: result.jsonData()) as? [String: Any])
         XCTAssertEqual(Set(object.keys), [
-            "records", "replayed", "skipped", "skipped_ids", "failed", "failures", "last_raw_id", "seconds"
+            "records", "replayed", "skipped", "skipped_ids", "failed", "failed_this_run", "failures",
+            "last_raw_id", "interrupted", "recovered_bulk_load", "seconds"
         ])
         XCTAssertEqual(object["last_raw_id"] as? Int, 3)
         let failures = try XCTUnwrap(object["failures"] as? [[String: Any]])
         XCTAssertEqual(failures.first?["raw_id"] as? Int, 3)
+    }
+
+    // MARK: - Stopping part-way
+
+    /// Four good hook records and one unparseable one (id 1).
+    private func appendFive(to files: ClaudePipelineFiles) throws {
+        let hook: (Int, String) throws -> RawRecord = { id, event in
+            try Self.hookLegacy(id: id, event: event, hookData: ["session_id": Self.sessionID, "cwd": "/x"])
+        }
+        try files.archive.append([
+            RawRecord(provider: ClaudeProvider.name, sourceKind: ClaudeProvider.legacyHookKind,
+                      dedupKey: "legacy-event-1", receivedAt: Self.receivedAt, payload: Data("{oops".utf8)),
+            try hook(2, "SessionStart"), try hook(3, "UserPromptSubmit"), try hook(4, "PreToolUse"),
+            try hook(5, "Stop")
+        ])
+    }
+
+    func testStopAfterTheFirstChunkEndsBulkLoadAndTheResumeNeitherSkipsNorDoubles() throws {
+        let files = try files()
+        try appendFive(to: files)
+        let expectedIndexes = try files.store.indexNames()
+        let chunks = Counter()
+
+        let first = try ClaudeArchiveReplay.run(
+            files: files, chunk: 2, shouldContinue: { chunks.value < 1 }, progress: { _ in chunks.increment() })
+
+        XCTAssertTrue(first.interrupted)
+        XCTAssertEqual(first.records, 2)
+        XCTAssertEqual(first.lastRawID, 2)
+        XCTAssertEqual(try ClaudeArchiveReplay.lastRawID(in: files.store), 2)
+        XCTAssertEqual(first.failures.map(\.rawID), [1])
+        XCTAssertFalse(try files.store.isInBulkLoad())
+        XCTAssertEqual(try files.store.indexNames(), expectedIndexes)
+        XCTAssertEqual(try files.store.counts().events, 1)
+
+        let second = try ClaudeArchiveReplay.run(files: files, chunk: 2)
+        XCTAssertFalse(second.interrupted)
+        XCTAssertEqual(second.records, 3)
+        XCTAssertEqual(second.lastRawID, 5)
+        XCTAssertEqual(second.failedThisRun, 0)
+        XCTAssertEqual(second.failures.map(\.rawID), [1])
+
+        // The same archive replayed in one go gives the same rows.
+        let whole = try ClaudePipelineFiles(directory: tmpDir.appendingPathComponent("whole"))
+        try appendFive(to: whole)
+        _ = try ClaudeArchiveReplay.run(files: whole, chunk: 2)
+        XCTAssertEqual(try files.store.canonicalDump(), try whole.store.canonicalDump())
+        XCTAssertEqual(try files.store.counts().events, 4)
+    }
+
+    func testFailuresSurviveAStoreErrorAndALeftOverBulkLoadIsRecoveredOnOpen() throws {
+        let directory = tmpDir.appendingPathComponent("pipeline")
+        let files = try files()
+        try appendFive(to: files)
+        let eventsPath = directory.appendingPathComponent(EventStore.fileName).path
+        let chunks = Counter()
+
+        // After chunk 1 commits, take the events table away so chunk 2's write (and
+        // the index rebuild) fails: the run stops with events.db still in bulk load.
+        XCTAssertThrowsError(try ClaudeArchiveReplay.run(files: files, chunk: 2, progress: { _ in
+            chunks.increment()
+            guard chunks.value == 1 else { return }
+            let queue = try? DatabaseQueue(path: eventsPath)
+            try? queue?.write { try $0.execute(sql: "ALTER TABLE events RENAME TO events_away") }
+        })) { error in
+            let stopped = error as? ClaudeArchiveReplayStopped
+            XCTAssertNotNil(stopped)
+            XCTAssertEqual(stopped?.partial.interrupted, true)
+            XCTAssertEqual(stopped?.partial.lastRawID, 2)
+            XCTAssertEqual(stopped?.partial.failures.map(\.rawID), [1])
+        }
+        XCTAssertTrue(try files.store.isInBulkLoad())
+        let queue = try DatabaseQueue(path: eventsPath)
+        try queue.write { try $0.execute(sql: "ALTER TABLE events_away RENAME TO events") }
+
+        // The next open finds the bulk load and rebuilds the indexes.
+        let reopened = try ClaudePipelineFiles(directory: directory)
+        XCTAssertTrue(reopened.store.recoveredBulkLoad)
+        XCTAssertFalse(try reopened.store.isInBulkLoad())
+        XCTAssertTrue(try reopened.store.indexNames().contains("events_session_time"))
+
+        let resumed = try ClaudeArchiveReplay.run(files: reopened, chunk: 2)
+        XCTAssertTrue(resumed.recoveredBulkLoad)
+        XCTAssertEqual(resumed.records, 3)
+        XCTAssertEqual(resumed.failedThisRun, 0)
+        XCTAssertEqual(resumed.failed, 1)
+        XCTAssertEqual(resumed.failures.map(\.rawID), [1])
+        XCTAssertEqual(try reopened.store.counts().events, 4)
+
+        // A fresh EventStore on a healthy file recovers nothing.
+        XCTAssertFalse(try EventStore(path: eventsPath).recoveredBulkLoad)
     }
 
     func testPipelineFilesCreateAllThreeWithIncrementalVacuum() throws {
@@ -240,6 +334,15 @@ final class ClaudeLegacyRecordTests: XCTestCase {
         let queue = try DatabaseQueue(path: directory.appendingPathComponent("events.db").path)
         XCTAssertEqual(try queue.read { try Int.fetchOne($0, sql: "PRAGMA auto_vacuum") }, 2)
     }
+}
+
+/// A count shared with `@Sendable` callbacks.
+private final class Counter: @unchecked Sendable {
+    private let lock = NSLock()
+    private var count = 0
+
+    func increment() { lock.withLock { count += 1 } }
+    var value: Int { lock.withLock { count } }
 }
 
 /// Lowercase hex SHA-256 of a string's UTF-8 bytes.
