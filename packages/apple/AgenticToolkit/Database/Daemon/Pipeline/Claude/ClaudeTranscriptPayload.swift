@@ -17,14 +17,21 @@ public struct ClaudeTranscriptPayload: Codable, Equatable, Sendable {
     public let lineNo: Int
     /// Whether the file is a subagent's own transcript (`JSONLScanner.isSubagentPath`).
     public let subagentFile: Bool
-    /// The line, verbatim, without its newline.
+    /// The line, verbatim, without its newline — or, when its bytes are not valid
+    /// UTF-8, decoded with U+FFFD in place of each bad sequence (see `lineBytes`).
     public let line: String
+    /// The line's exact bytes, kept only when they are not valid UTF-8 and `line`
+    /// is therefore lossy, so the archive still holds every captured byte. Encoded
+    /// as base64 under `line_base64`; absent (and the payload bytes unchanged) for
+    /// every valid line.
+    public let lineBytes: Data?
 
-    public init(file: String, lineNo: Int, subagentFile: Bool, line: String) {
+    public init(file: String, lineNo: Int, subagentFile: Bool, line: String, lineBytes: Data? = nil) {
         self.file = file
         self.lineNo = lineNo
         self.subagentFile = subagentFile
         self.line = line
+        self.lineBytes = lineBytes
     }
 
     private enum CodingKeys: String, CodingKey {
@@ -32,6 +39,7 @@ public struct ClaudeTranscriptPayload: Codable, Equatable, Sendable {
         case lineNo = "line_no"
         case subagentFile = "subagent_file"
         case line
+        case lineBytes = "line_base64"
     }
 
     /// The payload bytes: sorted keys, slashes unescaped.
@@ -48,10 +56,12 @@ public struct ClaudeTranscriptPayload: Codable, Equatable, Sendable {
     /// The record's dedup key (Design Ruling 3): `"<sessionId>:<sha256 hex of the
     /// line's UTF-8 bytes>"`. The session id is the line's own `sessionId`, else the
     /// file stem — the same attribution and hash as `transcript_lines`'
-    /// `(session_id, line_hash)` dedup.
-    public static func dedupKey(line: String, file: String) -> String {
+    /// `(session_id, line_hash)` dedup. A line that is not valid UTF-8 passes its
+    /// exact bytes as `lineBytes`, and those are hashed instead of the lossy text,
+    /// so two lines differing only in their bad bytes never collapse into one.
+    public static func dedupKey(line: String, file: String, lineBytes: Data? = nil) -> String {
         let sessionID = JSONLScanner.parseRawLine(line, lineNo: 0, fileStem: fileStem(file)).sessionId
-        return "\(sessionID):\(SHA256.hash(data: Data(line.utf8)).hexString)"
+        return "\(sessionID):\(SHA256.hash(data: lineBytes ?? Data(line.utf8)).hexString)"
     }
 
     /// The file name without its `.jsonl` extension, as `JSONLScanner.scanRawLines` derives it.

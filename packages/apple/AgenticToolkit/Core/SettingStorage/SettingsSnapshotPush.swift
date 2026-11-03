@@ -46,6 +46,17 @@ import OSLog
 /// nothing until the seed completes (completing it always pushes the then-current
 /// snapshot), so no caller can send local values ahead of the receiver's.
 ///
+/// **When the receiver owns the values (`pull`).** Some settings can be
+/// changed at the receiver by other means (a CLI, an HTTP call), so pushing
+/// the local copy at startup or on a reconnect would undo those changes. A
+/// caller that passes `pull` declares the receiver the source of truth: the
+/// start, every reconnect and every ``refresh()`` read the receiver's values
+/// into the local store instead of pushing, and only a local change pushes.
+/// The local store is written only while no local change is still on its way
+/// (in flight, waiting to retry, or made while the read was out), so a choice
+/// the user made while the receiver was down still lands. A local value
+/// equal to what the receiver was last known to hold is not sent.
+///
 /// What the snapshot holds, how it is encoded and how it travels are the
 /// caller's; the engine — observe, snapshot, supersede, bounded retry,
 /// re-push on reconnect — is this one copy.
@@ -65,6 +76,9 @@ public final class SettingsSnapshotPush {
     /// Nanoseconds a reconnect waits before pushing, given how many pushes in a
     /// row have failed (always at least 1 when asked).
     public typealias ReconnectDelay = @Sendable (_ consecutiveFailures: Int) -> UInt64
+    /// Reads the receiver's current values. Returns the step that writes them
+    /// into the local store, or nil when the receiver could not be reached.
+    public typealias Pull = @MainActor () async -> (@MainActor () -> Void)?
 
     private let label: String
     private let logger: Logger
@@ -74,6 +88,10 @@ public final class SettingsSnapshotPush {
     private let backoffs: [UInt64]
     private let reconnectDelay: ReconnectDelay
     private let seed: Seed?
+    private let pull: Pull?
+    /// The body the receiver was last known to hold (receiver-owned mode).
+    private var receiverBody: Data?
+    private var refreshTask: Task<Void, Never>?
 
     private var observers: [AnyObject] = []
     private var observing = false
@@ -102,6 +120,8 @@ public final class SettingsSnapshotPush {
     ///     default doubles from 1 s to a 30 s cap.
     ///   - seed: optional step run before the first push (see the type's
     ///     "Seeding" note); nil starts pushing at once.
+    ///   - pull: makes the receiver the owner of the values (see the type's
+    ///     "When the receiver owns the values" note); replaces `seed`.
     public init(
         label: String,
         logger: Logger,
@@ -110,8 +130,10 @@ public final class SettingsSnapshotPush {
         snapshot: @escaping Snapshot,
         send: @escaping Send,
         registerReconnect: @escaping RegisterReconnect,
-        seed: Seed? = nil
+        seed: Seed? = nil,
+        pull: Pull? = nil
     ) {
+        precondition(seed == nil || pull == nil, "pass seed or pull, not both")
         self.label = label
         self.logger = logger
         self.backoffs = backoffs
@@ -119,8 +141,20 @@ public final class SettingsSnapshotPush {
         self.snapshot = snapshot
         self.sendBody = send
         self.registerReconnect = registerReconnect
-        self.seed = seed
+        self.pull = pull
+        if let pull {
+            self.seed = {
+                guard let apply = await pull() else { return false }
+                apply()
+                return true
+            }
+        } else {
+            self.seed = seed
+        }
     }
+
+    /// Whether the receiver owns the values (a `pull` was given).
+    private var receiverOwns: Bool { pull != nil }
 
     /// 1 s after one failed push, doubling per further failure, capped at 30 s.
     public static let defaultReconnectDelay: ReconnectDelay = { failures in
@@ -170,8 +204,13 @@ public final class SettingsSnapshotPush {
     private func activate(_ built: [AnyObject]) {
         pendingObservers = nil
         observers = built
-        // Observers fire only on change, and the receiver may have restarted.
-        push()
+        if receiverOwns {
+            // The local store now holds the receiver's values: nothing to send.
+            receiverBody = snapshot()
+        } else {
+            // Observers fire only on change, and the receiver may have restarted.
+            push()
+        }
         installReconnect()
     }
 
@@ -234,8 +273,34 @@ public final class SettingsSnapshotPush {
         seedRetry = nil
         seedFailures = 0
         seedGeneration += 1
+        refreshTask?.cancel()
+        refreshTask = nil
+        receiverBody = nil
         cancelPending()
     }
+
+    /// Receiver-owned mode: reads the receiver's values into the local store,
+    /// unless a local change is still on its way (it is newer, and lands
+    /// instead). Does nothing before the start completes, while a read is
+    /// already out, or without a `pull`.
+    public func refresh() {
+        guard let pull, observing, pendingObservers == nil, refreshTask == nil,
+              !localChangePending else { return }
+        let startedAt = generation
+        refreshTask = Task { @MainActor [weak self] in
+            let apply = await pull()
+            guard let self else { return }
+            self.refreshTask = nil
+            // A change made while the read was out is newer than what it read.
+            guard let apply, self.observing, self.generation == startedAt,
+                  !self.localChangePending else { return }
+            apply()
+            self.receiverBody = self.snapshot()
+        }
+    }
+
+    /// A push in flight or waiting to retry.
+    private var localChangePending: Bool { inFlight || delayedReconnect != nil }
 
     /// Sends the current snapshot, superseding any push still retrying.
     public func push() {
@@ -244,6 +309,13 @@ public final class SettingsSnapshotPush {
         guard pendingObservers == nil else { return }
         guard let body = snapshot() else {
             logger.error("Failed to build the \(self.label, privacy: .public) snapshot")
+            return
+        }
+        // The receiver already holds it (or this is the echo of a pulled
+        // value): drop any older change still waiting, send nothing.
+        if receiverOwns, body == receiverBody, !inFlight {
+            cancelPending()
+            failures = 0
             return
         }
         cancelPending()
@@ -255,7 +327,7 @@ public final class SettingsSnapshotPush {
             let delivered = await BoundedPush.send(label: label, logger: logger, backoffs: backoffs) {
                 await send(body)
             }
-            self?.finished(generation: mine, delivered: delivered)
+            self?.finished(generation: mine, delivered: delivered, body: body)
         }
     }
 
@@ -264,6 +336,7 @@ public final class SettingsSnapshotPush {
     public func awaitPendingPush() async {
         await seedTask?.value
         await seedRetry?.value
+        await refreshTask?.value
         await delayedReconnect?.value
         await pushTask?.value
     }
@@ -280,6 +353,11 @@ public final class SettingsSnapshotPush {
         // The running push carries the current snapshot; restarting it would
         // cancel its bounded retry before it can give up (review F11).
         guard !inFlight, delayedReconnect == nil else { return }
+        // The receiver may have been changed while it was away: read it.
+        if receiverOwns {
+            refresh()
+            return
+        }
         guard failures > 0 else {
             push()
             return
@@ -304,11 +382,12 @@ public final class SettingsSnapshotPush {
         }
     }
 
-    private func finished(generation finishedGeneration: Int, delivered: Bool) {
+    private func finished(generation finishedGeneration: Int, delivered: Bool, body: Data) {
         // A superseded push says nothing about the receiver's current state.
         guard finishedGeneration == generation else { return }
         inFlight = false
         failures = delivered ? 0 : failures + 1
+        if delivered, receiverOwns { receiverBody = body }
         // Nothing else may open a connection soon, so an undelivered snapshot
         // schedules its own next attempt (review N3).
         if !delivered, observing, delayedReconnect == nil { scheduleDelayedPush(reason: "retry") }

@@ -529,32 +529,73 @@ final class ClaudeSourcesTests: XCTestCase {
         XCTAssertEqual(Set(byBytes.map(\.check)), ["sourceDuplicated", "keyCollision"], "\(byBytes)")
     }
 
-    /// Blank and non-UTF-8 lines after the last record move the cursor with no
-    /// records, so the next wake neither re-scans nor re-archives them.
-    func testTrailingBlankAndUndecodableLinesStepTheCursorWithoutRecords() throws {
+    /// Blank lines after the last record move the cursor with no records; a line
+    /// that is not valid UTF-8 is archived like any other (lossy text plus its
+    /// exact bytes), so the next wake neither re-scans nor loses it.
+    func testTrailingBlankLinesStepTheCursorAndAnUndecodableLineIsArchived() throws {
         let lines = [Self.userLine(1), Self.userLine(2)]
         let url = try transcript(Self.sessionID, lines: lines, mtime: base)
+        let junk = Data([0xFF, 0xFE, 0xC3, 0x28])
         let handle = try FileHandle(forWritingTo: url)
         try handle.seekToEnd()
-        try handle.write(contentsOf: Data("\n\n".utf8) + Data([0xFF, 0xFE, 0xC3, 0x28, 0x0A]))
+        try handle.write(contentsOf: Data("\n\n".utf8) + junk + Data([0x0A]) + Data("\n".utf8))
         try handle.close()
         try setMTime(url, base.addingTimeInterval(1))
         let size = try XCTUnwrap(
             (try FileManager.default.attributesOfItem(atPath: url.path)[.size] as? NSNumber)?.intValue)
 
         let source = ClaudeTranscriptSource(projectsDirectory: projectsDir, linesPerChunk: 1)
-        XCTAssertEqual(try source.poll(into: spool), 2)
+        XCTAssertEqual(try source.poll(into: spool), 3)
         let cursor = try XCTUnwrap(try spool.sourceState(ClaudeTranscriptSource.cursorKey(for: url)))
         let object = try XCTUnwrap(try JSONSerialization.jsonObject(with: cursor) as? [String: Any])
-        XCTAssertEqual(object["byte_offset"] as? Int, size, "the cursor steps over the trailing junk")
-        XCTAssertEqual(object["line_no"] as? Int, 2)
+        XCTAssertEqual(object["byte_offset"] as? Int, size, "the cursor steps over the trailing blank line")
+        XCTAssertEqual(object["line_no"] as? Int, 3)
         XCTAssertEqual(try source.poll(file: url, into: spool), 0)
-        XCTAssertEqual(try payloads().map(\.line), lines)
+        let archived = try payloads()
+        XCTAssertEqual(archived.prefix(2).map(\.line), lines)
+        XCTAssertEqual(archived.prefix(2).map(\.lineBytes), [nil, nil])
+        XCTAssertEqual(archived[2].lineBytes, junk, "the exact bytes are kept")
+        // swiftlint:disable:next optional_data_string_conversion
+        XCTAssertEqual(archived[2].line, String(decoding: junk, as: UTF8.self), "lossy text beside the bytes")
 
         // A record after the junk continues the numbering from the cursor.
         try appendText(Self.userLine(3) + "\n", to: url, mtime: base.addingTimeInterval(2))
         XCTAssertEqual(try source.poll(file: url, into: spool), 1)
-        XCTAssertEqual(try payloads().map(\.lineNo), [1, 2, 3])
+        XCTAssertEqual(try payloads().map(\.lineNo), [1, 2, 3, 4])
+    }
+
+    /// A line holding a truncated multi-byte sequence reaches the raw archive with
+    /// every byte intact, under a key that hashes those bytes, and a second line
+    /// differing only in its bad bytes is its own row.
+    func testANonUTF8TranscriptLineReachesTheArchiveByteForByte() throws {
+        let valid = Self.userLine(1)
+        // A line cut short by a lone multi-byte lead byte, then the same with 0xFF.
+        let broken = Data(Self.userLine(2).utf8.prefix(60)) + Data([0xC3]) + Data(#""}}"#.utf8)
+        let other = Data(Self.userLine(2).utf8.prefix(60)) + Data([0xFF]) + Data(#""}}"#.utf8)
+        XCTAssertNil(String(data: broken, encoding: .utf8))
+        let dir = projectsDir.appendingPathComponent("-Users-dev-work-myapp")
+        try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        let url = dir.appendingPathComponent("\(Self.sessionID).jsonl")
+        try (Data((valid + "\n").utf8) + broken + Data([0x0A]) + other + Data([0x0A])).write(to: url)
+
+        XCTAssertEqual(try ClaudeTranscriptSource(projectsDirectory: projectsDir).poll(into: spool), 3)
+        let records = try pending()
+        let (drainer, archive) = try makeDrainer()
+        _ = drainer.drainUntilEmpty()
+        XCTAssertEqual(try archive.count(), 3, "no line is skipped and the two bad lines do not collapse")
+
+        for (record, bytes) in zip(records.suffix(2), [broken, other]) {
+            let id = try XCTUnwrap(try archive.id(forDedupKey: record.dedupKey))
+            let stored = try XCTUnwrap(try archive.record(id: id))
+            let payload = try ClaudeTranscriptPayload.decode(stored.record.payload)
+            XCTAssertEqual(payload.lineBytes, bytes)
+            XCTAssertEqual(record.dedupKey, ClaudeTranscriptPayload.dedupKey(
+                line: payload.line, file: payload.file, lineBytes: bytes))
+        }
+        // A valid line's payload carries no `line_base64`, so its archived bytes
+        // are the same as before this field existed.
+        let first = try XCTUnwrap(records.first)
+        XCTAssertFalse((String(bytes: first.payload, encoding: .utf8) ?? "line_base64").contains("line_base64"))
     }
 
     /// Each chunk's offset ends just past its own last line — never past a skipped

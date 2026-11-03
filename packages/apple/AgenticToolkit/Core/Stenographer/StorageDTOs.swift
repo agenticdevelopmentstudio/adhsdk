@@ -91,10 +91,17 @@ public struct StorageStatusDTO: Codable, Sendable, Equatable {
     public let trimRunning: Bool
     /// "open" or "unavailable", as `/health` reports it; nil when unknown.
     public let claudePipeline: String?
+    /// When the running pass started (epoch seconds); nil when none runs, or
+    /// from a daemon older than this field.
+    public let trimRunningSince: Double?
+    /// Set only on the reply to a trim request: true when that request started
+    /// the pass, false when it joined one already running. Nil on every other
+    /// reply, and from a daemon older than this field.
+    public let trimStarted: Bool?
 
     public init(
         historyDays: Int, allowedHistoryDays: [Int], files: [StorageFileDTO], lastTrim: TrimReportDTO?,
-        trimRunning: Bool, claudePipeline: String?
+        trimRunning: Bool, claudePipeline: String?, trimRunningSince: Double? = nil, trimStarted: Bool? = nil
     ) {
         self.historyDays = historyDays
         self.allowedHistoryDays = allowedHistoryDays
@@ -102,6 +109,8 @@ public struct StorageStatusDTO: Codable, Sendable, Equatable {
         self.lastTrim = lastTrim
         self.trimRunning = trimRunning
         self.claudePipeline = claudePipeline
+        self.trimRunningSince = trimRunningSince
+        self.trimStarted = trimStarted
     }
 }
 
@@ -114,6 +123,10 @@ public enum StorageHistoryWindow {
 
     /// The window when nothing usable is stored.
     public static let defaultDays = 30
+
+    /// Whether `days` may be asked for at all: a whole number of days, at
+    /// least one. Anything accepted is then snapped (``snap(_:allowed:)``).
+    public static func accepts(_ days: Int) -> Bool { days >= 1 }
 
     /// The allowed window `days` means: the smallest allowed value at or above
     /// it, the largest for anything bigger. An empty `allowed` returns `days`.
@@ -140,7 +153,7 @@ extension TrimReportDTO {
         let parts = counts.filter { $0.0 > 0 }.map { "\($0.0) \($0.0 == 1 ? $0.1 : $0.2)" }
         var summary = parts.isEmpty ? "nothing removed" : "removed " + parts.joined(separator: ", ")
         if reclaimedBytes > 0 {
-            summary += "; reclaimed " + ByteCountFormatter.string(fromByteCount: reclaimedBytes, countStyle: .file)
+            summary += "; reclaimed " + StorageByteCount.text(reclaimedBytes)
         }
         return summary
     }
@@ -148,6 +161,22 @@ extension TrimReportDTO {
     /// Whether the pass removed any row or reclaimed any space.
     public var removedAnything: Bool {
         events + messages + turns + sessions + rateLimitSnapshots > 0 || reclaimedBytes > 0
+    }
+}
+
+/// How a storage size reads, wherever it is shown (`steno storage`, the
+/// Storage pane, a trim's "reclaimed"): decimal units with one place after the
+/// point ("512 bytes", "4.1 KB", "69.0 GB"), the same in every locale.
+public enum StorageByteCount {
+    public static func text(_ bytes: Int64) -> String {
+        guard bytes >= 1000 else { return bytes == 1 ? "1 byte" : "\(bytes) bytes" }
+        var value = Double(bytes)
+        var unit = "bytes"
+        for next in ["KB", "MB", "GB", "TB"] where value >= 1000 {
+            value /= 1000
+            unit = next
+        }
+        return String(format: "%.1f %@", locale: Locale(identifier: "en_US_POSIX"), value, unit)
     }
 }
 

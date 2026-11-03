@@ -104,7 +104,7 @@ extension DaemonDatabase {
             let plain = !table.isEmpty && table.unicodeScalars.allSatisfy {
                 CharacterSet.alphanumerics.contains($0) && $0.isASCII || $0 == "_"
             }
-            guard plain, tableHasColumn(table, "session_id") else { return 0 }
+            guard plain, try tableHasColumn(table, "session_id") else { return 0 }
         }
         let page = Self.claudeReadChunk
         // julianday('') is NULL, so a session with no usable clock never passes this.

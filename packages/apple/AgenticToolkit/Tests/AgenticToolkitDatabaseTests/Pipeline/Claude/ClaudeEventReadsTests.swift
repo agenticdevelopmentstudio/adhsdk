@@ -206,6 +206,40 @@ final class ClaudeEventReadsTests: XCTestCase {
         XCTAssertEqual(stamped["file_size_bytes"] as? Int, target.size)
     }
 
+    /// The stamp is spliced in as text: every byte the hook wrote stays, even
+    /// ones a JSON round trip would rewrite (`1.0`, a 2^53+ integer, `\/`, a
+    /// `é` escape, a nested `}` inside a string, a repeated key).
+    func testAStampedDropFileKeepsEveryByteTheHookWrote() throws {
+        let target = try fingerprintedFile("contents")
+        let path = target.path.replacingOccurrences(of: "/", with: "\\/")
+        let original = """
+            { "event" : "ConfigChange", "n": 1.0, "hook_data": {"file_path":"\(path)", \
+            "big": 9007199254740993, "s": "caf\\u00e9 } ]", "dup": 1, "dup": 2, "nested": {"a": [1, {"b": "}"}]} } , \
+            "context": {"x": "y"} }
+            """
+        let data = Data(original.utf8)
+        let out = ClaudeFileFingerprint.stamped(envelope: data)
+        let suffix = #","file_sha256":"\#(target.sha)","file_size_bytes":\#(target.size)"#
+        // `hook_data` closes at the last `}` of "]} }" (nested, then hook_data).
+        let brace = try XCTUnwrap(original.range(of: "]} }"))
+        var expected = original
+        let splice = original.index(brace.lowerBound, offsetBy: 3)
+        expected.insert(contentsOf: suffix, at: splice)
+        XCTAssertEqual(String(bytes: out, encoding: .utf8), expected)
+
+        let decoded = try XCTUnwrap(try JSONSerialization.jsonObject(with: out) as? [String: Any])
+        let hookData = try XCTUnwrap(decoded["hook_data"] as? [String: Any])
+        XCTAssertEqual(hookData["file_sha256"] as? String, target.sha)
+        XCTAssertEqual(hookData["file_size_bytes"] as? Int, target.size)
+        XCTAssertEqual(ClaudeFileFingerprint.stamped(envelope: out), out, "a stamped envelope is stamped once")
+
+        // A one-member object: the stamp follows it after a comma, nothing before it moves.
+        let bare = Data(#"{"event":"ConfigChange","hook_data":{"file_path":"\#(target.path)"}}"#.utf8)
+        let bareOut = ClaudeFileFingerprint.stamped(envelope: bare)
+        XCTAssertNotNil(try JSONSerialization.jsonObject(with: bareOut) as? [String: Any])
+        XCTAssertEqual(bareOut.prefix(bare.count - 2), bare.prefix(bare.count - 2))
+    }
+
     func testDetailOfAnUnknownIdIsNil() throws {
         XCTAssertNil(try database.fetchEventDetail(eventLogId: 999_999))
     }

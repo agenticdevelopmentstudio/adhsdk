@@ -178,26 +178,30 @@ public final class ClaudeTranscriptSource: IngestSource {
             appended += records.count
         }
 
-        let streamed = try JSONLScanner.streamCompleteLineChunks(
+        // Every complete line is archived, one that is not valid UTF-8 included
+        // (lossy text plus its exact bytes): no captured byte is skipped.
+        let streamed = try JSONLScanner.streamCompleteScannedLineChunks(
             at: url, startingAtByte: startOffset, linesPerChunk: linesPerChunk
         ) { lines, through in
             try autoreleasepool {
                 var records: [RawRecord] = []
                 records.reserveCapacity(lines.count)
-                for line in lines {
+                for scanned in lines {
                     lineNo += 1
                     let payload = ClaudeTranscriptPayload(
-                        file: path, lineNo: lineNo, subagentFile: subagent, line: line)
+                        file: path, lineNo: lineNo, subagentFile: subagent, line: scanned.text,
+                        lineBytes: scanned.invalidUTF8Bytes)
                     records.append(RawRecord(
                         provider: provider, sourceKind: ClaudeProvider.transcriptKind,
-                        dedupKey: ClaudeTranscriptPayload.dedupKey(line: line, file: path),
+                        dedupKey: ClaudeTranscriptPayload.dedupKey(
+                            line: scanned.text, file: path, lineBytes: scanned.invalidUTF8Bytes),
                         receivedAt: identity.modified, payload: try ClaudeTranscriptPayload.encode(payload)))
                 }
                 try commit(records, through: through)
             }
         }
-        // Blank or undecodable lines after the last record: step the cursor over them
-        // too, so they are not re-scanned on every wake.
+        // Blank lines after the last record: step the cursor over them too, so they
+        // are not re-scanned on every wake.
         if streamed.bytesConsumed > committed {
             try commit([], through: streamed.bytesConsumed)
         }

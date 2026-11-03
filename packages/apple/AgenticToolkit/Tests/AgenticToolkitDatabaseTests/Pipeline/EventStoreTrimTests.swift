@@ -108,6 +108,44 @@ final class EventStoreTrimTests: XCTestCase {
         XCTAssertEqual(try sessionIDs(store), ["active-empty", "ended-with-turn"])
     }
 
+    /// A row with no time (epoch 0) has an unknown age: a live session keeps it,
+    /// and it goes only with a session that ended before the cutoff (a turn folded
+    /// into `trimmed_turns` like any other).
+    func testUntimedRowsGoOnlyWithASessionThatEndedBeforeTheCutoff() throws {
+        let store = try makeStore()
+        let epoch = Date(timeIntervalSince1970: 0)
+        var batch = NormalizedBatch()
+        for session in ["live", "gone", "ended-late"] {
+            batch.events.append(NormalizedEvent(
+                dedupKey: "e-\(session)", sessionID: session, kind: .toolCall, providerType: "PreToolUse",
+                time: epoch, toolName: "Bash", attrs: [:], rawRef: 1))
+            batch.messages.append(MessageRow(dedupKey: "m-\(session)", uuid: "m-\(session)", sessionID: session,
+                                             role: "user", time: epoch, text: "hi", rawRef: 3))
+            batch.turns.append(TurnRow(dedupKey: "t-\(session)", sessionID: session, time: epoch,
+                                       inputTokens: 7, rawRef: 2))
+        }
+        batch.sessions = [
+            SessionUpsert(sessionID: "live", asOf: date(1), status: "active", startedAt: date(1)),
+            SessionUpsert(sessionID: "gone", asOf: date(5), status: "ended", startedAt: date(1), endedAt: date(5)),
+            SessionUpsert(sessionID: "ended-late", asOf: date(500), status: "ended", endedAt: date(500))
+        ]
+        try store.write(batch, provider: "mock")
+
+        let result = try store.trim(olderThan: date(100).timeIntervalSince1970, deadline: future)
+
+        XCTAssertEqual(result, EventStoreTrimResult(events: 1, messages: 1, turns: 1, sessions: 1, finished: true))
+        XCTAssertEqual(try sessionIDs(store), ["ended-late", "live"])
+        let left = try store.read { conn in
+            try String.fetchAll(conn, sql: "SELECT session_id FROM turns ORDER BY 1")
+        }
+        XCTAssertEqual(left, ["ended-late", "live"])
+        let folded = try store.read { conn in
+            try Row.fetchAll(conn, sql: "SELECT session_id, input_tokens FROM trimmed_turns")
+        }
+        XCTAssertEqual(folded.map { $0["session_id"] as String }, ["gone"])
+        XCTAssertEqual(folded.map { $0["input_tokens"] as Int }, [7])
+    }
+
     func testTrimKeepsAnEndedEmptySessionThatEndedAfterTheCutoff() throws {
         // A session's rows may land after its end record; one that ended inside the
         // kept window is not reaped yet.

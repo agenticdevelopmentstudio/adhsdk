@@ -45,7 +45,7 @@ public struct ClaudeNormalizer: Normalizer {
               let old = try? ClaudeTranscriptPayload.decode(archived.payload),
               let new = try? ClaudeTranscriptPayload.decode(incoming.payload)
         else { return false }
-        return old.line == new.line
+        return old.line == new.line && old.lineBytes == new.lineBytes
     }
 }
 #endif

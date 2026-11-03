@@ -147,9 +147,10 @@ extension EventStore {
         return try body()
     }
 
-    /// Deletes rows with `time < cutoff`, oldest first, `batch` rows per write
+    /// Deletes rows with `0 < time < cutoff`, oldest first, `batch` rows per write
     /// transaction (the writer is released between batches): events, then
-    /// messages, then turns, then the `sessions` rows of this file that are ended
+    /// messages, then turns; then the untimed rows (`time <= 0`, age unknown) of
+    /// sessions that qualify for removal; then the `sessions` rows of this file that are ended
     /// (`status = 'ended'` or `ended_at IS NOT NULL`), not `active`, last observed
     /// before the cutoff (the later of `ended_at` and `as_of`, so a resumed session
     /// with a stale `ended_at` stays), and have no events, messages or turns left.
@@ -198,8 +199,12 @@ extension EventStore {
             }
         }
 
+        // A row with no time (`time <= 0`: the line carried no timestamp) has an
+        // unknown age, not an old one: the time stages skip it, and it goes only
+        // with its session, once that session has ended before the cutoff.
         guard try drain("""
-            DELETE FROM events WHERE id IN (SELECT id FROM events WHERE time < ? ORDER BY time LIMIT ?)
+            DELETE FROM events WHERE id IN (
+                SELECT id FROM events WHERE time > 0 AND time < ? ORDER BY time LIMIT ?)
             """, [cutoff], into: \.events) else { return result }
 
         // `messages_time` leads with provider, so trim one provider at a time.
@@ -212,7 +217,7 @@ extension EventStore {
         for provider in providers {
             guard try drain("""
                 DELETE FROM messages WHERE id IN (
-                    SELECT id FROM messages WHERE provider = ? AND time < ? ORDER BY time LIMIT ?)
+                    SELECT id FROM messages WHERE provider = ? AND time > 0 AND time < ? ORDER BY time LIMIT ?)
                 """, [provider, cutoff], into: \.messages) else { return result }
         }
 
@@ -220,12 +225,27 @@ extension EventStore {
             try Self.foldAndDeleteTurns(olderThan: cutoff, limit: limit, conn)
         }) else { return result }
 
+        // The untimed rows of sessions that ended before the cutoff.
+        guard try drain("""
+            DELETE FROM events WHERE id IN (
+                SELECT e.id FROM events e JOIN sessions s
+                  ON s.provider = e.provider AND s.session_id = e.session_id
+                WHERE e.time <= 0 AND \(Self.endedBefore) LIMIT ?)
+            """, [cutoff], into: \.events) else { return result }
+        guard try drain("""
+            DELETE FROM messages WHERE id IN (
+                SELECT m.id FROM messages m JOIN sessions s
+                  ON s.provider = m.provider AND s.session_id = m.session_id
+                WHERE m.time <= 0 AND \(Self.endedBefore) LIMIT ?)
+            """, [cutoff], into: \.messages) else { return result }
+        guard try drain("", [], into: \.turns, batchWork: { conn in
+            try Self.foldAndDeleteTurns(untimedOfSessionsEndedBefore: cutoff, limit: limit, conn)
+        }) else { return result }
+
         guard try drain("""
             DELETE FROM sessions WHERE (provider, session_id) IN (
                 SELECT s.provider, s.session_id FROM sessions s
-                WHERE (s.status = 'ended' OR s.ended_at IS NOT NULL)
-                  AND s.status IS NOT 'active'
-                  AND MAX(COALESCE(s.ended_at, s.as_of), s.as_of) < ?
+                WHERE \(Self.endedBefore)
                   AND NOT EXISTS (SELECT 1 FROM events e
                                   WHERE e.provider = s.provider AND e.session_id = s.session_id)
                   AND NOT EXISTS (SELECT 1 FROM messages m
@@ -247,12 +267,35 @@ extension EventStore {
     /// already recorded (stored again by a replay into this file) is deleted without
     /// being added again. Returns the turns deleted.
     static func foldAndDeleteTurns(olderThan cutoff: Double, limit: Int, _ conn: Database) throws -> Int {
+        try foldAndDeleteTurns(selecting: """
+            SELECT id FROM turns WHERE time > 0 AND time < ? ORDER BY time, id LIMIT ?
+            """, arguments: [cutoff, limit], conn)
+    }
+
+    /// One batch of untimed turns (`time <= 0`) of sessions that ended before
+    /// `cutoff` (``endedBefore``), folded and deleted like any other.
+    static func foldAndDeleteTurns(untimedOfSessionsEndedBefore cutoff: Double, limit: Int,
+                                   _ conn: Database) throws -> Int {
+        try foldAndDeleteTurns(selecting: """
+            SELECT t.id FROM turns t JOIN sessions s ON s.provider = t.provider AND s.session_id = t.session_id
+            WHERE t.time <= 0 AND \(endedBefore) LIMIT ?
+            """, arguments: [cutoff, limit], conn)
+    }
+
+    /// A session the trim may remove (its rows first): ended (`status = 'ended'`
+    /// or `ended_at IS NOT NULL`), not `active`, last observed before the bound
+    /// cutoff. Alias `s`; one `?`.
+    static let endedBefore = """
+        (s.status = 'ended' OR s.ended_at IS NOT NULL)
+          AND s.status IS NOT 'active'
+          AND MAX(COALESCE(s.ended_at, s.as_of), s.as_of) < ?
+        """
+
+    private static func foldAndDeleteTurns(selecting selection: String, arguments: StatementArguments,
+                                           _ conn: Database) throws -> Int {
         try conn.execute(sql: "CREATE TEMP TABLE IF NOT EXISTS trim_turn_batch (id INTEGER PRIMARY KEY)")
         try conn.execute(sql: "DELETE FROM temp.trim_turn_batch")
-        try conn.execute(sql: """
-            INSERT INTO temp.trim_turn_batch(id)
-            SELECT id FROM turns WHERE time < ? ORDER BY time, id LIMIT ?
-            """, arguments: [cutoff, limit])
+        try conn.execute(sql: "INSERT INTO temp.trim_turn_batch(id) \(selection)", arguments: arguments)
         try conn.execute(sql: """
             INSERT INTO trimmed_turns(provider, session_id, model, turn_count, input_tokens, output_tokens,
                                       cache_read_tokens, cache_write_tokens, cache_write_1h_tokens,

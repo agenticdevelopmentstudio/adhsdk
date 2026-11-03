@@ -83,6 +83,7 @@ public struct TrimHold: Sendable, Equatable {
 /// nothing and reports `waitingFor: "rollups"`. A `hold` (the daemon's billing,
 /// for one) can hold the cutoff back further; when it does, the pass still
 /// trims up to the held cutoff and reports the hold's reason in `waitingFor`.
+/// A hold that cannot be read fails closed: the pass deletes nothing.
 ///
 /// **Bounded.** Deletes are batches of 500, one transaction each. The pass stops
 /// at `deadline` with `finished = false`; a rerun continues from the same cutoff.
@@ -120,7 +121,7 @@ public final class TrimService: Sendable {
     private let historyDays: Int
     private let coveredThroughDay: @Sendable () -> String?
     private let snapshotsReadThrough: (@Sendable () -> Int?)?
-    private let hold: (@Sendable () -> TrimHold?)?
+    private let hold: (@Sendable () throws -> TrimHold?)?
     private let extraMainTrims: [@Sendable (_ cutoff: Double, _ deadline: Date) throws -> Int]
     private let now: @Sendable () -> Date
 
@@ -128,7 +129,9 @@ public final class TrimService: Sendable {
     ///   - coveredThroughDay: the last `yyyy-MM-dd` UTC day every rollup has
     ///     frozen (the earlier of the watermarks); nil while any is missing.
     ///   - hold: a last day the trim may reach for another reason, and that
-    ///     reason; nil (or a nil hold) holds nothing back.
+    ///     reason; nil (or a nil hold) holds nothing back. It fails closed: a
+    ///     hold that throws, or names a day that does not parse, deletes nothing
+    ///     and reports the pass unfinished, waiting for it.
     ///   - snapshotsReadThrough: when given, the highest `rate_limit_snapshots.id`
     ///     the daemon's own readers have consumed; rows above it are never
     ///     deleted, and nil from it deletes no snapshot.
@@ -137,7 +140,7 @@ public final class TrimService: Sendable {
         database: DaemonDatabase, eventStore: EventStore?, historyDays: Int,
         coveredThroughDay: @escaping @Sendable () -> String?,
         snapshotsReadThrough: (@Sendable () -> Int?)? = nil,
-        hold: (@Sendable () -> TrimHold?)? = nil,
+        hold: (@Sendable () throws -> TrimHold?)? = nil,
         extraMainTrims: [@Sendable (_ cutoff: Double, _ deadline: Date) throws -> Int] = [],
         now: @escaping @Sendable () -> Date = Date.init
     ) {
@@ -208,6 +211,17 @@ public final class TrimService: Sendable {
 
     // MARK: - Pass
 
+    /// Ends a pass that deletes nothing because its hold could not be honoured:
+    /// waiting on `reason`, unfinished, stored.
+    private func heldBack(_ report: inout TrimReport, reason: String, _ message: String) -> TrimReport {
+        report.waitingFor = reason
+        report.finished = false
+        report.finishedAt = now().timeIntervalSince1970
+        logger.error("\(message, privacy: .public)")
+        store(report)
+        return report
+    }
+
     /// One pass. Each stage records its own failure in `error` and the later
     /// stages still run; the report is stored before it is returned.
     public func run(deadline: Date) throws -> TrimReport {
@@ -223,12 +237,27 @@ public final class TrimService: Sendable {
             return report
         }
         var cutoff = unheld
-        if let held = hold?(), held.day < covered,
-           let heldCutoff = Self.cutoff(now: started, historyDays: historyDays, coveredThroughDay: held.day),
-           heldCutoff < unheld {
-            cutoff = heldCutoff
-            report.waitingFor = held.reason
-            logger.info("Trim held back to \(held.day, privacy: .public): \(held.reason, privacy: .public)")
+        // The hold fails closed: one that cannot be read, or names a day that is
+        // not a day, deletes nothing this pass.
+        let held: TrimHold?
+        do {
+            held = try hold?()
+        } catch {
+            return heldBack(&report, reason: Self.waitingForBilling,
+                            "Trim deleted nothing: the hold could not be read: \(error.localizedDescription)")
+        }
+        if let held {
+            guard Self.dayStart(held.day) != nil,
+                  let heldCutoff = Self.cutoff(now: started, historyDays: historyDays, coveredThroughDay: held.day)
+            else {
+                return heldBack(&report, reason: held.reason,
+                                "Trim deleted nothing: the hold names no day (\(held.day))")
+            }
+            if held.day < covered, heldCutoff < unheld {
+                cutoff = heldCutoff
+                report.waitingFor = held.reason
+                logger.info("Trim held back to \(held.day, privacy: .public): \(held.reason, privacy: .public)")
+            }
         }
         report.cutoff = cutoff
         let bytesBefore = totalBytes()
@@ -327,16 +356,24 @@ public final class TrimService: Sendable {
     /// never one above `snapshotsReadThrough`. Returns the rows deleted and
     /// whether it finished before the deadline.
     private func trimSnapshots(before cutoff: Double, deadline: Date) throws -> (Int, Bool) {
-        guard database.tableExists("rate_limit_snapshots") else { return (0, true) }
+        guard try database.tableExists("rate_limit_snapshots") else { return (0, true) }
         var ceiling = Int64.max
         if let snapshotsReadThrough {
             guard let readThrough = snapshotsReadThrough() else { return (0, true) }
             ceiling = Int64(readThrough)
         }
-        let hasAccount = database.tableHasColumn("rate_limit_snapshots", "account_email")
+        let hasAccount = try database.tableHasColumn("rate_limit_snapshots", "account_email")
         let newest = hasAccount
             ? "SELECT MAX(id) FROM rate_limit_snapshots GROUP BY account_email"
             : "SELECT MAX(id) FROM rate_limit_snapshots"
+        // The keep set, read once rather than inside every batch's DELETE (a scan
+        // of the account index each time). Safe to hold: a row inserted meanwhile
+        // has a higher id, so a "newest" deleted later still has a newer sibling.
+        var keep: [Int64] = []
+        try database.query(newest) { row in
+            if let id: Int64 = row[0] { keep.append(id) }
+        }
+        let keepJSON = "[" + keep.map(String.init).joined(separator: ",") + "]"
         // ISO-8601 TEXT sorts by day first, so "< yyyy-MM-dd" is "before that midnight".
         let day = UTCDay.string(from: Date(timeIntervalSince1970: cutoff))
         var total = 0
@@ -348,9 +385,9 @@ public final class TrimService: Sendable {
                 try conn.execute(sql: """
                     DELETE FROM rate_limit_snapshots WHERE id IN (
                         SELECT id FROM rate_limit_snapshots
-                        WHERE timestamp < ? AND id <= ? AND id NOT IN (\(newest))
+                        WHERE timestamp < ? AND id <= ? AND id NOT IN (SELECT value FROM json_each(?))
                         ORDER BY timestamp LIMIT ?)
-                    """, arguments: [day, ceiling, Self.batchSize])
+                    """, arguments: [day, ceiling, keepJSON, Self.batchSize])
                 return conn.changesCount
             }
             total += deleted

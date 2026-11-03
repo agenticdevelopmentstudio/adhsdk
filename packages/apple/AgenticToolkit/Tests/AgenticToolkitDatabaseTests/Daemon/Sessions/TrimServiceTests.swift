@@ -45,13 +45,19 @@ final class TrimServiceTests: XCTestCase {
         historyDays: Int = 7, covered: String?, eventStore: EventStore?? = .none,
         snapshotsReadThrough: (@Sendable () -> Int?)? = nil,
         hold: TrimHold? = nil,
+        holdFails: Bool = false,
         extra: [@Sendable (Double, Date) throws -> Int] = []
     ) -> TrimService {
         TrimService(
             database: database, eventStore: eventStore ?? store, historyDays: historyDays,
             coveredThroughDay: { covered }, snapshotsReadThrough: snapshotsReadThrough,
-            hold: { hold }, extraMainTrims: extra, now: { Self.now })
+            hold: {
+                if holdFails { throw HoldUnreadable() }
+                return hold
+            }, extraMainTrims: extra, now: { Self.now })
     }
+
+    private struct HoldUnreadable: Error {}
 
     /// One event, turn and message for `session`, `daysAgo` before now (at noon).
     private func storeRows(_ session: String, daysAgo: Int, key: String? = nil) throws {
@@ -169,6 +175,34 @@ final class TrimServiceTests: XCTestCase {
         let unheld = try service(covered: Self.day(1), hold: loose).run(deadline: future)
         XCTAssertEqual(unheld.cutoff, Self.midnight(7))
         XCTAssertNil(unheld.waitingFor)
+    }
+
+    /// The hold fails closed: one that cannot be read, or names no day, deletes
+    /// nothing at all and reports the pass unfinished, waiting for billing.
+    func testAHoldThatCannotBeReadDeletesNothing() throws {
+        try storeRows("s", daysAgo: 40)
+        try snapshot("\(Self.day(40))T01:00:00Z", account: "a@x")
+        try snapshot("\(Self.day(39))T01:00:00Z", account: "a@x")
+        let extra: @Sendable (Double, Date) throws -> Int = { _, _ in
+            XCTFail("no main-db trim runs while the hold is unreadable")
+            return 0
+        }
+
+        for report in [
+            try service(covered: Self.day(1), holdFails: true, extra: [extra]).run(deadline: future),
+            try service(covered: Self.day(1), hold: TrimHold(day: "not a day", reason: "billing"))
+                .run(deadline: future)
+        ] {
+            XCTAssertNil(report.cutoff)
+            XCTAssertEqual(report.waitingFor, "billing")
+            XCTAssertFalse(report.finished)
+            XCTAssertEqual(report.turns, 0)
+            XCTAssertEqual(report.rateLimitSnapshots, 0)
+            XCTAssertEqual(TrimService.lastReport(database)?.waitingFor, "billing")
+        }
+        XCTAssertEqual(try count("turns"), 1)
+        XCTAssertEqual(try count("events"), 1)
+        XCTAssertEqual(try snapshotRows().count, 2)
     }
 
     // MARK: - Snapshots

@@ -48,7 +48,7 @@ final class SessionSchemaTests: XCTestCase {
         try store.query("SELECT MAX(version) FROM schema_migrations") { row in newest = store.int(row, 0) }
         XCTAssertEqual(newest, 45)
         for table in ["sessions", "event_log", "settings", "transcript_turns", "ingestion_errors"] {
-            XCTAssertTrue(store.tableExists(table), "\(table) should exist")
+            XCTAssertTrue(try store.tableExists(table), "\(table) should exist")
         }
     }
 

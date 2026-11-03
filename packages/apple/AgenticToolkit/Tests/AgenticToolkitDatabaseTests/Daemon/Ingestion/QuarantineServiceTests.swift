@@ -108,6 +108,27 @@ final class QuarantineServiceTests: XCTestCase {
         XCTAssertEqual(service.list().first?.filename, "error-one.json")
     }
 
+    /// Clear marks only the log rows of files it removed: a kept file's row stays
+    /// active, so the badge still counts it and a later retry can resolve it.
+    func testClearLeavesTheLogRowOfAKeptFileActive() throws {
+        let (database, path) = try TestDaemonDatabase.makeSessionDatabase()
+        defer { try? FileManager.default.removeItem(atPath: path) }
+        let service = QuarantineService(errorsDirectory: errorsDir, database: database, preserveRaw: { url in
+            if url.lastPathComponent == "error-kept.json" { throw Refused() }
+        })
+        for name in ["error-kept.json", "error-gone.json"] {
+            service.recordInitialQuarantine(eventURL: try quarantineFile(name), reason: "r", code: nil, parsed: nil)
+        }
+
+        service.clear()
+
+        XCTAssertEqual(service.list().map(\.filename), ["error-kept.json"])
+        let rows = Dictionary(uniqueKeysWithValues: try database.recentIngestionErrors()
+            .map { ($0.filename, $0.status) })
+        XCTAssertEqual(rows["error-gone.json"], "cleared")
+        XCTAssertEqual(rows["error-kept.json"], "failing")
+    }
+
     /// An untrackable event a retry discards is preserved before it is deleted.
     func testASkippedRetryPreservesTheFileBeforeDiscardingIt() throws {
         let preserved = Preserved()

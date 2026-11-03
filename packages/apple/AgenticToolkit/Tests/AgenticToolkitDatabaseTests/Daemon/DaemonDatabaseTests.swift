@@ -65,10 +65,10 @@ final class DaemonDatabaseTests: XCTestCase {
         let counter = Counter()
         let store = try DaemonDatabase(path: path, deferMigrations: true, migrations: twoMigrations(counter))
         XCTAssertFalse(store.isReady)
-        XCTAssertFalse(store.tableExists("schema_migrations"))
+        XCTAssertFalse(try store.tableExists("schema_migrations"))
         try store.migrateNow()
         XCTAssertTrue(store.isReady)
-        XCTAssertTrue(store.tableExists("schema_migrations"))
+        XCTAssertTrue(try store.tableExists("schema_migrations"))
     }
 
     func testDefaultInitIsReadyImmediately() throws {

@@ -241,6 +241,97 @@ final class SettingsSnapshotPushTests: XCTestCase {
         await push.awaitPendingPush()
     }
 
+    // MARK: - Receiver-owned (pull)
+
+    /// The receiver's value, changeable behind the push's back (a CLI).
+    private final class Remote: @unchecked Sendable {
+        private let lock = NSLock()
+        private var stored: Int
+        private var readCount = 0
+        init(_ value: Int) { stored = value }
+        var value: Int {
+            get { lock.withLock { stored } }
+            set { lock.withLock { stored = newValue } }
+        }
+        var reads: Int { lock.withLock { readCount } }
+        func read() -> Int { lock.withLock { readCount += 1; return stored } }
+    }
+
+    /// Final review (super) Important 1: with `pull`, the start and every
+    /// reconnect read the receiver's value; the stored one is never sent back.
+    func testAPullingPushReadsOnStartAndReconnectAndSendsOnlyLocalChanges() async {
+        let received = Received(failures: 0)
+        let remote = Remote(30)
+        var reconnect: (@Sendable () -> Void)?
+        var local = 7
+        let push = SettingsSnapshotPush(
+            label: "Test", logger: logger, backoffs: [0],
+            snapshot: { SettingsSnapshotPush.encodeSorted(["value": local]) },
+            send: { await received.take($0) },
+            registerReconnect: { reconnect = $0 },
+            pull: { let value = remote.read(); return { local = value } }
+        )
+        push.start(makeObservers: { _ in [] })
+        await settle(push)
+        XCTAssertEqual(local, 30, "the start took the receiver's value")
+        var bodies = await received.bodies
+        XCTAssertEqual(bodies.count, 0, "nothing sent at start")
+
+        remote.value = 365
+        reconnect?()
+        await settle(push)
+        XCTAssertEqual(local, 365, "the reconnect took the receiver's new value")
+        push.push()   // the observer's echo of the pulled value
+        await settle(push)
+        bodies = await received.bodies
+        XCTAssertEqual(bodies.count, 0, "an echo of the receiver's own value is not sent")
+
+        local = 90
+        push.push()
+        await settle(push)
+        bodies = await received.bodies
+        XCTAssertEqual(bodies, [Data(#"{"value":90}"#.utf8)])
+
+        remote.value = 14
+        push.refresh()
+        await settle(push)
+        XCTAssertEqual(local, 14, "refresh() reads the receiver too")
+        push.stop()
+    }
+
+    /// A local change still waiting to land is newer than the receiver's
+    /// value: neither a reconnect nor refresh() reads over it.
+    func testAPullNeverOverwritesAnUndeliveredLocalChange() async throws {
+        let received = Received(failures: 1)
+        let remote = Remote(30)
+        var reconnect: (@Sendable () -> Void)?
+        var local = 0
+        let push = SettingsSnapshotPush(
+            label: "Test", logger: logger, backoffs: [0],
+            reconnectDelay: { _ in 60_000_000 },
+            snapshot: { SettingsSnapshotPush.encodeSorted(["value": local]) },
+            send: { await received.take($0) },
+            registerReconnect: { reconnect = $0 },
+            pull: { let value = remote.read(); return { local = value } }
+        )
+        push.start(makeObservers: { _ in [] })
+        await settle(push)
+        let readsAfterStart = remote.reads
+
+        local = 90
+        push.push()                           // fails once; a retry is scheduled
+        try await Task.sleep(for: .milliseconds(10))
+        reconnect?()
+        push.refresh()
+        try await Task.sleep(for: .milliseconds(10))
+        XCTAssertEqual(remote.reads, readsAfterStart, "no read while the change waits")
+        await settle(push)
+        XCTAssertEqual(local, 90)
+        let bodies = await received.bodies
+        XCTAssertEqual(bodies, [Data(#"{"value":90}"#.utf8)], "the retry landed the user's change")
+        push.stop()
+    }
+
     func testEncodesWithSortedKeys() {
         let body = SettingsSnapshotPush.encodeSorted(["b": "2", "a": "1"])
         XCTAssertEqual(body, Data(#"{"a":"1","b":"2"}"#.utf8))
