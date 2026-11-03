@@ -105,6 +105,52 @@ public struct StorageStatusDTO: Codable, Sendable, Equatable {
     }
 }
 
+/// The event history windows a daemon keeps, and how any other number of days
+/// maps onto them. One copy for the daemon that stores the window and every
+/// client that offers it.
+public enum StorageHistoryWindow {
+    /// The windows that can be chosen, in days, smallest first.
+    public static let allowedDays = [7, 14, 30, 60, 90, 180, 365]
+
+    /// The window when nothing usable is stored.
+    public static let defaultDays = 30
+
+    /// The allowed window `days` means: the smallest allowed value at or above
+    /// it, the largest for anything bigger. An empty `allowed` returns `days`.
+    public static func snap(_ days: Int, allowed: [Int] = allowedDays) -> Int {
+        let sorted = allowed.sorted()
+        guard let largest = sorted.last else { return days }
+        return sorted.first { $0 >= days } ?? largest
+    }
+}
+
+extension TrimReportDTO {
+    /// What the pass removed, in words: "removed 1 event, 12 messages, 3 usage
+    /// snapshots; reclaimed 4 KB". Zero counts are left out, and so is the
+    /// reclaimed space when it is zero; a pass that removed no row reads
+    /// "nothing removed". The CLI and the app both print this.
+    public var removalSummary: String {
+        let counts: [(Int, String, String)] = [
+            (events, "event", "events"),
+            (messages, "message", "messages"),
+            (turns, "turn", "turns"),
+            (sessions, "session", "sessions"),
+            (rateLimitSnapshots, "usage snapshot", "usage snapshots")
+        ]
+        let parts = counts.filter { $0.0 > 0 }.map { "\($0.0) \($0.0 == 1 ? $0.1 : $0.2)" }
+        var summary = parts.isEmpty ? "nothing removed" : "removed " + parts.joined(separator: ", ")
+        if reclaimedBytes > 0 {
+            summary += "; reclaimed " + ByteCountFormatter.string(fromByteCount: reclaimedBytes, countStyle: .file)
+        }
+        return summary
+    }
+
+    /// Whether the pass removed any row or reclaimed any space.
+    public var removedAnything: Bool {
+        events + messages + turns + sessions + rateLimitSnapshots > 0 || reclaimedBytes > 0
+    }
+}
+
 /// The body of a change to the storage preferences.
 public struct StoragePreferencesRequestDTO: Codable, Sendable, Equatable {
     /// The new history window; snapped to an allowed value by the daemon.
