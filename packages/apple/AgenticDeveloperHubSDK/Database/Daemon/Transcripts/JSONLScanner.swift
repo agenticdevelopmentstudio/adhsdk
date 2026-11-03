@@ -499,8 +499,11 @@ public enum JSONLScanner {
     /// Summing the emitted lines' lengths cannot give that offset: blank lines and
     /// lines that are not valid UTF-8 consume bytes but never reach `body`, so a sum
     /// can land the cursor inside a line and re-read its tail as a new one. The
-    /// offset also covers any blank or skipped lines *before* the chunk's last line;
-    /// those after it are only in the returned ``StreamResult/bytesConsumed``.
+    /// offset also covers any blank or skipped lines *before* the chunk's last line
+    /// (and a skipped line scanned into the same chunk after it); later ones are
+    /// only in the returned ``StreamResult/bytesConsumed``. A caller that must keep
+    /// the undecodable lines uses
+    /// ``streamCompleteScannedLineChunks(at:startingAtByte:linesPerChunk:bufferSize:_:)``.
     @discardableResult
     public static func streamCompleteLineChunks(
         at url: URL,
@@ -508,6 +511,52 @@ public enum JSONLScanner {
         linesPerChunk: Int = 500,
         bufferSize: Int = 1 << 20,
         _ body: (_ lines: [String], _ consumedThrough: Int64) throws -> Void
+    ) throws -> StreamResult {
+        var invalid = 0
+        let result = try streamCompleteScannedLineChunks(
+            at: url, startingAtByte: startOffset, linesPerChunk: linesPerChunk, bufferSize: bufferSize
+        ) { lines, through in
+            let texts = lines.compactMap { $0.invalidUTF8Bytes == nil ? $0.text : nil }
+            invalid += lines.count - texts.count
+            if !texts.isEmpty { try body(texts, through) }
+        }
+        return StreamResult(
+            bytesConsumed: result.bytesConsumed, linesEmitted: result.linesEmitted - invalid,
+            linesSkipped: invalid)
+    }
+
+    /// One complete line from
+    /// ``streamCompleteScannedLineChunks(at:startingAtByte:linesPerChunk:bufferSize:_:)``.
+    public struct ScannedLine: Sendable, Equatable {
+        /// The line without its newline: verbatim when its bytes are UTF-8,
+        /// otherwise decoded with U+FFFD in place of each invalid sequence.
+        public let text: String
+        /// The line's exact bytes when they are not valid UTF-8 (so `text` is
+        /// lossy); nil for every valid line.
+        public let invalidUTF8Bytes: Data?
+        /// The absolute byte offset in the file where the line starts: its
+        /// position, which tells two byte-identical lines apart.
+        public let startOffset: Int64
+
+        public init(text: String, invalidUTF8Bytes: Data? = nil, startOffset: Int64 = 0) {
+            self.text = text
+            self.invalidUTF8Bytes = invalidUTF8Bytes
+            self.startOffset = startOffset
+        }
+    }
+
+    /// ``streamCompleteLineChunks(at:startingAtByte:linesPerChunk:bufferSize:_:)``
+    /// that drops nothing: a complete line whose bytes are not valid UTF-8 is
+    /// handed to `body` too, as lossy text plus its exact bytes, so a caller
+    /// that must keep every byte (the raw archive) can. ``StreamResult/linesSkipped``
+    /// is always 0 here; such lines count in ``StreamResult/linesEmitted``.
+    @discardableResult
+    public static func streamCompleteScannedLineChunks(
+        at url: URL,
+        startingAtByte startOffset: Int64 = 0,
+        linesPerChunk: Int = 500,
+        bufferSize: Int = 1 << 20,
+        _ body: (_ lines: [ScannedLine], _ consumedThrough: Int64) throws -> Void
     ) throws -> StreamResult {
         let handle = try FileHandle(forReadingFrom: url)
         defer { try? handle.close() }
@@ -517,7 +566,6 @@ public enum JSONLScanner {
         /// `consumed` as of the last line put into `chunk`.
         var consumedThroughLastLine = startOffset
         var emitted = 0
-        var skipped = 0
         var pending: [UInt8] = []
         /// How much of `pending` has already been examined for a newline.
         ///
@@ -528,7 +576,7 @@ public enum JSONLScanner {
         /// stalls while `bytesRead` still reports normal progress, which makes it
         /// look like slow I/O rather than a scan defect.
         var scanned = 0
-        var chunk: [String] = []
+        var chunk: [ScannedLine] = []
         chunk.reserveCapacity(linesPerChunk)
 
         func flushChunk() throws {
@@ -554,14 +602,19 @@ public enum JSONLScanner {
                     defer { index += 1 }
                     guard pending[index] == 0x0A else { continue }
                     let lineBytes = pending[lineStart..<index]
+                    let lineOffset = consumed
                     consumed += Int64(index - lineStart + 1)
                     lineStart = index + 1
                     guard !lineBytes.isEmpty else { continue }
-                    guard let text = String(bytes: lineBytes, encoding: .utf8) else {
-                        skipped += 1
-                        continue
+                    if let text = String(bytes: lineBytes, encoding: .utf8) {
+                        chunk.append(ScannedLine(text: text, startOffset: lineOffset))
+                    } else {
+                        // Lossy on purpose: the exact bytes ride along beside it.
+                        // swiftlint:disable:next optional_data_string_conversion
+                        let lossy = String(decoding: lineBytes, as: UTF8.self)
+                        chunk.append(ScannedLine(
+                            text: lossy, invalidUTF8Bytes: Data(lineBytes), startOffset: lineOffset))
                     }
-                    chunk.append(text)
                     consumedThroughLastLine = consumed
                     emitted += 1
                     if chunk.count >= linesPerChunk { try flushChunk() }
@@ -591,14 +644,14 @@ public enum JSONLScanner {
             let tailData = Data(pending)
             guard let tail = String(data: tailData, encoding: .utf8),
                   (try? JSONSerialization.jsonObject(with: tailData)) != nil else { return }
-            chunk.append(tail)
+            chunk.append(ScannedLine(text: tail, startOffset: consumed))
             emitted += 1
             consumed += Int64(pending.count)
             consumedThroughLastLine = consumed
         }
         try flushChunk()
 
-        return StreamResult(bytesConsumed: consumed, linesEmitted: emitted, linesSkipped: skipped)
+        return StreamResult(bytesConsumed: consumed, linesEmitted: emitted, linesSkipped: 0)
     }
 
     /// Cheap identity fingerprint for a transcript file: SHA-256 over TWO

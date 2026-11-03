@@ -115,6 +115,12 @@ public enum Replayer {
             var combined = NormalizedBatch()
             for archived in page {
                 report.records += 1
+                // A conflict copy is kept bytes only; the live drain derives
+                // nothing from it either.
+                if archived.record.isConflictCopy {
+                    report.normalized += 1
+                    continue
+                }
                 do {
                     combined.append(try source.normalizer.normalize(archived))
                     report.normalized += 1

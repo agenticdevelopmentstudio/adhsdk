@@ -4,96 +4,62 @@ import Foundation
 import GRDB
 import OSLog
 
-/// Deletes old events and empty ended sessions from the daemon database.
+/// The empty-session reaper: deletes main-db sessions that are ended and have
+/// nothing left anywhere.
 ///
-/// **Opt-in.** Retention permanently deletes event history, so it stays off until
-/// `retention_enabled` is explicitly truthy by Core's `RawSetting.bool` rule
-/// (1/true/yes/on, any case) in the settings table — see ``isEnabled(_:)``. A seeded
-/// `retention_days` is the deletion *window*, not consent to delete.
+/// It never deletes event history; that is `TrimService`'s job, and trimming
+/// never deletes a main-db `sessions` row. A session is reaped only when all of
+/// these hold:
+/// - it is ended;
+/// - `events.db` has no events, messages or turns for it (an absent store
+///   reaps nothing);
+/// - no table named in `keepSessionTables` (a daemon's per-session summaries,
+///   such as Stenographer's `session_summary`) has a row for it;
+/// - its `last_activity_at` is before `lastActivityBefore`, the cutoff of a trim
+///   pass that finished (an unparseable or empty `last_activity_at` keeps it).
 ///
-/// **Chunked.** One ``runOnce()`` deletes at most ``batchSize`` events, then reports
-/// ``Outcome/rerun`` while more remain, so a multi-month backlog drains across many
-/// short passes instead of holding the write lane for minutes. The caller owns the
-/// schedule and re-runs on `.rerun`.
+/// The caller runs it only after such a pass: with no cutoff there is nothing
+/// to reap against, and a fresh install must delete nothing.
 ///
-/// **Ceiling.** `finalizedThrough` returns the latest `yyyy-MM-dd` UTC day whose
-/// events may be deleted. A daemon that freezes events into rollups before deleting
-/// them passes its rollup watermark; one with no rollup passes `{ nil }`, and `nil`
-/// means "no ceiling" — age alone decides.
+/// A session that trimming emptied keeps its summary row, so it is never reaped
+/// and keeps its title, project, tokens and cost.
+///
+/// **Chunked.** One ``runOnce()`` reaps at most `DaemonDatabase.emptySessionReapBatch`
+/// sessions and reports ``Outcome/rerun`` while more may remain.
 public struct RetentionService: Sendable {
-    /// Events deleted per pass.
-    public static let batchSize = 50
-    /// The window used when `retention_days` holds no integer.
-    public static let defaultRetentionDays = 7
 
     /// What a pass left behind.
     public enum Outcome: Sendable, Equatable {
-        /// The backlog is drained for this cycle.
+        /// Nothing more to reap this cycle.
         case complete
-        /// A full batch was deleted; more remain, so run again at once.
+        /// A full batch was reaped; more may remain, so run again.
         case rerun
     }
 
     public let database: DaemonDatabase
-    public let retentionDays: Int
-    public let finalizedThrough: @Sendable () throws -> String?
+    public let keepSessionTables: [String]
+    /// Epoch seconds: only sessions last active before this are reaped.
+    public let lastActivityBefore: Double
 
-    public init(
-        database: DaemonDatabase,
-        retentionDays: Int,
-        finalizedThrough: @escaping @Sendable () throws -> String?
-    ) {
+    public init(database: DaemonDatabase, lastActivityBefore: Double, keepSessionTables: [String] = []) {
         self.database = database
-        self.retentionDays = retentionDays
-        self.finalizedThrough = finalizedThrough
+        self.lastActivityBefore = lastActivityBefore
+        self.keepSessionTables = keepSessionTables
     }
 
-    /// Retention is opt-in: enabled only when `retention_enabled` is explicitly
-    /// truthy. Absent, empty or anything else means disabled — the safe default for an
-    /// operation that permanently deletes user data.
-    public static func isEnabled(_ database: DaemonDatabase) -> Bool {
-        RawSetting.bool((try? database.setting(for: "retention_enabled")) ?? nil, default: false)
-    }
-
-    /// The deletion window: `retention_days` when it holds an integer, else `fallback`.
-    public static func effectiveRetentionDays(
-        _ database: DaemonDatabase, fallback: Int = defaultRetentionDays
-    ) -> Int {
-        if let raw = try? database.setting(for: "retention_days"), let days = Int(raw) {
-            return days
-        }
-        return fallback
-    }
-
-    /// One pass: a batch of old events, then — once events are drained — a batch of
-    /// empty ended sessions.
+    /// One batch of empty ended sessions.
     public func runOnce() throws -> Outcome {
         do {
-            let deleted = try database.deleteOldEvents(
-                olderThanDays: retentionDays,
-                batchSize: Self.batchSize,
-                notAfterDay: try finalizedThrough()
-            )
-            if deleted >= Self.batchSize {
-                // More to delete — yield the queue and re-fire so other DB-queue
-                // waiters can interleave.
-                logger.debug("Retention batch deleted \(deleted) event(s); rescheduling")
+            let reaped = try database.deleteEndedSessionsWithNoEvents(
+                keepSessionTables: keepSessionTables, lastActivityBefore: lastActivityBefore)
+            if reaped >= DaemonDatabase.emptySessionReapBatch {
+                logger.debug("Reaped \(reaped) empty session(s); rescheduling")
                 return .rerun
             }
-            // Event backlog drained for this cycle. Reap empty ended sessions, which
-            // is itself batched (LIMIT); if it hit the cap there are more, so
-            // reschedule to drain the rest instead of leaving them for tomorrow.
-            let deletedSessions = try database.deleteEndedSessionsWithNoEvents()
-            if deletedSessions >= DaemonDatabase.emptySessionReapBatch {
-                logger.debug("Retention reaped \(deletedSessions) empty session(s); rescheduling")
-                return .rerun
-            }
-            logger.info(
-                "Retention cleanup complete — final batch \(deleted) event(s), \(deletedSessions) empty session(s)"
-            )
+            logger.info("Empty-session reap complete — \(reaped) session(s)")
             return .complete
         } catch {
-            logger.error("Retention cleanup failed: \(error.localizedDescription, privacy: .public)")
+            logger.error("Empty-session reap failed: \(error.localizedDescription, privacy: .public)")
             throw error
         }
     }
@@ -105,83 +71,69 @@ extension RetentionService: Loggable {
 
 extension DaemonDatabase {
 
-    // MARK: - Retention
-
-    /// Deletes up to `batchSize` event_log rows older than `days`. Single batch only —
-    /// the caller loops (see ``RetentionService``). That shares the write lane fairly
-    /// with ingest + read handlers instead of holding it across an entire multi-month
-    /// backlog. When `notAfterDay` (a `yyyy-MM-dd` UTC day) is supplied, deletion is
-    /// additionally capped to events on that day or earlier — a rollup watermark, so a
-    /// day's source is never deleted before it is frozen into a daily metric. nil = no
-    /// cap.
-    @discardableResult
-    public func deleteOldEvents(
-        olderThanDays days: Int,
-        batchSize: Int = 50,
-        notAfterDay: String? = nil
-    ) throws -> Int {
-        let fmt = ISO8601DateFormatter()
-        fmt.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-        let cutoff = fmt.string(from: Date.now.addingTimeInterval(-Double(days) * 86400))
-        // "<day>T99" sorts above every real timestamp on that UTC day but below
-        // the next day (same trick as the daily-metric recompute); index-friendly.
-        let watermarkClause = notAfterDay != nil ? "AND timestamp <= ?" : ""
-        var params: [any Sendable] = [cutoff]
-        if let notAfterDay { params.append(notAfterDay + "T99") }
-        params.append(batchSize)
-        return try write { database in
-            try execute("""
-                DELETE FROM event_log
-                WHERE rowid IN (
-                    SELECT rowid FROM event_log
-                    WHERE timestamp <= ? \(watermarkClause)
-                    LIMIT ?
-                )
-            """, params: params)
-            return Int(database.changesCount)
-        }
-    }
+    // MARK: - Empty-session reaping
 
     /// Per-cycle cap on empty-ended-session reaping, shared with ``RetentionService``
     /// so it knows a full batch means "more remain, reschedule".
     public static let emptySessionReapBatch = 500
 
     /// Deletes up to `batchSize` ended sessions that have nothing in the event
-    /// store: no `events` row and no `turns` row for the Claude provider.
+    /// store (no Claude `events`, `messages` or `turns` row) and no row, by
+    /// `session_id`, in any of `keepSessionTables`; with `lastActivityBefore`
+    /// (epoch seconds), only those whose `last_activity_at` is before it.
     ///
     /// The events live in `events.db`, a separate file, so this is two steps,
     /// never an `ATTACH`: page through the ended sessions here (keyset by id,
-    /// `claudeReadChunk` at a time, so sessions that do have events never block
-    /// the batch), ask the store which of each page have rows, then delete the
-    /// rest. With no event store attached it reaps nothing: an absent store must
-    /// never read as "no events".
+    /// `claudeReadChunk` at a time, so kept sessions never block the batch), drop
+    /// those with a row in a keep table, ask the store which of the rest have rows,
+    /// then delete what is left. With no event store attached, or with a keep
+    /// table missing, it reaps nothing: an absent source must never read as "empty".
     ///
     /// The delete re-checks `status = 'ended'`, so a session resumed between the
     /// two steps survives, and it keeps any session that still has legacy
-    /// `event_log` rows, which only ever makes it reap less.
+    /// `event_log` rows or a keep-table row written meanwhile, which only ever
+    /// makes it reap less.
     @discardableResult
     public func deleteEndedSessionsWithNoEvents(
-        batchSize: Int = DaemonDatabase.emptySessionReapBatch
+        batchSize: Int = DaemonDatabase.emptySessionReapBatch,
+        keepSessionTables: [String] = [],
+        lastActivityBefore: Double? = nil
     ) throws -> Int {
         guard batchSize > 0, let store = eventReads else { return 0 }
+        for table in keepSessionTables {
+            let plain = !table.isEmpty && table.unicodeScalars.allSatisfy {
+                CharacterSet.alphanumerics.contains($0) && $0.isASCII || $0 == "_"
+            }
+            guard plain, try tableHasColumn(table, "session_id") else { return 0 }
+        }
         let page = Self.claudeReadChunk
+        // julianday('') is NULL, so a session with no usable clock never passes this.
+        let before = lastActivityBefore.map { _ in
+            "AND julianday(last_activity_at) < julianday(?, 'unixepoch')"
+        } ?? ""
+        let beforeParams: [any Sendable] = lastActivityBefore.map { [$0] } ?? []
         var doomed: [String] = []
         var after = ""
         while doomed.count < batchSize {
             var ids: [String] = []
             try query("""
                 SELECT session_id FROM sessions
-                WHERE status = 'ended' AND session_id > ?
+                WHERE status = 'ended' AND session_id > ? \(before)
                 ORDER BY session_id LIMIT ?
-            """, params: [after, page]) { row in ids.append(row[0] ?? "") }
+            """, params: [after] + beforeParams + [page]) { row in ids.append(row[0] ?? "") }
             guard let last = ids.last else { break }
             after = last
-            let kept = try Self.sessionsWithStoredRows(ids, in: store)
-            doomed += ids.filter { !kept.contains($0) }
+            let summarized = try sessionsWithRows(ids, in: keepSessionTables)
+            let candidates = ids.filter { !summarized.contains($0) }
+            let kept = try Self.sessionsWithStoredRows(candidates, in: store)
+            doomed += candidates.filter { !kept.contains($0) }
             if ids.count < page { break }
         }
         doomed = Array(doomed.prefix(batchSize))
         guard !doomed.isEmpty else { return 0 }
+        let keepClauses = keepSessionTables.map {
+            "AND NOT EXISTS (SELECT 1 FROM \($0) k WHERE k.session_id = sessions.session_id)"
+        }.joined(separator: "\n")
         return try write { database in
             var deleted = 0
             for start in stride(from: 0, to: doomed.count, by: page) {
@@ -189,28 +141,47 @@ extension DaemonDatabase {
                 let marks = chunk.map { _ in "?" }.joined(separator: ",")
                 try execute("""
                     DELETE FROM sessions
-                    WHERE status = 'ended' AND session_id IN (\(marks))
+                    WHERE status = 'ended' AND session_id IN (\(marks)) \(before)
                       AND NOT EXISTS (
                           SELECT 1 FROM event_log WHERE event_log.session_id = sessions.session_id
                       )
-                """, params: chunk)
+                      \(keepClauses)
+                """, params: chunk + beforeParams)
                 deleted += Int(database.changesCount)
             }
             return deleted
         }
     }
 
+    /// The ids among `sessionIds` (at most `claudeReadChunk`) with a row in any of `tables`.
+    private func sessionsWithRows(_ sessionIds: [String], in tables: [String]) throws -> Set<String> {
+        guard !sessionIds.isEmpty, !tables.isEmpty else { return [] }
+        precondition(sessionIds.count <= Self.claudeReadChunk, "one IN list binds at most claudeReadChunk ids")
+        let marks = sessionIds.map { _ in "?" }.joined(separator: ",")
+        var found = Set<String>()
+        for table in tables {
+            try query(
+                "SELECT DISTINCT session_id FROM \(table) WHERE session_id IN (\(marks))",
+                params: sessionIds
+            ) { row in found.insert(row[0] ?? "") }
+        }
+        return found
+    }
+
     /// The ids among `sessionIds` (at most `claudeReadChunk` of them) that have
-    /// at least one Claude `events` or `turns` row in `store`.
+    /// at least one Claude `events`, `messages` or `turns` row in `store`.
     private static func sessionsWithStoredRows(_ sessionIds: [String], in store: EventStore) throws -> Set<String> {
         guard !sessionIds.isEmpty else { return [] }
         precondition(sessionIds.count <= claudeReadChunk, "one IN list binds at most claudeReadChunk ids")
         let marks = sessionIds.map { _ in "?" }.joined(separator: ",")
         let provider = ClaudeProvider.name
-        let arguments = StatementArguments([provider] + sessionIds + [provider] + sessionIds)
+        let arguments = StatementArguments(
+            [provider] + sessionIds + [provider] + sessionIds + [provider] + sessionIds)
         return try store.read { conn in
             let ids = try String.fetchAll(conn, sql: """
                 SELECT DISTINCT session_id FROM events WHERE provider = ? AND session_id IN (\(marks))
+                UNION
+                SELECT DISTINCT session_id FROM messages WHERE provider = ? AND session_id IN (\(marks))
                 UNION
                 SELECT DISTINCT session_id FROM turns WHERE provider = ? AND session_id IN (\(marks))
                 """, arguments: arguments)

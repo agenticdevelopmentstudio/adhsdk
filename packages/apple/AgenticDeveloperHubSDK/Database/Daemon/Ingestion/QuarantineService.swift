@@ -132,13 +132,13 @@ public final class QuarantineService: @unchecked Sendable {
     public func clear() {
         let fileManager = FileManager.default
         var deleted = 0
-        var kept = 0
+        var keptNames: [String] = []
         for url in eventFiles() {
             if let preserveRaw {
                 do {
                     try preserveRaw(url)
                 } catch {
-                    kept += 1
+                    keptNames.append(url.lastPathComponent)
                     logger.error("""
                         Kept quarantined \(url.lastPathComponent, privacy: .public): it could not be \
                         preserved (\(error.localizedDescription, privacy: .public))
@@ -151,7 +151,9 @@ public final class QuarantineService: @unchecked Sendable {
             deleted += 1
         }
         do {
-            try database?.clearActiveIngestionErrors()
+            // A kept file's row stays active: the badge still counts it and a
+            // later retry resolves it.
+            try database?.clearActiveIngestionErrors(keeping: keptNames)
         } catch {
             // Surface rather than swallow: the on-disk files are gone but the log
             // rows would otherwise stay "failing"/"exhausted" until the next pass.
@@ -159,6 +161,7 @@ public final class QuarantineService: @unchecked Sendable {
                 "Failed to mark ingestion-error log rows cleared: \(error.localizedDescription, privacy: .public)"
             )
         }
+        let kept = keptNames.count
         logger.info("Cleared \(deleted, privacy: .public) quarantined event(s), kept \(kept, privacy: .public)")
     }
 

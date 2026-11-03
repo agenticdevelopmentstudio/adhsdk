@@ -40,7 +40,7 @@ final class ClaudeLiveObserverTests: XCTestCase {
         let payload = ClaudeTranscriptPayload(file: transcriptPath, lineNo: lineNo, subagentFile: false, line: line)
         return ArchivedRecord(id: id, record: RawRecord(
             provider: ClaudeProvider.name, sourceKind: ClaudeProvider.transcriptKind,
-            dedupKey: ClaudeTranscriptPayload.dedupKey(line: line, file: transcriptPath),
+            dedupKey: ClaudeTranscriptPayload.dedupKey(line: line, file: transcriptPath, byteOffset: Int64(lineNo)),
             receivedAt: Date(timeIntervalSince1970: 1_793_400_000),
             payload: try ClaudeTranscriptPayload.encode(payload)))
     }
