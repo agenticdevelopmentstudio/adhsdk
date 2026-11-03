@@ -1672,6 +1672,288 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/ownership/owned": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** What a customer, organization, persona or ecosystem still owns */
+        get: {
+            parameters: {
+                query: {
+                    kind: "customer" | "organization" | "application" | "persona" | "ecosystem";
+                    id: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description The tables it owns rows in, with counts */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {string} */
+                            kind?: "customer" | "organization" | "application" | "persona" | "ecosystem";
+                            id?: string;
+                            owned?: {
+                                /** @description `<schema>.<table>` */
+                                table: string;
+                                rows: number;
+                            }[];
+                        };
+                    };
+                };
+                /** @description Error */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Error */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Error */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Error */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/ownership/erase": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Hard-delete everything a principal owns */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        kind: "customer" | "organization" | "application" | "persona" | "ecosystem";
+                        id: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description What was erased */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {string} */
+                            kind?: "customer" | "organization" | "application" | "persona" | "ecosystem";
+                            id?: string;
+                            erased?: {
+                                /** @description `<schema>.<table>` */
+                                table: string;
+                                rows: number;
+                            }[];
+                        };
+                    };
+                };
+                /** @description Error */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Error */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Error */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Error */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Refused, nothing erased (error.code = "erase_blocked") */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/ownership/handover": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Give everything one principal owns to another of the same kind */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        kind: "customer" | "persona";
+                        from: string;
+                        to: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description What moved */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {string} */
+                            kind?: "customer" | "persona";
+                            from?: string;
+                            to?: string;
+                            moved?: {
+                                /** @description `<schema>.<table>` */
+                                table: string;
+                                rows: number;
+                            }[];
+                        };
+                    };
+                };
+                /** @description Error */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Error */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Error */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Error */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Error */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/auth/capabilities": {
         parameters: {
             query?: never;
@@ -13366,7 +13648,7 @@ export interface paths {
             cookie?: never;
         };
         get?: never;
-        /** Upsert a grant (bucket / bucket_type / row : crud) for an access group */
+        /** Upsert a grant (bucket / bucket_type : crud) for an access group */
         put: {
             parameters: {
                 query?: never;
@@ -13380,7 +13662,7 @@ export interface paths {
                 content: {
                     "application/json": {
                         /** @enum {string} */
-                        targetType: "bucket" | "bucket_type" | "row";
+                        targetType: "bucket" | "bucket_type";
                         targetId: string;
                         /** @description comma-separated CRUD subset (or '' for none) */
                         crud: string;
@@ -13462,6 +13744,429 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content?: never;
+                };
+                /** @description Error */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Error */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/bucket/tags": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List the tags in every ecosystem the caller manages */
+        get: {
+            parameters: {
+                query?: {
+                    ecosystemId?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Tags */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["AccessTagList"];
+                    };
+                };
+                /** @description Error */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Error */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        /** Create a tag */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        name: string;
+                        description?: string;
+                        /** @description the tag's ecosystem (rdid or uuid); defaults to the caller's */
+                        ecosystemId?: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Created tag */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["AccessTag"];
+                    };
+                };
+                /** @description Error */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Error */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Error */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Error */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/bucket/tags/{tagId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete a tag (removes it from every bucket type and row) */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    tagId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Deleted */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Error */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Error */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/bucket/buckets/{bucketId}/types/{typeId}/tags": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List a tags-mode bucket type's tags */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    bucketId: string;
+                    typeId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Tags */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["AccessTagList"];
+                    };
+                };
+                /** @description Error */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Error */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Error */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        /** Replace a tags-mode bucket type's tags */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    bucketId: string;
+                    typeId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        /** @description the complete set; each must be a tag in the bucket type's ecosystem */
+                        tagIds: string[];
+                    };
+                };
+            };
+            responses: {
+                /** @description The type now holds rows with these tags */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["BucketTypeTagIds"];
+                    };
+                };
+                /** @description Error */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Error */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Error */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Error */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/bucket/tags/{tagId}/rows/{table}/{rowId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Tag a row (idempotent) */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    tagId: string;
+                    /** @description a taggable table, e.g. content.markdown */
+                    table: string;
+                    rowId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Tagged */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Error */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Error */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Error */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        /** Remove a tag from a row */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    tagId: string;
+                    /** @description a taggable table, e.g. content.markdown */
+                    table: string;
+                    rowId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Untagged */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Error */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
                 };
                 /** @description Error */
                 401: {
@@ -22120,97 +22825,6 @@ export interface paths {
         };
         put?: never;
         post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/corpus/embed-pending": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Chunk and embed a knowledge bucket’s documents (backfill)
-         * @description Requires U (update) on the target bucket — read access must not authorize spending the owner’s embedding budget. The bucket type must be a `content.markdown` type with `ref_mode='rows'`; anything else is a 400. 503 when the caller has no Gemini service configured to embed with.
-         */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: {
-                content: {
-                    "application/json": {
-                        bucketTypeId: string;
-                        limit?: number;
-                    };
-                };
-            };
-            responses: {
-                /** @description Backfill batch result */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["CorpusEmbedResult"];
-                    };
-                };
-                /** @description Error */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["Error"];
-                    };
-                };
-                /** @description Error */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["Error"];
-                    };
-                };
-                /** @description Error */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["Error"];
-                    };
-                };
-                /** @description Error */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["Error"];
-                    };
-                };
-                /** @description Error */
-                503: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["Error"];
-                    };
-                };
-            };
-        };
         delete?: never;
         options?: never;
         head?: never;
@@ -33042,7 +33656,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Semantic recall of a persona’s memories (KNN) */
+        /** Keyword, semantic or combined recall of a persona’s memories */
         post: {
             parameters: {
                 query?: never;
@@ -33058,6 +33672,12 @@ export interface paths {
                         limit?: number;
                         /** @enum {string} */
                         memoryType?: "user" | "feedback" | "project" | "reference";
+                        /**
+                         * @description `keyword` needs no embedder; `semantic` fails with 503/502 when it cannot embed; `combined` falls back to keyword hits alone
+                         * @default combined
+                         * @enum {string}
+                         */
+                        mode?: "keyword" | "semantic" | "combined";
                     };
                 };
             };
@@ -33098,60 +33718,8 @@ export interface paths {
                         "application/json": components["schemas"]["Error"];
                     };
                 };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/persona-memory/embed-pending": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Backfill embeddings for pending memories */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: {
-                content: {
-                    "application/json": {
-                        personaId?: string;
-                        limit?: number;
-                    };
-                };
-            };
-            responses: {
-                /** @description Backfill batch result */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["PersonaMemoryEmbedResult"];
-                    };
-                };
                 /** @description Error */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["Error"];
-                    };
-                };
-                /** @description Error */
-                401: {
+                503: {
                     headers: {
                         [name: string]: unknown;
                     };
@@ -46403,7 +46971,12 @@ export interface paths {
         /** List the caller's attachments (newest first) */
         get: {
             parameters: {
-                query?: never;
+                query?: {
+                    parentType?: string;
+                    parentId?: string;
+                    ownerType?: string;
+                    ownerId?: string;
+                };
                 header?: never;
                 path?: never;
                 cookie?: never;
@@ -46444,8 +47017,20 @@ export interface paths {
                     "application/json": {
                         filename: string;
                         contentType: string;
-                        /** @description Polymorphic owner kind (defaults to 'standalone'). */
+                        /** @description Kind of row the attachment hangs off, e.g. 'persona' or 'registry.entry' (defaults to 'standalone'). */
+                        parentType?: string;
+                        /** @description Id of the row the attachment hangs off. */
+                        parentId?: string;
+                        /**
+                         * @deprecated
+                         * @description Legacy name for parentType; read only when parentType is absent.
+                         */
                         ownerType?: string;
+                        /**
+                         * @deprecated
+                         * @description Legacy name for parentId; read only when parentId is absent.
+                         */
+                        ownerId?: string;
                         ecosystemId?: string | null;
                         /** @description Declared size; enforced against the storage quota at init. */
                         sizeBytes?: number;
@@ -49187,6 +49772,8 @@ export interface paths {
                             ownerKind: string;
                             ownerId: string;
                             createdBy: string | null;
+                            authorKind: string | null;
+                            authorId: string | null;
                             name: string;
                             slug: string;
                             description: string | null;
@@ -49248,6 +49835,8 @@ export interface paths {
                             ownerKind: string;
                             ownerId: string;
                             createdBy: string | null;
+                            authorKind: string | null;
+                            authorId: string | null;
                             name: string;
                             slug: string;
                             description: string | null;
@@ -49321,6 +49910,8 @@ export interface paths {
                             ownerKind: string;
                             ownerId: string;
                             createdBy: string | null;
+                            authorKind: string | null;
+                            authorId: string | null;
                             name: string;
                             slug: string;
                             description: string | null;
@@ -49392,6 +49983,8 @@ export interface paths {
                             ownerKind: string;
                             ownerId: string;
                             createdBy: string | null;
+                            authorKind: string | null;
+                            authorId: string | null;
                             name: string;
                             slug: string;
                             description: string | null;
@@ -49509,6 +50102,8 @@ export interface paths {
                             ownerKind: string;
                             ownerId: string;
                             createdBy: string | null;
+                            authorKind: string | null;
+                            authorId: string | null;
                             name: string;
                             subject: string;
                             htmlBody: string;
@@ -49565,6 +50160,8 @@ export interface paths {
                             ownerKind: string;
                             ownerId: string;
                             createdBy: string | null;
+                            authorKind: string | null;
+                            authorId: string | null;
                             name: string;
                             subject: string;
                             htmlBody: string;
@@ -49635,6 +50232,8 @@ export interface paths {
                             ownerKind: string;
                             ownerId: string;
                             createdBy: string | null;
+                            authorKind: string | null;
+                            authorId: string | null;
                             name: string;
                             subject: string;
                             htmlBody: string;
@@ -49701,6 +50300,8 @@ export interface paths {
                             ownerKind: string;
                             ownerId: string;
                             createdBy: string | null;
+                            authorKind: string | null;
+                            authorId: string | null;
                             name: string;
                             subject: string;
                             htmlBody: string;
@@ -51677,6 +52278,8 @@ export interface paths {
                             syncVersion: number;
                             syncStampedAt: string | null;
                             syncTxid: number;
+                            authorKind: string | null;
+                            authorId: string | null;
                         }[];
                     };
                 };
@@ -51754,6 +52357,8 @@ export interface paths {
                             syncVersion: number;
                             syncStampedAt: string | null;
                             syncTxid: number;
+                            authorKind: string | null;
+                            authorId: string | null;
                         };
                     };
                 };
@@ -51850,6 +52455,8 @@ export interface paths {
                             syncVersion: number;
                             syncStampedAt: string | null;
                             syncTxid: number;
+                            authorKind: string | null;
+                            authorId: string | null;
                         };
                     };
                 };
@@ -51928,6 +52535,8 @@ export interface paths {
                             syncVersion: number;
                             syncStampedAt: string | null;
                             syncTxid: number;
+                            authorKind: string | null;
+                            authorId: string | null;
                         };
                     };
                 };
@@ -52052,6 +52661,8 @@ export interface paths {
                         "application/json": {
                             id: string;
                             customerId: string;
+                            ownerKind: string;
+                            ownerId: string;
                             deletedAt: string | null;
                             ecosystemId: string;
                             name: string;
@@ -52109,6 +52720,8 @@ export interface paths {
                         "application/json": {
                             id: string;
                             customerId: string;
+                            ownerKind: string;
+                            ownerId: string;
                             deletedAt: string | null;
                             ecosystemId: string;
                             name: string;
@@ -52180,6 +52793,8 @@ export interface paths {
                         "application/json": {
                             id: string;
                             customerId: string;
+                            ownerKind: string;
+                            ownerId: string;
                             deletedAt: string | null;
                             ecosystemId: string;
                             name: string;
@@ -52247,6 +52862,8 @@ export interface paths {
                         "application/json": {
                             id: string;
                             customerId: string;
+                            ownerKind: string;
+                            ownerId: string;
                             deletedAt: string | null;
                             ecosystemId: string;
                             name: string;
@@ -52363,6 +52980,8 @@ export interface paths {
                             id: string;
                             ecosystemId: string;
                             customerId: string;
+                            ownerKind: string;
+                            ownerId: string;
                             deletedAt: string | null;
                             parentId: string;
                             childId: string;
@@ -52416,6 +53035,8 @@ export interface paths {
                             id: string;
                             ecosystemId: string;
                             customerId: string;
+                            ownerKind: string;
+                            ownerId: string;
                             deletedAt: string | null;
                             parentId: string;
                             childId: string;
@@ -52485,6 +53106,8 @@ export interface paths {
                             id: string;
                             ecosystemId: string;
                             customerId: string;
+                            ownerKind: string;
+                            ownerId: string;
                             deletedAt: string | null;
                             parentId: string;
                             childId: string;
@@ -52548,6 +53171,8 @@ export interface paths {
                             id: string;
                             ecosystemId: string;
                             customerId: string;
+                            ownerKind: string;
+                            ownerId: string;
                             deletedAt: string | null;
                             parentId: string;
                             childId: string;
@@ -52661,6 +53286,8 @@ export interface paths {
                             id: string;
                             ecosystemId: string;
                             customerId: string;
+                            ownerKind: string;
+                            ownerId: string;
                             deletedAt: string | null;
                             categoryId: string;
                             targetKind: string;
@@ -52716,6 +53343,8 @@ export interface paths {
                             id: string;
                             ecosystemId: string;
                             customerId: string;
+                            ownerKind: string;
+                            ownerId: string;
                             deletedAt: string | null;
                             categoryId: string;
                             targetKind: string;
@@ -52786,6 +53415,8 @@ export interface paths {
                             id: string;
                             ecosystemId: string;
                             customerId: string;
+                            ownerKind: string;
+                            ownerId: string;
                             deletedAt: string | null;
                             categoryId: string;
                             targetKind: string;
@@ -52851,6 +53482,8 @@ export interface paths {
                             id: string;
                             ecosystemId: string;
                             customerId: string;
+                            ownerKind: string;
+                            ownerId: string;
                             deletedAt: string | null;
                             categoryId: string;
                             targetKind: string;
@@ -52979,6 +53612,8 @@ export interface paths {
                             syncVersion: number;
                             syncStampedAt: string | null;
                             syncTxid: number;
+                            authorKind: string | null;
+                            authorId: string | null;
                         }[];
                     };
                 };
@@ -53042,6 +53677,8 @@ export interface paths {
                             syncVersion: number;
                             syncStampedAt: string | null;
                             syncTxid: number;
+                            authorKind: string | null;
+                            authorId: string | null;
                         };
                     };
                 };
@@ -53116,6 +53753,8 @@ export interface paths {
                             syncVersion: number;
                             syncStampedAt: string | null;
                             syncTxid: number;
+                            authorKind: string | null;
+                            authorId: string | null;
                         };
                     };
                 };
@@ -53189,6 +53828,8 @@ export interface paths {
                             syncVersion: number;
                             syncStampedAt: string | null;
                             syncTxid: number;
+                            authorKind: string | null;
+                            authorId: string | null;
                         };
                     };
                 };
@@ -53293,6 +53934,8 @@ export interface paths {
                             id: string;
                             ecosystemId: string;
                             customerId: string;
+                            ownerKind: string;
+                            ownerId: string;
                             deletedAt: string | null;
                             name: string;
                             value: number;
@@ -53344,6 +53987,8 @@ export interface paths {
                             id: string;
                             ecosystemId: string;
                             customerId: string;
+                            ownerKind: string;
+                            ownerId: string;
                             deletedAt: string | null;
                             name: string;
                             value: number;
@@ -53412,6 +54057,8 @@ export interface paths {
                             id: string;
                             ecosystemId: string;
                             customerId: string;
+                            ownerKind: string;
+                            ownerId: string;
                             deletedAt: string | null;
                             name: string;
                             value: number;
@@ -53473,6 +54120,8 @@ export interface paths {
                             id: string;
                             ecosystemId: string;
                             customerId: string;
+                            ownerKind: string;
+                            ownerId: string;
                             deletedAt: string | null;
                             name: string;
                             value: number;
@@ -53598,6 +54247,8 @@ export interface paths {
                             syncVersion: number;
                             syncStampedAt: string | null;
                             syncTxid: number;
+                            authorKind: string | null;
+                            authorId: string | null;
                         }[];
                     };
                 };
@@ -53659,6 +54310,8 @@ export interface paths {
                             syncVersion: number;
                             syncStampedAt: string | null;
                             syncTxid: number;
+                            authorKind: string | null;
+                            authorId: string | null;
                         };
                     };
                 };
@@ -53732,6 +54385,8 @@ export interface paths {
                             syncVersion: number;
                             syncStampedAt: string | null;
                             syncTxid: number;
+                            authorKind: string | null;
+                            authorId: string | null;
                         };
                     };
                 };
@@ -53803,6 +54458,8 @@ export interface paths {
                             syncVersion: number;
                             syncStampedAt: string | null;
                             syncTxid: number;
+                            authorKind: string | null;
+                            authorId: string | null;
                         };
                     };
                 };
@@ -53907,6 +54564,8 @@ export interface paths {
                             id: string;
                             ecosystemId: string;
                             customerId: string;
+                            ownerKind: string;
+                            ownerId: string;
                             deletedAt: string | null;
                             type: string;
                             payload: (string | number | boolean | null) | {
@@ -53962,6 +54621,8 @@ export interface paths {
                             id: string;
                             ecosystemId: string;
                             customerId: string;
+                            ownerKind: string;
+                            ownerId: string;
                             deletedAt: string | null;
                             type: string;
                             payload: (string | number | boolean | null) | {
@@ -54032,6 +54693,8 @@ export interface paths {
                             id: string;
                             ecosystemId: string;
                             customerId: string;
+                            ownerKind: string;
+                            ownerId: string;
                             deletedAt: string | null;
                             type: string;
                             payload: (string | number | boolean | null) | {
@@ -54097,6 +54760,8 @@ export interface paths {
                             id: string;
                             ecosystemId: string;
                             customerId: string;
+                            ownerKind: string;
+                            ownerId: string;
                             deletedAt: string | null;
                             type: string;
                             payload: (string | number | boolean | null) | {
@@ -54210,6 +54875,8 @@ export interface paths {
                         "application/json": {
                             id: string;
                             customerId: string;
+                            ownerKind: string;
+                            ownerId: string;
                             deletedAt: string | null;
                             ecosystemId: string;
                             userEmail: string;
@@ -54277,6 +54944,8 @@ export interface paths {
                         "application/json": {
                             id: string;
                             customerId: string;
+                            ownerKind: string;
+                            ownerId: string;
                             deletedAt: string | null;
                             ecosystemId: string;
                             userEmail: string;
@@ -54353,6 +55022,8 @@ export interface paths {
                         "application/json": {
                             id: string;
                             customerId: string;
+                            ownerKind: string;
+                            ownerId: string;
                             deletedAt: string | null;
                             ecosystemId: string;
                             userEmail: string;
@@ -54430,6 +55101,8 @@ export interface paths {
                         "application/json": {
                             id: string;
                             customerId: string;
+                            ownerKind: string;
+                            ownerId: string;
                             deletedAt: string | null;
                             ecosystemId: string;
                             userEmail: string;
@@ -54551,6 +55224,8 @@ export interface paths {
                             id: string;
                             ecosystemId: string;
                             customerId: string;
+                            ownerKind: string;
+                            ownerId: string;
                             deletedAt: string | null;
                             key: string;
                             value: (string | number | boolean | null) | {
@@ -54606,6 +55281,8 @@ export interface paths {
                             id: string;
                             ecosystemId: string;
                             customerId: string;
+                            ownerKind: string;
+                            ownerId: string;
                             deletedAt: string | null;
                             key: string;
                             value: (string | number | boolean | null) | {
@@ -54676,6 +55353,8 @@ export interface paths {
                             id: string;
                             ecosystemId: string;
                             customerId: string;
+                            ownerKind: string;
+                            ownerId: string;
                             deletedAt: string | null;
                             key: string;
                             value: (string | number | boolean | null) | {
@@ -54741,6 +55420,8 @@ export interface paths {
                             id: string;
                             ecosystemId: string;
                             customerId: string;
+                            ownerKind: string;
+                            ownerId: string;
                             deletedAt: string | null;
                             key: string;
                             value: (string | number | boolean | null) | {
@@ -54855,6 +55536,8 @@ export interface paths {
                             id: string;
                             ecosystemId: string;
                             customerId: string;
+                            ownerKind: string;
+                            ownerId: string;
                             deletedAt: string | null;
                             keywordId: string;
                             targetKind: string;
@@ -54910,6 +55593,8 @@ export interface paths {
                             id: string;
                             ecosystemId: string;
                             customerId: string;
+                            ownerKind: string;
+                            ownerId: string;
                             deletedAt: string | null;
                             keywordId: string;
                             targetKind: string;
@@ -54980,6 +55665,8 @@ export interface paths {
                             id: string;
                             ecosystemId: string;
                             customerId: string;
+                            ownerKind: string;
+                            ownerId: string;
                             deletedAt: string | null;
                             keywordId: string;
                             targetKind: string;
@@ -55045,6 +55732,8 @@ export interface paths {
                             id: string;
                             ecosystemId: string;
                             customerId: string;
+                            ownerKind: string;
+                            ownerId: string;
                             deletedAt: string | null;
                             keywordId: string;
                             targetKind: string;
@@ -55158,6 +55847,8 @@ export interface paths {
                         "application/json": {
                             id: string;
                             customerId: string;
+                            ownerKind: string;
+                            ownerId: string;
                             deletedAt: string | null;
                             ecosystemId: string;
                             label: string;
@@ -55211,6 +55902,8 @@ export interface paths {
                         "application/json": {
                             id: string;
                             customerId: string;
+                            ownerKind: string;
+                            ownerId: string;
                             deletedAt: string | null;
                             ecosystemId: string;
                             label: string;
@@ -55280,6 +55973,8 @@ export interface paths {
                         "application/json": {
                             id: string;
                             customerId: string;
+                            ownerKind: string;
+                            ownerId: string;
                             deletedAt: string | null;
                             ecosystemId: string;
                             label: string;
@@ -55343,6 +56038,8 @@ export interface paths {
                         "application/json": {
                             id: string;
                             customerId: string;
+                            ownerKind: string;
+                            ownerId: string;
                             deletedAt: string | null;
                             ecosystemId: string;
                             label: string;
@@ -55457,6 +56154,8 @@ export interface paths {
                             id: string;
                             ecosystemId: string;
                             customerId: string;
+                            ownerKind: string;
+                            ownerId: string;
                             deletedAt: string | null;
                             listId: string;
                             position: number;
@@ -55514,6 +56213,8 @@ export interface paths {
                             id: string;
                             ecosystemId: string;
                             customerId: string;
+                            ownerKind: string;
+                            ownerId: string;
                             deletedAt: string | null;
                             listId: string;
                             position: number;
@@ -55585,6 +56286,8 @@ export interface paths {
                             id: string;
                             ecosystemId: string;
                             customerId: string;
+                            ownerKind: string;
+                            ownerId: string;
                             deletedAt: string | null;
                             listId: string;
                             position: number;
@@ -55652,6 +56355,8 @@ export interface paths {
                             id: string;
                             ecosystemId: string;
                             customerId: string;
+                            ownerKind: string;
+                            ownerId: string;
                             deletedAt: string | null;
                             listId: string;
                             position: number;
@@ -55767,6 +56472,8 @@ export interface paths {
                             id: string;
                             ecosystemId: string;
                             customerId: string;
+                            ownerKind: string;
+                            ownerId: string;
                             deletedAt: string | null;
                             name: string;
                             description: string | null;
@@ -55818,6 +56525,8 @@ export interface paths {
                             id: string;
                             ecosystemId: string;
                             customerId: string;
+                            ownerKind: string;
+                            ownerId: string;
                             deletedAt: string | null;
                             name: string;
                             description: string | null;
@@ -55886,6 +56595,8 @@ export interface paths {
                             id: string;
                             ecosystemId: string;
                             customerId: string;
+                            ownerKind: string;
+                            ownerId: string;
                             deletedAt: string | null;
                             name: string;
                             description: string | null;
@@ -55947,6 +56658,8 @@ export interface paths {
                             id: string;
                             ecosystemId: string;
                             customerId: string;
+                            ownerKind: string;
+                            ownerId: string;
                             deletedAt: string | null;
                             name: string;
                             description: string | null;
@@ -56073,6 +56786,8 @@ export interface paths {
                             syncVersion: number;
                             syncStampedAt: string | null;
                             syncTxid: number;
+                            authorKind: string | null;
+                            authorId: string | null;
                         }[];
                     };
                 };
@@ -56136,6 +56851,8 @@ export interface paths {
                             syncVersion: number;
                             syncStampedAt: string | null;
                             syncTxid: number;
+                            authorKind: string | null;
+                            authorId: string | null;
                         };
                     };
                 };
@@ -56210,6 +56927,8 @@ export interface paths {
                             syncVersion: number;
                             syncStampedAt: string | null;
                             syncTxid: number;
+                            authorKind: string | null;
+                            authorId: string | null;
                         };
                     };
                 };
@@ -56283,6 +57002,8 @@ export interface paths {
                             syncVersion: number;
                             syncStampedAt: string | null;
                             syncTxid: number;
+                            authorKind: string | null;
+                            authorId: string | null;
                         };
                     };
                 };
@@ -56387,6 +57108,8 @@ export interface paths {
                             id: string;
                             ecosystemId: string;
                             customerId: string;
+                            ownerKind: string;
+                            ownerId: string;
                             deletedAt: string | null;
                             pollId: string;
                             text: string;
@@ -56440,6 +57163,8 @@ export interface paths {
                             id: string;
                             ecosystemId: string;
                             customerId: string;
+                            ownerKind: string;
+                            ownerId: string;
                             deletedAt: string | null;
                             pollId: string;
                             text: string;
@@ -56509,6 +57234,8 @@ export interface paths {
                             id: string;
                             ecosystemId: string;
                             customerId: string;
+                            ownerKind: string;
+                            ownerId: string;
                             deletedAt: string | null;
                             pollId: string;
                             text: string;
@@ -56572,6 +57299,8 @@ export interface paths {
                             id: string;
                             ecosystemId: string;
                             customerId: string;
+                            ownerKind: string;
+                            ownerId: string;
                             deletedAt: string | null;
                             pollId: string;
                             text: string;
@@ -56684,6 +57413,8 @@ export interface paths {
                         "application/json": {
                             id: string;
                             customerId: string;
+                            ownerKind: string;
+                            ownerId: string;
                             deletedAt: string | null;
                             ecosystemId: string;
                             hostKind: string | null;
@@ -56741,6 +57472,8 @@ export interface paths {
                         "application/json": {
                             id: string;
                             customerId: string;
+                            ownerKind: string;
+                            ownerId: string;
                             deletedAt: string | null;
                             ecosystemId: string;
                             hostKind: string | null;
@@ -56812,6 +57545,8 @@ export interface paths {
                         "application/json": {
                             id: string;
                             customerId: string;
+                            ownerKind: string;
+                            ownerId: string;
                             deletedAt: string | null;
                             ecosystemId: string;
                             hostKind: string | null;
@@ -56879,6 +57614,8 @@ export interface paths {
                         "application/json": {
                             id: string;
                             customerId: string;
+                            ownerKind: string;
+                            ownerId: string;
                             deletedAt: string | null;
                             ecosystemId: string;
                             hostKind: string | null;
@@ -56995,6 +57732,8 @@ export interface paths {
                             id: string;
                             ecosystemId: string;
                             customerId: string;
+                            ownerKind: string;
+                            ownerId: string;
                             deletedAt: string | null;
                             queueId: string;
                             payload: (string | number | boolean | null) | {
@@ -57059,6 +57798,8 @@ export interface paths {
                             id: string;
                             ecosystemId: string;
                             customerId: string;
+                            ownerKind: string;
+                            ownerId: string;
                             deletedAt: string | null;
                             queueId: string;
                             payload: (string | number | boolean | null) | {
@@ -57133,6 +57874,8 @@ export interface paths {
                             id: string;
                             ecosystemId: string;
                             customerId: string;
+                            ownerKind: string;
+                            ownerId: string;
                             deletedAt: string | null;
                             queueId: string;
                             payload: (string | number | boolean | null) | {
@@ -57207,6 +57950,8 @@ export interface paths {
                             id: string;
                             ecosystemId: string;
                             customerId: string;
+                            ownerKind: string;
+                            ownerId: string;
                             deletedAt: string | null;
                             queueId: string;
                             payload: (string | number | boolean | null) | {
@@ -57325,6 +58070,8 @@ export interface paths {
                             id: string;
                             ecosystemId: string;
                             customerId: string;
+                            ownerKind: string;
+                            ownerId: string;
                             deletedAt: string | null;
                             name: string;
                             createdAt: string;
@@ -57374,6 +58121,8 @@ export interface paths {
                             id: string;
                             ecosystemId: string;
                             customerId: string;
+                            ownerKind: string;
+                            ownerId: string;
                             deletedAt: string | null;
                             name: string;
                             createdAt: string;
@@ -57441,6 +58190,8 @@ export interface paths {
                             id: string;
                             ecosystemId: string;
                             customerId: string;
+                            ownerKind: string;
+                            ownerId: string;
                             deletedAt: string | null;
                             name: string;
                             createdAt: string;
@@ -57500,6 +58251,8 @@ export interface paths {
                             id: string;
                             ecosystemId: string;
                             customerId: string;
+                            ownerKind: string;
+                            ownerId: string;
                             deletedAt: string | null;
                             name: string;
                             createdAt: string;
@@ -57623,6 +58376,8 @@ export interface paths {
                             syncVersion: number;
                             syncStampedAt: string | null;
                             syncTxid: number;
+                            authorKind: string | null;
+                            authorId: string | null;
                         }[];
                     };
                 };
@@ -57682,6 +58437,8 @@ export interface paths {
                             syncVersion: number;
                             syncStampedAt: string | null;
                             syncTxid: number;
+                            authorKind: string | null;
+                            authorId: string | null;
                         };
                     };
                 };
@@ -57754,6 +58511,8 @@ export interface paths {
                             syncVersion: number;
                             syncStampedAt: string | null;
                             syncTxid: number;
+                            authorKind: string | null;
+                            authorId: string | null;
                         };
                     };
                 };
@@ -57823,6 +58582,8 @@ export interface paths {
                             syncVersion: number;
                             syncStampedAt: string | null;
                             syncTxid: number;
+                            authorKind: string | null;
+                            authorId: string | null;
                         };
                     };
                 };
@@ -57942,6 +58703,8 @@ export interface paths {
                             syncVersion: number;
                             syncStampedAt: string | null;
                             syncTxid: number;
+                            authorKind: string | null;
+                            authorId: string | null;
                         }[];
                     };
                 };
@@ -58013,6 +58776,8 @@ export interface paths {
                             syncVersion: number;
                             syncStampedAt: string | null;
                             syncTxid: number;
+                            authorKind: string | null;
+                            authorId: string | null;
                         };
                     };
                 };
@@ -58106,6 +58871,8 @@ export interface paths {
                             syncVersion: number;
                             syncStampedAt: string | null;
                             syncTxid: number;
+                            authorKind: string | null;
+                            authorId: string | null;
                         };
                     };
                 };
@@ -58178,6 +58945,8 @@ export interface paths {
                             syncVersion: number;
                             syncStampedAt: string | null;
                             syncTxid: number;
+                            authorKind: string | null;
+                            authorId: string | null;
                         };
                     };
                 };
@@ -58316,6 +59085,8 @@ export interface paths {
                             syncVersion: number;
                             syncStampedAt: string | null;
                             syncTxid: number;
+                            authorKind: string | null;
+                            authorId: string | null;
                         }[];
                     };
                 };
@@ -58377,6 +59148,8 @@ export interface paths {
                             syncVersion: number;
                             syncStampedAt: string | null;
                             syncTxid: number;
+                            authorKind: string | null;
+                            authorId: string | null;
                         };
                     };
                 };
@@ -58450,6 +59223,8 @@ export interface paths {
                             syncVersion: number;
                             syncStampedAt: string | null;
                             syncTxid: number;
+                            authorKind: string | null;
+                            authorId: string | null;
                         };
                     };
                 };
@@ -58521,6 +59296,8 @@ export interface paths {
                             syncVersion: number;
                             syncStampedAt: string | null;
                             syncTxid: number;
+                            authorKind: string | null;
+                            authorId: string | null;
                         };
                     };
                 };
@@ -58624,6 +59401,8 @@ export interface paths {
                         "application/json": {
                             id: string;
                             customerId: string;
+                            ownerKind: string;
+                            ownerId: string;
                             deletedAt: string | null;
                             ecosystemId: string;
                             originalUrl: string;
@@ -58696,6 +59475,8 @@ export interface paths {
                         "application/json": {
                             id: string;
                             customerId: string;
+                            ownerKind: string;
+                            ownerId: string;
                             deletedAt: string | null;
                             ecosystemId: string;
                             originalUrl: string;
@@ -58775,6 +59556,8 @@ export interface paths {
                         "application/json": {
                             id: string;
                             customerId: string;
+                            ownerKind: string;
+                            ownerId: string;
                             deletedAt: string | null;
                             ecosystemId: string;
                             originalUrl: string;
@@ -58857,6 +59640,8 @@ export interface paths {
                         "application/json": {
                             id: string;
                             customerId: string;
+                            ownerKind: string;
+                            ownerId: string;
                             deletedAt: string | null;
                             ecosystemId: string;
                             originalUrl: string;
@@ -59299,7 +60084,7 @@ export interface paths {
                         "application/json": components["schemas"]["Error"];
                     };
                 };
-                /** @description Refused: this would leave no live operator (error.code = "last_operator"). Make someone else an operator first. */
+                /** @description Refused: this would leave no live operator (error.code = "last_operator"). Make someone else an operator first. Or: Refused: this still owns data (error.code = "still_owns_data", error.owned lists it by table). Hand it over (POST /ownership/handover) or erase it (POST /ownership/erase), then delete again. */
                 409: {
                     headers: {
                         [name: string]: unknown;
@@ -59342,6 +60127,8 @@ export interface paths {
                             id: string;
                             documentId: string;
                             customerId: string;
+                            ownerKind: string;
+                            ownerId: string;
                             deletedAt: string | null;
                             ecosystemId: string;
                             position: string;
@@ -59402,6 +60189,8 @@ export interface paths {
                             id: string;
                             documentId: string;
                             customerId: string;
+                            ownerKind: string;
+                            ownerId: string;
                             deletedAt: string | null;
                             ecosystemId: string;
                             position: string;
@@ -59475,6 +60264,8 @@ export interface paths {
                             id: string;
                             documentId: string;
                             customerId: string;
+                            ownerKind: string;
+                            ownerId: string;
                             deletedAt: string | null;
                             ecosystemId: string;
                             position: string;
@@ -59545,6 +60336,8 @@ export interface paths {
                             id: string;
                             documentId: string;
                             customerId: string;
+                            ownerKind: string;
+                            ownerId: string;
                             deletedAt: string | null;
                             ecosystemId: string;
                             position: string;
@@ -59661,6 +60454,8 @@ export interface paths {
                         "application/json": {
                             id: string;
                             customerId: string;
+                            ownerKind: string;
+                            ownerId: string;
                             deletedAt: string | null;
                             ecosystemId: string;
                             title: string;
@@ -59717,6 +60512,8 @@ export interface paths {
                         "application/json": {
                             id: string;
                             customerId: string;
+                            ownerKind: string;
+                            ownerId: string;
                             deletedAt: string | null;
                             ecosystemId: string;
                             title: string;
@@ -59788,6 +60585,8 @@ export interface paths {
                         "application/json": {
                             id: string;
                             customerId: string;
+                            ownerKind: string;
+                            ownerId: string;
                             deletedAt: string | null;
                             ecosystemId: string;
                             title: string;
@@ -59854,6 +60653,8 @@ export interface paths {
                         "application/json": {
                             id: string;
                             customerId: string;
+                            ownerKind: string;
+                            ownerId: string;
                             deletedAt: string | null;
                             ecosystemId: string;
                             title: string;
@@ -59970,6 +60771,8 @@ export interface paths {
                             id: string;
                             blockId: string;
                             customerId: string;
+                            ownerKind: string;
+                            ownerId: string;
                             deletedAt: string | null;
                             ecosystemId: string;
                             markType: string;
@@ -60028,6 +60831,8 @@ export interface paths {
                             id: string;
                             blockId: string;
                             customerId: string;
+                            ownerKind: string;
+                            ownerId: string;
                             deletedAt: string | null;
                             ecosystemId: string;
                             markType: string;
@@ -60100,6 +60905,8 @@ export interface paths {
                             id: string;
                             blockId: string;
                             customerId: string;
+                            ownerKind: string;
+                            ownerId: string;
                             deletedAt: string | null;
                             ecosystemId: string;
                             markType: string;
@@ -60168,6 +60975,8 @@ export interface paths {
                             id: string;
                             blockId: string;
                             customerId: string;
+                            ownerKind: string;
+                            ownerId: string;
                             deletedAt: string | null;
                             ecosystemId: string;
                             markType: string;
@@ -60285,6 +61094,8 @@ export interface paths {
                             documentId: string;
                             blockId: string | null;
                             customerId: string;
+                            ownerKind: string;
+                            ownerId: string;
                             deletedAt: string | null;
                             ecosystemId: string;
                             clientId: string;
@@ -60348,6 +61159,8 @@ export interface paths {
                             documentId: string;
                             blockId: string | null;
                             customerId: string;
+                            ownerKind: string;
+                            ownerId: string;
                             deletedAt: string | null;
                             ecosystemId: string;
                             clientId: string;
@@ -60422,6 +61235,8 @@ export interface paths {
                             documentId: string;
                             blockId: string | null;
                             customerId: string;
+                            ownerKind: string;
+                            ownerId: string;
                             deletedAt: string | null;
                             ecosystemId: string;
                             clientId: string;
@@ -60495,6 +61310,8 @@ export interface paths {
                             documentId: string;
                             blockId: string | null;
                             customerId: string;
+                            ownerKind: string;
+                            ownerId: string;
                             deletedAt: string | null;
                             ecosystemId: string;
                             clientId: string;
@@ -60612,6 +61429,8 @@ export interface paths {
                             id: string;
                             documentId: string;
                             customerId: string;
+                            ownerKind: string;
+                            ownerId: string;
                             deletedAt: string | null;
                             ecosystemId: string;
                             name: string;
@@ -60670,6 +61489,8 @@ export interface paths {
                             id: string;
                             documentId: string;
                             customerId: string;
+                            ownerKind: string;
+                            ownerId: string;
                             deletedAt: string | null;
                             ecosystemId: string;
                             name: string;
@@ -60742,6 +61563,8 @@ export interface paths {
                             id: string;
                             documentId: string;
                             customerId: string;
+                            ownerKind: string;
+                            ownerId: string;
                             deletedAt: string | null;
                             ecosystemId: string;
                             name: string;
@@ -60810,6 +61633,8 @@ export interface paths {
                             id: string;
                             documentId: string;
                             customerId: string;
+                            ownerKind: string;
+                            ownerId: string;
                             deletedAt: string | null;
                             ecosystemId: string;
                             name: string;
@@ -61197,6 +62022,15 @@ export interface paths {
                         "application/json": components["schemas"]["Error"];
                     };
                 };
+                /** @description Refused: this still owns data (error.code = "still_owns_data", error.owned lists it by table). Hand it over (POST /ownership/handover) or erase it (POST /ownership/erase), then delete again. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
             };
         };
         options?: never;
@@ -61504,6 +62338,7 @@ export interface paths {
                         "application/json": {
                             id: string;
                             ownerId: string;
+                            ownerKind: string | null;
                             slug: string;
                             name: string;
                             description: string;
@@ -61545,6 +62380,7 @@ export interface paths {
                 content: {
                     "application/json": {
                         ownerId?: string;
+                        ownerKind?: string | null;
                         slug: string;
                         name: string;
                         description?: string;
@@ -61570,6 +62406,7 @@ export interface paths {
                         "application/json": {
                             id: string;
                             ownerId: string;
+                            ownerKind: string | null;
                             slug: string;
                             name: string;
                             description: string;
@@ -61643,6 +62480,7 @@ export interface paths {
                         "application/json": {
                             id: string;
                             ownerId: string;
+                            ownerKind: string | null;
                             slug: string;
                             name: string;
                             description: string;
@@ -61694,6 +62532,7 @@ export interface paths {
                 content: {
                     "application/json": {
                         ownerId?: string;
+                        ownerKind?: string | null;
                         slug?: string;
                         name?: string;
                         description?: string;
@@ -61718,6 +62557,7 @@ export interface paths {
                         "application/json": {
                             id: string;
                             ownerId: string;
+                            ownerKind: string | null;
                             slug: string;
                             name: string;
                             description: string;
@@ -61795,6 +62635,15 @@ export interface paths {
                 };
                 /** @description Error */
                 404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Refused: an account infrastructure ecosystem cannot be deleted. Or: Refused: this still owns data (error.code = "still_owns_data", error.owned lists it by table). Hand it over (POST /ownership/handover) or erase it (POST /ownership/erase), then delete again. */
+                409: {
                     headers: {
                         [name: string]: unknown;
                     };
@@ -63160,6 +64009,8 @@ export interface paths {
                             id: string;
                             ecosystemId: string;
                             customerId: string;
+                            ownerKind: string;
+                            ownerId: string;
                             gameId: string;
                             characterName: string | null;
                             characterAvatarUrl: string | null;
@@ -63218,6 +64069,8 @@ export interface paths {
                             id: string;
                             ecosystemId: string;
                             customerId: string;
+                            ownerKind: string;
+                            ownerId: string;
                             gameId: string;
                             characterName: string | null;
                             characterAvatarUrl: string | null;
@@ -63290,6 +64143,8 @@ export interface paths {
                             id: string;
                             ecosystemId: string;
                             customerId: string;
+                            ownerKind: string;
+                            ownerId: string;
                             gameId: string;
                             characterName: string | null;
                             characterAvatarUrl: string | null;
@@ -63358,6 +64213,8 @@ export interface paths {
                             id: string;
                             ecosystemId: string;
                             customerId: string;
+                            ownerKind: string;
+                            ownerId: string;
                             gameId: string;
                             characterName: string | null;
                             characterAvatarUrl: string | null;
@@ -63501,6 +64358,8 @@ export interface paths {
                             syncVersion: number;
                             syncStampedAt: string | null;
                             syncTxid: number;
+                            authorKind: string | null;
+                            authorId: string | null;
                         }[];
                     };
                 };
@@ -63587,6 +64446,8 @@ export interface paths {
                             syncVersion: number;
                             syncStampedAt: string | null;
                             syncTxid: number;
+                            authorKind: string | null;
+                            authorId: string | null;
                         };
                     };
                 };
@@ -63674,6 +64535,8 @@ export interface paths {
                             syncVersion: number;
                             syncStampedAt: string | null;
                             syncTxid: number;
+                            authorKind: string | null;
+                            authorId: string | null;
                         };
                     };
                 };
@@ -63770,6 +64633,8 @@ export interface paths {
                             syncVersion: number;
                             syncStampedAt: string | null;
                             syncTxid: number;
+                            authorKind: string | null;
+                            authorId: string | null;
                         };
                     };
                 };
@@ -63891,6 +64756,8 @@ export interface paths {
                             syncVersion: number;
                             syncStampedAt: string | null;
                             syncTxid: number;
+                            authorKind: string | null;
+                            authorId: string | null;
                         }[];
                     };
                 };
@@ -63957,6 +64824,8 @@ export interface paths {
                             syncVersion: number;
                             syncStampedAt: string | null;
                             syncTxid: number;
+                            authorKind: string | null;
+                            authorId: string | null;
                         };
                     };
                 };
@@ -64034,6 +64903,8 @@ export interface paths {
                             syncVersion: number;
                             syncStampedAt: string | null;
                             syncTxid: number;
+                            authorKind: string | null;
+                            authorId: string | null;
                         };
                     };
                 };
@@ -64110,6 +64981,8 @@ export interface paths {
                             syncVersion: number;
                             syncStampedAt: string | null;
                             syncTxid: number;
+                            authorKind: string | null;
+                            authorId: string | null;
                         };
                     };
                 };
@@ -64213,6 +65086,8 @@ export interface paths {
                         "application/json": {
                             id: string;
                             customerId: string;
+                            ownerKind: string;
+                            ownerId: string;
                             deletedAt: string | null;
                             ecosystemId: string;
                             connectionId: string;
@@ -64287,6 +65162,8 @@ export interface paths {
                         "application/json": {
                             id: string;
                             customerId: string;
+                            ownerKind: string;
+                            ownerId: string;
                             deletedAt: string | null;
                             ecosystemId: string;
                             connectionId: string;
@@ -64367,6 +65244,8 @@ export interface paths {
                         "application/json": {
                             id: string;
                             customerId: string;
+                            ownerKind: string;
+                            ownerId: string;
                             deletedAt: string | null;
                             ecosystemId: string;
                             connectionId: string;
@@ -64451,6 +65330,8 @@ export interface paths {
                         "application/json": {
                             id: string;
                             customerId: string;
+                            ownerKind: string;
+                            ownerId: string;
                             deletedAt: string | null;
                             ecosystemId: string;
                             connectionId: string;
@@ -64597,6 +65478,8 @@ export interface paths {
                             updatedAt: string;
                             isDeleted: boolean;
                             customerId: string;
+                            ownerKind: string;
+                            ownerId: string;
                             deletedAt: string | null;
                             ecosystemId: string;
                             syncVersion: number;
@@ -64683,6 +65566,8 @@ export interface paths {
                             updatedAt: string;
                             isDeleted: boolean;
                             customerId: string;
+                            ownerKind: string;
+                            ownerId: string;
                             deletedAt: string | null;
                             ecosystemId: string;
                             syncVersion: number;
@@ -64769,6 +65654,8 @@ export interface paths {
                             updatedAt: string;
                             isDeleted: boolean;
                             customerId: string;
+                            ownerKind: string;
+                            ownerId: string;
                             deletedAt: string | null;
                             ecosystemId: string;
                             syncVersion: number;
@@ -64865,6 +65752,8 @@ export interface paths {
                             updatedAt: string;
                             isDeleted: boolean;
                             customerId: string;
+                            ownerKind: string;
+                            ownerId: string;
                             deletedAt: string | null;
                             ecosystemId: string;
                             syncVersion: number;
@@ -65001,6 +65890,8 @@ export interface paths {
                             syncVersion: number;
                             syncStampedAt: string | null;
                             syncTxid: number;
+                            authorKind: string | null;
+                            authorId: string | null;
                         }[];
                     };
                 };
@@ -65087,6 +65978,8 @@ export interface paths {
                             syncVersion: number;
                             syncStampedAt: string | null;
                             syncTxid: number;
+                            authorKind: string | null;
+                            authorId: string | null;
                         };
                     };
                 };
@@ -65174,6 +66067,8 @@ export interface paths {
                             syncVersion: number;
                             syncStampedAt: string | null;
                             syncTxid: number;
+                            authorKind: string | null;
+                            authorId: string | null;
                         };
                     };
                 };
@@ -65270,6 +66165,8 @@ export interface paths {
                             syncVersion: number;
                             syncStampedAt: string | null;
                             syncTxid: number;
+                            authorKind: string | null;
+                            authorId: string | null;
                         };
                     };
                 };
@@ -65373,6 +66270,8 @@ export interface paths {
                         "application/json": {
                             id: string;
                             customerId: string;
+                            ownerKind: string;
+                            ownerId: string;
                             deletedAt: string | null;
                             ecosystemId: string;
                             connectionId: string;
@@ -65451,6 +66350,8 @@ export interface paths {
                         "application/json": {
                             id: string;
                             customerId: string;
+                            ownerKind: string;
+                            ownerId: string;
                             deletedAt: string | null;
                             ecosystemId: string;
                             connectionId: string;
@@ -65533,6 +66434,8 @@ export interface paths {
                         "application/json": {
                             id: string;
                             customerId: string;
+                            ownerKind: string;
+                            ownerId: string;
                             deletedAt: string | null;
                             ecosystemId: string;
                             connectionId: string;
@@ -65621,6 +66524,8 @@ export interface paths {
                         "application/json": {
                             id: string;
                             customerId: string;
+                            ownerKind: string;
+                            ownerId: string;
                             deletedAt: string | null;
                             ecosystemId: string;
                             connectionId: string;
@@ -65747,6 +66652,8 @@ export interface paths {
                         "application/json": {
                             id: string;
                             customerId: string;
+                            ownerKind: string;
+                            ownerId: string;
                             deletedAt: string | null;
                             ecosystemId: string;
                             connectionId: string;
@@ -65827,6 +66734,8 @@ export interface paths {
                         "application/json": {
                             id: string;
                             customerId: string;
+                            ownerKind: string;
+                            ownerId: string;
                             deletedAt: string | null;
                             ecosystemId: string;
                             connectionId: string;
@@ -65910,6 +66819,8 @@ export interface paths {
                         "application/json": {
                             id: string;
                             customerId: string;
+                            ownerKind: string;
+                            ownerId: string;
                             deletedAt: string | null;
                             ecosystemId: string;
                             connectionId: string;
@@ -66000,6 +66911,8 @@ export interface paths {
                         "application/json": {
                             id: string;
                             customerId: string;
+                            ownerKind: string;
+                            ownerId: string;
                             deletedAt: string | null;
                             ecosystemId: string;
                             connectionId: string;
@@ -66127,6 +67040,8 @@ export interface paths {
                         "application/json": {
                             id: string;
                             customerId: string;
+                            ownerKind: string;
+                            ownerId: string;
                             deletedAt: string | null;
                             ecosystemId: string;
                             connectionId: string;
@@ -66201,6 +67116,8 @@ export interface paths {
                         "application/json": {
                             id: string;
                             customerId: string;
+                            ownerKind: string;
+                            ownerId: string;
                             deletedAt: string | null;
                             ecosystemId: string;
                             connectionId: string;
@@ -66281,6 +67198,8 @@ export interface paths {
                         "application/json": {
                             id: string;
                             customerId: string;
+                            ownerKind: string;
+                            ownerId: string;
                             deletedAt: string | null;
                             ecosystemId: string;
                             connectionId: string;
@@ -66365,6 +67284,8 @@ export interface paths {
                         "application/json": {
                             id: string;
                             customerId: string;
+                            ownerKind: string;
+                            ownerId: string;
                             deletedAt: string | null;
                             ecosystemId: string;
                             connectionId: string;
@@ -66489,6 +67410,8 @@ export interface paths {
                         "application/json": {
                             id: string;
                             customerId: string;
+                            ownerKind: string;
+                            ownerId: string;
                             deletedAt: string | null;
                             ecosystemId: string;
                             connectionId: string;
@@ -66557,6 +67480,8 @@ export interface paths {
                         "application/json": {
                             id: string;
                             customerId: string;
+                            ownerKind: string;
+                            ownerId: string;
                             deletedAt: string | null;
                             ecosystemId: string;
                             connectionId: string;
@@ -66634,6 +67559,8 @@ export interface paths {
                         "application/json": {
                             id: string;
                             customerId: string;
+                            ownerKind: string;
+                            ownerId: string;
                             deletedAt: string | null;
                             ecosystemId: string;
                             connectionId: string;
@@ -66712,6 +67639,8 @@ export interface paths {
                         "application/json": {
                             id: string;
                             customerId: string;
+                            ownerKind: string;
+                            ownerId: string;
                             deletedAt: string | null;
                             ecosystemId: string;
                             connectionId: string;
@@ -66833,6 +67762,8 @@ export interface paths {
                         "application/json": {
                             id: string;
                             customerId: string;
+                            ownerKind: string;
+                            ownerId: string;
                             deletedAt: string | null;
                             ecosystemId: string;
                             connectionId: string;
@@ -66903,6 +67834,8 @@ export interface paths {
                         "application/json": {
                             id: string;
                             customerId: string;
+                            ownerKind: string;
+                            ownerId: string;
                             deletedAt: string | null;
                             ecosystemId: string;
                             connectionId: string;
@@ -66981,6 +67914,8 @@ export interface paths {
                         "application/json": {
                             id: string;
                             customerId: string;
+                            ownerKind: string;
+                            ownerId: string;
                             deletedAt: string | null;
                             ecosystemId: string;
                             connectionId: string;
@@ -67061,6 +67996,8 @@ export interface paths {
                         "application/json": {
                             id: string;
                             customerId: string;
+                            ownerKind: string;
+                            ownerId: string;
                             deletedAt: string | null;
                             ecosystemId: string;
                             connectionId: string;
@@ -67184,6 +68121,8 @@ export interface paths {
                             id: string;
                             siteId: string;
                             userId: string;
+                            authorKind: string | null;
+                            authorId: string | null;
                             ownerKind: string;
                             ownerId: string;
                             kind: string;
@@ -67245,6 +68184,8 @@ export interface paths {
                             id: string;
                             siteId: string;
                             userId: string;
+                            authorKind: string | null;
+                            authorId: string | null;
                             ownerKind: string;
                             ownerId: string;
                             kind: string;
@@ -67317,6 +68258,8 @@ export interface paths {
                             id: string;
                             siteId: string;
                             userId: string;
+                            authorKind: string | null;
+                            authorId: string | null;
                             ownerKind: string;
                             ownerId: string;
                             kind: string;
@@ -67388,6 +68331,8 @@ export interface paths {
                             id: string;
                             siteId: string;
                             userId: string;
+                            authorKind: string | null;
+                            authorId: string | null;
                             ownerKind: string;
                             ownerId: string;
                             kind: string;
@@ -67504,6 +68449,8 @@ export interface paths {
                             id: string;
                             endpointId: string;
                             userId: string;
+                            authorKind: string | null;
+                            authorId: string | null;
                             ownerKind: string;
                             ownerId: string;
                             status: string;
@@ -67557,6 +68504,8 @@ export interface paths {
                             id: string;
                             endpointId: string;
                             userId: string;
+                            authorKind: string | null;
+                            authorId: string | null;
                             ownerKind: string;
                             ownerId: string;
                             status: string;
@@ -67624,6 +68573,8 @@ export interface paths {
                             id: string;
                             endpointId: string;
                             userId: string;
+                            authorKind: string | null;
+                            authorId: string | null;
                             ownerKind: string;
                             ownerId: string;
                             status: string;
@@ -67687,6 +68638,8 @@ export interface paths {
                             id: string;
                             endpointId: string;
                             userId: string;
+                            authorKind: string | null;
+                            authorId: string | null;
                             ownerKind: string;
                             ownerId: string;
                             status: string;
@@ -67797,6 +68750,8 @@ export interface paths {
                         "application/json": {
                             id: string;
                             userId: string;
+                            authorKind: string | null;
+                            authorId: string | null;
                             ownerKind: string;
                             ownerId: string;
                             name: string;
@@ -67850,6 +68805,8 @@ export interface paths {
                         "application/json": {
                             id: string;
                             userId: string;
+                            authorKind: string | null;
+                            authorId: string | null;
                             ownerKind: string;
                             ownerId: string;
                             name: string;
@@ -67918,6 +68875,8 @@ export interface paths {
                         "application/json": {
                             id: string;
                             userId: string;
+                            authorKind: string | null;
+                            authorId: string | null;
                             ownerKind: string;
                             ownerId: string;
                             name: string;
@@ -67981,6 +68940,8 @@ export interface paths {
                         "application/json": {
                             id: string;
                             userId: string;
+                            authorKind: string | null;
+                            authorId: string | null;
                             ownerKind: string;
                             ownerId: string;
                             name: string;
@@ -68094,6 +69055,8 @@ export interface paths {
                             id: string;
                             siteGroupId: string;
                             userId: string;
+                            authorKind: string | null;
+                            authorId: string | null;
                             ownerKind: string;
                             ownerId: string;
                             name: string;
@@ -68147,6 +69110,8 @@ export interface paths {
                             id: string;
                             siteGroupId: string;
                             userId: string;
+                            authorKind: string | null;
+                            authorId: string | null;
                             ownerKind: string;
                             ownerId: string;
                             name: string;
@@ -68215,6 +69180,8 @@ export interface paths {
                             id: string;
                             siteGroupId: string;
                             userId: string;
+                            authorKind: string | null;
+                            authorId: string | null;
                             ownerKind: string;
                             ownerId: string;
                             name: string;
@@ -68278,6 +69245,8 @@ export interface paths {
                             id: string;
                             siteGroupId: string;
                             userId: string;
+                            authorKind: string | null;
+                            authorId: string | null;
                             ownerKind: string;
                             ownerId: string;
                             name: string;
@@ -68683,6 +69652,8 @@ export interface paths {
                         "application/json": {
                             id: string;
                             userId: string | null;
+                            authorKind: string | null;
+                            authorId: string | null;
                             ownerKind: string;
                             ownerId: string;
                             slug: string;
@@ -68765,6 +69736,8 @@ export interface paths {
                         "application/json": {
                             id: string;
                             userId: string | null;
+                            authorKind: string | null;
+                            authorId: string | null;
                             ownerKind: string;
                             ownerId: string;
                             slug: string;
@@ -68848,6 +69821,8 @@ export interface paths {
                         "application/json": {
                             id: string;
                             userId: string | null;
+                            authorKind: string | null;
+                            authorId: string | null;
                             ownerKind: string;
                             ownerId: string;
                             slug: string;
@@ -68939,6 +69914,8 @@ export interface paths {
                         "application/json": {
                             id: string;
                             userId: string | null;
+                            authorKind: string | null;
+                            authorId: string | null;
                             ownerKind: string;
                             ownerId: string;
                             slug: string;
@@ -69033,6 +70010,15 @@ export interface paths {
                         "application/json": components["schemas"]["Error"];
                     };
                 };
+                /** @description Refused: this still owns data (error.code = "still_owns_data", error.owned lists it by table). Hand it over (POST /ownership/handover) or erase it (POST /ownership/erase), then delete again. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
             };
         };
         options?: never;
@@ -69067,6 +70053,8 @@ export interface paths {
                             id: string;
                             personaId: string;
                             userId: string | null;
+                            authorKind: string | null;
+                            authorId: string | null;
                             ownerKind: string;
                             ownerId: string;
                             slug: string;
@@ -69127,6 +70115,8 @@ export interface paths {
                             id: string;
                             personaId: string;
                             userId: string | null;
+                            authorKind: string | null;
+                            authorId: string | null;
                             ownerKind: string;
                             ownerId: string;
                             slug: string;
@@ -69200,6 +70190,8 @@ export interface paths {
                             id: string;
                             personaId: string;
                             userId: string | null;
+                            authorKind: string | null;
+                            authorId: string | null;
                             ownerKind: string;
                             ownerId: string;
                             slug: string;
@@ -69270,6 +70262,8 @@ export interface paths {
                             id: string;
                             personaId: string;
                             userId: string | null;
+                            authorKind: string | null;
+                            authorId: string | null;
                             ownerKind: string;
                             ownerId: string;
                             slug: string;
@@ -69671,6 +70665,8 @@ export interface paths {
                             id: string;
                             ecosystemId: string;
                             customerId: string;
+                            ownerKind: string;
+                            ownerId: string;
                             deletedAt: string | null;
                             name: string;
                             content: (string | number | boolean | null) | {
@@ -69728,6 +70724,8 @@ export interface paths {
                             id: string;
                             ecosystemId: string;
                             customerId: string;
+                            ownerKind: string;
+                            ownerId: string;
                             deletedAt: string | null;
                             name: string;
                             content: (string | number | boolean | null) | {
@@ -69799,6 +70797,8 @@ export interface paths {
                             id: string;
                             ecosystemId: string;
                             customerId: string;
+                            ownerKind: string;
+                            ownerId: string;
                             deletedAt: string | null;
                             name: string;
                             content: (string | number | boolean | null) | {
@@ -69866,6 +70866,8 @@ export interface paths {
                             id: string;
                             ecosystemId: string;
                             customerId: string;
+                            ownerKind: string;
+                            ownerId: string;
                             deletedAt: string | null;
                             name: string;
                             content: (string | number | boolean | null) | {
@@ -69981,6 +70983,8 @@ export interface paths {
                             id: string;
                             ecosystemId: string;
                             customerId: string;
+                            ownerKind: string;
+                            ownerId: string;
                             deletedAt: string | null;
                             /** Format: uuid */
                             personaId: string;
@@ -70060,6 +71064,8 @@ export interface paths {
                             id: string;
                             ecosystemId: string;
                             customerId: string;
+                            ownerKind: string;
+                            ownerId: string;
                             deletedAt: string | null;
                             /** Format: uuid */
                             personaId: string;
@@ -70142,6 +71148,8 @@ export interface paths {
                             id: string;
                             ecosystemId: string;
                             customerId: string;
+                            ownerKind: string;
+                            ownerId: string;
                             deletedAt: string | null;
                             /** Format: uuid */
                             personaId: string;
@@ -70231,6 +71239,8 @@ export interface paths {
                             id: string;
                             ecosystemId: string;
                             customerId: string;
+                            ownerKind: string;
+                            ownerId: string;
                             deletedAt: string | null;
                             /** Format: uuid */
                             personaId: string;
@@ -70357,6 +71367,8 @@ export interface paths {
                             id: string;
                             ecosystemId: string;
                             customerId: string;
+                            ownerKind: string;
+                            ownerId: string;
                             srcId: string;
                             dstId: string;
                             relation: string;
@@ -70410,6 +71422,8 @@ export interface paths {
                             id: string;
                             ecosystemId: string;
                             customerId: string;
+                            ownerKind: string;
+                            ownerId: string;
                             srcId: string;
                             dstId: string;
                             relation: string;
@@ -70479,6 +71493,8 @@ export interface paths {
                             id: string;
                             ecosystemId: string;
                             customerId: string;
+                            ownerKind: string;
+                            ownerId: string;
                             srcId: string;
                             dstId: string;
                             relation: string;
@@ -70542,6 +71558,8 @@ export interface paths {
                             id: string;
                             ecosystemId: string;
                             customerId: string;
+                            ownerKind: string;
+                            ownerId: string;
                             srcId: string;
                             dstId: string;
                             relation: string;
@@ -70655,6 +71673,8 @@ export interface paths {
                             id: string;
                             ecosystemId: string;
                             customerId: string;
+                            ownerKind: string;
+                            ownerId: string;
                             deletedAt: string | null;
                             /** Format: uuid */
                             personaId: string;
@@ -70676,6 +71696,9 @@ export interface paths {
                             lastRecalledAt: string | null;
                             embedding: number[] | null;
                             embeddingModel: string | null;
+                            semanticEmbedding: number[] | null;
+                            semanticStamp: string | null;
+                            semanticSource: string | null;
                             createdAt: string;
                             updatedAt: string;
                             syncVersion: number;
@@ -70738,6 +71761,8 @@ export interface paths {
                             id: string;
                             ecosystemId: string;
                             customerId: string;
+                            ownerKind: string;
+                            ownerId: string;
                             deletedAt: string | null;
                             /** Format: uuid */
                             personaId: string;
@@ -70759,6 +71784,9 @@ export interface paths {
                             lastRecalledAt: string | null;
                             embedding: number[] | null;
                             embeddingModel: string | null;
+                            semanticEmbedding: number[] | null;
+                            semanticStamp: string | null;
+                            semanticSource: string | null;
                             createdAt: string;
                             updatedAt: string;
                             syncVersion: number;
@@ -70824,6 +71852,8 @@ export interface paths {
                             id: string;
                             ecosystemId: string;
                             customerId: string;
+                            ownerKind: string;
+                            ownerId: string;
                             deletedAt: string | null;
                             /** Format: uuid */
                             personaId: string;
@@ -70845,6 +71875,9 @@ export interface paths {
                             lastRecalledAt: string | null;
                             embedding: number[] | null;
                             embeddingModel: string | null;
+                            semanticEmbedding: number[] | null;
+                            semanticStamp: string | null;
+                            semanticSource: string | null;
                             createdAt: string;
                             updatedAt: string;
                             syncVersion: number;
@@ -70917,6 +71950,8 @@ export interface paths {
                             id: string;
                             ecosystemId: string;
                             customerId: string;
+                            ownerKind: string;
+                            ownerId: string;
                             deletedAt: string | null;
                             /** Format: uuid */
                             personaId: string;
@@ -70938,6 +71973,9 @@ export interface paths {
                             lastRecalledAt: string | null;
                             embedding: number[] | null;
                             embeddingModel: string | null;
+                            semanticEmbedding: number[] | null;
+                            semanticStamp: string | null;
+                            semanticSource: string | null;
                             createdAt: string;
                             updatedAt: string;
                             syncVersion: number;
@@ -71046,6 +72084,8 @@ export interface paths {
                         "application/json": {
                             id: string;
                             customerId: string;
+                            ownerKind: string;
+                            ownerId: string;
                             deletedAt: string | null;
                             ecosystemId: string;
                             institution: string;
@@ -71107,6 +72147,8 @@ export interface paths {
                         "application/json": {
                             id: string;
                             customerId: string;
+                            ownerKind: string;
+                            ownerId: string;
                             deletedAt: string | null;
                             ecosystemId: string;
                             institution: string;
@@ -71180,6 +72222,8 @@ export interface paths {
                         "application/json": {
                             id: string;
                             customerId: string;
+                            ownerKind: string;
+                            ownerId: string;
                             deletedAt: string | null;
                             ecosystemId: string;
                             institution: string;
@@ -71251,6 +72295,8 @@ export interface paths {
                         "application/json": {
                             id: string;
                             customerId: string;
+                            ownerKind: string;
+                            ownerId: string;
                             deletedAt: string | null;
                             ecosystemId: string;
                             institution: string;
@@ -71368,6 +72414,8 @@ export interface paths {
                         "application/json": {
                             id: string;
                             customerId: string;
+                            ownerKind: string;
+                            ownerId: string;
                             deletedAt: string | null;
                             ecosystemId: string;
                             company: string;
@@ -71429,6 +72477,8 @@ export interface paths {
                         "application/json": {
                             id: string;
                             customerId: string;
+                            ownerKind: string;
+                            ownerId: string;
                             deletedAt: string | null;
                             ecosystemId: string;
                             company: string;
@@ -71502,6 +72552,8 @@ export interface paths {
                         "application/json": {
                             id: string;
                             customerId: string;
+                            ownerKind: string;
+                            ownerId: string;
                             deletedAt: string | null;
                             ecosystemId: string;
                             company: string;
@@ -71573,6 +72625,8 @@ export interface paths {
                         "application/json": {
                             id: string;
                             customerId: string;
+                            ownerKind: string;
+                            ownerId: string;
                             deletedAt: string | null;
                             ecosystemId: string;
                             company: string;
@@ -71690,6 +72744,8 @@ export interface paths {
                         "application/json": {
                             id: string;
                             customerId: string;
+                            ownerKind: string;
+                            ownerId: string;
                             deletedAt: string | null;
                             ecosystemId: string;
                             connectionId: string;
@@ -71764,6 +72820,8 @@ export interface paths {
                         "application/json": {
                             id: string;
                             customerId: string;
+                            ownerKind: string;
+                            ownerId: string;
                             deletedAt: string | null;
                             ecosystemId: string;
                             connectionId: string;
@@ -71844,6 +72902,8 @@ export interface paths {
                         "application/json": {
                             id: string;
                             customerId: string;
+                            ownerKind: string;
+                            ownerId: string;
                             deletedAt: string | null;
                             ecosystemId: string;
                             connectionId: string;
@@ -71928,6 +72988,8 @@ export interface paths {
                         "application/json": {
                             id: string;
                             customerId: string;
+                            ownerKind: string;
+                            ownerId: string;
                             deletedAt: string | null;
                             ecosystemId: string;
                             connectionId: string;
@@ -72052,6 +73114,8 @@ export interface paths {
                         "application/json": {
                             id: string;
                             customerId: string;
+                            ownerKind: string;
+                            ownerId: string;
                             deletedAt: string | null;
                             ecosystemId: string;
                             category: string;
@@ -72107,6 +73171,8 @@ export interface paths {
                         "application/json": {
                             id: string;
                             customerId: string;
+                            ownerKind: string;
+                            ownerId: string;
                             deletedAt: string | null;
                             ecosystemId: string;
                             category: string;
@@ -72177,6 +73243,8 @@ export interface paths {
                         "application/json": {
                             id: string;
                             customerId: string;
+                            ownerKind: string;
+                            ownerId: string;
                             deletedAt: string | null;
                             ecosystemId: string;
                             category: string;
@@ -72242,6 +73310,8 @@ export interface paths {
                         "application/json": {
                             id: string;
                             customerId: string;
+                            ownerKind: string;
+                            ownerId: string;
                             deletedAt: string | null;
                             ecosystemId: string;
                             category: string;
@@ -72357,6 +73427,8 @@ export interface paths {
                             id: string;
                             ecosystemId: string;
                             userId: string;
+                            authorKind: string | null;
+                            authorId: string | null;
                             ownerKind: string;
                             ownerId: string;
                             parentId: string | null;
@@ -72414,6 +73486,8 @@ export interface paths {
                             id: string;
                             ecosystemId: string;
                             userId: string;
+                            authorKind: string | null;
+                            authorId: string | null;
                             ownerKind: string;
                             ownerId: string;
                             parentId: string | null;
@@ -72484,6 +73558,8 @@ export interface paths {
                             id: string;
                             ecosystemId: string;
                             userId: string;
+                            authorKind: string | null;
+                            authorId: string | null;
                             ownerKind: string;
                             ownerId: string;
                             parentId: string | null;
@@ -72551,6 +73627,8 @@ export interface paths {
                             id: string;
                             ecosystemId: string;
                             userId: string;
+                            authorKind: string | null;
+                            authorId: string | null;
                             ownerKind: string;
                             ownerId: string;
                             parentId: string | null;
@@ -72961,6 +74039,8 @@ export interface paths {
                             name: string;
                             description: string;
                             createdBy: string | null;
+                            authorKind: string | null;
+                            authorId: string | null;
                             createdAt: string;
                             updatedAt: string;
                             isDeleted: boolean;
@@ -73013,6 +74093,8 @@ export interface paths {
                             name: string;
                             description: string;
                             createdBy: string | null;
+                            authorKind: string | null;
+                            authorId: string | null;
                             createdAt: string;
                             updatedAt: string;
                             isDeleted: boolean;
@@ -73080,6 +74162,8 @@ export interface paths {
                             name: string;
                             description: string;
                             createdBy: string | null;
+                            authorKind: string | null;
+                            authorId: string | null;
                             createdAt: string;
                             updatedAt: string;
                             isDeleted: boolean;
@@ -73142,6 +74226,8 @@ export interface paths {
                             name: string;
                             description: string;
                             createdBy: string | null;
+                            authorKind: string | null;
+                            authorId: string | null;
                             createdAt: string;
                             updatedAt: string;
                             isDeleted: boolean;
@@ -74740,6 +75826,11 @@ export interface components {
             error?: {
                 message?: string;
                 code?: string;
+                /** @description present when code is still_owns_data: the tables still owned, with counts */
+                owned?: {
+                    table: string;
+                    rows: number;
+                }[];
             };
         };
         User: {
@@ -75730,7 +76821,7 @@ export interface components {
             ecosystemId: string;
             accessGroupId: string;
             /** @enum {string} */
-            targetType: "bucket" | "bucket_type" | "row";
+            targetType: "bucket" | "bucket_type";
             targetId: string;
             /** @description comma-separated CRUD subset, e.g. 'C,R,U,D' or '' (none) */
             crud: string;
@@ -75744,6 +76835,22 @@ export interface components {
         };
         BucketAccessGroupList: {
             accessGroups: components["schemas"]["BucketAccessGroup"][];
+        };
+        AccessTag: {
+            id: string;
+            /** @description owning ecosystem */
+            ecosystemId: string;
+            /** @description unique within the ecosystem */
+            name: string;
+            description: string;
+            createdAt: string;
+            updatedAt: string;
+        };
+        AccessTagList: {
+            tags: components["schemas"]["AccessTag"][];
+        };
+        BucketTypeTagIds: {
+            tagIds: string[];
         };
         ChatConversation: {
             /** Format: uuid */
@@ -76736,16 +77843,6 @@ export interface components {
             slug: string;
             avatarUrl: string;
         };
-        CorpusEmbedResult: {
-            /** @description Documents (re)split into passages this call */
-            chunked: number;
-            /** @description Passages embedded this call */
-            embedded: number;
-            /** @description Passages that failed to embed (retried by the next call) */
-            failed: number;
-            /** @description True if a batch filled `limit`, i.e. work was left UNATTEMPTED — call again. Never true merely because passages failed, so a "while more" loop cannot spin forever on one permanently unembeddable passage. */
-            more: boolean;
-        };
         /**
          * StringList
          * @description A wrapper object `{ items: string[] }` (NOT a bare array). Returned by the public tag/category facet endpoints and the project label list.
@@ -77616,7 +78713,6 @@ export interface components {
             validTo?: string | null;
             recallCount: number;
             lastRecalledAt?: string | null;
-            embeddingModel?: string | null;
             createdAt: string;
             updatedAt: string;
         };
@@ -77632,19 +78728,11 @@ export interface components {
             body: string;
             confidence: number;
             tags: string[];
-            /** @description Cosine similarity, negatives clamped to 0 */
-            similarity: number;
+            /** @description Cosine similarity, negatives clamped to 0; null for a keyword hit */
+            similarity: number | null;
         };
         PersonaMemoryRecallResult: {
             memories: components["schemas"]["PersonaMemoryMatch"][];
-        };
-        PersonaMemoryEmbedResult: {
-            /** @description Rows embedded this call */
-            embedded: number;
-            /** @description Rows that failed to embed (retried next call) */
-            failed: number;
-            /** @description True if the batch filled `limit` — call again */
-            more: boolean;
         };
         PersonaService: {
             id: string;
@@ -79123,11 +80211,16 @@ export interface components {
         StorageAttachment: {
             id: string;
             ecosystemId: string;
+            /** @description The owning customer, empty when the owner is not a customer. Superseded by ownerKind / ownerId, and kept on the wire for clients that have not moved. */
             customerId: string;
-            /** @description e.g. 'standalone', 'chat_message', 'document' */
-            ownerType: string;
-            /** @description Polymorphic domain owner (NOT the tenant). */
-            ownerId?: string | null;
+            /** @description Kind of principal that owns the attachment: 'customer', 'organization', 'application', 'persona' or 'ecosystem'. */
+            ownerKind: string;
+            /** @description Id of the owning principal. */
+            ownerId: string;
+            /** @description Kind of row the attachment hangs off, e.g. 'standalone', 'persona', 'registry.entry'. */
+            parentType: string;
+            /** @description Id of the row the attachment hangs off; null for a standalone attachment. */
+            parentId?: string | null;
             /** @description R2 object key the presigned URLs address. */
             objectKey: string;
             /** @description Backing store, e.g. 'r2'. */
@@ -79195,7 +80288,7 @@ export interface components {
             op: "upsert" | "delete";
             /** @description Server-assigned monotonic version (bigint as string) */
             syncVersion: string;
-            /** @description Full row for upserts; absent for deletes */
+            /** @description Row for upserts, minus server-internal sync columns and derived columns such as a memory's embedding; absent for deletes */
             data?: {
                 [key: string]: unknown;
             };
@@ -79251,8 +80344,11 @@ export interface components {
         SyncEnrollmentRow: {
             /** @description "<schema>.<table>", e.g. content.contacts */
             resource: string;
-            /** @enum {string} */
-            scope: "customer" | "ecosystem";
+            /**
+             * @description Which rows a caller syncs: 'owner' the rows whose owner pair names them, 'customer' the rows whose customer_id does, 'ecosystem' every row in their ecosystem
+             * @enum {string}
+             */
+            scope: "owner" | "customer" | "ecosystem";
             /**
              * @description 'route' means /sync/push refuses direct writes; the row's own route owns them
              * @enum {string}

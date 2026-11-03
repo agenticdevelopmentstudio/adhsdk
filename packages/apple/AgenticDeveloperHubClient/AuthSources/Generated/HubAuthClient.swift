@@ -993,6 +993,8 @@ public struct HubAuthClient: APIProtocol {
     }
     /// Current user
     ///
+    /// A platform token answers the hub user (User). An end-customer token (client-auth) answers its customer record in the customer realm instead — the CustomerMe schema, linked from the 200 response's `x-customer-realm`. For a customer token, a customer row that is gone (or an ecosystem that is deleted, archived or has login disabled) is 401, never 404; 404 is the platform user-not-found case only.
+    ///
     /// - Remark: HTTP `GET /auth/me`.
     /// - Remark: Generated from `#/paths//auth/me/get`.
     public func getAuthMe(_ input: Operations.GetAuthMe.Input) async throws -> Operations.GetAuthMe.Output {
@@ -1061,6 +1063,28 @@ public struct HubAuthClient: APIProtocol {
                         preconditionFailure("bestContentType chose an invalid content type.")
                     }
                     return .unauthorized(.init(body: body))
+                case 404:
+                    let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
+                    let body: Operations.GetAuthMe.Output.NotFound.Body
+                    let chosenContentType = try converter.bestContentType(
+                        received: contentType,
+                        options: [
+                            "application/json"
+                        ]
+                    )
+                    switch chosenContentType {
+                    case "application/json":
+                        body = try await converter.getResponseBodyAsJSON(
+                            Components.Schemas._Error.self,
+                            from: responseBody,
+                            transforming: { value in
+                                .json(value)
+                            }
+                        )
+                    default:
+                        preconditionFailure("bestContentType chose an invalid content type.")
+                    }
+                    return .notFound(.init(body: body))
                 default:
                     return .undocumented(
                         statusCode: response.status.code,

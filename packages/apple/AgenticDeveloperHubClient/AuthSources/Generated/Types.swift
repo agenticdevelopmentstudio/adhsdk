@@ -53,6 +53,8 @@ public protocol APIProtocol: Sendable {
     func postAuthRefresh(_ input: Operations.PostAuthRefresh.Input) async throws -> Operations.PostAuthRefresh.Output
     /// Current user
     ///
+    /// A platform token answers the hub user (User). An end-customer token (client-auth) answers its customer record in the customer realm instead — the CustomerMe schema, linked from the 200 response's `x-customer-realm`. For a customer token, a customer row that is gone (or an ecosystem that is deleted, archived or has login disabled) is 401, never 404; 404 is the platform user-not-found case only.
+    ///
     /// - Remark: HTTP `GET /auth/me`.
     /// - Remark: Generated from `#/paths//auth/me/get`.
     func getAuthMe(_ input: Operations.GetAuthMe.Input) async throws -> Operations.GetAuthMe.Output
@@ -180,6 +182,8 @@ extension APIProtocol {
     }
     /// Current user
     ///
+    /// A platform token answers the hub user (User). An end-customer token (client-auth) answers its customer record in the customer realm instead — the CustomerMe schema, linked from the 200 response's `x-customer-realm`. For a customer token, a customer row that is gone (or an ecosystem that is deleted, archived or has login disabled) is 401, never 404; 404 is the platform user-not-found case only.
+    ///
     /// - Remark: HTTP `GET /auth/me`.
     /// - Remark: Generated from `#/paths//auth/me/get`.
     public func getAuthMe(headers: Operations.GetAuthMe.Input.Headers = .init()) async throws -> Operations.GetAuthMe.Output {
@@ -303,21 +307,56 @@ public enum Components {
                 public var message: Swift.String?
                 /// - Remark: Generated from `#/components/schemas/Error/error/code`.
                 public var code: Swift.String?
+                /// - Remark: Generated from `#/components/schemas/Error/error/OwnedPayload`.
+                public struct OwnedPayloadPayload: Codable, Hashable, Sendable {
+                    /// - Remark: Generated from `#/components/schemas/Error/error/OwnedPayload/table`.
+                    public var table: Swift.String
+                    /// - Remark: Generated from `#/components/schemas/Error/error/OwnedPayload/rows`.
+                    public var rows: Swift.Int
+                    /// Creates a new `OwnedPayloadPayload`.
+                    ///
+                    /// - Parameters:
+                    ///   - table:
+                    ///   - rows:
+                    public init(
+                        table: Swift.String,
+                        rows: Swift.Int
+                    ) {
+                        self.table = table
+                        self.rows = rows
+                    }
+                    public enum CodingKeys: String, CodingKey {
+                        case table
+                        case rows
+                    }
+                }
+                /// present when code is still_owns_data: the tables still owned, with counts
+                ///
+                /// - Remark: Generated from `#/components/schemas/Error/error/owned`.
+                public typealias OwnedPayload = [Components.Schemas._Error._ErrorPayload.OwnedPayloadPayload]
+                /// present when code is still_owns_data: the tables still owned, with counts
+                ///
+                /// - Remark: Generated from `#/components/schemas/Error/error/owned`.
+                public var owned: Components.Schemas._Error._ErrorPayload.OwnedPayload?
                 /// Creates a new `_ErrorPayload`.
                 ///
                 /// - Parameters:
                 ///   - message:
                 ///   - code:
+                ///   - owned: present when code is still_owns_data: the tables still owned, with counts
                 public init(
                     message: Swift.String? = nil,
-                    code: Swift.String? = nil
+                    code: Swift.String? = nil,
+                    owned: Components.Schemas._Error._ErrorPayload.OwnedPayload? = nil
                 ) {
                     self.message = message
                     self.code = code
+                    self.owned = owned
                 }
                 public enum CodingKeys: String, CodingKey {
                     case message
                     case code
+                    case owned
                 }
             }
             /// - Remark: Generated from `#/components/schemas/Error/error`.
@@ -2817,6 +2856,8 @@ public enum Operations {
     }
     /// Current user
     ///
+    /// A platform token answers the hub user (User). An end-customer token (client-auth) answers its customer record in the customer realm instead — the CustomerMe schema, linked from the 200 response's `x-customer-realm`. For a customer token, a customer row that is gone (or an ecosystem that is deleted, archived or has login disabled) is 401, never 404; 404 is the platform user-not-found case only.
+    ///
     /// - Remark: HTTP `GET /auth/me`.
     /// - Remark: Generated from `#/paths//auth/me/get`.
     public enum GetAuthMe {
@@ -2940,6 +2981,57 @@ public enum Operations {
                     default:
                         try throwUnexpectedResponseStatus(
                             expectedStatus: "unauthorized",
+                            response: self
+                        )
+                    }
+                }
+            }
+            public struct NotFound: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/auth/me/GET/responses/404/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/auth/me/GET/responses/404/content/application\/json`.
+                    case json(Components.Schemas._Error)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas._Error {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.GetAuthMe.Output.NotFound.Body
+                /// Creates a new `NotFound`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.GetAuthMe.Output.NotFound.Body) {
+                    self.body = body
+                }
+            }
+            /// Error
+            ///
+            /// - Remark: Generated from `#/paths//auth/me/get/responses/404`.
+            ///
+            /// HTTP response code: `404 notFound`.
+            case notFound(Operations.GetAuthMe.Output.NotFound)
+            /// The associated value of the enum case if `self` is `.notFound`.
+            ///
+            /// - Throws: An error if `self` is not `.notFound`.
+            /// - SeeAlso: `.notFound`.
+            public var notFound: Operations.GetAuthMe.Output.NotFound {
+                get throws {
+                    switch self {
+                    case let .notFound(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "notFound",
                             response: self
                         )
                     }

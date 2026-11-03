@@ -301,6 +301,8 @@ extension ADHClient {
             return try ok.body.json
         case .unauthorized:
             throw SessionError.invalidCredentials
+        case .notFound(let r):
+            throw SessionError.unexpectedResponse(Self.message(try r.body.json))
         case .undocumented(let status, _):
             throw SessionError.unexpectedResponse("HTTP \(status)")
         }
