@@ -29,6 +29,8 @@ public struct SessionDaemonConfiguration: Sendable {
     public var retentionCheckInterval: TimeInterval
     /// The file the signed-in Claude account is read from; nil means `~/.claude.json`.
     public var claudeJSONPath: String?
+    /// Claude Code's transcript root, which the transcript source sweeps and tails.
+    public var claudeProjectsDirectory: URL
     /// Folders scanned for `.aiplugin` bundles in addition to the default
     /// `~/.agenticplugins` and the bundle's `PlugIns`: where this daemon's host app
     /// installs AI plugins. Empty means only the defaults.
@@ -59,6 +61,7 @@ public struct SessionDaemonConfiguration: Sendable {
         livenessCheckInterval: TimeInterval = 10,
         retentionCheckInterval: TimeInterval = 86400,
         claudeJSONPath: String? = nil,
+        claudeProjectsDirectory: URL? = nil,
         pluginSearchPaths: [URL] = [],
         summariesDefaultEnabled: Bool,
         managesHooks: Bool = true
@@ -78,6 +81,8 @@ public struct SessionDaemonConfiguration: Sendable {
         self.livenessCheckInterval = livenessCheckInterval
         self.retentionCheckInterval = retentionCheckInterval
         self.claudeJSONPath = claudeJSONPath
+        self.claudeProjectsDirectory = claudeProjectsDirectory
+            ?? FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent(".claude/projects")
         self.pluginSearchPaths = pluginSearchPaths
         self.summariesDefaultEnabled = summariesDefaultEnabled
         self.managesHooks = managesHooks
@@ -107,6 +112,7 @@ public struct SessionDaemonConfiguration: Sendable {
             ),
             livenessCheckInterval: 1,
             claudeJSONPath: base.appendingPathComponent("claude.json").path,
+            claudeProjectsDirectory: base.appendingPathComponent("projects"),
             summariesDefaultEnabled: false
         )
     }

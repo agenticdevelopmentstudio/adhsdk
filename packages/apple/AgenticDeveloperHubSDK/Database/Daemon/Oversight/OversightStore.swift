@@ -275,22 +275,11 @@ extension DaemonDatabase {
 
     /// The type of the session's most recent event, or "" if it has none. `Stop` means
     /// Claude finished a response and is waiting for the user (a safe breakpoint to inject
-    /// `/compact`); anything else means it is mid-response. Single-session + indexed on
-    /// `session_id`, so it sorts only that one session's events — bounded and cheap. The
-    /// `id DESC` tiebreak orders events that share a one-second timestamp by insertion.
+    /// `/compact`); anything else means it is mid-response. Read from the event store's
+    /// `(provider, session_id, time)` index, so it touches one row. The `id DESC`
+    /// tiebreak orders events that share an instant by insertion. "" without a store.
     public func lastEventType(sessionId: String) throws -> String {
-        try read { _ in
-            var out = ""
-            try query("""
-                SELECT event_type FROM event_log
-                WHERE session_id = ?
-                ORDER BY timestamp DESC, id DESC
-                LIMIT 1
-            """, params: [sessionId]) { row in
-                out = string(row, 0)
-            }
-            return out
-        }
+        try claudeLastEventType(sessionId: sessionId)
     }
 }
 #endif

@@ -49,6 +49,17 @@ public final class IngestionPipeline: @unchecked Sendable {
     /// "recovered" and delete the file WITHOUT ingesting it.
     public let retryIngest: @Sendable (ParsedEvent) throws -> Void
 
+    /// Whether the legacy writers run: no Claude pipeline at init and the fallback
+    /// allowed. Fixed for the run: a pipeline that opens later never takes over
+    /// from running legacy writers (the runtime only retries the open when the
+    /// fallback is off).
+    public let legacyWriters: Bool
+
+    /// The Claude pipeline, read at call time by `capture`, `retryIngest`, the
+    /// quarantine's preserve and the transcript tailer, so one that opens mid-run
+    /// takes over all four.
+    public let claude: ClaudePipelineSlot
+
     private let drainer: IngestDrainer
     private let socketHandler: IngestSocketHandler
 
@@ -60,6 +71,21 @@ public final class IngestionPipeline: @unchecked Sendable {
     ///     ``SocketDecodeFailure`` when they are malformed or untrackable.
     ///   - summarizeOnStop: called with the session id after `Stop` / `SessionEnd`.
     ///   - footprintSuffix: appended to the ingestor's backfill log lines.
+    ///   - claude: the Claude provider pipeline, as a slot that may be filled
+    ///     later. While it holds one, a capture and a quarantine retry go to its
+    ///     spool, and the transcript tailer feeds its transcript source, instead of
+    ///     the legacy spool and writers, and a quarantined file is preserved in its
+    ///     raw archive before the service deletes it. Empty at init keeps the
+    ///     legacy path, subject to `legacyWriterFallback`.
+    ///   - legacyWriterFallback: whether, with no Claude pipeline at init, the
+    ///     legacy writers (`ingestEvent`, `JSONLImporter`) take over. True for a
+    ///     daemon that still writes the legacy tables. False for one whose events
+    ///     live in the Claude pipeline only: there, until the slot is filled, a
+    ///     capture stays in the legacy spool (adopted when the pipeline opens), a
+    ///     quarantine retry and a quarantine preserve are held
+    ///     (`QuarantineRetryHeld`, so the file is kept), the transcript tailer
+    ///     reads nothing (the lines stay on disk behind the transcript source's
+    ///     cursor) and ``startDraining()`` does nothing.
     public init(
         paths: Paths,
         spool: IngestSpool,
@@ -68,12 +94,16 @@ public final class IngestionPipeline: @unchecked Sendable {
         queueLabel: @Sendable (String) -> String,
         decode: @escaping @Sendable (Data) throws -> ParsedEvent,
         summarizeOnStop: (@Sendable (String) async -> Void)? = nil,
-        footprintSuffix: @escaping @Sendable () -> String = { "" }
+        footprintSuffix: @escaping @Sendable () -> String = { "" },
+        claude: ClaudePipelineSlot = ClaudePipelineSlot(),
+        legacyWriterFallback: Bool = true
     ) {
+        let legacyWriters = claude.current == nil && legacyWriterFallback
         let quarantine = QuarantineService(
             errorsDirectory: paths.errorsDirectory,
             database: database,
-            queueLabel: queueLabel("quarantine-retry")
+            queueLabel: queueLabel("quarantine-retry"),
+            preserveRaw: Self.preserveRaw(claude, legacyWriters: legacyWriters)
         )
         let ingestor = EventIngestor(
             dropDirectory: paths.dropDirectory,
@@ -82,7 +112,8 @@ public final class IngestionPipeline: @unchecked Sendable {
             quarantine: quarantine,
             tailerQueueLabel: queueLabel("transcript-tailer"),
             summarizeOnStop: summarizeOnStop,
-            footprintSuffix: footprintSuffix
+            footprintSuffix: footprintSuffix,
+            transcriptPoll: Self.transcriptPoll(claude, legacyWriters: legacyWriters)
         )
         let drainer = IngestDrainer(
             spool: spool,
@@ -95,7 +126,13 @@ public final class IngestionPipeline: @unchecked Sendable {
         let dropDirectory = paths.dropDirectory
         let capture: @Sendable (ParsedEvent) throws -> Void = { [drainer] event in
             do {
-                try spool.enqueue(event)
+                // Appends to the Claude spool and wakes its drainer when the
+                // pipeline is open. Otherwise the legacy spool takes it, under the
+                // slot's lock, so a pipeline opening now adopts it.
+                let captured = try claude.route(
+                    open: { pipeline in try pipeline.capture(event); return true },
+                    held: { try spool.enqueue(event); return false })
+                if captured { return }
             } catch {
                 // The spool file itself is unwritable — a full volume, most
                 // likely, which is also the one condition under which an
@@ -120,7 +157,22 @@ public final class IngestionPipeline: @unchecked Sendable {
         self.spool = spool
         self.drainer = drainer
         self.capture = capture
-        self.retryIngest = { [ingestor] in try ingestor.ingest($0) }
+        if legacyWriters {
+            self.retryIngest = { [ingestor] in try ingestor.ingest($0) }
+        } else {
+            // A retried event is captured afresh: the Claude spool takes it and the
+            // drainer writes it, so nothing re-enters the legacy writer. With the
+            // pipeline not open there is nowhere to write it: the file stays
+            // quarantined, its retry count untouched, for a retry once it opens.
+            self.retryIngest = { event in
+                guard let pipeline = claude.current else {
+                    throw QuarantineRetryHeld("Claude pipeline unavailable")
+                }
+                try pipeline.capture(event)
+            }
+        }
+        self.legacyWriters = legacyWriters
+        self.claude = claude
         self.socketHandler = IngestSocketHandler(
             socketPath: paths.socketPath, capture: capture, decode: decode
         )
@@ -136,7 +188,11 @@ public final class IngestionPipeline: @unchecked Sendable {
 
     /// Starts emptying the spool into the database. Call only once the database is
     /// migrated — this is the writer the migration protects the schema for.
+    /// Does nothing when the legacy writers are off (a Claude pipeline is
+    /// attached, or `legacyWriterFallback` is false): the legacy spool is then
+    /// only a holding area the Claude pipeline adopts.
     public func startDraining() {
+        guard legacyWriters else { return }
         drainer.start()
     }
 
@@ -147,6 +203,34 @@ public final class IngestionPipeline: @unchecked Sendable {
     public func stop() async {
         drainer.stop()
         socketHandler.stop()
+    }
+
+    /// The tailer's per-file read into the Claude pipeline; nil for the legacy
+    /// import. While the pipeline is not open it reads nothing (the lines wait on
+    /// disk behind the transcript source's cursor).
+    private static func transcriptPoll(
+        _ claude: ClaudePipelineSlot, legacyWriters: Bool
+    ) -> (@Sendable (URL) throws -> Void)? {
+        if legacyWriters { return nil }
+        return { url in
+            guard let pipeline = claude.current else { return }
+            _ = try pipeline.pollTranscript(file: url)
+        }
+    }
+
+    /// Hands a quarantined file to the Claude pipeline before the quarantine
+    /// deletes it; nil (delete outright) for legacy writers. While the pipeline is
+    /// not open the preserve is held, so the quarantine keeps the file.
+    private static func preserveRaw(
+        _ claude: ClaudePipelineSlot, legacyWriters: Bool
+    ) -> (@Sendable (URL) throws -> Void)? {
+        if legacyWriters { return nil }
+        return { url in
+            guard let pipeline = claude.current else {
+                throw QuarantineRetryHeld("Claude pipeline unavailable")
+            }
+            try pipeline.preserveQuarantinedFile(url)
+        }
     }
 
     // MARK: - Drop file fallback
