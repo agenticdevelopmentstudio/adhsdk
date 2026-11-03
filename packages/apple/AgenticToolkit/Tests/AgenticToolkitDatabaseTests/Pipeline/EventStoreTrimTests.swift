@@ -133,7 +133,7 @@ final class EventStoreTrimTests: XCTestCase {
         let first = try store.trim(olderThan: cutoff, batch: 500, deadline: .distantPast)
 
         XCTAssertFalse(first.finished)
-        XCTAssertEqual(first.events + first.messages + first.turns + first.sessions, 500)
+        XCTAssertEqual(first, EventStoreTrimResult(events: 500, finished: false))
         XCTAssertEqual(try store.counts().events, 700)
         // Oldest first: what is left is the newest 700.
         XCTAssertEqual(try times(store, "events").first, date(5).timeIntervalSince1970)
@@ -213,6 +213,139 @@ final class EventStoreTrimTests: XCTestCase {
         XCTAssertThrowsError(try SQLiteFileStats.stats(path: missing))
         XCTAssertFalse(FileManager.default.fileExists(atPath: missing))
         XCTAssertFalse(FileManager.default.fileExists(atPath: missing + "-wal"))
+        XCTAssertFalse(FileManager.default.fileExists(atPath: missing + "-shm"))
+    }
+
+    func testSQLiteFileStatsOnAClosedWALFileReadsTheHeaderAndCreatesNoSidecars() throws {
+        let filePath = path("closed-wal.db")
+        let expected: (pageSize: Int, pageCount: Int, freelist: Int, autoVacuum: Int)
+        do {
+            var configuration = Configuration()
+            configuration.prepareDatabase { conn in
+                if !conn.configuration.readonly { try conn.execute(sql: "PRAGMA auto_vacuum = INCREMENTAL") }
+            }
+            let pool = try DatabasePool(path: filePath, configuration: configuration)
+            try pool.write { conn in
+                try conn.execute(sql: "CREATE TABLE t(x TEXT)")
+                for index in 0..<2000 {
+                    try conn.execute(sql: "INSERT INTO t VALUES (?)",
+                                     arguments: [String(repeating: "y", count: 200) + "\(index)"])
+                }
+            }
+            try pool.write { conn in try conn.execute(sql: "DELETE FROM t WHERE rowid % 2 = 0") }
+            try pool.writeWithoutTransaction { conn in
+                _ = try Row.fetchOne(conn, sql: "PRAGMA wal_checkpoint(TRUNCATE)")
+            }
+            expected = try pool.read { conn in
+                (try Int.fetchOne(conn, sql: "PRAGMA page_size") ?? 0,
+                 try Int.fetchOne(conn, sql: "PRAGMA page_count") ?? 0,
+                 try Int.fetchOne(conn, sql: "PRAGMA freelist_count") ?? 0,
+                 try Int.fetchOne(conn, sql: "PRAGMA auto_vacuum") ?? 0)
+            }
+            XCTAssertEqual(try pool.read { try String.fetchOne($0, sql: "PRAGMA journal_mode") }, "wal")
+            try pool.close()
+        }
+        // Apple's SQLite keeps the sidecars after a clean close; other builds delete
+        // them. The WAL was checkpointed with TRUNCATE (empty), so removing them
+        // leaves the state a non-persistent build's clean close leaves.
+        let manager = FileManager.default
+        let walSize = (try? manager.attributesOfItem(atPath: filePath + "-wal"))?[.size] as? NSNumber
+        XCTAssertEqual(walSize?.int64Value ?? 0, 0)
+        try? manager.removeItem(atPath: filePath + "-wal")
+        try? manager.removeItem(atPath: filePath + "-shm")
+
+        let stats = try SQLiteFileStats.stats(path: filePath)
+
+        XCTAssertFalse(manager.fileExists(atPath: filePath + "-wal"))
+        XCTAssertFalse(manager.fileExists(atPath: filePath + "-shm"))
+        XCTAssertGreaterThan(expected.freelist, 0)
+        XCTAssertEqual(stats.pageSize, expected.pageSize)
+        XCTAssertEqual(stats.pageCount, expected.pageCount)
+        XCTAssertEqual(stats.freelistCount, expected.freelist)
+        XCTAssertEqual(stats.autoVacuum, 2)
+        XCTAssertEqual(expected.autoVacuum, 2)
+        let size = (try manager.attributesOfItem(atPath: filePath)[.size] as? NSNumber)?.int64Value
+        XCTAssertEqual(stats.bytes, size)
+    }
+
+    func testSQLiteFileStatsRefusesAFileThatIsNotSQLite() throws {
+        let filePath = path("not-sqlite.db")
+        try Data(repeating: 0x41, count: 200).write(to: URL(fileURLWithPath: filePath))
+        XCTAssertThrowsError(try SQLiteFileStats.stats(path: filePath)) { error in
+            XCTAssertEqual(error as? SQLiteFileStatsError, .notSQLite(path: filePath))
+        }
+    }
+
+    // MARK: - Fix round 1
+
+    func testTrimKeepsAResumedSessionWithAStaleEndedAt() throws {
+        let store = try makeStore()
+        var ended = NormalizedBatch()
+        ended.sessions = [SessionUpsert(sessionID: "resumed", asOf: date(5), status: "ended", endedAt: date(5))]
+        try store.write(ended, provider: "mock")
+        var resumed = NormalizedBatch()
+        resumed.sessions = [SessionUpsert(sessionID: "resumed", asOf: date(500), status: "active")]
+        try store.write(resumed, provider: "mock")
+
+        let result = try store.trim(olderThan: date(100).timeIntervalSince1970, deadline: future)
+
+        XCTAssertEqual(result.sessions, 0)
+        XCTAssertEqual(try sessionIDs(store), ["resumed"])
+    }
+
+    func testTrimAndVacuumAreRefusedDuringABulkLoad() throws {
+        let store = try makeStore()
+        var batch = NormalizedBatch()
+        batch.events = [event("e", session: "s", at: 1)]
+        try store.write(batch, provider: "mock")
+        try store.beginBulkLoad()
+
+        XCTAssertThrowsError(try store.trim(olderThan: date(100).timeIntervalSince1970, deadline: future)) {
+            XCTAssertEqual($0 as? EventStoreError, .bulkLoadInProgress)
+        }
+        XCTAssertThrowsError(try store.incrementalVacuum(deadline: future)) {
+            XCTAssertEqual($0 as? EventStoreError, .bulkLoadInProgress)
+        }
+        XCTAssertEqual(try store.counts().events, 1)
+
+        try store.endBulkLoad()
+        XCTAssertEqual(try store.trim(olderThan: date(100).timeIntervalSince1970, deadline: future).events, 1)
+    }
+
+    func testTrimIsRefusedWhenACrashLeftTheBulkLoadFlag() throws {
+        // The on-disk flag without this process's bulk window: what another process's
+        // crashed replay leaves on a file this store already has open.
+        let store = try makeStore()
+        try store.pool.write { conn in
+            try conn.execute(sql: "INSERT OR REPLACE INTO store_meta(key, value) VALUES('bulk_load', '1')")
+        }
+        XCTAssertThrowsError(try store.trim(olderThan: date(100).timeIntervalSince1970, deadline: future)) {
+            XCTAssertEqual($0 as? EventStoreError, .bulkLoadInProgress)
+        }
+    }
+
+    func testTrimDeletesOldMessagesOfEveryProvider() throws {
+        let store = try makeStore()
+        for provider in ["mock", "claude", "zeta"] {
+            var batch = NormalizedBatch()
+            batch.messages = (0..<7).map { message("\(provider)-\($0)", session: "s", at: Double($0 * 30)) }
+            try store.write(batch, provider: provider)
+        }
+
+        // 0, 30, 60, 90 are older than 100 in each provider; batch 2 loops per provider.
+        let result = try store.trim(olderThan: date(100).timeIntervalSince1970, batch: 2, deadline: future)
+
+        XCTAssertEqual(result.messages, 12)
+        XCTAssertTrue(result.finished)
+        let left = try store.read { conn in
+            try Row.fetchAll(
+                conn, sql: "SELECT provider, COUNT(*) AS n, MIN(time) AS t FROM messages GROUP BY provider")
+        }
+        XCTAssertEqual(left.count, 3)
+        for row in left {
+            XCTAssertEqual(row["n"] as Int, 3)
+            XCTAssertEqual(row["t"] as Double, date(120).timeIntervalSince1970)
+        }
     }
 
     // MARK: - tool_use_id index
