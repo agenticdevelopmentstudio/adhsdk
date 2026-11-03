@@ -262,6 +262,11 @@ final class ClaudeMainDBSinkTests: XCTestCase {
                 try dump(pipeline.database, table: table, excluding: excluding),
                 try dump(legacy, table: table, excluding: excluding), table)
         }
+        // The legacy path stamps `started_at` with the wall clock; the sink
+        // takes the SessionStart time.
+        XCTAssertEqual(
+            try scalar(pipeline.database, "SELECT started_at FROM sessions WHERE session_id = '\(Self.sessionID)'"),
+            "2026-10-30 12:00:00")
     }
 
     // MARK: - Transcripts

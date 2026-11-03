@@ -243,6 +243,31 @@ extension DaemonDatabase {
         try claudeDays(table: .turns, from: from, until: until, limit: limit, deadline: deadline)
     }
 
+    /// The turns stored after `afterId` (`turns.id`), in id order, at most
+    /// `limit`: each one's id, and its time when it is a Claude turn (nil for
+    /// another provider's, so a cursor still moves past it). A new turn gets a
+    /// larger id than every turn held, so walking ids from a saved cursor finds
+    /// the turns that arrived since, whatever day they belong to.
+    public func claudeTurnArrivals(
+        afterId: Int64, limit: Int, deadline: Duration? = nil
+    ) throws -> [(id: Int64, time: Double?)] {
+        guard limit > 0 else { return [] }
+        return try withEventReads([], deadline: deadline) { conn in
+            try Row.fetchAll(conn, sql: """
+                SELECT id, CASE WHEN provider = ? AND time >= ? THEN time END
+                FROM turns WHERE id > ? ORDER BY id LIMIT ?
+                """, arguments: [ClaudeProvider.name, Self.claudeEarliestKnownEventTime, afterId, limit])
+                .map { (id: $0[0] ?? 0, time: $0[1]) }
+        }
+    }
+
+    /// The largest `turns.id` held, every provider; 0 when there are none.
+    public func turnsMaxId(deadline: Duration? = nil) throws -> Int64 {
+        try withEventReads(0, deadline: deadline) { conn in
+            try Int64.fetchOne(conn, sql: "SELECT COALESCE(MAX(id), 0) FROM turns") ?? 0
+        }
+    }
+
     /// The two tables a day walk can seek. Fixed names, never caller input.
     private enum ClaudeDayTable: String {
         case events, turns
