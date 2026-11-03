@@ -38,17 +38,24 @@ public final class SessionDaemonRuntime: @unchecked Sendable {
         public var summarizeOnStop: (@Sendable (String) async -> Void)?
         /// Appended to the ingestor's backfill log lines.
         public var footprintSuffix: @Sendable () -> String
+        /// Whether the legacy writers (`ingestEvent`, `JSONLImporter`) take over
+        /// when the Claude pipeline fails to open. False for a daemon whose events
+        /// live in the Claude pipeline only: captures then wait in the legacy spool
+        /// for the next start that opens it (`IngestionPipeline`).
+        public var legacyWriterFallback: Bool
 
         public init(
             sink: any SessionEventSink,
             decode: @escaping @Sendable (Data) throws -> ParsedEvent,
             summarizeOnStop: (@Sendable (String) async -> Void)? = nil,
-            footprintSuffix: @escaping @Sendable () -> String = { "" }
+            footprintSuffix: @escaping @Sendable () -> String = { "" },
+            legacyWriterFallback: Bool = true
         ) {
             self.sink = sink
             self.decode = decode
             self.summarizeOnStop = summarizeOnStop
             self.footprintSuffix = footprintSuffix
+            self.legacyWriterFallback = legacyWriterFallback
         }
     }
 
@@ -277,7 +284,8 @@ public final class SessionDaemonRuntime: @unchecked Sendable {
             decode: behavior.decode,
             summarizeOnStop: behavior.summarizeOnStop,
             footprintSuffix: behavior.footprintSuffix,
-            claude: claude
+            claude: claude,
+            legacyWriterFallback: behavior.legacyWriterFallback
         )
         // One enrichment, shared with the legacy ingestor, so both paths drive the
         // same transcript tailer and summarizer.
@@ -339,23 +347,34 @@ public final class SessionDaemonRuntime: @unchecked Sendable {
     /// destination outage (a sink or the events.db write) go back into its spool,
     /// and the legacy capture spool's leftovers move into it too, so they reach the
     /// raw archive and events.db rather than only `event_log`. The legacy drainer
-    /// then starts over what is left, which is nothing. If that move fails, the
-    /// legacy drainer does not start this run: a batch may already be in the Claude
-    /// spool while its legacy rows remain, and draining both would ingest it twice.
-    /// The rows stay in the legacy spool and the next start moves them again.
+    /// never starts beside the Claude pipeline: captures go to the Claude spool, so
+    /// the legacy spool only holds leftovers, and if their move fails they stay
+    /// there for the next start rather than reaching `event_log` alone.
+    ///
+    /// Without the Claude pipeline the legacy drainer starts only when
+    /// `Behavior.legacyWriterFallback` allows it (`IngestionPipeline.startDraining()`);
+    /// otherwise captures wait in the legacy spool.
     public func startDrainer() async {
         let opened = requireOpened("startDrainer")
-        var legacyDrainAllowed = true
-        if let claude = opened.claude {
-            legacyDrainAllowed = Self.prepareClaudeSpool(claude, legacy: opened.spool)
+        guard let claude = opened.claude else {
+            if opened.pipeline.legacyWriters {
+                opened.pipeline.startDraining()
+            } else {
+                Self.logger.fault("""
+                    Claude pipeline not open and the legacy writers are off; \
+                    captures wait in the legacy spool for the next start
+                    """)
+            }
+            return
         }
-        if legacyDrainAllowed { opened.pipeline.startDraining() }
-        opened.claude?.drainer.start()
+        Self.prepareClaudeSpool(claude, legacy: opened.spool)
+        claude.drainer.start()
     }
 
     /// Requeues the transient quarantine and moves the legacy spool into the Claude
-    /// spool. Returns whether the legacy drainer may start: false when the move
-    /// failed. `afterAppend` is for tests; it fires between append and delete.
+    /// spool. Returns whether the move succeeded; on false the rows stay in the
+    /// legacy spool for the next start. `afterAppend` is for tests; it fires
+    /// between append and delete.
     @discardableResult
     static func prepareClaudeSpool(
         _ claude: ClaudePipelineHandles, legacy: IngestSpool, afterAppend: (() throws -> Void)? = nil

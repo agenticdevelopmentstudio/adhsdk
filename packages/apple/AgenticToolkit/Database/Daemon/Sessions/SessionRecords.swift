@@ -230,9 +230,9 @@ extension DaemonDatabase {
     // MARK: - Session reads
 
     /// Session IDs that want a summary, newest first, capped to `limit`. Lean read
-    /// for `SummarizeTask`: it only needs IDs, so this skips the
-    /// `LEFT JOIN event_log … COUNT(e.id)` that `fetchSessions` pays — never scanning
-    /// the (large) event_log just to pick a handful of sessions to summarize.
+    /// for `SummarizeTask`: it only needs IDs, so this skips the event-store count
+    /// read that `fetchSessions` pays — never counting events just to pick a
+    /// handful of sessions to summarize.
     ///
     /// Two populations, active ones first because they are what a sessions list
     /// is showing right now:

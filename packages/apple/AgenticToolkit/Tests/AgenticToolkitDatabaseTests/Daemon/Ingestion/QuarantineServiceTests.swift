@@ -63,4 +63,97 @@ final class QuarantineServiceTests: XCTestCase {
         let left = try FileManager.default.contentsOfDirectory(atPath: errorsDir.path)
         XCTAssertTrue(left.isEmpty, "nothing, sidecars included, may survive: \(left)")
     }
+
+    // MARK: - Preserving and holding
+
+    private struct Refused: Error {}
+
+    private final class Preserved: @unchecked Sendable {
+        private let lock = NSLock()
+        private var names: [String] = []
+        func add(_ url: URL) { lock.withLock { names.append(url.lastPathComponent) } }
+        var all: [String] { lock.withLock { names } }
+    }
+
+    private func sampleEvent() -> ParsedEvent {
+        ParsedEvent(
+            eventType: "PreToolUse",
+            timestamp: "2026-04-14T10:00:00Z",
+            hookData: ["session_id": "s1"],
+            context: nil, accountEmail: "")
+    }
+
+    /// Clear hands each event file to `preserveRaw` before it deletes anything.
+    func testClearPreservesEveryEventFileFirst() throws {
+        let preserved = Preserved()
+        let service = QuarantineService(errorsDirectory: errorsDir, preserveRaw: { preserved.add($0) })
+        let url = try quarantineFile("error-one.json")
+        service.recordInitialQuarantine(eventURL: url, reason: "r", code: nil, parsed: nil)
+
+        service.clear()
+
+        XCTAssertEqual(preserved.all, ["error-one.json"])
+        XCTAssertEqual(service.count(), 0)
+    }
+
+    /// A file `preserveRaw` cannot keep is not deleted: it stays, sidecar and all.
+    func testClearKeepsAFileItCouldNotPreserve() throws {
+        let service = QuarantineService(errorsDirectory: errorsDir, preserveRaw: { _ in throw Refused() })
+        let url = try quarantineFile("error-one.json")
+        service.recordInitialQuarantine(eventURL: url, reason: "r", code: nil, parsed: nil)
+
+        service.clear()
+
+        XCTAssertEqual(service.count(), 1, "an unpreserved file must survive clear")
+        XCTAssertEqual(service.list().first?.filename, "error-one.json")
+    }
+
+    /// An untrackable event a retry discards is preserved before it is deleted.
+    func testASkippedRetryPreservesTheFileBeforeDiscardingIt() throws {
+        let preserved = Preserved()
+        let service = QuarantineService(errorsDirectory: errorsDir, preserveRaw: { preserved.add($0) })
+        let url = try quarantineFile("error-one.json")
+        service.recordInitialQuarantine(eventURL: url, reason: "r", code: nil, parsed: nil)
+
+        let result = service.retryDueBatch(
+            limit: 10, parse: { _ in .skip(reason: "no session_id") }, ingest: { _ in })
+
+        XCTAssertEqual(result.recovered, 1)
+        XCTAssertEqual(preserved.all, ["error-one.json"])
+        XCTAssertEqual(service.count(), 0)
+    }
+
+    /// A skipped file that cannot be preserved stays quarantined and is charged.
+    func testASkippedRetryThatCannotPreserveKeepsTheFile() throws {
+        let service = QuarantineService(errorsDirectory: errorsDir, preserveRaw: { _ in throw Refused() })
+        let url = try quarantineFile("error-one.json")
+        service.recordInitialQuarantine(eventURL: url, reason: "r", code: nil, parsed: nil)
+
+        let result = service.retryDueBatch(
+            limit: 10, parse: { _ in .skip(reason: "no session_id") }, ingest: { _ in })
+
+        XCTAssertEqual(result.stillFailing, 1)
+        XCTAssertEqual(service.count(), 1)
+    }
+
+    /// A retry whose ingest has nowhere to go (`QuarantineRetryHeld`) keeps the
+    /// file untouched and charges nothing against its retry budget.
+    func testAHeldRetryKeepsTheFileAndItsBudget() throws {
+        let service = QuarantineService(errorsDirectory: errorsDir, maxRetries: 1)
+        let url = try quarantineFile("error-one.json")
+        service.recordInitialQuarantine(eventURL: url, reason: "r", code: nil, parsed: nil)
+        let event = sampleEvent()
+
+        for _ in 0..<3 {
+            let result = service.retryDueBatch(
+                limit: 10, parse: { _ in .event(event) },
+                ingest: { _ in throw QuarantineRetryHeld("no pipeline") })
+            XCTAssertEqual(result.recovered, 0)
+            XCTAssertEqual(result.stillFailing, 0, "a held retry is not a failure")
+        }
+
+        XCTAssertEqual(service.count(), 1)
+        XCTAssertEqual(service.exhaustedCount(), 0, "held retries must not spend the budget")
+        XCTAssertEqual(service.list().first?.retryCount, 0)
+    }
 }

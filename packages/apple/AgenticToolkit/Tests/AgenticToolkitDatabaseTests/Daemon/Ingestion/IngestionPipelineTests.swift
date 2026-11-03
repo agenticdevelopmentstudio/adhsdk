@@ -150,4 +150,80 @@ final class IngestionPipelineTests: XCTestCase {
         XCTAssertEqual(try eventLogCount(sessionId: "s-c2"), 0)
         await pipeline.stop()
     }
+
+    /// With the Claude pipeline, clearing the quarantine keeps every file's bytes
+    /// in the raw archive under `quarantine-<name>` before deleting it.
+    func testWithClaudeClearingTheQuarantinePreservesTheFilesInTheArchive() async throws {
+        let (pipeline, handles) = try claudePipeline()
+        let errors = pipeline.quarantine.errorsDirectory
+        try FileManager.default.createDirectory(at: errors, withIntermediateDirectories: true)
+        let file = errors.appendingPathComponent("error-keep.json")
+        try Data(#"{"event":"Stop","hook_data":{}}"#.utf8).write(to: file)
+
+        pipeline.quarantine.clear()
+
+        XCTAssertFalse(FileManager.default.fileExists(atPath: file.path))
+        XCTAssertFalse(handles.drainer.drainUntilEmpty().failed)
+        let keys = try handles.archive.records(after: 0, limit: 10).map(\.record.dedupKey)
+        XCTAssertEqual(keys, [ClaudePipelineHandles.quarantineDedupKey(file)])
+        await pipeline.stop()
+    }
+
+    /// The import walks the transcripts into the Claude spool; a dry run only
+    /// counts the files. Neither touches the legacy tables.
+    func testImportTranscriptsSpoolsLinesAndADryRunOnlyCounts() async throws {
+        let (pipeline, handles) = try claudePipeline()
+        let project = handles.transcriptSource.projectsDirectory.appendingPathComponent("-work")
+        try FileManager.default.createDirectory(at: project, withIntermediateDirectories: true)
+        let line = """
+            {"type":"user","sessionId":"imp-1","uuid":"u1","timestamp":"2026-04-14T10:00:00Z",\
+            "cwd":"/work","message":{"role":"user","content":"hi"}}
+
+            """
+        try line.write(to: project.appendingPathComponent("imp-1.jsonl"), atomically: true, encoding: .utf8)
+
+        let dry = handles.importTranscripts(ImportRequestDTO(dryRun: true))
+        XCTAssertEqual(dry.filesScanned, 1)
+        XCTAssertEqual(dry.linesSeen, 0)
+        XCTAssertEqual(try handles.spool.pendingCount(), 0, "a dry run spools nothing")
+
+        let real = handles.importTranscripts(ImportRequestDTO())
+        XCTAssertEqual(real.filesScanned, 1)
+        XCTAssertEqual(real.linesInserted, 1)
+        XCTAssertTrue(real.errors.isEmpty, "\(real.errors)")
+        XCTAssertEqual(try handles.spool.pendingCount(), 1)
+        XCTAssertFalse(handles.drainer.drainUntilEmpty().failed)
+        XCTAssertEqual(try handles.archive.count(), 1)
+        XCTAssertEqual(try eventLogCount(sessionId: "imp-1"), 0)
+        await pipeline.stop()
+    }
+
+    // MARK: - Legacy writers off
+
+    /// No Claude pipeline and the fallback off: a capture waits in the legacy
+    /// spool, the legacy drain does not start, and a retry is held.
+    func testWithoutClaudeAndNoFallbackNothingReachesTheLegacyWriter() async throws {
+        let root = tmpDir.appendingPathComponent("nofallback")
+        let drop = root.appendingPathComponent("drop")
+        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+        let held = IngestionPipeline(
+            paths: .init(dropDirectory: drop, errorsDirectory: drop.appendingPathComponent("errors"),
+                         socketPath: root.appendingPathComponent("s").path),
+            spool: try IngestSpool(path: root.appendingPathComponent("ingest.db").path),
+            database: database, sink: sink, queueLabel: { "test.held.\($0)" },
+            decode: { _ in throw SocketDecodeFailure.malformed },
+            legacyWriterFallback: false)
+        XCTAssertFalse(held.legacyWriters)
+
+        try held.capture(event(session: "s-held"))
+        held.startDraining()
+        try await Task.sleep(nanoseconds: 300_000_000)
+
+        XCTAssertEqual(held.spool.pendingCount(), 1, "the capture must wait in the legacy spool")
+        XCTAssertEqual(try eventLogCount(sessionId: "s-held"), 0)
+        XCTAssertThrowsError(try held.retryIngest(event(session: "s-held"))) { error in
+            XCTAssertTrue(error is QuarantineRetryHeld, "\(error)")
+        }
+        await held.stop()
+    }
 }

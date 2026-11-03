@@ -27,7 +27,7 @@ final class SessionDaemonRuntimeTests: XCTestCase {
         try? FileManager.default.removeItem(at: root)
     }
 
-    private func makeRuntime() throws -> SessionDaemonRuntime {
+    private func makeRuntime(legacyWriterFallback: Bool = true) throws -> SessionDaemonRuntime {
         let configuration = SessionDaemonConfiguration.test(port: 0, root: root)
         let dispatcher = root.appendingPathComponent("dispatch.sh")
         try "#!/bin/sh\n# claudehelpers-statusline-dispatch 1\n"
@@ -37,7 +37,9 @@ final class SessionDaemonRuntimeTests: XCTestCase {
         let installer = ClaudeHookInstaller(configuration: hook, helperIsExecutable: { _ in true })
         return SessionDaemonRuntime(
             configuration: configuration,
-            behavior: .init(sink: NoSink(), decode: { _ in throw Undecodable() }),
+            behavior: .init(
+                sink: NoSink(), decode: { _ in throw Undecodable() },
+                legacyWriterFallback: legacyWriterFallback),
             secretStore: InMemorySecretStore(),
             hookInstaller: installer
         )
@@ -223,6 +225,49 @@ final class SessionDaemonRuntimeTests: XCTestCase {
         XCTAssertEqual(try claude.spool.pendingCount(), 1)
         XCTAssertTrue(SessionDaemonRuntime.prepareClaudeSpool(claude, legacy: runtime.spool))
         XCTAssertEqual(runtime.spool.pendingCount(), 0)
+        await runtime.shutdown()
+    }
+
+    // MARK: - Legacy writers off (Stenographer)
+
+    /// With the Claude pipeline open the legacy writers never run, whatever the
+    /// fallback: a capture goes to the Claude spool and `event_log` stays empty.
+    func testOpenPipelineKeepsTheLegacyWritersOff() async throws {
+        let runtime = try makeRuntime()
+        try await runtime.openPhaseA()
+        let claude = try XCTUnwrap(runtime.claudePipeline)
+        XCTAssertFalse(runtime.pipeline.legacyWriters)
+        try runtime.migrate()
+        await runtime.startDrainer()
+
+        try runtime.pipeline.capture(try hookEvent("SessionStart"))
+        XCTAssertTrue(try waitUntil { try claude.archive.count() == 1 }, "the capture did not reach the archive")
+        XCTAssertEqual(runtime.spool.pendingCount(), 0)
+        XCTAssertEqual(try eventLogCount(runtime.database), 0, "the legacy writer ingested a capture")
+        await runtime.shutdown()
+    }
+
+    /// Fallback off and events.db unopenable: nothing reaches the legacy writer.
+    /// The capture waits in the legacy spool (the next start that opens the
+    /// pipeline adopts it), and a quarantine retry is held, not charged.
+    func testLegacyFallbackOffHoldsCapturesWhenThePipelineCannotOpen() async throws {
+        let runtime = try makeRuntime(legacyWriterFallback: false)
+        try FileManager.default.createDirectory(
+            atPath: runtime.configuration.eventStorePath, withIntermediateDirectories: true)
+
+        try await runtime.openPhaseA()
+        XCTAssertNil(runtime.claudePipeline)
+        XCTAssertFalse(runtime.pipeline.legacyWriters)
+        try runtime.migrate()
+        await runtime.startDrainer()
+
+        try runtime.pipeline.capture(try hookEvent("SessionStart"))
+        try await Task.sleep(nanoseconds: 300_000_000)
+        XCTAssertEqual(runtime.spool.pendingCount(), 1, "the capture must wait in the legacy spool")
+        XCTAssertEqual(try eventLogCount(runtime.database), 0, "the legacy writer ingested a capture")
+        XCTAssertThrowsError(try runtime.pipeline.retryIngest(try hookEvent("SessionStart"))) { error in
+            XCTAssertTrue(error is QuarantineRetryHeld, "\(error)")
+        }
         await runtime.shutdown()
     }
 }

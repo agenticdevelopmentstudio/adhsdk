@@ -98,7 +98,7 @@ enum SessionRoutes {
         }
         let projectFilter = request.query("project")
         // Callers that don't render the per-session event count (e.g. the Sessions-window
-        // poll) pass ?counts=false to skip the event_log COUNT join.
+        // poll) pass ?counts=false to skip the event-store count read.
         let includeCounts = request.query("counts") != "false"
         // `sessions` has no retention, so an unbounded list here is a response whose
         // size tracks how long the install has existed — 5,810 rows / 3.4 MB when

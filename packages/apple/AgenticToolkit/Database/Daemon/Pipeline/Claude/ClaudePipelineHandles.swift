@@ -107,6 +107,57 @@ public struct ClaudePipelineHandles: Sendable {
         drainer.wake()
     }
 
+    /// `steno import`: reads every transcript under the request's directory (the
+    /// daemon's projects directory when it names none) from its cursor into the
+    /// spool and wakes the drainer, which writes the archive and the event store.
+    /// `since` limits it to files modified at or after that instant. A dry run
+    /// only counts the files it would read.
+    ///
+    /// `linesSeen` and `linesInserted` are both the lines spooled: the drainer
+    /// writes them after this returns, and a line already read through its cursor
+    /// is never spooled twice. A file that fails is named in `errors` and the rest
+    /// are still read.
+    public func importTranscripts(_ request: ImportRequestDTO) -> ImportSummary {
+        let root = request.sourceDirectory.map {
+            URL(fileURLWithPath: ($0 as NSString).expandingTildeInPath)
+        } ?? transcriptSource.projectsDirectory
+        let files = JSONLScanner.discoverFilesWithModificationDates(under: root)
+            .filter { entry in request.since.map { entry.modified >= $0 } ?? true }
+            .sorted { ($0.modified, $0.url.path) < ($1.modified, $1.url.path) }
+        if request.dryRun ?? false { return ImportSummary(filesScanned: files.count) }
+        var lines = 0
+        var errors: [String] = []
+        for entry in files {
+            do {
+                lines += try pollTranscript(file: entry.url)
+            } catch {
+                errors.append("\(entry.url.path): \(error.localizedDescription)")
+            }
+        }
+        return ImportSummary(filesScanned: files.count, linesSeen: lines, linesInserted: lines, errors: errors)
+    }
+
+    /// Spools a quarantined drop file's bytes verbatim, as a hook record keyed
+    /// `quarantine-<file name>` and stamped with the file's modification time, and
+    /// wakes the drainer: the raw archive keeps it whether or not it ever becomes
+    /// an event. The key comes from the file alone, so preserving the same file
+    /// twice (a crash before its delete) collapses into one archive row. An empty
+    /// file has nothing to keep and appends nothing.
+    public func preserveQuarantinedFile(_ file: URL) throws {
+        let data = try Data(contentsOf: file)
+        guard !data.isEmpty else { return }
+        let modified = (try? FileManager.default.attributesOfItem(atPath: file.path)[.modificationDate]) as? Date
+        try spool.append([RawRecord(
+            provider: ClaudeProvider.name, sourceKind: ClaudeProvider.hookKind,
+            dedupKey: Self.quarantineDedupKey(file), receivedAt: modified ?? Date(), payload: data)])
+        drainer.wake()
+    }
+
+    /// The dedup key a quarantined file is preserved under.
+    public static func quarantineDedupKey(_ file: URL) -> String {
+        "quarantine-\(file.lastPathComponent)"
+    }
+
     // MARK: - Legacy spool
 
     /// The dedup key a legacy spool row is adopted under. Derived from the row
