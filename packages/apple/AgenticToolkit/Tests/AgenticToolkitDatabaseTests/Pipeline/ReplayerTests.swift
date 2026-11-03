@@ -89,13 +89,18 @@ final class ReplayerTests: XCTestCase {
         let outcome = try PipelineDrainer(spool: spool, archive: archive, normalizer: ReplayTestNormalizer(),
                                           store: live, batchSize: 7).drainUntilEmpty()
         XCTAssertFalse(outcome.failed)
-        XCTAssertEqual(try archive.count(), 48)
+        // k3 and k10 came again with other bytes: kept as two conflict copies.
+        XCTAssertEqual(outcome.conflictCopies, 2)
+        XCTAssertEqual(try archive.count(), 50)
 
         let rebuilt = try makeStore("rebuilt.db")
         let report = try Replayer.replay(archive: archive, normalizer: ReplayTestNormalizer(),
                                          into: rebuilt, chunk: 10)
-        XCTAssertEqual(report.records, 48)
+        XCTAssertEqual(report.records, 50)
         XCTAssertEqual(report.failed, 0)
+        // The conflict copies replay into nothing: skipped, not failed.
+        XCTAssertEqual(report.skipped, 2)
+        XCTAssertEqual(report.skippedIDs.count, 2)
         XCTAssertEqual(try rebuilt.canonicalDump(), try live.canonicalDump())
         XCTAssertFalse(try live.canonicalDump().isEmpty)
         XCTAssertEqual(try rebuilt.counts().sessions, 3)

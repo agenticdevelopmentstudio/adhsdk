@@ -257,6 +257,21 @@ public final class EventStore: @unchecked Sendable {
         }
     }
 
+    /// The `store_meta` value under `key`, or nil when it is not set.
+    public func metaValue(forKey key: String) throws -> String? {
+        try pool.read { conn in
+            try String.fetchOne(conn, sql: "SELECT value FROM store_meta WHERE key = ?", arguments: [key])
+        }
+    }
+
+    /// Sets the `store_meta` value under `key`, in its own transaction.
+    public func setMetaValue(_ value: String, forKey key: String) throws {
+        try pool.write { conn in
+            try conn.execute(
+                sql: "INSERT OR REPLACE INTO store_meta(key, value) VALUES(?, ?)", arguments: [key, value])
+        }
+    }
+
     /// The names of the secondary indexes that exist right now.
     public func indexNames() throws -> Set<String> {
         try pool.read { conn in

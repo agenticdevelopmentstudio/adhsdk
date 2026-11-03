@@ -6,6 +6,12 @@ public struct ReplayReport: Sendable, Equatable {
     public var records = 0
     public var normalized = 0
     public var failed = 0
+    /// Records that normalized without error into nothing: a hook envelope with no
+    /// session id, an archive-only kind, a conflict copy, a transcript line that
+    /// carries no turn, message, event or session. Counted in `normalized` too.
+    public var skipped = 0
+    /// The first `Replayer.maxReportedFailures` skipped archive ids, in replay order.
+    public var skippedIDs: [Int64] = []
     /// Archive id to error description. Only the first `Replayer.maxReportedFailures` are kept.
     public var failures: [Int64: String] = [:]
     /// The highest archive id this replay has written (or skipped as failed). Pass it
@@ -119,11 +125,17 @@ public enum Replayer {
                 // nothing from it either.
                 if archived.record.isConflictCopy {
                     report.normalized += 1
+                    skip(&report, id: archived.id)
                     continue
                 }
                 do {
-                    combined.append(try source.normalizer.normalize(archived))
+                    let batch = try source.normalizer.normalize(archived)
                     report.normalized += 1
+                    if batch.isEmpty {
+                        skip(&report, id: archived.id)
+                    } else {
+                        combined.append(batch)
+                    }
                 } catch {
                     fail(&report, id: archived.id, error)
                 }
@@ -133,6 +145,11 @@ public enum Replayer {
             report.lastID = last
             progress?(report)
         }
+    }
+
+    private static func skip(_ report: inout ReplayReport, id: Int64) {
+        report.skipped += 1
+        if report.skippedIDs.count < maxReportedFailures { report.skippedIDs.append(id) }
     }
 
     private static func fail(_ report: inout ReplayReport, id: Int64, _ error: Error) {

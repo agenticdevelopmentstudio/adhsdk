@@ -163,6 +163,7 @@
 		04674FA5049D6C696B986B36 /* PaneViewControllerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FDDC4E6FE08350D9FBD4E6E /* PaneViewControllerTests.swift */; };
 		046B14C51D77E5654F8D0ABE /* WindowLifecycleContextTrigger.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7F621171FF33797EEBC5DCA /* WindowLifecycleContextTrigger.swift */; };
 		047EFBE4351D6A2C8ED99DD3 /* LoopbackAuthServer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49C8E7410E6B55993D6F58B6 /* LoopbackAuthServer.swift */; };
+		04B2F71FBECB80574A4E95A2 /* ClaudeLegacyRecordTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E0AA1F35014497EF18E2A888 /* ClaudeLegacyRecordTests.swift */; };
 		050DBAEFB1E2F8421D9CB7AF /* TextDocumentStorage.swift in Sources */ = {isa = PBXBuildFile; fileRef = A82CE7DDCDBDDF6097A247CF /* TextDocumentStorage.swift */; };
 		051292E194F0487240D4DD20 /* ThemeManager+UserSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = F53F54F31C01E31B6C95AC4A /* ThemeManager+UserSettings.swift */; };
 		05397B8CB3F3FF26F854D341 /* PermissionRequest.json in Resources */ = {isa = PBXBuildFile; fileRef = AA7959A894F4A26DAABB8AD9 /* PermissionRequest.json */; };
@@ -2009,6 +2010,7 @@
 		B62D21E5DD7E7C060A8D78D5 /* AccessListsTopic.swift in Sources */ = {isa = PBXBuildFile; fileRef = CFE75D40889E80E42212DF7C /* AccessListsTopic.swift */; };
 		B660C4684C8731573EBF1F01 /* FeedChatSessionReplaceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 56149D68AA04C7818DC26FC7 /* FeedChatSessionReplaceTests.swift */; };
 		B69752E9C7E885C4B38239ED /* OpenVSXCatalogTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43E91C7CC2FE5E2A6F8B2445 /* OpenVSXCatalogTests.swift */; };
+		B6981597BDE27837F9BD8F10 /* ClaudeArchiveReplay.swift in Sources */ = {isa = PBXBuildFile; fileRef = C128B82EF99BF5636A74AF45 /* ClaudeArchiveReplay.swift */; };
 		B6B2D8F61C25776A5B6B23EA /* TopicListViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D6391E1372A83A76D72944F /* TopicListViewController.swift */; };
 		B6CE2B177FDC43A8B95EDD7D /* MainThreadLanguagesTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 69CCEB55C67CF3F03C30221E /* MainThreadLanguagesTests.swift */; };
 		B6DD01A409C6D8DEF9125041 /* ButtonView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBFE6A254091C292617E372F /* ButtonView.swift */; };
@@ -6646,6 +6648,7 @@
 		C0BCB82806BC1422EEA596C8 /* PostCompact.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = PostCompact.json; sourceTree = "<group>"; };
 		C0DC77B8A669145B772CD78A /* ConversationsWorkOutputTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConversationsWorkOutputTests.swift; sourceTree = "<group>"; };
 		C10D9526AD14619DCFCBEA5A /* AddRemoveFooterViewTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddRemoveFooterViewTests.swift; sourceTree = "<group>"; };
+		C128B82EF99BF5636A74AF45 /* ClaudeArchiveReplay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClaudeArchiveReplay.swift; sourceTree = "<group>"; };
 		C13B3B67E709FC040E90EE0F /* ContextEventKind.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContextEventKind.swift; sourceTree = "<group>"; };
 		C14760F58A172DA6D381A4B6 /* DiagnosticTypesTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiagnosticTypesTests.swift; sourceTree = "<group>"; };
 		C14B323738F9492A9275261A /* SessionWatcherActionHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionWatcherActionHandler.swift; sourceTree = "<group>"; };
@@ -6939,6 +6942,7 @@
 		DFDFF4C23643458BD9192793 /* TextAreaEditView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextAreaEditView.swift; sourceTree = "<group>"; };
 		E01A374118D89374DC47F92F /* OversightFindingsWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OversightFindingsWindowController.swift; sourceTree = "<group>"; };
 		E047F3C00087858C461AF7D6 /* PipelineDrainerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PipelineDrainerTests.swift; sourceTree = "<group>"; };
+		E0AA1F35014497EF18E2A888 /* ClaudeLegacyRecordTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClaudeLegacyRecordTests.swift; sourceTree = "<group>"; };
 		E0B4511D7E3B5C5EC1A742A3 /* ObservationSources.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ObservationSources.swift; sourceTree = "<group>"; };
 		E0C354AFAF25264CB1045812 /* CommandRunning.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommandRunning.swift; sourceTree = "<group>"; };
 		E0CE7FF05C8FCA433D673423 /* SocialSignInProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SocialSignInProvider.swift; sourceTree = "<group>"; };
@@ -7965,6 +7969,7 @@
 				C17341348247FB5B9A0C2E74 /* ClaudeEventReadsTests.swift */,
 				C3AD9BDDDA2CBD20881E00E7 /* ClaudeHookNormalizerTests.swift */,
 				4585D32A6D9ECCD8ED721A66 /* ClaudeInsightReadsTests.swift */,
+				E0AA1F35014497EF18E2A888 /* ClaudeLegacyRecordTests.swift */,
 				4C907A515BEEA950F5471C63 /* ClaudeLiveObserverTests.swift */,
 				389DDCF01399326664A5C8B3 /* ClaudeMainDBSinkTests.swift */,
 				25CF650AFC73288025D97B82 /* ClaudePipelineEndToEndTests.swift */,
@@ -11155,6 +11160,7 @@
 		A58F2672BEA8A82FFFA6433E /* Claude */ = {
 			isa = PBXGroup;
 			children = (
+				C128B82EF99BF5636A74AF45 /* ClaudeArchiveReplay.swift */,
 				57485B07F69EE725AB0D945C /* ClaudeCapture.swift */,
 				7CB15FFECEFBF1DE437965BA /* ClaudeHookDropSource.swift */,
 				CDF6F289D86E401CCD6419C1 /* ClaudeHookNormalizer.swift */,
@@ -16894,6 +16900,7 @@
 				3FCD872B1BD324F082809C41 /* ClaudeEventReadsTests.swift in Sources */,
 				E2CF5D5A6F69FF4E30CD588C /* ClaudeHookNormalizerTests.swift in Sources */,
 				6385177EE47930C12AD35C9F /* ClaudeInsightReadsTests.swift in Sources */,
+				04B2F71FBECB80574A4E95A2 /* ClaudeLegacyRecordTests.swift in Sources */,
 				18EA198EAE8E3BBA199A2265 /* ClaudeLiveObserverTests.swift in Sources */,
 				D6008CBDCC29FB0FDBA9EF6C /* ClaudeMainDBSinkTests.swift in Sources */,
 				8BFFFAA364451EC643FCEBF0 /* ClaudePipelineEndToEndTests.swift in Sources */,
@@ -17660,6 +17667,7 @@
 				6652E253C85FA7BC081976A7 /* AppStorageLocation.swift in Sources */,
 				06564B2D54BEEDD12124BE8D /* BoundedDatabase.swift in Sources */,
 				0A29414BBDD9C1C4AEA26FD9 /* BranchCreationDetector.swift in Sources */,
+				B6981597BDE27837F9BD8F10 /* ClaudeArchiveReplay.swift in Sources */,
 				9C3B418C52916B4534B6F53A /* ClaudeCapture.swift in Sources */,
 				47C73FC61ED242C090D0223C /* ClaudeHookDropSource.swift in Sources */,
 				62782F69819F7C1E7EA00A59 /* ClaudeHookNormalizer.swift in Sources */,
