@@ -792,7 +792,8 @@ extension DaemonDatabase {
         postTimestamp: String
     ) -> Int? {
         guard !sessionId.isEmpty, !toolUseId.isEmpty,
-              tableHasColumn("pre_tool_use_events", "tool_use_id") else { return nil }
+              // An unreadable schema yields no duration, never a guessed one.
+              (try? tableHasColumn("pre_tool_use_events", "tool_use_id")) == true else { return nil }
 
         var preTimestamp: String?
         try? query("""

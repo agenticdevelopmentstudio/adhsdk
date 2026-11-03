@@ -48,12 +48,50 @@ public final class ClaudeMainDBSink: PipelineSink {
         // event store's own connection; it is ordering, not routing, that this
         // protects.)
         let derived = try derive(transcripts)
+        let earliest = Self.earliestTimes(batch)
 
         try database.transaction {
             for hook in hooks {
                 try apply(hook)
             }
             try applyTranscripts(transcripts, derived: derived, fallbackAccount: fallbackAccount)
+            try lowerStartedAt(earliest)
+        }
+    }
+
+    // MARK: - Session start
+
+    /// Each session's earliest event or turn time in the batch, epoch seconds.
+    /// A time before `claudeEarliestKnownEventTime` is "time unknown" and never
+    /// counts.
+    static func earliestTimes(_ batch: NormalizedBatch) -> [String: Double] {
+        var earliest: [String: Double] = [:]
+        func see(_ sessionId: String, _ time: Date) {
+            let seconds = time.timeIntervalSince1970
+            guard !sessionId.isEmpty, seconds >= DaemonDatabase.claudeEarliestKnownEventTime else { return }
+            earliest[sessionId] = min(earliest[sessionId] ?? seconds, seconds)
+        }
+        for event in batch.events { see(event.sessionID, event.time) }
+        for turn in batch.turns { see(turn.sessionID, turn.time) }
+        return earliest
+    }
+
+    /// `sessions.started_at` is the earliest event or turn time seen for the
+    /// session, not the wall clock when its first record was ingested (the
+    /// column default a hook-created row takes): `MIN(started_at, batch)`, both
+    /// compared in `datetime` text form (whole seconds). The stored value is read
+    /// through `datetime()`, so a transcript stub's ISO-8601 stamp compares
+    /// correctly and is kept when it is already the earliest second (as the
+    /// JSONL importer leaves it); a later one is lowered and written in
+    /// `datetime` form, and one that does not parse is replaced. Must run inside
+    /// the batch's transaction, after the rows are created.
+    private func lowerStartedAt(_ earliest: [String: Double]) throws {
+        for (sessionId, time) in earliest.sorted(by: { $0.key < $1.key }) {
+            try database.execute("""
+                UPDATE sessions SET started_at = datetime(?, 'unixepoch')
+                WHERE session_id = ?
+                  AND (datetime(started_at) IS NULL OR datetime(started_at) > datetime(?, 'unixepoch'))
+                """, params: [time, sessionId, time])
         }
     }
 

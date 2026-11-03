@@ -302,8 +302,12 @@ final class ClaudeSourcesTests: XCTestCase {
         XCTAssertEqual(Set(first.map(\.subagentFile)), [false])
         let records = try pending()
         XCTAssertEqual(Set(records.map(\.sourceKind)), [ClaudeProvider.transcriptKind])
-        XCTAssertEqual(records.map(\.dedupKey),
-                       first.map { ClaudeTranscriptPayload.dedupKey(line: $0.line, file: $0.file) })
+        // Each line's offset: the bytes of every line (and newline) before it.
+        let offsets = lines.indices.map { index in Int64(lines[..<index].map { $0.utf8.count + 1 }.reduce(0, +)) }
+        XCTAssertEqual(first.map(\.byteOffset), offsets)
+        XCTAssertEqual(records.map(\.dedupKey), first.map {
+            ClaudeTranscriptPayload.dedupKey(line: $0.line, file: $0.file, byteOffset: $0.byteOffset ?? -1)
+        })
 
         // The cursor stops before the torn line.
         let key = ClaudeTranscriptSource.cursorKey(for: url)
@@ -361,10 +365,11 @@ final class ClaudeSourcesTests: XCTestCase {
     }
 
     /// Review Focus 2: a compaction removes the top line, so every surviving line comes
-    /// back with a shifted line_no (different payload bytes, same dedup key). Those are
-    /// duplicates by `ClaudeNormalizer.isEquivalent`: nothing quarantined, no new rows
-    /// except the genuinely new line, and the archive keeps the first payloads.
-    func testCompactionShiftingLineNumbersDedupsInsteadOfConflicting() throws {
+    /// back at a new offset. Records are keyed by position, so each is archived again
+    /// there; the lines keep their own hash in the key, so a different line now at an
+    /// offset an earlier one held never collides with it. Nothing conflicts or is
+    /// quarantined, and the first-read records stay as they were.
+    func testCompactionMovingLinesArchivesThemAgainWithoutConflicts() throws {
         let lines = (1...4).map { Self.userLine($0) }
         let url = try transcript(Self.sessionID, lines: lines, mtime: base)
         let source = ClaudeTranscriptSource(projectsDirectory: projectsDir)
@@ -372,7 +377,8 @@ final class ClaudeSourcesTests: XCTestCase {
         let (drainer, archive) = try makeDrainer()
         _ = drainer.drainUntilEmpty()
         XCTAssertEqual(try archive.count(), 4)
-        let line2Key = ClaudeTranscriptPayload.dedupKey(line: lines[1], file: url.path)
+        let line2Key = ClaudeTranscriptPayload.dedupKey(
+            line: lines[1], file: url.path, byteOffset: Int64(lines[0].utf8.count + 1))
         let line2Before = try XCTUnwrap(try archive.id(forDedupKey: line2Key))
 
         let oldInode = try inode(url)
@@ -387,8 +393,9 @@ final class ClaudeSourcesTests: XCTestCase {
         XCTAssertFalse(outcome.failed, outcome.failureReason ?? "")
         XCTAssertEqual(outcome.quarantined, 0)
         XCTAssertEqual(try spool.quarantined(limit: 10).count, 0, "no conflicts")
+        XCTAssertEqual(outcome.conflictCopies, 0, "a new line at an old offset has its own key")
         XCTAssertEqual(try spool.pendingCount(), 0)
-        XCTAssertEqual(try archive.count(), 5, "only line 5 is a new archive row")
+        XCTAssertEqual(try archive.count(), 8, "the three moved lines again at their new offsets, plus line 5")
         let kept = try XCTUnwrap(try archive.record(id: line2Before))
         XCTAssertEqual(try ClaudeTranscriptPayload.decode(kept.record.payload).lineNo, 2,
                        "the archive keeps the first-read payload")
@@ -398,7 +405,8 @@ final class ClaudeSourcesTests: XCTestCase {
         let normalizer = ClaudeNormalizer()
         func transcriptRecord(_ payload: ClaudeTranscriptPayload) throws -> RawRecord {
             RawRecord(provider: ClaudeProvider.name, sourceKind: ClaudeProvider.transcriptKind,
-                      dedupKey: ClaudeTranscriptPayload.dedupKey(line: payload.line, file: payload.file),
+                      dedupKey: ClaudeTranscriptPayload.dedupKey(
+                          line: payload.line, file: payload.file, byteOffset: payload.byteOffset ?? 0),
                       receivedAt: base, payload: try ClaudeTranscriptPayload.encode(payload))
         }
         let line = Self.userLine(1)
@@ -509,7 +517,7 @@ final class ClaudeSourcesTests: XCTestCase {
             try transcript("c\(index)", lines: (1...5).map { Self.userLine(index * 10 + $0, session: "c\(index)") },
                            mtime: base.addingTimeInterval(TimeInterval(index)))
         }
-        // A line Claude wrote twice verbatim: one dedup key, two line numbers.
+        // A line Claude wrote twice verbatim: two offsets, so two dedup keys.
         let repeated = Self.userLine(90, session: "c-repeat")
         try transcript("c-repeat", lines: [repeated, Self.userLine(91, session: "c-repeat"), repeated],
                        mtime: base.addingTimeInterval(5))
@@ -523,38 +531,153 @@ final class ClaudeSourcesTests: XCTestCase {
             equivalent: ClaudeNormalizer().isEquivalent, makeSource: makeSource)
         XCTAssertEqual(failures, [])
 
-        // Byte equality would report the repeat; the normalizer's equivalence is what admits it.
+        // Each occurrence has its own key, so even byte equality finds no duplicate.
         let byBytes = try ProviderConformance.checkSource(
             provider: ClaudeProvider.name, workDirectory: tmpDir, makeSource: makeSource)
-        XCTAssertEqual(Set(byBytes.map(\.check)), ["sourceDuplicated", "keyCollision"], "\(byBytes)")
+        XCTAssertEqual(byBytes, [])
     }
 
-    /// Blank and non-UTF-8 lines after the last record move the cursor with no
-    /// records, so the next wake neither re-scans nor re-archives them.
-    func testTrailingBlankAndUndecodableLinesStepTheCursorWithoutRecords() throws {
+    /// N1: a line that is not a JSON object is archived, then quarantined as
+    /// `unparseable` once its attempts run out. That reason is final, so a caller
+    /// waiting for captures to be stored does not count it; a retryable reason does.
+    func testAnUnparseableLineIsArchivedAndItsQuarantineIsFinal() throws {
+        let url = try transcript(Self.sessionID, lines: [Self.userLine(1), "not json at all"], mtime: base)
+        XCTAssertEqual(try ClaudeTranscriptSource(projectsDirectory: projectsDir).poll(file: url, into: spool), 2)
+        let (drainer, archive) = try makeDrainer()
+        var rounds = 0
+        while try spool.pendingCount() > 0, rounds < 20 {
+            _ = drainer.drainUntilEmpty()
+            rounds += 1
+        }
+        XCTAssertEqual(try spool.pendingCount(), 0)
+        XCTAssertEqual(try archive.count(), 2, "the unparseable line's bytes are in the archive")
+        let quarantined = try spool.quarantined(limit: 10)
+        XCTAssertEqual(quarantined.count, 1)
+        let reason = try XCTUnwrap(quarantined.first).reason
+        XCTAssertTrue(reason.hasPrefix(ClaudeNormalizerError.unparseableReasonPrefix), reason)
+        XCTAssertEqual(ClaudeNormalizerError.unparseableReasonPrefix, "unparseable(\"")
+        let permanent = ClaudeNormalizerError.permanentReasonPrefixes
+        XCTAssertEqual(try spool.quarantinedCount(excludingReasonPrefixes: permanent), 0)
+
+        // A retryable reason still counts.
+        try spool.append([RawRecord(provider: ClaudeProvider.name, sourceKind: ClaudeProvider.hookKind,
+                                    dedupKey: "retryable", receivedAt: base, payload: Data("{}".utf8))])
+        let id = try XCTUnwrap(try spool.pendingBatch(limit: 1).first?.id)
+        try spool.quarantine(id: id, reason: "store write failed: disk I/O error")
+        XCTAssertEqual(try spool.quarantinedCount(), 2)
+        XCTAssertEqual(try spool.quarantinedCount(excludingReasonPrefixes: permanent), 1)
+        XCTAssertEqual(try spool.quarantinedCount(excludingReasonPrefixes: []), 2)
+    }
+
+    /// A-7: a byte-identical line that repeats in a file is archived once per
+    /// occurrence, at its own offset, and re-delivering those offsets (a replay of
+    /// the same records, or a re-read from byte 0) adds nothing.
+    func testARepeatedLineIsArchivedOncePerOffsetAndReplayAddsNothing() throws {
+        let repeated = Self.userLine(1)
+        let lines = [repeated, Self.userLine(2), repeated]
+        let url = try transcript(Self.sessionID, lines: lines, mtime: base)
+        let source = ClaudeTranscriptSource(projectsDirectory: projectsDir)
+        XCTAssertEqual(try source.poll(into: spool), 3)
+        let records = try pending()
+        let (drainer, archive) = try makeDrainer()
+        XCTAssertFalse(drainer.drainUntilEmpty().failed)
+        XCTAssertEqual(try archive.count(), 3, "both occurrences of the repeated line are archived")
+
+        let stride = Int64(repeated.utf8.count + 1)
+        let firstKey = ClaudeTranscriptPayload.dedupKey(line: repeated, file: url.path, byteOffset: 0)
+        let thirdKey = ClaudeTranscriptPayload.dedupKey(
+            line: repeated, file: url.path, byteOffset: stride + Int64(lines[1].utf8.count + 1))
+        XCTAssertEqual([records[0].dedupKey, records[2].dedupKey], [firstKey, thirdKey])
+        XCTAssertNotEqual(firstKey, thirdKey)
+        for key in [firstKey, thirdKey] {
+            let id = try XCTUnwrap(try archive.id(forDedupKey: key))
+            let payload = try ClaudeTranscriptPayload.decode(try XCTUnwrap(try archive.record(id: id)).record.payload)
+            XCTAssertEqual(payload.line, repeated)
+        }
+
+        // Replay: the same records delivered again are duplicates.
+        try spool.append(records)
+        let replay = drainer.drainUntilEmpty()
+        XCTAssertFalse(replay.failed, replay.failureReason ?? "")
+        XCTAssertEqual(replay.conflictCopies, 0)
+        XCTAssertEqual(try archive.count(), 3, "a replay adds nothing")
+
+        // A re-read from byte 0 (the cursor is gone) delivers the same offsets.
+        try spool.setSourceState(ClaudeTranscriptSource.cursorKey(for: url), Data("garbage".utf8))
+        XCTAssertEqual(try source.poll(file: url, into: spool), 3)
+        XCTAssertFalse(drainer.drainUntilEmpty().failed)
+        XCTAssertEqual(try archive.count(), 3, "a re-read adds nothing")
+        XCTAssertEqual(try spool.quarantined(limit: 10).count, 0)
+    }
+
+    /// Blank lines after the last record move the cursor with no records; a line
+    /// that is not valid UTF-8 is archived like any other (lossy text plus its
+    /// exact bytes), so the next wake neither re-scans nor loses it.
+    func testTrailingBlankLinesStepTheCursorAndAnUndecodableLineIsArchived() throws {
         let lines = [Self.userLine(1), Self.userLine(2)]
         let url = try transcript(Self.sessionID, lines: lines, mtime: base)
+        let junk = Data([0xFF, 0xFE, 0xC3, 0x28])
         let handle = try FileHandle(forWritingTo: url)
         try handle.seekToEnd()
-        try handle.write(contentsOf: Data("\n\n".utf8) + Data([0xFF, 0xFE, 0xC3, 0x28, 0x0A]))
+        try handle.write(contentsOf: Data("\n\n".utf8) + junk + Data([0x0A]) + Data("\n".utf8))
         try handle.close()
         try setMTime(url, base.addingTimeInterval(1))
         let size = try XCTUnwrap(
             (try FileManager.default.attributesOfItem(atPath: url.path)[.size] as? NSNumber)?.intValue)
 
         let source = ClaudeTranscriptSource(projectsDirectory: projectsDir, linesPerChunk: 1)
-        XCTAssertEqual(try source.poll(into: spool), 2)
+        XCTAssertEqual(try source.poll(into: spool), 3)
         let cursor = try XCTUnwrap(try spool.sourceState(ClaudeTranscriptSource.cursorKey(for: url)))
         let object = try XCTUnwrap(try JSONSerialization.jsonObject(with: cursor) as? [String: Any])
-        XCTAssertEqual(object["byte_offset"] as? Int, size, "the cursor steps over the trailing junk")
-        XCTAssertEqual(object["line_no"] as? Int, 2)
+        XCTAssertEqual(object["byte_offset"] as? Int, size, "the cursor steps over the trailing blank line")
+        XCTAssertEqual(object["line_no"] as? Int, 3)
         XCTAssertEqual(try source.poll(file: url, into: spool), 0)
-        XCTAssertEqual(try payloads().map(\.line), lines)
+        let archived = try payloads()
+        XCTAssertEqual(archived.prefix(2).map(\.line), lines)
+        XCTAssertEqual(archived.prefix(2).map(\.lineBytes), [nil, nil])
+        XCTAssertEqual(archived[2].lineBytes, junk, "the exact bytes are kept")
+        // swiftlint:disable:next optional_data_string_conversion
+        XCTAssertEqual(archived[2].line, String(decoding: junk, as: UTF8.self), "lossy text beside the bytes")
 
         // A record after the junk continues the numbering from the cursor.
         try appendText(Self.userLine(3) + "\n", to: url, mtime: base.addingTimeInterval(2))
         XCTAssertEqual(try source.poll(file: url, into: spool), 1)
-        XCTAssertEqual(try payloads().map(\.lineNo), [1, 2, 3])
+        XCTAssertEqual(try payloads().map(\.lineNo), [1, 2, 3, 4])
+    }
+
+    /// A line holding a truncated multi-byte sequence reaches the raw archive with
+    /// every byte intact, under a key that hashes those bytes, and a second line
+    /// differing only in its bad bytes is its own row.
+    func testANonUTF8TranscriptLineReachesTheArchiveByteForByte() throws {
+        let valid = Self.userLine(1)
+        // A line cut short by a lone multi-byte lead byte, then the same with 0xFF.
+        let broken = Data(Self.userLine(2).utf8.prefix(60)) + Data([0xC3]) + Data(#""}}"#.utf8)
+        let other = Data(Self.userLine(2).utf8.prefix(60)) + Data([0xFF]) + Data(#""}}"#.utf8)
+        XCTAssertNil(String(data: broken, encoding: .utf8))
+        let dir = projectsDir.appendingPathComponent("-Users-dev-work-myapp")
+        try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        let url = dir.appendingPathComponent("\(Self.sessionID).jsonl")
+        try (Data((valid + "\n").utf8) + broken + Data([0x0A]) + other + Data([0x0A])).write(to: url)
+
+        XCTAssertEqual(try ClaudeTranscriptSource(projectsDirectory: projectsDir).poll(into: spool), 3)
+        let records = try pending()
+        let (drainer, archive) = try makeDrainer()
+        _ = drainer.drainUntilEmpty()
+        XCTAssertEqual(try archive.count(), 3, "no line is skipped and the two bad lines do not collapse")
+
+        for (record, bytes) in zip(records.suffix(2), [broken, other]) {
+            let id = try XCTUnwrap(try archive.id(forDedupKey: record.dedupKey))
+            let stored = try XCTUnwrap(try archive.record(id: id))
+            let payload = try ClaudeTranscriptPayload.decode(stored.record.payload)
+            XCTAssertEqual(payload.lineBytes, bytes)
+            XCTAssertEqual(record.dedupKey, ClaudeTranscriptPayload.dedupKey(
+                line: payload.line, file: payload.file, byteOffset: try XCTUnwrap(payload.byteOffset),
+                lineBytes: bytes))
+        }
+        // A valid line's payload carries no `line_base64`, so its archived bytes
+        // are the same as before this field existed.
+        let first = try XCTUnwrap(records.first)
+        XCTAssertFalse((String(bytes: first.payload, encoding: .utf8) ?? "line_base64").contains("line_base64"))
     }
 
     /// Each chunk's offset ends just past its own last line — never past a skipped

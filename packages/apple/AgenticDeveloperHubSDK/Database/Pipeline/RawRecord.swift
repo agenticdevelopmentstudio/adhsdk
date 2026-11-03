@@ -20,6 +20,23 @@ public struct RawRecord: Sendable, Equatable {
         self.receivedAt = receivedAt
         self.payload = payload
     }
+
+    /// The prefix of a conflict copy's source kind.
+    public static let conflictKindPrefix = "conflict:"
+
+    /// Whether this is a conflict copy: bytes that arrived under a key the archive
+    /// already held with other bytes, kept so nothing captured is lost. Nothing
+    /// is derived from one; the first record under the key stands.
+    public var isConflictCopy: Bool { sourceKind.hasPrefix(Self.conflictKindPrefix) }
+
+    /// The copy of this record the archive keeps when its key already holds other
+    /// bytes: keyed `<key>-<sha256 of these bytes>`, source kind `conflict:<kind>`,
+    /// the payload verbatim.
+    public func conflictCopy(sha256: String) -> RawRecord {
+        RawRecord(
+            provider: provider, sourceKind: Self.conflictKindPrefix + sourceKind,
+            dedupKey: "\(dedupKey)-\(sha256)", receivedAt: receivedAt, payload: payload)
+    }
 }
 
 /// Shared limits for the pipeline.

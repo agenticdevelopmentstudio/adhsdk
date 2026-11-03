@@ -273,6 +273,19 @@ extension DaemonDatabase {
         }
     }
 
+    /// The PreToolUse lookup behind `claudeToolDurationMs`; arguments are provider,
+    /// tool_use_id, session_id. It repeats `events_tool_use_id`'s expression and
+    /// its `json_valid(attrs)` predicate so the planner can use that partial index;
+    /// the unary `+` keeps `session_id` and `provider_type` off the other indexes,
+    /// so the plan does not depend on the planner's tie-break.
+    static let claudeToolDurationSQL = """
+        SELECT time FROM events
+        WHERE provider = ? AND json_extract(attrs,'$.tool_use_id') = ? AND json_valid(attrs)
+          AND +session_id = ? AND +provider_type = 'PreToolUse'
+        ORDER BY id DESC
+        LIMIT 1
+        """
+
     /// Milliseconds from the session's newest `PreToolUse` carrying `toolUseId` to
     /// `postTime` (epoch seconds), or nil when there is no such `PreToolUse` or
     /// it is later than `postTime`. What a `PostToolUse` / `PostToolUseFailure`
@@ -280,13 +293,8 @@ extension DaemonDatabase {
     public func claudeToolDurationMs(sessionId: String, toolUseId: String, postTime: Double) throws -> Int? {
         guard !sessionId.isEmpty, !toolUseId.isEmpty else { return nil }
         let preTime: Double? = try withEventReads(nil) { conn in
-            try Double.fetchOne(conn, sql: """
-                SELECT time FROM events
-                WHERE provider = ? AND session_id = ? AND provider_type = 'PreToolUse'
-                  AND json_extract(attrs, '$.tool_use_id') = ?
-                ORDER BY id DESC
-                LIMIT 1
-                """, arguments: [ClaudeProvider.name, sessionId, toolUseId])
+            try Double.fetchOne(
+                conn, sql: Self.claudeToolDurationSQL, arguments: [ClaudeProvider.name, toolUseId, sessionId])
         }
         guard let preTime else { return nil }
         let delta = (postTime - preTime) * 1000.0
@@ -535,11 +543,28 @@ extension DaemonDatabase {
         return rows.filter { kept.contains($0.key) }
     }
 
+    /// The sums of the Claude turns the storage trim deleted, one row per
+    /// (session, model), keyed by session id (`EventStore` `trimmed_turns`).
+    /// Empty without an attached store.
+    public func claudeTrimmedTurnTotals(deadline: Duration? = nil) throws -> [ClaudeTurnTotals] {
+        try withEventReads([], deadline: deadline) { conn in
+            try Row.fetchAll(conn, sql: """
+                SELECT session_id, model, turn_count, input_tokens, output_tokens,
+                       cache_read_tokens, cache_write_tokens, cache_write_1h_tokens
+                FROM trimmed_turns WHERE provider = ?
+                """, arguments: [ClaudeProvider.name]).map { row in
+                ClaudeTurnTotals(
+                    key: row[0], model: row[1], turnCount: row[2], inputTokens: row[3], outputTokens: row[4],
+                    cacheReadTokens: row[5], cacheCreationTokens: row[6], cacheCreation1hTokens: row[7])
+            }
+        }
+    }
+
     /// Every Claude turn's (session, time) in `[since, until)` (epoch seconds),
     /// ordered by session then time — what the active-hours walk needs. Untimed
-    /// turns are left out. `sessionIds` as in `claudeTurnTotals`.
+    /// turns are left out. `sessionIds` and `deadline` as in `claudeTurnTotals`.
     public func claudeTurnTimes(
-        since: Double, until: Double, sessionIds: [String]?
+        since: Double, until: Double, sessionIds: [String]?, deadline: Duration? = nil
     ) throws -> [(sessionId: String, time: Double)] {
         let unique = sessionIds.map { Array(Set($0)).sorted() }
         if let unique, unique.isEmpty { return [] }
@@ -557,7 +582,7 @@ extension DaemonDatabase {
                 ORDER BY session_id, time
                 """, arguments: StatementArguments(arguments)).map { (sessionId: $0[0] ?? "", time: $0[1] ?? 0) }
         }
-        return try withEventReads([]) { conn in
+        return try withEventReads([], deadline: deadline) { conn in
             guard let unique else { return try fetch(conn, nil) }
             // Chunks are cut from the sorted ids, so concatenating them keeps the order.
             var out: [(sessionId: String, time: Double)] = []

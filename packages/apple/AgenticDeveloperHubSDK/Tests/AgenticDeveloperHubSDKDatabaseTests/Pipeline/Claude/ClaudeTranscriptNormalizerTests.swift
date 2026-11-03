@@ -57,7 +57,8 @@ final class ClaudeTranscriptNormalizerTests: XCTestCase {
 
     private static func record(_ payload: ClaudeTranscriptPayload) throws -> RawRecord {
         RawRecord(provider: ClaudeProvider.name, sourceKind: ClaudeProvider.transcriptKind,
-                  dedupKey: ClaudeTranscriptPayload.dedupKey(line: payload.line, file: payload.file),
+                  dedupKey: ClaudeTranscriptPayload.dedupKey(
+                      line: payload.line, file: payload.file, byteOffset: Int64(payload.lineNo)),
                   receivedAt: receivedAt, payload: try ClaudeTranscriptPayload.encode(payload))
     }
 
@@ -86,21 +87,36 @@ final class ClaudeTranscriptNormalizerTests: XCTestCase {
         XCTAssertEqual(try ClaudeTranscriptPayload.decode(Data(text.utf8)), payload)
         // Same input, same bytes.
         XCTAssertEqual(try ClaudeTranscriptPayload.encode(payload), try ClaudeTranscriptPayload.encode(payload))
+        // The source's payloads carry the line's offset too.
+        let placed = ClaudeTranscriptPayload(
+            file: "/a/b.jsonl", lineNo: 3, subagentFile: false, line: #"{"x":1}"#, byteOffset: 42)
+        let placedText = try XCTUnwrap(String(data: try ClaudeTranscriptPayload.encode(placed), encoding: .utf8))
+        XCTAssertEqual(
+            placedText, #"{"byte_offset":42,"file":"/a/b.jsonl","line":"{\"x\":1}","line_no":3,"subagent_file":false}"#)
+        XCTAssertEqual(try ClaudeTranscriptPayload.decode(Data(placedText.utf8)), placed)
     }
 
-    func testDedupKeyIsSessionAndLineHash() throws {
+    func testDedupKeyIsSessionFileOffsetAndLineHash() throws {
         let line = try Self.line("user-string")
         let hash = SHA256.hash(data: Data(line.utf8)).map { String(format: "%02x", $0) }.joined()
-        XCTAssertEqual(ClaudeTranscriptPayload.dedupKey(line: line, file: Self.mainFile), "\(Self.sessionID):\(hash)")
-        // The key depends on the line, not where it sits.
-        XCTAssertEqual(ClaudeTranscriptPayload.dedupKey(line: line, file: "/elsewhere/other.jsonl"),
-                       "\(Self.sessionID):\(hash)")
+        let stem = Self.sessionID
+        XCTAssertEqual(ClaudeTranscriptPayload.dedupKey(line: line, file: Self.mainFile, byteOffset: 120),
+                       "\(Self.sessionID):\(stem)@120:\(hash)")
+        // The file is named by its stem, so another directory's copy shares the key.
+        XCTAssertEqual(
+            ClaudeTranscriptPayload.dedupKey(line: line, file: "/elsewhere/\(stem).jsonl", byteOffset: 120),
+            "\(Self.sessionID):\(stem)@120:\(hash)")
+        // The same line at another offset, or in another file, is another occurrence.
+        XCTAssertNotEqual(ClaudeTranscriptPayload.dedupKey(line: line, file: Self.mainFile, byteOffset: 0),
+                          ClaudeTranscriptPayload.dedupKey(line: line, file: Self.mainFile, byteOffset: 120))
+        XCTAssertNotEqual(ClaudeTranscriptPayload.dedupKey(line: line, file: Self.subagentFile, byteOffset: 120),
+                          ClaudeTranscriptPayload.dedupKey(line: line, file: Self.mainFile, byteOffset: 120))
         // No sessionId on the line: the file stem stands in.
         let summary = try Self.line("summary")
-        XCTAssertTrue(ClaudeTranscriptPayload.dedupKey(line: summary, file: Self.mainFile)
+        XCTAssertTrue(ClaudeTranscriptPayload.dedupKey(line: summary, file: Self.mainFile, byteOffset: 0)
             .hasPrefix("\(Self.sessionID):"))
-        XCTAssertTrue(ClaudeTranscriptPayload.dedupKey(line: summary, file: Self.subagentFile)
-            .hasPrefix("agent-a4f9e2c1b7d3:"))
+        XCTAssertTrue(ClaudeTranscriptPayload.dedupKey(line: summary, file: Self.subagentFile, byteOffset: 0)
+            .hasPrefix("agent-a4f9e2c1b7d3:agent-a4f9e2c1b7d3@0:"))
         XCTAssertEqual(ClaudeTranscriptPayload.fileStem(Self.mainFile), Self.sessionID)
     }
 

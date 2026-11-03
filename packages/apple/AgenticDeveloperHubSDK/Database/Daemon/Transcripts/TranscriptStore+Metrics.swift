@@ -11,6 +11,14 @@ extension DaemonDatabase {
     /// UPSERT per-session rollups from the importer. `updated_at` is
     /// refreshed by the row default on insert and by the SET clause on
     /// update so downstream consumers can tell when the numbers changed.
+    ///
+    /// **Totals never fall.** Callers recompute a session's totals from the
+    /// turns the event store still holds, and the storage trim deletes turns
+    /// older than its cutoff: a resumed old session (or a late import) would
+    /// otherwise overwrite its full totals with the post-cutoff fraction. So
+    /// tokens, cost and turn count keep the larger of the stored and the new
+    /// value, the first turn the earlier and the last turn the later. A real
+    /// drop (repricing) goes through its own UPDATE, never this upsert.
     public func upsertSessionMetrics(_ metrics: SessionMetricsDTO, accountEmail: String) throws {
         try write { _ in
             try execute("""
@@ -21,15 +29,19 @@ extension DaemonDatabase {
                     account_email
                 ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), ?)
                 ON CONFLICT(session_id) DO UPDATE SET
-                    total_input_tokens = excluded.total_input_tokens,
-                    total_output_tokens = excluded.total_output_tokens,
-                    cache_read_tokens = excluded.cache_read_tokens,
-                    cache_creation_tokens = excluded.cache_creation_tokens,
-                    total_cost_usd = excluded.total_cost_usd,
-                    turn_count = excluded.turn_count,
+                    total_input_tokens = MAX(session_metrics.total_input_tokens, excluded.total_input_tokens),
+                    total_output_tokens = MAX(session_metrics.total_output_tokens, excluded.total_output_tokens),
+                    cache_read_tokens = MAX(session_metrics.cache_read_tokens, excluded.cache_read_tokens),
+                    cache_creation_tokens = MAX(session_metrics.cache_creation_tokens,
+                                                excluded.cache_creation_tokens),
+                    total_cost_usd = MAX(session_metrics.total_cost_usd, excluded.total_cost_usd),
+                    turn_count = MAX(session_metrics.turn_count, excluded.turn_count),
                     model = excluded.model,
-                    first_turn_at = excluded.first_turn_at,
-                    last_turn_at = excluded.last_turn_at,
+                    first_turn_at = CASE
+                        WHEN session_metrics.first_turn_at = '' THEN excluded.first_turn_at
+                        WHEN excluded.first_turn_at = '' THEN session_metrics.first_turn_at
+                        ELSE MIN(session_metrics.first_turn_at, excluded.first_turn_at) END,
+                    last_turn_at = MAX(session_metrics.last_turn_at, excluded.last_turn_at),
                     updated_at = datetime('now'),
                     account_email = CASE WHEN excluded.account_email != '' AND session_metrics.account_email = ''
                                           THEN excluded.account_email ELSE session_metrics.account_email END
@@ -95,6 +107,11 @@ extension DaemonDatabase {
     /// `firstTurnAt`/`lastTurnAt` are written back in a transcript's own form
     /// (`yyyy-MM-ddTHH:mm:ss.SSSZ`); a turn from a line with no timestamp sits at
     /// the epoch and, like an empty `timestamp` there, sets neither.
+    ///
+    /// Turns the storage trim deleted still count: their per-model sums in the
+    /// store's `trimmed_turns` are added to the live turns', and the whole is
+    /// priced at today's rates, so a resumed old session's totals are its full
+    /// history, not the part after the cutoff.
     /// Returns nil when the session has no turns.
     public func sessionMetricsFromTurns(sessionId: String, reads: EventStore) throws -> SessionMetricsDTO? {
         let rows = try reads.read { conn in
@@ -111,7 +128,12 @@ extension DaemonDatabase {
                 FROM turns
                 WHERE provider = ? AND session_id = ?
                 GROUP BY COALESCE(model, '')
-                """, arguments: [ClaudeProvider.name, sessionId])
+                UNION ALL
+                SELECT model, turn_count, input_tokens, output_tokens, cache_read_tokens,
+                       cache_write_tokens, cache_write_1h_tokens, first_time, last_time
+                FROM trimmed_turns
+                WHERE provider = ? AND session_id = ?
+                """, arguments: [ClaudeProvider.name, sessionId, ClaudeProvider.name, sessionId])
         }
         let groups = rows.map { row in
             TurnModelGroup(
@@ -172,17 +194,18 @@ extension DaemonDatabase {
         var firstTs = ""
         var lastTs = ""
 
+        // A model can arrive in more than one group (live turns and trimmed sums), so add.
         for group in groups {
-            var bucket = ModelBucket()
-            bucket.turnCount = group.turnCount
-            bucket.input = group.input
-            bucket.output = group.output
-            bucket.cacheRead = group.cacheRead
-            bucket.cacheCreate = group.cacheCreate
-            bucket.cacheCreate1h = group.cacheCreate1h
-            bucket.lastTs = group.lastTs
+            var bucket = perModel[group.model] ?? ModelBucket()
+            bucket.turnCount += group.turnCount
+            bucket.input += group.input
+            bucket.output += group.output
+            bucket.cacheRead += group.cacheRead
+            bucket.cacheCreate += group.cacheCreate
+            bucket.cacheCreate1h += group.cacheCreate1h
+            bucket.lastTs = max(bucket.lastTs, group.lastTs)
             perModel[group.model] = bucket
-            totalTurns += bucket.turnCount
+            totalTurns += group.turnCount
             if !group.firstTs.isEmpty, firstTs.isEmpty || group.firstTs < firstTs { firstTs = group.firstTs }
             if group.lastTs > lastTs { lastTs = group.lastTs }
         }
@@ -321,9 +344,15 @@ extension DaemonDatabase {
         // own tokens — the same rule `sessionMetricsFromTurns` follows for a
         // single session, which is what keeps the two agreeing.
         var costs: [String: Double] = [:]
+        var turnCounts: [String: Int] = [:]
         // A whole-store grouped scan: on a converted history it outlives the
         // store's 30 s read deadline, so it gets the maintenance one.
-        for group in try claudeTurnTotals(groupBy: .session, deadline: Self.maintenanceReadDeadline) {
+        // Turns the storage trim folded away count too (`claudeTrimmedTurnTotals`),
+        // the same sums `sessionMetricsFromTurns` adds.
+        let live = try claudeTurnTotals(groupBy: .session, deadline: Self.maintenanceReadDeadline)
+        let trimmed = try claudeTrimmedTurnTotals(deadline: Self.maintenanceReadDeadline)
+        for group in live + trimmed {
+            turnCounts[group.key, default: 0] += group.turnCount
             costs[group.key, default: 0] += TranscriptPricing.cost(
                 model: group.model,
                 inputTokens: group.inputTokens,
@@ -335,10 +364,14 @@ extension DaemonDatabase {
         }
 
         try migrationTransaction {
+            // A session with more turns recorded than the store accounts for
+            // (live plus trimmed sums) lost turns before the trim kept sums,
+            // e.g. a trim from an older build: pricing what is left would cut
+            // its cost to that fraction, so it keeps the cost it has.
             for (sessionId, cost) in costs {
                 try execute(
-                    "UPDATE session_metrics SET total_cost_usd = ? WHERE session_id = ?",
-                    params: [cost, sessionId]
+                    "UPDATE session_metrics SET total_cost_usd = ? WHERE session_id = ? AND turn_count <= ?",
+                    params: [cost, sessionId, turnCounts[sessionId] ?? 0]
                 )
             }
             try setSetting(Self.pricingRevisionKey, String(TranscriptPricing.revision))
