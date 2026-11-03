@@ -11,6 +11,14 @@ extension DaemonDatabase {
     /// UPSERT per-session rollups from the importer. `updated_at` is
     /// refreshed by the row default on insert and by the SET clause on
     /// update so downstream consumers can tell when the numbers changed.
+    ///
+    /// **Totals never fall.** Callers recompute a session's totals from the
+    /// turns the event store still holds, and the storage trim deletes turns
+    /// older than its cutoff: a resumed old session (or a late import) would
+    /// otherwise overwrite its full totals with the post-cutoff fraction. So
+    /// tokens, cost and turn count keep the larger of the stored and the new
+    /// value, the first turn the earlier and the last turn the later. A real
+    /// drop (repricing) goes through its own UPDATE, never this upsert.
     public func upsertSessionMetrics(_ metrics: SessionMetricsDTO, accountEmail: String) throws {
         try write { _ in
             try execute("""
@@ -21,15 +29,19 @@ extension DaemonDatabase {
                     account_email
                 ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), ?)
                 ON CONFLICT(session_id) DO UPDATE SET
-                    total_input_tokens = excluded.total_input_tokens,
-                    total_output_tokens = excluded.total_output_tokens,
-                    cache_read_tokens = excluded.cache_read_tokens,
-                    cache_creation_tokens = excluded.cache_creation_tokens,
-                    total_cost_usd = excluded.total_cost_usd,
-                    turn_count = excluded.turn_count,
+                    total_input_tokens = MAX(session_metrics.total_input_tokens, excluded.total_input_tokens),
+                    total_output_tokens = MAX(session_metrics.total_output_tokens, excluded.total_output_tokens),
+                    cache_read_tokens = MAX(session_metrics.cache_read_tokens, excluded.cache_read_tokens),
+                    cache_creation_tokens = MAX(session_metrics.cache_creation_tokens,
+                                                excluded.cache_creation_tokens),
+                    total_cost_usd = MAX(session_metrics.total_cost_usd, excluded.total_cost_usd),
+                    turn_count = MAX(session_metrics.turn_count, excluded.turn_count),
                     model = excluded.model,
-                    first_turn_at = excluded.first_turn_at,
-                    last_turn_at = excluded.last_turn_at,
+                    first_turn_at = CASE
+                        WHEN session_metrics.first_turn_at = '' THEN excluded.first_turn_at
+                        WHEN excluded.first_turn_at = '' THEN session_metrics.first_turn_at
+                        ELSE MIN(session_metrics.first_turn_at, excluded.first_turn_at) END,
+                    last_turn_at = MAX(session_metrics.last_turn_at, excluded.last_turn_at),
                     updated_at = datetime('now'),
                     account_email = CASE WHEN excluded.account_email != '' AND session_metrics.account_email = ''
                                           THEN excluded.account_email ELSE session_metrics.account_email END
@@ -321,9 +333,11 @@ extension DaemonDatabase {
         // own tokens — the same rule `sessionMetricsFromTurns` follows for a
         // single session, which is what keeps the two agreeing.
         var costs: [String: Double] = [:]
+        var turnCounts: [String: Int] = [:]
         // A whole-store grouped scan: on a converted history it outlives the
         // store's 30 s read deadline, so it gets the maintenance one.
         for group in try claudeTurnTotals(groupBy: .session, deadline: Self.maintenanceReadDeadline) {
+            turnCounts[group.key, default: 0] += group.turnCount
             costs[group.key, default: 0] += TranscriptPricing.cost(
                 model: group.model,
                 inputTokens: group.inputTokens,
@@ -335,10 +349,13 @@ extension DaemonDatabase {
         }
 
         try migrationTransaction {
+            // A session with more turns recorded than the store still holds
+            // had its older turns trimmed: pricing what is left would cut its
+            // cost to that fraction, so it keeps the cost it has.
             for (sessionId, cost) in costs {
                 try execute(
-                    "UPDATE session_metrics SET total_cost_usd = ? WHERE session_id = ?",
-                    params: [cost, sessionId]
+                    "UPDATE session_metrics SET total_cost_usd = ? WHERE session_id = ? AND turn_count <= ?",
+                    params: [cost, sessionId, turnCounts[sessionId] ?? 0]
                 )
             }
             try setSetting(Self.pricingRevisionKey, String(TranscriptPricing.revision))

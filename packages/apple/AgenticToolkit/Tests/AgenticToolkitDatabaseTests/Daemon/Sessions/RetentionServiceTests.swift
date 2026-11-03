@@ -210,10 +210,31 @@ final class RetentionServiceTests: XCTestCase {
         try database.execute("INSERT INTO summary_keep(session_id, day) VALUES ('kept', '2026-01-01')")
         try endedSession("empty")
 
-        let service = RetentionService(database: database, keepSessionTables: ["summary_keep"])
+        let service = RetentionService(
+            database: database, lastActivityBefore: Date().timeIntervalSince1970, keepSessionTables: ["summary_keep"])
         XCTAssertEqual(try service.runOnce(), .complete)
         XCTAssertNotNil(try database.fetchSession(sessionId: "kept"))
         XCTAssertNil(try database.fetchSession(sessionId: "empty"))
+    }
+
+    // MARK: - Last activity before the trim cutoff
+
+    func testOnlySessionsLastActiveBeforeTheCutoffAreReaped() throws {
+        try attachEventStore()
+        try endedSession("old")                                  // last active 2026-01-01
+        _ = try database.createSessionStubIfMissing(
+            sessionId: "recent", cwd: "/tmp", model: "m",
+            startedAt: "2026-03-01T00:00:00Z", lastActivityAt: "2026-03-01T00:00:00Z", accountEmail: "")
+        database.updateSessionStatus(.ended, sessionId: "recent")
+        try database.execute("UPDATE sessions SET last_activity_at = '' WHERE session_id = 'old'")
+        try endedSession("old-clocked")
+        let cutoff = try XCTUnwrap(UTCTimestamp.epochSeconds("2026-02-01T00:00:00Z"))
+
+        let service = RetentionService(database: database, lastActivityBefore: Double(cutoff))
+        XCTAssertEqual(try service.runOnce(), .complete)
+        XCTAssertNil(try database.fetchSession(sessionId: "old-clocked"), "last active before the cutoff: reaped")
+        XCTAssertNotNil(try database.fetchSession(sessionId: "recent"), "last active after the cutoff: kept")
+        XCTAssertNotNil(try database.fetchSession(sessionId: "old"), "no usable last_activity_at: kept")
     }
 
     func testReaperNeverDeletesEventHistory() throws {
@@ -223,7 +244,7 @@ final class RetentionServiceTests: XCTestCase {
         var before = 0
         try database.query("SELECT COUNT(*) FROM event_log") { row in before = Int(database.int(row, 0)) }
 
-        _ = try RetentionService(database: database).runOnce()
+        _ = try RetentionService(database: database, lastActivityBefore: Date().timeIntervalSince1970).runOnce()
 
         var after = 0
         try database.query("SELECT COUNT(*) FROM event_log") { row in after = Int(database.int(row, 0)) }

@@ -253,7 +253,7 @@ final class TrimServiceTests: XCTestCase {
 
         XCTAssertEqual(report.waitingFor, "skipped: bulk load")
         XCTAssertNil(report.error)
-        XCTAssertTrue(report.finished)
+        XCTAssertFalse(report.finished, "rows are still due: the caller retries soon, not a day later")
         XCTAssertEqual(report.vacuum, "skipped")
         try store.endBulkLoad()
         XCTAssertEqual(try count("events"), 1)
@@ -280,7 +280,33 @@ final class TrimServiceTests: XCTestCase {
         try storeRows("s", daysAgo: 60)
         let report = try service(covered: Self.day(1), extra: [{ _, _ in throw Boom() }]).run(deadline: future)
         XCTAssertNotNil(report.error)
+        XCTAssertFalse(report.finished, "a failed stage asks for a rerun")
         XCTAssertEqual(report.events, 1)
+    }
+
+    /// A batch that fails after earlier ones committed: the report carries what
+    /// was deleted, names the failure and asks for a rerun.
+    func testAnEventsDbFailureReportsThePartialCounts() throws {
+        for index in 0..<3 { try storeRows("s\(index)", daysAgo: 60) }
+        try store.pool.write { conn in
+            try conn.execute(sql: """
+                CREATE TRIGGER refuse_message_delete BEFORE DELETE ON messages
+                BEGIN SELECT RAISE(ABORT, 'refused'); END
+                """)
+        }
+
+        let report = try service(covered: Self.day(1)).run(deadline: future)
+
+        XCTAssertEqual(report.events, 3, "the events batch committed before the messages batch failed")
+        XCTAssertEqual(report.messages, 0)
+        XCTAssertEqual(report.turns, 0)
+        XCTAssertEqual(try count("events"), 0)
+        XCTAssertEqual(try count("messages"), 3)
+        XCTAssertEqual(try count("turns"), 3)
+        XCTAssertTrue(report.error?.hasPrefix("events.db:") == true, report.error ?? "no error")
+        XCTAssertFalse(report.finished)
+        XCTAssertEqual(report.vacuum, "skipped", "nothing is vacuumed after a failed stage")
+        XCTAssertEqual(TrimService.lastReport(database), report, "the partial report is stored")
     }
 
     // MARK: - Main vacuum gate

@@ -26,7 +26,10 @@ public struct TrimReport: Sendable, Codable, Equatable {
     /// "incremental", "full main", "incremental, full main", "skipped" or
     /// "unavailable (auto_vacuum=none)".
     public var vacuum: String
-    /// False when the pass stopped on its deadline with rows still to delete.
+    /// False when rows may still be due: the pass stopped on its deadline, a
+    /// stage failed, or a bulk load kept it out of `events.db`. The caller
+    /// retries soon rather than a day later. True when it waited for rollups or
+    /// had no event store (nothing to retry until they change).
     public var finished: Bool
     /// A stage that failed, with the counts above still what was deleted.
     public var error: String?
@@ -202,6 +205,8 @@ public final class TrimService: Sendable {
         var vacuum = Self.vacuumSkipped
 
         // 1. rate_limit_snapshots, the newest row per account always kept.
+        // Account backfill (`recoverAccountFromSiblings`) also reads snapshots;
+        // trimming weakens it only before `account_backfill_done` is set.
         do {
             let (deleted, done) = try trimSnapshots(before: cutoff, deadline: deadline)
             report.rateLimitSnapshots = deleted
@@ -237,10 +242,13 @@ public final class TrimService: Sendable {
                 report.messages = failure.partial.messages
                 report.turns = failure.partial.turns
                 report.sessions = failure.partial.sessions
+                report.finished = false
                 errors.append("events.db: \(failure.underlying.localizedDescription)")
             } catch EventStoreError.bulkLoadInProgress {
                 report.waitingFor = Self.waitingForBulkLoad
+                report.finished = false
             } catch {
+                report.finished = false
                 errors.append("events.db: \(error.localizedDescription)")
             }
         } else {
@@ -261,6 +269,8 @@ public final class TrimService: Sendable {
         report.vacuum = vacuum
         report.reclaimedBytes = max(0, bytesBefore - totalBytes())
         report.error = errors.isEmpty ? nil : errors.joined(separator: "; ")
+        // A failed stage left rows behind: not finished, so the caller retries soon.
+        if report.error != nil { report.finished = false }
         report.finishedAt = now().timeIntervalSince1970
         logger.info("""
             Trim: \(report.events) events, \(report.messages) messages, \(report.turns) turns, \
