@@ -12,7 +12,7 @@
 
 ## GitHub URL
 
-https://github.com/agenticdevelopmentstudio/agenticdevelopertoolkit
+https://github.com/agenticdevelopmentstudio/adhsdk
 
 ## Directory Structure
 

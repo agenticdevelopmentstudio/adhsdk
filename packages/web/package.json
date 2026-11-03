@@ -7,11 +7,11 @@
   "packageManager": "pnpm@9.15.9",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/agenticdevelopmentstudio/agenticdevelopertoolkit.git"
+    "url": "git+https://github.com/agenticdevelopmentstudio/adhsdk.git"
   },
-  "homepage": "https://github.com/agenticdevelopmentstudio/agenticdevelopertoolkit#readme",
+  "homepage": "https://github.com/agenticdevelopmentstudio/adhsdk#readme",
   "bugs": {
-    "url": "https://github.com/agenticdevelopmentstudio/agenticdevelopertoolkit/issues"
+    "url": "https://github.com/agenticdevelopmentstudio/adhsdk/issues"
   },
   "scripts": {
     "build": "pnpm -r --workspace-concurrency=1 run build",

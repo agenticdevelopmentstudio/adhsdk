@@ -24,7 +24,7 @@ They require:
 Add the submodule wherever you want it to live:
 
 ```bash
-git submodule add git@github.com:agenticdevelopmentstudio/adtoolkit.git vendor/adt
+git submodule add git@github.com:agenticdevelopmentstudio/adhsdk.git vendor/adt
 ```
 
 In the consumer's `package.json` (e.g. `sites/main/package.json`), add a
