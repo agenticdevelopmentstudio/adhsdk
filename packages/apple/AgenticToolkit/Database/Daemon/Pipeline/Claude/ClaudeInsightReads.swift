@@ -45,6 +45,25 @@ public struct ClaudeCacheMissGroup: Sendable, Equatable {
     }
 }
 
+/// One session's events within a time range, as
+/// `DaemonDatabase.claudeSessionEventActivity(from:until:deadline:)` reads them.
+public struct ClaudeSessionEventActivity: Sendable, Equatable {
+    public let sessionId: String
+    public let eventCount: Int
+    public let firstTime: Double
+    public let lastTime: Double
+    /// The newest non-empty `cwd` in the range, or "".
+    public let cwd: String
+
+    public init(sessionId: String, eventCount: Int, firstTime: Double, lastTime: Double, cwd: String) {
+        self.sessionId = sessionId
+        self.eventCount = eventCount
+        self.firstTime = firstTime
+        self.lastTime = lastTime
+        self.cwd = cwd
+    }
+}
+
 /// The insights and daily-rollup reads over the event store's Claude events.
 ///
 /// Every read binds the Claude provider, leaves out rows before
@@ -210,6 +229,28 @@ extension DaemonDatabase {
     public func claudeEventDays(
         from: Double? = nil, until: Double? = nil, limit: Int? = nil, deadline: Duration? = nil
     ) throws -> [String] {
+        try claudeDays(table: .events, from: from, until: until, limit: limit, deadline: deadline)
+    }
+
+    /// The distinct UTC days holding a turn in the range, oldest first, at most
+    /// `limit` of them — ``claudeEventDays(from:until:limit:deadline:)``'s seek
+    /// walk over `turns` (its `turns_time` index). A transcript import lands
+    /// turns on days no hook event covers, so a reader summarising turns per
+    /// day must walk these as well as the event days.
+    public func claudeTurnDays(
+        from: Double? = nil, until: Double? = nil, limit: Int? = nil, deadline: Duration? = nil
+    ) throws -> [String] {
+        try claudeDays(table: .turns, from: from, until: until, limit: limit, deadline: deadline)
+    }
+
+    /// The two tables a day walk can seek. Fixed names, never caller input.
+    private enum ClaudeDayTable: String {
+        case events, turns
+    }
+
+    private func claudeDays(
+        table: ClaudeDayTable, from: Double?, until: Double?, limit: Int?, deadline: Duration?
+    ) throws -> [String] {
         if let limit, limit <= 0 { return [] }
         let untilClause = until == nil ? "" : " AND time < ?"
         return try withEventReads([], deadline: deadline) { conn in
@@ -223,7 +264,7 @@ extension DaemonDatabase {
                 // INDEXED BY — a bulk load drops the index, and the read must
                 // still answer (slowly) rather than fail.
                 guard let time = try Double.fetchOne(conn, sql: """
-                    SELECT time FROM events
+                    SELECT time FROM \(table.rawValue)
                     WHERE provider = ? AND time >= ?\(untilClause)
                     ORDER BY time LIMIT 1
                     """, arguments: StatementArguments(arguments)) else { break }
@@ -234,6 +275,36 @@ extension DaemonDatabase {
                 cursor = dayStart + 86400
             }
             return days
+        }
+    }
+
+    /// Per session, its events in `[from, until)`: how many, the first and last
+    /// event time, and the newest non-empty `cwd` among them ("" when none
+    /// carried one). Unordered. What a per-session, per-day summary needs from
+    /// `events`; the turns half comes from `claudeTurnTotals` grouped by session.
+    public func claudeSessionEventActivity(
+        from: Double, until: Double, deadline: Duration? = nil
+    ) throws -> [ClaudeSessionEventActivity] {
+        let range = Self.claudeTimeRange(from: from, until: until)
+        return try withEventReads([], deadline: deadline) { conn in
+            let rows = try Row.fetchAll(conn, sql: """
+                SELECT session_id, COUNT(*), MIN(time), MAX(time)
+                FROM events
+                WHERE provider = ? AND \(range.sql)
+                GROUP BY session_id
+                """, arguments: StatementArguments([ClaudeProvider.name] + range.arguments))
+            return try rows.map { row in
+                let sessionId: String = row[0] ?? ""
+                // Each lookup seeks `events_session_time` from its right edge.
+                let cwd = try String.fetchOne(conn, sql: """
+                    SELECT cwd FROM events
+                    WHERE provider = ? AND session_id = ? AND \(range.sql) AND COALESCE(cwd, '') <> ''
+                    ORDER BY time DESC LIMIT 1
+                    """, arguments: StatementArguments([ClaudeProvider.name, sessionId] + range.arguments)) ?? ""
+                return ClaudeSessionEventActivity(
+                    sessionId: sessionId, eventCount: row[1] ?? 0,
+                    firstTime: row[2] ?? 0, lastTime: row[3] ?? 0, cwd: cwd)
+            }
         }
     }
 

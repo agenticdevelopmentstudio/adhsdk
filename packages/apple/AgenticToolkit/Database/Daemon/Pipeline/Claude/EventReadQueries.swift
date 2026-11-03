@@ -545,9 +545,9 @@ extension DaemonDatabase {
 
     /// Every Claude turn's (session, time) in `[since, until)` (epoch seconds),
     /// ordered by session then time — what the active-hours walk needs. Untimed
-    /// turns are left out. `sessionIds` as in `claudeTurnTotals`.
+    /// turns are left out. `sessionIds` and `deadline` as in `claudeTurnTotals`.
     public func claudeTurnTimes(
-        since: Double, until: Double, sessionIds: [String]?
+        since: Double, until: Double, sessionIds: [String]?, deadline: Duration? = nil
     ) throws -> [(sessionId: String, time: Double)] {
         let unique = sessionIds.map { Array(Set($0)).sorted() }
         if let unique, unique.isEmpty { return [] }
@@ -565,7 +565,7 @@ extension DaemonDatabase {
                 ORDER BY session_id, time
                 """, arguments: StatementArguments(arguments)).map { (sessionId: $0[0] ?? "", time: $0[1] ?? 0) }
         }
-        return try withEventReads([]) { conn in
+        return try withEventReads([], deadline: deadline) { conn in
             guard let unique else { return try fetch(conn, nil) }
             // Chunks are cut from the sorted ids, so concatenating them keeps the order.
             var out: [(sessionId: String, time: Double)] = []
