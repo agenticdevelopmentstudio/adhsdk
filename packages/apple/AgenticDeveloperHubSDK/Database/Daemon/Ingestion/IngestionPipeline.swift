@@ -124,7 +124,11 @@ public final class IngestionPipeline: @unchecked Sendable {
             threadName: queueLabel("ingest-drain")
         )
         let dropDirectory = paths.dropDirectory
-        let capture: @Sendable (ParsedEvent) throws -> Void = { [drainer] event in
+        let capture: @Sendable (ParsedEvent) throws -> Void = { [drainer] incoming in
+            // Stamped once, here, before routing: an event held in the legacy
+            // spool while the pipeline is closed carries the fingerprint of its
+            // file at event time too (a later stamp would measure a later file).
+            let event = ClaudeFileFingerprint.stamped(incoming)
             do {
                 // Appends to the Claude spool and wakes its drainer when the
                 // pipeline is open. Otherwise the legacy spool takes it, under the

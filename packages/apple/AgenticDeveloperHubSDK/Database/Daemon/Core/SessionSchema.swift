@@ -583,8 +583,8 @@ public enum SessionSchema {
         let columns = ["timestamp", "model", "input_tokens", "output_tokens", "cache_read_tokens",
                        "cache_creation_tokens", "cache_creation_1h_tokens"]
         // A pre-migration fixture may carry only some of them.
-        guard db.tableExists("transcript_turns"),
-              columns.allSatisfy({ db.tableHasColumn("transcript_turns", $0) })
+        guard try db.tableExists("transcript_turns"),
+              try columns.allSatisfy({ try db.tableHasColumn("transcript_turns", $0) })
         else { return }
         try db.migrationExecute(
             "CREATE INDEX IF NOT EXISTS idx_transcript_turns_time_tokens ON transcript_turns("
@@ -639,7 +639,7 @@ public enum SessionSchema {
         // Idempotent: ALTER ADD COLUMN isn't atomic with the schema_migrations
         // insert, so an unclean shutdown between them would re-run this and throw
         // "duplicate column name", wedging startup (cf. migration019).
-        if !db.tableHasColumn("sessions", "project_root") {
+        if try !db.tableHasColumn("sessions", "project_root") {
             try db.migrationExecute("ALTER TABLE sessions ADD COLUMN project_root TEXT NOT NULL DEFAULT ''")
         }
         logger.info("migration015: sessions.project_root column ready")
@@ -662,7 +662,7 @@ public enum SessionSchema {
     /// (default 0) rows are below any real version, so they enrich once.
     private static func migration017(_ db: DaemonDatabase) throws {
         // Idempotent ADD COLUMN — see migration015.
-        if !db.tableHasColumn("sessions", "project_root_version") {
+        if try !db.tableHasColumn("sessions", "project_root_version") {
             try db.migrationExecute("ALTER TABLE sessions ADD COLUMN project_root_version INTEGER NOT NULL DEFAULT 0")
         }
         logger.info("migration017: sessions.project_root_version column ready")
@@ -705,7 +705,7 @@ public enum SessionSchema {
     /// startup. Guarding the ALTER lets the daemon self-heal: skip the add,
     /// record the version, move on.
     private static func migration019(_ db: DaemonDatabase) throws {
-        if !db.tableHasColumn("sessions", "term_session_id") {
+        if try !db.tableHasColumn("sessions", "term_session_id") {
             try db.migrationExecute("ALTER TABLE sessions ADD COLUMN term_session_id TEXT NOT NULL DEFAULT ''")
         }
         logger.info("migration019: sessions.term_session_id column ready")
@@ -749,7 +749,7 @@ public enum SessionSchema {
             // rollup reads. Guard on table existence: per-type tables are created
             // lazily on first ingest (DynamicSchema), so a never-seen event type
             // has no table yet — CREATE INDEX would throw and wedge startup.
-            for source in Self.perTypeRollups where db.tableExists(source.table) {
+            for source in Self.perTypeRollups where try db.tableExists(source.table) {
                 try db.migrationExecute("CREATE INDEX IF NOT EXISTS idx_\(source.table)_timestamp "
                     + "ON \(source.table)(timestamp)")
             }
@@ -763,7 +763,7 @@ public enum SessionSchema {
     /// (not atomic with the schema_migrations insert) so an unclean shutdown
     /// self-heals instead of wedging startup on "duplicate column".
     private static func migration021(_ db: DaemonDatabase) throws {
-        if !db.tableHasColumn("sessions", "account_email") {
+        if try !db.tableHasColumn("sessions", "account_email") {
             try db.migrationExecute("ALTER TABLE sessions ADD COLUMN account_email TEXT NOT NULL DEFAULT ''")
         }
         logger.info("migration021: sessions.account_email column ready")
@@ -807,8 +807,8 @@ public enum SessionSchema {
 
     /// migration023 — `ai_interactions`: one row per LLM call the daemon made (summaries,
     /// oversight), logged at the `DaemonAIChat` chokepoint. Bounded by pruning to the
-    /// newest `maxAIInteractionRows` on every insert (RetentionTask is opt-in/off, so
-    /// insert-time pruning is the working bound). `IF NOT EXISTS` throughout so an
+    /// newest `maxAIInteractionRows` on every insert (the storage trim never touches
+    /// this table, so insert-time pruning is the working bound). `IF NOT EXISTS` throughout so an
     /// unclean shutdown mid-migration self-heals.
     private static func migration023(_ db: DaemonDatabase) throws {
         logger.info("migration023: creating ai_interactions…")
@@ -880,7 +880,7 @@ public enum SessionSchema {
         // Defensive: only normalize if the column exists. A DB that never created
         // `sessions` (e.g. a synthetic legacy migration fixture) skips it — a no-op
         // there, since later ingest writes datetime() format anyway.
-        guard db.tableHasColumn("sessions", "last_activity_at") else {
+        guard try db.tableHasColumn("sessions", "last_activity_at") else {
             logger.info("migration025: no sessions.last_activity_at column — skipping normalization")
             return
         }
@@ -912,7 +912,7 @@ public enum SessionSchema {
     /// drift. Idempotent; a no-op when `sessions` doesn't exist yet (synthetic
     /// legacy fixtures — mirrors migration025's defensive guard).
     static func ensureSessionsAuthMethodColumn(_ db: DaemonDatabase) throws {
-        guard db.tableExists("sessions"), !db.tableHasColumn("sessions", "auth_method") else { return }
+        guard try db.tableExists("sessions"), try !db.tableHasColumn("sessions", "auth_method") else { return }
         try db.migrationExecute("ALTER TABLE sessions ADD COLUMN auth_method TEXT NOT NULL DEFAULT ''")
     }
 
@@ -1084,7 +1084,7 @@ public enum SessionSchema {
     /// constant bump rather than a blanket-reset migration.
     private static func migration030(_ db: DaemonDatabase) throws {
         // Idempotent ADD COLUMN — see migration015.
-        if !db.tableHasColumn("sessions", "enrichment_version") {
+        if try !db.tableHasColumn("sessions", "enrichment_version") {
             try db.migrationExecute("ALTER TABLE sessions ADD COLUMN enrichment_version INTEGER NOT NULL DEFAULT 0")
         }
         logger.info("migration030: sessions.enrichment_version column ready")
@@ -1107,10 +1107,10 @@ public enum SessionSchema {
     /// row reads as absent rather than as 0% spent.
     private static func migration031(_ db: DaemonDatabase) throws {
         // Idempotent ADD COLUMN — see migration015.
-        if !db.tableHasColumn("rate_limit_snapshots", "spend_pct") {
+        if try !db.tableHasColumn("rate_limit_snapshots", "spend_pct") {
             try db.migrationExecute("ALTER TABLE rate_limit_snapshots ADD COLUMN spend_pct REAL NOT NULL DEFAULT 0")
         }
-        if !db.tableHasColumn("rate_limit_snapshots", "spend_resets_at") {
+        if try !db.tableHasColumn("rate_limit_snapshots", "spend_resets_at") {
             try db.migrationExecute(
                 "ALTER TABLE rate_limit_snapshots ADD COLUMN spend_resets_at INTEGER NOT NULL DEFAULT 0"
             )
@@ -1296,12 +1296,12 @@ public enum SessionSchema {
     /// divergence that re-runs the version — self-heals instead of wedging
     /// startup on "duplicate column name".
     private static func migration034(_ db: DaemonDatabase) throws {
-        if !db.tableHasColumn("transcript_turns", "is_subagent") {
+        if try !db.tableHasColumn("transcript_turns", "is_subagent") {
             try db.migrationExecute(
                 "ALTER TABLE transcript_turns ADD COLUMN is_subagent INTEGER NOT NULL DEFAULT 0"
             )
         }
-        if !db.tableHasColumn("transcript_turns", "agent_id") {
+        if try !db.tableHasColumn("transcript_turns", "agent_id") {
             try db.migrationExecute(
                 "ALTER TABLE transcript_turns ADD COLUMN agent_id TEXT NOT NULL DEFAULT ''"
             )
@@ -1330,12 +1330,12 @@ public enum SessionSchema {
             "CREATE INDEX IF NOT EXISTS idx_agent_dispatches_agent_type ON agent_dispatches(agent_type)"
         )
 
-        if !db.tableHasColumn("sessions", "transcript_title") {
+        if try !db.tableHasColumn("sessions", "transcript_title") {
             try db.migrationExecute(
                 "ALTER TABLE sessions ADD COLUMN transcript_title TEXT NOT NULL DEFAULT ''"
             )
         }
-        if !db.tableHasColumn("sessions", "title_source") {
+        if try !db.tableHasColumn("sessions", "title_source") {
             try db.migrationExecute(
                 "ALTER TABLE sessions ADD COLUMN title_source TEXT NOT NULL DEFAULT ''"
             )
@@ -1356,7 +1356,7 @@ public enum SessionSchema {
     /// Guarded ALTER (cf. migration019) so a re-run of the version self-heals
     /// rather than wedging startup on "duplicate column name".
     private static func migration035(_ db: DaemonDatabase) throws {
-        if !db.tableHasColumn("transcript_turns", "cache_creation_1h_tokens") {
+        if try !db.tableHasColumn("transcript_turns", "cache_creation_1h_tokens") {
             try db.migrationExecute(
                 "ALTER TABLE transcript_turns ADD COLUMN cache_creation_1h_tokens "
                 + "INTEGER NOT NULL DEFAULT 0"
@@ -1404,7 +1404,7 @@ public enum SessionSchema {
     /// `--SCAN status_line_events
     /// ```
     ///
-    /// with 841,264 rows in that table. `RetentionTask` deletes 50 `event_log`
+    /// with 841,264 rows in that table. The retention task of the time deleted 50 `event_log`
     /// rows per batch, so one batch is 50 full scans of every per-type table —
     /// on the serial database queue that ingest and the HTTP reader share. This
     /// is why retention on a large capture appears to hang rather than run.
@@ -1469,7 +1469,7 @@ public enum SessionSchema {
     /// guarantee the index exists on every launch. Idempotent, and a no-op before
     /// `transcript_lines` exists (synthetic legacy fixtures).
     static func ensureConversationIndex(_ db: DaemonDatabase) throws {
-        guard db.tableExists("transcript_lines") else { return }
+        guard try db.tableExists("transcript_lines") else { return }
         try db.migrationExecute("""
             CREATE INDEX IF NOT EXISTS idx_transcript_lines_conversation
             ON transcript_lines(timestamp)
@@ -1491,17 +1491,17 @@ public enum SessionSchema {
     ///
     /// Guarded ALTERs: a DB that rode a pre-rebase branch may already carry one.
     private static func migration039(_ db: DaemonDatabase) throws {
-        if !db.tableHasColumn("sessions", "last_output") {
+        if try !db.tableHasColumn("sessions", "last_output") {
             try db.migrationExecute(
                 "ALTER TABLE sessions ADD COLUMN last_output TEXT NOT NULL DEFAULT ''"
             )
         }
-        if !db.tableHasColumn("sessions", "last_event_type") {
+        if try !db.tableHasColumn("sessions", "last_event_type") {
             try db.migrationExecute(
                 "ALTER TABLE sessions ADD COLUMN last_event_type TEXT NOT NULL DEFAULT ''"
             )
         }
-        if !db.tableHasColumn("sessions", "summary_at") {
+        if try !db.tableHasColumn("sessions", "summary_at") {
             try db.migrationExecute(
                 "ALTER TABLE sessions ADD COLUMN summary_at TEXT NOT NULL DEFAULT ''"
             )
@@ -1514,9 +1514,9 @@ public enum SessionSchema {
         // Column-guarded like the ALTERs above, and for the same reason: a DB whose
         // early migrations were recorded without being run has a `sessions` table
         // from the base schema, without the columns this statement reads.
-        if db.tableHasColumn("sessions", "summary_at"),
-           db.tableHasColumn("sessions", "last_activity_at"),
-           db.tableHasColumn("sessions", "summary") {
+        if try db.tableHasColumn("sessions", "summary_at"),
+           try db.tableHasColumn("sessions", "last_activity_at"),
+           try db.tableHasColumn("sessions", "summary") {
             try db.migrationExecute(
                 "UPDATE sessions SET summary_at = last_activity_at WHERE summary != '' AND summary_at = ''"
             )
@@ -1535,8 +1535,8 @@ public enum SessionSchema {
     /// re-reads each from its transcript. Rows outside that reach keep their
     /// flattened text: nothing shows them, and nothing would re-read them.
     private static func migration040(_ db: DaemonDatabase) throws {
-        guard db.tableHasColumn("sessions", "last_output"),
-              db.tableHasColumn("sessions", "last_activity_at") else { return }
+        guard try db.tableHasColumn("sessions", "last_output"),
+              try db.tableHasColumn("sessions", "last_activity_at") else { return }
         try db.migrationExecute("""
             UPDATE sessions SET last_output = ''
             WHERE last_output != ''
@@ -1566,11 +1566,11 @@ public enum SessionSchema {
     /// ALTER is guarded: a DB that rode a pre-rebase branch may already carry it. A
     /// legacy fixture's `sessions` without `status` has no live sessions to heal.
     private static func migration041(_ db: DaemonDatabase) throws {
-        guard db.tableHasColumn("sessions", "last_event_type") else { return }
-        if !db.tableHasColumn("sessions", "turn_state_at") {
+        guard try db.tableHasColumn("sessions", "last_event_type") else { return }
+        if try !db.tableHasColumn("sessions", "turn_state_at") {
             try db.migrationExecute("ALTER TABLE sessions ADD COLUMN turn_state_at TEXT NOT NULL DEFAULT ''")
         }
-        guard db.tableHasColumn("sessions", "status") else { return }
+        guard try db.tableHasColumn("sessions", "status") else { return }
         var sessionIds: [String] = []
         try db.query(
             "SELECT session_id FROM sessions WHERE status = ?",
@@ -1638,8 +1638,8 @@ public enum SessionSchema {
     /// a pre-rebase branch may already carry the column, and an unguarded
     /// `ALTER … ADD COLUMN` that throws takes the whole daemon down with exit 0.
     private static func migration043(_ db: DaemonDatabase) throws {
-        guard db.tableHasColumn("sessions", "turn_state_at") else { return }
-        if !db.tableHasColumn("sessions", "subagent_activity_at") {
+        guard try db.tableHasColumn("sessions", "turn_state_at") else { return }
+        if try !db.tableHasColumn("sessions", "subagent_activity_at") {
             try db.migrationExecute(
                 "ALTER TABLE sessions ADD COLUMN subagent_activity_at TEXT NOT NULL DEFAULT ''")
         }
@@ -1666,7 +1666,7 @@ public enum SessionSchema {
     /// to `transcript_lines` for the line itself, so the extractor stays the one
     /// place that decides what a line says.
     private static func migration044(_ db: DaemonDatabase) throws {
-        guard db.tableExists("transcript_lines") else { return }
+        guard try db.tableExists("transcript_lines") else { return }
         try db.migrationExecute("""
             CREATE TABLE IF NOT EXISTS conversation_queued_prompts (
                 line_id    INTEGER PRIMARY KEY,
@@ -1696,8 +1696,8 @@ public enum SessionSchema {
     /// freshness window. A re-stamp now has to be newer than this too. No
     /// backfill: '' sorts below every real time, which is exactly the old rule.
     private static func migration045(_ db: DaemonDatabase) throws {
-        guard db.tableHasColumn("sessions", "subagent_activity_at") else { return }
-        if !db.tableHasColumn("sessions", "subagent_stopped_at") {
+        guard try db.tableHasColumn("sessions", "subagent_activity_at") else { return }
+        if try !db.tableHasColumn("sessions", "subagent_stopped_at") {
             try db.migrationExecute(
                 "ALTER TABLE sessions ADD COLUMN subagent_stopped_at TEXT NOT NULL DEFAULT ''")
         }

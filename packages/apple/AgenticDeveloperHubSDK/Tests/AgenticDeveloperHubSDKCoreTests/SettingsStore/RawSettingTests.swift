@@ -241,6 +241,200 @@ final class SettingsSnapshotPushTests: XCTestCase {
         await push.awaitPendingPush()
     }
 
+    // MARK: - Receiver-owned (pull)
+
+    /// The receiver's value, changeable behind the push's back (a CLI).
+    private final class Remote: @unchecked Sendable {
+        private let lock = NSLock()
+        private var stored: Int
+        private var readCount = 0
+        init(_ value: Int) { stored = value }
+        var value: Int {
+            get { lock.withLock { stored } }
+            set { lock.withLock { stored = newValue } }
+        }
+        var reads: Int { lock.withLock { readCount } }
+        func read() -> Int { lock.withLock { readCount += 1; return stored } }
+    }
+
+    /// Final review (super) Important 1: with `pull`, the start and every
+    /// reconnect read the receiver's value; the stored one is never sent back.
+    func testAPullingPushReadsOnStartAndReconnectAndSendsOnlyLocalChanges() async {
+        let received = Received(failures: 0)
+        let remote = Remote(30)
+        var reconnect: (@Sendable () -> Void)?
+        var local = 7
+        let push = SettingsSnapshotPush(
+            label: "Test", logger: logger, backoffs: [0],
+            snapshot: { SettingsSnapshotPush.encodeSorted(["value": local]) },
+            send: { await received.take($0) },
+            registerReconnect: { reconnect = $0 },
+            pull: { let value = remote.read(); return { local = value } }
+        )
+        push.start(makeObservers: { _ in [] })
+        await settle(push)
+        XCTAssertEqual(local, 30, "the start took the receiver's value")
+        var bodies = await received.bodies
+        XCTAssertEqual(bodies.count, 0, "nothing sent at start")
+
+        remote.value = 365
+        reconnect?()
+        await settle(push)
+        XCTAssertEqual(local, 365, "the reconnect took the receiver's new value")
+        push.push()   // the observer's echo of the pulled value
+        await settle(push)
+        bodies = await received.bodies
+        XCTAssertEqual(bodies.count, 0, "an echo of the receiver's own value is not sent")
+
+        local = 90
+        push.push()
+        await settle(push)
+        bodies = await received.bodies
+        XCTAssertEqual(bodies, [Data(#"{"value":90}"#.utf8)])
+
+        remote.value = 14
+        push.refresh()
+        await settle(push)
+        XCTAssertEqual(local, 14, "refresh() reads the receiver too")
+        push.stop()
+    }
+
+    /// A local change still waiting to land is newer than the receiver's
+    /// value: neither a reconnect nor refresh() reads over it.
+    func testAPullNeverOverwritesAnUndeliveredLocalChange() async throws {
+        let received = Received(failures: 1)
+        let remote = Remote(30)
+        var reconnect: (@Sendable () -> Void)?
+        var local = 0
+        let push = SettingsSnapshotPush(
+            label: "Test", logger: logger, backoffs: [0],
+            reconnectDelay: { _ in 60_000_000 },
+            snapshot: { SettingsSnapshotPush.encodeSorted(["value": local]) },
+            send: { await received.take($0) },
+            registerReconnect: { reconnect = $0 },
+            pull: { let value = remote.read(); return { local = value } }
+        )
+        push.start(makeObservers: { _ in [] })
+        await settle(push)
+        let readsAfterStart = remote.reads
+
+        local = 90
+        push.push()                           // fails once; a retry is scheduled
+        try await Task.sleep(for: .milliseconds(10))
+        reconnect?()
+        push.refresh()
+        try await Task.sleep(for: .milliseconds(10))
+        XCTAssertEqual(remote.reads, readsAfterStart, "no read while the change waits")
+        await settle(push)
+        XCTAssertEqual(local, 90)
+        let bodies = await received.bodies
+        XCTAssertEqual(bodies, [Data(#"{"value":90}"#.utf8)], "the retry landed the user's change")
+        push.stop()
+    }
+
+    /// A receiver that can be down, and refuses one value while up.
+    private final class Gate: @unchecked Sendable {
+        private let lock = NSLock()
+        private var isUp: Bool
+        private var sentBodies: [Data] = []
+        let refused: Int?
+        let remote: Remote
+        init(reachable: Bool, remote: Remote, refusing refused: Int? = nil) {
+            isUp = reachable
+            self.remote = remote
+            self.refused = refused
+        }
+        var reachable: Bool {
+            get { lock.withLock { isUp } }
+            set { lock.withLock { isUp = newValue } }
+        }
+        var sent: [Data] { lock.withLock { sentBodies } }
+
+        func deliver(_ body: Data) -> SettingsSnapshotPush.Delivery {
+            guard reachable else { return .unreached }
+            lock.withLock { sentBodies.append(body) }
+            let value = (try? JSONDecoder().decode([String: Int].self, from: body))?["value"]
+            guard let value, value != refused else { return .refused }
+            remote.value = value
+            return .taken
+        }
+
+        func read() -> Int? { reachable ? remote.read() : nil }
+    }
+
+    /// R1: a refused value is not recorded as the receiver's. The local store
+    /// goes back to the receiver's value, and choosing the refused value again
+    /// is sent again rather than taken for an echo.
+    func testARefusedValueIsReadBackAndNotRecordedAsTheReceivers() async throws {
+        let gate = Gate(reachable: true, remote: Remote(30), refusing: 7)
+        var local = 0
+        let push = SettingsSnapshotPush(
+            label: "Test", logger: logger, backoffs: [0],
+            snapshot: { SettingsSnapshotPush.encodeSorted(["value": local]) },
+            deliver: { gate.deliver($0) },
+            registerReconnect: { _ in },
+            pull: { guard let value = gate.read() else { return nil }; return { local = value } }
+        )
+        push.start(makeObservers: { _ in [] })
+        await settle(push)
+        XCTAssertEqual(local, 30)
+
+        local = 7
+        push.push()
+        await settle(push)
+        XCTAssertEqual(local, 30, "the refusal read the receiver's value back")
+        XCTAssertEqual(push.consecutiveFailures, 0, "a refusal is not a failure to retry")
+        XCTAssertEqual(gate.sent.count, 1)
+
+        local = 7
+        push.push()
+        await settle(push)
+        XCTAssertEqual(gate.sent.count, 2, "the refused value was never taken for the receiver's own")
+        XCTAssertEqual(local, 30)
+        push.stop()
+    }
+
+    /// R2: a change made before the first read has ever reached the receiver
+    /// is observed, retried until the receiver is up, lands, and is not read
+    /// over by the first read.
+    func testAChangeBeforeTheFirstReadLandsWhenTheReceiverComesUp() async throws {
+        let gate = Gate(reachable: false, remote: Remote(30))
+        var local = 0
+        var onChange: (@MainActor () -> Void)?
+        let push = SettingsSnapshotPush(
+            label: "Test", logger: logger, backoffs: [0],
+            reconnectDelay: { _ in 20_000_000 },
+            snapshot: { SettingsSnapshotPush.encodeSorted(["value": local]) },
+            deliver: { gate.deliver($0) },
+            registerReconnect: { _ in },
+            pull: { guard let value = gate.read() else { return nil }; return { local = value } }
+        )
+        push.start(makeObservers: { change in
+            onChange = change
+            return []
+        })
+        XCTAssertNotNil(onChange, "the observers are installed before the first read")
+        try await Task.sleep(for: .milliseconds(30))
+
+        local = 90
+        onChange?()
+        try await Task.sleep(for: .milliseconds(30))
+        XCTAssertEqual(gate.sent, [], "the receiver is down")
+
+        gate.reachable = true
+        let giveUp = Date().addingTimeInterval(5)
+        while gate.remote.value != 90, Date() < giveUp {
+            try await Task.sleep(for: .milliseconds(10))
+        }
+        await settle(push)
+        XCTAssertEqual(gate.remote.value, 90, "the change landed")
+        XCTAssertEqual(local, 90, "the first read did not overwrite it")
+        try await Task.sleep(for: .milliseconds(60))
+        await settle(push)
+        XCTAssertEqual(local, 90)
+        push.stop()
+    }
+
     func testEncodesWithSortedKeys() {
         let body = SettingsSnapshotPush.encodeSorted(["b": "2", "a": "1"])
         XCTAssertEqual(body, Data(#"{"a":"1","b":"2"}"#.utf8))

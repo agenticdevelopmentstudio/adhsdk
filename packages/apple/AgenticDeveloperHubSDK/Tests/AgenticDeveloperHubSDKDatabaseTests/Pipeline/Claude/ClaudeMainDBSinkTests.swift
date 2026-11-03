@@ -96,7 +96,8 @@ final class ClaudeMainDBSinkTests: XCTestCase {
             file: transcriptFile.path, lineNo: lineNo, subagentFile: false, line: try Self.transcriptLine(stem))
         return ArchivedRecord(id: id, record: RawRecord(
             provider: ClaudeProvider.name, sourceKind: ClaudeProvider.transcriptKind,
-            dedupKey: ClaudeTranscriptPayload.dedupKey(line: payload.line, file: payload.file),
+            dedupKey: ClaudeTranscriptPayload.dedupKey(
+                line: payload.line, file: payload.file, byteOffset: Int64(payload.lineNo)),
             receivedAt: Self.receivedAt, payload: try ClaudeTranscriptPayload.encode(payload)))
     }
 
@@ -210,9 +211,17 @@ final class ClaudeMainDBSinkTests: XCTestCase {
         let records = try Self.hookStems.enumerated().map { try Self.hookRecord($1, id: Int64($0 + 1)) }
         try pipeline.deliver(records)
 
+        // `started_at` aside: the legacy path stamps it with the wall clock,
+        // the sink with the session's earliest event time.
         for table in ["sessions", "session_branches", "rate_limit_snapshots"] {
-            XCTAssertEqual(try dump(pipeline.database, table: table), try dump(legacy, table: table), table)
+            let excluding: Set<String> = table == "sessions" ? ["started_at"] : []
+            XCTAssertEqual(
+                try dump(pipeline.database, table: table, excluding: excluding),
+                try dump(legacy, table: table, excluding: excluding), table)
         }
+        XCTAssertEqual(
+            try scalar(pipeline.database, "SELECT started_at FROM sessions WHERE session_id = '\(Self.sessionID)'"),
+            "2026-10-30 12:00:00")
         // StatusLine's `model` is an object: neither path may overwrite the
         // SessionStart model with it.
         let model = "SELECT model FROM sessions WHERE session_id = '\(Self.sessionID)'"
@@ -249,8 +258,16 @@ final class ClaudeMainDBSinkTests: XCTestCase {
         }
         try pipeline.deliver([try Self.hookRecord("SessionStart", id: 1), try Self.hookRecord("StatusLine", id: 2)])
         for table in ["sessions", "session_branches"] {
-            XCTAssertEqual(try dump(pipeline.database, table: table), try dump(legacy, table: table), table)
+            let excluding: Set<String> = table == "sessions" ? ["started_at"] : []
+            XCTAssertEqual(
+                try dump(pipeline.database, table: table, excluding: excluding),
+                try dump(legacy, table: table, excluding: excluding), table)
         }
+        // The legacy path stamps `started_at` with the wall clock; the sink
+        // takes the SessionStart time.
+        XCTAssertEqual(
+            try scalar(pipeline.database, "SELECT started_at FROM sessions WHERE session_id = '\(Self.sessionID)'"),
+            "2026-10-30 12:00:00")
     }
 
     // MARK: - Transcripts
@@ -473,5 +490,36 @@ final class ClaudeMainDBSinkTests: XCTestCase {
             """
         XCTAssertEqual(try rows(pipeline.database, accounts), try rows(legacy, accounts))
         XCTAssertEqual(try rows(pipeline.database, accounts), [#""dev@example.com"|"token"|"current@example.com""#])
+    }
+
+    // MARK: - Session start
+
+    private var startedAt: String {
+        "SELECT started_at FROM sessions WHERE session_id = '\(Self.sessionID)'"
+    }
+
+    func testStartedAtIsTheEarliestEventTimeAndAnEarlierBatchLowersIt() throws {
+        let pipeline = try makePipeline()
+        try pipeline.deliver([try Self.hookRecord(
+            "SessionStart", id: 1, key: "late", timestamp: "2026-10-01T10:00:00Z")])
+        XCTAssertEqual(try scalar(pipeline.database, startedAt), "2026-10-01 10:00:00")
+
+        try pipeline.deliver([try Self.hookRecord(
+            "PreToolUse", id: 2, key: "early", timestamp: "2026-09-30T08:15:30Z")])
+        XCTAssertEqual(try scalar(pipeline.database, startedAt), "2026-09-30 08:15:30")
+
+        // A later batch never raises it.
+        try pipeline.deliver([try Self.hookRecord(
+            "PostToolUse", id: 3, key: "later", timestamp: "2026-10-02T09:00:00Z")])
+        XCTAssertEqual(try scalar(pipeline.database, startedAt), "2026-09-30 08:15:30")
+    }
+
+    func testATimeBeforeTwoThousandNeverCountsAsTheStart() throws {
+        let pipeline = try makePipeline()
+        try pipeline.deliver([try Self.hookRecord(
+            "SessionStart", id: 1, key: "real", timestamp: "2026-10-01T10:00:00Z")])
+        try pipeline.deliver([try Self.hookRecord(
+            "PreToolUse", id: 2, key: "zero", timestamp: "1970-01-01T00:00:00Z")])
+        XCTAssertEqual(try scalar(pipeline.database, startedAt), "2026-10-01 10:00:00")
     }
 }

@@ -1,3 +1,4 @@
+import CryptoKit
 import AgenticDeveloperHubSDKCore
 import XCTest
 import Foundation
@@ -316,6 +317,38 @@ final class IngestionPipelineTests: XCTestCase {
         XCTAssertThrowsError(try held.retryIngest(event(session: "s-held"))) { error in
             XCTAssertTrue(error is QuarantineRetryHeld, "\(error)")
         }
+        await held.stop()
+    }
+
+    /// A ConfigChange captured while the Claude pipeline is closed waits in the
+    /// legacy spool already stamped with its file's fingerprint at event time.
+    func testACaptureHeldInTheLegacySpoolIsStampedAtCapture() async throws {
+        let root = tmpDir.appendingPathComponent("heldstamp")
+        let drop = root.appendingPathComponent("drop")
+        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+        let file = root.appendingPathComponent("settings.json")
+        let contents = Data(#"{"theme":"dark"}"#.utf8)
+        try contents.write(to: file)
+        let held = IngestionPipeline(
+            paths: .init(dropDirectory: drop, errorsDirectory: drop.appendingPathComponent("errors"),
+                         socketPath: root.appendingPathComponent("s").path),
+            spool: try IngestSpool(path: root.appendingPathComponent("ingest.db").path),
+            database: database, sink: sink, queueLabel: { "test.heldstamp.\($0)" },
+            decode: { _ in throw SocketDecodeFailure.malformed },
+            legacyWriterFallback: false)
+
+        try held.capture(ParsedEvent(
+            eventType: "ConfigChange", timestamp: "2026-06-01T12:00:00Z",
+            hookData: ["session_id": "s-stamp", "file_path": file.path], context: nil, accountEmail: ""))
+        // The file changes before the pipeline opens; the stamp is the old one.
+        try Data("rewritten".utf8).write(to: file)
+
+        let spooled = try XCTUnwrap(try held.spool.pendingBatch(limit: 10).first)
+        let envelope = try XCTUnwrap(try JSONSerialization.jsonObject(with: spooled.envelope) as? [String: Any])
+        let hookData = try XCTUnwrap(envelope["hook_data"] as? [String: Any])
+        XCTAssertEqual(hookData["file_size_bytes"] as? Int, contents.count)
+        XCTAssertEqual(hookData["file_sha256"] as? String,
+                       SHA256.hash(data: contents).map { String(format: "%02x", $0) }.joined())
         await held.stop()
     }
 }

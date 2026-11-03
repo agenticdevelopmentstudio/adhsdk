@@ -12,14 +12,17 @@ public enum ClaudeTranscriptSourceError: Error, Equatable {
 ///
 /// - **Records** (Design Ruling 3): one per complete, non-empty line; sourceKind
 ///   `"transcript"`, payload `ClaudeTranscriptPayload` (canonical path, 1-based
-///   line number among non-empty lines, subagent flag, the line), dedupKey
-///   `ClaudeTranscriptPayload.dedupKey`, receivedAt the file's mtime when read.
+///   line number among non-empty lines, the line's byte offset, subagent flag, the
+///   line), dedupKey `ClaudeTranscriptPayload.dedupKey` (session, file stem, offset
+///   and line hash, so each occurrence of a repeated line is its own record),
+///   receivedAt the file's mtime when read.
 /// - **Cursor**: source state `"file:<canonical path>"` holds
 ///   `{byte_offset, line_no, file_size, inode, head_hash}`. It is resumed only when
 ///   the inode matches, the file is no shorter than `byte_offset`, and
 ///   `JSONLScanner.resumeFingerprint` over `[0, byte_offset)` still equals
-///   `head_hash`; otherwise the file is read again from byte 0 and the archive's
-///   dedup keys drop the lines it already holds. Each chunk of at most
+///   `head_hash`; otherwise the file is read again from byte 0. The archive's dedup
+///   keys drop every line still at the offset it was read from; a line the change
+///   moved to a new offset is archived again there. Each chunk of at most
 ///   `linesPerChunk` records is appended together with the cursor just past its
 ///   last line, in one transaction.
 /// - **Torn lines**: a trailing line Claude is still writing is neither spooled nor
@@ -178,26 +181,31 @@ public final class ClaudeTranscriptSource: IngestSource {
             appended += records.count
         }
 
-        let streamed = try JSONLScanner.streamCompleteLineChunks(
+        // Every complete line is archived, one that is not valid UTF-8 included
+        // (lossy text plus its exact bytes): no captured byte is skipped.
+        let streamed = try JSONLScanner.streamCompleteScannedLineChunks(
             at: url, startingAtByte: startOffset, linesPerChunk: linesPerChunk
         ) { lines, through in
             try autoreleasepool {
                 var records: [RawRecord] = []
                 records.reserveCapacity(lines.count)
-                for line in lines {
+                for scanned in lines {
                     lineNo += 1
                     let payload = ClaudeTranscriptPayload(
-                        file: path, lineNo: lineNo, subagentFile: subagent, line: line)
+                        file: path, lineNo: lineNo, subagentFile: subagent, line: scanned.text,
+                        lineBytes: scanned.invalidUTF8Bytes, byteOffset: scanned.startOffset)
                     records.append(RawRecord(
                         provider: provider, sourceKind: ClaudeProvider.transcriptKind,
-                        dedupKey: ClaudeTranscriptPayload.dedupKey(line: line, file: path),
+                        dedupKey: ClaudeTranscriptPayload.dedupKey(
+                            line: scanned.text, file: path, byteOffset: scanned.startOffset,
+                            lineBytes: scanned.invalidUTF8Bytes),
                         receivedAt: identity.modified, payload: try ClaudeTranscriptPayload.encode(payload)))
                 }
                 try commit(records, through: through)
             }
         }
-        // Blank or undecodable lines after the last record: step the cursor over them
-        // too, so they are not re-scanned on every wake.
+        // Blank lines after the last record: step the cursor over them too, so they
+        // are not re-scanned on every wake.
         if streamed.bytesConsumed > committed {
             try commit([], through: streamed.bytesConsumed)
         }

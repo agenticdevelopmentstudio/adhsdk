@@ -19,6 +19,10 @@ public struct DrainOutcome: Sendable, Equatable {
     public var archived = 0
     public var stored = 0
     public var quarantined = 0
+    /// Records whose key the archive already held with other bytes: their bytes
+    /// were kept as a conflict copy (``RawRecord/conflictCopy(sha256:)``) and the
+    /// record then completed as a duplicate of the first.
+    public var conflictCopies = 0
     public var completed = 0
     /// True when the pass stopped early on an error.
     public var failed = false
@@ -223,6 +227,7 @@ public final class PipelineDrainer: @unchecked Sendable {
             total.archived += one.archived
             total.stored += one.stored
             total.quarantined += one.quarantined
+            total.conflictCopies += one.conflictCopies
             total.completed += one.completed
             if one.skippedReentrant { total.skippedReentrant = true }
             if one.failed {
@@ -307,12 +312,21 @@ public final class PipelineDrainer: @unchecked Sendable {
                     accepted.append((spooled, existingID))
                     continue
                 }
-                // The archive keeps the first bytes; these differ, so keep them in
-                // quarantine rather than acknowledging bytes that were never stored.
-                try spool.quarantine(
-                    id: spooled.id,
-                    reason: "dedup-key conflict: archived sha \(archivedSHA) vs incoming sha \(incomingSHA)")
-                outcome.quarantined += 1
+                // The archive keeps the first bytes under the key. These differ:
+                // keep them too, as a conflict copy under `<key>-<sha>`, then treat
+                // the record as a duplicate of the first, so no byte is lost and
+                // nothing stays stuck in quarantine. Only if even that key holds
+                // other bytes (a sha collision) is it quarantined.
+                let copy = try archive.append([spooled.record.conflictCopy(sha256: incomingSHA)])
+                if case .conflict? = copy.outcomes.first {
+                    try spool.quarantine(
+                        id: spooled.id,
+                        reason: "dedup-key conflict: archived sha \(archivedSHA) vs incoming sha \(incomingSHA)")
+                    outcome.quarantined += 1
+                    continue
+                }
+                outcome.conflictCopies += 1
+                accepted.append((spooled, existingID))
             }
         }
         outcome.archived = accepted.count

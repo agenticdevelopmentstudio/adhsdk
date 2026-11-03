@@ -442,10 +442,11 @@ public final class DaemonDatabase: @unchecked Sendable {
 
     /// Check whether a table has a given column via `PRAGMA table_info`.
     /// Used by insights queries to short-circuit when a dynamic column
-    /// (from ``DynamicSchema``) isn't present yet.
-    public func tableHasColumn(_ table: String, _ column: String) -> Bool {
+    /// (from ``DynamicSchema``) isn't present yet. A failed read throws rather
+    /// than answering false, so a guard on it never acts on a guess.
+    public func tableHasColumn(_ table: String, _ column: String) throws -> Bool {
         var found = false
-        try? query("PRAGMA table_info(\(table))") { row in
+        try query("PRAGMA table_info(\(table))") { row in
             let name = string(row, 1)
             if name == column { found = true }
         }
@@ -454,10 +455,11 @@ public final class DaemonDatabase: @unchecked Sendable {
 
     /// Whether a base table exists. Per-type event tables are created lazily by
     /// ``DynamicSchema`` on first ingest, so an event type never seen on this DB
-    /// has no table yet — callers that reference one must guard with this.
-    public func tableExists(_ table: String) -> Bool {
+    /// has no table yet — callers that reference one must guard with this. A
+    /// failed read throws rather than answering false.
+    public func tableExists(_ table: String) throws -> Bool {
         var found = false
-        try? query(
+        try query(
             "SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = ?",
             params: [table]
         ) { _ in found = true }

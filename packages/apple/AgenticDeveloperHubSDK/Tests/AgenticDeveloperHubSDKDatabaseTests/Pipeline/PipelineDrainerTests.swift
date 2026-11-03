@@ -342,25 +342,38 @@ final class PipelineDrainerTests: XCTestCase {
 
     // MARK: - Archive conflicts and budgets
 
-    func testConflictingRedeliveryIsQuarantinedAndArchiveKeepsFirstBytes() throws {
+    /// A redelivery whose bytes differ keeps the first bytes under the key and its
+    /// own under `<key>-<sha>` as a conflict copy, then completes as a duplicate:
+    /// every byte is archived and nothing stays stuck in quarantine.
+    func testConflictingRedeliveryIsKeptAsACopyAndArchiveKeepsFirstBytes() throws {
         let rig = try makeRig()
         let first = "{\"session\":\"s1\",\"t\":1}"
+        let second = "{\"session\":\"s2\",\"t\":2}"
         try rig.spool.append([record("k", payload: first)])
         try drainer(rig).drainUntilEmpty()
-        try rig.spool.append([record("k", payload: "{\"session\":\"s2\",\"t\":2}")])
+        try rig.spool.append([record("k", payload: second)])
         let outcome = try drainer(rig).drainOnce()
         XCTAssertFalse(outcome.failed, outcome.failureReason ?? "")
-        XCTAssertEqual(outcome.quarantined, 1)
-        XCTAssertEqual(outcome.completed, 0)
+        XCTAssertEqual(outcome.quarantined, 0)
+        XCTAssertEqual(outcome.conflictCopies, 1)
+        XCTAssertEqual(outcome.completed, 1)
         XCTAssertEqual(try rig.spool.pendingCount(), 0)
-        let quarantined = try rig.spool.quarantined(limit: 10)
-        XCTAssertEqual(quarantined.count, 1)
-        XCTAssertTrue(quarantined.first?.reason.hasPrefix("dedup-key conflict: archived sha ") ?? false,
-                      quarantined.first?.reason ?? "")
-        XCTAssertEqual(quarantined.first?.record.payload, Data("{\"session\":\"s2\",\"t\":2}".utf8))
+        XCTAssertTrue(try rig.spool.quarantined(limit: 10).isEmpty)
         let id = try XCTUnwrap(try rig.archive.id(forDedupKey: "k"))
         XCTAssertEqual(try rig.archive.record(id: id)?.record.payload, Data(first.utf8))
+        let sha = RawArchive.hex(Data(second.utf8))
+        let copyID = try XCTUnwrap(try rig.archive.id(forDedupKey: "k-\(sha)"))
+        let copy = try XCTUnwrap(try rig.archive.record(id: copyID)?.record)
+        XCTAssertEqual(copy.payload, Data(second.utf8))
+        XCTAssertTrue(copy.isConflictCopy)
+        XCTAssertEqual(copy.sourceKind, RawRecord.conflictKindPrefix + record("k").sourceKind)
+        XCTAssertEqual(try rig.archive.count(), 2)
         XCTAssertEqual(try rig.store.counts().events, 1)
+
+        // The same conflicting bytes again: a duplicate of the copy, no new row.
+        try rig.spool.append([record("k", payload: second)])
+        XCTAssertEqual(try drainer(rig).drainOnce().completed, 1)
+        XCTAssertEqual(try rig.archive.count(), 2)
         // The live store still derives from the archived bytes: a replay rebuilds it exactly.
         let rebuilt = try EventStore(path: tmpDir.appendingPathComponent("replayed.db").path)
         let report = try Replayer.replay(archive: rig.archive, normalizer: TestNormalizer(), into: rebuilt)
@@ -389,12 +402,14 @@ final class PipelineDrainerTests: XCTestCase {
         XCTAssertEqual(try rig.archive.record(id: id)?.record.payload, Data(first.utf8))
         XCTAssertEqual(try rig.store.canonicalDump(), before)
 
-        // A different "t" under the same key is still a conflict for this normalizer.
+        // A different "t" under the same key is still a conflict for this normalizer:
+        // its bytes are kept as a conflict copy.
         try rig.spool.append([record("k", payload: "{\"session\":\"s1\",\"t\":2}")])
         let conflicted = pipe.drainOnce()
-        XCTAssertEqual(conflicted.quarantined, 1)
-        XCTAssertEqual(conflicted.completed, 0)
-        XCTAssertEqual(try rig.archive.count(), 1)
+        XCTAssertEqual(conflicted.quarantined, 0)
+        XCTAssertEqual(conflicted.conflictCopies, 1)
+        XCTAssertEqual(try rig.archive.count(), 2)
+        XCTAssertEqual(try rig.store.canonicalDump(), before)
     }
 
     func testDefaultEquivalenceIsByteEquality() {
@@ -560,12 +575,16 @@ final class PipelineDrainerTests: XCTestCase {
         XCTAssertEqual(outcome.completed, 1)
         try rig.spool.append([record("dup"), record("new")])
         pipe.drainUntilEmpty()
-        // A pass that completes nothing (a conflict is quarantined) notifies no one.
+        // A conflict completes as a duplicate of the first record: observers hear
+        // the first record's rows again, never the conflicting bytes'.
         try rig.spool.append([record("dup", payload: "{\"session\":\"s9\",\"t\":9}")])
         let conflicted = pipe.drainUntilEmpty()
-        XCTAssertEqual(conflicted.quarantined, 1)
+        XCTAssertEqual(conflicted.conflictCopies, 1)
         XCTAssertEqual(observer.received.map { $0.events.map(\.dedupKey) },
-                       [["dup#0"], ["dup#0"], ["dup#0", "new#0"]])
+                       [["dup#0"], ["dup#0"], ["dup#0", "new#0"], ["dup#0"]])
+        // A pass that completes nothing notifies no one.
+        XCTAssertEqual(pipe.drainUntilEmpty().completed, 0)
+        XCTAssertEqual(observer.received.count, 4)
     }
 
     func testObserverHearsRowsCommittedBeforeASinkFailureWhenTheRetryCompletes() throws {
