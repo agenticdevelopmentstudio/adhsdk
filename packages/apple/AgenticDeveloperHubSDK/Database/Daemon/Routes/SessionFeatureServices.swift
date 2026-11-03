@@ -3,6 +3,23 @@ import AgenticDeveloperHubSDKCore
 import AIPluginKit
 import Foundation
 
+/// A provider pipeline's spool quarantine, as the ingestion-error routes drive it.
+public protocol PipelineQuarantineControl: Sendable {
+    /// Records parked in quarantine; 0 when it cannot be read.
+    func quarantinedCount() -> Int
+    /// Sends every quarantined record through the pipeline again and wakes its
+    /// drainer. Returns how many were requeued.
+    @discardableResult
+    func requeueAllQuarantined() -> Int
+    /// Deletes only the quarantined records whose exact bytes the raw archive
+    /// already holds and that were refused for themselves, and keeps every other
+    /// one. Records parked by a destination outage are requeued instead, never
+    /// deleted: they have not been applied anywhere yet. Returns how many were
+    /// deleted.
+    @discardableResult
+    func clearArchivedQuarantine() -> Int
+}
+
 /// Everything the shared session-feature routes need from the daemon that mounts
 /// them: the stores and services they call, the daemon's identity, and closures for
 /// the few things only a daemon can do (read its own process footprint, capture a
@@ -73,6 +90,13 @@ public struct SessionFeatureServices: Sendable {
     /// How the summarize route loads AI plugins. Defaults to `.live` (the default
     /// folders only); `SessionDaemonRuntime.services` passes the daemon's own.
     public let pluginRuntime: DaemonAIChat.PluginRuntime
+    /// The provider pipeline's spool quarantine: counted, retried and cleared with
+    /// the file quarantine. Nil when the daemon runs no provider pipeline (or it
+    /// failed to open).
+    public let pipelineQuarantine: (any PipelineQuarantineControl)?
+    /// Whether the Claude pipeline is open, for `/health`'s `claude_pipeline`.
+    /// Nil for a daemon that runs none, which leaves the field out.
+    public let claudePipelineState: (@Sendable () -> ClaudePipelineSlot.State)?
 
     public init(
         database: DaemonDatabase,
@@ -93,8 +117,11 @@ public struct SessionFeatureServices: Sendable {
         buildHookEvent: @escaping @Sendable (_ event: String, _ payload: Data) -> ParsedEvent?,
         captureHook: @escaping @Sendable (ParsedEvent) throws -> Void,
         runImport: @escaping @Sendable (ImportRequestDTO) throws -> ImportSummary,
-        pluginRuntime: DaemonAIChat.PluginRuntime = .live
+        pluginRuntime: DaemonAIChat.PluginRuntime = .live,
+        pipelineQuarantine: (any PipelineQuarantineControl)? = nil,
+        claudePipelineState: (@Sendable () -> ClaudePipelineSlot.State)? = nil
     ) {
+        self.claudePipelineState = claudePipelineState
         self.database = database
         self.conversations = conversations
         self.quarantine = quarantine
@@ -114,6 +141,7 @@ public struct SessionFeatureServices: Sendable {
         self.captureHook = captureHook
         self.runImport = runImport
         self.pluginRuntime = pluginRuntime
+        self.pipelineQuarantine = pipelineQuarantine
     }
 }
 #endif

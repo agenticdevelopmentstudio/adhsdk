@@ -42,6 +42,17 @@ final class IngestBatchTests: XCTestCase {
         try? FileManager.default.removeItem(at: tmpDir)
     }
 
+    /// The rows the legacy writer put in `event_log` for `sessionId` (the session
+    /// readers now read the event store, which this writer does not feed).
+    private func eventLogCount(sessionId: String, eventType: String? = nil) throws -> Int {
+        var count = 0
+        try database.query(
+            "SELECT COUNT(*) FROM event_log WHERE session_id = ? AND (? = '' OR event_type = ?)",
+            params: [sessionId, eventType ?? "", eventType ?? ""]
+        ) { count = database.int($0, 0) }
+        return count
+    }
+
     private func event(_ type: String, session: String, tool: String = "Bash") -> ParsedEvent {
         ParsedEvent(
             eventType: type, timestamp: "2026-01-01T00:00:00Z",
@@ -57,8 +68,7 @@ final class IngestBatchTests: XCTestCase {
             event("PostToolUse", session: "s-b1")
         ])
 
-        let stored = try database.fetchEvents(sessionId: "s-b1", eventType: nil, limit: 100)
-        XCTAssertEqual(stored.count, 3)
+        XCTAssertEqual(try eventLogCount(sessionId: "s-b1"), 3)
         XCTAssertEqual(sink.eventTypes.count, 3)
     }
 
@@ -71,8 +81,8 @@ final class IngestBatchTests: XCTestCase {
             event("PostToolUse", session: "s-b2")
         ])
 
-        XCTAssertEqual(try database.fetchEvents(sessionId: "s-b2", eventType: nil, limit: 100).count, 2)
-        XCTAssertEqual(try database.fetchEvents(sessionId: "s-b3", eventType: nil, limit: 100).count, 1)
+        XCTAssertEqual(try eventLogCount(sessionId: "s-b2"), 2)
+        XCTAssertEqual(try eventLogCount(sessionId: "s-b3"), 1)
     }
 
     func testAnEmptyBatchWritesNothingAndBroadcastsNothing() throws {
@@ -86,8 +96,7 @@ final class IngestBatchTests: XCTestCase {
     func testASingleEventBatchMatchesTheSingleEventPath() throws {
         try ingestion.ingestBatch([event("PreToolUse", session: "s-b4", tool: "Read")])
 
-        let stored = try database.fetchEvents(sessionId: "s-b4", eventType: "PreToolUse", limit: 10)
-        XCTAssertEqual(stored.count, 1)
+        XCTAssertEqual(try eventLogCount(sessionId: "s-b4", eventType: "PreToolUse"), 1)
         XCTAssertEqual(sink.events.count, 1)
         XCTAssertEqual(sink.events.first?.sessionId, "s-b4")
     }

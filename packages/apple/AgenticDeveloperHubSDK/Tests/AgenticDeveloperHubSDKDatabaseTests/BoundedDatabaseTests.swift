@@ -39,6 +39,40 @@ final class BoundedDatabaseTests: XCTestCase {
         }
     }
 
+    func testNestedOpOnAnotherInstanceUsesItsOwnConnectionAndKeepsTheOuterMarker() throws {
+        let first = try BoundedDatabase(path: path)
+        let second = try BoundedDatabase(path: dir.appendingPathComponent("other.db").path)
+        try second.write { conn in try conn.execute(sql: "CREATE TABLE only_second(x INTEGER)") }
+
+        try first.write { conn in
+            try conn.execute(sql: "CREATE TABLE only_first(x INTEGER); INSERT INTO only_first VALUES (1)")
+            XCTAssertTrue(first.isReentrant)
+            XCTAssertFalse(second.isReentrant)
+
+            // A read and a write on the other database, nested in this op, reach that
+            // database's own file — not this op's connection.
+            try second.write { other in
+                XCTAssertTrue(second.isReentrant)
+                try other.execute(sql: "INSERT INTO only_second VALUES (2)")
+            }
+            let inner = try second.read { other in try Int.fetchOne(other, sql: "SELECT x FROM only_second") }
+            XCTAssertEqual(inner, 2)
+            XCTAssertThrowsError(try second.read { other in
+                try Int.fetchOne(other, sql: "SELECT x FROM only_first")
+            })
+
+            // The outer op's marker survived the inner ops: still reentrant, still
+            // its own uncommitted row.
+            XCTAssertTrue(first.isReentrant)
+            XCTAssertFalse(second.isReentrant)
+            let mine = try first.read { reader in try Int.fetchOne(reader, sql: "SELECT x FROM only_first") }
+            XCTAssertEqual(mine, 1)
+        }
+        XCTAssertFalse(first.isReentrant)
+        let committed = try first.read { conn in try Int.fetchOne(conn, sql: "SELECT x FROM only_first") }
+        XCTAssertEqual(committed, 1)
+    }
+
     func testRunawayQueryIsEjectedWithinBudget() throws {
         let store = try BoundedDatabase(path: path, readers: 1)
         try store.write { conn in

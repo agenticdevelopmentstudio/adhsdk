@@ -20,7 +20,11 @@ enum IngestRoutes {
             },
             RouteTable.route("GET", where: { $0 == ["ingestion", "errors", "count"] }) { _, _ in
                 let counts = quarantine.counts()
-                return .json(["count": counts.total, "exhausted": counts.exhausted])
+                // A provider spool's quarantined records count in both: nothing
+                // retries them on a timer (only a restart and the retry route do), so
+                // they are as stuck as an exhausted file and the badge must show them.
+                let pipeline = services.pipelineQuarantine?.quarantinedCount() ?? 0
+                return .json(["count": counts.total + pipeline, "exhausted": counts.exhausted + pipeline])
             },
             // Persistent ingestion-error log (DB-backed) for tracking recurring
             // failures — includes recovered/cleared history, unlike the live list.
@@ -37,13 +41,23 @@ enum IngestRoutes {
                 .json(quarantine.retryProgress())
             },
             RouteTable.route("POST", where: { $0 == ["ingestion", "errors", "retry"] }) { _, _ in
+                // The provider spool's quarantine goes back into its spool (and its
+                // drainer is woken) before the file retry starts; the progress DTO
+                // describes the file retry only.
+                services.pipelineQuarantine?.requeueAllQuarantined()
                 let progress = quarantine.startRetry(
                     parse: services.parseQuarantinedEvent, ingest: services.retryIngest
                 )
                 return .json(progress, status: 202)
             },
+            // Clears the file quarantine. In the provider spool it deletes ONLY the
+            // records whose exact bytes the raw archive already holds (same dedup key,
+            // same payload), so the backup still has them; every other quarantined
+            // record (never archived, or a conflict whose bytes differ from the
+            // archived ones) stays, because deleting it would lose it for good.
             RouteTable.route("POST", where: { $0 == ["ingestion", "errors", "clear"] }) { _, _ in
                 quarantine.clear()
+                services.pipelineQuarantine?.clearArchivedQuarantine()
                 return .noContent
             },
             RouteTable.route("POST", where: { $0.count == 2 && $0[0] == "hook" }) { request, components in

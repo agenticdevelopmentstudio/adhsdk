@@ -113,8 +113,7 @@ final class JSONLImporterTests: XCTestCase {
         XCTAssertEqual(sessions.first?.status, "ended")
 
         // Events were inserted
-        let events = try database.fetchEvents(sessionId: "s1")
-        XCTAssertEqual(events.count, 2)
+        XCTAssertEqual(try eventLogCount(session: "s1"), 2)
 
         // Metrics computed
         let metrics = try XCTUnwrap(database.metricsForSession(sessionId: "s1"))
@@ -133,7 +132,7 @@ final class JSONLImporterTests: XCTestCase {
         ], at: "s1.jsonl")
 
         _ = try runImport()
-        let before = try database.fetchEvents(sessionId: "s1").count
+        let before = try eventLogCount(session: "s1")
 
         let second = try runImport()
         XCTAssertEqual(second.eventsInserted, 0)
@@ -143,7 +142,7 @@ final class JSONLImporterTests: XCTestCase {
         )
         XCTAssertEqual(second.eventsSkipped, 0, "no lines re-read means nothing to dedup")
 
-        let after = try database.fetchEvents(sessionId: "s1").count
+        let after = try eventLogCount(session: "s1")
         XCTAssertEqual(before, after, "re-import must not duplicate events")
     }
 
@@ -186,7 +185,7 @@ final class JSONLImporterTests: XCTestCase {
         ]
         try writeJSONL(lines, at: "s1.jsonl")
         _ = try runImport()
-        let before = try database.fetchEvents(sessionId: "s1").count
+        let before = try eventLogCount(session: "s1")
 
         // An atomic rewrite swaps the inode, which invalidates the stored cursor:
         // the file must be re-read whole and the duplicate rows dropped by dedup,
@@ -202,7 +201,7 @@ final class JSONLImporterTests: XCTestCase {
         )
         XCTAssertGreaterThan(second.bytesRead, 0)
 
-        XCTAssertEqual(try database.fetchEvents(sessionId: "s1").count, before)
+        XCTAssertEqual(try eventLogCount(session: "s1"), before)
         XCTAssertEqual(
             try transcriptLineCount(session: "s1"), 2, "re-read lines must dedup, not duplicate"
         )
@@ -407,7 +406,7 @@ final class JSONLImporterTests: XCTestCase {
         ], at: "s1.jsonl")
 
         _ = try runImport()
-        XCTAssertEqual(try database.transcriptTurnCount(sessionId: "s1"), 3,
+        XCTAssertEqual(try database.legacyTranscriptTurnCount(sessionId: "s1"), 3,
                        "all three turns (user + 2 assistant) land in transcript_turns")
     }
 
@@ -419,11 +418,11 @@ final class JSONLImporterTests: XCTestCase {
         ], at: "s1.jsonl")
 
         _ = try runImport()
-        let before = try database.transcriptTurnCount(sessionId: "s1")
+        let before = try database.legacyTranscriptTurnCount(sessionId: "s1")
         XCTAssertEqual(before, 3)
 
         _ = try runImport()
-        let after = try database.transcriptTurnCount(sessionId: "s1")
+        let after = try database.legacyTranscriptTurnCount(sessionId: "s1")
         XCTAssertEqual(after, 3, "re-import must not duplicate turns (message_id + composite dedup)")
     }
 
@@ -435,7 +434,7 @@ final class JSONLImporterTests: XCTestCase {
         ], at: "s1.jsonl")
 
         _ = try runImport()
-        XCTAssertEqual(try database.transcriptTurnCount(sessionId: "s1"), 1,
+        XCTAssertEqual(try database.legacyTranscriptTurnCount(sessionId: "s1"), 1,
                        "(session_id, timestamp, kind) composite key dedups user turns")
     }
 
@@ -453,10 +452,10 @@ final class JSONLImporterTests: XCTestCase {
         try writeJSONL([line], at: "s1.jsonl")
 
         _ = try runImport()
-        XCTAssertEqual(try database.transcriptTurnCount(sessionId: "s1"), 1)
+        XCTAssertEqual(try database.legacyTranscriptTurnCount(sessionId: "s1"), 1)
 
         _ = try runImport()
-        XCTAssertEqual(try database.transcriptTurnCount(sessionId: "s1"), 1,
+        XCTAssertEqual(try database.legacyTranscriptTurnCount(sessionId: "s1"), 1,
                        "(session_id, timestamp, tool_name) collapses re-imports")
     }
 
@@ -471,7 +470,7 @@ final class JSONLImporterTests: XCTestCase {
         try writeJSONL([readLine, editLine], at: "s1.jsonl")
 
         _ = try runImport()
-        XCTAssertEqual(try database.transcriptTurnCount(sessionId: "s1"), 2,
+        XCTAssertEqual(try database.legacyTranscriptTurnCount(sessionId: "s1"), 2,
                        "distinct tool_names preserve multi-tool-use siblings")
     }
 
@@ -929,6 +928,16 @@ final class JSONLImporterTests: XCTestCase {
         XCTAssertEqual(try transcriptLineCount(session: "sd"), 0)
     }
 
+    /// The rows the importer wrote to `event_log` for `session`. The session
+    /// readers (`fetchEvents`) read the event store, which the importer does not feed.
+    private func eventLogCount(session: String) throws -> Int {
+        var count = 0
+        try database.query(
+            "SELECT COUNT(*) FROM event_log WHERE session_id = ?", params: [session]
+        ) { count = database.int($0, 0) }
+        return count
+    }
+
     private func transcriptLineCount(session: String) throws -> Int {
         var handle: OpaquePointer?
         XCTAssertEqual(sqlite3_open(dbPath, &handle), SQLITE_OK)
@@ -1025,7 +1034,7 @@ final class JSONLImporterTests: XCTestCase {
         try writeJSONL([line], at: "s1.jsonl")
 
         _ = try runImport()
-        let row = try XCTUnwrap(database.transcriptTurn(messageId: "m-sc"))
+        let row = try XCTUnwrap(database.legacyTranscriptTurn(messageId: "m-sc"))
         XCTAssertTrue(row.isSubagent, "isSidechain marker must persist as is_subagent = 1")
         XCTAssertEqual(row.agentId, "", "sidechain flag alone carries no agent id")
     }
@@ -1040,7 +1049,7 @@ final class JSONLImporterTests: XCTestCase {
         try writeJSONL([line], at: "s1.jsonl")
 
         _ = try runImport()
-        let row = try XCTUnwrap(database.transcriptTurn(messageId: "m-aid"))
+        let row = try XCTUnwrap(database.legacyTranscriptTurn(messageId: "m-aid"))
         XCTAssertTrue(row.isSubagent, "record-level agentId must persist as is_subagent = 1")
         XCTAssertEqual(row.agentId, "agent-42")
     }
@@ -1052,7 +1061,7 @@ final class JSONLImporterTests: XCTestCase {
         ], at: "proj/subagents/agent-1.jsonl")
 
         _ = try runImport()
-        let row = try XCTUnwrap(database.transcriptTurn(messageId: "m-path"))
+        let row = try XCTUnwrap(database.legacyTranscriptTurn(messageId: "m-path"))
         XCTAssertTrue(row.isSubagent, "a /subagents/ transcript path must persist as is_subagent = 1")
         XCTAssertEqual(row.agentId, "", "path marker carries no agent id")
     }
@@ -1063,7 +1072,7 @@ final class JSONLImporterTests: XCTestCase {
         ], at: "proj/s1.jsonl")
 
         _ = try runImport()
-        let row = try XCTUnwrap(database.transcriptTurn(messageId: "m-main"))
+        let row = try XCTUnwrap(database.legacyTranscriptTurn(messageId: "m-main"))
         XCTAssertFalse(row.isSubagent)
         XCTAssertEqual(row.agentId, "")
     }
@@ -1192,10 +1201,10 @@ final class JSONLImporterTests: XCTestCase {
         ], at: "s1.jsonl")
 
         _ = try runImport()
-        XCTAssertEqual(try database.transcriptTurnCount(sessionId: "s1"), 1,
+        XCTAssertEqual(try database.legacyTranscriptTurnCount(sessionId: "s1"), 1,
                        "partials sharing a message.id collapse to one turn")
 
-        let row = try XCTUnwrap(database.transcriptTurn(messageId: "m1"))
+        let row = try XCTUnwrap(database.legacyTranscriptTurn(messageId: "m1"))
         XCTAssertEqual(row.inputTokens, 100, "the FINAL record's usage must win, not the first's")
         XCTAssertEqual(row.outputTokens, 50)
         XCTAssertEqual(row.toolName, "Bash",
@@ -1219,7 +1228,7 @@ final class JSONLImporterTests: XCTestCase {
 
         // Same-values re-import: the upsert writes back identical numbers.
         _ = try runImport()
-        XCTAssertEqual(try database.transcriptTurnCount(sessionId: "s1"), 1)
+        XCTAssertEqual(try database.legacyTranscriptTurnCount(sessionId: "s1"), 1)
         let after = try XCTUnwrap(database.metricsForSession(sessionId: "s1"))
         XCTAssertEqual(after.totalInputTokens, before.totalInputTokens)
         XCTAssertEqual(after.totalOutputTokens, before.totalOutputTokens)
@@ -1240,7 +1249,7 @@ final class JSONLImporterTests: XCTestCase {
         try writeJSONL([tallied, zeroUsage], at: "s1.jsonl")
 
         _ = try runImport()
-        let row = try XCTUnwrap(database.transcriptTurn(messageId: "m1"))
+        let row = try XCTUnwrap(database.legacyTranscriptTurn(messageId: "m1"))
         XCTAssertEqual(row.inputTokens, 100, "zero-usage newcomer skipped, final tallies kept")
         XCTAssertEqual(row.outputTokens, 50)
     }

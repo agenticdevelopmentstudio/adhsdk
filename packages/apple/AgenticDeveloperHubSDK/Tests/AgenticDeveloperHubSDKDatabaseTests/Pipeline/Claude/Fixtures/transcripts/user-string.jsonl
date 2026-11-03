@@ -1,0 +1,1 @@
+{"parentUuid":null,"isSidechain":false,"userType":"external","cwd":"/Users/dev/work/myapp","sessionId":"6f1c2a9e-0b7d-4c55-9a3e-2d8f1e4b7a10","version":"2.1.302","gitBranch":"feature/upload-retry","type":"user","message":{"role":"user","content":"Add a retry to the upload client"},"uuid":"0a1b2c3d-0001-4000-8000-000000000001","timestamp":"2026-10-30T12:00:01.000Z"}

@@ -36,7 +36,7 @@ public final class DaemonDatabase: @unchecked Sendable {
     /// Ceiling for a one-time maintenance READ — the read-lane twin of
     /// `migrationWriteDeadline`, and the widest of the four. A maintenance scan
     /// is the one read legitimately allowed to take minutes
-    /// (`repriceSessionMetricsIfNeeded` groups the whole of `transcript_turns`),
+    /// (`repriceSessionMetricsIfNeeded` groups every Claude turn in events.db),
     /// and the serving ceiling above ejects it every time on a large DB.
     ///
     /// Wider than the migration ceiling on purpose: this one runs off both the
@@ -111,6 +111,32 @@ public final class DaemonDatabase: @unchecked Sendable {
         defer { readyLock.unlock() }
         return _isReady
     }
+
+    // MARK: - Event reads
+
+    private let eventReadsLock = NSLock()
+    private var attachedEventReads: EventStore?
+    private var attachedRawArchive: RawArchive?
+
+    /// Hands this database the provider pipeline's event store and raw archive,
+    /// which readers of the moved tables go through. Set once, when the runtime
+    /// opens; a second call keeps the first pair.
+    public func attachEventReads(_ store: EventStore, archive: RawArchive) {
+        eventReadsLock.withLock {
+            guard attachedEventReads == nil else {
+                assertionFailure("attachEventReads called twice")
+                return
+            }
+            attachedEventReads = store
+            attachedRawArchive = archive
+        }
+    }
+
+    /// The event store (`events.db`), or nil until ``attachEventReads(_:archive:)``.
+    public var eventReads: EventStore? { eventReadsLock.withLock { attachedEventReads } }
+
+    /// The raw archive, or nil until ``attachEventReads(_:archive:)``.
+    public var rawArchive: RawArchive? { eventReadsLock.withLock { attachedRawArchive } }
 
     // MARK: - Attachments
 

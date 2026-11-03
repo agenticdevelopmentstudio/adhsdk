@@ -123,7 +123,44 @@ public enum ConversationExtractor {
         guard let data = rawJSON.data(using: .utf8),
               let entry = try? JSONSerialization.jsonObject(with: data) as? [String: Any]
         else { return [] }
+        return extract(entry: entry)
+    }
 
+    /// Extracts every showable line from one event-store message: its `role`,
+    /// flattened `text` and `attrs` JSON (``ClaudeTranscriptNormalizer`` keeps
+    /// the content blocks in `attrs.blocks`, the reply's `stop_reason`, the
+    /// session's `entrypoint`, the harness's `is_meta` / `turn_origin` /
+    /// `is_compact_summary` marks, and `queued_prompt` for a prompt typed
+    /// mid-turn).
+    ///
+    /// The transcript entry is put back together from those and judged by the
+    /// same rules as ``extract(rawJSON:)``, so the two paths cannot disagree
+    /// about a line. Content is the blocks when the line had an array, the
+    /// text when it had a string. A sidechain message never reaches here (the
+    /// feed's read leaves them out); unparseable `attrs` read as none.
+    public static func extract(role: String, text: String, attrsJSON: String) -> [Line] {
+        let attrs = (try? JSONSerialization.jsonObject(with: Data(attrsJSON.utf8)) as? [String: Any]) ?? [:]
+        let content: Any = attrs["blocks"] as? [Any] ?? text
+        var entry: [String: Any] = [:]
+        if let isMeta = attrs["is_meta"] as? Bool { entry["isMeta"] = isMeta }
+        if let entrypoint = attrs["entrypoint"] as? String { entry["entrypoint"] = entrypoint }
+        if let turnOrigin = attrs["turn_origin"] as? String { entry["turnOrigin"] = turnOrigin }
+        if let compact = attrs["is_compact_summary"] as? Bool { entry["isCompactSummary"] = compact }
+        if attrs["queued_prompt"] as? Bool == true {
+            entry["type"] = "attachment"
+            entry["attachment"] = [
+                "type": "queued_command", "commandMode": "prompt", "prompt": content
+            ] as [String: Any]
+            return extract(entry: entry)
+        }
+        var message: [String: Any] = ["role": role, "content": content]
+        if let stopReason = attrs["stop_reason"] as? String { message["stop_reason"] = stopReason }
+        entry["type"] = role
+        entry["message"] = message
+        return extract(entry: entry)
+    }
+
+    private static func extract(entry: [String: Any]) -> [Line] {
         // Sub-agent traffic is a different conversation, and meta entries are
         // the harness talking to itself.
         if entry["isSidechain"] as? Bool == true { return [] }

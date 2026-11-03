@@ -48,6 +48,9 @@ public struct SessionMetricsDTO: Codable, Sendable {
 /// What `steno import` asks for — the body of both `POST /import` and the XPC
 /// `importTranscripts`. snake_case on the wire, `since` as ISO-8601; every field
 /// optional, so an empty body is a full import from the default directory.
+/// `since` selects *files*: only transcripts whose modification time is at or
+/// after it are read (from their cursors); lines are not filtered by their own
+/// timestamps.
 public struct ImportRequestDTO: Codable, Sendable {
     public let sourceDirectory: String?
     public let since: Date?
@@ -102,8 +105,12 @@ public struct ImportSummary: Codable, Sendable {
     /// Total transcript JSONL lines seen across scanned files this run
     /// (every line, not just user/assistant turns). Counted even in dryRun.
     public let linesSeen: Int
-    /// Transcript lines actually inserted into `transcript_lines` this run;
-    /// re-runs of already-captured files insert 0 (session_id+hash dedup).
+    /// Transcript lines this run handed on. From the Claude pipeline's import it
+    /// is the lines *queued* into the spool (the drainer writes them to the raw
+    /// archive and events.db afterwards; a line already read through its cursor
+    /// is never queued twice). From the legacy `JSONLImporter` it is the lines
+    /// inserted into `transcript_lines` (session_id+hash dedup). The wire name
+    /// stays `linesInserted` for compatibility.
     public let linesInserted: Int
     /// Non-empty lines dropped because their bytes were not valid UTF-8.
     ///
