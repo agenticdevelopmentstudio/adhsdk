@@ -45,7 +45,11 @@ public final class EventStore: @unchecked Sendable {
     /// `endBulkLoad` and each replay chunk. Effectively none.
     public static let bulkDeadline: Duration = .seconds(24 * 60 * 60)
 
-    private let pool: BoundedDatabase
+    /// Internal so the store's extensions in other files (`EventStore+Trim`) reach it.
+    let pool: BoundedDatabase
+
+    /// The file this store opened.
+    public let path: String
 
     private let stateLock = NSLock()
     private var liveWriters = 0
@@ -62,7 +66,14 @@ public final class EventStore: @unchecked Sendable {
         ("messages_session_time",
          "CREATE INDEX IF NOT EXISTS messages_session_time ON messages(provider, session_id, time)"),
         // The Conversations feed's merged read: every session's messages newest first.
-        ("messages_time", "CREATE INDEX IF NOT EXISTS messages_time ON messages(provider, time)")
+        ("messages_time", "CREATE INDEX IF NOT EXISTS messages_time ON messages(provider, time)"),
+        // A PostToolUse finding its PreToolUse by tool_use_id. Partial on
+        // json_valid(attrs) so the build never fails on a malformed row; a reader
+        // must repeat that predicate and the exact expression for the planner to
+        // pick it (see `claudeToolDurationMs`).
+        ("events_tool_use_id",
+         "CREATE INDEX IF NOT EXISTS events_tool_use_id "
+            + "ON events(provider, json_extract(attrs,'$.tool_use_id')) WHERE json_valid(attrs)")
     ]
 
     private static let sessionScalarFields = ["cwd", "project", "account", "model", "title", "status"]
@@ -73,6 +84,7 @@ public final class EventStore: @unchecked Sendable {
     /// in `store_meta`) has its indexes rebuilt here and the flag cleared, under
     /// `bulkDeadline`.
     public init(path: String) throws {
+        self.path = path
         self.pool = try BoundedDatabase(
             path: path, readers: 3,
             readDeadline: .seconds(30), writeDeadline: .seconds(60),

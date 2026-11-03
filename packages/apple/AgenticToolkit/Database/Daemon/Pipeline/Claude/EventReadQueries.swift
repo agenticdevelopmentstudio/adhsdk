@@ -273,6 +273,19 @@ extension DaemonDatabase {
         }
     }
 
+    /// The PreToolUse lookup behind `claudeToolDurationMs`; arguments are provider,
+    /// tool_use_id, session_id. It repeats `events_tool_use_id`'s expression and
+    /// its `json_valid(attrs)` predicate so the planner can use that partial index;
+    /// the unary `+` keeps `session_id` and `provider_type` off the other indexes,
+    /// so the plan does not depend on the planner's tie-break.
+    static let claudeToolDurationSQL = """
+        SELECT time FROM events
+        WHERE provider = ? AND json_extract(attrs,'$.tool_use_id') = ? AND json_valid(attrs)
+          AND +session_id = ? AND +provider_type = 'PreToolUse'
+        ORDER BY id DESC
+        LIMIT 1
+        """
+
     /// Milliseconds from the session's newest `PreToolUse` carrying `toolUseId` to
     /// `postTime` (epoch seconds), or nil when there is no such `PreToolUse` or
     /// it is later than `postTime`. What a `PostToolUse` / `PostToolUseFailure`
@@ -280,13 +293,8 @@ extension DaemonDatabase {
     public func claudeToolDurationMs(sessionId: String, toolUseId: String, postTime: Double) throws -> Int? {
         guard !sessionId.isEmpty, !toolUseId.isEmpty else { return nil }
         let preTime: Double? = try withEventReads(nil) { conn in
-            try Double.fetchOne(conn, sql: """
-                SELECT time FROM events
-                WHERE provider = ? AND session_id = ? AND provider_type = 'PreToolUse'
-                  AND json_extract(attrs, '$.tool_use_id') = ?
-                ORDER BY id DESC
-                LIMIT 1
-                """, arguments: [ClaudeProvider.name, sessionId, toolUseId])
+            try Double.fetchOne(
+                conn, sql: Self.claudeToolDurationSQL, arguments: [ClaudeProvider.name, toolUseId, sessionId])
         }
         guard let preTime else { return nil }
         let delta = (postTime - preTime) * 1000.0
