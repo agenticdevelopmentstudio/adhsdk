@@ -807,8 +807,8 @@ public enum SessionSchema {
 
     /// migration023 — `ai_interactions`: one row per LLM call the daemon made (summaries,
     /// oversight), logged at the `DaemonAIChat` chokepoint. Bounded by pruning to the
-    /// newest `maxAIInteractionRows` on every insert (RetentionTask is opt-in/off, so
-    /// insert-time pruning is the working bound). `IF NOT EXISTS` throughout so an
+    /// newest `maxAIInteractionRows` on every insert (the storage trim never touches
+    /// this table, so insert-time pruning is the working bound). `IF NOT EXISTS` throughout so an
     /// unclean shutdown mid-migration self-heals.
     private static func migration023(_ db: DaemonDatabase) throws {
         logger.info("migration023: creating ai_interactions…")
@@ -1404,7 +1404,7 @@ public enum SessionSchema {
     /// `--SCAN status_line_events
     /// ```
     ///
-    /// with 841,264 rows in that table. `RetentionTask` deletes 50 `event_log`
+    /// with 841,264 rows in that table. The retention task of the time deleted 50 `event_log`
     /// rows per batch, so one batch is 50 full scans of every per-type table —
     /// on the serial database queue that ingest and the HTTP reader share. This
     /// is why retention on a large capture appears to hang rather than run.

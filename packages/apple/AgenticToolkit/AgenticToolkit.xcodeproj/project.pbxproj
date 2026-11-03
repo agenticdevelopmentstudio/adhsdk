@@ -1371,6 +1371,7 @@
 		7A4B32EB0E890D7A1B8AB775 /* TextDocumentTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE6B2E59FBA7EEA9553CA0B0 /* TextDocumentTests.swift */; };
 		7A502D3345B9720D5926E88B /* SubagentStart.json in Resources */ = {isa = PBXBuildFile; fileRef = E15BAB291E6000A2CE629377 /* SubagentStart.json */; };
 		7A63B1BEAFD613CC0C3B8FCD /* AccountMenuModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7DF9DBB851E3FBF774D5CB83 /* AccountMenuModel.swift */; };
+		7A6466913E5472E3E96E057E /* TrimService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 97E399FDAA8AE43574378927 /* TrimService.swift */; };
 		7A6F3034264BA439184146A9 /* ContributedSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = F722FAE0F1511699F96EA994 /* ContributedSettings.swift */; };
 		7AA2F138D9100F8DCECDCB6C /* UsageStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D810819E43FDA6218FA39A9 /* UsageStore.swift */; };
 		7AA7DD4D1A43A9B02FDE0EB8 /* GRDB in Frameworks */ = {isa = PBXBuildFile; productRef = 92236A003369BB1759D0F7F9 /* GRDB */; };
@@ -2285,6 +2286,7 @@
 		D32A2B8975DF601AA5E91486 /* Slug.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A56CFEF189E66E9852CFF84 /* Slug.swift */; };
 		D344127FA64390ABE722E30A /* AgenticToolkitDatabase.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4BB62E3D95DA86CAF132B225 /* AgenticToolkitDatabase.framework */; };
 		D35788BA91E0E2FF4BA260E6 /* SettingsKeyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 21632D2A100D8B2EAEE30D47 /* SettingsKeyTests.swift */; };
+		D3A6906CC278F621FB73D2DB /* TrimServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5CEB5C8A105F9FECE174FA8 /* TrimServiceTests.swift */; };
 		D3C781B34E8C55C934EAAC7B /* ColorViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6CCE95461780CEB975B410C /* ColorViewModel.swift */; };
 		D3CC58E10D9C8A381AD3A617 /* AutoApplierTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EBCB305F38E2239B0D258768 /* AutoApplierTests.swift */; };
 		D3DFEEA7CD3BC8E5031160C8 /* AIModelChatConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 310D7389C2AAF6717CCC2A67 /* AIModelChatConfig.swift */; };
@@ -6335,6 +6337,7 @@
 		97968EFD1C9C7597C4C09F4D /* ThemePreviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemePreviewView.swift; sourceTree = "<group>"; };
 		97B4499E3B46F6564F7B0611 /* BillingTestContext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BillingTestContext.swift; sourceTree = "<group>"; };
 		97D73AE672A872337EA8DEB2 /* KeychainHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainHelper.swift; sourceTree = "<group>"; };
+		97E399FDAA8AE43574378927 /* TrimService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrimService.swift; sourceTree = "<group>"; };
 		984EC531AE0882765A7D457F /* DaemonAIChatGuardTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DaemonAIChatGuardTests.swift; sourceTree = "<group>"; };
 		985193AF903CF5BD0E25B3E5 /* EditableTableCardTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditableTableCardTests.swift; sourceTree = "<group>"; };
 		987598EA55542AE43DD4E99B /* HelpContentTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HelpContentTests.swift; sourceTree = "<group>"; };
@@ -6686,6 +6689,7 @@
 		C521821AF7EC36FCB302FFD2 /* FloatingChooserPanelController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FloatingChooserPanelController.swift; sourceTree = "<group>"; };
 		C522580F9F4E472CD8B0FF2C /* ScriptEditorViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScriptEditorViewController.swift; sourceTree = "<group>"; };
 		C536426782FE9779FC20C72A /* PrivateTerminalView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrivateTerminalView.swift; sourceTree = "<group>"; };
+		C5CEB5C8A105F9FECE174FA8 /* TrimServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrimServiceTests.swift; sourceTree = "<group>"; };
 		C60D426CBB08DDACE7C005C6 /* FormStateTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FormStateTests.swift; sourceTree = "<group>"; };
 		C61B3F438C4D507D4ED8D487 /* ViewsContributionPoint.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewsContributionPoint.swift; sourceTree = "<group>"; };
 		C66667DCA02B801B5D59DD3D /* ProjectScanProgressWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectScanProgressWindow.swift; sourceTree = "<group>"; };
@@ -10706,6 +10710,7 @@
 				19A37BBE8D731D1B0DB47506 /* SessionModels.swift */,
 				36005766A94EE15385E89F44 /* SessionRecords.swift */,
 				F6E04D9B7AE9D983E72CFA60 /* SummaryPrefs.swift */,
+				97E399FDAA8AE43574378927 /* TrimService.swift */,
 			);
 			path = Sessions;
 			sourceTree = "<group>";
@@ -11662,6 +11667,7 @@
 				8E3DAA4E8DAFBB4098D8EC07 /* RetentionServiceTests.swift */,
 				511C3237E662C0B3A5662094 /* SessionEnricherTests.swift */,
 				A8F0F0F8AF1B3D3B442B9FB6 /* SessionRecordsTests.swift */,
+				C5CEB5C8A105F9FECE174FA8 /* TrimServiceTests.swift */,
 			);
 			path = Sessions;
 			sourceTree = "<group>";
@@ -16944,6 +16950,7 @@
 				E66940C547461B97A6291C9B /* TestDaemonDatabase.swift in Sources */,
 				E3DA2B4FFBC34667B029BF0A /* TranscriptTailerTests.swift in Sources */,
 				7D975D7FE1CBB8861F7EFEB2 /* TranscriptTitleScannerTests.swift in Sources */,
+				D3A6906CC278F621FB73D2DB /* TrimServiceTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -17738,6 +17745,7 @@
 				816F00FF5D39D9DD57BA3FC8 /* TranscriptStore+Turns.swift in Sources */,
 				3EF07593F71F79091019F420 /* TranscriptTailer.swift in Sources */,
 				05DC74484990197A7292CD9A /* TranscriptTitleScanner.swift in Sources */,
+				7A6466913E5472E3E96E057E /* TrimService.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
