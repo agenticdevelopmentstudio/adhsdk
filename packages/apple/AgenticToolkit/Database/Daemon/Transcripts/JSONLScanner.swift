@@ -525,10 +525,14 @@ public enum JSONLScanner {
         /// The line's exact bytes when they are not valid UTF-8 (so `text` is
         /// lossy); nil for every valid line.
         public let invalidUTF8Bytes: Data?
+        /// The absolute byte offset in the file where the line starts: its
+        /// position, which tells two byte-identical lines apart.
+        public let startOffset: Int64
 
-        public init(text: String, invalidUTF8Bytes: Data? = nil) {
+        public init(text: String, invalidUTF8Bytes: Data? = nil, startOffset: Int64 = 0) {
             self.text = text
             self.invalidUTF8Bytes = invalidUTF8Bytes
+            self.startOffset = startOffset
         }
     }
 
@@ -589,16 +593,18 @@ public enum JSONLScanner {
                     defer { index += 1 }
                     guard pending[index] == 0x0A else { continue }
                     let lineBytes = pending[lineStart..<index]
+                    let lineOffset = consumed
                     consumed += Int64(index - lineStart + 1)
                     lineStart = index + 1
                     guard !lineBytes.isEmpty else { continue }
                     if let text = String(bytes: lineBytes, encoding: .utf8) {
-                        chunk.append(ScannedLine(text: text))
+                        chunk.append(ScannedLine(text: text, startOffset: lineOffset))
                     } else {
                         // Lossy on purpose: the exact bytes ride along beside it.
                         // swiftlint:disable:next optional_data_string_conversion
                         let lossy = String(decoding: lineBytes, as: UTF8.self)
-                        chunk.append(ScannedLine(text: lossy, invalidUTF8Bytes: Data(lineBytes)))
+                        chunk.append(ScannedLine(
+                            text: lossy, invalidUTF8Bytes: Data(lineBytes), startOffset: lineOffset))
                     }
                     consumedThroughLastLine = consumed
                     emitted += 1
@@ -629,7 +635,7 @@ public enum JSONLScanner {
             let tailData = Data(pending)
             guard let tail = String(data: tailData, encoding: .utf8),
                   (try? JSONSerialization.jsonObject(with: tailData)) != nil else { return }
-            chunk.append(ScannedLine(text: tail))
+            chunk.append(ScannedLine(text: tail, startOffset: consumed))
             emitted += 1
             consumed += Int64(pending.count)
             consumedThroughLastLine = consumed

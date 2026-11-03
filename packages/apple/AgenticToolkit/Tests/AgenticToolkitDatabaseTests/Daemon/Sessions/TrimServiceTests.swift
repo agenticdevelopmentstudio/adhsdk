@@ -178,7 +178,7 @@ final class TrimServiceTests: XCTestCase {
     }
 
     /// The hold fails closed: one that cannot be read, or names no day, deletes
-    /// nothing at all and reports the pass unfinished, waiting for billing.
+    /// nothing at all and reports the pass unfinished, "billing unreadable" (N3).
     func testAHoldThatCannotBeReadDeletesNothing() throws {
         try storeRows("s", daysAgo: 40)
         try snapshot("\(Self.day(40))T01:00:00Z", account: "a@x")
@@ -194,11 +194,12 @@ final class TrimServiceTests: XCTestCase {
                 .run(deadline: future)
         ] {
             XCTAssertNil(report.cutoff)
-            XCTAssertEqual(report.waitingFor, "billing")
+            XCTAssertEqual(report.waitingFor, TrimService.waitingForBillingUnreadable)
+            XCTAssertEqual(report.waitingFor, "billing unreadable")
             XCTAssertFalse(report.finished)
             XCTAssertEqual(report.turns, 0)
             XCTAssertEqual(report.rateLimitSnapshots, 0)
-            XCTAssertEqual(TrimService.lastReport(database)?.waitingFor, "billing")
+            XCTAssertEqual(TrimService.lastReport(database)?.waitingFor, "billing unreadable")
         }
         XCTAssertEqual(try count("turns"), 1)
         XCTAssertEqual(try count("events"), 1)

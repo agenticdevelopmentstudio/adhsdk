@@ -83,7 +83,8 @@ public struct TrimHold: Sendable, Equatable {
 /// nothing and reports `waitingFor: "rollups"`. A `hold` (the daemon's billing,
 /// for one) can hold the cutoff back further; when it does, the pass still
 /// trims up to the held cutoff and reports the hold's reason in `waitingFor`.
-/// A hold that cannot be read fails closed: the pass deletes nothing.
+/// A hold that cannot be read fails closed: the pass deletes nothing and
+/// reports ``waitingForBillingUnreadable``.
 ///
 /// **Bounded.** Deletes are batches of 500, one transaction each. The pass stops
 /// at `deadline` with `finished = false`; a rerun continues from the same cutoff.
@@ -115,6 +116,10 @@ public final class TrimService: Sendable {
     public static let waitingForBulkLoad = "skipped: bulk load"
     /// The reason a billing hold reports: sessions billing has not derived yet.
     public static let waitingForBilling = "billing"
+    /// The reason a pass reports when its hold could not be read (it threw, or
+    /// named no day): the pass deleted nothing and has no cutoff. The daemon's
+    /// only hold is billing's, hence the name.
+    public static let waitingForBillingUnreadable = "billing unreadable"
 
     private let database: DaemonDatabase
     private let eventStore: EventStore?
@@ -243,14 +248,14 @@ public final class TrimService: Sendable {
         do {
             held = try hold?()
         } catch {
-            return heldBack(&report, reason: Self.waitingForBilling,
+            return heldBack(&report, reason: Self.waitingForBillingUnreadable,
                             "Trim deleted nothing: the hold could not be read: \(error.localizedDescription)")
         }
         if let held {
             guard Self.dayStart(held.day) != nil,
                   let heldCutoff = Self.cutoff(now: started, historyDays: historyDays, coveredThroughDay: held.day)
             else {
-                return heldBack(&report, reason: held.reason,
+                return heldBack(&report, reason: Self.waitingForBillingUnreadable,
                                 "Trim deleted nothing: the hold names no day (\(held.day))")
             }
             if held.day < covered, heldCutoff < unheld {

@@ -234,6 +234,20 @@ public final class ProviderSpool: @unchecked Sendable {
         try pool.read { conn in try Int.fetchOne(conn, sql: "SELECT COUNT(*) FROM quarantined_record") ?? 0 }
     }
 
+    /// Quarantined records whose reason starts with none of `reasonPrefixes`: the
+    /// ones that could still be stored after a retry, for a caller that waits on
+    /// those and not on records the provider has declared final.
+    public func quarantinedCount(excludingReasonPrefixes reasonPrefixes: [String]) throws -> Int {
+        guard !reasonPrefixes.isEmpty else { return try quarantinedCount() }
+        let filter = Self.reasonFilter(reasonPrefixes)
+        let match = filter.sql.dropFirst("WHERE ".count)
+        return try pool.read { conn in
+            try Int.fetchOne(
+                conn, sql: "SELECT COUNT(*) FROM quarantined_record WHERE NOT (\(match))",
+                arguments: filter.arguments) ?? 0
+        }
+    }
+
     public func sourceState(_ key: String) throws -> Data? {
         try pool.read { conn in
             try Data.fetchOne(conn, sql: "SELECT value FROM source_state WHERE key = ?", arguments: [key])

@@ -9,7 +9,8 @@ public struct TrimReportDTO: Codable, Sendable, Equatable {
     /// Rows older than this (epoch seconds) were eligible; nil when nothing was.
     public let cutoff: Double?
     /// Why part or all of the pass did nothing ("rollups", "events.db
-    /// unavailable", "skipped: bulk load", "billing"). Not an error.
+    /// unavailable", "skipped: bulk load", "billing", "billing unreadable").
+    /// Not an error; ``waitingText(_:)`` puts it in words.
     public let waitingFor: String?
     public let events: Int
     public let messages: Int
@@ -161,6 +162,20 @@ extension TrimReportDTO {
     /// Whether the pass removed any row or reclaimed any space.
     public var removedAnything: Bool {
         events + messages + turns + sessions + rateLimitSnapshots > 0 || reclaimedBytes > 0
+    }
+
+    /// A daemon's `waitingFor` value, in words, as a sentence start ("Waiting
+    /// for billing", "Billing could not be read; nothing removed"). An unknown
+    /// value reads "Waiting for <value>". The CLI and the app both print this.
+    public static func waitingText(_ waitingFor: String) -> String {
+        switch waitingFor {
+        case "rollups": return "Waiting for rollups"
+        case "billing": return "Waiting for billing"
+        case "billing unreadable": return "Billing could not be read; nothing removed"
+        case "skipped: bulk load": return "Skipped during a bulk import"
+        case "events.db unavailable": return "events.db unavailable"
+        default: return "Waiting for \(waitingFor)"
+        }
     }
 }
 

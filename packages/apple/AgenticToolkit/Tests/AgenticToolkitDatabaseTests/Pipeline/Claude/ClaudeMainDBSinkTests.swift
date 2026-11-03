@@ -96,7 +96,8 @@ final class ClaudeMainDBSinkTests: XCTestCase {
             file: transcriptFile.path, lineNo: lineNo, subagentFile: false, line: try Self.transcriptLine(stem))
         return ArchivedRecord(id: id, record: RawRecord(
             provider: ClaudeProvider.name, sourceKind: ClaudeProvider.transcriptKind,
-            dedupKey: ClaudeTranscriptPayload.dedupKey(line: payload.line, file: payload.file),
+            dedupKey: ClaudeTranscriptPayload.dedupKey(
+                line: payload.line, file: payload.file, byteOffset: Int64(payload.lineNo)),
             receivedAt: Self.receivedAt, payload: try ClaudeTranscriptPayload.encode(payload)))
     }
 
