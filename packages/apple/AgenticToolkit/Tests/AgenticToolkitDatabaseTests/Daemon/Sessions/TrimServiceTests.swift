@@ -44,12 +44,13 @@ final class TrimServiceTests: XCTestCase {
     private func service(
         historyDays: Int = 7, covered: String?, eventStore: EventStore?? = .none,
         snapshotsReadThrough: (@Sendable () -> Int?)? = nil,
+        hold: TrimHold? = nil,
         extra: [@Sendable (Double, Date) throws -> Int] = []
     ) -> TrimService {
         TrimService(
             database: database, eventStore: eventStore ?? store, historyDays: historyDays,
             coveredThroughDay: { covered }, snapshotsReadThrough: snapshotsReadThrough,
-            extraMainTrims: extra, now: { Self.now })
+            hold: { hold }, extraMainTrims: extra, now: { Self.now })
     }
 
     /// One event, turn and message for `session`, `daysAgo` before now (at noon).
@@ -145,6 +146,29 @@ final class TrimServiceTests: XCTestCase {
         XCTAssertEqual(try count("messages"), 1)
         XCTAssertTrue(report.finished)
         XCTAssertNil(report.error)
+    }
+
+    /// A hold that lowers the cutoff trims up to it and says why, in the report
+    /// returned and the one stored; one that lowers nothing says nothing.
+    func testAHoldThatLowersTheCutoffIsReportedAsWaitingFor() throws {
+        try storeRows("s", daysAgo: 40)   // before the hold: goes
+        try storeRows("s", daysAgo: 25)   // after the hold, inside the window's reach: stays
+
+        let held = TrimHold(day: Self.day(30), reason: TrimService.waitingForBilling)
+        let report = try service(covered: Self.day(1), hold: held).run(deadline: future)
+
+        XCTAssertEqual(report.cutoff, Self.midnight(29))
+        XCTAssertEqual(report.waitingFor, "billing")
+        XCTAssertEqual(report.turns, 1)
+        XCTAssertEqual(try count("turns"), 1)
+        XCTAssertTrue(report.finished)
+        XCTAssertEqual(TrimService.lastReport(database)?.waitingFor, "billing")
+
+        // A hold later than the window holds nothing back.
+        let loose = TrimHold(day: Self.day(2), reason: TrimService.waitingForBilling)
+        let unheld = try service(covered: Self.day(1), hold: loose).run(deadline: future)
+        XCTAssertEqual(unheld.cutoff, Self.midnight(7))
+        XCTAssertNil(unheld.waitingFor)
     }
 
     // MARK: - Snapshots

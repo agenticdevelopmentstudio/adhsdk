@@ -141,6 +141,23 @@ public final class EventStore: @unchecked Sendable {
                     UNIQUE (provider, session_id, uuid))
                 """)
             try conn.execute(sql: "CREATE TABLE IF NOT EXISTS store_meta (key TEXT PRIMARY KEY, value TEXT NOT NULL)")
+            // What `trim` deleted from `turns`, kept so a session's totals survive it:
+            // per (provider, session, model) sums of the trimmed turns, and the key
+            // of every trimmed turn, so a redelivered one is never stored (and so
+            // never counted) twice. See `EventStore+Trim.swift`.
+            try conn.execute(sql: """
+                CREATE TABLE IF NOT EXISTS trimmed_turns (
+                    provider TEXT NOT NULL, session_id TEXT NOT NULL, model TEXT NOT NULL,
+                    turn_count INTEGER NOT NULL, input_tokens INTEGER NOT NULL, output_tokens INTEGER NOT NULL,
+                    cache_read_tokens INTEGER NOT NULL, cache_write_tokens INTEGER NOT NULL,
+                    cache_write_1h_tokens INTEGER NOT NULL, first_time REAL, last_time REAL,
+                    PRIMARY KEY (provider, session_id, model)) WITHOUT ROWID
+                """)
+            try conn.execute(sql: """
+                CREATE TABLE IF NOT EXISTS trimmed_turn_keys (
+                    provider TEXT NOT NULL, dedup_key TEXT NOT NULL,
+                    PRIMARY KEY (provider, dedup_key)) WITHOUT ROWID
+                """)
             // On a new file this creates the indexes; on a healthy one it is a
             // no-op; after a crash mid-bulk-load it is the rebuild.
             for index in Self.indexes { try conn.execute(sql: index.sql) }
@@ -541,6 +558,9 @@ public final class EventStore: @unchecked Sendable {
     private static func merge(turns: [TurnRow], provider: String, _ conn: Database) throws -> TurnRow? {
         guard let first = turns.first else { return nil }
         let stored = try loadTurn(provider: provider, dedupKey: first.dedupKey, conn)
+        // A turn the trim already folded into `trimmed_turns` (an old transcript
+        // imported again) is counted there; storing it again would count it twice.
+        if stored == nil, try isTrimmedTurn(provider: provider, dedupKey: first.dedupKey, conn) { return nil }
         var state = stored ?? TurnState(asOf: (first.asOf ?? first.time).timeIntervalSince1970)
         for turn in turns {
             let asOf = (turn.asOf ?? turn.time).timeIntervalSince1970
@@ -594,6 +614,12 @@ public final class EventStore: @unchecked Sendable {
             inputTokens: Int(int("input_tokens")), outputTokens: Int(int("output_tokens")),
             cacheReadTokens: Int(int("cache_read_tokens")), cacheWriteTokens: Int(int("cache_write_tokens")),
             costUSD: fields.number("cost_usd"), attrs: fields.attrs, rawRef: int("raw_ref"))
+    }
+
+    private static func isTrimmedTurn(provider: String, dedupKey: String, _ conn: Database) throws -> Bool {
+        try Bool.fetchOne(conn, sql: """
+            SELECT EXISTS (SELECT 1 FROM trimmed_turn_keys WHERE provider = ? AND dedup_key = ?)
+            """, arguments: [provider, dedupKey]) ?? false
     }
 
     private static func loadTurn(provider: String, dedupKey: String, _ conn: Database) throws -> TurnState? {

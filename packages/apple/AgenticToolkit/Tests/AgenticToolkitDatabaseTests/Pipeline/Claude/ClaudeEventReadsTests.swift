@@ -455,6 +455,145 @@ final class ClaudeEventReadsTests: XCTestCase {
         XCTAssertEqual(try database.metricsForSession(sessionId: "s1")?.totalCostUsd, 1)
     }
 
+    // MARK: - Trimmed turns
+
+    /// Every total of a session's metrics, cost to the nanodollar.
+    private func totals(_ session: String) throws -> String {
+        guard let metrics = try database.sessionMetricsFromTurns(sessionId: session, reads: harness.store) else {
+            return "none"
+        }
+        return "i\(metrics.totalInputTokens) o\(metrics.totalOutputTokens) r\(metrics.cacheReadTokens) "
+            + "w\(metrics.cacheCreationTokens) n\(metrics.turnCount) "
+            + "c\(Int((metrics.totalCostUsd * 1e9).rounded())) m\(metrics.model) "
+            + "\(metrics.firstTurnAt)…\(metrics.lastTurnAt)"
+    }
+
+    private func trimmedRows() throws -> [String] {
+        try harness.store.read { conn in
+            try String.fetchAll(conn, sql: """
+                SELECT session_id || '|' || model || '|n' || turn_count || '|i' || input_tokens
+                       || '|o' || output_tokens || '|r' || cache_read_tokens || '|w' || cache_write_tokens
+                       || '|h' || cache_write_1h_tokens
+                FROM trimmed_turns ORDER BY 1
+                """)
+        }
+    }
+
+    private var farFuture: Date { Date().addingTimeInterval(600) }
+
+    /// Two old turns (two models) and one recent one in `s1`, one old turn in `s2`.
+    private func seedForTrim() throws {
+        try turn("a", "s1", "2026-06-01T12:00:00Z", input: 1000, output: 2000, cacheRead: 300, cacheWrite: 40,
+                 cache1h: 10)
+        try turn("b", "s1", "2026-06-01T12:01:00Z", model: "claude-opus-4-1", input: 7, output: 500)
+        try turn("c", "s1", "2026-06-20T12:00:00Z", input: 11, output: 13, cacheRead: 17, cacheWrite: 19, cache1h: 5)
+        try turn("d", "s2", "2026-06-01T13:00:00Z", output: 9)
+    }
+
+    func testSessionTotalsAreTheSameAfterATrimAndExactAfterResuming() throws {
+        try seedForTrim()
+        let before = try totals("s1")
+
+        let result = try harness.store.trim(olderThan: try epoch("2026-06-10T00:00:00Z"), deadline: farFuture)
+        XCTAssertEqual(result.turns, 3)
+        XCTAssertEqual(try totals("s1"), before, "the trimmed turns still count, priced per model")
+        XCTAssertEqual(try trimmedRows(), [
+            "s1|claude-opus-4-1|n1|i7|o500|r0|w0|h0",
+            "s1|claude-sonnet-4-6|n1|i1000|o2000|r300|w40|h10",
+            "s2|claude-sonnet-4-6|n1|i0|o9|r0|w0|h0"
+        ])
+
+        // Resumed: new turns push the live part past what was trimmed.
+        try turn("e", "s1", "2026-06-21T12:00:00Z", input: 5000, output: 6000, cacheRead: 7000)
+        try turn("f", "s1", "2026-06-21T12:01:00Z", model: "claude-opus-4-1", output: 900)
+        let sonnet = TranscriptPricing.cost(
+            model: "claude-sonnet-4-6", inputTokens: 1000 + 11 + 5000, outputTokens: 2000 + 13 + 6000,
+            cacheReadTokens: 300 + 17 + 7000, cacheCreationTokens: 40 + 19, cacheCreation1hTokens: 10 + 5)
+        let opus = TranscriptPricing.cost(
+            model: "claude-opus-4-1", inputTokens: 7, outputTokens: 500 + 900, cacheReadTokens: 0,
+            cacheCreationTokens: 0, cacheCreation1hTokens: 0)
+        let metrics = try XCTUnwrap(try database.sessionMetricsFromTurns(sessionId: "s1", reads: harness.store))
+        XCTAssertEqual(metrics.totalInputTokens, 1000 + 7 + 11 + 5000)
+        XCTAssertEqual(metrics.totalOutputTokens, 2000 + 500 + 13 + 6000 + 900)
+        XCTAssertEqual(metrics.cacheReadTokens, 300 + 17 + 7000)
+        XCTAssertEqual(metrics.cacheCreationTokens, 40 + 19)
+        XCTAssertEqual(metrics.turnCount, 5)
+        XCTAssertEqual(metrics.totalCostUsd, sonnet + opus, accuracy: 1e-9)
+        XCTAssertEqual(metrics.firstTurnAt, "2026-06-01T12:00:00.000Z", "the first turn is the trimmed one")
+        XCTAssertEqual(metrics.lastTurnAt, "2026-06-21T12:01:00.000Z")
+        XCTAssertEqual(metrics.model, "claude-opus-4-1")
+
+        // A session that only has trimmed turns still has totals.
+        XCTAssertNotEqual(try totals("s2"), "none")
+    }
+
+    func testARedeliveredTrimmedTurnIsNeitherStoredNorFoldedAgain() throws {
+        try seedForTrim()
+        let cutoff = try epoch("2026-06-10T00:00:00Z")
+        _ = try harness.store.trim(olderThan: cutoff, deadline: farFuture)
+        let after = try totals("s1")
+        let folded = try trimmedRows()
+
+        // An old transcript imported again: the same turns arrive once more.
+        try seedForTrim()
+        XCTAssertEqual(try harness.store.read { conn in try Int.fetchOne(conn, sql: "SELECT COUNT(*) FROM turns") },
+                       1, "only the recent turn is stored; the trimmed ones are not stored again")
+        XCTAssertEqual(try totals("s1"), after)
+
+        // A turn that does get back in (a store filled before the keys were kept)
+        // is deleted by the next trim but never folded twice.
+        try harness.store.pool.write { conn in
+            try conn.execute(sql: "DELETE FROM trimmed_turn_keys WHERE dedup_key = 'a'")
+        }
+        try seedForTrim()
+        try harness.store.pool.write { conn in
+            try conn.execute(sql: "INSERT INTO trimmed_turn_keys(provider, dedup_key) VALUES (?, 'a')",
+                             arguments: [ClaudeProvider.name])
+        }
+        XCTAssertEqual(try harness.store.trim(olderThan: cutoff, deadline: farFuture).turns, 1)
+        XCTAssertEqual(try trimmedRows(), folded, "folding the same turn twice adds nothing")
+        XCTAssertEqual(try totals("s1"), after)
+    }
+
+    func testATurnsBatchThatFailsFoldsNothingAndTheRerunFoldsOnce() throws {
+        try seedForTrim()
+        let before = try totals("s1")
+        try harness.store.pool.write { conn in
+            try conn.execute(sql: """
+                CREATE TRIGGER refuse_turn_delete BEFORE DELETE ON turns BEGIN SELECT RAISE(ABORT, 'refused'); END
+                """)
+        }
+        let cutoff = try epoch("2026-06-10T00:00:00Z")
+        XCTAssertThrowsError(try harness.store.trim(olderThan: cutoff, deadline: farFuture)) { error in
+            XCTAssertEqual((error as? EventStoreTrimFailure)?.partial.turns, 0)
+        }
+        XCTAssertEqual(try trimmedRows(), [], "the fold rolled back with the delete")
+        XCTAssertEqual(try harness.store.read { conn in
+            try Int.fetchOne(conn, sql: "SELECT COUNT(*) FROM trimmed_turn_keys") }, 0)
+        XCTAssertEqual(try totals("s1"), before)
+
+        try harness.store.pool.write { conn in try conn.execute(sql: "DROP TRIGGER refuse_turn_delete") }
+        XCTAssertEqual(try harness.store.trim(olderThan: cutoff, deadline: farFuture).turns, 3)
+        XCTAssertEqual(try harness.store.trim(olderThan: cutoff, deadline: farFuture).turns, 0)
+        XCTAssertEqual(try totals("s1"), before, "counted exactly once")
+    }
+
+    func testRepricingCountsTrimmedTurns() throws {
+        try seedForTrim()
+        let full = try XCTUnwrap(try database.sessionMetricsFromTurns(sessionId: "s1", reads: harness.store))
+        _ = try database.createSessionStubIfMissing(
+            sessionId: "s1", cwd: "/tmp", model: "", startedAt: "2026-06-01T12:00:00Z",
+            lastActivityAt: "2026-06-01T12:00:00Z", accountEmail: "")
+        try database.upsertSessionMetrics(full, accountEmail: "")
+        _ = try harness.store.trim(olderThan: try epoch("2026-06-10T00:00:00Z"), deadline: farFuture)
+        try database.execute("UPDATE session_metrics SET total_cost_usd = 999 WHERE session_id = 's1'")
+
+        database.repriceSessionMetricsIfNeeded()
+
+        XCTAssertEqual(try XCTUnwrap(try database.metricsForSession(sessionId: "s1")).totalCostUsd,
+                       full.totalCostUsd, accuracy: 1e-9, "priced over the live and the trimmed turns")
+    }
+
     func testRepricingWithoutAStoreDoesNothingAndRecordsNothing() throws {
         let opened = try TestDaemonDatabase.makeSessionDatabase()
         defer { TestDaemonDatabase.remove(path: opened.path) }

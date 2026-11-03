@@ -543,6 +543,23 @@ extension DaemonDatabase {
         return rows.filter { kept.contains($0.key) }
     }
 
+    /// The sums of the Claude turns the storage trim deleted, one row per
+    /// (session, model), keyed by session id (`EventStore` `trimmed_turns`).
+    /// Empty without an attached store.
+    public func claudeTrimmedTurnTotals(deadline: Duration? = nil) throws -> [ClaudeTurnTotals] {
+        try withEventReads([], deadline: deadline) { conn in
+            try Row.fetchAll(conn, sql: """
+                SELECT session_id, model, turn_count, input_tokens, output_tokens,
+                       cache_read_tokens, cache_write_tokens, cache_write_1h_tokens
+                FROM trimmed_turns WHERE provider = ?
+                """, arguments: [ClaudeProvider.name]).map { row in
+                ClaudeTurnTotals(
+                    key: row[0], model: row[1], turnCount: row[2], inputTokens: row[3], outputTokens: row[4],
+                    cacheReadTokens: row[5], cacheCreationTokens: row[6], cacheCreation1hTokens: row[7])
+            }
+        }
+    }
+
     /// Every Claude turn's (session, time) in `[since, until)` (epoch seconds),
     /// ordered by session then time — what the active-hours walk needs. Untimed
     /// turns are left out. `sessionIds` and `deadline` as in `claudeTurnTotals`.

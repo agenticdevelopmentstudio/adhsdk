@@ -14,7 +14,8 @@ public struct TrimReport: Sendable, Codable, Equatable {
     public var cutoff: Double?
     /// Why part or all of the pass did nothing: "rollups" when a rollup
     /// watermark is missing, "events.db unavailable" when there is no event
-    /// store, "skipped: bulk load" while one runs. Not an error.
+    /// store, "skipped: bulk load" while one runs, or a `TrimHold`'s reason
+    /// ("billing") when it held the cutoff back. Not an error.
     public var waitingFor: String?
     public var events: Int
     public var messages: Int
@@ -56,6 +57,18 @@ public struct TrimReport: Sendable, Codable, Equatable {
     }
 }
 
+/// A last `yyyy-MM-dd` UTC day a trim may reach, besides the rollups', and why.
+public struct TrimHold: Sendable, Equatable {
+    public var day: String
+    /// What the report's `waitingFor` says when this hold lowers the cutoff.
+    public var reason: String
+
+    public init(day: String, reason: String) {
+        self.day = day
+        self.reason = reason
+    }
+}
+
 /// One storage trim pass over a daemon database and its optional event store.
 ///
 /// **What it deletes.** `events.db` events, messages and turns older than the
@@ -67,7 +80,9 @@ public struct TrimReport: Sendable, Codable, Equatable {
 /// **The cutoff** is a UTC midnight: the earlier of `now - historyDays`
 /// (at least 7) floored to midnight, and the day after `coveredThroughDay()`,
 /// the last day every rollup has frozen. With no covered day the pass deletes
-/// nothing and reports `waitingFor: "rollups"`.
+/// nothing and reports `waitingFor: "rollups"`. A `hold` (the daemon's billing,
+/// for one) can hold the cutoff back further; when it does, the pass still
+/// trims up to the held cutoff and reports the hold's reason in `waitingFor`.
 ///
 /// **Bounded.** Deletes are batches of 500, one transaction each. The pass stops
 /// at `deadline` with `finished = false`; a rerun continues from the same cutoff.
@@ -97,18 +112,23 @@ public final class TrimService: Sendable {
     public static let waitingForRollups = "rollups"
     public static let waitingForEventStore = "events.db unavailable"
     public static let waitingForBulkLoad = "skipped: bulk load"
+    /// The reason a billing hold reports: sessions billing has not derived yet.
+    public static let waitingForBilling = "billing"
 
     private let database: DaemonDatabase
     private let eventStore: EventStore?
     private let historyDays: Int
     private let coveredThroughDay: @Sendable () -> String?
     private let snapshotsReadThrough: (@Sendable () -> Int?)?
+    private let hold: (@Sendable () -> TrimHold?)?
     private let extraMainTrims: [@Sendable (_ cutoff: Double, _ deadline: Date) throws -> Int]
     private let now: @Sendable () -> Date
 
     /// - Parameters:
     ///   - coveredThroughDay: the last `yyyy-MM-dd` UTC day every rollup has
     ///     frozen (the earlier of the watermarks); nil while any is missing.
+    ///   - hold: a last day the trim may reach for another reason, and that
+    ///     reason; nil (or a nil hold) holds nothing back.
     ///   - snapshotsReadThrough: when given, the highest `rate_limit_snapshots.id`
     ///     the daemon's own readers have consumed; rows above it are never
     ///     deleted, and nil from it deletes no snapshot.
@@ -117,6 +137,7 @@ public final class TrimService: Sendable {
         database: DaemonDatabase, eventStore: EventStore?, historyDays: Int,
         coveredThroughDay: @escaping @Sendable () -> String?,
         snapshotsReadThrough: (@Sendable () -> Int?)? = nil,
+        hold: (@Sendable () -> TrimHold?)? = nil,
         extraMainTrims: [@Sendable (_ cutoff: Double, _ deadline: Date) throws -> Int] = [],
         now: @escaping @Sendable () -> Date = Date.init
     ) {
@@ -125,6 +146,7 @@ public final class TrimService: Sendable {
         self.historyDays = max(Self.minimumHistoryDays, historyDays)
         self.coveredThroughDay = coveredThroughDay
         self.snapshotsReadThrough = snapshotsReadThrough
+        self.hold = hold
         self.extraMainTrims = extraMainTrims
         self.now = now
     }
@@ -191,13 +213,22 @@ public final class TrimService: Sendable {
     public func run(deadline: Date) throws -> TrimReport {
         let started = now()
         var report = TrimReport(startedAt: started.timeIntervalSince1970, finishedAt: started.timeIntervalSince1970)
-        guard let cutoff = Self.cutoff(now: started, historyDays: historyDays, coveredThroughDay: coveredThroughDay())
-        else {
+        let covered = coveredThroughDay()
+        guard let unheld = Self.cutoff(now: started, historyDays: historyDays, coveredThroughDay: covered),
+              let covered else {
             report.waitingFor = Self.waitingForRollups
             report.finishedAt = now().timeIntervalSince1970
             logger.info("Trim deleted nothing: waiting for the rollups to cover a day")
             store(report)
             return report
+        }
+        var cutoff = unheld
+        if let held = hold?(), held.day < covered,
+           let heldCutoff = Self.cutoff(now: started, historyDays: historyDays, coveredThroughDay: held.day),
+           heldCutoff < unheld {
+            cutoff = heldCutoff
+            report.waitingFor = held.reason
+            logger.info("Trim held back to \(held.day, privacy: .public): \(held.reason, privacy: .public)")
         }
         report.cutoff = cutoff
         let bytesBefore = totalBytes()

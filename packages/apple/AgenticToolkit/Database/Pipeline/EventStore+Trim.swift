@@ -153,7 +153,9 @@ extension EventStore {
     /// (`status = 'ended'` or `ended_at IS NOT NULL`), not `active`, last observed
     /// before the cutoff (the later of `ended_at` and `as_of`, so a resumed session
     /// with a stale `ended_at` stays), and have no events, messages or turns left.
-    /// Never touches any other database.
+    /// Never touches any other database. Trimmed turns are folded into
+    /// `trimmed_turns` in the transaction that deletes them
+    /// (`foldAndDeleteTurns`), so a session's totals still count them.
     ///
     /// The first batch always runs, so every call makes progress; before each later
     /// one, a passed `deadline` stops the call with `finished = false`. A rerun with
@@ -173,14 +175,17 @@ extension EventStore {
         var ranBatch = false
 
         /// Runs `sql` (bound to `arguments` + the limit) until a batch deletes fewer
-        /// than `limit` rows; false when the deadline stopped it first.
+        /// than `limit` rows; false when the deadline stopped it first. With `batchWork`,
+        /// that runs instead of `sql` and returns the rows it deleted.
         func drain(_ sql: String, _ arguments: StatementArguments,
-                   into field: WritableKeyPath<EventStoreTrimResult, Int>) throws -> Bool {
+                   into field: WritableKeyPath<EventStoreTrimResult, Int>,
+                   batchWork: ((Database) throws -> Int)? = nil) throws -> Bool {
             while true {
                 if ranBatch && ContinuousClock.now >= end { return false }
                 let deleted: Int
                 do {
                     deleted = try pool.write(deadline: nil) { conn -> Int in
+                        if let batchWork { return try batchWork(conn) }
                         try conn.execute(sql: sql, arguments: arguments + [limit])
                         return conn.changesCount
                     }
@@ -211,9 +216,9 @@ extension EventStore {
                 """, [provider, cutoff], into: \.messages) else { return result }
         }
 
-        guard try drain("""
-            DELETE FROM turns WHERE id IN (SELECT id FROM turns WHERE time < ? ORDER BY time LIMIT ?)
-            """, [cutoff], into: \.turns) else { return result }
+        guard try drain("", [], into: \.turns, batchWork: { conn in
+            try Self.foldAndDeleteTurns(olderThan: cutoff, limit: limit, conn)
+        }) else { return result }
 
         guard try drain("""
             DELETE FROM sessions WHERE (provider, session_id) IN (
@@ -232,6 +237,54 @@ extension EventStore {
 
         result.finished = true
         return result
+    }
+
+    /// One batch of the turns stage, inside the caller's write transaction: picks the
+    /// oldest `limit` turns before `cutoff`, adds their sums to `trimmed_turns` (per
+    /// provider, session and model), records their keys in `trimmed_turn_keys`, then
+    /// deletes them. The fold and the delete commit together or not at all, so a
+    /// crash between them cannot count a turn twice or lose it; a turn whose key is
+    /// already recorded (stored again by a replay into this file) is deleted without
+    /// being added again. Returns the turns deleted.
+    static func foldAndDeleteTurns(olderThan cutoff: Double, limit: Int, _ conn: Database) throws -> Int {
+        try conn.execute(sql: "CREATE TEMP TABLE IF NOT EXISTS trim_turn_batch (id INTEGER PRIMARY KEY)")
+        try conn.execute(sql: "DELETE FROM temp.trim_turn_batch")
+        try conn.execute(sql: """
+            INSERT INTO temp.trim_turn_batch(id)
+            SELECT id FROM turns WHERE time < ? ORDER BY time, id LIMIT ?
+            """, arguments: [cutoff, limit])
+        try conn.execute(sql: """
+            INSERT INTO trimmed_turns(provider, session_id, model, turn_count, input_tokens, output_tokens,
+                                      cache_read_tokens, cache_write_tokens, cache_write_1h_tokens,
+                                      first_time, last_time)
+            SELECT t.provider, t.session_id, COALESCE(t.model, ''), COUNT(*),
+                   COALESCE(SUM(t.input_tokens), 0), COALESCE(SUM(t.output_tokens), 0),
+                   COALESCE(SUM(t.cache_read_tokens), 0), COALESCE(SUM(t.cache_write_tokens), 0),
+                   CAST(COALESCE(SUM(json_extract(t.attrs, '$.cache_creation_1h_tokens')), 0) AS INTEGER),
+                   MIN(CASE WHEN t.time > 0 THEN t.time END), MAX(CASE WHEN t.time > 0 THEN t.time END)
+            FROM turns t
+            WHERE t.id IN (SELECT id FROM temp.trim_turn_batch)
+              AND NOT EXISTS (SELECT 1 FROM trimmed_turn_keys k
+                              WHERE k.provider = t.provider AND k.dedup_key = t.dedup_key)
+            GROUP BY t.provider, t.session_id, COALESCE(t.model, '')
+            ON CONFLICT(provider, session_id, model) DO UPDATE SET
+                turn_count = turn_count + excluded.turn_count,
+                input_tokens = input_tokens + excluded.input_tokens,
+                output_tokens = output_tokens + excluded.output_tokens,
+                cache_read_tokens = cache_read_tokens + excluded.cache_read_tokens,
+                cache_write_tokens = cache_write_tokens + excluded.cache_write_tokens,
+                cache_write_1h_tokens = cache_write_1h_tokens + excluded.cache_write_1h_tokens,
+                first_time = COALESCE(MIN(first_time, excluded.first_time), first_time, excluded.first_time),
+                last_time = COALESCE(MAX(last_time, excluded.last_time), last_time, excluded.last_time)
+            """)
+        try conn.execute(sql: """
+            INSERT OR IGNORE INTO trimmed_turn_keys(provider, dedup_key)
+            SELECT provider, dedup_key FROM turns WHERE id IN (SELECT id FROM temp.trim_turn_batch)
+            """)
+        try conn.execute(sql: "DELETE FROM turns WHERE id IN (SELECT id FROM temp.trim_turn_batch)")
+        let deleted = conn.changesCount
+        try conn.execute(sql: "DELETE FROM temp.trim_turn_batch")
+        return deleted
     }
 
     /// The distinct providers in `messages`, by a skip-scan over `messages_time`
