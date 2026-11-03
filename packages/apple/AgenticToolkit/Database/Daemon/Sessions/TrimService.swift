@@ -393,4 +393,16 @@ extension TrimService: Loggable {
     public static nonisolated let logger = makeLogger()
 }
 
+extension TrimReportDTO {
+    /// The wire form of `report`.
+    public init(_ report: TrimReport) {
+        self.init(
+            startedAt: report.startedAt, finishedAt: report.finishedAt, cutoff: report.cutoff,
+            waitingFor: report.waitingFor, events: report.events, messages: report.messages, turns: report.turns,
+            sessions: report.sessions, rateLimitSnapshots: report.rateLimitSnapshots,
+            reclaimedBytes: report.reclaimedBytes, vacuum: report.vacuum, finished: report.finished,
+            error: report.error)
+    }
+}
+
 #endif
