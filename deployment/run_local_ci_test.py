@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-"""Self-test for run-ci's adh dist drift check. Needs git, not pnpm."""
+"""Self-test for run-local-ci's adh dist drift check. Needs git, not pnpm."""
 import subprocess
 import sys
 import tempfile
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from run_ci_lib import dist_drift, reached_patterns, steps_to_run  # noqa: E402
+from run_local_ci_lib import dist_drift, reached_patterns, steps_to_run  # noqa: E402
 
 DIST = "pkg/dist"
 

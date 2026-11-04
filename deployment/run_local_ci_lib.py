@@ -1,4 +1,4 @@
-"""Pure helpers for `deployment/run-ci`, split out so they can be tested without pnpm."""
+"""Pure helpers for `deployment/run-local-ci`, split out so they can be tested without pnpm."""
 import fnmatch
 import json
 import subprocess
