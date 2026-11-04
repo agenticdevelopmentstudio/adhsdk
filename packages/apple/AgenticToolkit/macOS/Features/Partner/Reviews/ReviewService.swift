@@ -108,20 +108,23 @@ public final class ReviewService {
             repoSetting: try store.reviewSetting(repoID: review.repoID, key: "fix_branch"),
             global: settings.get(UserSettings.partnerReviewsFixBranch),
             defaultValue: UserSettings.partnerReviewsFixBranch.defaultValue)
-        // A mistyped setting is the owner's to fix, not this review's failure: it stays queued until then.
-        guard try await git.isValidBranchName(baseFixBranch, in: URL(fileURLWithPath: review.repoPath)) else {
-            let reason = "the fix branch \"\(baseFixBranch)\" is not a valid branch name; correct it in the "
-                + "Coding Partner's Code Reviews settings"
-            raiseBlockedWorktree(review, reason: reason)
-            throw ReviewError.worktreeBlocked(review.repoName, reason)
-        }
         let prepared: Prepared
         do {
+            // A mistyped setting is the owner's to fix, not this review's failure: it stays queued until then.
+            // Inside the `do`, so git failing to run the check fails the review like any other git work.
+            guard try await git.isValidBranchName(baseFixBranch, in: URL(fileURLWithPath: review.repoPath)) else {
+                let reason = "the fix branch \"\(baseFixBranch)\" is not a valid branch name; correct it in the "
+                    + "Coding Partner's Code Reviews settings"
+                raiseBlockedWorktree(review, reason: reason)
+                throw ReviewError.worktreeBlocked(review.repoName, reason)
+            }
             review = try await retargetedIfLanded(review)
             switch try await prepare(review, baseFixBranch: baseFixBranch) {
             case .skip(let reason): return try skip(review, reason: reason, fixBranch: baseFixBranch)
             case .ready(let found): prepared = found
             }
+        } catch let refusal as ReviewError {
+            throw refusal
         } catch let failure as ReviewWorktree.Failure {
             let reason = failure.localizedDescription
             raiseBlockedWorktree(review, reason: reason)
