@@ -15706,7 +15706,7 @@
           "data": {
             "type": "object",
             "additionalProperties": true,
-            "description": "Row for upserts, minus server-internal sync columns and derived columns such as a memory's embedding; absent for deletes"
+            "description": "Row for upserts, minus server-internal sync columns and derived columns such as a memory's vector; absent for deletes"
           }
         }
       },
@@ -105588,6 +105588,10 @@
                       "isInfrastructure": {
                         "type": "boolean"
                       },
+                      "type": {
+                        "type": "string",
+                        "maxLength": 16
+                      },
                       "namespaceId": {
                         "anyOf": [
                           {
@@ -105636,6 +105640,7 @@
                       "isDeleted",
                       "isDefault",
                       "isInfrastructure",
+                      "type",
                       "namespaceId",
                       "parentId",
                       "archivedAt"
@@ -105843,6 +105848,10 @@
                     "isInfrastructure": {
                       "type": "boolean"
                     },
+                    "type": {
+                      "type": "string",
+                      "maxLength": 16
+                    },
                     "namespaceId": {
                       "anyOf": [
                         {
@@ -105891,6 +105900,7 @@
                     "isDeleted",
                     "isDefault",
                     "isInfrastructure",
+                    "type",
                     "namespaceId",
                     "parentId",
                     "archivedAt"
@@ -106016,6 +106026,10 @@
                     "isInfrastructure": {
                       "type": "boolean"
                     },
+                    "type": {
+                      "type": "string",
+                      "maxLength": 16
+                    },
                     "namespaceId": {
                       "anyOf": [
                         {
@@ -106064,6 +106078,7 @@
                     "isDeleted",
                     "isDefault",
                     "isInfrastructure",
+                    "type",
                     "namespaceId",
                     "parentId",
                     "archivedAt"
@@ -106273,6 +106288,10 @@
                     "isInfrastructure": {
                       "type": "boolean"
                     },
+                    "type": {
+                      "type": "string",
+                      "maxLength": 16
+                    },
                     "namespaceId": {
                       "anyOf": [
                         {
@@ -106321,6 +106340,7 @@
                     "isDeleted",
                     "isDefault",
                     "isInfrastructure",
+                    "type",
                     "namespaceId",
                     "parentId",
                     "archivedAt"
@@ -133727,32 +133747,6 @@
                           }
                         ]
                       },
-                      "embedding": {
-                        "anyOf": [
-                          {
-                            "minItems": 1536,
-                            "maxItems": 1536,
-                            "type": "array",
-                            "items": {
-                              "type": "number"
-                            }
-                          },
-                          {
-                            "type": "null"
-                          }
-                        ]
-                      },
-                      "embeddingModel": {
-                        "anyOf": [
-                          {
-                            "type": "string",
-                            "maxLength": 64
-                          },
-                          {
-                            "type": "null"
-                          }
-                        ]
-                      },
                       "semanticEmbedding": {
                         "anyOf": [
                           {
@@ -133841,8 +133835,6 @@
                       "validTo",
                       "recallCount",
                       "lastRecalledAt",
-                      "embedding",
-                      "embeddingModel",
                       "semanticEmbedding",
                       "semanticStamp",
                       "semanticSource",
@@ -134150,32 +134142,6 @@
                         }
                       ]
                     },
-                    "embedding": {
-                      "anyOf": [
-                        {
-                          "minItems": 1536,
-                          "maxItems": 1536,
-                          "type": "array",
-                          "items": {
-                            "type": "number"
-                          }
-                        },
-                        {
-                          "type": "null"
-                        }
-                      ]
-                    },
-                    "embeddingModel": {
-                      "anyOf": [
-                        {
-                          "type": "string",
-                          "maxLength": 64
-                        },
-                        {
-                          "type": "null"
-                        }
-                      ]
-                    },
                     "semanticEmbedding": {
                       "anyOf": [
                         {
@@ -134264,8 +134230,6 @@
                     "validTo",
                     "recallCount",
                     "lastRecalledAt",
-                    "embedding",
-                    "embeddingModel",
                     "semanticEmbedding",
                     "semanticStamp",
                     "semanticSource",
@@ -134474,32 +134438,6 @@
                         }
                       ]
                     },
-                    "embedding": {
-                      "anyOf": [
-                        {
-                          "minItems": 1536,
-                          "maxItems": 1536,
-                          "type": "array",
-                          "items": {
-                            "type": "number"
-                          }
-                        },
-                        {
-                          "type": "null"
-                        }
-                      ]
-                    },
-                    "embeddingModel": {
-                      "anyOf": [
-                        {
-                          "type": "string",
-                          "maxLength": 64
-                        },
-                        {
-                          "type": "null"
-                        }
-                      ]
-                    },
                     "semanticEmbedding": {
                       "anyOf": [
                         {
@@ -134588,8 +134526,6 @@
                     "validTo",
                     "recallCount",
                     "lastRecalledAt",
-                    "embedding",
-                    "embeddingModel",
                     "semanticEmbedding",
                     "semanticStamp",
                     "semanticSource",
@@ -134899,32 +134835,6 @@
                         }
                       ]
                     },
-                    "embedding": {
-                      "anyOf": [
-                        {
-                          "minItems": 1536,
-                          "maxItems": 1536,
-                          "type": "array",
-                          "items": {
-                            "type": "number"
-                          }
-                        },
-                        {
-                          "type": "null"
-                        }
-                      ]
-                    },
-                    "embeddingModel": {
-                      "anyOf": [
-                        {
-                          "type": "string",
-                          "maxLength": 64
-                        },
-                        {
-                          "type": "null"
-                        }
-                      ]
-                    },
                     "semanticEmbedding": {
                       "anyOf": [
                         {
@@ -135013,8 +134923,6 @@
                     "validTo",
                     "recallCount",
                     "lastRecalledAt",
-                    "embedding",
-                    "embeddingModel",
                     "semanticEmbedding",
                     "semanticStamp",
                     "semanticSource",

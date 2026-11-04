@@ -62349,6 +62349,7 @@ export interface paths {
                             isDeleted: boolean;
                             isDefault: boolean;
                             isInfrastructure: boolean;
+                            type: string;
                             namespaceId: string | null;
                             parentId: string | null;
                             archivedAt: string | null;
@@ -62417,6 +62418,7 @@ export interface paths {
                             isDeleted: boolean;
                             isDefault: boolean;
                             isInfrastructure: boolean;
+                            type: string;
                             namespaceId: string | null;
                             parentId: string | null;
                             archivedAt: string | null;
@@ -62491,6 +62493,7 @@ export interface paths {
                             isDeleted: boolean;
                             isDefault: boolean;
                             isInfrastructure: boolean;
+                            type: string;
                             namespaceId: string | null;
                             parentId: string | null;
                             archivedAt: string | null;
@@ -62568,6 +62571,7 @@ export interface paths {
                             isDeleted: boolean;
                             isDefault: boolean;
                             isInfrastructure: boolean;
+                            type: string;
                             namespaceId: string | null;
                             parentId: string | null;
                             archivedAt: string | null;
@@ -71693,8 +71697,6 @@ export interface paths {
                             validTo: string | null;
                             recallCount: number;
                             lastRecalledAt: string | null;
-                            embedding: number[] | null;
-                            embeddingModel: string | null;
                             semanticEmbedding: number[] | null;
                             semanticStamp: string | null;
                             semanticSource: string | null;
@@ -71781,8 +71783,6 @@ export interface paths {
                             validTo: string | null;
                             recallCount: number;
                             lastRecalledAt: string | null;
-                            embedding: number[] | null;
-                            embeddingModel: string | null;
                             semanticEmbedding: number[] | null;
                             semanticStamp: string | null;
                             semanticSource: string | null;
@@ -71872,8 +71872,6 @@ export interface paths {
                             validTo: string | null;
                             recallCount: number;
                             lastRecalledAt: string | null;
-                            embedding: number[] | null;
-                            embeddingModel: string | null;
                             semanticEmbedding: number[] | null;
                             semanticStamp: string | null;
                             semanticSource: string | null;
@@ -71970,8 +71968,6 @@ export interface paths {
                             validTo: string | null;
                             recallCount: number;
                             lastRecalledAt: string | null;
-                            embedding: number[] | null;
-                            embeddingModel: string | null;
                             semanticEmbedding: number[] | null;
                             semanticStamp: string | null;
                             semanticSource: string | null;
@@ -80286,7 +80282,7 @@ export interface components {
             op: "upsert" | "delete";
             /** @description Server-assigned monotonic version (bigint as string) */
             syncVersion: string;
-            /** @description Row for upserts, minus server-internal sync columns and derived columns such as a memory's embedding; absent for deletes */
+            /** @description Row for upserts, minus server-internal sync columns and derived columns such as a memory's vector; absent for deletes */
             data?: {
                 [key: string]: unknown;
             };
