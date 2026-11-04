@@ -98,7 +98,7 @@ function KeptPane({ show, children }: { show: boolean; children: ReactNode }): R
 
 /**
  * The board: ONE HierarchicalTopicDetail at the root of the site whose first topic list
- * is Overview / Details / Fleet / Analytics / Errors / …divider… / Settings.
+ * is Overview / Analytics / Errors / Details / Fleet / …divider… / Settings.
  *
  * Settings opens the hierarchy's SECOND level — its sections, alphabetically: API tokens,
  * Appearance, Fleet peers, Groups, Platforms, Sites, Users. Appearance is a leaf (the

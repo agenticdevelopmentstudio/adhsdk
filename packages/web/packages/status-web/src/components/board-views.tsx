@@ -37,10 +37,10 @@ const ICON = 16;
 // every role; the role gate lives one level down, on the Settings sections.
 export const BOARD_VIEWS: readonly BoardView[] = [
   { id: "overview", label: "Overview", icon: <Gauge size={ICON} aria-hidden /> },
-  { id: "details", label: "Details", icon: <Table2 size={ICON} aria-hidden /> },
-  { id: "fleet", label: "Fleet", icon: <Server size={ICON} aria-hidden /> },
   { id: "analytics", label: "Analytics", icon: <BarChart3 size={ICON} aria-hidden /> },
-  { id: "errors", label: "Errors", icon: <Bug size={ICON} aria-hidden />, dividerAfter: true },
+  { id: "errors", label: "Errors", icon: <Bug size={ICON} aria-hidden /> },
+  { id: "details", label: "Details", icon: <Table2 size={ICON} aria-hidden /> },
+  { id: "fleet", label: "Fleet", icon: <Server size={ICON} aria-hidden />, dividerAfter: true },
   { id: "settings", label: "Settings", icon: <Settings size={ICON} aria-hidden /> },
 ];
 
