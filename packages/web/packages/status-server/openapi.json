@@ -4699,20 +4699,6 @@
               ],
               "default": "7d"
             }
-          },
-          {
-            "name": "env",
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "enum": [
-                "production",
-                "staging",
-                "testing",
-                "all"
-              ],
-              "default": "production"
-            }
           }
         ],
         "responses": {
@@ -4726,7 +4712,6 @@
                     "generatedAt",
                     "refreshing",
                     "range",
-                    "env",
                     "configured",
                     "sections"
                   ],
@@ -4738,9 +4723,6 @@
                       "type": "boolean"
                     },
                     "range": {
-                      "type": "string"
-                    },
-                    "env": {
                       "type": "string"
                     },
                     "configured": {
@@ -5125,6 +5107,7 @@
                                     "projectsTotal",
                                     "projectsEnabled",
                                     "failed",
+                                    "roster",
                                     "totals",
                                     "pageviews",
                                     "visitors",
@@ -5145,6 +5128,45 @@
                                     },
                                     "failed": {
                                       "type": "number"
+                                    },
+                                    "roster": {
+                                      "type": "array",
+                                      "items": {
+                                        "type": "object",
+                                        "required": [
+                                          "project",
+                                          "domain",
+                                          "analyticsOn",
+                                          "pageviews",
+                                          "visitors"
+                                        ],
+                                        "properties": {
+                                          "project": {
+                                            "type": "string"
+                                          },
+                                          "domain": {
+                                            "type": [
+                                              "string",
+                                              "null"
+                                            ]
+                                          },
+                                          "analyticsOn": {
+                                            "type": "boolean"
+                                          },
+                                          "pageviews": {
+                                            "type": [
+                                              "number",
+                                              "null"
+                                            ]
+                                          },
+                                          "visitors": {
+                                            "type": [
+                                              "number",
+                                              "null"
+                                            ]
+                                          }
+                                        }
+                                      }
                                     },
                                     "totals": {
                                       "type": "object",

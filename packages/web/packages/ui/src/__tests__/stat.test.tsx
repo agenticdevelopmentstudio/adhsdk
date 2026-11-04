@@ -212,3 +212,20 @@ describe('StatCard', () => {
     expect(screen.queryByRole('link')).toBeNull()
   })
 })
+
+describe('left-aligned stats', () => {
+  it('Stat stays right-aligned by default and takes the left edge on request', () => {
+    const { container, rerender } = render(<Stat label="a" value="1" />)
+    expect(container.firstElementChild).toHaveClass('items-end')
+    rerender(<Stat label="a" value="1" align="start" />)
+    expect(container.firstElementChild).toHaveClass('items-start')
+  })
+
+  it('StatCard keeps rows by default and lays a strip of left-aligned stats on request', () => {
+    const stats = [{ label: 'Pageviews', value: '130' }]
+    const { container, rerender } = render(<StatCard title="Traffic" stats={stats} />)
+    expect(container.querySelector('.items-start')).toBeNull()
+    rerender(<StatCard title="Traffic" stats={stats} statLayout="strip" />)
+    expect(container.querySelector('.items-start')).toHaveTextContent('130')
+  })
+})

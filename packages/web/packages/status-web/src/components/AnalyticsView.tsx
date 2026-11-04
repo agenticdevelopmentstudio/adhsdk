@@ -1,50 +1,44 @@
 "use client";
 import { useMemo, useState, type ReactElement } from "react";
-import { X } from "lucide-react";
+import { TrendingUp, X } from "lucide-react";
 import { BarList } from "@agenticdevelopertoolkit/ui/blocks/bar-list";
-import { formatCount, TrendChart, type TrendSeries } from "@agenticdevelopertoolkit/ui/blocks/trend-chart";
-import { DataTable, type DataTableColumn } from "@agenticdevelopertoolkit/ui/components/data-table";
-import { StatusDot } from "@agenticdevelopertoolkit/ui/components/status-dot";
+import { StatCard } from "@agenticdevelopertoolkit/ui/blocks/stat-card";
+import { formatCount } from "@agenticdevelopertoolkit/ui/blocks/trend-chart";
 import { ToggleGroup, ToggleGroupItem } from "@agenticdevelopertoolkit/ui/components/toggle-group";
 import { useAnalyticsDashboard } from "../hooks/use-dashboards";
 import {
-  bucketDetail,
-  bucketLabel,
   dimensionTotals,
-  formatVital,
   joinSites,
-  pageviewSeries,
   pathTotals,
   siteKey,
   vercelTotals,
-  vitalRating,
   type Dimension,
   type JoinedSite,
-  type Vital,
   type VercelBreakdown,
-  type VitalRating,
 } from "../lib/analytics-model";
 import { ANALYTICS_SOURCE_COLORS } from "../lib/colors";
 import {
-  ANALYTICS_ENVIRONMENTS,
   ANALYTICS_RANGES,
-  type AnalyticsEnvironment,
   type AnalyticsRange,
   type AnalyticsSectionData,
   type DashboardSections,
-  type Marginal,
-  type VitalsRow,
 } from "../telemetry/dashboard-types";
-import { DashboardPanel, FigureTile, SiteFailureRate } from "./DashboardParts";
-import { ResponseChart } from "./ResponseChart";
+import {
+  AnalyticsTopicBody,
+  countOrDash,
+  PAGEVIEWS_NOTE,
+  PageviewsChart,
+  projectsNote,
+  SitesTable,
+  toBars,
+  VITALS_NOTE,
+  VitalsTable,
+} from "./AnalyticsTopics";
+import type { AnalyticsTopic } from "./board-views";
+import { DashboardPanel, eitherSection, SeeAll } from "./DashboardParts";
+import { useStatusHost } from "./StatusHost";
 
 const RANGE_LABEL: Record<AnalyticsRange, string> = { "24h": "24 hours", "7d": "7 days", "30d": "30 days" };
-const ENV_LABEL: Record<AnalyticsEnvironment, string> = {
-  production: "Production",
-  staging: "Staging",
-  testing: "Testing",
-  all: "All",
-};
 
 const EMPTY_SECTIONS: DashboardSections<AnalyticsSectionData> = {
   traffic: { data: null, error: null, updatedAt: null },
@@ -55,27 +49,19 @@ const EMPTY_SECTIONS: DashboardSections<AnalyticsSectionData> = {
   vercel: { data: null, error: null, updatedAt: null },
 };
 
-const POSTHOG_BREAKDOWNS: { dimension: Dimension; title: string }[] = [
-  { dimension: "country", title: "Countries" },
-  { dimension: "referrer", title: "Referrers" },
-  { dimension: "device", title: "Devices" },
-  { dimension: "browser", title: "Browsers" },
+const POSTHOG_BREAKDOWNS: { dimension: Dimension; title: string; topic: AnalyticsTopic }[] = [
+  { dimension: "country", title: "Countries", topic: "countries" },
+  { dimension: "referrer", title: "Referrers", topic: "referrers" },
+  { dimension: "device", title: "Devices", topic: "devices" },
+  { dimension: "browser", title: "Browsers", topic: "browsers" },
 ];
 
-const VERCEL_BREAKDOWNS: { breakdown: VercelBreakdown; title: string }[] = [
-  { breakdown: "countries", title: "Countries" },
-  { breakdown: "referrers", title: "Referrers" },
-  { breakdown: "devices", title: "Devices" },
-  { breakdown: "paths", title: "Pages" },
+const VERCEL_BREAKDOWNS: { breakdown: VercelBreakdown; title: string; topic: AnalyticsTopic }[] = [
+  { breakdown: "countries", title: "Countries", topic: "countries" },
+  { breakdown: "referrers", title: "Referrers", topic: "referrers" },
+  { breakdown: "devices", title: "Devices", topic: "devices" },
+  { breakdown: "paths", title: "Pages", topic: "pages" },
 ];
-
-function toBars(marginals: readonly Marginal[]): { name: string; value: number }[] {
-  return marginals.map((m) => ({ name: m.name, value: m.pageviews }));
-}
-
-function count(value: number | null | undefined): string {
-  return value === null || value === undefined ? "—" : formatCount(value);
-}
 
 type SiteSortKey = "site" | "phViews" | "phSessions" | "vcViews" | "vcVisitors" | "errors" | "failures" | "p95";
 
@@ -110,96 +96,28 @@ function sortSites(rows: readonly JoinedSite[], key: SiteSortKey, dir: "asc" | "
   });
 }
 
-const SITE_COLUMNS: DataTableColumn<JoinedSite>[] = [
-  {
-    key: "site",
-    header: "Site",
-    sortable: true,
-    width: "minmax(16rem, 1fr)",
-    render: (row) => <span title={row.key}>{row.key}</span>,
-  },
-  {
-    key: "trend",
-    header: "Trend",
-    width: "6.5rem",
-    resizable: false,
-    render: (row) => (
-      <ResponseChart
-        points={row.posthog?.series ?? row.vercel?.series ?? []}
-        color={row.posthog ? ANALYTICS_SOURCE_COLORS.posthog : ANALYTICS_SOURCE_COLORS.vercel}
-        height={20}
-      />
-    ),
-  },
-  { key: "phViews", header: "PostHog views", sortable: true, align: "end", render: (row) => count(row.posthog?.pageviews) },
-  { key: "phSessions", header: "Sessions", sortable: true, align: "end", render: (row) => count(row.posthog?.sessions) },
-  { key: "vcViews", header: "Vercel views", sortable: true, align: "end", render: (row) => count(row.vercel?.pageviews) },
-  { key: "vcVisitors", header: "Visitors", sortable: true, align: "end", render: (row) => count(row.vercel?.visitors) },
-  { key: "errors", header: "Errors", sortable: true, align: "end", render: (row) => count(row.health?.errors) },
-  {
-    key: "failures",
-    header: "Failed requests",
-    sortable: true,
-    align: "end",
-    render: (row) =>
-      row.health ? <SiteFailureRate failures={row.health.failures} requests={row.health.requests} /> : "—",
-  },
-  {
-    key: "p95",
-    header: "p95",
-    sortable: true,
-    align: "end",
-    render: (row) => (row.health?.p95Ms === null || !row.health ? "—" : `${Math.round(row.health.p95Ms)}ms`),
-  },
-];
-
-const RATING_TONE: Record<VitalRating, "success" | "accent" | "error"> = {
-  good: "success",
-  fair: "accent",
-  poor: "error",
-};
-
-function VitalCell({ vital, value }: { vital: Vital; value: number | null }): ReactElement {
-  if (value === null) return <>—</>;
-  const rating = vitalRating(vital, value);
-  return (
-    <span className="inline-flex items-center justify-end gap-1.5" title={`${vital.toUpperCase()}: ${rating}`}>
-      <StatusDot tone={RATING_TONE[rating]} size={7} />
-      {formatVital(vital, value)}
-      <span className="text-apt-text-dim">{rating}</span>
-    </span>
-  );
-}
-
-const VITALS_COLUMNS: DataTableColumn<VitalsRow>[] = [
-  { key: "host", header: "Site", width: "minmax(16rem, 1fr)", render: (row) => siteKey(row.host) },
-  { key: "samples", header: "Samples", align: "end", render: (row) => formatCount(row.samples) },
-  { key: "lcp", header: "LCP", align: "end", render: (row) => <VitalCell vital="lcp" value={row.lcp} /> },
-  { key: "inp", header: "INP", align: "end", render: (row) => <VitalCell vital="inp" value={row.inp} /> },
-  { key: "cls", header: "CLS", align: "end", render: (row) => <VitalCell vital="cls" value={row.cls} /> },
-  { key: "fcp", header: "FCP", align: "end", render: (row) => <VitalCell vital="fcp" value={row.fcp} /> },
-];
-
 /**
  * The Analytics topic: traffic per site and in aggregate, from PostHog and from Vercel Web
  * Analytics. The two stay side by side and are never added together. They overlap on the sites
- * reporting to both and count differently, so a sum would describe nothing.
+ * reporting to both and count differently, so a sum would describe nothing. Only production
+ * sites report analytics, so that is all this page reads.
  *
- * Picking a site narrows everything on the page without another request.
+ * Picking a site narrows everything without another request. Overview holds every panel, each with
+ * a way to its own sub-topic, where nothing is held back and every site gets its own card. This
+ * stays mounted across sub-topics, so the range and the site carry from one to the next.
  */
-export function AnalyticsView(): ReactElement {
+export function AnalyticsView({ topic }: { topic: AnalyticsTopic }): ReactElement {
   const [range, setRange] = useState<AnalyticsRange>("7d");
-  const [env, setEnv] = useState<AnalyticsEnvironment>("production");
   const [site, setSite] = useState<string | null>(null);
   const [sort, setSort] = useState<{ key: string; dir: "asc" | "desc" }>({ key: "phViews", dir: "desc" });
 
-  const query = useAnalyticsDashboard(range, env);
+  const { posthogUrl } = useStatusHost();
+  const query = useAnalyticsDashboard(range);
   const body = query.data;
   const sections = body?.sections ?? EMPTY_SECTIONS;
   const refreshing = body ? body.refreshing : query.isLoading;
   const posthogOn = body?.configured.posthog ?? true;
   const vercelOn = body?.configured.vercel ?? true;
-  const vercelNote = env === "production" ? null : "Vercel Web Analytics only reports production.";
 
   const traffic = sections.traffic.data;
   const vercel = sections.vercel.data;
@@ -208,11 +126,6 @@ export function AnalyticsView(): ReactElement {
   const rows = useMemo(() => joinSites(traffic, vercel, health), [traffic, vercel, health]);
   const sortedRows = useMemo(() => sortSites(rows, sort.key as SiteSortKey, sort.dir), [rows, sort]);
   const chosen = site === null ? null : (rows.find((row) => row.key === site) ?? null);
-
-  const series = useMemo(() => pageviewSeries(traffic, vercel, site), [traffic, vercel, site]);
-  const chartSeries: TrendSeries[] = [];
-  if (series.posthog) chartSeries.push({ name: "PostHog", color: ANALYTICS_SOURCE_COLORS.posthog, values: series.posthog });
-  if (series.vercel) chartSeries.push({ name: "Vercel", color: ANALYTICS_SOURCE_COLORS.vercel, values: series.vercel });
 
   const figures =
     site === null
@@ -229,11 +142,9 @@ export function AnalyticsView(): ReactElement {
           vercelVisitors: chosen?.vercel?.visitors ?? null,
         };
 
-  const vitalsRows = (sections.vitals.data ?? []).filter((row) => site === null || siteKey(row.host) === site);
-
   return (
     <div className="min-h-0 flex-1 overflow-y-auto">
-      <div className="mx-auto flex w-full max-w-[1400px] flex-col gap-4 p-4">
+      <div className="flex w-full flex-col gap-4 p-4">
         <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
           <ToggleGroup
             aria-label="Time range"
@@ -249,20 +160,6 @@ export function AnalyticsView(): ReactElement {
               </ToggleGroupItem>
             ))}
           </ToggleGroup>
-          <ToggleGroup
-            aria-label="Environment"
-            value={[env]}
-            onValueChange={(next: unknown[]) => {
-              const value = next[0] as AnalyticsEnvironment | undefined;
-              if (value) setEnv(value);
-            }}
-          >
-            {ANALYTICS_ENVIRONMENTS.map((value) => (
-              <ToggleGroupItem key={value} value={value}>
-                {ENV_LABEL[value]}
-              </ToggleGroupItem>
-            ))}
-          </ToggleGroup>
           {site !== null && (
             <button
               type="button"
@@ -275,7 +172,7 @@ export function AnalyticsView(): ReactElement {
             </button>
           )}
           {(refreshing || query.isPlaceholderData) && (
-            <span role="status" className="ml-auto font-mono text-[11px] text-apt-text-dim">
+            <span role="status" className="font-mono text-[11px] text-apt-text-dim">
               Refreshing…
             </span>
           )}
@@ -287,181 +184,185 @@ export function AnalyticsView(): ReactElement {
           </p>
         )}
 
-        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-          <FigureTile label="Pageviews" source="PostHog" value={figures.posthogViews === null ? null : count(figures.posthogViews)} />
-          <FigureTile label="Sessions" source="PostHog" value={figures.posthogSessions === null ? null : count(figures.posthogSessions)} hint="About one per page load" />
-          <FigureTile label="Pageviews" source="Vercel" value={figures.vercelViews === null ? null : count(figures.vercelViews)} />
-          <FigureTile label="Visitors" source="Vercel" value={figures.vercelVisitors === null ? null : count(figures.vercelVisitors)} />
-        </div>
-
-        <DashboardPanel
-          title={site === null ? "Pageviews, all sites" : `Pageviews, ${site}`}
-          source="PostHog and Vercel"
-          section={{
-            data: traffic || vercel ? true : null,
-            error: sections.traffic.error ?? sections.vercel.error,
-            updatedAt: sections.traffic.updatedAt ?? sections.vercel.updatedAt,
-          }}
-          configured={posthogOn || vercelOn}
-          refreshing={refreshing}
-          skeletonHeight={240}
-          note="Two separate measurements, compared rather than added. Sites reporting to both appear in both lines."
-        >
-          {() => (
-            <TrendChart
-              ariaLabel={site === null ? "Pageviews across all sites over time, by source" : `Pageviews for ${site} over time, by source`}
-              labels={series.labels}
-              series={chartSeries}
-              height={240}
-              formatLabel={(label) => bucketLabel(label, range)}
-              formatDetail={(label) => bucketDetail(label, range)}
-            />
-          )}
-        </DashboardPanel>
-
-        <DashboardPanel
-          title="Sites"
-          source="PostHog and Vercel"
-          section={{
-            data: traffic || vercel ? true : null,
-            error: sections.traffic.error ?? sections.vercel.error,
-            updatedAt: sections.traffic.updatedAt ?? sections.vercel.updatedAt,
-          }}
-          configured={posthogOn || vercelOn}
-          refreshing={refreshing}
-          note="Select a site to narrow the whole page to it. A dash means that source has not seen the site. Errors, failed requests and p95 come from PostHog."
-        >
-          {() => (
-            <div className="-mx-1 max-h-[420px] overflow-auto">
-              <DataTable
-                ariaLabel="Traffic per site"
-                columns={SITE_COLUMNS}
-                rows={sortedRows}
-                getRowId={(row) => row.key}
-                selectedIds={site === null ? new Set<string>() : new Set([site])}
-                onSelectionChange={(ids) => {
-                  const next = [...ids].find((id) => id !== site);
-                  setSite(next ?? (site !== null && ids.has(site) ? site : null));
-                }}
-                sort={sort}
-                onSortChange={setSort}
-                autoSizeColumns
-                emptyLabel="No site reported traffic in this range."
-                describeRow={(row) => row.key}
+        {topic !== "overview" ? (
+          <AnalyticsTopicBody
+            topic={topic}
+            range={range}
+            site={site}
+            onSite={setSite}
+            sections={sections}
+            rows={rows}
+            sortedRows={sortedRows}
+            sort={sort}
+            onSort={setSort}
+            posthogOn={posthogOn}
+            vercelOn={vercelOn}
+            refreshing={refreshing}
+            posthogUrl={posthogUrl}
+          />
+        ) : (
+          <>
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <StatCard
+                title="PostHog"
+                className="min-w-0"
+                icon={<TrendingUp size={15} className="text-apt-blue" />}
+                link={posthogUrl ? { href: posthogUrl, label: "PostHog" } : undefined}
+                statLayout="strip"
+                stats={[
+                  { label: "Pageviews", value: countOrDash(figures.posthogViews) },
+                  { label: "Sessions", value: countOrDash(figures.posthogSessions) },
+                ]}
+                footnote="A session is about one page load"
+              />
+              <StatCard
+                title="Vercel"
+                className="min-w-0"
+                icon={<TrendingUp size={15} className="text-apt-orange" />}
+                statLayout="strip"
+                stats={[
+                  { label: "Pageviews", value: countOrDash(figures.vercelViews) },
+                  { label: "Visitors", value: countOrDash(figures.vercelVisitors) },
+                ]}
+                footnote="Production Web Analytics"
               />
             </div>
-          )}
-        </DashboardPanel>
 
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-          <DashboardPanel
-            title="Top pages"
-            source="PostHog"
-            section={sections.paths}
-            configured={posthogOn}
-            refreshing={refreshing}
-          >
-            {(paths) => (
-              <BarList
-                ariaLabel="Top pages by pageviews, from PostHog"
-                items={toBars(pathTotals(paths, site))}
-                color={ANALYTICS_SOURCE_COLORS.posthog}
-                emptyLabel="No pageviews in this range."
-              />
-            )}
-          </DashboardPanel>
-          {POSTHOG_BREAKDOWNS.map(({ dimension, title }) => (
             <DashboardPanel
-              key={dimension}
-              title={title}
+              title={site === null ? "Pageviews, all sites" : `Pageviews, ${site}`}
+              source="PostHog and Vercel"
+              section={eitherSection(sections.traffic, sections.vercel)}
+              configured={posthogOn || vercelOn}
+              refreshing={refreshing}
+              skeletonHeight={240}
+              actions={<SeeAll href="/analytics/pageviews" what="pageviews" />}
+              note={PAGEVIEWS_NOTE}
+            >
+              {() => <PageviewsChart traffic={traffic} vercel={vercel} site={site} range={range} height={240} />}
+            </DashboardPanel>
+
+            <DashboardPanel
+              title="Sites"
+              source="PostHog and Vercel"
+              section={eitherSection(sections.traffic, sections.vercel)}
+              configured={posthogOn || vercelOn}
+              refreshing={refreshing}
+              actions={<SeeAll href="/analytics/sites" what="sites" />}
+              note="Select a site to narrow every topic to it. A dash means that source has not seen the site. Errors, failed requests and p95 come from PostHog."
+            >
+              {() => (
+                <div className="-mx-1 max-h-[420px] overflow-auto">
+                  <SitesTable rows={sortedRows} site={site} onSite={setSite} sort={sort} onSort={setSort} />
+                </div>
+              )}
+            </DashboardPanel>
+
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+              <DashboardPanel
+                title="Top pages"
+                source="PostHog"
+                sourceHref={posthogUrl}
+                section={sections.paths}
+                configured={posthogOn}
+                refreshing={refreshing}
+                actions={<SeeAll href="/analytics/pages" what="pages" />}
+              >
+                {(paths) => (
+                  <BarList
+                    ariaLabel="Top pages by pageviews, from PostHog"
+                    items={toBars(pathTotals(paths, site))}
+                    color={ANALYTICS_SOURCE_COLORS.posthog}
+                    emptyLabel="No pageviews in this range."
+                  />
+                )}
+              </DashboardPanel>
+              {POSTHOG_BREAKDOWNS.map(({ dimension, title, topic: target }) => (
+                <DashboardPanel
+                  key={dimension}
+                  title={title}
+                  source="PostHog"
+                  sourceHref={posthogUrl}
+                  section={sections.dimensions}
+                  configured={posthogOn}
+                  refreshing={refreshing}
+                  actions={<SeeAll href={`/analytics/${target}`} what={`${title.toLowerCase()} from PostHog`} />}
+                  note={sections.dimensions.data?.truncated ? "The rarest combinations were cut off, so small rows may be short." : undefined}
+                >
+                  {(dimensions) => (
+                    <BarList
+                      ariaLabel={`${title} by pageviews, from PostHog`}
+                      items={toBars(dimensionTotals(dimensions.rows, dimension, site))}
+                      color={ANALYTICS_SOURCE_COLORS.posthog}
+                      emptyLabel="No pageviews in this range."
+                    />
+                  )}
+                </DashboardPanel>
+              ))}
+              <DashboardPanel
+                title="Projects"
+                source="Vercel"
+                section={sections.vercel}
+                configured={vercelOn}
+                refreshing={refreshing}
+                actions={<SeeAll href="/analytics/projects" what="projects" />}
+                note={projectsNote(vercel)}
+              >
+                {(data) => (
+                  <BarList
+                    ariaLabel="Vercel projects by pageviews"
+                    items={data.projects
+                      .filter((p) => p.pageviews > 0)
+                      .map((p) => ({ name: p.domain ?? p.project, value: p.pageviews, detail: `${formatCount(p.pageviews)} · ${formatCount(p.visitors)} visitors` }))}
+                    color={ANALYTICS_SOURCE_COLORS.vercel}
+                    selected={site}
+                    onSelect={(name) => setSite(site === siteKey(name) ? null : siteKey(name))}
+                    emptyLabel="No pageviews in this range."
+                  />
+                )}
+              </DashboardPanel>
+              {VERCEL_BREAKDOWNS.map(({ breakdown, title, topic: target }) => (
+                <DashboardPanel
+                  key={breakdown}
+                  title={title}
+                  source="Vercel"
+                  section={sections.vercel}
+                  configured={vercelOn}
+                  refreshing={refreshing}
+                  actions={<SeeAll href={`/analytics/${target}`} what={`${title.toLowerCase()} from Vercel`} />}
+                >
+                  {(data) => (
+                    <BarList
+                      ariaLabel={`${title} by pageviews, from Vercel`}
+                      items={toBars(vercelTotals(data.projects, breakdown, site))}
+                      color={ANALYTICS_SOURCE_COLORS.vercel}
+                      emptyLabel="No pageviews in this range."
+                    />
+                  )}
+                </DashboardPanel>
+              ))}
+            </div>
+
+            <DashboardPanel
+              title="Web vitals"
               source="PostHog"
-              section={sections.dimensions}
+              sourceHref={posthogUrl}
+              section={sections.vitals}
               configured={posthogOn}
               refreshing={refreshing}
-              note={sections.dimensions.data?.truncated ? "The rarest combinations were cut off, so small rows may be short." : undefined}
-            >
-              {(dimensions) => (
-                <BarList
-                  ariaLabel={`${title} by pageviews, from PostHog`}
-                  items={toBars(dimensionTotals(dimensions.rows, dimension, site))}
-                  color={ANALYTICS_SOURCE_COLORS.posthog}
-                  emptyLabel="No pageviews in this range."
-                />
-              )}
-            </DashboardPanel>
-          ))}
-          <DashboardPanel
-            title="Projects"
-            source="Vercel"
-            section={sections.vercel}
-            configured={vercelOn}
-            refreshing={refreshing}
-            notApplicable={vercelNote}
-            note={
-              vercel
-                ? `${vercel.projectsEnabled} of ${vercel.projectsTotal} projects have Web Analytics on.${vercel.failed > 0 ? ` ${vercel.failed} could not be read, so totals may be short.` : ""}`
-                : undefined
-            }
-          >
-            {(data) => (
-              <BarList
-                ariaLabel="Vercel projects by pageviews"
-                items={data.projects
-                  .filter((p) => p.pageviews > 0)
-                  .map((p) => ({ name: p.domain ?? p.project, value: p.pageviews, detail: `${formatCount(p.pageviews)} · ${formatCount(p.visitors)} visitors` }))}
-                color={ANALYTICS_SOURCE_COLORS.vercel}
-                selected={site}
-                onSelect={(name) => setSite(site === siteKey(name) ? null : siteKey(name))}
-                emptyLabel="No pageviews in this range."
-              />
-            )}
-          </DashboardPanel>
-          {VERCEL_BREAKDOWNS.map(({ breakdown, title }) => (
-            <DashboardPanel
-              key={breakdown}
-              title={title}
-              source="Vercel"
-              section={sections.vercel}
-              configured={vercelOn}
-              refreshing={refreshing}
-              notApplicable={vercelNote}
+              actions={<SeeAll href="/analytics/vitals" what="web vitals" />}
+              note={VITALS_NOTE}
             >
               {(data) => (
-                <BarList
-                  ariaLabel={`${title} by pageviews, from Vercel`}
-                  items={toBars(vercelTotals(data.projects, breakdown, site))}
-                  color={ANALYTICS_SOURCE_COLORS.vercel}
-                  emptyLabel="No pageviews in this range."
-                />
+                <div className="-mx-1 max-h-[320px] overflow-auto">
+                  <VitalsTable rows={data} site={site} />
+                </div>
               )}
             </DashboardPanel>
-          ))}
-        </div>
-
-        <DashboardPanel
-          title="Web vitals"
-          source="PostHog"
-          section={sections.vitals}
-          configured={posthogOn}
-          refreshing={refreshing}
-          note="75th percentile of real page loads, rated against Google's Core Web Vitals limits. Vercel Speed Insights is off on every project."
-        >
-          {() => (
-            <div className="-mx-1 max-h-[320px] overflow-auto">
-              <DataTable
-                ariaLabel="Web vitals per site"
-                columns={VITALS_COLUMNS}
-                rows={vitalsRows}
-                getRowId={(row) => row.host}
-                autoSizeColumns
-                emptyLabel="No vitals were reported in this range."
-              />
-            </div>
-          )}
-        </DashboardPanel>
+          </>
+        )}
 
         <p className="m-0 font-mono text-[10px] leading-relaxed text-apt-text-dim">
-          PostHog runs cookieless, so its visitors, sessions and pageviews come out nearly equal: treat sessions as page
+          Production sites only. PostHog runs cookieless, so its visitors, sessions and pageviews come out nearly equal: treat sessions as page
           loads, not people. Much of its traffic looks automated. Times are UTC.
         </p>
       </div>

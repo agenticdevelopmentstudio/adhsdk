@@ -1,16 +1,18 @@
 "use client";
 import type { ReactElement, ReactNode } from "react";
-import { InfoPanel } from "@agenticdevelopertoolkit/ui/blocks/info-panel";
+import Link from "next/link";
+import { StatCard } from "@agenticdevelopertoolkit/ui/blocks/stat-card";
 import { Skeleton } from "@agenticdevelopertoolkit/ui/components/skeleton";
 import { useNow } from "../hooks/use-now";
 import { timeAgo } from "../lib/time-ago";
 import type { DashboardSection } from "../telemetry/dashboard-types";
 
-// The pieces the Analytics and Errors topics share. A section's four states live here so both say
-// them the same way: a failed provider must never look like a quiet one.
+// The pieces the Analytics and Errors topics share. The panel is the shared StatCard, with a
+// section's four states inside it so both topics say them the same way: a failed provider must
+// never look like a quiet one.
 
-/** Which provider a figure came from. The two count differently, so it is always on screen. */
-export function SourceTag({ children }: { children: ReactNode }): ReactElement {
+/** Which provider a panel came from, for a panel with no single tool to link to. */
+function SourceTag({ children }: { children: ReactNode }): ReactElement {
   return (
     <span className="whitespace-nowrap font-mono text-[10px] uppercase tracking-[0.06em] text-apt-text-dim">
       {children}
@@ -21,12 +23,12 @@ export function SourceTag({ children }: { children: ReactNode }): ReactElement {
 export interface DashboardPanelProps<T> {
   title: string;
   source: string;
+  /** Turns the source into the "{tool} ↗" link every StatCard carries. */
+  sourceHref?: string;
   section: DashboardSection<T>;
   configured: boolean;
   /** The topic is still fetching, so an empty section is loading rather than absent. */
   refreshing: boolean;
-  /** Said instead of a loading state when this section does not apply to the current filters. */
-  notApplicable?: string | null;
   note?: ReactNode;
   actions?: ReactNode;
   skeletonHeight?: number;
@@ -36,10 +38,10 @@ export interface DashboardPanelProps<T> {
 export function DashboardPanel<T>({
   title,
   source,
+  sourceHref,
   section,
   configured,
   refreshing,
-  notApplicable = null,
   note,
   actions,
   skeletonHeight = 120,
@@ -47,31 +49,30 @@ export function DashboardPanel<T>({
 }: DashboardPanelProps<T>): ReactElement {
   const now = useNow();
   return (
-    <InfoPanel
+    <StatCard
       title={title}
       className="min-w-0"
+      link={sourceHref ? { href: sourceHref, label: source } : undefined}
       actions={
-        <>
-          {actions}
-          <SourceTag>{source}</SourceTag>
-        </>
+        actions || !sourceHref ? (
+          <>
+            {actions}
+            {!sourceHref && <SourceTag>{source}</SourceTag>}
+          </>
+        ) : undefined
       }
+      footnote={configured && section.data !== null ? note : undefined}
     >
       {section.data !== null && section.error !== null && (
-        <p className="m-0 mb-3 font-mono text-[11px] text-apt-gold">
+        <p className="m-0 font-mono text-[11px] text-apt-gold">
           Last good data{section.updatedAt ? ` from ${timeAgo(section.updatedAt, now)} ago` : ""}. The latest refresh
           failed: {section.error}
         </p>
       )}
       {!configured ? (
         <Notice>{source} is not configured on this backend.</Notice>
-      ) : notApplicable !== null ? (
-        <Notice>{notApplicable}</Notice>
       ) : section.data !== null ? (
-        <>
-          {children(section.data)}
-          {note && <p className="m-0 mt-3 font-mono text-[10px] leading-relaxed text-apt-text-dim">{note}</p>}
-        </>
+        children(section.data)
       ) : section.error !== null ? (
         <p role="alert" className="m-0 font-mono text-xs text-apt-red">
           Could not load from {source}: {section.error}
@@ -81,7 +82,7 @@ export function DashboardPanel<T>({
       ) : (
         <Notice>No data yet.</Notice>
       )}
-    </InfoPanel>
+    </StatCard>
   );
 }
 
@@ -89,35 +90,36 @@ function Notice({ children }: { children: ReactNode }): ReactElement {
   return <p className="m-0 font-mono text-xs text-apt-text-dim">{children}</p>;
 }
 
-export interface FigureTileProps {
-  label: string;
-  /** Null while unknown, which prints a dash rather than a zero. */
-  value: string | null;
-  source?: string;
-  hint?: string;
-  /** A color is not enough on its own, so the caller's value or label must also say why. */
-  alert?: boolean;
-}
-
-/** A headline number. The figure is the point, so it is the largest thing in the tile. */
-export function FigureTile({ label, value, source, hint, alert = false }: FigureTileProps): ReactElement {
-  return (
-    <div className="min-w-0 rounded-[10px] border border-apt-border bg-apt-surface px-3.5 py-3">
-      <div className="flex items-baseline justify-between gap-2">
-        <span className="truncate text-xs text-apt-text-muted">{label}</span>
-        {source && <SourceTag>{source}</SourceTag>}
-      </div>
-      <div className={`mt-1 font-mono text-2xl font-bold leading-none ${alert ? "text-apt-red" : "text-apt-text"}`}>
-        {value ?? "—"}
-      </div>
-      {hint && <div className="mt-1.5 truncate font-mono text-[10px] text-apt-text-dim">{hint}</div>}
-    </div>
-  );
-}
-
 /** "3.2%", or a dash when nothing was attempted: a rate of nothing is not a 0% failure rate. */
 export function formatRate(part: number, whole: number): string {
   return whole > 0 ? `${((part / whole) * 100).toFixed(1)}%` : "—";
+}
+
+/** A panel fed by two providers: it has data if either answered, and shows the first failure. */
+export function eitherSection(a: DashboardSection<unknown>, b: DashboardSection<unknown>): DashboardSection<true> {
+  return {
+    data: a.data !== null || b.data !== null ? true : null,
+    error: a.error ?? b.error,
+    updatedAt: a.updatedAt ?? b.updatedAt,
+  };
+}
+
+/** Table text that wraps rather than being cut off by the cell. */
+export function WrappedCell({ children }: { children: ReactNode }): ReactElement {
+  return <span className="whitespace-normal [overflow-wrap:anywhere]">{children}</span>;
+}
+
+/** From a panel on an overview to the topic holding all of it. */
+export function SeeAll({ href, what }: { href: string; what: string }): ReactElement {
+  return (
+    <Link
+      href={href}
+      aria-label={`See all ${what}`}
+      className="whitespace-nowrap font-mono text-[10px] text-apt-text-muted underline underline-offset-2 hover:text-apt-text"
+    >
+      See all
+    </Link>
+  );
 }
 
 /** The worst failure rate on a page is what an operator scans for. */

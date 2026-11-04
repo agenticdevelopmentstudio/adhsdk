@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 import {
+  ANALYTICS_TOPICS,
   BOARD_PATHS,
+  ERRORS_TOPICS,
+  subTopicFromPath,
   BOARD_VIEWS,
   SETTINGS_SECTIONS,
   entityIdFromPath,
@@ -18,6 +21,26 @@ import {
 // which matters because the failure modes here are silent: a section that misses the
 // roster set gets no entity list and a dead deep link, and a role gate that leaks reads
 // as a working page rather than an error.
+
+describe("subTopicFromPath", () => {
+  it("reads the second segment against the list it is given", () => {
+    expect(subTopicFromPath("/analytics/countries", ANALYTICS_TOPICS)).toBe("countries");
+    expect(subTopicFromPath("/errors/by-type/", ERRORS_TOPICS)).toBe("by-type");
+  });
+
+  it("is null with no second segment, or one that is not on the list", () => {
+    expect(subTopicFromPath("/analytics", ANALYTICS_TOPICS)).toBeNull();
+    expect(subTopicFromPath("/analytics/nope", ANALYTICS_TOPICS)).toBeNull();
+    expect(subTopicFromPath("/errors/countries", ERRORS_TOPICS)).toBeNull();
+  });
+
+  it("both lists open on the overview, and a deep link stays on the board", () => {
+    expect(ANALYTICS_TOPICS[0]!.id).toBe("overview");
+    expect(ERRORS_TOPICS[0]!.id).toBe("overview");
+    expect(topicFromPath("/analytics/countries")).toBe("analytics");
+    expect(isBoardPath("/errors/per-site")).toBe(true);
+  });
+});
 
 describe("topicFromPath", () => {
   it("reads the FIRST segment, so a Settings deep link is still the Settings topic", () => {

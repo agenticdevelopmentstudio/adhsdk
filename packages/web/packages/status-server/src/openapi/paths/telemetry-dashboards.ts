@@ -64,6 +64,9 @@ const analyticsSections = object({
       projectsTotal: num,
       projectsEnabled: num,
       failed: num,
+      roster: list(
+        object({ project: str, domain: nullableStr, analyticsOn: bool, pageviews: nullableNum, visitors: nullableNum }),
+      ),
       totals: object({ pageviews: num, visitors: num }),
       pageviews: nums,
       visitors: nums,
@@ -128,11 +131,6 @@ export const dashboardPaths: Paths = {
       security: BEARER,
       parameters: [
         { name: 'range', in: 'query', schema: { type: 'string', enum: ['24h', '7d', '30d'], default: '7d' } },
-        {
-          name: 'env',
-          in: 'query',
-          schema: { type: 'string', enum: ['production', 'staging', 'testing', 'all'], default: 'production' },
-        },
       ],
       responses: {
         200: okJson(
@@ -141,7 +139,6 @@ export const dashboardPaths: Paths = {
             generatedAt: str,
             refreshing: bool,
             range: str,
-            env: str,
             configured: object({ posthog: bool, vercel: bool }),
             sections: analyticsSections,
           }),

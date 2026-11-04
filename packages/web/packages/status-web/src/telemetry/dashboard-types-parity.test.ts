@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { ANALYTICS_ENVIRONMENTS as SERVER_ENVIRONMENTS } from "@agentic-toolkit/status-server/dashboard-types";
+import { ANALYTICS_RANGES as SERVER_RANGES } from "@agentic-toolkit/status-server/dashboard-types";
 import type * as server from "@agentic-toolkit/status-server/dashboard-types";
-import { ANALYTICS_ENVIRONMENTS } from "./dashboard-types";
+import { ANALYTICS_RANGES } from "./dashboard-types";
 import type * as web from "./dashboard-types";
 
 // DRIFT GUARD. dashboard-types.ts is a hand mirror of status-server's, because this package only
@@ -17,7 +17,7 @@ export const responsesAgree: [
 ] = [true, true];
 
 describe("dashboard types", () => {
-  it("offer the same environments", () => {
-    expect([...ANALYTICS_ENVIRONMENTS]).toEqual([...SERVER_ENVIRONMENTS]);
+  it("offer the same ranges", () => {
+    expect([...ANALYTICS_RANGES]).toEqual([...SERVER_RANGES]);
   });
 });

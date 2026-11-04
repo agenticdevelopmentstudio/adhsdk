@@ -1,11 +1,11 @@
 import type { AnalyticsRange } from "./ranges";
 import type { DashboardSections } from "./sectioned-dashboard";
 
+export { ANALYTICS_RANGES } from "./ranges";
+
 // The wire shapes of GET /analytics/dashboard and GET /errors/dashboard. status-web keeps a hand
 // mirror in telemetry/dashboard-types.ts, held to this file by dashboard-types-parity.test.ts.
 
-export const ANALYTICS_ENVIRONMENTS = ["production", "staging", "testing", "all"] as const;
-export type AnalyticsEnvironment = (typeof ANALYTICS_ENVIRONMENTS)[number];
 
 // ── PostHog ────────────────────────────────────────────────────────────────
 
@@ -76,12 +76,24 @@ export interface VercelProjectTraffic {
   devices: Marginal[];
 }
 
+/** One production project, whether or not it has analytics on or had any traffic. */
+export interface VercelRosterEntry {
+  project: string;
+  domain: string | null;
+  analyticsOn: boolean;
+  /** Null when analytics is off or the count could not be read, which is not a zero. */
+  pageviews: number | null;
+  visitors: number | null;
+}
+
 export interface VercelTrafficSection {
   buckets: string[];
+  /** Production projects only: staging and testing are never counted. */
   projectsTotal: number;
   projectsEnabled: number;
   /** Projects with at least one call that failed, so their numbers may be short. */
   failed: number;
+  roster: VercelRosterEntry[];
   totals: { pageviews: number; visitors: number };
   pageviews: number[];
   visitors: number[];
@@ -103,7 +115,6 @@ export interface AnalyticsDashboardResponse {
   generatedAt: string;
   refreshing: boolean;
   range: AnalyticsRange;
-  env: AnalyticsEnvironment;
   configured: { posthog: boolean; vercel: boolean };
   sections: DashboardSections<AnalyticsSectionData>;
 }

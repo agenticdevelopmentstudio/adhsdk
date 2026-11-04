@@ -34,6 +34,11 @@ export interface StatProps {
   className?: string
 }
 
+export interface StatColumnProps extends StatProps {
+  /** Which edge the value and label share. Default "end", the hero-strip form. */
+  align?: "start" | "end"
+}
+
 /** Label left, big value right on a shared baseline — the dashboard-card form. */
 export function StatRow({ label, value, tone, valueClassName, className }: StatProps) {
   return (
@@ -44,10 +49,10 @@ export function StatRow({ label, value, tone, valueClassName, className }: StatP
   )
 }
 
-/** Big value over its label, right-aligned — the hero-strip form. */
-export function Stat({ label, value, tone, valueClassName, className }: StatProps) {
+/** Big value over its label, right-aligned by default — the hero-strip form. */
+export function Stat({ label, value, tone, valueClassName, className, align = "end" }: StatColumnProps) {
   return (
-    <div className={cn("flex flex-col items-end gap-px", className)}>
+    <div className={cn("flex flex-col gap-px", align === "start" ? "items-start" : "items-end", className)}>
       <span className={cn(statValueVariants({ tone }), valueClassName)}>{value}</span>
       <span className={statLabelClass}>{label}</span>
     </div>

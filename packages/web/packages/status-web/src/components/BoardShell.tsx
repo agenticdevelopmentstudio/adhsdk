@@ -12,11 +12,15 @@ import { useLiveSnapshot } from "../hooks/use-live-snapshot";
 import { plural } from "../lib/format";
 import { headlineFor } from "../lib/overview";
 import {
+  ANALYTICS_TOPICS,
   BOARD_VIEWS,
   entityIdFromPath,
+  ERRORS_TOPICS,
   isRosterTopic,
   sectionFromPath,
+  subTopicFromPath,
   topicFromPath,
+  type SubTopicView,
   visibleSettingsSections,
 } from "./board-views";
 import { SettingsLevelProvider } from "./settings-level";
@@ -87,6 +91,8 @@ function KeptPane({ show, children }: { show: boolean; children: ReactNode }): R
   return <div className={cn("min-h-0 flex-1 flex-col", show ? "flex" : "hidden")}>{children}</div>;
 }
 
+const SUB_TOPIC_NAMES = { analytics: "Analytics", errors: "Errors" } as const;
+
 /**
  * The board: ONE HierarchicalTopicDetail at the root of the site whose first topic list
  * is Overview / Details / Fleet / Analytics / Errors / …divider… / Settings.
@@ -95,6 +101,10 @@ function KeptPane({ show, children }: { show: boolean; children: ReactNode }): R
  * Appearance, Fleet peers, Groups, Platforms, Sites, Users. Appearance is a leaf (the
  * display preferences); every other section is a config ROSTER that publishes its entity
  * list up via SettingsLevelProvider as the THIRD level, with the entity editor as the leaf.
+ *
+ * Analytics and Errors open a second level of their own: Overview, then one topic per panel on
+ * it, at `/analytics/<id>` and `/errors/<id>`. A wide screen lands on Overview; a phone gets the
+ * list first, as every list on the board does.
  *
  * Selection is deep-linked: each topic is a root URL segment, a section is
  * `/settings/<section>`, a roster entity is `/settings/<section>/<id>`; `/home` is the
@@ -270,10 +280,31 @@ export function BoardShell({ children }: { children: ReactNode }): ReactElement 
     ? { ...entityLevel, railLabel: entityLevel.railLabel ?? entityLevel.title }
     : null;
 
+  const subTopicLevel = (
+    id: keyof typeof SUB_TOPIC_NAMES,
+    topics: readonly SubTopicView<string>[],
+  ): TopicLevel => ({
+    id: `${id}-topics`,
+    title: SUB_TOPIC_NAMES[id],
+    railLabel: `${SUB_TOPIC_NAMES[id]} topics`,
+    itemNoun: "topic",
+    overview: false,
+    items: topics.map((t) => ({ id: t.id, label: t.label, icon: t.icon })),
+    selectedId: subTopicFromPath(path, topics),
+    defaultSelectedId: "overview",
+    onSelect: (next, options) =>
+      options?.replace ? router.replace(`/${id}/${next}`) : router.push(`/${id}/${next}`),
+    onClear: () => router.push(`/${id}`),
+  });
+
   const levels =
     topic === "settings"
       ? [level, settingsLevel, ...(isRoster && namedEntityLevel ? [namedEntityLevel] : [])]
-      : [level];
+      : topic === "analytics"
+        ? [level, subTopicLevel("analytics", ANALYTICS_TOPICS)]
+        : topic === "errors"
+          ? [level, subTopicLevel("errors", ERRORS_TOPICS)]
+          : [level];
 
   return (
     <HierarchicalDetailView levels={levels} rootLabel="Status" minDetailWidth="20rem">
@@ -309,12 +340,12 @@ export function BoardShell({ children }: { children: ReactNode }): ReactElement 
         )}
         {topic === "analytics" && (
           <div className="flex min-h-0 flex-1 flex-col">
-            <AnalyticsView />
+            <AnalyticsView topic={subTopicFromPath(path, ANALYTICS_TOPICS) ?? "overview"} />
           </div>
         )}
         {topic === "errors" && (
           <div className="flex min-h-0 flex-1 flex-col">
-            <ErrorsView />
+            <ErrorsView topic={subTopicFromPath(path, ERRORS_TOPICS) ?? "overview"} />
           </div>
         )}
         {topic === "settings" && effectiveSection === "appearance" && (

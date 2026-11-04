@@ -3,7 +3,6 @@ import { keepPreviousData, useQuery, type UseQueryResult } from "@tanstack/react
 import { useStatusApi } from "../api/client";
 import type {
   AnalyticsDashboardResponse,
-  AnalyticsEnvironment,
   AnalyticsRange,
   ErrorsDashboardResponse,
 } from "../telemetry/dashboard-types";
@@ -32,14 +31,11 @@ async function getDashboard<T>(api: Api, path: string): Promise<T> {
   return (await response.json()) as T;
 }
 
-export function useAnalyticsDashboard(
-  range: AnalyticsRange,
-  env: AnalyticsEnvironment,
-): UseQueryResult<AnalyticsDashboardResponse> {
+export function useAnalyticsDashboard(range: AnalyticsRange): UseQueryResult<AnalyticsDashboardResponse> {
   const api = useStatusApi();
   return useQuery<AnalyticsDashboardResponse>({
-    queryKey: ["analytics-dashboard", range, env],
-    queryFn: () => getDashboard(api, `/analytics/dashboard?range=${range}&env=${env}`),
+    queryKey: ["analytics-dashboard", range],
+    queryFn: () => getDashboard(api, `/analytics/dashboard?range=${range}`),
     // Keep the last chart up while another range loads, instead of flashing skeletons.
     placeholderData: keepPreviousData,
     refetchInterval: (query) => dashboardPollMs(query.state.data),

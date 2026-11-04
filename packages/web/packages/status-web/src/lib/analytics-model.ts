@@ -18,6 +18,11 @@ export function siteKey(host: string): string {
   return host.trim().toLowerCase().replace(/^www\./, "");
 }
 
+/** A Vercel project's site. A project with no production domain can only be named by itself. */
+export function projectKey(project: { project: string; domain: string | null }): string {
+  return project.domain ? siteKey(project.domain) : project.project;
+}
+
 export interface JoinedSite {
   key: string;
   /** Null where this provider has never seen the site, which is not the same as a zero. */
@@ -58,8 +63,7 @@ export function joinSites(
     };
   }
   for (const project of vercel?.projects ?? []) {
-    // A project with no production domain can only be named by itself.
-    const target = row(project.domain ? siteKey(project.domain) : project.project);
+    const target = row(projectKey(project));
     target.vercel = {
       project: project.project,
       pageviews: (target.vercel?.pageviews ?? 0) + project.pageviews,
@@ -120,7 +124,7 @@ export function pageviewSeries(
     vercel &&
     (site === null
       ? vercel.pageviews
-      : sumMatching(vercel.projects, (p) => (p.domain ? siteKey(p.domain) : p.project) === site));
+      : sumMatching(vercel.projects, (p) => projectKey(p) === site));
   return {
     labels,
     posthog: traffic && posthogValues ? onAxis(labels, traffic.buckets, posthogValues) : null,
@@ -193,7 +197,7 @@ export function vercelTotals(
 ): Marginal[] {
   const totals = new Map<string, number>();
   for (const project of projects) {
-    const key = project.domain ? siteKey(project.domain) : project.project;
+    const key = projectKey(project);
     if (site !== null && key !== site) continue;
     for (const entry of project[breakdown]) {
       const name = vercelEntryName(breakdown, entry.name, site === null ? key : null);
@@ -201,6 +205,76 @@ export function vercelTotals(
     }
   }
   return sortMarginals(totals);
+}
+
+export type BreakdownTopic = "pages" | "countries" | "referrers" | "devices" | "browsers";
+
+const DIMENSION_OF: Record<Exclude<BreakdownTopic, "pages">, Dimension> = {
+  countries: "country",
+  referrers: "referrer",
+  devices: "device",
+  browsers: "browser",
+};
+
+// Vercel reports no browsers, so that topic has only PostHog's side.
+const VERCEL_OF: Partial<Record<BreakdownTopic, VercelBreakdown>> = {
+  pages: "paths",
+  countries: "countries",
+  referrers: "referrers",
+  devices: "devices",
+};
+
+export interface BreakdownTotals {
+  /** Null where the provider has no answer, which is not the same as an empty list. */
+  posthog: Marginal[] | null;
+  vercel: Marginal[] | null;
+}
+
+/** One topic's totals from each provider, for everything or for one site. */
+export function breakdownTotals(
+  topic: BreakdownTopic,
+  dimensionRows: readonly DimensionRow[] | null,
+  pathRows: readonly PathRow[] | null,
+  projects: readonly VercelProjectTraffic[] | null,
+  site: string | null,
+): BreakdownTotals {
+  const field = VERCEL_OF[topic];
+  return {
+    posthog:
+      topic === "pages"
+        ? pathRows && pathTotals(pathRows, site)
+        : dimensionRows && dimensionTotals(dimensionRows, DIMENSION_OF[topic], site),
+    vercel: field && projects ? vercelTotals(projects, field, site) : null,
+  };
+}
+
+export interface SiteBreakdown extends BreakdownTotals {
+  key: string;
+}
+
+function breakdownSize(row: BreakdownTotals): number {
+  const sum = (list: Marginal[] | null): number => (list ?? []).reduce((total, m) => total + m.pageviews, 0);
+  return Math.max(sum(row.posthog), sum(row.vercel));
+}
+
+/**
+ * One topic per site, busiest first. The sites come from the rows themselves rather than from
+ * the traffic table, so a site present only in this breakdown is still shown. A site with nothing
+ * in the topic from either provider is left out.
+ */
+export function siteBreakdowns(
+  topic: BreakdownTopic,
+  dimensionRows: readonly DimensionRow[] | null,
+  pathRows: readonly PathRow[] | null,
+  projects: readonly VercelProjectTraffic[] | null,
+): SiteBreakdown[] {
+  const hosts = (topic === "pages" ? pathRows : dimensionRows) ?? [];
+  const keys = new Set(hosts.map((row) => siteKey(row.host)));
+  if (VERCEL_OF[topic]) for (const project of projects ?? []) keys.add(projectKey(project));
+  return [...keys]
+    .map((key) => ({ key, ...breakdownTotals(topic, dimensionRows, pathRows, projects, key) }))
+    .filter((row) => (row.posthog?.length ?? 0) + (row.vercel?.length ?? 0) > 0)
+    .sort((a, b) => breakdownSize(b) - breakdownSize(a) || a.key.localeCompare(b.key));
 }
 
 function sortMarginals(totals: ReadonlyMap<string, number>): Marginal[] {

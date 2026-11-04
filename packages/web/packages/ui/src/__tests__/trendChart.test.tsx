@@ -127,10 +127,25 @@ describe("BarList", () => {
     { name: "CN", value: 10 },
   ]
 
-  it("counts what it leaves out", () => {
+  it("opens what it leaves out, and closes it again", () => {
     render(<BarList ariaLabel="x" items={ITEMS} maxItems={2} />)
     expect(screen.queryByText("CN")).toBeNull()
-    expect(screen.getByText("and 1 more")).toBeTruthy()
+    fireEvent.click(screen.getByRole("button", { name: "Show all 3" }))
+    expect(screen.getByText("CN")).toBeTruthy()
+    fireEvent.click(screen.getByRole("button", { name: "Show fewer" }))
+    expect(screen.queryByText("CN")).toBeNull()
+  })
+
+  it("offers nothing to open when every row fits", () => {
+    render(<BarList ariaLabel="x" items={ITEMS} maxItems={Infinity} />)
+    expect(screen.getByText("CN")).toBeTruthy()
+    expect(screen.queryByRole("button")).toBeNull()
+  })
+
+  it("lets a long name wrap rather than cutting it off", () => {
+    const name = "/a/very/long/path/that/would/not/fit/in/a/narrow/panel"
+    render(<BarList ariaLabel="x" items={[{ name, value: 1 }]} />)
+    expect(screen.getByText(name).className).not.toContain("truncate")
   })
 
   it("is plain text until it can do something", () => {

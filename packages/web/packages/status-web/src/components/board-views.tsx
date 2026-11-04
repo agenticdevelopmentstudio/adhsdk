@@ -1,5 +1,29 @@
 import type { ReactNode } from "react";
-import { BarChart3, Boxes, Bug, Cloud, Gauge, Globe, KeyRound, Network, Palette, Server, Settings, Table2, Users } from "lucide-react";
+import {
+  Activity,
+  AppWindow,
+  BarChart3,
+  Boxes,
+  Bug,
+  CalendarDays,
+  Cloud,
+  FileText,
+  Gauge,
+  Globe,
+  KeyRound,
+  Link2,
+  List,
+  MapPin,
+  MonitorSmartphone,
+  Network,
+  Palette,
+  Server,
+  Settings,
+  Table2,
+  Tags,
+  TrendingUp,
+  Users,
+} from "lucide-react";
 
 /** The board's deep-linked topics (each a root route `/overview`, `/settings`, …).
  *  Everything configurable lives one level down, as a SECTION under Settings
@@ -125,6 +149,53 @@ export function isRosterTopic(section: SettingsSection | null): section is Roste
   return section !== null && ROSTER_SECTIONS.has(section);
 }
 
+/** The Analytics topic's sub-topics, at `/analytics/<id>`. */
+export type AnalyticsTopic =
+  | "overview"
+  | "pageviews"
+  | "sites"
+  | "pages"
+  | "countries"
+  | "referrers"
+  | "devices"
+  | "browsers"
+  | "projects"
+  | "vitals";
+
+/** The Errors topic's sub-topics, at `/errors/<id>`. */
+export type ErrorsTopic = "overview" | "new-issues" | "issues" | "by-type" | "per-site";
+
+export interface SubTopicView<T extends string> {
+  id: T;
+  label: string;
+  icon: ReactNode;
+  /** The document description, for the same reason Settings sections carry one. */
+  description: string;
+}
+
+// One entry per panel on the topic's overview, in the order the panels appear there, which is
+// why these are not alphabetical like the Settings sections: each list reads as the page does.
+export const ANALYTICS_TOPICS: readonly SubTopicView<AnalyticsTopic>[] = [
+  { id: "overview", label: "Overview", icon: <Gauge size={ICON} aria-hidden />, description: "Traffic across every production site, from PostHog and Vercel." },
+  { id: "pageviews", label: "Pageviews", icon: <TrendingUp size={ICON} aria-hidden />, description: "Pageviews over time, for all sites and for each site." },
+  { id: "sites", label: "Sites", icon: <Globe size={ICON} aria-hidden />, description: "Every production site: traffic, errors, failed requests and p95." },
+  { id: "pages", label: "Pages", icon: <FileText size={ICON} aria-hidden />, description: "Every page viewed, per site." },
+  { id: "countries", label: "Countries", icon: <MapPin size={ICON} aria-hidden />, description: "Pageviews by country, per site." },
+  { id: "referrers", label: "Referrers", icon: <Link2 size={ICON} aria-hidden />, description: "Pageviews by referrer, per site." },
+  { id: "devices", label: "Devices", icon: <MonitorSmartphone size={ICON} aria-hidden />, description: "Pageviews by device, per site." },
+  { id: "browsers", label: "Browsers", icon: <AppWindow size={ICON} aria-hidden />, description: "Pageviews by browser, per site." },
+  { id: "projects", label: "Projects", icon: <Boxes size={ICON} aria-hidden />, description: "Every production Vercel project and whether Web Analytics is on." },
+  { id: "vitals", label: "Web vitals", icon: <Activity size={ICON} aria-hidden />, description: "Core Web Vitals per site." },
+];
+
+export const ERRORS_TOPICS: readonly SubTopicView<ErrorsTopic>[] = [
+  { id: "overview", label: "Overview", icon: <Gauge size={ICON} aria-hidden />, description: "GlitchTip issues and failed requests across the fleet." },
+  { id: "new-issues", label: "New issues", icon: <CalendarDays size={ICON} aria-hidden />, description: "Unresolved issues by the day they first fired." },
+  { id: "issues", label: "Issues", icon: <List size={ICON} aria-hidden />, description: "Every unresolved GlitchTip issue." },
+  { id: "by-type", label: "By type", icon: <Tags size={ICON} aria-hidden />, description: "Unresolved issues by exception type." },
+  { id: "per-site", label: "Per site", icon: <Globe size={ICON} aria-hidden />, description: "Errors, requests, failures and p95 for each site." },
+];
+
 /** The gated board route paths: `/home` (the no-selection landing) + one per topic.
  *  StatusHeader checks first segments against this to decide when to show the live
  *  status pill (Settings carries deeper `/settings/<section>/<id>` segments). */
@@ -160,6 +231,12 @@ export function sectionFromPath(path: string): SettingsSection | null {
   if (segs[0] !== "settings") return null;
   const seg = segs[1] ?? "";
   return SECTION_IDS.includes(seg) ? (seg as SettingsSection) : null;
+}
+
+/** The selected sub-topic for a pathname (`/<topic>/<id>`), or null when there is none. */
+export function subTopicFromPath<T extends string>(path: string, topics: readonly SubTopicView<T>[]): T | null {
+  const seg = segments(path)[1];
+  return topics.find((t) => t.id === seg)?.id ?? null;
 }
 
 /** The selected entity id for a roster pathname (`/settings/<roster-section>/<id>`), or
