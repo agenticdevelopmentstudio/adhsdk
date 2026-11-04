@@ -3,7 +3,7 @@ import { afterEach, describe, expect, it } from "vitest"
 import { cleanup, fireEvent, render, screen } from "@testing-library/react"
 
 import { BarList } from "../blocks/bar-list"
-import { formatCount, niceTicks, TrendChart } from "../blocks/trend-chart"
+import { axisLabelIndexes, formatCount, niceTicks, TrendChart } from "../blocks/trend-chart"
 
 afterEach(cleanup)
 
@@ -29,6 +29,24 @@ describe("niceTicks", () => {
 
   it("gives a flat series an axis to sit on", () => {
     expect(niceTicks(0)).toEqual([0, 1])
+  })
+})
+
+describe("axisLabelIndexes", () => {
+  it("labels every bucket when there are few", () => {
+    expect(axisLabelIndexes(3)).toEqual([0, 1, 2])
+    expect(axisLabelIndexes(5)).toEqual([0, 1, 2, 3, 4])
+  })
+
+  it("keeps the gaps equal, so a week does not read Oct 29, 31, Nov 1, 3, 4", () => {
+    expect(axisLabelIndexes(7)).toEqual([0, 2, 4, 6])
+  })
+
+  it.each([6, 7, 8, 14, 24, 30, 31, 90])("steps evenly and ends on the newest bucket across %i", (n) => {
+    const indexes = axisLabelIndexes(n)
+    expect(indexes.length).toBeLessThanOrEqual(5)
+    expect(indexes.at(-1)).toBe(n - 1)
+    expect(new Set(indexes.slice(1).map((v, i) => v - indexes[i]!)).size).toBe(1)
   })
 })
 

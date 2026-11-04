@@ -86,10 +86,17 @@ function runs(values: readonly (number | null)[]): { i: number; value: number }[
   return out
 }
 
-/** Up to five labels, evenly spread, always including both ends. */
-function axisLabelIndexes(n: number): number[] {
+/**
+ * Up to five labels at a constant step, counted back from the newest bucket. The step has to be a
+ * whole number of buckets or the gaps between dates vary (a week labelled Oct 29, 31, Nov 1, 3, 4),
+ * so when the buckets do not divide evenly it is the oldest end that goes unlabelled, not the newest.
+ */
+export function axisLabelIndexes(n: number): number[] {
   if (n <= 5) return Array.from({ length: n }, (_, i) => i)
-  return [0, 1, 2, 3, 4].map((k) => Math.round((k / 4) * (n - 1)))
+  const step = Math.ceil((n - 1) / 4)
+  const indexes: number[] = []
+  for (let i = n - 1; i >= 0; i -= step) indexes.unshift(i)
+  return indexes
 }
 
 export function TrendChart({

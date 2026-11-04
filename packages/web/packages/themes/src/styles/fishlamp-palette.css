@@ -131,6 +131,17 @@ html:root[data-color-mode]:not(.dark):not([data-contrast='high']):not([data-cont
   --color-accent-bright: var(--color-primary-bright);
   --color-accent-dim: var(--color-primary-dim);
 
+  /* Categorical hues, tailwind.css's dark values. color-mode-light.css sets these too, in its
+     light selector, so a palette that stays dark on a light-mode device has to name them or the
+     chart and tag colours alone flip to the shades tuned for a cream surface. */
+  --color-apt-cat-blue: #2f80ff;
+  --color-apt-cat-violet: #a855f7;
+  --color-apt-cat-pink: #ff4d9e;
+  --color-apt-cat-teal: #5fb3c4;
+  --color-apt-cat-indigo: #6366f1;
+  --color-apt-cat-orange: #f6821f;
+  --color-apt-cat-purple: #d63ad0;
+
   /* fonts (mode-invariant) — the adh base already self-hosts this exact face */
   --font-sans: 'Iosevka', 'Iosevka Fallback Menlo', 'Iosevka Fallback Courier', ui-monospace, monospace;
   --font-serif: 'Iosevka', 'Iosevka Fallback Menlo', 'Iosevka Fallback Courier', ui-monospace, monospace;

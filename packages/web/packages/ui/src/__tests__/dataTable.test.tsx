@@ -494,3 +494,22 @@ describe('DataTable selection checkboxes', () => {
     expect(screen.getAllByRole('checkbox', { name: 'Select fruit' })).toHaveLength(2)
   })
 })
+
+describe('DataTable auto-sized tracks', () => {
+  function template(columns: DataTableColumn<Row>[]): string {
+    const { container } = render(
+      <DataTable<Row> columns={columns} rows={ROWS} getRowId={(r) => r.id} ariaLabel="People" autoSizeColumns />,
+    )
+    const header = container.querySelector<HTMLElement>('[role="row"]')!
+    return header.style.gridTemplateColumns
+  }
+
+  it('adds a filler track that packs content-sized columns to the left', () => {
+    expect(template([{ key: 'name', header: 'Name', width: '10rem' }])).toBe('10rem minmax(0,1fr)')
+  })
+
+  it('leaves the filler out when a column already claims the leftover width', () => {
+    // Beside the filler, this column would get half the slack and truncate next to dead space.
+    expect(template([{ key: 'name', header: 'Name', width: 'minmax(16rem, 1fr)' }])).toBe('minmax(16rem, 1fr)')
+  })
+})
