@@ -13,4 +13,4 @@ export type { DeployIdentity } from "./ownership";
 export { reconcileBoardLedger } from "./reconcile";
 // The platform-health target spelling and its inverse — so no reader outside the fold has
 // to know that the string starts with "platform-health|".
-export { errorsTarget, parseErrorsTarget, parsePlatformHealthTarget, platformHealthTarget } from "./derive-problems";
+export { ERROR_JUDGED_LEVELS, ERROR_RECENT_MS, errorsTarget, parseErrorsTarget, parsePlatformHealthTarget, platformHealthTarget } from "./derive-problems";

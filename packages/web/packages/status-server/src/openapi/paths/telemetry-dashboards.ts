@@ -117,7 +117,6 @@ const errorsSections = object({
       }),
     }),
   ),
-  events: section(object({ buckets: strs, events: nums })),
   sites: section(list(siteHealth)),
 });
 

@@ -1,10 +1,10 @@
 import type { ReactNode } from "react";
-import { Boxes, Cloud, Gauge, Globe, KeyRound, Network, Palette, Server, Settings, Table2, Users } from "lucide-react";
+import { BarChart3, Boxes, Bug, Cloud, Gauge, Globe, KeyRound, Network, Palette, Server, Settings, Table2, Users } from "lucide-react";
 
 /** The board's deep-linked topics (each a root route `/overview`, `/settings`, …).
  *  Everything configurable lives one level down, as a SECTION under Settings
  *  (`/settings/<section>`) — see {@link SETTINGS_SECTIONS}. */
-export type BoardTopic = "overview" | "details" | "fleet" | "settings";
+export type BoardTopic = "overview" | "details" | "fleet" | "analytics" | "errors" | "settings";
 
 export interface BoardView {
   id: BoardTopic;
@@ -24,7 +24,9 @@ const ICON = 16;
 export const BOARD_VIEWS: readonly BoardView[] = [
   { id: "overview", label: "Overview", icon: <Gauge size={ICON} aria-hidden /> },
   { id: "details", label: "Details", icon: <Table2 size={ICON} aria-hidden /> },
-  { id: "fleet", label: "Fleet", icon: <Server size={ICON} aria-hidden />, dividerAfter: true },
+  { id: "fleet", label: "Fleet", icon: <Server size={ICON} aria-hidden /> },
+  { id: "analytics", label: "Analytics", icon: <BarChart3 size={ICON} aria-hidden /> },
+  { id: "errors", label: "Errors", icon: <Bug size={ICON} aria-hidden />, dividerAfter: true },
   { id: "settings", label: "Settings", icon: <Settings size={ICON} aria-hidden /> },
 ];
 

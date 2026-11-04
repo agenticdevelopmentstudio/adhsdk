@@ -1,8 +1,8 @@
 import type { AnalyticsRange } from "./ranges";
 import type { DashboardSections } from "./sectioned-dashboard";
 
-// The wire shapes of GET /analytics/dashboard and GET /errors/dashboard. status-web keeps a
-// parallel copy (status-web does not depend on status-server), as it does for telemetry/types.
+// The wire shapes of GET /analytics/dashboard and GET /errors/dashboard. status-web keeps a hand
+// mirror in telemetry/dashboard-types.ts, held to this file by dashboard-types-parity.test.ts.
 
 export const ANALYTICS_ENVIRONMENTS = ["production", "staging", "testing", "all"] as const;
 export type AnalyticsEnvironment = (typeof ANALYTICS_ENVIRONMENTS)[number];
@@ -145,15 +145,8 @@ export interface ErrorsIssuesSection {
   };
 }
 
-export interface ErrorsEventsSection {
-  buckets: string[];
-  /** Every event GlitchTip accepted, per day, resolved issues included. */
-  events: number[];
-}
-
 export interface ErrorsSectionData {
   issues: ErrorsIssuesSection;
-  events: ErrorsEventsSection;
   sites: SiteHealthRow[];
 }
 

@@ -1,11 +1,14 @@
 "use client";
 import type { ReactElement } from "react";
+import Link from "next/link";
 import { Bug, TrendingUp } from "lucide-react";
 import { StatCard } from "@agenticdevelopertoolkit/ui/blocks/stat-card";
 import { StatList, StatListRow } from "@agenticdevelopertoolkit/ui/blocks/stat-list";
 import { ExternalLink } from "@agenticdevelopertoolkit/ui/components/external-link";
 import { type StatusDotTone } from "@agenticdevelopertoolkit/ui/components/status-dot";
+import { useNow } from "../hooks/use-now";
 import { useTelemetry } from "../hooks/use-telemetry";
+import { isActiveError } from "../lib/error-activity";
 import { useStatusHost } from "./StatusHost";
 import type { AnalyticsMetricDTO } from "../telemetry/types";
 
@@ -17,6 +20,10 @@ import type { AnalyticsMetricDTO } from "../telemetry/types";
 
 // Deep-dive targets come from the HOST (StatusHostProvider) — this package knows no
 // hostname. Without one, a card renders its data and simply carries no deep link.
+
+// Compact number formatter — handles k/M/B with correct rounding (e.g. 999_999 → "1M",
+// 1_240 → "1.2K"), unlike a hand-rolled /1000 that breaks above 'k'.
+const COMPACT = new Intl.NumberFormat("en", { notation: "compact", maximumFractionDigits: 1 });
 
 function levelTone(level: string | null): StatusDotTone {
   switch (level) {
@@ -38,48 +45,43 @@ function IssueLink({ href, title }: { href: string | undefined; title: string })
 }
 
 /**
- * Errors card — top GlitchTip issues by event volume; healthy-green when none.
+ * Errors card: what GlitchTip says is happening now, and how much old backlog sits behind it.
  *
- * THIS CARD AND THE PROBLEMS PANE COUNT DIFFERENT THINGS, on purpose, and the labels
- * have to say so or the two read as a contradiction. This is the raw `is:unresolved`
- * feed: every level, no age limit, so a `warning` from March is in it. `errorProblems`
- * judges only `error`/`fatal` seen in the last 24h, because a status board reports what
- * is happening now and GlitchTip's unresolved set is a backlog nobody clears. So "5
- * unresolved" here with nothing in Problems is the NORMAL healthy state, not a missed
- * alert — the labels below carry the qualifiers that make that legible.
+ * Only ACTIVE issues (error or fatal, seen in the last 24h) turn this card red, because that is
+ * the same test that raises a Problem. GlitchTip's unresolved set is a backlog nobody clears, so
+ * coloring by its size left this card permanently red on a healthy fleet, with nothing in Problems
+ * to explain it and nothing an operator could do to clear it. The backlog is still counted, in a
+ * neutral tone, and the Errors topic lists it.
  */
 export function ErrorsCard(): ReactElement {
   const { errors } = useTelemetry();
-  const totalEvents = errors.reduce((s, e) => s + (e.count || 0), 0);
+  const now = useNow();
   const { glitchtipUrl } = useStatusHost();
-  const totalUsers = errors.reduce((s, e) => s + (e.userCount || 0), 0);
+  const active = errors.filter((e) => isActiveError(e.level, e.lastSeen, now));
+  const totalEvents = errors.reduce((s, e) => s + (e.count || 0), 0);
   // Sort by event count desc so the shown "top 5" actually matches the prominent
   // {count}× label — the feed arrives in GlitchTip's last-seen order, not by volume.
-  const top = [...errors].sort((a, b) => b.count - a.count).slice(0, 5);
+  const top = [...active].sort((a, b) => b.count - a.count).slice(0, 5);
 
   return (
     <StatCard
       title="Errors"
-      icon={<Bug size={15} className={errors.length > 0 ? "text-apt-red" : "text-apt-text-muted"} />}
+      icon={<Bug size={15} className={active.length > 0 ? "text-apt-red" : "text-apt-text-muted"} />}
       link={glitchtipUrl ? { href: glitchtipUrl, label: "GlitchTip" } : undefined}
       stats={
         errors.length > 0
           ? [
-              // "unresolved · all levels" rather than "open issues": these are GlitchTip's
-              // own unresolved rows at every severity, not the board's Problems.
-              { label: "unresolved · all levels", value: String(errors.length), tone: "error" },
-              { label: "events", value: String(totalEvents) },
-              { label: "users affected", value: String(totalUsers) },
+              { label: "active · 24h", value: String(active.length), tone: active.length > 0 ? "error" : undefined },
+              { label: "backlog", value: String(errors.length - active.length) },
+              { label: "events · all unresolved", value: COMPACT.format(totalEvents) },
             ]
           : undefined
       }
     >
-      {errors.length === 0 ? (
-        // No unresolved issues — a single quiet all-clear line (no subtitle).
-        <div className="font-mono text-[13px] font-semibold text-apt-green">✓ Nothing unresolved in GlitchTip</div>
+      {active.length === 0 ? (
+        <div className="font-mono text-[13px] font-semibold text-apt-green">✓ No errors in the last 24h</div>
       ) : (
-        // Something IS unresolved in GlitchTip — the top issues by volume,
-        // each deep-linking to its GlitchTip page (the shared status-list block).
+        // Each deep-links to its GlitchTip page (the shared status-list block).
         <StatList divided>
           {top.map((e) => (
             <StatListRow
@@ -97,13 +99,12 @@ export function ErrorsCard(): ReactElement {
           ))}
         </StatList>
       )}
+      <Link href="/errors" className="mt-2 block font-mono text-[11px] text-apt-text-muted hover:text-apt-text">
+        All errors →
+      </Link>
     </StatCard>
   );
 }
-
-// Compact number formatter — handles k/M/B with correct rounding (e.g. 999_999 → "1M",
-// 1_240 → "1.2K"), unlike a hand-rolled /1000 that breaks above 'k'.
-const COMPACT = new Intl.NumberFormat("en", { notation: "compact", maximumFractionDigits: 1 });
 
 function kpi(metrics: AnalyticsMetricDTO[], metric: string, window: string): number | null {
   const m = metrics.find((x) => x.metric === metric && x.window === window && x.scope === "all");

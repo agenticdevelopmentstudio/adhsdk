@@ -15,6 +15,7 @@ export default defineConfig({
     "src/board/index.ts",
     "src/board/derive-activity.ts",
     "src/monitor/deploy-status.ts",
+    "src/telemetry/dashboard/types.ts",
     "src/types.ts",
   ],
   format: ["esm"],
