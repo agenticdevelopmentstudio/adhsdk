@@ -37,6 +37,13 @@ public final class PartnerCodeReviewJobSettingsViewController: ComposableSetting
     private var enabledModel: ComposableSettings.ViewModel<Bool>?
     private var guidelinesModel: ComposableSettings.ViewModel<String>?
     private var jobsChanges: AnyCancellable?
+    /// One stable id per step, in step order. Internal for tests.
+    ///
+    /// A row is never named by its position: an edit in progress commits under the id it began with, and a
+    /// step moved or removed meanwhile would otherwise take that edit into whichever step now has the index.
+    /// Add, Remove and Up/Down carry the ids along with their steps; anything else that changes the steps
+    /// (a reset, a write from elsewhere) issues fresh ones, so a stale edit finds no row and is dropped.
+    private(set) var stepRowIDs: [String] = []
 
     /// Internal for tests.
     let stepsCard = ComposableSettings.EditableTableCard(
@@ -171,17 +178,24 @@ public final class PartnerCodeReviewJobSettingsViewController: ComposableSetting
 
     private func jobChangedElsewhere() {
         model.reload()
+        stepRowIDs = []
         enabledModel?.refresh()
         reloadSteps()
     }
 
-    private func perform(_ work: () throws -> Void) {
+    /// Runs one edit, showing its error under the card. Returns whether it saved.
+    @discardableResult
+    private func perform(_ work: () throws -> Void) -> Bool {
         errorLine.stringValue = ""
         errorLine.isHidden = true
-        do { try work() } catch {
+        do {
+            try work()
+            return true
+        } catch {
             Self.logger.error("Editing the code review job failed: \(error.localizedDescription)")
             errorLine.stringValue = "Could not save: \(error.localizedDescription)"
             errorLine.isHidden = false
+            return false
         }
     }
 
@@ -189,25 +203,19 @@ public final class PartnerCodeReviewJobSettingsViewController: ComposableSetting
 
     private func addStepsCard() {
         stepsCard.fitsAllRows = true
-        stepsCard.onAdd = { [weak self] in
-            self?.perform { try self?.model.addStep(to: Self.jobID) }
-            self?.reloadSteps()
-            if let last = self?.job?.steps.indices.last { _ = self?.stepsCard.selectRow(id: String(last)) }
-        }
-        stepsCard.onRemove = { [weak self] rowID in
-            guard let index = Int(rowID) else { return }
-            self?.perform { try self?.model.removeStep(in: Self.jobID, at: index) }
-            self?.reloadSteps()
-        }
+        stepsCard.onAdd = { [weak self] in self?.addStep() }
+        stepsCard.onRemove = { [weak self] rowID in self?.removeStep(rowID: rowID) }
         stepsCard.onEdit = { [weak self] rowID, column, text in self?.editStep(rowID: rowID, column: column, to: text) }
         stepsCard.onChoose = { [weak self] rowID, column, choice in
             self?.editStep(rowID: rowID, column: column, to: choice)
         }
         stepsCard.addFooterButton(title: "Up", identifier: "settings.partner.job.steps.up") { [weak self] in
-            self?.moveSelectedStep(by: -1)
+            guard let rowID = self?.stepsCard.selectedRowID else { return }
+            self?.moveStep(rowID: rowID, by: -1)
         }
         stepsCard.addFooterButton(title: "Down", identifier: "settings.partner.job.steps.down") { [weak self] in
-            self?.moveSelectedStep(by: 1)
+            guard let rowID = self?.stepsCard.selectedRowID else { return }
+            self?.moveStep(rowID: rowID, by: 1)
         }
         addGroup(stepsCard)
     }
@@ -219,6 +227,7 @@ public final class PartnerCodeReviewJobSettingsViewController: ComposableSetting
             explanation: "Replaces every step with the bundled ones.",
             wasPressedCallback: { [weak self] in
                 self?.perform { try self?.model.resetSteps(id: Self.jobID) }
+                self?.stepRowIDs = []
                 self?.reloadSteps()
             }))
         _ = reset.button.accessibilityID("settings.partner.job.reset-steps")
@@ -226,13 +235,15 @@ public final class PartnerCodeReviewJobSettingsViewController: ComposableSetting
         return group
     }
 
-    /// Rows are identified by position, the order the steps run in.
+    /// Rows are listed in the order the steps run in, each under its stable id (`stepRowIDs`).
     func reloadSteps() {
+        let steps = job?.steps ?? []
+        if stepRowIDs.count != steps.count { stepRowIDs = steps.map { _ in UUID().uuidString } }
         let choices = ([.terminal, .claude] as [PartnerJobStep.Environment]).map {
             ComposableSettings.EditableTableChoice(id: $0.rawValue, title: $0.rawValue)
         }
-        let rows = (job?.steps ?? []).enumerated().map { index, step in
-            ComposableSettings.EditableTableRow(id: String(index), cells: [
+        let rows = zip(stepRowIDs, steps).map { rowID, step in
+            ComposableSettings.EditableTableRow(id: rowID, cells: [
                 StepColumn.name: .text(step.name),
                 StepColumn.environment: .choice(selected: step.environment.rawValue, choices: choices),
                 StepColumn.command: .text(step.command),
@@ -243,7 +254,10 @@ public final class PartnerCodeReviewJobSettingsViewController: ComposableSetting
     }
 
     func editStep(rowID: String, column: String, to text: String) {
-        guard let index = Int(rowID) else { return }
+        guard let index = stepRowIDs.firstIndex(of: rowID) else {
+            Self.logger.info("Dropped an edit to a step that is no longer listed")
+            return
+        }
         perform {
             try model.update(Self.jobID) { job in
                 guard job.steps.indices.contains(index) else {
@@ -265,11 +279,28 @@ public final class PartnerCodeReviewJobSettingsViewController: ComposableSetting
         if column == StepColumn.environment { reloadSteps() }
     }
 
-    private func moveSelectedStep(by offset: Int) {
-        guard let rowID = stepsCard.selectedRowID, let index = Int(rowID) else { return }
-        perform { try model.moveStep(in: Self.jobID, from: index, to: index + offset) }
+    func addStep() {
+        if perform({ try model.addStep(to: Self.jobID) }) { stepRowIDs.append(UUID().uuidString) }
         reloadSteps()
-        if job?.steps.indices.contains(index + offset) == true { _ = stepsCard.selectRow(id: String(index + offset)) }
+        if let last = stepRowIDs.last { _ = stepsCard.selectRow(id: last) }
+    }
+
+    func removeStep(rowID: String) {
+        guard let index = stepRowIDs.firstIndex(of: rowID) else { return }
+        if perform({ try model.removeStep(in: Self.jobID, at: index) }) { stepRowIDs.remove(at: index) }
+        reloadSteps()
+    }
+
+    /// Moves a step up (`offset` -1) or down (+1); its row keeps its id, so it stays selected.
+    func moveStep(rowID: String, by offset: Int) {
+        guard let index = stepRowIDs.firstIndex(of: rowID), stepRowIDs.indices.contains(index + offset) else {
+            return
+        }
+        if perform({ try model.moveStep(in: Self.jobID, from: index, to: index + offset) }) {
+            stepRowIDs.insert(stepRowIDs.remove(at: index), at: index + offset)
+        }
+        reloadSteps()
+        _ = stepsCard.selectRow(id: rowID)
     }
 
     // MARK: - Reviewing

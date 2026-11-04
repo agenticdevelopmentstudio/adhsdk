@@ -107,12 +107,30 @@ final class PartnerCodeReviewJobSettingsTests: XCTestCase {
         let tab = makeTab()
         tab.reloadSteps()
         XCTAssertEqual(tab.stepsCard.rows.count, PartnerJobDefaults.codeReviews().steps.count)
-        tab.editStep(rowID: "0", column: "name", to: "renamed")
+        tab.editStep(rowID: tab.stepRowIDs[0], column: "name", to: "renamed")
         XCTAssertEqual(try store.jobs().first { $0.id == PartnerJobDefaults.codeReviewsID }?.steps.first?.name,
                        "renamed")
-        tab.editStep(rowID: "1", column: "environment", to: "terminal")
+        tab.editStep(rowID: tab.stepRowIDs[1], column: "environment", to: "terminal")
         XCTAssertEqual(try store.jobs().first { $0.id == PartnerJobDefaults.codeReviewsID }?.steps[1].environment,
                        .terminal)
+    }
+
+    /// An edit begun on a step commits to that step, even when Up moved it before the edit ended.
+    func testAnEditFollowsItsStepThroughAMove() throws {
+        let tab = makeTab()
+        tab.reloadSteps()
+        let steps = { try self.store.jobs().first { $0.id == PartnerJobDefaults.codeReviewsID }?.steps ?? [] }
+        let before = try steps()
+        let editing = tab.stepRowIDs[1]
+        tab.moveStep(rowID: editing, by: -1)
+        tab.editStep(rowID: editing, column: "command", to: "edited")
+        XCTAssertEqual(try steps().map(\.name), [before[1].name, before[0].name] + before.dropFirst(2).map(\.name))
+        XCTAssertEqual(try steps()[0].command, "edited")
+        XCTAssertEqual(try steps()[1].command, before[0].command)
+
+        tab.removeStep(rowID: editing)
+        tab.editStep(rowID: editing, column: "command", to: "lost")
+        XCTAssertFalse(try steps().contains { $0.command == "lost" }, "an edit to a removed step is dropped")
     }
 
     func testThePermissionsToolsTableEditsTheList() {
