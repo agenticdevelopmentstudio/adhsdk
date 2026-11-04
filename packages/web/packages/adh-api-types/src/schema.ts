@@ -2170,6 +2170,8 @@ export interface paths {
                             slug: string;
                             name: string;
                             allowedReturnOrigins: string[];
+                            /** @description The deployment sets these return origins, so they cannot be edited here. A site adds its origin on its application. */
+                            originsManaged: boolean;
                             defaultEcosystemId?: string | null;
                             isInternal: boolean;
                             appTokenPrefix?: string | null;
@@ -2229,6 +2231,8 @@ export interface paths {
                                 slug: string;
                                 name: string;
                                 allowedReturnOrigins: string[];
+                                /** @description The deployment sets these return origins, so they cannot be edited here. A site adds its origin on its application. */
+                                originsManaged: boolean;
                                 defaultEcosystemId?: string | null;
                                 isInternal: boolean;
                                 appTokenPrefix?: string | null;
@@ -2296,6 +2300,8 @@ export interface paths {
                                 slug: string;
                                 name: string;
                                 allowedReturnOrigins: string[];
+                                /** @description The deployment sets these return origins, so they cannot be edited here. A site adds its origin on its application. */
+                                originsManaged: boolean;
                                 defaultEcosystemId?: string | null;
                                 isInternal: boolean;
                                 appTokenPrefix?: string | null;
@@ -2415,6 +2421,8 @@ export interface paths {
                             slug: string;
                             name: string;
                             allowedReturnOrigins: string[];
+                            /** @description The deployment sets these return origins, so they cannot be edited here. A site adds its origin on its application. */
+                            originsManaged: boolean;
                             defaultEcosystemId?: string | null;
                             isInternal: boolean;
                             appTokenPrefix?: string | null;
@@ -2675,16 +2683,25 @@ export interface paths {
                                     tokenUrl?: string | null;
                                     userinfoUrl?: string | null;
                                     defaultScopes?: string[];
-                                    identityMapping?: {
-                                        subjectField?: string;
-                                        emailField?: string;
-                                        nameField?: string;
-                                        avatarField?: string;
+                                    identityMapping: {
+                                        subjectField: string;
+                                        emailField: string;
+                                        nameField: string;
+                                        avatarField: string;
                                         verificationUrl?: string;
                                         jwksUrl?: string;
                                         requireEmailVerified?: boolean;
                                         allowedAudiences?: string[];
                                         secondaryEmailUrl?: string;
+                                        idTokenJwksUrl?: string;
+                                        idTokenIssuers?: string[];
+                                        /** @enum {string} */
+                                        responseMode?: "form_post";
+                                        clientSecretJwt?: {
+                                            teamId: string;
+                                            keyId: string;
+                                            audience: string;
+                                        };
                                     };
                                 };
                             };
@@ -2754,15 +2771,24 @@ export interface paths {
                             clientId: string;
                             scopes: string[];
                             identityMapping: {
-                                subjectField?: string;
-                                emailField?: string;
-                                nameField?: string;
-                                avatarField?: string;
+                                subjectField: string;
+                                emailField: string;
+                                nameField: string;
+                                avatarField: string;
                                 verificationUrl?: string;
                                 jwksUrl?: string;
                                 requireEmailVerified?: boolean;
                                 allowedAudiences?: string[];
                                 secondaryEmailUrl?: string;
+                                idTokenJwksUrl?: string;
+                                idTokenIssuers?: string[];
+                                /** @enum {string} */
+                                responseMode?: "form_post";
+                                clientSecretJwt?: {
+                                    teamId: string;
+                                    keyId: string;
+                                    audience: string;
+                                };
                             };
                         }[];
                     };
@@ -2819,6 +2845,15 @@ export interface paths {
                             requireEmailVerified?: boolean;
                             allowedAudiences?: string[];
                             secondaryEmailUrl?: string;
+                            idTokenJwksUrl?: string;
+                            idTokenIssuers?: string[];
+                            /** @enum {string} */
+                            responseMode?: "form_post";
+                            clientSecretJwt?: {
+                                teamId: string;
+                                keyId: string;
+                                audience: string;
+                            };
                         };
                     };
                 };
@@ -2842,15 +2877,24 @@ export interface paths {
                             clientId: string;
                             scopes: string[];
                             identityMapping: {
-                                subjectField?: string;
-                                emailField?: string;
-                                nameField?: string;
-                                avatarField?: string;
+                                subjectField: string;
+                                emailField: string;
+                                nameField: string;
+                                avatarField: string;
                                 verificationUrl?: string;
                                 jwksUrl?: string;
                                 requireEmailVerified?: boolean;
                                 allowedAudiences?: string[];
                                 secondaryEmailUrl?: string;
+                                idTokenJwksUrl?: string;
+                                idTokenIssuers?: string[];
+                                /** @enum {string} */
+                                responseMode?: "form_post";
+                                clientSecretJwt?: {
+                                    teamId: string;
+                                    keyId: string;
+                                    audience: string;
+                                };
                             };
                         };
                     };
@@ -2920,15 +2964,24 @@ export interface paths {
                             clientId: string;
                             scopes: string[];
                             identityMapping: {
-                                subjectField?: string;
-                                emailField?: string;
-                                nameField?: string;
-                                avatarField?: string;
+                                subjectField: string;
+                                emailField: string;
+                                nameField: string;
+                                avatarField: string;
                                 verificationUrl?: string;
                                 jwksUrl?: string;
                                 requireEmailVerified?: boolean;
                                 allowedAudiences?: string[];
                                 secondaryEmailUrl?: string;
+                                idTokenJwksUrl?: string;
+                                idTokenIssuers?: string[];
+                                /** @enum {string} */
+                                responseMode?: "form_post";
+                                clientSecretJwt?: {
+                                    teamId: string;
+                                    keyId: string;
+                                    audience: string;
+                                };
                             };
                         };
                     };
@@ -3026,6 +3079,15 @@ export interface paths {
                             requireEmailVerified?: boolean;
                             allowedAudiences?: string[];
                             secondaryEmailUrl?: string;
+                            idTokenJwksUrl?: string;
+                            idTokenIssuers?: string[];
+                            /** @enum {string} */
+                            responseMode?: "form_post";
+                            clientSecretJwt?: {
+                                teamId: string;
+                                keyId: string;
+                                audience: string;
+                            };
                         };
                     };
                 };
@@ -3049,15 +3111,24 @@ export interface paths {
                             clientId: string;
                             scopes: string[];
                             identityMapping: {
-                                subjectField?: string;
-                                emailField?: string;
-                                nameField?: string;
-                                avatarField?: string;
+                                subjectField: string;
+                                emailField: string;
+                                nameField: string;
+                                avatarField: string;
                                 verificationUrl?: string;
                                 jwksUrl?: string;
                                 requireEmailVerified?: boolean;
                                 allowedAudiences?: string[];
                                 secondaryEmailUrl?: string;
+                                idTokenJwksUrl?: string;
+                                idTokenIssuers?: string[];
+                                /** @enum {string} */
+                                responseMode?: "form_post";
+                                clientSecretJwt?: {
+                                    teamId: string;
+                                    keyId: string;
+                                    audience: string;
+                                };
                             };
                         };
                     };
@@ -3362,8 +3433,9 @@ export interface paths {
         get: {
             parameters: {
                 query: {
-                    code: string;
+                    code?: string;
                     state: string;
+                    error?: string;
                 };
                 header?: never;
                 path?: never;
@@ -3397,7 +3469,51 @@ export interface paths {
             };
         };
         put?: never;
-        post?: never;
+        /** The same callback, for a provider that posts it (response_mode=form_post) */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/x-www-form-urlencoded": {
+                        code?: string;
+                        state: string;
+                        error?: string;
+                        /** @description Apple's one-time name, as JSON */
+                        user?: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description redirect to returnUrl with code */
+                302: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Hydra-login mode: redirect to Hydra, or back to the login page */
+                303: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Error */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
         delete?: never;
         options?: never;
         head?: never;

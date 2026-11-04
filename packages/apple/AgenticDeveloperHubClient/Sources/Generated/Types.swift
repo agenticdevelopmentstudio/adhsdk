@@ -275,6 +275,11 @@ public protocol APIProtocol: Sendable {
     /// - Remark: HTTP `GET /oauth/signin/callback`.
     /// - Remark: Generated from `#/paths//oauth/signin/callback/get`.
     func getOauthSigninCallback(_ input: Operations.GetOauthSigninCallback.Input) async throws -> Operations.GetOauthSigninCallback.Output
+    /// The same callback, for a provider that posts it (response_mode=form_post)
+    ///
+    /// - Remark: HTTP `POST /oauth/signin/callback`.
+    /// - Remark: Generated from `#/paths//oauth/signin/callback/post`.
+    func postOauthSigninCallback(_ input: Operations.PostOauthSigninCallback.Input) async throws -> Operations.PostOauthSigninCallback.Output
     /// Trade a single-use exchange code → token + refreshToken + user
     ///
     /// - Remark: HTTP `POST /oauth/signin/exchange`.
@@ -6890,6 +6895,19 @@ extension APIProtocol {
         try await getOauthSigninCallback(Operations.GetOauthSigninCallback.Input(
             query: query,
             headers: headers
+        ))
+    }
+    /// The same callback, for a provider that posts it (response_mode=form_post)
+    ///
+    /// - Remark: HTTP `POST /oauth/signin/callback`.
+    /// - Remark: Generated from `#/paths//oauth/signin/callback/post`.
+    public func postOauthSigninCallback(
+        headers: Operations.PostOauthSigninCallback.Input.Headers = .init(),
+        body: Operations.PostOauthSigninCallback.Input.Body
+    ) async throws -> Operations.PostOauthSigninCallback.Output {
+        try await postOauthSigninCallback(Operations.PostOauthSigninCallback.Input(
+            headers: headers,
+            body: body
         ))
     }
     /// Trade a single-use exchange code → token + refreshToken + user
@@ -58457,6 +58475,10 @@ public enum Operations {
                         public var name: Swift.String
                         /// - Remark: Generated from `#/paths/oauth/clients/GET/responses/200/content/JsonPayload/allowedReturnOrigins`.
                         public var allowedReturnOrigins: [Swift.String]
+                        /// The deployment sets these return origins, so they cannot be edited here. A site adds its origin on its application.
+                        ///
+                        /// - Remark: Generated from `#/paths/oauth/clients/GET/responses/200/content/JsonPayload/originsManaged`.
+                        public var originsManaged: Swift.Bool
                         /// - Remark: Generated from `#/paths/oauth/clients/GET/responses/200/content/JsonPayload/defaultEcosystemId`.
                         public var defaultEcosystemId: Swift.String?
                         /// - Remark: Generated from `#/paths/oauth/clients/GET/responses/200/content/JsonPayload/isInternal`.
@@ -58470,6 +58492,7 @@ public enum Operations {
                         ///   - slug:
                         ///   - name:
                         ///   - allowedReturnOrigins:
+                        ///   - originsManaged: The deployment sets these return origins, so they cannot be edited here. A site adds its origin on its application.
                         ///   - defaultEcosystemId:
                         ///   - isInternal:
                         ///   - appTokenPrefix:
@@ -58478,6 +58501,7 @@ public enum Operations {
                             slug: Swift.String,
                             name: Swift.String,
                             allowedReturnOrigins: [Swift.String],
+                            originsManaged: Swift.Bool,
                             defaultEcosystemId: Swift.String? = nil,
                             isInternal: Swift.Bool,
                             appTokenPrefix: Swift.String? = nil
@@ -58486,6 +58510,7 @@ public enum Operations {
                             self.slug = slug
                             self.name = name
                             self.allowedReturnOrigins = allowedReturnOrigins
+                            self.originsManaged = originsManaged
                             self.defaultEcosystemId = defaultEcosystemId
                             self.isInternal = isInternal
                             self.appTokenPrefix = appTokenPrefix
@@ -58495,6 +58520,7 @@ public enum Operations {
                             case slug
                             case name
                             case allowedReturnOrigins
+                            case originsManaged
                             case defaultEcosystemId
                             case isInternal
                             case appTokenPrefix
@@ -58778,6 +58804,10 @@ public enum Operations {
                             public var name: Swift.String
                             /// - Remark: Generated from `#/paths/oauth/clients/POST/responses/201/content/json/client/allowedReturnOrigins`.
                             public var allowedReturnOrigins: [Swift.String]
+                            /// The deployment sets these return origins, so they cannot be edited here. A site adds its origin on its application.
+                            ///
+                            /// - Remark: Generated from `#/paths/oauth/clients/POST/responses/201/content/json/client/originsManaged`.
+                            public var originsManaged: Swift.Bool
                             /// - Remark: Generated from `#/paths/oauth/clients/POST/responses/201/content/json/client/defaultEcosystemId`.
                             public var defaultEcosystemId: Swift.String?
                             /// - Remark: Generated from `#/paths/oauth/clients/POST/responses/201/content/json/client/isInternal`.
@@ -58791,6 +58821,7 @@ public enum Operations {
                             ///   - slug:
                             ///   - name:
                             ///   - allowedReturnOrigins:
+                            ///   - originsManaged: The deployment sets these return origins, so they cannot be edited here. A site adds its origin on its application.
                             ///   - defaultEcosystemId:
                             ///   - isInternal:
                             ///   - appTokenPrefix:
@@ -58799,6 +58830,7 @@ public enum Operations {
                                 slug: Swift.String,
                                 name: Swift.String,
                                 allowedReturnOrigins: [Swift.String],
+                                originsManaged: Swift.Bool,
                                 defaultEcosystemId: Swift.String? = nil,
                                 isInternal: Swift.Bool,
                                 appTokenPrefix: Swift.String? = nil
@@ -58807,6 +58839,7 @@ public enum Operations {
                                 self.slug = slug
                                 self.name = name
                                 self.allowedReturnOrigins = allowedReturnOrigins
+                                self.originsManaged = originsManaged
                                 self.defaultEcosystemId = defaultEcosystemId
                                 self.isInternal = isInternal
                                 self.appTokenPrefix = appTokenPrefix
@@ -58816,6 +58849,7 @@ public enum Operations {
                                 case slug
                                 case name
                                 case allowedReturnOrigins
+                                case originsManaged
                                 case defaultEcosystemId
                                 case isInternal
                                 case appTokenPrefix
@@ -59084,6 +59118,10 @@ public enum Operations {
                             public var name: Swift.String
                             /// - Remark: Generated from `#/paths/oauth/clients/{slug}/GET/responses/200/content/json/client/allowedReturnOrigins`.
                             public var allowedReturnOrigins: [Swift.String]
+                            /// The deployment sets these return origins, so they cannot be edited here. A site adds its origin on its application.
+                            ///
+                            /// - Remark: Generated from `#/paths/oauth/clients/{slug}/GET/responses/200/content/json/client/originsManaged`.
+                            public var originsManaged: Swift.Bool
                             /// - Remark: Generated from `#/paths/oauth/clients/{slug}/GET/responses/200/content/json/client/defaultEcosystemId`.
                             public var defaultEcosystemId: Swift.String?
                             /// - Remark: Generated from `#/paths/oauth/clients/{slug}/GET/responses/200/content/json/client/isInternal`.
@@ -59097,6 +59135,7 @@ public enum Operations {
                             ///   - slug:
                             ///   - name:
                             ///   - allowedReturnOrigins:
+                            ///   - originsManaged: The deployment sets these return origins, so they cannot be edited here. A site adds its origin on its application.
                             ///   - defaultEcosystemId:
                             ///   - isInternal:
                             ///   - appTokenPrefix:
@@ -59105,6 +59144,7 @@ public enum Operations {
                                 slug: Swift.String,
                                 name: Swift.String,
                                 allowedReturnOrigins: [Swift.String],
+                                originsManaged: Swift.Bool,
                                 defaultEcosystemId: Swift.String? = nil,
                                 isInternal: Swift.Bool,
                                 appTokenPrefix: Swift.String? = nil
@@ -59113,6 +59153,7 @@ public enum Operations {
                                 self.slug = slug
                                 self.name = name
                                 self.allowedReturnOrigins = allowedReturnOrigins
+                                self.originsManaged = originsManaged
                                 self.defaultEcosystemId = defaultEcosystemId
                                 self.isInternal = isInternal
                                 self.appTokenPrefix = appTokenPrefix
@@ -59122,6 +59163,7 @@ public enum Operations {
                                 case slug
                                 case name
                                 case allowedReturnOrigins
+                                case originsManaged
                                 case defaultEcosystemId
                                 case isInternal
                                 case appTokenPrefix
@@ -59481,6 +59523,10 @@ public enum Operations {
                         public var name: Swift.String
                         /// - Remark: Generated from `#/paths/oauth/clients/{slug}/PATCH/responses/200/content/json/allowedReturnOrigins`.
                         public var allowedReturnOrigins: [Swift.String]
+                        /// The deployment sets these return origins, so they cannot be edited here. A site adds its origin on its application.
+                        ///
+                        /// - Remark: Generated from `#/paths/oauth/clients/{slug}/PATCH/responses/200/content/json/originsManaged`.
+                        public var originsManaged: Swift.Bool
                         /// - Remark: Generated from `#/paths/oauth/clients/{slug}/PATCH/responses/200/content/json/defaultEcosystemId`.
                         public var defaultEcosystemId: Swift.String?
                         /// - Remark: Generated from `#/paths/oauth/clients/{slug}/PATCH/responses/200/content/json/isInternal`.
@@ -59494,6 +59540,7 @@ public enum Operations {
                         ///   - slug:
                         ///   - name:
                         ///   - allowedReturnOrigins:
+                        ///   - originsManaged: The deployment sets these return origins, so they cannot be edited here. A site adds its origin on its application.
                         ///   - defaultEcosystemId:
                         ///   - isInternal:
                         ///   - appTokenPrefix:
@@ -59502,6 +59549,7 @@ public enum Operations {
                             slug: Swift.String,
                             name: Swift.String,
                             allowedReturnOrigins: [Swift.String],
+                            originsManaged: Swift.Bool,
                             defaultEcosystemId: Swift.String? = nil,
                             isInternal: Swift.Bool,
                             appTokenPrefix: Swift.String? = nil
@@ -59510,6 +59558,7 @@ public enum Operations {
                             self.slug = slug
                             self.name = name
                             self.allowedReturnOrigins = allowedReturnOrigins
+                            self.originsManaged = originsManaged
                             self.defaultEcosystemId = defaultEcosystemId
                             self.isInternal = isInternal
                             self.appTokenPrefix = appTokenPrefix
@@ -59519,6 +59568,7 @@ public enum Operations {
                             case slug
                             case name
                             case allowedReturnOrigins
+                            case originsManaged
                             case defaultEcosystemId
                             case isInternal
                             case appTokenPrefix
@@ -60955,13 +61005,13 @@ public enum Operations {
                                 /// - Remark: Generated from `#/paths/oauth/provider-templates/GET/responses/200/content/json/templates/additionalProperties/identityMapping`.
                                 public struct IdentityMappingPayload: Codable, Hashable, Sendable {
                                     /// - Remark: Generated from `#/paths/oauth/provider-templates/GET/responses/200/content/json/templates/additionalProperties/identityMapping/subjectField`.
-                                    public var subjectField: Swift.String?
+                                    public var subjectField: Swift.String
                                     /// - Remark: Generated from `#/paths/oauth/provider-templates/GET/responses/200/content/json/templates/additionalProperties/identityMapping/emailField`.
-                                    public var emailField: Swift.String?
+                                    public var emailField: Swift.String
                                     /// - Remark: Generated from `#/paths/oauth/provider-templates/GET/responses/200/content/json/templates/additionalProperties/identityMapping/nameField`.
-                                    public var nameField: Swift.String?
+                                    public var nameField: Swift.String
                                     /// - Remark: Generated from `#/paths/oauth/provider-templates/GET/responses/200/content/json/templates/additionalProperties/identityMapping/avatarField`.
-                                    public var avatarField: Swift.String?
+                                    public var avatarField: Swift.String
                                     /// - Remark: Generated from `#/paths/oauth/provider-templates/GET/responses/200/content/json/templates/additionalProperties/identityMapping/verificationUrl`.
                                     public var verificationUrl: Swift.String?
                                     /// - Remark: Generated from `#/paths/oauth/provider-templates/GET/responses/200/content/json/templates/additionalProperties/identityMapping/jwksUrl`.
@@ -60972,6 +61022,47 @@ public enum Operations {
                                     public var allowedAudiences: [Swift.String]?
                                     /// - Remark: Generated from `#/paths/oauth/provider-templates/GET/responses/200/content/json/templates/additionalProperties/identityMapping/secondaryEmailUrl`.
                                     public var secondaryEmailUrl: Swift.String?
+                                    /// - Remark: Generated from `#/paths/oauth/provider-templates/GET/responses/200/content/json/templates/additionalProperties/identityMapping/idTokenJwksUrl`.
+                                    public var idTokenJwksUrl: Swift.String?
+                                    /// - Remark: Generated from `#/paths/oauth/provider-templates/GET/responses/200/content/json/templates/additionalProperties/identityMapping/idTokenIssuers`.
+                                    public var idTokenIssuers: [Swift.String]?
+                                    /// - Remark: Generated from `#/paths/oauth/provider-templates/GET/responses/200/content/json/templates/additionalProperties/identityMapping/responseMode`.
+                                    @frozen public enum ResponseModePayload: String, Codable, Hashable, Sendable, CaseIterable {
+                                        case formPost = "form_post"
+                                    }
+                                    /// - Remark: Generated from `#/paths/oauth/provider-templates/GET/responses/200/content/json/templates/additionalProperties/identityMapping/responseMode`.
+                                    public var responseMode: Operations.GetOauthProviderTemplates.Output.Ok.Body.JsonPayload.TemplatesPayload.AdditionalPropertiesPayload.IdentityMappingPayload.ResponseModePayload?
+                                    /// - Remark: Generated from `#/paths/oauth/provider-templates/GET/responses/200/content/json/templates/additionalProperties/identityMapping/clientSecretJwt`.
+                                    public struct ClientSecretJwtPayload: Codable, Hashable, Sendable {
+                                        /// - Remark: Generated from `#/paths/oauth/provider-templates/GET/responses/200/content/json/templates/additionalProperties/identityMapping/clientSecretJwt/teamId`.
+                                        public var teamId: Swift.String
+                                        /// - Remark: Generated from `#/paths/oauth/provider-templates/GET/responses/200/content/json/templates/additionalProperties/identityMapping/clientSecretJwt/keyId`.
+                                        public var keyId: Swift.String
+                                        /// - Remark: Generated from `#/paths/oauth/provider-templates/GET/responses/200/content/json/templates/additionalProperties/identityMapping/clientSecretJwt/audience`.
+                                        public var audience: Swift.String
+                                        /// Creates a new `ClientSecretJwtPayload`.
+                                        ///
+                                        /// - Parameters:
+                                        ///   - teamId:
+                                        ///   - keyId:
+                                        ///   - audience:
+                                        public init(
+                                            teamId: Swift.String,
+                                            keyId: Swift.String,
+                                            audience: Swift.String
+                                        ) {
+                                            self.teamId = teamId
+                                            self.keyId = keyId
+                                            self.audience = audience
+                                        }
+                                        public enum CodingKeys: String, CodingKey {
+                                            case teamId
+                                            case keyId
+                                            case audience
+                                        }
+                                    }
+                                    /// - Remark: Generated from `#/paths/oauth/provider-templates/GET/responses/200/content/json/templates/additionalProperties/identityMapping/clientSecretJwt`.
+                                    public var clientSecretJwt: Operations.GetOauthProviderTemplates.Output.Ok.Body.JsonPayload.TemplatesPayload.AdditionalPropertiesPayload.IdentityMappingPayload.ClientSecretJwtPayload?
                                     /// Creates a new `IdentityMappingPayload`.
                                     ///
                                     /// - Parameters:
@@ -60984,16 +61075,24 @@ public enum Operations {
                                     ///   - requireEmailVerified:
                                     ///   - allowedAudiences:
                                     ///   - secondaryEmailUrl:
+                                    ///   - idTokenJwksUrl:
+                                    ///   - idTokenIssuers:
+                                    ///   - responseMode:
+                                    ///   - clientSecretJwt:
                                     public init(
-                                        subjectField: Swift.String? = nil,
-                                        emailField: Swift.String? = nil,
-                                        nameField: Swift.String? = nil,
-                                        avatarField: Swift.String? = nil,
+                                        subjectField: Swift.String,
+                                        emailField: Swift.String,
+                                        nameField: Swift.String,
+                                        avatarField: Swift.String,
                                         verificationUrl: Swift.String? = nil,
                                         jwksUrl: Swift.String? = nil,
                                         requireEmailVerified: Swift.Bool? = nil,
                                         allowedAudiences: [Swift.String]? = nil,
-                                        secondaryEmailUrl: Swift.String? = nil
+                                        secondaryEmailUrl: Swift.String? = nil,
+                                        idTokenJwksUrl: Swift.String? = nil,
+                                        idTokenIssuers: [Swift.String]? = nil,
+                                        responseMode: Operations.GetOauthProviderTemplates.Output.Ok.Body.JsonPayload.TemplatesPayload.AdditionalPropertiesPayload.IdentityMappingPayload.ResponseModePayload? = nil,
+                                        clientSecretJwt: Operations.GetOauthProviderTemplates.Output.Ok.Body.JsonPayload.TemplatesPayload.AdditionalPropertiesPayload.IdentityMappingPayload.ClientSecretJwtPayload? = nil
                                     ) {
                                         self.subjectField = subjectField
                                         self.emailField = emailField
@@ -61004,6 +61103,10 @@ public enum Operations {
                                         self.requireEmailVerified = requireEmailVerified
                                         self.allowedAudiences = allowedAudiences
                                         self.secondaryEmailUrl = secondaryEmailUrl
+                                        self.idTokenJwksUrl = idTokenJwksUrl
+                                        self.idTokenIssuers = idTokenIssuers
+                                        self.responseMode = responseMode
+                                        self.clientSecretJwt = clientSecretJwt
                                     }
                                     public enum CodingKeys: String, CodingKey {
                                         case subjectField
@@ -61015,10 +61118,14 @@ public enum Operations {
                                         case requireEmailVerified
                                         case allowedAudiences
                                         case secondaryEmailUrl
+                                        case idTokenJwksUrl
+                                        case idTokenIssuers
+                                        case responseMode
+                                        case clientSecretJwt
                                     }
                                 }
                                 /// - Remark: Generated from `#/paths/oauth/provider-templates/GET/responses/200/content/json/templates/additionalProperties/identityMapping`.
-                                public var identityMapping: Operations.GetOauthProviderTemplates.Output.Ok.Body.JsonPayload.TemplatesPayload.AdditionalPropertiesPayload.IdentityMappingPayload?
+                                public var identityMapping: Operations.GetOauthProviderTemplates.Output.Ok.Body.JsonPayload.TemplatesPayload.AdditionalPropertiesPayload.IdentityMappingPayload
                                 /// Creates a new `AdditionalPropertiesPayload`.
                                 ///
                                 /// - Parameters:
@@ -61038,7 +61145,7 @@ public enum Operations {
                                     tokenUrl: Swift.String? = nil,
                                     userinfoUrl: Swift.String? = nil,
                                     defaultScopes: [Swift.String]? = nil,
-                                    identityMapping: Operations.GetOauthProviderTemplates.Output.Ok.Body.JsonPayload.TemplatesPayload.AdditionalPropertiesPayload.IdentityMappingPayload? = nil
+                                    identityMapping: Operations.GetOauthProviderTemplates.Output.Ok.Body.JsonPayload.TemplatesPayload.AdditionalPropertiesPayload.IdentityMappingPayload
                                 ) {
                                     self.slug = slug
                                     self.name = name
@@ -61330,13 +61437,13 @@ public enum Operations {
                         /// - Remark: Generated from `#/paths/oauth/providers/GET/responses/200/content/JsonPayload/identityMapping`.
                         public struct IdentityMappingPayload: Codable, Hashable, Sendable {
                             /// - Remark: Generated from `#/paths/oauth/providers/GET/responses/200/content/JsonPayload/identityMapping/subjectField`.
-                            public var subjectField: Swift.String?
+                            public var subjectField: Swift.String
                             /// - Remark: Generated from `#/paths/oauth/providers/GET/responses/200/content/JsonPayload/identityMapping/emailField`.
-                            public var emailField: Swift.String?
+                            public var emailField: Swift.String
                             /// - Remark: Generated from `#/paths/oauth/providers/GET/responses/200/content/JsonPayload/identityMapping/nameField`.
-                            public var nameField: Swift.String?
+                            public var nameField: Swift.String
                             /// - Remark: Generated from `#/paths/oauth/providers/GET/responses/200/content/JsonPayload/identityMapping/avatarField`.
-                            public var avatarField: Swift.String?
+                            public var avatarField: Swift.String
                             /// - Remark: Generated from `#/paths/oauth/providers/GET/responses/200/content/JsonPayload/identityMapping/verificationUrl`.
                             public var verificationUrl: Swift.String?
                             /// - Remark: Generated from `#/paths/oauth/providers/GET/responses/200/content/JsonPayload/identityMapping/jwksUrl`.
@@ -61347,6 +61454,47 @@ public enum Operations {
                             public var allowedAudiences: [Swift.String]?
                             /// - Remark: Generated from `#/paths/oauth/providers/GET/responses/200/content/JsonPayload/identityMapping/secondaryEmailUrl`.
                             public var secondaryEmailUrl: Swift.String?
+                            /// - Remark: Generated from `#/paths/oauth/providers/GET/responses/200/content/JsonPayload/identityMapping/idTokenJwksUrl`.
+                            public var idTokenJwksUrl: Swift.String?
+                            /// - Remark: Generated from `#/paths/oauth/providers/GET/responses/200/content/JsonPayload/identityMapping/idTokenIssuers`.
+                            public var idTokenIssuers: [Swift.String]?
+                            /// - Remark: Generated from `#/paths/oauth/providers/GET/responses/200/content/JsonPayload/identityMapping/responseMode`.
+                            @frozen public enum ResponseModePayload: String, Codable, Hashable, Sendable, CaseIterable {
+                                case formPost = "form_post"
+                            }
+                            /// - Remark: Generated from `#/paths/oauth/providers/GET/responses/200/content/JsonPayload/identityMapping/responseMode`.
+                            public var responseMode: Operations.GetOauthProviders.Output.Ok.Body.JsonPayloadPayload.IdentityMappingPayload.ResponseModePayload?
+                            /// - Remark: Generated from `#/paths/oauth/providers/GET/responses/200/content/JsonPayload/identityMapping/clientSecretJwt`.
+                            public struct ClientSecretJwtPayload: Codable, Hashable, Sendable {
+                                /// - Remark: Generated from `#/paths/oauth/providers/GET/responses/200/content/JsonPayload/identityMapping/clientSecretJwt/teamId`.
+                                public var teamId: Swift.String
+                                /// - Remark: Generated from `#/paths/oauth/providers/GET/responses/200/content/JsonPayload/identityMapping/clientSecretJwt/keyId`.
+                                public var keyId: Swift.String
+                                /// - Remark: Generated from `#/paths/oauth/providers/GET/responses/200/content/JsonPayload/identityMapping/clientSecretJwt/audience`.
+                                public var audience: Swift.String
+                                /// Creates a new `ClientSecretJwtPayload`.
+                                ///
+                                /// - Parameters:
+                                ///   - teamId:
+                                ///   - keyId:
+                                ///   - audience:
+                                public init(
+                                    teamId: Swift.String,
+                                    keyId: Swift.String,
+                                    audience: Swift.String
+                                ) {
+                                    self.teamId = teamId
+                                    self.keyId = keyId
+                                    self.audience = audience
+                                }
+                                public enum CodingKeys: String, CodingKey {
+                                    case teamId
+                                    case keyId
+                                    case audience
+                                }
+                            }
+                            /// - Remark: Generated from `#/paths/oauth/providers/GET/responses/200/content/JsonPayload/identityMapping/clientSecretJwt`.
+                            public var clientSecretJwt: Operations.GetOauthProviders.Output.Ok.Body.JsonPayloadPayload.IdentityMappingPayload.ClientSecretJwtPayload?
                             /// Creates a new `IdentityMappingPayload`.
                             ///
                             /// - Parameters:
@@ -61359,16 +61507,24 @@ public enum Operations {
                             ///   - requireEmailVerified:
                             ///   - allowedAudiences:
                             ///   - secondaryEmailUrl:
+                            ///   - idTokenJwksUrl:
+                            ///   - idTokenIssuers:
+                            ///   - responseMode:
+                            ///   - clientSecretJwt:
                             public init(
-                                subjectField: Swift.String? = nil,
-                                emailField: Swift.String? = nil,
-                                nameField: Swift.String? = nil,
-                                avatarField: Swift.String? = nil,
+                                subjectField: Swift.String,
+                                emailField: Swift.String,
+                                nameField: Swift.String,
+                                avatarField: Swift.String,
                                 verificationUrl: Swift.String? = nil,
                                 jwksUrl: Swift.String? = nil,
                                 requireEmailVerified: Swift.Bool? = nil,
                                 allowedAudiences: [Swift.String]? = nil,
-                                secondaryEmailUrl: Swift.String? = nil
+                                secondaryEmailUrl: Swift.String? = nil,
+                                idTokenJwksUrl: Swift.String? = nil,
+                                idTokenIssuers: [Swift.String]? = nil,
+                                responseMode: Operations.GetOauthProviders.Output.Ok.Body.JsonPayloadPayload.IdentityMappingPayload.ResponseModePayload? = nil,
+                                clientSecretJwt: Operations.GetOauthProviders.Output.Ok.Body.JsonPayloadPayload.IdentityMappingPayload.ClientSecretJwtPayload? = nil
                             ) {
                                 self.subjectField = subjectField
                                 self.emailField = emailField
@@ -61379,6 +61535,10 @@ public enum Operations {
                                 self.requireEmailVerified = requireEmailVerified
                                 self.allowedAudiences = allowedAudiences
                                 self.secondaryEmailUrl = secondaryEmailUrl
+                                self.idTokenJwksUrl = idTokenJwksUrl
+                                self.idTokenIssuers = idTokenIssuers
+                                self.responseMode = responseMode
+                                self.clientSecretJwt = clientSecretJwt
                             }
                             public enum CodingKeys: String, CodingKey {
                                 case subjectField
@@ -61390,6 +61550,10 @@ public enum Operations {
                                 case requireEmailVerified
                                 case allowedAudiences
                                 case secondaryEmailUrl
+                                case idTokenJwksUrl
+                                case idTokenIssuers
+                                case responseMode
+                                case clientSecretJwt
                             }
                         }
                         /// - Remark: Generated from `#/paths/oauth/providers/GET/responses/200/content/JsonPayload/identityMapping`.
@@ -61693,6 +61857,47 @@ public enum Operations {
                         public var allowedAudiences: [Swift.String]?
                         /// - Remark: Generated from `#/paths/oauth/providers/POST/requestBody/json/identityMapping/secondaryEmailUrl`.
                         public var secondaryEmailUrl: Swift.String?
+                        /// - Remark: Generated from `#/paths/oauth/providers/POST/requestBody/json/identityMapping/idTokenJwksUrl`.
+                        public var idTokenJwksUrl: Swift.String?
+                        /// - Remark: Generated from `#/paths/oauth/providers/POST/requestBody/json/identityMapping/idTokenIssuers`.
+                        public var idTokenIssuers: [Swift.String]?
+                        /// - Remark: Generated from `#/paths/oauth/providers/POST/requestBody/json/identityMapping/responseMode`.
+                        @frozen public enum ResponseModePayload: String, Codable, Hashable, Sendable, CaseIterable {
+                            case formPost = "form_post"
+                        }
+                        /// - Remark: Generated from `#/paths/oauth/providers/POST/requestBody/json/identityMapping/responseMode`.
+                        public var responseMode: Operations.PostOauthProviders.Input.Body.JsonPayload.IdentityMappingPayload.ResponseModePayload?
+                        /// - Remark: Generated from `#/paths/oauth/providers/POST/requestBody/json/identityMapping/clientSecretJwt`.
+                        public struct ClientSecretJwtPayload: Codable, Hashable, Sendable {
+                            /// - Remark: Generated from `#/paths/oauth/providers/POST/requestBody/json/identityMapping/clientSecretJwt/teamId`.
+                            public var teamId: Swift.String
+                            /// - Remark: Generated from `#/paths/oauth/providers/POST/requestBody/json/identityMapping/clientSecretJwt/keyId`.
+                            public var keyId: Swift.String
+                            /// - Remark: Generated from `#/paths/oauth/providers/POST/requestBody/json/identityMapping/clientSecretJwt/audience`.
+                            public var audience: Swift.String
+                            /// Creates a new `ClientSecretJwtPayload`.
+                            ///
+                            /// - Parameters:
+                            ///   - teamId:
+                            ///   - keyId:
+                            ///   - audience:
+                            public init(
+                                teamId: Swift.String,
+                                keyId: Swift.String,
+                                audience: Swift.String
+                            ) {
+                                self.teamId = teamId
+                                self.keyId = keyId
+                                self.audience = audience
+                            }
+                            public enum CodingKeys: String, CodingKey {
+                                case teamId
+                                case keyId
+                                case audience
+                            }
+                        }
+                        /// - Remark: Generated from `#/paths/oauth/providers/POST/requestBody/json/identityMapping/clientSecretJwt`.
+                        public var clientSecretJwt: Operations.PostOauthProviders.Input.Body.JsonPayload.IdentityMappingPayload.ClientSecretJwtPayload?
                         /// Creates a new `IdentityMappingPayload`.
                         ///
                         /// - Parameters:
@@ -61704,6 +61909,10 @@ public enum Operations {
                         ///   - requireEmailVerified:
                         ///   - allowedAudiences:
                         ///   - secondaryEmailUrl:
+                        ///   - idTokenJwksUrl:
+                        ///   - idTokenIssuers:
+                        ///   - responseMode:
+                        ///   - clientSecretJwt:
                         public init(
                             subjectField: Swift.String,
                             emailField: Swift.String,
@@ -61712,7 +61921,11 @@ public enum Operations {
                             verificationUrl: Swift.String? = nil,
                             requireEmailVerified: Swift.Bool? = nil,
                             allowedAudiences: [Swift.String]? = nil,
-                            secondaryEmailUrl: Swift.String? = nil
+                            secondaryEmailUrl: Swift.String? = nil,
+                            idTokenJwksUrl: Swift.String? = nil,
+                            idTokenIssuers: [Swift.String]? = nil,
+                            responseMode: Operations.PostOauthProviders.Input.Body.JsonPayload.IdentityMappingPayload.ResponseModePayload? = nil,
+                            clientSecretJwt: Operations.PostOauthProviders.Input.Body.JsonPayload.IdentityMappingPayload.ClientSecretJwtPayload? = nil
                         ) {
                             self.subjectField = subjectField
                             self.emailField = emailField
@@ -61722,6 +61935,10 @@ public enum Operations {
                             self.requireEmailVerified = requireEmailVerified
                             self.allowedAudiences = allowedAudiences
                             self.secondaryEmailUrl = secondaryEmailUrl
+                            self.idTokenJwksUrl = idTokenJwksUrl
+                            self.idTokenIssuers = idTokenIssuers
+                            self.responseMode = responseMode
+                            self.clientSecretJwt = clientSecretJwt
                         }
                         public enum CodingKeys: String, CodingKey {
                             case subjectField
@@ -61732,6 +61949,10 @@ public enum Operations {
                             case requireEmailVerified
                             case allowedAudiences
                             case secondaryEmailUrl
+                            case idTokenJwksUrl
+                            case idTokenIssuers
+                            case responseMode
+                            case clientSecretJwt
                         }
                     }
                     /// - Remark: Generated from `#/paths/oauth/providers/POST/requestBody/json/identityMapping`.
@@ -61839,13 +62060,13 @@ public enum Operations {
                         /// - Remark: Generated from `#/paths/oauth/providers/POST/responses/201/content/json/identityMapping`.
                         public struct IdentityMappingPayload: Codable, Hashable, Sendable {
                             /// - Remark: Generated from `#/paths/oauth/providers/POST/responses/201/content/json/identityMapping/subjectField`.
-                            public var subjectField: Swift.String?
+                            public var subjectField: Swift.String
                             /// - Remark: Generated from `#/paths/oauth/providers/POST/responses/201/content/json/identityMapping/emailField`.
-                            public var emailField: Swift.String?
+                            public var emailField: Swift.String
                             /// - Remark: Generated from `#/paths/oauth/providers/POST/responses/201/content/json/identityMapping/nameField`.
-                            public var nameField: Swift.String?
+                            public var nameField: Swift.String
                             /// - Remark: Generated from `#/paths/oauth/providers/POST/responses/201/content/json/identityMapping/avatarField`.
-                            public var avatarField: Swift.String?
+                            public var avatarField: Swift.String
                             /// - Remark: Generated from `#/paths/oauth/providers/POST/responses/201/content/json/identityMapping/verificationUrl`.
                             public var verificationUrl: Swift.String?
                             /// - Remark: Generated from `#/paths/oauth/providers/POST/responses/201/content/json/identityMapping/jwksUrl`.
@@ -61856,6 +62077,47 @@ public enum Operations {
                             public var allowedAudiences: [Swift.String]?
                             /// - Remark: Generated from `#/paths/oauth/providers/POST/responses/201/content/json/identityMapping/secondaryEmailUrl`.
                             public var secondaryEmailUrl: Swift.String?
+                            /// - Remark: Generated from `#/paths/oauth/providers/POST/responses/201/content/json/identityMapping/idTokenJwksUrl`.
+                            public var idTokenJwksUrl: Swift.String?
+                            /// - Remark: Generated from `#/paths/oauth/providers/POST/responses/201/content/json/identityMapping/idTokenIssuers`.
+                            public var idTokenIssuers: [Swift.String]?
+                            /// - Remark: Generated from `#/paths/oauth/providers/POST/responses/201/content/json/identityMapping/responseMode`.
+                            @frozen public enum ResponseModePayload: String, Codable, Hashable, Sendable, CaseIterable {
+                                case formPost = "form_post"
+                            }
+                            /// - Remark: Generated from `#/paths/oauth/providers/POST/responses/201/content/json/identityMapping/responseMode`.
+                            public var responseMode: Operations.PostOauthProviders.Output.Created.Body.JsonPayload.IdentityMappingPayload.ResponseModePayload?
+                            /// - Remark: Generated from `#/paths/oauth/providers/POST/responses/201/content/json/identityMapping/clientSecretJwt`.
+                            public struct ClientSecretJwtPayload: Codable, Hashable, Sendable {
+                                /// - Remark: Generated from `#/paths/oauth/providers/POST/responses/201/content/json/identityMapping/clientSecretJwt/teamId`.
+                                public var teamId: Swift.String
+                                /// - Remark: Generated from `#/paths/oauth/providers/POST/responses/201/content/json/identityMapping/clientSecretJwt/keyId`.
+                                public var keyId: Swift.String
+                                /// - Remark: Generated from `#/paths/oauth/providers/POST/responses/201/content/json/identityMapping/clientSecretJwt/audience`.
+                                public var audience: Swift.String
+                                /// Creates a new `ClientSecretJwtPayload`.
+                                ///
+                                /// - Parameters:
+                                ///   - teamId:
+                                ///   - keyId:
+                                ///   - audience:
+                                public init(
+                                    teamId: Swift.String,
+                                    keyId: Swift.String,
+                                    audience: Swift.String
+                                ) {
+                                    self.teamId = teamId
+                                    self.keyId = keyId
+                                    self.audience = audience
+                                }
+                                public enum CodingKeys: String, CodingKey {
+                                    case teamId
+                                    case keyId
+                                    case audience
+                                }
+                            }
+                            /// - Remark: Generated from `#/paths/oauth/providers/POST/responses/201/content/json/identityMapping/clientSecretJwt`.
+                            public var clientSecretJwt: Operations.PostOauthProviders.Output.Created.Body.JsonPayload.IdentityMappingPayload.ClientSecretJwtPayload?
                             /// Creates a new `IdentityMappingPayload`.
                             ///
                             /// - Parameters:
@@ -61868,16 +62130,24 @@ public enum Operations {
                             ///   - requireEmailVerified:
                             ///   - allowedAudiences:
                             ///   - secondaryEmailUrl:
+                            ///   - idTokenJwksUrl:
+                            ///   - idTokenIssuers:
+                            ///   - responseMode:
+                            ///   - clientSecretJwt:
                             public init(
-                                subjectField: Swift.String? = nil,
-                                emailField: Swift.String? = nil,
-                                nameField: Swift.String? = nil,
-                                avatarField: Swift.String? = nil,
+                                subjectField: Swift.String,
+                                emailField: Swift.String,
+                                nameField: Swift.String,
+                                avatarField: Swift.String,
                                 verificationUrl: Swift.String? = nil,
                                 jwksUrl: Swift.String? = nil,
                                 requireEmailVerified: Swift.Bool? = nil,
                                 allowedAudiences: [Swift.String]? = nil,
-                                secondaryEmailUrl: Swift.String? = nil
+                                secondaryEmailUrl: Swift.String? = nil,
+                                idTokenJwksUrl: Swift.String? = nil,
+                                idTokenIssuers: [Swift.String]? = nil,
+                                responseMode: Operations.PostOauthProviders.Output.Created.Body.JsonPayload.IdentityMappingPayload.ResponseModePayload? = nil,
+                                clientSecretJwt: Operations.PostOauthProviders.Output.Created.Body.JsonPayload.IdentityMappingPayload.ClientSecretJwtPayload? = nil
                             ) {
                                 self.subjectField = subjectField
                                 self.emailField = emailField
@@ -61888,6 +62158,10 @@ public enum Operations {
                                 self.requireEmailVerified = requireEmailVerified
                                 self.allowedAudiences = allowedAudiences
                                 self.secondaryEmailUrl = secondaryEmailUrl
+                                self.idTokenJwksUrl = idTokenJwksUrl
+                                self.idTokenIssuers = idTokenIssuers
+                                self.responseMode = responseMode
+                                self.clientSecretJwt = clientSecretJwt
                             }
                             public enum CodingKeys: String, CodingKey {
                                 case subjectField
@@ -61899,6 +62173,10 @@ public enum Operations {
                                 case requireEmailVerified
                                 case allowedAudiences
                                 case secondaryEmailUrl
+                                case idTokenJwksUrl
+                                case idTokenIssuers
+                                case responseMode
+                                case clientSecretJwt
                             }
                         }
                         /// - Remark: Generated from `#/paths/oauth/providers/POST/responses/201/content/json/identityMapping`.
@@ -62211,13 +62489,13 @@ public enum Operations {
                         /// - Remark: Generated from `#/paths/oauth/providers/{slug}/GET/responses/200/content/json/identityMapping`.
                         public struct IdentityMappingPayload: Codable, Hashable, Sendable {
                             /// - Remark: Generated from `#/paths/oauth/providers/{slug}/GET/responses/200/content/json/identityMapping/subjectField`.
-                            public var subjectField: Swift.String?
+                            public var subjectField: Swift.String
                             /// - Remark: Generated from `#/paths/oauth/providers/{slug}/GET/responses/200/content/json/identityMapping/emailField`.
-                            public var emailField: Swift.String?
+                            public var emailField: Swift.String
                             /// - Remark: Generated from `#/paths/oauth/providers/{slug}/GET/responses/200/content/json/identityMapping/nameField`.
-                            public var nameField: Swift.String?
+                            public var nameField: Swift.String
                             /// - Remark: Generated from `#/paths/oauth/providers/{slug}/GET/responses/200/content/json/identityMapping/avatarField`.
-                            public var avatarField: Swift.String?
+                            public var avatarField: Swift.String
                             /// - Remark: Generated from `#/paths/oauth/providers/{slug}/GET/responses/200/content/json/identityMapping/verificationUrl`.
                             public var verificationUrl: Swift.String?
                             /// - Remark: Generated from `#/paths/oauth/providers/{slug}/GET/responses/200/content/json/identityMapping/jwksUrl`.
@@ -62228,6 +62506,47 @@ public enum Operations {
                             public var allowedAudiences: [Swift.String]?
                             /// - Remark: Generated from `#/paths/oauth/providers/{slug}/GET/responses/200/content/json/identityMapping/secondaryEmailUrl`.
                             public var secondaryEmailUrl: Swift.String?
+                            /// - Remark: Generated from `#/paths/oauth/providers/{slug}/GET/responses/200/content/json/identityMapping/idTokenJwksUrl`.
+                            public var idTokenJwksUrl: Swift.String?
+                            /// - Remark: Generated from `#/paths/oauth/providers/{slug}/GET/responses/200/content/json/identityMapping/idTokenIssuers`.
+                            public var idTokenIssuers: [Swift.String]?
+                            /// - Remark: Generated from `#/paths/oauth/providers/{slug}/GET/responses/200/content/json/identityMapping/responseMode`.
+                            @frozen public enum ResponseModePayload: String, Codable, Hashable, Sendable, CaseIterable {
+                                case formPost = "form_post"
+                            }
+                            /// - Remark: Generated from `#/paths/oauth/providers/{slug}/GET/responses/200/content/json/identityMapping/responseMode`.
+                            public var responseMode: Operations.GetOauthProvidersSlug.Output.Ok.Body.JsonPayload.IdentityMappingPayload.ResponseModePayload?
+                            /// - Remark: Generated from `#/paths/oauth/providers/{slug}/GET/responses/200/content/json/identityMapping/clientSecretJwt`.
+                            public struct ClientSecretJwtPayload: Codable, Hashable, Sendable {
+                                /// - Remark: Generated from `#/paths/oauth/providers/{slug}/GET/responses/200/content/json/identityMapping/clientSecretJwt/teamId`.
+                                public var teamId: Swift.String
+                                /// - Remark: Generated from `#/paths/oauth/providers/{slug}/GET/responses/200/content/json/identityMapping/clientSecretJwt/keyId`.
+                                public var keyId: Swift.String
+                                /// - Remark: Generated from `#/paths/oauth/providers/{slug}/GET/responses/200/content/json/identityMapping/clientSecretJwt/audience`.
+                                public var audience: Swift.String
+                                /// Creates a new `ClientSecretJwtPayload`.
+                                ///
+                                /// - Parameters:
+                                ///   - teamId:
+                                ///   - keyId:
+                                ///   - audience:
+                                public init(
+                                    teamId: Swift.String,
+                                    keyId: Swift.String,
+                                    audience: Swift.String
+                                ) {
+                                    self.teamId = teamId
+                                    self.keyId = keyId
+                                    self.audience = audience
+                                }
+                                public enum CodingKeys: String, CodingKey {
+                                    case teamId
+                                    case keyId
+                                    case audience
+                                }
+                            }
+                            /// - Remark: Generated from `#/paths/oauth/providers/{slug}/GET/responses/200/content/json/identityMapping/clientSecretJwt`.
+                            public var clientSecretJwt: Operations.GetOauthProvidersSlug.Output.Ok.Body.JsonPayload.IdentityMappingPayload.ClientSecretJwtPayload?
                             /// Creates a new `IdentityMappingPayload`.
                             ///
                             /// - Parameters:
@@ -62240,16 +62559,24 @@ public enum Operations {
                             ///   - requireEmailVerified:
                             ///   - allowedAudiences:
                             ///   - secondaryEmailUrl:
+                            ///   - idTokenJwksUrl:
+                            ///   - idTokenIssuers:
+                            ///   - responseMode:
+                            ///   - clientSecretJwt:
                             public init(
-                                subjectField: Swift.String? = nil,
-                                emailField: Swift.String? = nil,
-                                nameField: Swift.String? = nil,
-                                avatarField: Swift.String? = nil,
+                                subjectField: Swift.String,
+                                emailField: Swift.String,
+                                nameField: Swift.String,
+                                avatarField: Swift.String,
                                 verificationUrl: Swift.String? = nil,
                                 jwksUrl: Swift.String? = nil,
                                 requireEmailVerified: Swift.Bool? = nil,
                                 allowedAudiences: [Swift.String]? = nil,
-                                secondaryEmailUrl: Swift.String? = nil
+                                secondaryEmailUrl: Swift.String? = nil,
+                                idTokenJwksUrl: Swift.String? = nil,
+                                idTokenIssuers: [Swift.String]? = nil,
+                                responseMode: Operations.GetOauthProvidersSlug.Output.Ok.Body.JsonPayload.IdentityMappingPayload.ResponseModePayload? = nil,
+                                clientSecretJwt: Operations.GetOauthProvidersSlug.Output.Ok.Body.JsonPayload.IdentityMappingPayload.ClientSecretJwtPayload? = nil
                             ) {
                                 self.subjectField = subjectField
                                 self.emailField = emailField
@@ -62260,6 +62587,10 @@ public enum Operations {
                                 self.requireEmailVerified = requireEmailVerified
                                 self.allowedAudiences = allowedAudiences
                                 self.secondaryEmailUrl = secondaryEmailUrl
+                                self.idTokenJwksUrl = idTokenJwksUrl
+                                self.idTokenIssuers = idTokenIssuers
+                                self.responseMode = responseMode
+                                self.clientSecretJwt = clientSecretJwt
                             }
                             public enum CodingKeys: String, CodingKey {
                                 case subjectField
@@ -62271,6 +62602,10 @@ public enum Operations {
                                 case requireEmailVerified
                                 case allowedAudiences
                                 case secondaryEmailUrl
+                                case idTokenJwksUrl
+                                case idTokenIssuers
+                                case responseMode
+                                case clientSecretJwt
                             }
                         }
                         /// - Remark: Generated from `#/paths/oauth/providers/{slug}/GET/responses/200/content/json/identityMapping`.
@@ -62575,6 +62910,47 @@ public enum Operations {
                         public var allowedAudiences: [Swift.String]?
                         /// - Remark: Generated from `#/paths/oauth/providers/{slug}/PATCH/requestBody/json/identityMapping/secondaryEmailUrl`.
                         public var secondaryEmailUrl: Swift.String?
+                        /// - Remark: Generated from `#/paths/oauth/providers/{slug}/PATCH/requestBody/json/identityMapping/idTokenJwksUrl`.
+                        public var idTokenJwksUrl: Swift.String?
+                        /// - Remark: Generated from `#/paths/oauth/providers/{slug}/PATCH/requestBody/json/identityMapping/idTokenIssuers`.
+                        public var idTokenIssuers: [Swift.String]?
+                        /// - Remark: Generated from `#/paths/oauth/providers/{slug}/PATCH/requestBody/json/identityMapping/responseMode`.
+                        @frozen public enum ResponseModePayload: String, Codable, Hashable, Sendable, CaseIterable {
+                            case formPost = "form_post"
+                        }
+                        /// - Remark: Generated from `#/paths/oauth/providers/{slug}/PATCH/requestBody/json/identityMapping/responseMode`.
+                        public var responseMode: Operations.PatchOauthProvidersSlug.Input.Body.JsonPayload.IdentityMappingPayload.ResponseModePayload?
+                        /// - Remark: Generated from `#/paths/oauth/providers/{slug}/PATCH/requestBody/json/identityMapping/clientSecretJwt`.
+                        public struct ClientSecretJwtPayload: Codable, Hashable, Sendable {
+                            /// - Remark: Generated from `#/paths/oauth/providers/{slug}/PATCH/requestBody/json/identityMapping/clientSecretJwt/teamId`.
+                            public var teamId: Swift.String
+                            /// - Remark: Generated from `#/paths/oauth/providers/{slug}/PATCH/requestBody/json/identityMapping/clientSecretJwt/keyId`.
+                            public var keyId: Swift.String
+                            /// - Remark: Generated from `#/paths/oauth/providers/{slug}/PATCH/requestBody/json/identityMapping/clientSecretJwt/audience`.
+                            public var audience: Swift.String
+                            /// Creates a new `ClientSecretJwtPayload`.
+                            ///
+                            /// - Parameters:
+                            ///   - teamId:
+                            ///   - keyId:
+                            ///   - audience:
+                            public init(
+                                teamId: Swift.String,
+                                keyId: Swift.String,
+                                audience: Swift.String
+                            ) {
+                                self.teamId = teamId
+                                self.keyId = keyId
+                                self.audience = audience
+                            }
+                            public enum CodingKeys: String, CodingKey {
+                                case teamId
+                                case keyId
+                                case audience
+                            }
+                        }
+                        /// - Remark: Generated from `#/paths/oauth/providers/{slug}/PATCH/requestBody/json/identityMapping/clientSecretJwt`.
+                        public var clientSecretJwt: Operations.PatchOauthProvidersSlug.Input.Body.JsonPayload.IdentityMappingPayload.ClientSecretJwtPayload?
                         /// Creates a new `IdentityMappingPayload`.
                         ///
                         /// - Parameters:
@@ -62586,6 +62962,10 @@ public enum Operations {
                         ///   - requireEmailVerified:
                         ///   - allowedAudiences:
                         ///   - secondaryEmailUrl:
+                        ///   - idTokenJwksUrl:
+                        ///   - idTokenIssuers:
+                        ///   - responseMode:
+                        ///   - clientSecretJwt:
                         public init(
                             subjectField: Swift.String,
                             emailField: Swift.String,
@@ -62594,7 +62974,11 @@ public enum Operations {
                             verificationUrl: Swift.String? = nil,
                             requireEmailVerified: Swift.Bool? = nil,
                             allowedAudiences: [Swift.String]? = nil,
-                            secondaryEmailUrl: Swift.String? = nil
+                            secondaryEmailUrl: Swift.String? = nil,
+                            idTokenJwksUrl: Swift.String? = nil,
+                            idTokenIssuers: [Swift.String]? = nil,
+                            responseMode: Operations.PatchOauthProvidersSlug.Input.Body.JsonPayload.IdentityMappingPayload.ResponseModePayload? = nil,
+                            clientSecretJwt: Operations.PatchOauthProvidersSlug.Input.Body.JsonPayload.IdentityMappingPayload.ClientSecretJwtPayload? = nil
                         ) {
                             self.subjectField = subjectField
                             self.emailField = emailField
@@ -62604,6 +62988,10 @@ public enum Operations {
                             self.requireEmailVerified = requireEmailVerified
                             self.allowedAudiences = allowedAudiences
                             self.secondaryEmailUrl = secondaryEmailUrl
+                            self.idTokenJwksUrl = idTokenJwksUrl
+                            self.idTokenIssuers = idTokenIssuers
+                            self.responseMode = responseMode
+                            self.clientSecretJwt = clientSecretJwt
                         }
                         public enum CodingKeys: String, CodingKey {
                             case subjectField
@@ -62614,6 +63002,10 @@ public enum Operations {
                             case requireEmailVerified
                             case allowedAudiences
                             case secondaryEmailUrl
+                            case idTokenJwksUrl
+                            case idTokenIssuers
+                            case responseMode
+                            case clientSecretJwt
                         }
                     }
                     /// - Remark: Generated from `#/paths/oauth/providers/{slug}/PATCH/requestBody/json/identityMapping`.
@@ -62716,13 +63108,13 @@ public enum Operations {
                         /// - Remark: Generated from `#/paths/oauth/providers/{slug}/PATCH/responses/200/content/json/identityMapping`.
                         public struct IdentityMappingPayload: Codable, Hashable, Sendable {
                             /// - Remark: Generated from `#/paths/oauth/providers/{slug}/PATCH/responses/200/content/json/identityMapping/subjectField`.
-                            public var subjectField: Swift.String?
+                            public var subjectField: Swift.String
                             /// - Remark: Generated from `#/paths/oauth/providers/{slug}/PATCH/responses/200/content/json/identityMapping/emailField`.
-                            public var emailField: Swift.String?
+                            public var emailField: Swift.String
                             /// - Remark: Generated from `#/paths/oauth/providers/{slug}/PATCH/responses/200/content/json/identityMapping/nameField`.
-                            public var nameField: Swift.String?
+                            public var nameField: Swift.String
                             /// - Remark: Generated from `#/paths/oauth/providers/{slug}/PATCH/responses/200/content/json/identityMapping/avatarField`.
-                            public var avatarField: Swift.String?
+                            public var avatarField: Swift.String
                             /// - Remark: Generated from `#/paths/oauth/providers/{slug}/PATCH/responses/200/content/json/identityMapping/verificationUrl`.
                             public var verificationUrl: Swift.String?
                             /// - Remark: Generated from `#/paths/oauth/providers/{slug}/PATCH/responses/200/content/json/identityMapping/jwksUrl`.
@@ -62733,6 +63125,47 @@ public enum Operations {
                             public var allowedAudiences: [Swift.String]?
                             /// - Remark: Generated from `#/paths/oauth/providers/{slug}/PATCH/responses/200/content/json/identityMapping/secondaryEmailUrl`.
                             public var secondaryEmailUrl: Swift.String?
+                            /// - Remark: Generated from `#/paths/oauth/providers/{slug}/PATCH/responses/200/content/json/identityMapping/idTokenJwksUrl`.
+                            public var idTokenJwksUrl: Swift.String?
+                            /// - Remark: Generated from `#/paths/oauth/providers/{slug}/PATCH/responses/200/content/json/identityMapping/idTokenIssuers`.
+                            public var idTokenIssuers: [Swift.String]?
+                            /// - Remark: Generated from `#/paths/oauth/providers/{slug}/PATCH/responses/200/content/json/identityMapping/responseMode`.
+                            @frozen public enum ResponseModePayload: String, Codable, Hashable, Sendable, CaseIterable {
+                                case formPost = "form_post"
+                            }
+                            /// - Remark: Generated from `#/paths/oauth/providers/{slug}/PATCH/responses/200/content/json/identityMapping/responseMode`.
+                            public var responseMode: Operations.PatchOauthProvidersSlug.Output.Ok.Body.JsonPayload.IdentityMappingPayload.ResponseModePayload?
+                            /// - Remark: Generated from `#/paths/oauth/providers/{slug}/PATCH/responses/200/content/json/identityMapping/clientSecretJwt`.
+                            public struct ClientSecretJwtPayload: Codable, Hashable, Sendable {
+                                /// - Remark: Generated from `#/paths/oauth/providers/{slug}/PATCH/responses/200/content/json/identityMapping/clientSecretJwt/teamId`.
+                                public var teamId: Swift.String
+                                /// - Remark: Generated from `#/paths/oauth/providers/{slug}/PATCH/responses/200/content/json/identityMapping/clientSecretJwt/keyId`.
+                                public var keyId: Swift.String
+                                /// - Remark: Generated from `#/paths/oauth/providers/{slug}/PATCH/responses/200/content/json/identityMapping/clientSecretJwt/audience`.
+                                public var audience: Swift.String
+                                /// Creates a new `ClientSecretJwtPayload`.
+                                ///
+                                /// - Parameters:
+                                ///   - teamId:
+                                ///   - keyId:
+                                ///   - audience:
+                                public init(
+                                    teamId: Swift.String,
+                                    keyId: Swift.String,
+                                    audience: Swift.String
+                                ) {
+                                    self.teamId = teamId
+                                    self.keyId = keyId
+                                    self.audience = audience
+                                }
+                                public enum CodingKeys: String, CodingKey {
+                                    case teamId
+                                    case keyId
+                                    case audience
+                                }
+                            }
+                            /// - Remark: Generated from `#/paths/oauth/providers/{slug}/PATCH/responses/200/content/json/identityMapping/clientSecretJwt`.
+                            public var clientSecretJwt: Operations.PatchOauthProvidersSlug.Output.Ok.Body.JsonPayload.IdentityMappingPayload.ClientSecretJwtPayload?
                             /// Creates a new `IdentityMappingPayload`.
                             ///
                             /// - Parameters:
@@ -62745,16 +63178,24 @@ public enum Operations {
                             ///   - requireEmailVerified:
                             ///   - allowedAudiences:
                             ///   - secondaryEmailUrl:
+                            ///   - idTokenJwksUrl:
+                            ///   - idTokenIssuers:
+                            ///   - responseMode:
+                            ///   - clientSecretJwt:
                             public init(
-                                subjectField: Swift.String? = nil,
-                                emailField: Swift.String? = nil,
-                                nameField: Swift.String? = nil,
-                                avatarField: Swift.String? = nil,
+                                subjectField: Swift.String,
+                                emailField: Swift.String,
+                                nameField: Swift.String,
+                                avatarField: Swift.String,
                                 verificationUrl: Swift.String? = nil,
                                 jwksUrl: Swift.String? = nil,
                                 requireEmailVerified: Swift.Bool? = nil,
                                 allowedAudiences: [Swift.String]? = nil,
-                                secondaryEmailUrl: Swift.String? = nil
+                                secondaryEmailUrl: Swift.String? = nil,
+                                idTokenJwksUrl: Swift.String? = nil,
+                                idTokenIssuers: [Swift.String]? = nil,
+                                responseMode: Operations.PatchOauthProvidersSlug.Output.Ok.Body.JsonPayload.IdentityMappingPayload.ResponseModePayload? = nil,
+                                clientSecretJwt: Operations.PatchOauthProvidersSlug.Output.Ok.Body.JsonPayload.IdentityMappingPayload.ClientSecretJwtPayload? = nil
                             ) {
                                 self.subjectField = subjectField
                                 self.emailField = emailField
@@ -62765,6 +63206,10 @@ public enum Operations {
                                 self.requireEmailVerified = requireEmailVerified
                                 self.allowedAudiences = allowedAudiences
                                 self.secondaryEmailUrl = secondaryEmailUrl
+                                self.idTokenJwksUrl = idTokenJwksUrl
+                                self.idTokenIssuers = idTokenIssuers
+                                self.responseMode = responseMode
+                                self.clientSecretJwt = clientSecretJwt
                             }
                             public enum CodingKeys: String, CodingKey {
                                 case subjectField
@@ -62776,6 +63221,10 @@ public enum Operations {
                                 case requireEmailVerified
                                 case allowedAudiences
                                 case secondaryEmailUrl
+                                case idTokenJwksUrl
+                                case idTokenIssuers
+                                case responseMode
+                                case clientSecretJwt
                             }
                         }
                         /// - Remark: Generated from `#/paths/oauth/providers/{slug}/PATCH/responses/200/content/json/identityMapping`.
@@ -64405,20 +64854,25 @@ public enum Operations {
             /// - Remark: Generated from `#/paths/oauth/signin/callback/GET/query`.
             public struct Query: Sendable, Hashable {
                 /// - Remark: Generated from `#/paths/oauth/signin/callback/GET/query/code`.
-                public var code: Swift.String
+                public var code: Swift.String?
                 /// - Remark: Generated from `#/paths/oauth/signin/callback/GET/query/state`.
                 public var state: Swift.String
+                /// - Remark: Generated from `#/paths/oauth/signin/callback/GET/query/error`.
+                public var error: Swift.String?
                 /// Creates a new `Query`.
                 ///
                 /// - Parameters:
                 ///   - code:
                 ///   - state:
+                ///   - error:
                 public init(
-                    code: Swift.String,
-                    state: Swift.String
+                    code: Swift.String? = nil,
+                    state: Swift.String,
+                    error: Swift.String? = nil
                 ) {
                     self.code = code
                     self.state = state
+                    self.error = error
                 }
             }
             public var query: Operations.GetOauthSigninCallback.Input.Query
@@ -64557,6 +65011,234 @@ public enum Operations {
             /// - Throws: An error if `self` is not `.badRequest`.
             /// - SeeAlso: `.badRequest`.
             public var badRequest: Operations.GetOauthSigninCallback.Output.BadRequest {
+                get throws {
+                    switch self {
+                    case let .badRequest(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "badRequest",
+                            response: self
+                        )
+                    }
+                }
+            }
+            /// Undocumented response.
+            ///
+            /// A response with a code that is not documented in the OpenAPI document.
+            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
+        }
+        @frozen public enum AcceptableContentType: AcceptableProtocol {
+            case json
+            case other(Swift.String)
+            public init?(rawValue: Swift.String) {
+                switch rawValue.lowercased() {
+                case "application/json":
+                    self = .json
+                default:
+                    self = .other(rawValue)
+                }
+            }
+            public var rawValue: Swift.String {
+                switch self {
+                case let .other(string):
+                    return string
+                case .json:
+                    return "application/json"
+                }
+            }
+            public static var allCases: [Self] {
+                [
+                    .json
+                ]
+            }
+        }
+    }
+    /// The same callback, for a provider that posts it (response_mode=form_post)
+    ///
+    /// - Remark: HTTP `POST /oauth/signin/callback`.
+    /// - Remark: Generated from `#/paths//oauth/signin/callback/post`.
+    public enum PostOauthSigninCallback {
+        public static let id: Swift.String = "post/oauth/signin/callback"
+        public struct Input: Sendable, Hashable {
+            /// - Remark: Generated from `#/paths/oauth/signin/callback/POST/header`.
+            public struct Headers: Sendable, Hashable {
+                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.PostOauthSigninCallback.AcceptableContentType>]
+                /// Creates a new `Headers`.
+                ///
+                /// - Parameters:
+                ///   - accept:
+                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.PostOauthSigninCallback.AcceptableContentType>] = .defaultValues()) {
+                    self.accept = accept
+                }
+            }
+            public var headers: Operations.PostOauthSigninCallback.Input.Headers
+            /// - Remark: Generated from `#/paths/oauth/signin/callback/POST/requestBody`.
+            @frozen public enum Body: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/oauth/signin/callback/POST/requestBody/urlEncodedForm`.
+                public struct UrlEncodedFormPayload: Codable, Hashable, Sendable {
+                    /// - Remark: Generated from `#/paths/oauth/signin/callback/POST/requestBody/urlEncodedForm/code`.
+                    public var code: Swift.String?
+                    /// - Remark: Generated from `#/paths/oauth/signin/callback/POST/requestBody/urlEncodedForm/state`.
+                    public var state: Swift.String
+                    /// - Remark: Generated from `#/paths/oauth/signin/callback/POST/requestBody/urlEncodedForm/error`.
+                    public var error: Swift.String?
+                    /// Apple's one-time name, as JSON
+                    ///
+                    /// - Remark: Generated from `#/paths/oauth/signin/callback/POST/requestBody/urlEncodedForm/user`.
+                    public var user: Swift.String?
+                    /// Creates a new `UrlEncodedFormPayload`.
+                    ///
+                    /// - Parameters:
+                    ///   - code:
+                    ///   - state:
+                    ///   - error:
+                    ///   - user: Apple's one-time name, as JSON
+                    public init(
+                        code: Swift.String? = nil,
+                        state: Swift.String,
+                        error: Swift.String? = nil,
+                        user: Swift.String? = nil
+                    ) {
+                        self.code = code
+                        self.state = state
+                        self.error = error
+                        self.user = user
+                    }
+                    public enum CodingKeys: String, CodingKey {
+                        case code
+                        case state
+                        case error
+                        case user
+                    }
+                }
+                /// - Remark: Generated from `#/paths/oauth/signin/callback/POST/requestBody/content/application\/x-www-form-urlencoded`.
+                case urlEncodedForm(Operations.PostOauthSigninCallback.Input.Body.UrlEncodedFormPayload)
+            }
+            public var body: Operations.PostOauthSigninCallback.Input.Body
+            /// Creates a new `Input`.
+            ///
+            /// - Parameters:
+            ///   - headers:
+            ///   - body:
+            public init(
+                headers: Operations.PostOauthSigninCallback.Input.Headers = .init(),
+                body: Operations.PostOauthSigninCallback.Input.Body
+            ) {
+                self.headers = headers
+                self.body = body
+            }
+        }
+        @frozen public enum Output: Sendable, Hashable {
+            public struct Found: Sendable, Hashable {
+                /// Creates a new `Found`.
+                public init() {}
+            }
+            /// redirect to returnUrl with code
+            ///
+            /// - Remark: Generated from `#/paths//oauth/signin/callback/post/responses/302`.
+            ///
+            /// HTTP response code: `302 found`.
+            case found(Operations.PostOauthSigninCallback.Output.Found)
+            /// redirect to returnUrl with code
+            ///
+            /// - Remark: Generated from `#/paths//oauth/signin/callback/post/responses/302`.
+            ///
+            /// HTTP response code: `302 found`.
+            public static var found: Self {
+                .found(.init())
+            }
+            /// The associated value of the enum case if `self` is `.found`.
+            ///
+            /// - Throws: An error if `self` is not `.found`.
+            /// - SeeAlso: `.found`.
+            public var found: Operations.PostOauthSigninCallback.Output.Found {
+                get throws {
+                    switch self {
+                    case let .found(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "found",
+                            response: self
+                        )
+                    }
+                }
+            }
+            public struct SeeOther: Sendable, Hashable {
+                /// Creates a new `SeeOther`.
+                public init() {}
+            }
+            /// Hydra-login mode: redirect to Hydra, or back to the login page
+            ///
+            /// - Remark: Generated from `#/paths//oauth/signin/callback/post/responses/303`.
+            ///
+            /// HTTP response code: `303 seeOther`.
+            case seeOther(Operations.PostOauthSigninCallback.Output.SeeOther)
+            /// Hydra-login mode: redirect to Hydra, or back to the login page
+            ///
+            /// - Remark: Generated from `#/paths//oauth/signin/callback/post/responses/303`.
+            ///
+            /// HTTP response code: `303 seeOther`.
+            public static var seeOther: Self {
+                .seeOther(.init())
+            }
+            /// The associated value of the enum case if `self` is `.seeOther`.
+            ///
+            /// - Throws: An error if `self` is not `.seeOther`.
+            /// - SeeAlso: `.seeOther`.
+            public var seeOther: Operations.PostOauthSigninCallback.Output.SeeOther {
+                get throws {
+                    switch self {
+                    case let .seeOther(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "seeOther",
+                            response: self
+                        )
+                    }
+                }
+            }
+            public struct BadRequest: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/oauth/signin/callback/POST/responses/400/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/oauth/signin/callback/POST/responses/400/content/application\/json`.
+                    case json(Components.Schemas._Error)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas._Error {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.PostOauthSigninCallback.Output.BadRequest.Body
+                /// Creates a new `BadRequest`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.PostOauthSigninCallback.Output.BadRequest.Body) {
+                    self.body = body
+                }
+            }
+            /// Error
+            ///
+            /// - Remark: Generated from `#/paths//oauth/signin/callback/post/responses/400`.
+            ///
+            /// HTTP response code: `400 badRequest`.
+            case badRequest(Operations.PostOauthSigninCallback.Output.BadRequest)
+            /// The associated value of the enum case if `self` is `.badRequest`.
+            ///
+            /// - Throws: An error if `self` is not `.badRequest`.
+            /// - SeeAlso: `.badRequest`.
+            public var badRequest: Operations.PostOauthSigninCallback.Output.BadRequest {
                 get throws {
                     switch self {
                     case let .badRequest(response):

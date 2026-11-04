@@ -20215,6 +20215,7 @@
                       "slug",
                       "name",
                       "allowedReturnOrigins",
+                      "originsManaged",
                       "isInternal"
                     ],
                     "properties": {
@@ -20232,6 +20233,10 @@
                         "items": {
                           "type": "string"
                         }
+                      },
+                      "originsManaged": {
+                        "type": "boolean",
+                        "description": "The deployment sets these return origins, so they cannot be edited here. A site adds its origin on its application."
                       },
                       "defaultEcosystemId": {
                         "type": "string",
@@ -20335,6 +20340,7 @@
                         "slug",
                         "name",
                         "allowedReturnOrigins",
+                        "originsManaged",
                         "isInternal"
                       ],
                       "properties": {
@@ -20352,6 +20358,10 @@
                           "items": {
                             "type": "string"
                           }
+                        },
+                        "originsManaged": {
+                          "type": "boolean",
+                          "description": "The deployment sets these return origins, so they cannot be edited here. A site adds its origin on its application."
                         },
                         "defaultEcosystemId": {
                           "type": "string",
@@ -20437,6 +20447,7 @@
                         "slug",
                         "name",
                         "allowedReturnOrigins",
+                        "originsManaged",
                         "isInternal"
                       ],
                       "properties": {
@@ -20454,6 +20465,10 @@
                           "items": {
                             "type": "string"
                           }
+                        },
+                        "originsManaged": {
+                          "type": "boolean",
+                          "description": "The deployment sets these return origins, so they cannot be edited here. A site adds its origin on its application."
                         },
                         "defaultEcosystemId": {
                           "type": "string",
@@ -20583,6 +20598,7 @@
                     "slug",
                     "name",
                     "allowedReturnOrigins",
+                    "originsManaged",
                     "isInternal"
                   ],
                   "properties": {
@@ -20600,6 +20616,10 @@
                       "items": {
                         "type": "string"
                       }
+                    },
+                    "originsManaged": {
+                      "type": "boolean",
+                      "description": "The deployment sets these return origins, so they cannot be edited here. A site adds its origin on its application."
                     },
                     "defaultEcosystemId": {
                       "type": "string",
@@ -20946,7 +20966,8 @@
                         "required": [
                           "slug",
                           "name",
-                          "authType"
+                          "authType",
+                          "identityMapping"
                         ],
                         "properties": {
                           "slug": {
@@ -20983,6 +21004,12 @@
                           },
                           "identityMapping": {
                             "type": "object",
+                            "required": [
+                              "subjectField",
+                              "emailField",
+                              "nameField",
+                              "avatarField"
+                            ],
                             "properties": {
                               "subjectField": {
                                 "type": "string"
@@ -21013,6 +21040,40 @@
                               },
                               "secondaryEmailUrl": {
                                 "type": "string"
+                              },
+                              "idTokenJwksUrl": {
+                                "type": "string"
+                              },
+                              "idTokenIssuers": {
+                                "type": "array",
+                                "items": {
+                                  "type": "string"
+                                }
+                              },
+                              "responseMode": {
+                                "type": "string",
+                                "enum": [
+                                  "form_post"
+                                ]
+                              },
+                              "clientSecretJwt": {
+                                "type": "object",
+                                "required": [
+                                  "teamId",
+                                  "keyId",
+                                  "audience"
+                                ],
+                                "properties": {
+                                  "teamId": {
+                                    "type": "string"
+                                  },
+                                  "keyId": {
+                                    "type": "string"
+                                  },
+                                  "audience": {
+                                    "type": "string"
+                                  }
+                                }
                               }
                             }
                           }
@@ -21117,6 +21178,12 @@
                       },
                       "identityMapping": {
                         "type": "object",
+                        "required": [
+                          "subjectField",
+                          "emailField",
+                          "nameField",
+                          "avatarField"
+                        ],
                         "properties": {
                           "subjectField": {
                             "type": "string"
@@ -21147,6 +21214,40 @@
                           },
                           "secondaryEmailUrl": {
                             "type": "string"
+                          },
+                          "idTokenJwksUrl": {
+                            "type": "string"
+                          },
+                          "idTokenIssuers": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          },
+                          "responseMode": {
+                            "type": "string",
+                            "enum": [
+                              "form_post"
+                            ]
+                          },
+                          "clientSecretJwt": {
+                            "type": "object",
+                            "required": [
+                              "teamId",
+                              "keyId",
+                              "audience"
+                            ],
+                            "properties": {
+                              "teamId": {
+                                "type": "string"
+                              },
+                              "keyId": {
+                                "type": "string"
+                              },
+                              "audience": {
+                                "type": "string"
+                              }
+                            }
                           }
                         }
                       }
@@ -21274,6 +21375,40 @@
                       },
                       "secondaryEmailUrl": {
                         "type": "string"
+                      },
+                      "idTokenJwksUrl": {
+                        "type": "string"
+                      },
+                      "idTokenIssuers": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      },
+                      "responseMode": {
+                        "type": "string",
+                        "enum": [
+                          "form_post"
+                        ]
+                      },
+                      "clientSecretJwt": {
+                        "type": "object",
+                        "required": [
+                          "teamId",
+                          "keyId",
+                          "audience"
+                        ],
+                        "properties": {
+                          "teamId": {
+                            "type": "string"
+                          },
+                          "keyId": {
+                            "type": "string"
+                          },
+                          "audience": {
+                            "type": "string"
+                          }
+                        }
                       }
                     }
                   }
@@ -21339,6 +21474,12 @@
                     },
                     "identityMapping": {
                       "type": "object",
+                      "required": [
+                        "subjectField",
+                        "emailField",
+                        "nameField",
+                        "avatarField"
+                      ],
                       "properties": {
                         "subjectField": {
                           "type": "string"
@@ -21369,6 +21510,40 @@
                         },
                         "secondaryEmailUrl": {
                           "type": "string"
+                        },
+                        "idTokenJwksUrl": {
+                          "type": "string"
+                        },
+                        "idTokenIssuers": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "responseMode": {
+                          "type": "string",
+                          "enum": [
+                            "form_post"
+                          ]
+                        },
+                        "clientSecretJwt": {
+                          "type": "object",
+                          "required": [
+                            "teamId",
+                            "keyId",
+                            "audience"
+                          ],
+                          "properties": {
+                            "teamId": {
+                              "type": "string"
+                            },
+                            "keyId": {
+                              "type": "string"
+                            },
+                            "audience": {
+                              "type": "string"
+                            }
+                          }
                         }
                       }
                     }
@@ -21478,6 +21653,12 @@
                     },
                     "identityMapping": {
                       "type": "object",
+                      "required": [
+                        "subjectField",
+                        "emailField",
+                        "nameField",
+                        "avatarField"
+                      ],
                       "properties": {
                         "subjectField": {
                           "type": "string"
@@ -21508,6 +21689,40 @@
                         },
                         "secondaryEmailUrl": {
                           "type": "string"
+                        },
+                        "idTokenJwksUrl": {
+                          "type": "string"
+                        },
+                        "idTokenIssuers": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "responseMode": {
+                          "type": "string",
+                          "enum": [
+                            "form_post"
+                          ]
+                        },
+                        "clientSecretJwt": {
+                          "type": "object",
+                          "required": [
+                            "teamId",
+                            "keyId",
+                            "audience"
+                          ],
+                          "properties": {
+                            "teamId": {
+                              "type": "string"
+                            },
+                            "keyId": {
+                              "type": "string"
+                            },
+                            "audience": {
+                              "type": "string"
+                            }
+                          }
                         }
                       }
                     }
@@ -21619,6 +21834,40 @@
                       },
                       "secondaryEmailUrl": {
                         "type": "string"
+                      },
+                      "idTokenJwksUrl": {
+                        "type": "string"
+                      },
+                      "idTokenIssuers": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      },
+                      "responseMode": {
+                        "type": "string",
+                        "enum": [
+                          "form_post"
+                        ]
+                      },
+                      "clientSecretJwt": {
+                        "type": "object",
+                        "required": [
+                          "teamId",
+                          "keyId",
+                          "audience"
+                        ],
+                        "properties": {
+                          "teamId": {
+                            "type": "string"
+                          },
+                          "keyId": {
+                            "type": "string"
+                          },
+                          "audience": {
+                            "type": "string"
+                          }
+                        }
                       }
                     }
                   }
@@ -21684,6 +21933,12 @@
                     },
                     "identityMapping": {
                       "type": "object",
+                      "required": [
+                        "subjectField",
+                        "emailField",
+                        "nameField",
+                        "avatarField"
+                      ],
                       "properties": {
                         "subjectField": {
                           "type": "string"
@@ -21714,6 +21969,40 @@
                         },
                         "secondaryEmailUrl": {
                           "type": "string"
+                        },
+                        "idTokenJwksUrl": {
+                          "type": "string"
+                        },
+                        "idTokenIssuers": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "responseMode": {
+                          "type": "string",
+                          "enum": [
+                            "form_post"
+                          ]
+                        },
+                        "clientSecretJwt": {
+                          "type": "object",
+                          "required": [
+                            "teamId",
+                            "keyId",
+                            "audience"
+                          ],
+                          "properties": {
+                            "teamId": {
+                              "type": "string"
+                            },
+                            "keyId": {
+                              "type": "string"
+                            },
+                            "audience": {
+                              "type": "string"
+                            }
+                          }
                         }
                       }
                     }
@@ -22149,7 +22438,7 @@
           {
             "name": "code",
             "in": "query",
-            "required": true,
+            "required": false,
             "schema": {
               "type": "string"
             }
@@ -22161,8 +22450,68 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "name": "error",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
           }
         ],
+        "responses": {
+          "302": {
+            "description": "redirect to returnUrl with code"
+          },
+          "303": {
+            "description": "Hydra-login mode: redirect to Hydra, or back to the login page"
+          },
+          "400": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "oauth"
+        ],
+        "summary": "The same callback, for a provider that posts it (response_mode=form_post)",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "state"
+                ],
+                "properties": {
+                  "code": {
+                    "type": "string"
+                  },
+                  "state": {
+                    "type": "string"
+                  },
+                  "error": {
+                    "type": "string"
+                  },
+                  "user": {
+                    "type": "string",
+                    "description": "Apple's one-time name, as JSON"
+                  }
+                }
+              }
+            }
+          }
+        },
         "responses": {
           "302": {
             "description": "redirect to returnUrl with code"
