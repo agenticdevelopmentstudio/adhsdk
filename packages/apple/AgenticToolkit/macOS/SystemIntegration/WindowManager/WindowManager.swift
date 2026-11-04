@@ -178,8 +178,9 @@ public final class WindowManager {
     /// so in its own `WindowSpec` (drop `.canReopenOnLaunch`).
     ///
     /// A visible flag that no registered window and no live controller claims
-    /// cannot be restored: it is logged as a host wiring gap and cleared, so
-    /// it is reported once rather than on every launch.
+    /// yet is logged and kept: a feature that builds its controller after
+    /// launch restores it as it registers (`controllerDidRegister(_:)`), and
+    /// clearing the flag here would leave that window closed.
     ///
     /// Re-invoke on reactivation (e.g. a second-launch
     /// `DistributedNotification`) so persisted-visible windows reappear
@@ -248,10 +249,12 @@ public final class WindowManager {
 
         for id in frames.visibleWindowIDs()
         where windowFactories[id] == nil && registry.controller(forID: id) == nil {
-            Self.logger.error(
-                "restoreOnLaunch: visible window '\(id, privacy: .public)' has no registered factory; clearing its flag"
+            Self.logger.info(
+                """
+                restoreOnLaunch: visible window '\(id, privacy: .public)' has no controller yet; \
+                restored if one registers
+                """
             )
-            frames.clearVisibility(for: id)
         }
     }
 

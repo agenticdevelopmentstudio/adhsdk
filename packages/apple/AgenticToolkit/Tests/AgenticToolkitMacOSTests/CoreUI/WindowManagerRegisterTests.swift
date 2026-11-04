@@ -140,14 +140,16 @@ final class WindowManagerRegisterTests: XCTestCase {
         XCTAssertEqual(window?.isVisible, true)
     }
 
-    func testUnclaimedVisibleFlagIsReportedAndCleared() {
+    /// A controller built after launch (a feature enabled later) restores its window as it registers, so
+    /// the launch restore must leave a flag it cannot place yet.
+    func testUnclaimedVisibleFlagIsKeptForALateController() {
         let orphanID = newID("orphan")
         seedVisibility(true, for: orphanID)
         XCTAssertTrue(manager.frames.visibleWindowIDs().contains(orphanID), "the default storage lists visible ids")
 
         manager.restoreOnLaunch()
 
-        XCTAssertNil(manager.frames.savedVisibility(for: orphanID))
-        XCTAssertFalse(manager.frames.visibleWindowIDs().contains(orphanID))
+        XCTAssertEqual(manager.frames.savedVisibility(for: orphanID), true)
+        XCTAssertTrue(manager.frames.visibleWindowIDs().contains(orphanID))
     }
 }
