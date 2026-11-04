@@ -165,15 +165,50 @@ describe("Vercel section", () => {
     ]);
   });
 
+  /** Answers every Vercel call through `handler`, and records the analytics ones. A project's domain
+   *  lookup is answered but not recorded: it has no `projectId` and is cached for an hour. */
   function stubVercel(handler: (u: URL) => { status?: number; body?: unknown }): URL[] {
     const calls: URL[] = [];
-    vi.stubGlobal("fetch", async (url: URL) => {
-      calls.push(url);
+    vi.stubGlobal("fetch", async (input: URL | string) => {
+      const url = new URL(String(input));
+      if (!url.pathname.endsWith("/domains")) calls.push(url);
       const { status = 200, body = {} } = handler(url);
       return { ok: status < 400, status, headers: new Headers(), json: async () => body };
     });
     return calls;
   }
+
+  /** One project, with `domains` from the domains API, or that API refusing when `domains` is null. */
+  function stubDomains(project: { id: string; name: string; alias?: string[] }, domains: { name: string; verified: boolean }[] | null): void {
+    stubVercel((u) => {
+      if (u.pathname === "/v9/projects") {
+        const { alias = [], ...rest } = project;
+        return { body: { projects: [{ ...rest, webAnalytics: { enabledAt: 1 }, targets: { production: { alias } } }] } };
+      }
+      if (u.pathname.endsWith("/domains")) return domains ? { body: { domains } } : { status: 403 };
+      return { body: { data: { pageviews: 0, visitors: 0 } } };
+    });
+  }
+
+  // The domain joins Vercel's numbers to PostHog's, so it can't depend on whether the project happens
+  // to be mid-deployment, when its aliases are only `*.vercel.app`. Each case has its own project
+  // name because the domains lookup is cached per project.
+  it("finds the domain of a project whose latest deployment only has vercel.app aliases", async () => {
+    stubDomains({ id: "d1", name: "deploying-production", alias: ["deploying.vercel.app"] }, [{ name: "deploying.example.com", verified: true }]);
+    expect((await loadVercelTraffic(ENV, w)).roster.map((r) => r.domain)).toEqual(["deploying.example.com"]);
+  });
+
+  it("falls back to the alias when the domains API cannot be read", async () => {
+    stubDomains({ id: "d2", name: "aliased-production", alias: ["aliased.example.com"] }, null);
+    expect((await loadVercelTraffic(ENV, w)).roster.map((r) => r.domain)).toEqual(["aliased.example.com"]);
+  });
+
+  it("drops a project whose real domain turns out to be staging, and does not count it", async () => {
+    stubDomains({ id: "d3", name: "odd-name", alias: ["odd.vercel.app"] }, [{ name: "staging.example.com", verified: true }]);
+    const s = await loadVercelTraffic(ENV, w);
+    expect(s.roster).toEqual([]);
+    expect(s.projectsTotal).toBe(0);
+  });
 
   const PROJECTS = {
     projects: [

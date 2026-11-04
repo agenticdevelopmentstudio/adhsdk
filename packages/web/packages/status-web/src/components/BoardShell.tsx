@@ -1,5 +1,5 @@
 "use client";
-import { type ReactElement, type ReactNode, useCallback, useEffect, useState } from "react";
+import { type ReactElement, type ReactNode, useCallback, useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { HierarchicalDetailView, type TopicLevel, type TopicDetailItem } from "@adh-sdk/ui/blocks";
 import { Badge } from "@adh-sdk/ui/components/badge";
@@ -9,17 +9,23 @@ import { usePortfolioIndicator } from "../hooks/use-portfolio-indicator";
 import { useConfigStatus } from "../hooks/use-config-status";
 import { useStatusUser } from "../hooks/useStatusUser";
 import { useLiveSnapshot } from "../hooks/use-live-snapshot";
+import { useAnalyticsDashboard } from "../hooks/use-dashboards";
+import { sortSiteNames, topicSites } from "../lib/analytics-model";
 import { plural } from "../lib/format";
 import { headlineFor } from "../lib/overview";
+import type { AnalyticsRange } from "../telemetry/dashboard-types";
 import {
+  analyticsSiteFromPath,
   ANALYTICS_TOPICS,
   BOARD_VIEWS,
   entityIdFromPath,
   ERRORS_TOPICS,
+  isAnalyticsSiteTopic,
   isRosterTopic,
   sectionFromPath,
   subTopicFromPath,
   topicFromPath,
+  type AnalyticsTopic,
   type SubTopicView,
   visibleSettingsSections,
 } from "./board-views";
@@ -27,7 +33,7 @@ import { SettingsLevelProvider } from "./settings-level";
 import { OverviewTab } from "./OverviewTab";
 import { Dashboard } from "./Dashboard";
 import { FleetView } from "./FleetView";
-import { AnalyticsView } from "./AnalyticsView";
+import { AnalyticsRangeGear, AnalyticsView, DEFAULT_ANALYTICS_RANGE } from "./AnalyticsView";
 import { ErrorsView } from "./ErrorsView";
 import { SnapshotStaleBanner } from "./SnapshotStaleBanner";
 import { ConnectionOverlay } from "@adh-sdk/ui/components/connection-overlay";
@@ -104,7 +110,8 @@ const SUB_TOPIC_NAMES = { analytics: "Analytics", errors: "Errors" } as const;
  *
  * Analytics and Errors open a second level of their own: Overview, then one topic per panel on
  * it, at `/analytics/<id>` and `/errors/<id>`. A wide screen lands on Overview; a phone gets the
- * list first, as every list on the board does.
+ * list first, as every list on the board does. Analytics' stat topics open a THIRD level, the sites
+ * reporting that stat, at `/analytics/<topic>/<site>`, with one display per site as the leaf.
  *
  * Selection is deep-linked: each topic is a root URL segment, a section is
  * `/settings/<section>`, a roster entity is `/settings/<section>/<id>`; `/home` is the
@@ -289,7 +296,12 @@ export function BoardShell({ children }: { children: ReactNode }): ReactElement 
     railLabel: `${SUB_TOPIC_NAMES[id]} topics`,
     itemNoun: "topic",
     overview: false,
-    items: topics.map((t) => ({ id: t.id, label: t.label, icon: t.icon })),
+    items: topics.map((t) => ({
+      id: t.id,
+      label: t.label,
+      icon: t.icon,
+      leadsTo: id === "analytics" && isAnalyticsSiteTopic(t.id as AnalyticsTopic) ? ("list" as const) : undefined,
+    })),
     selectedId: subTopicFromPath(path, topics),
     defaultSelectedId: "overview",
     onSelect: (next, options) =>
@@ -297,17 +309,77 @@ export function BoardShell({ children }: { children: ReactNode }): ReactElement 
     onClear: () => router.push(`/${id}`),
   });
 
+  // Analytics' third level. Its rows come from the dashboard, so the board reads it (the same
+  // query the view reads, so one request) and holds the range it is read for.
+  //
+  // `analyticsFilter` is the site the reader chose: it narrows the overview, and a
+  // stat topic opens on it. A stat topic's own selection is the URL. Landing on the first site
+  // is the list's default rather than a choice, so it does not become the filter: otherwise
+  // opening Pageviews would quietly narrow the overview to whichever site happens to sort first.
+  const [analyticsRange, setAnalyticsRange] = useState<AnalyticsRange>(DEFAULT_ANALYTICS_RANGE);
+  const [analyticsFilter, setAnalyticsFilter] = useState<string | null>(null);
+  const analyticsQuery = useAnalyticsDashboard(analyticsRange, { enabled: topic === "analytics" });
+  const analyticsSections = analyticsQuery.data?.sections ?? null;
+  const analyticsTopic = topic === "analytics" ? (subTopicFromPath(path, ANALYTICS_TOPICS) ?? "overview") : null;
+  const siteTopic = analyticsTopic && isAnalyticsSiteTopic(analyticsTopic) ? analyticsTopic : null;
+  const urlSite = siteTopic ? analyticsSiteFromPath(path) : null;
+  const reportingSites = useMemo(
+    () => (siteTopic && analyticsSections ? topicSites(siteTopic, analyticsSections) : []),
+    [siteTopic, analyticsSections],
+  );
+
+  const analyticsSiteLevel = (siteTopic: AnalyticsTopic): TopicLevel => {
+    // A deep-linked site with nothing in this range stays on the list, marked, rather than
+    // leaving a page with no row to say what it is showing.
+    const sites =
+      urlSite === null || reportingSites.includes(urlSite) ? reportingSites : sortSiteNames([...reportingSites, urlSite]);
+    const label = ANALYTICS_TOPICS.find((t) => t.id === siteTopic)?.label ?? siteTopic;
+    return {
+      id: `analytics-${siteTopic}-sites`,
+      title: label,
+      railLabel: `${label} sites`,
+      itemNoun: "site",
+      search: { placeholder: "Filter sites" },
+      // With no site to choose, the page has to stay: it is where a failed read is reported. The
+      // nudge would cover it.
+      overview: sites.length > 0,
+      busy: analyticsQuery.isLoading,
+      emptyLabel: analyticsQuery.isLoading ? "Loading…" : "No sites in this range.",
+      items: sites.map((id) => ({ id, label: id })),
+      selectedId: urlSite,
+      defaultSelectedId: analyticsFilter !== null && sites.includes(analyticsFilter) ? analyticsFilter : sites[0],
+      onSelect: (next, options) => {
+        const href = `/analytics/${siteTopic}/${encodeURIComponent(next)}`;
+        if (options?.replace) {
+          router.replace(href);
+        } else {
+          setAnalyticsFilter(next);
+          router.push(href);
+        }
+      },
+      onClear: () => {
+        setAnalyticsFilter(null);
+        router.push(`/analytics/${siteTopic}`);
+      },
+    };
+  };
+
   const levels =
     topic === "settings"
       ? [level, settingsLevel, ...(isRoster && namedEntityLevel ? [namedEntityLevel] : [])]
       : topic === "analytics"
-        ? [level, subTopicLevel("analytics", ANALYTICS_TOPICS)]
+        ? [level, subTopicLevel("analytics", ANALYTICS_TOPICS), ...(siteTopic ? [analyticsSiteLevel(siteTopic)] : [])]
         : topic === "errors"
           ? [level, subTopicLevel("errors", ERRORS_TOPICS)]
           : [level];
 
   return (
-    <HierarchicalDetailView levels={levels} rootLabel="Status" minDetailWidth="20rem">
+    <HierarchicalDetailView
+      levels={levels}
+      rootLabel="Status"
+      minDetailWidth="20rem"
+      help={topic === "analytics" ? <AnalyticsRangeGear range={analyticsRange} onRange={setAnalyticsRange} /> : undefined}
+    >
       <div style={{ zoom: fontScale, position: "relative" }} className="flex min-h-0 w-full flex-1 flex-col">
         {/* Board-wide: a wedged / never-redeployed poller freezes EVERY view, so the
             "monitoring paused" warning rides above the topic content, not just Overview.
@@ -340,7 +412,12 @@ export function BoardShell({ children }: { children: ReactNode }): ReactElement 
         )}
         {topic === "analytics" && (
           <div className="flex min-h-0 flex-1 flex-col">
-            <AnalyticsView topic={subTopicFromPath(path, ANALYTICS_TOPICS) ?? "overview"} />
+            <AnalyticsView
+              topic={analyticsTopic ?? "overview"}
+              range={analyticsRange}
+              site={siteTopic ? urlSite : analyticsFilter}
+              onSite={setAnalyticsFilter}
+            />
           </div>
         )}
         {topic === "errors" && (

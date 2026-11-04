@@ -1,3 +1,5 @@
+import { pickCanonicalHost } from "./host-pick.js";
+
 interface VercelDomain {
   name: string;
   verified?: boolean;
@@ -64,4 +66,18 @@ export async function fetchProjectDomains(
 ): Promise<{ domains: string[]; live: boolean }> {
   const { domains, live } = await fetchProjectDomainList(token, teamId, projectName);
   return { domains: domains.map((d) => d.name), live };
+}
+
+/**
+ * The one domain that names the project's site: the most canonical verified domain that does not
+ * redirect to another, so `olylo.ai` -> `ia.olylo.ai` gives `ia.olylo.ai`. Null when the project
+ * serves no custom domain or the lookup failed. Shares the hour-long cache with the full list.
+ */
+export async function fetchProjectPrimaryDomain(
+  token: string,
+  teamId: string | undefined,
+  projectName: string,
+): Promise<string | null> {
+  const { domains } = await fetchProjectDomainList(token, teamId, projectName);
+  return pickCanonicalHost(domains.filter((d) => !d.redirect).map((d) => d.name));
 }

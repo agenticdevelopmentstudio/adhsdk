@@ -31,10 +31,14 @@ async function getDashboard<T>(api: Api, path: string): Promise<T> {
   return (await response.json()) as T;
 }
 
-export function useAnalyticsDashboard(range: AnalyticsRange): UseQueryResult<AnalyticsDashboardResponse> {
+export function useAnalyticsDashboard(
+  range: AnalyticsRange,
+  options?: { enabled?: boolean },
+): UseQueryResult<AnalyticsDashboardResponse> {
   const api = useStatusApi();
   return useQuery<AnalyticsDashboardResponse>({
     queryKey: ["analytics-dashboard", range],
+    enabled: options?.enabled ?? true,
     queryFn: () => getDashboard(api, `/analytics/dashboard?range=${range}`),
     // Keep the last chart up while another range loads, instead of flashing skeletons.
     placeholderData: keepPreviousData,

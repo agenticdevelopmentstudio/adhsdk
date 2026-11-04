@@ -4,7 +4,6 @@ import { TrendingUp, X } from "lucide-react";
 import { BarList } from "@adh-sdk/ui/blocks/bar-list";
 import { StatCard } from "@adh-sdk/ui/blocks/stat-card";
 import { formatCount } from "@adh-sdk/ui/blocks/trend-chart";
-import { ToggleGroup, ToggleGroupItem } from "@adh-sdk/ui/components/toggle-group";
 import { useAnalyticsDashboard } from "../hooks/use-dashboards";
 import {
   dimensionTotals,
@@ -36,9 +35,51 @@ import {
 } from "./AnalyticsTopics";
 import type { AnalyticsTopic } from "./board-views";
 import { DashboardPanel, eitherSection, SeeAll } from "./DashboardParts";
+import { OptionSection, OptionsGear, optionRow } from "./OptionsGear";
 import { useStatusHost } from "./StatusHost";
 
 const RANGE_LABEL: Record<AnalyticsRange, string> = { "24h": "24 hours", "7d": "7 days", "30d": "30 days" };
+
+export const DEFAULT_ANALYTICS_RANGE: AnalyticsRange = "7d";
+
+/** The range every Analytics topic reads, as the shared options gear. The board puts it on the
+ *  breadcrumb bar, because it applies to the whole topic rather than to one panel. */
+export function AnalyticsRangeGear({
+  range,
+  onRange,
+}: {
+  range: AnalyticsRange;
+  onRange: (range: AnalyticsRange) => void;
+}): ReactElement {
+  return (
+    <OptionsGear
+      changedCount={range === DEFAULT_ANALYTICS_RANGE ? 0 : 1}
+      summary={`Range: last ${RANGE_LABEL[range]}`}
+      label="Analytics options"
+      menuWidth={140}
+    >
+      {(close) => (
+        <OptionSection title="Range">
+          {ANALYTICS_RANGES.map((value) => (
+            <label key={value} style={optionRow(value === range)}>
+              <input
+                className="adh-check"
+                type="radio"
+                name="analytics-range"
+                checked={value === range}
+                onChange={() => {
+                  onRange(value);
+                  close();
+                }}
+              />
+              last {RANGE_LABEL[value]}
+            </label>
+          ))}
+        </OptionSection>
+      )}
+    </OptionsGear>
+  );
+}
 
 const EMPTY_SECTIONS: DashboardSections<AnalyticsSectionData> = {
   traffic: { data: null, error: null, updatedAt: null },
@@ -103,12 +144,21 @@ function sortSites(rows: readonly JoinedSite[], key: SiteSortKey, dir: "asc" | "
  * sites report analytics, so that is all this page reads.
  *
  * Picking a site narrows everything without another request. Overview holds every panel, each with
- * a way to its own sub-topic, where nothing is held back and every site gets its own card. This
- * stays mounted across sub-topics, so the range and the site carry from one to the next.
+ * a way to its own sub-topic, where nothing is held back. A stat topic shows one site, chosen from
+ * the list the board puts beside it. The board holds the range and the site, because that list
+ * needs them too, so they carry from one sub-topic to the next.
  */
-export function AnalyticsView({ topic }: { topic: AnalyticsTopic }): ReactElement {
-  const [range, setRange] = useState<AnalyticsRange>("7d");
-  const [site, setSite] = useState<string | null>(null);
+export function AnalyticsView({
+  topic,
+  range,
+  site,
+  onSite,
+}: {
+  topic: AnalyticsTopic;
+  range: AnalyticsRange;
+  site: string | null;
+  onSite: (site: string | null) => void;
+}): ReactElement {
   const [sort, setSort] = useState<{ key: string; dir: "asc" | "desc" }>({ key: "phViews", dir: "desc" });
 
   const { posthogUrl } = useStatusHost();
@@ -126,6 +176,10 @@ export function AnalyticsView({ topic }: { topic: AnalyticsTopic }): ReactElemen
   const rows = useMemo(() => joinSites(traffic, vercel, health), [traffic, vercel, health]);
   const sortedRows = useMemo(() => sortSites(rows, sort.key as SiteSortKey, sort.dir), [rows, sort]);
   const chosen = site === null ? null : (rows.find((row) => row.key === site) ?? null);
+
+  // On every other topic the list beside the page is what picks the site.
+  const showSiteChip = site !== null && topic === "overview";
+  const showRefreshing = refreshing || query.isPlaceholderData;
 
   const figures =
     site === null
@@ -145,38 +199,26 @@ export function AnalyticsView({ topic }: { topic: AnalyticsTopic }): ReactElemen
   return (
     <div className="min-h-0 flex-1 overflow-y-auto">
       <div className="flex w-full flex-col gap-4 p-4">
-        <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
-          <ToggleGroup
-            aria-label="Time range"
-            value={[range]}
-            onValueChange={(next: unknown[]) => {
-              const value = next[0] as AnalyticsRange | undefined;
-              if (value) setRange(value);
-            }}
-          >
-            {ANALYTICS_RANGES.map((value) => (
-              <ToggleGroupItem key={value} value={value} aria-label={RANGE_LABEL[value]}>
-                {value}
-              </ToggleGroupItem>
-            ))}
-          </ToggleGroup>
-          {site !== null && (
-            <button
-              type="button"
-              onClick={() => setSite(null)}
-              aria-label={`Clear the site filter: ${site}`}
-              className="inline-flex max-w-full cursor-pointer items-center gap-1.5 rounded-md border border-apt-border bg-apt-surface px-2.5 py-1.5 font-mono text-xs text-apt-text"
-            >
-              <span className="truncate">{site}</span>
-              <X size={13} aria-hidden className="flex-none" />
-            </button>
-          )}
-          {(refreshing || query.isPlaceholderData) && (
-            <span role="status" className="font-mono text-[11px] text-apt-text-dim">
-              Refreshing…
-            </span>
-          )}
-        </div>
+        {(showSiteChip || showRefreshing) && (
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+            {showSiteChip && (
+              <button
+                type="button"
+                onClick={() => onSite(null)}
+                aria-label={`Clear the site filter: ${site}`}
+                className="inline-flex max-w-full cursor-pointer items-center gap-1.5 rounded-md border border-apt-border bg-apt-surface px-2.5 py-1.5 font-mono text-xs text-apt-text"
+              >
+                <span className="truncate">{site}</span>
+                <X size={13} aria-hidden className="flex-none" />
+              </button>
+            )}
+            {showRefreshing && (
+              <span role="status" className="font-mono text-[11px] text-apt-text-dim">
+                Refreshing…
+              </span>
+            )}
+          </div>
+        )}
 
         {query.isError && !body && (
           <p role="alert" className="m-0 font-mono text-xs text-apt-red">
@@ -189,12 +231,8 @@ export function AnalyticsView({ topic }: { topic: AnalyticsTopic }): ReactElemen
             topic={topic}
             range={range}
             site={site}
-            onSite={setSite}
             sections={sections}
             rows={rows}
-            sortedRows={sortedRows}
-            sort={sort}
-            onSort={setSort}
             posthogOn={posthogOn}
             vercelOn={vercelOn}
             refreshing={refreshing}
@@ -252,7 +290,7 @@ export function AnalyticsView({ topic }: { topic: AnalyticsTopic }): ReactElemen
             >
               {() => (
                 <div className="-mx-1 max-h-[420px] overflow-auto">
-                  <SitesTable rows={sortedRows} site={site} onSite={setSite} sort={sort} onSort={setSort} />
+                  <SitesTable rows={sortedRows} site={site} onSite={onSite} sort={sort} onSort={setSort} />
                 </div>
               )}
             </DashboardPanel>
@@ -315,7 +353,7 @@ export function AnalyticsView({ topic }: { topic: AnalyticsTopic }): ReactElemen
                       .map((p) => ({ name: p.domain ?? p.project, value: p.pageviews, detail: `${formatCount(p.pageviews)} · ${formatCount(p.visitors)} visitors` }))}
                     color={ANALYTICS_SOURCE_COLORS.vercel}
                     selected={site}
-                    onSelect={(name) => setSite(site === siteKey(name) ? null : siteKey(name))}
+                    onSelect={(name) => onSite(site === siteKey(name) ? null : siteKey(name))}
                     emptyLabel="No pageviews in this range."
                   />
                 )}

@@ -1,7 +1,7 @@
 import type { HTMLAttributes, ReactNode } from "react"
 
 import { ExternalLink } from "../components/external-link"
-import { Stat, StatRow, type StatTone } from "../components/stat"
+import { Stat, StatRow, StatStrip, type StatTone } from "../components/stat"
 import { InfoPanel } from "./info-panel"
 
 // The dashboard stat card — an InfoPanel headed by an icon + title with an
@@ -70,11 +70,11 @@ export function StatCard({
       <div className="flex flex-col gap-2.5">
         {statLayout === "strip" ? (
           stats != null && (
-            <div className="flex flex-wrap gap-x-8 gap-y-3">
+            <StatStrip>
               {stats.map((s, i) => (
                 <Stat key={statKey(s, i)} align="start" label={s.label} value={s.value} tone={s.tone} />
               ))}
-            </div>
+            </StatStrip>
           )
         ) : (
           stats?.map((s, i) => <StatRow key={statKey(s, i)} label={s.label} value={s.value} tone={s.tone} />)

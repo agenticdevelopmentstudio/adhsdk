@@ -1,8 +1,9 @@
 "use client";
-import { useMemo, type ReactElement } from "react";
+import type { ReactElement } from "react";
 import { BarList } from "@adh-sdk/ui/blocks/bar-list";
 import { formatCount, TrendChart, type TrendSeries } from "@adh-sdk/ui/blocks/trend-chart";
 import { DataTable, type DataTableColumn } from "@adh-sdk/ui/components/data-table";
+import { Stat, StatStrip } from "@adh-sdk/ui/components/stat";
 import { StatusDot } from "@adh-sdk/ui/components/status-dot";
 import {
   breakdownTotals,
@@ -11,7 +12,6 @@ import {
   formatVital,
   pageviewSeries,
   projectKey,
-  siteBreakdowns,
   siteKey,
   vitalRating,
   type BreakdownTopic,
@@ -26,7 +26,6 @@ import type {
   DashboardSections,
   Marginal,
   TrafficSection,
-  VercelRosterEntry,
   VercelTrafficSection,
   VitalsRow,
 } from "../telemetry/dashboard-types";
@@ -34,9 +33,9 @@ import { ANALYTICS_TOPICS, type AnalyticsTopic } from "./board-views";
 import { DashboardPanel, eitherSection, SiteFailureRate, WrappedCell } from "./DashboardParts";
 import { ResponseChart } from "./ResponseChart";
 
-// What the Analytics sub-topics hold beyond the overview: the whole of each panel, and then the
-// same thing again for every site. The tables and the chart here are used by the overview too, so
-// a panel and its topic can't disagree about what a column means.
+// What the Analytics sub-topics hold beyond the overview: the whole of each panel, for one site,
+// chosen from the list beside the page. The tables and the chart here are used by the overview too,
+// so a panel and its topic can't disagree about what a figure means.
 
 export function toBars(marginals: readonly Marginal[]): { name: string; value: number }[] {
   return marginals.map((m) => ({ name: m.name, value: m.pageviews }));
@@ -200,14 +199,6 @@ export function PageviewsChart({
 export const PAGEVIEWS_NOTE =
   "Two separate measurements, compared rather than added. Sites reporting to both appear in both lines.";
 
-const ROSTER_COLUMNS: DataTableColumn<VercelRosterEntry>[] = [
-  { key: "site", header: "Site", width: "minmax(14rem, 1fr)", render: (row) => <WrappedCell>{row.domain ?? "—"}</WrappedCell> },
-  { key: "project", header: "Project", width: "minmax(12rem, 1fr)", render: (row) => <WrappedCell>{row.project}</WrappedCell> },
-  { key: "analytics", header: "Web Analytics", render: (row) => (row.analyticsOn ? "On" : "Off") },
-  { key: "pageviews", header: "Pageviews", render: (row) => countOrDash(row.pageviews) },
-  { key: "visitors", header: "Visitors", render: (row) => countOrDash(row.visitors) },
-];
-
 /** "63 of 68 production sites have Web Analytics on", and what could not be read. */
 export function projectsNote(vercel: VercelTrafficSection | null): string | undefined {
   if (!vercel) return undefined;
@@ -226,7 +217,7 @@ function SourceList({
   source: string;
   color: string;
   topicLabel: string;
-  site: string | null;
+  site: string;
   marginals: readonly Marginal[] | null;
 }): ReactElement {
   return (
@@ -236,7 +227,7 @@ function SourceList({
         <p className="m-0 font-mono text-xs text-apt-text-dim">Not available.</p>
       ) : (
         <BarList
-          ariaLabel={`${topicLabel} by pageviews for ${site ?? "all sites"}, from ${source}`}
+          ariaLabel={`${topicLabel} by pageviews for ${site}, from ${source}`}
           items={toBars(marginals)}
           color={color}
           maxItems={Infinity}
@@ -256,7 +247,7 @@ function SourceLists({
 }: {
   topic: BreakdownTopic;
   topicLabel: string;
-  site: string | null;
+  site: string;
   posthog: readonly Marginal[] | null;
   vercel: readonly Marginal[] | null;
 }): ReactElement {
@@ -271,22 +262,79 @@ function SourceLists({
   );
 }
 
-// A site card's data has already been read from a section whose failures the first panel on the
-// topic reports, so the cards don't each repeat them.
-const ANSWERED = { data: true as const, error: null, updatedAt: null };
+/** A topic with no site to show. With sites to choose from, the list's own nudge says so. */
+function NoSites({ message = "No site reported this in this range." }: { message?: string }): ReactElement {
+  return <p className="m-0 font-mono text-xs text-apt-text-dim">{message}</p>;
+}
+
+function SiteFigures({ row, site, traffic, vercel, range }: {
+  row: JoinedSite;
+  site: string;
+  traffic: TrafficSection | null;
+  vercel: VercelTrafficSection | null;
+  range: AnalyticsRange;
+}): ReactElement {
+  const health = row.health;
+  return (
+    <div className="flex flex-col gap-4">
+      <StatStrip>
+        <Stat align="start" label="PostHog views" value={countOrDash(row.posthog?.pageviews)} />
+        <Stat align="start" label="Sessions" value={countOrDash(row.posthog?.sessions)} />
+        <Stat align="start" label="Vercel views" value={countOrDash(row.vercel?.pageviews)} />
+        <Stat align="start" label="Visitors" value={countOrDash(row.vercel?.visitors)} />
+        <Stat align="start" label="Errors" value={countOrDash(health?.errors)} />
+        <Stat
+          align="start"
+          label="Failed requests"
+          value={health ? <SiteFailureRate failures={health.failures} requests={health.requests} /> : "—"}
+        />
+        <Stat align="start" label="p95" value={health && health.p95Ms !== null ? `${Math.round(health.p95Ms)}ms` : "—"} />
+      </StatStrip>
+      <PageviewsChart traffic={traffic} vercel={vercel} site={site} range={range} height={160} />
+    </div>
+  );
+}
+
+function SiteProjects({ projects }: { projects: VercelTrafficSection["roster"] }): ReactElement {
+  return (
+    <div className="flex flex-col gap-4">
+      {projects.map((row) => (
+        <StatStrip key={row.project}>
+          <Stat align="start" label="Project" value={row.project} />
+          <Stat align="start" label="Web Analytics" value={row.analyticsOn ? "On" : "Off"} />
+          <Stat align="start" label="Pageviews" value={countOrDash(row.pageviews)} />
+          <Stat align="start" label="Visitors" value={countOrDash(row.visitors)} />
+        </StatStrip>
+      ))}
+    </div>
+  );
+}
+
+function SiteVitals({ rows }: { rows: readonly VitalsRow[] }): ReactElement {
+  return (
+    <div className="flex flex-col gap-4">
+      {rows.map((row) => (
+        <StatStrip key={row.host}>
+          {/* `www.x.com` and `x.com` are one site, but percentiles do not add, so each keeps its own. */}
+          {rows.length > 1 && <Stat align="start" label="Host" value={row.host} />}
+          <Stat align="start" label="Samples" value={formatCount(row.samples)} />
+          <Stat align="start" label="LCP" value={<VitalCell vital="lcp" value={row.lcp} />} />
+          <Stat align="start" label="INP" value={<VitalCell vital="inp" value={row.inp} />} />
+          <Stat align="start" label="CLS" value={<VitalCell vital="cls" value={row.cls} />} />
+          <Stat align="start" label="FCP" value={<VitalCell vital="fcp" value={row.fcp} />} />
+        </StatStrip>
+      ))}
+    </div>
+  );
+}
 
 export interface AnalyticsTopicBodyProps {
   topic: Exclude<AnalyticsTopic, "overview">;
   range: AnalyticsRange;
   site: string | null;
-  onSite: (site: string | null) => void;
   sections: DashboardSections<AnalyticsSectionData>;
   /** Every site, busiest first. */
   rows: readonly JoinedSite[];
-  /** The same rows in the order the Sites table is sorted. */
-  sortedRows: readonly JoinedSite[];
-  sort: SiteSort;
-  onSort: (sort: SiteSort) => void;
   posthogOn: boolean;
   vercelOn: boolean;
   refreshing: boolean;
@@ -308,11 +356,7 @@ function BreakdownBody({
   const paths = sections.paths.data;
   const projects = sections.vercel.data?.projects ?? null;
 
-  const perSite = useMemo(
-    () => siteBreakdowns(topic, rowsOfDimensions, paths, projects),
-    [topic, rowsOfDimensions, paths, projects],
-  );
-  const totals = breakdownTotals(topic, rowsOfDimensions, paths, projects, site);
+  const totals = site === null ? null : breakdownTotals(topic, rowsOfDimensions, paths, projects, site);
 
   const posthogSection = topic === "pages" ? sections.paths : sections.dimensions;
   const posthogOnly = topic === "browsers";
@@ -327,141 +371,105 @@ function BreakdownBody({
   if (posthogOnly) notes.push("Vercel does not report browsers.");
 
   return (
-    <>
-      <DashboardPanel
-        title={site ?? "All sites"}
-        source={source}
-        sourceHref={posthogOnly ? posthogUrl : undefined}
-        section={eitherSection(posthogSection, posthogOnly ? posthogSection : sections.vercel)}
-        configured={posthogOnly ? posthogOn : posthogOn || vercelOn}
-        refreshing={refreshing}
-        note={notes.length > 0 ? notes.join(" ") : undefined}
-      >
-        {() => (
-          <SourceLists
-            topic={topic}
-            topicLabel={topicLabel}
-            site={site}
-            posthog={totals.posthog}
-            vercel={totals.vercel}
-          />
-        )}
-      </DashboardPanel>
-
-      {site === null && (
-        <div className={topic === "pages" ? "grid grid-cols-1 items-start gap-4" : "grid grid-cols-1 items-start gap-4 xl:grid-cols-2"}>
-          {perSite.map((row) => (
-            <DashboardPanel
-              key={row.key}
-              title={row.key}
-              source={source}
-              section={ANSWERED}
-              configured
-              refreshing={false}
-            >
-              {() => (
-                <SourceLists
-                  topic={topic}
-                  topicLabel={topicLabel}
-                  site={row.key}
-                  posthog={row.posthog}
-                  vercel={row.vercel}
-                />
-              )}
-            </DashboardPanel>
-          ))}
-        </div>
-      )}
-    </>
+    <DashboardPanel
+      title={site ?? topicLabel}
+      source={source}
+      sourceHref={posthogOnly ? posthogUrl : undefined}
+      section={eitherSection(posthogSection, posthogOnly ? posthogSection : sections.vercel)}
+      configured={posthogOnly ? posthogOn : posthogOn || vercelOn}
+      refreshing={refreshing}
+      note={notes.length > 0 ? notes.join(" ") : undefined}
+    >
+      {() =>
+        site === null || totals === null ? (
+          <NoSites />
+        ) : (
+          <SourceLists topic={topic} topicLabel={topicLabel} site={site} posthog={totals.posthog} vercel={totals.vercel} />
+        )
+      }
+    </DashboardPanel>
   );
 }
 
 /** One Analytics sub-topic, in full. The toolbar and the selected site belong to the page around it. */
 export function AnalyticsTopicBody(props: AnalyticsTopicBodyProps): ReactElement {
-  const { topic, range, site, onSite, sections, rows, sortedRows, sort, onSort, posthogOn, vercelOn, refreshing, posthogUrl } = props;
+  const { topic, range, site, sections, rows, posthogOn, vercelOn, refreshing, posthogUrl } = props;
   const traffic = sections.traffic.data;
   const vercel = sections.vercel.data;
   const trafficSection = eitherSection(sections.traffic, sections.vercel);
 
   switch (topic) {
-    case "pageviews":
-      return (
-        <>
-          <DashboardPanel
-            title={site === null ? "All sites" : site}
-            source="PostHog and Vercel"
-            section={trafficSection}
-            configured={posthogOn || vercelOn}
-            refreshing={refreshing}
-            skeletonHeight={240}
-            note={PAGEVIEWS_NOTE}
-          >
-            {() => <PageviewsChart traffic={traffic} vercel={vercel} site={site} range={range} height={240} />}
-          </DashboardPanel>
-          {site === null && (
-            <div className="grid grid-cols-1 items-start gap-4 xl:grid-cols-2">
-              {rows.map((row) => (
-                <DashboardPanel
-                  key={row.key}
-                  title={row.key}
-                  source="PostHog and Vercel"
-                  section={ANSWERED}
-                  configured
-                  refreshing={false}
-                  note={`PostHog ${countOrDash(row.posthog?.pageviews)} · Vercel ${countOrDash(row.vercel?.pageviews)}`}
-                >
-                  {() => <PageviewsChart traffic={traffic} vercel={vercel} site={row.key} range={range} height={140} />}
-                </DashboardPanel>
-              ))}
-            </div>
-          )}
-        </>
-      );
-    case "sites":
+    case "pageviews": {
+      const chosen = rows.find((row) => row.key === site);
       return (
         <DashboardPanel
-          title="Sites"
+          title={site ?? "Pageviews"}
           source="PostHog and Vercel"
           section={trafficSection}
           configured={posthogOn || vercelOn}
           refreshing={refreshing}
-          note="Select a site to narrow every topic to it. A dash means that source has not seen the site. Errors, failed requests and p95 come from PostHog."
+          skeletonHeight={240}
+          note={
+            chosen
+              ? `PostHog ${countOrDash(chosen.posthog?.pageviews)} · Vercel ${countOrDash(chosen.vercel?.pageviews)}. ${PAGEVIEWS_NOTE}`
+              : PAGEVIEWS_NOTE
+          }
         >
-          {() => (
-            <div className="-mx-1">
-              <SitesTable rows={sortedRows} site={site} onSite={onSite} sort={sort} onSort={onSort} />
-            </div>
-          )}
+          {() =>
+            site === null ? <NoSites /> : <PageviewsChart traffic={traffic} vercel={vercel} site={site} range={range} height={240} />
+          }
         </DashboardPanel>
       );
+    }
+    case "sites": {
+      const chosen = rows.find((row) => row.key === site);
+      return (
+        <DashboardPanel
+          title={site ?? "Sites"}
+          source="PostHog and Vercel"
+          section={trafficSection}
+          configured={posthogOn || vercelOn}
+          refreshing={refreshing}
+          skeletonHeight={240}
+          note={`A dash means that source has not seen the site. Errors, failed requests and p95 come from PostHog. ${PAGEVIEWS_NOTE}`}
+        >
+          {() =>
+            site === null ? (
+              <NoSites />
+            ) : chosen ? (
+              <SiteFigures row={chosen} site={site} traffic={traffic} vercel={vercel} range={range} />
+            ) : (
+              <NoSites message="No traffic from this site in this range." />
+            )
+          }
+        </DashboardPanel>
+      );
+    }
     case "projects":
       return (
         <DashboardPanel
-          title="Projects"
+          title={site ?? "Projects"}
           source="Vercel"
           section={sections.vercel}
           configured={vercelOn}
           refreshing={refreshing}
           note={projectsNote(vercel)}
         >
-          {(data) => (
-            <div className="-mx-1">
-              <DataTable
-                ariaLabel="Production Vercel projects"
-                columns={ROSTER_COLUMNS}
-                rows={data.roster.filter((row) => site === null || projectKey(row) === site)}
-                getRowId={(row) => row.project}
-                autoSizeColumns
-                emptyLabel="No production project matches."
-              />
-            </div>
-          )}
+          {(data) => {
+            const projects = data.roster.filter((row) => projectKey(row) === site);
+            if (site === null) return <NoSites />;
+            return projects.length > 0 ? (
+              <SiteProjects projects={projects} />
+            ) : (
+              <NoSites message="No production Vercel project serves this site." />
+            );
+          }}
         </DashboardPanel>
       );
     case "vitals":
       return (
         <DashboardPanel
-          title="Web vitals"
+          title={site ?? "Web vitals"}
           source="PostHog"
           sourceHref={posthogUrl}
           section={sections.vitals}
@@ -469,11 +477,15 @@ export function AnalyticsTopicBody(props: AnalyticsTopicBodyProps): ReactElement
           refreshing={refreshing}
           note={VITALS_NOTE}
         >
-          {(data) => (
-            <div className="-mx-1">
-              <VitalsTable rows={data} site={site} />
-            </div>
-          )}
+          {(data) => {
+            const vitals = data.filter((row) => siteKey(row.host) === site);
+            if (site === null) return <NoSites />;
+            return vitals.length > 0 ? (
+              <SiteVitals rows={vitals} />
+            ) : (
+              <NoSites message="No vitals were reported for this site in this range." />
+            );
+          }}
         </DashboardPanel>
       );
     default:

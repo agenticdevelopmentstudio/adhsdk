@@ -1,5 +1,7 @@
 import type {
   AnalyticsRange,
+  AnalyticsSectionData,
+  DashboardSections,
   DimensionRow,
   Marginal,
   PathRow,
@@ -275,6 +277,49 @@ export function siteBreakdowns(
     .map((key) => ({ key, ...breakdownTotals(topic, dimensionRows, pathRows, projects, key) }))
     .filter((row) => (row.posthog?.length ?? 0) + (row.vercel?.length ?? 0) > 0)
     .sort((a, b) => breakdownSize(b) - breakdownSize(a) || a.key.localeCompare(b.key));
+}
+
+/**
+ * Site names in list order: alphabetical, so a site stays where the reader last found it when
+ * traffic moves. A stat topic's list and any row added to it both go through this.
+ */
+export function sortSiteNames(sites: readonly string[]): string[] {
+  return [...sites].sort((a, b) => a.localeCompare(b));
+}
+
+/**
+ * The sites a stat topic can show, alphabetically: the rows of its list. A site with nothing to show
+ * in the topic is not offered, so Browsers lists only the sites PostHog has browsers for.
+ */
+export function topicSites(
+  topic: "pageviews" | "sites" | "projects" | "vitals" | BreakdownTopic,
+  sections: DashboardSections<AnalyticsSectionData>,
+): string[] {
+  if (topic === "sites") {
+    return sortSiteNames(joinSites(sections.traffic.data, sections.vercel.data, sections.health.data).map((row) => row.key));
+  }
+  if (topic === "projects") {
+    // The whole roster, traffic or not: a site with analytics off has to stay findable.
+    return sortSiteNames([...new Set((sections.vercel.data?.roster ?? []).map(projectKey))]);
+  }
+  if (topic === "vitals") {
+    return sortSiteNames([...new Set((sections.vitals.data ?? []).map((row) => siteKey(row.host)))]);
+  }
+  if (topic === "pageviews") {
+    return sortSiteNames(
+      joinSites(sections.traffic.data, sections.vercel.data, sections.health.data)
+        .filter((row) => (row.posthog?.pageviews ?? 0) + (row.vercel?.pageviews ?? 0) > 0)
+        .map((row) => row.key),
+    );
+  }
+  return sortSiteNames(
+    siteBreakdowns(
+      topic,
+      sections.dimensions.data?.rows ?? null,
+      sections.paths.data,
+      sections.vercel.data?.projects ?? null,
+    ).map((row) => row.key),
+  );
 }
 
 function sortMarginals(totals: ReadonlyMap<string, number>): Marginal[] {

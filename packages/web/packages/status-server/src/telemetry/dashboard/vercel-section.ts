@@ -1,4 +1,5 @@
 import { noteRateLimited, rateLimitedUntil } from "@adh-sdk/deploy-platform/cooldown";
+import { fetchProjectPrimaryDomain } from "@adh-sdk/deploy-platform/providers";
 import { mapLimit } from "@adh-sdk/deploy-platform/util";
 import { alignToBuckets, type RangeWindow } from "./ranges";
 import type { Marginal, VercelProjectTraffic, VercelRosterEntry, VercelTrafficSection } from "./types";
@@ -68,7 +69,11 @@ export function analyticsEnabled(p: ListedProject): boolean {
   return Boolean(p.webAnalytics?.enabledAt) && !p.webAnalytics?.disabledAt;
 }
 
-/** The first production alias that a person would call the site's domain. */
+/**
+ * The first production alias that a person would call the site's domain. These belong to the latest
+ * production deployment, so a queued deployment leaves only `*.vercel.app` here. That makes this a
+ * cheap first filter and a fallback, not the answer: `loadVercelTraffic` asks the domains API.
+ */
 export function productionDomain(p: ListedProject): string | null {
   return p.targets?.production?.alias?.find((a) => !a.endsWith(".vercel.app")) ?? null;
 }
@@ -82,7 +87,11 @@ export function productionDomain(p: ListedProject): string | null {
  * testing.
  */
 export function isProductionProject(p: ListedProject): boolean {
-  return !/-(staging|testing)$/i.test(p.name ?? "") && !/^(staging|testing)\./i.test(productionDomain(p) ?? "");
+  return !/-(staging|testing)$/i.test(p.name ?? "") && !isNonProductionHost(productionDomain(p));
+}
+
+function isNonProductionHost(domain: string | null): boolean {
+  return /^(staging|testing)\./i.test(domain ?? "");
 }
 
 /** The API takes dates for whole days. Hourly needs instants or it can't tell the hours apart. */
@@ -125,9 +134,17 @@ export async function loadVercelTraffic(env: VercelEnv, w: RangeWindow): Promise
   const cooling = rateLimitedUntil("vercel");
   if (cooling) throw new Error(`Vercel rate limited until ${new Date(cooling).toISOString()}`);
 
-  const listed = (await listProjects(env)).filter(
+  const candidates = (await listProjects(env)).filter(
     (p): p is ListedProject & { id: string; name: string } => Boolean(p.id && p.name && isProductionProject(p)),
   );
+  const domains = new Map(
+    await mapLimit(candidates, CONCURRENCY, async (p) => {
+      const domain = await fetchProjectPrimaryDomain(env.VERCEL_API_TOKEN ?? "", env.VERCEL_TEAM_ID, p.name);
+      return [p.id, domain ?? productionDomain(p)] as const;
+    }),
+  );
+  const domainOf = (p: { id: string }): string | null => domains.get(p.id) ?? null;
+  const listed = candidates.filter((p) => !isNonProductionHost(domainOf(p)));
   const enabled = listed.filter(analyticsEnabled);
 
   let failed = 0;
@@ -162,7 +179,7 @@ export async function loadVercelTraffic(env: VercelEnv, w: RangeWindow): Promise
     const seriesRows = ok(series);
     const traffic: VercelProjectTraffic = {
       project: p.name,
-      domain: productionDomain(p),
+      domain: domainOf(p),
       pageviews,
       visitors,
       series: alignToBuckets(w.buckets, seriesRows.map((r): [unknown, number] => [r.timestamp, Number(r.pageviews) || 0])),
@@ -186,7 +203,7 @@ export async function loadVercelTraffic(env: VercelEnv, w: RangeWindow): Promise
       const c = countOf.get(p.id);
       return {
         project: p.name,
-        domain: productionDomain(p),
+        domain: domainOf(p),
         analyticsOn: analyticsEnabled(p),
         pageviews: c?.pageviews ?? null,
         visitors: c?.visitors ?? null,
