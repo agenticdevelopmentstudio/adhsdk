@@ -60,15 +60,17 @@ open class SingleWindowController: NSWindowController, NSWindowDelegate {
     private var hudConfiguration: HUDConfiguration?
 
     /// Initializes the controller and registers it with
-    /// `WindowManager.shared.registry` under `windowID`. The host's launch
-    /// path then calls `WindowManager.shared.restoreOnLaunch()` once to
-    /// re-show every registered window whose spec opts in to visibility
-    /// persistence — no per-controller restore call is needed.
+    /// `WindowManager.shared.registry` under `windowID`. The framework restores
+    /// it: the automatic launch restore re-shows every registered window whose
+    /// spec opts in to visibility persistence, and a controller built after
+    /// that pass restores itself here. Neither the host nor the subclass calls
+    /// anything to get its window back.
     public init(windowID: String, contentViewController: NSViewController) {
         self.windowID = windowID
         super.init(window: nil)
         self.contentViewController = contentViewController
         WindowManager.shared.registry.register(self)
+        WindowManager.shared.controllerDidRegister(self)
     }
 
     @available(*, unavailable)

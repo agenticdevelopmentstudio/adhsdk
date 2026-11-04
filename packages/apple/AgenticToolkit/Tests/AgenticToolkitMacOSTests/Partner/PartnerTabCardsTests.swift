@@ -115,31 +115,38 @@ final class PartnerTabCardsTests: XCTestCase {
         let split = PartnerSplitViewController(controller: controller)
         split.loadViewIfNeeded()
         let session = registry.open(directory: directory.path, title: "t", firstCommand: nil)
-        await waitUntil { split.tabbed.tabs(on: .left).count == 3 }
-        XCTAssertEqual(split.tabbed.tabs(on: .left).map(\.id),
-                       [split.partnerTabID, split.notificationsTabID, session.id])
+        await waitUntil { split.tabbed.tabs(on: .left).count == 2 }
+        XCTAssertEqual(split.tabbed.tabs(on: .left).map(\.id), [split.partnerTabID, session.id])
         split.select(sessionID: session.id)
         XCTAssertEqual(split.tabbed.selectedTabID(on: .left), session.id)
 
         registry.close(id: session.id)
-        await waitUntil { split.tabbed.tabs(on: .left).count == 2 }
-        XCTAssertEqual(split.tabbed.tabs(on: .left).map(\.id), [split.partnerTabID, split.notificationsTabID])
+        await waitUntil { split.tabbed.tabs(on: .left).count == 1 }
+        XCTAssertEqual(split.tabbed.tabs(on: .left).map(\.id), [split.partnerTabID])
         XCTAssertEqual(split.tabbed.selectedTabID(on: .left), split.partnerTabID)
     }
 
-    func testThePartnerAndNotificationsTabsCannotClose() {
+    func testThePartnerTabCannotClose() {
         let split = PartnerSplitViewController(controller: controller)
         split.loadViewIfNeeded()
-        for id in [split.partnerTabID, split.notificationsTabID] {
-            split.multiTabbedViewController(split.tabbed, didRequestCloseTab: id, on: .left)
-            XCTAssertEqual(split.cards[id]?.card.showsCloseButton, false)
-        }
-        XCTAssertEqual(split.tabbed.tabs(on: .left).map(\.id), [split.partnerTabID, split.notificationsTabID])
+        split.multiTabbedViewController(split.tabbed, didRequestCloseTab: split.partnerTabID, on: .left)
+        XCTAssertEqual(split.cards[split.partnerTabID]?.card.showsCloseButton, false)
+        XCTAssertEqual(split.tabbed.tabs(on: .left).map(\.id), [split.partnerTabID])
     }
 
-    func testTheNotificationsCardCountsOpenItems() {
-        XCTAssertEqual(NotificationsCardSource.summary(openCount: 0), "Nothing open")
-        XCTAssertEqual(NotificationsCardSource.summary(openCount: 1), "1 open item")
-        XCTAssertEqual(NotificationsCardSource.summary(openCount: 3), "3 open items")
+    func testThePartnerTabShowsPartnerAndNotificationsPanesThatCannotClose() throws {
+        let split = PartnerSplitViewController(controller: controller)
+        split.loadViewIfNeeded()
+        let panes = try XCTUnwrap(split.partnerPanes)
+        panes.loadViewIfNeeded()
+        XCTAssertEqual(panes.splitViewItems.map(\.viewController),
+                       [panes.partnerPane, panes.notificationsPane])
+        panes.notificationsPane.loadViewIfNeeded()
+        XCTAssertTrue(split.attention.view.isDescendant(of: panes.notificationsPane.view))
+        for pane in [panes.partnerPane, panes.notificationsPane] {
+            XCTAssertFalse(split.canClose(pane))
+            split.paneDidRequestClose(pane)
+        }
+        XCTAssertEqual(panes.splitViewItems.count, 2)
     }
 }

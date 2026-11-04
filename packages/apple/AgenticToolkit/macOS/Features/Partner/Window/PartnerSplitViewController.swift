@@ -9,9 +9,10 @@ import os
 /// Its panes are framed exactly as a Projects window's: each is a ``PartnerPaneViewController`` on the shared
 /// pane backdrop, and the space around them is the app-wide pane spacing.
 ///
-/// The content item is a ``MultiTabbedViewController`` with only its left edge on. Its first two tabs are the
-/// partner and Notifications, which cannot be closed; each live session the partner opened adds another after
-/// them. Selecting a card shows that tab's pane in the center.
+/// The content item is a ``MultiTabbedViewController`` with only its left edge on. Its first tab is the
+/// partner's, which cannot be closed: it shows the Partner chat pane and the Notifications pane side by side
+/// (``PartnerPanesViewController``), neither of which can be removed. Each live session the partner opened
+/// adds a tab after it. Selecting a card shows that tab's panes in the center.
 ///
 /// Turns the attention pane's buttons into controller calls, and keeps the one piece of window state the
 /// controller does not: which attention item, if any, the owner is discussing. The next line the composer
@@ -27,10 +28,10 @@ public final class PartnerSplitViewController: ThemedSplitViewController {
     let commands: PartnerCommands
     /// The partner's tab. Fixed, so a selection can name it.
     let partnerTabID = UUID()
-    /// The Notifications tab. Fixed, like the partner's.
-    let notificationsTabID = UUID()
     /// The tabs that are always there, first, and never close.
-    private var fixedTabIDs: Set<UUID> { [partnerTabID, notificationsTabID] }
+    private var fixedTabIDs: Set<UUID> { [partnerTabID] }
+    /// The partner's tab content: the Partner and Notifications panes side by side. Internal for tests.
+    private(set) var partnerPanes: PartnerPanesViewController?
 
     /// A reference link in the attention pane was clicked that is not a live or closed session of this
     /// window. The app decides what opening it means.
@@ -97,15 +98,15 @@ public final class PartnerSplitViewController: ThemedSplitViewController {
             self.view.window?.backgroundColor = NSColor(palette.projectPaneBackdrop)
         }
         let commands = commands
-        addTab(id: partnerTabID, source: PartnerCardSource(controller: controller),
-               pane: PartnerPaneViewController(
-                   title: "Partner", content: chat, showsCloseButton: false,
-                   menuItems: { commands.menuItems() }), closable: false)
-        let model = attention.model
-        addTab(id: notificationsTabID,
-               source: NotificationsCardSource(directory: controller.paths.directory) { model.open.count },
-               pane: PartnerPaneViewController(title: "Notifications", content: attention, showsCloseButton: false),
-               closable: false)
+        let partnerPane = PartnerPaneViewController(
+            title: "Partner", content: chat, showsCloseButton: false, menuItems: { commands.menuItems() })
+        let notificationsPane = PartnerPaneViewController(
+            title: "Notifications", content: attention, showsCloseButton: false)
+        partnerPane.host = self
+        notificationsPane.host = self
+        let panes = PartnerPanesViewController(partner: partnerPane, notifications: notificationsPane)
+        partnerPanes = panes
+        addTab(id: partnerTabID, source: PartnerCardSource(controller: controller), content: panes, closable: false)
     }
 
     /// The app-wide pane spacing around the window's one pane.
@@ -113,15 +114,14 @@ public final class PartnerSplitViewController: ThemedSplitViewController {
         ComposableTabsWindowController.applyPaneSpacing(PaneSpacing.contentInsets, to: tabbed)
     }
 
-    private func addTab(id: UUID, source: TabPaneDataSource, pane: PartnerPaneViewController, closable: Bool,
+    private func addTab(id: UUID, source: TabPaneDataSource, content: NSViewController, closable: Bool,
                         at index: Int? = nil) {
         let card = TabPaneViewController(edge: .left, tabID: id)
         card.dataSource = source
         card.showsCloseButton = closable
         card.reload()
-        pane.host = self
         cards[id] = (card, source)
-        let tab = MultiTabbedViewController.Tab(id: id, item: .viewController(card), viewController: pane)
+        let tab = MultiTabbedViewController.Tab(id: id, item: .viewController(card), viewController: content)
         if let index { tabbed.insertTab(tab, at: index, on: .left) } else { tabbed.addTab(tab, on: .left) }
     }
 
@@ -165,7 +165,8 @@ public final class PartnerSplitViewController: ThemedSplitViewController {
             }
             let pane = PartnerPaneViewController(
                 title: "Terminal", content: session.viewController, sessionID: session.id)
-            addTab(id: session.id, source: source, pane: pane, closable: true,
+            pane.host = self
+            addTab(id: session.id, source: source, content: pane, closable: true,
                    at: min(offset + fixedTabIDs.count, tabbed.tabs(on: .left).count))
         }
         reloadCards()
@@ -188,10 +189,6 @@ public final class PartnerSplitViewController: ThemedSplitViewController {
             // A review's state and summary are on its session's card, and the queue is on the partner's.
             .filter { $0 == .sessions || $0 == .reviews }
             .sink { [weak self] _ in MainActor.assumeIsolated { self?.reloadCards() } }
-            .store(in: &subscriptions)
-        // The Notifications card counts the open items.
-        attention.model.$open
-            .sink { [weak self] _ in self?.scheduleSync(sessionsChanged: false) }
             .store(in: &subscriptions)
         // The partner's card names the provider and model chosen in Settings.
         controller.settings.changes
@@ -307,7 +304,7 @@ public final class PartnerSplitViewController: ThemedSplitViewController {
 }
 
 extension PartnerSplitViewController: MultiTabbedViewControllerDelegate {
-    /// A card's close closes its session; the partner's and Notifications' cards cannot close.
+    /// A card's close closes its session; the partner's card cannot close.
     public func multiTabbedViewController(_ controller: MultiTabbedViewController,
                                           didRequestCloseTab id: UUID, on edge: Edge) {
         guard !fixedTabIDs.contains(id) else { return }

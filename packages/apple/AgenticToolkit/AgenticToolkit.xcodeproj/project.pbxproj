@@ -1639,6 +1639,7 @@
 		8FD5C575334E8C7895674B98 /* BillingProjectCutoffTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C17CD5378F08D914FF09EF18 /* BillingProjectCutoffTests.swift */; };
 		8FED2A85C99076782C8E7C11 /* AppearanceController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0BA301AB6BB379592455B323 /* AppearanceController.swift */; };
 		9000606D1E6AC7968E3B9E1A /* IngestDrainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0A27CE8D51C660A827163DE /* IngestDrainer.swift */; };
+		901625396BBC36E1B2954BD5 /* PartnerPanesViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC07310906B50E4A7447F07E /* PartnerPanesViewController.swift */; };
 		902052303A539C37552920FD /* ExtensionHostInstallerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5EAE339C94E99D5A0FBE738 /* ExtensionHostInstallerTests.swift */; };
 		907D431A86802EBCA1D135CB /* OllamaModelMetadataTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A53F5510AE3A737BC98AEC4 /* OllamaModelMetadataTests.swift */; };
 		9098989184FCC9C8B2FAA38B /* ActivitySpanBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD9E92B4FB3F5F474F5AF997 /* ActivitySpanBuilder.swift */; };
@@ -6625,6 +6626,7 @@
 		BBB7EE2A1E5250C0936ACE6D /* LanguageContributionPoint.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LanguageContributionPoint.swift; sourceTree = "<group>"; };
 		BBE539C216B001170F681243 /* StenographerIdentifiers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StenographerIdentifiers.swift; sourceTree = "<group>"; };
 		BBFE6A254091C292617E372F /* ButtonView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ButtonView.swift; sourceTree = "<group>"; };
+		BC07310906B50E4A7447F07E /* PartnerPanesViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PartnerPanesViewController.swift; sourceTree = "<group>"; };
 		BC3A9667DF2A57DEA583AC99 /* DaemonBootstrapTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DaemonBootstrapTests.swift; sourceTree = "<group>"; };
 		BC3E0306E2588C893D5027DD /* OversightFindingsListSource.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OversightFindingsListSource.swift; sourceTree = "<group>"; };
 		BC4ADCA6FB8E027F279BB653 /* ModelChooserContent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelChooserContent.swift; sourceTree = "<group>"; };
@@ -11344,6 +11346,7 @@
 			children = (
 				401F50C54224F9532485C2C5 /* AttentionPaneView.swift */,
 				F9CB7C5D2164FCAFF5880A8B /* AttentionPaneViewController.swift */,
+				BC07310906B50E4A7447F07E /* PartnerPanesViewController.swift */,
 				BE029025C5A141A91F20192E /* PartnerSplitViewController.swift */,
 				5E7F87AB1F81188A268AD0D3 /* PartnerTabCards.swift */,
 				30718E5CFBD32FC2447F7079 /* PartnerToolbar.swift */,
@@ -15904,6 +15907,7 @@
 				E61B93C15695A5931FFF3337 /* PartnerModelSettingsViewController.swift in Sources */,
 				8764EFD10CB314E7AD769046 /* PartnerNotificationsSettingsViewController.swift in Sources */,
 				774016EF46E085B272DFF170 /* PartnerNotifier.swift in Sources */,
+				901625396BBC36E1B2954BD5 /* PartnerPanesViewController.swift in Sources */,
 				31481A8BAA9CFE4C06C86BE1 /* PartnerPermissionsSettingsViewController.swift in Sources */,
 				72548968ACD91263B7DD557E /* PartnerSession.swift in Sources */,
 				068B320A67CF04F5C0987C58 /* PartnerSessionEventDetecting.swift in Sources */,
