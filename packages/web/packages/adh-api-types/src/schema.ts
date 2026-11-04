@@ -62353,6 +62353,8 @@ export interface paths {
                             namespaceId: string | null;
                             parentId: string | null;
                             archivedAt: string | null;
+                            /** @description Workspace mode only: whether the caller may manage this ecosystem. Absent otherwise. */
+                            canManage?: boolean;
                         }[];
                     };
                 };

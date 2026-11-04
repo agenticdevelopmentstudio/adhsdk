@@ -105623,6 +105623,10 @@
                             "type": "null"
                           }
                         ]
+                      },
+                      "canManage": {
+                        "type": "boolean",
+                        "description": "Workspace mode only: whether the caller may manage this ecosystem. Absent otherwise."
                       }
                     },
                     "required": [

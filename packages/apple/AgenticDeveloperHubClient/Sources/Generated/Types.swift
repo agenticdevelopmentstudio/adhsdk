@@ -345609,6 +345609,10 @@ public enum Operations {
                         public var isInfrastructure: Swift.Bool
                         /// - Remark: Generated from `#/paths/ecosystem/ecosystems/GET/responses/200/content/JsonPayload/type`.
                         public var _type: Swift.String
+                        /// Workspace mode only: whether the caller may manage this ecosystem. Absent otherwise.
+                        ///
+                        /// - Remark: Generated from `#/paths/ecosystem/ecosystems/GET/responses/200/content/JsonPayload/canManage`.
+                        public var canManage: Swift.Bool?
                         /// Creates a new `JsonPayloadPayload`.
                         ///
                         /// - Parameters:
@@ -345625,6 +345629,7 @@ public enum Operations {
                         ///   - isDefault:
                         ///   - isInfrastructure:
                         ///   - _type:
+                        ///   - canManage: Workspace mode only: whether the caller may manage this ecosystem. Absent otherwise.
                         public init(
                             id: Swift.String,
                             ownerId: Swift.String,
@@ -345638,7 +345643,8 @@ public enum Operations {
                             isDeleted: Swift.Bool,
                             isDefault: Swift.Bool,
                             isInfrastructure: Swift.Bool,
-                            _type: Swift.String
+                            _type: Swift.String,
+                            canManage: Swift.Bool? = nil
                         ) {
                             self.id = id
                             self.ownerId = ownerId
@@ -345653,6 +345659,7 @@ public enum Operations {
                             self.isDefault = isDefault
                             self.isInfrastructure = isInfrastructure
                             self._type = _type
+                            self.canManage = canManage
                         }
                         public enum CodingKeys: String, CodingKey {
                             case id
@@ -345668,6 +345675,7 @@ public enum Operations {
                             case isDefault
                             case isInfrastructure
                             case _type = "type"
+                            case canManage
                         }
                         public init(from decoder: any Swift.Decoder) throws {
                             let container = try decoder.container(keyedBy: CodingKeys.self)
@@ -345723,6 +345731,10 @@ public enum Operations {
                                 Swift.String.self,
                                 forKey: ._type
                             )
+                            self.canManage = try container.decodeIfPresent(
+                                Swift.Bool.self,
+                                forKey: .canManage
+                            )
                             try decoder.ensureNoAdditionalProperties(knownKeys: [
                                 "id",
                                 "ownerId",
@@ -345736,7 +345748,8 @@ public enum Operations {
                                 "isDeleted",
                                 "isDefault",
                                 "isInfrastructure",
-                                "type"
+                                "type",
+                                "canManage"
                             ])
                         }
                     }
