@@ -96,13 +96,11 @@ final class PartnerCodeReviewJobSettingsTests: XCTestCase {
             endpoint: { nil })
     }
 
-    func testThePanelListsExactlyTheFiveSubTopics() {
-        let panel = PartnerSettingsPanelViewController(controller: makeController(), pluginManager: nil)
+    func testTheJobsPanelListsCodeReviewAsItsOnlyJob() {
+        let panel = PartnerJobsSettingsPanelViewController(controller: makeController())
         panel.loadViewIfNeeded()
-        XCTAssertEqual(panel.panels.map { $0.descriptor.title },
-                       ["General", "Model", "Permissions", "Code Review Job", "Notifications"])
-        XCTAssertEqual(panel.descriptor.title, "Coding Partner")
-        XCTAssertEqual(panel.sidebarTitle, "Coding Partner")
+        XCTAssertEqual(panel.panels.map { $0.descriptor.title }, ["Code Review"])
+        XCTAssertEqual(panel.descriptor.title, "Jobs")
     }
 
     func testTheCodeReviewStepsAreEditedThroughTheModel() throws {

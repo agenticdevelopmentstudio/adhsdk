@@ -4,7 +4,7 @@ import Combine
 import AgenticToolkitCore
 import os
 
-/// Code Review Job: the one job the partner has. Its guidelines and steps, how the crawl and the reviews
+/// Code Review: the one job the partner has. Its guidelines and steps, how the crawl and the reviews
 /// run, and which projects are reviewed.
 @MainActor
 // swiftlint:disable:next type_name
@@ -73,7 +73,7 @@ public final class PartnerCodeReviewJobSettingsViewController: ComposableSetting
         self.projects = projects
         self.settings = settings
         super.init(with: ComposableSettings.SettingsPanelDescriptor(
-            title: "Code Review Job",
+            title: "Code Review",
             icon: NSImage(systemSymbolName: "checkmark.bubble", accessibilityDescription: nil)))
     }
 

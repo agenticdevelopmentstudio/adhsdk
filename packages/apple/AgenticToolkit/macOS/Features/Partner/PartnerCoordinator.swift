@@ -219,9 +219,14 @@ public final class PartnerCoordinator: AppFeature {
         await quitTask?.value
     }
 
-    public func settingsPanel() -> ComposableSettings.SettingsPanelSplitViewController {
-        PartnerSettingsPanelViewController(
-            controller: controller, pluginManager: pluginManager, projects: projects, settings: settings)
+    /// The Coding Partner's settings, one tab each across the top of its Settings section: General,
+    /// Permissions and Jobs.
+    public func settingsPanels() -> [any ComposableSettingsPanel] {
+        [
+            PartnerGeneralSettingsViewController(pluginManager: pluginManager, settings: settings),
+            PartnerPermissionsSettingsViewController(settings: settings),
+            PartnerJobsSettingsPanelViewController(controller: controller, projects: projects, settings: settings)
+        ]
     }
 
     /// The system-wide key command that opens the window. Ships switched off.

@@ -72,6 +72,11 @@ final class PartnerCoordinatorTests: XCTestCase {
         status.port = 4321
     }
 
+    func testTheSettingsAreTheGeneralPermissionsAndJobsTabs() {
+        let panels = makeCoordinator().settingsPanels()
+        XCTAssertEqual(panels.map { $0.descriptor.title }, ["General", "Permissions", "Jobs"])
+    }
+
     func testLaunchMigratesTheOldAllowedToolsWhileThePartnerIsOff() {
         settings.set("Read Bash(npm run *) mcp__x", for: UserSettings.partnerAllowedToolsLegacy)
         _ = makeCoordinator()
