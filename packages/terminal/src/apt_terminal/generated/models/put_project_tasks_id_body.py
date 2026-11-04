@@ -28,7 +28,6 @@ class PutProjectTasksIdBody:
         external_project_name (None | str | Unset):
         labels (None | str | Unset):
         url (None | str | Unset):
-        sync_txid (int | Unset):
     """
 
     ecosystem_id: str | Unset = UNSET
@@ -45,7 +44,6 @@ class PutProjectTasksIdBody:
     external_project_name: None | str | Unset = UNSET
     labels: None | str | Unset = UNSET
     url: None | str | Unset = UNSET
-    sync_txid: int | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
         ecosystem_id = self.ecosystem_id
@@ -104,8 +102,6 @@ class PutProjectTasksIdBody:
         else:
             url = self.url
 
-        sync_txid = self.sync_txid
-
         field_dict: dict[str, Any] = {}
 
         field_dict.update({})
@@ -137,8 +133,6 @@ class PutProjectTasksIdBody:
             field_dict["labels"] = labels
         if url is not UNSET:
             field_dict["url"] = url
-        if sync_txid is not UNSET:
-            field_dict["syncTxid"] = sync_txid
 
         return field_dict
 
@@ -222,8 +216,6 @@ class PutProjectTasksIdBody:
 
         url = _parse_url(d.pop("url", UNSET))
 
-        sync_txid = d.pop("syncTxid", UNSET)
-
         put_project_tasks_id_body = cls(
             ecosystem_id=ecosystem_id,
             connection_id=connection_id,
@@ -239,7 +231,6 @@ class PutProjectTasksIdBody:
             external_project_name=external_project_name,
             labels=labels,
             url=url,
-            sync_txid=sync_txid,
         )
 
         return put_project_tasks_id_body

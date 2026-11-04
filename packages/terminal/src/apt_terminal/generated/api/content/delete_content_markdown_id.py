@@ -14,10 +14,13 @@ def _get_kwargs(
     id: str,
     *,
     workspace: str | Unset = UNSET,
+    ecosystem_id: str | Unset = UNSET,
 ) -> dict[str, Any]:
     params: dict[str, Any] = {}
 
     params["workspace"] = workspace
+
+    params["ecosystemId"] = ecosystem_id
 
     params = {k: v for k, v in params.items() if v is not UNSET and v is not None}
 
@@ -71,12 +74,14 @@ def sync_detailed(
     *,
     client: AuthenticatedClient,
     workspace: str | Unset = UNSET,
+    ecosystem_id: str | Unset = UNSET,
 ) -> Response[Any | Error]:
     """Soft-delete a document
 
     Args:
         id (str):
         workspace (str | Unset):
+        ecosystem_id (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -89,6 +94,7 @@ def sync_detailed(
     kwargs = _get_kwargs(
         id=id,
         workspace=workspace,
+        ecosystem_id=ecosystem_id,
     )
 
     response = client.get_httpx_client().request(
@@ -103,12 +109,14 @@ def sync(
     *,
     client: AuthenticatedClient,
     workspace: str | Unset = UNSET,
+    ecosystem_id: str | Unset = UNSET,
 ) -> Any | Error | None:
     """Soft-delete a document
 
     Args:
         id (str):
         workspace (str | Unset):
+        ecosystem_id (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -122,6 +130,7 @@ def sync(
         id=id,
         client=client,
         workspace=workspace,
+        ecosystem_id=ecosystem_id,
     ).parsed
 
 
@@ -130,12 +139,14 @@ async def asyncio_detailed(
     *,
     client: AuthenticatedClient,
     workspace: str | Unset = UNSET,
+    ecosystem_id: str | Unset = UNSET,
 ) -> Response[Any | Error]:
     """Soft-delete a document
 
     Args:
         id (str):
         workspace (str | Unset):
+        ecosystem_id (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -148,6 +159,7 @@ async def asyncio_detailed(
     kwargs = _get_kwargs(
         id=id,
         workspace=workspace,
+        ecosystem_id=ecosystem_id,
     )
 
     response = await client.get_async_httpx_client().request(**kwargs)
@@ -160,12 +172,14 @@ async def asyncio(
     *,
     client: AuthenticatedClient,
     workspace: str | Unset = UNSET,
+    ecosystem_id: str | Unset = UNSET,
 ) -> Any | Error | None:
     """Soft-delete a document
 
     Args:
         id (str):
         workspace (str | Unset):
+        ecosystem_id (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -180,5 +194,6 @@ async def asyncio(
             id=id,
             client=client,
             workspace=workspace,
+            ecosystem_id=ecosystem_id,
         )
     ).parsed

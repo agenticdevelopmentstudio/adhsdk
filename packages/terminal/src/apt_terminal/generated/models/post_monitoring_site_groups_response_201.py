@@ -14,6 +14,8 @@ class PostMonitoringSiteGroupsResponse201:
     Attributes:
         id (str):
         user_id (str):
+        author_kind (None | str):
+        author_id (None | str):
         owner_kind (str):
         owner_id (str):
         name (str):
@@ -27,6 +29,8 @@ class PostMonitoringSiteGroupsResponse201:
 
     id: str
     user_id: str
+    author_kind: None | str
+    author_id: None | str
     owner_kind: str
     owner_id: str
     name: str
@@ -41,6 +45,12 @@ class PostMonitoringSiteGroupsResponse201:
         id = self.id
 
         user_id = self.user_id
+
+        author_kind: None | str
+        author_kind = self.author_kind
+
+        author_id: None | str
+        author_id = self.author_id
 
         owner_kind = self.owner_kind
 
@@ -67,6 +77,8 @@ class PostMonitoringSiteGroupsResponse201:
             {
                 "id": id,
                 "userId": user_id,
+                "authorKind": author_kind,
+                "authorId": author_id,
                 "ownerKind": owner_kind,
                 "ownerId": owner_id,
                 "name": name,
@@ -87,6 +99,20 @@ class PostMonitoringSiteGroupsResponse201:
         id = d.pop("id")
 
         user_id = d.pop("userId")
+
+        def _parse_author_kind(data: object) -> None | str:
+            if data is None:
+                return data
+            return cast(None | str, data)
+
+        author_kind = _parse_author_kind(d.pop("authorKind"))
+
+        def _parse_author_id(data: object) -> None | str:
+            if data is None:
+                return data
+            return cast(None | str, data)
+
+        author_id = _parse_author_id(d.pop("authorId"))
 
         owner_kind = d.pop("ownerKind")
 
@@ -114,6 +140,8 @@ class PostMonitoringSiteGroupsResponse201:
         post_monitoring_site_groups_response_201 = cls(
             id=id,
             user_id=user_id,
+            author_kind=author_kind,
+            author_id=author_id,
             owner_kind=owner_kind,
             owner_id=owner_id,
             name=name,

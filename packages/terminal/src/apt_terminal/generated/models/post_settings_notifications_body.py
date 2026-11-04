@@ -19,7 +19,6 @@ class PostSettingsNotificationsBody:
         email (bool | Unset):
         sms (bool | Unset):
         in_app (bool | Unset):
-        sync_txid (int | Unset):
     """
 
     category: str
@@ -27,7 +26,6 @@ class PostSettingsNotificationsBody:
     email: bool | Unset = UNSET
     sms: bool | Unset = UNSET
     in_app: bool | Unset = UNSET
-    sync_txid: int | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
         category = self.category
@@ -39,8 +37,6 @@ class PostSettingsNotificationsBody:
         sms = self.sms
 
         in_app = self.in_app
-
-        sync_txid = self.sync_txid
 
         field_dict: dict[str, Any] = {}
 
@@ -57,8 +53,6 @@ class PostSettingsNotificationsBody:
             field_dict["sms"] = sms
         if in_app is not UNSET:
             field_dict["inApp"] = in_app
-        if sync_txid is not UNSET:
-            field_dict["syncTxid"] = sync_txid
 
         return field_dict
 
@@ -75,15 +69,12 @@ class PostSettingsNotificationsBody:
 
         in_app = d.pop("inApp", UNSET)
 
-        sync_txid = d.pop("syncTxid", UNSET)
-
         post_settings_notifications_body = cls(
             category=category,
             ecosystem_id=ecosystem_id,
             email=email,
             sms=sms,
             in_app=in_app,
-            sync_txid=sync_txid,
         )
 
         return post_settings_notifications_body

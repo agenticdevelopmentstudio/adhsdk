@@ -21,7 +21,6 @@ class PostContentRelationshipsBody:
         relationship_kind (str | Unset):
         since_date (str | Unset):
         notes (str | Unset):
-        sync_txid (int | Unset):
     """
 
     contact_id: str
@@ -31,7 +30,6 @@ class PostContentRelationshipsBody:
     relationship_kind: str | Unset = UNSET
     since_date: str | Unset = UNSET
     notes: str | Unset = UNSET
-    sync_txid: int | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
         contact_id = self.contact_id
@@ -47,8 +45,6 @@ class PostContentRelationshipsBody:
         since_date = self.since_date
 
         notes = self.notes
-
-        sync_txid = self.sync_txid
 
         field_dict: dict[str, Any] = {}
 
@@ -69,8 +65,6 @@ class PostContentRelationshipsBody:
             field_dict["sinceDate"] = since_date
         if notes is not UNSET:
             field_dict["notes"] = notes
-        if sync_txid is not UNSET:
-            field_dict["syncTxid"] = sync_txid
 
         return field_dict
 
@@ -91,8 +85,6 @@ class PostContentRelationshipsBody:
 
         notes = d.pop("notes", UNSET)
 
-        sync_txid = d.pop("syncTxid", UNSET)
-
         post_content_relationships_body = cls(
             contact_id=contact_id,
             ecosystem_id=ecosystem_id,
@@ -101,7 +93,6 @@ class PostContentRelationshipsBody:
             relationship_kind=relationship_kind,
             since_date=since_date,
             notes=notes,
-            sync_txid=sync_txid,
         )
 
         return post_content_relationships_body

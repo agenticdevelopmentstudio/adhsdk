@@ -14,6 +14,8 @@ class GetPersonalEducationIdResponse200:
     Attributes:
         id (str):
         customer_id (str):
+        owner_kind (str):
+        owner_id (str):
         deleted_at (None | str):
         ecosystem_id (str):
         institution (str):
@@ -32,6 +34,8 @@ class GetPersonalEducationIdResponse200:
 
     id: str
     customer_id: str
+    owner_kind: str
+    owner_id: str
     deleted_at: None | str
     ecosystem_id: str
     institution: str
@@ -51,6 +55,10 @@ class GetPersonalEducationIdResponse200:
         id = self.id
 
         customer_id = self.customer_id
+
+        owner_kind = self.owner_kind
+
+        owner_id = self.owner_id
 
         deleted_at: None | str
         deleted_at = self.deleted_at
@@ -89,6 +97,8 @@ class GetPersonalEducationIdResponse200:
             {
                 "id": id,
                 "customerId": customer_id,
+                "ownerKind": owner_kind,
+                "ownerId": owner_id,
                 "deletedAt": deleted_at,
                 "ecosystemId": ecosystem_id,
                 "institution": institution,
@@ -114,6 +124,10 @@ class GetPersonalEducationIdResponse200:
         id = d.pop("id")
 
         customer_id = d.pop("customerId")
+
+        owner_kind = d.pop("ownerKind")
+
+        owner_id = d.pop("ownerId")
 
         def _parse_deleted_at(data: object) -> None | str:
             if data is None:
@@ -161,6 +175,8 @@ class GetPersonalEducationIdResponse200:
         get_personal_education_id_response_200 = cls(
             id=id,
             customer_id=customer_id,
+            owner_kind=owner_kind,
+            owner_id=owner_id,
             deleted_at=deleted_at,
             ecosystem_id=ecosystem_id,
             institution=institution,

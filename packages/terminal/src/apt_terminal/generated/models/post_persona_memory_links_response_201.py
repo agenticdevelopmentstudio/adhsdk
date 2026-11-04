@@ -15,6 +15,8 @@ class PostPersonaMemoryLinksResponse201:
         id (str):
         ecosystem_id (str):
         customer_id (str):
+        owner_kind (str):
+        owner_id (str):
         src_id (str):
         dst_id (str):
         relation (str):
@@ -29,6 +31,8 @@ class PostPersonaMemoryLinksResponse201:
     id: str
     ecosystem_id: str
     customer_id: str
+    owner_kind: str
+    owner_id: str
     src_id: str
     dst_id: str
     relation: str
@@ -45,6 +49,10 @@ class PostPersonaMemoryLinksResponse201:
         ecosystem_id = self.ecosystem_id
 
         customer_id = self.customer_id
+
+        owner_kind = self.owner_kind
+
+        owner_id = self.owner_id
 
         src_id = self.src_id
 
@@ -73,6 +81,8 @@ class PostPersonaMemoryLinksResponse201:
                 "id": id,
                 "ecosystemId": ecosystem_id,
                 "customerId": customer_id,
+                "ownerKind": owner_kind,
+                "ownerId": owner_id,
                 "srcId": src_id,
                 "dstId": dst_id,
                 "relation": relation,
@@ -95,6 +105,10 @@ class PostPersonaMemoryLinksResponse201:
         ecosystem_id = d.pop("ecosystemId")
 
         customer_id = d.pop("customerId")
+
+        owner_kind = d.pop("ownerKind")
+
+        owner_id = d.pop("ownerId")
 
         src_id = d.pop("srcId")
 
@@ -128,6 +142,8 @@ class PostPersonaMemoryLinksResponse201:
             id=id,
             ecosystem_id=ecosystem_id,
             customer_id=customer_id,
+            owner_kind=owner_kind,
+            owner_id=owner_id,
             src_id=src_id,
             dst_id=dst_id,
             relation=relation,

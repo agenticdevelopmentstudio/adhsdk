@@ -24,6 +24,8 @@ class EcosystemSigninApp:
             is_internal (bool): Always false here — internal clients are not listed or editable
             app_token_prefix (None | str):
             github_enabled (bool):
+            redirect_uris (list[str]): The OAuth redirect URIs registered on the app’s Hydra client. Empty when Hydra is
+                unreachable or not configured (the list never fails on Hydra).
     """
 
     id: str
@@ -35,6 +37,7 @@ class EcosystemSigninApp:
     is_internal: bool
     app_token_prefix: None | str
     github_enabled: bool
+    redirect_uris: list[str]
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -58,6 +61,8 @@ class EcosystemSigninApp:
 
         github_enabled = self.github_enabled
 
+        redirect_uris = self.redirect_uris
+
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update(
@@ -71,6 +76,7 @@ class EcosystemSigninApp:
                 "isInternal": is_internal,
                 "appTokenPrefix": app_token_prefix,
                 "githubEnabled": github_enabled,
+                "redirectUris": redirect_uris,
             }
         )
 
@@ -107,6 +113,8 @@ class EcosystemSigninApp:
 
         github_enabled = d.pop("githubEnabled")
 
+        redirect_uris = cast(list[str], d.pop("redirectUris"))
+
         ecosystem_signin_app = cls(
             id=id,
             slug=slug,
@@ -117,6 +125,7 @@ class EcosystemSigninApp:
             is_internal=is_internal,
             app_token_prefix=app_token_prefix,
             github_enabled=github_enabled,
+            redirect_uris=redirect_uris,
         )
 
         ecosystem_signin_app.additional_properties = d

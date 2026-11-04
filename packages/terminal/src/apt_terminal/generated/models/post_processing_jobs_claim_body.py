@@ -6,6 +6,7 @@ from typing import Any, TypeVar, cast
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
 
+from ..models.ai_processing_provider_kind import AiProcessingProviderKind
 from ..types import UNSET, Unset
 
 T = TypeVar("T", bound="PostProcessingJobsClaimBody")
@@ -20,6 +21,8 @@ class PostProcessingJobsClaimBody:
         batch (int | Unset): Max jobs to claim (default 1)
         lease_ms (int | Unset): Lease duration in ms (default 30 000)
         worker_id (str | Unset): Label for the claimed rows; defaults to api-token name or userId
+        providers (list[AiProcessingProviderKind] | Unset): LLM providers this node can run; only jobs resolving to one
+            of them are claimed. Absent = ['local'].
     """
 
     job_types: list[str] | Unset = UNSET
@@ -27,6 +30,7 @@ class PostProcessingJobsClaimBody:
     batch: int | Unset = UNSET
     lease_ms: int | Unset = UNSET
     worker_id: str | Unset = UNSET
+    providers: list[AiProcessingProviderKind] | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -42,6 +46,13 @@ class PostProcessingJobsClaimBody:
 
         worker_id = self.worker_id
 
+        providers: list[str] | Unset = UNSET
+        if not isinstance(self.providers, Unset):
+            providers = []
+            for providers_item_data in self.providers:
+                providers_item = providers_item_data.value
+                providers.append(providers_item)
+
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update({})
@@ -55,6 +66,8 @@ class PostProcessingJobsClaimBody:
             field_dict["leaseMs"] = lease_ms
         if worker_id is not UNSET:
             field_dict["workerId"] = worker_id
+        if providers is not UNSET:
+            field_dict["providers"] = providers
 
         return field_dict
 
@@ -71,12 +84,22 @@ class PostProcessingJobsClaimBody:
 
         worker_id = d.pop("workerId", UNSET)
 
+        _providers = d.pop("providers", UNSET)
+        providers: list[AiProcessingProviderKind] | Unset = UNSET
+        if _providers is not UNSET:
+            providers = []
+            for providers_item_data in _providers:
+                providers_item = AiProcessingProviderKind(providers_item_data)
+
+                providers.append(providers_item)
+
         post_processing_jobs_claim_body = cls(
             job_types=job_types,
             min_priority=min_priority,
             batch=batch,
             lease_ms=lease_ms,
             worker_id=worker_id,
+            providers=providers,
         )
 
         post_processing_jobs_claim_body.additional_properties = d

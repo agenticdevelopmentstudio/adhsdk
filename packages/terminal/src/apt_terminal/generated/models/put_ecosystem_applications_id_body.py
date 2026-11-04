@@ -18,14 +18,14 @@ class PutEcosystemApplicationsIdBody:
         slug (str | Unset):
         display_name (str | Unset):
         consumer_kind (str | Unset):
-        sync_txid (int | Unset):
+        platform (str | Unset):
     """
 
     ecosystem_id: str | Unset = UNSET
     slug: str | Unset = UNSET
     display_name: str | Unset = UNSET
     consumer_kind: str | Unset = UNSET
-    sync_txid: int | Unset = UNSET
+    platform: str | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
         ecosystem_id = self.ecosystem_id
@@ -36,7 +36,7 @@ class PutEcosystemApplicationsIdBody:
 
         consumer_kind = self.consumer_kind
 
-        sync_txid = self.sync_txid
+        platform = self.platform
 
         field_dict: dict[str, Any] = {}
 
@@ -49,8 +49,8 @@ class PutEcosystemApplicationsIdBody:
             field_dict["displayName"] = display_name
         if consumer_kind is not UNSET:
             field_dict["consumerKind"] = consumer_kind
-        if sync_txid is not UNSET:
-            field_dict["syncTxid"] = sync_txid
+        if platform is not UNSET:
+            field_dict["platform"] = platform
 
         return field_dict
 
@@ -65,14 +65,14 @@ class PutEcosystemApplicationsIdBody:
 
         consumer_kind = d.pop("consumerKind", UNSET)
 
-        sync_txid = d.pop("syncTxid", UNSET)
+        platform = d.pop("platform", UNSET)
 
         put_ecosystem_applications_id_body = cls(
             ecosystem_id=ecosystem_id,
             slug=slug,
             display_name=display_name,
             consumer_kind=consumer_kind,
-            sync_txid=sync_txid,
+            platform=platform,
         )
 
         return put_ecosystem_applications_id_body

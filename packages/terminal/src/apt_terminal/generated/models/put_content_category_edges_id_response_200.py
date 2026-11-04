@@ -15,6 +15,8 @@ class PutContentCategoryEdgesIdResponse200:
         id (str):
         ecosystem_id (str):
         customer_id (str):
+        owner_kind (str):
+        owner_id (str):
         deleted_at (None | str):
         parent_id (str):
         child_id (str):
@@ -29,6 +31,8 @@ class PutContentCategoryEdgesIdResponse200:
     id: str
     ecosystem_id: str
     customer_id: str
+    owner_kind: str
+    owner_id: str
     deleted_at: None | str
     parent_id: str
     child_id: str
@@ -45,6 +49,10 @@ class PutContentCategoryEdgesIdResponse200:
         ecosystem_id = self.ecosystem_id
 
         customer_id = self.customer_id
+
+        owner_kind = self.owner_kind
+
+        owner_id = self.owner_id
 
         deleted_at: None | str
         deleted_at = self.deleted_at
@@ -73,6 +81,8 @@ class PutContentCategoryEdgesIdResponse200:
                 "id": id,
                 "ecosystemId": ecosystem_id,
                 "customerId": customer_id,
+                "ownerKind": owner_kind,
+                "ownerId": owner_id,
                 "deletedAt": deleted_at,
                 "parentId": parent_id,
                 "childId": child_id,
@@ -95,6 +105,10 @@ class PutContentCategoryEdgesIdResponse200:
         ecosystem_id = d.pop("ecosystemId")
 
         customer_id = d.pop("customerId")
+
+        owner_kind = d.pop("ownerKind")
+
+        owner_id = d.pop("ownerId")
 
         def _parse_deleted_at(data: object) -> None | str:
             if data is None:
@@ -128,6 +142,8 @@ class PutContentCategoryEdgesIdResponse200:
             id=id,
             ecosystem_id=ecosystem_id,
             customer_id=customer_id,
+            owner_kind=owner_kind,
+            owner_id=owner_id,
             deleted_at=deleted_at,
             parent_id=parent_id,
             child_id=child_id,

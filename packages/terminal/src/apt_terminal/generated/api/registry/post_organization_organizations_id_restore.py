@@ -78,6 +78,13 @@ def sync_detailed(
 ) -> Response[Error | PostOrganizationOrganizationsIdRestoreResponse200]:
     """Restore an archived organization to its own rdid (org creator, org-team admin, or site-admin)
 
+     Restores the organization under its own slug, and its workspace under the owner's workspace as it is
+    now; an address that moves with it keeps its old form as an alias. A 409 leaves the organization
+    archived: its handle was taken while it was archived, by an organization or as a user slug; `code:
+    owner_org_archived` while the organization that owns it is archived (restore that one first); `code:
+    owner_has_no_workspace` when its owner has no workspace to restore its own into; or the restored
+    addresses would be inconsistent (`violations`).
+
     Args:
         id (str):
 
@@ -107,6 +114,13 @@ def sync(
 ) -> Error | PostOrganizationOrganizationsIdRestoreResponse200 | None:
     """Restore an archived organization to its own rdid (org creator, org-team admin, or site-admin)
 
+     Restores the organization under its own slug, and its workspace under the owner's workspace as it is
+    now; an address that moves with it keeps its old form as an alias. A 409 leaves the organization
+    archived: its handle was taken while it was archived, by an organization or as a user slug; `code:
+    owner_org_archived` while the organization that owns it is archived (restore that one first); `code:
+    owner_has_no_workspace` when its owner has no workspace to restore its own into; or the restored
+    addresses would be inconsistent (`violations`).
+
     Args:
         id (str):
 
@@ -130,6 +144,13 @@ async def asyncio_detailed(
     client: AuthenticatedClient,
 ) -> Response[Error | PostOrganizationOrganizationsIdRestoreResponse200]:
     """Restore an archived organization to its own rdid (org creator, org-team admin, or site-admin)
+
+     Restores the organization under its own slug, and its workspace under the owner's workspace as it is
+    now; an address that moves with it keeps its old form as an alias. A 409 leaves the organization
+    archived: its handle was taken while it was archived, by an organization or as a user slug; `code:
+    owner_org_archived` while the organization that owns it is archived (restore that one first); `code:
+    owner_has_no_workspace` when its owner has no workspace to restore its own into; or the restored
+    addresses would be inconsistent (`violations`).
 
     Args:
         id (str):
@@ -157,6 +178,13 @@ async def asyncio(
     client: AuthenticatedClient,
 ) -> Error | PostOrganizationOrganizationsIdRestoreResponse200 | None:
     """Restore an archived organization to its own rdid (org creator, org-team admin, or site-admin)
+
+     Restores the organization under its own slug, and its workspace under the owner's workspace as it is
+    now; an address that moves with it keeps its old form as an alias. A 409 leaves the organization
+    archived: its handle was taken while it was archived, by an organization or as a user slug; `code:
+    owner_org_archived` while the organization that owns it is archived (restore that one first); `code:
+    owner_has_no_workspace` when its owner has no workspace to restore its own into; or the restored
+    addresses would be inconsistent (`violations`).
 
     Args:
         id (str):

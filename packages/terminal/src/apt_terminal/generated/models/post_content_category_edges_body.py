@@ -18,14 +18,12 @@ class PostContentCategoryEdgesBody:
         child_id (str):
         ecosystem_id (str | Unset):
         sort_order (int | Unset):
-        sync_txid (int | Unset):
     """
 
     parent_id: str
     child_id: str
     ecosystem_id: str | Unset = UNSET
     sort_order: int | Unset = UNSET
-    sync_txid: int | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
         parent_id = self.parent_id
@@ -35,8 +33,6 @@ class PostContentCategoryEdgesBody:
         ecosystem_id = self.ecosystem_id
 
         sort_order = self.sort_order
-
-        sync_txid = self.sync_txid
 
         field_dict: dict[str, Any] = {}
 
@@ -50,8 +46,6 @@ class PostContentCategoryEdgesBody:
             field_dict["ecosystemId"] = ecosystem_id
         if sort_order is not UNSET:
             field_dict["sortOrder"] = sort_order
-        if sync_txid is not UNSET:
-            field_dict["syncTxid"] = sync_txid
 
         return field_dict
 
@@ -66,14 +60,11 @@ class PostContentCategoryEdgesBody:
 
         sort_order = d.pop("sortOrder", UNSET)
 
-        sync_txid = d.pop("syncTxid", UNSET)
-
         post_content_category_edges_body = cls(
             parent_id=parent_id,
             child_id=child_id,
             ecosystem_id=ecosystem_id,
             sort_order=sort_order,
-            sync_txid=sync_txid,
         )
 
         return post_content_category_edges_body

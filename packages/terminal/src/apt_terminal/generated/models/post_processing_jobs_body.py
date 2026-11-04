@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import Any, TypeVar
+from typing import Any, TypeVar, cast
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -20,6 +20,8 @@ class PostProcessingJobsBody:
         target_id (str): UUID of the target entity
         payload (Any): Arbitrary job-specific input stored as jsonb
         priority (int | Unset): Higher value = claimed first; defaults to 0
+        config_set_id (None | str | Unset): Run under this config set. Requires admin (403 otherwise); an unknown id is
+            400.
     """
 
     job_type: str
@@ -27,6 +29,7 @@ class PostProcessingJobsBody:
     target_id: str
     payload: Any
     priority: int | Unset = UNSET
+    config_set_id: None | str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -40,6 +43,12 @@ class PostProcessingJobsBody:
 
         priority = self.priority
 
+        config_set_id: None | str | Unset
+        if isinstance(self.config_set_id, Unset):
+            config_set_id = UNSET
+        else:
+            config_set_id = self.config_set_id
+
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update(
@@ -52,6 +61,8 @@ class PostProcessingJobsBody:
         )
         if priority is not UNSET:
             field_dict["priority"] = priority
+        if config_set_id is not UNSET:
+            field_dict["configSetId"] = config_set_id
 
         return field_dict
 
@@ -68,12 +79,22 @@ class PostProcessingJobsBody:
 
         priority = d.pop("priority", UNSET)
 
+        def _parse_config_set_id(data: object) -> None | str | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(None | str | Unset, data)
+
+        config_set_id = _parse_config_set_id(d.pop("configSetId", UNSET))
+
         post_processing_jobs_body = cls(
             job_type=job_type,
             target_kind=target_kind,
             target_id=target_id,
             payload=payload,
             priority=priority,
+            config_set_id=config_set_id,
         )
 
         post_processing_jobs_body.additional_properties = d

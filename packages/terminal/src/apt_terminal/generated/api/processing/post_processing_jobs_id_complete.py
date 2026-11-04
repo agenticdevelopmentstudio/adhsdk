@@ -86,7 +86,11 @@ def sync_detailed(
     """Mark a claimed job succeeded
 
      Stores the result jsonb and transitions the job to succeeded. Returns 404 when the lease guard fails
-    (wrong token, wrong ecosystem, or already finished).
+    (wrong token, wrong ecosystem, or already finished). The optional `usage` array reports the LLM
+    usage the worker ran up, one entry per provider attempt; each is recorded as a cost line against the
+    job's ecosystem, priced from the model catalog (unpriced when the catalog has no price or the host
+    is self-hosted), always paid by the platform. Recorded once per successful completion, after the
+    transaction commits — a repeated call is the 404.
 
     Args:
         id (str):
@@ -121,7 +125,11 @@ def sync(
     """Mark a claimed job succeeded
 
      Stores the result jsonb and transitions the job to succeeded. Returns 404 when the lease guard fails
-    (wrong token, wrong ecosystem, or already finished).
+    (wrong token, wrong ecosystem, or already finished). The optional `usage` array reports the LLM
+    usage the worker ran up, one entry per provider attempt; each is recorded as a cost line against the
+    job's ecosystem, priced from the model catalog (unpriced when the catalog has no price or the host
+    is self-hosted), always paid by the platform. Recorded once per successful completion, after the
+    transaction commits — a repeated call is the 404.
 
     Args:
         id (str):
@@ -151,7 +159,11 @@ async def asyncio_detailed(
     """Mark a claimed job succeeded
 
      Stores the result jsonb and transitions the job to succeeded. Returns 404 when the lease guard fails
-    (wrong token, wrong ecosystem, or already finished).
+    (wrong token, wrong ecosystem, or already finished). The optional `usage` array reports the LLM
+    usage the worker ran up, one entry per provider attempt; each is recorded as a cost line against the
+    job's ecosystem, priced from the model catalog (unpriced when the catalog has no price or the host
+    is self-hosted), always paid by the platform. Recorded once per successful completion, after the
+    transaction commits — a repeated call is the 404.
 
     Args:
         id (str):
@@ -184,7 +196,11 @@ async def asyncio(
     """Mark a claimed job succeeded
 
      Stores the result jsonb and transitions the job to succeeded. Returns 404 when the lease guard fails
-    (wrong token, wrong ecosystem, or already finished).
+    (wrong token, wrong ecosystem, or already finished). The optional `usage` array reports the LLM
+    usage the worker ran up, one entry per provider attempt; each is recorded as a cost line against the
+    job's ecosystem, priced from the model catalog (unpriced when the catalog has no price or the host
+    is self-hosted), always paid by the platform. Recorded once per successful completion, after the
+    transaction commits — a repeated call is the 404.
 
     Args:
         id (str):

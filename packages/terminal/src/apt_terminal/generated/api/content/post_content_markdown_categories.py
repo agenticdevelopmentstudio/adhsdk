@@ -15,12 +15,15 @@ def _get_kwargs(
     *,
     body: PostContentMarkdownCategoriesBody | Unset = UNSET,
     workspace: str | Unset = UNSET,
+    ecosystem_id: str | Unset = UNSET,
 ) -> dict[str, Any]:
     headers: dict[str, Any] = {}
 
     params: dict[str, Any] = {}
 
     params["workspace"] = workspace
+
+    params["ecosystemId"] = ecosystem_id
 
     params = {k: v for k, v in params.items() if v is not UNSET and v is not None}
 
@@ -94,6 +97,7 @@ def sync_detailed(
     client: AuthenticatedClient,
     body: PostContentMarkdownCategoriesBody | Unset = UNSET,
     workspace: str | Unset = UNSET,
+    ecosystem_id: str | Unset = UNSET,
 ) -> Response[Error | MarkdownCategoryNode]:
     """Create a category, optionally nested under one or more others
 
@@ -106,6 +110,7 @@ def sync_detailed(
 
     Args:
         workspace (str | Unset):
+        ecosystem_id (str | Unset):
         body (PostContentMarkdownCategoriesBody | Unset):
 
     Raises:
@@ -119,6 +124,7 @@ def sync_detailed(
     kwargs = _get_kwargs(
         body=body,
         workspace=workspace,
+        ecosystem_id=ecosystem_id,
     )
 
     response = client.get_httpx_client().request(
@@ -133,6 +139,7 @@ def sync(
     client: AuthenticatedClient,
     body: PostContentMarkdownCategoriesBody | Unset = UNSET,
     workspace: str | Unset = UNSET,
+    ecosystem_id: str | Unset = UNSET,
 ) -> Error | MarkdownCategoryNode | None:
     """Create a category, optionally nested under one or more others
 
@@ -145,6 +152,7 @@ def sync(
 
     Args:
         workspace (str | Unset):
+        ecosystem_id (str | Unset):
         body (PostContentMarkdownCategoriesBody | Unset):
 
     Raises:
@@ -159,6 +167,7 @@ def sync(
         client=client,
         body=body,
         workspace=workspace,
+        ecosystem_id=ecosystem_id,
     ).parsed
 
 
@@ -167,6 +176,7 @@ async def asyncio_detailed(
     client: AuthenticatedClient,
     body: PostContentMarkdownCategoriesBody | Unset = UNSET,
     workspace: str | Unset = UNSET,
+    ecosystem_id: str | Unset = UNSET,
 ) -> Response[Error | MarkdownCategoryNode]:
     """Create a category, optionally nested under one or more others
 
@@ -179,6 +189,7 @@ async def asyncio_detailed(
 
     Args:
         workspace (str | Unset):
+        ecosystem_id (str | Unset):
         body (PostContentMarkdownCategoriesBody | Unset):
 
     Raises:
@@ -192,6 +203,7 @@ async def asyncio_detailed(
     kwargs = _get_kwargs(
         body=body,
         workspace=workspace,
+        ecosystem_id=ecosystem_id,
     )
 
     response = await client.get_async_httpx_client().request(**kwargs)
@@ -204,6 +216,7 @@ async def asyncio(
     client: AuthenticatedClient,
     body: PostContentMarkdownCategoriesBody | Unset = UNSET,
     workspace: str | Unset = UNSET,
+    ecosystem_id: str | Unset = UNSET,
 ) -> Error | MarkdownCategoryNode | None:
     """Create a category, optionally nested under one or more others
 
@@ -216,6 +229,7 @@ async def asyncio(
 
     Args:
         workspace (str | Unset):
+        ecosystem_id (str | Unset):
         body (PostContentMarkdownCategoriesBody | Unset):
 
     Raises:
@@ -231,5 +245,6 @@ async def asyncio(
             client=client,
             body=body,
             workspace=workspace,
+            ecosystem_id=ecosystem_id,
         )
     ).parsed

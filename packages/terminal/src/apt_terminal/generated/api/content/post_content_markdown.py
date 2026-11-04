@@ -15,12 +15,15 @@ def _get_kwargs(
     *,
     body: PostContentMarkdownBody | Unset = UNSET,
     workspace: str | Unset = UNSET,
+    ecosystem_id: str | Unset = UNSET,
 ) -> dict[str, Any]:
     headers: dict[str, Any] = {}
 
     params: dict[str, Any] = {}
 
     params["workspace"] = workspace
+
+    params["ecosystemId"] = ecosystem_id
 
     params = {k: v for k, v in params.items() if v is not UNSET and v is not None}
 
@@ -79,11 +82,13 @@ def sync_detailed(
     client: AuthenticatedClient,
     body: PostContentMarkdownBody | Unset = UNSET,
     workspace: str | Unset = UNSET,
+    ecosystem_id: str | Unset = UNSET,
 ) -> Response[Error | MarkdownDocument]:
     """Create a markdown document (writes the head + version 1)
 
     Args:
         workspace (str | Unset):
+        ecosystem_id (str | Unset):
         body (PostContentMarkdownBody | Unset):
 
     Raises:
@@ -97,6 +102,7 @@ def sync_detailed(
     kwargs = _get_kwargs(
         body=body,
         workspace=workspace,
+        ecosystem_id=ecosystem_id,
     )
 
     response = client.get_httpx_client().request(
@@ -111,11 +117,13 @@ def sync(
     client: AuthenticatedClient,
     body: PostContentMarkdownBody | Unset = UNSET,
     workspace: str | Unset = UNSET,
+    ecosystem_id: str | Unset = UNSET,
 ) -> Error | MarkdownDocument | None:
     """Create a markdown document (writes the head + version 1)
 
     Args:
         workspace (str | Unset):
+        ecosystem_id (str | Unset):
         body (PostContentMarkdownBody | Unset):
 
     Raises:
@@ -130,6 +138,7 @@ def sync(
         client=client,
         body=body,
         workspace=workspace,
+        ecosystem_id=ecosystem_id,
     ).parsed
 
 
@@ -138,11 +147,13 @@ async def asyncio_detailed(
     client: AuthenticatedClient,
     body: PostContentMarkdownBody | Unset = UNSET,
     workspace: str | Unset = UNSET,
+    ecosystem_id: str | Unset = UNSET,
 ) -> Response[Error | MarkdownDocument]:
     """Create a markdown document (writes the head + version 1)
 
     Args:
         workspace (str | Unset):
+        ecosystem_id (str | Unset):
         body (PostContentMarkdownBody | Unset):
 
     Raises:
@@ -156,6 +167,7 @@ async def asyncio_detailed(
     kwargs = _get_kwargs(
         body=body,
         workspace=workspace,
+        ecosystem_id=ecosystem_id,
     )
 
     response = await client.get_async_httpx_client().request(**kwargs)
@@ -168,11 +180,13 @@ async def asyncio(
     client: AuthenticatedClient,
     body: PostContentMarkdownBody | Unset = UNSET,
     workspace: str | Unset = UNSET,
+    ecosystem_id: str | Unset = UNSET,
 ) -> Error | MarkdownDocument | None:
     """Create a markdown document (writes the head + version 1)
 
     Args:
         workspace (str | Unset):
+        ecosystem_id (str | Unset):
         body (PostContentMarkdownBody | Unset):
 
     Raises:
@@ -188,5 +202,6 @@ async def asyncio(
             client=client,
             body=body,
             workspace=workspace,
+            ecosystem_id=ecosystem_id,
         )
     ).parsed

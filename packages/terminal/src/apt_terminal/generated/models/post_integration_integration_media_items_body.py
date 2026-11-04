@@ -28,7 +28,6 @@ class PostIntegrationIntegrationMediaItemsBody:
         popularity (int | None | Unset):
         is_saved (bool | Unset):
         last_played_at (None | str | Unset):
-        sync_txid (int | Unset):
     """
 
     connection_id: str
@@ -45,7 +44,6 @@ class PostIntegrationIntegrationMediaItemsBody:
     popularity: int | None | Unset = UNSET
     is_saved: bool | Unset = UNSET
     last_played_at: None | str | Unset = UNSET
-    sync_txid: int | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
         connection_id = self.connection_id
@@ -104,8 +102,6 @@ class PostIntegrationIntegrationMediaItemsBody:
         else:
             last_played_at = self.last_played_at
 
-        sync_txid = self.sync_txid
-
         field_dict: dict[str, Any] = {}
 
         field_dict.update(
@@ -135,8 +131,6 @@ class PostIntegrationIntegrationMediaItemsBody:
             field_dict["isSaved"] = is_saved
         if last_played_at is not UNSET:
             field_dict["lastPlayedAt"] = last_played_at
-        if sync_txid is not UNSET:
-            field_dict["syncTxid"] = sync_txid
 
         return field_dict
 
@@ -220,8 +214,6 @@ class PostIntegrationIntegrationMediaItemsBody:
 
         last_played_at = _parse_last_played_at(d.pop("lastPlayedAt", UNSET))
 
-        sync_txid = d.pop("syncTxid", UNSET)
-
         post_integration_integration_media_items_body = cls(
             connection_id=connection_id,
             external_id=external_id,
@@ -237,7 +229,6 @@ class PostIntegrationIntegrationMediaItemsBody:
             popularity=popularity,
             is_saved=is_saved,
             last_played_at=last_played_at,
-            sync_txid=sync_txid,
         )
 
         return post_integration_integration_media_items_body

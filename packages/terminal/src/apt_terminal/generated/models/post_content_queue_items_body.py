@@ -28,7 +28,6 @@ class PostContentQueueItemsBody:
         dequeued_at (None | str | Unset):
         acked_at (None | str | Unset):
         nacked_at (None | str | Unset):
-        sync_txid (int | Unset):
     """
 
     queue_id: str
@@ -39,7 +38,6 @@ class PostContentQueueItemsBody:
     dequeued_at: None | str | Unset = UNSET
     acked_at: None | str | Unset = UNSET
     nacked_at: None | str | Unset = UNSET
-    sync_txid: int | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
         from ..models.post_content_queue_items_body_payload_type_1 import (
@@ -81,8 +79,6 @@ class PostContentQueueItemsBody:
         else:
             nacked_at = self.nacked_at
 
-        sync_txid = self.sync_txid
-
         field_dict: dict[str, Any] = {}
 
         field_dict.update(
@@ -101,8 +97,6 @@ class PostContentQueueItemsBody:
             field_dict["ackedAt"] = acked_at
         if nacked_at is not UNSET:
             field_dict["nackedAt"] = nacked_at
-        if sync_txid is not UNSET:
-            field_dict["syncTxid"] = sync_txid
 
         return field_dict
 
@@ -175,8 +169,6 @@ class PostContentQueueItemsBody:
 
         nacked_at = _parse_nacked_at(d.pop("nackedAt", UNSET))
 
-        sync_txid = d.pop("syncTxid", UNSET)
-
         post_content_queue_items_body = cls(
             queue_id=queue_id,
             payload=payload,
@@ -186,7 +178,6 @@ class PostContentQueueItemsBody:
             dequeued_at=dequeued_at,
             acked_at=acked_at,
             nacked_at=nacked_at,
-            sync_txid=sync_txid,
         )
 
         return post_content_queue_items_body

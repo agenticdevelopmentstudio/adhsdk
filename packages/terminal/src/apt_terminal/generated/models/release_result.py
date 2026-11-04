@@ -1,13 +1,16 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import Any, TypeVar, cast
+from typing import TYPE_CHECKING, Any, TypeVar, cast
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
 
-from ..models.release_result_reason import ReleaseResultReason
-from ..types import UNSET, Unset
+from ..models.released_name_reason import ReleasedNameReason
+
+if TYPE_CHECKING:
+    from ..models.released_name import ReleasedName
+
 
 T = TypeVar("T", bound="ReleaseResult")
 
@@ -17,21 +20,24 @@ class ReleaseResult:
     """
     Attributes:
         rdid (str):
-        reason (ReleaseResultReason):
+        reason (ReleasedNameReason):
         freed (bool): The released NAME is available again. Deliberately not "the surrounding namespace is empty" — a
             different type sharing that path is a different name.
         aliases_removed (int):
         still_held_by (list[str]): Canonical addresses still sitting in that space, informational. Read as "these exist
             nearby", never as "the release failed".
-        placeholder (str | Unset): The name the entity was renamed to, when the release was a rename
+        renamed_to (None | str): The name the dead row was renamed to — your own `newNames` entry, echoed back. Null on
+            every other branch, where nothing outside the identifier table was written.
+        children (list[ReleasedName]):
     """
 
     rdid: str
-    reason: ReleaseResultReason
+    reason: ReleasedNameReason
     freed: bool
     aliases_removed: int
     still_held_by: list[str]
-    placeholder: str | Unset = UNSET
+    renamed_to: None | str
+    children: list[ReleasedName]
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -45,7 +51,13 @@ class ReleaseResult:
 
         still_held_by = self.still_held_by
 
-        placeholder = self.placeholder
+        renamed_to: None | str
+        renamed_to = self.renamed_to
+
+        children = []
+        for children_item_data in self.children:
+            children_item = children_item_data.to_dict()
+            children.append(children_item)
 
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
@@ -56,19 +68,21 @@ class ReleaseResult:
                 "freed": freed,
                 "aliasesRemoved": aliases_removed,
                 "stillHeldBy": still_held_by,
+                "renamedTo": renamed_to,
+                "children": children,
             }
         )
-        if placeholder is not UNSET:
-            field_dict["placeholder"] = placeholder
 
         return field_dict
 
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
+        from ..models.released_name import ReleasedName
+
         d = dict(src_dict)
         rdid = d.pop("rdid")
 
-        reason = ReleaseResultReason(d.pop("reason"))
+        reason = ReleasedNameReason(d.pop("reason"))
 
         freed = d.pop("freed")
 
@@ -76,7 +90,19 @@ class ReleaseResult:
 
         still_held_by = cast(list[str], d.pop("stillHeldBy"))
 
-        placeholder = d.pop("placeholder", UNSET)
+        def _parse_renamed_to(data: object) -> None | str:
+            if data is None:
+                return data
+            return cast(None | str, data)
+
+        renamed_to = _parse_renamed_to(d.pop("renamedTo"))
+
+        children = []
+        _children = d.pop("children")
+        for children_item_data in _children:
+            children_item = ReleasedName.from_dict(children_item_data)
+
+            children.append(children_item)
 
         release_result = cls(
             rdid=rdid,
@@ -84,7 +110,8 @@ class ReleaseResult:
             freed=freed,
             aliases_removed=aliases_removed,
             still_held_by=still_held_by,
-            placeholder=placeholder,
+            renamed_to=renamed_to,
+            children=children,
         )
 
         release_result.additional_properties = d

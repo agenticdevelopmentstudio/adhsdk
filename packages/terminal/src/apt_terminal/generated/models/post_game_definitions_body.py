@@ -29,7 +29,6 @@ class PostGameDefinitionsBody:
         status (str | Unset):
         sort_order (int | Unset):
         data (bool | float | list[Any] | None | PostGameDefinitionsBodyDataType0Type1 | str | Unset):
-        sync_txid (int | Unset):
     """
 
     game_id: str
@@ -43,7 +42,6 @@ class PostGameDefinitionsBody:
     data: bool | float | list[Any] | None | PostGameDefinitionsBodyDataType0Type1 | str | Unset = (
         UNSET
     )
-    sync_txid: int | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
         from ..models.post_game_definitions_body_data_type_0_type_1 import (
@@ -81,8 +79,6 @@ class PostGameDefinitionsBody:
         else:
             data = self.data
 
-        sync_txid = self.sync_txid
-
         field_dict: dict[str, Any] = {}
 
         field_dict.update(
@@ -103,8 +99,6 @@ class PostGameDefinitionsBody:
             field_dict["sortOrder"] = sort_order
         if data is not UNSET:
             field_dict["data"] = data
-        if sync_txid is not UNSET:
-            field_dict["syncTxid"] = sync_txid
 
         return field_dict
 
@@ -174,8 +168,6 @@ class PostGameDefinitionsBody:
 
         data = _parse_data(d.pop("data", UNSET))
 
-        sync_txid = d.pop("syncTxid", UNSET)
-
         post_game_definitions_body = cls(
             game_id=game_id,
             kind=kind,
@@ -186,7 +178,6 @@ class PostGameDefinitionsBody:
             status=status,
             sort_order=sort_order,
             data=data,
-            sync_txid=sync_txid,
         )
 
         return post_game_definitions_body

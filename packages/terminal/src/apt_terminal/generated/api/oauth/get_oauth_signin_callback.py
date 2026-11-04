@@ -38,6 +38,10 @@ def _parse_response(
         response_302 = cast(Any, None)
         return response_302
 
+    if response.status_code == 303:
+        response_303 = cast(Any, None)
+        return response_303
+
     if response.status_code == 400:
         response_400 = Error.from_dict(response.json())
 

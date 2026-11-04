@@ -42,7 +42,6 @@ class PostIntegrationIntegrationAudienceContactsBody:
         subscribed_at (None | str | Unset):
         raw (bool | float | list[Any] | None | PostIntegrationIntegrationAudienceContactsBodyRawType0Type1 | str |
             Unset):
-        sync_txid (int | Unset):
     """
 
     connection_id: str
@@ -82,7 +81,6 @@ class PostIntegrationIntegrationAudienceContactsBody:
         | str
         | Unset
     ) = UNSET
-    sync_txid: int | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
         from ..models.post_integration_integration_audience_contacts_body_fields_type_0_type_1 import (
@@ -162,8 +160,6 @@ class PostIntegrationIntegrationAudienceContactsBody:
         else:
             raw = self.raw
 
-        sync_txid = self.sync_txid
-
         field_dict: dict[str, Any] = {}
 
         field_dict.update(
@@ -190,8 +186,6 @@ class PostIntegrationIntegrationAudienceContactsBody:
             field_dict["subscribedAt"] = subscribed_at
         if raw is not UNSET:
             field_dict["raw"] = raw
-        if sync_txid is not UNSET:
-            field_dict["syncTxid"] = sync_txid
 
         return field_dict
 
@@ -387,8 +381,6 @@ class PostIntegrationIntegrationAudienceContactsBody:
 
         raw = _parse_raw(d.pop("raw", UNSET))
 
-        sync_txid = d.pop("syncTxid", UNSET)
-
         post_integration_integration_audience_contacts_body = cls(
             connection_id=connection_id,
             provider=provider,
@@ -403,7 +395,6 @@ class PostIntegrationIntegrationAudienceContactsBody:
             fields=fields,
             subscribed_at=subscribed_at,
             raw=raw,
-            sync_txid=sync_txid,
         )
 
         return post_integration_integration_audience_contacts_body

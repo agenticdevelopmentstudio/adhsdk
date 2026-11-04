@@ -18,14 +18,12 @@ class PostPersonaMemoryLinksBody:
         dst_id (str):
         ecosystem_id (str | Unset):
         relation (str | Unset):
-        sync_txid (int | Unset):
     """
 
     src_id: str
     dst_id: str
     ecosystem_id: str | Unset = UNSET
     relation: str | Unset = UNSET
-    sync_txid: int | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
         src_id = self.src_id
@@ -35,8 +33,6 @@ class PostPersonaMemoryLinksBody:
         ecosystem_id = self.ecosystem_id
 
         relation = self.relation
-
-        sync_txid = self.sync_txid
 
         field_dict: dict[str, Any] = {}
 
@@ -50,8 +46,6 @@ class PostPersonaMemoryLinksBody:
             field_dict["ecosystemId"] = ecosystem_id
         if relation is not UNSET:
             field_dict["relation"] = relation
-        if sync_txid is not UNSET:
-            field_dict["syncTxid"] = sync_txid
 
         return field_dict
 
@@ -66,14 +60,11 @@ class PostPersonaMemoryLinksBody:
 
         relation = d.pop("relation", UNSET)
 
-        sync_txid = d.pop("syncTxid", UNSET)
-
         post_persona_memory_links_body = cls(
             src_id=src_id,
             dst_id=dst_id,
             ecosystem_id=ecosystem_id,
             relation=relation,
-            sync_txid=sync_txid,
         )
 
         return post_persona_memory_links_body

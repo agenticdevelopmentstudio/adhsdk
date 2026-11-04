@@ -22,8 +22,12 @@ class StorageAttachment:
     Attributes:
         id (str):
         ecosystem_id (str):
-        customer_id (str):
-        owner_type (str): e.g. 'standalone', 'chat_message', 'document'
+        customer_id (str): The owning customer, empty when the owner is not a customer. Superseded by ownerKind /
+            ownerId, and kept on the wire for clients that have not moved.
+        owner_kind (str): Kind of principal that owns the attachment: 'customer', 'organization', 'application',
+            'persona' or 'ecosystem'.
+        owner_id (str): Id of the owning principal.
+        parent_type (str): Kind of row the attachment hangs off, e.g. 'standalone', 'persona', 'registry.entry'.
         object_key (str): R2 object key the presigned URLs address.
         storage_kind (str): Backing store, e.g. 'r2'.
         filename (str):
@@ -33,7 +37,7 @@ class StorageAttachment:
         status (StorageAttachmentStatus): 'pending' (presigned, awaiting upload) → 'ready' (bytes confirmed).
         created_at (str):
         updated_at (str):
-        owner_id (None | str | Unset): Polymorphic domain owner (NOT the tenant).
+        parent_id (None | str | Unset): Id of the row the attachment hangs off; null for a standalone attachment.
         width (int | None | Unset):
         height (int | None | Unset):
         duration_ms (int | None | Unset):
@@ -45,7 +49,9 @@ class StorageAttachment:
     id: str
     ecosystem_id: str
     customer_id: str
-    owner_type: str
+    owner_kind: str
+    owner_id: str
+    parent_type: str
     object_key: str
     storage_kind: str
     filename: str
@@ -55,7 +61,7 @@ class StorageAttachment:
     status: StorageAttachmentStatus
     created_at: str
     updated_at: str
-    owner_id: None | str | Unset = UNSET
+    parent_id: None | str | Unset = UNSET
     width: int | None | Unset = UNSET
     height: int | None | Unset = UNSET
     duration_ms: int | None | Unset = UNSET
@@ -74,7 +80,11 @@ class StorageAttachment:
 
         customer_id = self.customer_id
 
-        owner_type = self.owner_type
+        owner_kind = self.owner_kind
+
+        owner_id = self.owner_id
+
+        parent_type = self.parent_type
 
         object_key = self.object_key
 
@@ -94,11 +104,11 @@ class StorageAttachment:
 
         updated_at = self.updated_at
 
-        owner_id: None | str | Unset
-        if isinstance(self.owner_id, Unset):
-            owner_id = UNSET
+        parent_id: None | str | Unset
+        if isinstance(self.parent_id, Unset):
+            parent_id = UNSET
         else:
-            owner_id = self.owner_id
+            parent_id = self.parent_id
 
         width: int | None | Unset
         if isinstance(self.width, Unset):
@@ -139,7 +149,9 @@ class StorageAttachment:
                 "id": id,
                 "ecosystemId": ecosystem_id,
                 "customerId": customer_id,
-                "ownerType": owner_type,
+                "ownerKind": owner_kind,
+                "ownerId": owner_id,
+                "parentType": parent_type,
                 "objectKey": object_key,
                 "storageKind": storage_kind,
                 "filename": filename,
@@ -151,8 +163,8 @@ class StorageAttachment:
                 "updatedAt": updated_at,
             }
         )
-        if owner_id is not UNSET:
-            field_dict["ownerId"] = owner_id
+        if parent_id is not UNSET:
+            field_dict["parentId"] = parent_id
         if width is not UNSET:
             field_dict["width"] = width
         if height is not UNSET:
@@ -179,7 +191,11 @@ class StorageAttachment:
 
         customer_id = d.pop("customerId")
 
-        owner_type = d.pop("ownerType")
+        owner_kind = d.pop("ownerKind")
+
+        owner_id = d.pop("ownerId")
+
+        parent_type = d.pop("parentType")
 
         object_key = d.pop("objectKey")
 
@@ -199,14 +215,14 @@ class StorageAttachment:
 
         updated_at = d.pop("updatedAt")
 
-        def _parse_owner_id(data: object) -> None | str | Unset:
+        def _parse_parent_id(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
             return cast(None | str | Unset, data)
 
-        owner_id = _parse_owner_id(d.pop("ownerId", UNSET))
+        parent_id = _parse_parent_id(d.pop("parentId", UNSET))
 
         def _parse_width(data: object) -> int | None | Unset:
             if data is None:
@@ -265,7 +281,9 @@ class StorageAttachment:
             id=id,
             ecosystem_id=ecosystem_id,
             customer_id=customer_id,
-            owner_type=owner_type,
+            owner_kind=owner_kind,
+            owner_id=owner_id,
+            parent_type=parent_type,
             object_key=object_key,
             storage_kind=storage_kind,
             filename=filename,
@@ -275,7 +293,7 @@ class StorageAttachment:
             status=status,
             created_at=created_at,
             updated_at=updated_at,
-            owner_id=owner_id,
+            parent_id=parent_id,
             width=width,
             height=height,
             duration_ms=duration_ms,

@@ -17,7 +17,11 @@ class PostStorageUploadsBody:
     Attributes:
         filename (str):
         content_type (str):
-        owner_type (str | Unset): Polymorphic owner kind (defaults to 'standalone').
+        parent_type (str | Unset): Kind of row the attachment hangs off, e.g. 'persona' or 'registry.entry' (defaults to
+            'standalone').
+        parent_id (str | Unset): Id of the row the attachment hangs off.
+        owner_type (str | Unset): Legacy name for parentType; read only when parentType is absent.
+        owner_id (str | Unset): Legacy name for parentId; read only when parentId is absent.
         ecosystem_id (None | str | Unset):
         size_bytes (int | Unset): Declared size; enforced against the storage quota at init.
         content_hash (str | Unset): When it matches an existing ready object, the upload is deduplicated.
@@ -25,7 +29,10 @@ class PostStorageUploadsBody:
 
     filename: str
     content_type: str
+    parent_type: str | Unset = UNSET
+    parent_id: str | Unset = UNSET
     owner_type: str | Unset = UNSET
+    owner_id: str | Unset = UNSET
     ecosystem_id: None | str | Unset = UNSET
     size_bytes: int | Unset = UNSET
     content_hash: str | Unset = UNSET
@@ -36,7 +43,13 @@ class PostStorageUploadsBody:
 
         content_type = self.content_type
 
+        parent_type = self.parent_type
+
+        parent_id = self.parent_id
+
         owner_type = self.owner_type
+
+        owner_id = self.owner_id
 
         ecosystem_id: None | str | Unset
         if isinstance(self.ecosystem_id, Unset):
@@ -56,8 +69,14 @@ class PostStorageUploadsBody:
                 "contentType": content_type,
             }
         )
+        if parent_type is not UNSET:
+            field_dict["parentType"] = parent_type
+        if parent_id is not UNSET:
+            field_dict["parentId"] = parent_id
         if owner_type is not UNSET:
             field_dict["ownerType"] = owner_type
+        if owner_id is not UNSET:
+            field_dict["ownerId"] = owner_id
         if ecosystem_id is not UNSET:
             field_dict["ecosystemId"] = ecosystem_id
         if size_bytes is not UNSET:
@@ -74,7 +93,13 @@ class PostStorageUploadsBody:
 
         content_type = d.pop("contentType")
 
+        parent_type = d.pop("parentType", UNSET)
+
+        parent_id = d.pop("parentId", UNSET)
+
         owner_type = d.pop("ownerType", UNSET)
+
+        owner_id = d.pop("ownerId", UNSET)
 
         def _parse_ecosystem_id(data: object) -> None | str | Unset:
             if data is None:
@@ -92,7 +117,10 @@ class PostStorageUploadsBody:
         post_storage_uploads_body = cls(
             filename=filename,
             content_type=content_type,
+            parent_type=parent_type,
+            parent_id=parent_id,
             owner_type=owner_type,
+            owner_id=owner_id,
             ecosystem_id=ecosystem_id,
             size_bytes=size_bytes,
             content_hash=content_hash,

@@ -24,7 +24,6 @@ class PutContentListItemsIdBody:
         list_id (str | Unset):
         position (int | Unset):
         value (bool | float | list[Any] | None | PutContentListItemsIdBodyValueType1 | str | Unset):
-        sync_txid (int | Unset):
     """
 
     ecosystem_id: str | Unset = UNSET
@@ -33,7 +32,6 @@ class PutContentListItemsIdBody:
     value: bool | float | list[Any] | None | PutContentListItemsIdBodyValueType1 | str | Unset = (
         UNSET
     )
-    sync_txid: int | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
         from ..models.put_content_list_items_id_body_value_type_1 import (
@@ -57,8 +55,6 @@ class PutContentListItemsIdBody:
         else:
             value = self.value
 
-        sync_txid = self.sync_txid
-
         field_dict: dict[str, Any] = {}
 
         field_dict.update({})
@@ -70,8 +66,6 @@ class PutContentListItemsIdBody:
             field_dict["position"] = position
         if value is not UNSET:
             field_dict["value"] = value
-        if sync_txid is not UNSET:
-            field_dict["syncTxid"] = sync_txid
 
         return field_dict
 
@@ -118,14 +112,11 @@ class PutContentListItemsIdBody:
 
         value = _parse_value(d.pop("value", UNSET))
 
-        sync_txid = d.pop("syncTxid", UNSET)
-
         put_content_list_items_id_body = cls(
             ecosystem_id=ecosystem_id,
             list_id=list_id,
             position=position,
             value=value,
-            sync_txid=sync_txid,
         )
 
         return put_content_list_items_id_body

@@ -34,7 +34,6 @@ class PostIntegrationIntegrationCalendarEventsBody:
         url (None | str | Unset):
         ai_extraction (None | str | Unset):
         ecosystem_id (str | Unset):
-        sync_txid (int | Unset):
     """
 
     title: str
@@ -57,7 +56,6 @@ class PostIntegrationIntegrationCalendarEventsBody:
     url: None | str | Unset = UNSET
     ai_extraction: None | str | Unset = UNSET
     ecosystem_id: str | Unset = UNSET
-    sync_txid: int | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
         title = self.title
@@ -156,8 +154,6 @@ class PostIntegrationIntegrationCalendarEventsBody:
 
         ecosystem_id = self.ecosystem_id
 
-        sync_txid = self.sync_txid
-
         field_dict: dict[str, Any] = {}
 
         field_dict.update(
@@ -201,8 +197,6 @@ class PostIntegrationIntegrationCalendarEventsBody:
             field_dict["aiExtraction"] = ai_extraction
         if ecosystem_id is not UNSET:
             field_dict["ecosystemId"] = ecosystem_id
-        if sync_txid is not UNSET:
-            field_dict["syncTxid"] = sync_txid
 
         return field_dict
 
@@ -347,8 +341,6 @@ class PostIntegrationIntegrationCalendarEventsBody:
 
         ecosystem_id = d.pop("ecosystemId", UNSET)
 
-        sync_txid = d.pop("syncTxid", UNSET)
-
         post_integration_integration_calendar_events_body = cls(
             title=title,
             source=source,
@@ -370,7 +362,6 @@ class PostIntegrationIntegrationCalendarEventsBody:
             url=url,
             ai_extraction=ai_extraction,
             ecosystem_id=ecosystem_id,
-            sync_txid=sync_txid,
         )
 
         return post_integration_integration_calendar_events_body

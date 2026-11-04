@@ -17,6 +17,7 @@ class GetEcosystemApplicationsIdResponse200:
         slug (str):
         display_name (str):
         consumer_kind (str):
+        platform (str):
         created_at (str):
         updated_at (str):
         is_deleted (bool):
@@ -31,6 +32,7 @@ class GetEcosystemApplicationsIdResponse200:
     slug: str
     display_name: str
     consumer_kind: str
+    platform: str
     created_at: str
     updated_at: str
     is_deleted: bool
@@ -49,6 +51,8 @@ class GetEcosystemApplicationsIdResponse200:
         display_name = self.display_name
 
         consumer_kind = self.consumer_kind
+
+        platform = self.platform
 
         created_at = self.created_at
 
@@ -75,6 +79,7 @@ class GetEcosystemApplicationsIdResponse200:
                 "slug": slug,
                 "displayName": display_name,
                 "consumerKind": consumer_kind,
+                "platform": platform,
                 "createdAt": created_at,
                 "updatedAt": updated_at,
                 "isDeleted": is_deleted,
@@ -99,6 +104,8 @@ class GetEcosystemApplicationsIdResponse200:
         display_name = d.pop("displayName")
 
         consumer_kind = d.pop("consumerKind")
+
+        platform = d.pop("platform")
 
         created_at = d.pop("createdAt")
 
@@ -130,6 +137,7 @@ class GetEcosystemApplicationsIdResponse200:
             slug=slug,
             display_name=display_name,
             consumer_kind=consumer_kind,
+            platform=platform,
             created_at=created_at,
             updated_at=updated_at,
             is_deleted=is_deleted,

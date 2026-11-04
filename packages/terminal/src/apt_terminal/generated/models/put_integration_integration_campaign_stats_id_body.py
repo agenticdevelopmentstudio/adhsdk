@@ -37,7 +37,6 @@ class PutIntegrationIntegrationCampaignStatsIdBody:
         bounces (int | None | Unset):
         unsubscribes (int | None | Unset):
         raw (bool | float | list[Any] | None | PutIntegrationIntegrationCampaignStatsIdBodyRawType0Type1 | str | Unset):
-        sync_txid (int | Unset):
     """
 
     ecosystem_id: str | Unset = UNSET
@@ -65,7 +64,6 @@ class PutIntegrationIntegrationCampaignStatsIdBody:
         | str
         | Unset
     ) = UNSET
-    sync_txid: int | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
         from ..models.put_integration_integration_campaign_stats_id_body_raw_type_0_type_1 import (
@@ -159,8 +157,6 @@ class PutIntegrationIntegrationCampaignStatsIdBody:
         else:
             raw = self.raw
 
-        sync_txid = self.sync_txid
-
         field_dict: dict[str, Any] = {}
 
         field_dict.update({})
@@ -198,8 +194,6 @@ class PutIntegrationIntegrationCampaignStatsIdBody:
             field_dict["unsubscribes"] = unsubscribes
         if raw is not UNSET:
             field_dict["raw"] = raw
-        if sync_txid is not UNSET:
-            field_dict["syncTxid"] = sync_txid
 
         return field_dict
 
@@ -365,8 +359,6 @@ class PutIntegrationIntegrationCampaignStatsIdBody:
 
         raw = _parse_raw(d.pop("raw", UNSET))
 
-        sync_txid = d.pop("syncTxid", UNSET)
-
         put_integration_integration_campaign_stats_id_body = cls(
             ecosystem_id=ecosystem_id,
             connection_id=connection_id,
@@ -385,7 +377,6 @@ class PutIntegrationIntegrationCampaignStatsIdBody:
             bounces=bounces,
             unsubscribes=unsubscribes,
             raw=raw,
-            sync_txid=sync_txid,
         )
 
         return put_integration_integration_campaign_stats_id_body

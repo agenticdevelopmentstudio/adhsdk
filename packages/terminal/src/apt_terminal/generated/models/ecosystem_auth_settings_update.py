@@ -21,12 +21,14 @@ class EcosystemAuthSettingsUpdate:
     Attributes:
         signup_mode (EcosystemAuthSettingsUpdateSignupMode | Unset):
         login_enabled (bool | Unset):
+        password_enabled (bool | Unset):
         allowed_providers (list[str] | None | Unset): Every slug must name a configured provider, or the call is a 400.
             An empty array is coerced to null (all providers) rather than locking everyone out.
     """
 
     signup_mode: EcosystemAuthSettingsUpdateSignupMode | Unset = UNSET
     login_enabled: bool | Unset = UNSET
+    password_enabled: bool | Unset = UNSET
     allowed_providers: list[str] | None | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
@@ -36,6 +38,8 @@ class EcosystemAuthSettingsUpdate:
             signup_mode = self.signup_mode.value
 
         login_enabled = self.login_enabled
+
+        password_enabled = self.password_enabled
 
         allowed_providers: list[str] | None | Unset
         if isinstance(self.allowed_providers, Unset):
@@ -53,6 +57,8 @@ class EcosystemAuthSettingsUpdate:
             field_dict["signupMode"] = signup_mode
         if login_enabled is not UNSET:
             field_dict["loginEnabled"] = login_enabled
+        if password_enabled is not UNSET:
+            field_dict["passwordEnabled"] = password_enabled
         if allowed_providers is not UNSET:
             field_dict["allowedProviders"] = allowed_providers
 
@@ -69,6 +75,8 @@ class EcosystemAuthSettingsUpdate:
             signup_mode = EcosystemAuthSettingsUpdateSignupMode(_signup_mode)
 
         login_enabled = d.pop("loginEnabled", UNSET)
+
+        password_enabled = d.pop("passwordEnabled", UNSET)
 
         def _parse_allowed_providers(data: object) -> list[str] | None | Unset:
             if data is None:
@@ -90,6 +98,7 @@ class EcosystemAuthSettingsUpdate:
         ecosystem_auth_settings_update = cls(
             signup_mode=signup_mode,
             login_enabled=login_enabled,
+            password_enabled=password_enabled,
             allowed_providers=allowed_providers,
         )
 

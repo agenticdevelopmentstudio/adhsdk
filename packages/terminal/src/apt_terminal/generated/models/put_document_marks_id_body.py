@@ -20,7 +20,6 @@ class PutDocumentMarksIdBody:
         start_anchor (str | Unset):
         end_anchor (str | Unset):
         mark_data (str | Unset):
-        sync_txid (int | Unset):
     """
 
     block_id: str | Unset = UNSET
@@ -29,7 +28,6 @@ class PutDocumentMarksIdBody:
     start_anchor: str | Unset = UNSET
     end_anchor: str | Unset = UNSET
     mark_data: str | Unset = UNSET
-    sync_txid: int | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
         block_id = self.block_id
@@ -43,8 +41,6 @@ class PutDocumentMarksIdBody:
         end_anchor = self.end_anchor
 
         mark_data = self.mark_data
-
-        sync_txid = self.sync_txid
 
         field_dict: dict[str, Any] = {}
 
@@ -61,8 +57,6 @@ class PutDocumentMarksIdBody:
             field_dict["endAnchor"] = end_anchor
         if mark_data is not UNSET:
             field_dict["markData"] = mark_data
-        if sync_txid is not UNSET:
-            field_dict["syncTxid"] = sync_txid
 
         return field_dict
 
@@ -81,8 +75,6 @@ class PutDocumentMarksIdBody:
 
         mark_data = d.pop("markData", UNSET)
 
-        sync_txid = d.pop("syncTxid", UNSET)
-
         put_document_marks_id_body = cls(
             block_id=block_id,
             ecosystem_id=ecosystem_id,
@@ -90,7 +82,6 @@ class PutDocumentMarksIdBody:
             start_anchor=start_anchor,
             end_anchor=end_anchor,
             mark_data=mark_data,
-            sync_txid=sync_txid,
         )
 
         return put_document_marks_id_body

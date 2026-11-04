@@ -20,7 +20,6 @@ class PutGamePlayersIdBody:
         visibility (str | Unset):
         first_played_at (str | Unset):
         last_played_at (str | Unset):
-        sync_txid (int | Unset):
     """
 
     ecosystem_id: str | Unset = UNSET
@@ -29,7 +28,6 @@ class PutGamePlayersIdBody:
     visibility: str | Unset = UNSET
     first_played_at: str | Unset = UNSET
     last_played_at: str | Unset = UNSET
-    sync_txid: int | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
         ecosystem_id = self.ecosystem_id
@@ -48,8 +46,6 @@ class PutGamePlayersIdBody:
 
         last_played_at = self.last_played_at
 
-        sync_txid = self.sync_txid
-
         field_dict: dict[str, Any] = {}
 
         field_dict.update({})
@@ -65,8 +61,6 @@ class PutGamePlayersIdBody:
             field_dict["firstPlayedAt"] = first_played_at
         if last_played_at is not UNSET:
             field_dict["lastPlayedAt"] = last_played_at
-        if sync_txid is not UNSET:
-            field_dict["syncTxid"] = sync_txid
 
         return field_dict
 
@@ -92,8 +86,6 @@ class PutGamePlayersIdBody:
 
         last_played_at = d.pop("lastPlayedAt", UNSET)
 
-        sync_txid = d.pop("syncTxid", UNSET)
-
         put_game_players_id_body = cls(
             ecosystem_id=ecosystem_id,
             game_id=game_id,
@@ -101,7 +93,6 @@ class PutGamePlayersIdBody:
             visibility=visibility,
             first_played_at=first_played_at,
             last_played_at=last_played_at,
-            sync_txid=sync_txid,
         )
 
         return put_game_players_id_body

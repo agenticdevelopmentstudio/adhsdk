@@ -19,7 +19,6 @@ class PostDocumentDocumentsBody:
         doc_type (str | Unset):
         last_op_id (None | str | Unset):
         last_snapshot_id (None | str | Unset):
-        sync_txid (int | Unset):
     """
 
     title: str
@@ -27,7 +26,6 @@ class PostDocumentDocumentsBody:
     doc_type: str | Unset = UNSET
     last_op_id: None | str | Unset = UNSET
     last_snapshot_id: None | str | Unset = UNSET
-    sync_txid: int | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
         title = self.title
@@ -48,8 +46,6 @@ class PostDocumentDocumentsBody:
         else:
             last_snapshot_id = self.last_snapshot_id
 
-        sync_txid = self.sync_txid
-
         field_dict: dict[str, Any] = {}
 
         field_dict.update(
@@ -65,8 +61,6 @@ class PostDocumentDocumentsBody:
             field_dict["lastOpId"] = last_op_id
         if last_snapshot_id is not UNSET:
             field_dict["lastSnapshotId"] = last_snapshot_id
-        if sync_txid is not UNSET:
-            field_dict["syncTxid"] = sync_txid
 
         return field_dict
 
@@ -97,15 +91,12 @@ class PostDocumentDocumentsBody:
 
         last_snapshot_id = _parse_last_snapshot_id(d.pop("lastSnapshotId", UNSET))
 
-        sync_txid = d.pop("syncTxid", UNSET)
-
         post_document_documents_body = cls(
             title=title,
             ecosystem_id=ecosystem_id,
             doc_type=doc_type,
             last_op_id=last_op_id,
             last_snapshot_id=last_snapshot_id,
-            sync_txid=sync_txid,
         )
 
         return post_document_documents_body

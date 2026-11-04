@@ -36,6 +36,8 @@ class GetIntegrationIntegrationCalendarEventsResponse200Item:
         updated_at (str):
         is_deleted (bool):
         customer_id (str):
+        owner_kind (str):
+        owner_id (str):
         deleted_at (None | str):
         ecosystem_id (str):
         sync_version (int):
@@ -67,6 +69,8 @@ class GetIntegrationIntegrationCalendarEventsResponse200Item:
     updated_at: str
     is_deleted: bool
     customer_id: str
+    owner_kind: str
+    owner_id: str
     deleted_at: None | str
     ecosystem_id: str
     sync_version: int
@@ -136,6 +140,10 @@ class GetIntegrationIntegrationCalendarEventsResponse200Item:
 
         customer_id = self.customer_id
 
+        owner_kind = self.owner_kind
+
+        owner_id = self.owner_id
+
         deleted_at: None | str
         deleted_at = self.deleted_at
 
@@ -176,6 +184,8 @@ class GetIntegrationIntegrationCalendarEventsResponse200Item:
                 "updatedAt": updated_at,
                 "isDeleted": is_deleted,
                 "customerId": customer_id,
+                "ownerKind": owner_kind,
+                "ownerId": owner_id,
                 "deletedAt": deleted_at,
                 "ecosystemId": ecosystem_id,
                 "syncVersion": sync_version,
@@ -307,6 +317,10 @@ class GetIntegrationIntegrationCalendarEventsResponse200Item:
 
         customer_id = d.pop("customerId")
 
+        owner_kind = d.pop("ownerKind")
+
+        owner_id = d.pop("ownerId")
+
         def _parse_deleted_at(data: object) -> None | str:
             if data is None:
                 return data
@@ -352,6 +366,8 @@ class GetIntegrationIntegrationCalendarEventsResponse200Item:
             updated_at=updated_at,
             is_deleted=is_deleted,
             customer_id=customer_id,
+            owner_kind=owner_kind,
+            owner_id=owner_id,
             deleted_at=deleted_at,
             ecosystem_id=ecosystem_id,
             sync_version=sync_version,

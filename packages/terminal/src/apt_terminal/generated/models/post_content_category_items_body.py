@@ -19,7 +19,6 @@ class PostContentCategoryItemsBody:
         target_id (str):
         ecosystem_id (str | Unset):
         sort_order (int | Unset):
-        sync_txid (int | Unset):
     """
 
     category_id: str
@@ -27,7 +26,6 @@ class PostContentCategoryItemsBody:
     target_id: str
     ecosystem_id: str | Unset = UNSET
     sort_order: int | Unset = UNSET
-    sync_txid: int | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
         category_id = self.category_id
@@ -39,8 +37,6 @@ class PostContentCategoryItemsBody:
         ecosystem_id = self.ecosystem_id
 
         sort_order = self.sort_order
-
-        sync_txid = self.sync_txid
 
         field_dict: dict[str, Any] = {}
 
@@ -55,8 +51,6 @@ class PostContentCategoryItemsBody:
             field_dict["ecosystemId"] = ecosystem_id
         if sort_order is not UNSET:
             field_dict["sortOrder"] = sort_order
-        if sync_txid is not UNSET:
-            field_dict["syncTxid"] = sync_txid
 
         return field_dict
 
@@ -73,15 +67,12 @@ class PostContentCategoryItemsBody:
 
         sort_order = d.pop("sortOrder", UNSET)
 
-        sync_txid = d.pop("syncTxid", UNSET)
-
         post_content_category_items_body = cls(
             category_id=category_id,
             target_kind=target_kind,
             target_id=target_id,
             ecosystem_id=ecosystem_id,
             sort_order=sort_order,
-            sync_txid=sync_txid,
         )
 
         return post_content_category_items_body

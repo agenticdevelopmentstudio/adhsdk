@@ -42,7 +42,6 @@ class PersonaMemory:
         valid_from (None | str | Unset):
         valid_to (None | str | Unset):
         last_recalled_at (None | str | Unset):
-        embedding_model (None | str | Unset):
     """
 
     id: str
@@ -68,7 +67,6 @@ class PersonaMemory:
     valid_from: None | str | Unset = UNSET
     valid_to: None | str | Unset = UNSET
     last_recalled_at: None | str | Unset = UNSET
-    embedding_model: None | str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -146,12 +144,6 @@ class PersonaMemory:
         else:
             last_recalled_at = self.last_recalled_at
 
-        embedding_model: None | str | Unset
-        if isinstance(self.embedding_model, Unset):
-            embedding_model = UNSET
-        else:
-            embedding_model = self.embedding_model
-
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update(
@@ -188,8 +180,6 @@ class PersonaMemory:
             field_dict["validTo"] = valid_to
         if last_recalled_at is not UNSET:
             field_dict["lastRecalledAt"] = last_recalled_at
-        if embedding_model is not UNSET:
-            field_dict["embeddingModel"] = embedding_model
 
         return field_dict
 
@@ -291,15 +281,6 @@ class PersonaMemory:
 
         last_recalled_at = _parse_last_recalled_at(d.pop("lastRecalledAt", UNSET))
 
-        def _parse_embedding_model(data: object) -> None | str | Unset:
-            if data is None:
-                return data
-            if isinstance(data, Unset):
-                return data
-            return cast(None | str | Unset, data)
-
-        embedding_model = _parse_embedding_model(d.pop("embeddingModel", UNSET))
-
         persona_memory = cls(
             id=id,
             ecosystem_id=ecosystem_id,
@@ -324,7 +305,6 @@ class PersonaMemory:
             valid_from=valid_from,
             valid_to=valid_to,
             last_recalled_at=last_recalled_at,
-            embedding_model=embedding_model,
         )
 
         persona_memory.additional_properties = d

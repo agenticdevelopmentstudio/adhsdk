@@ -15,6 +15,8 @@ class PostMonitoringSitesResponse201:
         id (str):
         site_group_id (str):
         user_id (str):
+        author_kind (None | str):
+        author_id (None | str):
         owner_kind (str):
         owner_id (str):
         name (str):
@@ -28,6 +30,8 @@ class PostMonitoringSitesResponse201:
     id: str
     site_group_id: str
     user_id: str
+    author_kind: None | str
+    author_id: None | str
     owner_kind: str
     owner_id: str
     name: str
@@ -43,6 +47,12 @@ class PostMonitoringSitesResponse201:
         site_group_id = self.site_group_id
 
         user_id = self.user_id
+
+        author_kind: None | str
+        author_kind = self.author_kind
+
+        author_id: None | str
+        author_id = self.author_id
 
         owner_kind = self.owner_kind
 
@@ -68,6 +78,8 @@ class PostMonitoringSitesResponse201:
                 "id": id,
                 "siteGroupId": site_group_id,
                 "userId": user_id,
+                "authorKind": author_kind,
+                "authorId": author_id,
                 "ownerKind": owner_kind,
                 "ownerId": owner_id,
                 "name": name,
@@ -89,6 +101,20 @@ class PostMonitoringSitesResponse201:
         site_group_id = d.pop("siteGroupId")
 
         user_id = d.pop("userId")
+
+        def _parse_author_kind(data: object) -> None | str:
+            if data is None:
+                return data
+            return cast(None | str, data)
+
+        author_kind = _parse_author_kind(d.pop("authorKind"))
+
+        def _parse_author_id(data: object) -> None | str:
+            if data is None:
+                return data
+            return cast(None | str, data)
+
+        author_id = _parse_author_id(d.pop("authorId"))
 
         owner_kind = d.pop("ownerKind")
 
@@ -115,6 +141,8 @@ class PostMonitoringSitesResponse201:
             id=id,
             site_group_id=site_group_id,
             user_id=user_id,
+            author_kind=author_kind,
+            author_id=author_id,
             owner_kind=owner_kind,
             owner_id=owner_id,
             name=name,

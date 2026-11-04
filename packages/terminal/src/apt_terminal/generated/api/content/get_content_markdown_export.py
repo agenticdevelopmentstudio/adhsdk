@@ -13,10 +13,13 @@ from ...types import UNSET, Response, Unset
 def _get_kwargs(
     *,
     workspace: str | Unset = UNSET,
+    ecosystem_id: str | Unset = UNSET,
 ) -> dict[str, Any]:
     params: dict[str, Any] = {}
 
     params["workspace"] = workspace
+
+    params["ecosystemId"] = ecosystem_id
 
     params = {k: v for k, v in params.items() if v is not UNSET and v is not None}
 
@@ -63,11 +66,13 @@ def sync_detailed(
     *,
     client: AuthenticatedClient,
     workspace: str | Unset = UNSET,
+    ecosystem_id: str | Unset = UNSET,
 ) -> Response[Error | GetContentMarkdownExportResponse200]:
     """Bulk export the caller's documents WITH content (download a whole set)
 
     Args:
         workspace (str | Unset):
+        ecosystem_id (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -79,6 +84,7 @@ def sync_detailed(
 
     kwargs = _get_kwargs(
         workspace=workspace,
+        ecosystem_id=ecosystem_id,
     )
 
     response = client.get_httpx_client().request(
@@ -92,11 +98,13 @@ def sync(
     *,
     client: AuthenticatedClient,
     workspace: str | Unset = UNSET,
+    ecosystem_id: str | Unset = UNSET,
 ) -> Error | GetContentMarkdownExportResponse200 | None:
     """Bulk export the caller's documents WITH content (download a whole set)
 
     Args:
         workspace (str | Unset):
+        ecosystem_id (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -109,6 +117,7 @@ def sync(
     return sync_detailed(
         client=client,
         workspace=workspace,
+        ecosystem_id=ecosystem_id,
     ).parsed
 
 
@@ -116,11 +125,13 @@ async def asyncio_detailed(
     *,
     client: AuthenticatedClient,
     workspace: str | Unset = UNSET,
+    ecosystem_id: str | Unset = UNSET,
 ) -> Response[Error | GetContentMarkdownExportResponse200]:
     """Bulk export the caller's documents WITH content (download a whole set)
 
     Args:
         workspace (str | Unset):
+        ecosystem_id (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -132,6 +143,7 @@ async def asyncio_detailed(
 
     kwargs = _get_kwargs(
         workspace=workspace,
+        ecosystem_id=ecosystem_id,
     )
 
     response = await client.get_async_httpx_client().request(**kwargs)
@@ -143,11 +155,13 @@ async def asyncio(
     *,
     client: AuthenticatedClient,
     workspace: str | Unset = UNSET,
+    ecosystem_id: str | Unset = UNSET,
 ) -> Error | GetContentMarkdownExportResponse200 | None:
     """Bulk export the caller's documents WITH content (download a whole set)
 
     Args:
         workspace (str | Unset):
+        ecosystem_id (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -161,5 +175,6 @@ async def asyncio(
         await asyncio_detailed(
             client=client,
             workspace=workspace,
+            ecosystem_id=ecosystem_id,
         )
     ).parsed

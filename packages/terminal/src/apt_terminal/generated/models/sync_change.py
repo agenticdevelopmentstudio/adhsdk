@@ -24,7 +24,8 @@ class SyncChange:
         id (str):
         op (SyncChangeOp):
         sync_version (str): Server-assigned monotonic version (bigint as string)
-        data (SyncChangeData | Unset): Full row for upserts; absent for deletes
+        data (SyncChangeData | Unset): Row for upserts, minus server-internal sync columns and derived columns such as a
+            memory's embedding; absent for deletes
     """
 
     resource: str

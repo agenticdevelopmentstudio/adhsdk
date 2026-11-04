@@ -21,7 +21,6 @@ class PutDocumentBlocksIdBody:
         content_text (str | Unset):
         content_meta (str | Unset):
         last_op_id (None | str | Unset):
-        sync_txid (int | Unset):
     """
 
     document_id: str | Unset = UNSET
@@ -31,7 +30,6 @@ class PutDocumentBlocksIdBody:
     content_text: str | Unset = UNSET
     content_meta: str | Unset = UNSET
     last_op_id: None | str | Unset = UNSET
-    sync_txid: int | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
         document_id = self.document_id
@@ -52,8 +50,6 @@ class PutDocumentBlocksIdBody:
         else:
             last_op_id = self.last_op_id
 
-        sync_txid = self.sync_txid
-
         field_dict: dict[str, Any] = {}
 
         field_dict.update({})
@@ -71,8 +67,6 @@ class PutDocumentBlocksIdBody:
             field_dict["contentMeta"] = content_meta
         if last_op_id is not UNSET:
             field_dict["lastOpId"] = last_op_id
-        if sync_txid is not UNSET:
-            field_dict["syncTxid"] = sync_txid
 
         return field_dict
 
@@ -100,8 +94,6 @@ class PutDocumentBlocksIdBody:
 
         last_op_id = _parse_last_op_id(d.pop("lastOpId", UNSET))
 
-        sync_txid = d.pop("syncTxid", UNSET)
-
         put_document_blocks_id_body = cls(
             document_id=document_id,
             ecosystem_id=ecosystem_id,
@@ -110,7 +102,6 @@ class PutDocumentBlocksIdBody:
             content_text=content_text,
             content_meta=content_meta,
             last_op_id=last_op_id,
-            sync_txid=sync_txid,
         )
 
         return put_document_blocks_id_body

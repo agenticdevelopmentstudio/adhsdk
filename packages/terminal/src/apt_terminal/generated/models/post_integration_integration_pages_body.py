@@ -25,7 +25,6 @@ class PostIntegrationIntegrationPagesBody:
         parent_id (None | str | Unset):
         is_archived (bool | Unset):
         last_edited_at (None | str | Unset):
-        sync_txid (int | Unset):
     """
 
     connection_id: str
@@ -39,7 +38,6 @@ class PostIntegrationIntegrationPagesBody:
     parent_id: None | str | Unset = UNSET
     is_archived: bool | Unset = UNSET
     last_edited_at: None | str | Unset = UNSET
-    sync_txid: int | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
         connection_id = self.connection_id
@@ -84,8 +82,6 @@ class PostIntegrationIntegrationPagesBody:
         else:
             last_edited_at = self.last_edited_at
 
-        sync_txid = self.sync_txid
-
         field_dict: dict[str, Any] = {}
 
         field_dict.update(
@@ -111,8 +107,6 @@ class PostIntegrationIntegrationPagesBody:
             field_dict["isArchived"] = is_archived
         if last_edited_at is not UNSET:
             field_dict["lastEditedAt"] = last_edited_at
-        if sync_txid is not UNSET:
-            field_dict["syncTxid"] = sync_txid
 
         return field_dict
 
@@ -176,8 +170,6 @@ class PostIntegrationIntegrationPagesBody:
 
         last_edited_at = _parse_last_edited_at(d.pop("lastEditedAt", UNSET))
 
-        sync_txid = d.pop("syncTxid", UNSET)
-
         post_integration_integration_pages_body = cls(
             connection_id=connection_id,
             external_id=external_id,
@@ -190,7 +182,6 @@ class PostIntegrationIntegrationPagesBody:
             parent_id=parent_id,
             is_archived=is_archived,
             last_edited_at=last_edited_at,
-            sync_txid=sync_txid,
         )
 
         return post_integration_integration_pages_body

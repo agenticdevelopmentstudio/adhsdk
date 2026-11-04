@@ -26,7 +26,6 @@ class PostIntegrationIntegrationSocialNotificationsBody:
         item_url (None | str | Unset):
         is_read (bool | Unset):
         external_created_at (None | str | Unset):
-        sync_txid (int | Unset):
     """
 
     connection_id: str
@@ -41,7 +40,6 @@ class PostIntegrationIntegrationSocialNotificationsBody:
     item_url: None | str | Unset = UNSET
     is_read: bool | Unset = UNSET
     external_created_at: None | str | Unset = UNSET
-    sync_txid: int | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
         connection_id = self.connection_id
@@ -92,8 +90,6 @@ class PostIntegrationIntegrationSocialNotificationsBody:
         else:
             external_created_at = self.external_created_at
 
-        sync_txid = self.sync_txid
-
         field_dict: dict[str, Any] = {}
 
         field_dict.update(
@@ -120,8 +116,6 @@ class PostIntegrationIntegrationSocialNotificationsBody:
             field_dict["isRead"] = is_read
         if external_created_at is not UNSET:
             field_dict["externalCreatedAt"] = external_created_at
-        if sync_txid is not UNSET:
-            field_dict["syncTxid"] = sync_txid
 
         return field_dict
 
@@ -194,8 +188,6 @@ class PostIntegrationIntegrationSocialNotificationsBody:
 
         external_created_at = _parse_external_created_at(d.pop("externalCreatedAt", UNSET))
 
-        sync_txid = d.pop("syncTxid", UNSET)
-
         post_integration_integration_social_notifications_body = cls(
             connection_id=connection_id,
             external_id=external_id,
@@ -209,7 +201,6 @@ class PostIntegrationIntegrationSocialNotificationsBody:
             item_url=item_url,
             is_read=is_read,
             external_created_at=external_created_at,
-            sync_txid=sync_txid,
         )
 
         return post_integration_integration_social_notifications_body

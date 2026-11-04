@@ -18,10 +18,13 @@ def _get_kwargs(
     route: str,
     *,
     workspace: str | Unset = UNSET,
+    ecosystem_id: str | Unset = UNSET,
 ) -> dict[str, Any]:
     params: dict[str, Any] = {}
 
     params["workspace"] = workspace
+
+    params["ecosystemId"] = ecosystem_id
 
     params = {k: v for k, v in params.items() if v is not UNSET and v is not None}
 
@@ -78,6 +81,7 @@ def sync_detailed(
     *,
     client: AuthenticatedClient,
     workspace: str | Unset = UNSET,
+    ecosystem_id: str | Unset = UNSET,
 ) -> Response[Error | GetContentMarkdownIdRouteAvailableRouteResponse200]:
     """Check whether a public route slug is free for this document
 
@@ -91,6 +95,7 @@ def sync_detailed(
         id (str):
         route (str):
         workspace (str | Unset):
+        ecosystem_id (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -104,6 +109,7 @@ def sync_detailed(
         id=id,
         route=route,
         workspace=workspace,
+        ecosystem_id=ecosystem_id,
     )
 
     response = client.get_httpx_client().request(
@@ -119,6 +125,7 @@ def sync(
     *,
     client: AuthenticatedClient,
     workspace: str | Unset = UNSET,
+    ecosystem_id: str | Unset = UNSET,
 ) -> Error | GetContentMarkdownIdRouteAvailableRouteResponse200 | None:
     """Check whether a public route slug is free for this document
 
@@ -132,6 +139,7 @@ def sync(
         id (str):
         route (str):
         workspace (str | Unset):
+        ecosystem_id (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -146,6 +154,7 @@ def sync(
         route=route,
         client=client,
         workspace=workspace,
+        ecosystem_id=ecosystem_id,
     ).parsed
 
 
@@ -155,6 +164,7 @@ async def asyncio_detailed(
     *,
     client: AuthenticatedClient,
     workspace: str | Unset = UNSET,
+    ecosystem_id: str | Unset = UNSET,
 ) -> Response[Error | GetContentMarkdownIdRouteAvailableRouteResponse200]:
     """Check whether a public route slug is free for this document
 
@@ -168,6 +178,7 @@ async def asyncio_detailed(
         id (str):
         route (str):
         workspace (str | Unset):
+        ecosystem_id (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -181,6 +192,7 @@ async def asyncio_detailed(
         id=id,
         route=route,
         workspace=workspace,
+        ecosystem_id=ecosystem_id,
     )
 
     response = await client.get_async_httpx_client().request(**kwargs)
@@ -194,6 +206,7 @@ async def asyncio(
     *,
     client: AuthenticatedClient,
     workspace: str | Unset = UNSET,
+    ecosystem_id: str | Unset = UNSET,
 ) -> Error | GetContentMarkdownIdRouteAvailableRouteResponse200 | None:
     """Check whether a public route slug is free for this document
 
@@ -207,6 +220,7 @@ async def asyncio(
         id (str):
         route (str):
         workspace (str | Unset):
+        ecosystem_id (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -222,5 +236,6 @@ async def asyncio(
             route=route,
             client=client,
             workspace=workspace,
+            ecosystem_id=ecosystem_id,
         )
     ).parsed

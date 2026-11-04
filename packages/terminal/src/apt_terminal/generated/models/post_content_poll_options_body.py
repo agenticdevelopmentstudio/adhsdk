@@ -18,14 +18,12 @@ class PostContentPollOptionsBody:
         text (str):
         ecosystem_id (str | Unset):
         sort_order (int | Unset):
-        sync_txid (int | Unset):
     """
 
     poll_id: str
     text: str
     ecosystem_id: str | Unset = UNSET
     sort_order: int | Unset = UNSET
-    sync_txid: int | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
         poll_id = self.poll_id
@@ -35,8 +33,6 @@ class PostContentPollOptionsBody:
         ecosystem_id = self.ecosystem_id
 
         sort_order = self.sort_order
-
-        sync_txid = self.sync_txid
 
         field_dict: dict[str, Any] = {}
 
@@ -50,8 +46,6 @@ class PostContentPollOptionsBody:
             field_dict["ecosystemId"] = ecosystem_id
         if sort_order is not UNSET:
             field_dict["sortOrder"] = sort_order
-        if sync_txid is not UNSET:
-            field_dict["syncTxid"] = sync_txid
 
         return field_dict
 
@@ -66,14 +60,11 @@ class PostContentPollOptionsBody:
 
         sort_order = d.pop("sortOrder", UNSET)
 
-        sync_txid = d.pop("syncTxid", UNSET)
-
         post_content_poll_options_body = cls(
             poll_id=poll_id,
             text=text,
             ecosystem_id=ecosystem_id,
             sort_order=sort_order,
-            sync_txid=sync_txid,
         )
 
         return post_content_poll_options_body

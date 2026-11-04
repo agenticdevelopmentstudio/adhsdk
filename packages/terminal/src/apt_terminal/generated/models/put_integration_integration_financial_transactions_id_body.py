@@ -30,7 +30,6 @@ class PutIntegrationIntegrationFinancialTransactionsIdBody:
         authorized_date (None | str | Unset):
         pending (bool | Unset):
         logo_url (None | str | Unset):
-        sync_txid (int | Unset):
     """
 
     ecosystem_id: str | Unset = UNSET
@@ -49,7 +48,6 @@ class PutIntegrationIntegrationFinancialTransactionsIdBody:
     authorized_date: None | str | Unset = UNSET
     pending: bool | Unset = UNSET
     logo_url: None | str | Unset = UNSET
-    sync_txid: int | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
         ecosystem_id = self.ecosystem_id
@@ -112,8 +110,6 @@ class PutIntegrationIntegrationFinancialTransactionsIdBody:
         else:
             logo_url = self.logo_url
 
-        sync_txid = self.sync_txid
-
         field_dict: dict[str, Any] = {}
 
         field_dict.update({})
@@ -149,8 +145,6 @@ class PutIntegrationIntegrationFinancialTransactionsIdBody:
             field_dict["pending"] = pending
         if logo_url is not UNSET:
             field_dict["logoUrl"] = logo_url
-        if sync_txid is not UNSET:
-            field_dict["syncTxid"] = sync_txid
 
         return field_dict
 
@@ -238,8 +232,6 @@ class PutIntegrationIntegrationFinancialTransactionsIdBody:
 
         logo_url = _parse_logo_url(d.pop("logoUrl", UNSET))
 
-        sync_txid = d.pop("syncTxid", UNSET)
-
         put_integration_integration_financial_transactions_id_body = cls(
             ecosystem_id=ecosystem_id,
             connection_id=connection_id,
@@ -257,7 +249,6 @@ class PutIntegrationIntegrationFinancialTransactionsIdBody:
             authorized_date=authorized_date,
             pending=pending,
             logo_url=logo_url,
-            sync_txid=sync_txid,
         )
 
         return put_integration_integration_financial_transactions_id_body

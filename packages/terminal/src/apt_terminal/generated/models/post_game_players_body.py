@@ -20,7 +20,6 @@ class PostGamePlayersBody:
         ecosystem_id (str | Unset):
         character_avatar_url (None | str | Unset):
         visibility (str | Unset):
-        sync_txid (int | Unset):
     """
 
     game_id: str
@@ -29,7 +28,6 @@ class PostGamePlayersBody:
     ecosystem_id: str | Unset = UNSET
     character_avatar_url: None | str | Unset = UNSET
     visibility: str | Unset = UNSET
-    sync_txid: int | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
         game_id = self.game_id
@@ -48,8 +46,6 @@ class PostGamePlayersBody:
 
         visibility = self.visibility
 
-        sync_txid = self.sync_txid
-
         field_dict: dict[str, Any] = {}
 
         field_dict.update(
@@ -65,8 +61,6 @@ class PostGamePlayersBody:
             field_dict["characterAvatarUrl"] = character_avatar_url
         if visibility is not UNSET:
             field_dict["visibility"] = visibility
-        if sync_txid is not UNSET:
-            field_dict["syncTxid"] = sync_txid
 
         return field_dict
 
@@ -92,8 +86,6 @@ class PostGamePlayersBody:
 
         visibility = d.pop("visibility", UNSET)
 
-        sync_txid = d.pop("syncTxid", UNSET)
-
         post_game_players_body = cls(
             game_id=game_id,
             first_played_at=first_played_at,
@@ -101,7 +93,6 @@ class PostGamePlayersBody:
             ecosystem_id=ecosystem_id,
             character_avatar_url=character_avatar_url,
             visibility=visibility,
-            sync_txid=sync_txid,
         )
 
         return post_game_players_body

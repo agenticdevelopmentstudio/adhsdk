@@ -14,6 +14,8 @@ class GetContentPollsResponse200Item:
     Attributes:
         id (str):
         customer_id (str):
+        owner_kind (str):
+        owner_id (str):
         deleted_at (None | str):
         ecosystem_id (str):
         host_kind (None | str):
@@ -30,6 +32,8 @@ class GetContentPollsResponse200Item:
 
     id: str
     customer_id: str
+    owner_kind: str
+    owner_id: str
     deleted_at: None | str
     ecosystem_id: str
     host_kind: None | str
@@ -47,6 +51,10 @@ class GetContentPollsResponse200Item:
         id = self.id
 
         customer_id = self.customer_id
+
+        owner_kind = self.owner_kind
+
+        owner_id = self.owner_id
 
         deleted_at: None | str
         deleted_at = self.deleted_at
@@ -83,6 +91,8 @@ class GetContentPollsResponse200Item:
             {
                 "id": id,
                 "customerId": customer_id,
+                "ownerKind": owner_kind,
+                "ownerId": owner_id,
                 "deletedAt": deleted_at,
                 "ecosystemId": ecosystem_id,
                 "hostKind": host_kind,
@@ -106,6 +116,10 @@ class GetContentPollsResponse200Item:
         id = d.pop("id")
 
         customer_id = d.pop("customerId")
+
+        owner_kind = d.pop("ownerKind")
+
+        owner_id = d.pop("ownerId")
 
         def _parse_deleted_at(data: object) -> None | str:
             if data is None:
@@ -159,6 +173,8 @@ class GetContentPollsResponse200Item:
         get_content_polls_response_200_item = cls(
             id=id,
             customer_id=customer_id,
+            owner_kind=owner_kind,
+            owner_id=owner_id,
             deleted_at=deleted_at,
             ecosystem_id=ecosystem_id,
             host_kind=host_kind,

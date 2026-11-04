@@ -68,6 +68,11 @@ def _parse_response(
 
         return response_404
 
+    if response.status_code == 409:
+        response_409 = Error.from_dict(response.json())
+
+        return response_409
+
     if client.raise_on_unexpected_status:
         raise errors.UnexpectedStatus(response.status_code, response.content)
     else:
@@ -94,7 +99,8 @@ def sync_detailed(
     """Send a DM
 
      Send a message into a DM chat. Supplying `clientMessageId` makes the send idempotent: a replay
-    returns 200 with the already-stored message instead of 201.
+    returns 200 with the already-stored message instead of 201. The id is scoped to the sender: one the
+    OTHER participant already used in this chat is a 409.
 
     Args:
         chat_id (str):
@@ -129,7 +135,8 @@ def sync(
     """Send a DM
 
      Send a message into a DM chat. Supplying `clientMessageId` makes the send idempotent: a replay
-    returns 200 with the already-stored message instead of 201.
+    returns 200 with the already-stored message instead of 201. The id is scoped to the sender: one the
+    OTHER participant already used in this chat is a 409.
 
     Args:
         chat_id (str):
@@ -159,7 +166,8 @@ async def asyncio_detailed(
     """Send a DM
 
      Send a message into a DM chat. Supplying `clientMessageId` makes the send idempotent: a replay
-    returns 200 with the already-stored message instead of 201.
+    returns 200 with the already-stored message instead of 201. The id is scoped to the sender: one the
+    OTHER participant already used in this chat is a 409.
 
     Args:
         chat_id (str):
@@ -192,7 +200,8 @@ async def asyncio(
     """Send a DM
 
      Send a message into a DM chat. Supplying `clientMessageId` makes the send idempotent: a replay
-    returns 200 with the already-stored message instead of 201.
+    returns 200 with the already-stored message instead of 201. The id is scoped to the sender: one the
+    OTHER participant already used in this chat is a 409.
 
     Args:
         chat_id (str):

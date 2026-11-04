@@ -19,6 +19,8 @@ class GetTeamTeamsResponse200Item:
         name (str):
         description (str):
         created_by (None | str):
+        author_kind (None | str):
+        author_id (None | str):
         created_at (str):
         updated_at (str):
         is_deleted (bool):
@@ -31,6 +33,8 @@ class GetTeamTeamsResponse200Item:
     name: str
     description: str
     created_by: None | str
+    author_kind: None | str
+    author_id: None | str
     created_at: str
     updated_at: str
     is_deleted: bool
@@ -51,6 +55,12 @@ class GetTeamTeamsResponse200Item:
         created_by: None | str
         created_by = self.created_by
 
+        author_kind: None | str
+        author_kind = self.author_kind
+
+        author_id: None | str
+        author_id = self.author_id
+
         created_at = self.created_at
 
         updated_at = self.updated_at
@@ -68,6 +78,8 @@ class GetTeamTeamsResponse200Item:
                 "name": name,
                 "description": description,
                 "createdBy": created_by,
+                "authorKind": author_kind,
+                "authorId": author_id,
                 "createdAt": created_at,
                 "updatedAt": updated_at,
                 "isDeleted": is_deleted,
@@ -98,6 +110,20 @@ class GetTeamTeamsResponse200Item:
 
         created_by = _parse_created_by(d.pop("createdBy"))
 
+        def _parse_author_kind(data: object) -> None | str:
+            if data is None:
+                return data
+            return cast(None | str, data)
+
+        author_kind = _parse_author_kind(d.pop("authorKind"))
+
+        def _parse_author_id(data: object) -> None | str:
+            if data is None:
+                return data
+            return cast(None | str, data)
+
+        author_id = _parse_author_id(d.pop("authorId"))
+
         created_at = d.pop("createdAt")
 
         updated_at = d.pop("updatedAt")
@@ -112,6 +138,8 @@ class GetTeamTeamsResponse200Item:
             name=name,
             description=description,
             created_by=created_by,
+            author_kind=author_kind,
+            author_id=author_id,
             created_at=created_at,
             updated_at=updated_at,
             is_deleted=is_deleted,

@@ -21,12 +21,16 @@ class EcosystemSigninAppCreate:
         allowed_return_origins (list[str] | Unset): Bare http(s) origins: no credentials, no path, no query, no
             fragment. Anything else is a 400.
         enable_github (bool | Unset):  Default: True.
+        redirect_uris (list[str] | Unset): OAuth redirect URIs for the app’s Hydra PKCE client: https, loopback http
+            (localhost, 127.0.0.1, [::1]), or a private-use native scheme (com.example.app:/cb). No fragment, no
+            credentials. Anything else is a 400.
     """
 
     slug: str
     name: str
     allowed_return_origins: list[str] | Unset = UNSET
     enable_github: bool | Unset = True
+    redirect_uris: list[str] | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -40,6 +44,10 @@ class EcosystemSigninAppCreate:
 
         enable_github = self.enable_github
 
+        redirect_uris: list[str] | Unset = UNSET
+        if not isinstance(self.redirect_uris, Unset):
+            redirect_uris = self.redirect_uris
+
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update(
@@ -52,6 +60,8 @@ class EcosystemSigninAppCreate:
             field_dict["allowedReturnOrigins"] = allowed_return_origins
         if enable_github is not UNSET:
             field_dict["enableGithub"] = enable_github
+        if redirect_uris is not UNSET:
+            field_dict["redirectUris"] = redirect_uris
 
         return field_dict
 
@@ -66,11 +76,14 @@ class EcosystemSigninAppCreate:
 
         enable_github = d.pop("enableGithub", UNSET)
 
+        redirect_uris = cast(list[str], d.pop("redirectUris", UNSET))
+
         ecosystem_signin_app_create = cls(
             slug=slug,
             name=name,
             allowed_return_origins=allowed_return_origins,
             enable_github=enable_github,
+            redirect_uris=redirect_uris,
         )
 
         ecosystem_signin_app_create.additional_properties = d

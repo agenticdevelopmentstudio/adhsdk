@@ -31,7 +31,6 @@ class PutPersonaMemoryMemoriesIdBody:
         tags (list[str] | Unset):
         valid_from (None | str | Unset):
         valid_to (None | str | Unset):
-        sync_txid (int | Unset):
     """
 
     ecosystem_id: str | Unset = UNSET
@@ -50,7 +49,6 @@ class PutPersonaMemoryMemoriesIdBody:
     tags: list[str] | Unset = UNSET
     valid_from: None | str | Unset = UNSET
     valid_to: None | str | Unset = UNSET
-    sync_txid: int | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
         ecosystem_id = self.ecosystem_id
@@ -109,8 +107,6 @@ class PutPersonaMemoryMemoriesIdBody:
         else:
             valid_to = self.valid_to
 
-        sync_txid = self.sync_txid
-
         field_dict: dict[str, Any] = {}
 
         field_dict.update({})
@@ -146,8 +142,6 @@ class PutPersonaMemoryMemoriesIdBody:
             field_dict["validFrom"] = valid_from
         if valid_to is not UNSET:
             field_dict["validTo"] = valid_to
-        if sync_txid is not UNSET:
-            field_dict["syncTxid"] = sync_txid
 
         return field_dict
 
@@ -226,8 +220,6 @@ class PutPersonaMemoryMemoriesIdBody:
 
         valid_to = _parse_valid_to(d.pop("validTo", UNSET))
 
-        sync_txid = d.pop("syncTxid", UNSET)
-
         put_persona_memory_memories_id_body = cls(
             ecosystem_id=ecosystem_id,
             persona_id=persona_id,
@@ -245,7 +237,6 @@ class PutPersonaMemoryMemoriesIdBody:
             tags=tags,
             valid_from=valid_from,
             valid_to=valid_to,
-            sync_txid=sync_txid,
         )
 
         return put_persona_memory_memories_id_body

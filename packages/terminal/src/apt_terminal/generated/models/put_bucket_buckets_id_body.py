@@ -23,21 +23,21 @@ class PutBucketBucketsIdBody:
         ecosystem_id (str | Unset):
         parent_id (None | str | Unset):
         name (str | Unset):
+        slug (str | Unset):
         description (str | Unset):
         kind (str | Unset):
         metadata (bool | float | list[Any] | None | PutBucketBucketsIdBodyMetadataType0Type1 | str | Unset):
-        sync_txid (int | Unset):
     """
 
     ecosystem_id: str | Unset = UNSET
     parent_id: None | str | Unset = UNSET
     name: str | Unset = UNSET
+    slug: str | Unset = UNSET
     description: str | Unset = UNSET
     kind: str | Unset = UNSET
     metadata: (
         bool | float | list[Any] | None | PutBucketBucketsIdBodyMetadataType0Type1 | str | Unset
     ) = UNSET
-    sync_txid: int | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
         from ..models.put_bucket_buckets_id_body_metadata_type_0_type_1 import (
@@ -54,6 +54,8 @@ class PutBucketBucketsIdBody:
 
         name = self.name
 
+        slug = self.slug
+
         description = self.description
 
         kind = self.kind
@@ -69,8 +71,6 @@ class PutBucketBucketsIdBody:
         else:
             metadata = self.metadata
 
-        sync_txid = self.sync_txid
-
         field_dict: dict[str, Any] = {}
 
         field_dict.update({})
@@ -80,14 +80,14 @@ class PutBucketBucketsIdBody:
             field_dict["parentId"] = parent_id
         if name is not UNSET:
             field_dict["name"] = name
+        if slug is not UNSET:
+            field_dict["slug"] = slug
         if description is not UNSET:
             field_dict["description"] = description
         if kind is not UNSET:
             field_dict["kind"] = kind
         if metadata is not UNSET:
             field_dict["metadata"] = metadata
-        if sync_txid is not UNSET:
-            field_dict["syncTxid"] = sync_txid
 
         return field_dict
 
@@ -110,6 +110,8 @@ class PutBucketBucketsIdBody:
         parent_id = _parse_parent_id(d.pop("parentId", UNSET))
 
         name = d.pop("name", UNSET)
+
+        slug = d.pop("slug", UNSET)
 
         description = d.pop("description", UNSET)
 
@@ -153,16 +155,14 @@ class PutBucketBucketsIdBody:
 
         metadata = _parse_metadata(d.pop("metadata", UNSET))
 
-        sync_txid = d.pop("syncTxid", UNSET)
-
         put_bucket_buckets_id_body = cls(
             ecosystem_id=ecosystem_id,
             parent_id=parent_id,
             name=name,
+            slug=slug,
             description=description,
             kind=kind,
             metadata=metadata,
-            sync_txid=sync_txid,
         )
 
         return put_bucket_buckets_id_body

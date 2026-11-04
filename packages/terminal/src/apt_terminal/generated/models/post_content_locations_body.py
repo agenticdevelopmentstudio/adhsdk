@@ -23,7 +23,6 @@ class PostContentLocationsBody:
         start_date (str | Unset):
         end_date (None | str | Unset):
         notes (str | Unset):
-        sync_txid (int | Unset):
     """
 
     ecosystem_id: str | Unset = UNSET
@@ -35,7 +34,6 @@ class PostContentLocationsBody:
     start_date: str | Unset = UNSET
     end_date: None | str | Unset = UNSET
     notes: str | Unset = UNSET
-    sync_txid: int | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
         ecosystem_id = self.ecosystem_id
@@ -60,8 +58,6 @@ class PostContentLocationsBody:
 
         notes = self.notes
 
-        sync_txid = self.sync_txid
-
         field_dict: dict[str, Any] = {}
 
         field_dict.update({})
@@ -83,8 +79,6 @@ class PostContentLocationsBody:
             field_dict["endDate"] = end_date
         if notes is not UNSET:
             field_dict["notes"] = notes
-        if sync_txid is not UNSET:
-            field_dict["syncTxid"] = sync_txid
 
         return field_dict
 
@@ -116,8 +110,6 @@ class PostContentLocationsBody:
 
         notes = d.pop("notes", UNSET)
 
-        sync_txid = d.pop("syncTxid", UNSET)
-
         post_content_locations_body = cls(
             ecosystem_id=ecosystem_id,
             owner_kind=owner_kind,
@@ -128,7 +120,6 @@ class PostContentLocationsBody:
             start_date=start_date,
             end_date=end_date,
             notes=notes,
-            sync_txid=sync_txid,
         )
 
         return post_content_locations_body

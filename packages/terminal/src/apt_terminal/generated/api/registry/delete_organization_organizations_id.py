@@ -45,6 +45,11 @@ def _parse_response(
 
         return response_404
 
+    if response.status_code == 409:
+        response_409 = Error.from_dict(response.json())
+
+        return response_409
+
     if client.raise_on_unexpected_status:
         raise errors.UnexpectedStatus(response.status_code, response.content)
     else:
@@ -69,6 +74,11 @@ def sync_detailed(
 ) -> Response[Any | Error]:
     """Archive an organization — hides it and releases its rdid (org creator, org-team admin, or site-
     admin)
+
+     Archives the organization, its workspace and everything addressed under its slug. 404 when it does
+    not exist or is already archived. 409 with a `code` when it may not be archived: `operators_org` for
+    the operators organization, the root every workspace hangs under; `org_has_child_orgs` while it owns
+    a live organization, which must be archived or deleted first. Nothing is archived on a 409.
 
     Args:
         id (str):
@@ -100,6 +110,11 @@ def sync(
     """Archive an organization — hides it and releases its rdid (org creator, org-team admin, or site-
     admin)
 
+     Archives the organization, its workspace and everything addressed under its slug. 404 when it does
+    not exist or is already archived. 409 with a `code` when it may not be archived: `operators_org` for
+    the operators organization, the root every workspace hangs under; `org_has_child_orgs` while it owns
+    a live organization, which must be archived or deleted first. Nothing is archived on a 409.
+
     Args:
         id (str):
 
@@ -124,6 +139,11 @@ async def asyncio_detailed(
 ) -> Response[Any | Error]:
     """Archive an organization — hides it and releases its rdid (org creator, org-team admin, or site-
     admin)
+
+     Archives the organization, its workspace and everything addressed under its slug. 404 when it does
+    not exist or is already archived. 409 with a `code` when it may not be archived: `operators_org` for
+    the operators organization, the root every workspace hangs under; `org_has_child_orgs` while it owns
+    a live organization, which must be archived or deleted first. Nothing is archived on a 409.
 
     Args:
         id (str):
@@ -152,6 +172,11 @@ async def asyncio(
 ) -> Any | Error | None:
     """Archive an organization — hides it and releases its rdid (org creator, org-team admin, or site-
     admin)
+
+     Archives the organization, its workspace and everything addressed under its slug. 404 when it does
+    not exist or is already archived. 409 with a `code` when it may not be archived: `operators_org` for
+    the operators organization, the root every workspace hangs under; `org_has_child_orgs` while it owns
+    a live organization, which must be archived or deleted first. Nothing is archived on a 409.
 
     Args:
         id (str):

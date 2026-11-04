@@ -16,6 +16,8 @@ class GetPersonaMemoryMemoriesIdResponse200:
         id (str):
         ecosystem_id (str):
         customer_id (str):
+        owner_kind (str):
+        owner_id (str):
         deleted_at (None | str):
         persona_id (UUID):
         scope (str):
@@ -36,6 +38,9 @@ class GetPersonaMemoryMemoriesIdResponse200:
         last_recalled_at (None | str):
         embedding (list[float] | None):
         embedding_model (None | str):
+        semantic_embedding (list[float] | None):
+        semantic_stamp (None | str):
+        semantic_source (None | str):
         created_at (str):
         updated_at (str):
         sync_version (int):
@@ -46,6 +51,8 @@ class GetPersonaMemoryMemoriesIdResponse200:
     id: str
     ecosystem_id: str
     customer_id: str
+    owner_kind: str
+    owner_id: str
     deleted_at: None | str
     persona_id: UUID
     scope: str
@@ -66,6 +73,9 @@ class GetPersonaMemoryMemoriesIdResponse200:
     last_recalled_at: None | str
     embedding: list[float] | None
     embedding_model: None | str
+    semantic_embedding: list[float] | None
+    semantic_stamp: None | str
+    semantic_source: None | str
     created_at: str
     updated_at: str
     sync_version: int
@@ -78,6 +88,10 @@ class GetPersonaMemoryMemoriesIdResponse200:
         ecosystem_id = self.ecosystem_id
 
         customer_id = self.customer_id
+
+        owner_kind = self.owner_kind
+
+        owner_id = self.owner_id
 
         deleted_at: None | str
         deleted_at = self.deleted_at
@@ -132,6 +146,19 @@ class GetPersonaMemoryMemoriesIdResponse200:
         embedding_model: None | str
         embedding_model = self.embedding_model
 
+        semantic_embedding: list[float] | None
+        if isinstance(self.semantic_embedding, list):
+            semantic_embedding = self.semantic_embedding
+
+        else:
+            semantic_embedding = self.semantic_embedding
+
+        semantic_stamp: None | str
+        semantic_stamp = self.semantic_stamp
+
+        semantic_source: None | str
+        semantic_source = self.semantic_source
+
         created_at = self.created_at
 
         updated_at = self.updated_at
@@ -150,6 +177,8 @@ class GetPersonaMemoryMemoriesIdResponse200:
                 "id": id,
                 "ecosystemId": ecosystem_id,
                 "customerId": customer_id,
+                "ownerKind": owner_kind,
+                "ownerId": owner_id,
                 "deletedAt": deleted_at,
                 "personaId": persona_id,
                 "scope": scope,
@@ -170,6 +199,9 @@ class GetPersonaMemoryMemoriesIdResponse200:
                 "lastRecalledAt": last_recalled_at,
                 "embedding": embedding,
                 "embeddingModel": embedding_model,
+                "semanticEmbedding": semantic_embedding,
+                "semanticStamp": semantic_stamp,
+                "semanticSource": semantic_source,
                 "createdAt": created_at,
                 "updatedAt": updated_at,
                 "syncVersion": sync_version,
@@ -188,6 +220,10 @@ class GetPersonaMemoryMemoriesIdResponse200:
         ecosystem_id = d.pop("ecosystemId")
 
         customer_id = d.pop("customerId")
+
+        owner_kind = d.pop("ownerKind")
+
+        owner_id = d.pop("ownerId")
 
         def _parse_deleted_at(data: object) -> None | str:
             if data is None:
@@ -282,6 +318,35 @@ class GetPersonaMemoryMemoriesIdResponse200:
 
         embedding_model = _parse_embedding_model(d.pop("embeddingModel"))
 
+        def _parse_semantic_embedding(data: object) -> list[float] | None:
+            if data is None:
+                return data
+            try:
+                if not isinstance(data, list):
+                    raise TypeError()
+                semantic_embedding_type_0 = cast(list[float], data)
+
+                return semantic_embedding_type_0
+            except (TypeError, ValueError, AttributeError, KeyError):
+                pass
+            return cast(list[float] | None, data)
+
+        semantic_embedding = _parse_semantic_embedding(d.pop("semanticEmbedding"))
+
+        def _parse_semantic_stamp(data: object) -> None | str:
+            if data is None:
+                return data
+            return cast(None | str, data)
+
+        semantic_stamp = _parse_semantic_stamp(d.pop("semanticStamp"))
+
+        def _parse_semantic_source(data: object) -> None | str:
+            if data is None:
+                return data
+            return cast(None | str, data)
+
+        semantic_source = _parse_semantic_source(d.pop("semanticSource"))
+
         created_at = d.pop("createdAt")
 
         updated_at = d.pop("updatedAt")
@@ -301,6 +366,8 @@ class GetPersonaMemoryMemoriesIdResponse200:
             id=id,
             ecosystem_id=ecosystem_id,
             customer_id=customer_id,
+            owner_kind=owner_kind,
+            owner_id=owner_id,
             deleted_at=deleted_at,
             persona_id=persona_id,
             scope=scope,
@@ -321,6 +388,9 @@ class GetPersonaMemoryMemoriesIdResponse200:
             last_recalled_at=last_recalled_at,
             embedding=embedding,
             embedding_model=embedding_model,
+            semantic_embedding=semantic_embedding,
+            semantic_stamp=semantic_stamp,
+            semantic_source=semantic_source,
             created_at=created_at,
             updated_at=updated_at,
             sync_version=sync_version,

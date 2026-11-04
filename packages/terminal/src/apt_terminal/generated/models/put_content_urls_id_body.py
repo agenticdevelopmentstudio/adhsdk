@@ -27,7 +27,6 @@ class PutContentUrlsIdBody:
         preview_error (None | str | Unset):
         preview_generated_at (None | str | Unset):
         preview_attempts (int | Unset):
-        sync_txid (int | Unset):
     """
 
     ecosystem_id: str | Unset = UNSET
@@ -43,7 +42,6 @@ class PutContentUrlsIdBody:
     preview_error: None | str | Unset = UNSET
     preview_generated_at: None | str | Unset = UNSET
     preview_attempts: int | Unset = UNSET
-    sync_txid: int | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
         ecosystem_id = self.ecosystem_id
@@ -100,8 +98,6 @@ class PutContentUrlsIdBody:
 
         preview_attempts = self.preview_attempts
 
-        sync_txid = self.sync_txid
-
         field_dict: dict[str, Any] = {}
 
         field_dict.update({})
@@ -131,8 +127,6 @@ class PutContentUrlsIdBody:
             field_dict["previewGeneratedAt"] = preview_generated_at
         if preview_attempts is not UNSET:
             field_dict["previewAttempts"] = preview_attempts
-        if sync_txid is not UNSET:
-            field_dict["syncTxid"] = sync_txid
 
         return field_dict
 
@@ -214,8 +208,6 @@ class PutContentUrlsIdBody:
 
         preview_attempts = d.pop("previewAttempts", UNSET)
 
-        sync_txid = d.pop("syncTxid", UNSET)
-
         put_content_urls_id_body = cls(
             ecosystem_id=ecosystem_id,
             original_url=original_url,
@@ -230,7 +222,6 @@ class PutContentUrlsIdBody:
             preview_error=preview_error,
             preview_generated_at=preview_generated_at,
             preview_attempts=preview_attempts,
-            sync_txid=sync_txid,
         )
 
         return put_content_urls_id_body

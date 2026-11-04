@@ -30,7 +30,6 @@ class PutGameGamesIdBody:
         status (str | Unset):
         event_log (str | Unset):
         event_retention_days (int | Unset):
-        sync_txid (int | Unset):
     """
 
     ecosystem_id: str | Unset = UNSET
@@ -45,7 +44,6 @@ class PutGameGamesIdBody:
     status: str | Unset = UNSET
     event_log: str | Unset = UNSET
     event_retention_days: int | Unset = UNSET
-    sync_txid: int | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
         from ..models.put_game_games_id_body_engine_config_type_1 import (
@@ -85,8 +83,6 @@ class PutGameGamesIdBody:
 
         event_retention_days = self.event_retention_days
 
-        sync_txid = self.sync_txid
-
         field_dict: dict[str, Any] = {}
 
         field_dict.update({})
@@ -110,8 +106,6 @@ class PutGameGamesIdBody:
             field_dict["eventLog"] = event_log
         if event_retention_days is not UNSET:
             field_dict["eventRetentionDays"] = event_retention_days
-        if sync_txid is not UNSET:
-            field_dict["syncTxid"] = sync_txid
 
         return field_dict
 
@@ -177,8 +171,6 @@ class PutGameGamesIdBody:
 
         event_retention_days = d.pop("eventRetentionDays", UNSET)
 
-        sync_txid = d.pop("syncTxid", UNSET)
-
         put_game_games_id_body = cls(
             ecosystem_id=ecosystem_id,
             slug=slug,
@@ -190,7 +182,6 @@ class PutGameGamesIdBody:
             status=status,
             event_log=event_log,
             event_retention_days=event_retention_days,
-            sync_txid=sync_txid,
         )
 
         return put_game_games_id_body

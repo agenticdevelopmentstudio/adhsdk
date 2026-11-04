@@ -21,6 +21,8 @@ class PutContentEventsIdResponse200:
         id (str):
         ecosystem_id (str):
         customer_id (str):
+        owner_kind (str):
+        owner_id (str):
         deleted_at (None | str):
         type_ (str):
         payload (bool | float | list[Any] | None | PutContentEventsIdResponse200PayloadType1 | str):
@@ -34,6 +36,8 @@ class PutContentEventsIdResponse200:
     id: str
     ecosystem_id: str
     customer_id: str
+    owner_kind: str
+    owner_id: str
     deleted_at: None | str
     type_: str
     payload: bool | float | list[Any] | None | PutContentEventsIdResponse200PayloadType1 | str
@@ -53,6 +57,10 @@ class PutContentEventsIdResponse200:
         ecosystem_id = self.ecosystem_id
 
         customer_id = self.customer_id
+
+        owner_kind = self.owner_kind
+
+        owner_id = self.owner_id
 
         deleted_at: None | str
         deleted_at = self.deleted_at
@@ -86,6 +94,8 @@ class PutContentEventsIdResponse200:
                 "id": id,
                 "ecosystemId": ecosystem_id,
                 "customerId": customer_id,
+                "ownerKind": owner_kind,
+                "ownerId": owner_id,
                 "deletedAt": deleted_at,
                 "type": type_,
                 "payload": payload,
@@ -111,6 +121,10 @@ class PutContentEventsIdResponse200:
         ecosystem_id = d.pop("ecosystemId")
 
         customer_id = d.pop("customerId")
+
+        owner_kind = d.pop("ownerKind")
+
+        owner_id = d.pop("ownerId")
 
         def _parse_deleted_at(data: object) -> None | str:
             if data is None:
@@ -168,6 +182,8 @@ class PutContentEventsIdResponse200:
             id=id,
             ecosystem_id=ecosystem_id,
             customer_id=customer_id,
+            owner_kind=owner_kind,
+            owner_id=owner_id,
             deleted_at=deleted_at,
             type_=type_,
             payload=payload,

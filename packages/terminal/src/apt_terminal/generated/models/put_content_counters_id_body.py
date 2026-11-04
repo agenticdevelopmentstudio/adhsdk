@@ -17,13 +17,11 @@ class PutContentCountersIdBody:
         ecosystem_id (str | Unset):
         name (str | Unset):
         value (int | Unset):
-        sync_txid (int | Unset):
     """
 
     ecosystem_id: str | Unset = UNSET
     name: str | Unset = UNSET
     value: int | Unset = UNSET
-    sync_txid: int | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
         ecosystem_id = self.ecosystem_id
@@ -31,8 +29,6 @@ class PutContentCountersIdBody:
         name = self.name
 
         value = self.value
-
-        sync_txid = self.sync_txid
 
         field_dict: dict[str, Any] = {}
 
@@ -43,8 +39,6 @@ class PutContentCountersIdBody:
             field_dict["name"] = name
         if value is not UNSET:
             field_dict["value"] = value
-        if sync_txid is not UNSET:
-            field_dict["syncTxid"] = sync_txid
 
         return field_dict
 
@@ -57,13 +51,10 @@ class PutContentCountersIdBody:
 
         value = d.pop("value", UNSET)
 
-        sync_txid = d.pop("syncTxid", UNSET)
-
         put_content_counters_id_body = cls(
             ecosystem_id=ecosystem_id,
             name=name,
             value=value,
-            sync_txid=sync_txid,
         )
 
         return put_content_counters_id_body

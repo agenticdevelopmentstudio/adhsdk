@@ -29,7 +29,6 @@ class PutGameDefinitionsIdBody:
         status (str | Unset):
         sort_order (int | Unset):
         data (bool | float | list[Any] | None | PutGameDefinitionsIdBodyDataType0Type1 | str | Unset):
-        sync_txid (int | Unset):
     """
 
     ecosystem_id: str | Unset = UNSET
@@ -43,7 +42,6 @@ class PutGameDefinitionsIdBody:
     data: bool | float | list[Any] | None | PutGameDefinitionsIdBodyDataType0Type1 | str | Unset = (
         UNSET
     )
-    sync_txid: int | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
         from ..models.put_game_definitions_id_body_data_type_0_type_1 import (
@@ -81,8 +79,6 @@ class PutGameDefinitionsIdBody:
         else:
             data = self.data
 
-        sync_txid = self.sync_txid
-
         field_dict: dict[str, Any] = {}
 
         field_dict.update({})
@@ -104,8 +100,6 @@ class PutGameDefinitionsIdBody:
             field_dict["sortOrder"] = sort_order
         if data is not UNSET:
             field_dict["data"] = data
-        if sync_txid is not UNSET:
-            field_dict["syncTxid"] = sync_txid
 
         return field_dict
 
@@ -175,8 +169,6 @@ class PutGameDefinitionsIdBody:
 
         data = _parse_data(d.pop("data", UNSET))
 
-        sync_txid = d.pop("syncTxid", UNSET)
-
         put_game_definitions_id_body = cls(
             ecosystem_id=ecosystem_id,
             game_id=game_id,
@@ -187,7 +179,6 @@ class PutGameDefinitionsIdBody:
             status=status,
             sort_order=sort_order,
             data=data,
-            sync_txid=sync_txid,
         )
 
         return put_game_definitions_id_body

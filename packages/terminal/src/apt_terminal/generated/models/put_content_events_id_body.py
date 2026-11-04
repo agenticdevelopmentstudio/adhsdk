@@ -23,7 +23,6 @@ class PutContentEventsIdBody:
         ecosystem_id (str | Unset):
         type_ (str | Unset):
         payload (bool | float | list[Any] | None | PutContentEventsIdBodyPayloadType1 | str | Unset):
-        sync_txid (int | Unset):
     """
 
     ecosystem_id: str | Unset = UNSET
@@ -31,7 +30,6 @@ class PutContentEventsIdBody:
     payload: bool | float | list[Any] | None | PutContentEventsIdBodyPayloadType1 | str | Unset = (
         UNSET
     )
-    sync_txid: int | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
         from ..models.put_content_events_id_body_payload_type_1 import (
@@ -53,8 +51,6 @@ class PutContentEventsIdBody:
         else:
             payload = self.payload
 
-        sync_txid = self.sync_txid
-
         field_dict: dict[str, Any] = {}
 
         field_dict.update({})
@@ -64,8 +60,6 @@ class PutContentEventsIdBody:
             field_dict["type"] = type_
         if payload is not UNSET:
             field_dict["payload"] = payload
-        if sync_txid is not UNSET:
-            field_dict["syncTxid"] = sync_txid
 
         return field_dict
 
@@ -110,13 +104,10 @@ class PutContentEventsIdBody:
 
         payload = _parse_payload(d.pop("payload", UNSET))
 
-        sync_txid = d.pop("syncTxid", UNSET)
-
         put_content_events_id_body = cls(
             ecosystem_id=ecosystem_id,
             type_=type_,
             payload=payload,
-            sync_txid=sync_txid,
         )
 
         return put_content_events_id_body

@@ -20,7 +20,6 @@ class PostContentCategoriesBody:
         color (str | Unset):
         icon (str | Unset):
         sort_order (int | Unset):
-        sync_txid (int | Unset):
     """
 
     name: str
@@ -29,7 +28,6 @@ class PostContentCategoriesBody:
     color: str | Unset = UNSET
     icon: str | Unset = UNSET
     sort_order: int | Unset = UNSET
-    sync_txid: int | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
         name = self.name
@@ -43,8 +41,6 @@ class PostContentCategoriesBody:
         icon = self.icon
 
         sort_order = self.sort_order
-
-        sync_txid = self.sync_txid
 
         field_dict: dict[str, Any] = {}
 
@@ -63,8 +59,6 @@ class PostContentCategoriesBody:
             field_dict["icon"] = icon
         if sort_order is not UNSET:
             field_dict["sortOrder"] = sort_order
-        if sync_txid is not UNSET:
-            field_dict["syncTxid"] = sync_txid
 
         return field_dict
 
@@ -83,8 +77,6 @@ class PostContentCategoriesBody:
 
         sort_order = d.pop("sortOrder", UNSET)
 
-        sync_txid = d.pop("syncTxid", UNSET)
-
         post_content_categories_body = cls(
             name=name,
             ecosystem_id=ecosystem_id,
@@ -92,7 +84,6 @@ class PostContentCategoriesBody:
             color=color,
             icon=icon,
             sort_order=sort_order,
-            sync_txid=sync_txid,
         )
 
         return post_content_categories_body

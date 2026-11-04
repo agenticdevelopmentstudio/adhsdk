@@ -17,6 +17,8 @@ class GetAudienceTemplatesIdResponse200:
         owner_kind (str):
         owner_id (str):
         created_by (None | str):
+        author_kind (None | str):
+        author_id (None | str):
         name (str):
         subject (str):
         html_body (str):
@@ -32,6 +34,8 @@ class GetAudienceTemplatesIdResponse200:
     owner_kind: str
     owner_id: str
     created_by: None | str
+    author_kind: None | str
+    author_id: None | str
     name: str
     subject: str
     html_body: str
@@ -52,6 +56,12 @@ class GetAudienceTemplatesIdResponse200:
 
         created_by: None | str
         created_by = self.created_by
+
+        author_kind: None | str
+        author_kind = self.author_kind
+
+        author_id: None | str
+        author_id = self.author_id
 
         name = self.name
 
@@ -78,6 +88,8 @@ class GetAudienceTemplatesIdResponse200:
                 "ownerKind": owner_kind,
                 "ownerId": owner_id,
                 "createdBy": created_by,
+                "authorKind": author_kind,
+                "authorId": author_id,
                 "name": name,
                 "subject": subject,
                 "htmlBody": html_body,
@@ -109,6 +121,20 @@ class GetAudienceTemplatesIdResponse200:
 
         created_by = _parse_created_by(d.pop("createdBy"))
 
+        def _parse_author_kind(data: object) -> None | str:
+            if data is None:
+                return data
+            return cast(None | str, data)
+
+        author_kind = _parse_author_kind(d.pop("authorKind"))
+
+        def _parse_author_id(data: object) -> None | str:
+            if data is None:
+                return data
+            return cast(None | str, data)
+
+        author_id = _parse_author_id(d.pop("authorId"))
+
         name = d.pop("name")
 
         subject = d.pop("subject")
@@ -131,6 +157,8 @@ class GetAudienceTemplatesIdResponse200:
             owner_kind=owner_kind,
             owner_id=owner_id,
             created_by=created_by,
+            author_kind=author_kind,
+            author_id=author_id,
             name=name,
             subject=subject,
             html_body=html_body,

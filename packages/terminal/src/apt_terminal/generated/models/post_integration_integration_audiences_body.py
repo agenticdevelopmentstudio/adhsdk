@@ -27,7 +27,6 @@ class PostIntegrationIntegrationAudiencesBody:
         ecosystem_id (str | Unset):
         member_count (int | None | Unset):
         raw (bool | float | list[Any] | None | PostIntegrationIntegrationAudiencesBodyRawType0Type1 | str | Unset):
-        sync_txid (int | Unset):
     """
 
     connection_id: str
@@ -45,7 +44,6 @@ class PostIntegrationIntegrationAudiencesBody:
         | str
         | Unset
     ) = UNSET
-    sync_txid: int | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
         from ..models.post_integration_integration_audiences_body_raw_type_0_type_1 import (
@@ -79,8 +77,6 @@ class PostIntegrationIntegrationAudiencesBody:
         else:
             raw = self.raw
 
-        sync_txid = self.sync_txid
-
         field_dict: dict[str, Any] = {}
 
         field_dict.update(
@@ -97,8 +93,6 @@ class PostIntegrationIntegrationAudiencesBody:
             field_dict["memberCount"] = member_count
         if raw is not UNSET:
             field_dict["raw"] = raw
-        if sync_txid is not UNSET:
-            field_dict["syncTxid"] = sync_txid
 
         return field_dict
 
@@ -174,8 +168,6 @@ class PostIntegrationIntegrationAudiencesBody:
 
         raw = _parse_raw(d.pop("raw", UNSET))
 
-        sync_txid = d.pop("syncTxid", UNSET)
-
         post_integration_integration_audiences_body = cls(
             connection_id=connection_id,
             provider=provider,
@@ -184,7 +176,6 @@ class PostIntegrationIntegrationAudiencesBody:
             ecosystem_id=ecosystem_id,
             member_count=member_count,
             raw=raw,
-            sync_txid=sync_txid,
         )
 
         return post_integration_integration_audiences_body

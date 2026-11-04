@@ -22,7 +22,6 @@ class PostPersonalJobsBody:
         location (str | Unset):
         description (str | Unset):
         is_current (bool | Unset):
-        sync_txid (int | Unset):
     """
 
     ecosystem_id: str | Unset = UNSET
@@ -33,7 +32,6 @@ class PostPersonalJobsBody:
     location: str | Unset = UNSET
     description: str | Unset = UNSET
     is_current: bool | Unset = UNSET
-    sync_txid: int | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
         ecosystem_id = self.ecosystem_id
@@ -56,8 +54,6 @@ class PostPersonalJobsBody:
 
         is_current = self.is_current
 
-        sync_txid = self.sync_txid
-
         field_dict: dict[str, Any] = {}
 
         field_dict.update({})
@@ -77,8 +73,6 @@ class PostPersonalJobsBody:
             field_dict["description"] = description
         if is_current is not UNSET:
             field_dict["isCurrent"] = is_current
-        if sync_txid is not UNSET:
-            field_dict["syncTxid"] = sync_txid
 
         return field_dict
 
@@ -108,8 +102,6 @@ class PostPersonalJobsBody:
 
         is_current = d.pop("isCurrent", UNSET)
 
-        sync_txid = d.pop("syncTxid", UNSET)
-
         post_personal_jobs_body = cls(
             ecosystem_id=ecosystem_id,
             company=company,
@@ -119,7 +111,6 @@ class PostPersonalJobsBody:
             location=location,
             description=description,
             is_current=is_current,
-            sync_txid=sync_txid,
         )
 
         return post_personal_jobs_body

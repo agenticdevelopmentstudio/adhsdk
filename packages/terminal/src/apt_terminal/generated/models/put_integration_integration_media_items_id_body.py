@@ -28,7 +28,6 @@ class PutIntegrationIntegrationMediaItemsIdBody:
         popularity (int | None | Unset):
         is_saved (bool | Unset):
         last_played_at (None | str | Unset):
-        sync_txid (int | Unset):
     """
 
     ecosystem_id: str | Unset = UNSET
@@ -45,7 +44,6 @@ class PutIntegrationIntegrationMediaItemsIdBody:
     popularity: int | None | Unset = UNSET
     is_saved: bool | Unset = UNSET
     last_played_at: None | str | Unset = UNSET
-    sync_txid: int | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
         ecosystem_id = self.ecosystem_id
@@ -104,8 +102,6 @@ class PutIntegrationIntegrationMediaItemsIdBody:
         else:
             last_played_at = self.last_played_at
 
-        sync_txid = self.sync_txid
-
         field_dict: dict[str, Any] = {}
 
         field_dict.update({})
@@ -137,8 +133,6 @@ class PutIntegrationIntegrationMediaItemsIdBody:
             field_dict["isSaved"] = is_saved
         if last_played_at is not UNSET:
             field_dict["lastPlayedAt"] = last_played_at
-        if sync_txid is not UNSET:
-            field_dict["syncTxid"] = sync_txid
 
         return field_dict
 
@@ -222,8 +216,6 @@ class PutIntegrationIntegrationMediaItemsIdBody:
 
         last_played_at = _parse_last_played_at(d.pop("lastPlayedAt", UNSET))
 
-        sync_txid = d.pop("syncTxid", UNSET)
-
         put_integration_integration_media_items_id_body = cls(
             ecosystem_id=ecosystem_id,
             connection_id=connection_id,
@@ -239,7 +231,6 @@ class PutIntegrationIntegrationMediaItemsIdBody:
             popularity=popularity,
             is_saved=is_saved,
             last_played_at=last_played_at,
-            sync_txid=sync_txid,
         )
 
         return put_integration_integration_media_items_id_body
