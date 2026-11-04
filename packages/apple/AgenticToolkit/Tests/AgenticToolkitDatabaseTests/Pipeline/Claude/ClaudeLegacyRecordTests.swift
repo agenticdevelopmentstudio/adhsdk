@@ -325,6 +325,69 @@ final class ClaudeLegacyRecordTests: XCTestCase {
         XCTAssertFalse(try EventStore(path: eventsPath).recoveredBulkLoad)
     }
 
+    // MARK: - Background backfill
+
+    func testBackfillWithNoTargetDoesNothing() throws {
+        let files = try files()
+        try appendFive(to: files)
+        let status = try ClaudeArchiveReplay.backfillStatus(in: files.store)
+        XCTAssertNil(status.target)
+        XCTAssertFalse(status.pending)
+        let result = try ClaudeArchiveReplay.backfill(archive: files.archive, store: files.store)
+        XCTAssertEqual(result.records, 0)
+        XCTAssertEqual(try files.store.counts().events, 0)
+    }
+
+    func testBackfillReplaysInSlicesUpToTheTargetAndLeavesLaterRecordsToTheDrain() throws {
+        let files = try files()
+        try appendFive(to: files)
+        // The cutover's target; record 6 arrives later and is the live drain's.
+        try files.store.setMetaValue("5", forKey: ClaudeArchiveReplay.backfillTargetKey)
+        try files.archive.append([
+            try Self.hookLegacy(id: 6, event: "Stop", hookData: ["session_id": Self.sessionID, "cwd": "/x"])
+        ])
+        let expectedIndexes = try files.store.indexNames()
+        XCTAssertEqual(try ClaudeArchiveReplay.backfillStatus(in: files.store),
+                       ClaudeArchiveReplay.BackfillStatus(target: 5, lastRawID: 0))
+
+        // A slice that ends after one chunk.
+        let chunks = Counter()
+        let first = try ClaudeArchiveReplay.backfill(
+            archive: files.archive, store: files.store, chunk: 2,
+            shouldContinue: { chunks.value < 1 }, progress: { _ in chunks.increment() })
+        XCTAssertTrue(first.interrupted)
+        XCTAssertEqual(first.lastRawID, 2)
+        XCTAssertEqual(first.failures.map(\.rawID), [1])
+        let midway = try ClaudeArchiveReplay.backfillStatus(in: files.store)
+        XCTAssertTrue(midway.pending)
+        XCTAssertEqual(midway.remaining, 3)
+        XCTAssertEqual(try files.store.indexNames(), expectedIndexes)
+
+        let second = try ClaudeArchiveReplay.backfill(archive: files.archive, store: files.store, chunk: 2)
+        XCTAssertFalse(second.interrupted)
+        XCTAssertEqual(second.records, 3)
+        XCTAssertEqual(second.lastRawID, 5)
+        XCTAssertEqual(second.failures.map(\.rawID), [1])
+        XCTAssertFalse(try ClaudeArchiveReplay.backfillStatus(in: files.store).pending)
+        // Records 2…5 only; record 6 was never read.
+        XCTAssertEqual(try files.store.counts().events, 4)
+
+        // Done: another call reads nothing.
+        let third = try ClaudeArchiveReplay.backfill(archive: files.archive, store: files.store)
+        XCTAssertEqual(third.records, 0)
+        XCTAssertEqual(third.lastRawID, 5)
+    }
+
+    func testBackfillReachesATargetPastTheArchivesLastID() throws {
+        let files = try files()
+        try appendFive(to: files)
+        try files.store.setMetaValue("9", forKey: ClaudeArchiveReplay.backfillTargetKey)
+        let result = try ClaudeArchiveReplay.backfill(archive: files.archive, store: files.store)
+        XCTAssertFalse(result.interrupted)
+        XCTAssertEqual(result.lastRawID, 9)
+        XCTAssertFalse(try ClaudeArchiveReplay.backfillStatus(in: files.store).pending)
+    }
+
     func testPipelineFilesCreateAllThreeWithIncrementalVacuum() throws {
         let directory = tmpDir.appendingPathComponent("new/dir")
         _ = try ClaudePipelineFiles(directory: directory)

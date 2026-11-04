@@ -49,12 +49,17 @@ public struct ReplaySource: Sendable {
     /// When set, every chunk commits a `ReplayCheckpoint` under this `store_meta`
     /// key in the same transaction as its rows.
     public let checkpointKey: String?
+    /// When set, the replay ends after this id: records the archive gained
+    /// later (a live drain writes them itself) are never read.
+    public let through: Int64?
 
-    public init(archive: RawArchive, normalizer: any Normalizer, after: Int64 = 0, checkpointKey: String? = nil) {
+    public init(archive: RawArchive, normalizer: any Normalizer, after: Int64 = 0, checkpointKey: String? = nil,
+                through: Int64? = nil) {
         self.archive = archive
         self.normalizer = normalizer
         self.after = after
         self.checkpointKey = checkpointKey
+        self.through = through
     }
 }
 
@@ -117,10 +122,7 @@ public enum Replayer {
                               progress: (@Sendable (ReplayReport) -> Void)? = nil) throws -> [ReplayReport] {
         var seen = Set<String>()
         for source in sources {
-            guard source.archive.provider == source.normalizer.provider else {
-                throw PipelineError.normalizerMismatch(
-                    archive: source.archive.provider, normalizer: source.normalizer.provider)
-            }
+            try checkNormalizer(source)
             guard seen.insert(source.archive.provider).inserted else {
                 throw PipelineError.duplicateProvider(source.archive.provider)
             }
@@ -138,8 +140,8 @@ public enum Replayer {
                 report.stopped = stopped
                 defer { reports.append(report) }
                 if stopped { continue }
-                try replay(source, into: store, size: size, maxBytes: maxBytes, report: &report,
-                           shouldContinue: shouldContinue, progress: progress)
+                try replay(source, into: store, size: size, maxBytes: maxBytes, deadline: EventStore.bulkDeadline,
+                           report: &report, shouldContinue: shouldContinue, progress: progress)
                 stopped = report.stopped
             }
         } catch {
@@ -151,23 +153,67 @@ public enum Replayer {
         return reports
     }
 
+    /// The default chunk of a live replay: small, so each write transaction is
+    /// short next to a live drainer's.
+    public static let liveChunk = 1_000
+    /// What each read and write of a live replay may wait: far above a small
+    /// chunk's cost, far below the bulk budget, so a stuck store surfaces.
+    public static let liveDeadline: Duration = .seconds(120)
+
+    /// Replays one source into a store that stays live: no bulk load, so the
+    /// indexes stay and a drainer may write beside it (the store's writes are
+    /// idempotent and order-independent, so the two never disagree). The replay
+    /// registers as a live writer, so no bulk load can start under it. Stops at
+    /// `source.through` when set, and before any chunk `shouldContinue` refuses
+    /// (`ReplayReport.stopped`). Failures and the checkpoint behave as in
+    /// `replay(sources:into:)`.
+    public static func replayLive(_ source: ReplaySource, into store: EventStore, chunk: Int = liveChunk,
+                                  maxBytes: Int = PipelineLimits.defaultMaxBatchBytes,
+                                  deadline: Duration = liveDeadline,
+                                  shouldContinue: (@Sendable () -> Bool)? = nil,
+                                  progress: (@Sendable (ReplayReport) -> Void)? = nil) throws -> ReplayReport {
+        try checkNormalizer(source)
+        try store.attachLiveWriter()
+        defer { store.detachLiveWriter() }
+        var report = ReplayReport()
+        report.provider = source.archive.provider
+        report.lastID = source.after
+        try replay(source, into: store, size: max(1, chunk), maxBytes: maxBytes, deadline: deadline,
+                   report: &report, shouldContinue: shouldContinue, progress: progress)
+        return report
+    }
+
+    private static func checkNormalizer(_ source: ReplaySource) throws {
+        guard source.archive.provider == source.normalizer.provider else {
+            throw PipelineError.normalizerMismatch(
+                archive: source.archive.provider, normalizer: source.normalizer.provider)
+        }
+    }
+
     private static func replay(_ source: ReplaySource, into store: EventStore, size: Int, maxBytes: Int,
-                               report: inout ReplayReport,
+                               deadline: Duration, report: inout ReplayReport,
                                shouldContinue: (@Sendable () -> Bool)?,
                                progress: (@Sendable (ReplayReport) -> Void)?) throws {
         var cursor = source.after
+        if let through = source.through, cursor >= through { return }
         while true {
             if let shouldContinue, !shouldContinue() {
                 report.stopped = true
                 break
             }
-            // Reads get the bulk budget too: the archive's 30 s read deadline
-            // stopped a dev replay of a 78 GB archive after 474,124 records.
-            let ids = try source.archive.ids(after: cursor, limit: size, maxBytes: maxBytes,
-                                             deadline: EventStore.bulkDeadline)
+            // A bulk replay's reads get the bulk budget too: the archive's 30 s
+            // read deadline stopped a dev replay of a 78 GB archive after 474,124
+            // records.
+            var ids = try source.archive.ids(after: cursor, limit: size, maxBytes: maxBytes, deadline: deadline)
+            var reachedEnd = false
+            if let through = source.through, let over = ids.firstIndex(where: { $0 > through }) {
+                ids = Array(ids[..<over])
+                reachedEnd = true
+            }
             guard let last = ids.last else { break }
             var chunkFailures: [Int64: String] = [:]
-            let page = try readChunk(archive: source.archive, ids: ids, report: &report, chunkFailures: &chunkFailures)
+            let page = try readChunk(archive: source.archive, ids: ids, deadline: deadline, report: &report,
+                                     chunkFailures: &chunkFailures)
             var combined = NormalizedBatch()
             for archived in page {
                 report.records += 1
@@ -193,11 +239,11 @@ public enum Replayer {
             let checkpoint = source.checkpointKey.map {
                 ReplayCheckpoint(metaKey: $0, lastID: last, failures: chunkFailures)
             }
-            try store.write(combined, provider: source.archive.provider, deadline: EventStore.bulkDeadline,
-                            checkpoint: checkpoint)
+            try store.write(combined, provider: source.archive.provider, deadline: deadline, checkpoint: checkpoint)
             cursor = last
             report.lastID = last
             progress?(report)
+            if reachedEnd || source.through == last { break }
         }
     }
 
@@ -216,15 +262,16 @@ public enum Replayer {
 
     /// The records with `ids`. When the chunk read throws `corruptPayload`, falls back
     /// to one read per id so only the bad rows are lost. Other errors propagate.
-    private static func readChunk(archive: RawArchive, ids: [Int64], report: inout ReplayReport,
+    private static func readChunk(archive: RawArchive, ids: [Int64], deadline: Duration,
+                                  report: inout ReplayReport,
                                   chunkFailures: inout [Int64: String]) throws -> [ArchivedRecord] {
         do {
-            return try archive.records(ids: ids, deadline: EventStore.bulkDeadline)
+            return try archive.records(ids: ids, deadline: deadline)
         } catch RawArchiveError.corruptPayload {
             var page: [ArchivedRecord] = []
             for id in ids {
                 do {
-                    if let archived = try archive.record(id: id, deadline: EventStore.bulkDeadline) {
+                    if let archived = try archive.record(id: id, deadline: deadline) {
                         page.append(archived)
                     }
                 } catch RawArchiveError.corruptPayload {

@@ -128,8 +128,103 @@ public enum ClaudeArchiveReplay {
         shouldContinue: (@Sendable () -> Bool)? = nil,
         progress: (@Sendable (ReplayReport) -> Void)? = nil
     ) throws -> ClaudeArchiveReplayResult {
+        try resume(store: files.store, clock: clock) { after, track in
+            try Replayer.replay(
+                archive: files.archive, normalizer: ClaudeNormalizer(), into: files.store, after: after, chunk: chunk,
+                checkpointKey: lastRawIDKey, shouldContinue: shouldContinue,
+                progress: { report in
+                    track(report)
+                    progress?(report)
+                })
+        }
+    }
+
+    // MARK: - Background backfill
+
+    /// The `store_meta` key holding the last archive id the history backfill
+    /// must reach. A cutover that swaps in a partly replayed `events.db` sets it
+    /// to the archive's highest id; every later record is the live drain's.
+    public static let backfillTargetKey = "replay_target_raw_id"
+
+    /// Where the history backfill stands.
+    public struct BackfillStatus: Sendable, Equatable {
+        /// ``ClaudeArchiveReplay/backfillTargetKey``, or nil when none is set.
+        public let target: Int64?
+        /// ``ClaudeArchiveReplay/lastRawIDKey``: the last id replayed.
+        public let lastRawID: Int64
+
+        public init(target: Int64?, lastRawID: Int64) {
+            self.target = target
+            self.lastRawID = lastRawID
+        }
+
+        /// True while a target is set and the cursor has not reached it.
+        public var pending: Bool { target.map { lastRawID < $0 } ?? false }
+        /// Archive ids still to replay (an upper bound: ids can have gaps).
+        public var remaining: Int64 { target.map { max(0, $0 - lastRawID) } ?? 0 }
+    }
+
+    public static func backfillStatus(in store: EventStore) throws -> BackfillStatus {
+        let target = try store.metaValue(forKey: backfillTargetKey).flatMap { Int64($0) }
+        return BackfillStatus(target: target, lastRawID: try lastRawID(in: store))
+    }
+
+    /// Replays the archive from ``lastRawID(in:)`` through the backfill target
+    /// into a store a running daemon keeps live (`Replayer.replayLive`): no bulk
+    /// load, small chunks, each committing its cursor. Does nothing when no
+    /// backfill is pending. Errors and the result behave as in `run`;
+    /// `interrupted` is true while records remain before the target.
+    public static func backfill(
+        archive: RawArchive, store: EventStore, chunk: Int = Replayer.liveChunk,
+        clock: @escaping @Sendable () -> Date = Date.init,
+        shouldContinue: (@Sendable () -> Bool)? = nil,
+        progress: (@Sendable (ReplayReport) -> Void)? = nil
+    ) throws -> ClaudeArchiveReplayResult {
+        let target: Int64?
+        do {
+            target = try backfillStatus(in: store).target
+        } catch {
+            throw ClaudeArchiveReplayStopped(partial: ClaudeArchiveReplayResult(), cause: String(describing: error))
+        }
+        guard let target else {
+            var result = ClaudeArchiveReplayResult()
+            result.lastRawID = (try? lastRawID(in: store)) ?? 0
+            return result
+        }
+        var done = try resume(store: store, clock: clock) { after, track in
+            try Replayer.replayLive(
+                ReplaySource(archive: archive, normalizer: ClaudeNormalizer(), after: after,
+                             checkpointKey: lastRawIDKey, through: target),
+                into: store, chunk: chunk, shouldContinue: shouldContinue,
+                progress: { report in
+                    track(report)
+                    progress?(report)
+                })
+        }
+        // A run that was not stopped read every id through the target; when the
+        // archive's last ids before it are missing, the cursor still lands on it,
+        // or the backfill would stay pending forever.
+        if !done.interrupted, done.lastRawID < target {
+            do {
+                try store.commit(ReplayCheckpoint(metaKey: lastRawIDKey, lastID: target), provider: ClaudeProvider.name)
+            } catch {
+                done.interrupted = true
+                throw ClaudeArchiveReplayStopped(partial: done, cause: String(describing: error))
+            }
+            done.lastRawID = target
+        }
+        return done
+    }
+
+    /// The shared shape of a resumable replay: reads the cursor (forgetting old
+    /// failures when it is 0), runs `replay` from it, commits where it stands,
+    /// and turns any error into ``ClaudeArchiveReplayStopped`` with what was
+    /// committed before it.
+    private static func resume(
+        store: EventStore, clock: @escaping @Sendable () -> Date,
+        replay: (_ after: Int64, _ track: @escaping @Sendable (ReplayReport) -> Void) throws -> ReplayReport
+    ) throws -> ClaudeArchiveReplayResult {
         let started = clock()
-        let store = files.store
         let provider = ClaudeProvider.name
         let latest = LatestReport()
         let after: Int64
@@ -140,13 +235,7 @@ public enum ClaudeArchiveReplay {
             throw ClaudeArchiveReplayStopped(partial: ClaudeArchiveReplayResult(), cause: String(describing: error))
         }
         do {
-            let report = try Replayer.replay(
-                archive: files.archive, normalizer: ClaudeNormalizer(), into: store, after: after, chunk: chunk,
-                checkpointKey: lastRawIDKey, shouldContinue: shouldContinue,
-                progress: { report in
-                    latest.set(report)
-                    progress?(report)
-                })
+            let report = try replay(after) { latest.set($0) }
             // A run that read nothing still records where it stands.
             try store.commit(ReplayCheckpoint(metaKey: lastRawIDKey, lastID: report.lastID), provider: provider)
             return try result(report, store: store, seconds: clock().timeIntervalSince(started))
