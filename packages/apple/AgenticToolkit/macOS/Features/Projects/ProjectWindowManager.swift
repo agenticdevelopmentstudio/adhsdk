@@ -581,6 +581,11 @@ public final class ProjectWindowManager: ProjectOpening, ObservableObject {
         if let outgoing {
             outgoing.window?.isExcludedFromWindowsMenu = true
             outgoing.window?.orderOut(nil)
+            // Saved hidden, as `dismiss()` would: the launch restore re-shows every window saved visible,
+            // and a swapped-out window shown again would stand beside its group's own.
+            if let single = outgoing as? SingleWindowController {
+                WindowManager.shared.frames.saveVisibility(false, for: single.windowID)
+            }
             if let empty = outgoing as? EmptyProjectWindowController {
                 discardEmptyWindow(empty, of: group)
             }
