@@ -209,6 +209,18 @@ final class ReviewWorktreeTests: XCTestCase {
         }
     }
 
+    /// The fix branch checked out in the main checkout is the owner's to clear, not a failed review.
+    func testAFixBranchCheckedOutElsewhereIsAConflict() async throws {
+        let setup = try makeSetup()
+        try setup.repo.git("checkout", "-b", fix)
+        do {
+            _ = try await prepare(setup)
+            XCTFail("expected .conflict")
+        } catch ReviewWorktree.Failure.conflict(let detail) {
+            XCTAssertFalse(detail.isEmpty)
+        }
+    }
+
     func testRefusesTheMainCheckoutAsTheWorktree() async throws {
         let setup = try makeSetup()
         _ = try await prepare(setup)

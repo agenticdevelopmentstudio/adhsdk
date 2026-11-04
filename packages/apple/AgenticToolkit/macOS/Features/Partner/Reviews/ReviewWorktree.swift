@@ -14,12 +14,16 @@ public struct ReviewWorktree: Sendable {
         /// The directory is not a worktree of the repo (another repo's checkout, a plain folder, the main
         /// checkout), so no destructive verb was run in it. Carries the reason.
         case notReviewWorktree(String)
+        /// Git refused to add or switch the worktree because a path or branch is already taken (the directory
+        /// exists, the fix branch is checked out in another worktree). The owner's to clear. Carries git's stderr.
+        case conflict(String)
 
         public var errorDescription: String? {
             switch self {
             case .dirty: return "the review worktree has uncommitted changes"
             case .rebaseConflict(let detail): return "rebasing the fix branch onto the tip conflicted: \(detail)"
             case .notReviewWorktree(let detail): return detail
+            case .conflict(let detail): return "git refused the review worktree: \(detail)"
             }
         }
     }
@@ -38,7 +42,9 @@ public struct ReviewWorktree: Sendable {
         }
 
         guard try await git.resolveCommit("refs/heads/\(fixBranch)", in: repo) != nil else {
-            _ = try await git.run(["worktree", "add", "-b", fixBranch, worktree.path, tip], in: repo)
+            try await Self.refusingConflicts {
+                _ = try await git.run(["worktree", "add", "-b", fixBranch, worktree.path, tip], in: repo)
+            }
             return .created
         }
 
@@ -49,7 +55,9 @@ public struct ReviewWorktree: Sendable {
             if try await git.worktrees(in: repo).contains(where: { Self.canonical($0.directory) == missing }) {
                 _ = try await git.run(["worktree", "remove", "--force", worktree.path], in: repo)
             }
-            _ = try await git.run(["worktree", "add", worktree.path, fixBranch], in: repo)
+            try await Self.refusingConflicts {
+                _ = try await git.run(["worktree", "add", worktree.path, fixBranch], in: repo)
+            }
         }
 
         // Observe the worktree before running anything destructive in it.
@@ -68,7 +76,7 @@ public struct ReviewWorktree: Sendable {
         if entry.branch != fixBranch {
             // Detached, or on a branch of the session's own making: put it back on the fix branch first, so
             // the reset and rebase below move the branch and not whatever HEAD happened to be.
-            _ = try await git.run(["switch", fixBranch], in: worktree)
+            try await Self.refusingConflicts { _ = try await git.run(["switch", fixBranch], in: worktree) }
         }
 
         guard let fix = try await git.resolveCommit("refs/heads/\(fixBranch)", in: repo) else {
@@ -98,6 +106,19 @@ public struct ReviewWorktree: Sendable {
             throw Self.rebaseFailure(error, abortError: abortError)
         }
         return .rebased
+    }
+
+    /// What git says when a worktree path or branch is already taken: conditions the owner clears, not failures.
+    static let conflictMarkers = ["already exists", "already checked out", "is already used by worktree"]
+
+    /// Runs `body`, turning a git refusal that names a taken path or branch into ``Failure/conflict(_:)``.
+    static func refusingConflicts(_ body: () async throws -> Void) async throws {
+        do {
+            try await body()
+        } catch GitClientError.commandFailed(_, _, let standardError)
+                    where conflictMarkers.contains(where: { standardError.contains($0) }) {
+            throw Failure.conflict(standardError.trimmingCharacters(in: .whitespacesAndNewlines))
+        }
     }
 
     /// `rebase --abort` on an unstructured task, so it still runs when the caller has been cancelled: the
