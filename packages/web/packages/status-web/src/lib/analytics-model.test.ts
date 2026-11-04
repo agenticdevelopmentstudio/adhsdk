@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import type { TrafficSection, VercelProjectTraffic, VercelTrafficSection } from "../telemetry/dashboard-types";
+import type {
+  AnalyticsSectionData,
+  DashboardSections,
+  TrafficSection,
+  VercelProjectTraffic,
+  VercelTrafficSection,
+} from "../telemetry/dashboard-types";
 import {
   breakdownTotals,
   bucketDetail,
@@ -11,6 +17,7 @@ import {
   pageviewSeries,
   pathTotals,
   siteBreakdowns,
+  topicSites,
   siteKey,
   vercelTotals,
   vitalRating,
@@ -247,5 +254,91 @@ describe("web vitals", () => {
     expect(formatVital("lcp", 2400)).toBe("2.4s");
     expect(formatVital("inp", 180)).toBe("180ms");
     expect(formatVital("cls", 0.1)).toBe("0.10");
+  });
+});
+
+describe("topicSites", () => {
+  const answered = <T,>(data: T | null): { data: T | null; error: null; updatedAt: null } => ({ data, error: null, updatedAt: null });
+  const sections = (over: Partial<DashboardSections<AnalyticsSectionData>>): DashboardSections<AnalyticsSectionData> => ({
+    traffic: answered(null),
+    dimensions: answered(null),
+    paths: answered(null),
+    vitals: answered(null),
+    health: answered(null),
+    vercel: answered(null),
+    ...over,
+  });
+  const row = (host: string, browser: string, pageviews: number) => ({ host, device: "Desktop", browser, country: "US", referrer: "$direct", pageviews });
+
+  it("lists a breakdown's sites alphabetically, as one site however PostHog spells the host", () => {
+    const rows = [row("www.zeta.example.com", "Chrome", 5), row("zeta.example.com", "Safari", 5), row("quiet.example.com", "Chrome", 1)];
+    const result = topicSites("browsers", sections({ dimensions: answered({ rows, truncated: false }) as never }));
+    expect(result).toEqual(["quiet.example.com", "zeta.example.com"]);
+  });
+
+  it("lists every project on Projects, including one with analytics off and one with no domain", () => {
+    const vercel = {
+      roster: [
+        { project: "zeta-production", domain: "www.zeta.example.com", analyticsOn: true, pageviews: 9, visitors: 9 },
+        { project: "off-production", domain: "off.example.com", analyticsOn: false, pageviews: null, visitors: null },
+        { project: "bare-production", domain: null, analyticsOn: true, pageviews: 0, visitors: 0 },
+      ],
+      projects: [],
+    };
+    expect(topicSites("projects", sections({ vercel: answered(vercel) as never }))).toEqual([
+      "bare-production",
+      "off.example.com",
+      "zeta.example.com",
+    ]);
+  });
+
+  it("lists web vitals' sites once each however the host is spelled", () => {
+    const vitals = [
+      { host: "www.zeta.example.com", samples: 1, lcp: 1, inp: 1, cls: 1, fcp: 1 },
+      { host: "zeta.example.com", samples: 1, lcp: 1, inp: 1, cls: 1, fcp: 1 },
+      { host: "alpha.example.com", samples: 1, lcp: 1, inp: 1, cls: 1, fcp: 1 },
+    ];
+    expect(topicSites("vitals", sections({ vitals: answered(vitals) as never }))).toEqual(["alpha.example.com", "zeta.example.com"]);
+  });
+
+  it("lists a site on Sites even with no traffic in the range, because its row still has figures", () => {
+    const traffic = {
+      buckets: [],
+      pageviews: [],
+      totals: { pageviews: 0, sessions: 0 },
+      sites: [{ host: "idle.example.com", pageviews: 0, sessions: 0, series: [] }],
+    };
+    expect(topicSites("sites", sections({ traffic: answered(traffic) as never }))).toEqual(["idle.example.com"]);
+  });
+
+  it("lists pageviews alphabetically rather than by traffic", () => {
+    const traffic = {
+      buckets: [],
+      pageviews: [],
+      totals: { pageviews: 10, sessions: 10 },
+      sites: [
+        { host: "zeta.example.com", pageviews: 9, sessions: 9, series: [] },
+        { host: "alpha.example.com", pageviews: 1, sessions: 1, series: [] },
+      ],
+    };
+    expect(topicSites("pageviews", sections({ traffic: answered(traffic) as never }))).toEqual(["alpha.example.com", "zeta.example.com"]);
+  });
+
+  it("leaves off a site with no pageviews from either provider", () => {
+    const traffic = {
+      buckets: [],
+      pageviews: [],
+      totals: { pageviews: 3, sessions: 3 },
+      sites: [
+        { host: "seen.example.com", pageviews: 3, sessions: 3, series: [] },
+        { host: "idle.example.com", pageviews: 0, sessions: 0, series: [] },
+      ],
+    };
+    expect(topicSites("pageviews", sections({ traffic: answered(traffic) as never }))).toEqual(["seen.example.com"]);
+  });
+
+  it("has nothing to list before anything has answered", () => {
+    expect(topicSites("pageviews", sections({}))).toEqual([]);
+    expect(topicSites("pages", sections({}))).toEqual([]);
   });
 });

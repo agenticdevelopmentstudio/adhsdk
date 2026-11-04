@@ -1,5 +1,5 @@
 import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
-import { fetchProjectDomains } from "./vercel.js";
+import { fetchProjectDomains, fetchProjectPrimaryDomain } from "./vercel.js";
 
 // `live` is the whole point of this function's shape. Every failure mode — a 403 from a
 // token without project scope, a 5xx, a timeout — produces an EMPTY domain list, which is
@@ -12,7 +12,7 @@ import { fetchProjectDomains } from "./vercel.js";
 
 let fetchMock: ReturnType<typeof vi.fn>;
 
-const domainsResponse = (domains: { name: string; verified?: boolean }[]): Response =>
+const domainsResponse = (domains: { name: string; verified?: boolean; redirect?: string | null }[]): Response =>
   new Response(JSON.stringify({ domains }), { status: 200, headers: { "content-type": "application/json" } });
 
 beforeEach(() => {
@@ -92,5 +92,33 @@ describe("fetchProjectDomains provenance", () => {
       domains: ["stale.example.com"],
       live: false,
     });
+  });
+});
+
+describe("fetchProjectPrimaryDomain", () => {
+  it("names the domain the others redirect to, not the shortest", async () => {
+    fetchMock.mockResolvedValue(
+      domainsResponse([
+        { name: "olylo.ai", verified: true, redirect: "ia.olylo.ai" },
+        { name: "www.olylo.ai", verified: true, redirect: "ia.olylo.ai" },
+        { name: "ia.olylo.ai", verified: true, redirect: null },
+      ]),
+    );
+    expect(await fetchProjectPrimaryDomain("tok", undefined, "p-redirects")).toBe("ia.olylo.ai");
+  });
+
+  it("ignores vercel.app and unverified names", async () => {
+    fetchMock.mockResolvedValue(
+      domainsResponse([
+        { name: "x.vercel.app", verified: true },
+        { name: "pending.example.com", verified: false },
+      ]),
+    );
+    expect(await fetchProjectPrimaryDomain("tok", undefined, "p-none")).toBeNull();
+  });
+
+  it("is null when the lookup fails", async () => {
+    fetchMock.mockResolvedValue(new Response("forbidden", { status: 403 }));
+    expect(await fetchProjectPrimaryDomain("tok", undefined, "p-primary-403")).toBeNull();
   });
 });

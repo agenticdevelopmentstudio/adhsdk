@@ -4,6 +4,8 @@ import {
   BOARD_PATHS,
   ERRORS_TOPICS,
   subTopicFromPath,
+  analyticsSiteFromPath,
+  isAnalyticsSiteTopic,
   BOARD_VIEWS,
   SETTINGS_SECTIONS,
   entityIdFromPath,
@@ -95,6 +97,32 @@ describe("sectionFromPath", () => {
     // now, and a stale bookmark has to land on "nothing selected", not a phantom section.
     expect(sectionFromPath("/sites")).toBeNull();
     expect(sectionFromPath("/overview/sites")).toBeNull();
+  });
+});
+
+describe("analyticsSiteFromPath", () => {
+  it("reads the site of a stat topic, percent-decoded", () => {
+    expect(analyticsSiteFromPath("/analytics/countries/alpha.example.com")).toBe("alpha.example.com");
+    expect(analyticsSiteFromPath("/analytics/pageviews/my%20site/")).toBe("my site");
+  });
+
+  it("reads the site of the topics that used to be one table", () => {
+    expect(analyticsSiteFromPath("/analytics/sites/alpha.example.com")).toBe("alpha.example.com");
+    expect(analyticsSiteFromPath("/analytics/projects/alpha.example.com")).toBe("alpha.example.com");
+    expect(analyticsSiteFromPath("/analytics/vitals/alpha.example.com")).toBe("alpha.example.com");
+  });
+
+  it("is null with no site, on the overview, on an unknown topic, off Analytics, or when undecodable", () => {
+    expect(analyticsSiteFromPath("/analytics/countries")).toBeNull();
+    expect(analyticsSiteFromPath("/analytics/nonsense/alpha.example.com")).toBeNull();
+    expect(analyticsSiteFromPath("/analytics/overview/alpha.example.com")).toBeNull();
+    expect(analyticsSiteFromPath("/errors/countries/alpha.example.com")).toBeNull();
+    expect(analyticsSiteFromPath("/analytics/countries/%E0%A4%A")).toBeNull();
+  });
+
+  it("gives a site list to every topic but the overview", () => {
+    const without = ANALYTICS_TOPICS.filter((t) => !isAnalyticsSiteTopic(t.id)).map((t) => t.id);
+    expect(without).toEqual(["overview"]);
   });
 });
 

@@ -49,6 +49,11 @@ export function StatRow({ label, value, tone, valueClassName, className }: StatP
   )
 }
 
+/** A left-aligned, wrapping row of Stats: a card's headline figures. */
+export function StatStrip({ children, className }: { children: ReactNode; className?: string }) {
+  return <div className={cn("flex flex-wrap gap-x-8 gap-y-3", className)}>{children}</div>
+}
+
 /** Big value over its label, right-aligned by default — the hero-strip form. */
 export function Stat({ label, value, tone, valueClassName, className, align = "end" }: StatColumnProps) {
   return (
