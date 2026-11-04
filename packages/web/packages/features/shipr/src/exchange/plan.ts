@@ -169,11 +169,6 @@ function row(
     patch.shipBranch = config.ship_branch;
     changes.push(`ship branch → \`${config.ship_branch}\``);
   }
-  const context = config.ci?.context;
-  if (context && context !== existing.ciContext) {
-    patch.ciContext = context;
-    changes.push(`gate context → \`${context}\``);
-  }
 
   const wanted: Partial<Record<Environment, string>> = {};
   if (config.environments) {

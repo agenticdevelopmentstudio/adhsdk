@@ -32,7 +32,6 @@ function mirror(registeredAt: string | null): RepoItem {
     slug: 'DeploymentRepos/thing-deployment',
     shard: 'all',
     shipBranch: 'ship',
-    ciContext: 'gate',
     envBranches: {},
     registeredAt,
     position: 0,

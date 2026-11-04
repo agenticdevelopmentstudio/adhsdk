@@ -22,7 +22,6 @@ function repo(id: string, envBranches: Partial<Record<Environment, string>>): Re
     slug: `acme/${id}-deployment`,
     shard: 'all',
     shipBranch: 'ship',
-    ciContext: 'gate',
     envBranches,
     registeredAt: null,
     position: 0,

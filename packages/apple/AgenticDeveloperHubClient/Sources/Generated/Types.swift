@@ -43546,8 +43546,6 @@ public enum Components {
             public var shard: Swift.String?
             /// - Remark: Generated from `#/components/schemas/ShiprRepo/shipBranch`.
             public var shipBranch: Swift.String?
-            /// - Remark: Generated from `#/components/schemas/ShiprRepo/ciContext`.
-            public var ciContext: Swift.String?
             /// environment → branch. An environment absent here is one this repository does not deploy to, and its ladder column is not drawn.
             ///
             /// - Remark: Generated from `#/components/schemas/ShiprRepo/envBranches`.
@@ -43587,7 +43585,6 @@ public enum Components {
             ///   - slug: owner/name on the forge.
             ///   - shard:
             ///   - shipBranch:
-            ///   - ciContext:
             ///   - envBranches: environment → branch. An environment absent here is one this repository does not deploy to, and its ladder column is not drawn.
             ///   - registeredAt:
             ///   - provisioned:
@@ -43599,7 +43596,6 @@ public enum Components {
                 slug: Swift.String? = nil,
                 shard: Swift.String? = nil,
                 shipBranch: Swift.String? = nil,
-                ciContext: Swift.String? = nil,
                 envBranches: Components.Schemas.ShiprRepo.EnvBranchesPayload? = nil,
                 registeredAt: Swift.String? = nil,
                 provisioned: OpenAPIRuntime.OpenAPIObjectContainer? = nil,
@@ -43611,7 +43607,6 @@ public enum Components {
                 self.slug = slug
                 self.shard = shard
                 self.shipBranch = shipBranch
-                self.ciContext = ciContext
                 self.envBranches = envBranches
                 self.registeredAt = registeredAt
                 self.provisioned = provisioned
@@ -43624,7 +43619,6 @@ public enum Components {
                 case slug
                 case shard
                 case shipBranch
-                case ciContext
                 case envBranches
                 case registeredAt
                 case provisioned
@@ -235648,8 +235642,6 @@ public enum Operations {
                     public var displayName: Swift.String?
                     /// - Remark: Generated from `#/paths/shipr/repos/{id}/PATCH/requestBody/json/shipBranch`.
                     public var shipBranch: Swift.String?
-                    /// - Remark: Generated from `#/paths/shipr/repos/{id}/PATCH/requestBody/json/ciContext`.
-                    public var ciContext: Swift.String?
                     /// - Remark: Generated from `#/paths/shipr/repos/{id}/PATCH/requestBody/json/envBranches`.
                     public struct EnvBranchesPayload: Codable, Hashable, Sendable {
                         /// A container of undocumented properties.
@@ -235678,7 +235670,6 @@ public enum Operations {
                     ///   - slug: owner/name of the DEPLOYMENT repository. 409 once it is provisioned.
                     ///   - displayName: The source repository’s label, shown in the console instead of its slug. Null clears it.
                     ///   - shipBranch:
-                    ///   - ciContext:
                     ///   - envBranches:
                     public init(
                         groupId: Swift.String? = nil,
@@ -235686,7 +235677,6 @@ public enum Operations {
                         slug: Swift.String? = nil,
                         displayName: Swift.String? = nil,
                         shipBranch: Swift.String? = nil,
-                        ciContext: Swift.String? = nil,
                         envBranches: Operations.PatchShiprReposId.Input.Body.JsonPayload.EnvBranchesPayload? = nil
                     ) {
                         self.groupId = groupId
@@ -235694,7 +235684,6 @@ public enum Operations {
                         self.slug = slug
                         self.displayName = displayName
                         self.shipBranch = shipBranch
-                        self.ciContext = ciContext
                         self.envBranches = envBranches
                     }
                     public enum CodingKeys: String, CodingKey {
@@ -235703,7 +235692,6 @@ public enum Operations {
                         case slug
                         case displayName
                         case shipBranch
-                        case ciContext
                         case envBranches
                     }
                 }

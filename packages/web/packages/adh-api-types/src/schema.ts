@@ -41726,7 +41726,6 @@ export interface paths {
                         /** @description The source repository’s label, shown in the console instead of its slug. Null clears it. */
                         displayName?: string | null;
                         shipBranch?: string;
-                        ciContext?: string;
                         envBranches?: {
                             [key: string]: string;
                         };
@@ -79851,7 +79850,6 @@ export interface components {
             slug?: string;
             shard?: string;
             shipBranch?: string;
-            ciContext?: string;
             /** @description environment → branch. An environment absent here is one this repository does not deploy to, and its ladder column is not drawn. */
             envBranches?: {
                 [key: string]: string;

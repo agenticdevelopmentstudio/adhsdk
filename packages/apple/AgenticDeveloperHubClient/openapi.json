@@ -14246,9 +14246,6 @@
           "shipBranch": {
             "type": "string"
           },
-          "ciContext": {
-            "type": "string"
-          },
           "envBranches": {
             "type": "object",
             "additionalProperties": {
@@ -66314,9 +66311,6 @@
                     "description": "The source repository’s label, shown in the console instead of its slug. Null clears it."
                   },
                   "shipBranch": {
-                    "type": "string"
-                  },
-                  "ciContext": {
                     "type": "string"
                   },
                   "envBranches": {

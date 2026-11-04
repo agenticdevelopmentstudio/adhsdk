@@ -124,7 +124,6 @@ export interface Repo {
   slug: string;
   shard: string;
   shipBranch: string;
-  ciContext: string;
   /** Environment → the branch it deploys from. An environment ABSENT here is one this
    *  repository does not deploy to, and its ladder column is dropped rather than drawn
    *  empty — an empty column reads as "behind", which is a different fact. */
@@ -426,6 +425,5 @@ export interface RepoPatch {
   /** The SOURCE repository's label. Null clears it. */
   displayName?: string | null;
   shipBranch?: string;
-  ciContext?: string;
   envBranches?: Partial<Record<Environment, string>>;
 }

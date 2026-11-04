@@ -70,7 +70,6 @@ export interface ExportedConfig {
   /** environment → the branch it deploys from. Absent environments are ones this repository
    *  does not deploy to, which is a different fact from an empty branch name. */
   environments?: Record<string, string>;
-  ci?: { context?: string };
   [key: string]: unknown;
 }
 
@@ -141,7 +140,6 @@ export interface ExportableRepo {
   /** The deployment repository — `owner/name`. */
   slug: string;
   shipBranch: string;
-  ciContext: string;
   /** Values are optional because the wire's own type is a `Partial` — an environment this
    *  repository does not deploy to is an absent key, and a key whose value is `undefined`
    *  must reach the file as neither. */
@@ -204,7 +202,6 @@ export function buildDocument({ groups, items, exportedAt }: BuildOptions): Ship
         prepared_branch: item.devRepo.preparedBranch,
         ship_branch: item.shipBranch,
         environments: environmentsOf(item.envBranches),
-        ci: { context: item.ciContext },
       },
     });
   }

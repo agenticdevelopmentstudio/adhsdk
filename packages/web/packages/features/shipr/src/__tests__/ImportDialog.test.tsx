@@ -51,7 +51,6 @@ const ITEM: RepoItem = {
   slug: 'acme/olylo-deployment',
   shard: 'all',
   shipBranch: 'ship',
-  ciContext: 'gate',
   envBranches: { testing: 'testing' },
   registeredAt: null,
   position: 0,
