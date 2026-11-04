@@ -699,8 +699,10 @@ extension ComposableSettings {
             // column hides behind a horizontal scroll. The last column gives way
             // first, then the one before it: leading columns (a name, a popup)
             // keep the width they asked for, and the long free-text columns
-            // that usually trail them truncate instead.
-            tableView.columnAutoresizingStyle = .reverseSequentialColumnAutoresizingStyle
+            // that usually trail them truncate instead. AppKit's naming runs the
+            // other way: `sequential` starts at the last column, `reverseSequential`
+            // at the first.
+            tableView.columnAutoresizingStyle = .sequentialColumnAutoresizingStyle
             tableView.dataSource = self
             tableView.delegate = self
             tableView.usesAlternatingRowBackgroundColors = false
