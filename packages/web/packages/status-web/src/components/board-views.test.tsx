@@ -1,11 +1,10 @@
 import { describe, expect, it } from "vitest";
 import {
-  ANALYTICS_TOPICS,
+  ANALYTICS_OVERVIEW,
   BOARD_PATHS,
   ERRORS_TOPICS,
   subTopicFromPath,
   analyticsSiteFromPath,
-  isAnalyticsSiteTopic,
   BOARD_VIEWS,
   SETTINGS_SECTIONS,
   entityIdFromPath,
@@ -26,20 +25,19 @@ import {
 
 describe("subTopicFromPath", () => {
   it("reads the second segment against the list it is given", () => {
-    expect(subTopicFromPath("/analytics/countries", ANALYTICS_TOPICS)).toBe("countries");
+    expect(subTopicFromPath("/analytics/overview", [ANALYTICS_OVERVIEW])).toBe("overview");
     expect(subTopicFromPath("/errors/by-type/", ERRORS_TOPICS)).toBe("by-type");
   });
 
   it("is null with no second segment, or one that is not on the list", () => {
-    expect(subTopicFromPath("/analytics", ANALYTICS_TOPICS)).toBeNull();
-    expect(subTopicFromPath("/analytics/nope", ANALYTICS_TOPICS)).toBeNull();
+    expect(subTopicFromPath("/analytics", [ANALYTICS_OVERVIEW])).toBeNull();
+    expect(subTopicFromPath("/analytics/alpha.example.com", [ANALYTICS_OVERVIEW])).toBeNull();
     expect(subTopicFromPath("/errors/countries", ERRORS_TOPICS)).toBeNull();
   });
 
-  it("both lists open on the overview, and a deep link stays on the board", () => {
-    expect(ANALYTICS_TOPICS[0]!.id).toBe("overview");
+  it("Errors opens on its overview, and a deep link stays on the board", () => {
     expect(ERRORS_TOPICS[0]!.id).toBe("overview");
-    expect(topicFromPath("/analytics/countries")).toBe("analytics");
+    expect(topicFromPath("/analytics/alpha.example.com")).toBe("analytics");
     expect(isBoardPath("/errors/per-site")).toBe(true);
   });
 });
@@ -101,28 +99,16 @@ describe("sectionFromPath", () => {
 });
 
 describe("analyticsSiteFromPath", () => {
-  it("reads the site of a stat topic, percent-decoded", () => {
-    expect(analyticsSiteFromPath("/analytics/countries/alpha.example.com")).toBe("alpha.example.com");
-    expect(analyticsSiteFromPath("/analytics/pageviews/my%20site/")).toBe("my site");
+  it("reads the site, percent-decoded", () => {
+    expect(analyticsSiteFromPath("/analytics/alpha.example.com")).toBe("alpha.example.com");
+    expect(analyticsSiteFromPath("/analytics/my%20site/")).toBe("my site");
   });
 
-  it("reads the site of the topics that used to be one table", () => {
-    expect(analyticsSiteFromPath("/analytics/sites/alpha.example.com")).toBe("alpha.example.com");
-    expect(analyticsSiteFromPath("/analytics/projects/alpha.example.com")).toBe("alpha.example.com");
-    expect(analyticsSiteFromPath("/analytics/vitals/alpha.example.com")).toBe("alpha.example.com");
-  });
-
-  it("is null with no site, on the overview, on an unknown topic, off Analytics, or when undecodable", () => {
-    expect(analyticsSiteFromPath("/analytics/countries")).toBeNull();
-    expect(analyticsSiteFromPath("/analytics/nonsense/alpha.example.com")).toBeNull();
-    expect(analyticsSiteFromPath("/analytics/overview/alpha.example.com")).toBeNull();
-    expect(analyticsSiteFromPath("/errors/countries/alpha.example.com")).toBeNull();
-    expect(analyticsSiteFromPath("/analytics/countries/%E0%A4%A")).toBeNull();
-  });
-
-  it("gives a site list to every topic but the overview", () => {
-    const without = ANALYTICS_TOPICS.filter((t) => !isAnalyticsSiteTopic(t.id)).map((t) => t.id);
-    expect(without).toEqual(["overview"]);
+  it("is null on the overview, off Analytics, or when undecodable", () => {
+    expect(analyticsSiteFromPath("/analytics")).toBeNull();
+    expect(analyticsSiteFromPath("/analytics/overview")).toBeNull();
+    expect(analyticsSiteFromPath("/errors/alpha.example.com")).toBeNull();
+    expect(analyticsSiteFromPath("/analytics/%E0%A4%A")).toBeNull();
   });
 });
 
