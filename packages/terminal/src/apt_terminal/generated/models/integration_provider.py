@@ -30,6 +30,10 @@ class IntegrationProvider:
         subtitle (str): Short human category for the picker list + filter (e.g. Email, Social)
         description (str): What the service is and what enabling it does
         links (list[IntegrationProviderLinksItem]): Out-links for the info card (homepage / docs / "get your keys")
+        testable (bool): Whether a saved config for this provider can be verified — a GitHub App, or a provider
+            declaring a validation endpoint. DERIVED, not stored: it is the condition POST …/provider-
+            configs/{configId}/test dispatches on, so a client can draw the Test button without keeping its own list of
+            which providers have one.
         config_fields (list[IntegrationProviderConfigFieldsItem] | Unset): For api_key providers: declarative
             config/credential fields, rendered + validated identically at ecosystem and user scope (absent for OAuth-style
             providers).
@@ -44,6 +48,7 @@ class IntegrationProvider:
     subtitle: str
     description: str
     links: list[IntegrationProviderLinksItem]
+    testable: bool
     config_fields: list[IntegrationProviderConfigFieldsItem] | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
@@ -69,6 +74,8 @@ class IntegrationProvider:
             links_item = links_item_data.to_dict()
             links.append(links_item)
 
+        testable = self.testable
+
         config_fields: list[dict[str, Any]] | Unset = UNSET
         if not isinstance(self.config_fields, Unset):
             config_fields = []
@@ -89,6 +96,7 @@ class IntegrationProvider:
                 "subtitle": subtitle,
                 "description": description,
                 "links": links,
+                "testable": testable,
             }
         )
         if config_fields is not UNSET:
@@ -129,6 +137,8 @@ class IntegrationProvider:
 
             links.append(links_item)
 
+        testable = d.pop("testable")
+
         _config_fields = d.pop("configFields", UNSET)
         config_fields: list[IntegrationProviderConfigFieldsItem] | Unset = UNSET
         if _config_fields is not UNSET:
@@ -150,6 +160,7 @@ class IntegrationProvider:
             subtitle=subtitle,
             description=description,
             links=links,
+            testable=testable,
             config_fields=config_fields,
         )
 

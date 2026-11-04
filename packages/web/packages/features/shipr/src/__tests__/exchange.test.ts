@@ -49,7 +49,6 @@ const FROM_THE_CLI = {
         prepared_branch: 'prepared',
         ship_branch: 'ship',
         environments: { testing: 'testing', production: 'production' },
-        ci: { context: 'gate' },
       },
     },
     {
@@ -75,7 +74,6 @@ function repo(over: Partial<RepoItem> = {}): RepoItem {
     slug: 'acme/olylo-deployment',
     shard: 'all',
     shipBranch: 'ship',
-    ciContext: 'gate',
     envBranches: { testing: 'testing', production: 'production' },
     registeredAt: null,
     position: 0,
@@ -179,7 +177,6 @@ describe('the document', () => {
       prepared_branch: 'prepared',
       ship_branch: 'ship',
       environments: { testing: 'testing', production: 'production' },
-      ci: { context: 'gate' },
     });
     // Slugs only: a URL built here would be `doctor`'s own fallback written down as
     // though it had been observed.
@@ -219,6 +216,18 @@ describe('the plan', () => {
     });
     expect(plan.rows[0]!.state).toBe('same');
     expect(plan.rows[0]!.changes).toEqual([]);
+  });
+
+  it('asks nothing of the `ci` key a file exported before the gate went still carries', () => {
+    const older = structuredClone(FROM_THE_CLI);
+    (older.projects[0]!.config as Record<string, unknown>).ci = { context: 'deploy/ci' };
+    const plan = planImport({
+      document: parseDocument(JSON.stringify(older)),
+      groups: [group()],
+      items: [repo()],
+    });
+    expect(plan.rows[0]!.changes).toEqual([]);
+    expect(plan.rows[0]!.patch).toBeUndefined();
   });
 
   it('names what differs, and patches only that', () => {
@@ -358,7 +367,6 @@ describe('applying a plan', () => {
         groupId: 'g1',
         shipBranch: 'ship',
         envBranches: {},
-        ciContext: '',
       })],
     });
     const result = await applyImport({ client: c as never, plan, groups: [group()] });

@@ -1,5 +1,8 @@
 import AgenticDeveloperToolkitUI
 import AppKit
+import Combine
+
+import AgenticToolkitCore
 
 /// A pane: a title bar, some content, and enough memory to come back the way it
 /// was left.
@@ -103,14 +106,6 @@ open class PaneViewController: NSViewController {
     /// would answer `refreshTitle()` by renaming a heading nobody can see.
     private(set) weak var optionsSheet: OptionsDialogViewController?
 
-    /// This pane's spacing, and where it comes from. `lazy` because it asks
-    /// `inheritedPaneSpacing`, which a subclass overrides — so it cannot be
-    /// built until `self` exists.
-    public private(set) lazy var spacingOverride = PaneSpacingOverride(
-        store: stateStore,
-        inherited: { [weak self] in self?.inheritedPaneSpacing ?? Spacing() }
-    )
-
     /// What the pane is *itself* holding the content off its edges by. Zero
     /// when the content applies the gap instead — which is the invariant this
     /// property exists to make testable.
@@ -121,8 +116,8 @@ open class PaneViewController: NSViewController {
                                          bottom: NSLayoutConstraint,
                                          trailing: NSLayoutConstraint)?
 
-    private var spacingControl: SpacingControl?
-    private var spacingResetButton: NSButton?
+    /// Re-insets the content when the app-wide pane-content spacing changes.
+    private var spacingObservation: AnyCancellable?
 
     public init(stateStore: PaneStateStore = EphemeralPaneStateStore()) {
         self.stateStore = stateStore
@@ -155,21 +150,15 @@ open class PaneViewController: NSViewController {
     /// pane among several.
     open var paneAccessibilityIdentifier: String { "pane" }
 
-    /// The spacing this pane falls back to when it has no override of its own.
-    ///
-    /// Content that already applies a gap names the global it is applying, so
-    /// the per-pane control overrides *that* number rather than introducing a
-    /// second one. Everything else inherits nothing, and a subclass that knows
-    /// better overrides this.
-    open var inheritedPaneSpacing: Spacing {
-        (contentViewController as? PaneContentSpacingConsuming)?.inheritedPaneSpacing ?? Spacing()
-    }
+    /// How far this pane holds its content off its edges: the app-wide pane
+    /// content spacing (Settings > Appearance > Spacing). No pane has spacing
+    /// of its own, so every pane in every window is spaced alike.
+    public var paneContentSpacing: Spacing { PaneSpacing.contentSpacing }
 
-    /// The rows in the options dialog: the frame spacing control first, then
-    /// the content's own rows.
+    /// The rows in the options dialog: the content's own. Empty means the
+    /// gear menu offers no `Settings…` item at all.
     open func makeOptionRows() -> [NSView] {
-        makeSpacingRows()
-            + ((contentViewController as? PaneOptionsProviding)?.makePaneOptionRows() ?? [])
+        (contentViewController as? PaneOptionsProviding)?.makePaneOptionRows() ?? []
     }
 
     /// The pane's own items in the gear menu, above `Settings…`.
@@ -228,7 +217,10 @@ open class PaneViewController: NSViewController {
         super.viewDidLoad()
         wireControls()
         wireContentCallbacks()
-        spacingOverride.onChange = { [weak self] _ in self?.applyResolvedSpacing() }
+        spacingObservation = UserSettings.shared.changes
+            .filter { PaneSpacing.contentSettingKeys.contains($0) }
+            .receive(on: RunLoop.main)
+            .sink { [weak self] _ in self?.applyResolvedSpacing() }
         applyResolvedSpacing()
         installGear()
         refreshTitle()
@@ -276,7 +268,9 @@ open class PaneViewController: NSViewController {
         titleBar.gearView = gearButton
     }
 
-    /// What the gear raises: the pane's own items, then `Settings…`.
+    /// What the gear raises: the pane's own items, then `Settings…` when the
+    /// content has rows for it. Empty when neither has anything to offer, and
+    /// then the gear is not shown at all — see `refreshGearVisibility()`.
     ///
     /// Built fresh on every click, because what a pane may legally do — which
     /// ways it can move, above all — changes with the layout around it, and a
@@ -296,6 +290,7 @@ open class PaneViewController: NSViewController {
 
         let items = makeMenuItems()
         for item in items { menu.addItem(item) }
+        guard hasOptionRows else { return menu }
         if !items.isEmpty { menu.addItem(.separator()) }
 
         let settings = NSMenuItem(
@@ -313,6 +308,25 @@ open class PaneViewController: NSViewController {
         return menu
     }
 
+    /// Whether the content has anything for a `Settings…` dialog to show, asked without building the rows:
+    /// the gear asks on every pane-tree refresh, and building a pane's rows has side effects (a persona chat
+    /// re-points its model popups and fetches the model list). A subclass overriding `makeOptionRows()`
+    /// overrides this too.
+    open var hasOptionRows: Bool {
+        (contentViewController as? PaneOptionsProviding)?.hasPaneOptionRows ?? false
+    }
+
+    /// Whether the gear has a menu to raise. Internal so a test can read it.
+    var hasOptionsMenu: Bool { makeOptionsMenu().numberOfItems > 0 }
+
+    /// Hides the gear when its menu would be empty — only UI with content is
+    /// shown. What a pane's menu holds can change with the layout around it,
+    /// so the host calls this along with `refreshControlAvailability()`.
+    public func refreshGearVisibility() {
+        guard isViewLoaded else { return }
+        gearButton.isHidden = !hasOptionsMenu
+    }
+
     @objc private func showOptionsMenu(_ sender: NSButton) {
         // `(0, 0)` is the button's own bottom-left — its content is unflipped —
         // and `popUp` lands the menu's top-left there, so the menu hangs below
@@ -324,8 +338,6 @@ open class PaneViewController: NSViewController {
         let sheet = OptionsDialogViewController(
             heading: resolvedTitle,
             rows: makeOptionRows(),
-            // Wide enough for the spacing control's diagram, which is the
-            // widest thing any pane puts in here.
             width: 340,
             accessibilityPrefix: "pane.options"
         )
@@ -333,7 +345,6 @@ open class PaneViewController: NSViewController {
             guard let sheet else { return }
             self?.dismiss(sheet)
         }
-        sheet.onDidClose = { [weak self] in self?.optionsDialogDidClose() }
         optionsSheet = sheet
         presentAsSheet(sheet)
     }
@@ -344,18 +355,6 @@ open class PaneViewController: NSViewController {
     public func dismissOptionsDialog() {
         guard let optionsSheet else { return }
         dismiss(optionsSheet)
-    }
-
-    /// The spacing steppers coalesce their writes, so the last tick of a
-    /// gesture is still waiting when the dialog goes away. The dialog closing
-    /// *is* the end of the gesture — and closing the window closes it too — so
-    /// this is where the pane stops waiting and writes.
-    ///
-    /// Internal rather than private so a test can end the gesture without
-    /// putting a dialog on screen; nothing outside the framework has any
-    /// business reaching it.
-    func optionsDialogDidClose() {
-        spacingOverride.flushPendingPersist()
     }
 
     private func presentMinimizePicker(from anchor: NSButton) {
@@ -374,57 +373,20 @@ open class PaneViewController: NSViewController {
     /// off the other. Safe to call repeatedly — it assigns, it does not
     /// accumulate (`idempotency`).
     public func applyResolvedSpacing() {
-        let spacing = resolvedSpacing
-        spacingControl?.value = spacing
-        spacingResetButton?.isEnabled = spacingOverride.isOverridden
-
+        let spacing = paneContentSpacing
         if let consumer = contentViewController as? PaneContentSpacingConsuming {
             consumer.applyPaneSpacing(spacing)
             contentSpacingInsets = NSEdgeInsets()
         } else {
-            contentSpacingInsets = spacingOverride.insets
+            contentSpacingInsets = NSEdgeInsets(
+                top: CGFloat(spacing.top), left: CGFloat(spacing.leading),
+                bottom: CGFloat(spacing.bottom), right: CGFloat(spacing.trailing))
         }
 
         contentEdgeConstraints?.top.constant = contentSpacingInsets.top
         contentEdgeConstraints?.leading.constant = contentSpacingInsets.left
         contentEdgeConstraints?.bottom.constant = contentSpacingInsets.bottom
         contentEdgeConstraints?.trailing.constant = contentSpacingInsets.right
-    }
-
-    /// Split out so `applyResolvedSpacing` reads as one idea; a subclass never
-    /// needs it, since `inheritedPaneSpacing` is the hook.
-    private var resolvedSpacing: Spacing { spacingOverride.resolved }
-
-    /// The dialog's first rows: the picture, and the way back to inheriting.
-    ///
-    /// The control's own reset sets every number to zero, which is a *look* a
-    /// user may want — so returning to the app's spacing needs its own button,
-    /// and it is disabled while there is nothing to return from.
-    public func makeSpacingRows() -> [NSView] {
-        let control = SpacingControl(style: .frame, range: PaneSpacingOverride.range)
-        control.value = spacingOverride.resolved
-        control.onChange = { [weak self] value in self?.spacingOverride.setOverride(value) }
-        control.accessibilityID("pane.options.spacing")
-        spacingControl = control
-
-        let reset = NSButton(title: "Use Default", target: nil, action: nil)
-        reset.bezelStyle = .rounded
-        reset.isEnabled = spacingOverride.isOverridden
-        reset.accessibilityID("pane.options.spacing.reset")
-        reset.setAccessibilityLabel("Use Default Spacing")
-        // Target/action rather than a closure: the pane is the target, and it
-        // outlives every dialog the button is ever put in, so the unowned
-        // `target` reference cannot dangle and there is no retain cycle to
-        // break — the pane raises the dialog, not the other way round.
-        reset.target = self
-        reset.action = #selector(resetSpacing)
-        spacingResetButton = reset
-
-        return [control, reset]
-    }
-
-    @objc private func resetSpacing() {
-        spacingOverride.reset()
     }
 
     // MARK: - Reading the content
@@ -481,6 +443,7 @@ open class PaneViewController: NSViewController {
         let edges = host?.availableMinimizeEdges(for: self) ?? []
         titleBar.controls.canMinimize = !edges.isEmpty
         titleBar.controls.canClose = host?.canClose(self) ?? true
+        refreshGearVisibility()
     }
 
     // MARK: - State the host hands back

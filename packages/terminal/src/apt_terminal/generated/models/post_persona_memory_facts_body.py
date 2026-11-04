@@ -31,7 +31,6 @@ class PostPersonaMemoryFactsBody:
         valid_to (None | str | Unset):
         status (str | Unset):
         supersedes_id (None | str | Unset):
-        sync_txid (int | Unset):
     """
 
     persona_id: UUID
@@ -50,7 +49,6 @@ class PostPersonaMemoryFactsBody:
     valid_to: None | str | Unset = UNSET
     status: str | Unset = UNSET
     supersedes_id: None | str | Unset = UNSET
-    sync_txid: int | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
         persona_id = str(self.persona_id)
@@ -121,8 +119,6 @@ class PostPersonaMemoryFactsBody:
         else:
             supersedes_id = self.supersedes_id
 
-        sync_txid = self.sync_txid
-
         field_dict: dict[str, Any] = {}
 
         field_dict.update(
@@ -159,8 +155,6 @@ class PostPersonaMemoryFactsBody:
             field_dict["status"] = status
         if supersedes_id is not UNSET:
             field_dict["supersedesId"] = supersedes_id
-        if sync_txid is not UNSET:
-            field_dict["syncTxid"] = sync_txid
 
         return field_dict
 
@@ -262,8 +256,6 @@ class PostPersonaMemoryFactsBody:
 
         supersedes_id = _parse_supersedes_id(d.pop("supersedesId", UNSET))
 
-        sync_txid = d.pop("syncTxid", UNSET)
-
         post_persona_memory_facts_body = cls(
             persona_id=persona_id,
             predicate=predicate,
@@ -281,7 +273,6 @@ class PostPersonaMemoryFactsBody:
             valid_to=valid_to,
             status=status,
             supersedes_id=supersedes_id,
-            sync_txid=sync_txid,
         )
 
         return post_persona_memory_facts_body

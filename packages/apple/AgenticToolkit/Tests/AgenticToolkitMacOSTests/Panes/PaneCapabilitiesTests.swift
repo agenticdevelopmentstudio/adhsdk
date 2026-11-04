@@ -95,6 +95,5 @@ final class PaneCapabilitiesTests: XCTestCase {
     func testStateKeysAreTheStringsAlreadyOnDisk() {
         XCTAssertEqual(PaneStateKey.minimizeEdge, "minimize.edge")
         XCTAssertEqual(PaneStateKey.zoomed, "zoomed")
-        XCTAssertEqual(PaneStateKey.spacingOverride, "spacing.override")
     }
 }

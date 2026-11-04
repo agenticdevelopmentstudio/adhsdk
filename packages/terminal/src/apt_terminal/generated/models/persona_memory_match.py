@@ -25,7 +25,7 @@ class PersonaMemoryMatch:
         body (str):
         confidence (int):
         tags (list[str]):
-        similarity (float): Cosine similarity, negatives clamped to 0
+        similarity (float | None): Cosine similarity, negatives clamped to 0; null for a keyword hit
     """
 
     id: str
@@ -37,7 +37,7 @@ class PersonaMemoryMatch:
     body: str
     confidence: int
     tags: list[str]
-    similarity: float
+    similarity: float | None
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -59,6 +59,7 @@ class PersonaMemoryMatch:
 
         tags = self.tags
 
+        similarity: float | None
         similarity = self.similarity
 
         field_dict: dict[str, Any] = {}
@@ -101,7 +102,12 @@ class PersonaMemoryMatch:
 
         tags = cast(list[str], d.pop("tags"))
 
-        similarity = d.pop("similarity")
+        def _parse_similarity(data: object) -> float | None:
+            if data is None:
+                return data
+            return cast(float | None, data)
+
+        similarity = _parse_similarity(d.pop("similarity"))
 
         persona_memory_match = cls(
             id=id,

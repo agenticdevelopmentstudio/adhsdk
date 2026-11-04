@@ -15,6 +15,8 @@ class PostGamePlayersResponse201:
         id (str):
         ecosystem_id (str):
         customer_id (str):
+        owner_kind (str):
+        owner_id (str):
         game_id (str):
         character_name (None | str):
         character_avatar_url (None | str):
@@ -32,6 +34,8 @@ class PostGamePlayersResponse201:
     id: str
     ecosystem_id: str
     customer_id: str
+    owner_kind: str
+    owner_id: str
     game_id: str
     character_name: None | str
     character_avatar_url: None | str
@@ -51,6 +55,10 @@ class PostGamePlayersResponse201:
         ecosystem_id = self.ecosystem_id
 
         customer_id = self.customer_id
+
+        owner_kind = self.owner_kind
+
+        owner_id = self.owner_id
 
         game_id = self.game_id
 
@@ -87,6 +95,8 @@ class PostGamePlayersResponse201:
                 "id": id,
                 "ecosystemId": ecosystem_id,
                 "customerId": customer_id,
+                "ownerKind": owner_kind,
+                "ownerId": owner_id,
                 "gameId": game_id,
                 "characterName": character_name,
                 "characterAvatarUrl": character_avatar_url,
@@ -112,6 +122,10 @@ class PostGamePlayersResponse201:
         ecosystem_id = d.pop("ecosystemId")
 
         customer_id = d.pop("customerId")
+
+        owner_kind = d.pop("ownerKind")
+
+        owner_id = d.pop("ownerId")
 
         game_id = d.pop("gameId")
 
@@ -161,6 +175,8 @@ class PostGamePlayersResponse201:
             id=id,
             ecosystem_id=ecosystem_id,
             customer_id=customer_id,
+            owner_kind=owner_kind,
+            owner_id=owner_id,
             game_id=game_id,
             character_name=character_name,
             character_avatar_url=character_avatar_url,

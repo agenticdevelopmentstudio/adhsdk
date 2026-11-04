@@ -18,7 +18,7 @@ class PostEcosystemApplicationsBody:
         display_name (str):
         consumer_kind (str):
         ecosystem_id (str | Unset):
-        sync_txid (int | Unset):
+        platform (str | Unset):
         id (str | Unset):
     """
 
@@ -26,7 +26,7 @@ class PostEcosystemApplicationsBody:
     display_name: str
     consumer_kind: str
     ecosystem_id: str | Unset = UNSET
-    sync_txid: int | Unset = UNSET
+    platform: str | Unset = UNSET
     id: str | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
@@ -38,7 +38,7 @@ class PostEcosystemApplicationsBody:
 
         ecosystem_id = self.ecosystem_id
 
-        sync_txid = self.sync_txid
+        platform = self.platform
 
         id = self.id
 
@@ -53,8 +53,8 @@ class PostEcosystemApplicationsBody:
         )
         if ecosystem_id is not UNSET:
             field_dict["ecosystemId"] = ecosystem_id
-        if sync_txid is not UNSET:
-            field_dict["syncTxid"] = sync_txid
+        if platform is not UNSET:
+            field_dict["platform"] = platform
         if id is not UNSET:
             field_dict["id"] = id
 
@@ -71,7 +71,7 @@ class PostEcosystemApplicationsBody:
 
         ecosystem_id = d.pop("ecosystemId", UNSET)
 
-        sync_txid = d.pop("syncTxid", UNSET)
+        platform = d.pop("platform", UNSET)
 
         id = d.pop("id", UNSET)
 
@@ -80,7 +80,7 @@ class PostEcosystemApplicationsBody:
             display_name=display_name,
             consumer_kind=consumer_kind,
             ecosystem_id=ecosystem_id,
-            sync_txid=sync_txid,
+            platform=platform,
             id=id,
         )
 

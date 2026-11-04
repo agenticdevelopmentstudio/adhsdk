@@ -22,7 +22,6 @@ function repo(id: string, slug: string, shard = 'all'): RepoItem {
     slug,
     shard,
     shipBranch: 'ship',
-    ciContext: 'gate',
     envBranches: {},
     registeredAt: null,
     position: 0,

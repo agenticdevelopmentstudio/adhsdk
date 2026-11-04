@@ -22,7 +22,6 @@ class PutContentDatesIdBody:
         recurrence (str | Unset):
         contact_id (None | str | Unset):
         notes (str | Unset):
-        sync_txid (int | Unset):
     """
 
     ecosystem_id: str | Unset = UNSET
@@ -33,7 +32,6 @@ class PutContentDatesIdBody:
     recurrence: str | Unset = UNSET
     contact_id: None | str | Unset = UNSET
     notes: str | Unset = UNSET
-    sync_txid: int | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
         ecosystem_id = self.ecosystem_id
@@ -56,8 +54,6 @@ class PutContentDatesIdBody:
 
         notes = self.notes
 
-        sync_txid = self.sync_txid
-
         field_dict: dict[str, Any] = {}
 
         field_dict.update({})
@@ -77,8 +73,6 @@ class PutContentDatesIdBody:
             field_dict["contactId"] = contact_id
         if notes is not UNSET:
             field_dict["notes"] = notes
-        if sync_txid is not UNSET:
-            field_dict["syncTxid"] = sync_txid
 
         return field_dict
 
@@ -108,8 +102,6 @@ class PutContentDatesIdBody:
 
         notes = d.pop("notes", UNSET)
 
-        sync_txid = d.pop("syncTxid", UNSET)
-
         put_content_dates_id_body = cls(
             ecosystem_id=ecosystem_id,
             owner_kind=owner_kind,
@@ -119,7 +111,6 @@ class PutContentDatesIdBody:
             recurrence=recurrence,
             contact_id=contact_id,
             notes=notes,
-            sync_txid=sync_txid,
         )
 
         return put_content_dates_id_body

@@ -6,7 +6,8 @@
         - listitem [ref=e5]:
           - link "Docs" [ref=e6]
         - listitem [ref=e7]:
-          - link "Weblog" [ref=e8]
+          - link "Weblog" [ref=e8]:
+            - text: Blog
   - text: Welcome to Acme.
   - img "Logo" [ref=e9]
   - table [ref=e10]:

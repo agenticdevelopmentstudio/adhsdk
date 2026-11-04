@@ -151,7 +151,6 @@ function RepoFacts({ repo }: { repo: RepoItem }): React.ReactElement {
           <Fact key={env} name={`${env} branch`} value={repo.envBranches[env]} />
         ) : null,
       )}
-      <Fact name="gate context" value={repo.ciContext} />
       <Fact name="registered" value={repo.registeredAt ?? 'not provisioned yet'} />
     </Facts>
   );

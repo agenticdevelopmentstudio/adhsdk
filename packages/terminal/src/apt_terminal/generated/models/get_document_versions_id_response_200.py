@@ -15,6 +15,8 @@ class GetDocumentVersionsIdResponse200:
         id (str):
         document_id (str):
         customer_id (str):
+        owner_kind (str):
+        owner_id (str):
         deleted_at (None | str):
         ecosystem_id (str):
         name (str):
@@ -32,6 +34,8 @@ class GetDocumentVersionsIdResponse200:
     id: str
     document_id: str
     customer_id: str
+    owner_kind: str
+    owner_id: str
     deleted_at: None | str
     ecosystem_id: str
     name: str
@@ -51,6 +55,10 @@ class GetDocumentVersionsIdResponse200:
         document_id = self.document_id
 
         customer_id = self.customer_id
+
+        owner_kind = self.owner_kind
+
+        owner_id = self.owner_id
 
         deleted_at: None | str
         deleted_at = self.deleted_at
@@ -85,6 +93,8 @@ class GetDocumentVersionsIdResponse200:
                 "id": id,
                 "documentId": document_id,
                 "customerId": customer_id,
+                "ownerKind": owner_kind,
+                "ownerId": owner_id,
                 "deletedAt": deleted_at,
                 "ecosystemId": ecosystem_id,
                 "name": name,
@@ -110,6 +120,10 @@ class GetDocumentVersionsIdResponse200:
         document_id = d.pop("documentId")
 
         customer_id = d.pop("customerId")
+
+        owner_kind = d.pop("ownerKind")
+
+        owner_id = d.pop("ownerId")
 
         def _parse_deleted_at(data: object) -> None | str:
             if data is None:
@@ -149,6 +163,8 @@ class GetDocumentVersionsIdResponse200:
             id=id,
             document_id=document_id,
             customer_id=customer_id,
+            owner_kind=owner_kind,
+            owner_id=owner_id,
             deleted_at=deleted_at,
             ecosystem_id=ecosystem_id,
             name=name,

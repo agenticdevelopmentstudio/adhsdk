@@ -27,7 +27,6 @@ class PostBucketBucketTypesBody:
         description (str | Unset):
         ref_mode (str | Unset):
         metadata (bool | float | list[Any] | None | PostBucketBucketTypesBodyMetadataType0Type1 | str | Unset):
-        sync_txid (int | Unset):
         id (str | Unset):
     """
 
@@ -40,7 +39,6 @@ class PostBucketBucketTypesBody:
     metadata: (
         bool | float | list[Any] | None | PostBucketBucketTypesBodyMetadataType0Type1 | str | Unset
     ) = UNSET
-    sync_txid: int | Unset = UNSET
     id: str | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
@@ -71,8 +69,6 @@ class PostBucketBucketTypesBody:
         else:
             metadata = self.metadata
 
-        sync_txid = self.sync_txid
-
         id = self.id
 
         field_dict: dict[str, Any] = {}
@@ -92,8 +88,6 @@ class PostBucketBucketTypesBody:
             field_dict["refMode"] = ref_mode
         if metadata is not UNSET:
             field_dict["metadata"] = metadata
-        if sync_txid is not UNSET:
-            field_dict["syncTxid"] = sync_txid
         if id is not UNSET:
             field_dict["id"] = id
 
@@ -162,8 +156,6 @@ class PostBucketBucketTypesBody:
 
         metadata = _parse_metadata(d.pop("metadata", UNSET))
 
-        sync_txid = d.pop("syncTxid", UNSET)
-
         id = d.pop("id", UNSET)
 
         post_bucket_bucket_types_body = cls(
@@ -174,7 +166,6 @@ class PostBucketBucketTypesBody:
             description=description,
             ref_mode=ref_mode,
             metadata=metadata,
-            sync_txid=sync_txid,
             id=id,
         )
 

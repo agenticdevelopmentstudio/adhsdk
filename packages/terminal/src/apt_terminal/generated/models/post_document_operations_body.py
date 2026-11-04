@@ -23,7 +23,6 @@ class PostDocumentOperationsBody:
         op_payload (str | Unset):
         undo_group_id (None | str | Unset):
         inverse_of_op_id (None | str | Unset):
-        sync_txid (int | Unset):
     """
 
     document_id: str
@@ -35,7 +34,6 @@ class PostDocumentOperationsBody:
     op_payload: str | Unset = UNSET
     undo_group_id: None | str | Unset = UNSET
     inverse_of_op_id: None | str | Unset = UNSET
-    sync_txid: int | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
         document_id = self.document_id
@@ -68,8 +66,6 @@ class PostDocumentOperationsBody:
         else:
             inverse_of_op_id = self.inverse_of_op_id
 
-        sync_txid = self.sync_txid
-
         field_dict: dict[str, Any] = {}
 
         field_dict.update(
@@ -90,8 +86,6 @@ class PostDocumentOperationsBody:
             field_dict["undoGroupId"] = undo_group_id
         if inverse_of_op_id is not UNSET:
             field_dict["inverseOfOpId"] = inverse_of_op_id
-        if sync_txid is not UNSET:
-            field_dict["syncTxid"] = sync_txid
 
         return field_dict
 
@@ -137,8 +131,6 @@ class PostDocumentOperationsBody:
 
         inverse_of_op_id = _parse_inverse_of_op_id(d.pop("inverseOfOpId", UNSET))
 
-        sync_txid = d.pop("syncTxid", UNSET)
-
         post_document_operations_body = cls(
             document_id=document_id,
             client_id=client_id,
@@ -149,7 +141,6 @@ class PostDocumentOperationsBody:
             op_payload=op_payload,
             undo_group_id=undo_group_id,
             inverse_of_op_id=inverse_of_op_id,
-            sync_txid=sync_txid,
         )
 
         return post_document_operations_body

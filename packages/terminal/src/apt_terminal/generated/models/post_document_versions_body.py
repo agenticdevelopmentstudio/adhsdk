@@ -20,7 +20,6 @@ class PostDocumentVersionsBody:
         pinned_sync_version (int):
         ecosystem_id (str | Unset):
         description (str | Unset):
-        sync_txid (int | Unset):
     """
 
     document_id: str
@@ -29,7 +28,6 @@ class PostDocumentVersionsBody:
     pinned_sync_version: int
     ecosystem_id: str | Unset = UNSET
     description: str | Unset = UNSET
-    sync_txid: int | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
         document_id = self.document_id
@@ -43,8 +41,6 @@ class PostDocumentVersionsBody:
         ecosystem_id = self.ecosystem_id
 
         description = self.description
-
-        sync_txid = self.sync_txid
 
         field_dict: dict[str, Any] = {}
 
@@ -60,8 +56,6 @@ class PostDocumentVersionsBody:
             field_dict["ecosystemId"] = ecosystem_id
         if description is not UNSET:
             field_dict["description"] = description
-        if sync_txid is not UNSET:
-            field_dict["syncTxid"] = sync_txid
 
         return field_dict
 
@@ -80,8 +74,6 @@ class PostDocumentVersionsBody:
 
         description = d.pop("description", UNSET)
 
-        sync_txid = d.pop("syncTxid", UNSET)
-
         post_document_versions_body = cls(
             document_id=document_id,
             name=name,
@@ -89,7 +81,6 @@ class PostDocumentVersionsBody:
             pinned_sync_version=pinned_sync_version,
             ecosystem_id=ecosystem_id,
             description=description,
-            sync_txid=sync_txid,
         )
 
         return post_document_versions_body

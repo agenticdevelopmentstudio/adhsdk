@@ -63,17 +63,19 @@ final class BillingSettingsPanelTests: XCTestCase {
     }
 
     /// Round To and Rounding only seed new projects (the daemon rounds each
-    /// billable by its project's own settings), and the pane says so beneath
-    /// them, where the change is made.
-    func testTheRoundingSettingsSayTheyOnlySeedNewProjects() {
+    /// billable by its project's own settings). That is reference prose, so it
+    /// lives in the help drawer under the group's topic, not under the control.
+    func testTheRoundingSettingsSayTheyOnlySeedNewProjects() throws {
         let panel = makePanel()
 
         func texts(in view: NSView) -> [String] {
             ((view as? NSTextField).map { [$0.stringValue] } ?? []) + view.subviews.flatMap(texts)
         }
-        let shown = texts(in: panel.view)
-        XCTAssertEqual(shown.filter { $0 == BillingSettingsPanel.roundingSeedsNewProjects }.count, 1,
-                       "drawn in the pane, not only held by a view model")
+        XCTAssertFalse(texts(in: panel.view).contains(BillingSettingsPanel.roundingSeedsNewProjects),
+                       "explanations live in the help drawer, not in the pane")
+        let topics = try XCTUnwrap(panel.effectiveHelpContent?.topics)
+        let drawer = topics.map(\.body).joined(separator: "\n")
+        XCTAssertTrue(drawer.contains("Rounding: \(BillingSettingsPanel.roundingSeedsNewProjects)"))
         XCTAssertTrue(BillingSettingsPanel.roundingSeedsNewProjects.contains("Existing projects"))
     }
 

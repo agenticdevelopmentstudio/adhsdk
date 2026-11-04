@@ -22,7 +22,6 @@ class PostPersonalEducationBody:
         end_date (None | str | Unset):
         location (str | Unset):
         description (str | Unset):
-        sync_txid (int | Unset):
     """
 
     ecosystem_id: str | Unset = UNSET
@@ -33,7 +32,6 @@ class PostPersonalEducationBody:
     end_date: None | str | Unset = UNSET
     location: str | Unset = UNSET
     description: str | Unset = UNSET
-    sync_txid: int | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
         ecosystem_id = self.ecosystem_id
@@ -56,8 +54,6 @@ class PostPersonalEducationBody:
 
         description = self.description
 
-        sync_txid = self.sync_txid
-
         field_dict: dict[str, Any] = {}
 
         field_dict.update({})
@@ -77,8 +73,6 @@ class PostPersonalEducationBody:
             field_dict["location"] = location
         if description is not UNSET:
             field_dict["description"] = description
-        if sync_txid is not UNSET:
-            field_dict["syncTxid"] = sync_txid
 
         return field_dict
 
@@ -108,8 +102,6 @@ class PostPersonalEducationBody:
 
         description = d.pop("description", UNSET)
 
-        sync_txid = d.pop("syncTxid", UNSET)
-
         post_personal_education_body = cls(
             ecosystem_id=ecosystem_id,
             institution=institution,
@@ -119,7 +111,6 @@ class PostPersonalEducationBody:
             end_date=end_date,
             location=location,
             description=description,
-            sync_txid=sync_txid,
         )
 
         return post_personal_education_body

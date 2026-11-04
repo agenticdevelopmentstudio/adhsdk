@@ -1,5 +1,4 @@
 import AppKit
-import Combine
 
 import AgenticToolkitCore
 import AgenticToolkitCoreMacOS
@@ -34,7 +33,7 @@ public final class ComposableTabsPaneViewController: PaneViewController {
     public var thicknessFraction: CGFloat?
     private weak var project: ProjectWorkspace?
 
-    private var arrangeOverlay: ComposableTabsArrangeOverlayView?
+    private lazy var arrange: PaneArrangeOverlayController = makeArrangeController()
 
     /// The four directions, for the gear menu. Held rather than made per click
     /// because `NSMenuItem` keeps its target unowned — the items would fire
@@ -48,8 +47,6 @@ public final class ComposableTabsPaneViewController: PaneViewController {
         menu.onMove = { [weak self] direction in self?.move(direction) }
         return menu
     }()
-    private var arrowKeyMonitor: Any?
-    private var cancellables = Set<AnyCancellable>()
 
     /// Set by the enclosing tree when a tab holds more than one pane of this
     /// kind. `nil` — the common case — leaves the identifier unnumbered.
@@ -150,38 +147,14 @@ public final class ComposableTabsPaneViewController: PaneViewController {
     public override func viewDidLoad() {
         super.viewDidLoad()
 
-        NotificationCenter.default.publisher(for: ComposableTabsArrangeMode.didChangeNotification)
-            .sink { [weak self] notification in
-                guard let self, let window = notification.object as? NSWindow,
-                      window === self.view.window else { return }
-                self.updateArrangeOverlay()
-            }
-            .store(in: &cancellables)
-
-        // Any pane moving changes what every *other* pane may do — the last
-        // pane in a column loses its `Up`, the last pane in the tab loses its
-        // `Remove` — so availability is refreshed from the tree, not from the
-        // pane that happened to act.
-        NotificationCenter.default.publisher(for: ComposableTabsViewController.layoutDidChangeNotification)
-            .sink { [weak self] _ in self?.arrangeOverlay?.refreshAvailability() }
-            .store(in: &cancellables)
-
-        // A closing window takes its panes with it without ever leaving arrange
-        // mode, and `deinit` cannot touch the monitor — it is nonisolated.
-        NotificationCenter.default.publisher(for: NSWindow.willCloseNotification)
-            .sink { [weak self] notification in
-                guard let self, let window = notification.object as? NSWindow,
-                      window === self.view.window else { return }
-                self.removeArrangeOverlay()
-            }
-            .store(in: &cancellables)
+        arrange.attach(to: view)
     }
 
     public override func viewDidAppear() {
         super.viewDidAppear()
         // Also the re-entry point after a move: `rebuild(from:)` re-hosts this
         // controller, and the pane has to come back with the scrim it left with.
-        updateArrangeOverlay()
+        arrange.update()
     }
 
     /// The active-pane border is drawn on the backdrop's own layer, so the
@@ -202,7 +175,7 @@ public final class ComposableTabsPaneViewController: PaneViewController {
     /// "released at some point after the last reference drops" is not good
     /// enough for a child process.
     public func paneWillBeRemoved() {
-        removeArrangeOverlay()
+        arrange.remove()
         (contentViewController as? PaneContentTeardown)?.paneContentWillBeDiscarded()
     }
 
@@ -232,106 +205,22 @@ public final class ComposableTabsPaneViewController: PaneViewController {
         return layout.registry.descriptor(for: viewID).displayName
     }
 
-    private func updateArrangeOverlay() {
-        if ComposableTabsArrangeMode.shared.isEnabled(in: view.window) {
-            installArrangeOverlay()
-        } else {
-            removeArrangeOverlay()
-        }
-    }
-
-    private func installArrangeOverlay() {
-        guard arrangeOverlay == nil else {
-            arrangeOverlay?.refreshAvailability()
-            return
-        }
-
-        let overlay = ComposableTabsArrangeOverlayView(frame: view.bounds)
-        overlay.translatesAutoresizingMaskIntoConstraints = false
-        overlay.paneName = paneName
-        overlay.canAdd = { [weak self] in self?.addChoices().isEmpty == false }
-        overlay.canRemove = { [weak self] in
+    private func makeArrangeController() -> PaneArrangeOverlayController {
+        let arrange = PaneArrangeOverlayController(nodeID: nodeID)
+        arrange.paneName = { [weak self] in self?.paneName ?? "" }
+        arrange.canAdd = { [weak self] in self?.addChoices().isEmpty == false }
+        arrange.canRemove = { [weak self] in
             guard let self else { return false }
             return self.enclosingSplitOnScreen?.canRemoveLeaf(self) ?? false
         }
-        overlay.availableDirections = { [weak self] in
+        arrange.availableDirections = { [weak self] in
             guard let self else { return [] }
             return self.enclosingSplitOnScreen?.availableMoveDirections(for: self) ?? []
         }
-        overlay.onAdd = { [weak self] in self?.presentAddSheet() }
-        overlay.onRemove = { [weak self] in self?.confirmAndRemove() }
-        overlay.onMove = { [weak self] direction in self?.move(direction) }
-        overlay.onDone = { [weak self] in
-            guard let window = self?.view.window else { return }
-            ComposableTabsArrangeMode.shared.setEnabled(false, in: window)
-        }
-
-        // Above the content, inside the active-pane border.
-        view.addSubview(overlay)
-        NSLayoutConstraint.activate([
-            overlay.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: Self.borderInset),
-            view.trailingAnchor.constraint(equalTo: overlay.trailingAnchor, constant: Self.borderInset),
-            overlay.topAnchor.constraint(equalTo: view.topAnchor, constant: Self.borderInset),
-            view.bottomAnchor.constraint(equalTo: overlay.bottomAnchor, constant: Self.borderInset)
-        ])
-        arrangeOverlay = overlay
-        overlay.refreshAvailability()
-
-        installArrowKeyMonitor()
-    }
-
-    private func removeArrangeOverlay() {
-        arrangeOverlay?.removeFromSuperview()
-        arrangeOverlay = nil
-        if let arrowKeyMonitor {
-            NSEvent.removeMonitor(arrowKeyMonitor)
-            self.arrowKeyMonitor = nil
-        }
-    }
-
-    /// While arranging, an arrow key moves the selected pane — the fastest way
-    /// to push a pane where you want it is to keep pressing the direction.
-    ///
-    /// A local monitor rather than `keyDown`: the pane's content owns the first
-    /// responder (a terminal, an editor), and it would eat the arrow long
-    /// before this controller saw it.
-    private func installArrowKeyMonitor() {
-        guard arrowKeyMonitor == nil else { return }
-        arrowKeyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
-            guard let self else { return event }
-            // Only the Bool crosses back out: `assumeIsolated` hands its result
-            // across an isolation boundary, and NSEvent is not `Sendable`.
-            let consumed = MainActor.assumeIsolated { self.handleKeyDown(event) }
-            return consumed ? nil : event
-        }
-    }
-
-    /// Return, Enter and Escape all mean "done arranging" — the mode is what
-    /// they dismiss, and which of the three a person reaches for is a habit,
-    /// not a distinction worth honouring.
-    private static let exitKeyCodes: Set<UInt16> = [36, 76, 53]
-
-    /// Whether the key was ours to act on, and was.
-    private func handleKeyDown(_ event: NSEvent) -> Bool {
-        guard let window = view.window,
-              // Not the pane's own window means a sheet is up, and Escape
-              // there cancels the sheet rather than the mode behind it.
-              event.window === window,
-              ComposableTabsArrangeMode.shared.isEnabled(in: window) else { return false }
-
-        if Self.exitKeyCodes.contains(event.keyCode) {
-            // Every pane in the window has a monitor, so this runs more than
-            // once; turning the mode off twice is a no-op.
-            ComposableTabsArrangeMode.shared.setEnabled(false, in: window)
-            return true
-        }
-
-        // One monitor per pane, but only the pane the user selected moves.
-        guard ComposableTabsActivePane.shared.activeNodeID(in: window) == nodeID,
-              let direction = ComposableTabsViewController.Direction.allCases.first(
-                where: { $0.arrowKeyCode == event.keyCode }) else { return false }
-        move(direction)
-        return true
+        arrange.onAdd = { [weak self] in self?.presentAddSheet() }
+        arrange.onRemove = { [weak self] in self?.confirmAndRemove() }
+        arrange.onMove = { [weak self] direction in self?.move(direction) }
+        return arrange
     }
 
     private func move(_ direction: ComposableTabsViewController.Direction) {
@@ -398,7 +287,7 @@ public final class ComposableTabsPaneViewController: PaneViewController {
         // A popover over the button that opened it, not a sheet off the title
         // bar: the question is about *this* pane, and a sheet drops it at the
         // top of a window that may hold five others.
-        guard let anchor = arrangeOverlay?.addButtonView else {
+        guard let anchor = arrange.overlay?.addButtonView else {
             presentAsSheet(picker)
             return
         }

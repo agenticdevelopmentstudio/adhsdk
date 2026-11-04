@@ -147,8 +147,10 @@ public final class BrowserPaneViewController: NSViewController {
     /// The address the pane will restore to: what the store remembers, else
     /// the Home Page setting, else the registration's home.
     var restorationURL: URL {
+        // `encodingInvalidCharacters: false`: since macOS 14 `URL(string:)` percent-encodes what it
+        // cannot parse, so "not a url" would come back as a relative URL instead of falling through.
         if let remembered = store.paneStateValue(forKey: Self.addressKey),
-           let url = URL(string: remembered) {
+           let url = URL(string: remembered, encodingInvalidCharacters: false) {
             return url
         }
         return BrowserSettings.homePage(in: settings) ?? fallbackHomeURL

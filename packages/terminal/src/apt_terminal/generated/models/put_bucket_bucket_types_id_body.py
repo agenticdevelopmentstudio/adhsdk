@@ -27,7 +27,6 @@ class PutBucketBucketTypesIdBody:
         description (str | Unset):
         ref_mode (str | Unset):
         metadata (bool | float | list[Any] | None | PutBucketBucketTypesIdBodyMetadataType0Type1 | str | Unset):
-        sync_txid (int | Unset):
     """
 
     ecosystem_id: str | Unset = UNSET
@@ -39,7 +38,6 @@ class PutBucketBucketTypesIdBody:
     metadata: (
         bool | float | list[Any] | None | PutBucketBucketTypesIdBodyMetadataType0Type1 | str | Unset
     ) = UNSET
-    sync_txid: int | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
         from ..models.put_bucket_bucket_types_id_body_metadata_type_0_type_1 import (
@@ -69,8 +67,6 @@ class PutBucketBucketTypesIdBody:
         else:
             metadata = self.metadata
 
-        sync_txid = self.sync_txid
-
         field_dict: dict[str, Any] = {}
 
         field_dict.update({})
@@ -88,8 +84,6 @@ class PutBucketBucketTypesIdBody:
             field_dict["refMode"] = ref_mode
         if metadata is not UNSET:
             field_dict["metadata"] = metadata
-        if sync_txid is not UNSET:
-            field_dict["syncTxid"] = sync_txid
 
         return field_dict
 
@@ -158,8 +152,6 @@ class PutBucketBucketTypesIdBody:
 
         metadata = _parse_metadata(d.pop("metadata", UNSET))
 
-        sync_txid = d.pop("syncTxid", UNSET)
-
         put_bucket_bucket_types_id_body = cls(
             ecosystem_id=ecosystem_id,
             bucket_id=bucket_id,
@@ -168,7 +160,6 @@ class PutBucketBucketTypesIdBody:
             description=description,
             ref_mode=ref_mode,
             metadata=metadata,
-            sync_txid=sync_txid,
         )
 
         return put_bucket_bucket_types_id_body

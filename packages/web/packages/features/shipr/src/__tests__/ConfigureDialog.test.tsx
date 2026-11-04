@@ -115,7 +115,6 @@ function mirror(
     slug: 'acme/site-deployment',
     shard: 'all',
     shipBranch: 'ship',
-    ciContext: 'gate',
     envBranches,
     // ADDED, NOT MADE — what Add now leaves behind, and the default here because it is the
     // state every row passes through. A row that has been provisioned says so with a date.

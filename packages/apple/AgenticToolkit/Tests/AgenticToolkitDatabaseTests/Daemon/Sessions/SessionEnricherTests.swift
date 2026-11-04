@@ -176,8 +176,7 @@ final class SessionEnricherTests: XCTestCase {
 
     /// A DB the enrichment writes can land in. Each test gets its own file.
     private func makeDatabase() throws -> DaemonDatabase {
-        let path = NSTemporaryDirectory() + "enricher-\(UUID().uuidString).db"
-        tempRoots.append(path)
+        let path = try makeTempDir("db") + "/session.db"
         return try TestDaemonDatabase.makeSessionDatabase(path: path).db
     }
 

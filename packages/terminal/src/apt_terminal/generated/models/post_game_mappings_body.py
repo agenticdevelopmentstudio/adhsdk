@@ -21,7 +21,6 @@ class PostGameMappingsBody:
         ecosystem_id (str | Unset):
         amount (int | Unset):
         sort_order (int | Unset):
-        sync_txid (int | Unset):
     """
 
     game_id: str
@@ -31,7 +30,6 @@ class PostGameMappingsBody:
     ecosystem_id: str | Unset = UNSET
     amount: int | Unset = UNSET
     sort_order: int | Unset = UNSET
-    sync_txid: int | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
         game_id = self.game_id
@@ -47,8 +45,6 @@ class PostGameMappingsBody:
         amount = self.amount
 
         sort_order = self.sort_order
-
-        sync_txid = self.sync_txid
 
         field_dict: dict[str, Any] = {}
 
@@ -66,8 +62,6 @@ class PostGameMappingsBody:
             field_dict["amount"] = amount
         if sort_order is not UNSET:
             field_dict["sortOrder"] = sort_order
-        if sync_txid is not UNSET:
-            field_dict["syncTxid"] = sync_txid
 
         return field_dict
 
@@ -88,8 +82,6 @@ class PostGameMappingsBody:
 
         sort_order = d.pop("sortOrder", UNSET)
 
-        sync_txid = d.pop("syncTxid", UNSET)
-
         post_game_mappings_body = cls(
             game_id=game_id,
             from_id=from_id,
@@ -98,7 +90,6 @@ class PostGameMappingsBody:
             ecosystem_id=ecosystem_id,
             amount=amount,
             sort_order=sort_order,
-            sync_txid=sync_txid,
         )
 
         return post_game_mappings_body

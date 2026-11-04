@@ -1,0 +1,109 @@
+from __future__ import annotations
+
+from collections.abc import Mapping
+from typing import Any, TypeVar, cast
+
+from attrs import define as _attrs_define
+from attrs import field as _attrs_field
+
+from ..models.provisioned_feature_state import ProvisionedFeatureState
+from ..types import UNSET, Unset
+
+T = TypeVar("T", bound="ProvisionedFeature")
+
+
+@_attrs_define
+class ProvisionedFeature:
+    """
+    Attributes:
+        feature_key (str):
+        state (ProvisionedFeatureState): Only `active` counts as on. `provisioning` is a claim whose artifacts are not
+            all there yet; `removed` keeps the record (and the data) of a feature taken off the rail.
+        provisioned_at (str): When the feature was FIRST added. Never rewritten by a re-add.
+        updated_at (str):
+        provisioned_by (None | str | Unset):
+    """
+
+    feature_key: str
+    state: ProvisionedFeatureState
+    provisioned_at: str
+    updated_at: str
+    provisioned_by: None | str | Unset = UNSET
+    additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
+
+    def to_dict(self) -> dict[str, Any]:
+        feature_key = self.feature_key
+
+        state = self.state.value
+
+        provisioned_at = self.provisioned_at
+
+        updated_at = self.updated_at
+
+        provisioned_by: None | str | Unset
+        if isinstance(self.provisioned_by, Unset):
+            provisioned_by = UNSET
+        else:
+            provisioned_by = self.provisioned_by
+
+        field_dict: dict[str, Any] = {}
+        field_dict.update(self.additional_properties)
+        field_dict.update(
+            {
+                "featureKey": feature_key,
+                "state": state,
+                "provisionedAt": provisioned_at,
+                "updatedAt": updated_at,
+            }
+        )
+        if provisioned_by is not UNSET:
+            field_dict["provisionedBy"] = provisioned_by
+
+        return field_dict
+
+    @classmethod
+    def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
+        d = dict(src_dict)
+        feature_key = d.pop("featureKey")
+
+        state = ProvisionedFeatureState(d.pop("state"))
+
+        provisioned_at = d.pop("provisionedAt")
+
+        updated_at = d.pop("updatedAt")
+
+        def _parse_provisioned_by(data: object) -> None | str | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(None | str | Unset, data)
+
+        provisioned_by = _parse_provisioned_by(d.pop("provisionedBy", UNSET))
+
+        provisioned_feature = cls(
+            feature_key=feature_key,
+            state=state,
+            provisioned_at=provisioned_at,
+            updated_at=updated_at,
+            provisioned_by=provisioned_by,
+        )
+
+        provisioned_feature.additional_properties = d
+        return provisioned_feature
+
+    @property
+    def additional_keys(self) -> list[str]:
+        return list(self.additional_properties.keys())
+
+    def __getitem__(self, key: str) -> Any:
+        return self.additional_properties[key]
+
+    def __setitem__(self, key: str, value: Any) -> None:
+        self.additional_properties[key] = value
+
+    def __delitem__(self, key: str) -> None:
+        del self.additional_properties[key]
+
+    def __contains__(self, key: str) -> bool:
+        return key in self.additional_properties

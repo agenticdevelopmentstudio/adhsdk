@@ -54,6 +54,11 @@ def _parse_response(
 
         return response_502
 
+    if response.status_code == 503:
+        response_503 = Error.from_dict(response.json())
+
+        return response_503
+
     if client.raise_on_unexpected_status:
         raise errors.UnexpectedStatus(response.status_code, response.content)
     else:
@@ -76,7 +81,7 @@ def sync_detailed(
     client: AuthenticatedClient,
     body: PostPersonaMemoryRecallBody | Unset = UNSET,
 ) -> Response[Error | PersonaMemoryRecallResult]:
-    """Semantic recall of a persona’s memories (KNN)
+    """Keyword, semantic or combined recall of a persona’s memories
 
     Args:
         body (PostPersonaMemoryRecallBody | Unset):
@@ -105,7 +110,7 @@ def sync(
     client: AuthenticatedClient,
     body: PostPersonaMemoryRecallBody | Unset = UNSET,
 ) -> Error | PersonaMemoryRecallResult | None:
-    """Semantic recall of a persona’s memories (KNN)
+    """Keyword, semantic or combined recall of a persona’s memories
 
     Args:
         body (PostPersonaMemoryRecallBody | Unset):
@@ -129,7 +134,7 @@ async def asyncio_detailed(
     client: AuthenticatedClient,
     body: PostPersonaMemoryRecallBody | Unset = UNSET,
 ) -> Response[Error | PersonaMemoryRecallResult]:
-    """Semantic recall of a persona’s memories (KNN)
+    """Keyword, semantic or combined recall of a persona’s memories
 
     Args:
         body (PostPersonaMemoryRecallBody | Unset):
@@ -156,7 +161,7 @@ async def asyncio(
     client: AuthenticatedClient,
     body: PostPersonaMemoryRecallBody | Unset = UNSET,
 ) -> Error | PersonaMemoryRecallResult | None:
-    """Semantic recall of a persona’s memories (KNN)
+    """Keyword, semantic or combined recall of a persona’s memories
 
     Args:
         body (PostPersonaMemoryRecallBody | Unset):

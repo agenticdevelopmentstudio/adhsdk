@@ -118,7 +118,12 @@ public final class SpacingControl: NSView, NSTextFieldDelegate {
     /// other number field on the panel puts them.
     private var edgeSteppers: [SpacingEdge: NSStepper] = [:]
     private var gutterSteppers: [SpacingGutter: NSStepper] = [:]
-    /// Sets every number this flavor edits back to zero in one press. Standing
+    /// What Reset puts back. Zero unless whoever owns the numbers says what
+    /// they start at; a control bound to settings is given each setting's
+    /// default, so Reset means "as shipped", not "nothing".
+    public var resetValue = Spacing()
+
+    /// Sets every number this flavor edits back to `resetValue` in one press. Standing
     /// under the lower-right corner, outside the diagram, so it is plainly a
     /// command about the picture rather than a part of it.
     private var resetButton: NSButton?
@@ -348,14 +353,14 @@ public final class SpacingControl: NSView, NSTextFieldDelegate {
         return handle
     }
 
-    /// One button, whichever flavor is showing, and it zeroes only the numbers
+    /// One button, whichever flavor is showing, and it resets only the numbers
     /// that flavor actually edits — a frame control resetting the gutters would
     /// silently change a setting it does not show.
     private func buildResetControl() {
         let button = NSButton(title: "Reset", target: self, action: #selector(resetClicked))
         button.bezelStyle = .rounded
         button.controlSize = .small
-        button.toolTip = "Set every number here back to zero"
+        button.toolTip = "Set every number here back to its default"
         button.translatesAutoresizingMaskIntoConstraints = true
         button.observeTheme { button, palette in
             button.font = palette.font(.body)
@@ -502,21 +507,22 @@ public final class SpacingControl: NSView, NSTextFieldDelegate {
         }
     }
 
-    /// Zero every number this flavor shows, in one write, so the change reaches
-    /// whatever is bound to it as a single edit rather than four or six.
-    @objc private func resetClicked() {
-        var zeroed = value
+    /// Put every number this flavor shows back to `resetValue`, in one write,
+    /// so the change reaches whatever is bound to it as a single edit rather
+    /// than four or six.
+    @objc func resetClicked() {
+        var reset = value
         switch style {
         case .frame:
             for edge in SpacingEdge.allCases {
-                zeroed = zeroed.setting(edge, to: 0, in: range)
+                reset = reset.setting(edge, to: resetValue[edge], in: range)
             }
         case .paneDividers:
             for gutter in SpacingGutter.allCases {
-                zeroed = zeroed.setting(gutter, to: 0, in: range)
+                reset = reset.setting(gutter, to: resetValue[gutter], in: range)
             }
         }
-        apply(zeroed)
+        apply(reset)
     }
 
     /// Committing on every keystroke would fight the user mid-number (a "1" on

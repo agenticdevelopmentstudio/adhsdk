@@ -19,7 +19,6 @@ const repo: Repo = {
   slug: 'acme/site-deployment',
   shard: 'all',
   shipBranch: 'ship',
-  ciContext: 'deploy/ci',
   envBranches: { testing: 'testing', staging: 'staging', production: 'production' },
   registeredAt: null,
   position: 0,
@@ -93,15 +92,13 @@ describe('RepoView — the two ways a ladder can be absent', () => {
     ).toBeTruthy();
   });
 
-  // The names underneath — which branch is `ship`, which CI context is watched — are
+  // The names underneath — which branch is `ship`, which branch each environment tracks — are
   // reference material consulted when the ladder shows something surprising, and they sat
   // between the operator and the output the whole rest of the time. They live behind the
   // rail's Settings item now, so the view is the ladder and the output and nothing else.
   it('keeps the reference facts out of the view entirely', async () => {
     render(<RepoView client={stubClient(detail(null))} repoId="m1" />);
     await screen.findByRole('heading', { name: 'site-deployment' });
-    expect(screen.queryByText('deploy/ci')).toBeNull();
-    expect(screen.queryByText(/Gate context/i)).toBeNull();
     expect(screen.queryByText(/Ship branch/i)).toBeNull();
   });
 

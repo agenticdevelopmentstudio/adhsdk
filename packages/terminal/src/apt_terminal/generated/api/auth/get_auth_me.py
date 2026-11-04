@@ -32,6 +32,11 @@ def _parse_response(
 
         return response_401
 
+    if response.status_code == 404:
+        response_404 = Error.from_dict(response.json())
+
+        return response_404
+
     if client.raise_on_unexpected_status:
         raise errors.UnexpectedStatus(response.status_code, response.content)
     else:
@@ -54,6 +59,12 @@ def sync_detailed(
     client: AuthenticatedClient,
 ) -> Response[Error | User]:
     """Current user
+
+     A platform token answers the hub user (User). An end-customer token (client-auth) answers its
+    customer record in the customer realm instead — the CustomerMe schema, linked from the 200
+    response's `x-customer-realm`. For a customer token, a customer row that is gone (or an ecosystem
+    that is deleted, archived or has login disabled) is 401, never 404; 404 is the platform user-not-
+    found case only.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -78,6 +89,12 @@ def sync(
 ) -> Error | User | None:
     """Current user
 
+     A platform token answers the hub user (User). An end-customer token (client-auth) answers its
+    customer record in the customer realm instead — the CustomerMe schema, linked from the 200
+    response's `x-customer-realm`. For a customer token, a customer row that is gone (or an ecosystem
+    that is deleted, archived or has login disabled) is 401, never 404; 404 is the platform user-not-
+    found case only.
+
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
@@ -96,6 +113,12 @@ async def asyncio_detailed(
     client: AuthenticatedClient,
 ) -> Response[Error | User]:
     """Current user
+
+     A platform token answers the hub user (User). An end-customer token (client-auth) answers its
+    customer record in the customer realm instead — the CustomerMe schema, linked from the 200
+    response's `x-customer-realm`. For a customer token, a customer row that is gone (or an ecosystem
+    that is deleted, archived or has login disabled) is 401, never 404; 404 is the platform user-not-
+    found case only.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -117,6 +140,12 @@ async def asyncio(
     client: AuthenticatedClient,
 ) -> Error | User | None:
     """Current user
+
+     A platform token answers the hub user (User). An end-customer token (client-auth) answers its
+    customer record in the customer realm instead — the CustomerMe schema, linked from the 200
+    response's `x-customer-realm`. For a customer token, a customer row that is gone (or an ecosystem
+    that is deleted, archived or has login disabled) is 401, never 404; 404 is the platform user-not-
+    found case only.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.

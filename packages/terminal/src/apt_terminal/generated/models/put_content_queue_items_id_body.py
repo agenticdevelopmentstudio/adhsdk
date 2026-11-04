@@ -28,7 +28,6 @@ class PutContentQueueItemsIdBody:
         dequeued_at (None | str | Unset):
         acked_at (None | str | Unset):
         nacked_at (None | str | Unset):
-        sync_txid (int | Unset):
     """
 
     ecosystem_id: str | Unset = UNSET
@@ -41,7 +40,6 @@ class PutContentQueueItemsIdBody:
     dequeued_at: None | str | Unset = UNSET
     acked_at: None | str | Unset = UNSET
     nacked_at: None | str | Unset = UNSET
-    sync_txid: int | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
         from ..models.put_content_queue_items_id_body_payload_type_1 import (
@@ -85,8 +83,6 @@ class PutContentQueueItemsIdBody:
         else:
             nacked_at = self.nacked_at
 
-        sync_txid = self.sync_txid
-
         field_dict: dict[str, Any] = {}
 
         field_dict.update({})
@@ -106,8 +102,6 @@ class PutContentQueueItemsIdBody:
             field_dict["ackedAt"] = acked_at
         if nacked_at is not UNSET:
             field_dict["nackedAt"] = nacked_at
-        if sync_txid is not UNSET:
-            field_dict["syncTxid"] = sync_txid
 
         return field_dict
 
@@ -189,8 +183,6 @@ class PutContentQueueItemsIdBody:
 
         nacked_at = _parse_nacked_at(d.pop("nackedAt", UNSET))
 
-        sync_txid = d.pop("syncTxid", UNSET)
-
         put_content_queue_items_id_body = cls(
             ecosystem_id=ecosystem_id,
             queue_id=queue_id,
@@ -200,7 +192,6 @@ class PutContentQueueItemsIdBody:
             dequeued_at=dequeued_at,
             acked_at=acked_at,
             nacked_at=nacked_at,
-            sync_txid=sync_txid,
         )
 
         return put_content_queue_items_id_body

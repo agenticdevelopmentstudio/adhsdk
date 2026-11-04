@@ -12,13 +12,16 @@ public struct GitBranch: Sendable, Equatable, Hashable {
         self.upstream = upstream
     }
 
-    /// Format string this parser expects (tab-separated): `%(refname:short)%09%(HEAD)%09%(upstream:short)`.
+    /// Format string this parser expects (tab-separated): `%(refname:lstrip=2)%09%(HEAD)%09%(upstream:short)`.
+    ///
+    /// `lstrip=2`, not `short`: `short` prints `heads/<name>` for a branch that shares its name with a tag, and
+    /// callers build `refs/heads/<name>` from what this returns.
     ///
     /// Real `git for-each-ref` fills the `%(HEAD)` field with `*` for the checked-out
     /// branch and a single space (not an empty string) for every other one, so the
     /// current-branch check below only ever compares against `"*"` and never assumes
     /// the non-current case is empty.
-    public static let forEachRefFormat = "%(refname:short)%09%(HEAD)%09%(upstream:short)"
+    public static let forEachRefFormat = "%(refname:lstrip=2)%09%(HEAD)%09%(upstream:short)"
 
     /// Parses tab-separated `for-each-ref` lines into branches.
     ///

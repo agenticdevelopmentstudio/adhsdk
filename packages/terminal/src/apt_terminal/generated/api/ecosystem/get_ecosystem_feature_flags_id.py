@@ -71,7 +71,7 @@ def sync_detailed(
     *,
     client: AuthenticatedClient,
 ) -> Response[Error | GetEcosystemFeatureFlagsIdResponse200]:
-    """An ecosystem's feature flags, by key (owner or admin)
+    """An ecosystem's feature flags, by key (owner or admin, or an end-customer of this ecosystem)
 
     Args:
         id (str):
@@ -100,7 +100,7 @@ def sync(
     *,
     client: AuthenticatedClient,
 ) -> Error | GetEcosystemFeatureFlagsIdResponse200 | None:
-    """An ecosystem's feature flags, by key (owner or admin)
+    """An ecosystem's feature flags, by key (owner or admin, or an end-customer of this ecosystem)
 
     Args:
         id (str):
@@ -124,7 +124,7 @@ async def asyncio_detailed(
     *,
     client: AuthenticatedClient,
 ) -> Response[Error | GetEcosystemFeatureFlagsIdResponse200]:
-    """An ecosystem's feature flags, by key (owner or admin)
+    """An ecosystem's feature flags, by key (owner or admin, or an end-customer of this ecosystem)
 
     Args:
         id (str):
@@ -151,7 +151,7 @@ async def asyncio(
     *,
     client: AuthenticatedClient,
 ) -> Error | GetEcosystemFeatureFlagsIdResponse200 | None:
-    """An ecosystem's feature flags, by key (owner or admin)
+    """An ecosystem's feature flags, by key (owner or admin, or an end-customer of this ecosystem)
 
     Args:
         id (str):

@@ -21,16 +21,17 @@ class PostBucketBucketsBody:
     """
     Attributes:
         name (str):
+        slug (str):
         ecosystem_id (str | Unset):
         parent_id (None | str | Unset):
         description (str | Unset):
         kind (str | Unset):
         metadata (bool | float | list[Any] | None | PostBucketBucketsBodyMetadataType0Type1 | str | Unset):
-        sync_txid (int | Unset):
         id (str | Unset):
     """
 
     name: str
+    slug: str
     ecosystem_id: str | Unset = UNSET
     parent_id: None | str | Unset = UNSET
     description: str | Unset = UNSET
@@ -38,7 +39,6 @@ class PostBucketBucketsBody:
     metadata: (
         bool | float | list[Any] | None | PostBucketBucketsBodyMetadataType0Type1 | str | Unset
     ) = UNSET
-    sync_txid: int | Unset = UNSET
     id: str | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
@@ -47,6 +47,8 @@ class PostBucketBucketsBody:
         )
 
         name = self.name
+
+        slug = self.slug
 
         ecosystem_id = self.ecosystem_id
 
@@ -71,8 +73,6 @@ class PostBucketBucketsBody:
         else:
             metadata = self.metadata
 
-        sync_txid = self.sync_txid
-
         id = self.id
 
         field_dict: dict[str, Any] = {}
@@ -80,6 +80,7 @@ class PostBucketBucketsBody:
         field_dict.update(
             {
                 "name": name,
+                "slug": slug,
             }
         )
         if ecosystem_id is not UNSET:
@@ -92,8 +93,6 @@ class PostBucketBucketsBody:
             field_dict["kind"] = kind
         if metadata is not UNSET:
             field_dict["metadata"] = metadata
-        if sync_txid is not UNSET:
-            field_dict["syncTxid"] = sync_txid
         if id is not UNSET:
             field_dict["id"] = id
 
@@ -107,6 +106,8 @@ class PostBucketBucketsBody:
 
         d = dict(src_dict)
         name = d.pop("name")
+
+        slug = d.pop("slug")
 
         ecosystem_id = d.pop("ecosystemId", UNSET)
 
@@ -161,18 +162,16 @@ class PostBucketBucketsBody:
 
         metadata = _parse_metadata(d.pop("metadata", UNSET))
 
-        sync_txid = d.pop("syncTxid", UNSET)
-
         id = d.pop("id", UNSET)
 
         post_bucket_buckets_body = cls(
             name=name,
+            slug=slug,
             ecosystem_id=ecosystem_id,
             parent_id=parent_id,
             description=description,
             kind=kind,
             metadata=metadata,
-            sync_txid=sync_txid,
             id=id,
         )
 

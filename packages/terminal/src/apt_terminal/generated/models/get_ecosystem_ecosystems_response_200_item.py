@@ -14,6 +14,7 @@ class GetEcosystemEcosystemsResponse200Item:
     Attributes:
         id (str):
         owner_id (str):
+        owner_kind (None | str):
         slug (str):
         name (str):
         description (str):
@@ -32,6 +33,7 @@ class GetEcosystemEcosystemsResponse200Item:
 
     id: str
     owner_id: str
+    owner_kind: None | str
     slug: str
     name: str
     description: str
@@ -51,6 +53,9 @@ class GetEcosystemEcosystemsResponse200Item:
         id = self.id
 
         owner_id = self.owner_id
+
+        owner_kind: None | str
+        owner_kind = self.owner_kind
 
         slug = self.slug
 
@@ -90,6 +95,7 @@ class GetEcosystemEcosystemsResponse200Item:
             {
                 "id": id,
                 "ownerId": owner_id,
+                "ownerKind": owner_kind,
                 "slug": slug,
                 "name": name,
                 "description": description,
@@ -115,6 +121,13 @@ class GetEcosystemEcosystemsResponse200Item:
         id = d.pop("id")
 
         owner_id = d.pop("ownerId")
+
+        def _parse_owner_kind(data: object) -> None | str:
+            if data is None:
+                return data
+            return cast(None | str, data)
+
+        owner_kind = _parse_owner_kind(d.pop("ownerKind"))
 
         slug = d.pop("slug")
 
@@ -169,6 +182,7 @@ class GetEcosystemEcosystemsResponse200Item:
         get_ecosystem_ecosystems_response_200_item = cls(
             id=id,
             owner_id=owner_id,
+            owner_kind=owner_kind,
             slug=slug,
             name=name,
             description=description,

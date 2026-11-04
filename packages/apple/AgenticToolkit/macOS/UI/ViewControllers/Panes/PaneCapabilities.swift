@@ -36,11 +36,21 @@ public protocol PaneAccessoryProviding: AnyObject {
     func makePaneAccessoryViews() -> [NSView]
 }
 
-/// Content that adds rows to the gear popover, beneath the spacing control
-/// every pane gets.
+/// Content that adds rows to the pane's `Settings…` dialog.
 @MainActor
 public protocol PaneOptionsProviding: AnyObject {
     func makePaneOptionRows() -> [NSView]
+
+    /// Whether `makePaneOptionRows()` would return anything, answered without building the rows.
+    ///
+    /// The gear asks this on every pane-tree refresh, so it must have no side effects: building rows can
+    /// re-point a pane's live controls or start a fetch. Defaults to `true`; content whose rows can be
+    /// empty says so here.
+    var hasPaneOptionRows: Bool { get }
+}
+
+public extension PaneOptionsProviding {
+    var hasPaneOptionRows: Bool { true }
 }
 
 /// Content that draws itself as a glyph when the pane is minimized to a strip.

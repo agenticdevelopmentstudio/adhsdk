@@ -771,6 +771,19 @@ open class ThemedTableRowView: NSTableRowView, Themeable {
     public private(set) var palette: SemanticPalette = ThemePaletteObserver.currentPalette
     private var observer: ThemePaletteObserver?
 
+    /// When set, the selected row is drawn as an outlined card: filled with
+    /// `elevatedSurface` and stroked with `outline`, in a key or a non-key window
+    /// alike. The leading `selectionEdge` bar is kept.
+    public var drawsSelectionOutline = false {
+        didSet { if drawsSelectionOutline != oldValue { needsDisplay = true } }
+    }
+
+    /// An outlined selection never greys out in a non-key window.
+    public override var isEmphasized: Bool {
+        get { drawsSelectionOutline || super.isEmphasized }
+        set { super.isEmphasized = newValue }
+    }
+
     public override init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         self.observer = ThemePaletteObserver(host: self) { [weak self] palette in self?.applyTheme(palette) }
@@ -787,9 +800,14 @@ open class ThemedTableRowView: NSTableRowView, Themeable {
     public override func drawSelection(in dirtyRect: NSRect) {
         guard selectionHighlightStyle != .none else { return }
         let rect = bounds.insetBy(dx: 2, dy: 1)
-        palette.nsColor(.selection).setFill()
+        palette.nsColor(drawsSelectionOutline ? .elevatedSurface : .selection).setFill()
         let path = NSBezierPath(roundedRect: rect, xRadius: 4, yRadius: 4)
         path.fill()
+        if drawsSelectionOutline {
+            palette.nsColor(.outline).setStroke()
+            path.lineWidth = 1
+            path.stroke()
+        }
         // A theme that sets `selectionEdge` marks the row with a line down its
         // leading edge, clipped to the fill's rounded corners.
         guard palette.selectionEdge.alpha > 0 else { return }

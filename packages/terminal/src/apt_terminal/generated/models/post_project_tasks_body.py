@@ -28,7 +28,6 @@ class PostProjectTasksBody:
         external_project_name (None | str | Unset):
         labels (None | str | Unset):
         url (None | str | Unset):
-        sync_txid (int | Unset):
     """
 
     connection_id: str
@@ -45,7 +44,6 @@ class PostProjectTasksBody:
     external_project_name: None | str | Unset = UNSET
     labels: None | str | Unset = UNSET
     url: None | str | Unset = UNSET
-    sync_txid: int | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
         connection_id = self.connection_id
@@ -104,8 +102,6 @@ class PostProjectTasksBody:
         else:
             url = self.url
 
-        sync_txid = self.sync_txid
-
         field_dict: dict[str, Any] = {}
 
         field_dict.update(
@@ -136,8 +132,6 @@ class PostProjectTasksBody:
             field_dict["labels"] = labels
         if url is not UNSET:
             field_dict["url"] = url
-        if sync_txid is not UNSET:
-            field_dict["syncTxid"] = sync_txid
 
         return field_dict
 
@@ -221,8 +215,6 @@ class PostProjectTasksBody:
 
         url = _parse_url(d.pop("url", UNSET))
 
-        sync_txid = d.pop("syncTxid", UNSET)
-
         post_project_tasks_body = cls(
             connection_id=connection_id,
             external_id=external_id,
@@ -238,7 +230,6 @@ class PostProjectTasksBody:
             external_project_name=external_project_name,
             labels=labels,
             url=url,
-            sync_txid=sync_txid,
         )
 
         return post_project_tasks_body

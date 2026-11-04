@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import Any, TypeVar
+from typing import Any, TypeVar, cast
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -18,11 +18,14 @@ class PostProcessingRunBody:
         target_kind (str): Saved entity kind, e.g. 'content.markdown'
         target_id (str): Row id of the saved entity
         job_type (str | Unset): Optional; defaults to the registered job for the targetKind
+        config_set_id (None | str | Unset): Run under this config set. Requires admin (403 otherwise); an unknown id is
+            400.
     """
 
     target_kind: str
     target_id: str
     job_type: str | Unset = UNSET
+    config_set_id: None | str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -31,6 +34,12 @@ class PostProcessingRunBody:
         target_id = self.target_id
 
         job_type = self.job_type
+
+        config_set_id: None | str | Unset
+        if isinstance(self.config_set_id, Unset):
+            config_set_id = UNSET
+        else:
+            config_set_id = self.config_set_id
 
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
@@ -42,6 +51,8 @@ class PostProcessingRunBody:
         )
         if job_type is not UNSET:
             field_dict["jobType"] = job_type
+        if config_set_id is not UNSET:
+            field_dict["configSetId"] = config_set_id
 
         return field_dict
 
@@ -54,10 +65,20 @@ class PostProcessingRunBody:
 
         job_type = d.pop("jobType", UNSET)
 
+        def _parse_config_set_id(data: object) -> None | str | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(None | str | Unset, data)
+
+        config_set_id = _parse_config_set_id(d.pop("configSetId", UNSET))
+
         post_processing_run_body = cls(
             target_kind=target_kind,
             target_id=target_id,
             job_type=job_type,
+            config_set_id=config_set_id,
         )
 
         post_processing_run_body.additional_properties = d

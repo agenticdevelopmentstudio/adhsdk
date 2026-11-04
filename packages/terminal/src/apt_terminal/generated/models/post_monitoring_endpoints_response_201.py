@@ -15,6 +15,8 @@ class PostMonitoringEndpointsResponse201:
         id (str):
         site_id (str):
         user_id (str):
+        author_kind (None | str):
+        author_id (None | str):
         owner_kind (str):
         owner_id (str):
         kind (str):
@@ -32,6 +34,8 @@ class PostMonitoringEndpointsResponse201:
     id: str
     site_id: str
     user_id: str
+    author_kind: None | str
+    author_id: None | str
     owner_kind: str
     owner_id: str
     kind: str
@@ -51,6 +55,12 @@ class PostMonitoringEndpointsResponse201:
         site_id = self.site_id
 
         user_id = self.user_id
+
+        author_kind: None | str
+        author_kind = self.author_kind
+
+        author_id: None | str
+        author_id = self.author_id
 
         owner_kind = self.owner_kind
 
@@ -84,6 +94,8 @@ class PostMonitoringEndpointsResponse201:
                 "id": id,
                 "siteId": site_id,
                 "userId": user_id,
+                "authorKind": author_kind,
+                "authorId": author_id,
                 "ownerKind": owner_kind,
                 "ownerId": owner_id,
                 "kind": kind,
@@ -109,6 +121,20 @@ class PostMonitoringEndpointsResponse201:
         site_id = d.pop("siteId")
 
         user_id = d.pop("userId")
+
+        def _parse_author_kind(data: object) -> None | str:
+            if data is None:
+                return data
+            return cast(None | str, data)
+
+        author_kind = _parse_author_kind(d.pop("authorKind"))
+
+        def _parse_author_id(data: object) -> None | str:
+            if data is None:
+                return data
+            return cast(None | str, data)
+
+        author_id = _parse_author_id(d.pop("authorId"))
 
         owner_kind = d.pop("ownerKind")
 
@@ -143,6 +169,8 @@ class PostMonitoringEndpointsResponse201:
             id=id,
             site_id=site_id,
             user_id=user_id,
+            author_kind=author_kind,
+            author_id=author_id,
             owner_kind=owner_kind,
             owner_id=owner_id,
             kind=kind,

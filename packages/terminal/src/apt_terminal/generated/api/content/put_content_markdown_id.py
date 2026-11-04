@@ -17,12 +17,15 @@ def _get_kwargs(
     *,
     body: PutContentMarkdownIdBody | Unset = UNSET,
     workspace: str | Unset = UNSET,
+    ecosystem_id: str | Unset = UNSET,
 ) -> dict[str, Any]:
     headers: dict[str, Any] = {}
 
     params: dict[str, Any] = {}
 
     params["workspace"] = workspace
+
+    params["ecosystemId"] = ecosystem_id
 
     params = {k: v for k, v in params.items() if v is not UNSET and v is not None}
 
@@ -89,12 +92,14 @@ def sync_detailed(
     client: AuthenticatedClient,
     body: PutContentMarkdownIdBody | Unset = UNSET,
     workspace: str | Unset = UNSET,
+    ecosystem_id: str | Unset = UNSET,
 ) -> Response[Error | MarkdownDocument]:
     """Update a document; a content change appends a full-state version
 
     Args:
         id (str):
         workspace (str | Unset):
+        ecosystem_id (str | Unset):
         body (PutContentMarkdownIdBody | Unset): At least one of content/category/tags. A content
             change appends a full-state version (author attaches to it) and re-derives the title; a
             category/tags-only change updates the head in place WITHOUT a new version; a no-op returns
@@ -112,6 +117,7 @@ def sync_detailed(
         id=id,
         body=body,
         workspace=workspace,
+        ecosystem_id=ecosystem_id,
     )
 
     response = client.get_httpx_client().request(
@@ -127,12 +133,14 @@ def sync(
     client: AuthenticatedClient,
     body: PutContentMarkdownIdBody | Unset = UNSET,
     workspace: str | Unset = UNSET,
+    ecosystem_id: str | Unset = UNSET,
 ) -> Error | MarkdownDocument | None:
     """Update a document; a content change appends a full-state version
 
     Args:
         id (str):
         workspace (str | Unset):
+        ecosystem_id (str | Unset):
         body (PutContentMarkdownIdBody | Unset): At least one of content/category/tags. A content
             change appends a full-state version (author attaches to it) and re-derives the title; a
             category/tags-only change updates the head in place WITHOUT a new version; a no-op returns
@@ -151,6 +159,7 @@ def sync(
         client=client,
         body=body,
         workspace=workspace,
+        ecosystem_id=ecosystem_id,
     ).parsed
 
 
@@ -160,12 +169,14 @@ async def asyncio_detailed(
     client: AuthenticatedClient,
     body: PutContentMarkdownIdBody | Unset = UNSET,
     workspace: str | Unset = UNSET,
+    ecosystem_id: str | Unset = UNSET,
 ) -> Response[Error | MarkdownDocument]:
     """Update a document; a content change appends a full-state version
 
     Args:
         id (str):
         workspace (str | Unset):
+        ecosystem_id (str | Unset):
         body (PutContentMarkdownIdBody | Unset): At least one of content/category/tags. A content
             change appends a full-state version (author attaches to it) and re-derives the title; a
             category/tags-only change updates the head in place WITHOUT a new version; a no-op returns
@@ -183,6 +194,7 @@ async def asyncio_detailed(
         id=id,
         body=body,
         workspace=workspace,
+        ecosystem_id=ecosystem_id,
     )
 
     response = await client.get_async_httpx_client().request(**kwargs)
@@ -196,12 +208,14 @@ async def asyncio(
     client: AuthenticatedClient,
     body: PutContentMarkdownIdBody | Unset = UNSET,
     workspace: str | Unset = UNSET,
+    ecosystem_id: str | Unset = UNSET,
 ) -> Error | MarkdownDocument | None:
     """Update a document; a content change appends a full-state version
 
     Args:
         id (str):
         workspace (str | Unset):
+        ecosystem_id (str | Unset):
         body (PutContentMarkdownIdBody | Unset): At least one of content/category/tags. A content
             change appends a full-state version (author attaches to it) and re-derives the title; a
             category/tags-only change updates the head in place WITHOUT a new version; a no-op returns
@@ -221,5 +235,6 @@ async def asyncio(
             client=client,
             body=body,
             workspace=workspace,
+            ecosystem_id=ecosystem_id,
         )
     ).parsed

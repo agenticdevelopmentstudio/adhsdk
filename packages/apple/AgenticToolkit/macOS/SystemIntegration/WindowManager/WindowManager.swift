@@ -17,7 +17,24 @@ import AgenticToolkitCore
 @MainActor
 public final class WindowManager {
 
-    public static let shared = WindowManager(screenManager: .shared)
+    /// The app's one manager. It restores the previous session's windows by
+    /// itself (`scheduleAutomaticLaunchRestore()`): no host calls
+    /// `restoreOnLaunch()`.
+    public static let shared: WindowManager = {
+        let manager = WindowManager(screenManager: .shared)
+        manager.scheduleAutomaticLaunchRestore()
+        return manager
+    }()
+
+    /// `true` once the automatic launch restore has run. From then on a
+    /// controller that registers late — a feature started after launch —
+    /// restores its own window as it registers (`controllerDidRegister(_:)`).
+    private var hasRunLaunchRestore = false
+
+    /// Window ids already given their launch restore, so building a controller
+    /// a second time in one process never re-shows a window the user has since
+    /// closed or moved on from.
+    private var launchRestoredIDs: Set<String> = []
 
     /// Frame persistence + screen-change handling.
     public let frames: WindowFrameManager
@@ -124,7 +141,9 @@ public final class WindowManager {
 
     /// Tells the manager how to build the window `id`: `make` constructs its
     /// controller (which self-registers with `registry`) **without** showing it.
-    /// The host registers every window it has, once, before `restoreOnLaunch()`.
+    /// The host registers every window it has, once, from
+    /// `applicationDidFinishLaunching`; the framework's automatic launch
+    /// restore runs after that.
     ///
     /// The host does not decide, and does not need to know, whether a window
     /// comes back at launch. That is the window's own `WindowSpec.behavior`,
@@ -141,10 +160,13 @@ public final class WindowManager {
         register(id: id, make: make)
     }
 
-    /// One-shot restore for everything window-related. Hosts call this once
-    /// from `applicationDidFinishLaunching`, after `register(id:make:)`-ing
-    /// their windows. Every window saved as visible is built and handed to its
-    /// controller's `restoreVisibilityIfNeeded()`, which re-shows it if its
+    /// One-shot restore for everything window-related. **The framework calls
+    /// this; a host never does.** `WindowManager.shared` runs it on the main
+    /// queue's turn after `applicationDidFinishLaunching`, once the host has
+    /// built its controllers and `register(id:make:)`-ed its factories, and a
+    /// controller built after that restores itself as it registers. Every
+    /// window saved as visible is built and handed to its controller's
+    /// `restoreVisibilityIfNeeded()`, which re-shows it if its
     /// spec opts in. Windows saved as closed are not built at all. Then routes
     /// through `reopenRecentsOnLaunch()` to repopulate document windows.
     ///
@@ -156,15 +178,62 @@ public final class WindowManager {
     /// so in its own `WindowSpec` (drop `.canReopenOnLaunch`).
     ///
     /// A visible flag that no registered window and no live controller claims
-    /// cannot be restored: it is logged as a host wiring gap and cleared, so
-    /// it is reported once rather than on every launch.
+    /// yet is logged and kept: a feature that builds its controller after
+    /// launch restores it as it registers (`controllerDidRegister(_:)`), and
+    /// clearing the flag here would leave that window closed.
     ///
     /// Re-invoke on reactivation (e.g. a second-launch
     /// `DistributedNotification`) so persisted-visible windows reappear
     /// when an LSUIElement app is re-frontmost.
     public func restoreOnLaunch() {
+        hasRunLaunchRestore = true
         restoreSavedVisibleWindows()
         reopenRecentsOnLaunch()
+    }
+
+    // MARK: - Automatic launch restore
+
+    /// Runs `restoreOnLaunch()` on the main queue's next turn after the app
+    /// finishes launching, which is after the host's
+    /// `applicationDidFinishLaunching(_:)` has built and registered its
+    /// windows. Restoring is the framework's job; a host only builds its
+    /// windows. Skipped under XCTest, where a test host must not reopen the
+    /// developer's windows.
+    func scheduleAutomaticLaunchRestore() {
+        guard ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] == nil else { return }
+        let run: @MainActor () -> Void = { [weak self] in
+            guard let self, !self.hasRunLaunchRestore else { return }
+            self.restoreOnLaunch()
+        }
+        if NSRunningApplication.current.isFinishedLaunching {
+            DispatchQueue.main.async { MainActor.assumeIsolated { run() } }
+        } else {
+            launchObserver = NotificationCenter.default.addObserver(
+                forName: NSApplication.didFinishLaunchingNotification, object: nil, queue: .main
+            ) { [weak self] _ in
+                MainActor.assumeIsolated {
+                    if let observer = self?.launchObserver {
+                        NotificationCenter.default.removeObserver(observer)
+                        self?.launchObserver = nil
+                    }
+                    DispatchQueue.main.async { MainActor.assumeIsolated { run() } }
+                }
+            }
+        }
+    }
+
+    private var launchObserver: NSObjectProtocol?
+
+    /// Called by `SingleWindowController` as it registers. Once the launch
+    /// restore has run, a controller built later restores its own window, so a
+    /// feature that starts after launch still gets its window back. Deferred a
+    /// turn so the subclass finishes initialising first.
+    func controllerDidRegister(_ controller: SingleWindowController) {
+        guard hasRunLaunchRestore, !launchRestoredIDs.contains(controller.windowID) else { return }
+        launchRestoredIDs.insert(controller.windowID)
+        DispatchQueue.main.async { [weak controller] in
+            MainActor.assumeIsolated { controller?.restoreVisibilityIfNeeded() }
+        }
     }
 
     private func restoreSavedVisibleWindows() {
@@ -174,15 +243,18 @@ public final class WindowManager {
         }
 
         for id in registry.registeredIDs {
+            launchRestoredIDs.insert(id)
             registry.controller(forID: id)?.restoreVisibilityIfNeeded()
         }
 
         for id in frames.visibleWindowIDs()
         where windowFactories[id] == nil && registry.controller(forID: id) == nil {
-            Self.logger.error(
-                "restoreOnLaunch: visible window '\(id, privacy: .public)' has no registered factory; clearing its flag"
+            Self.logger.info(
+                """
+                restoreOnLaunch: visible window '\(id, privacy: .public)' has no controller yet; \
+                restored if one registers
+                """
             )
-            frames.clearVisibility(for: id)
         }
     }
 

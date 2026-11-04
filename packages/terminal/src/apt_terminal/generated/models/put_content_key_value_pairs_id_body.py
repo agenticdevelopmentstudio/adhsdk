@@ -23,7 +23,6 @@ class PutContentKeyValuePairsIdBody:
         ecosystem_id (str | Unset):
         key (str | Unset):
         value (bool | float | list[Any] | None | PutContentKeyValuePairsIdBodyValueType1 | str | Unset):
-        sync_txid (int | Unset):
     """
 
     ecosystem_id: str | Unset = UNSET
@@ -31,7 +30,6 @@ class PutContentKeyValuePairsIdBody:
     value: (
         bool | float | list[Any] | None | PutContentKeyValuePairsIdBodyValueType1 | str | Unset
     ) = UNSET
-    sync_txid: int | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
         from ..models.put_content_key_value_pairs_id_body_value_type_1 import (
@@ -53,8 +51,6 @@ class PutContentKeyValuePairsIdBody:
         else:
             value = self.value
 
-        sync_txid = self.sync_txid
-
         field_dict: dict[str, Any] = {}
 
         field_dict.update({})
@@ -64,8 +60,6 @@ class PutContentKeyValuePairsIdBody:
             field_dict["key"] = key
         if value is not UNSET:
             field_dict["value"] = value
-        if sync_txid is not UNSET:
-            field_dict["syncTxid"] = sync_txid
 
         return field_dict
 
@@ -118,13 +112,10 @@ class PutContentKeyValuePairsIdBody:
 
         value = _parse_value(d.pop("value", UNSET))
 
-        sync_txid = d.pop("syncTxid", UNSET)
-
         put_content_key_value_pairs_id_body = cls(
             ecosystem_id=ecosystem_id,
             key=key,
             value=value,
-            sync_txid=sync_txid,
         )
 
         return put_content_key_value_pairs_id_body

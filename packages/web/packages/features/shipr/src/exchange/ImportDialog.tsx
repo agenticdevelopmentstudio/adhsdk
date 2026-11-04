@@ -286,7 +286,7 @@ const STATE_WORD: Record<RowState, string> = {
 /**
  * The counts, and the one thing about a registration this plan cannot show as a change.
  *
- * A `+` row's ship branch, gate context and environments are NOT sent with the registration —
+ * A `+` row's ship branch and environments are NOT sent with the registration —
  * `register` takes the source, the branches it is cut from and where to file it, and the rest
  * of the config belongs to a deployment repository that does not exist until the run makes
  * it. Importing the same file again once the runs have landed carries them, and the second
@@ -308,9 +308,9 @@ function Summary({ plan }: { plan: ImportPlan }): React.ReactElement {
       <p>{parts.length > 0 ? parts.join(', ') : 'Nothing to do.'}</p>
       {plan.counts.new > 0 ? (
         <p>
-          A registration carries the source, its branches and its folder. The ship branch,
-          gate context and environments arrive on a second import of the same file, once
-          those runs have made the deployment repositories.
+          A registration carries the source, its branches and its folder. The ship branch and
+          environments arrive on a second import of the same file, once those runs have made
+          the deployment repositories.
         </p>
       ) : null}
     </div>

@@ -18,12 +18,14 @@ class EcosystemAuthSettings:
     Attributes:
         signup_mode (EcosystemAuthSettingsSignupMode): Defaults to invite_only
         login_enabled (bool): Defaults to true
+        password_enabled (bool): Email and password sign-in and sign-up for the customer realm. Defaults to true
         allowed_providers (list[str] | None): null means every configured provider. An empty array is stored as null,
             never as "none".
     """
 
     signup_mode: EcosystemAuthSettingsSignupMode
     login_enabled: bool
+    password_enabled: bool
     allowed_providers: list[str] | None
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
@@ -31,6 +33,8 @@ class EcosystemAuthSettings:
         signup_mode = self.signup_mode.value
 
         login_enabled = self.login_enabled
+
+        password_enabled = self.password_enabled
 
         allowed_providers: list[str] | None
         if isinstance(self.allowed_providers, list):
@@ -45,6 +49,7 @@ class EcosystemAuthSettings:
             {
                 "signupMode": signup_mode,
                 "loginEnabled": login_enabled,
+                "passwordEnabled": password_enabled,
                 "allowedProviders": allowed_providers,
             }
         )
@@ -57,6 +62,8 @@ class EcosystemAuthSettings:
         signup_mode = EcosystemAuthSettingsSignupMode(d.pop("signupMode"))
 
         login_enabled = d.pop("loginEnabled")
+
+        password_enabled = d.pop("passwordEnabled")
 
         def _parse_allowed_providers(data: object) -> list[str] | None:
             if data is None:
@@ -76,6 +83,7 @@ class EcosystemAuthSettings:
         ecosystem_auth_settings = cls(
             signup_mode=signup_mode,
             login_enabled=login_enabled,
+            password_enabled=password_enabled,
             allowed_providers=allowed_providers,
         )
 

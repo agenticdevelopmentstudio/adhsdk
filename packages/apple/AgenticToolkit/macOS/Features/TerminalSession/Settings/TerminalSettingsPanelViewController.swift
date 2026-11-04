@@ -2,7 +2,10 @@ import AppKit
 
 import AgenticToolkitCore
 
-/// Settings panel for the terminal's layout, font and caret.
+/// Settings panel for the terminal's font and caret.
+///
+/// No spacing: how far the text sits from the pane's edges is the app-wide pane
+/// content spacing, set under Appearance > Spacing with every other pane's.
 ///
 /// There is deliberately no color section: terminal colors are the app theme's,
 /// edited in Theme settings, so there is one palette rather than two that drift
@@ -24,19 +27,6 @@ public final class TerminalSettingsPanelViewController: ComposableSettings.Setti
     public override var helpContent: ComposableSettings.PanelHelp? {
         ComposableSettings.PanelHelp(topics: [
             .init(
-                title: "Frame Spacing",
-                body: "Space between the terminal text and the edge of its pane, in points, "
-                    + "set per side. A terminal sitting under a tab bar usually wants more "
-                    + "room at the top than at the bottom, which is why there are four "
-                    + "numbers and not one. Each number stands outside the diagram, in "
-                    + "line with the edge it belongs to. Every arrow stands against that edge "
-                    + "and points the way it travels, so the arrow pointing into the terminal "
-                    + "is the one that adds space. Hold an arrow "
-                    + "down to keep going, or type a number and press Return. The stepper "
-                    + "beside each number adjusts it a point at a time. Changes apply to "
-                    + "every open terminal as you make them."
-            ),
-            .init(
                 title: "Font",
                 body: "The terminal's own font, independent of the theme's code font — a "
                     + "terminal is usually read at a different size from a code editor. "
@@ -52,9 +42,10 @@ public final class TerminalSettingsPanelViewController: ComposableSettings.Setti
             .init(
                 title: "Themes Override These",
                 body: "A theme can carry its own terminal padding, font and cursor, and when "
-                    + "it does they win over the values here. Those live in Theme settings, "
-                    + "under the theme's Terminal topic. A theme has no terminal options "
-                    + "until you set them, so by default this panel is what decides."
+                    + "it does they win over the values here and under Appearance > Spacing. "
+                    + "Those live in Theme settings, under the theme's Terminal topic. A theme "
+                    + "has no terminal options until you set them, so by default these panels "
+                    + "are what decide."
             ),
             .init(
                 title: "Colors",
@@ -67,29 +58,8 @@ public final class TerminalSettingsPanelViewController: ComposableSettings.Setti
 
     public override func viewDidLoad() {
         super.viewDidLoad()
-        self.settingsView.addGroup(createLayoutGroup())
         self.settingsView.addGroup(createFontGroup())
         self.settingsView.addGroup(createCursorGroup())
-    }
-
-    private func createLayoutGroup() -> ComposableSettings.GroupView {
-        let group = ComposableSettings.GroupView(withTitle: "Frame Spacing")
-
-        // A picture of the terminal with each number, and the two arrows that
-        // move it, sitting on the edge it belongs to. A stacked column of
-        // labelled fields said the same thing but left the reader to work out
-        // which edge "Top" meant with the tab bar in play.
-        group.addSettingSubview(SpacingControl.boundToSettings(
-            style: .frame,
-            edges: [
-                .top: UserSettings.terminalPaddingTop,
-                .leading: UserSettings.terminalPaddingLeading,
-                .bottom: UserSettings.terminalPaddingBottom,
-                .trailing: UserSettings.terminalPaddingTrailing
-            ]
-        ))
-
-        return group
     }
 
     private func createFontGroup() -> ComposableSettings.GroupView {

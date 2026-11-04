@@ -6,8 +6,7 @@ import AgenticToolkitCore
 /// One editor pane's answer to the three display options — either its own, or
 /// silence, which means whatever the app says.
 ///
-/// Modelled on `PaneSpacingOverride`, and for the same reason: absence and
-/// "the same value as the default" are different states, and only one of them
+/// Absence and "the same value as the default" are different states, and only one of them
 /// keeps following the app. Each option is independently absent, so pinning
 /// line numbers does not silently pin the minimap too.
 @MainActor

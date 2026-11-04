@@ -51,6 +51,8 @@ class GetIntegrationIntegrationAudienceContactsResponse200Item:
         sync_version (int):
         sync_stamped_at (None | str):
         sync_txid (int):
+        author_kind (None | str):
+        author_id (None | str):
     """
 
     id: str
@@ -98,6 +100,8 @@ class GetIntegrationIntegrationAudienceContactsResponse200Item:
     sync_version: int
     sync_stamped_at: None | str
     sync_txid: int
+    author_kind: None | str
+    author_id: None | str
 
     def to_dict(self) -> dict[str, Any]:
         from ..models.get_integration_integration_audience_contacts_response_200_item_fields_type_0_type_1 import (
@@ -190,6 +194,12 @@ class GetIntegrationIntegrationAudienceContactsResponse200Item:
 
         sync_txid = self.sync_txid
 
+        author_kind: None | str
+        author_kind = self.author_kind
+
+        author_id: None | str
+        author_id = self.author_id
+
         field_dict: dict[str, Any] = {}
 
         field_dict.update(
@@ -218,6 +228,8 @@ class GetIntegrationIntegrationAudienceContactsResponse200Item:
                 "syncVersion": sync_version,
                 "syncStampedAt": sync_stamped_at,
                 "syncTxid": sync_txid,
+                "authorKind": author_kind,
+                "authorId": author_id,
             }
         )
 
@@ -431,6 +443,20 @@ class GetIntegrationIntegrationAudienceContactsResponse200Item:
 
         sync_txid = d.pop("syncTxid")
 
+        def _parse_author_kind(data: object) -> None | str:
+            if data is None:
+                return data
+            return cast(None | str, data)
+
+        author_kind = _parse_author_kind(d.pop("authorKind"))
+
+        def _parse_author_id(data: object) -> None | str:
+            if data is None:
+                return data
+            return cast(None | str, data)
+
+        author_id = _parse_author_id(d.pop("authorId"))
+
         get_integration_integration_audience_contacts_response_200_item = cls(
             id=id,
             customer_id=customer_id,
@@ -456,6 +482,8 @@ class GetIntegrationIntegrationAudienceContactsResponse200Item:
             sync_version=sync_version,
             sync_stamped_at=sync_stamped_at,
             sync_txid=sync_txid,
+            author_kind=author_kind,
+            author_id=author_id,
         )
 
         return get_integration_integration_audience_contacts_response_200_item

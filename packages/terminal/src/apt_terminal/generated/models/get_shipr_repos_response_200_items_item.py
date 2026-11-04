@@ -30,7 +30,6 @@ class GetShiprReposResponse200ItemsItem:
         slug (str | Unset): owner/name on the forge.
         shard (str | Unset):
         ship_branch (str | Unset):
-        ci_context (str | Unset):
         env_branches (ShiprRepoEnvBranches | Unset): environment → branch. An environment absent here is one this
             repository does not deploy to, and its ladder column is not drawn.
         registered_at (None | str | Unset):
@@ -48,7 +47,6 @@ class GetShiprReposResponse200ItemsItem:
     slug: str | Unset = UNSET
     shard: str | Unset = UNSET
     ship_branch: str | Unset = UNSET
-    ci_context: str | Unset = UNSET
     env_branches: ShiprRepoEnvBranches | Unset = UNSET
     registered_at: None | str | Unset = UNSET
     provisioned: None | ShiprRepoProvisionedType0 | Unset = UNSET
@@ -82,8 +80,6 @@ class GetShiprReposResponse200ItemsItem:
         shard = self.shard
 
         ship_branch = self.ship_branch
-
-        ci_context = self.ci_context
 
         env_branches: dict[str, Any] | Unset = UNSET
         if not isinstance(self.env_branches, Unset):
@@ -140,8 +136,6 @@ class GetShiprReposResponse200ItemsItem:
             field_dict["shard"] = shard
         if ship_branch is not UNSET:
             field_dict["shipBranch"] = ship_branch
-        if ci_context is not UNSET:
-            field_dict["ciContext"] = ci_context
         if env_branches is not UNSET:
             field_dict["envBranches"] = env_branches
         if registered_at is not UNSET:
@@ -189,8 +183,6 @@ class GetShiprReposResponse200ItemsItem:
         shard = d.pop("shard", UNSET)
 
         ship_branch = d.pop("shipBranch", UNSET)
-
-        ci_context = d.pop("ciContext", UNSET)
 
         _env_branches = d.pop("envBranches", UNSET)
         env_branches: ShiprRepoEnvBranches | Unset
@@ -272,7 +264,6 @@ class GetShiprReposResponse200ItemsItem:
             slug=slug,
             shard=shard,
             ship_branch=ship_branch,
-            ci_context=ci_context,
             env_branches=env_branches,
             registered_at=registered_at,
             provisioned=provisioned,

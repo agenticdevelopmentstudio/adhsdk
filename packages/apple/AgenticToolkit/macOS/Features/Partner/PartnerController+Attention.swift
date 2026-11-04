@@ -1,0 +1,79 @@
+import Foundation
+import AgenticToolkitCore
+
+/// The owner's buttons on attention items. Each one speaks to the partner in the owner's voice.
+extension PartnerController {
+
+    /// Resolved or Confirm: records the action, sends "Resolved: …" / "Confirmed: …" as the owner, and moves
+    /// the item to `.sent`. The partner's next message after that line goes out completes it.
+    public func performButton(_ action: AttentionActionKind, itemID: String) throws {
+        let verb: String
+        let name: String
+        switch action {
+        case .resolved: verb = "Resolved"; name = "Resolved"
+        case .confirm: verb = "Confirmed"; name = "Confirm"
+        case .discuss, .reopen: throw ControllerError.unsupportedAction(action)
+        }
+        guard var item = try store.attentionItem(id: itemID) else { throw ControllerError.unknownItem(itemID) }
+        // A second click, or a click on a card the window has not redrawn yet, must not send the line twice.
+        guard item.state != .sent, item.state != .done else { throw ControllerError.alreadyAnswered(itemID) }
+        let source = Self.attentionSourcePrefix + itemID
+        let messageID = UUID().uuidString
+        try store.record(AttentionAction(itemID: itemID, action: action, at: now(), messageID: messageID))
+        item.state = .sent
+        item.updatedAt = now()
+        try store.update(item)
+        presetMessageIDs[source] = messageID
+        let attribution = ChatMessage.Attribution(sourceID: source, context: [], name: name,
+                                                  iconSymbol: "checkmark.circle")
+        enqueue(.owner(text: "\(verb): \(item.text)", attribution: attribution))
+    }
+
+    /// Discuss: records the action, moves the item to `.discussing`, and returns its text quoted for the
+    /// owner's reply. The window sends that reply as `.owner` with a "Discuss" attribution.
+    public func beginDiscussion(itemID: String) throws -> String {
+        guard var item = try store.attentionItem(id: itemID) else { throw ControllerError.unknownItem(itemID) }
+        try store.record(AttentionAction(itemID: itemID, action: .discuss, at: now()))
+        item.state = .discussing
+        item.updatedAt = now()
+        try store.update(item)
+        return "> " + item.text.replacingOccurrences(of: "\n", with: "\n> ") + "\n\n"
+    }
+
+    /// Puts every `.sent` item whose line will now never be answered back to `.open`, so the owner sees its
+    /// buttons again: its line went to a process that has since ended (``awaitingDone``), or it was lost with
+    /// an earlier run of the app (no queued line names it in ``presetMessageIDs``). Called at start, once the
+    /// lock is held, and whenever the process ends.
+    func reopenUnansweredItems() {
+        awaitingDone = []
+        do {
+            for var item in try store.attentionItems(includeDoneCompletedAfter: nil) where item.state == .sent {
+                guard presetMessageIDs[Self.attentionSourcePrefix + item.id] == nil else { continue }
+                item.state = .open
+                item.updatedAt = now()
+                try store.update(item)
+            }
+        } catch {
+            Self.logger.error("Reopening unanswered attention items failed: \(error.localizedDescription)")
+        }
+    }
+
+    /// Marks every item whose button line has gone out `.done`. Called on each message from the partner.
+    func completeAwaitedItems() {
+        guard !awaitingDone.isEmpty else { return }
+        let ids = awaitingDone
+        awaitingDone = []
+        for id in ids {
+            do {
+                guard var item = try store.attentionItem(id: id), item.state == .sent else { continue }
+                let completed = now()
+                item.state = .done
+                item.completedAt = completed
+                item.updatedAt = completed
+                try store.update(item)
+            } catch {
+                Self.logger.error("Completing attention item \(id) failed: \(error.localizedDescription)")
+            }
+        }
+    }
+}

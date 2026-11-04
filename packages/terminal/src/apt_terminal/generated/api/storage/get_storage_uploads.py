@@ -7,13 +7,32 @@ from ... import errors
 from ...client import AuthenticatedClient, Client
 from ...models.error import Error
 from ...models.storage_attachment import StorageAttachment
-from ...types import Response
+from ...types import UNSET, Response, Unset
 
 
-def _get_kwargs() -> dict[str, Any]:
+def _get_kwargs(
+    *,
+    parent_type: str | Unset = UNSET,
+    parent_id: str | Unset = UNSET,
+    owner_type: str | Unset = UNSET,
+    owner_id: str | Unset = UNSET,
+) -> dict[str, Any]:
+    params: dict[str, Any] = {}
+
+    params["parentType"] = parent_type
+
+    params["parentId"] = parent_id
+
+    params["ownerType"] = owner_type
+
+    params["ownerId"] = owner_id
+
+    params = {k: v for k, v in params.items() if v is not UNSET and v is not None}
+
     _kwargs: dict[str, Any] = {
         "method": "get",
         "url": "/storage/uploads",
+        "params": params,
     }
 
     return _kwargs
@@ -57,8 +76,18 @@ def _build_response(
 def sync_detailed(
     *,
     client: AuthenticatedClient,
+    parent_type: str | Unset = UNSET,
+    parent_id: str | Unset = UNSET,
+    owner_type: str | Unset = UNSET,
+    owner_id: str | Unset = UNSET,
 ) -> Response[Error | list[StorageAttachment]]:
     """List the caller's attachments (newest first)
+
+    Args:
+        parent_type (str | Unset):
+        parent_id (str | Unset):
+        owner_type (str | Unset):
+        owner_id (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -68,7 +97,12 @@ def sync_detailed(
         Response[Error | list[StorageAttachment]]
     """
 
-    kwargs = _get_kwargs()
+    kwargs = _get_kwargs(
+        parent_type=parent_type,
+        parent_id=parent_id,
+        owner_type=owner_type,
+        owner_id=owner_id,
+    )
 
     response = client.get_httpx_client().request(
         **kwargs,
@@ -80,8 +114,18 @@ def sync_detailed(
 def sync(
     *,
     client: AuthenticatedClient,
+    parent_type: str | Unset = UNSET,
+    parent_id: str | Unset = UNSET,
+    owner_type: str | Unset = UNSET,
+    owner_id: str | Unset = UNSET,
 ) -> Error | list[StorageAttachment] | None:
     """List the caller's attachments (newest first)
+
+    Args:
+        parent_type (str | Unset):
+        parent_id (str | Unset):
+        owner_type (str | Unset):
+        owner_id (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -93,14 +137,28 @@ def sync(
 
     return sync_detailed(
         client=client,
+        parent_type=parent_type,
+        parent_id=parent_id,
+        owner_type=owner_type,
+        owner_id=owner_id,
     ).parsed
 
 
 async def asyncio_detailed(
     *,
     client: AuthenticatedClient,
+    parent_type: str | Unset = UNSET,
+    parent_id: str | Unset = UNSET,
+    owner_type: str | Unset = UNSET,
+    owner_id: str | Unset = UNSET,
 ) -> Response[Error | list[StorageAttachment]]:
     """List the caller's attachments (newest first)
+
+    Args:
+        parent_type (str | Unset):
+        parent_id (str | Unset):
+        owner_type (str | Unset):
+        owner_id (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -110,7 +168,12 @@ async def asyncio_detailed(
         Response[Error | list[StorageAttachment]]
     """
 
-    kwargs = _get_kwargs()
+    kwargs = _get_kwargs(
+        parent_type=parent_type,
+        parent_id=parent_id,
+        owner_type=owner_type,
+        owner_id=owner_id,
+    )
 
     response = await client.get_async_httpx_client().request(**kwargs)
 
@@ -120,8 +183,18 @@ async def asyncio_detailed(
 async def asyncio(
     *,
     client: AuthenticatedClient,
+    parent_type: str | Unset = UNSET,
+    parent_id: str | Unset = UNSET,
+    owner_type: str | Unset = UNSET,
+    owner_id: str | Unset = UNSET,
 ) -> Error | list[StorageAttachment] | None:
     """List the caller's attachments (newest first)
+
+    Args:
+        parent_type (str | Unset):
+        parent_id (str | Unset):
+        owner_type (str | Unset):
+        owner_id (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -134,5 +207,9 @@ async def asyncio(
     return (
         await asyncio_detailed(
             client=client,
+            parent_type=parent_type,
+            parent_id=parent_id,
+            owner_type=owner_type,
+            owner_id=owner_id,
         )
     ).parsed

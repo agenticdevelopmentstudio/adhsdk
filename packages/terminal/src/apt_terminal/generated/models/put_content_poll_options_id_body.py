@@ -18,14 +18,12 @@ class PutContentPollOptionsIdBody:
         poll_id (str | Unset):
         text (str | Unset):
         sort_order (int | Unset):
-        sync_txid (int | Unset):
     """
 
     ecosystem_id: str | Unset = UNSET
     poll_id: str | Unset = UNSET
     text: str | Unset = UNSET
     sort_order: int | Unset = UNSET
-    sync_txid: int | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
         ecosystem_id = self.ecosystem_id
@@ -35,8 +33,6 @@ class PutContentPollOptionsIdBody:
         text = self.text
 
         sort_order = self.sort_order
-
-        sync_txid = self.sync_txid
 
         field_dict: dict[str, Any] = {}
 
@@ -49,8 +45,6 @@ class PutContentPollOptionsIdBody:
             field_dict["text"] = text
         if sort_order is not UNSET:
             field_dict["sortOrder"] = sort_order
-        if sync_txid is not UNSET:
-            field_dict["syncTxid"] = sync_txid
 
         return field_dict
 
@@ -65,14 +59,11 @@ class PutContentPollOptionsIdBody:
 
         sort_order = d.pop("sortOrder", UNSET)
 
-        sync_txid = d.pop("syncTxid", UNSET)
-
         put_content_poll_options_id_body = cls(
             ecosystem_id=ecosystem_id,
             poll_id=poll_id,
             text=text,
             sort_order=sort_order,
-            sync_txid=sync_txid,
         )
 
         return put_content_poll_options_id_body

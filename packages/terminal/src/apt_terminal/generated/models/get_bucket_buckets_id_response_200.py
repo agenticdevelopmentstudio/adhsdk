@@ -22,6 +22,7 @@ class GetBucketBucketsIdResponse200:
         ecosystem_id (str):
         parent_id (None | str):
         name (str):
+        slug (str):
         description (str):
         kind (str):
         metadata (bool | float | GetBucketBucketsIdResponse200MetadataType0Type1 | list[Any] | None | str):
@@ -37,6 +38,7 @@ class GetBucketBucketsIdResponse200:
     ecosystem_id: str
     parent_id: None | str
     name: str
+    slug: str
     description: str
     kind: str
     metadata: (
@@ -62,6 +64,8 @@ class GetBucketBucketsIdResponse200:
         parent_id = self.parent_id
 
         name = self.name
+
+        slug = self.slug
 
         description = self.description
 
@@ -98,6 +102,7 @@ class GetBucketBucketsIdResponse200:
                 "ecosystemId": ecosystem_id,
                 "parentId": parent_id,
                 "name": name,
+                "slug": slug,
                 "description": description,
                 "kind": kind,
                 "metadata": metadata,
@@ -131,6 +136,8 @@ class GetBucketBucketsIdResponse200:
         parent_id = _parse_parent_id(d.pop("parentId"))
 
         name = d.pop("name")
+
+        slug = d.pop("slug")
 
         description = d.pop("description")
 
@@ -200,6 +207,7 @@ class GetBucketBucketsIdResponse200:
             ecosystem_id=ecosystem_id,
             parent_id=parent_id,
             name=name,
+            slug=slug,
             description=description,
             kind=kind,
             metadata=metadata,

@@ -23,7 +23,6 @@ class PutContentContactsIdBody:
         email (str | Unset):
         phone (str | Unset):
         notes (str | Unset):
-        sync_txid (int | Unset):
     """
 
     ecosystem_id: str | Unset = UNSET
@@ -35,7 +34,6 @@ class PutContentContactsIdBody:
     email: str | Unset = UNSET
     phone: str | Unset = UNSET
     notes: str | Unset = UNSET
-    sync_txid: int | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
         ecosystem_id = self.ecosystem_id
@@ -60,8 +58,6 @@ class PutContentContactsIdBody:
 
         notes = self.notes
 
-        sync_txid = self.sync_txid
-
         field_dict: dict[str, Any] = {}
 
         field_dict.update({})
@@ -83,8 +79,6 @@ class PutContentContactsIdBody:
             field_dict["phone"] = phone
         if notes is not UNSET:
             field_dict["notes"] = notes
-        if sync_txid is not UNSET:
-            field_dict["syncTxid"] = sync_txid
 
         return field_dict
 
@@ -116,8 +110,6 @@ class PutContentContactsIdBody:
 
         notes = d.pop("notes", UNSET)
 
-        sync_txid = d.pop("syncTxid", UNSET)
-
         put_content_contacts_id_body = cls(
             ecosystem_id=ecosystem_id,
             owner_kind=owner_kind,
@@ -128,7 +120,6 @@ class PutContentContactsIdBody:
             email=email,
             phone=phone,
             notes=notes,
-            sync_txid=sync_txid,
         )
 
         return put_content_contacts_id_body

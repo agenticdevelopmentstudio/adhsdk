@@ -35,9 +35,13 @@ final class PaneViewControllerTests: XCTestCase {
         /// Held rather than built fresh per call, so a test can assert the pane
         /// hands back *these* rows and not merely two of something.
         let optionRows = [NSButton(), NSButton()]
+        private(set) var optionRowsBuilt = 0
 
         func makePaneAccessoryViews() -> [NSView] { [accessory] }
-        func makePaneOptionRows() -> [NSView] { optionRows }
+        func makePaneOptionRows() -> [NSView] {
+            optionRowsBuilt += 1
+            return optionRows
+        }
         var paneMinimizedSymbolName: String { "folder" }
         var paneMinimizedTooltip: String { "Files" }
         func paneSearch(for query: String) { receivedQueries.append(query) }
@@ -167,40 +171,30 @@ final class PaneViewControllerTests: XCTestCase {
         XCTAssertEqual(pane.titleBar.accessoryViews.count, 1)
         XCTAssertTrue(pane.titleBar.accessoryViews.first === content.accessory)
 
-        // The gear leads with the two universal spacing rows (Task 14), then
-        // the content's own. Asserted by identity, so four generic rows cannot
-        // pass on the count alone; the spacing pair is rebuilt on every call,
-        // so it is named by type and identifier rather than by instance.
-        let rows = pane.makeOptionRows()
-        XCTAssertEqual(rows.count, 4)
-        XCTAssertTrue(rows.first is SpacingControl)
-        XCTAssertEqual(rows[1].accessibilityIdentifier(), "pane.options.spacing.reset")
-        XCTAssertTrue(rows[2] === content.optionRows[0])
-        XCTAssertTrue(rows[3] === content.optionRows[1])
-    }
-
-    func testBareContentGetsNoAccessoriesAndOnlyTheUniversalOptionRows() {
-        let (pane, _) = loadedPane(content: BareContent())
-        XCTAssertTrue(pane.titleBar.accessoryViews.isEmpty)
-
-        // Content that opts into nothing still gets the spacing pair every pane
-        // has, and nothing past it.
+        // Only the content's own rows: spacing is app-wide, set in Settings,
+        // never per pane. Asserted by identity, so two generic rows cannot
+        // pass on the count alone.
         let rows = pane.makeOptionRows()
         XCTAssertEqual(rows.count, 2)
-        XCTAssertTrue(rows.first is SpacingControl)
-        XCTAssertEqual(rows[1].accessibilityIdentifier(), "pane.options.spacing.reset")
+        XCTAssertTrue(rows[0] === content.optionRows[0])
+        XCTAssertTrue(rows[1] === content.optionRows[1])
+    }
+
+    func testBareContentGetsNoAccessoriesAndNoOptionRows() {
+        let (pane, _) = loadedPane(content: BareContent())
+        XCTAssertTrue(pane.titleBar.accessoryViews.isEmpty)
+        XCTAssertTrue(pane.makeOptionRows().isEmpty)
     }
 
     func testTheGearIsInTheTitleBarsTrailingSlot() {
-        let (pane, _) = loadedPane(content: BareContent())
+        let (pane, _) = loadedPane(content: RichContent())
         XCTAssertNotNil(pane.titleBar.gearView)
+        XCTAssertFalse(pane.titleBar.gearView?.isHidden ?? true)
     }
 
-    /// A pane with nothing of its own to offer raises a menu of exactly one
-    /// item — no leading separator, because there is nothing to separate it
-    /// from.
-    func testABarePanesGearMenuIsOnlySettings() {
-        let (pane, _) = loadedPane(content: BareContent())
+    /// Content with option rows gets `Settings…`, the one way to reach them.
+    func testAPaneWithOptionsHasSettings() {
+        let (pane, _) = loadedPane(content: RichContent())
 
         let menu = pane.makeOptionsMenu()
         XCTAssertEqual(menu.items.count, 1)
@@ -208,10 +202,31 @@ final class PaneViewControllerTests: XCTestCase {
         XCTAssertEqual(menu.items.first?.accessibilityIdentifier(), "pane.options.settings")
     }
 
-    /// A pane that has its own items gets them above `Settings…`, separated —
-    /// and every item is enabled on its own say-so, since a menu raised from a
-    /// button has nothing to validate it.
-    func testAPanesOwnItemsComeFirstAndSettingsLast() {
+    /// Deciding whether to show the gear never builds the rows: building them has side effects.
+    func testTheGearIsDecidedWithoutBuildingTheRows() {
+        let content = RichContent()
+        let (pane, _) = loadedPane(content: content)
+        pane.refreshGearVisibility()
+        _ = pane.makeOptionsMenu()
+
+        XCTAssertFalse(pane.titleBar.gearView?.isHidden ?? true)
+        XCTAssertEqual(content.optionRowsBuilt, 0)
+    }
+
+    /// A pane with nothing to offer has an empty menu, so no gear: only UI
+    /// that has content is shown.
+    func testABarePaneHasNoGear() {
+        let (pane, _) = loadedPane(content: BareContent())
+
+        XCTAssertEqual(pane.makeOptionsMenu().numberOfItems, 0)
+        XCTAssertFalse(pane.hasOptionsMenu)
+        XCTAssertTrue(pane.titleBar.gearView?.isHidden ?? true)
+    }
+
+    /// A pane's own items make the menu; with no option rows there is no
+    /// `Settings…` and so nothing to separate. Every item is enabled on its own
+    /// say-so, since a menu raised from a button has nothing to validate it.
+    func testAPanesOwnItemsWithoutOptionsHaveNoSettings() {
         final class ItemPane: PaneViewController {
             override func makeMenuItems() -> [NSMenuItem] {
                 [NSMenuItem(title: "Move", action: nil, keyEquivalent: "")]
@@ -223,8 +238,8 @@ final class PaneViewControllerTests: XCTestCase {
 
         let menu = pane.makeOptionsMenu()
         XCTAssertFalse(menu.autoenablesItems, "nothing validates a menu raised from a button")
-        XCTAssertEqual(menu.items.map(\.title), ["Move", "", "Settings…"])
-        XCTAssertTrue(menu.items[1].isSeparatorItem)
+        XCTAssertEqual(menu.items.map(\.title), ["Move"])
+        XCTAssertFalse(pane.titleBar.gearView?.isHidden ?? true)
     }
 
     // MARK: - Requests go to the host

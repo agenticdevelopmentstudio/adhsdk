@@ -24,14 +24,12 @@ class PostPersonaMemoryBlocksBody:
         content (bool | float | list[Any] | None | PostPersonaMemoryBlocksBodyContentType1 | str):
         ecosystem_id (str | Unset):
         size_limit (int | None | Unset):
-        sync_txid (int | Unset):
     """
 
     name: str
     content: bool | float | list[Any] | None | PostPersonaMemoryBlocksBodyContentType1 | str
     ecosystem_id: str | Unset = UNSET
     size_limit: int | None | Unset = UNSET
-    sync_txid: int | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
         from ..models.post_persona_memory_blocks_body_content_type_1 import (
@@ -57,8 +55,6 @@ class PostPersonaMemoryBlocksBody:
         else:
             size_limit = self.size_limit
 
-        sync_txid = self.sync_txid
-
         field_dict: dict[str, Any] = {}
 
         field_dict.update(
@@ -71,8 +67,6 @@ class PostPersonaMemoryBlocksBody:
             field_dict["ecosystemId"] = ecosystem_id
         if size_limit is not UNSET:
             field_dict["sizeLimit"] = size_limit
-        if sync_txid is not UNSET:
-            field_dict["syncTxid"] = sync_txid
 
         return field_dict
 
@@ -124,14 +118,11 @@ class PostPersonaMemoryBlocksBody:
 
         size_limit = _parse_size_limit(d.pop("sizeLimit", UNSET))
 
-        sync_txid = d.pop("syncTxid", UNSET)
-
         post_persona_memory_blocks_body = cls(
             name=name,
             content=content,
             ecosystem_id=ecosystem_id,
             size_limit=size_limit,
-            sync_txid=sync_txid,
         )
 
         return post_persona_memory_blocks_body

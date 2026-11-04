@@ -17,12 +17,15 @@ def _get_kwargs(
     *,
     body: PostContentMarkdownIdPublishBody | Unset = UNSET,
     workspace: str | Unset = UNSET,
+    ecosystem_id: str | Unset = UNSET,
 ) -> dict[str, Any]:
     headers: dict[str, Any] = {}
 
     params: dict[str, Any] = {}
 
     params["workspace"] = workspace
+
+    params["ecosystemId"] = ecosystem_id
 
     params = {k: v for k, v in params.items() if v is not UNSET and v is not None}
 
@@ -94,6 +97,7 @@ def sync_detailed(
     client: AuthenticatedClient,
     body: PostContentMarkdownIdPublishBody | Unset = UNSET,
     workspace: str | Unset = UNSET,
+    ecosystem_id: str | Unset = UNSET,
 ) -> Response[Error | MarkdownDocument]:
     """Publish a document under an author-defined public route slug
 
@@ -104,6 +108,7 @@ def sync_detailed(
     Args:
         id (str):
         workspace (str | Unset):
+        ecosystem_id (str | Unset):
         body (PostContentMarkdownIdPublishBody | Unset):
 
     Raises:
@@ -118,6 +123,7 @@ def sync_detailed(
         id=id,
         body=body,
         workspace=workspace,
+        ecosystem_id=ecosystem_id,
     )
 
     response = client.get_httpx_client().request(
@@ -133,6 +139,7 @@ def sync(
     client: AuthenticatedClient,
     body: PostContentMarkdownIdPublishBody | Unset = UNSET,
     workspace: str | Unset = UNSET,
+    ecosystem_id: str | Unset = UNSET,
 ) -> Error | MarkdownDocument | None:
     """Publish a document under an author-defined public route slug
 
@@ -143,6 +150,7 @@ def sync(
     Args:
         id (str):
         workspace (str | Unset):
+        ecosystem_id (str | Unset):
         body (PostContentMarkdownIdPublishBody | Unset):
 
     Raises:
@@ -158,6 +166,7 @@ def sync(
         client=client,
         body=body,
         workspace=workspace,
+        ecosystem_id=ecosystem_id,
     ).parsed
 
 
@@ -167,6 +176,7 @@ async def asyncio_detailed(
     client: AuthenticatedClient,
     body: PostContentMarkdownIdPublishBody | Unset = UNSET,
     workspace: str | Unset = UNSET,
+    ecosystem_id: str | Unset = UNSET,
 ) -> Response[Error | MarkdownDocument]:
     """Publish a document under an author-defined public route slug
 
@@ -177,6 +187,7 @@ async def asyncio_detailed(
     Args:
         id (str):
         workspace (str | Unset):
+        ecosystem_id (str | Unset):
         body (PostContentMarkdownIdPublishBody | Unset):
 
     Raises:
@@ -191,6 +202,7 @@ async def asyncio_detailed(
         id=id,
         body=body,
         workspace=workspace,
+        ecosystem_id=ecosystem_id,
     )
 
     response = await client.get_async_httpx_client().request(**kwargs)
@@ -204,6 +216,7 @@ async def asyncio(
     client: AuthenticatedClient,
     body: PostContentMarkdownIdPublishBody | Unset = UNSET,
     workspace: str | Unset = UNSET,
+    ecosystem_id: str | Unset = UNSET,
 ) -> Error | MarkdownDocument | None:
     """Publish a document under an author-defined public route slug
 
@@ -214,6 +227,7 @@ async def asyncio(
     Args:
         id (str):
         workspace (str | Unset):
+        ecosystem_id (str | Unset):
         body (PostContentMarkdownIdPublishBody | Unset):
 
     Raises:
@@ -230,5 +244,6 @@ async def asyncio(
             client=client,
             body=body,
             workspace=workspace,
+            ecosystem_id=ecosystem_id,
         )
     ).parsed

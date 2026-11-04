@@ -86,13 +86,14 @@ final class ComposableTabsPaneChromeTests: XCTestCase {
     // MARK: - The gear menu
 
     /// `Move` is always in the menu, always with all four directions under it.
+    /// A plain view has no option rows, so there is no `Settings…` after it.
     /// Which of them are lit is the tree's business, re-read at every click; the
     /// menu's *shape* never changes, so the user learns one menu.
-    func testTheGearMenuOffersMoveInEveryDirectionAboveSettings() throws {
+    func testTheGearMenuOffersMoveInEveryDirection() throws {
         let pane = try makePane(plain)
 
         let menu = pane.makeOptionsMenu()
-        XCTAssertEqual(menu.items.map(\.title), ["Move", "", "Settings…"])
+        XCTAssertEqual(menu.items.map(\.title), ["Move"])
 
         let move = try XCTUnwrap(menu.items.first)
         XCTAssertEqual(move.submenu?.items.map(\.title), ["Left", "Right", "Up", "Down"])

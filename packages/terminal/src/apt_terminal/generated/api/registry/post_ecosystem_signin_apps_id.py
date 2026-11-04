@@ -95,7 +95,8 @@ def sync_detailed(
 
      The client is bound to this ecosystem by the server; the body cannot name a different one. Asking
     for GitHub sign-in when no GitHub provider is configured is a 400, checked before anything is
-    written.
+    written. The app is also registered as a Hydra public PKCE client; if that fails the call is a 500
+    and nothing is written.
 
     Args:
         id (str):
@@ -131,7 +132,8 @@ def sync(
 
      The client is bound to this ecosystem by the server; the body cannot name a different one. Asking
     for GitHub sign-in when no GitHub provider is configured is a 400, checked before anything is
-    written.
+    written. The app is also registered as a Hydra public PKCE client; if that fails the call is a 500
+    and nothing is written.
 
     Args:
         id (str):
@@ -162,7 +164,8 @@ async def asyncio_detailed(
 
      The client is bound to this ecosystem by the server; the body cannot name a different one. Asking
     for GitHub sign-in when no GitHub provider is configured is a 400, checked before anything is
-    written.
+    written. The app is also registered as a Hydra public PKCE client; if that fails the call is a 500
+    and nothing is written.
 
     Args:
         id (str):
@@ -196,7 +199,8 @@ async def asyncio(
 
      The client is bound to this ecosystem by the server; the body cannot name a different one. Asking
     for GitHub sign-in when no GitHub provider is configured is a 400, checked before anything is
-    written.
+    written. The app is also registered as a Hydra public PKCE client; if that fails the call is a 500
+    and nothing is written.
 
     Args:
         id (str):

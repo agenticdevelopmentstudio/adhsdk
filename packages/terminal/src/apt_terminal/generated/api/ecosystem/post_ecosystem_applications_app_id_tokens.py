@@ -86,7 +86,7 @@ def sync_detailed(
     """Mint an API token for the application (raw value shown once)
 
      The application must belong to the caller’s ecosystem (404 otherwise). Minting also grants the app
-    CRUD on its ecosystem’s default bucket so the token works immediately.
+    CRUD on every storage bucket a feature provisioned in its ecosystem, so the token works immediately.
 
     Args:
         app_id (str):
@@ -121,7 +121,7 @@ def sync(
     """Mint an API token for the application (raw value shown once)
 
      The application must belong to the caller’s ecosystem (404 otherwise). Minting also grants the app
-    CRUD on its ecosystem’s default bucket so the token works immediately.
+    CRUD on every storage bucket a feature provisioned in its ecosystem, so the token works immediately.
 
     Args:
         app_id (str):
@@ -151,7 +151,7 @@ async def asyncio_detailed(
     """Mint an API token for the application (raw value shown once)
 
      The application must belong to the caller’s ecosystem (404 otherwise). Minting also grants the app
-    CRUD on its ecosystem’s default bucket so the token works immediately.
+    CRUD on every storage bucket a feature provisioned in its ecosystem, so the token works immediately.
 
     Args:
         app_id (str):
@@ -184,7 +184,7 @@ async def asyncio(
     """Mint an API token for the application (raw value shown once)
 
      The application must belong to the caller’s ecosystem (404 otherwise). Minting also grants the app
-    CRUD on its ecosystem’s default bucket so the token works immediately.
+    CRUD on every storage bucket a feature provisioned in its ecosystem, so the token works immediately.
 
     Args:
         app_id (str):

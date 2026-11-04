@@ -53,9 +53,31 @@ public final class TerminalChatSession {
     private var droppedUnclaimedOutput = false
     private static let unclaimedLimit = 64 * 1024
 
-    public init(quietPeriod: Duration = .milliseconds(300), maximumLatency: Duration = .seconds(1)) {
+    /// How long ``send(_:)`` waits between typing the text and pressing
+    /// Return. A program that reads its input as keystrokes, Claude Code
+    /// among them, takes a long line arriving in one write for a paste and
+    /// keeps a Return inside that write as part of the pasted text (Claude
+    /// Code strips it and shows "review and press Enter to send"), so the
+    /// message would sit unsent. Return on a write of its own, after a pause,
+    /// reads as a key press.
+    private let returnDelay: Duration
+    /// The writes ``send(_:)`` has queued, so a second message never lands
+    /// between the first one's text and its Return.
+    private var pendingInput: Task<Void, Never>?
+    /// Bumped by an interrupt or a new connection; a queued message not yet
+    /// typed is dropped, so a new terminal never gets the old one's input.
+    private var inputGeneration = 0
+    /// Bumped by an interrupt only. Text already typed gets its Return in the
+    /// terminal it was typed into, whatever the chat connects to meanwhile, so
+    /// closing a pane never leaves a command typed but not run; only Control-C
+    /// drops that Return.
+    private var interrupts = 0
+
+    public init(quietPeriod: Duration = .milliseconds(300), maximumLatency: Duration = .seconds(1),
+                returnDelay: Duration = .milliseconds(250)) {
         self.quietPeriod = quietPeriod
         self.maximumLatency = maximumLatency
+        self.returnDelay = returnDelay
     }
 
     /// Connects to `terminal`, or disconnects when it is nil. What the
@@ -64,6 +86,8 @@ public final class TerminalChatSession {
     /// what the terminal shows rather than on nothing.
     public func connect(to terminal: TerminalSession?) {
         guard terminal !== self.terminal || terminal == nil else { return }
+        // A new terminal drops input still queued for the old one; closing (nil) lets it finish there.
+        if terminal != nil { inputGeneration += 1 }
         outputSubscription = nil
         exitSubscription = nil
         cancelReportTimers()
@@ -166,8 +190,12 @@ public final class TerminalChatSession {
         timeout: Duration = .seconds(TerminalChatControl.Defaults.timeout)
     ) async -> String {
         guard terminal != nil else { return Self.notConnected }
-        let wait = beginWait(settle: settle, timeout: timeout, replayingUnclaimed: false)
+        // Not settled until Return is written: the echo of the text alone would otherwise settle a short
+        // wait before the command starts, and its output would go to whichever wait came next.
+        let wait = beginWait(settle: settle, timeout: timeout, replayingUnclaimed: false, armed: false)
         send(text)
+        await pendingInput?.value
+        wait.arm()
         return await wait.result()
     }
 
@@ -214,9 +242,10 @@ public final class TerminalChatSession {
     /// had. A wait for more output starts from the output nobody claimed; a
     /// new command or an interrupt starts fresh, since what came before it
     /// answers something else and is in the transcript already.
-    private func beginWait(settle: Duration, timeout: Duration, replayingUnclaimed: Bool) -> OutputWait {
+    private func beginWait(settle: Duration, timeout: Duration, replayingUnclaimed: Bool,
+                           armed: Bool = true) -> OutputWait {
         currentWait?.finish()
-        let wait = OutputWait(settle: settle, timeout: timeout) { [weak self] in
+        let wait = OutputWait(settle: settle, timeout: timeout, armed: armed) { [weak self] in
             self?.flushOutput()
         } onFinish: { [weak self] finished in
             if self?.currentWait === finished { self?.currentWait = nil }
@@ -247,6 +276,10 @@ private final class OutputWait {
     private var settleTask: Task<Void, Never>?
     private var deadlineTask: Task<Void, Never>?
     private let settle: Duration
+    private let timeout: Duration
+    /// Until armed, output is collected but cannot settle the wait, and the timeout has not started: a
+    /// command's time is counted from when its Return is written, not from when its text began to be typed.
+    private var armed: Bool
     private let flushPending: () -> Void
     private let onFinish: (OutputWait) -> Void
 
@@ -257,12 +290,18 @@ private final class OutputWait {
     ///   - flushPending: Reports output the terminal printed but the chat has
     ///     not reported yet, so a wait that ends inside the chat's own quiet
     ///     period still gets all of it.
-    init(settle: Duration, timeout: Duration, flushPending: @escaping () -> Void,
+    init(settle: Duration, timeout: Duration, armed: Bool = true, flushPending: @escaping () -> Void,
          onFinish: @escaping (OutputWait) -> Void) {
+        self.armed = armed
         self.settle = min(settle, timeout / 2)
+        self.timeout = timeout
         self.flushPending = flushPending
         self.onFinish = onFinish
-        deadlineTask = Task { [weak self] in
+        if armed { startDeadline() }
+    }
+
+    private func startDeadline() {
+        deadlineTask = Task { [weak self, timeout] in
             try? await Task.sleep(for: timeout)
             guard !Task.isCancelled else { return }
             self?.end(stillRunning: true)
@@ -271,13 +310,21 @@ private final class OutputWait {
 
     /// The terminal printed something, so the wait is not settled yet.
     func activity() {
-        guard finished == nil else { return }
+        guard finished == nil, armed else { return }
         settleTask?.cancel()
         settleTask = Task { [weak self, settle] in
             try? await Task.sleep(for: settle)
             guard !Task.isCancelled else { return }
             self?.end(stillRunning: false)
         }
+    }
+
+    /// Lets the wait settle, measuring quiet and the timeout from now.
+    func arm() {
+        guard finished == nil, !armed else { return }
+        armed = true
+        startDeadline()
+        activity()
     }
 
     func received(_ text: String) {
@@ -327,8 +374,8 @@ extension TerminalChatSession: @preconcurrency ChatSession {
     }
 
     /// Shows `text` as the user wrote it and types it into the terminal,
-    /// followed by Return. A multi-line message goes in as several
-    /// lines, the way a paste would.
+    /// followed by Return as a write of its own after ``returnDelay``. A
+    /// multi-line message goes in as several lines, the way a paste would.
     public func send(_ text: String) {
         continuation?.yield(.userMessage(ChatMessage(role: .user, text: text)))
         guard let terminal else {
@@ -341,11 +388,34 @@ extension TerminalChatSession: @preconcurrency ChatSession {
         // terminal shows it, which a private terminal may have changed.
         let echoed = terminal.presentable(text)
         tracker.noteSent(echoed.components(separatedBy: "\n").last ?? echoed)
-        terminal.sendInput(text.replacingOccurrences(of: "\n", with: "\r") + "\r")
+        let typed = text.replacingOccurrences(of: "\n", with: "\r")
+        let previous = pendingInput
+        let generation = inputGeneration
+        let target = terminal
+        pendingInput = Task { [weak self, returnDelay] in
+            await previous?.value
+            // Re-checked each time: an interrupt or a new connection in between drops the rest. The
+            // terminal is the one the message was sent to, so a close in between still lets it finish.
+            @MainActor func current() -> TerminalSession? {
+                guard self == nil || self?.inputGeneration == generation else { return nil }
+                return target
+            }
+            guard let terminal = current() else { return }
+            if !typed.isEmpty {
+                let interruptsBefore = self?.interrupts
+                terminal.sendInput(typed)
+                try? await Task.sleep(for: returnDelay)
+                // A chat closed and released meanwhile cannot have been interrupted.
+                guard self == nil || self?.interrupts == interruptsBefore else { return }
+            }
+            terminal.sendInput("\r")
+        }
     }
 
     /// Control-C, which is what interrupting a terminal means.
     public func interrupt() {
+        inputGeneration += 1
+        interrupts += 1
         terminal?.sendInput("\u{03}")
     }
 

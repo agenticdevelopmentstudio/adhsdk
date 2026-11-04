@@ -20,7 +20,6 @@ class PostContentPollsBody:
         host_id (None | str | Unset):
         allow_multiple (bool | Unset):
         expires_at (None | str | Unset):
-        sync_txid (int | Unset):
     """
 
     question: str
@@ -29,7 +28,6 @@ class PostContentPollsBody:
     host_id: None | str | Unset = UNSET
     allow_multiple: bool | Unset = UNSET
     expires_at: None | str | Unset = UNSET
-    sync_txid: int | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
         question = self.question
@@ -56,8 +54,6 @@ class PostContentPollsBody:
         else:
             expires_at = self.expires_at
 
-        sync_txid = self.sync_txid
-
         field_dict: dict[str, Any] = {}
 
         field_dict.update(
@@ -75,8 +71,6 @@ class PostContentPollsBody:
             field_dict["allowMultiple"] = allow_multiple
         if expires_at is not UNSET:
             field_dict["expiresAt"] = expires_at
-        if sync_txid is not UNSET:
-            field_dict["syncTxid"] = sync_txid
 
         return field_dict
 
@@ -116,8 +110,6 @@ class PostContentPollsBody:
 
         expires_at = _parse_expires_at(d.pop("expiresAt", UNSET))
 
-        sync_txid = d.pop("syncTxid", UNSET)
-
         post_content_polls_body = cls(
             question=question,
             ecosystem_id=ecosystem_id,
@@ -125,7 +117,6 @@ class PostContentPollsBody:
             host_id=host_id,
             allow_multiple=allow_multiple,
             expires_at=expires_at,
-            sync_txid=sync_txid,
         )
 
         return post_content_polls_body

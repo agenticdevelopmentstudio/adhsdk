@@ -22,7 +22,6 @@ class PostContentTagsBody:
         level (str | Unset):
         since_date (str | Unset):
         notes (str | Unset):
-        sync_txid (int | Unset):
     """
 
     ecosystem_id: str | Unset = UNSET
@@ -33,7 +32,6 @@ class PostContentTagsBody:
     level: str | Unset = UNSET
     since_date: str | Unset = UNSET
     notes: str | Unset = UNSET
-    sync_txid: int | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
         ecosystem_id = self.ecosystem_id
@@ -51,8 +49,6 @@ class PostContentTagsBody:
         since_date = self.since_date
 
         notes = self.notes
-
-        sync_txid = self.sync_txid
 
         field_dict: dict[str, Any] = {}
 
@@ -73,8 +69,6 @@ class PostContentTagsBody:
             field_dict["sinceDate"] = since_date
         if notes is not UNSET:
             field_dict["notes"] = notes
-        if sync_txid is not UNSET:
-            field_dict["syncTxid"] = sync_txid
 
         return field_dict
 
@@ -97,8 +91,6 @@ class PostContentTagsBody:
 
         notes = d.pop("notes", UNSET)
 
-        sync_txid = d.pop("syncTxid", UNSET)
-
         post_content_tags_body = cls(
             ecosystem_id=ecosystem_id,
             owner_kind=owner_kind,
@@ -108,7 +100,6 @@ class PostContentTagsBody:
             level=level,
             since_date=since_date,
             notes=notes,
-            sync_txid=sync_txid,
         )
 
         return post_content_tags_body

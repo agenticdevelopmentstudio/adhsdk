@@ -25,7 +25,6 @@ class PatchShiprReposIdBody:
         display_name (None | str | Unset): The source repository’s label, shown in the console instead of its slug. Null
             clears it.
         ship_branch (str | Unset):
-        ci_context (str | Unset):
         env_branches (PatchShiprReposIdBodyEnvBranches | Unset):
     """
 
@@ -34,7 +33,6 @@ class PatchShiprReposIdBody:
     slug: str | Unset = UNSET
     display_name: None | str | Unset = UNSET
     ship_branch: str | Unset = UNSET
-    ci_context: str | Unset = UNSET
     env_branches: PatchShiprReposIdBodyEnvBranches | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
@@ -57,8 +55,6 @@ class PatchShiprReposIdBody:
 
         ship_branch = self.ship_branch
 
-        ci_context = self.ci_context
-
         env_branches: dict[str, Any] | Unset = UNSET
         if not isinstance(self.env_branches, Unset):
             env_branches = self.env_branches.to_dict()
@@ -76,8 +72,6 @@ class PatchShiprReposIdBody:
             field_dict["displayName"] = display_name
         if ship_branch is not UNSET:
             field_dict["shipBranch"] = ship_branch
-        if ci_context is not UNSET:
-            field_dict["ciContext"] = ci_context
         if env_branches is not UNSET:
             field_dict["envBranches"] = env_branches
 
@@ -115,8 +109,6 @@ class PatchShiprReposIdBody:
 
         ship_branch = d.pop("shipBranch", UNSET)
 
-        ci_context = d.pop("ciContext", UNSET)
-
         _env_branches = d.pop("envBranches", UNSET)
         env_branches: PatchShiprReposIdBodyEnvBranches | Unset
         if isinstance(_env_branches, Unset):
@@ -130,7 +122,6 @@ class PatchShiprReposIdBody:
             slug=slug,
             display_name=display_name,
             ship_branch=ship_branch,
-            ci_context=ci_context,
             env_branches=env_branches,
         )
 

@@ -7,6 +7,7 @@ from ... import errors
 from ...client import AuthenticatedClient, Client
 from ...models.error import Error
 from ...models.get_content_markdown_response_200 import GetContentMarkdownResponse200
+from ...models.get_content_markdown_visibility import GetContentMarkdownVisibility
 from ...types import UNSET, Response, Unset
 
 
@@ -18,9 +19,11 @@ def _get_kwargs(
     category: str | Unset = UNSET,
     tag: str | Unset = UNSET,
     source: str | Unset = UNSET,
+    visibility: GetContentMarkdownVisibility | Unset = UNSET,
     noted: bool | Unset = UNSET,
     doc: bool | Unset = UNSET,
     workspace: str | Unset = UNSET,
+    ecosystem_id: str | Unset = UNSET,
 ) -> dict[str, Any]:
     params: dict[str, Any] = {}
 
@@ -36,11 +39,19 @@ def _get_kwargs(
 
     params["source"] = source
 
+    json_visibility: str | Unset = UNSET
+    if not isinstance(visibility, Unset):
+        json_visibility = visibility.value
+
+    params["visibility"] = json_visibility
+
     params["noted"] = noted
 
     params["doc"] = doc
 
     params["workspace"] = workspace
+
+    params["ecosystemId"] = ecosystem_id
 
     params = {k: v for k, v in params.items() if v is not UNSET and v is not None}
 
@@ -92,9 +103,11 @@ def sync_detailed(
     category: str | Unset = UNSET,
     tag: str | Unset = UNSET,
     source: str | Unset = UNSET,
+    visibility: GetContentMarkdownVisibility | Unset = UNSET,
     noted: bool | Unset = UNSET,
     doc: bool | Unset = UNSET,
     workspace: str | Unset = UNSET,
+    ecosystem_id: str | Unset = UNSET,
 ) -> Response[Error | GetContentMarkdownResponse200]:
     """List/search the caller's markdown documents (metadata only)
 
@@ -109,9 +122,11 @@ def sync_detailed(
         category (str | Unset):
         tag (str | Unset):
         source (str | Unset):
+        visibility (GetContentMarkdownVisibility | Unset):
         noted (bool | Unset):
         doc (bool | Unset):
         workspace (str | Unset):
+        ecosystem_id (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -128,9 +143,11 @@ def sync_detailed(
         category=category,
         tag=tag,
         source=source,
+        visibility=visibility,
         noted=noted,
         doc=doc,
         workspace=workspace,
+        ecosystem_id=ecosystem_id,
     )
 
     response = client.get_httpx_client().request(
@@ -149,9 +166,11 @@ def sync(
     category: str | Unset = UNSET,
     tag: str | Unset = UNSET,
     source: str | Unset = UNSET,
+    visibility: GetContentMarkdownVisibility | Unset = UNSET,
     noted: bool | Unset = UNSET,
     doc: bool | Unset = UNSET,
     workspace: str | Unset = UNSET,
+    ecosystem_id: str | Unset = UNSET,
 ) -> Error | GetContentMarkdownResponse200 | None:
     """List/search the caller's markdown documents (metadata only)
 
@@ -166,9 +185,11 @@ def sync(
         category (str | Unset):
         tag (str | Unset):
         source (str | Unset):
+        visibility (GetContentMarkdownVisibility | Unset):
         noted (bool | Unset):
         doc (bool | Unset):
         workspace (str | Unset):
+        ecosystem_id (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -186,9 +207,11 @@ def sync(
         category=category,
         tag=tag,
         source=source,
+        visibility=visibility,
         noted=noted,
         doc=doc,
         workspace=workspace,
+        ecosystem_id=ecosystem_id,
     ).parsed
 
 
@@ -201,9 +224,11 @@ async def asyncio_detailed(
     category: str | Unset = UNSET,
     tag: str | Unset = UNSET,
     source: str | Unset = UNSET,
+    visibility: GetContentMarkdownVisibility | Unset = UNSET,
     noted: bool | Unset = UNSET,
     doc: bool | Unset = UNSET,
     workspace: str | Unset = UNSET,
+    ecosystem_id: str | Unset = UNSET,
 ) -> Response[Error | GetContentMarkdownResponse200]:
     """List/search the caller's markdown documents (metadata only)
 
@@ -218,9 +243,11 @@ async def asyncio_detailed(
         category (str | Unset):
         tag (str | Unset):
         source (str | Unset):
+        visibility (GetContentMarkdownVisibility | Unset):
         noted (bool | Unset):
         doc (bool | Unset):
         workspace (str | Unset):
+        ecosystem_id (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -237,9 +264,11 @@ async def asyncio_detailed(
         category=category,
         tag=tag,
         source=source,
+        visibility=visibility,
         noted=noted,
         doc=doc,
         workspace=workspace,
+        ecosystem_id=ecosystem_id,
     )
 
     response = await client.get_async_httpx_client().request(**kwargs)
@@ -256,9 +285,11 @@ async def asyncio(
     category: str | Unset = UNSET,
     tag: str | Unset = UNSET,
     source: str | Unset = UNSET,
+    visibility: GetContentMarkdownVisibility | Unset = UNSET,
     noted: bool | Unset = UNSET,
     doc: bool | Unset = UNSET,
     workspace: str | Unset = UNSET,
+    ecosystem_id: str | Unset = UNSET,
 ) -> Error | GetContentMarkdownResponse200 | None:
     """List/search the caller's markdown documents (metadata only)
 
@@ -273,9 +304,11 @@ async def asyncio(
         category (str | Unset):
         tag (str | Unset):
         source (str | Unset):
+        visibility (GetContentMarkdownVisibility | Unset):
         noted (bool | Unset):
         doc (bool | Unset):
         workspace (str | Unset):
+        ecosystem_id (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -294,8 +327,10 @@ async def asyncio(
             category=category,
             tag=tag,
             source=source,
+            visibility=visibility,
             noted=noted,
             doc=doc,
             workspace=workspace,
+            ecosystem_id=ecosystem_id,
         )
     ).parsed

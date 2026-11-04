@@ -25,7 +25,6 @@ class PutContentFeedbackIdBody:
         device_info (str | Unset):
         status (str | Unset):
         admin_notes (str | Unset):
-        sync_txid (int | Unset):
     """
 
     ecosystem_id: str | Unset = UNSET
@@ -39,7 +38,6 @@ class PutContentFeedbackIdBody:
     device_info: str | Unset = UNSET
     status: str | Unset = UNSET
     admin_notes: str | Unset = UNSET
-    sync_txid: int | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
         ecosystem_id = self.ecosystem_id
@@ -63,8 +61,6 @@ class PutContentFeedbackIdBody:
         status = self.status
 
         admin_notes = self.admin_notes
-
-        sync_txid = self.sync_txid
 
         field_dict: dict[str, Any] = {}
 
@@ -91,8 +87,6 @@ class PutContentFeedbackIdBody:
             field_dict["status"] = status
         if admin_notes is not UNSET:
             field_dict["adminNotes"] = admin_notes
-        if sync_txid is not UNSET:
-            field_dict["syncTxid"] = sync_txid
 
         return field_dict
 
@@ -121,8 +115,6 @@ class PutContentFeedbackIdBody:
 
         admin_notes = d.pop("adminNotes", UNSET)
 
-        sync_txid = d.pop("syncTxid", UNSET)
-
         put_content_feedback_id_body = cls(
             ecosystem_id=ecosystem_id,
             user_email=user_email,
@@ -135,7 +127,6 @@ class PutContentFeedbackIdBody:
             device_info=device_info,
             status=status,
             admin_notes=admin_notes,
-            sync_txid=sync_txid,
         )
 
         return put_content_feedback_id_body

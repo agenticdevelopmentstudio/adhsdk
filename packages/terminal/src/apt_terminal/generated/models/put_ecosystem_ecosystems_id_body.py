@@ -15,6 +15,7 @@ class PutEcosystemEcosystemsIdBody:
     """
     Attributes:
         owner_id (str | Unset):
+        owner_kind (None | str | Unset):
         slug (str | Unset):
         name (str | Unset):
         description (str | Unset):
@@ -29,6 +30,7 @@ class PutEcosystemEcosystemsIdBody:
     """
 
     owner_id: str | Unset = UNSET
+    owner_kind: None | str | Unset = UNSET
     slug: str | Unset = UNSET
     name: str | Unset = UNSET
     description: str | Unset = UNSET
@@ -43,6 +45,12 @@ class PutEcosystemEcosystemsIdBody:
 
     def to_dict(self) -> dict[str, Any]:
         owner_id = self.owner_id
+
+        owner_kind: None | str | Unset
+        if isinstance(self.owner_kind, Unset):
+            owner_kind = UNSET
+        else:
+            owner_kind = self.owner_kind
 
         slug = self.slug
 
@@ -87,6 +95,8 @@ class PutEcosystemEcosystemsIdBody:
         field_dict.update({})
         if owner_id is not UNSET:
             field_dict["ownerId"] = owner_id
+        if owner_kind is not UNSET:
+            field_dict["ownerKind"] = owner_kind
         if slug is not UNSET:
             field_dict["slug"] = slug
         if name is not UNSET:
@@ -116,6 +126,15 @@ class PutEcosystemEcosystemsIdBody:
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
         d = dict(src_dict)
         owner_id = d.pop("ownerId", UNSET)
+
+        def _parse_owner_kind(data: object) -> None | str | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(None | str | Unset, data)
+
+        owner_kind = _parse_owner_kind(d.pop("ownerKind", UNSET))
 
         slug = d.pop("slug", UNSET)
 
@@ -171,6 +190,7 @@ class PutEcosystemEcosystemsIdBody:
 
         put_ecosystem_ecosystems_id_body = cls(
             owner_id=owner_id,
+            owner_kind=owner_kind,
             slug=slug,
             name=name,
             description=description,

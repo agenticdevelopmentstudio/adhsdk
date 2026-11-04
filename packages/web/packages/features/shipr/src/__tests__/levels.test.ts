@@ -32,7 +32,6 @@ function repo(
     slug,
     shard,
     shipBranch: 'ship',
-    ciContext: 'gate',
     envBranches: {},
     registeredAt: null,
     position,

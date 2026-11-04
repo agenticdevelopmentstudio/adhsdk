@@ -1,4 +1,5 @@
 import XCTest
+import AgenticToolkitCore
 @testable import AgenticToolkitMacOS
 
 /// Each edge carries two arrows, and which number each one moves — and which
@@ -413,5 +414,31 @@ final class SpacingControlAccessibilityTests: XCTestCase {
             found.formUnion(identifiers(under: subview))
         }
         return found
+    }
+}
+
+/// Reset means "as shipped": a control bound to settings puts each number back
+/// to its setting's default, never to zero.
+@MainActor
+final class SpacingControlResetTests: XCTestCase {
+
+    func testResetRestoresTheResetValueNotZero() {
+        let control = SpacingControl(style: .frame, value: Spacing(uniform: 3))
+        control.resetValue = Spacing(uniform: 10)
+        control.resetClicked()
+        for edge in SpacingEdge.allCases {
+            XCTAssertEqual(control.value[edge], 10, "\(edge) goes back to its default")
+        }
+    }
+
+    func testABoundControlResetsToEachSettingsDefault() {
+        let control = SpacingControl.boundToSettings(style: .frame, edges: PaneSpacing.edgeSettings)
+        for edge in SpacingEdge.allCases {
+            XCTAssertEqual(control.resetValue[edge], UserSettings.defaultPaneSpacing)
+        }
+        let dividers = SpacingControl.boundToSettings(style: .paneDividers, gutters: PaneSpacing.gutterSettings)
+        for gutter in SpacingGutter.allCases {
+            XCTAssertEqual(dividers.resetValue[gutter], UserSettings.defaultPaneSpacing)
+        }
     }
 }

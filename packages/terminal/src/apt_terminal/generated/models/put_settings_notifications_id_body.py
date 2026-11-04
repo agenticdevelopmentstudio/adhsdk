@@ -19,7 +19,6 @@ class PutSettingsNotificationsIdBody:
         email (bool | Unset):
         sms (bool | Unset):
         in_app (bool | Unset):
-        sync_txid (int | Unset):
     """
 
     ecosystem_id: str | Unset = UNSET
@@ -27,7 +26,6 @@ class PutSettingsNotificationsIdBody:
     email: bool | Unset = UNSET
     sms: bool | Unset = UNSET
     in_app: bool | Unset = UNSET
-    sync_txid: int | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
         ecosystem_id = self.ecosystem_id
@@ -39,8 +37,6 @@ class PutSettingsNotificationsIdBody:
         sms = self.sms
 
         in_app = self.in_app
-
-        sync_txid = self.sync_txid
 
         field_dict: dict[str, Any] = {}
 
@@ -55,8 +51,6 @@ class PutSettingsNotificationsIdBody:
             field_dict["sms"] = sms
         if in_app is not UNSET:
             field_dict["inApp"] = in_app
-        if sync_txid is not UNSET:
-            field_dict["syncTxid"] = sync_txid
 
         return field_dict
 
@@ -73,15 +67,12 @@ class PutSettingsNotificationsIdBody:
 
         in_app = d.pop("inApp", UNSET)
 
-        sync_txid = d.pop("syncTxid", UNSET)
-
         put_settings_notifications_id_body = cls(
             ecosystem_id=ecosystem_id,
             category=category,
             email=email,
             sms=sms,
             in_app=in_app,
-            sync_txid=sync_txid,
         )
 
         return put_settings_notifications_id_body

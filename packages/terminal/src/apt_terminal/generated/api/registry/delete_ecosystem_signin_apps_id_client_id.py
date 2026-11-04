@@ -72,7 +72,8 @@ def sync_detailed(
 ) -> Response[Any | Error]:
     """Delete a sign-in app
 
-     Also removes the client’s provider links. Internal clients cannot be deleted (403).
+     Also removes the client’s provider links and its Hydra client (Hydra first, so a Hydra failure
+    leaves the app in place to retry). Internal clients cannot be deleted (403).
 
     Args:
         id (str):
@@ -106,7 +107,8 @@ def sync(
 ) -> Any | Error | None:
     """Delete a sign-in app
 
-     Also removes the client’s provider links. Internal clients cannot be deleted (403).
+     Also removes the client’s provider links and its Hydra client (Hydra first, so a Hydra failure
+    leaves the app in place to retry). Internal clients cannot be deleted (403).
 
     Args:
         id (str):
@@ -135,7 +137,8 @@ async def asyncio_detailed(
 ) -> Response[Any | Error]:
     """Delete a sign-in app
 
-     Also removes the client’s provider links. Internal clients cannot be deleted (403).
+     Also removes the client’s provider links and its Hydra client (Hydra first, so a Hydra failure
+    leaves the app in place to retry). Internal clients cannot be deleted (403).
 
     Args:
         id (str):
@@ -167,7 +170,8 @@ async def asyncio(
 ) -> Any | Error | None:
     """Delete a sign-in app
 
-     Also removes the client’s provider links. Internal clients cannot be deleted (403).
+     Also removes the client’s provider links and its Hydra client (Hydra first, so a Hydra failure
+    leaves the app in place to retry). Internal clients cannot be deleted (403).
 
     Args:
         id (str):

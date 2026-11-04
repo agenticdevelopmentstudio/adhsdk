@@ -31,7 +31,6 @@ class PostIntegrationIntegrationItemsBody:
         notification_reason (None | str | Unset):
         external_created_at (None | str | Unset):
         external_updated_at (None | str | Unset):
-        sync_txid (int | Unset):
     """
 
     connection_id: str
@@ -51,7 +50,6 @@ class PostIntegrationIntegrationItemsBody:
     notification_reason: None | str | Unset = UNSET
     external_created_at: None | str | Unset = UNSET
     external_updated_at: None | str | Unset = UNSET
-    sync_txid: int | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
         connection_id = self.connection_id
@@ -124,8 +122,6 @@ class PostIntegrationIntegrationItemsBody:
         else:
             external_updated_at = self.external_updated_at
 
-        sync_txid = self.sync_txid
-
         field_dict: dict[str, Any] = {}
 
         field_dict.update(
@@ -160,8 +156,6 @@ class PostIntegrationIntegrationItemsBody:
             field_dict["externalCreatedAt"] = external_created_at
         if external_updated_at is not UNSET:
             field_dict["externalUpdatedAt"] = external_updated_at
-        if sync_txid is not UNSET:
-            field_dict["syncTxid"] = sync_txid
 
         return field_dict
 
@@ -265,8 +259,6 @@ class PostIntegrationIntegrationItemsBody:
 
         external_updated_at = _parse_external_updated_at(d.pop("externalUpdatedAt", UNSET))
 
-        sync_txid = d.pop("syncTxid", UNSET)
-
         post_integration_integration_items_body = cls(
             connection_id=connection_id,
             external_id=external_id,
@@ -285,7 +277,6 @@ class PostIntegrationIntegrationItemsBody:
             notification_reason=notification_reason,
             external_created_at=external_created_at,
             external_updated_at=external_updated_at,
-            sync_txid=sync_txid,
         )
 
         return post_integration_integration_items_body

@@ -300,6 +300,17 @@ extension ComposableSettings {
         /// the card's own fill, so rows, the space under them and the card
         /// around them read as one surface.
         public let tableView = ThemedTableView(role: .card)
+
+        /// The table's width the columns were last fitted to.
+        private var fittedWidth: CGFloat = 0
+
+        public override func layout() {
+            super.layout()
+            let width = scrollView.contentView.bounds.width
+            guard width > 0, width != fittedWidth else { return }
+            fittedWidth = width
+            tableView.sizeToFit()
+        }
         /// Shown over the table while it has no rows.
         public let emptyLabel = ThemedLabel(role: .secondaryText, textRole: .body)
 
@@ -675,6 +686,7 @@ extension ComposableSettings {
                 let tableColumn = NSTableColumn(identifier: NSUserInterfaceItemIdentifier(column.id))
                 tableColumn.title = column.title
                 tableColumn.width = column.width
+                tableColumn.minWidth = min(column.width, 80)
                 tableColumn.headerToolTip = column.headerToolTip
                 if column.isSortable {
                     tableColumn.sortDescriptorPrototype =
@@ -683,6 +695,14 @@ extension ComposableSettings {
                 tableView.addTableColumn(tableColumn)
             }
             tableView.headerView = ThemedTableHeaderView(role: .card)
+            // Columns fit the card's width rather than running past it, so no
+            // column hides behind a horizontal scroll. The last column gives way
+            // first, then the one before it: leading columns (a name, a popup)
+            // keep the width they asked for, and the long free-text columns
+            // that usually trail them truncate instead. AppKit's naming runs the
+            // other way: `sequential` starts at the last column, `reverseSequential`
+            // at the first.
+            tableView.columnAutoresizingStyle = .sequentialColumnAutoresizingStyle
             tableView.dataSource = self
             tableView.delegate = self
             tableView.usesAlternatingRowBackgroundColors = false

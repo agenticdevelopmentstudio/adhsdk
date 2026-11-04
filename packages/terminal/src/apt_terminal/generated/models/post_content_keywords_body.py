@@ -18,14 +18,12 @@ class PostContentKeywordsBody:
         ecosystem_id (str | Unset):
         color (str | Unset):
         description (str | Unset):
-        sync_txid (int | Unset):
     """
 
     label: str
     ecosystem_id: str | Unset = UNSET
     color: str | Unset = UNSET
     description: str | Unset = UNSET
-    sync_txid: int | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
         label = self.label
@@ -35,8 +33,6 @@ class PostContentKeywordsBody:
         color = self.color
 
         description = self.description
-
-        sync_txid = self.sync_txid
 
         field_dict: dict[str, Any] = {}
 
@@ -51,8 +47,6 @@ class PostContentKeywordsBody:
             field_dict["color"] = color
         if description is not UNSET:
             field_dict["description"] = description
-        if sync_txid is not UNSET:
-            field_dict["syncTxid"] = sync_txid
 
         return field_dict
 
@@ -67,14 +61,11 @@ class PostContentKeywordsBody:
 
         description = d.pop("description", UNSET)
 
-        sync_txid = d.pop("syncTxid", UNSET)
-
         post_content_keywords_body = cls(
             label=label,
             ecosystem_id=ecosystem_id,
             color=color,
             description=description,
-            sync_txid=sync_txid,
         )
 
         return post_content_keywords_body

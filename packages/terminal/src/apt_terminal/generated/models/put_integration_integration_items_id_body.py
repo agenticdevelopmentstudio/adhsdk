@@ -31,7 +31,6 @@ class PutIntegrationIntegrationItemsIdBody:
         notification_reason (None | str | Unset):
         external_created_at (None | str | Unset):
         external_updated_at (None | str | Unset):
-        sync_txid (int | Unset):
     """
 
     ecosystem_id: str | Unset = UNSET
@@ -51,7 +50,6 @@ class PutIntegrationIntegrationItemsIdBody:
     notification_reason: None | str | Unset = UNSET
     external_created_at: None | str | Unset = UNSET
     external_updated_at: None | str | Unset = UNSET
-    sync_txid: int | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
         ecosystem_id = self.ecosystem_id
@@ -124,8 +122,6 @@ class PutIntegrationIntegrationItemsIdBody:
         else:
             external_updated_at = self.external_updated_at
 
-        sync_txid = self.sync_txid
-
         field_dict: dict[str, Any] = {}
 
         field_dict.update({})
@@ -163,8 +159,6 @@ class PutIntegrationIntegrationItemsIdBody:
             field_dict["externalCreatedAt"] = external_created_at
         if external_updated_at is not UNSET:
             field_dict["externalUpdatedAt"] = external_updated_at
-        if sync_txid is not UNSET:
-            field_dict["syncTxid"] = sync_txid
 
         return field_dict
 
@@ -268,8 +262,6 @@ class PutIntegrationIntegrationItemsIdBody:
 
         external_updated_at = _parse_external_updated_at(d.pop("externalUpdatedAt", UNSET))
 
-        sync_txid = d.pop("syncTxid", UNSET)
-
         put_integration_integration_items_id_body = cls(
             ecosystem_id=ecosystem_id,
             connection_id=connection_id,
@@ -288,7 +280,6 @@ class PutIntegrationIntegrationItemsIdBody:
             notification_reason=notification_reason,
             external_created_at=external_created_at,
             external_updated_at=external_updated_at,
-            sync_txid=sync_txid,
         )
 
         return put_integration_integration_items_id_body

@@ -24,14 +24,12 @@ class PostContentListItemsBody:
         position (int):
         value (bool | float | list[Any] | None | PostContentListItemsBodyValueType1 | str):
         ecosystem_id (str | Unset):
-        sync_txid (int | Unset):
     """
 
     list_id: str
     position: int
     value: bool | float | list[Any] | None | PostContentListItemsBodyValueType1 | str
     ecosystem_id: str | Unset = UNSET
-    sync_txid: int | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
         from ..models.post_content_list_items_body_value_type_1 import (
@@ -53,8 +51,6 @@ class PostContentListItemsBody:
 
         ecosystem_id = self.ecosystem_id
 
-        sync_txid = self.sync_txid
-
         field_dict: dict[str, Any] = {}
 
         field_dict.update(
@@ -66,8 +62,6 @@ class PostContentListItemsBody:
         )
         if ecosystem_id is not UNSET:
             field_dict["ecosystemId"] = ecosystem_id
-        if sync_txid is not UNSET:
-            field_dict["syncTxid"] = sync_txid
 
         return field_dict
 
@@ -111,14 +105,11 @@ class PostContentListItemsBody:
 
         ecosystem_id = d.pop("ecosystemId", UNSET)
 
-        sync_txid = d.pop("syncTxid", UNSET)
-
         post_content_list_items_body = cls(
             list_id=list_id,
             position=position,
             value=value,
             ecosystem_id=ecosystem_id,
-            sync_txid=sync_txid,
         )
 
         return post_content_list_items_body

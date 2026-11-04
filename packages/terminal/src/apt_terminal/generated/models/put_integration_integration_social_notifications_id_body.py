@@ -26,7 +26,6 @@ class PutIntegrationIntegrationSocialNotificationsIdBody:
         item_url (None | str | Unset):
         is_read (bool | Unset):
         external_created_at (None | str | Unset):
-        sync_txid (int | Unset):
     """
 
     ecosystem_id: str | Unset = UNSET
@@ -41,7 +40,6 @@ class PutIntegrationIntegrationSocialNotificationsIdBody:
     item_url: None | str | Unset = UNSET
     is_read: bool | Unset = UNSET
     external_created_at: None | str | Unset = UNSET
-    sync_txid: int | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
         ecosystem_id = self.ecosystem_id
@@ -92,8 +90,6 @@ class PutIntegrationIntegrationSocialNotificationsIdBody:
         else:
             external_created_at = self.external_created_at
 
-        sync_txid = self.sync_txid
-
         field_dict: dict[str, Any] = {}
 
         field_dict.update({})
@@ -121,8 +117,6 @@ class PutIntegrationIntegrationSocialNotificationsIdBody:
             field_dict["isRead"] = is_read
         if external_created_at is not UNSET:
             field_dict["externalCreatedAt"] = external_created_at
-        if sync_txid is not UNSET:
-            field_dict["syncTxid"] = sync_txid
 
         return field_dict
 
@@ -195,8 +189,6 @@ class PutIntegrationIntegrationSocialNotificationsIdBody:
 
         external_created_at = _parse_external_created_at(d.pop("externalCreatedAt", UNSET))
 
-        sync_txid = d.pop("syncTxid", UNSET)
-
         put_integration_integration_social_notifications_id_body = cls(
             ecosystem_id=ecosystem_id,
             connection_id=connection_id,
@@ -210,7 +202,6 @@ class PutIntegrationIntegrationSocialNotificationsIdBody:
             item_url=item_url,
             is_read=is_read,
             external_created_at=external_created_at,
-            sync_txid=sync_txid,
         )
 
         return put_integration_integration_social_notifications_id_body

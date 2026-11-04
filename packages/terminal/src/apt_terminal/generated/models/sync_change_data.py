@@ -11,7 +11,10 @@ T = TypeVar("T", bound="SyncChangeData")
 
 @_attrs_define
 class SyncChangeData:
-    """Full row for upserts; absent for deletes"""
+    """Row for upserts, minus server-internal sync columns and derived columns such as a memory's embedding; absent for
+    deletes
+
+    """
 
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 

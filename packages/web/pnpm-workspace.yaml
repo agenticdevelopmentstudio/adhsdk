@@ -8,6 +8,10 @@ packages:
 # it there, while pnpm 10+ reads it here. Drop an entry once every dependent
 # resolves that package above the floor on its own. minimatch 11 is CJS-named
 # only, so @redocly/openapi-core's default-call require is patched (patches/).
+# deepmerge has no patched release (GHSA-gcqx-w48m-w2h4). style-dictionary imports
+# the ESM bundle of @bundled-es-modules/deepmerge, which carries its own copy and
+# never loads the package, so the override removes it. Only that package's CJS
+# entry needs it, and nothing here requires that entry.
 overrides:
   vite: ^8.2.4
   esbuild: ^0.28.1
@@ -26,6 +30,11 @@ overrides:
   "@vitest/mocker": ^4.1.12
   minimatch: ^11.0.1
   "glob@>=9 <14.0.2": ^14.0.2
+  "@types/react": 19.2.18
+  "@bundled-es-modules/deepmerge>deepmerge": "-"
+
+# pnpm deploy of a closure without @redocly/openapi-core must not fail on its patch.
+allowUnusedPatches: true
 
 patchedDependencies:
   "@redocly/openapi-core@1.34.20": patches/@redocly__openapi-core@1.34.20.patch

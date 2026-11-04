@@ -21,7 +21,6 @@ class PutContentSocialLinksIdBody:
         url (str | Unset):
         handle (str | Unset):
         sort_order (int | Unset):
-        sync_txid (int | Unset):
     """
 
     ecosystem_id: str | Unset = UNSET
@@ -31,7 +30,6 @@ class PutContentSocialLinksIdBody:
     url: str | Unset = UNSET
     handle: str | Unset = UNSET
     sort_order: int | Unset = UNSET
-    sync_txid: int | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
         ecosystem_id = self.ecosystem_id
@@ -47,8 +45,6 @@ class PutContentSocialLinksIdBody:
         handle = self.handle
 
         sort_order = self.sort_order
-
-        sync_txid = self.sync_txid
 
         field_dict: dict[str, Any] = {}
 
@@ -67,8 +63,6 @@ class PutContentSocialLinksIdBody:
             field_dict["handle"] = handle
         if sort_order is not UNSET:
             field_dict["sortOrder"] = sort_order
-        if sync_txid is not UNSET:
-            field_dict["syncTxid"] = sync_txid
 
         return field_dict
 
@@ -89,8 +83,6 @@ class PutContentSocialLinksIdBody:
 
         sort_order = d.pop("sortOrder", UNSET)
 
-        sync_txid = d.pop("syncTxid", UNSET)
-
         put_content_social_links_id_body = cls(
             ecosystem_id=ecosystem_id,
             owner_kind=owner_kind,
@@ -99,7 +91,6 @@ class PutContentSocialLinksIdBody:
             url=url,
             handle=handle,
             sort_order=sort_order,
-            sync_txid=sync_txid,
         )
 
         return put_content_social_links_id_body

@@ -7,6 +7,16 @@ import XCTest
 /// again with `remove(path:)`.
 enum TestDaemonDatabase {
 
+    private static let directoryPrefix = "daemontest-"
+
+    /// A database path inside its own new temp directory, so the -wal and -shm
+    /// files SQLite makes beside it go when `remove(path:)` removes the directory.
+    static func makeDatabasePath() throws -> String {
+        let directory = NSTemporaryDirectory() + directoryPrefix + UUID().uuidString
+        try FileManager.default.createDirectory(atPath: directory, withIntermediateDirectories: true)
+        return directory + "/session.db"
+    }
+
     /// Opens a fresh `SessionSchema` database at a unique temp path.
     static func makeSessionDatabase(
         path explicitPath: String? = nil,
@@ -15,7 +25,7 @@ enum TestDaemonDatabase {
         sessionUpsertHook: DaemonDatabase.SessionUpsertHook? = nil,
         file: StaticString = #filePath, line: UInt = #line
     ) throws -> (db: DaemonDatabase, path: String) {
-        let path = explicitPath ?? NSTemporaryDirectory() + "daemontest-\(UUID().uuidString).db"
+        let path = try explicitPath ?? makeDatabasePath()
         do {
             let db = try DaemonDatabase(
                 path: path,
@@ -33,8 +43,14 @@ enum TestDaemonDatabase {
         }
     }
 
-    /// Removes the database file and its WAL siblings.
+    /// Removes the database and its WAL siblings, along with the directory
+    /// `makeDatabasePath()` made for it. A path the caller chose keeps its directory.
     static func remove(path: String) {
+        let directory = (path as NSString).deletingLastPathComponent
+        if (directory as NSString).lastPathComponent.hasPrefix(directoryPrefix) {
+            try? FileManager.default.removeItem(atPath: directory)
+            return
+        }
         for suffix in ["", "-wal", "-shm"] {
             try? FileManager.default.removeItem(atPath: path + suffix)
         }

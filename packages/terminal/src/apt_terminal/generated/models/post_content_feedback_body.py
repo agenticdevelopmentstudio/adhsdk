@@ -25,7 +25,6 @@ class PostContentFeedbackBody:
         device_info (str | Unset):
         status (str | Unset):
         admin_notes (str | Unset):
-        sync_txid (int | Unset):
     """
 
     user_email: str
@@ -39,7 +38,6 @@ class PostContentFeedbackBody:
     device_info: str | Unset = UNSET
     status: str | Unset = UNSET
     admin_notes: str | Unset = UNSET
-    sync_txid: int | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
         user_email = self.user_email
@@ -64,8 +62,6 @@ class PostContentFeedbackBody:
 
         admin_notes = self.admin_notes
 
-        sync_txid = self.sync_txid
-
         field_dict: dict[str, Any] = {}
 
         field_dict.update(
@@ -89,8 +85,6 @@ class PostContentFeedbackBody:
             field_dict["status"] = status
         if admin_notes is not UNSET:
             field_dict["adminNotes"] = admin_notes
-        if sync_txid is not UNSET:
-            field_dict["syncTxid"] = sync_txid
 
         return field_dict
 
@@ -119,8 +113,6 @@ class PostContentFeedbackBody:
 
         admin_notes = d.pop("adminNotes", UNSET)
 
-        sync_txid = d.pop("syncTxid", UNSET)
-
         post_content_feedback_body = cls(
             user_email=user_email,
             category=category,
@@ -133,7 +125,6 @@ class PostContentFeedbackBody:
             device_info=device_info,
             status=status,
             admin_notes=admin_notes,
-            sync_txid=sync_txid,
         )
 
         return post_content_feedback_body

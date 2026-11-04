@@ -71,6 +71,74 @@ final class TerminalChatSessionTests: XCTestCase {
         XCTAssertFalse(terminal.isRunning)
     }
 
+    /// Claude Code reads a long line arriving in one write as a paste and keeps
+    /// a Return inside it as pasted text, so the message never sends. Return
+    /// has to reach the program as a read of its own.
+    func testReturnArrivesAsAWriteOfItsOwn() async throws {
+        let (chat, terminal) = try await connectedShell()
+        defer { withExtendedLifetime(terminal) {} }
+        // Reads two raw chunks and prints them, putting the tty back first.
+        let reader = #"/usr/bin/python3 -c 'import os,termios,tty; o=termios.tcgetattr(0); tty.setraw(0); "#
+            + #"a=os.read(0,99); b=os.read(0,99); termios.tcsetattr(0,termios.TCSADRAIN,o); print("CHUNKS",a,b)'"#
+        _ = await chat.run(reader, settle: .seconds(1), timeout: .seconds(3))
+        let reply = await chat.run("hello", settle: .milliseconds(800), timeout: .seconds(5))
+        XCTAssertTrue(reply.contains(#"CHUNKS b'hello' b'\r'"#), reply)
+    }
+
+    /// The echo of the text must not settle a short wait before Return is written: the command's
+    /// output belongs to this run, not to the next wait.
+    func testAShortSettleStillGetsTheCommandsOutput() async throws {
+        let (chat, terminal) = try await connectedShell()
+        defer { withExtendedLifetime(terminal) {} }
+        let reply = await chat.run("echo $((40+2))QQ", settle: .milliseconds(50), timeout: .seconds(5))
+        XCTAssertTrue(reply.contains("42QQ"), reply)
+        let next = await chat.waitForOutput(settle: .milliseconds(300), timeout: .seconds(1))
+        XCTAssertFalse(next.contains("42QQ"), "the output went to the next wait: \(next)")
+    }
+
+    /// Two quick messages keep their order: each one's Return comes before the next one's text.
+    func testQuickSendsKeepTheirOrder() async throws {
+        let (chat, terminal) = try await connectedShell()
+        defer { withExtendedLifetime(terminal) {} }
+        // Reads raw input until two Returns have arrived, then prints everything it read.
+        let reader = #"/usr/bin/python3 -c 'import os,termios,tty; o=termios.tcgetattr(0); tty.setraw(0); "#
+            + #"d=b""; exec("while d.count(13) < 2: d += os.read(0,99)"); "#
+            + #"termios.tcsetattr(0,termios.TCSADRAIN,o); print("GOT",d)'"#
+        _ = await chat.run(reader, settle: .seconds(1), timeout: .seconds(3))
+        chat.send("one")
+        chat.send("two")
+        let reply = await chat.waitForOutput(settle: .milliseconds(800), timeout: .seconds(5))
+        XCTAssertTrue(reply.contains(#"GOT b'one\rtwo\r'"#), reply)
+    }
+
+    /// The Return goes to the terminal the text was typed into even when the chat closes before it is
+    /// written: the command is never left typed but not run.
+    func testAMessageSentJustBeforeClosingStillRuns() async throws {
+        let (chat, terminal) = try await connectedShell()
+        defer { withExtendedLifetime(terminal) {} }
+        chat.send("echo closed$((1+1))")
+        chat.close()
+        let deadline = ContinuousClock.now + .seconds(5)
+        func ran() -> Bool {
+            terminal.screenSnapshot().lines.contains { $0.trimmingCharacters(in: .whitespaces) == "closed2" }
+        }
+        while !ran() {
+            guard ContinuousClock.now < deadline else {
+                return XCTFail("never ran: \(terminal.screenSnapshot().lines.joined(separator: "\n"))")
+            }
+            try await Task.sleep(for: .milliseconds(100))
+        }
+    }
+
+    /// The timeout counts from the Return, so one shorter than the pause before it still gets the output.
+    func testATimeoutShorterThanTheReturnDelayStillGetsTheOutput() async throws {
+        let (chat, terminal) = try await connectedShell()
+        defer { withExtendedLifetime(terminal) {} }
+        let reply = await chat.run("echo $((6*7))ZZ", settle: .milliseconds(100), timeout: .milliseconds(400))
+        XCTAssertTrue(reply.contains("42ZZ"), reply)
+        XCTAssertFalse(reply.contains(Self.stillRunning), reply)
+    }
+
     // MARK: - Helpers
 
     /// A chat connected to a freshly started shell, once its first prompt is up.

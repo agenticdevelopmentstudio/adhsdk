@@ -25,6 +25,8 @@ class GetPersonaPersonasIdResponse200:
     Attributes:
         id (str):
         user_id (None | str):
+        author_kind (None | str):
+        author_id (None | str):
         owner_kind (str):
         owner_id (str):
         slug (str):
@@ -49,6 +51,8 @@ class GetPersonaPersonasIdResponse200:
 
     id: str
     user_id: None | str
+    author_kind: None | str
+    author_id: None | str
     owner_kind: str
     owner_id: str
     slug: str
@@ -86,6 +90,12 @@ class GetPersonaPersonasIdResponse200:
 
         user_id: None | str
         user_id = self.user_id
+
+        author_kind: None | str
+        author_kind = self.author_kind
+
+        author_id: None | str
+        author_id = self.author_id
 
         owner_kind = self.owner_kind
 
@@ -162,6 +172,8 @@ class GetPersonaPersonasIdResponse200:
             {
                 "id": id,
                 "userId": user_id,
+                "authorKind": author_kind,
+                "authorId": author_id,
                 "ownerKind": owner_kind,
                 "ownerId": owner_id,
                 "slug": slug,
@@ -207,6 +219,20 @@ class GetPersonaPersonasIdResponse200:
             return cast(None | str, data)
 
         user_id = _parse_user_id(d.pop("userId"))
+
+        def _parse_author_kind(data: object) -> None | str:
+            if data is None:
+                return data
+            return cast(None | str, data)
+
+        author_kind = _parse_author_kind(d.pop("authorKind"))
+
+        def _parse_author_id(data: object) -> None | str:
+            if data is None:
+                return data
+            return cast(None | str, data)
+
+        author_id = _parse_author_id(d.pop("authorId"))
 
         owner_kind = d.pop("ownerKind")
 
@@ -380,6 +406,8 @@ class GetPersonaPersonasIdResponse200:
         get_persona_personas_id_response_200 = cls(
             id=id,
             user_id=user_id,
+            author_kind=author_kind,
+            author_id=author_id,
             owner_kind=owner_kind,
             owner_id=owner_id,
             slug=slug,

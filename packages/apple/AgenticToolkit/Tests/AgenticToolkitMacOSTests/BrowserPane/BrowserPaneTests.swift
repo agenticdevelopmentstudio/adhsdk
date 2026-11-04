@@ -90,7 +90,8 @@ final class BrowserPaneTests: XCTestCase {
         let settings = makeSettings()
         let pane = BrowserPaneViewController(store: EphemeralPaneStateStore(), settings: settings)
         XCTAssertEqual(pane.webView.pageZoom, 1.0)
-        XCTAssertNil(pane.webView.customUserAgent)
+        // The pane sets nil; WebKit reads an unset agent back as "" on macOS 26.
+        XCTAssertEqual(pane.webView.customUserAgent ?? "", "")
         XCTAssertFalse(pane.webView.isInspectable)
 
         settings.set(1.5, for: UserSettings.browserPageZoom)

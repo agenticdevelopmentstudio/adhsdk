@@ -24,7 +24,6 @@ class PutGameEffectsIdBody:
         value (int | Unset):
         duration (int | None | Unset):
         sort_order (int | Unset):
-        sync_txid (int | Unset):
     """
 
     ecosystem_id: str | Unset = UNSET
@@ -37,7 +36,6 @@ class PutGameEffectsIdBody:
     value: int | Unset = UNSET
     duration: int | None | Unset = UNSET
     sort_order: int | Unset = UNSET
-    sync_txid: int | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
         ecosystem_id = self.ecosystem_id
@@ -64,8 +62,6 @@ class PutGameEffectsIdBody:
 
         sort_order = self.sort_order
 
-        sync_txid = self.sync_txid
-
         field_dict: dict[str, Any] = {}
 
         field_dict.update({})
@@ -89,8 +85,6 @@ class PutGameEffectsIdBody:
             field_dict["duration"] = duration
         if sort_order is not UNSET:
             field_dict["sortOrder"] = sort_order
-        if sync_txid is not UNSET:
-            field_dict["syncTxid"] = sync_txid
 
         return field_dict
 
@@ -124,8 +118,6 @@ class PutGameEffectsIdBody:
 
         sort_order = d.pop("sortOrder", UNSET)
 
-        sync_txid = d.pop("syncTxid", UNSET)
-
         put_game_effects_id_body = cls(
             ecosystem_id=ecosystem_id,
             game_id=game_id,
@@ -137,7 +129,6 @@ class PutGameEffectsIdBody:
             value=value,
             duration=duration,
             sort_order=sort_order,
-            sync_txid=sync_txid,
         )
 
         return put_game_effects_id_body

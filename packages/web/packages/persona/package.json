@@ -72,7 +72,7 @@
     "@agenticdevelopertoolkit/chat": "workspace:*",
     "@agenticdevelopertoolkit/themes": "workspace:*",
     "@agenticdevelopertoolkit/viewport": "workspace:*",
-    "@types/react": "19.2.16",
+    "@types/react": "19.2.18",
     "@types/react-dom": "19.2.3",
     "esbuild-plugin-preserve-directives": "^0.0.11",
     "react": "^19.2.7",

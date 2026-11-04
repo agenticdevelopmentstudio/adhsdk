@@ -17,13 +17,11 @@ class PostContentListsBody:
         name (str):
         ecosystem_id (str | Unset):
         description (None | str | Unset):
-        sync_txid (int | Unset):
     """
 
     name: str
     ecosystem_id: str | Unset = UNSET
     description: None | str | Unset = UNSET
-    sync_txid: int | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
         name = self.name
@@ -36,8 +34,6 @@ class PostContentListsBody:
         else:
             description = self.description
 
-        sync_txid = self.sync_txid
-
         field_dict: dict[str, Any] = {}
 
         field_dict.update(
@@ -49,8 +45,6 @@ class PostContentListsBody:
             field_dict["ecosystemId"] = ecosystem_id
         if description is not UNSET:
             field_dict["description"] = description
-        if sync_txid is not UNSET:
-            field_dict["syncTxid"] = sync_txid
 
         return field_dict
 
@@ -70,13 +64,10 @@ class PostContentListsBody:
 
         description = _parse_description(d.pop("description", UNSET))
 
-        sync_txid = d.pop("syncTxid", UNSET)
-
         post_content_lists_body = cls(
             name=name,
             ecosystem_id=ecosystem_id,
             description=description,
-            sync_txid=sync_txid,
         )
 
         return post_content_lists_body

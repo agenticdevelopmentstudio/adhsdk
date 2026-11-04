@@ -84,7 +84,8 @@ def sync_detailed(
     """Record a job failure
 
      Records an error and either re-queues the job with exponential backoff (when retry:true and attempts
-    remain) or moves it to dead. Returns 404 when the lease guard fails.
+    remain) or moves it to dead. Returns 404 when the lease guard fails. The optional `usage` array is
+    recorded exactly as on /complete — once per admitted failure, after the transaction commits.
 
     Args:
         id (str):
@@ -119,7 +120,8 @@ def sync(
     """Record a job failure
 
      Records an error and either re-queues the job with exponential backoff (when retry:true and attempts
-    remain) or moves it to dead. Returns 404 when the lease guard fails.
+    remain) or moves it to dead. Returns 404 when the lease guard fails. The optional `usage` array is
+    recorded exactly as on /complete — once per admitted failure, after the transaction commits.
 
     Args:
         id (str):
@@ -149,7 +151,8 @@ async def asyncio_detailed(
     """Record a job failure
 
      Records an error and either re-queues the job with exponential backoff (when retry:true and attempts
-    remain) or moves it to dead. Returns 404 when the lease guard fails.
+    remain) or moves it to dead. Returns 404 when the lease guard fails. The optional `usage` array is
+    recorded exactly as on /complete — once per admitted failure, after the transaction commits.
 
     Args:
         id (str):
@@ -182,7 +185,8 @@ async def asyncio(
     """Record a job failure
 
      Records an error and either re-queues the job with exponential backoff (when retry:true and attempts
-    remain) or moves it to dead. Returns 404 when the lease guard fails.
+    remain) or moves it to dead. Returns 404 when the lease guard fails. The optional `usage` array is
+    recorded exactly as on /complete — once per admitted failure, after the transaction commits.
 
     Args:
         id (str):

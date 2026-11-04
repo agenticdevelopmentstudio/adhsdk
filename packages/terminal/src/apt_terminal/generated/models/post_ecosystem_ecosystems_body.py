@@ -17,6 +17,7 @@ class PostEcosystemEcosystemsBody:
         slug (str):
         name (str):
         owner_id (str | Unset):
+        owner_kind (None | str | Unset):
         description (str | Unset):
         region (str | Unset):
         dedicated_db_connection_id (None | str | Unset):
@@ -32,6 +33,7 @@ class PostEcosystemEcosystemsBody:
     slug: str
     name: str
     owner_id: str | Unset = UNSET
+    owner_kind: None | str | Unset = UNSET
     description: str | Unset = UNSET
     region: str | Unset = UNSET
     dedicated_db_connection_id: None | str | Unset = UNSET
@@ -49,6 +51,12 @@ class PostEcosystemEcosystemsBody:
         name = self.name
 
         owner_id = self.owner_id
+
+        owner_kind: None | str | Unset
+        if isinstance(self.owner_kind, Unset):
+            owner_kind = UNSET
+        else:
+            owner_kind = self.owner_kind
 
         description = self.description
 
@@ -96,6 +104,8 @@ class PostEcosystemEcosystemsBody:
         )
         if owner_id is not UNSET:
             field_dict["ownerId"] = owner_id
+        if owner_kind is not UNSET:
+            field_dict["ownerKind"] = owner_kind
         if description is not UNSET:
             field_dict["description"] = description
         if region is not UNSET:
@@ -127,6 +137,15 @@ class PostEcosystemEcosystemsBody:
         name = d.pop("name")
 
         owner_id = d.pop("ownerId", UNSET)
+
+        def _parse_owner_kind(data: object) -> None | str | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(None | str | Unset, data)
+
+        owner_kind = _parse_owner_kind(d.pop("ownerKind", UNSET))
 
         description = d.pop("description", UNSET)
 
@@ -182,6 +201,7 @@ class PostEcosystemEcosystemsBody:
             slug=slug,
             name=name,
             owner_id=owner_id,
+            owner_kind=owner_kind,
             description=description,
             region=region,
             dedicated_db_connection_id=dedicated_db_connection_id,

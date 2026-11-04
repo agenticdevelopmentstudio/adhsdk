@@ -121,6 +121,11 @@ extension SpacingControl {
         }
 
         let control = SpacingControl(style: style, range: range)
+        // Reset restores what the settings ship with, not zero.
+        var defaults = Spacing()
+        for (edge, setting) in edges { defaults[edge] = setting.defaultValue }
+        for (gutter, setting) in gutters { defaults[gutter] = setting.defaultValue }
+        control.resetValue = defaults
         control.retainedBinding = SpacingSettingsBinding(
             control: control,
             edges: edges,

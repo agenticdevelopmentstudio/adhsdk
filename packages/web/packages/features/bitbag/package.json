@@ -54,7 +54,7 @@
     "@agenticdevelopertoolkit/viewport": "workspace:*",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
-    "@types/react": "19.2.16",
+    "@types/react": "19.2.18",
     "@types/react-dom": "19.2.3",
     "esbuild-plugin-preserve-directives": "^0.0.11",
     "gsap": "^3.13.0",

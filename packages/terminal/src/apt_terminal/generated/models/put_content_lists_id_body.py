@@ -17,13 +17,11 @@ class PutContentListsIdBody:
         ecosystem_id (str | Unset):
         name (str | Unset):
         description (None | str | Unset):
-        sync_txid (int | Unset):
     """
 
     ecosystem_id: str | Unset = UNSET
     name: str | Unset = UNSET
     description: None | str | Unset = UNSET
-    sync_txid: int | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
         ecosystem_id = self.ecosystem_id
@@ -36,8 +34,6 @@ class PutContentListsIdBody:
         else:
             description = self.description
 
-        sync_txid = self.sync_txid
-
         field_dict: dict[str, Any] = {}
 
         field_dict.update({})
@@ -47,8 +43,6 @@ class PutContentListsIdBody:
             field_dict["name"] = name
         if description is not UNSET:
             field_dict["description"] = description
-        if sync_txid is not UNSET:
-            field_dict["syncTxid"] = sync_txid
 
         return field_dict
 
@@ -68,13 +62,10 @@ class PutContentListsIdBody:
 
         description = _parse_description(d.pop("description", UNSET))
 
-        sync_txid = d.pop("syncTxid", UNSET)
-
         put_content_lists_id_body = cls(
             ecosystem_id=ecosystem_id,
             name=name,
             description=description,
-            sync_txid=sync_txid,
         )
 
         return put_content_lists_id_body

@@ -24,7 +24,6 @@ class PutContentAddressesIdBody:
         region (str | Unset):
         postal_code (str | Unset):
         country (str | Unset):
-        sync_txid (int | Unset):
     """
 
     ecosystem_id: str | Unset = UNSET
@@ -37,7 +36,6 @@ class PutContentAddressesIdBody:
     region: str | Unset = UNSET
     postal_code: str | Unset = UNSET
     country: str | Unset = UNSET
-    sync_txid: int | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
         ecosystem_id = self.ecosystem_id
@@ -59,8 +57,6 @@ class PutContentAddressesIdBody:
         postal_code = self.postal_code
 
         country = self.country
-
-        sync_txid = self.sync_txid
 
         field_dict: dict[str, Any] = {}
 
@@ -85,8 +81,6 @@ class PutContentAddressesIdBody:
             field_dict["postalCode"] = postal_code
         if country is not UNSET:
             field_dict["country"] = country
-        if sync_txid is not UNSET:
-            field_dict["syncTxid"] = sync_txid
 
         return field_dict
 
@@ -113,8 +107,6 @@ class PutContentAddressesIdBody:
 
         country = d.pop("country", UNSET)
 
-        sync_txid = d.pop("syncTxid", UNSET)
-
         put_content_addresses_id_body = cls(
             ecosystem_id=ecosystem_id,
             owner_kind=owner_kind,
@@ -126,7 +118,6 @@ class PutContentAddressesIdBody:
             region=region,
             postal_code=postal_code,
             country=country,
-            sync_txid=sync_txid,
         )
 
         return put_content_addresses_id_body

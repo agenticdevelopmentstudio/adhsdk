@@ -69,7 +69,7 @@ def sync_detailed(
     *,
     client: AuthenticatedClient,
 ) -> Response[Error | GetEcosystemServerBagIdResponse200]:
-    """An ecosystem's server-bag entries, by key (owner or admin)
+    """An ecosystem's server-bag entries, by key (owner or admin, or an end-customer of this ecosystem)
 
     Args:
         id (str):
@@ -98,7 +98,7 @@ def sync(
     *,
     client: AuthenticatedClient,
 ) -> Error | GetEcosystemServerBagIdResponse200 | None:
-    """An ecosystem's server-bag entries, by key (owner or admin)
+    """An ecosystem's server-bag entries, by key (owner or admin, or an end-customer of this ecosystem)
 
     Args:
         id (str):
@@ -122,7 +122,7 @@ async def asyncio_detailed(
     *,
     client: AuthenticatedClient,
 ) -> Response[Error | GetEcosystemServerBagIdResponse200]:
-    """An ecosystem's server-bag entries, by key (owner or admin)
+    """An ecosystem's server-bag entries, by key (owner or admin, or an end-customer of this ecosystem)
 
     Args:
         id (str):
@@ -149,7 +149,7 @@ async def asyncio(
     *,
     client: AuthenticatedClient,
 ) -> Error | GetEcosystemServerBagIdResponse200 | None:
-    """An ecosystem's server-bag entries, by key (owner or admin)
+    """An ecosystem's server-bag entries, by key (owner or admin, or an end-customer of this ecosystem)
 
     Args:
         id (str):

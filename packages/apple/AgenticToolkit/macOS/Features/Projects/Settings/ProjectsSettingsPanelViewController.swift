@@ -5,8 +5,8 @@ import AgenticToolkitCore
 /// How project windows behave and where projects come from: how a pane shows
 /// it is the active one, which directories the project scan walks, which it
 /// stays out of, and what it leaves out inside them. Filed under Workspace; how
-/// a project window *looks* is `ProjectsAppearancePanelViewController`,
-/// under Appearance.
+/// its panes are spaced is `SpacingSettingsPanelViewController`, under
+/// Appearance.
 ///
 /// Every change here is written straight to its setting, and
 /// `ProjectsCoordinator` observes all four scan settings: the project list

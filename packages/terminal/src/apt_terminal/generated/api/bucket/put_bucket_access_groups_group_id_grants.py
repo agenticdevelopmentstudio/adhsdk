@@ -83,7 +83,7 @@ def sync_detailed(
     client: AuthenticatedClient,
     body: PutBucketAccessGroupsGroupIdGrantsBody | Unset = UNSET,
 ) -> Response[BucketGrant | Error]:
-    """Upsert a grant (bucket / bucket_type / row : crud) for an access group
+    """Upsert a grant (bucket / bucket_type : crud) for an access group
 
     Args:
         group_id (str):
@@ -115,7 +115,7 @@ def sync(
     client: AuthenticatedClient,
     body: PutBucketAccessGroupsGroupIdGrantsBody | Unset = UNSET,
 ) -> BucketGrant | Error | None:
-    """Upsert a grant (bucket / bucket_type / row : crud) for an access group
+    """Upsert a grant (bucket / bucket_type : crud) for an access group
 
     Args:
         group_id (str):
@@ -142,7 +142,7 @@ async def asyncio_detailed(
     client: AuthenticatedClient,
     body: PutBucketAccessGroupsGroupIdGrantsBody | Unset = UNSET,
 ) -> Response[BucketGrant | Error]:
-    """Upsert a grant (bucket / bucket_type / row : crud) for an access group
+    """Upsert a grant (bucket / bucket_type : crud) for an access group
 
     Args:
         group_id (str):
@@ -172,7 +172,7 @@ async def asyncio(
     client: AuthenticatedClient,
     body: PutBucketAccessGroupsGroupIdGrantsBody | Unset = UNSET,
 ) -> BucketGrant | Error | None:
-    """Upsert a grant (bucket / bucket_type / row : crud) for an access group
+    """Upsert a grant (bucket / bucket_type : crud) for an access group
 
     Args:
         group_id (str):

@@ -6,14 +6,15 @@ import httpx
 from ... import errors
 from ...client import AuthenticatedClient, Client
 from ...models.error import Error
-from ...types import UNSET, Response
+from ...types import UNSET, Response, Unset
 
 
 def _get_kwargs(
     *,
     client_id: str,
     provider_id: str,
-    return_: str,
+    return_: str | Unset = UNSET,
+    login_challenge: str | Unset = UNSET,
 ) -> dict[str, Any]:
     params: dict[str, Any] = {}
 
@@ -22,6 +23,8 @@ def _get_kwargs(
     params["providerId"] = provider_id
 
     params["return"] = return_
+
+    params["login_challenge"] = login_challenge
 
     params = {k: v for k, v in params.items() if v is not UNSET and v is not None}
 
@@ -68,14 +71,16 @@ def sync_detailed(
     client: AuthenticatedClient | Client,
     client_id: str,
     provider_id: str,
-    return_: str,
+    return_: str | Unset = UNSET,
+    login_challenge: str | Unset = UNSET,
 ) -> Response[Any | Error]:
     """Begin the server redirect flow → 302 to the provider
 
     Args:
         client_id (str):
         provider_id (str):
-        return_ (str):
+        return_ (str | Unset):
+        login_challenge (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -89,6 +94,7 @@ def sync_detailed(
         client_id=client_id,
         provider_id=provider_id,
         return_=return_,
+        login_challenge=login_challenge,
     )
 
     response = client.get_httpx_client().request(
@@ -103,14 +109,16 @@ def sync(
     client: AuthenticatedClient | Client,
     client_id: str,
     provider_id: str,
-    return_: str,
+    return_: str | Unset = UNSET,
+    login_challenge: str | Unset = UNSET,
 ) -> Any | Error | None:
     """Begin the server redirect flow → 302 to the provider
 
     Args:
         client_id (str):
         provider_id (str):
-        return_ (str):
+        return_ (str | Unset):
+        login_challenge (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -125,6 +133,7 @@ def sync(
         client_id=client_id,
         provider_id=provider_id,
         return_=return_,
+        login_challenge=login_challenge,
     ).parsed
 
 
@@ -133,14 +142,16 @@ async def asyncio_detailed(
     client: AuthenticatedClient | Client,
     client_id: str,
     provider_id: str,
-    return_: str,
+    return_: str | Unset = UNSET,
+    login_challenge: str | Unset = UNSET,
 ) -> Response[Any | Error]:
     """Begin the server redirect flow → 302 to the provider
 
     Args:
         client_id (str):
         provider_id (str):
-        return_ (str):
+        return_ (str | Unset):
+        login_challenge (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -154,6 +165,7 @@ async def asyncio_detailed(
         client_id=client_id,
         provider_id=provider_id,
         return_=return_,
+        login_challenge=login_challenge,
     )
 
     response = await client.get_async_httpx_client().request(**kwargs)
@@ -166,14 +178,16 @@ async def asyncio(
     client: AuthenticatedClient | Client,
     client_id: str,
     provider_id: str,
-    return_: str,
+    return_: str | Unset = UNSET,
+    login_challenge: str | Unset = UNSET,
 ) -> Any | Error | None:
     """Begin the server redirect flow → 302 to the provider
 
     Args:
         client_id (str):
         provider_id (str):
-        return_ (str):
+        return_ (str | Unset):
+        login_challenge (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -189,5 +203,6 @@ async def asyncio(
             client_id=client_id,
             provider_id=provider_id,
             return_=return_,
+            login_challenge=login_challenge,
         )
     ).parsed

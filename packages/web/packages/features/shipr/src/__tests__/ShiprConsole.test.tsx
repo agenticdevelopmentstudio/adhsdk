@@ -53,7 +53,6 @@ const repo: RepoItem = {
   slug: 'acme/site-deployment',
   shard: 'all',
   shipBranch: 'ship',
-  ciContext: 'deploy/ci',
   envBranches: { testing: 'testing', staging: 'staging', production: 'production' },
   registeredAt: null,
   position: 0,

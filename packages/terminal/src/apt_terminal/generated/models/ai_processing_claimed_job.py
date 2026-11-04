@@ -7,8 +7,11 @@ from uuid import UUID
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
 
+from ..types import UNSET, Unset
+
 if TYPE_CHECKING:
     from ..models.ai_processing_claimed_job_payload import AiProcessingClaimedJobPayload
+    from ..models.ai_processing_job_llm import AiProcessingJobLlm
 
 
 T = TypeVar("T", bound="AiProcessingClaimedJob")
@@ -26,6 +29,8 @@ class AiProcessingClaimedJob:
         claimed_at (str): Drizzle-read timestamp of when the job was claimed
         lease_expires_at (str): Drizzle-read timestamp when the lease expires
         lease_token (str): Opaque lease token required for heartbeat / complete / fail
+        attempts (int | Unset): Prior failed or reaped runs of this job; this claim is attempt attempts + 1
+        llm (AiProcessingJobLlm | Unset):
     """
 
     id: UUID
@@ -36,6 +41,8 @@ class AiProcessingClaimedJob:
     claimed_at: str
     lease_expires_at: str
     lease_token: str
+    attempts: int | Unset = UNSET
+    llm: AiProcessingJobLlm | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -55,6 +62,12 @@ class AiProcessingClaimedJob:
 
         lease_token = self.lease_token
 
+        attempts = self.attempts
+
+        llm: dict[str, Any] | Unset = UNSET
+        if not isinstance(self.llm, Unset):
+            llm = self.llm.to_dict()
+
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update(
@@ -69,6 +82,10 @@ class AiProcessingClaimedJob:
                 "leaseToken": lease_token,
             }
         )
+        if attempts is not UNSET:
+            field_dict["attempts"] = attempts
+        if llm is not UNSET:
+            field_dict["llm"] = llm
 
         return field_dict
 
@@ -77,6 +94,7 @@ class AiProcessingClaimedJob:
         from ..models.ai_processing_claimed_job_payload import (
             AiProcessingClaimedJobPayload,
         )
+        from ..models.ai_processing_job_llm import AiProcessingJobLlm
 
         d = dict(src_dict)
         id = UUID(d.pop("id"))
@@ -95,6 +113,15 @@ class AiProcessingClaimedJob:
 
         lease_token = d.pop("leaseToken")
 
+        attempts = d.pop("attempts", UNSET)
+
+        _llm = d.pop("llm", UNSET)
+        llm: AiProcessingJobLlm | Unset
+        if isinstance(_llm, Unset):
+            llm = UNSET
+        else:
+            llm = AiProcessingJobLlm.from_dict(_llm)
+
         ai_processing_claimed_job = cls(
             id=id,
             job_type=job_type,
@@ -104,6 +131,8 @@ class AiProcessingClaimedJob:
             claimed_at=claimed_at,
             lease_expires_at=lease_expires_at,
             lease_token=lease_token,
+            attempts=attempts,
+            llm=llm,
         )
 
         ai_processing_claimed_job.additional_properties = d

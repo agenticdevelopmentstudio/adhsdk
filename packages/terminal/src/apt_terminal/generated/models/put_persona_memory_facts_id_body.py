@@ -31,7 +31,6 @@ class PutPersonaMemoryFactsIdBody:
         valid_to (None | str | Unset):
         status (str | Unset):
         supersedes_id (None | str | Unset):
-        sync_txid (int | Unset):
     """
 
     ecosystem_id: str | Unset = UNSET
@@ -50,7 +49,6 @@ class PutPersonaMemoryFactsIdBody:
     valid_to: None | str | Unset = UNSET
     status: str | Unset = UNSET
     supersedes_id: None | str | Unset = UNSET
-    sync_txid: int | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
         ecosystem_id = self.ecosystem_id
@@ -123,8 +121,6 @@ class PutPersonaMemoryFactsIdBody:
         else:
             supersedes_id = self.supersedes_id
 
-        sync_txid = self.sync_txid
-
         field_dict: dict[str, Any] = {}
 
         field_dict.update({})
@@ -160,8 +156,6 @@ class PutPersonaMemoryFactsIdBody:
             field_dict["status"] = status
         if supersedes_id is not UNSET:
             field_dict["supersedesId"] = supersedes_id
-        if sync_txid is not UNSET:
-            field_dict["syncTxid"] = sync_txid
 
         return field_dict
 
@@ -268,8 +262,6 @@ class PutPersonaMemoryFactsIdBody:
 
         supersedes_id = _parse_supersedes_id(d.pop("supersedesId", UNSET))
 
-        sync_txid = d.pop("syncTxid", UNSET)
-
         put_persona_memory_facts_id_body = cls(
             ecosystem_id=ecosystem_id,
             persona_id=persona_id,
@@ -287,7 +279,6 @@ class PutPersonaMemoryFactsIdBody:
             valid_to=valid_to,
             status=status,
             supersedes_id=supersedes_id,
-            sync_txid=sync_txid,
         )
 
         return put_persona_memory_facts_id_body
