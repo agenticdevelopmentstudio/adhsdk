@@ -22623,6 +22623,15 @@ export interface paths {
                     };
                 };
                 /** @description Error */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Error */
                 422: {
                     headers: {
                         [name: string]: unknown;
@@ -22650,7 +22659,7 @@ export interface paths {
         };
         /**
          * The catalog features this ecosystem may not add, and why
-         * @description A client ecosystem cannot hold an `ownEcosystemOnly` feature (Organizations). The picker disables exactly these, and POST /ecosystem/features/{id} refuses the same list. Coming-soon features are not listed — the catalog already marks them.
+         * @description An ecosystem cannot hold a feature whose `allowedIn` omits its type (a product cannot hold Organizations). The picker disables exactly these, and POST /ecosystem/features/{id} refuses the same list; POST and DELETE on a Personal or Organization ecosystem are 409. Coming-soon features are not listed — the catalog already marks them.
          */
         get: {
             parameters: {
@@ -22787,7 +22796,7 @@ export interface paths {
                         "application/json": components["schemas"]["Error"];
                     };
                 };
-                /** @description Another active feature needs this one; nothing was removed */
+                /** @description Nothing was removed: another active feature needs this one (feature_required), or this is a Personal or Organization ecosystem, whose features are fixed (a plain error) */
                 409: {
                     headers: {
                         [name: string]: unknown;
@@ -22802,7 +22811,7 @@ export interface paths {
                                 /** @description Keys of the active features that require this one or what comes with it, named by the feature the picker lists. */
                                 neededBy: string[];
                             };
-                        };
+                        } | components["schemas"]["Error"];
                     };
                 };
             };
@@ -64024,6 +64033,15 @@ export interface paths {
                         "application/json": components["schemas"]["Error"];
                     };
                 };
+                /** @description Refused: an ecosystem with that id or slug already exists, or the `parent` is the Personal or Organization ecosystem, which cannot have sub-ecosystems. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
             };
         };
         delete?: never;
@@ -64186,6 +64204,15 @@ export interface paths {
                         "application/json": components["schemas"]["Error"];
                     };
                 };
+                /** @description Refused: the slug is taken under this parent, or this is the Personal or Organization ecosystem, whose name and slug cannot be changed. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
             };
         };
         post?: never;
@@ -64226,7 +64253,7 @@ export interface paths {
                         "application/json": components["schemas"]["Error"];
                     };
                 };
-                /** @description Refused: an account infrastructure ecosystem cannot be deleted. Or: Refused: this still owns data (error.code = "still_owns_data", error.owned lists it by table). Hand it over (POST /ownership/handover) or erase it (POST /ownership/erase), then delete again. */
+                /** @description Refused: an account infrastructure ecosystem, or the Personal or Organization ecosystem, cannot be deleted. Or: Refused: this still owns data (error.code = "still_owns_data", error.owned lists it by table). Hand it over (POST /ownership/handover) or erase it (POST /ownership/erase), then delete again. */
                 409: {
                     headers: {
                         [name: string]: unknown;
@@ -78595,8 +78622,12 @@ export interface components {
             comingSoon?: boolean;
             /** @description Feature keys this one needs. Adding it provisions them too; they cannot be removed while it is active (409 feature_required). */
             requiresFeatures?: string[];
-            /** @description Only a user's or an organization's own ecosystem may hold it; a client ecosystem cannot (400). GET /ecosystem/features/{id}/availability names these per ecosystem. */
-            ownEcosystemOnly?: boolean;
+            /** @description The ecosystem types that may hold it; absent means every type except workspace, personal and organization. Adding it elsewhere is refused (400). GET /ecosystem/features/{id}/availability names these per ecosystem. */
+            allowedIn?: ("workspace" | "persona" | "personal" | "organization" | "container" | "product")[];
+            /** @description Narrows allowedIn for a workspace by who owns it: Teams is allowed only in an organization workspace. Absent means either owner kind. */
+            workspaceOwnerKinds?: ("customer" | "organization")[];
+            /** @description The ecosystem types that get it when provisioned, with no owner opt-in (a workspace gets Personas; a Personal or Organization ecosystem gets its hub data). */
+            automaticIn?: ("workspace" | "persona" | "personal" | "organization" | "container" | "product")[];
             /** @description The feature this one comes with (the Users Settings, the Applications Client Auth panel). The picker does not list it: adding the parent adds it, removing the parent removes it, adding it adds the parent, and removing it on its own is refused (400). */
             includedWith?: string;
         };
@@ -80263,6 +80294,14 @@ export interface components {
             /** @description The provisioned admin team id */
             teamId: string;
             ecosystem: components["schemas"]["RegistryEcosystem"];
+            /** @description The org's Organization ecosystem: the child of its workspace that holds the org's own data — Notes, Research, Documents, Integrations, Planning, Storage */
+            hubData: {
+                id: string;
+                /** @description Always `organization` */
+                slug: string;
+                /** @description ecosystem.<workspace path>.organization */
+                rdid: string;
+            };
         };
         RegistryPersonaApproval: {
             id: string;

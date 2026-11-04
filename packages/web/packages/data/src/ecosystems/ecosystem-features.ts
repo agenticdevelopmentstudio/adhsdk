@@ -30,6 +30,7 @@ import { enc } from "../client-helpers";
 // (`isConflict` etc.) duck-type on `.status` only and drop everything else.
 import { AuthHttpError } from "@adh-sdk/auth/client";
 import { listedCatalog } from "./feature-requirements";
+import type { EcosystemType } from "./wire";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -71,11 +72,14 @@ export interface CatalogFeature {
    */
   requiresFeatures?: readonly string[];
   /**
-   * Only a user's or an organization's own ecosystem may hold it (Organizations) — a client
-   * ecosystem cannot. Which ecosystems that rules out is the server's call, read per ecosystem
-   * through {@link ecosystemFeaturesApi.availability}; this flag is informational.
+   * The ecosystem types that may hold it. Absent means every type except workspace, personal and
+   * organization. Which ecosystems that rules out is the server's call, read per ecosystem through
+   * {@link ecosystemFeaturesApi.availability}; this field is informational.
    */
-  ownEcosystemOnly?: boolean;
+  allowedIn?: readonly EcosystemType[];
+  /** The ecosystem types that get it when provisioned, with no owner opt-in (a workspace gets
+   *  Personas; a Personal or Organization ecosystem gets its hub data). */
+  automaticIn?: readonly EcosystemType[];
   /**
    * The feature this one COMES WITH — User Authentication and Email Signup with Users, Storage
    * Access Tokens with Storage, Client Auth with Applications. It is still a feature of its own on
