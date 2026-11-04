@@ -11,22 +11,23 @@ import { StatusDot, type StatusDotTone } from "@agenticdevelopertoolkit/ui/compo
 import { ToggleGroup, ToggleGroupItem } from "@agenticdevelopertoolkit/ui/components/toggle-group";
 import { useErrorsDashboard } from "../hooks/use-dashboards";
 import { useNow } from "../hooks/use-now";
-import { bucketDetail, bucketLabel, siteKey } from "../lib/analytics-model";
+import { bucketDetail, bucketLabel } from "../lib/analytics-model";
 import { ERROR_CHART_COLOR } from "../lib/colors";
-import { timeAgo } from "../lib/time-ago";
+import { errorsSiteRows } from "../lib/errors-model";
 import type {
   DashboardSections,
   ErrorIssue,
   ErrorsSectionData,
   SiteHealthRow,
 } from "../telemetry/dashboard-types";
-import type { ErrorsTopic } from "./board-views";
-import { DashboardPanel, formatRate, SeeAll, SiteFailureRate, WrappedCell } from "./DashboardParts";
+import { DashboardPanel, formatAge, formatRate, openOnRowClick, SiteFailureRate, WrappedCell } from "./DashboardParts";
+import { ErrorsSitePage } from "./ErrorsSitePage";
 import { useStatusHost } from "./StatusHost";
 
 const EMPTY_SECTIONS: DashboardSections<ErrorsSectionData> = {
   issues: { data: null, error: null, updatedAt: null },
   sites: { data: null, error: null, updatedAt: null },
+  detail: { data: null, error: null, updatedAt: null },
 };
 
 type IssueView = "active" | "backlog" | "all";
@@ -86,14 +87,8 @@ function sortIssues(issues: readonly ErrorIssue[], key: string, dir: "asc" | "de
   });
 }
 
-function age(iso: string | null, now: number): string {
-  if (!iso) return "—";
-  const text = timeAgo(iso, now);
-  return text === "just now" ? text : `${text} ago`;
-}
-
 const SITE_COLUMNS: DataTableColumn<SiteHealthRow>[] = [
-  { key: "host", header: "Site", width: "minmax(16rem, 1fr)", render: (row) => <WrappedCell>{siteKey(row.host)}</WrappedCell> },
+  { key: "host", header: "Site", width: "minmax(16rem, 1fr)", render: (row) => <WrappedCell>{row.host}</WrappedCell> },
   { key: "errors", header: "Errors reported", render: (row) => formatCount(row.errors) },
   { key: "requests", header: "Requests", render: (row) => formatCount(row.requests) },
   {
@@ -104,13 +99,14 @@ const SITE_COLUMNS: DataTableColumn<SiteHealthRow>[] = [
   { key: "p95", header: "p95", render: (row) => (row.p95Ms === null ? "—" : `${Math.round(row.p95Ms)}ms`) },
 ];
 
-const DAY_COLUMNS: DataTableColumn<{ day: string; count: number }>[] = [
-  { key: "day", header: "Day", width: "minmax(10rem, 1fr)", render: (row) => bucketDetail(row.day, "30d") },
-  { key: "count", header: "New issues", render: (row) => formatCount(row.count) },
-];
-
 const GLITCHTIP_NOT_PER_SITE =
   "GlitchTip has no per-site split: its stored events have been pruned, so an issue cannot be traced to a site.";
+
+export interface ErrorsViewProps {
+  /** The site chosen in the topic list, or null for the overview. */
+  site: string | null;
+  onSite: (site: string) => void;
+}
 
 /**
  * The Errors topic: everything GlitchTip holds, split the way the board judges it. "Active" means
@@ -118,12 +114,12 @@ const GLITCHTIP_NOT_PER_SITE =
  * backlog nobody has resolved, and it is shown as that rather than as an alarm.
  *
  * GlitchTip's stored events have been pruned, so an issue cannot be traced to a site and there is
- * no count of events per day. The per-site panel is PostHog's view of the same fleet and says so.
+ * no count of events per day. So the overview holds GlitchTip in full, and each site's own page is
+ * PostHog's view of that site, as the panels there say.
  *
- * Overview holds every panel, each with a way to its own sub-topic, where nothing is held back.
- * This stays mounted across sub-topics, so a view or a search carries from one to the next.
+ * This stays mounted across the list, so a view or a search on the overview survives a visit to a site.
  */
-export function ErrorsView({ topic }: { topic: ErrorsTopic }): ReactElement {
+export function ErrorsView({ site, onSite }: ErrorsViewProps): ReactElement {
   const now = useNow();
   const query = useErrorsDashboard();
   const { glitchtipUrl, posthogUrl } = useStatusHost();
@@ -146,6 +142,7 @@ export function ErrorsView({ topic }: { topic: ErrorsTopic }): ReactElement {
     () => sortIssues(filterIssues(issues?.issues ?? [], view, search), sort.key, sort.dir),
     [issues, view, search, sort],
   );
+  const siteRows = useMemo(() => errorsSiteRows(sections), [sections]);
 
   const columns: DataTableColumn<ErrorIssue>[] = [
     {
@@ -163,8 +160,8 @@ export function ErrorsView({ topic }: { topic: ErrorsTopic }): ReactElement {
     { key: "level", header: "Level", render: (issue) => issue.level ?? "—" },
     { key: "count", header: "Events", sortable: true, render: (issue) => formatCount(issue.count) },
     { key: "users", header: "Users", sortable: true, render: (issue) => formatCount(issue.userCount) },
-    { key: "lastSeen", header: "Last seen", sortable: true, render: (issue) => age(issue.lastSeen, now) },
-    { key: "firstSeen", header: "First seen", sortable: true, render: (issue) => age(issue.firstSeen, now) },
+    { key: "lastSeen", header: "Last seen", sortable: true, render: (issue) => formatAge(issue.lastSeen, now) },
+    { key: "firstSeen", header: "First seen", sortable: true, render: (issue) => formatAge(issue.firstSeen, now) },
     {
       key: "source",
       header: "Source",
@@ -185,151 +182,6 @@ export function ErrorsView({ topic }: { topic: ErrorsTopic }): ReactElement {
     },
   ];
 
-  const newIssuesPanel = (seeAll: boolean): ReactElement => (
-    <DashboardPanel
-      title="New issues per day"
-      source="GlitchTip"
-      sourceHref={glitchtipUrl}
-      section={sections.issues}
-      configured={glitchtipOn}
-      refreshing={refreshing}
-      skeletonHeight={200}
-      actions={seeAll ? <SeeAll href="/errors/new-issues" what="new issues per day" /> : undefined}
-      note="When each issue that is still unresolved first fired. Issues since resolved are not counted."
-    >
-      {(data) => (
-        <TrendChart
-          ariaLabel="Unresolved GlitchTip issues by the day they first fired, last 30 days"
-          variant="bars"
-          labels={data.buckets}
-          series={[{ name: "New issues", color: ERROR_CHART_COLOR, values: data.summary.newPerDay }]}
-          height={200}
-          formatLabel={(label) => bucketLabel(label, "30d")}
-          formatDetail={(label) => bucketDetail(label, "30d")}
-        />
-      )}
-    </DashboardPanel>
-  );
-
-  const issuesPanel = (capped: boolean): ReactElement => (
-    <DashboardPanel
-      title="Issues"
-      source="GlitchTip"
-      sourceHref={glitchtipUrl}
-      section={sections.issues}
-      configured={glitchtipOn}
-      refreshing={refreshing}
-      skeletonHeight={280}
-      actions={capped ? <SeeAll href="/errors/issues" what="issues" /> : undefined}
-      note={capped ? undefined : GLITCHTIP_NOT_PER_SITE}
-    >
-      {() => (
-        <div className="flex flex-col gap-3">
-          <div className="flex flex-wrap items-center gap-2">
-            <ToggleGroup
-              aria-label="Which issues"
-              value={[view]}
-              onValueChange={(next: unknown[]) => {
-                const value = next[0] as IssueView | undefined;
-                if (value) setChosenView(value);
-              }}
-            >
-              {ISSUE_VIEWS.map(({ id, label }) => (
-                <ToggleGroupItem key={id} value={id}>
-                  {label}
-                </ToggleGroupItem>
-              ))}
-            </ToggleGroup>
-            <Input
-              type="search"
-              aria-label="Search issues"
-              placeholder="Search issues"
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-              className="w-full min-w-0 sm:w-64"
-            />
-          </div>
-          <div className={capped ? "-mx-1 max-h-[520px] overflow-auto" : "-mx-1"}>
-            <DataTable
-              ariaLabel="GlitchTip issues"
-              columns={columns}
-              rows={issueRows}
-              getRowId={(issue) => issue.id}
-              sort={sort}
-              onSortChange={setSort}
-              autoSizeColumns
-              emptyLabel={
-                search.trim() !== ""
-                  ? "No issue matches that search."
-                  : view === "active"
-                    ? "✓ No errors in the last 24 hours."
-                    : "Nothing here."
-              }
-            />
-          </div>
-        </div>
-      )}
-    </DashboardPanel>
-  );
-
-  const byTypePanel = (capped: boolean): ReactElement => (
-    <DashboardPanel
-      title="By type"
-      source="GlitchTip"
-      sourceHref={glitchtipUrl}
-      section={sections.issues}
-      configured={glitchtipOn}
-      refreshing={refreshing}
-      actions={capped ? <SeeAll href="/errors/by-type" what="issue types" /> : undefined}
-      note={capped ? undefined : GLITCHTIP_NOT_PER_SITE}
-    >
-      {(data) => (
-        <BarList
-          ariaLabel="Unresolved issues by exception type, ranked by events"
-          items={data.summary.byType.map((type) => ({
-            name: type.name,
-            value: type.events,
-            detail: `${formatCount(type.events)} · ${formatCount(type.issues)} ${type.issues === 1 ? "issue" : "issues"}`,
-          }))}
-          color={ERROR_CHART_COLOR}
-          maxItems={capped ? undefined : Infinity}
-          emptyLabel="Nothing unresolved."
-        />
-      )}
-    </DashboardPanel>
-  );
-
-  const perSitePanel = (capped: boolean): ReactElement => (
-    <DashboardPanel
-      title="Per site, last 30 days"
-      source="PostHog"
-      sourceHref={posthogUrl}
-      section={sections.sites}
-      configured={posthogOn}
-      refreshing={refreshing}
-      actions={capped ? <SeeAll href="/errors/per-site" what="sites" /> : undefined}
-      note={`Production only. These are PostHog's own error and request events, not GlitchTip issues: GlitchTip no longer holds the event data to attribute an issue to a site. Failure rates are failed requests over all requests${
-        sections.sites.data ? `, ${formatRate(
-          sections.sites.data.reduce((sum, row) => sum + row.failures, 0),
-          sections.sites.data.reduce((sum, row) => sum + row.requests, 0),
-        )} across the fleet` : ""
-      }.`}
-    >
-      {(rows) => (
-        <div className={capped ? "-mx-1 max-h-[360px] overflow-auto" : "-mx-1"}>
-          <DataTable
-            ariaLabel="Errors and failed requests per site, from PostHog"
-            columns={SITE_COLUMNS}
-            rows={rows}
-            getRowId={(row) => row.host}
-            autoSizeColumns
-            emptyLabel="No site reported requests in this range."
-          />
-        </div>
-      )}
-    </DashboardPanel>
-  );
-
   return (
     <div className="min-h-0 flex-1 overflow-y-auto">
       <div className="flex w-full flex-col gap-4 p-4">
@@ -339,14 +191,23 @@ export function ErrorsView({ topic }: { topic: ErrorsTopic }): ReactElement {
           </p>
         )}
 
-        {summary && !summary.complete && (
-          <p role="alert" className="m-0 font-mono text-xs text-apt-gold">
-            GlitchTip&apos;s list could not be read to its end, so the counts below are short.
-          </p>
-        )}
-
-        {topic === "overview" && (
+        {site !== null ? (
+          <ErrorsSitePage
+            key={site}
+            site={site}
+            sections={sections}
+            posthogOn={posthogOn}
+            refreshing={refreshing}
+            posthogUrl={posthogUrl}
+          />
+        ) : (
           <>
+            {summary && !summary.complete && (
+              <p role="alert" className="m-0 font-mono text-xs text-apt-gold">
+                GlitchTip&apos;s list could not be read to its end, so the counts below are short.
+              </p>
+            )}
+
             <StatCard
               title="Errors"
               className="min-w-0"
@@ -361,47 +222,146 @@ export function ErrorsView({ topic }: { topic: ErrorsTopic }): ReactElement {
               ]}
               footnote="Active: errors and fatals in the last 24 hours. Backlog: unresolved and gone quiet. Events: across unresolved issues."
             />
-            {newIssuesPanel(true)}
-            {issuesPanel(true)}
-            <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]">
-              {byTypePanel(true)}
-              {perSitePanel(true)}
-            </div>
-          </>
-        )}
 
-        {topic === "new-issues" && (
-          <>
-            {newIssuesPanel(false)}
             <DashboardPanel
-              title="Day by day"
+              title="New issues per day"
               source="GlitchTip"
               sourceHref={glitchtipUrl}
               section={sections.issues}
               configured={glitchtipOn}
               refreshing={refreshing}
+              skeletonHeight={200}
+              note="When each issue that is still unresolved first fired. Issues since resolved are not counted."
             >
               {(data) => (
-                <div className="-mx-1">
-                  <DataTable
-                    ariaLabel="New issues per day, newest first"
-                    columns={DAY_COLUMNS}
-                    rows={data.buckets
-                      .map((day, i) => ({ day, count: data.summary.newPerDay[i] ?? 0 }))
-                      .reverse()}
-                    getRowId={(row) => row.day}
-                    autoSizeColumns
-                    emptyLabel="No days to show."
-                  />
+                <TrendChart
+                  ariaLabel="Unresolved GlitchTip issues by the day they first fired, last 30 days"
+                  variant="bars"
+                  labels={data.buckets}
+                  series={[{ name: "New issues", color: ERROR_CHART_COLOR, values: data.summary.newPerDay }]}
+                  height={200}
+                  formatLabel={(label) => bucketLabel(label, "30d")}
+                  formatDetail={(label) => bucketDetail(label, "30d")}
+                />
+              )}
+            </DashboardPanel>
+
+            <DashboardPanel
+              title="Issues"
+              source="GlitchTip"
+              sourceHref={glitchtipUrl}
+              section={sections.issues}
+              configured={glitchtipOn}
+              refreshing={refreshing}
+              skeletonHeight={280}
+              note={GLITCHTIP_NOT_PER_SITE}
+            >
+              {() => (
+                <div className="flex flex-col gap-3">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <ToggleGroup
+                      aria-label="Which issues"
+                      value={[view]}
+                      onValueChange={(next: unknown[]) => {
+                        const value = next[0] as IssueView | undefined;
+                        if (value) setChosenView(value);
+                      }}
+                    >
+                      {ISSUE_VIEWS.map(({ id, label }) => (
+                        <ToggleGroupItem key={id} value={id}>
+                          {label}
+                        </ToggleGroupItem>
+                      ))}
+                    </ToggleGroup>
+                    <Input
+                      type="search"
+                      aria-label="Search issues"
+                      placeholder="Search issues"
+                      value={search}
+                      onChange={(event) => setSearch(event.target.value)}
+                      className="w-full min-w-0 sm:w-64"
+                    />
+                  </div>
+                  <div className="-mx-1">
+                    <DataTable
+                      ariaLabel="GlitchTip issues"
+                      columns={columns}
+                      rows={issueRows}
+                      getRowId={(issue) => issue.id}
+                      sort={sort}
+                      onSortChange={setSort}
+                      autoSizeColumns
+                      emptyLabel={
+                        search.trim() !== ""
+                          ? "No issue matches that search."
+                          : view === "active"
+                            ? "✓ No errors in the last 24 hours."
+                            : "Nothing here."
+                      }
+                    />
+                  </div>
                 </div>
               )}
             </DashboardPanel>
+
+            <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]">
+              <DashboardPanel
+                title="By type"
+                source="GlitchTip"
+                sourceHref={glitchtipUrl}
+                section={sections.issues}
+                configured={glitchtipOn}
+                refreshing={refreshing}
+              >
+                {(data) => (
+                  <BarList
+                    ariaLabel="Unresolved issues by exception type, ranked by events"
+                    items={data.summary.byType.map((type) => ({
+                      name: type.name,
+                      value: type.events,
+                      detail: `${formatCount(type.events)} · ${formatCount(type.issues)} ${type.issues === 1 ? "issue" : "issues"}`,
+                    }))}
+                    color={ERROR_CHART_COLOR}
+                    maxItems={Infinity}
+                    emptyLabel="Nothing unresolved."
+                  />
+                )}
+              </DashboardPanel>
+
+              <DashboardPanel
+                title="Per site, last 30 days"
+                source="PostHog"
+                sourceHref={posthogUrl}
+                section={sections.sites}
+                configured={posthogOn}
+                refreshing={refreshing}
+                note={`Production only. These are PostHog's own error and request events, not GlitchTip issues: GlitchTip no longer holds the event data to attribute an issue to a site. Failure rates are failed requests over all requests${
+                  sections.sites.data
+                    ? `, ${formatRate(
+                        sections.sites.data.reduce((sum, row) => sum + row.failures, 0),
+                        sections.sites.data.reduce((sum, row) => sum + row.requests, 0),
+                      )} across the fleet`
+                    : ""
+                }.`}
+              >
+                {() => (
+                  <div className="-mx-1">
+                    <DataTable
+                      ariaLabel="Errors and failed requests per site, from PostHog"
+                      columns={SITE_COLUMNS}
+                      rows={siteRows}
+                      getRowId={(row) => row.host}
+                      {...openOnRowClick(onSite)}
+                      describeRow={(row) => row.host}
+                      autoSizeColumns
+                      emptyLabel="No site reported requests in this range."
+                    />
+                  </div>
+                )}
+              </DashboardPanel>
+            </div>
           </>
         )}
-
-        {topic === "issues" && issuesPanel(false)}
-        {topic === "by-type" && byTypePanel(false)}
-        {topic === "per-site" && perSitePanel(false)}
       </div>
     </div>
   );

@@ -1,6 +1,7 @@
 import type {
   AnalyticsRange,
   AnalyticsSectionData,
+  DashboardSection,
   DashboardSections,
   DimensionRow,
   Marginal,
@@ -34,12 +35,12 @@ export interface JoinedSite {
   health: SiteHealthRow | null;
 }
 
-function addSeries(a: readonly number[], b: readonly number[]): number[] {
+export function addSeries(a: readonly number[], b: readonly number[]): number[] {
   return Array.from({ length: Math.max(a.length, b.length) }, (_, i) => (a[i] ?? 0) + (b[i] ?? 0));
 }
 
 /** A site's health across its hosts: counts add, but percentiles do not, so p95 is the worse one. */
-function mergeHealth(seen: SiteHealthRow | null, site: SiteHealthRow): SiteHealthRow {
+export function mergeHealth(seen: SiteHealthRow | null, site: SiteHealthRow): SiteHealthRow {
   if (!seen) return { ...site };
   return {
     host: seen.host,
@@ -363,11 +364,20 @@ export function sectionFailures(
   sections: DashboardSections<AnalyticsSectionData>,
   configured: { posthog: boolean; vercel: boolean },
 ): SectionFailure[] {
+  return collectFailures(
+    SECTION_NAMES.filter(({ source }) => (source === "PostHog" ? configured.posthog : configured.vercel)).map(
+      ({ key, what, source }) => ({ section: sections[key], what, source }),
+    ),
+  );
+}
+
+/** The sections among these that could not be read at all, grouped by source and error. */
+export function collectFailures(
+  named: readonly { section: DashboardSection<unknown>; what: string; source: SectionFailure["source"] }[],
+): SectionFailure[] {
   const failures: SectionFailure[] = [];
-  for (const { key, what, source } of SECTION_NAMES) {
-    const section = sections[key];
+  for (const { section, what, source } of named) {
     if (section.data !== null || section.error === null) continue;
-    if (!(source === "PostHog" ? configured.posthog : configured.vercel)) continue;
     const same = failures.find((f) => f.source === source && f.error === section.error);
     if (same) same.what.push(what);
     else failures.push({ source, what: [what], error: section.error });

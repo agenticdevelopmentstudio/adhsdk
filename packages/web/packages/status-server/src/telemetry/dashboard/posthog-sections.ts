@@ -3,6 +3,10 @@ import { alignToBuckets, type RangeWindow } from "./ranges";
 import type {
   DimensionsSection,
   PathRow,
+  SiteErrorDays,
+  SiteErrorDetailSection,
+  SiteErrorRow,
+  SiteFailedRequestRow,
   SiteHealthRow,
   TrafficSection,
   VitalsRow,
@@ -18,6 +22,7 @@ const TRAFFIC_ROW_LIMIT = 5_000;
 const DIMENSION_ROW_LIMIT = 5_000;
 const PATH_ROW_LIMIT = 5_000;
 const SITE_ROW_LIMIT = 200;
+const ERROR_DETAIL_ROW_LIMIT = 5_000;
 
 const HOST = "properties.$host";
 
@@ -169,4 +174,83 @@ export async function loadSiteHealth(env: PosthogEnv, w: RangeWindow): Promise<S
       `WHERE event IN ('error_reported', 'http_request') AND ${since(w)} AND ${PRODUCTION_HOSTS} GROUP BY 1 ORDER BY 3 DESC LIMIT ${SITE_ROW_LIMIT}`,
   );
   return shapeHealth(raw);
+}
+
+// ── one site's errors and failed requests ─────────────────────────────────
+
+const optional = (v: unknown): string | null => (typeof v === "string" && v !== "" ? v : null);
+
+/** Rows are [host, bucket, errors, failures]. */
+export function shapeErrorDays(raw: unknown[][], buckets: string[]): SiteErrorDays[] {
+  const byHost = new Map<string, unknown[][]>();
+  for (const row of raw) {
+    const host = label(row[0], "(unknown)");
+    byHost.set(host, [...(byHost.get(host) ?? []), row]);
+  }
+  return [...byHost.entries()].map(([host, hostRows]) => ({
+    host,
+    errors: alignToBuckets(buckets, hostRows.map((r): [unknown, number] => [r[1], count(r[2])])),
+    failures: alignToBuckets(buckets, hostRows.map((r): [unknown, number] => [r[1], count(r[3])])),
+  }));
+}
+
+/** Rows are [host, name, feature, step, boundary, page, count, lastSeen]. */
+export function shapeSiteErrors(raw: unknown[][]): SiteErrorRow[] {
+  return raw.map((r) => ({
+    host: label(r[0], "(unknown)"),
+    name: label(r[1], "(unnamed)"),
+    feature: optional(r[2]),
+    step: optional(r[3]),
+    boundary: optional(r[4]),
+    page: optional(r[5]),
+    count: count(r[6]),
+    lastSeen: optional(r[7]),
+  }));
+}
+
+/** Rows are [host, status, method, path, count, lastSeen]. */
+export function shapeFailedRequests(raw: unknown[][]): SiteFailedRequestRow[] {
+  return raw.map((r) => ({
+    host: label(r[0], "(unknown)"),
+    status: count(r[1]),
+    method: optional(r[2]),
+    path: label(r[3], "(unknown)"),
+    count: count(r[4]),
+    lastSeen: optional(r[5]),
+  }));
+}
+
+/**
+ * The rows behind each site's page. Fetched for every site at once, like the rest of this file, so
+ * moving between sites costs no query. A busy site can have hundreds of distinct failing paths, so
+ * the cap is high and hitting it is reported.
+ */
+export async function loadSiteErrorDetail(env: PosthogEnv, w: RangeWindow): Promise<SiteErrorDetailSection> {
+  const status = "toFloat(properties.status)";
+  const failed = `(${status} >= 500 OR ${status} = 0)`;
+  const isFailure = `event = 'http_request' AND ${failed}`;
+  const [days, errors, requests] = await Promise.all([
+    rows(
+      env,
+      `SELECT ${HOST}, toStartOfDay(timestamp), countIf(event = 'error_reported'), countIf(${isFailure}) FROM events ` +
+        `WHERE event IN ('error_reported', 'http_request') AND ${since(w)} AND ${PRODUCTION_HOSTS} GROUP BY 1, 2 ORDER BY 2 LIMIT ${ERROR_DETAIL_ROW_LIMIT}`,
+    ),
+    rows(
+      env,
+      `SELECT ${HOST}, properties.error_name, properties.feature, properties.step, properties.boundary, properties.$pathname, count(), max(timestamp) FROM events ` +
+        `WHERE event = 'error_reported' AND ${since(w)} AND ${PRODUCTION_HOSTS} GROUP BY 1, 2, 3, 4, 5, 6 ORDER BY 7 DESC LIMIT ${ERROR_DETAIL_ROW_LIMIT}`,
+    ),
+    rows(
+      env,
+      `SELECT ${HOST}, ${status}, properties.method, properties.path, count(), max(timestamp) FROM events ` +
+        `WHERE ${isFailure} AND ${since(w)} AND ${PRODUCTION_HOSTS} GROUP BY 1, 2, 3, 4 ORDER BY 5 DESC LIMIT ${ERROR_DETAIL_ROW_LIMIT}`,
+    ),
+  ]);
+  return {
+    buckets: w.buckets,
+    days: shapeErrorDays(days, w.buckets),
+    errors: shapeSiteErrors(errors),
+    requests: shapeFailedRequests(requests),
+    truncated: [days, errors, requests].some((found) => found.length >= ERROR_DETAIL_ROW_LIMIT),
+  };
 }

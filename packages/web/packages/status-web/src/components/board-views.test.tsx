@@ -2,9 +2,10 @@ import { describe, expect, it } from "vitest";
 import {
   ANALYTICS_OVERVIEW,
   BOARD_PATHS,
-  ERRORS_TOPICS,
+  ERRORS_OVERVIEW,
   subTopicFromPath,
   analyticsSiteFromPath,
+  errorsSiteFromPath,
   BOARD_VIEWS,
   SETTINGS_SECTIONS,
   entityIdFromPath,
@@ -26,19 +27,19 @@ import {
 describe("subTopicFromPath", () => {
   it("reads the second segment against the list it is given", () => {
     expect(subTopicFromPath("/analytics/overview", [ANALYTICS_OVERVIEW])).toBe("overview");
-    expect(subTopicFromPath("/errors/by-type/", ERRORS_TOPICS)).toBe("by-type");
+    expect(subTopicFromPath("/errors/overview/", [ERRORS_OVERVIEW])).toBe("overview");
   });
 
   it("is null with no second segment, or one that is not on the list", () => {
     expect(subTopicFromPath("/analytics", [ANALYTICS_OVERVIEW])).toBeNull();
     expect(subTopicFromPath("/analytics/alpha.example.com", [ANALYTICS_OVERVIEW])).toBeNull();
-    expect(subTopicFromPath("/errors/countries", ERRORS_TOPICS)).toBeNull();
+    expect(subTopicFromPath("/errors/alpha.example.com", [ERRORS_OVERVIEW])).toBeNull();
   });
 
-  it("Errors opens on its overview, and a deep link stays on the board", () => {
-    expect(ERRORS_TOPICS[0]!.id).toBe("overview");
+  it("a site's deep link stays on the board", () => {
     expect(topicFromPath("/analytics/alpha.example.com")).toBe("analytics");
-    expect(isBoardPath("/errors/per-site")).toBe(true);
+    expect(topicFromPath("/errors/alpha.example.com")).toBe("errors");
+    expect(isBoardPath("/errors/alpha.example.com")).toBe(true);
   });
 });
 
@@ -109,6 +110,20 @@ describe("analyticsSiteFromPath", () => {
     expect(analyticsSiteFromPath("/analytics/overview")).toBeNull();
     expect(analyticsSiteFromPath("/errors/alpha.example.com")).toBeNull();
     expect(analyticsSiteFromPath("/analytics/%E0%A4%A")).toBeNull();
+  });
+});
+
+describe("errorsSiteFromPath", () => {
+  it("reads the site, percent-decoded", () => {
+    expect(errorsSiteFromPath("/errors/alpha.example.com")).toBe("alpha.example.com");
+    expect(errorsSiteFromPath("/errors/my%20site/")).toBe("my site");
+  });
+
+  it("is null on the overview, off Errors, or when undecodable", () => {
+    expect(errorsSiteFromPath("/errors")).toBeNull();
+    expect(errorsSiteFromPath("/errors/overview")).toBeNull();
+    expect(errorsSiteFromPath("/analytics/alpha.example.com")).toBeNull();
+    expect(errorsSiteFromPath("/errors/%E0%A4%A")).toBeNull();
   });
 });
 

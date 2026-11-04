@@ -5315,7 +5315,7 @@
         "tags": [
           "dashboards"
         ],
-        "summary": "Every unresolved GlitchTip issue, 30-day event history, and per-site failure rates",
+        "summary": "Every unresolved GlitchTip issue, 30-day event history, and each site’s errors and failed requests",
         "security": [
           {
             "bearerAuth": []
@@ -5360,7 +5360,8 @@
                       "type": "object",
                       "required": [
                         "issues",
-                        "sites"
+                        "sites",
+                        "detail"
                       ],
                       "properties": {
                         "issues": {
@@ -5572,6 +5573,181 @@
                                   "type": "array",
                                   "items": {
                                     "$ref": "#/components/schemas/SiteHealthRow"
+                                  }
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
+                            "error": {
+                              "type": [
+                                "string",
+                                "null"
+                              ]
+                            },
+                            "updatedAt": {
+                              "type": [
+                                "string",
+                                "null"
+                              ]
+                            }
+                          }
+                        },
+                        "detail": {
+                          "type": "object",
+                          "required": [
+                            "data",
+                            "error",
+                            "updatedAt"
+                          ],
+                          "properties": {
+                            "data": {
+                              "anyOf": [
+                                {
+                                  "type": "object",
+                                  "required": [
+                                    "buckets",
+                                    "days",
+                                    "errors",
+                                    "requests",
+                                    "truncated"
+                                  ],
+                                  "properties": {
+                                    "buckets": {
+                                      "type": "array",
+                                      "items": {
+                                        "type": "string"
+                                      }
+                                    },
+                                    "days": {
+                                      "type": "array",
+                                      "items": {
+                                        "type": "object",
+                                        "required": [
+                                          "host",
+                                          "errors",
+                                          "failures"
+                                        ],
+                                        "properties": {
+                                          "host": {
+                                            "type": "string"
+                                          },
+                                          "errors": {
+                                            "type": "array",
+                                            "items": {
+                                              "type": "number"
+                                            }
+                                          },
+                                          "failures": {
+                                            "type": "array",
+                                            "items": {
+                                              "type": "number"
+                                            }
+                                          }
+                                        }
+                                      }
+                                    },
+                                    "errors": {
+                                      "type": "array",
+                                      "items": {
+                                        "type": "object",
+                                        "required": [
+                                          "host",
+                                          "name",
+                                          "feature",
+                                          "step",
+                                          "boundary",
+                                          "page",
+                                          "count",
+                                          "lastSeen"
+                                        ],
+                                        "properties": {
+                                          "host": {
+                                            "type": "string"
+                                          },
+                                          "name": {
+                                            "type": "string"
+                                          },
+                                          "feature": {
+                                            "type": [
+                                              "string",
+                                              "null"
+                                            ]
+                                          },
+                                          "step": {
+                                            "type": [
+                                              "string",
+                                              "null"
+                                            ]
+                                          },
+                                          "boundary": {
+                                            "type": [
+                                              "string",
+                                              "null"
+                                            ]
+                                          },
+                                          "page": {
+                                            "type": [
+                                              "string",
+                                              "null"
+                                            ]
+                                          },
+                                          "count": {
+                                            "type": "number"
+                                          },
+                                          "lastSeen": {
+                                            "type": [
+                                              "string",
+                                              "null"
+                                            ]
+                                          }
+                                        }
+                                      }
+                                    },
+                                    "requests": {
+                                      "type": "array",
+                                      "items": {
+                                        "type": "object",
+                                        "required": [
+                                          "host",
+                                          "status",
+                                          "method",
+                                          "path",
+                                          "count",
+                                          "lastSeen"
+                                        ],
+                                        "properties": {
+                                          "host": {
+                                            "type": "string"
+                                          },
+                                          "status": {
+                                            "type": "number"
+                                          },
+                                          "method": {
+                                            "type": [
+                                              "string",
+                                              "null"
+                                            ]
+                                          },
+                                          "path": {
+                                            "type": "string"
+                                          },
+                                          "count": {
+                                            "type": "number"
+                                          },
+                                          "lastSeen": {
+                                            "type": [
+                                              "string",
+                                              "null"
+                                            ]
+                                          }
+                                        }
+                                      }
+                                    },
+                                    "truncated": {
+                                      "type": "boolean"
+                                    }
                                   }
                                 },
                                 {

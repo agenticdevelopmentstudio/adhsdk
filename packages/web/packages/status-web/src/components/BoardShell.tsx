@@ -9,8 +9,9 @@ import { usePortfolioIndicator } from "../hooks/use-portfolio-indicator";
 import { useConfigStatus } from "../hooks/use-config-status";
 import { useStatusUser } from "../hooks/useStatusUser";
 import { useLiveSnapshot } from "../hooks/use-live-snapshot";
-import { useAnalyticsDashboard } from "../hooks/use-dashboards";
+import { useAnalyticsDashboard, useErrorsDashboard } from "../hooks/use-dashboards";
 import { analyticsSites, sortSiteNames } from "../lib/analytics-model";
+import { errorsSites } from "../lib/errors-model";
 import { plural } from "../lib/format";
 import { headlineFor } from "../lib/overview";
 import type { AnalyticsRange } from "../telemetry/dashboard-types";
@@ -19,7 +20,8 @@ import {
   analyticsSiteFromPath,
   BOARD_VIEWS,
   entityIdFromPath,
-  ERRORS_TOPICS,
+  ERRORS_OVERVIEW,
+  errorsSiteFromPath,
   isRosterTopic,
   sectionFromPath,
   subTopicFromPath,
@@ -104,9 +106,9 @@ function KeptPane({ show, children }: { show: boolean; children: ReactNode }): R
  * list up via SettingsLevelProvider as the THIRD level, with the entity editor as the leaf.
  *
  * Analytics and Errors open a second level of their own, and both start on Overview: a wide screen
- * lands there, and a phone gets the list first, as every list on the board does. Analytics' list is
- * Overview, a divider, then every site, at `/analytics/<site>`, each opening one scrolling page.
- * Errors' is one topic per panel on its overview, at `/errors/<id>`.
+ * lands there, and a phone gets the list first, as every list on the board does. Each list is
+ * Overview, a divider, then every site, at `/analytics/<site>` and `/errors/<site>`, each opening
+ * one scrolling page.
  *
  * Selection is deep-linked: each topic is a root URL segment, a section is
  * `/settings/<section>`, a roster entity is `/settings/<section>/<id>`; `/home` is the
@@ -282,17 +284,39 @@ export function BoardShell({ children }: { children: ReactNode }): ReactElement 
     ? { ...entityLevel, railLabel: entityLevel.railLabel ?? entityLevel.title }
     : null;
 
+  // Errors' list works as Analytics' does below, with no range: its per-site figures are 30 days.
+  const errorsQuery = useErrorsDashboard({ enabled: topic === "errors" });
+  const errorsSections = errorsQuery.data?.sections ?? null;
+  const errorsSite = topic === "errors" ? errorsSiteFromPath(path) : null;
+  const errorSiteNames = useMemo(() => {
+    const listed = errorsSections ? errorsSites(errorsSections) : [];
+    return errorsSite === null || listed.includes(errorsSite) ? listed : sortSiteNames([...listed, errorsSite]);
+  }, [errorsSections, errorsSite]);
+
+  const openErrors = useCallback(
+    (next: string, replace = false): void => {
+      const href = `/errors/${encodeURIComponent(next)}`;
+      if (replace) router.replace(href);
+      else router.push(href);
+    },
+    [router],
+  );
+
   const errorsLevel: TopicLevel = {
     id: "errors-topics",
     title: "Errors",
     railLabel: "Errors topics",
     itemNoun: "topic",
+    search: { placeholder: "Filter sites" },
     overview: false,
-    items: ERRORS_TOPICS.map((t) => ({ id: t.id, label: t.label, icon: t.icon })),
-    selectedId: subTopicFromPath(path, ERRORS_TOPICS),
-    defaultSelectedId: "overview",
-    onSelect: (next, options) =>
-      options?.replace ? router.replace(`/errors/${next}`) : router.push(`/errors/${next}`),
+    busy: errorsQuery.isLoading,
+    items: [
+      { id: ERRORS_OVERVIEW.id, label: ERRORS_OVERVIEW.label, icon: ERRORS_OVERVIEW.icon, dividerAfter: true },
+      ...errorSiteNames.map((id) => ({ id, label: id })),
+    ],
+    selectedId: errorsSite ?? subTopicFromPath(path, [ERRORS_OVERVIEW]),
+    defaultSelectedId: ERRORS_OVERVIEW.id,
+    onSelect: (next, options) => openErrors(next, options?.replace),
     onClear: () => router.push("/errors"),
   };
 
@@ -389,7 +413,7 @@ export function BoardShell({ children }: { children: ReactNode }): ReactElement 
         )}
         {topic === "errors" && (
           <div className="flex min-h-0 flex-1 flex-col">
-            <ErrorsView topic={subTopicFromPath(path, ERRORS_TOPICS) ?? "overview"} />
+            <ErrorsView site={errorsSite} onSite={openErrors} />
           </div>
         )}
         {topic === "settings" && effectiveSection === "appearance" && (
