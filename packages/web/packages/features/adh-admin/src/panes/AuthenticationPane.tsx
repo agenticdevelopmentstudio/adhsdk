@@ -138,7 +138,37 @@ interface EntryPointDraft {
   slug: string;
   name: string;
   origins: string[];
+  /** The deployment sets these origins, so they are shown but not edited. */
+  originsManaged: boolean;
   status: RowStatus;
+}
+
+interface SecretJwtDraft {
+  teamId: string;
+  keyId: string;
+}
+
+type IdentityMapping = ProviderTemplate["identityMapping"];
+
+function secretJwtDraft(mapping: IdentityMapping | undefined): SecretJwtDraft | null {
+  const jwt = mapping?.clientSecretJwt;
+  return jwt ? { teamId: jwt.teamId, keyId: jwt.keyId } : null;
+}
+
+/** The mapping with the admin's keys in it. A blank key is the backend's to refuse. */
+function withSecretJwt(
+  mapping: IdentityMapping,
+  draft: SecretJwtDraft | null,
+): IdentityMapping {
+  if (!mapping.clientSecretJwt || !draft) return mapping;
+  return {
+    ...mapping,
+    clientSecretJwt: {
+      ...mapping.clientSecretJwt,
+      teamId: draft.teamId.trim(),
+      keyId: draft.keyId.trim(),
+    },
+  };
 }
 
 interface ProviderDraft {
@@ -149,6 +179,8 @@ interface ProviderDraft {
   name: string;
   clientId: string;
   clientSecret: string;
+  /** The account's keys, for a provider whose client secret is a JWT minted from a private key. */
+  secretJwt: SecretJwtDraft | null;
   globallyEnabled: boolean;
   enabledForEntryPoint: Record<string, boolean>;
   status: RowStatus;
@@ -197,6 +229,7 @@ export function AuthenticationPane({ help }: { help?: ReactNode } = {}): ReactEl
       slug: c.slug,
       name: c.name,
       origins: [...c.allowedReturnOrigins],
+      originsManaged: c.originsManaged,
       status: "existing",
     }));
 
@@ -220,6 +253,7 @@ export function AuthenticationPane({ help }: { help?: ReactNode } = {}): ReactEl
         name: p.name,
         clientId: p.clientId,
         clientSecret: "",
+        secretJwt: secretJwtDraft(p.identityMapping),
         globallyEnabled: method?.enabled ?? true,
         enabledForEntryPoint,
         status: "existing",
@@ -281,6 +315,7 @@ export function AuthenticationPane({ help }: { help?: ReactNode } = {}): ReactEl
           slug: "",
           name: "",
           origins: [""],
+          originsManaged: false,
           status: "new",
         },
       ],
@@ -309,6 +344,7 @@ export function AuthenticationPane({ help }: { help?: ReactNode } = {}): ReactEl
           name: first.name,
           clientId: "",
           clientSecret: "",
+          secretJwt: secretJwtDraft(first.identityMapping),
           globallyEnabled: true,
           enabledForEntryPoint,
           status: "new",
@@ -422,11 +458,15 @@ export function AuthenticationPane({ help }: { help?: ReactNode } = {}): ReactEl
           ) {
             continue;
           }
+          const template = templatesQ.data?.templates[p.templateSlug];
           await createProvider.mutateAsync({
             templateSlug: p.templateSlug,
             slug,
             clientId: p.clientId.trim(),
             clientSecret: p.clientSecret.trim(),
+            ...(template?.identityMapping.clientSecretJwt
+              ? { identityMapping: withSecretJwt(template.identityMapping, p.secretJwt) }
+              : {}),
           });
         }
       }
@@ -462,13 +502,22 @@ export function AuthenticationPane({ help }: { help?: ReactNode } = {}): ReactEl
         const nameChanged = orig.name !== p.name.trim();
         const clientIdChanged = orig.clientId !== p.clientId.trim();
         const secretChanged = p.clientSecret.trim() !== "";
-        if (slugChanged || nameChanged || clientIdChanged || secretChanged) {
+        const origJwt = orig.identityMapping.clientSecretJwt;
+        const secretJwtChanged =
+          !!origJwt &&
+          !!p.secretJwt &&
+          (origJwt.teamId !== p.secretJwt.teamId.trim() ||
+            origJwt.keyId !== p.secretJwt.keyId.trim());
+        if (slugChanged || nameChanged || clientIdChanged || secretChanged || secretJwtChanged) {
           await updateProviderMut.mutateAsync({
             slug: p.originalSlug,
             ...(slugChanged ? { slug: p.slug.trim() } : {}),
             ...(nameChanged ? { displayName: p.name.trim() } : {}),
             ...(clientIdChanged ? { clientId: p.clientId.trim() } : {}),
             ...(secretChanged ? { clientSecret: p.clientSecret.trim() } : {}),
+            ...(secretJwtChanged
+              ? { identityMapping: withSecretJwt(orig.identityMapping, p.secretJwt) }
+              : {}),
           });
         }
       }
@@ -797,55 +846,69 @@ function EntryPointCard({
           />
         </Field>
 
-        <div className="space-y-1.5">
-          <div className="flex items-center justify-between">
+        {ep.originsManaged ? (
+          <div className="space-y-1.5">
             <Label>Allowed Return Origins</Label>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              disabled={deleted}
-              onClick={() => onChange({ origins: [...ep.origins, ""] })}
-            >
-              <Plus className="size-4 mr-1" />
-              Add Return Origin
-            </Button>
+            <ul className="space-y-1 font-mono text-sm">
+              {ep.origins.map((origin) => (
+                <li key={origin}>{origin}</li>
+              ))}
+            </ul>
+            <p className="text-xs text-muted-foreground">
+              Set by the deployment. A site adds its return origin on its application.
+            </p>
           </div>
-          <div className="space-y-2">
-            {ep.origins.map((origin, i) => (
-              <div
-                key={`${ep.localId}-origin-${i}`}
-                className="flex items-center gap-2"
-              >
-                <Input
-                  value={origin}
-                  onChange={(e) => {
-                    const next = [...ep.origins];
-                    next[i] = e.target.value;
-                    onChange({ origins: next });
-                  }}
-                  disabled={deleted}
-                  placeholder="https://agenticdeveloperhub.com"
-                  className="font-mono flex-1"
-                />
+        ) : (
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between">
+                <Label>Allowed Return Origins</Label>
                 <Button
                   type="button"
-                  variant="destructive-ghost"
-                  size="icon"
-                  disabled={deleted || ep.origins.length <= 1}
-                  onClick={() => {
-                    const next = ep.origins.filter((_, j) => j !== i);
-                    onChange({ origins: next.length === 0 ? [""] : next });
-                  }}
-                  aria-label="Remove return origin"
-                  className="shrink-0"
+                  variant="outline"
+                  size="sm"
+                  disabled={deleted}
+                  onClick={() => onChange({ origins: [...ep.origins, ""] })}
                 >
-                  <Trash2 className="size-4" />
+                  <Plus className="size-4 mr-1" />
+                  Add Return Origin
                 </Button>
               </div>
-            ))}
-          </div>
-        </div>
+              <div className="space-y-2">
+                {ep.origins.map((origin, i) => (
+                  <div
+                    key={`${ep.localId}-origin-${i}`}
+                    className="flex items-center gap-2"
+                  >
+                    <Input
+                      value={origin}
+                      onChange={(e) => {
+                        const next = [...ep.origins];
+                        next[i] = e.target.value;
+                        onChange({ origins: next });
+                      }}
+                      disabled={deleted}
+                      placeholder="https://agenticdeveloperhub.com"
+                      className="font-mono flex-1"
+                    />
+                    <Button
+                      type="button"
+                      variant="destructive-ghost"
+                      size="icon"
+                      disabled={deleted || ep.origins.length <= 1}
+                      onClick={() => {
+                        const next = ep.origins.filter((_, j) => j !== i);
+                        onChange({ origins: next.length === 0 ? [""] : next });
+                      }}
+                      aria-label="Remove return origin"
+                      className="shrink-0"
+                    >
+                      <Trash2 className="size-4" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            </div>
+        )}
 
         <div className="flex justify-end pt-2">
           {deleted ? (
@@ -880,6 +943,7 @@ function ProviderCard({
 }) {
   const deleted = provider.status === "deleted";
   const isNew = provider.status === "new";
+  const secretJwt = provider.secretJwt ?? { teamId: "", keyId: "" };
   return (
     <Disclosure
       className={cn("transition-opacity", deleted && "opacity-50")}
@@ -904,6 +968,7 @@ function ProviderCard({
                 onChange({
                   templateSlug: e.target.value,
                   name: t?.name ?? provider.name,
+                  secretJwt: secretJwtDraft(t?.identityMapping),
                 });
               }}
               disabled={deleted}
@@ -936,7 +1001,36 @@ function ProviderCard({
           />
         </Field>
 
-        <Field label="Client Secret">
+        {provider.secretJwt && (
+          <>
+            <Field label="Team ID">
+              <Input
+                value={provider.secretJwt.teamId}
+                onChange={(e) =>
+                  onChange({
+                    secretJwt: { ...secretJwt, teamId: e.target.value },
+                  })
+                }
+                disabled={deleted}
+                className="font-mono"
+              />
+            </Field>
+            <Field label="Key ID">
+              <Input
+                value={provider.secretJwt.keyId}
+                onChange={(e) =>
+                  onChange({
+                    secretJwt: { ...secretJwt, keyId: e.target.value },
+                  })
+                }
+                disabled={deleted}
+                className="font-mono"
+              />
+            </Field>
+          </>
+        )}
+
+        <Field label={provider.secretJwt ? "Private Key" : "Client Secret"}>
           <SecretInput
             id={`p-sec-${provider.localId}`}
             value={provider.clientSecret}
