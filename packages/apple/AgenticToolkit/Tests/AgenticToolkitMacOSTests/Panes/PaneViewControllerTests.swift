@@ -35,9 +35,13 @@ final class PaneViewControllerTests: XCTestCase {
         /// Held rather than built fresh per call, so a test can assert the pane
         /// hands back *these* rows and not merely two of something.
         let optionRows = [NSButton(), NSButton()]
+        private(set) var optionRowsBuilt = 0
 
         func makePaneAccessoryViews() -> [NSView] { [accessory] }
-        func makePaneOptionRows() -> [NSView] { optionRows }
+        func makePaneOptionRows() -> [NSView] {
+            optionRowsBuilt += 1
+            return optionRows
+        }
         var paneMinimizedSymbolName: String { "folder" }
         var paneMinimizedTooltip: String { "Files" }
         func paneSearch(for query: String) { receivedQueries.append(query) }
@@ -196,6 +200,17 @@ final class PaneViewControllerTests: XCTestCase {
         XCTAssertEqual(menu.items.count, 1)
         XCTAssertEqual(menu.items.first?.title, "Settings…")
         XCTAssertEqual(menu.items.first?.accessibilityIdentifier(), "pane.options.settings")
+    }
+
+    /// Deciding whether to show the gear never builds the rows: building them has side effects.
+    func testTheGearIsDecidedWithoutBuildingTheRows() {
+        let content = RichContent()
+        let (pane, _) = loadedPane(content: content)
+        pane.refreshGearVisibility()
+        _ = pane.makeOptionsMenu()
+
+        XCTAssertFalse(pane.titleBar.gearView?.isHidden ?? true)
+        XCTAssertEqual(content.optionRowsBuilt, 0)
     }
 
     /// A pane with nothing to offer has an empty menu, so no gear: only UI

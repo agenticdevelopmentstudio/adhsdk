@@ -308,8 +308,13 @@ open class PaneViewController: NSViewController {
         return menu
     }
 
-    /// Whether the content has anything for a `Settings…` dialog to show.
-    private var hasOptionRows: Bool { !makeOptionRows().isEmpty }
+    /// Whether the content has anything for a `Settings…` dialog to show, asked without building the rows:
+    /// the gear asks on every pane-tree refresh, and building a pane's rows has side effects (a persona chat
+    /// re-points its model popups and fetches the model list). A subclass overriding `makeOptionRows()`
+    /// overrides this too.
+    open var hasOptionRows: Bool {
+        (contentViewController as? PaneOptionsProviding)?.hasPaneOptionRows ?? false
+    }
 
     /// Whether the gear has a menu to raise. Internal so a test can read it.
     var hasOptionsMenu: Bool { makeOptionsMenu().numberOfItems > 0 }
