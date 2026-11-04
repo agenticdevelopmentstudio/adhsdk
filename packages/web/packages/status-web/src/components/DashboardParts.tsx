@@ -1,6 +1,5 @@
 "use client";
 import type { ReactElement, ReactNode } from "react";
-import Link from "next/link";
 import { StatCard } from "@adh-sdk/ui/blocks/stat-card";
 import { Skeleton } from "@adh-sdk/ui/components/skeleton";
 import { useNow } from "../hooks/use-now";
@@ -95,6 +94,13 @@ export function formatRate(part: number, whole: number): string {
   return whole > 0 ? `${((part / whole) * 100).toFixed(1)}%` : "—";
 }
 
+/** "3h ago", or a dash when it is not known. */
+export function formatAge(iso: string | null, now: number): string {
+  if (!iso) return "—";
+  const text = timeAgo(iso, now);
+  return text === "just now" ? text : `${text} ago`;
+}
+
 /** A panel fed by two providers: it has data if either answered, and shows the first failure. */
 export function eitherSection(a: DashboardSection<unknown>, b: DashboardSection<unknown>): DashboardSection<true> {
   return {
@@ -109,17 +115,20 @@ export function WrappedCell({ children }: { children: ReactNode }): ReactElement
   return <span className="whitespace-normal [overflow-wrap:anywhere]">{children}</span>;
 }
 
-/** From a panel on an overview to the topic holding all of it. */
-export function SeeAll({ href, what }: { href: string; what: string }): ReactElement {
-  return (
-    <Link
-      href={href}
-      aria-label={`See all ${what}`}
-      className="whitespace-nowrap font-mono text-[10px] text-apt-text-muted underline underline-offset-2 hover:text-apt-text"
-    >
-      See all
-    </Link>
-  );
+const NO_SELECTION = new Set<string>();
+
+/** DataTable props for a table whose rows each open a page on one click, and which never holds a selection. */
+export function openOnRowClick(onOpen: (id: string) => void): {
+  selectedIds: Set<string>;
+  onSelectionChange: (ids: Set<string>) => void;
+} {
+  return {
+    selectedIds: NO_SELECTION,
+    onSelectionChange: (ids) => {
+      const [next] = ids;
+      if (next !== undefined) onOpen(next);
+    },
+  };
 }
 
 /** The worst failure rate on a page is what an operator scans for. */

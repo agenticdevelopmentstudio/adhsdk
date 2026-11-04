@@ -22,7 +22,7 @@ import type {
   VercelTrafficSection,
   VitalsRow,
 } from "../telemetry/dashboard-types";
-import { SiteFailureRate, WrappedCell } from "./DashboardParts";
+import { openOnRowClick, SiteFailureRate, WrappedCell } from "./DashboardParts";
 import { ResponseChart } from "./ResponseChart";
 
 // What Analytics' overview and its site pages share, so the two can't disagree about what a figure
@@ -82,8 +82,6 @@ export interface SiteSort {
   dir: "asc" | "desc";
 }
 
-const NO_SELECTION: ReadonlySet<string> = new Set<string>();
-
 /** Every site on one table. Choosing a row opens that site: its page is where the row's detail is. */
 export function SitesTable({
   rows,
@@ -102,11 +100,7 @@ export function SitesTable({
       columns={SITE_COLUMNS}
       rows={[...rows]}
       getRowId={(row) => row.key}
-      selectedIds={NO_SELECTION as Set<string>}
-      onSelectionChange={(ids) => {
-        const [next] = ids;
-        if (next !== undefined) onSite(next);
-      }}
+      {...openOnRowClick(onSite)}
       sort={sort}
       onSortChange={onSort}
       autoSizeColumns

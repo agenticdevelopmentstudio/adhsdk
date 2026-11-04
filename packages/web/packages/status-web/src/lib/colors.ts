@@ -75,6 +75,13 @@ export const ANALYTICS_SOURCE_COLORS = {
 // first categorical hue. Red stays reserved for the "something is active" state.
 export const ERROR_CHART_COLOR = "var(--color-apt-cat-blue)";
 
+// A site's errors and failed requests on one chart. The same validated pair as the two providers,
+// fixed to the series, and named by the chart's legend so neither relies on colour alone.
+export const SITE_ERROR_SERIES_COLORS = {
+  errors: ERROR_CHART_COLOR,
+  failures: ANALYTICS_SOURCE_COLORS.vercel,
+} as const;
+
 // Core UI palette — all theme tokens.
 export const PALETTE = {
   bg: "var(--color-apt-bg)",

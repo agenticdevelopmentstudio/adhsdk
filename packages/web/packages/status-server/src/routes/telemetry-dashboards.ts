@@ -5,6 +5,7 @@ import { loadErrorIssues } from '../telemetry/dashboard/errors-sections';
 import {
   loadDimensions,
   loadPaths,
+  loadSiteErrorDetail,
   loadSiteHealth,
   loadTraffic,
   loadVitals,
@@ -33,13 +34,13 @@ const ERRORS_TTL_MS = 60_000;
 
 type PosthogSections = Omit<AnalyticsSectionData, 'vercel'>;
 type VercelSections = Pick<AnalyticsSectionData, 'vercel'>;
-type GlitchtipSections = Omit<ErrorsSectionData, 'sites'>;
-type SitesSections = Pick<ErrorsSectionData, 'sites'>;
+type SitesSections = Pick<ErrorsSectionData, 'sites' | 'detail'>;
+type GlitchtipSections = Omit<ErrorsSectionData, keyof SitesSections>;
 
 const POSTHOG_SECTIONS = ['traffic', 'dimensions', 'paths', 'vitals', 'health'] as const;
 const VERCEL_SECTIONS = ['vercel'] as const;
 const GLITCHTIP_SECTIONS = ['issues'] as const;
-const SITES_SECTIONS = ['sites'] as const;
+const SITES_SECTIONS = ['sites', 'detail'] as const;
 
 function isOneOf<T extends string>(allowed: readonly T[], value: string): value is T {
   return (allowed as readonly string[]).includes(value);
@@ -79,9 +80,13 @@ export function dashboardRoutes(config: StatusConfig): Hono<{ Variables: { tier:
   const errorSites = sectionedDashboard<'all', SitesSections>({
     ttlMs: ANALYTICS_TTL_MS,
     sections: SITES_SECTIONS,
-    loaders: () => ({
-      sites: () => loadSiteHealth(creds, rangeWindow('30d', Date.now())),
-    }),
+    loaders: () => {
+      const w = rangeWindow('30d', Date.now());
+      return {
+        sites: () => loadSiteHealth(creds, w),
+        detail: () => loadSiteErrorDetail(creds, w),
+      };
+    },
   });
 
   app.get('/analytics/dashboard', (c) => {

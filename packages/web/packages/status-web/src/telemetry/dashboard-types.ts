@@ -167,9 +167,49 @@ export interface ErrorsIssuesSection {
   };
 }
 
+/** One kind of error a site reported. PostHog holds no message text, only these names. */
+export interface SiteErrorRow {
+  host: string;
+  name: string;
+  feature: string | null;
+  step: string | null;
+  boundary: string | null;
+  page: string | null;
+  count: number;
+  lastSeen: string | null;
+}
+
+export interface SiteFailedRequestRow {
+  host: string;
+  /** 0 means the request never got a response. */
+  status: number;
+  method: string | null;
+  path: string;
+  count: number;
+  lastSeen: string | null;
+}
+
+export interface SiteErrorDays {
+  host: string;
+  /** One value per bucket. */
+  errors: number[];
+  failures: number[];
+}
+
+/** What sits behind each site's row in `sites`, for that site's own page. */
+export interface SiteErrorDetailSection {
+  buckets: string[];
+  days: SiteErrorDays[];
+  errors: SiteErrorRow[];
+  requests: SiteFailedRequestRow[];
+  /** A row cap was hit, so the rarest errors or failed requests are missing. */
+  truncated: boolean;
+}
+
 export interface ErrorsSectionData {
   issues: ErrorsIssuesSection;
   sites: SiteHealthRow[];
+  detail: SiteErrorDetailSection;
 }
 
 export interface ErrorsDashboardResponse {

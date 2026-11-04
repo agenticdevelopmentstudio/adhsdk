@@ -1,7 +1,17 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { _resetProviderCooldowns, noteRateLimited } from "@adh-sdk/deploy-platform/cooldown";
 import { alignToBuckets, rangeWindow } from "../src/telemetry/dashboard/ranges";
-import { loadTraffic, shapeDimensions, shapeHealth, shapeTraffic, shapeVitals } from "../src/telemetry/dashboard/posthog-sections";
+import {
+  loadSiteErrorDetail,
+  loadTraffic,
+  shapeDimensions,
+  shapeErrorDays,
+  shapeFailedRequests,
+  shapeHealth,
+  shapeSiteErrors,
+  shapeTraffic,
+  shapeVitals,
+} from "../src/telemetry/dashboard/posthog-sections";
 import { analyticsEnabled, isProductionProject, loadVercelTraffic, productionDomain, shapeMarginal } from "../src/telemetry/dashboard/vercel-section";
 import { isActiveIssue, summarizeIssues, toErrorIssues } from "../src/telemetry/dashboard/errors-sections";
 
@@ -78,6 +88,82 @@ describe("PostHog shapers", () => {
 
   it("shapeHealth", () => {
     expect(shapeHealth([["a.com", 1, 100, 2, null]])[0]).toEqual({ host: "a.com", errors: 1, requests: 100, failures: 2, p95Ms: null });
+  });
+
+  it("shapeErrorDays lines each site up on the buckets, zero-filled", () => {
+    expect(
+      shapeErrorDays(
+        [
+          ["a.com", "2026-11-03T00:00:00Z", 1, 0],
+          ["a.com", "2026-11-04T00:00:00Z", 0, "2"],
+          ["b.com", "2026-11-04T00:00:00Z", 3, 4],
+        ],
+        buckets,
+      ),
+    ).toEqual([
+      { host: "a.com", errors: [1, 0], failures: [0, 2] },
+      { host: "b.com", errors: [0, 3], failures: [0, 4] },
+    ]);
+  });
+
+  it("shapeSiteErrors keeps what an error did not report as null", () => {
+    expect(shapeSiteErrors([["a.com", "TypeError", "checkout", "", null, "/pay", 2, "2026-11-04T01:00:00Z"]])[0]).toEqual({
+      host: "a.com",
+      name: "TypeError",
+      feature: "checkout",
+      step: null,
+      boundary: null,
+      page: "/pay",
+      count: 2,
+      lastSeen: "2026-11-04T01:00:00Z",
+    });
+    expect(shapeSiteErrors([["a.com", null, null, null, null, null, 1, null]])[0]?.name).toBe("(unnamed)");
+  });
+
+  it("shapeFailedRequests keeps status 0, a request with no response", () => {
+    expect(shapeFailedRequests([["a.com", 0, "POST", "/x", "3", "2026-11-04T01:00:00Z"]])[0]).toEqual({
+      host: "a.com",
+      status: 0,
+      method: "POST",
+      path: "/x",
+      count: 3,
+      lastSeen: "2026-11-04T01:00:00Z",
+    });
+  });
+
+  describe("loadSiteErrorDetail", () => {
+    const ENV = { POSTHOG_HOST: "https://ph", POSTHOG_API_KEY: "k", POSTHOG_PROJECT_ID: "1" };
+    const answer = (results: unknown[][]) => ({ ok: true, status: 200, json: async () => ({ results }) });
+
+    it("asks only for production errors and failed requests, and says when a cap was hit", async () => {
+      const queries: string[] = [];
+      const atCap = Array.from({ length: 5_000 }, () => ["a.com", 500, "GET", "/x", 1, null]);
+      vi.stubGlobal("fetch", async (_url: string, init: { body: string }) => {
+        const query = (JSON.parse(init.body) as { query: { query: string } }).query.query;
+        queries.push(query);
+        return answer(query.includes("properties.path") ? atCap : []);
+      });
+
+      const detail = await loadSiteErrorDetail(ENV, rangeWindow("30d", NOW));
+
+      expect(detail.buckets).toHaveLength(30);
+      expect(detail.requests).toHaveLength(5_000);
+      expect(detail.truncated).toBe(true);
+      expect(queries).toHaveLength(3);
+      for (const query of queries) expect(query).toContain("NOT LIKE 'staging.%'");
+      const requests = queries.find((q) => q.includes("properties.path"));
+      expect(requests).toContain("toFloat(properties.status) >= 500 OR toFloat(properties.status) = 0");
+    });
+
+    it("is not truncated under the cap", async () => {
+      vi.stubGlobal("fetch", async () => answer([]));
+      expect((await loadSiteErrorDetail(ENV, rangeWindow("30d", NOW))).truncated).toBe(false);
+    });
+
+    it("fails the section when any of its queries fails", async () => {
+      vi.stubGlobal("fetch", async () => ({ ok: false, status: 504, json: async () => ({}) }));
+      await expect(loadSiteErrorDetail(ENV, rangeWindow("30d", NOW))).rejects.toThrow("HTTP 504");
+    });
   });
 
   it("a failed query fails the section rather than reading as no traffic", async () => {

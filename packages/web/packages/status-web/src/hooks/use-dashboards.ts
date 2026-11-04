@@ -47,10 +47,11 @@ export function useAnalyticsDashboard(
   });
 }
 
-export function useErrorsDashboard(): UseQueryResult<ErrorsDashboardResponse> {
+export function useErrorsDashboard(options?: { enabled?: boolean }): UseQueryResult<ErrorsDashboardResponse> {
   const api = useStatusApi();
   return useQuery<ErrorsDashboardResponse>({
     queryKey: ["errors-dashboard"],
+    enabled: options?.enabled ?? true,
     queryFn: () => getDashboard(api, "/errors/dashboard"),
     refetchInterval: (query) => dashboardPollMs(query.state.data),
     refetchOnWindowFocus: true,

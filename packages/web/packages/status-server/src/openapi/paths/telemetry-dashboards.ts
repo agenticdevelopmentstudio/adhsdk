@@ -121,6 +121,28 @@ const errorsSections = object({
     }),
   ),
   sites: section(list(siteHealth)),
+  detail: section(
+    object({
+      buckets: strs,
+      days: list(object({ host: str, errors: nums, failures: nums })),
+      errors: list(
+        object({
+          host: str,
+          name: str,
+          feature: nullableStr,
+          step: nullableStr,
+          boundary: nullableStr,
+          page: nullableStr,
+          count: num,
+          lastSeen: nullableStr,
+        }),
+      ),
+      requests: list(
+        object({ host: str, status: num, method: nullableStr, path: str, count: num, lastSeen: nullableStr }),
+      ),
+      truncated: bool,
+    }),
+  ),
 });
 
 export const dashboardPaths: Paths = {
@@ -150,7 +172,7 @@ export const dashboardPaths: Paths = {
   '/errors/dashboard': {
     get: {
       tags: [tag],
-      summary: 'Every unresolved GlitchTip issue, 30-day event history, and per-site failure rates',
+      summary: 'Every unresolved GlitchTip issue, 30-day event history, and each site’s errors and failed requests',
       security: BEARER,
       responses: {
         200: okJson(

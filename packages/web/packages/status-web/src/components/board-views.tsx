@@ -3,18 +3,15 @@ import {
   BarChart3,
   Boxes,
   Bug,
-  CalendarDays,
   Cloud,
   Gauge,
   Globe,
   KeyRound,
-  List,
   Network,
   Palette,
   Server,
   Settings,
   Table2,
-  Tags,
   Users,
 } from "lucide-react";
 
@@ -142,9 +139,6 @@ export function isRosterTopic(section: SettingsSection | null): section is Roste
   return section !== null && ROSTER_SECTIONS.has(section);
 }
 
-/** The Errors topic's sub-topics, at `/errors/<id>`. */
-export type ErrorsTopic = "overview" | "new-issues" | "issues" | "by-type" | "per-site";
-
 export interface SubTopicView<T extends string> {
   id: T;
   label: string;
@@ -153,8 +147,8 @@ export interface SubTopicView<T extends string> {
   description: string;
 }
 
-// The aggregate at the top of Analytics' list. The rest of that list is the sites, which come from
-// the dashboard, so the board builds it.
+// The aggregates at the top of the Analytics and Errors lists. The rest of each list is the sites,
+// which come from that topic's dashboard, so the board builds it.
 export const ANALYTICS_OVERVIEW: SubTopicView<"overview"> = {
   id: "overview",
   label: "Overview",
@@ -162,15 +156,12 @@ export const ANALYTICS_OVERVIEW: SubTopicView<"overview"> = {
   description: "Traffic across every production site, from PostHog and Vercel.",
 };
 
-// One entry per panel on the topic's overview, in the order the panels appear there, which is
-// why these are not alphabetical like the Settings sections: the list reads as the page does.
-export const ERRORS_TOPICS: readonly SubTopicView<ErrorsTopic>[] = [
-  { id: "overview", label: "Overview", icon: <Gauge size={ICON} aria-hidden />, description: "GlitchTip issues and failed requests across the fleet." },
-  { id: "new-issues", label: "New issues", icon: <CalendarDays size={ICON} aria-hidden />, description: "Unresolved issues by the day they first fired." },
-  { id: "issues", label: "Issues", icon: <List size={ICON} aria-hidden />, description: "Every unresolved GlitchTip issue." },
-  { id: "by-type", label: "By type", icon: <Tags size={ICON} aria-hidden />, description: "Unresolved issues by exception type." },
-  { id: "per-site", label: "Per site", icon: <Globe size={ICON} aria-hidden />, description: "Errors, requests, failures and p95 for each site." },
-];
+export const ERRORS_OVERVIEW: SubTopicView<"overview"> = {
+  id: "overview",
+  label: "Overview",
+  icon: <Gauge size={ICON} aria-hidden />,
+  description: "GlitchTip issues and failed requests across the fleet.",
+};
 
 /** The gated board route paths: `/home` (the no-selection landing) + one per topic.
  *  StatusHeader checks first segments against this to decide when to show the live
@@ -227,16 +218,25 @@ export function entityIdFromPath(path: string): string | null {
   }
 }
 
-/** The site chosen in Analytics' list (`/analytics/<site>`), percent-decoded, or null on the
- *  overview. */
-export function analyticsSiteFromPath(path: string): string | null {
+/** The site chosen in a `/<topic>/<site>` list, percent-decoded, or null on its overview. */
+function siteFromPath(path: string, topic: BoardTopic, overviewId: string): string | null {
   const segs = segments(path);
-  if (segs[0] !== "analytics" || !segs[1] || segs[1] === ANALYTICS_OVERVIEW.id) return null;
+  if (segs[0] !== topic || !segs[1] || segs[1] === overviewId) return null;
   try {
     return decodeURIComponent(segs[1]);
   } catch {
     return null;
   }
+}
+
+/** The site chosen in Analytics' list (`/analytics/<site>`), or null on the overview. */
+export function analyticsSiteFromPath(path: string): string | null {
+  return siteFromPath(path, "analytics", ANALYTICS_OVERVIEW.id);
+}
+
+/** The site chosen in Errors' list (`/errors/<site>`), or null on the overview. */
+export function errorsSiteFromPath(path: string): string | null {
+  return siteFromPath(path, "errors", ERRORS_OVERVIEW.id);
 }
 
 /** The Settings sections a role may see. Appearance is a per-browser display preference,
