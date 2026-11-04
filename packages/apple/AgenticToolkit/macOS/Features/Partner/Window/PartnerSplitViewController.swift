@@ -104,7 +104,8 @@ public final class PartnerSplitViewController: ThemedSplitViewController {
             title: "Notifications", content: attention, showsCloseButton: false)
         partnerPane.host = self
         notificationsPane.host = self
-        let panes = PartnerPanesViewController(partner: partnerPane, notifications: notificationsPane)
+        let panes = PartnerPanesViewController(
+            partner: partnerPane, notifications: notificationsPane, settings: controller.settings)
         partnerPanes = panes
         addTab(id: partnerTabID, source: PartnerCardSource(controller: controller), content: panes, closable: false)
     }

@@ -81,6 +81,11 @@ extension UserSettings {
     /// Whether the partner window floats above other windows.
     public static let partnerAlwaysOnTop = UserSetting<Bool>("partner.window_always_on_top", default: false)
 
+    /// Where the Notifications pane sits beside the Partner pane: `left`, `right`, `above` or `below`.
+    /// Arrange mode's Move changes it.
+    public static let partnerNotificationsSide = UserSetting<String>(
+        "partner.window_notifications_side", default: "right")
+
     /// How many days done attention items stay in the window.
     public static let partnerAttentionRetentionDays = UserSetting<Int>("partner.attention_retention_days", default: 7)
 

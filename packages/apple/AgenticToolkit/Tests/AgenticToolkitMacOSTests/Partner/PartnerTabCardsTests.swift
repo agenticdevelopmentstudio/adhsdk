@@ -149,4 +149,36 @@ final class PartnerTabCardsTests: XCTestCase {
         }
         XCTAssertEqual(panes.splitViewItems.count, 2)
     }
+
+    func testArrangeModeMovesNotificationsAroundThePartnerPaneAndRemembersWhere() throws {
+        let split = PartnerSplitViewController(controller: controller)
+        split.loadViewIfNeeded()
+        let panes = try XCTUnwrap(split.partnerPanes)
+        panes.loadViewIfNeeded()
+        let partner = panes.partnerPane, notifications = panes.notificationsPane
+
+        // Notifications starts on the right, so it cannot move right and the Partner pane cannot move left.
+        XCTAssertFalse(panes.availableMoveDirections(for: notifications).contains(.right))
+        XCTAssertFalse(panes.availableMoveDirections(for: partner).contains(.left))
+        XCTAssertFalse(panes.move(notifications, .right))
+
+        XCTAssertTrue(panes.move(notifications, .below))
+        XCTAssertFalse(panes.splitView.isVertical)
+        XCTAssertEqual(panes.splitViewItems.map(\.viewController), [partner, notifications])
+        XCTAssertEqual(settings.get(UserSettings.partnerNotificationsSide), "below")
+
+        // The Partner pane moving right puts Notifications on its left, first in the split.
+        XCTAssertTrue(panes.move(partner, .right))
+        XCTAssertTrue(panes.splitView.isVertical)
+        XCTAssertEqual(panes.splitViewItems.map(\.viewController), [notifications, partner])
+        XCTAssertEqual(settings.get(UserSettings.partnerNotificationsSide), "left")
+
+        // A new window opens the way the last one was left.
+        let reopened = PartnerSplitViewController(controller: controller)
+        reopened.loadViewIfNeeded()
+        let again = try XCTUnwrap(reopened.partnerPanes)
+        again.loadViewIfNeeded()
+        XCTAssertEqual(again.notificationsSide, .left)
+        XCTAssertEqual(again.splitViewItems.map(\.viewController), [again.notificationsPane, again.partnerPane])
+    }
 }

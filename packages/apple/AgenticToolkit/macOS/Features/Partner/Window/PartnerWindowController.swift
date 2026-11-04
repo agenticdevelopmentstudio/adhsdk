@@ -9,7 +9,9 @@ import AppKit
 ///
 /// The Conversations window's recipe: built by ``ensureCurrent(controller:)``
 /// without showing so `restoreOnLaunch()` can reopen it, always-on-top from a
-/// setting kept live by an observer, and the gear in the title bar.
+/// setting kept live by an observer, and the gear in the title bar. Dressed as
+/// a Projects window is: the integrated title bar, the panes' backdrop running
+/// up behind it, and the arrange-mode button beside the gear.
 @MainActor
 public final class PartnerWindowController: SingleWindowController {
     public private(set) static var current: PartnerWindowController?
@@ -22,6 +24,8 @@ public final class PartnerWindowController: SingleWindowController {
     private let toolbar: PartnerToolbar
     private let configDialog: WindowOptionsDialog
     private var floatingObserver: UserSettingObserver<Bool>?
+    private let arrangeButton = ArrangeModeTitlebarButton(accessibilityID: "partner-window.arrange-button")
+    private var backdropObserver: ThemePaletteObserver?
 
     public static func present(controller: PartnerController) {
         ensureCurrent(controller: controller)
@@ -47,7 +51,15 @@ public final class PartnerWindowController: SingleWindowController {
             self?.setFloating(floating)
         }
         toolbar.install(in: window)
-        window.addTitlebarAccessoryViewController(configDialog.makeTitlebarAccessory())
+        WindowTitlebarAccessory.applyIntegratedTitlebar(to: window)
+        // The window's own background is what shows through the clear title
+        // bar, so it follows the theme as a Projects window's does.
+        backdropObserver = ThemePaletteObserver { [weak window] palette in
+            window?.backgroundColor = NSColor(palette.projectPaneBackdrop)
+        }
+        window.addTitlebarAccessoryViewController(
+            configDialog.makeTitlebarAccessory(leading: [arrangeButton.button], width: 120))
+        arrangeButton.attach(to: window)
     }
 
     private init(controller: PartnerController) {
@@ -65,10 +77,11 @@ public final class PartnerWindowController: SingleWindowController {
             ]
         }
 
-        super.init(windowID: Self.windowID, contentViewController: split)
+        // Below the title bar: the window's content runs full height behind it.
+        super.init(windowID: Self.windowID, contentViewController: SafeAreaHostViewController(child: split))
 
         self.windowTitle = "Coding Partner"
-        self.windowStyleMask = [.titled, .closable, .resizable, .miniaturizable]
+        self.windowStyleMask = [.titled, .closable, .resizable, .miniaturizable, .fullSizeContentView]
         self.windowSpec = WindowSpec(
             defaultSize: NSSize(width: 1100, height: 720),
             minSize: NSSize(width: 800, height: 420),

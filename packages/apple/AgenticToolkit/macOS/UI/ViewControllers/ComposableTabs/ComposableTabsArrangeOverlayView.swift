@@ -28,6 +28,16 @@ final class ComposableTabsArrangeOverlayView: NSView {
     var canRemove: () -> Bool = { true }
     var availableDirections: () -> Set<Direction> = { [] }
 
+    /// False for a pane that is fixed in its window — it can move but never be
+    /// added beside or removed — so Add and Remove leave the toolbar rather
+    /// than sit there disabled, and the toolbar fits a narrow pane.
+    var offersAddRemove = true {
+        didSet {
+            addButton.isHidden = !offersAddRemove
+            removeButton.isHidden = !offersAddRemove
+        }
+    }
+
     /// What this pane is, named above the toolbar. In arrange mode the content
     /// is dimmed to the point of being unreadable, which is exactly when the
     /// user needs to know which pane they are about to move.

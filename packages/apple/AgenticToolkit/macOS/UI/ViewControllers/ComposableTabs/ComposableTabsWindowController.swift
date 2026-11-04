@@ -262,7 +262,7 @@ public final class ComposableTabsWindowController: WindowController<NSViewContro
     private var isMirroringArrangement = false
 
     private var titlebarAccessory: NSTitlebarAccessoryViewController?
-    private var arrangeButton: NSButton?
+    private let arrangeButton = ArrangeModeTitlebarButton(accessibilityID: "project-window.arrange-button")
     private var cancellables = Set<AnyCancellable>()
 
     /// Keeps the room around the panes following the setting while the window
@@ -450,24 +450,15 @@ public final class ComposableTabsWindowController: WindowController<NSViewContro
     public override func configureWindow(_ window: NSWindow) {
         super.configureWindow(window)
         window.toolbar = toolbarDelegate.makeToolbar(identifier: "project.toolbar")
-        window.toolbarStyle = .unified
-        // Settings' seamless titlebar: no material of its own and no hairline
-        // under it, so the panes' backdrop and the shelf run straight up
-        // behind the traffic lights. The title stays — see above.
-        window.titlebarAppearsTransparent = true
-        window.titlebarSeparatorStyle = .none
+        // Settings' seamless titlebar, shared with the Coding Partner window.
+        // The title stays — see above.
+        WindowTitlebarAccessory.applyIntegratedTitlebar(to: window)
         if shelf != nil {
             // The toolbar draws the title after the shelf instead — see
             // `WindowToolbarItem.projectShelfItems`.
             window.titleVisibility = .hidden
             toolbarDelegate.titleWindow = window
         }
-        window.backgroundColor = NSColor(ThemePaletteObserver.currentPalette.projectPaneBackdrop)
-        // A project window is its own tab host. Left `.automatic`, AppKit
-        // merges a newly opened project into the front project window as a
-        // native window tab whenever the system's "Prefer tabs" setting says
-        // so — opening one project rearranges the window of another.
-        window.tabbingMode = .disallowed
 
         // The window, not `self.window`: this runs *during* `loadWindow()`, so
         // the controller's own property is not pointing at it yet.
@@ -564,17 +555,7 @@ public final class ComposableTabsWindowController: WindowController<NSViewContro
     private func installTitlebarAccessoryIfNeeded() {
         guard titlebarAccessory == nil, let window else { return }
 
-        let arrange = Self.titlebarButton(
-            symbolName: "rectangle.3.group",
-            description: "Arrange Panes",
-            toolTip: "Arrange panes",
-            target: self,
-            action: #selector(toggleArrangeMode(_:))
-        )
-        arrange.accessibilityID("project-window.arrange-button")
-        arrangeButton = arrange
-
-        let settings = Self.titlebarButton(
+        let settings = WindowTitlebarAccessory.makeButton(
             symbolName: "gearshape",
             description: "Project Settings",
             toolTip: "Project settings",
@@ -583,51 +564,8 @@ public final class ComposableTabsWindowController: WindowController<NSViewContro
         )
         settings.accessibilityID("project-window.project-settings-button")
 
-        let stack = NSStackView(views: [arrange, settings])
-        stack.orientation = .horizontal
-        stack.spacing = 4
-        stack.frame = NSRect(x: 0, y: 0, width: 80, height: 24)
-
-        let accessory = NSTitlebarAccessoryViewController()
-        accessory.view = stack
-        accessory.layoutAttribute = .right
-        window.addTitlebarAccessoryViewController(accessory)
-        titlebarAccessory = accessory
-
-        // The mode can also be turned on from the Window menu, so the button's
-        // tint follows the mode rather than the click.
-        NotificationCenter.default.publisher(for: ComposableTabsArrangeMode.didChangeNotification)
-            .sink { [weak self] notification in
-                guard let self, let changed = notification.object as? NSWindow,
-                      changed === self.window else { return }
-                self.refreshArrangeButton()
-            }
-            .store(in: &cancellables)
-        refreshArrangeButton()
-    }
-
-    private static func titlebarButton(
-        symbolName: String,
-        description: String,
-        toolTip: String,
-        target: AnyObject,
-        action: Selector
-    ) -> NSButton {
-        let symbol = NSImage(systemSymbolName: symbolName, accessibilityDescription: description)?
-            .withSymbolConfiguration(.init(pointSize: 14, weight: .regular))
-        let button = NSButton(image: symbol ?? NSImage(), target: target, action: action)
-        button.bezelStyle = .texturedRounded
-        button.imagePosition = .imageOnly
-        button.toolTip = toolTip
-        button.frame = NSRect(x: 0, y: 0, width: 36, height: 24)
-        return button
-    }
-
-    private func refreshArrangeButton() {
-        let enabled = ComposableTabsArrangeMode.shared.isEnabled(in: window)
-        arrangeButton?.contentTintColor =
-            enabled ? tabbed.view.resolvedThemeScope.palette.nsColor(.accent) : nil
-        arrangeButton?.state = enabled ? .on : .off
+        titlebarAccessory = WindowTitlebarAccessory.install([arrangeButton.button, settings], in: window)
+        arrangeButton.attach(to: window)
     }
 
     // MARK: - Adding panes

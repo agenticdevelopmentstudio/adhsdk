@@ -156,6 +156,19 @@ final class PartnerPaneViewController: PaneViewController {
     private let menuItems: () -> [NSMenuItem]
     /// Names this pane to the active-pane tracker, as a layout node names a Projects window pane.
     let nodeID = UUID()
+    /// What arrange mode and the gear's Move may do with this pane; nil for a pane nothing can move.
+    weak var arrangeHost: PartnerPaneArranging?
+    private lazy var arrange: PaneArrangeOverlayController = makeArrangeController()
+    /// Held because `NSMenuItem` keeps its target unowned.
+    private lazy var moveMenu: ComposableTabsMoveMenu = {
+        let menu = ComposableTabsMoveMenu()
+        menu.availableDirections = { [weak self] in
+            guard let self else { return [] }
+            return self.arrangeHost?.availableMoveDirections(for: self) ?? []
+        }
+        menu.onMove = { [weak self] direction in self?.move(direction) }
+        return menu
+    }()
 
     init(title: String, content: NSViewController, sessionID: UUID? = nil, showsCloseButton: Bool = true,
          menuItems: @escaping () -> [NSMenuItem] = { [] }) {
@@ -174,7 +187,21 @@ final class PartnerPaneViewController: PaneViewController {
     /// Room for the border the backdrop draws, the same number a Projects window pane uses.
     override var contentInset: CGFloat { ComposableTabsPaneBackgroundView.borderInset }
     override func makeContentViewController() -> NSViewController? { content }
-    override func makeMenuItems() -> [NSMenuItem] { menuItems() }
+    /// The pane's own items, then `Move ▸` for a pane that can move — the same submenu a Projects window
+    /// pane carries.
+    override func makeMenuItems() -> [NSMenuItem] {
+        guard arrangeHost != nil else { return menuItems() }
+        let items = moveMenu.makeItems(accessibilityPrefix: "pane.options.move")
+        let submenu = NSMenu()
+        submenu.autoenablesItems = false
+        for item in items { submenu.addItem(item) }
+        let move = NSMenuItem(title: "Move", action: nil, keyEquivalent: "")
+        move.submenu = submenu
+        move.isEnabled = items.contains { $0.isEnabled }
+        move.accessibilityID("pane.options.move")
+        let own = menuItems()
+        return own.isEmpty ? [move] : own + [.separator(), move]
+    }
     override var fallbackTitle: String { paneTitle }
     override var paneAccessibilityIdentifier: String { "partner.pane" }
 
@@ -183,7 +210,49 @@ final class PartnerPaneViewController: PaneViewController {
         titleBar.controls.minimizeButton.isHidden = true
         titleBar.controls.zoomButton.isHidden = true
         titleBar.controls.closeButton.isHidden = !showsCloseButton
+        arrange.attach(to: view)
     }
+
+    override func viewDidAppear() {
+        super.viewDidAppear()
+        // Also the re-entry point after a move re-hosts the pane.
+        arrange.update()
+    }
+
+    /// Re-reads what the overlay offers, after either pane moved.
+    func refreshArrangeAvailability() {
+        arrange.refreshAvailability()
+    }
+
+    /// Arrange mode as a Projects window pane has it. Neither pane here can be added beside or removed: the
+    /// Partner and Notifications panes are fixed, and a session's pane closes with its session.
+    private func makeArrangeController() -> PaneArrangeOverlayController {
+        let arrange = PaneArrangeOverlayController(nodeID: nodeID)
+        arrange.paneName = { [weak self] in self?.paneTitle ?? "" }
+        // Both panes are fixed: they move, but nothing is added beside them and neither is removed.
+        arrange.offersAddRemove = false
+        arrange.availableDirections = { [weak self] in
+            guard let self else { return [] }
+            return self.arrangeHost?.availableMoveDirections(for: self) ?? []
+        }
+        arrange.onMove = { [weak self] direction in self?.move(direction) }
+        return arrange
+    }
+
+    private func move(_ direction: ComposableTabsViewController.Direction) {
+        guard let host = arrangeHost, host.move(self, direction) else {
+            RefusalFeedback.announce()
+            return
+        }
+    }
+}
+
+/// What can move a ``PartnerPaneViewController``: the split holding the Partner and Notifications panes.
+@MainActor
+protocol PartnerPaneArranging: AnyObject {
+    func availableMoveDirections(for pane: PartnerPaneViewController) -> Set<ComposableTabsViewController.Direction>
+    /// Moves `pane` toward `direction`; false when it cannot go there.
+    func move(_ pane: PartnerPaneViewController, _ direction: ComposableTabsViewController.Direction) -> Bool
 }
 
 /// Hosts the partner's `ChatView`. Made once and kept, since its view model is the partner chat session's one
