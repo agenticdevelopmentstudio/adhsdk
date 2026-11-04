@@ -23,9 +23,13 @@ public final class PartnerCoordinator: AppFeature {
         public static let showWindow = "partner.showWindow"
     }
 
-    /// How long the partner's quit turn may run: three fifths of the app's flush budget (5 s gives 3 s), so
-    /// its `stop()` and the features terminated after it still fit inside that budget.
-    public static let quitTurnLimit = ApplicationShutdownCoordinator.defaultFlushBudget * 3 / 5
+    /// How long the partner's quit turn may run: two fifths of the app's flush budget (5 s gives 2 s).
+    public static let quitTurnLimit = ApplicationShutdownCoordinator.defaultFlushBudget * 2 / 5
+
+    /// What the stop and the session close after the quit turn may add before `terminate()` returns anyway:
+    /// one fifth of the budget. The whole partner quit is capped at three fifths (3 s), so the features
+    /// terminated after it (Notes saving its edits, the language servers) always keep two seconds.
+    public static let quitStopAllowance = ApplicationShutdownCoordinator.defaultFlushBudget / 5
 
     typealias MakeController = @MainActor (
         _ store: PartnerStore, _ sessions: PartnerSessionRegistry, _ notifier: PartnerNotifier,
@@ -51,7 +55,11 @@ public final class PartnerCoordinator: AppFeature {
     private var lifecycleTask: Task<Void, Never>?
     /// The quit turn and the stop after it; `terminate()` may be awaited more than once.
     private var quitTask: Task<Void, Never>?
+    private var quitFinished = false
+    /// When every `terminate()` returns, whether or not the quit has finished.
+    private var quitDeadline: ContinuousClock.Instant?
     private let quitLimit: Duration
+    private let quitStopLimit: Duration
     /// The partner's pane id, readable off the main actor by the tool source.
     private let callerIDBox = CallerIDBox()
 
@@ -80,10 +88,12 @@ public final class PartnerCoordinator: AppFeature {
          commandRegistry: CommandRegistry, detector: (any PartnerSessionEventDetecting)?,
          pluginManager: AIPluginManager? = nil, settings: SettingsStore,
          quitLimit: Duration = PartnerCoordinator.quitTurnLimit,
+         quitStopLimit: Duration = PartnerCoordinator.quitStopAllowance,
          makeController: MakeController) {
         self.status = status
         self.settings = settings
         self.quitLimit = quitLimit
+        self.quitStopLimit = quitStopLimit
         self.registerTools = registerTools
         self.projects = projects
         self.pluginManager = pluginManager
@@ -203,6 +213,10 @@ public final class PartnerCoordinator: AppFeature {
     /// Sends the quit turn, waits at most ``quitTurnLimit`` for it, then stops the partner either way, and
     /// closes every open session so its final screen is stored before the shells die with the app.
     ///
+    /// Returns once that is done or ``quitTurnLimit`` plus ``quitStopAllowance`` has passed since the first
+    /// call, whichever is sooner: a stop waiting out the process's SIGTERM grace must not spend the budget
+    /// the features terminated after the partner need. The quit carries on beside them if it overruns.
+    ///
     /// The host terminates the partner before the automation endpoint, so the turn's `partner_*` calls
     /// still reach it. A start or stop still queued is cancelled rather than awaited: the controller's
     /// `stop()` overtakes a launch in flight, and waiting for one would spend the budget.
@@ -211,12 +225,17 @@ public final class PartnerCoordinator: AppFeature {
             lifecycleTask?.cancel()
             let controller = controller
             let limit = quitLimit
-            quitTask = Task { @MainActor in
+            quitDeadline = ContinuousClock.now.advanced(by: limit + quitStopLimit)
+            quitTask = Task { @MainActor [weak self] in
                 await controller.prepareForQuit(waitingAtMost: limit)
                 _ = controller.sessions.closeAll()
+                self?.quitFinished = true
             }
         }
-        await quitTask?.value
+        while !quitFinished, let quitDeadline, ContinuousClock.now < quitDeadline {
+            try? await Task.sleep(for: .milliseconds(20))
+        }
+        if !quitFinished { Self.logger.info("The partner's quit overran its share of the budget; moving on") }
     }
 
     /// The Coding Partner's settings, one tab each across the top of its Settings section: General,

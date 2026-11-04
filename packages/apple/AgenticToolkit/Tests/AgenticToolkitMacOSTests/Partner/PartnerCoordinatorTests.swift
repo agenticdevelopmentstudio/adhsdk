@@ -37,6 +37,7 @@ final class PartnerCoordinatorTests: XCTestCase {
     }
 
     private func makeCoordinator(quitLimit: Duration = PartnerCoordinator.quitTurnLimit,
+                                 quitStopLimit: Duration = PartnerCoordinator.quitStopAllowance,
                                  isPIDAlive: @escaping (Int32) -> Bool = { _ in false }) -> PartnerCoordinator {
         let log = log!
         let settings = settings!
@@ -44,7 +45,7 @@ final class PartnerCoordinatorTests: XCTestCase {
             store: store, paths: PartnerPaths(home: directory, token: "kitchen-test"), status: status,
             terminalEnvironment: { [:] }, registerTools: { [unowned self] in registered.append($0) },
             projects: { [] }, commandRegistry: CommandRegistry(), detector: ManualSessionEventDetector(),
-            settings: settings, quitLimit: quitLimit,
+            settings: settings, quitLimit: quitLimit, quitStopLimit: quitStopLimit,
             makeController: { store, sessions, notifier, paths, endpoint in
                 PartnerController(
                     store: store, sessions: sessions, notifier: notifier, paths: paths, endpoint: endpoint,
@@ -345,8 +346,36 @@ final class PartnerCoordinatorTests: XCTestCase {
     }
 
     func testQuitTurnFitsTheFlushBudget() {
-        XCTAssertEqual(PartnerCoordinator.quitTurnLimit, .seconds(3))
-        XCTAssertLessThan(PartnerCoordinator.quitTurnLimit, ApplicationShutdownCoordinator.defaultFlushBudget)
+        XCTAssertEqual(PartnerCoordinator.quitTurnLimit, .seconds(2))
+        XCTAssertEqual(PartnerCoordinator.quitTurnLimit + PartnerCoordinator.quitStopAllowance, .seconds(3),
+                       "the rest of the five-second budget is the other features'")
+    }
+
+    /// A stop stuck in the process's SIGTERM grace does not hold up the features terminated after the partner.
+    func testAStopThatHangsDoesNotHoldTerminateBeyondItsShare() async {
+        endpointUp()
+        settings.set(true, for: UserSettings.partnerEnabled)
+        let coordinator = makeCoordinator(quitLimit: .milliseconds(100), quitStopLimit: .milliseconds(200))
+        coordinator.startServices()
+        await waitUntil { coordinator.controller.state == .thinking }
+        guard let process = log.all.first else { return XCTFail("partner did not start") }
+        process.push(ClaudeStreamMessage(kind: .result, subtype: "success"))
+        await waitUntil { coordinator.controller.state == .idle }
+        let gate = StartGate()
+        process.terminateGate = gate
+
+        coordinator.stop()
+        let clock = ContinuousClock()
+        let began = clock.now
+        await coordinator.terminate()
+        XCTAssertLessThan(clock.now - began, .milliseconds(1000), "terminate returned at its cap")
+        let again = clock.now
+        await coordinator.terminate()
+        XCTAssertLessThan(clock.now - again, .milliseconds(100), "the registry's second call waits no longer")
+
+        gate.open()
+        await waitUntil { coordinator.controller.state == .stopped }
+        XCTAssertEqual(coordinator.controller.state, .stopped, "the stop still finished in the background")
     }
 
     func testAQuitTurnThatNeverFinishesStillStopsWithinTheCap() async {
