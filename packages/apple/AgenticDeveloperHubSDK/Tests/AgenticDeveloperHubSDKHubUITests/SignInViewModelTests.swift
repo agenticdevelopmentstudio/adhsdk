@@ -540,7 +540,7 @@ final class SignInViewModelTests: XCTestCase {
         XCTAssertFalse(model.state.isBusy)
     }
 
-    func testSocialProvidersAreAllFive() {
-        XCTAssertEqual(SignInViewModel.socialProviders, [.google, .github, .gitlab, .bitbucket, .apple])
+    func testSocialProvidersAreAllSix() {
+        XCTAssertEqual(SignInViewModel.socialProviders, [.google, .github, .gitlab, .bitbucket, .apple, .microsoft])
     }
 }

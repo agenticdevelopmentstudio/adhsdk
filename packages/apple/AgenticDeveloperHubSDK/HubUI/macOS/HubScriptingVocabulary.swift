@@ -40,7 +40,7 @@ public enum HubScripting {
 
         /// `sign-in`, `passkey`, `send-code`, `verify`, `back`, or
         /// `social:<provider>` — the provider being a `SocialProvider` raw
-        /// value (`google`, `github`, `gitlab`, `bitbucket`, `apple`).
+        /// value (`google`, `github`, `gitlab`, `bitbucket`, `apple`, `microsoft`).
         public static func parse(_ raw: String) -> Action? {
             let text = raw.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
             switch text {

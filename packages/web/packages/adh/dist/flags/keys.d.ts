@@ -13,6 +13,7 @@ export declare const FLAG: {
     readonly appleOauth: "apple_oauth";
     readonly gitlabOauth: "gitlab_oauth";
     readonly bitbucketOauth: "bitbucket_oauth";
+    readonly microsoftOauth: "microsoft_oauth";
     /** Shows the "Sign in with a passkey" option on the hub login card
      *  (LoginPage → LoginCard `onPasskeyLogin`). Off ⇒ the passkey button is hidden. */
     readonly enablePasskeySignin: "enable_passkey_signin";

@@ -9,7 +9,8 @@
       "github": "Continue with GitHub",
       "gitlab": "Continue with GitLab",
       "bitbucket": "Continue with Bitbucket",
-      "apple": "Continue with Apple"
+      "apple": "Continue with Apple",
+      "microsoft": "Continue with Microsoft"
     },
     "emailButton": "Continue with Email →",
     "nameLabel": "Name",

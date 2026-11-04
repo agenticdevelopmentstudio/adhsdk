@@ -72,5 +72,6 @@ final class SignInConfigurationTests: XCTestCase {
         XCTAssertEqual(SocialProvider.gitlab.label, "GitLab")
         XCTAssertEqual(SocialProvider.bitbucket.label, "Bitbucket")
         XCTAssertEqual(SocialProvider.apple.label, "Apple")
+        XCTAssertEqual(SocialProvider.microsoft.label, "Microsoft")
     }
 }

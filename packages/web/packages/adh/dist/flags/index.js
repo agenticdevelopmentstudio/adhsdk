@@ -80,6 +80,7 @@ var FLAG = {
   appleOauth: "apple_oauth",
   gitlabOauth: "gitlab_oauth",
   bitbucketOauth: "bitbucket_oauth",
+  microsoftOauth: "microsoft_oauth",
   /** Shows the "Sign in with a passkey" option on the hub login card
    *  (LoginPage → LoginCard `onPasskeyLogin`). Off ⇒ the passkey button is hidden. */
   enablePasskeySignin: "enable_passkey_signin",

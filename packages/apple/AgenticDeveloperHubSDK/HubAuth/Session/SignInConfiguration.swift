@@ -3,7 +3,7 @@ import Foundation
 
 /// Spec §5.2 social providers, in the order the sign-in screen lists them.
 public enum SocialProvider: String, CaseIterable, Sendable {
-    case google, github, gitlab, bitbucket, apple
+    case google, github, gitlab, bitbucket, apple, microsoft
 
     public var label: String {
         switch self {
@@ -12,6 +12,7 @@ public enum SocialProvider: String, CaseIterable, Sendable {
         case .gitlab: "GitLab"
         case .bitbucket: "Bitbucket"
         case .apple: "Apple"
+        case .microsoft: "Microsoft"
         }
     }
 }

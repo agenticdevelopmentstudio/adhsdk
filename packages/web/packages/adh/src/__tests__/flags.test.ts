@@ -12,6 +12,7 @@ describe('@adh-sdk/adh/flags', () => {
       appleOauth: 'apple_oauth',
       gitlabOauth: 'gitlab_oauth',
       bitbucketOauth: 'bitbucket_oauth',
+      microsoftOauth: 'microsoft_oauth',
       enablePasskeySignin: 'enable_passkey_signin',
       // `show_bitbag` is deliberately absent: bitbag stopped being flag-gated when he
       // became a permanent footer fixture (BitbagDock), so the key was retired rather
