@@ -4,16 +4,17 @@ import GRDB
 
 final class DaemonDatabaseTests: XCTestCase {
 
+    private var directory: String!
     private var path: String!
 
     override func setUpWithError() throws {
-        path = NSTemporaryDirectory() + "daemondb-\(UUID().uuidString).store"
+        directory = NSTemporaryDirectory() + "daemondb-\(UUID().uuidString)"
+        try FileManager.default.createDirectory(atPath: directory, withIntermediateDirectories: true)
+        path = directory + "/daemon.store"
     }
 
     override func tearDownWithError() throws {
-        for suffix in ["", "-wal", "-shm"] {
-            try? FileManager.default.removeItem(atPath: path + suffix)
-        }
+        try? FileManager.default.removeItem(atPath: directory)
     }
 
     /// Counts how many times each migration body ran.
