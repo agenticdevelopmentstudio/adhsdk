@@ -192,6 +192,36 @@ final class AdkdStopEventDetectorTests: XCTestCase {
         XCTAssertEqual(idles, [session.id])
     }
 
+    /// A `claude -p` run from inside the pane's turn shares its TERM_SESSION_ID; its Stop is not the pane's.
+    func testANestedRunsStopIsNotThePanesIdle() async {
+        let session = makeDetachedPartnerSession()
+        watch(session)
+        source.rows = [row("PreToolUse", at: "2026-10-30 10:00:00", session: "outer")]
+        await detector.poll()
+
+        source.rows = [row("PreToolUse", at: "2026-10-30 10:00:00", session: "outer"),
+                       row("Stop", at: "2026-10-30 10:00:10", session: "nested")]
+        await detector.poll()
+        XCTAssertEqual(idles, [], "the outer turn is still running")
+
+        source.rows = [row("Stop", at: "2026-10-30 10:00:20", session: "outer"),
+                       row("Stop", at: "2026-10-30 10:00:10", session: "nested")]
+        await detector.poll()
+        XCTAssertEqual(idles, [session.id], "the outer turn's own Stop is the idle")
+    }
+
+    /// A session that replaced an idle one in the pane (`/clear`) still reports its turns.
+    func testANewSessionAfterAnIdleOneStillReportsItsStop() async {
+        let session = makeDetachedPartnerSession()
+        watch(session)
+        source.rows = [row("Stop", at: "2026-10-30 10:00:00", session: "before")]
+        await detector.poll()
+        source.rows = [row("Stop", at: "2026-10-30 10:00:00", session: "before"),
+                       row("Stop", at: "2026-10-30 10:01:00", session: "after")]
+        await detector.poll()
+        XCTAssertEqual(idles, [session.id])
+    }
+
     func testTerminatedIsOneExit() {
         let session = makeDetachedPartnerSession()
         watch(session)

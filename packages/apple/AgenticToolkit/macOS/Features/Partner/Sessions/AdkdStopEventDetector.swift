@@ -76,6 +76,13 @@ public struct DaemonSessionActivitySource: AdkdSessionActivitySource {
 /// idle-prompt notification a minute later, a background subagent) is never a
 /// second idle. The state found by the first poll after watching is the past,
 /// not news. Exits come from the terminal, as for any detector.
+///
+/// A nested Claude Code run (`claude -p` from a Bash call, a skill or a hook)
+/// inherits the pane's `TERM_SESSION_ID`, so its rows are the pane's too. Its
+/// Stop is not the pane's idle: while any other session in the pane is mid-turn
+/// (its last event one of ``midTurnEvents``), a Stop is the nested run's and is
+/// recorded without being reported, so the outer turn's own Stop later is the
+/// idle. A session that replaced an idle one (`/clear`) still reports its turns.
 @MainActor
 public final class AdkdStopEventDetector: PartnerSessionEventDetecting {
 
@@ -91,6 +98,12 @@ public final class AdkdStopEventDetector: PartnerSessionEventDetecting {
 
     private static let turnEndingEvents: Set<String> = [HookEventType.stop.rawValue,
                                                         HookEventType.stopFailure.rawValue]
+
+    /// The events that leave a session in the middle of a turn.
+    static let midTurnEvents: Set<String> = Set([
+        HookEventType.userPromptSubmit, .preToolUse, .postToolUse, .postToolUseFailure, .permissionRequest,
+        .permissionDenied, .subagentStart, .subagentStop, .preCompact, .postCompact
+    ].map(\.rawValue))
 
     private final class Watch {
         let paneID: String
@@ -141,9 +154,13 @@ public final class AdkdStopEventDetector: PartnerSessionEventDetecting {
             let isBaseline = watch.turnStates == nil
             var states = watch.turnStates ?? [:]
             var endedTurn = false
-            for row in rows where watch.owns(row) {
+            let owned = rows.filter(watch.owns)
+            for row in owned {
                 let state = row.turnStateAt.isEmpty ? row.lastEventType : "\(row.lastEventType)@\(row.turnStateAt)"
-                if !isBaseline, states[row.sessionID] != state,
+                let insideAnotherTurn = owned.contains {
+                    $0.sessionID != row.sessionID && Self.midTurnEvents.contains($0.lastEventType)
+                }
+                if !isBaseline, states[row.sessionID] != state, !insideAnotherTurn,
                    Self.turnEndingEvents.contains(row.lastEventType) {
                     endedTurn = true
                 }
