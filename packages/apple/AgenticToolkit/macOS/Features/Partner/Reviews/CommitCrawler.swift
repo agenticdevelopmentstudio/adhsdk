@@ -78,9 +78,12 @@ public struct CommitCrawler: Sendable {
     /// Queues a review (id `<repoID>:<sha>`) for every commit on each branch not already in the store, authored
     /// by the repo's own `user.email`. Returns how many were inserted.
     ///
-    /// Only the owner's commits: a review runs Claude Code with permissions bypassed over the commit's diff, so
-    /// a contributor's commit pulled onto a crawled branch would be text from someone else steering an agent
-    /// with the owner's privileges. A repo with no `user.email` throws rather than reviewing everything.
+    /// Only commits whose author email is the owner's, so a contributor's ordinary commit pulled onto a crawled
+    /// branch is not reviewed. This is a scope filter, not a security boundary: the author email is whatever
+    /// the committer typed, so a commit written with `--author` set to the owner's address passes it, whether it
+    /// arrived by a merged pull request or a local `gh pr checkout` with other branches crawled. A review runs
+    /// Claude Code with permissions bypassed over the diff, so a crawled repo must be one whose commits the owner
+    /// would let steer that agent. A repo with no `user.email` throws rather than reviewing everything.
     ///
     /// Never the partner's own fixes (a ``reviewedCommitTrailer`` trailer), on any branch: merged into a crawled
     /// branch they would be reviewed again, and their reviews' fixes after them.
