@@ -68,7 +68,7 @@ describe('dashboard routes, with no provider configured', () => {
     const body = await parse(res);
     expect(body.refreshing).toBe(false);
     expect(body.configured).toEqual({ glitchtip: false, posthog: false });
-    expect(Object.keys(body.sections).sort()).toEqual(['events', 'issues', 'sites']);
+    expect(Object.keys(body.sections).sort()).toEqual(['issues', 'sites']);
     for (const section of Object.values<Record<string, unknown>>(body.sections)) {
       expect(section).toEqual({ data: null, error: null, updatedAt: null });
     }

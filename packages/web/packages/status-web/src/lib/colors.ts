@@ -61,6 +61,20 @@ export function envBadgeLabel(env: string): string {
   return ENV_BADGE_LABEL[env] ?? env.toUpperCase();
 }
 
+// Which provider a traffic figure came from: categorical, and fixed to the provider rather than
+// to its position, so a filter that hides one never repaints the other.
+export const ANALYTICS_SOURCE_COLORS = {
+  posthog: "var(--color-apt-cat-blue)",
+  // The token is a touch too light for a chart mark on the dark surfaces (L 0.72 against the
+  // palette validator's 0.67 ceiling) and is shared, so the step down happens here. It stays
+  // inside the band in light mode as well.
+  vercel: "color-mix(in oklch, var(--color-apt-cat-orange) 90%, black)",
+} as const;
+
+// New issues per day is a single series, not a verdict: a quiet day is still drawn, so it wears the
+// first categorical hue. Red stays reserved for the "something is active" state.
+export const ERROR_CHART_COLOR = "var(--color-apt-cat-blue)";
+
 // Core UI palette — all theme tokens.
 export const PALETTE = {
   bg: "var(--color-apt-bg)",

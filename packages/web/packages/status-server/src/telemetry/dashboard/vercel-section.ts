@@ -93,9 +93,14 @@ async function aggregate(
   return body.data ?? [];
 }
 
-/** One `by=country`-style response. The row's dimension value sits under the `by` name. */
+/**
+ * One `by=country`-style response. The row's dimension value sits under the `by` name. Past its
+ * limit Vercel folds the rest into a row named "Others", which is not a page or a country and
+ * cannot be summed across projects as if it were the same thing, so it is left out of a top list.
+ */
 export function shapeMarginal(rows: Record<string, unknown>[], by: string): Marginal[] {
   return rows
+    .filter((r) => r[by] !== "Others")
     .map((r) => ({
       name: typeof r[by] === "string" && r[by] !== "" ? (r[by] as string) : "(none)",
       pageviews: Number(r.pageviews) || 0,

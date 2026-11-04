@@ -60,6 +60,12 @@
       "import": "./dist/monitor/deploy-status.js",
       "default": "./dist/monitor/deploy-status.js"
     },
+    "./dashboard-types": {
+      "types": "./dist/telemetry/dashboard/types.d.ts",
+      "development": "./src/telemetry/dashboard/types.ts",
+      "import": "./dist/telemetry/dashboard/types.js",
+      "default": "./dist/telemetry/dashboard/types.js"
+    },
     "./types": {
       "types": "./dist/types.d.ts",
       "development": "./src/types.ts",

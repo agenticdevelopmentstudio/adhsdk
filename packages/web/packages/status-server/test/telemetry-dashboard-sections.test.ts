@@ -3,7 +3,7 @@ import { _resetProviderCooldowns, noteRateLimited } from "@adh-sdk/deploy-platfo
 import { alignToBuckets, rangeWindow } from "../src/telemetry/dashboard/ranges";
 import { loadTraffic, shapeDimensions, shapeHealth, shapeTraffic, shapeVitals } from "../src/telemetry/dashboard/posthog-sections";
 import { analyticsEnabled, loadVercelTraffic, productionDomain, shapeMarginal } from "../src/telemetry/dashboard/vercel-section";
-import { isActiveIssue, shapeEventStats, summarizeIssues, toErrorIssues } from "../src/telemetry/dashboard/errors-sections";
+import { isActiveIssue, summarizeIssues, toErrorIssues } from "../src/telemetry/dashboard/errors-sections";
 
 const NOW = Date.parse("2026-11-04T15:30:20.000Z");
 const HOUR = 3_600_000;
@@ -101,6 +101,12 @@ describe("Vercel section", () => {
   it("the domain is the first alias that isn't a vercel.app one", () => {
     expect(productionDomain({ targets: { production: { alias: ["x.vercel.app", "x.com"] } } })).toBe("x.com");
     expect(productionDomain({ targets: { production: { alias: ["x.vercel.app"] } } })).toBeNull();
+  });
+
+  it("shapeMarginal drops Vercel's Others rollup, which is no value of the dimension", () => {
+    expect(shapeMarginal([{ requestPath: "Others", pageviews: 9 }, { requestPath: "/a", pageviews: 1 }], "requestPath")).toEqual([
+      { name: "/a", pageviews: 1 },
+    ]);
   });
 
   it("shapeMarginal reads the value from the `by` column", () => {
@@ -209,7 +215,7 @@ describe("errors sections", () => {
       NOW,
     );
     const s = summarizeIssues(issues, rangeWindow("30d", NOW), { resolved: 7, complete: true });
-    expect(s.summary).toMatchObject({ active: 1, backlog: 3, events: 104, resolved: 7, complete: true });
+    expect(s.summary).toMatchObject({ active: 1, backlog: 2, events: 104, resolved: 7, complete: true });
     expect(s.summary.byType).toEqual([
       { name: "TypeError", issues: 1, events: 100 },
       { name: "SyntaxError", issues: 1, events: 3 },
@@ -219,15 +225,5 @@ describe("errors sections", () => {
     expect(s.issues[0]).toMatchObject({ shortId: "ADH-2", type: "SyntaxError", source: "/x.js", release: "abc", active: true });
     expect(s.summary.newPerDay.at(-3)).toBe(2);
     expect(s.summary.newPerDay.reduce((a, b) => a + b, 0)).toBe(2);
-  });
-
-  it("shapeEventStats treats a null interval as zero", () => {
-    const buckets = ["2026-11-03T00:00:00.000Z", "2026-11-04T00:00:00.000Z"];
-    expect(
-      shapeEventStats(
-        { intervals: ["2026-11-03T00:00:00Z", "2026-11-04T00:00:00Z"], groups: [{ series: { "sum(quantity)": [null, 4] } }] },
-        buckets,
-      ),
-    ).toEqual({ buckets, events: [0, 4] });
   });
 });

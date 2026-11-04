@@ -1,11 +1,14 @@
 import { ERROR_JUDGED_LEVELS, ERROR_RECENT_MS } from "../../board/derive-problems";
 import { fetchGlitchtipIssues, mapIssues, type GlitchtipEnv, type GlitchtipIssue } from "../fetchers/glitchtip";
 import { alignToBuckets, rangeWindow, type RangeWindow } from "./ranges";
-import type { ErrorIssue, ErrorsEventsSection, ErrorsIssuesSection } from "./types";
+import type { ErrorIssue, ErrorsIssuesSection } from "./types";
 
 // The GlitchTip half of the Errors topic: every unresolved issue, read as the board reads it.
+//
+// There is deliberately no events-per-day series. GlitchTip's stats_v2 answers 200 with nulls for
+// every interval on this instance (both fields, daily and hourly) while issues are firing, so it
+// would draw a flat zero beside issues reporting hundreds of events.
 
-const STATS_TIMEOUT_MS = 12_000;
 const DAY_MS = 24 * 3_600_000;
 
 /** The board's rule for an error being a current Problem, on an API row. */
@@ -61,12 +64,13 @@ export function summarizeIssues(
       ? [[new Date(Math.floor(new Date(issue.firstSeen).getTime() / DAY_MS) * DAY_MS).toISOString(), 1]]
       : [],
   );
+  const active = issues.filter((i) => i.active).length;
   return {
     buckets: w.buckets,
     issues: [...issues].sort(compareIssues),
     summary: {
-      active: issues.filter((i) => i.active).length,
-      backlog: issues.length,
+      active,
+      backlog: issues.length - active,
       events: issues.reduce((a, i) => a + i.count, 0),
       resolved: extra.resolved,
       complete: extra.complete,
@@ -85,33 +89,4 @@ export async function loadErrorIssues(env: GlitchtipEnv, nowMs: number = Date.no
     resolved: resolved.ok && resolved.complete ? resolved.issues.length : null,
     complete: unresolved.complete,
   });
-}
-
-interface StatsBody {
-  intervals?: unknown[];
-  groups?: { series?: Record<string, (number | null)[]> }[];
-}
-
-/** stats_v2 → a value per bucket; its null intervals are days with nothing to report. */
-export function shapeEventStats(body: StatsBody, buckets: string[]): ErrorsEventsSection {
-  const values = body.groups?.[0]?.series?.["sum(quantity)"] ?? [];
-  const points = (body.intervals ?? []).map((at, i): [unknown, number] => [at, values[i] ?? 0]);
-  return { buckets, events: alignToBuckets(buckets, points) };
-}
-
-export async function loadErrorEvents(env: GlitchtipEnv, nowMs: number = Date.now()): Promise<ErrorsEventsSection> {
-  const w = rangeWindow("30d", nowMs);
-  const base = `${(env.GLITCHTIP_URL ?? "").replace(/\/+$/, "")}/api/0/organizations/${env.GLITCHTIP_ORG}/stats_v2/`;
-  const url = new URL(base);
-  url.searchParams.set("category", "error");
-  url.searchParams.set("interval", "1d");
-  url.searchParams.set("field", "sum(quantity)");
-  url.searchParams.set("start", `${w.since.toISOString().slice(0, 19)}Z`);
-  url.searchParams.set("end", `${w.until.toISOString().slice(0, 19)}Z`);
-  const res = await fetch(url, {
-    headers: { Authorization: `Bearer ${env.GLITCHTIP_API_TOKEN}` },
-    signal: AbortSignal.timeout(STATS_TIMEOUT_MS),
-  });
-  if (!res.ok) throw new Error(`GlitchTip stats HTTP ${res.status}`);
-  return shapeEventStats((await res.json()) as StatsBody, w.buckets);
 }

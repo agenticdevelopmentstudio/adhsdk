@@ -5338,7 +5338,6 @@
                       "type": "object",
                       "required": [
                         "issues",
-                        "events",
                         "sites"
                       ],
                       "properties": {
@@ -5514,56 +5513,6 @@
                                             "type": "number"
                                           }
                                         }
-                                      }
-                                    }
-                                  }
-                                },
-                                {
-                                  "type": "null"
-                                }
-                              ]
-                            },
-                            "error": {
-                              "type": [
-                                "string",
-                                "null"
-                              ]
-                            },
-                            "updatedAt": {
-                              "type": [
-                                "string",
-                                "null"
-                              ]
-                            }
-                          }
-                        },
-                        "events": {
-                          "type": "object",
-                          "required": [
-                            "data",
-                            "error",
-                            "updatedAt"
-                          ],
-                          "properties": {
-                            "data": {
-                              "anyOf": [
-                                {
-                                  "type": "object",
-                                  "required": [
-                                    "buckets",
-                                    "events"
-                                  ],
-                                  "properties": {
-                                    "buckets": {
-                                      "type": "array",
-                                      "items": {
-                                        "type": "string"
-                                      }
-                                    },
-                                    "events": {
-                                      "type": "array",
-                                      "items": {
-                                        "type": "number"
                                       }
                                     }
                                   }

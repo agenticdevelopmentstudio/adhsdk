@@ -23,6 +23,8 @@ import { SettingsLevelProvider } from "./settings-level";
 import { OverviewTab } from "./OverviewTab";
 import { Dashboard } from "./Dashboard";
 import { FleetView } from "./FleetView";
+import { AnalyticsView } from "./AnalyticsView";
+import { ErrorsView } from "./ErrorsView";
 import { SnapshotStaleBanner } from "./SnapshotStaleBanner";
 import { ConnectionOverlay } from "@adh-sdk/ui/components/connection-overlay";
 import { ConfigPanel, AppearanceSection } from "./ConfigPanel";
@@ -87,7 +89,7 @@ function KeptPane({ show, children }: { show: boolean; children: ReactNode }): R
 
 /**
  * The board: ONE HierarchicalTopicDetail at the root of the site whose first topic list
- * is Overview / Details / Fleet / …divider… / Settings.
+ * is Overview / Details / Fleet / Analytics / Errors / …divider… / Settings.
  *
  * Settings opens the hierarchy's SECOND level — its sections, alphabetically: API tokens,
  * Appearance, Fleet peers, Groups, Platforms, Sites, Users. Appearance is a leaf (the
@@ -303,6 +305,16 @@ export function BoardShell({ children }: { children: ReactNode }): ReactElement 
         {topic === "fleet" && (
           <div className="flex min-h-0 flex-1 flex-col">
             <FleetView />
+          </div>
+        )}
+        {topic === "analytics" && (
+          <div className="flex min-h-0 flex-1 flex-col">
+            <AnalyticsView />
+          </div>
+        )}
+        {topic === "errors" && (
+          <div className="flex min-h-0 flex-1 flex-col">
+            <ErrorsView />
           </div>
         )}
         {topic === "settings" && effectiveSection === "appearance" && (

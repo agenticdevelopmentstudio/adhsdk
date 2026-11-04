@@ -1,7 +1,7 @@
 import { Hono } from 'hono';
 import { glitchtipConfigured, posthogConfigured, vercelConfigured, type StatusConfig } from '../config/port';
 import type { Tier } from '../middleware/auth';
-import { loadErrorEvents, loadErrorIssues } from '../telemetry/dashboard/errors-sections';
+import { loadErrorIssues } from '../telemetry/dashboard/errors-sections';
 import {
   loadDimensions,
   loadPaths,
@@ -40,7 +40,7 @@ type SitesSections = Pick<ErrorsSectionData, 'sites'>;
 
 const POSTHOG_SECTIONS = ['traffic', 'dimensions', 'paths', 'vitals', 'health'] as const;
 const VERCEL_SECTIONS = ['vercel'] as const;
-const GLITCHTIP_SECTIONS = ['issues', 'events'] as const;
+const GLITCHTIP_SECTIONS = ['issues'] as const;
 const SITES_SECTIONS = ['sites'] as const;
 
 function isOneOf<T extends string>(allowed: readonly T[], value: string): value is T {
@@ -77,7 +77,6 @@ export function dashboardRoutes(config: StatusConfig): Hono<{ Variables: { tier:
     sections: GLITCHTIP_SECTIONS,
     loaders: () => ({
       issues: () => loadErrorIssues(creds),
-      events: () => loadErrorEvents(creds),
     }),
   });
   const errorSites = sectionedDashboard<'all', SitesSections>({
