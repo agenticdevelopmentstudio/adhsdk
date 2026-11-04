@@ -14,6 +14,7 @@ import {
   errorsSiteReportIsEmpty,
   errorsSiteRows,
   errorsSites,
+  mostErrorSites,
 } from "./errors-model";
 
 const ok = <T,>(data: T): DashboardSection<T> => ({ data, error: null, updatedAt: "2026-11-04T00:00:00Z" });
@@ -62,6 +63,27 @@ describe("errorsSiteRows", () => {
     const rows = errorsSiteRows(sections([health("www.a.com", 5, 1, 1, 100), health("a.com", 5, 1, 2, 300), health("b.com", 50)]));
     expect(rows.map((row) => row.host)).toEqual(["b.com", "a.com"]);
     expect(rows[1]).toEqual({ host: "a.com", requests: 10, errors: 2, failures: 3, p95Ms: 300 });
+  });
+});
+
+describe("mostErrorSites", () => {
+  it("ranks sites by errors reported, drops the ones with none and stops at the limit", () => {
+    const rows = mostErrorSites(
+      sections([
+        health("quiet.com", 900),
+        health("www.a.com", 5, 2),
+        health("a.com", 5, 2),
+        health("b.com", 50, 6),
+        health("c.com", 10, 1, 4),
+        health("d.com", 10, 1, 1),
+      ]),
+      3,
+    );
+    expect(rows.map((row) => [row.host, row.errors])).toEqual([
+      ["b.com", 6],
+      ["a.com", 4],
+      ["c.com", 1],
+    ]);
   });
 });
 
