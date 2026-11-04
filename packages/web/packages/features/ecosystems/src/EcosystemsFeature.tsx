@@ -481,6 +481,12 @@ export function EcosystemsFeature({
   // Child Ecosystems row read. Unknown (undefined) while its row is loading or from an older backend.
   const scopedType = scopedItems?.find((e) => e.id === scopedId)?.type;
   const scopedIsHubData = isHubDataEcosystem({ type: scopedType });
+  // Unknown only because the row has not arrived: the list is still loading, or the scoped row is
+  // being fetched on its own. A deep link's typed row is kept through that (see heldTopics).
+  const scopedTypeLoading =
+    scopedId != null &&
+    scopedType == null &&
+    (ecosystems === null || (scopedMissing && scopedEcoQuery.isPending));
   // The list as drawn: the Personal / Organization ecosystem pinned first (stable for the rest),
   // each row with its own icon. Sorted here and not in the data client, which other lists share.
   const railItems = useMemo(
@@ -614,6 +620,7 @@ export function EcosystemsFeature({
       provisionedQuery.isLoadingError ? null : provisionedQuery.data,
       activeTopic,
       scopedType,
+      scopedTypeLoading,
     ).filter(
       // No add-sub-ecosystem on a hub-data ecosystem: it holds no products, and that follows from
       // its type rather than from any one host's rail.

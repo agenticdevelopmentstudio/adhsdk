@@ -192,6 +192,16 @@ describe("a hub-data ecosystem's topics", () => {
     ]);
   });
 
+  it("keeps a deep link's typed row while the ecosystem list is still loading", async () => {
+    vi.mocked(ecosystemsApi.listForWorkspace).mockReturnValue(new Promise(() => {}));
+    vi.mocked(ecosystemsApi.get).mockReturnValue(new Promise(() => {}));
+    vi.mocked(useProvisionedFeatures).mockReturnValue({ ...held(), data: undefined, isPending: true } as never);
+    renderFeature({ activeEcoId: PERSONAL.id, activeTopic: "notebook" });
+    // Notes is the routed row; the other typed rows wait for the type.
+    expect(topicLabels()).toContain("Notes");
+    expect(topicLabels()).not.toContain("Documents");
+  });
+
   it("draws no Narratives row where the ecosystem does not hold it", async () => {
     vi.mocked(useProvisionedFeatures).mockReturnValue(
       held("notes", "documents", "research", "planning", "storage", "integrations") as never,

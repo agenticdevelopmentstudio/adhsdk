@@ -98,6 +98,16 @@ describe("heldTopics, rows that name types", () => {
     expect(ids(heldTopics(HUB, held))).toEqual(["storage", "settings"]);
   });
 
+  it("keeps the routed typed row while the type is still loading, and only then", () => {
+    expect(ids(heldTopics(HUB, undefined, "notebook", undefined, true))).toEqual(["notebook", "settings"]);
+    // Only the routed row: the others wait for the type.
+    expect(ids(heldTopics(HUB, held, "notebook", undefined, true))).toEqual(["notebook", "storage", "settings"]);
+    expect(ids(heldTopics(HUB, held, undefined, undefined, true))).toEqual(["storage", "settings"]);
+    // Once the type lands it rules again.
+    expect(ids(heldTopics(HUB, undefined, "notebook", "container", false))).toEqual(["settings"]);
+    expect(ids(heldTopics(HUB, undefined, "notebook", undefined, false))).toEqual(["settings"]);
+  });
+
   it("holds even for the routed row and a failed read", () => {
     expect(ids(heldTopics(HUB, undefined, "notebook", "container"))).toEqual(["settings"]);
     expect(ids(heldTopics(HUB, null, undefined, "container"))).toEqual(["storage", "settings"]);

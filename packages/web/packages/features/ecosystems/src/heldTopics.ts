@@ -46,19 +46,26 @@ export type HeldTopic<T> = T & {
  * and every row is shown, unmarked — a transient error must not make a product look empty, and
  * each pane still reports its own failure.
  *
- * `ecosystemType` is the scoped ecosystem's type, for the rows that name `types`.
+ * `ecosystemType` is the scoped ecosystem's type, for the rows that name `types`. `typeLoading`
+ * says the type is unknown only because the ecosystem's row has not arrived yet: the routed typed
+ * row is kept meanwhile (a deep link to `/<slug>/notebook` must not sit on "Select a topic" while
+ * the list loads), and goes when the row lands if its type is not one the row names.
  */
 export function heldTopics<T extends FeatureKeyedTopic>(
   topics: readonly T[],
   provisioned: readonly ProvisionedFeature[] | null | undefined,
   routed?: string,
   ecosystemType?: string,
+  typeLoading = false,
 ): HeldTopic<T>[] {
   // A row that names `types` is for those ecosystem types only. An ecosystem whose type is unknown
   // (an older backend sends none) is in none of them, so the row is not drawn: a type-gated row is
   // never a guess. This runs before every other rule, the routed row and a failed read included.
   topics = topics.filter(
-    (t) => t.types == null || (ecosystemType != null && t.types.includes(ecosystemType)),
+    (t) =>
+      t.types == null ||
+      (ecosystemType != null && t.types.includes(ecosystemType)) ||
+      (ecosystemType == null && typeLoading && t.id === routed),
   );
   if (provisioned === null) return [...topics];
   // The rule itself is the feature manager's (`featureRowState`), shared with every other surface

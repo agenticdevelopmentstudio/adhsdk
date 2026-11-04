@@ -107,8 +107,8 @@ export function productFeaturePanelRenderer({
   };
 }
 
-/** A surface that exists, but not on this host. Names both halves — what it is and where it is —
- *  because "not here" without "there" is indistinguishable from "not built". */
+/** The row names of the hub-data topics of a Personal / Organization ecosystem, which this site
+ *  lists but does not draw (see {@link ElsewherePane}). */
 const HUB_DATA_TITLES = {
   notebook: "Notes",
   docs: "Documents",
@@ -117,6 +117,8 @@ const HUB_DATA_TITLES = {
   narratives: "Narratives",
 } as const;
 
+/** A surface that exists, but not on this host. Names both halves — what it is and where it is —
+ *  because "not here" without "there" is indistinguishable from "not built". */
 function ElsewherePane({
   title,
   where,
