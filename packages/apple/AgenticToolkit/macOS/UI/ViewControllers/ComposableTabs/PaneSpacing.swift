@@ -69,6 +69,31 @@ public enum PaneSpacing {
     /// The pane-content keys alone: a pane re-insets on these and nothing else.
     public static let contentSettingKeys: Set<String> = Set(contentSettings.values.map(\.name))
 
+    /// The terminal's own padding keys, from before pane-content spacing
+    /// replaced them. Read only by ``migrateLegacyTerminalPadding(in:)``.
+    static let legacyTerminalPadding: [SpacingEdge: UserSetting<Int>] = [
+        .top: UserSetting<Int>("terminal_padding_top", default: UserSettings.defaultPaneSpacing),
+        .leading: UserSetting<Int>("terminal_padding_leading", default: UserSettings.defaultPaneSpacing),
+        .bottom: UserSetting<Int>("terminal_padding_bottom", default: UserSettings.defaultPaneSpacing),
+        .trailing: UserSetting<Int>("terminal_padding_trailing", default: UserSettings.defaultPaneSpacing)
+    ]
+
+    /// Carries a terminal padding the owner saved before pane-content spacing
+    /// replaced it over to that side's pane-content spacing, then deletes the
+    /// old key, so a terminal set to 0 does not jump to the default 10.
+    /// A side whose pane-content spacing is already stored keeps it: that is
+    /// the newer choice. Safe to run on every launch; once the old keys are
+    /// gone it does nothing. Pane-content spacing is app-wide, so the carried
+    /// value now insets every pane, not just terminals — the one setting there is.
+    public static func migrateLegacyTerminalPadding(in store: SettingsStore = UserSettings.shared) {
+        for (edge, legacy) in legacyTerminalPadding where store.contains(legacy) {
+            if let content = contentSettings[edge], !store.contains(content) {
+                store.set(store.get(legacy), for: content)
+            }
+            store.remove(legacy)
+        }
+    }
+
     /// The insets, as AppKit wants them.
     public static var contentInsets: NSEdgeInsets {
         let spacing = current
