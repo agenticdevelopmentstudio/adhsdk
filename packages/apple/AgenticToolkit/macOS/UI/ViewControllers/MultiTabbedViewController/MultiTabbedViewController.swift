@@ -127,12 +127,53 @@ open class MultiTabbedViewController: NSViewController {
     /// the content it frames; this controller never asks what that something
     /// is, because the content is the only thing that could know.
     public func setTabStartInset(_ inset: CGFloat, for edge: Edge) {
-        tabBars[edge]?.startInset = inset
+        requestedStartInsets[edge] = inset
+        applyStartInset(for: edge)
     }
 
     public func tabStartInset(for edge: Edge) -> CGFloat {
-        tabBars[edge]?.startInset ?? 0
+        requestedStartInsets[edge] ?? TabBarView.endPadding
     }
+
+    /// The start insets hosts asked for, measured from the top of the centre;
+    /// what a bar is given adds the title bar when it runs up behind it.
+    private var requestedStartInsets: [Edge: CGFloat] = [:]
+
+    /// Whether the left and right bars run the full height of the window, up
+    /// behind a clear title bar, while the centre and a top bar start below
+    /// it — a project window's integrated title bar, for a window whose
+    /// navigator is its side tab bar. The window needs `.fullSizeContentView`
+    /// and must give this controller its whole height. A side bar's first tab
+    /// still lines up with the centre's top: its start inset is measured from
+    /// there, and the title bar's height is added to it here.
+    public var sideBarsRunUnderTitlebar = false {
+        didSet {
+            guard sideBarsRunUnderTitlebar != oldValue, isViewLoaded else { return }
+            rebuildEdgeConstraints()
+            applyStartInsets()
+        }
+    }
+
+    /// The title bar's height over this controller, as it was last applied.
+    private var appliedTitlebarHeight: CGFloat = 0
+
+    private var titlebarHeight: CGFloat {
+        sideBarsRunUnderTitlebar && isViewLoaded ? view.safeAreaInsets.top : 0
+    }
+
+    private func applyStartInset(for edge: Edge) {
+        let extra = (edge == .left || edge == .right) ? titlebarHeight : 0
+        tabBars[edge]?.startInset = (requestedStartInsets[edge] ?? TabBarView.endPadding) + extra
+    }
+
+    private func applyStartInsets() {
+        appliedTitlebarHeight = titlebarHeight
+        for edge in Edge.allCases { applyStartInset(for: edge) }
+    }
+
+    /// The centre's leading edge, for a host that lines something up with the
+    /// content rather than with the window — a title over it, say.
+    public var centerLeadingAnchor: NSLayoutXAxisAnchor { centerContainer.leadingAnchor }
 
     /// The plane the centre content sits on — what shows through
     /// `contentInsets`, and through any gap the content leaves inside itself.
@@ -197,6 +238,14 @@ open class MultiTabbedViewController: NSViewController {
             syncTabBar(for: edge)
         }
         refreshCenterContent()
+    }
+
+    /// The title bar's height is known only once the view is in a window, and
+    /// changes with it (full screen hides it), so the side bars' start insets
+    /// follow it here.
+    open override func viewDidLayout() {
+        super.viewDidLayout()
+        if titlebarHeight != appliedTitlebarHeight { applyStartInsets() }
     }
 
     /// A hosted item's `preferredContentSize` changing is how it tells the
@@ -377,8 +426,10 @@ open class MultiTabbedViewController: NSViewController {
         let leftBar = isEdgeEnabled(.left) ? tabBars[.left] : nil
         let rightBar = isEdgeEnabled(.right) ? tabBars[.right] : nil
 
+        // Below the title bar when the side bars run up behind it.
+        let top = sideBarsRunUnderTitlebar ? view.safeAreaLayoutGuide.topAnchor : view.topAnchor
         var constraints: [NSLayoutConstraint] = [
-            centerContainer.topAnchor.constraint(equalTo: topBar?.bottomAnchor ?? view.topAnchor),
+            centerContainer.topAnchor.constraint(equalTo: topBar?.bottomAnchor ?? top),
             centerContainer.bottomAnchor.constraint(equalTo: bottomBar?.topAnchor ?? view.bottomAnchor),
             centerContainer.leadingAnchor.constraint(equalTo: leftBar?.trailingAnchor ?? view.leadingAnchor),
             centerContainer.trailingAnchor.constraint(equalTo: rightBar?.leadingAnchor ?? view.trailingAnchor)
@@ -386,7 +437,7 @@ open class MultiTabbedViewController: NSViewController {
 
         if let topBar {
             constraints += [
-                topBar.topAnchor.constraint(equalTo: view.topAnchor),
+                topBar.topAnchor.constraint(equalTo: top),
                 topBar.leadingAnchor.constraint(equalTo: centerContainer.leadingAnchor),
                 topBar.trailingAnchor.constraint(equalTo: centerContainer.trailingAnchor)
             ]
@@ -401,14 +452,16 @@ open class MultiTabbedViewController: NSViewController {
         if let leftBar {
             constraints += [
                 leftBar.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-                leftBar.topAnchor.constraint(equalTo: centerContainer.topAnchor),
+                leftBar.topAnchor.constraint(
+                    equalTo: sideBarsRunUnderTitlebar ? view.topAnchor : centerContainer.topAnchor),
                 leftBar.bottomAnchor.constraint(equalTo: centerContainer.bottomAnchor)
             ]
         }
         if let rightBar {
             constraints += [
                 rightBar.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-                rightBar.topAnchor.constraint(equalTo: centerContainer.topAnchor),
+                rightBar.topAnchor.constraint(
+                    equalTo: sideBarsRunUnderTitlebar ? view.topAnchor : centerContainer.topAnchor),
                 rightBar.bottomAnchor.constraint(equalTo: centerContainer.bottomAnchor)
             ]
         }

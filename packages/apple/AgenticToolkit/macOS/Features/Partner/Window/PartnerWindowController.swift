@@ -10,8 +10,9 @@ import AppKit
 /// The Conversations window's recipe: built by ``ensureCurrent(controller:)``
 /// without showing so `restoreOnLaunch()` can reopen it, always-on-top from a
 /// setting kept live by an observer, and the gear in the title bar. Dressed as
-/// a Projects window is: the integrated title bar, the panes' backdrop running
-/// up behind it, and the arrange-mode button beside the gear.
+/// a Projects window is: the integrated title bar with the tab column running
+/// up behind it, the window's title in bold over the panes, and the
+/// arrange-mode button beside the gear.
 @MainActor
 public final class PartnerWindowController: SingleWindowController {
     public private(set) static var current: PartnerWindowController?
@@ -52,6 +53,9 @@ public final class PartnerWindowController: SingleWindowController {
         }
         toolbar.install(in: window)
         WindowTitlebarAccessory.applyIntegratedTitlebar(to: window)
+        // The title is drawn over the content, left-aligned in the heading
+        // font, as a project window's is; the system's centred grey one goes.
+        window.titleVisibility = .hidden
         // The window's own background is what shows through the clear title
         // bar, so it follows the theme as a Projects window's does.
         backdropObserver = ThemePaletteObserver { [weak window] palette in
@@ -77,8 +81,10 @@ public final class PartnerWindowController: SingleWindowController {
             ]
         }
 
-        // Below the title bar: the window's content runs full height behind it.
-        super.init(windowID: Self.windowID, contentViewController: SafeAreaHostViewController(child: split))
+        // Full height, behind the title bar: the tab column rises up behind the
+        // traffic lights while the panes start below it (the split's own job).
+        super.init(windowID: Self.windowID,
+                   contentViewController: SafeAreaHostViewController(child: split, pinsToSafeArea: false))
 
         self.windowTitle = "Coding Partner"
         self.windowStyleMask = [.titled, .closable, .resizable, .miniaturizable, .fullSizeContentView]

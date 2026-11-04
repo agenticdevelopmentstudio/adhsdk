@@ -46,6 +46,8 @@ public final class PartnerSplitViewController: ThemedSplitViewController {
     private var sessionSubscriptions: Set<AnyCancellable> = []
     private var spacingObservers: [UserSettingObserver<Int>] = []
     private var backdropObserver: ThemePaletteObserver?
+    /// The window's title, drawn in the title bar over the panes as a project window draws its own.
+    private let titleLabel = ThemedLabel(string: "Coding Partner", role: .primaryText, textRole: .heading)
 
     public init(controller: PartnerController) {
         self.controller = controller
@@ -71,6 +73,7 @@ public final class PartnerSplitViewController: ThemedSplitViewController {
     public override func viewDidLoad() {
         super.viewDidLoad()
         configureTabs()
+        installTitle()
         let contentItem = NSSplitViewItem(viewController: tabbed)
         contentItem.minimumThickness = 500
         addSplitViewItem(contentItem)
@@ -108,6 +111,27 @@ public final class PartnerSplitViewController: ThemedSplitViewController {
             partner: partnerPane, notifications: notificationsPane, settings: controller.settings)
         partnerPanes = panes
         addTab(id: partnerTabID, source: PartnerCardSource(controller: controller), content: panes, closable: false)
+    }
+
+    /// The tab column runs up behind the title bar; the panes start below it, and the title sits in the
+    /// title bar over them, left-aligned with the panes — a project window's integrated title bar.
+    private func installTitle() {
+        tabbed.sideBarsRunUnderTitlebar = true
+        titleLabel.translatesAutoresizingMaskIntoConstraints = false
+        titleLabel.lineBreakMode = .byTruncatingTail
+        titleLabel.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+        titleLabel.setAccessibilityIdentifier("partner-window.title")
+        let container = tabbed.view
+        let titlebar = NSLayoutGuide()
+        container.addLayoutGuide(titlebar)
+        container.addSubview(titleLabel)
+        NSLayoutConstraint.activate([
+            titlebar.topAnchor.constraint(equalTo: container.topAnchor),
+            titlebar.bottomAnchor.constraint(equalTo: container.safeAreaLayoutGuide.topAnchor),
+            titleLabel.centerYAnchor.constraint(equalTo: titlebar.centerYAnchor),
+            titleLabel.leadingAnchor.constraint(equalTo: tabbed.centerLeadingAnchor, constant: 12),
+            titleLabel.trailingAnchor.constraint(lessThanOrEqualTo: container.trailingAnchor, constant: -200)
+        ])
     }
 
     /// The app-wide pane spacing around the window's one pane.
