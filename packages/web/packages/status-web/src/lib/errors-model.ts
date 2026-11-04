@@ -23,6 +23,17 @@ export function errorsSiteRows(sections: Sections): SiteHealthRow[] {
   return [...bySite.values()].sort((a, b) => b.requests - a.requests || a.host.localeCompare(b.host));
 }
 
+/** How many sites the overview ranks; the rest are a click away in the list. */
+export const MOST_ERRORS_LIMIT = 10;
+
+/** The sites that reported the most errors, most first, leaving out any that reported none. */
+export function mostErrorSites(sections: Sections, limit = MOST_ERRORS_LIMIT): SiteHealthRow[] {
+  return errorsSiteRows(sections)
+    .filter((row) => row.errors > 0)
+    .sort((a, b) => b.errors - a.errors || b.failures - a.failures || a.host.localeCompare(b.host))
+    .slice(0, limit);
+}
+
 /** Every site for Errors' list, alphabetically. */
 export function errorsSites(sections: Sections): string[] {
   const keys = new Set<string>();

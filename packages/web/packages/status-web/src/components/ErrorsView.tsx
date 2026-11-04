@@ -13,14 +13,9 @@ import { useErrorsDashboard } from "../hooks/use-dashboards";
 import { useNow } from "../hooks/use-now";
 import { bucketDetail, bucketLabel } from "../lib/analytics-model";
 import { ERROR_CHART_COLOR } from "../lib/colors";
-import { errorsSiteRows } from "../lib/errors-model";
-import type {
-  DashboardSections,
-  ErrorIssue,
-  ErrorsSectionData,
-  SiteHealthRow,
-} from "../telemetry/dashboard-types";
-import { DashboardPanel, formatAge, formatRate, openOnRowClick, SiteFailureRate, WrappedCell } from "./DashboardParts";
+import { MOST_ERRORS_LIMIT, mostErrorSites } from "../lib/errors-model";
+import type { DashboardSections, ErrorIssue, ErrorsSectionData } from "../telemetry/dashboard-types";
+import { DashboardPanel, formatAge, WrappedCell } from "./DashboardParts";
 import { ErrorsSitePage } from "./ErrorsSitePage";
 import { useStatusHost } from "./StatusHost";
 
@@ -87,18 +82,6 @@ function sortIssues(issues: readonly ErrorIssue[], key: string, dir: "asc" | "de
   });
 }
 
-const SITE_COLUMNS: DataTableColumn<SiteHealthRow>[] = [
-  { key: "host", header: "Site", width: "minmax(16rem, 1fr)", render: (row) => <WrappedCell>{row.host}</WrappedCell> },
-  { key: "errors", header: "Errors reported", render: (row) => formatCount(row.errors) },
-  { key: "requests", header: "Requests", render: (row) => formatCount(row.requests) },
-  {
-    key: "failures",
-    header: "Failed",
-    render: (row) => <SiteFailureRate failures={row.failures} requests={row.requests} />,
-  },
-  { key: "p95", header: "p95", render: (row) => (row.p95Ms === null ? "—" : `${Math.round(row.p95Ms)}ms`) },
-];
-
 const GLITCHTIP_NOT_PER_SITE =
   "GlitchTip has no per-site split: its stored events have been pruned, so an issue cannot be traced to a site.";
 
@@ -142,7 +125,7 @@ export function ErrorsView({ site, onSite }: ErrorsViewProps): ReactElement {
     () => sortIssues(filterIssues(issues?.issues ?? [], view, search), sort.key, sort.dir),
     [issues, view, search, sort],
   );
-  const siteRows = useMemo(() => errorsSiteRows(sections), [sections]);
+  const topSites = useMemo(() => mostErrorSites(sections), [sections]);
 
   const columns: DataTableColumn<ErrorIssue>[] = [
     {
@@ -329,34 +312,27 @@ export function ErrorsView({ site, onSite }: ErrorsViewProps): ReactElement {
               </DashboardPanel>
 
               <DashboardPanel
-                title="Per site, last 30 days"
+                title="Most errors, last 30 days"
                 source="PostHog"
                 sourceHref={posthogUrl}
                 section={sections.sites}
                 configured={posthogOn}
                 refreshing={refreshing}
-                note={`Production only. These are PostHog's own error and request events, not GlitchTip issues: GlitchTip no longer holds the event data to attribute an issue to a site. Failure rates are failed requests over all requests${
-                  sections.sites.data
-                    ? `, ${formatRate(
-                        sections.sites.data.reduce((sum, row) => sum + row.failures, 0),
-                        sections.sites.data.reduce((sum, row) => sum + row.requests, 0),
-                      )} across the fleet`
-                    : ""
-                }.`}
+                note={`Production only. The ${MOST_ERRORS_LIMIT} sites that reported the most errors to PostHog, not GlitchTip issues: GlitchTip no longer holds the event data to attribute an issue to a site. Open one for its page.`}
               >
                 {() => (
-                  <div className="-mx-1">
-                    <DataTable
-                      ariaLabel="Errors and failed requests per site, from PostHog"
-                      columns={SITE_COLUMNS}
-                      rows={siteRows}
-                      getRowId={(row) => row.host}
-                      {...openOnRowClick(onSite)}
-                      describeRow={(row) => row.host}
-                      autoSizeColumns
-                      emptyLabel="No site reported requests in this range."
-                    />
-                  </div>
+                  <BarList
+                    ariaLabel="Sites that reported the most errors, from PostHog"
+                    items={topSites.map((row) => ({
+                      name: row.host,
+                      value: row.errors,
+                      detail: `${formatCount(row.errors)} ${row.errors === 1 ? "error" : "errors"}`,
+                    }))}
+                    color={ERROR_CHART_COLOR}
+                    maxItems={MOST_ERRORS_LIMIT}
+                    onSelect={onSite}
+                    emptyLabel="✓ No site reported an error in the last 30 days."
+                  />
                 )}
               </DashboardPanel>
             </div>
