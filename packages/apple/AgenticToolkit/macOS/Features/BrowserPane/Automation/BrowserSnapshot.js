@@ -283,7 +283,10 @@
   }
 
   // Elements visible in the last snapshot whose name or text contains `text` (case-insensitive).
+  // Before any snapshot there are no refs to search, and "no element matches" would be a false
+  // negative about a page that has one, so the first find takes the snapshot it needs.
   function find(text) {
+    if (refs.size === 0) { snapshot({}); }
     const needle = collapse(text).toLowerCase();
     const out = [];
     for (const [ref, held] of refs) {

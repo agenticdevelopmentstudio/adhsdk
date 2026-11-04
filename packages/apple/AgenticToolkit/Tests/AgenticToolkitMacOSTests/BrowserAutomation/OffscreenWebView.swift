@@ -11,6 +11,7 @@ final class OffscreenWebView: NSObject, WKNavigationDelegate, WKUIDelegate {
     let window: NSWindow
     let webView: WKWebView
     private var continuation: CheckedContinuation<Void, Never>?
+    private var lastError: Error?
 
     override init() {
         self.window = NSWindow(
@@ -37,6 +38,27 @@ final class OffscreenWebView: NSObject, WKNavigationDelegate, WKUIDelegate {
         }
     }
 
+    /// A real navigation to `url` that serves `html`. Unlike `load(html:)` (`loadHTMLString`, which
+    /// on macOS 26 adds no back-forward item), it leaves an entry to go back from.
+    func navigate(to url: URL, html: String) async {
+        await withCheckedContinuation { (cont: CheckedContinuation<Void, Never>) in
+            self.continuation = cont
+            self.webView.loadSimulatedRequest(URLRequest(url: url), responseHTML: html)
+        }
+    }
+
+    /// Loads a local file and returns once WebKit has finished (or failed) it,
+    /// with the failure, if any, so a test can say why there is nothing to go back to.
+    @discardableResult
+    func load(fileURL url: URL) async -> Error? {
+        lastError = nil
+        await withCheckedContinuation { (cont: CheckedContinuation<Void, Never>) in
+            self.continuation = cont
+            self.webView.loadFileURL(url, allowingReadAccessTo: url.deletingLastPathComponent())
+        }
+        return lastError
+    }
+
     func load(fixture name: String) async throws {
         let url = try XCTUnwrap(Bundle(for: OffscreenWebView.self).url(forResource: name, withExtension: "html"))
         await self.load(html: try String(contentsOf: url, encoding: .utf8))
@@ -53,6 +75,16 @@ final class OffscreenWebView: NSObject, WKNavigationDelegate, WKUIDelegate {
     }
 
     func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) {
+        lastError = error
+        self.continuation?.resume()
+        self.continuation = nil
+    }
+
+    /// A load that never commits (a file WebKit may not read, say) fails here, not
+    /// in `didFail`; without this the loader would wait forever.
+    func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!,
+                 withError error: Error) {
+        lastError = error
         self.continuation?.resume()
         self.continuation = nil
     }

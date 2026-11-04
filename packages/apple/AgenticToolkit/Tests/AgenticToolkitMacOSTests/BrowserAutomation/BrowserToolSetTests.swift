@@ -185,11 +185,11 @@ final class BrowserToolSetTests: XCTestCase {
         let url = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent("local-\(UUID().uuidString).html")
         defer { try? FileManager.default.removeItem(at: url) }
         try "<p>local</p>".write(to: url, atomically: true, encoding: .utf8)
-        await withCheckedContinuation { (done: CheckedContinuation<Void, Never>) in
-            page.webView.loadFileURL(url, allowingReadAccessTo: url.deletingLastPathComponent())
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { done.resume() }
-        }
-        await page.load(html: "<title>Web</title><p>web</p>")
+        let failure = await page.load(fileURL: url)
+        XCTAssertNil(failure, "the local file never loaded: \(String(describing: failure))")
+        await page.navigate(to: URL(string: "https://web.test/")!, html: "<title>Web</title><p>web</p>")
+        XCTAssertEqual(page.webView.backForwardList.backItem?.url.isFileURL, true,
+                       "nothing to go back to: \(String(describing: page.webView.backForwardList.backItem?.url))")
         directory.panes = [BrowserPaneHandle(id: "F", project: "p", tab: "t", automation: BrowserAutomation(webView: page.webView, console: BrowserConsoleLog()))]
         let back = await call("browser_back")
         XCTAssertTrue(back.isError)
