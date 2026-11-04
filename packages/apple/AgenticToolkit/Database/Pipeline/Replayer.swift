@@ -161,7 +161,10 @@ public enum Replayer {
                 report.stopped = true
                 break
             }
-            let ids = try source.archive.ids(after: cursor, limit: size, maxBytes: maxBytes)
+            // Reads get the bulk budget too: the archive's 30 s read deadline
+            // stopped a dev replay of a 78 GB archive after 474,124 records.
+            let ids = try source.archive.ids(after: cursor, limit: size, maxBytes: maxBytes,
+                                             deadline: EventStore.bulkDeadline)
             guard let last = ids.last else { break }
             var chunkFailures: [Int64: String] = [:]
             let page = try readChunk(archive: source.archive, ids: ids, report: &report, chunkFailures: &chunkFailures)
@@ -216,12 +219,14 @@ public enum Replayer {
     private static func readChunk(archive: RawArchive, ids: [Int64], report: inout ReplayReport,
                                   chunkFailures: inout [Int64: String]) throws -> [ArchivedRecord] {
         do {
-            return try archive.records(ids: ids)
+            return try archive.records(ids: ids, deadline: EventStore.bulkDeadline)
         } catch RawArchiveError.corruptPayload {
             var page: [ArchivedRecord] = []
             for id in ids {
                 do {
-                    if let archived = try archive.record(id: id) { page.append(archived) }
+                    if let archived = try archive.record(id: id, deadline: EventStore.bulkDeadline) {
+                        page.append(archived)
+                    }
                 } catch RawArchiveError.corruptPayload {
                     report.records += 1
                     fail(&report, &chunkFailures, id: id, RawArchiveError.corruptPayload(id: id))
