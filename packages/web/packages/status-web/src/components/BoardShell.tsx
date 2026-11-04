@@ -10,23 +10,20 @@ import { useConfigStatus } from "../hooks/use-config-status";
 import { useStatusUser } from "../hooks/useStatusUser";
 import { useLiveSnapshot } from "../hooks/use-live-snapshot";
 import { useAnalyticsDashboard } from "../hooks/use-dashboards";
-import { sortSiteNames, topicSites } from "../lib/analytics-model";
+import { analyticsSites, sortSiteNames } from "../lib/analytics-model";
 import { plural } from "../lib/format";
 import { headlineFor } from "../lib/overview";
 import type { AnalyticsRange } from "../telemetry/dashboard-types";
 import {
+  ANALYTICS_OVERVIEW,
   analyticsSiteFromPath,
-  ANALYTICS_TOPICS,
   BOARD_VIEWS,
   entityIdFromPath,
   ERRORS_TOPICS,
-  isAnalyticsSiteTopic,
   isRosterTopic,
   sectionFromPath,
   subTopicFromPath,
   topicFromPath,
-  type AnalyticsTopic,
-  type SubTopicView,
   visibleSettingsSections,
 } from "./board-views";
 import { SettingsLevelProvider } from "./settings-level";
@@ -97,8 +94,6 @@ function KeptPane({ show, children }: { show: boolean; children: ReactNode }): R
   return <div className={cn("min-h-0 flex-1 flex-col", show ? "flex" : "hidden")}>{children}</div>;
 }
 
-const SUB_TOPIC_NAMES = { analytics: "Analytics", errors: "Errors" } as const;
-
 /**
  * The board: ONE HierarchicalTopicDetail at the root of the site whose first topic list
  * is Overview / Details / Fleet / Analytics / Errors / …divider… / Settings.
@@ -108,10 +103,10 @@ const SUB_TOPIC_NAMES = { analytics: "Analytics", errors: "Errors" } as const;
  * display preferences); every other section is a config ROSTER that publishes its entity
  * list up via SettingsLevelProvider as the THIRD level, with the entity editor as the leaf.
  *
- * Analytics and Errors open a second level of their own: Overview, then one topic per panel on
- * it, at `/analytics/<id>` and `/errors/<id>`. A wide screen lands on Overview; a phone gets the
- * list first, as every list on the board does. Analytics' stat topics open a THIRD level, the sites
- * reporting that stat, at `/analytics/<topic>/<site>`, with one display per site as the leaf.
+ * Analytics and Errors open a second level of their own, and both start on Overview: a wide screen
+ * lands there, and a phone gets the list first, as every list on the board does. Analytics' list is
+ * Overview, a divider, then every site, at `/analytics/<site>`, each opening one scrolling page.
+ * Errors' is one topic per panel on its overview, at `/errors/<id>`.
  *
  * Selection is deep-linked: each topic is a root URL segment, a section is
  * `/settings/<section>`, a roster entity is `/settings/<section>/<id>`; `/home` is the
@@ -287,90 +282,67 @@ export function BoardShell({ children }: { children: ReactNode }): ReactElement 
     ? { ...entityLevel, railLabel: entityLevel.railLabel ?? entityLevel.title }
     : null;
 
-  const subTopicLevel = (
-    id: keyof typeof SUB_TOPIC_NAMES,
-    topics: readonly SubTopicView<string>[],
-  ): TopicLevel => ({
-    id: `${id}-topics`,
-    title: SUB_TOPIC_NAMES[id],
-    railLabel: `${SUB_TOPIC_NAMES[id]} topics`,
+  const errorsLevel: TopicLevel = {
+    id: "errors-topics",
+    title: "Errors",
+    railLabel: "Errors topics",
     itemNoun: "topic",
     overview: false,
-    items: topics.map((t) => ({
-      id: t.id,
-      label: t.label,
-      icon: t.icon,
-      leadsTo: id === "analytics" && isAnalyticsSiteTopic(t.id as AnalyticsTopic) ? ("list" as const) : undefined,
-    })),
-    selectedId: subTopicFromPath(path, topics),
+    items: ERRORS_TOPICS.map((t) => ({ id: t.id, label: t.label, icon: t.icon })),
+    selectedId: subTopicFromPath(path, ERRORS_TOPICS),
     defaultSelectedId: "overview",
     onSelect: (next, options) =>
-      options?.replace ? router.replace(`/${id}/${next}`) : router.push(`/${id}/${next}`),
-    onClear: () => router.push(`/${id}`),
-  });
+      options?.replace ? router.replace(`/errors/${next}`) : router.push(`/errors/${next}`),
+    onClear: () => router.push("/errors"),
+  };
 
-  // Analytics' third level. Its rows come from the dashboard, so the board reads it (the same
+  // Analytics' list needs the sites, which come from the dashboard, so the board reads it (the same
   // query the view reads, so one request) and holds the range it is read for.
-  //
-  // `analyticsFilter` is the site the reader chose: it narrows the overview, and a
-  // stat topic opens on it. A stat topic's own selection is the URL. Landing on the first site
-  // is the list's default rather than a choice, so it does not become the filter: otherwise
-  // opening Pageviews would quietly narrow the overview to whichever site happens to sort first.
   const [analyticsRange, setAnalyticsRange] = useState<AnalyticsRange>(DEFAULT_ANALYTICS_RANGE);
-  const [analyticsFilter, setAnalyticsFilter] = useState<string | null>(null);
   const analyticsQuery = useAnalyticsDashboard(analyticsRange, { enabled: topic === "analytics" });
   const analyticsSections = analyticsQuery.data?.sections ?? null;
-  const analyticsTopic = topic === "analytics" ? (subTopicFromPath(path, ANALYTICS_TOPICS) ?? "overview") : null;
-  const siteTopic = analyticsTopic && isAnalyticsSiteTopic(analyticsTopic) ? analyticsTopic : null;
-  const urlSite = siteTopic ? analyticsSiteFromPath(path) : null;
-  const reportingSites = useMemo(
-    () => (siteTopic && analyticsSections ? topicSites(siteTopic, analyticsSections) : []),
-    [siteTopic, analyticsSections],
+  const urlSite = topic === "analytics" ? analyticsSiteFromPath(path) : null;
+  const sites = useMemo(() => {
+    const listed = analyticsSections ? analyticsSites(analyticsSections) : [];
+    // A deep-linked site with nothing in this range stays on the list, rather than leaving a page
+    // with no row to say what it is showing.
+    return urlSite === null || listed.includes(urlSite) ? listed : sortSiteNames([...listed, urlSite]);
+  }, [analyticsSections, urlSite]);
+
+  const openAnalytics = useCallback(
+    (next: string, replace = false): void => {
+      const href = `/analytics/${encodeURIComponent(next)}`;
+      if (replace) router.replace(href);
+      else router.push(href);
+    },
+    [router],
   );
 
-  const analyticsSiteLevel = (siteTopic: AnalyticsTopic): TopicLevel => {
-    // A deep-linked site with nothing in this range stays on the list, marked, rather than
-    // leaving a page with no row to say what it is showing.
-    const sites =
-      urlSite === null || reportingSites.includes(urlSite) ? reportingSites : sortSiteNames([...reportingSites, urlSite]);
-    const label = ANALYTICS_TOPICS.find((t) => t.id === siteTopic)?.label ?? siteTopic;
-    return {
-      id: `analytics-${siteTopic}-sites`,
-      title: label,
-      railLabel: `${label} sites`,
-      itemNoun: "site",
-      search: { placeholder: "Filter sites" },
-      // With no site to choose, the page has to stay: it is where a failed read is reported. The
-      // nudge would cover it.
-      overview: sites.length > 0,
-      busy: analyticsQuery.isLoading,
-      emptyLabel: analyticsQuery.isLoading ? "Loading…" : "No sites in this range.",
-      items: sites.map((id) => ({ id, label: id })),
-      selectedId: urlSite,
-      defaultSelectedId: analyticsFilter !== null && sites.includes(analyticsFilter) ? analyticsFilter : sites[0],
-      onSelect: (next, options) => {
-        const href = `/analytics/${siteTopic}/${encodeURIComponent(next)}`;
-        if (options?.replace) {
-          router.replace(href);
-        } else {
-          setAnalyticsFilter(next);
-          router.push(href);
-        }
-      },
-      onClear: () => {
-        setAnalyticsFilter(null);
-        router.push(`/analytics/${siteTopic}`);
-      },
-    };
+  const analyticsLevel: TopicLevel = {
+    id: "analytics-topics",
+    title: "Analytics",
+    railLabel: "Analytics topics",
+    itemNoun: "topic",
+    search: { placeholder: "Filter sites" },
+    overview: false,
+    busy: analyticsQuery.isLoading,
+    items: [
+      { id: ANALYTICS_OVERVIEW.id, label: ANALYTICS_OVERVIEW.label, icon: ANALYTICS_OVERVIEW.icon, dividerAfter: true },
+      ...sites.map((id) => ({ id, label: id })),
+    ],
+    selectedId: urlSite ?? subTopicFromPath(path, [ANALYTICS_OVERVIEW]),
+    defaultSelectedId: ANALYTICS_OVERVIEW.id,
+    onSelect: (next, options) => openAnalytics(next, options?.replace),
+    onClear: () => router.push("/analytics"),
   };
 
   const levels =
     topic === "settings"
       ? [level, settingsLevel, ...(isRoster && namedEntityLevel ? [namedEntityLevel] : [])]
       : topic === "analytics"
-        ? [level, subTopicLevel("analytics", ANALYTICS_TOPICS), ...(siteTopic ? [analyticsSiteLevel(siteTopic)] : [])]
+        ? [level, analyticsLevel]
         : topic === "errors"
-          ? [level, subTopicLevel("errors", ERRORS_TOPICS)]
+          ? [level, errorsLevel]
           : [level];
 
   return (
@@ -412,12 +384,7 @@ export function BoardShell({ children }: { children: ReactNode }): ReactElement 
         )}
         {topic === "analytics" && (
           <div className="flex min-h-0 flex-1 flex-col">
-            <AnalyticsView
-              topic={analyticsTopic ?? "overview"}
-              range={analyticsRange}
-              site={siteTopic ? urlSite : analyticsFilter}
-              onSite={setAnalyticsFilter}
-            />
+            <AnalyticsView range={analyticsRange} site={urlSite} onSite={openAnalytics} />
           </div>
         )}
         {topic === "errors" && (

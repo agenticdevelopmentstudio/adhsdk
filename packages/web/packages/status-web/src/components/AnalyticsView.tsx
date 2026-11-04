@@ -1,6 +1,6 @@
 "use client";
 import { useMemo, useState, type ReactElement } from "react";
-import { TrendingUp, X } from "lucide-react";
+import { TrendingUp } from "lucide-react";
 import { BarList } from "@agenticdevelopertoolkit/ui/blocks/bar-list";
 import { StatCard } from "@agenticdevelopertoolkit/ui/blocks/stat-card";
 import { formatCount } from "@agenticdevelopertoolkit/ui/blocks/trend-chart";
@@ -9,7 +9,7 @@ import {
   dimensionTotals,
   joinSites,
   pathTotals,
-  siteKey,
+  projectKey,
   vercelTotals,
   type Dimension,
   type JoinedSite,
@@ -23,7 +23,6 @@ import {
   type DashboardSections,
 } from "../telemetry/dashboard-types";
 import {
-  AnalyticsTopicBody,
   countOrDash,
   PAGEVIEWS_NOTE,
   PageviewsChart,
@@ -32,9 +31,9 @@ import {
   toBars,
   VITALS_NOTE,
   VitalsTable,
-} from "./AnalyticsTopics";
-import type { AnalyticsTopic } from "./board-views";
-import { DashboardPanel, eitherSection, SeeAll } from "./DashboardParts";
+} from "./AnalyticsParts";
+import { AnalyticsSitePage } from "./AnalyticsSitePage";
+import { DashboardPanel, eitherSection } from "./DashboardParts";
 import { OptionSection, OptionsGear, optionRow } from "./OptionsGear";
 import { useStatusHost } from "./StatusHost";
 
@@ -90,18 +89,18 @@ const EMPTY_SECTIONS: DashboardSections<AnalyticsSectionData> = {
   vercel: { data: null, error: null, updatedAt: null },
 };
 
-const POSTHOG_BREAKDOWNS: { dimension: Dimension; title: string; topic: AnalyticsTopic }[] = [
-  { dimension: "country", title: "Countries", topic: "countries" },
-  { dimension: "referrer", title: "Referrers", topic: "referrers" },
-  { dimension: "device", title: "Devices", topic: "devices" },
-  { dimension: "browser", title: "Browsers", topic: "browsers" },
+const POSTHOG_BREAKDOWNS: { dimension: Dimension; title: string }[] = [
+  { dimension: "country", title: "Countries" },
+  { dimension: "referrer", title: "Referrers" },
+  { dimension: "device", title: "Devices" },
+  { dimension: "browser", title: "Browsers" },
 ];
 
-const VERCEL_BREAKDOWNS: { breakdown: VercelBreakdown; title: string; topic: AnalyticsTopic }[] = [
-  { breakdown: "countries", title: "Countries", topic: "countries" },
-  { breakdown: "referrers", title: "Referrers", topic: "referrers" },
-  { breakdown: "devices", title: "Devices", topic: "devices" },
-  { breakdown: "paths", title: "Pages", topic: "pages" },
+const VERCEL_BREAKDOWNS: { breakdown: VercelBreakdown; title: string }[] = [
+  { breakdown: "countries", title: "Countries" },
+  { breakdown: "referrers", title: "Referrers" },
+  { breakdown: "devices", title: "Devices" },
+  { breakdown: "paths", title: "Pages" },
 ];
 
 type SiteSortKey = "site" | "phViews" | "phSessions" | "vcViews" | "vcVisitors" | "errors" | "failures" | "p95";
@@ -143,21 +142,18 @@ function sortSites(rows: readonly JoinedSite[], key: SiteSortKey, dir: "asc" | "
  * reporting to both and count differently, so a sum would describe nothing. Only production
  * sites report analytics, so that is all this page reads.
  *
- * Picking a site narrows everything without another request. Overview holds every panel, each with
- * a way to its own sub-topic, where nothing is held back. A stat topic shows one site, chosen from
- * the list the board puts beside it. The board holds the range and the site, because that list
- * needs them too, so they carry from one sub-topic to the next.
+ * With no site this is the overview: every panel, across every site. With one it is that site's own
+ * page. The board holds the range, because its list of sites reads the same dashboard.
  */
 export function AnalyticsView({
-  topic,
   range,
   site,
   onSite,
 }: {
-  topic: AnalyticsTopic;
   range: AnalyticsRange;
+  /** The open site, or null for the overview. */
   site: string | null;
-  onSite: (site: string | null) => void;
+  onSite: (site: string) => void;
 }): ReactElement {
   const [sort, setSort] = useState<{ key: string; dir: "asc" | "desc" }>({ key: "phViews", dir: "desc" });
 
@@ -175,49 +171,15 @@ export function AnalyticsView({
 
   const rows = useMemo(() => joinSites(traffic, vercel, health), [traffic, vercel, health]);
   const sortedRows = useMemo(() => sortSites(rows, sort.key as SiteSortKey, sort.dir), [rows, sort]);
-  const chosen = site === null ? null : (rows.find((row) => row.key === site) ?? null);
-
-  // On every other topic the list beside the page is what picks the site.
-  const showSiteChip = site !== null && topic === "overview";
   const showRefreshing = refreshing || query.isPlaceholderData;
-
-  const figures =
-    site === null
-      ? {
-          posthogViews: traffic?.totals.pageviews ?? null,
-          posthogSessions: traffic?.totals.sessions ?? null,
-          vercelViews: vercel?.totals.pageviews ?? null,
-          vercelVisitors: vercel?.totals.visitors ?? null,
-        }
-      : {
-          posthogViews: chosen?.posthog?.pageviews ?? null,
-          posthogSessions: chosen?.posthog?.sessions ?? null,
-          vercelViews: chosen?.vercel?.pageviews ?? null,
-          vercelVisitors: chosen?.vercel?.visitors ?? null,
-        };
 
   return (
     <div className="min-h-0 flex-1 overflow-y-auto">
       <div className="flex w-full flex-col gap-4 p-4">
-        {(showSiteChip || showRefreshing) && (
-          <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
-            {showSiteChip && (
-              <button
-                type="button"
-                onClick={() => onSite(null)}
-                aria-label={`Clear the site filter: ${site}`}
-                className="inline-flex max-w-full cursor-pointer items-center gap-1.5 rounded-md border border-apt-border bg-apt-surface px-2.5 py-1.5 font-mono text-xs text-apt-text"
-              >
-                <span className="truncate">{site}</span>
-                <X size={13} aria-hidden className="flex-none" />
-              </button>
-            )}
-            {showRefreshing && (
-              <span role="status" className="font-mono text-[11px] text-apt-text-dim">
-                Refreshing…
-              </span>
-            )}
-          </div>
+        {showRefreshing && (
+          <span role="status" className="font-mono text-[11px] text-apt-text-dim">
+            Refreshing…
+          </span>
         )}
 
         {query.isError && !body && (
@@ -226,18 +188,19 @@ export function AnalyticsView({
           </p>
         )}
 
-        {topic !== "overview" ? (
-          <AnalyticsTopicBody
-            topic={topic}
-            range={range}
-            site={site}
-            sections={sections}
-            rows={rows}
-            posthogOn={posthogOn}
-            vercelOn={vercelOn}
-            refreshing={refreshing}
-            posthogUrl={posthogUrl}
-          />
+        {site !== null ? (
+          // With no answer at all there is no report to draw: the alert above is the whole story.
+          (body || refreshing) && (
+            <AnalyticsSitePage
+              site={site}
+              range={range}
+              sections={sections}
+              posthogOn={posthogOn}
+              vercelOn={vercelOn}
+              refreshing={refreshing}
+              posthogUrl={posthogUrl}
+            />
+          )
         ) : (
           <>
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
@@ -248,8 +211,8 @@ export function AnalyticsView({
                 link={posthogUrl ? { href: posthogUrl, label: "PostHog" } : undefined}
                 statLayout="strip"
                 stats={[
-                  { label: "Pageviews", value: countOrDash(figures.posthogViews) },
-                  { label: "Sessions", value: countOrDash(figures.posthogSessions) },
+                  { label: "Pageviews", value: countOrDash(traffic?.totals.pageviews) },
+                  { label: "Sessions", value: countOrDash(traffic?.totals.sessions) },
                 ]}
                 footnote="A session is about one page load"
               />
@@ -259,24 +222,23 @@ export function AnalyticsView({
                 icon={<TrendingUp size={15} className="text-apt-orange" />}
                 statLayout="strip"
                 stats={[
-                  { label: "Pageviews", value: countOrDash(figures.vercelViews) },
-                  { label: "Visitors", value: countOrDash(figures.vercelVisitors) },
+                  { label: "Pageviews", value: countOrDash(vercel?.totals.pageviews) },
+                  { label: "Visitors", value: countOrDash(vercel?.totals.visitors) },
                 ]}
                 footnote="Production Web Analytics"
               />
             </div>
 
             <DashboardPanel
-              title={site === null ? "Pageviews, all sites" : `Pageviews, ${site}`}
+              title="Pageviews, all sites"
               source="PostHog and Vercel"
               section={eitherSection(sections.traffic, sections.vercel)}
               configured={posthogOn || vercelOn}
               refreshing={refreshing}
               skeletonHeight={240}
-              actions={<SeeAll href="/analytics/pageviews" what="pageviews" />}
               note={PAGEVIEWS_NOTE}
             >
-              {() => <PageviewsChart traffic={traffic} vercel={vercel} site={site} range={range} height={240} />}
+              {() => <PageviewsChart traffic={traffic} vercel={vercel} site={null} range={range} height={240} />}
             </DashboardPanel>
 
             <DashboardPanel
@@ -285,12 +247,11 @@ export function AnalyticsView({
               section={eitherSection(sections.traffic, sections.vercel)}
               configured={posthogOn || vercelOn}
               refreshing={refreshing}
-              actions={<SeeAll href="/analytics/sites" what="sites" />}
-              note="Select a site to narrow every topic to it. A dash means that source has not seen the site. Errors, failed requests and p95 come from PostHog."
+              note="Select a site to open it. A dash means that source has not seen the site. Errors, failed requests and p95 come from PostHog."
             >
               {() => (
                 <div className="-mx-1 max-h-[420px] overflow-auto">
-                  <SitesTable rows={sortedRows} site={site} onSite={onSite} sort={sort} onSort={setSort} />
+                  <SitesTable rows={sortedRows} onSite={onSite} sort={sort} onSort={setSort} />
                 </div>
               )}
             </DashboardPanel>
@@ -303,18 +264,17 @@ export function AnalyticsView({
                 section={sections.paths}
                 configured={posthogOn}
                 refreshing={refreshing}
-                actions={<SeeAll href="/analytics/pages" what="pages" />}
               >
                 {(paths) => (
                   <BarList
                     ariaLabel="Top pages by pageviews, from PostHog"
-                    items={toBars(pathTotals(paths, site))}
+                    items={toBars(pathTotals(paths, null))}
                     color={ANALYTICS_SOURCE_COLORS.posthog}
                     emptyLabel="No pageviews in this range."
                   />
                 )}
               </DashboardPanel>
-              {POSTHOG_BREAKDOWNS.map(({ dimension, title, topic: target }) => (
+              {POSTHOG_BREAKDOWNS.map(({ dimension, title }) => (
                 <DashboardPanel
                   key={dimension}
                   title={title}
@@ -323,13 +283,12 @@ export function AnalyticsView({
                   section={sections.dimensions}
                   configured={posthogOn}
                   refreshing={refreshing}
-                  actions={<SeeAll href={`/analytics/${target}`} what={`${title.toLowerCase()} from PostHog`} />}
                   note={sections.dimensions.data?.truncated ? "The rarest combinations were cut off, so small rows may be short." : undefined}
                 >
                   {(dimensions) => (
                     <BarList
                       ariaLabel={`${title} by pageviews, from PostHog`}
-                      items={toBars(dimensionTotals(dimensions.rows, dimension, site))}
+                      items={toBars(dimensionTotals(dimensions.rows, dimension, null))}
                       color={ANALYTICS_SOURCE_COLORS.posthog}
                       emptyLabel="No pageviews in this range."
                     />
@@ -342,7 +301,6 @@ export function AnalyticsView({
                 section={sections.vercel}
                 configured={vercelOn}
                 refreshing={refreshing}
-                actions={<SeeAll href="/analytics/projects" what="projects" />}
                 note={projectsNote(vercel)}
               >
                 {(data) => (
@@ -350,15 +308,14 @@ export function AnalyticsView({
                     ariaLabel="Vercel projects by pageviews"
                     items={data.projects
                       .filter((p) => p.pageviews > 0)
-                      .map((p) => ({ name: p.domain ?? p.project, value: p.pageviews, detail: `${formatCount(p.pageviews)} · ${formatCount(p.visitors)} visitors` }))}
+                      .map((p) => ({ name: projectKey(p), value: p.pageviews, detail: `${formatCount(p.pageviews)} · ${formatCount(p.visitors)} visitors` }))}
                     color={ANALYTICS_SOURCE_COLORS.vercel}
-                    selected={site}
-                    onSelect={(name) => onSite(site === siteKey(name) ? null : siteKey(name))}
+                    onSelect={onSite}
                     emptyLabel="No pageviews in this range."
                   />
                 )}
               </DashboardPanel>
-              {VERCEL_BREAKDOWNS.map(({ breakdown, title, topic: target }) => (
+              {VERCEL_BREAKDOWNS.map(({ breakdown, title }) => (
                 <DashboardPanel
                   key={breakdown}
                   title={title}
@@ -366,12 +323,11 @@ export function AnalyticsView({
                   section={sections.vercel}
                   configured={vercelOn}
                   refreshing={refreshing}
-                  actions={<SeeAll href={`/analytics/${target}`} what={`${title.toLowerCase()} from Vercel`} />}
                 >
                   {(data) => (
                     <BarList
                       ariaLabel={`${title} by pageviews, from Vercel`}
-                      items={toBars(vercelTotals(data.projects, breakdown, site))}
+                      items={toBars(vercelTotals(data.projects, breakdown, null))}
                       color={ANALYTICS_SOURCE_COLORS.vercel}
                       emptyLabel="No pageviews in this range."
                     />
@@ -387,12 +343,11 @@ export function AnalyticsView({
               section={sections.vitals}
               configured={posthogOn}
               refreshing={refreshing}
-              actions={<SeeAll href="/analytics/vitals" what="web vitals" />}
               note={VITALS_NOTE}
             >
               {(data) => (
                 <div className="-mx-1 max-h-[320px] overflow-auto">
-                  <VitalsTable rows={data} site={site} />
+                  <VitalsTable rows={data} />
                 </div>
               )}
             </DashboardPanel>

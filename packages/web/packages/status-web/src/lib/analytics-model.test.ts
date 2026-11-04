@@ -7,6 +7,7 @@ import type {
   VercelTrafficSection,
 } from "../telemetry/dashboard-types";
 import {
+  analyticsSites,
   breakdownTotals,
   bucketDetail,
   bucketLabel,
@@ -16,9 +17,10 @@ import {
   joinSites,
   pageviewSeries,
   pathTotals,
-  siteBreakdowns,
-  topicSites,
+  sectionFailures,
   siteKey,
+  siteReport,
+  siteReportIsEmpty,
   vercelTotals,
   vitalRating,
 } from "./analytics-model";
@@ -64,47 +66,7 @@ const VERCEL: VercelTrafficSection = {
   projects: [project({}), project({ project: "orphan-production", domain: null, pageviews: 1, visitors: 1, series: [0, 1] })],
 };
 
-describe("siteBreakdowns", () => {
-  const rows = [
-    { host: "www.a.com", device: "Desktop", browser: "Chrome", country: "US", referrer: "$direct", pageviews: 2 },
-    { host: "a.com", device: "Mobile", browser: "Safari", country: "US", referrer: "x.com", pageviews: 1 },
-    { host: "b.com", device: "Desktop", browser: "Chrome", country: "CA", referrer: "$direct", pageviews: 9 },
-  ];
-  const projects = [
-    project({ countries: [{ name: "FR", pageviews: 4 }], paths: [{ name: "/x", pageviews: 4 }] }),
-    project({ project: "c-production", domain: "c.com", countries: [{ name: "DE", pageviews: 20 }] }),
-    project({ project: "quiet-production", domain: "quiet.com" }),
-  ];
-
-  it("gives each site its own totals, busiest first, and merges www", () => {
-    const result = siteBreakdowns("countries", rows, null, projects);
-    expect(result.map((r) => r.key)).toEqual(["c.com", "b.com", "a.com"]);
-    const a = result.find((r) => r.key === "a.com")!;
-    expect(a.posthog).toEqual([{ name: "United States", pageviews: 3 }]);
-    expect(a.vercel).toEqual([{ name: "France", pageviews: 4 }]);
-  });
-
-  it("keeps a site only one provider saw, and drops one neither did", () => {
-    const result = siteBreakdowns("countries", rows, null, projects);
-    expect(result.find((r) => r.key === "c.com")!.posthog).toEqual([]);
-    expect(result.some((r) => r.key === "quiet.com")).toBe(false);
-  });
-
-  it("has no Vercel side for browsers, whether or not Vercel answered", () => {
-    const result = siteBreakdowns("browsers", rows, null, projects);
-    expect(result.map((r) => r.key)).toEqual(["b.com", "a.com"]);
-    expect(result.every((r) => r.vercel === null)).toBe(true);
-  });
-
-  it("reads pages from the path rows, with the bare path on a site's card", () => {
-    const paths = [{ host: "a.com", path: "/p", pageviews: 2 }];
-    const result = siteBreakdowns("pages", rows, paths, projects);
-    const a = result.find((r) => r.key === "a.com")!;
-    expect(a.posthog).toEqual([{ name: "/p", pageviews: 2 }]);
-    expect(a.vercel).toEqual([{ name: "/x", pageviews: 4 }]);
-    expect(result.some((r) => r.key === "b.com")).toBe(false);
-  });
-
+describe("breakdownTotals", () => {
   it("says a provider has no answer rather than an empty one", () => {
     expect(breakdownTotals("countries", null, null, null, null)).toEqual({ posthog: null, vercel: null });
     expect(breakdownTotals("countries", [], null, [], null)).toEqual({ posthog: [], vercel: [] });
@@ -257,88 +219,144 @@ describe("web vitals", () => {
   });
 });
 
-describe("topicSites", () => {
-  const answered = <T,>(data: T | null): { data: T | null; error: null; updatedAt: null } => ({ data, error: null, updatedAt: null });
-  const sections = (over: Partial<DashboardSections<AnalyticsSectionData>>): DashboardSections<AnalyticsSectionData> => ({
-    traffic: answered(null),
-    dimensions: answered(null),
-    paths: answered(null),
-    vitals: answered(null),
-    health: answered(null),
-    vercel: answered(null),
-    ...over,
-  });
-  const row = (host: string, browser: string, pageviews: number) => ({ host, device: "Desktop", browser, country: "US", referrer: "$direct", pageviews });
+const answered = <T,>(data: T | null): { data: T | null; error: null; updatedAt: null } => ({ data, error: null, updatedAt: null });
+const sections = (over: Partial<DashboardSections<AnalyticsSectionData>>): DashboardSections<AnalyticsSectionData> => ({
+  traffic: answered(null),
+  dimensions: answered(null),
+  paths: answered(null),
+  vitals: answered(null),
+  health: answered(null),
+  vercel: answered(null),
+  ...over,
+});
+const dimension = (host: string, browser: string, pageviews: number) => ({ host, device: "Desktop", browser, country: "US", referrer: "$direct", pageviews });
+const vital = (host: string) => ({ host, samples: 1, lcp: 1, inp: 1, cls: 1, fcp: null });
 
-  it("lists a breakdown's sites alphabetically, as one site however PostHog spells the host", () => {
-    const rows = [row("www.zeta.example.com", "Chrome", 5), row("zeta.example.com", "Safari", 5), row("quiet.example.com", "Chrome", 1)];
-    const result = topicSites("browsers", sections({ dimensions: answered({ rows, truncated: false }) as never }));
-    expect(result).toEqual(["quiet.example.com", "zeta.example.com"]);
+describe("analyticsSites", () => {
+  it("lists every site alphabetically, whichever provider reported it, as one site however it is spelled", () => {
+    const traffic = { ...TRAFFIC, sites: [{ host: "www.zeta.example.com", pageviews: 9, sessions: 9, series: [] }, { host: "zeta.example.com", pageviews: 1, sessions: 1, series: [] }] };
+    const result = analyticsSites(
+      sections({
+        traffic: answered(traffic) as never,
+        vitals: answered([vital("vitals.example.com")]) as never,
+        dimensions: answered({ rows: [dimension("dims.example.com", "Chrome", 1)], truncated: false }) as never,
+        paths: answered([{ host: "paths.example.com", path: "/", pageviews: 1 }]) as never,
+      }),
+    );
+    expect(result).toEqual(["dims.example.com", "paths.example.com", "vitals.example.com", "zeta.example.com"]);
   });
 
-  it("lists every project on Projects, including one with analytics off and one with no domain", () => {
+  it("includes a project with analytics off and one with no domain, so neither is unfindable", () => {
     const vercel = {
+      ...VERCEL,
+      projects: [],
       roster: [
-        { project: "zeta-production", domain: "www.zeta.example.com", analyticsOn: true, pageviews: 9, visitors: 9 },
         { project: "off-production", domain: "off.example.com", analyticsOn: false, pageviews: null, visitors: null },
         { project: "bare-production", domain: null, analyticsOn: true, pageviews: 0, visitors: 0 },
       ],
-      projects: [],
     };
-    expect(topicSites("projects", sections({ vercel: answered(vercel) as never }))).toEqual([
-      "bare-production",
-      "off.example.com",
-      "zeta.example.com",
-    ]);
+    expect(analyticsSites(sections({ vercel: answered(vercel) as never }))).toEqual(["bare-production", "off.example.com"]);
   });
 
-  it("lists web vitals' sites once each however the host is spelled", () => {
-    const vitals = [
-      { host: "www.zeta.example.com", samples: 1, lcp: 1, inp: 1, cls: 1, fcp: 1 },
-      { host: "zeta.example.com", samples: 1, lcp: 1, inp: 1, cls: 1, fcp: 1 },
-      { host: "alpha.example.com", samples: 1, lcp: 1, inp: 1, cls: 1, fcp: 1 },
-    ];
-    expect(topicSites("vitals", sections({ vitals: answered(vitals) as never }))).toEqual(["alpha.example.com", "zeta.example.com"]);
-  });
-
-  it("lists a site on Sites even with no traffic in the range, because its row still has figures", () => {
-    const traffic = {
-      buckets: [],
-      pageviews: [],
-      totals: { pageviews: 0, sessions: 0 },
-      sites: [{ host: "idle.example.com", pageviews: 0, sessions: 0, series: [] }],
-    };
-    expect(topicSites("sites", sections({ traffic: answered(traffic) as never }))).toEqual(["idle.example.com"]);
-  });
-
-  it("lists pageviews alphabetically rather than by traffic", () => {
-    const traffic = {
-      buckets: [],
-      pageviews: [],
-      totals: { pageviews: 10, sessions: 10 },
-      sites: [
-        { host: "zeta.example.com", pageviews: 9, sessions: 9, series: [] },
-        { host: "alpha.example.com", pageviews: 1, sessions: 1, series: [] },
-      ],
-    };
-    expect(topicSites("pageviews", sections({ traffic: answered(traffic) as never }))).toEqual(["alpha.example.com", "zeta.example.com"]);
-  });
-
-  it("leaves off a site with no pageviews from either provider", () => {
-    const traffic = {
-      buckets: [],
-      pageviews: [],
-      totals: { pageviews: 3, sessions: 3 },
-      sites: [
-        { host: "seen.example.com", pageviews: 3, sessions: 3, series: [] },
-        { host: "idle.example.com", pageviews: 0, sessions: 0, series: [] },
-      ],
-    };
-    expect(topicSites("pageviews", sections({ traffic: answered(traffic) as never }))).toEqual(["seen.example.com"]);
+  it("does not add a host that only has health, which would add every API", () => {
+    const health = [{ host: "api.example.com", errors: 1, requests: 1, failures: 0, p95Ms: 1 }];
+    expect(analyticsSites(sections({ health: answered(health) as never }))).toEqual([]);
   });
 
   it("has nothing to list before anything has answered", () => {
-    expect(topicSites("pageviews", sections({}))).toEqual([]);
-    expect(topicSites("pages", sections({}))).toEqual([]);
+    expect(analyticsSites(sections({}))).toEqual([]);
+  });
+});
+
+describe("siteReport", () => {
+  const everything = sections({
+    traffic: answered(TRAFFIC) as never,
+    vercel: answered({ ...VERCEL, projects: [project({ countries: [{ name: "FR", pageviews: 4 }], paths: [{ name: "/x", pageviews: 4 }] })], roster: [{ project: "a-production", domain: "a.com", analyticsOn: true, pageviews: 10, visitors: 5 }] }) as never,
+    dimensions: answered({ rows: [dimension("www.a.com", "Chrome", 2), dimension("a.com", "Safari", 1), dimension("b.com", "Chrome", 9)], truncated: false }) as never,
+    paths: answered([{ host: "a.com", path: "/p", pageviews: 2 }]) as never,
+    vitals: answered([vital("www.a.com"), vital("b.com")]) as never,
+    health: answered([
+      { host: "www.a.com", errors: 1, requests: 10, failures: 1, p95Ms: 100 },
+      { host: "a.com", errors: 2, requests: 10, failures: 0, p95Ms: 300 },
+    ]) as never,
+  });
+
+  it("gathers one site's figures across its hosts: counts add, and p95 is the worse one", () => {
+    const report = siteReport(everything, "a.com");
+    expect(report.posthog).toMatchObject({ pageviews: 7, sessions: 4 });
+    expect(report.vercel).toMatchObject({ pageviews: 10, visitors: 5 });
+    expect(report.health).toMatchObject({ errors: 3, requests: 20, failures: 1, p95Ms: 300 });
+    expect(report.projects.map((row) => row.project)).toEqual(["a-production"]);
+    expect(report.vitals.map((row) => row.host)).toEqual(["www.a.com"]);
+  });
+
+  it("lists breakdowns in page order, with the bare path on Pages and each provider's own list", () => {
+    const report = siteReport(everything, "a.com");
+    expect(report.breakdowns.map((b) => b.topic)).toEqual(["pages", "countries", "referrers", "devices", "browsers"]);
+    expect(report.breakdowns[0]).toEqual({
+      topic: "pages",
+      posthog: [{ name: "/p", pageviews: 2 }],
+      vercel: [{ name: "/x", pageviews: 4 }],
+    });
+    expect(report.breakdowns[1]).toEqual({
+      topic: "countries",
+      posthog: [{ name: "United States", pageviews: 3 }],
+      vercel: [{ name: "France", pageviews: 4 }],
+    });
+  });
+
+  it("leaves off a provider's list that is empty, and a card with none", () => {
+    const report = siteReport(everything, "b.com");
+    expect(report.vercel).toBeNull();
+    expect(report.health).toBeNull();
+    expect(report.projects).toEqual([]);
+    expect(report.breakdowns.map((b) => b.topic)).toEqual(["countries", "referrers", "devices", "browsers"]);
+    expect(report.breakdowns.every((b) => b.vercel === null)).toBe(true);
+  });
+
+  it("treats a figure of zero as absent", () => {
+    const idle = sections({
+      traffic: answered({ ...TRAFFIC, sites: [{ host: "idle.com", pageviews: 0, sessions: 0, series: [] }] }) as never,
+      health: answered([{ host: "idle.com", errors: 0, requests: 0, failures: 0, p95Ms: null }]) as never,
+    });
+    const report = siteReport(idle, "idle.com");
+    expect(report.posthog).toBeNull();
+    expect(report.health).toBeNull();
+    expect(siteReportIsEmpty(report)).toBe(true);
+  });
+
+  it("keeps zero errors on a site that served requests: that is the finding", () => {
+    const clean = sections({ health: answered([{ host: "clean.com", errors: 0, requests: 5, failures: 0, p95Ms: null }]) as never });
+    expect(siteReport(clean, "clean.com").health).toMatchObject({ errors: 0, requests: 5 });
+  });
+
+  it("is empty for a site nothing knows, and a project with analytics off is not empty", () => {
+    expect(siteReportIsEmpty(siteReport(everything, "gone.example.com"))).toBe(true);
+    const off = sections({
+      vercel: answered({ ...VERCEL, projects: [], roster: [{ project: "off-production", domain: "off.com", analyticsOn: false, pageviews: null, visitors: null }] }) as never,
+    });
+    const report = siteReport(off, "off.com");
+    expect(report.projects).toHaveLength(1);
+    expect(siteReportIsEmpty(report)).toBe(false);
+  });
+});
+
+describe("sectionFailures", () => {
+  const failed = (error: string) => ({ data: null, error, updatedAt: null });
+  const on = { posthog: true, vercel: true };
+
+  it("names what could not be read, one line per source and error", () => {
+    const result = sectionFailures(sections({ traffic: failed("boom"), vitals: failed("boom"), health: failed("other"), vercel: failed("boom") }), on);
+    expect(result).toEqual([
+      { source: "PostHog", what: ["traffic", "web vitals"], error: "boom" },
+      { source: "PostHog", what: ["health"], error: "other" },
+      { source: "Vercel", what: ["traffic"], error: "boom" },
+    ]);
+  });
+
+  it("leaves out a section with last-good data, because its card says so, and a provider that is off", () => {
+    const stale = { data: [], error: "boom", updatedAt: null };
+    expect(sectionFailures(sections({ vitals: stale as never }), on)).toEqual([]);
+    expect(sectionFailures(sections({ vercel: failed("boom") }), { posthog: true, vercel: false })).toEqual([]);
   });
 });

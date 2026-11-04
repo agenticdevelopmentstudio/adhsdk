@@ -9,6 +9,7 @@ import type {
   TrafficSection,
   VercelProjectTraffic,
   VercelTrafficSection,
+  VitalsRow,
 } from "../telemetry/dashboard-types";
 
 // The Analytics topic's arithmetic, kept apart from its rendering. The backend answers per host
@@ -35,6 +36,18 @@ export interface JoinedSite {
 
 function addSeries(a: readonly number[], b: readonly number[]): number[] {
   return Array.from({ length: Math.max(a.length, b.length) }, (_, i) => (a[i] ?? 0) + (b[i] ?? 0));
+}
+
+/** A site's health across its hosts: counts add, but percentiles do not, so p95 is the worse one. */
+function mergeHealth(seen: SiteHealthRow | null, site: SiteHealthRow): SiteHealthRow {
+  if (!seen) return { ...site };
+  return {
+    host: seen.host,
+    errors: seen.errors + site.errors,
+    requests: seen.requests + site.requests,
+    failures: seen.failures + site.failures,
+    p95Ms: seen.p95Ms === null || site.p95Ms === null ? (seen.p95Ms ?? site.p95Ms) : Math.max(seen.p95Ms, site.p95Ms),
+  };
 }
 
 /**
@@ -78,17 +91,7 @@ export function joinSites(
     // Health alone does not put a site on a traffic table: it would add every API host.
     const target = rows.get(key);
     if (!target) continue;
-    const seen = target.health;
-    target.health = seen
-      ? {
-          host: seen.host,
-          errors: seen.errors + site.errors,
-          requests: seen.requests + site.requests,
-          failures: seen.failures + site.failures,
-          // Percentiles do not add. The worse of the two is the honest summary.
-          p95Ms: seen.p95Ms === null || site.p95Ms === null ? (seen.p95Ms ?? site.p95Ms) : Math.max(seen.p95Ms, site.p95Ms),
-        }
-      : { ...site };
+    target.health = mergeHealth(target.health, site);
   }
 
   return [...rows.values()].sort(
@@ -250,76 +253,126 @@ export function breakdownTotals(
   };
 }
 
-export interface SiteBreakdown extends BreakdownTotals {
-  key: string;
-}
-
-function breakdownSize(row: BreakdownTotals): number {
-  const sum = (list: Marginal[] | null): number => (list ?? []).reduce((total, m) => total + m.pageviews, 0);
-  return Math.max(sum(row.posthog), sum(row.vercel));
-}
-
-/**
- * One topic per site, busiest first. The sites come from the rows themselves rather than from
- * the traffic table, so a site present only in this breakdown is still shown. A site with nothing
- * in the topic from either provider is left out.
- */
-export function siteBreakdowns(
-  topic: BreakdownTopic,
-  dimensionRows: readonly DimensionRow[] | null,
-  pathRows: readonly PathRow[] | null,
-  projects: readonly VercelProjectTraffic[] | null,
-): SiteBreakdown[] {
-  const hosts = (topic === "pages" ? pathRows : dimensionRows) ?? [];
-  const keys = new Set(hosts.map((row) => siteKey(row.host)));
-  if (VERCEL_OF[topic]) for (const project of projects ?? []) keys.add(projectKey(project));
-  return [...keys]
-    .map((key) => ({ key, ...breakdownTotals(topic, dimensionRows, pathRows, projects, key) }))
-    .filter((row) => (row.posthog?.length ?? 0) + (row.vercel?.length ?? 0) > 0)
-    .sort((a, b) => breakdownSize(b) - breakdownSize(a) || a.key.localeCompare(b.key));
-}
-
 /**
  * Site names in list order: alphabetical, so a site stays where the reader last found it when
- * traffic moves. A stat topic's list and any row added to it both go through this.
+ * traffic moves. Analytics' list and any row added to it both go through this.
  */
 export function sortSiteNames(sites: readonly string[]): string[] {
   return [...sites].sort((a, b) => a.localeCompare(b));
 }
 
 /**
- * The sites a stat topic can show, alphabetically: the rows of its list. A site with nothing to show
- * in the topic is not offered, so Browsers lists only the sites PostHog has browsers for.
+ * Every site for Analytics' list, alphabetically: anything a provider reports traffic for, plus every
+ * production project, so a site with analytics off stays findable. Health alone does not add one,
+ * because that would add every API host.
  */
-export function topicSites(
-  topic: "pageviews" | "sites" | "projects" | "vitals" | BreakdownTopic,
-  sections: DashboardSections<AnalyticsSectionData>,
-): string[] {
-  if (topic === "sites") {
-    return sortSiteNames(joinSites(sections.traffic.data, sections.vercel.data, sections.health.data).map((row) => row.key));
-  }
-  if (topic === "projects") {
-    // The whole roster, traffic or not: a site with analytics off has to stay findable.
-    return sortSiteNames([...new Set((sections.vercel.data?.roster ?? []).map(projectKey))]);
-  }
-  if (topic === "vitals") {
-    return sortSiteNames([...new Set((sections.vitals.data ?? []).map((row) => siteKey(row.host)))]);
-  }
-  if (topic === "pageviews") {
-    return sortSiteNames(
-      joinSites(sections.traffic.data, sections.vercel.data, sections.health.data)
-        .filter((row) => (row.posthog?.pageviews ?? 0) + (row.vercel?.pageviews ?? 0) > 0)
-        .map((row) => row.key),
-    );
-  }
-  return sortSiteNames(
-    siteBreakdowns(
-      topic,
-      sections.dimensions.data?.rows ?? null,
-      sections.paths.data,
-      sections.vercel.data?.projects ?? null,
-    ).map((row) => row.key),
+export function analyticsSites(sections: DashboardSections<AnalyticsSectionData>): string[] {
+  const keys = new Set(joinSites(sections.traffic.data, sections.vercel.data, null).map((row) => row.key));
+  for (const row of sections.vercel.data?.roster ?? []) keys.add(projectKey(row));
+  for (const row of sections.vitals.data ?? []) keys.add(siteKey(row.host));
+  for (const row of sections.dimensions.data?.rows ?? []) keys.add(siteKey(row.host));
+  for (const row of sections.paths.data ?? []) keys.add(siteKey(row.host));
+  return sortSiteNames([...keys]);
+}
+
+export interface SiteBreakdown {
+  topic: BreakdownTopic;
+  /** Null where this provider has nothing for the site: its list is left off the card. */
+  posthog: Marginal[] | null;
+  vercel: Marginal[] | null;
+}
+
+/**
+ * What one site has, and only that. Everything absent is null or empty here, so the page draws what
+ * this returns and has no "nothing for this site" states of its own. A figure of zero counts as
+ * absent, except errors on a site that served requests, where zero is the finding.
+ */
+export interface SiteReport {
+  posthog: { pageviews: number; sessions: number } | null;
+  vercel: { pageviews: number; visitors: number } | null;
+  health: SiteHealthRow | null;
+  breakdowns: SiteBreakdown[];
+  projects: VercelTrafficSection["roster"];
+  vitals: VitalsRow[];
+}
+
+const BREAKDOWN_ORDER: readonly BreakdownTopic[] = ["pages", "countries", "referrers", "devices", "browsers"];
+
+const nonEmpty = (list: Marginal[] | null): Marginal[] | null => (list && list.length > 0 ? list : null);
+
+export function siteReport(sections: DashboardSections<AnalyticsSectionData>, site: string): SiteReport {
+  const joined = joinSites(sections.traffic.data, sections.vercel.data, null).find((row) => row.key === site);
+  const posthog = joined?.posthog;
+  const vercel = joined?.vercel;
+  const health = (sections.health.data ?? [])
+    .filter((row) => siteKey(row.host) === site)
+    .reduce<SiteHealthRow | null>(mergeHealth, null);
+  return {
+    posthog: posthog && (posthog.pageviews > 0 || posthog.sessions > 0) ? posthog : null,
+    vercel: vercel && (vercel.pageviews > 0 || vercel.visitors > 0) ? vercel : null,
+    health: health && (health.requests > 0 || health.errors > 0 || health.p95Ms !== null) ? health : null,
+    breakdowns: BREAKDOWN_ORDER.flatMap((topic) => {
+      const totals = breakdownTotals(
+        topic,
+        sections.dimensions.data?.rows ?? null,
+        sections.paths.data,
+        sections.vercel.data?.projects ?? null,
+        site,
+      );
+      const lists = { posthog: nonEmpty(totals.posthog), vercel: nonEmpty(totals.vercel) };
+      return lists.posthog || lists.vercel ? [{ topic, ...lists }] : [];
+    }),
+    projects: (sections.vercel.data?.roster ?? []).filter((row) => projectKey(row) === site),
+    vitals: (sections.vitals.data ?? []).filter((row) => siteKey(row.host) === site),
+  };
+}
+
+/** Whether a site's report has anything to draw. */
+export function siteReportIsEmpty(report: SiteReport): boolean {
+  return (
+    !report.posthog &&
+    !report.vercel &&
+    !report.health &&
+    report.breakdowns.length === 0 &&
+    report.projects.length === 0 &&
+    report.vitals.length === 0
   );
+}
+
+const SECTION_NAMES: { key: keyof DashboardSections<AnalyticsSectionData>; what: string; source: "PostHog" | "Vercel" }[] = [
+  { key: "traffic", what: "traffic", source: "PostHog" },
+  { key: "paths", what: "pages", source: "PostHog" },
+  { key: "dimensions", what: "breakdowns", source: "PostHog" },
+  { key: "health", what: "health", source: "PostHog" },
+  { key: "vitals", what: "web vitals", source: "PostHog" },
+  { key: "vercel", what: "traffic", source: "Vercel" },
+];
+
+export interface SectionFailure {
+  source: "PostHog" | "Vercel";
+  what: string[];
+  error: string;
+}
+
+/**
+ * What could not be read at all, one entry per source and error. Leaving out what a site does not
+ * have must not also leave out what we failed to ask about: a failed provider has to stay visible
+ * on a page that hides absences. A section with last-good data is not here, because its card shows.
+ */
+export function sectionFailures(
+  sections: DashboardSections<AnalyticsSectionData>,
+  configured: { posthog: boolean; vercel: boolean },
+): SectionFailure[] {
+  const failures: SectionFailure[] = [];
+  for (const { key, what, source } of SECTION_NAMES) {
+    const section = sections[key];
+    if (section.data !== null || section.error === null) continue;
+    if (!(source === "PostHog" ? configured.posthog : configured.vercel)) continue;
+    const same = failures.find((f) => f.source === source && f.error === section.error);
+    if (same) same.what.push(what);
+    else failures.push({ source, what: [what], error: section.error });
+  }
+  return failures;
 }
 
 function sortMarginals(totals: ReadonlyMap<string, number>): Marginal[] {
