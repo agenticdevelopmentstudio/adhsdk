@@ -1212,6 +1212,51 @@
           }
         }
       },
+      "SiteHealthRow": {
+        "type": "object",
+        "required": [
+          "host",
+          "errors",
+          "requests",
+          "failures",
+          "p95Ms"
+        ],
+        "properties": {
+          "host": {
+            "type": "string"
+          },
+          "errors": {
+            "type": "number"
+          },
+          "requests": {
+            "type": "number"
+          },
+          "failures": {
+            "type": "number"
+          },
+          "p95Ms": {
+            "type": [
+              "number",
+              "null"
+            ]
+          }
+        }
+      },
+      "DashboardMarginal": {
+        "type": "object",
+        "required": [
+          "name",
+          "pageviews"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "pageviews": {
+            "type": "number"
+          }
+        }
+      },
       "FleetMember": {
         "type": "object",
         "required": [
@@ -4610,6 +4655,973 @@
                       "type": "array",
                       "items": {
                         "$ref": "#/components/schemas/AnalyticsMetricDTO"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/analytics/dashboard": {
+      "get": {
+        "tags": [
+          "dashboards"
+        ],
+        "summary": "Per-site and aggregate traffic from PostHog and Vercel Web Analytics",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "range",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "24h",
+                "7d",
+                "30d"
+              ],
+              "default": "7d"
+            }
+          },
+          {
+            "name": "env",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "production",
+                "staging",
+                "testing",
+                "all"
+              ],
+              "default": "production"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "What is known now; poll while `refreshing`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "generatedAt",
+                    "refreshing",
+                    "range",
+                    "env",
+                    "configured",
+                    "sections"
+                  ],
+                  "properties": {
+                    "generatedAt": {
+                      "type": "string"
+                    },
+                    "refreshing": {
+                      "type": "boolean"
+                    },
+                    "range": {
+                      "type": "string"
+                    },
+                    "env": {
+                      "type": "string"
+                    },
+                    "configured": {
+                      "type": "object",
+                      "required": [
+                        "posthog",
+                        "vercel"
+                      ],
+                      "properties": {
+                        "posthog": {
+                          "type": "boolean"
+                        },
+                        "vercel": {
+                          "type": "boolean"
+                        }
+                      }
+                    },
+                    "sections": {
+                      "type": "object",
+                      "required": [
+                        "traffic",
+                        "dimensions",
+                        "paths",
+                        "vitals",
+                        "health",
+                        "vercel"
+                      ],
+                      "properties": {
+                        "traffic": {
+                          "type": "object",
+                          "required": [
+                            "data",
+                            "error",
+                            "updatedAt"
+                          ],
+                          "properties": {
+                            "data": {
+                              "anyOf": [
+                                {
+                                  "type": "object",
+                                  "required": [
+                                    "buckets",
+                                    "totals",
+                                    "pageviews",
+                                    "sessions",
+                                    "sites"
+                                  ],
+                                  "properties": {
+                                    "buckets": {
+                                      "type": "array",
+                                      "items": {
+                                        "type": "string"
+                                      }
+                                    },
+                                    "totals": {
+                                      "type": "object",
+                                      "required": [
+                                        "pageviews",
+                                        "sessions"
+                                      ],
+                                      "properties": {
+                                        "pageviews": {
+                                          "type": "number"
+                                        },
+                                        "sessions": {
+                                          "type": "number"
+                                        }
+                                      }
+                                    },
+                                    "pageviews": {
+                                      "type": "array",
+                                      "items": {
+                                        "type": "number"
+                                      }
+                                    },
+                                    "sessions": {
+                                      "type": "array",
+                                      "items": {
+                                        "type": "number"
+                                      }
+                                    },
+                                    "sites": {
+                                      "type": "array",
+                                      "items": {
+                                        "type": "object",
+                                        "required": [
+                                          "host",
+                                          "pageviews",
+                                          "sessions",
+                                          "series"
+                                        ],
+                                        "properties": {
+                                          "host": {
+                                            "type": "string"
+                                          },
+                                          "pageviews": {
+                                            "type": "number"
+                                          },
+                                          "sessions": {
+                                            "type": "number"
+                                          },
+                                          "series": {
+                                            "type": "array",
+                                            "items": {
+                                              "type": "number"
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
+                            "error": {
+                              "type": [
+                                "string",
+                                "null"
+                              ]
+                            },
+                            "updatedAt": {
+                              "type": [
+                                "string",
+                                "null"
+                              ]
+                            }
+                          }
+                        },
+                        "dimensions": {
+                          "type": "object",
+                          "required": [
+                            "data",
+                            "error",
+                            "updatedAt"
+                          ],
+                          "properties": {
+                            "data": {
+                              "anyOf": [
+                                {
+                                  "type": "object",
+                                  "required": [
+                                    "rows",
+                                    "truncated"
+                                  ],
+                                  "properties": {
+                                    "rows": {
+                                      "type": "array",
+                                      "items": {
+                                        "type": "object",
+                                        "required": [
+                                          "host",
+                                          "device",
+                                          "browser",
+                                          "country",
+                                          "referrer",
+                                          "pageviews"
+                                        ],
+                                        "properties": {
+                                          "host": {
+                                            "type": "string"
+                                          },
+                                          "device": {
+                                            "type": "string"
+                                          },
+                                          "browser": {
+                                            "type": "string"
+                                          },
+                                          "country": {
+                                            "type": "string"
+                                          },
+                                          "referrer": {
+                                            "type": "string"
+                                          },
+                                          "pageviews": {
+                                            "type": "number"
+                                          }
+                                        }
+                                      }
+                                    },
+                                    "truncated": {
+                                      "type": "boolean"
+                                    }
+                                  }
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
+                            "error": {
+                              "type": [
+                                "string",
+                                "null"
+                              ]
+                            },
+                            "updatedAt": {
+                              "type": [
+                                "string",
+                                "null"
+                              ]
+                            }
+                          }
+                        },
+                        "paths": {
+                          "type": "object",
+                          "required": [
+                            "data",
+                            "error",
+                            "updatedAt"
+                          ],
+                          "properties": {
+                            "data": {
+                              "anyOf": [
+                                {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "object",
+                                    "required": [
+                                      "host",
+                                      "path",
+                                      "pageviews"
+                                    ],
+                                    "properties": {
+                                      "host": {
+                                        "type": "string"
+                                      },
+                                      "path": {
+                                        "type": "string"
+                                      },
+                                      "pageviews": {
+                                        "type": "number"
+                                      }
+                                    }
+                                  }
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
+                            "error": {
+                              "type": [
+                                "string",
+                                "null"
+                              ]
+                            },
+                            "updatedAt": {
+                              "type": [
+                                "string",
+                                "null"
+                              ]
+                            }
+                          }
+                        },
+                        "vitals": {
+                          "type": "object",
+                          "required": [
+                            "data",
+                            "error",
+                            "updatedAt"
+                          ],
+                          "properties": {
+                            "data": {
+                              "anyOf": [
+                                {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "object",
+                                    "required": [
+                                      "host",
+                                      "samples",
+                                      "lcp",
+                                      "inp",
+                                      "cls",
+                                      "fcp"
+                                    ],
+                                    "properties": {
+                                      "host": {
+                                        "type": "string"
+                                      },
+                                      "samples": {
+                                        "type": "number"
+                                      },
+                                      "lcp": {
+                                        "type": [
+                                          "number",
+                                          "null"
+                                        ]
+                                      },
+                                      "inp": {
+                                        "type": [
+                                          "number",
+                                          "null"
+                                        ]
+                                      },
+                                      "cls": {
+                                        "type": [
+                                          "number",
+                                          "null"
+                                        ]
+                                      },
+                                      "fcp": {
+                                        "type": [
+                                          "number",
+                                          "null"
+                                        ]
+                                      }
+                                    }
+                                  }
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
+                            "error": {
+                              "type": [
+                                "string",
+                                "null"
+                              ]
+                            },
+                            "updatedAt": {
+                              "type": [
+                                "string",
+                                "null"
+                              ]
+                            }
+                          }
+                        },
+                        "health": {
+                          "type": "object",
+                          "required": [
+                            "data",
+                            "error",
+                            "updatedAt"
+                          ],
+                          "properties": {
+                            "data": {
+                              "anyOf": [
+                                {
+                                  "type": "array",
+                                  "items": {
+                                    "$ref": "#/components/schemas/SiteHealthRow"
+                                  }
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
+                            "error": {
+                              "type": [
+                                "string",
+                                "null"
+                              ]
+                            },
+                            "updatedAt": {
+                              "type": [
+                                "string",
+                                "null"
+                              ]
+                            }
+                          }
+                        },
+                        "vercel": {
+                          "type": "object",
+                          "required": [
+                            "data",
+                            "error",
+                            "updatedAt"
+                          ],
+                          "properties": {
+                            "data": {
+                              "anyOf": [
+                                {
+                                  "type": "object",
+                                  "required": [
+                                    "buckets",
+                                    "projectsTotal",
+                                    "projectsEnabled",
+                                    "failed",
+                                    "totals",
+                                    "pageviews",
+                                    "visitors",
+                                    "projects"
+                                  ],
+                                  "properties": {
+                                    "buckets": {
+                                      "type": "array",
+                                      "items": {
+                                        "type": "string"
+                                      }
+                                    },
+                                    "projectsTotal": {
+                                      "type": "number"
+                                    },
+                                    "projectsEnabled": {
+                                      "type": "number"
+                                    },
+                                    "failed": {
+                                      "type": "number"
+                                    },
+                                    "totals": {
+                                      "type": "object",
+                                      "required": [
+                                        "pageviews",
+                                        "visitors"
+                                      ],
+                                      "properties": {
+                                        "pageviews": {
+                                          "type": "number"
+                                        },
+                                        "visitors": {
+                                          "type": "number"
+                                        }
+                                      }
+                                    },
+                                    "pageviews": {
+                                      "type": "array",
+                                      "items": {
+                                        "type": "number"
+                                      }
+                                    },
+                                    "visitors": {
+                                      "type": "array",
+                                      "items": {
+                                        "type": "number"
+                                      }
+                                    },
+                                    "projects": {
+                                      "type": "array",
+                                      "items": {
+                                        "type": "object",
+                                        "required": [
+                                          "project",
+                                          "domain",
+                                          "pageviews",
+                                          "visitors",
+                                          "series",
+                                          "countries",
+                                          "referrers",
+                                          "paths",
+                                          "devices"
+                                        ],
+                                        "properties": {
+                                          "project": {
+                                            "type": "string"
+                                          },
+                                          "domain": {
+                                            "type": [
+                                              "string",
+                                              "null"
+                                            ]
+                                          },
+                                          "pageviews": {
+                                            "type": "number"
+                                          },
+                                          "visitors": {
+                                            "type": "number"
+                                          },
+                                          "series": {
+                                            "type": "array",
+                                            "items": {
+                                              "type": "number"
+                                            }
+                                          },
+                                          "countries": {
+                                            "type": "array",
+                                            "items": {
+                                              "$ref": "#/components/schemas/DashboardMarginal"
+                                            }
+                                          },
+                                          "referrers": {
+                                            "type": "array",
+                                            "items": {
+                                              "$ref": "#/components/schemas/DashboardMarginal"
+                                            }
+                                          },
+                                          "paths": {
+                                            "type": "array",
+                                            "items": {
+                                              "$ref": "#/components/schemas/DashboardMarginal"
+                                            }
+                                          },
+                                          "devices": {
+                                            "type": "array",
+                                            "items": {
+                                              "$ref": "#/components/schemas/DashboardMarginal"
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
+                            "error": {
+                              "type": [
+                                "string",
+                                "null"
+                              ]
+                            },
+                            "updatedAt": {
+                              "type": [
+                                "string",
+                                "null"
+                              ]
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/errors/dashboard": {
+      "get": {
+        "tags": [
+          "dashboards"
+        ],
+        "summary": "Every unresolved GlitchTip issue, 30-day event history, and per-site failure rates",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "What is known now; poll while `refreshing`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "generatedAt",
+                    "refreshing",
+                    "configured",
+                    "sections"
+                  ],
+                  "properties": {
+                    "generatedAt": {
+                      "type": "string"
+                    },
+                    "refreshing": {
+                      "type": "boolean"
+                    },
+                    "configured": {
+                      "type": "object",
+                      "required": [
+                        "glitchtip",
+                        "posthog"
+                      ],
+                      "properties": {
+                        "glitchtip": {
+                          "type": "boolean"
+                        },
+                        "posthog": {
+                          "type": "boolean"
+                        }
+                      }
+                    },
+                    "sections": {
+                      "type": "object",
+                      "required": [
+                        "issues",
+                        "events",
+                        "sites"
+                      ],
+                      "properties": {
+                        "issues": {
+                          "type": "object",
+                          "required": [
+                            "data",
+                            "error",
+                            "updatedAt"
+                          ],
+                          "properties": {
+                            "data": {
+                              "anyOf": [
+                                {
+                                  "type": "object",
+                                  "required": [
+                                    "buckets",
+                                    "issues",
+                                    "summary"
+                                  ],
+                                  "properties": {
+                                    "buckets": {
+                                      "type": "array",
+                                      "items": {
+                                        "type": "string"
+                                      }
+                                    },
+                                    "issues": {
+                                      "type": "array",
+                                      "items": {
+                                        "type": "object",
+                                        "required": [
+                                          "id",
+                                          "shortId",
+                                          "title",
+                                          "type",
+                                          "source",
+                                          "level",
+                                          "count",
+                                          "userCount",
+                                          "firstSeen",
+                                          "lastSeen",
+                                          "release",
+                                          "project",
+                                          "permalink",
+                                          "active"
+                                        ],
+                                        "properties": {
+                                          "id": {
+                                            "type": "string"
+                                          },
+                                          "shortId": {
+                                            "type": [
+                                              "string",
+                                              "null"
+                                            ]
+                                          },
+                                          "title": {
+                                            "type": "string"
+                                          },
+                                          "type": {
+                                            "type": [
+                                              "string",
+                                              "null"
+                                            ]
+                                          },
+                                          "source": {
+                                            "type": [
+                                              "string",
+                                              "null"
+                                            ]
+                                          },
+                                          "level": {
+                                            "type": [
+                                              "string",
+                                              "null"
+                                            ]
+                                          },
+                                          "count": {
+                                            "type": "number"
+                                          },
+                                          "userCount": {
+                                            "type": "number"
+                                          },
+                                          "firstSeen": {
+                                            "type": [
+                                              "string",
+                                              "null"
+                                            ]
+                                          },
+                                          "lastSeen": {
+                                            "type": [
+                                              "string",
+                                              "null"
+                                            ]
+                                          },
+                                          "release": {
+                                            "type": [
+                                              "string",
+                                              "null"
+                                            ]
+                                          },
+                                          "project": {
+                                            "type": "string"
+                                          },
+                                          "permalink": {
+                                            "type": [
+                                              "string",
+                                              "null"
+                                            ]
+                                          },
+                                          "active": {
+                                            "type": "boolean"
+                                          }
+                                        }
+                                      }
+                                    },
+                                    "summary": {
+                                      "type": "object",
+                                      "required": [
+                                        "active",
+                                        "backlog",
+                                        "events",
+                                        "resolved",
+                                        "complete",
+                                        "byType",
+                                        "newPerDay"
+                                      ],
+                                      "properties": {
+                                        "active": {
+                                          "type": "number"
+                                        },
+                                        "backlog": {
+                                          "type": "number"
+                                        },
+                                        "events": {
+                                          "type": "number"
+                                        },
+                                        "resolved": {
+                                          "type": [
+                                            "number",
+                                            "null"
+                                          ]
+                                        },
+                                        "complete": {
+                                          "type": "boolean"
+                                        },
+                                        "byType": {
+                                          "type": "array",
+                                          "items": {
+                                            "type": "object",
+                                            "required": [
+                                              "name",
+                                              "issues",
+                                              "events"
+                                            ],
+                                            "properties": {
+                                              "name": {
+                                                "type": "string"
+                                              },
+                                              "issues": {
+                                                "type": "number"
+                                              },
+                                              "events": {
+                                                "type": "number"
+                                              }
+                                            }
+                                          }
+                                        },
+                                        "newPerDay": {
+                                          "type": "array",
+                                          "items": {
+                                            "type": "number"
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
+                            "error": {
+                              "type": [
+                                "string",
+                                "null"
+                              ]
+                            },
+                            "updatedAt": {
+                              "type": [
+                                "string",
+                                "null"
+                              ]
+                            }
+                          }
+                        },
+                        "events": {
+                          "type": "object",
+                          "required": [
+                            "data",
+                            "error",
+                            "updatedAt"
+                          ],
+                          "properties": {
+                            "data": {
+                              "anyOf": [
+                                {
+                                  "type": "object",
+                                  "required": [
+                                    "buckets",
+                                    "events"
+                                  ],
+                                  "properties": {
+                                    "buckets": {
+                                      "type": "array",
+                                      "items": {
+                                        "type": "string"
+                                      }
+                                    },
+                                    "events": {
+                                      "type": "array",
+                                      "items": {
+                                        "type": "number"
+                                      }
+                                    }
+                                  }
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
+                            "error": {
+                              "type": [
+                                "string",
+                                "null"
+                              ]
+                            },
+                            "updatedAt": {
+                              "type": [
+                                "string",
+                                "null"
+                              ]
+                            }
+                          }
+                        },
+                        "sites": {
+                          "type": "object",
+                          "required": [
+                            "data",
+                            "error",
+                            "updatedAt"
+                          ],
+                          "properties": {
+                            "data": {
+                              "anyOf": [
+                                {
+                                  "type": "array",
+                                  "items": {
+                                    "$ref": "#/components/schemas/SiteHealthRow"
+                                  }
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
+                            "error": {
+                              "type": [
+                                "string",
+                                "null"
+                              ]
+                            },
+                            "updatedAt": {
+                              "type": [
+                                "string",
+                                "null"
+                              ]
+                            }
+                          }
+                        }
                       }
                     }
                   }

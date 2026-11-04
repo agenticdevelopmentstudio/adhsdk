@@ -10,11 +10,11 @@ import type { AnalyticsMetricDTO, ErrorDTO, TelemetrySnapshot } from '../telemet
 // ---------------------------------------------------------------------------
 // The TELEMETRY read API — the production-visibility band (errors + analytics).
 //
-//   /telemetry   LIVE snapshot — polls GlitchTip + PostHog directly (NOT the DB),
-//                a 30s in-memory cache dampens the provider fan-out; ?fresh=1
-//                bypasses it. A failed poll contributes an empty list rather than
-//                clearing the other stream, so one provider outage never blanks
-//                the band.
+//   /telemetry   LIVE snapshot — polls GlitchTip + PostHog directly (NOT the DB).
+//                GlitchTip is cached 30s and awaited; PostHog is cached 5 min and
+//                never held up for: see `analyticsForSnapshot`. ?fresh=1 bypasses
+//                both caches and waits for both. A failed poll serves the last good
+//                stream rather than blanking it.
 //   /errors      the SQLite-backed errors stream (errorsStore.load)
 //   /analytics   the SQLite-backed analytics stream, reduced to the latest value
 //                per (metric, window, scope) (analyticsStore.load)
@@ -24,7 +24,11 @@ import type { AnalyticsMetricDTO, ErrorDTO, TelemetrySnapshot } from '../telemet
 // apply, which is correct: peers exchange health snapshots, not telemetry.
 // ---------------------------------------------------------------------------
 
-const CACHE_TTL_MS = 30_000;
+const ERRORS_CACHE_TTL_MS = 30_000;
+/** Headline traffic KPIs over 24h and 7d: nobody needs these to the second. */
+const ANALYTICS_CACHE_TTL_MS = 5 * 60_000;
+/** How long a cold start waits for PostHog before answering without it. */
+const ANALYTICS_COLD_WAIT_MS = 3_000;
 
 export function telemetryRoutes(
   storage: Storage,
@@ -45,29 +49,49 @@ export function telemetryRoutes(
     analytics: null,
   };
 
-  async function build(): Promise<TelemetrySnapshot> {
-    const [er, ar] = await Promise.all([errorsFetcher.fetch(), analyticsFetcher.fetch()]);
-    if (er.ok) lastGood.errors = er.items;
-    if (ar.ok) lastGood.analytics = ar.items;
-    return {
-      generatedAt: new Date().toISOString(),
-      // A failed poll serves the last good stream (or nothing on a cold start)
-      // rather than clearing the other stream — one provider outage never blanks
-      // the band, and a transient one doesn't even blank its own stream.
-      errors: er.ok ? er.items : (lastGood.errors ?? []),
-      analytics: ar.ok ? ar.items : (lastGood.analytics ?? []),
-    };
+  // TTL + single-flight (the shared primitive), one per provider because they have nothing
+  // in common: concurrent cache misses — a burst of page loads, several panes — share ONE
+  // provider poll instead of each fanning out its own, which is what turned one slow
+  // provider into a page-load-multiplied wall of "[telemetry] … failed" log lines. A
+  // ?fresh=1 during an in-flight build joins it: a poll started moments ago IS fresh.
+  const cachedErrors = cachedSingleFlight(ERRORS_CACHE_TTL_MS, async () => {
+    const r = await errorsFetcher.fetch();
+    if (r.ok) lastGood.errors = r.items;
+    return lastGood.errors ?? [];
+  });
+  const cachedAnalytics = cachedSingleFlight(ANALYTICS_CACHE_TTL_MS, async () => {
+    const r = await analyticsFetcher.fetch();
+    if (r.ok) lastGood.analytics = r.items;
+    return lastGood.analytics ?? [];
+  });
+
+  // PostHog takes 2–30s to answer, and the GlitchTip half of this snapshot is what the
+  // Overview's error card and the board wait on. Awaiting both let the slow half hold up the
+  // fast half: `/telemetry` was logging 18s stalls. So a normal read serves what we already
+  // have and lets the refresh land for the next poll; only a cold start waits, briefly.
+  async function analyticsForSnapshot(fresh: boolean): Promise<AnalyticsMetricDTO[]> {
+    const refresh = cachedAnalytics(fresh);
+    if (fresh) return refresh;
+    const known = lastGood.analytics;
+    if (known) {
+      void refresh.catch(() => undefined);
+      return known;
+    }
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const coldWait = new Promise<AnalyticsMetricDTO[]>((resolve) => {
+      timer = setTimeout(() => resolve([]), ANALYTICS_COLD_WAIT_MS);
+    });
+    try {
+      return await Promise.race([refresh, coldWait]);
+    } finally {
+      clearTimeout(timer);
+    }
   }
 
-  // TTL + single-flight (the shared primitive): concurrent cache misses — a burst of
-  // page loads, several panes — share ONE provider poll instead of each fanning out
-  // its own GlitchTip + PostHog round, which is what turned one slow provider into a
-  // page-load-multiplied wall of "[telemetry] … failed" log lines. A ?fresh=1 during
-  // an in-flight build joins it: a poll started moments ago IS fresh.
-  const cachedSnapshot = cachedSingleFlight(CACHE_TTL_MS, build);
-
   app.get('/telemetry', async (c) => {
-    const snapshot = await cachedSnapshot(c.req.query('fresh') === '1');
+    const fresh = c.req.query('fresh') === '1';
+    const [errors, analytics] = await Promise.all([cachedErrors(fresh), analyticsForSnapshot(fresh)]);
+    const snapshot: TelemetrySnapshot = { generatedAt: new Date().toISOString(), errors, analytics };
     return c.json(snapshot, 200, { 'Cache-Control': 'no-store' });
   });
 
