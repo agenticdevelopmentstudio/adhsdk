@@ -251,7 +251,8 @@ public final class ReviewService {
     /// A review whose branch is gone, or no longer holds its commit, moves to the default branch when the commit
     /// landed there (the branch was merged, then deleted or reset). Otherwise it would be skipped, and the crawl
     /// of the default branch never queues it again: a repo and sha are queued once, whatever the first row's
-    /// state. Saved, so the session, the fix branch and the store all name the branch the review ran on.
+    /// state. Saved, so the session, the fix branch and the store all name the branch the review ran on, but
+    /// only over a review still queued: one finished while git ran keeps what its finisher wrote.
     private func retargetedIfLanded(_ review: PartnerReview) async throws -> PartnerReview {
         let repo = URL(fileURLWithPath: review.repoPath)
         let branchRef = "refs/heads/\(review.branch)"
@@ -261,7 +262,7 @@ public final class ReviewService {
         }
         guard let main = try? await git.defaultBranch(in: repo), main != review.branch,
               try await git.isAncestor(review.sha, of: "refs/heads/\(main)", in: repo) else { return review }
-        var moved = review
+        guard var moved = try store.review(id: review.id), moved.state == .queued else { return review }
         moved.branch = main
         try store.updateReview(moved)
         return moved
