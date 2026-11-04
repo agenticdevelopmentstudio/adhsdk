@@ -81,9 +81,6 @@ extension UserSettings {
     /// Whether the partner window floats above other windows.
     public static let partnerAlwaysOnTop = UserSetting<Bool>("partner.window_always_on_top", default: false)
 
-    /// Whether the Needs-you pane is shown in the partner window.
-    public static let partnerAttentionPaneVisible = UserSetting<Bool>("partner.attention_pane_visible", default: true)
-
     /// How many days done attention items stay in the window.
     public static let partnerAttentionRetentionDays = UserSetting<Int>("partner.attention_retention_days", default: 7)
 

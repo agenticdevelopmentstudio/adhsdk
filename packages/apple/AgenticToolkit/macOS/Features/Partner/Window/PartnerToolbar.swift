@@ -109,8 +109,8 @@ final class PartnerCommands: NSObject {
     }
 }
 
-/// The Coding Partner window's toolbar: a labelled Start/Stop button, and the standard inspector toggle that
-/// shows or hides Notifications. Everything else the partner can be told to do is in the Partner pane's gear
+/// The Coding Partner window's toolbar: a labelled Start/Stop button. Notifications is a fixed tab, so there is
+/// no inspector to toggle. Everything else the partner can be told to do is in the Partner pane's gear
 /// menu, where a Projects window pane keeps its own actions; its state and queue are on its tab card.
 ///
 /// Held by the window controller for the window's life: a toolbar keeps its delegate weakly.
@@ -175,7 +175,7 @@ public final class PartnerToolbar: NSObject, NSToolbarDelegate {
     // MARK: - NSToolbarDelegate
 
     public func toolbarDefaultItemIdentifiers(_ toolbar: NSToolbar) -> [NSToolbarItem.Identifier] {
-        [.flexibleSpace, ItemID.startStop, .inspectorTrackingSeparator, .toggleInspector]
+        [.flexibleSpace, ItemID.startStop]
     }
 
     public func toolbarAllowedItemIdentifiers(_ toolbar: NSToolbar) -> [NSToolbarItem.Identifier] {

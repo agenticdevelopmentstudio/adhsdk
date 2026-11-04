@@ -56,6 +56,4 @@ public enum PaneStateKey {
     public static let minimizeEdge = "minimize.edge"
     /// `"1"` when this pane is the tab's zoomed one. Absent means not zoomed.
     public static let zoomed = "zoomed"
-    /// The per-pane frame spacing override, JSON. Absent means inherit.
-    public static let spacingOverride = "spacing.override"
 }

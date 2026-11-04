@@ -91,6 +91,40 @@ final class PartnerCardSource: TabPaneDataSource {
     }
 }
 
+/// What the Notifications card says: how many items are waiting on the owner.
+@MainActor
+final class NotificationsCardSource: TabPaneDataSource {
+
+    private let directory: URL
+    private let openCount: () -> Int
+
+    init(directory: URL, openCount: @escaping () -> Int) {
+        self.directory = directory
+        self.openCount = openCount
+    }
+
+    /// "Nothing open", "1 open item", "N open items".
+    static func summary(openCount: Int) -> String {
+        switch openCount {
+        case 0: return "Nothing open"
+        case 1: return "1 open item"
+        default: return "\(openCount) open items"
+        }
+    }
+
+    func tabPaneAgentName(_ pane: TabPaneViewController) -> String { "Notifications" }
+    func tabPaneModelName(_ pane: TabPaneViewController) -> String? { nil }
+    func tabPaneStatusSymbols(_ pane: TabPaneViewController) -> [TabPaneStatusSymbol] {
+        openCount() > 0
+            ? [TabPaneStatusSymbol(symbolName: "bell.badge", accessibilityLabel: "Items open")]
+            : [TabPaneStatusSymbol(symbolName: "bell", accessibilityLabel: "Nothing open")]
+    }
+    func tabPaneSessionName(_ pane: TabPaneViewController) -> String { "Attention" }
+    func tabPaneWorkingDirectory(_ pane: TabPaneViewController) -> URL { directory }
+    func tabPaneBranch(_ pane: TabPaneViewController) -> String? { nil }
+    func tabPaneSummary(_ pane: TabPaneViewController) -> String? { Self.summary(openCount: openCount()) }
+}
+
 /// What a card for a session the partner opened says.
 @MainActor
 final class SessionCardSource: TabPaneDataSource {

@@ -69,10 +69,6 @@ public final class PartnerGeneralSettingsViewController: ComposableSettings.Sett
             title: "Keep the partner window on top",
             get: { settings.get(UserSettings.partnerAlwaysOnTop) },
             set: { settings.set($0, for: UserSettings.partnerAlwaysOnTop) })))
-        window.addSettingSubview(ComposableSettings.CheckboxView(with: ComposableSettings.ViewModel<Bool>(
-            title: "Show the Notifications pane",
-            get: { settings.get(UserSettings.partnerAttentionPaneVisible) },
-            set: { settings.set($0, for: UserSettings.partnerAttentionPaneVisible) })))
         addGroup(window)
     }
 

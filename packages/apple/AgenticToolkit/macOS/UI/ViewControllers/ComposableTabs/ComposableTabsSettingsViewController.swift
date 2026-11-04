@@ -72,7 +72,6 @@ public final class ComposableTabsSettingsViewController: NSViewController {
 private final class ProjectSettingsSplitViewController: ComposableSettings.SplitViewController {
 
     private let tabsPanel: ProjectTabsSettingsPanel
-    private let spacingPanel = ProjectSpacingSettingsPanel()
 
     /// A sheet has no free edge for a drawer to slide out of, so this split
     /// presents its help in a popover off the help button instead.
@@ -93,10 +92,6 @@ private final class ProjectSettingsSplitViewController: ComposableSettings.Split
     @available(*, unavailable)
     required init?(coder: NSCoder) { fatalError() }
 
-    /// Wide enough for the Spacing panel's diagram, which is the widest thing
-    /// either topic puts in the detail pane.
-    override var detailMinimumThickness: CGFloat { 420 }
-
     /// A sheet has no remembered geometry to restore, and a divider the user
     /// drags in a transient dialog is a setting they never asked to keep.
     override var contentSizedSidebar: Bool { true }
@@ -105,7 +100,6 @@ private final class ProjectSettingsSplitViewController: ComposableSettings.Split
         super.viewDidLoad()
         helpPresenter = help
         addPanel(tabsPanel)
-        addPanel(spacingPanel)
         selectPanel(at: 0)
     }
 }
@@ -148,8 +142,9 @@ private final class ProjectTabsSettingsPanel: ComposableSettings.SettingsPanelVi
                 title: "This Project Only",
                 body: "These edges belong to this project, not to the app — another "
                     + "project window keeps whatever edges it was given. Changes apply "
-                    + "as you make them and are saved with the project. Spacing, on the "
-                    + "next topic, is the opposite: it belongs to every window."
+                    + "as you make them and are saved with the project. Spacing is the "
+                    + "opposite: it belongs to every window, and is set under Settings > "
+                    + "Appearance > Spacing."
             )
         ])
     }
@@ -194,82 +189,4 @@ private final class ProjectTabsSettingsPanel: ComposableSettings.SettingsPanelVi
         sender.state = isEdgeEnabled(edge) ? .on : .off
     }
 
-}
-
-/// How much room the panes are given: around the group of them, and between
-/// them.
-@MainActor
-private final class ProjectSpacingSettingsPanel: ComposableSettings.SettingsPanelViewController {
-
-    init() {
-        super.init(with: ComposableSettings.SettingsPanelDescriptor(
-            title: "Spacing",
-            icon: NSImage(systemSymbolName: "squareshape.split.2x2", accessibilityDescription: "Spacing")
-        ))
-    }
-
-    @available(*, unavailable)
-    required init?(coder: NSCoder) { fatalError() }
-
-    override var helpContent: ComposableSettings.PanelHelp? {
-        ComposableSettings.PanelHelp(topics: [
-            .init(
-                title: "Frame Spacing",
-                body: "The room between the panes and the tab bars framing them, in points, "
-                    + "set per side. Each number stands outside the diagram, in line with "
-                    + "the edge it belongs to. Every arrow stands against that edge and "
-                    + "points the way it travels, so the arrow pointing into the view is "
-                    + "the one that adds space. Hold an arrow down to "
-                    + "keep going, or type a number and press Return. The stepper beside "
-                    + "each number adjusts it a point at a time."
-            ),
-            .init(
-                title: "Pane Divider Spacing",
-                body: "The gaps between panes: one number for panes side by side, one for "
-                    + "panes stacked, each sitting on the divider it opens. The arrows "
-                    + "pointing at the divider close the gap; the ones pointing away open "
-                    + "it. Each number is the whole gap, not each pane's half — ten means "
-                    + "ten points between two panes. A gap of zero still drags: the divider "
-                    + "keeps a few points of grab area whatever it is drawn at."
-            ),
-            .init(
-                title: "Every Window",
-                body: "Spacing belongs to the app, not to this project — every project "
-                    + "window is spaced the same way. Changes apply to the window behind "
-                    + "this sheet as you make them."
-            )
-        ])
-    }
-
-    override func viewDidLoad() {
-        super.viewDidLoad()
-
-        let frameSpacing = SpacingControl.boundToSettings(
-            style: .frame,
-            edges: PaneSpacing.edgeSettings
-        )
-        let frame = ComposableSettings.GroupView(withTitle: "Frame Spacing")
-        frame.addSettingSubview(frameSpacing)
-        addGroup(frame)
-
-        let dividerSpacing = SpacingControl.boundToSettings(
-            style: .paneDividers,
-            gutters: PaneSpacing.gutterSettings
-        )
-        let dividers = ComposableSettings.GroupView(withTitle: "Pane Divider Spacing")
-        dividers.addSettingSubview(dividerSpacing)
-        addGroup(dividers)
-
-        // Tab out of the last number in one control and into the first of the
-        // next. Each control answers Tab within itself and hands the key back
-        // at either end, where AppKit takes over — and AppKit works the key
-        // view loop out from where subviews *are*. These are placed by frame,
-        // so left to itself Tab out of the bottom number went somewhere that
-        // looked like nowhere. This sheet shows the same pair as the Projects
-        // settings panel, so it owes the user the same key view loop.
-        // The sheet holds nothing else to type in, so the loop closes on itself
-        // rather than trailing off into the sheet's buttons.
-        frameSpacing.lastNumberField?.nextKeyView = dividerSpacing.firstNumberField
-        dividerSpacing.lastNumberField?.nextKeyView = frameSpacing.firstNumberField
-    }
 }

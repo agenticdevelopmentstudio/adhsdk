@@ -228,41 +228,6 @@ final class ProjectPaneStateStoreTests: XCTestCase {
         XCTAssertFalse(try leaf(rightID, in: try makeTree()).isZoomed)
     }
 
-    /// The four edges only. The two gutters belong to the grid rather than to
-    /// one pane and are never stored — see
-    /// `PaneSpacingOverrideTests.testGuttersAreNotPartOfAPanesOverride`, which
-    /// is where that rule is pinned. This test is about the trip through the
-    /// project, so it overrides what a pane may actually own.
-    func testAPanesOwnFrameSpacingSurvives() throws {
-        let spacing = Spacing(top: 12, leading: 12, bottom: 12, trailing: 12)
-        let first = try makeTree()
-        let override = try leaf(leftID, in: first).spacingOverride
-        override.setOverride(spacing)
-        // The steppers are continuous, so the write waits for the pause a held
-        // arrow key never takes. In the app the popover closing ends the
-        // gesture; here the read below is what ends it.
-        override.flushPendingPersist()
-
-        let restored = try leaf(leftID, in: try makeTree())
-
-        XCTAssertTrue(restored.spacingOverride.isOverridden)
-        XCTAssertEqual(restored.spacingOverride.resolved, spacing)
-    }
-
-    func testUsingTheDefaultAgainForgetsTheOverride() throws {
-        let first = try makeTree()
-        let left = try leaf(leftID, in: first)
-        left.spacingOverride.setOverride(Spacing(uniform: 12))
-        left.spacingOverride.flushPendingPersist()
-        XCTAssertNotNil(project.paneState(nodeID: leftID, key: "chrome.spacing.override"),
-                        "the row the reset has to remove")
-
-        left.spacingOverride.reset()
-
-        XCTAssertNil(project.paneState(nodeID: leftID, key: "chrome.spacing.override"))
-        XCTAssertFalse(try leaf(leftID, in: try makeTree()).spacingOverride.isOverridden)
-    }
-
     /// A row whose edge the tree no longer admits. The layout spec can change
     /// the axis a pane sits on between launches, and the pane restores its own
     /// rail off the row before the host ever looks at it — so a host that just

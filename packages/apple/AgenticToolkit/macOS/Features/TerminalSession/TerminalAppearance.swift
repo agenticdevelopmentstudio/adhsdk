@@ -58,13 +58,9 @@ public enum TerminalAppearance {
     /// Every `terminal_*` key, so a change to any of them can be recognized
     /// from `UserSettings.shared.changes` without one observer per setting.
     public static let settingKeys: Set<String> = fontSettingKeys.union([
-        UserSettings.terminalPaddingTop.name,
-        UserSettings.terminalPaddingLeading.name,
-        UserSettings.terminalPaddingBottom.name,
-        UserSettings.terminalPaddingTrailing.name,
         UserSettings.terminalCursorShape.name,
         UserSettings.terminalCursorBlinks.name
-    ])
+    ]).union(PaneSpacing.contentSettingKeys)
 
     /// The terminal font: the theme's override if it has one, otherwise the
     /// Terminal settings panel's.
@@ -79,14 +75,17 @@ public enum TerminalAppearance {
             ?? .monospacedSystemFont(ofSize: size, weight: .regular)
     }
 
-    /// How far the terminal grid is held off its container's edges.
+    /// How far the terminal grid is held off its container's edges: the
+    /// theme's override, otherwise the app-wide pane-content spacing every
+    /// other pane uses (Settings > Appearance > Spacing).
     public static func resolvedPadding(theme: ColorTheme) -> TerminalPadding {
         let overrides = theme.terminal
+        let content = PaneSpacing.contentSpacing
         return TerminalPadding(
-            top: CGFloat(overrides?.paddingTop ?? UserSettings.terminalPaddingTop.value),
-            leading: CGFloat(overrides?.paddingLeading ?? UserSettings.terminalPaddingLeading.value),
-            bottom: CGFloat(overrides?.paddingBottom ?? UserSettings.terminalPaddingBottom.value),
-            trailing: CGFloat(overrides?.paddingTrailing ?? UserSettings.terminalPaddingTrailing.value)
+            top: CGFloat(overrides?.paddingTop ?? content.top),
+            leading: CGFloat(overrides?.paddingLeading ?? content.leading),
+            bottom: CGFloat(overrides?.paddingBottom ?? content.bottom),
+            trailing: CGFloat(overrides?.paddingTrailing ?? content.trailing)
         )
     }
 
@@ -167,14 +166,6 @@ public enum TerminalAppearance {
 }
 
 extension UserSettings {
-
-    /// Inset between the terminal grid and its container, per side, in points.
-    /// Four settings rather than one because a terminal under a tab bar wants
-    /// more room at the top than at the bottom, and that is not derivable.
-    static public var terminalPaddingTop = UserSetting<Int>("terminal_padding_top", default: 10)
-    static public var terminalPaddingLeading = UserSetting<Int>("terminal_padding_leading", default: 10)
-    static public var terminalPaddingBottom = UserSetting<Int>("terminal_padding_bottom", default: 10)
-    static public var terminalPaddingTrailing = UserSetting<Int>("terminal_padding_trailing", default: 10)
 
     /// PostScript font name for the terminal.
     static public var terminalFontName = UserSetting<String>("terminal_font_name", default: "Menlo-Regular")

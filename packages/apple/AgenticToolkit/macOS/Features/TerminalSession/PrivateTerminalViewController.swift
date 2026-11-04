@@ -362,3 +362,12 @@ extension PrivateTerminalViewController: PaneContentRemovalConfirmation {
             : nil
     }
 }
+
+/// The terminal insets its own grid — a theme may override that padding — so
+/// its pane pins it flush and leaves the gap to it.
+extension PrivateTerminalViewController: PaneContentSpacingConsuming {
+    public func applyPaneSpacing(_ spacing: Spacing) {
+        guard isViewLoaded else { return }
+        reapplyAppearance()
+    }
+}

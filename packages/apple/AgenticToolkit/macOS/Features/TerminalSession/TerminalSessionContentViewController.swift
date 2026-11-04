@@ -144,3 +144,12 @@ extension TerminalSessionContentViewController: PaneContentRemovalConfirmation {
             : "This pane has \(count) running terminal sessions. Removing the pane ends them."
     }
 }
+
+/// The terminal insets its own grid — a theme may override that padding — so
+/// its pane pins it flush and leaves the gap to it.
+extension TerminalSessionContentViewController: PaneContentSpacingConsuming {
+    public func applyPaneSpacing(_ spacing: Spacing) {
+        guard isViewLoaded else { return }
+        reapplyAppearance()
+    }
+}
