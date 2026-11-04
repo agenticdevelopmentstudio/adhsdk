@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { _resetProviderCooldowns, noteRateLimited } from "@adh-sdk/deploy-platform/cooldown";
 import { alignToBuckets, rangeWindow } from "../src/telemetry/dashboard/ranges";
 import { loadTraffic, shapeDimensions, shapeHealth, shapeTraffic, shapeVitals } from "../src/telemetry/dashboard/posthog-sections";
-import { analyticsEnabled, loadVercelTraffic, productionDomain, shapeMarginal } from "../src/telemetry/dashboard/vercel-section";
+import { analyticsEnabled, isProductionProject, loadVercelTraffic, productionDomain, shapeMarginal } from "../src/telemetry/dashboard/vercel-section";
 import { isActiveIssue, summarizeIssues, toErrorIssues } from "../src/telemetry/dashboard/errors-sections";
 
 const NOW = Date.parse("2026-11-04T15:30:20.000Z");
@@ -83,7 +83,7 @@ describe("PostHog shapers", () => {
   it("a failed query fails the section rather than reading as no traffic", async () => {
     vi.stubGlobal("fetch", async () => ({ ok: false, status: 504, json: async () => ({}) }));
     await expect(
-      loadTraffic({ POSTHOG_HOST: "https://ph", POSTHOG_API_KEY: "k", POSTHOG_PROJECT_ID: "1" }, "production", rangeWindow("7d", NOW)),
+      loadTraffic({ POSTHOG_HOST: "https://ph", POSTHOG_API_KEY: "k", POSTHOG_PROJECT_ID: "1" }, rangeWindow("7d", NOW)),
     ).rejects.toThrow("HTTP 504");
   });
 });
@@ -101,6 +101,54 @@ describe("Vercel section", () => {
   it("the domain is the first alias that isn't a vercel.app one", () => {
     expect(productionDomain({ targets: { production: { alias: ["x.vercel.app", "x.com"] } } })).toBe("x.com");
     expect(productionDomain({ targets: { production: { alias: ["x.vercel.app"] } } })).toBeNull();
+  });
+
+  it("a project is production unless its name ends in staging or testing", () => {
+    expect(isProductionProject({ name: "site-production" })).toBe(true);
+    expect(isProductionProject({ name: "site-staging" })).toBe(false);
+    expect(isProductionProject({ name: "site-testing" })).toBe(false);
+    // The production site of a site about testing.
+    expect(isProductionProject({ name: "testing-production" })).toBe(true);
+    expect(isProductionProject({ name: "x", targets: { production: { alias: ["staging.x.com"] } } })).toBe(false);
+  });
+
+  it("staging and testing are neither counted nor queried", async () => {
+    const calls = stubVercel((u) => {
+      if (u.pathname === "/v9/projects") {
+        return {
+          body: {
+            projects: [
+              { id: "prod", name: "a-production", webAnalytics: { enabledAt: 1 } },
+              { id: "off", name: "b-production" },
+              { id: "stg", name: "a-staging", webAnalytics: { enabledAt: 1 } },
+              { id: "tst", name: "a-testing", webAnalytics: { enabledAt: 1 } },
+            ],
+          },
+        };
+      }
+      return { body: { data: { pageviews: 0, visitors: 0 } } };
+    });
+    const s = await loadVercelTraffic(ENV, w);
+    expect(s.projectsTotal).toBe(2);
+    expect(s.projectsEnabled).toBe(1);
+    expect(s.roster.map((r) => r.project)).toEqual(["a-production", "b-production"]);
+    const queried = calls.filter((u) => u.pathname !== "/v9/projects").map((u) => u.searchParams.get("projectId"));
+    expect(new Set(queried)).toEqual(new Set(["prod"]));
+  });
+
+  it("the roster lists every production project, busiest first, and a project with no count has none", async () => {
+    stubVercel((u) => {
+      if (u.pathname === "/v9/projects") return { body: PROJECTS };
+      if (u.pathname.endsWith("/count")) {
+        return { body: { data: u.searchParams.get("projectId") === "p1" ? { pageviews: 5, visitors: 2 } : { pageviews: 0, visitors: 0 } } };
+      }
+      return { body: { data: [] } };
+    });
+    expect((await loadVercelTraffic(ENV, w)).roster).toEqual([
+      { project: "one", domain: "one.com", analyticsOn: true, pageviews: 5, visitors: 2 },
+      { project: "quiet", domain: null, analyticsOn: true, pageviews: 0, visitors: 0 },
+      { project: "off", domain: null, analyticsOn: false, pageviews: null, visitors: null },
+    ]);
   });
 
   it("shapeMarginal drops Vercel's Others rollup, which is no value of the dimension", () => {

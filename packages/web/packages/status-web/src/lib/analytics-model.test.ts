@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { TrafficSection, VercelProjectTraffic, VercelTrafficSection } from "../telemetry/dashboard-types";
 import {
+  breakdownTotals,
   bucketDetail,
   bucketLabel,
   countryName,
@@ -9,6 +10,7 @@ import {
   joinSites,
   pageviewSeries,
   pathTotals,
+  siteBreakdowns,
   siteKey,
   vercelTotals,
   vitalRating,
@@ -48,11 +50,59 @@ const VERCEL: VercelTrafficSection = {
   projectsTotal: 3,
   projectsEnabled: 2,
   failed: 0,
+  roster: [],
   totals: { pageviews: 11, visitors: 6 },
   pageviews: [4, 7],
   visitors: [2, 4],
   projects: [project({}), project({ project: "orphan-production", domain: null, pageviews: 1, visitors: 1, series: [0, 1] })],
 };
+
+describe("siteBreakdowns", () => {
+  const rows = [
+    { host: "www.a.com", device: "Desktop", browser: "Chrome", country: "US", referrer: "$direct", pageviews: 2 },
+    { host: "a.com", device: "Mobile", browser: "Safari", country: "US", referrer: "x.com", pageviews: 1 },
+    { host: "b.com", device: "Desktop", browser: "Chrome", country: "CA", referrer: "$direct", pageviews: 9 },
+  ];
+  const projects = [
+    project({ countries: [{ name: "FR", pageviews: 4 }], paths: [{ name: "/x", pageviews: 4 }] }),
+    project({ project: "c-production", domain: "c.com", countries: [{ name: "DE", pageviews: 20 }] }),
+    project({ project: "quiet-production", domain: "quiet.com" }),
+  ];
+
+  it("gives each site its own totals, busiest first, and merges www", () => {
+    const result = siteBreakdowns("countries", rows, null, projects);
+    expect(result.map((r) => r.key)).toEqual(["c.com", "b.com", "a.com"]);
+    const a = result.find((r) => r.key === "a.com")!;
+    expect(a.posthog).toEqual([{ name: "United States", pageviews: 3 }]);
+    expect(a.vercel).toEqual([{ name: "France", pageviews: 4 }]);
+  });
+
+  it("keeps a site only one provider saw, and drops one neither did", () => {
+    const result = siteBreakdowns("countries", rows, null, projects);
+    expect(result.find((r) => r.key === "c.com")!.posthog).toEqual([]);
+    expect(result.some((r) => r.key === "quiet.com")).toBe(false);
+  });
+
+  it("has no Vercel side for browsers, whether or not Vercel answered", () => {
+    const result = siteBreakdowns("browsers", rows, null, projects);
+    expect(result.map((r) => r.key)).toEqual(["b.com", "a.com"]);
+    expect(result.every((r) => r.vercel === null)).toBe(true);
+  });
+
+  it("reads pages from the path rows, with the bare path on a site's card", () => {
+    const paths = [{ host: "a.com", path: "/p", pageviews: 2 }];
+    const result = siteBreakdowns("pages", rows, paths, projects);
+    const a = result.find((r) => r.key === "a.com")!;
+    expect(a.posthog).toEqual([{ name: "/p", pageviews: 2 }]);
+    expect(a.vercel).toEqual([{ name: "/x", pageviews: 4 }]);
+    expect(result.some((r) => r.key === "b.com")).toBe(false);
+  });
+
+  it("says a provider has no answer rather than an empty one", () => {
+    expect(breakdownTotals("countries", null, null, null, null)).toEqual({ posthog: null, vercel: null });
+    expect(breakdownTotals("countries", [], null, [], null)).toEqual({ posthog: [], vercel: [] });
+  });
+});
 
 describe("siteKey", () => {
   it("treats www and the apex as one site", () => {

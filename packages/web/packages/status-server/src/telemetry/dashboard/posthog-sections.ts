@@ -1,7 +1,6 @@
 import { hogqlRows, toMetricValue, type PosthogEnv } from "../fetchers/posthog";
 import { alignToBuckets, type RangeWindow } from "./ranges";
 import type {
-  AnalyticsEnvironment,
   DimensionsSection,
   PathRow,
   SiteHealthRow,
@@ -17,18 +16,13 @@ import type {
 const QUERY_TIMEOUT_MS = 45_000;
 const TRAFFIC_ROW_LIMIT = 5_000;
 const DIMENSION_ROW_LIMIT = 5_000;
-const PATH_ROW_LIMIT = 500;
+const PATH_ROW_LIMIT = 5_000;
 const SITE_ROW_LIMIT = 200;
 
 const HOST = "properties.$host";
-const NOT_LOCAL = `${HOST} NOT LIKE '%localhost%' AND ${HOST} NOT LIKE '%127.0.0.1%' AND ${HOST} NOT LIKE '%.vercel.app'`;
 
-const ENV_PREDICATE: Record<AnalyticsEnvironment, string> = {
-  production: `${HOST} NOT LIKE 'testing.%' AND ${HOST} NOT LIKE 'staging.%' AND ${NOT_LOCAL}`,
-  staging: `${HOST} LIKE 'staging.%' AND ${NOT_LOCAL}`,
-  testing: `${HOST} LIKE 'testing.%' AND ${NOT_LOCAL}`,
-  all: NOT_LOCAL,
-};
+// Only production sites report analytics; the host filters keep out a stray local or preview hit.
+const PRODUCTION_HOSTS = `${HOST} NOT LIKE 'testing.%' AND ${HOST} NOT LIKE 'staging.%' AND ${HOST} NOT LIKE '%localhost%' AND ${HOST} NOT LIKE '%127.0.0.1%' AND ${HOST} NOT LIKE '%.vercel.app'`;
 
 function since(w: RangeWindow): string {
   const at = w.since.toISOString().slice(0, 19).replace("T", " ");
@@ -76,12 +70,12 @@ export function shapeTraffic(raw: unknown[][], buckets: string[]): TrafficSectio
   };
 }
 
-export async function loadTraffic(env: PosthogEnv, e: AnalyticsEnvironment, w: RangeWindow): Promise<TrafficSection> {
+export async function loadTraffic(env: PosthogEnv, w: RangeWindow): Promise<TrafficSection> {
   const bucket = w.unit === "hour" ? "toStartOfHour(timestamp)" : "toStartOfDay(timestamp)";
   const raw = await rows(
     env,
     `SELECT ${HOST}, ${bucket}, count(), uniq(properties.$session_id) FROM events ` +
-      `WHERE event = '$pageview' AND ${since(w)} AND ${ENV_PREDICATE[e]} GROUP BY 1, 2 ORDER BY 2 LIMIT ${TRAFFIC_ROW_LIMIT}`,
+      `WHERE event = '$pageview' AND ${since(w)} AND ${PRODUCTION_HOSTS} GROUP BY 1, 2 ORDER BY 2 LIMIT ${TRAFFIC_ROW_LIMIT}`,
   );
   return shapeTraffic(raw, w.buckets);
 }
@@ -103,22 +97,22 @@ export function shapeDimensions(raw: unknown[][], limit: number = DIMENSION_ROW_
   };
 }
 
-export async function loadDimensions(env: PosthogEnv, e: AnalyticsEnvironment, w: RangeWindow): Promise<DimensionsSection> {
+export async function loadDimensions(env: PosthogEnv, w: RangeWindow): Promise<DimensionsSection> {
   const raw = await rows(
     env,
     `SELECT ${HOST}, properties.$device_type, properties.$browser, properties.$geoip_country_code, properties.$referring_domain, count() ` +
-      `FROM events WHERE event = '$pageview' AND ${since(w)} AND ${ENV_PREDICATE[e]} GROUP BY 1, 2, 3, 4, 5 ORDER BY 6 DESC LIMIT ${DIMENSION_ROW_LIMIT}`,
+      `FROM events WHERE event = '$pageview' AND ${since(w)} AND ${PRODUCTION_HOSTS} GROUP BY 1, 2, 3, 4, 5 ORDER BY 6 DESC LIMIT ${DIMENSION_ROW_LIMIT}`,
   );
   return shapeDimensions(raw);
 }
 
 // ── paths ──────────────────────────────────────────────────────────────────
 
-export async function loadPaths(env: PosthogEnv, e: AnalyticsEnvironment, w: RangeWindow): Promise<PathRow[]> {
+export async function loadPaths(env: PosthogEnv, w: RangeWindow): Promise<PathRow[]> {
   const raw = await rows(
     env,
     `SELECT ${HOST}, properties.$pathname, count() FROM events ` +
-      `WHERE event = '$pageview' AND ${since(w)} AND ${ENV_PREDICATE[e]} GROUP BY 1, 2 ORDER BY 3 DESC LIMIT ${PATH_ROW_LIMIT}`,
+      `WHERE event = '$pageview' AND ${since(w)} AND ${PRODUCTION_HOSTS} GROUP BY 1, 2 ORDER BY 3 DESC LIMIT ${PATH_ROW_LIMIT}`,
   );
   return raw.map((r) => ({ host: label(r[0], "(unknown)"), path: label(r[1], "/"), pageviews: count(r[2]) }));
 }
@@ -137,12 +131,12 @@ export function shapeVitals(raw: unknown[][]): VitalsRow[] {
   }));
 }
 
-export async function loadVitals(env: PosthogEnv, e: AnalyticsEnvironment, w: RangeWindow): Promise<VitalsRow[]> {
+export async function loadVitals(env: PosthogEnv, w: RangeWindow): Promise<VitalsRow[]> {
   const p75 = (name: string): string => `quantile(0.75)(toFloat(properties.$web_vitals_${name}_value))`;
   const raw = await rows(
     env,
     `SELECT ${HOST}, count(), ${p75("LCP")}, ${p75("INP")}, ${p75("CLS")}, ${p75("FCP")} FROM events ` +
-      `WHERE event = '$web_vitals' AND ${since(w)} AND ${ENV_PREDICATE[e]} GROUP BY 1 ORDER BY 2 DESC LIMIT ${SITE_ROW_LIMIT}`,
+      `WHERE event = '$web_vitals' AND ${since(w)} AND ${PRODUCTION_HOSTS} GROUP BY 1 ORDER BY 2 DESC LIMIT ${SITE_ROW_LIMIT}`,
   );
   return shapeVitals(raw);
 }
@@ -164,7 +158,7 @@ export function shapeHealth(raw: unknown[][]): SiteHealthRow[] {
  * The only per-site error signal there is: GlitchTip's events are pruned, so its issues cannot
  * be attributed to a site. A status of 0 means the request never got a response.
  */
-export async function loadSiteHealth(env: PosthogEnv, e: AnalyticsEnvironment, w: RangeWindow): Promise<SiteHealthRow[]> {
+export async function loadSiteHealth(env: PosthogEnv, w: RangeWindow): Promise<SiteHealthRow[]> {
   const isRequest = "event = 'http_request'";
   const status = "toFloat(properties.status)";
   const raw = await rows(
@@ -172,7 +166,7 @@ export async function loadSiteHealth(env: PosthogEnv, e: AnalyticsEnvironment, w
     `SELECT ${HOST}, countIf(event = 'error_reported'), countIf(${isRequest}), ` +
       `countIf(${isRequest} AND (${status} >= 500 OR ${status} = 0)), ` +
       `quantileIf(0.95)(toFloat(properties.duration_ms), ${isRequest}) FROM events ` +
-      `WHERE event IN ('error_reported', 'http_request') AND ${since(w)} AND ${ENV_PREDICATE[e]} GROUP BY 1 ORDER BY 3 DESC LIMIT ${SITE_ROW_LIMIT}`,
+      `WHERE event IN ('error_reported', 'http_request') AND ${since(w)} AND ${PRODUCTION_HOSTS} GROUP BY 1 ORDER BY 3 DESC LIMIT ${SITE_ROW_LIMIT}`,
   );
   return shapeHealth(raw);
 }

@@ -36,23 +36,19 @@ describe('dashboard routes, with no provider configured', () => {
     expect((await app.request('/errors/dashboard')).status).toBe(401);
   });
 
-  it('refuses a range or env outside the closed lists', async () => {
+  it('refuses a range outside the closed list', async () => {
     const range = await app.request('/analytics/dashboard?range=forever', { headers: viewAuth });
     expect(range.status).toBe(400);
     expect(await parse(range)).toEqual({ error: 'invalid range' });
 
-    const env = await app.request(`/analytics/dashboard?env=${encodeURIComponent("x' OR 1=1")}`, { headers: viewAuth });
-    expect(env.status).toBe(400);
-    expect(await parse(env)).toEqual({ error: 'invalid env' });
   });
 
-  it('defaults to seven days of production, and says nothing is configured', async () => {
+  it('defaults to seven days, and says nothing is configured', async () => {
     const res = await app.request('/analytics/dashboard', { headers: viewAuth });
     expect(res.status).toBe(200);
     expect(res.headers.get('cache-control')).toBe('no-store');
     const body = await parse(res);
     expect(body.range).toBe('7d');
-    expect(body.env).toBe('production');
     expect(body.refreshing).toBe(false);
     expect(body.configured).toEqual({ posthog: false, vercel: false });
     expect(Object.keys(body.sections).sort()).toEqual(['dimensions', 'health', 'paths', 'traffic', 'vercel', 'vitals']);

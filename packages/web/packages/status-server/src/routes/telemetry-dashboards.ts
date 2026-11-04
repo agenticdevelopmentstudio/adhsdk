@@ -12,9 +12,7 @@ import {
 import { ANALYTICS_RANGES, rangeWindow, type AnalyticsRange } from '../telemetry/dashboard/ranges';
 import { emptySections, sectionedDashboard } from '../telemetry/dashboard/sectioned-dashboard';
 import {
-  ANALYTICS_ENVIRONMENTS,
   type AnalyticsDashboardResponse,
-  type AnalyticsEnvironment,
   type AnalyticsSectionData,
   type ErrorsDashboardResponse,
   type ErrorsSectionData,
@@ -52,18 +50,17 @@ export function dashboardRoutes(config: StatusConfig): Hono<{ Variables: { tier:
   const creds = config.credentials;
 
   // Providers refresh independently: a slow PostHog must not hold back GlitchTip or Vercel.
-  const posthog = sectionedDashboard<`${AnalyticsRange}|${AnalyticsEnvironment}`, PosthogSections>({
+  const posthog = sectionedDashboard<AnalyticsRange, PosthogSections>({
     ttlMs: ANALYTICS_TTL_MS,
     sections: POSTHOG_SECTIONS,
-    loaders: (key) => {
-      const [range, env] = key.split('|') as [AnalyticsRange, AnalyticsEnvironment];
+    loaders: (range) => {
       const w = rangeWindow(range, Date.now());
       return {
-        traffic: () => loadTraffic(creds, env, w),
-        dimensions: () => loadDimensions(creds, env, w),
-        paths: () => loadPaths(creds, env, w),
-        vitals: () => loadVitals(creds, env, w),
-        health: () => loadSiteHealth(creds, env, w),
+        traffic: () => loadTraffic(creds, w),
+        dimensions: () => loadDimensions(creds, w),
+        paths: () => loadPaths(creds, w),
+        vitals: () => loadVitals(creds, w),
+        health: () => loadSiteHealth(creds, w),
       };
     },
   });
@@ -83,28 +80,23 @@ export function dashboardRoutes(config: StatusConfig): Hono<{ Variables: { tier:
     ttlMs: ANALYTICS_TTL_MS,
     sections: SITES_SECTIONS,
     loaders: () => ({
-      sites: () => loadSiteHealth(creds, 'production', rangeWindow('30d', Date.now())),
+      sites: () => loadSiteHealth(creds, rangeWindow('30d', Date.now())),
     }),
   });
 
   app.get('/analytics/dashboard', (c) => {
     const range = c.req.query('range') ?? '7d';
-    const env = c.req.query('env') ?? 'production';
     if (!isOneOf(ANALYTICS_RANGES, range)) return c.json({ error: 'invalid range' }, 400);
-    if (!isOneOf(ANALYTICS_ENVIRONMENTS, env)) return c.json({ error: 'invalid env' }, 400);
 
     const posthogOn = posthogConfigured(config);
     const vercelOn = vercelConfigured(config);
-    // Vercel's API is production-only, so asking it about staging would spend quota to mislead.
-    const vercelApplies = vercelOn && env === 'production';
-    const ph = posthogOn ? posthog.read(`${range}|${env}`) : null;
-    const vc = vercelApplies ? vercel.read(range) : null;
+    const ph = posthogOn ? posthog.read(range) : null;
+    const vc = vercelOn ? vercel.read(range) : null;
 
     const body: AnalyticsDashboardResponse = {
       generatedAt: new Date().toISOString(),
       refreshing: Boolean(ph?.refreshing || vc?.refreshing),
       range,
-      env,
       configured: { posthog: posthogOn, vercel: vercelOn },
       sections: {
         ...(ph?.sections ?? emptySections<PosthogSections>(POSTHOG_SECTIONS)),

@@ -1,15 +1,16 @@
 import { noteRateLimited, rateLimitedUntil } from "@adh-sdk/deploy-platform/cooldown";
 import { mapLimit } from "@adh-sdk/deploy-platform/util";
 import { alignToBuckets, type RangeWindow } from "./ranges";
-import type { Marginal, VercelProjectTraffic, VercelTrafficSection } from "./types";
+import type { Marginal, VercelProjectTraffic, VercelRosterEntry, VercelTrafficSection } from "./types";
 
 // Vercel Web Analytics, read through the REST API with the same token the deploy poll uses, so
 // it shares that token's quota and honors the shared 429 cooldown.
 //
 //   https://vercel.com/docs/analytics/web-analytics-api
 //
-// The API is per project and production-only. Counts run for every project with analytics on,
-// and the costlier breakdowns only for projects that had traffic: most have none.
+// The API is per project, and only production projects are read at all. Counts run for every
+// one with analytics on, and the costlier breakdowns only for those that had traffic: most have
+// none.
 
 const API = "https://api.vercel.com";
 const CALL_TIMEOUT_MS = 20_000;
@@ -72,6 +73,18 @@ export function productionDomain(p: ListedProject): string | null {
   return p.targets?.production?.alias?.find((a) => !a.endsWith(".vercel.app")) ?? null;
 }
 
+/**
+ * Every site is three Vercel projects, `x-production`, `x-staging` and `x-testing`, and analytics
+ * only runs on the first. The other two are not sites to report on, so they are dropped before
+ * anything is counted or queried.
+ *
+ * It has to be the end of the name: `testing-production` is the production site of a site about
+ * testing.
+ */
+export function isProductionProject(p: ListedProject): boolean {
+  return !/-(staging|testing)$/i.test(p.name ?? "") && !/^(staging|testing)\./i.test(productionDomain(p) ?? "");
+}
+
 /** The API takes dates for whole days. Hourly needs instants or it can't tell the hours apart. */
 function windowParams(w: RangeWindow): Record<string, string> {
   if (w.unit === "hour") return { since: w.since.toISOString(), until: w.until.toISOString() };
@@ -112,10 +125,10 @@ export async function loadVercelTraffic(env: VercelEnv, w: RangeWindow): Promise
   const cooling = rateLimitedUntil("vercel");
   if (cooling) throw new Error(`Vercel rate limited until ${new Date(cooling).toISOString()}`);
 
-  const listed = await listProjects(env);
-  const enabled = listed.filter((p): p is ListedProject & { id: string; name: string } =>
-    Boolean(p.id && p.name && analyticsEnabled(p)),
+  const listed = (await listProjects(env)).filter(
+    (p): p is ListedProject & { id: string; name: string } => Boolean(p.id && p.name && isProductionProject(p)),
   );
+  const enabled = listed.filter(analyticsEnabled);
 
   let failed = 0;
   const counts = await mapLimit(enabled, CONCURRENCY, async (p) => {
@@ -167,11 +180,26 @@ export async function loadVercelTraffic(env: VercelEnv, w: RangeWindow): Promise
       projects.flatMap(({ seriesRows }) => seriesRows.map((r): [unknown, number] => [r.timestamp, Number(r[field]) || 0])),
     );
 
+  const countOf = new Map(counts.flatMap((c) => (c ? [[c.p.id, c] as const] : [])));
+  const roster = listed
+    .map((p): VercelRosterEntry => {
+      const c = countOf.get(p.id);
+      return {
+        project: p.name,
+        domain: productionDomain(p),
+        analyticsOn: analyticsEnabled(p),
+        pageviews: c?.pageviews ?? null,
+        visitors: c?.visitors ?? null,
+      };
+    })
+    .sort((a, b) => (b.pageviews ?? -1) - (a.pageviews ?? -1) || a.project.localeCompare(b.project));
+
   return {
     buckets: w.buckets,
     projectsTotal: listed.length,
     projectsEnabled: enabled.length,
     failed,
+    roster,
     totals: {
       pageviews: withTraffic.reduce((a, c) => a + c.pageviews, 0),
       visitors: withTraffic.reduce((a, c) => a + c.visitors, 0),
