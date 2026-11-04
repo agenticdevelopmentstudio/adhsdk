@@ -164,4 +164,31 @@ describe('telemetry live snapshot — single-flight + stale fallback', () => {
     // The provider outage is invisible to the band — last good read stands in.
     expect(second.errors.map((e) => e.issueKey)).toEqual(['gt-1']);
   });
+
+  // The stall the Overview was logging: PostHog takes 2–30s, and the snapshot used to wait
+  // for it even though only the error half is urgent.
+  it('a slow PostHog never holds up the errors, once the analytics stream is known', async () => {
+    const metric: AnalyticsMetricDTO = { metric: 'pageviews', window: '7d', scope: 'all', value: 5, capturedAt: 'x' };
+    const errorsFetcher: Fetcher<ErrorDTO> = { fetch: async () => ({ ok: true as const, items: [errItem] }) };
+    let hang = false;
+    const analyticsFetcher: Fetcher<AnalyticsMetricDTO> = {
+      fetch: () =>
+        hang ? new Promise(() => undefined) : Promise.resolve({ ok: true as const, items: [metric] }),
+    };
+    const routes = telemetryRoutes(createLibsqlStorage(db), testConfig(), { errorsFetcher, analyticsFetcher });
+
+    await routes.request('/telemetry?fresh=1');
+    hang = true;
+    vi.useFakeTimers({ toFake: ['Date'], now: Date.now() + 10 * 60_000 });
+    try {
+      const body = (await (await routes.request('/telemetry')).json()) as {
+        errors: unknown[];
+        analytics: AnalyticsMetricDTO[];
+      };
+      expect(body.errors).toHaveLength(1);
+      expect(body.analytics).toEqual([metric]);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
 });

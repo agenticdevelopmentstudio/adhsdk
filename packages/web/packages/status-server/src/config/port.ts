@@ -119,3 +119,6 @@ export function posthogConfigured(config: StatusConfig): boolean {
   return !!(c.POSTHOG_HOST && c.POSTHOG_API_KEY && c.POSTHOG_PROJECT_ID);
 }
 
+export function vercelConfigured(config: StatusConfig): boolean {
+  return !!config.credentials.VERCEL_API_TOKEN;
+}

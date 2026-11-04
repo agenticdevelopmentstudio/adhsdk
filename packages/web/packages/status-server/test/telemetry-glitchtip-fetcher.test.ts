@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, afterEach } from "vitest";
-import { glitchtipFetcher, mapIssues, PAGE_LIMIT } from "../src/telemetry/fetchers/glitchtip";
+import { glitchtipFetcher, mapIssues, MAX_PAGES, PAGE_LIMIT } from "../src/telemetry/fetchers/glitchtip";
 
 // The fetcher's CONTRACT with `errorsStore`, which is the only thing that makes the store's
 // sweep safe. The store reads "absent from this set" as "resolved upstream", so it depends
@@ -23,10 +23,40 @@ function stubFetch(body: unknown, init: { ok?: boolean; status?: number } = {}) 
   const calls: string[] = [];
   vi.stubGlobal("fetch", async (url: string) => {
     calls.push(url);
-    return { ok: init.ok ?? true, status: init.status ?? 200, json: async () => body };
+    return { ok: init.ok ?? true, status: init.status ?? 200, headers: new Headers(), json: async () => body };
   });
   return calls;
 }
+
+/** GlitchTip's Link header, byte for byte: it stringifies a Python set, so the value opens
+ *  with `{'` and the two rels arrive in either order. A strict RFC 8288 parser reads this
+ *  as no links at all. */
+function linkHeader(next: { cursor: string; results: boolean; origin?: string }): string {
+  const origin = next.origin ?? "https://glitchtip.example";
+  const url = `${origin}/api/0/organizations/adh/issues/?cursor=${encodeURIComponent(next.cursor)}&limit=100&query=is%3Aunresolved`;
+  return `{'<${origin}/api/0/x>; rel="previous"; results="false"; cursor="p"', '<${url}>; rel="next"; results="${next.results}"; cursor="${next.cursor}"'}`;
+}
+
+interface StubPage {
+  issues?: unknown;
+  link?: string;
+  status?: number;
+}
+
+/** Stub `fetch` with a sequence of pages, the last repeating. Returns the URLs asked for. */
+function stubPages(pages: StubPage[]) {
+  const calls: string[] = [];
+  vi.stubGlobal("fetch", async (url: string) => {
+    const page = pages[Math.min(calls.length, pages.length - 1)]!;
+    calls.push(url);
+    const status = page.status ?? 200;
+    const headers = new Headers(page.link ? { Link: page.link } : {});
+    return { ok: status < 400, status, headers, json: async () => page.issues ?? [] };
+  });
+  return calls;
+}
+
+const fullPage = (prefix: string) => Array.from({ length: PAGE_LIMIT }, (_, i) => issue(`${prefix}${i}`));
 
 afterEach(() => {
   vi.unstubAllGlobals();
@@ -47,22 +77,22 @@ describe("glitchtipFetcher — is this answer usable", () => {
     expect(r.items.map((i) => i.issueKey)).toEqual(["a", "b"]);
   });
 
-  // A FULL page is presumed truncated. Sweeping on it would resolve every issue past the
-  // page edge and the next poll would reopen them — a project whose issues straddle the
-  // boundary flapping open/closed every cycle, forever.
-  it("reports a FULL page as incomplete", async () => {
+  // A FULL page with no way forward is presumed truncated. Sweeping on it would resolve every
+  // issue past the page edge and the next poll would reopen them — a project whose issues
+  // straddle the boundary flapping open/closed every cycle, forever.
+  it("reports a FULL page with no next link as incomplete", async () => {
     stubFetch(Array.from({ length: PAGE_LIMIT }, (_, i) => issue(`i${i}`)));
     const r = await glitchtipFetcher(ENV).fetch();
     expect(r.ok).toBe(true);
     expect(r.complete).toBe(false);
   });
 
-  it("asks for exactly one page of PAGE_LIMIT unresolved issues", async () => {
+  it("starts at PAGE_LIMIT unresolved issues and stops when there is nothing more", async () => {
     const calls = stubFetch([]);
     await glitchtipFetcher(ENV).fetch();
-    expect(calls[0]).toBe(
+    expect(calls).toEqual([
       `https://glitchtip.example/api/0/organizations/adh/issues/?query=is:unresolved&limit=${PAGE_LIMIT}`,
-    );
+    ]);
   });
 
   // THE one that matters. A 200 whose body is not a list — an error envelope, a
@@ -92,6 +122,88 @@ describe("glitchtipFetcher — is this answer usable", () => {
       throw new Error("ECONNREFUSED");
     });
     expect(await glitchtipFetcher(ENV).fetch()).toMatchObject({ ok: false, items: [] });
+  });
+});
+
+// The fix for the permanently-red panel. Production holds 137 unresolved issues; one page
+// of 100 reported `complete: false` on every poll, so `errorsStore` never swept and the
+// table could only ever grow.
+describe("glitchtipFetcher — walks every page", () => {
+  it("follows the cursor to the end and reports the whole set as complete", async () => {
+    const calls = stubPages([
+      { issues: fullPage("a"), link: linkHeader({ cursor: "c1:0:0", results: true }) },
+      { issues: [issue("last")], link: linkHeader({ cursor: "c2:0:0", results: false }) },
+    ]);
+    const r = await glitchtipFetcher(ENV).fetch();
+    expect(r.ok).toBe(true);
+    expect(r.complete).toBe(true);
+    expect(r.items).toHaveLength(PAGE_LIMIT + 1);
+    expect(calls).toHaveLength(2);
+    expect(calls[1]).toContain("cursor=c1%3A0%3A0");
+  });
+
+  it("trusts an explicit results=false on a page that happens to be exactly full", async () => {
+    stubPages([{ issues: fullPage("a"), link: linkHeader({ cursor: "c1", results: false }) }]);
+    const r = await glitchtipFetcher(ENV).fetch();
+    expect(r.complete).toBe(true);
+  });
+
+  // The token goes on every page request, so the next URL is REBUILT from our own base. A
+  // header is provider data; a proxy or a misconfigured GlitchTip must not be able to name
+  // where the bearer token is sent.
+  it("never sends a request to an origin named by the Link header", async () => {
+    const calls = stubPages([
+      { issues: fullPage("a"), link: linkHeader({ cursor: "c1", results: true, origin: "https://evil.example" }) },
+      { issues: [] },
+    ]);
+    await glitchtipFetcher(ENV).fetch();
+    expect(calls).toHaveLength(2);
+    expect(calls.every((u) => u.startsWith("https://glitchtip.example/"))).toBe(true);
+  });
+
+  it("is ok but INCOMPLETE when a cursor repeats, rather than looping", async () => {
+    const calls = stubPages([{ issues: fullPage("a"), link: linkHeader({ cursor: "same", results: true }) }]);
+    const r = await glitchtipFetcher(ENV).fetch();
+    expect(r).toMatchObject({ ok: true, complete: false });
+    expect(calls).toHaveLength(2);
+  });
+
+  it("is ok but INCOMPLETE past the page cap", async () => {
+    let n = 0;
+    const calls: string[] = [];
+    vi.stubGlobal("fetch", async (url: string) => {
+      calls.push(url);
+      n += 1;
+      const page = n;
+      return {
+        ok: true,
+        status: 200,
+        headers: new Headers({ Link: linkHeader({ cursor: `c${page}`, results: true }) }),
+        json: async () => fullPage(`p${page}-`),
+      };
+    });
+    const r = await glitchtipFetcher(ENV).fetch();
+    expect(r).toMatchObject({ ok: true, complete: false });
+    expect(calls).toHaveLength(MAX_PAGES);
+  });
+
+  // A partial walk reported as ok+complete would sweep every issue on the unread pages.
+  it("fails the whole poll when a later page fails", async () => {
+    vi.spyOn(console, "warn").mockImplementation(() => {});
+    stubPages([
+      { issues: fullPage("a"), link: linkHeader({ cursor: "c1", results: true }) },
+      { status: 502 },
+    ]);
+    expect(await glitchtipFetcher(ENV).fetch()).toMatchObject({ ok: false, items: [] });
+  });
+
+  it("drops an issue a shifting cursor served twice", async () => {
+    stubPages([
+      { issues: fullPage("a"), link: linkHeader({ cursor: "c1", results: true }) },
+      { issues: [issue("a0"), issue("z")] },
+    ]);
+    const r = await glitchtipFetcher(ENV).fetch();
+    expect(r.items).toHaveLength(PAGE_LIMIT + 1);
   });
 });
 
