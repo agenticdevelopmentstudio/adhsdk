@@ -441,6 +441,9 @@ export function DataTable<T>({
   //
   // In auto-size mode a trailing `minmax(0,1fr)` FILLER track (one more track than there are cells)
   // soaks up any leftover width, so content-sized columns pack to the left instead of stretching.
+  // A column that declares its own `fr` track has already claimed that width, so the filler stands
+  // down: beside it, the filler would take an equal share and leave it as dead space at the right
+  // while that column's content truncates.
   const trackOf = (c: DataTableColumn<T>): string => {
     const dragged = widths[c.key]
     if (dragged != null) return `${dragged}px`
@@ -449,8 +452,9 @@ export function DataTable<T>({
     const measured = autoWidths?.[c.key]
     return measured != null ? `${measured}px` : "max-content"
   }
-  const template =
-    renderedColumns.map(trackOf).join(" ") + (autoSizeColumns ? " minmax(0,1fr)" : "")
+  const tracks = renderedColumns.map(trackOf)
+  const needsFiller = autoSizeColumns && !tracks.some((t) => /\dfr\b/.test(t))
+  const template = tracks.join(" ") + (needsFiller ? " minmax(0,1fr)" : "")
 
   // Drag the trailing border of a header cell: the new width is the pointer's distance from that
   // cell's left edge. Double-click clears the override, returning the column to its content size.

@@ -115,7 +115,7 @@ const SITE_COLUMNS: DataTableColumn<JoinedSite>[] = [
     key: "site",
     header: "Site",
     sortable: true,
-    width: "minmax(11rem, 1fr)",
+    width: "minmax(16rem, 1fr)",
     render: (row) => <span title={row.key}>{row.key}</span>,
   },
   {
@@ -172,7 +172,7 @@ function VitalCell({ vital, value }: { vital: Vital; value: number | null }): Re
 }
 
 const VITALS_COLUMNS: DataTableColumn<VitalsRow>[] = [
-  { key: "host", header: "Site", width: "minmax(11rem, 1fr)", render: (row) => siteKey(row.host) },
+  { key: "host", header: "Site", width: "minmax(16rem, 1fr)", render: (row) => siteKey(row.host) },
   { key: "samples", header: "Samples", align: "end", render: (row) => formatCount(row.samples) },
   { key: "lcp", header: "LCP", align: "end", render: (row) => <VitalCell vital="lcp" value={row.lcp} /> },
   { key: "inp", header: "INP", align: "end", render: (row) => <VitalCell vital="inp" value={row.inp} /> },

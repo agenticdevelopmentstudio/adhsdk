@@ -53,6 +53,17 @@ html:root[data-color-mode]:not(.dark)[data-contrast='extra-high'],
 html:root[data-color-mode]:not(.dark):not([data-contrast='high']):not([data-contrast='extra-high']) {
   color-scheme: dark;
 
+  /* Categorical hues, tailwind.css's dark values. color-mode-light.css sets these too, in its
+     light selector, so a palette that stays dark on a light-mode device has to name them or the
+     chart and tag colours alone flip to the shades tuned for a cream surface. */
+  --color-apt-cat-blue: #2f80ff;
+  --color-apt-cat-violet: #a855f7;
+  --color-apt-cat-pink: #ff4d9e;
+  --color-apt-cat-teal: #5fb3c4;
+  --color-apt-cat-indigo: #6366f1;
+  --color-apt-cat-orange: #f6821f;
+  --color-apt-cat-purple: #d63ad0;
+
   /* M3 surfaces + text + outline */
   --color-surface: #0c0c0f;
   --color-surface-dim: #0a0a0d;

@@ -90,7 +90,7 @@ function age(iso: string | null, now: number): string {
 }
 
 const SITE_COLUMNS: DataTableColumn<SiteHealthRow>[] = [
-  { key: "host", header: "Site", width: "minmax(11rem, 1fr)", render: (row) => siteKey(row.host) },
+  { key: "host", header: "Site", width: "minmax(16rem, 1fr)", render: (row) => siteKey(row.host) },
   { key: "errors", header: "Errors reported", align: "end", render: (row) => formatCount(row.errors) },
   { key: "requests", header: "Requests", align: "end", render: (row) => formatCount(row.requests) },
   {
@@ -193,7 +193,7 @@ export function ErrorsView(): ReactElement {
             source="24h"
             value={summary ? formatCount(summary.active) : null}
             alert={(summary?.active ?? 0) > 0}
-            hint="Errors and fatals seen today"
+            hint="Errors and fatals"
           />
           <FigureTile label="Backlog" value={summary ? formatCount(summary.backlog) : null} hint="Unresolved, gone quiet" />
           <FigureTile label="Events" value={summary ? formatCount(summary.events) : null} hint="Across unresolved issues" />
