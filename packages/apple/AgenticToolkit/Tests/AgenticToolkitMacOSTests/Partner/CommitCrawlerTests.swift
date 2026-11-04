@@ -64,6 +64,23 @@ final class CommitCrawlerTests: XCTestCase {
         XCTAssertEqual(found.map(\.sha), [shas[2]])
     }
 
+    /// A fix commit merged onto the default branch is never queued: it is the partner's own, by its trailer.
+    func testCrawlLeavesThePartnersFixCommitsAlone() async throws {
+        let repo = try PartnerGitFixture()
+        let reviewed = try repo.commit(file: "a.txt", day: 1, message: "reviewed")
+        try repo.commit(file: "b.txt", day: 2, message: "fix the finding\n\nReviewed-Commit: \(reviewed)")
+        let found = try await CommitCrawler(git: repo.review)
+            .commits(in: repo.directory, branch: "main", since: .distantPast)
+        XCTAssertEqual(found.map(\.reviewedCommits), [[], [reviewed]])
+        XCTAssertEqual(found.map(\.subject), ["reviewed", "fix the finding"])
+
+        let inserted = try await CommitCrawler(git: repo.review).crawl(
+            repos: [(id: "r1", path: repo.directory.path, name: "repo")], branches: { _ in ["main"] },
+            since: .distantPast, store: store)
+        XCTAssertEqual(inserted, 1)
+        XCTAssertEqual(try store.reviews(state: .queued).map(\.sha), [reviewed])
+    }
+
     /// A contributor's commit is never queued: its review would run an unprompted agent over their text.
     func testCrawlQueuesOnlyTheOwnersCommits() async throws {
         let repo = try PartnerGitFixture()

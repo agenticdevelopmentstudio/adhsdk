@@ -311,7 +311,9 @@ public final class ReviewService {
     }
 
     /// Whether `branch` is one of the partner's own fix branches for `base`, which the crawler leaves alone:
-    /// reviewing them would review the reviews' fixes, and again under a new sha after every rebase.
+    /// reviewing them would review the reviews' fixes, and again under a new sha after every rebase. Fix
+    /// commits merged onto another branch are left alone by their `Reviewed-Commit:` trailer instead
+    /// (``CommitCrawler/crawl(repos:branches:since:store:)``).
     nonisolated static func isFixBranch(_ branch: String, base: String) -> Bool {
         branch == base || branch.hasPrefix(base + "-")
     }

@@ -8,15 +8,19 @@ public struct CrawledCommit: Sendable, Equatable {
     public var author: String
     public var authorEmail: String
     public var committedAt: Date
+    /// The values of the commit's `Reviewed-Commit:` trailers: the shas a review's fix commit answers. Not
+    /// empty marks one of the partner's own fixes, wherever it has since been merged.
+    public var reviewedCommits: [String]
 
     public init(sha: String, parent: String, subject: String, author: String, authorEmail: String = "",
-                committedAt: Date) {
+                committedAt: Date, reviewedCommits: [String] = []) {
         self.sha = sha
         self.parent = parent
         self.subject = subject
         self.author = author
         self.authorEmail = authorEmail
         self.committedAt = committedAt
+        self.reviewedCommits = reviewedCommits
     }
 }
 
@@ -34,6 +38,9 @@ public enum CommitCrawlerError: LocalizedError, Equatable {
 
 /// Finds recent commits per repo and queues a review for each one not yet seen.
 public struct CommitCrawler: Sendable {
+    /// The trailer the review job's fix step writes on every fix commit (``PartnerJobDefaults``).
+    public static let reviewedCommitTrailer = "Reviewed-Commit"
+
     private let git: ReviewGit
 
     /// `PartnerStore` is a `@unchecked Sendable` class with its own lock, not main-actor, so `crawl` runs
@@ -44,21 +51,26 @@ public struct CommitCrawler: Sendable {
 
     /// Non-merge commits on `branch` since `since`, oldest first. A root commit's parent is git's empty tree.
     /// The branch is named as `refs/heads/<branch>` before `--`, so neither a top-level path nor a tag of the
-    /// same name can stand in for it.
+    /// same name can stand in for it. Each commit's `Reviewed-Commit:` trailer values come back with it.
     public func commits(in repo: URL, branch: String, since: Date) async throws -> [CrawledCommit] {
         var arguments = ["log", "--no-merges"]
         if since.timeIntervalSince1970 > 0 {
             arguments.append("--since=\(ISO8601DateFormatter().string(from: since))")
         }
-        arguments += ["--format=%H%x1f%P%x1f%s%x1f%an%x1f%cI%x1f%ae", "refs/heads/\(branch)", "--"]
+        arguments += ["--format=%H%x1f%P%x1f%s%x1f%an%x1f%cI%x1f%ae%x1f"
+                        + "%(trailers:key=\(Self.reviewedCommitTrailer),valueonly,separator=%x20)%x1e",
+                      "refs/heads/\(branch)", "--"]
         let formatter = ISO8601DateFormatter()
         let output = try await git.run(arguments, in: repo)
-        let found: [CrawledCommit] = output.split(separator: "\n").compactMap { line in
+        // Records end in RS, not newline: a trailer value may run onto a continuation line.
+        let found: [CrawledCommit] = output.split(separator: "\u{1e}").compactMap { record in
+            let line = record.trimmingCharacters(in: .newlines)
             let fields = line.split(separator: "\u{1f}", omittingEmptySubsequences: false).map(String.init)
-            guard fields.count == 6, let date = formatter.date(from: fields[4]) else { return nil }
+            guard fields.count == 7, let date = formatter.date(from: fields[4]) else { return nil }
             let parent = fields[1].split(separator: " ").first.map(String.init) ?? ReviewGit.emptyTree
             return CrawledCommit(sha: fields[0], parent: parent, subject: fields[2], author: fields[3],
-                                 authorEmail: fields[5], committedAt: date)
+                                 authorEmail: fields[5], committedAt: date,
+                                 reviewedCommits: fields[6].split(whereSeparator: \.isWhitespace).map(String.init))
         }
         return found.reversed()
     }
@@ -69,6 +81,9 @@ public struct CommitCrawler: Sendable {
     /// Only the owner's commits: a review runs Claude Code with permissions bypassed over the commit's diff, so
     /// a contributor's commit pulled onto a crawled branch would be text from someone else steering an agent
     /// with the owner's privileges. A repo with no `user.email` throws rather than reviewing everything.
+    ///
+    /// Never the partner's own fixes (a ``reviewedCommitTrailer`` trailer), on any branch: merged into a crawled
+    /// branch they would be reviewed again, and their reviews' fixes after them.
     public func crawl(repos: [(id: String, path: String, name: String)], branches: (URL) async throws -> [String],
                       since: Date, store: PartnerStore) async throws -> Int {
         var inserted = 0
@@ -78,6 +93,7 @@ public struct CommitCrawler: Sendable {
             for branch in try await branches(url) {
                 for commit in try await commits(in: url, branch: branch, since: since)
                 where try commit.authorEmail.caseInsensitiveCompare(owner) == .orderedSame
+                    && commit.reviewedCommits.isEmpty
                     && !store.reviewExists(repoID: repo.id, sha: commit.sha) {
                     // OR IGNORE: another crawl (a second Debug copy) may have queued it since the check.
                     let isNew = try store.insertReviewIfNew(PartnerReview(
