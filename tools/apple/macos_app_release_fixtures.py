@@ -163,7 +163,7 @@ STENOGRAPHER: dict[str, Any] = {
         "health": ["python3", "scripts/install_health.py", "--release"],
     },
     "warnings_allowlist": "scripts/build_warnings_allowlist.json",
-    "toolkit": "external/agenticdevelopertoolkit",
+    "toolkit": "external/adhsdk",
     "env_file": "~/.local-env/stenographer.env",
 }
 

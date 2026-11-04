@@ -412,7 +412,7 @@ def parse_config(data: dict, *, repo: Path, main_checkout: Path,
         hook_health=_argv_or_none(hooks.get("health")),
         warnings_allowlist=path(data["warnings_allowlist"]),
         toolkit=(path(data["toolkit"]) if data.get("toolkit")
-                 else repo / "external/agenticdevelopertoolkit"),
+                 else repo / "external/adhsdk"),
         env_file=path(data["env_file"]) if data.get("env_file") else None,
     )
 

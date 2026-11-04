@@ -53,7 +53,7 @@ commits survive.
   under `packages/web/`. Both repos already use the same per-platform layout
   (`packages/{web,apple,android,windows}`, `websites/`, `docs/`).
 - **ATK depends on ADT at exactly the commit `origin/main` points to**
-  (`86fb39a7`). ATK reaches ADT through its `external/agenticdevelopertoolkit`
+  (`86fb39a7`). ATK reaches ADT through its `external/adhsdk`
   submodule using `link:../../../../external/…` dependencies (about 60 of
   them), `vitest.adt.ts`, `install.sh` and CI. On the Apple side,
   `AgenticToolkit/project.yml` climbs out to the superproject's ADT checkout.
@@ -122,7 +122,7 @@ in-flight ATK work still land).
    - The seven `packages/web/` root files are resolved in Phase 2. For the
      merge commit, take ADT's versions and keep ATK's as `*.atk` scratch, so
      the commit is a pure history join.
-4. Remove the `external/agenticdevelopertoolkit` submodule (`git rm`, then
+4. Remove the `external/adhsdk` submodule (`git rm`, then
    `.gitmodules` is deleted). The repo can no longer contain itself.
 5. Commit the merge and push the branch.
 
@@ -143,7 +143,7 @@ Each step below is its own commit on this branch.
      resolution.
    - Regenerate `pnpm-lock.yaml`.
 2. **Repoint every ADT dependency.** A one-off Python script rewrites every
-   `link:…/external/agenticdevelopertoolkit/packages/web/packages/<x>` to
+   `link:…/external/adhsdk/packages/web/packages/<x>` to
    `workspace:*`. That includes bitbag's peer and dev pairs. The script also
    deletes the `//devDependencies` prose that explains the `link:`. It ran
    once, in the workspace-unification commit, and is not kept: nothing in
@@ -200,9 +200,9 @@ The layout inside ATK did not move, so for every consumer the change is a
 mechanical prefix swap:
 
 - `…/external/agentictoolkit/<path>` becomes
-  `…/external/agenticdevelopertoolkit/<path>`.
+  `…/external/adhsdk/<path>`.
 - `…/external/agentictoolkit/external/agenticdevelopertoolkit/<path>` also
-  becomes `…/external/agenticdevelopertoolkit/<path>`.
+  becomes `…/external/adhsdk/<path>`.
 - The `agentictoolkit` submodule is removed, ADT is bumped to the merged
   `main`, and old `agenticdevelopmentstudio/…` URLs are corrected.
 

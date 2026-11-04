@@ -349,7 +349,7 @@ def test_releases_repo_must_be_pushed_except_when_resuming_a_failed_push(tmp_pat
 
 # submodule_drift / build_env / step_build -----------------------------------------
 
-DRIFT = ("+0123456789abcdef external/agenticdevelopertoolkit (heads/feature)\n"
+DRIFT = ("+0123456789abcdef external/adhsdk (heads/feature)\n"
          "-fedcba9876543210 external/agenticdaemon\n"
          " 1111111111111111 external/insync (heads/main)\n")
 
@@ -358,7 +358,7 @@ def test_submodule_drift_names_each_drifted_submodule_and_its_fix(tmp_path):
     r = release(tmp_path, FakeRunner([(lambda a: "submodule" in a, 0, DRIFT)]))
     drift = bp.submodule_drift(r)
     assert len(drift) == 2
-    assert "external/agenticdevelopertoolkit is at 0123456789ab" in drift[0]
+    assert "external/adhsdk is at 0123456789ab" in drift[0]
     assert "external/agenticdaemon is not checked out" in drift[1]
     assert "git submodule update --init --recursive" in drift[1]
 
@@ -375,7 +375,7 @@ def test_build_refuses_drifted_submodules_and_never_runs_the_hook(tmp_path, flav
     r = release(tmp_path, run, flavor=flavor)
     with pytest.raises(RuntimeError) as exc:
         bp.step_build(r)
-    assert "external/agenticdevelopertoolkit is at 0123456789ab" in str(exc.value)
+    assert "external/adhsdk is at 0123456789ab" in str(exc.value)
     assert "insync" not in str(exc.value)
     assert not run.find("/usr/bin/env")
 

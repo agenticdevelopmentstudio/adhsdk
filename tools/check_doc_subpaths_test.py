@@ -85,7 +85,7 @@ def test_filesystem_path_in_a_command_is_not_a_specifier() -> None:
         _make_package(
             root, "widget", "@agenticdevelopertoolkit/widget",
             {".": "./dist/index.js"},
-            '"buildCommand": "python3 ../external/agenticdevelopertoolkit/packages/web/packages/widget/tools/b.py"\n',
+            '"buildCommand": "python3 ../external/adhsdk/packages/web/packages/widget/tools/b.py"\n',
         )
         result = run(root)
         assert result.returncode == 0, result.stderr

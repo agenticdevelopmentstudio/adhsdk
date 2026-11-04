@@ -164,7 +164,7 @@ class AssembleTest(unittest.TestCase):
         self.assertEqual(pkg["scripts"]["dev"], "next dev -p 5210")
         self.assertEqual(
             pkg["dependencies"]["@agenticdevelopertoolkit/site-template"],
-            "link:../external/agenticdevelopertoolkit/packages/web/packages/site-template",
+            "link:../external/adhsdk/packages/web/packages/site-template",
         )
         config = (self.app / "src/site/config.ts").read_text()
         self.assertIn("frameSiteUrl(5210)", config)
@@ -504,7 +504,7 @@ class AssembleTest(unittest.TestCase):
         self.assertEqual(pkg["dependencies"]["zod"], "^3.0.0")
         self.assertEqual(
             pkg["dependencies"]["@agenticdevelopertoolkit/releases"],
-            "link:../external/agenticdevelopertoolkit/packages/web/packages/releases",
+            "link:../external/adhsdk/packages/web/packages/releases",
         )
         self.assert_ok(run(self.site, "--check"))
 

@@ -62,7 +62,7 @@ class ToolkitPackages(unittest.TestCase):
 
     def test_a_link_into_another_toolkit_checkout_is_refused(self):
         with tempfile.TemporaryDirectory() as tmp:
-            other = Path(tmp) / "external" / "agenticdevelopertoolkit" / "packages" / "web" / "packages" / "landing"
+            other = Path(tmp) / "external" / "adhsdk" / "packages" / "web" / "packages" / "landing"
             other.mkdir(parents=True)
             site = site_with(Path(tmp), {"@agenticdevelopertoolkit/landing": f"link:{other}"})
             with self.assertRaises(SystemExit) as raised:

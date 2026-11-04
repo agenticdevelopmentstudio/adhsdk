@@ -106,7 +106,7 @@ def test_status_json_adkitchen(tmp_path, capsys):
     assert s["latest_published"] == {"version": "1.0.153", "publishedAt": "2026-10-01T12:00:00Z"}
     assert s["hooks"] == {"tests": True, "warnings_build": True, "health": False}
     assert s["artifacts_default"] == str(w.repo / "build/release")
-    assert s["toolkit"] == str(w.repo / "external/agenticdevelopertoolkit")
+    assert s["toolkit"] == str(w.repo / "external/adhsdk")
     assert w.runner.find("gh", "release", "view")[0][3:5] == ["--repo", "agenticdevelopmentstudio/adkitchen-releases"]
 
 

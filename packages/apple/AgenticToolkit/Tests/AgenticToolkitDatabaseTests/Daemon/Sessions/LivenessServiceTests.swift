@@ -272,7 +272,7 @@ final class LivenessServiceTests: XCTestCase {
         // rule gave the old session the slot and ended the live one — which its next
         // hook resurrected, over and over.
         let root = try makeProjectDir()
-        let submodule = try makeSubdir(of: root, named: "external/agenticdevelopertoolkit")
+        let submodule = try makeSubdir(of: root, named: "external/adhsdk")
         let now = Date()
         try seedSession("superseded", cwd: root, at: now.addingTimeInterval(-86_400))
         try seedSession("current", cwd: submodule, at: now)

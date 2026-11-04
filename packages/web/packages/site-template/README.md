@@ -414,7 +414,7 @@ Every templated site runs ONE build entry, `tools/build-site.py`, from its own s
 `site/app-root/vercel.json` (Root Directory = the site's output) reads:
 
 ```
-"buildCommand": "python3 ../external/agenticdevelopertoolkit/packages/web/packages/site-template/tools/build-site.py"
+"buildCommand": "python3 ../external/adhsdk/packages/web/packages/site-template/tools/build-site.py"
 ```
 
 It installs and builds the toolkit packages the site's `package.json` `link:`s (each with its

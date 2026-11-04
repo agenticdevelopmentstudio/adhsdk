@@ -52,7 +52,7 @@ THEMES = PACKAGE / "themes.json"
 MANIFEST = ".site-template.json"
 
 # Where a site repo mounts the toolkit. `link:` dependencies point here, relative to the app dir.
-SITE_TOOLKIT = Path("websites/external/agenticdevelopertoolkit/packages/web/packages")
+SITE_TOOLKIT = Path("websites/external/adhsdk/packages/web/packages")
 
 # The landing kit's sheets the frame needs, in the order the kit's own consumers load them, then
 # the template's: the bridge (theme tokens -> `--lp-*`) before the frame, which owns the rest.

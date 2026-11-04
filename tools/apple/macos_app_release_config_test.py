@@ -31,7 +31,7 @@ def test_minimal_config_resolves_every_default(tmp_path):
     assert cfg.notes_path("1.2.0") == repo / "docs" / "release-notes" / "1.2.0.md"
     assert cfg.pkg_must_close == (cfg.bundle_id,)
     assert cfg.apps_dir == Path("/Applications")
-    assert cfg.toolkit == repo / "external/agenticdevelopertoolkit"
+    assert cfg.toolkit == repo / "external/adhsdk"
     assert cfg.site_origin == "https://kitchen.agenticdevelopmentstudio.com"
     assert cfg.download_prefix == "https://github.com/agenticdevelopmentstudio/adkitchen-releases/releases/download"
     assert cfg.cask_file == "Casks/adkitchen.rb"

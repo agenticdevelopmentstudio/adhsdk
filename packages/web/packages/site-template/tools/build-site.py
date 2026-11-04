@@ -3,7 +3,7 @@
 
 A templated site links its toolkit packages (`site-template`, `landing`, `themes`, and whatever
 its `site.json` `toolkitPackages` names) with `link:` dependencies into its
-`websites/external/agenticdevelopertoolkit` submodule. That toolkit is its OWN pnpm workspace
+`websites/external/adhsdk` submodule. That toolkit is its OWN pnpm workspace
 (pnpm workspaces cannot nest), so two things follow, and this script exists for both:
 
   1. Every one of those packages resolves through `main`/`exports` that point at `dist/` for a
@@ -25,7 +25,7 @@ template is the tier every one of them already builds on, and it is run from the
 checkout the site's install step has already fetched:
 
     Root Directory = websites/main (or websites/app)
-    buildCommand   = python3 ../external/agenticdevelopertoolkit/packages/web/packages/site-template/tools/build-site.py
+    buildCommand   = python3 ../external/adhsdk/packages/web/packages/site-template/tools/build-site.py
 
 `--toolkits-only` stops after the toolkit dists, which is what a dev server wants: its imports
 resolve through the same `link:` symlinks, so the dists must exist before `next dev` too, but a
@@ -72,7 +72,7 @@ def toolkit_packages(package_json: Path, toolkit: Path = TOOLKIT) -> list[str]:
         target = (package_json.parent / spec[len("link:"):]).resolve()
         if target == root or root in target.parents:
             names.append(name)
-        elif "agenticdevelopertoolkit" in target.parts:
+        elif "adhsdk" in target.parts:
             sys.exit(
                 f"{package_json} links {name} into {target}, which is not the toolkit this "
                 f"script belongs to ({root}). Run the build-site.py inside the site's own "

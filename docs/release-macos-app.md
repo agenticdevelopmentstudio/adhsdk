@@ -5,7 +5,7 @@ commands; the toolkit holds everything else. Design:
 [`specs/2026-10-16-release-macos-app-design.md`](specs/2026-10-16-release-macos-app-design.md).
 
 ```
-python3 external/agenticdevelopertoolkit/tools/apple/release_macos_app.py [--repo PATH] <command>
+python3 external/adhsdk/tools/apple/release_macos_app.py [--repo PATH] <command>
 ```
 
 The `/release [--tests]` skill (mydevsetup) drives this CLI, start to finish. It prepares
@@ -114,7 +114,7 @@ Required keys are marked **req**.
 | `hooks.warnings_build` | argv | **req** | A clean Release build into `$RELEASE_WARNINGS_DERIVED_DATA`. |
 | `hooks.health` | argv | none | Checks the installed app beyond the generic checks. |
 | `warnings_allowlist` | path | **req** | The accepted-warnings file (see below). |
-| `toolkit` | path | `external/agenticdevelopertoolkit` | Where the app pins this toolkit; reported by `status`. |
+| `toolkit` | path | `external/adhsdk` | Where the app pins this toolkit; reported by `status`. |
 | `env_file` | path | none | `KEY=value` lines (optional `export`, quotes and `#` comments) that fill in every variable the environment does not set -- the `signing.profiles` paths, typically. A missing file sets nothing; a profile it should have named is then reported with the file in the fix. |
 
 ### Hooks
