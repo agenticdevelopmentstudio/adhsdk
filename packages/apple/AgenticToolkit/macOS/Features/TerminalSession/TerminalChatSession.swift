@@ -86,7 +86,8 @@ public final class TerminalChatSession {
     /// what the terminal shows rather than on nothing.
     public func connect(to terminal: TerminalSession?) {
         guard terminal !== self.terminal || terminal == nil else { return }
-        inputGeneration += 1
+        // A new terminal drops input still queued for the old one; closing (nil) lets it finish there.
+        if terminal != nil { inputGeneration += 1 }
         outputSubscription = nil
         exitSubscription = nil
         cancelReportTimers()
@@ -390,12 +391,14 @@ extension TerminalChatSession: @preconcurrency ChatSession {
         let typed = text.replacingOccurrences(of: "\n", with: "\r")
         let previous = pendingInput
         let generation = inputGeneration
+        let target = terminal
         pendingInput = Task { [weak self, returnDelay] in
             await previous?.value
-            // Re-read each time: an interrupt or a new connection in between drops the rest.
+            // Re-checked each time: an interrupt or a new connection in between drops the rest. The
+            // terminal is the one the message was sent to, so a close in between still lets it finish.
             @MainActor func current() -> TerminalSession? {
-                guard let self, self.inputGeneration == generation else { return nil }
-                return self.terminal
+                guard self == nil || self?.inputGeneration == generation else { return nil }
+                return target
             }
             guard let terminal = current() else { return }
             if !typed.isEmpty {

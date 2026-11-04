@@ -616,6 +616,8 @@ final class ReviewServiceTests: XCTestCase {
         try repo.commit(file: "a.txt", day: 1, message: "first")
         let review = try queue(file: "b.txt", day: 2, message: "second")
         let other = try queue(file: "c.txt", day: 3, message: "third", repoID: "other")
+        // Both "repos" are one git directory, and one branch can be checked out in only one worktree.
+        try store.setReviewSetting(repoID: "other", key: "fix_branch", value: "other/fixes")
         _ = try await service.start(id: review.id)
         let session = try XCTUnwrap(registry.sessions.first)
         detector.onExit?(session.id)

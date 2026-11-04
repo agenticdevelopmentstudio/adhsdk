@@ -133,9 +133,7 @@ public struct ReviewGit: Sendable {
     /// Whether `worktree` is in the middle of a rebase (git's `rebase-merge` or `rebase-apply` exists).
     public func isRebasing(worktree: URL) async throws -> Bool {
         for state in ["rebase-merge", "rebase-apply"] {
-            let path = try await run(["rev-parse", "--git-path", state], in: worktree)
-                .trimmingCharacters(in: .whitespacesAndNewlines)
-            let url = path.hasPrefix("/") ? URL(fileURLWithPath: path) : worktree.appendingPathComponent(path)
+            let url = try await client.gitPath(state, in: worktree)
             if FileManager.default.fileExists(atPath: url.path) { return true }
         }
         return false

@@ -37,6 +37,9 @@ final class PartnerCodeReviewJobSettingsTests: XCTestCase {
     private func makePaths() -> PartnerPaths { PartnerPaths(home: directory, token: "kitchen-test") }
 
     private func makeTab() -> PartnerCodeReviewJobSettingsViewController {
+        // The settings panel seeds the built-in job (through `PartnerController.jobs()`) before it builds
+        // this model; a bare store has no job for the tab to show.
+        try? store.upsert(PartnerJobDefaults.codeReviews())
         let model = PartnerJobsEditorModel(store: store, guidelines: PartnerGuidelinesInstaller(paths: makePaths()))
         let tab = PartnerCodeReviewJobSettingsViewController(model: model, store: store, projects: {
             [.init(id: "a", name: "Alpha", path: "/r/alpha"), .init(id: "b", name: "Beta", path: "/r/beta"),

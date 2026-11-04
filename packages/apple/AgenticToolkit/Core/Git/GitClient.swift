@@ -134,6 +134,24 @@ public actor GitClient {
         }
     }
 
+    /// Where git keeps `name` inside the repository's git directory (`rebase-merge`, `MERGE_HEAD`, …),
+    /// resolved to an absolute URL. The file need not exist: the answer is where it would be.
+    public func gitPath(
+        _ name: String,
+        in directory: URL,
+        caller: GitCaller = GitCaller()
+    ) async throws -> URL {
+        let output = try await execute(
+            verb: "rev-parse",
+            arguments: ["--git-path", name],
+            directory: directory,
+            caller: caller,
+            configuration: await configurationProvider()
+        )
+        let path = output.trimmingCharacters(in: .whitespacesAndNewlines)
+        return path.hasPrefix("/") ? URL(fileURLWithPath: path) : directory.appendingPathComponent(path)
+    }
+
     // MARK: - Verbs no typed method models
 
     /// Runs `git <verb> <arguments>` in `directory` and returns its standard output.
