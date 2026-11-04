@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import {
   Settings, Table2, Users, KeyRound, Network, Boxes, Plus, Inbox, Send, Database,
-  MailPlus,
+  MailPlus, User, Building2,
 } from "lucide-react";
 import { Button } from "@adh-sdk/ui/components/button";
 import { Checkbox } from "@adh-sdk/ui/components/checkbox";
@@ -27,6 +27,7 @@ import { useResourceList, makeEntityDeleteHandler, writeLastId } from "@adh-sdk/
 import {
   ecosystemsApi,
   featureRowLabel,
+  isHubDataEcosystem,
   useFeatureCatalog,
   useProvisionedFeatures,
   useWorkspaceDefaultEcosystemId,
@@ -76,6 +77,11 @@ export interface EcosystemsTopicConfig {
    *  Child Ecosystems, a feature site's own rows) — it is always drawn. When NO row sets this, the
    *  list is not a features list: it gets no "Features" heading and no Manage features button. */
   features?: readonly string[];
+  /** The ecosystem types this row is drawn for (`personal`, `organization`, …). A row with `types`
+   *  is drawn only for an ecosystem whose `type` is in it — and not at all while the type is
+   *  unknown (an older backend sends none), so the hub-data rows (Notes, Documents, …) never show
+   *  on a product or a container. Omit for a row every type draws. */
+  types?: readonly string[];
 }
 
 /** What `renderTopicPane` needs to reconstruct a host-owned config pane's exact call
@@ -471,6 +477,30 @@ export function EcosystemsFeature({
   // the feature is scoped to stays OUT of its own child list.
   const scopedItems =
     scopedMissing && scopedEco ? [...(ecosystems ?? []), scopedEco] : ecosystems;
+  // The scoped ecosystem's type: what the type-gated rows, the Manage features button and the
+  // Child Ecosystems row read. Unknown (undefined) while its row is loading or from an older backend.
+  const scopedType = scopedItems?.find((e) => e.id === scopedId)?.type;
+  const scopedIsHubData = isHubDataEcosystem({ type: scopedType });
+  // The list as drawn: the Personal / Organization ecosystem pinned first (stable for the rest),
+  // each row with its own icon. Sorted here and not in the data client, which other lists share.
+  const railItems = useMemo(
+    () =>
+      scopedItems == null
+        ? scopedItems
+        : [
+            ...scopedItems.filter(isHubDataEcosystem),
+            ...scopedItems.filter((e) => !isHubDataEcosystem(e)),
+          ],
+    [scopedItems],
+  );
+  const itemIconFor = (e: Ecosystem): ReactNode =>
+    e.type === "personal" ? (
+      <User size={16} aria-hidden />
+    ) : e.type === "organization" ? (
+      <Building2 size={16} aria-hidden />
+    ) : (
+      <Network size={16} aria-hidden />
+    );
 
   // The CHILD ecosystems of the scoped ecosystem — fetched server-scoped to owner_id = scopedId
   // (the ecosystems in the namespace it owns), NOT the caller's whole manageable set. This is what
@@ -556,14 +586,17 @@ export function EcosystemsFeature({
   // The topics list's Manage features button, scoped to the ecosystem those topics belong to.
   // Withheld where the pane would be the not-manageable notice: a button whose one action would
   // fail is worse than no button.
-  const manageFeaturesButton = (ecoId: string): ReactNode =>
-    canManageScoped(ecoId) ? (
+  // Withheld for a hub-data ecosystem too: its features are fixed by its type, so there is no picker.
+  const manageFeaturesButton = (ecoId: string): ReactNode => {
+    if (isHubDataEcosystem(scopedItems?.find((e) => e.id === ecoId))) return null;
+    return canManageScoped(ecoId) ? (
       <ManageFeaturesButton
         ecosystemId={ecoId}
         label={`Manage ${singular.toLowerCase()} features`}
         onOpen={() => setManagingFeaturesOf(ecoId)}
       />
     ) : null;
+  };
 
   // Only the topics the scoped ecosystem holds. Read only when some row is feature-keyed, so a
   // host whose rows name no features (a feature site's own rail) never pays for the request.
@@ -580,6 +613,11 @@ export function EcosystemsFeature({
       topicsConfig,
       provisionedQuery.isLoadingError ? null : provisionedQuery.data,
       activeTopic,
+      scopedType,
+    ).filter(
+      // No add-sub-ecosystem on a hub-data ecosystem: it holds no products, and that follows from
+      // its type rather than from any one host's rail.
+      (t) => !(scopedIsHubData && t.id === "child-ecosystems"),
     ),
   );
   // A feature still being provisioned: drawn (the Manage features dialog ticks it, and a list that
@@ -921,11 +959,11 @@ export function EcosystemsFeature({
           activeLeafId={activeLeafId}
           activeMemberEntityId={activeMemberEntityId}
           basePath={basePath}
-          items={scopedItems}
+          items={railItems}
           getId={(e) => e.id}
           getLabel={(e) => e.name}
           nameSuffix={singular}
-          itemIcon={<Network size={16} aria-hidden />}
+          getItemIcon={itemIconFor}
           topics={topics}
           topicAliases={aliases}
           memberMoves={moves}
@@ -1002,11 +1040,11 @@ export function EcosystemsFeature({
         activeLeafId={activeLeafId}
         activeMemberEntityId={activeMemberEntityId}
         basePath={basePath}
-        items={scopedItems}
+        items={railItems}
         getId={(e) => e.id}
         getLabel={(e) => e.name}
         nameSuffix={singular}
-        itemIcon={<Network size={16} aria-hidden />}
+        getItemIcon={itemIconFor}
         topics={topics}
         topicAliases={aliases}
         memberMoves={moves}

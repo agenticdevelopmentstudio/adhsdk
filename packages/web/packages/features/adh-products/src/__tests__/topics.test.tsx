@@ -144,3 +144,25 @@ describe("the old addresses", () => {
     expect(PRODUCT_MEMBER_MOVES.gaming?.levels).toBe("gamification");
   });
 });
+
+// Notes, Documents, Research, Planning and Narratives belong to the hub-data ecosystems alone.
+describe("the hub-data rows", () => {
+  const HUB_IDS = ["notebook", "docs", "research", "projects", "narratives"];
+
+  it("are typed to personal and organization, and every typed row is one of them", () => {
+    const typed = PRODUCT_TOPICS.filter((t) => "types" in t);
+    expect(typed.map((t) => t.id)).toEqual(HUB_IDS);
+    for (const t of typed) expect("types" in t && [...t.types]).toEqual(["personal", "organization"]);
+  });
+
+  it("stand on the catalog's keys, and reach the rail config with their types", () => {
+    const keys = PRODUCT_TOPICS.filter((t) => HUB_IDS.includes(t.id)).map((t) => ("features" in t ? t.features : []));
+    expect(keys).toEqual([["notes"], ["documents"], ["research"], ["planning"], ["narratives"]]);
+    expect(PRODUCT_TOPIC_CONFIGS.find((t) => t.id === "notebook")?.types).toEqual(["personal", "organization"]);
+    expect(PRODUCT_TOPIC_CONFIGS.find((t) => t.id === "storage")?.types).toBeUndefined();
+  });
+
+  it("are the host's to render", () => {
+    for (const id of HUB_IDS) expect(HOST_RENDERED_TOPIC_IDS as readonly string[]).toContain(id);
+  });
+});

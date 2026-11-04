@@ -21,6 +21,11 @@ import {
   Bell,
   LayoutTemplate,
   Store,
+  NotebookText,
+  FileText,
+  FlaskConical,
+  FolderKanban,
+  ScrollText,
 } from "lucide-react";
 import { useDetailTitle } from "@adh-sdk/ui/blocks/detail-title";
 import type { TopicLeaf } from "@adh-sdk/resource";
@@ -78,6 +83,12 @@ import { GamingGroup } from "./GamingGroup";
 // both, or the same feature wears different icons depending on whether you reached it from the
 // hub rail or from inside a product.
 const ICONS: Record<string, ReactNode> = {
+  // The hub-data rows (Personal / Organization ecosystems only).
+  notebook: <NotebookText size={16} aria-hidden />,
+  docs: <FileText size={16} aria-hidden />,
+  research: <FlaskConical size={16} aria-hidden />,
+  projects: <FolderKanban size={16} aria-hidden />,
+  narratives: <ScrollText size={16} aria-hidden />,
   storage: <HardDrive size={16} aria-hidden />,
   integrations: <Plug size={16} aria-hidden />,
   messaging: <MessageCircle size={16} aria-hidden />,
@@ -137,6 +148,7 @@ export const PRODUCT_TOPIC_CONFIGS: EcosystemsTopicConfig[] = PRODUCT_TOPICS.map
   description: helpFor(`ecosystems/${t.id}`),
   dividerAfter: t.dividerAfter,
   features: "features" in t ? t.features : undefined,
+  types: "types" in t ? t.types : undefined,
 }));
 
 // The per-product Tokens pane. `ctx` (RenderTopicPaneCtx) carries no workspace slug and the topic

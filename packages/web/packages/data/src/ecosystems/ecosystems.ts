@@ -36,7 +36,17 @@
 
 import { authedJson, authedRequest, isNotFound, rethrowConflict } from "../http";
 import { compact, enc, sortByText } from "../client-helpers";
-import type { EcosystemRow, EcosystemCreateBody, EcosystemPutBody } from "./wire";
+import type { EcosystemRow, EcosystemCreateBody, EcosystemPutBody, EcosystemType } from "./wire";
+
+export type { EcosystemType };
+
+/** The hub-data ecosystems: a workspace's `personal` (user) / `organization` (org) child, which holds
+ *  its Notes, Research, Documents, Integrations, Planning and Storage. They have a fixed name and
+ *  slug, and can be neither deleted nor given sub-ecosystems or a feature picker. A row with no
+ *  `type` (an older backend) is not one. Takes the wire row or the mapped {@link Ecosystem}. */
+export function isHubDataEcosystem(row: { type?: string } | null | undefined): boolean {
+  return row?.type === "personal" || row?.type === "organization";
+}
 
 /**
  * An address's LAST SEGMENT — the one part of an rdid a create or a rename supplies.
@@ -81,6 +91,8 @@ export interface Ecosystem {
    *  contents (the org-admin bar). Absent (undefined) outside `?workspace=` mode,
    *  where every listed ecosystem is manageable by construction. */
   canManage?: boolean;
+  /** The ecosystem's type; absent when the backend predates it. */
+  type?: EcosystemType;
 }
 
 export interface EcosystemInput {
@@ -118,6 +130,7 @@ export function toEcosystem(r: EcosystemRow): Ecosystem {
     createdAt: r.createdAt,
     updatedAt: r.updatedAt,
     ...(r.canManage !== undefined ? { canManage: r.canManage } : {}),
+    ...(r.type !== undefined ? { type: r.type } : {}),
   };
 }
 
@@ -168,6 +181,13 @@ export const ecosystemsApi = {
     // ecosystem (membership-gated) but only an org admin can MANAGE its contents — the host uses
     // this to show an honest "ask an admin" notice instead of a wall of per-pane 403s.
     return row ? { id: row.id, canManage: row.canManage !== false } : null;
+  },
+
+  /** The id of the workspace's hub-data (`personal` / `organization`) ecosystem, or `null` when the
+   *  workspace has none yet (a backend or a user the move has not reached). */
+  async hubDataEcosystemId(workspaceSlug: string): Promise<string | null> {
+    const rows = await authedJson<EcosystemRow[]>(`${BASE}?workspace=${enc(workspaceSlug)}`);
+    return rows.find(isHubDataEcosystem)?.id ?? null;
   },
 
   /** The CHILD ecosystems of `parentId` (an ecosystem rdid/uuid): the ecosystems whose owner IS

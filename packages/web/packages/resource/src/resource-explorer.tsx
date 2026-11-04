@@ -120,6 +120,7 @@ export function ResourceExplorer<T>({
   getId,
   getLabel,
   itemIcon,
+  getItemIcon,
   nameSuffix,
   topics,
   rail,
@@ -157,6 +158,9 @@ export function ResourceExplorer<T>({
   /** Leading icon for each resource rail row (e.g. <Network/>); a neutral ring
    *  fills in when omitted so the collapsed icon strip is never blank. */
   itemIcon?: ReactNode;
+  /** PER-ROW icon, for a list whose rows are not all the same kind of thing (the Ecosystems list
+   *  pins a Personal / Organization ecosystem among products). Wins over `itemIcon`. */
+  getItemIcon?: (item: T) => ReactNode;
   /** Suffix in feature titles, e.g. "Ecosystem" → "Applications (Core Ecosystem)". */
   nameSuffix: string;
   topics: ResourceTopic[];
@@ -352,7 +356,7 @@ export function ResourceExplorer<T>({
     id: getId(it),
     label: getLabel(it),
     sublabel: rail?.getSublabel?.(it),
-    icon: itemIcon,
+    icon: getItemIcon ? getItemIcon(it) : itemIcon,
   }));
   // A query over a list that has loaded EMPTY has nothing left to narrow and no field left to
   // clear it from — the magnifier below goes with the last row. Kept, it would narrow whatever

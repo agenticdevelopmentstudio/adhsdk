@@ -84,6 +84,14 @@ export function productFeaturePanelRenderer({
         // confines it to the rows that workspace owns, exactly as the hub's mount does.
         // And the ecosystem whose Storage rail it sits in — the workspace alone spans them all.
         return <AllDataPane workspace={workspaceSlug} ecosystemId={opts?.ecosystemId} />;
+      case "notebook":
+      case "docs":
+      case "research":
+      case "projects":
+      case "narratives":
+        // The hub-data rows of a Personal / Organization ecosystem. Their panes are the hub's; this
+        // site lists the ecosystem (it is the workspace's child) but does not draw them.
+        return <ElsewherePane title={HUB_DATA_TITLES[feature]} where="Agentic Developer Hub" scope="ecosystem" />;
       case "email-signup":
         // The Authentication group's fourth member, and the one pane this site genuinely cannot
         // draw: the panel is the hub's, built on hub-local workspace context and API clients, and
@@ -101,12 +109,28 @@ export function productFeaturePanelRenderer({
 
 /** A surface that exists, but not on this host. Names both halves — what it is and where it is —
  *  because "not here" without "there" is indistinguishable from "not built". */
-function ElsewherePane({ title, where }: { title: string; where: string }): ReactNode {
+const HUB_DATA_TITLES = {
+  notebook: "Notes",
+  docs: "Documents",
+  research: "Research",
+  projects: "Planning",
+  narratives: "Narratives",
+} as const;
+
+function ElsewherePane({
+  title,
+  where,
+  scope = "product",
+}: {
+  title: string;
+  where: string;
+  scope?: string;
+}): ReactNode {
   return (
     <section className="flex flex-1 flex-col items-center justify-center gap-2 p-8 text-center">
       <h2 className="text-lg font-medium text-apt-text">{title}</h2>
       <p className="max-w-prose text-sm text-apt-text-muted">
-        {title} for this product is managed in the {where}.
+        {title} for this {scope} is managed in the {where}.
       </p>
     </section>
   );

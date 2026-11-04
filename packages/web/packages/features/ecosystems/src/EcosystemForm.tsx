@@ -185,7 +185,11 @@ export function EcosystemFields({
   onName,
   onSlug,
   onDescription,
+  fixedIdentity = false,
 }: {
+  /** The name and slug are fixed (a hub-data ecosystem: `Personal` / `Organization`), so both are
+   *  drawn read-only. The description stays editable. */
+  fixedIdentity?: boolean;
   /** The fixed identifier prefix (up to and including the final dot). */
   prefix: string;
   name: string;
@@ -215,6 +219,8 @@ export function EcosystemFields({
           id={`${uid}-name`}
           placeholder={`My ${noun[0]?.toUpperCase()}${noun.slice(1)}`}
           value={name}
+          readOnly={fixedIdentity}
+          disabled={fixedIdentity}
           onChange={(e) => onName(e.target.value)}
         />
         <Label htmlFor={`${uid}-slug`} className="justify-self-end">
@@ -224,6 +230,8 @@ export function EcosystemFields({
           id={`${uid}-slug`}
           placeholder={`my-${noun}`}
           value={slug}
+          readOnly={fixedIdentity}
+          disabled={fixedIdentity}
           onChange={(e) => onSlug(e.target.value.toLowerCase())}
         />
         <Label className="justify-self-end self-start pt-0.5">Identifier:</Label>

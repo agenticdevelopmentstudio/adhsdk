@@ -8,3 +8,4 @@ export * from "./ecosystem-features";
 export * from "./feature-requirements";
 export * from "./feature-manager";
 export * from "./use-workspace-default-ecosystem";
+export * from "./use-workspace-hub-ecosystem";

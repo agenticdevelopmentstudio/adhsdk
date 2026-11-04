@@ -6,6 +6,18 @@
 // interface carries exactly the fields the mappers and call sites touch.
 // Type-only file.
 
+/** What an ecosystem is (backend `ecosystems.type`). `personal` / `organization` are the hub-data
+ *  ecosystems — a user's / an org's Notes, Research, Documents, Integrations, Planning and Storage;
+ *  the rest are the owner's own (`workspace`), a persona's, one the owner made (`container`) or a
+ *  website / app / service (`product`). */
+export type EcosystemType =
+  | "workspace"
+  | "persona"
+  | "personal"
+  | "organization"
+  | "container"
+  | "product";
+
 /** Backend row for `GET /ecosystem/ecosystems` (and a single ecosystem). */
 export interface EcosystemRow {
   id: string;
@@ -23,6 +35,9 @@ export interface EcosystemRow {
    *  (the org-admin bar). The list itself is membership-gated, so a plain org member
    *  sees org products they cannot open — the UI uses this to present that honestly. */
   canManage?: boolean;
+  /** Optional on the wire: a backend older than the `type` column omits it, and a row without one
+   *  is treated as NOT hub data (see `isHubDataEcosystem`). */
+  type?: EcosystemType;
 }
 
 /** `POST /ecosystem/ecosystems` body. */

@@ -73,3 +73,34 @@ describe("heldTopics", () => {
     expect(got.some((t) => t.provisioning)).toBe(false);
   });
 });
+
+// Hub-data rows (Notes, Documents, …) are drawn only for the types they name. The catalog's
+// `features` already keeps a container that holds `notes` from being offered one, but a container
+// that holds it anyway must still draw no Notes row.
+describe("heldTopics, rows that name types", () => {
+  const HUB = [
+    { id: "notebook", features: ["notes"], types: ["personal", "organization"] },
+    { id: "storage", features: ["storage"] },
+    { id: "settings" },
+  ] as const;
+  const held = [row("notes"), row("storage")];
+
+  it("draws a typed row for an ecosystem of that type", () => {
+    expect(ids(heldTopics(HUB, held, undefined, "personal"))).toEqual(["notebook", "storage", "settings"]);
+    expect(ids(heldTopics(HUB, held, undefined, "organization"))).toEqual(["notebook", "storage", "settings"]);
+  });
+
+  it("draws no typed row for a container that holds the feature", () => {
+    expect(ids(heldTopics(HUB, held, undefined, "container"))).toEqual(["storage", "settings"]);
+  });
+
+  it("draws no typed row when the type is unknown", () => {
+    expect(ids(heldTopics(HUB, held))).toEqual(["storage", "settings"]);
+  });
+
+  it("holds even for the routed row and a failed read", () => {
+    expect(ids(heldTopics(HUB, undefined, "notebook", "container"))).toEqual(["settings"]);
+    expect(ids(heldTopics(HUB, null, undefined, "container"))).toEqual(["storage", "settings"]);
+    expect(ids(heldTopics(HUB, null, undefined, "personal"))).toEqual(["notebook", "storage", "settings"]);
+  });
+});

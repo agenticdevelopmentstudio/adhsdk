@@ -2,7 +2,12 @@
 
 import { useEffect, useState, type ReactElement, type ReactNode } from "react";
 
-import { ecosystemsApi, type Ecosystem, type EcosystemInput } from "@adh-sdk/data/ecosystems";
+import {
+  ecosystemsApi,
+  isHubDataEcosystem,
+  type Ecosystem,
+  type EcosystemInput,
+} from "@adh-sdk/data/ecosystems";
 import {
   useMasterDetailForm,
   RecordSettingsPane,
@@ -67,6 +72,9 @@ export function EcosystemSettingsPane({
   renderTransferOwnership?: (ecosystem: { id: string; identifier: string }) => ReactNode;
 }): ReactElement {
   const active = items?.find((e) => e.id === ecosystemId);
+  // A Personal / Organization ecosystem: fixed name and slug, no delete, no transfer. Read off its
+  // type here, so no host has to remember to withhold them.
+  const hubData = isHubDataEcosystem(active);
 
   // The fixed identifier prefix: an rdid's own type+scope (so an owner-scoped product keeps
   // `ecosystem.<owner>.` and a legacy top-level row keeps `ecosystem.`). A rdid-less id
@@ -218,12 +226,13 @@ export function EcosystemSettingsPane({
             status={derivedStatus}
             error={form.error}
             noun={noun.toLowerCase()}
+            fixedIdentity={hubData}
             onName={(v) => form.onChange({ ...d, name: v })}
             onSlug={(v) => form.onChange({ ...d, identifier: prefix + v })}
             onDescription={(v) => form.onChange({ ...d, description: v })}
           />
-          {active && renderTransferOwnership && renderTransferOwnership(active)}
-          {active && onDelete && (
+          {active && !hubData && renderTransferOwnership && renderTransferOwnership(active)}
+          {active && !hubData && onDelete && (
             <DeleteEntitySection
               entityNoun={noun}
               confirmValue={active.identifier}

@@ -22,14 +22,22 @@ vi.mock("./EcosystemForm", () => ({
     prefix,
     slug,
     status,
+    fixedIdentity,
     onSlug,
   }: {
     prefix: string;
     slug: string;
     status: string;
+    fixedIdentity?: boolean;
     onSlug: (v: string) => void;
   }) => (
-    <div data-testid="eco-fields" data-prefix={prefix} data-slug={slug} data-status={status}>
+    <div
+      data-testid="eco-fields"
+      data-prefix={prefix}
+      data-slug={slug}
+      data-status={status}
+      data-fixed={String(fixedIdentity === true)}
+    >
       <button type="button" onClick={() => onSlug("gizmos")}>
         rename
       </button>
@@ -221,4 +229,42 @@ describe("EcosystemSettingsPane rename gate", () => {
       expect(screen.getByText("Waiting for the identifier availability check.")).toBeInTheDocument();
     },
   );
+});
+
+// A Personal / Organization ecosystem: fixed name and slug, no delete, no transfer. The pane reads
+// this off the row's type, so a host that passes onDelete and a transfer seam still gets neither.
+describe("EcosystemSettingsPane on a hub-data ecosystem", () => {
+  const PERSONAL: Ecosystem = {
+    ...WIDGETS,
+    id: "ecosystem.acme.personal",
+    identifier: "ecosystem.acme.personal",
+    slug: "personal",
+    name: "Personal",
+    type: "personal",
+  };
+
+  it.each(["personal", "organization"] as const)(
+    "fixes the name and slug and withholds delete and transfer (%s)",
+    (type) => {
+      renderPane({
+        ecosystemId: PERSONAL.id,
+        items: [{ ...PERSONAL, type }],
+        onDelete: async () => {},
+        renderTransferOwnership: seam,
+      });
+      expect(screen.getByTestId("eco-fields").getAttribute("data-fixed")).toBe("true");
+      expect(screen.queryByRole("region", { name: "Danger Zone" })).toBeNull();
+      expect(screen.queryByTestId("transfer")).toBeNull();
+    },
+  );
+
+  it("leaves an ordinary ecosystem, and one with no type, editable and deletable", () => {
+    for (const items of [[WIDGETS], [{ ...WIDGETS, type: "product" as const }]]) {
+      renderPane({ items, onDelete: async () => {}, renderTransferOwnership: seam });
+      expect(screen.getByTestId("eco-fields").getAttribute("data-fixed")).toBe("false");
+      expect(screen.getByRole("region", { name: "Danger Zone" })).toBeInTheDocument();
+      expect(screen.getByTestId("transfer")).toBeInTheDocument();
+      cleanup();
+    }
+  });
 });

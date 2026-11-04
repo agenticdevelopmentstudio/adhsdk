@@ -1,3 +1,5 @@
+const HUB_DATA_TYPES = ["personal", "organization"] as const;
+
 /** Sidebar topics inside a PRODUCT (the Products FTD — each product IS an ecosystem).
  * The LAST topic ("Settings", id "settings" for deep-link stability) is the
  * entity pane itself — it edits the product's own fields and holds the Danger (delete)
@@ -27,6 +29,14 @@
  * Tokens on the hub's own rail. Same pane, different scope; the split is deliberate and this
  * list is not the place to reconcile it.
  *
+ * `types` marks a row that belongs to the HUB-DATA ecosystems (`personal` / `organization`) and to
+ * no product: Notes, Documents, Research, Planning, Narratives. A row with `types` is drawn only
+ * for an ecosystem of one of those types (EcosystemsFeature reads the type; an unknown type draws
+ * none), and still only while the ecosystem holds its feature, so a container that somehow holds
+ * `notes` draws no Notes row. Their panes are the host's: see {@link HOST_RENDERED_TOPIC_IDS}.
+ * The ids are the hub's own feature ids (`notebook`, `docs`, `projects`) so a deep link to
+ * `/<slug>/notebook` lands on the same row; the `features` key is the catalog's.
+ *
  * A plain data module, and its own package entry (`@adh-sdk/adh-products/topics`), so a
  * Server Component that only needs an id or a label does not drag the feature onto the client.
  *
@@ -35,6 +45,11 @@
 export const PRODUCT_TOPICS = [
   // No "features" row: this list IS the product's features (EcosystemsFeature heads it
   // "Features"), and adding or removing them is the list's own title-row tool menu.
+  { id: "notebook", label: "Notes", dividerAfter: false, features: ["notes"], types: HUB_DATA_TYPES },
+  { id: "docs", label: "Documents", dividerAfter: false, features: ["documents"], types: HUB_DATA_TYPES },
+  { id: "research", label: "Research", dividerAfter: false, features: ["research"], types: HUB_DATA_TYPES },
+  { id: "projects", label: "Planning", dividerAfter: false, features: ["planning"], types: HUB_DATA_TYPES },
+  { id: "narratives", label: "Narratives", dividerAfter: false, features: ["narratives"], types: HUB_DATA_TYPES },
   { id: "storage", label: "Storage", dividerAfter: false, features: ["storage"] },
   { id: "integrations", label: "Integrations", dividerAfter: false, features: ["integrations"] },
   // Messaging and Dashboards stand on their catalog features like every other row. They were
@@ -127,6 +142,13 @@ export const PRODUCT_MEMBER_MOVES: Record<string, Record<string, string | null>>
  * reached through the same seam, which is why they are listed here with the two that are rows.
  */
 export const HOST_RENDERED_TOPIC_IDS = [
+  // The hub-data rows (`types: personal / organization`): the hub's own panes, which a product
+  // site does not have.
+  "notebook",
+  "docs",
+  "research",
+  "projects",
+  "narratives",
   "dashboards",
   "billing",
   "all-data",
