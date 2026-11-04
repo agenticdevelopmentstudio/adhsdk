@@ -39,22 +39,19 @@ public struct SignInConfiguration: Sendable, Equatable {
     public static let bundleClientIDKey = "ADHSignInClientId"
     public static let environmentClientIDKey = "HUB_SIGNIN_CLIENT_ID"
 
-    /// The backend has no `hub` client — `clientId=hub` 400s with
-    /// `client not found` on every environment. `adh-cli` is the one built-in
-    /// client whose allow-listed return origins are loopback
-    /// (`ADH_CLI_RETURN_ORIGINS` in `auth/oauth/clients.ts`, seeded in every
-    /// env including production), which is what a native app needs. The apps
-    /// therefore sign in as it until a dedicated client is provisioned; when
-    /// one is, it needs no code change — set `ADHSignInClientId` in the app's
-    /// Info.plist (or `HUB_SIGNIN_CLIENT_ID` in the environment) and give it
-    /// the same loopback origins.
-    public static let defaultClientID = "adh-cli"
+    /// The hub's own sign-on client. Its allow-listed return origins include
+    /// loopback (`LOOPBACK_RETURN_ORIGINS` in `auth/oauth/clients.ts`, in every
+    /// env including production), which is what a native app needs. An app that
+    /// has its own login registration needs no code change: set
+    /// `ADHSignInClientId` in the app's Info.plist (or `HUB_SIGNIN_CLIENT_ID` in
+    /// the environment) and give that registration the same loopback origins.
+    public static let defaultClientID = "adh"
 
     /// The loopback ports the backend allow-lists for that client, in the
     /// order they are tried. These are not ours to choose: `originAllowed`
     /// matches an exact origin, so a port outside this set is refused with
     /// `return URL origin not allowed for this client`. Keep in step with
-    /// `ADH_CLI_RETURN_ORIGINS`.
+    /// `LOOPBACK_RETURN_ORIGINS`.
     public static let loopbackPorts: [UInt16] = [8517, 8518, 8519]
 
     public let clientID: String

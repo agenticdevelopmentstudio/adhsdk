@@ -97,7 +97,7 @@ final class SignInViewModelTests: XCTestCase {
         let session = SessionController(
             environment: environment,
             configuration: SignInConfiguration(
-                clientID: "adh-cli",
+                clientID: "adh",
                 backendURL: URL(string: "https://api.example.com")!
             ),
             defaults: isolated.defaults

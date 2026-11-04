@@ -55,7 +55,7 @@ final class SessionControllerTests: XCTestCase {
         let controller = SessionController(
             environment: environment,
             configuration: SignInConfiguration(
-                clientID: "adh-cli",
+                clientID: "adh",
                 backendURL: URL(string: "https://api.example.com")!
             ),
             defaults: isolated.defaults
@@ -125,7 +125,7 @@ final class SessionControllerTests: XCTestCase {
         let controller = SessionController(
             environment: .direct(sessionStore: store),
             configuration: SignInConfiguration(
-                clientID: "adh-cli",
+                clientID: "adh",
                 backendURL: URL(string: "https://api.example.com")!
             ),
             defaults: isolated.defaults
