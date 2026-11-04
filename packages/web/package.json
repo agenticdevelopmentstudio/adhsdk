@@ -51,7 +51,8 @@
       "@vitest/mocker": "^4.1.12",
       "minimatch": "^11.0.1",
       "glob@>=9 <14.0.2": "^14.0.2",
-      "@types/react": "19.2.18"
+      "@types/react": "19.2.18",
+      "@bundled-es-modules/deepmerge>deepmerge": "-"
     },
     "allowNonAppliedPatches": true,
     "patchedDependencies": {
