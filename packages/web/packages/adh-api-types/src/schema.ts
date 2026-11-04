@@ -2691,6 +2691,8 @@ export interface paths {
                                         verificationUrl?: string;
                                         jwksUrl?: string;
                                         requireEmailVerified?: boolean;
+                                        emailVerifiedField?: string;
+                                        trustedEmailTenants?: string[];
                                         allowedAudiences?: string[];
                                         secondaryEmailUrl?: string;
                                         idTokenJwksUrl?: string;
@@ -2778,6 +2780,8 @@ export interface paths {
                                 verificationUrl?: string;
                                 jwksUrl?: string;
                                 requireEmailVerified?: boolean;
+                                emailVerifiedField?: string;
+                                trustedEmailTenants?: string[];
                                 allowedAudiences?: string[];
                                 secondaryEmailUrl?: string;
                                 idTokenJwksUrl?: string;
@@ -2843,6 +2847,8 @@ export interface paths {
                             avatarField: string;
                             verificationUrl?: string;
                             requireEmailVerified?: boolean;
+                            emailVerifiedField?: string;
+                            trustedEmailTenants?: string[];
                             allowedAudiences?: string[];
                             secondaryEmailUrl?: string;
                             idTokenJwksUrl?: string;
@@ -2884,6 +2890,8 @@ export interface paths {
                                 verificationUrl?: string;
                                 jwksUrl?: string;
                                 requireEmailVerified?: boolean;
+                                emailVerifiedField?: string;
+                                trustedEmailTenants?: string[];
                                 allowedAudiences?: string[];
                                 secondaryEmailUrl?: string;
                                 idTokenJwksUrl?: string;
@@ -2971,6 +2979,8 @@ export interface paths {
                                 verificationUrl?: string;
                                 jwksUrl?: string;
                                 requireEmailVerified?: boolean;
+                                emailVerifiedField?: string;
+                                trustedEmailTenants?: string[];
                                 allowedAudiences?: string[];
                                 secondaryEmailUrl?: string;
                                 idTokenJwksUrl?: string;
@@ -3077,6 +3087,8 @@ export interface paths {
                             avatarField: string;
                             verificationUrl?: string;
                             requireEmailVerified?: boolean;
+                            emailVerifiedField?: string;
+                            trustedEmailTenants?: string[];
                             allowedAudiences?: string[];
                             secondaryEmailUrl?: string;
                             idTokenJwksUrl?: string;
@@ -3118,6 +3130,8 @@ export interface paths {
                                 verificationUrl?: string;
                                 jwksUrl?: string;
                                 requireEmailVerified?: boolean;
+                                emailVerifiedField?: string;
+                                trustedEmailTenants?: string[];
                                 allowedAudiences?: string[];
                                 secondaryEmailUrl?: string;
                                 idTokenJwksUrl?: string;

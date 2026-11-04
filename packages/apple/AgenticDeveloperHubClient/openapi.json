@@ -21032,6 +21032,15 @@
                               "requireEmailVerified": {
                                 "type": "boolean"
                               },
+                              "emailVerifiedField": {
+                                "type": "string"
+                              },
+                              "trustedEmailTenants": {
+                                "type": "array",
+                                "items": {
+                                  "type": "string"
+                                }
+                              },
                               "allowedAudiences": {
                                 "type": "array",
                                 "items": {
@@ -21206,6 +21215,15 @@
                           "requireEmailVerified": {
                             "type": "boolean"
                           },
+                          "emailVerifiedField": {
+                            "type": "string"
+                          },
+                          "trustedEmailTenants": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          },
                           "allowedAudiences": {
                             "type": "array",
                             "items": {
@@ -21367,6 +21385,15 @@
                       "requireEmailVerified": {
                         "type": "boolean"
                       },
+                      "emailVerifiedField": {
+                        "type": "string"
+                      },
+                      "trustedEmailTenants": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      },
                       "allowedAudiences": {
                         "type": "array",
                         "items": {
@@ -21501,6 +21528,15 @@
                         },
                         "requireEmailVerified": {
                           "type": "boolean"
+                        },
+                        "emailVerifiedField": {
+                          "type": "string"
+                        },
+                        "trustedEmailTenants": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
                         },
                         "allowedAudiences": {
                           "type": "array",
@@ -21681,6 +21717,15 @@
                         "requireEmailVerified": {
                           "type": "boolean"
                         },
+                        "emailVerifiedField": {
+                          "type": "string"
+                        },
+                        "trustedEmailTenants": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
                         "allowedAudiences": {
                           "type": "array",
                           "items": {
@@ -21826,6 +21871,15 @@
                       "requireEmailVerified": {
                         "type": "boolean"
                       },
+                      "emailVerifiedField": {
+                        "type": "string"
+                      },
+                      "trustedEmailTenants": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      },
                       "allowedAudiences": {
                         "type": "array",
                         "items": {
@@ -21960,6 +22014,15 @@
                         },
                         "requireEmailVerified": {
                           "type": "boolean"
+                        },
+                        "emailVerifiedField": {
+                          "type": "string"
+                        },
+                        "trustedEmailTenants": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
                         },
                         "allowedAudiences": {
                           "type": "array",

@@ -61018,6 +61018,10 @@ public enum Operations {
                                     public var jwksUrl: Swift.String?
                                     /// - Remark: Generated from `#/paths/oauth/provider-templates/GET/responses/200/content/json/templates/additionalProperties/identityMapping/requireEmailVerified`.
                                     public var requireEmailVerified: Swift.Bool?
+                                    /// - Remark: Generated from `#/paths/oauth/provider-templates/GET/responses/200/content/json/templates/additionalProperties/identityMapping/emailVerifiedField`.
+                                    public var emailVerifiedField: Swift.String?
+                                    /// - Remark: Generated from `#/paths/oauth/provider-templates/GET/responses/200/content/json/templates/additionalProperties/identityMapping/trustedEmailTenants`.
+                                    public var trustedEmailTenants: [Swift.String]?
                                     /// - Remark: Generated from `#/paths/oauth/provider-templates/GET/responses/200/content/json/templates/additionalProperties/identityMapping/allowedAudiences`.
                                     public var allowedAudiences: [Swift.String]?
                                     /// - Remark: Generated from `#/paths/oauth/provider-templates/GET/responses/200/content/json/templates/additionalProperties/identityMapping/secondaryEmailUrl`.
@@ -61073,6 +61077,8 @@ public enum Operations {
                                     ///   - verificationUrl:
                                     ///   - jwksUrl:
                                     ///   - requireEmailVerified:
+                                    ///   - emailVerifiedField:
+                                    ///   - trustedEmailTenants:
                                     ///   - allowedAudiences:
                                     ///   - secondaryEmailUrl:
                                     ///   - idTokenJwksUrl:
@@ -61087,6 +61093,8 @@ public enum Operations {
                                         verificationUrl: Swift.String? = nil,
                                         jwksUrl: Swift.String? = nil,
                                         requireEmailVerified: Swift.Bool? = nil,
+                                        emailVerifiedField: Swift.String? = nil,
+                                        trustedEmailTenants: [Swift.String]? = nil,
                                         allowedAudiences: [Swift.String]? = nil,
                                         secondaryEmailUrl: Swift.String? = nil,
                                         idTokenJwksUrl: Swift.String? = nil,
@@ -61101,6 +61109,8 @@ public enum Operations {
                                         self.verificationUrl = verificationUrl
                                         self.jwksUrl = jwksUrl
                                         self.requireEmailVerified = requireEmailVerified
+                                        self.emailVerifiedField = emailVerifiedField
+                                        self.trustedEmailTenants = trustedEmailTenants
                                         self.allowedAudiences = allowedAudiences
                                         self.secondaryEmailUrl = secondaryEmailUrl
                                         self.idTokenJwksUrl = idTokenJwksUrl
@@ -61116,6 +61126,8 @@ public enum Operations {
                                         case verificationUrl
                                         case jwksUrl
                                         case requireEmailVerified
+                                        case emailVerifiedField
+                                        case trustedEmailTenants
                                         case allowedAudiences
                                         case secondaryEmailUrl
                                         case idTokenJwksUrl
@@ -61450,6 +61462,10 @@ public enum Operations {
                             public var jwksUrl: Swift.String?
                             /// - Remark: Generated from `#/paths/oauth/providers/GET/responses/200/content/JsonPayload/identityMapping/requireEmailVerified`.
                             public var requireEmailVerified: Swift.Bool?
+                            /// - Remark: Generated from `#/paths/oauth/providers/GET/responses/200/content/JsonPayload/identityMapping/emailVerifiedField`.
+                            public var emailVerifiedField: Swift.String?
+                            /// - Remark: Generated from `#/paths/oauth/providers/GET/responses/200/content/JsonPayload/identityMapping/trustedEmailTenants`.
+                            public var trustedEmailTenants: [Swift.String]?
                             /// - Remark: Generated from `#/paths/oauth/providers/GET/responses/200/content/JsonPayload/identityMapping/allowedAudiences`.
                             public var allowedAudiences: [Swift.String]?
                             /// - Remark: Generated from `#/paths/oauth/providers/GET/responses/200/content/JsonPayload/identityMapping/secondaryEmailUrl`.
@@ -61505,6 +61521,8 @@ public enum Operations {
                             ///   - verificationUrl:
                             ///   - jwksUrl:
                             ///   - requireEmailVerified:
+                            ///   - emailVerifiedField:
+                            ///   - trustedEmailTenants:
                             ///   - allowedAudiences:
                             ///   - secondaryEmailUrl:
                             ///   - idTokenJwksUrl:
@@ -61519,6 +61537,8 @@ public enum Operations {
                                 verificationUrl: Swift.String? = nil,
                                 jwksUrl: Swift.String? = nil,
                                 requireEmailVerified: Swift.Bool? = nil,
+                                emailVerifiedField: Swift.String? = nil,
+                                trustedEmailTenants: [Swift.String]? = nil,
                                 allowedAudiences: [Swift.String]? = nil,
                                 secondaryEmailUrl: Swift.String? = nil,
                                 idTokenJwksUrl: Swift.String? = nil,
@@ -61533,6 +61553,8 @@ public enum Operations {
                                 self.verificationUrl = verificationUrl
                                 self.jwksUrl = jwksUrl
                                 self.requireEmailVerified = requireEmailVerified
+                                self.emailVerifiedField = emailVerifiedField
+                                self.trustedEmailTenants = trustedEmailTenants
                                 self.allowedAudiences = allowedAudiences
                                 self.secondaryEmailUrl = secondaryEmailUrl
                                 self.idTokenJwksUrl = idTokenJwksUrl
@@ -61548,6 +61570,8 @@ public enum Operations {
                                 case verificationUrl
                                 case jwksUrl
                                 case requireEmailVerified
+                                case emailVerifiedField
+                                case trustedEmailTenants
                                 case allowedAudiences
                                 case secondaryEmailUrl
                                 case idTokenJwksUrl
@@ -61853,6 +61877,10 @@ public enum Operations {
                         public var verificationUrl: Swift.String?
                         /// - Remark: Generated from `#/paths/oauth/providers/POST/requestBody/json/identityMapping/requireEmailVerified`.
                         public var requireEmailVerified: Swift.Bool?
+                        /// - Remark: Generated from `#/paths/oauth/providers/POST/requestBody/json/identityMapping/emailVerifiedField`.
+                        public var emailVerifiedField: Swift.String?
+                        /// - Remark: Generated from `#/paths/oauth/providers/POST/requestBody/json/identityMapping/trustedEmailTenants`.
+                        public var trustedEmailTenants: [Swift.String]?
                         /// - Remark: Generated from `#/paths/oauth/providers/POST/requestBody/json/identityMapping/allowedAudiences`.
                         public var allowedAudiences: [Swift.String]?
                         /// - Remark: Generated from `#/paths/oauth/providers/POST/requestBody/json/identityMapping/secondaryEmailUrl`.
@@ -61907,6 +61935,8 @@ public enum Operations {
                         ///   - avatarField:
                         ///   - verificationUrl:
                         ///   - requireEmailVerified:
+                        ///   - emailVerifiedField:
+                        ///   - trustedEmailTenants:
                         ///   - allowedAudiences:
                         ///   - secondaryEmailUrl:
                         ///   - idTokenJwksUrl:
@@ -61920,6 +61950,8 @@ public enum Operations {
                             avatarField: Swift.String,
                             verificationUrl: Swift.String? = nil,
                             requireEmailVerified: Swift.Bool? = nil,
+                            emailVerifiedField: Swift.String? = nil,
+                            trustedEmailTenants: [Swift.String]? = nil,
                             allowedAudiences: [Swift.String]? = nil,
                             secondaryEmailUrl: Swift.String? = nil,
                             idTokenJwksUrl: Swift.String? = nil,
@@ -61933,6 +61965,8 @@ public enum Operations {
                             self.avatarField = avatarField
                             self.verificationUrl = verificationUrl
                             self.requireEmailVerified = requireEmailVerified
+                            self.emailVerifiedField = emailVerifiedField
+                            self.trustedEmailTenants = trustedEmailTenants
                             self.allowedAudiences = allowedAudiences
                             self.secondaryEmailUrl = secondaryEmailUrl
                             self.idTokenJwksUrl = idTokenJwksUrl
@@ -61947,6 +61981,8 @@ public enum Operations {
                             case avatarField
                             case verificationUrl
                             case requireEmailVerified
+                            case emailVerifiedField
+                            case trustedEmailTenants
                             case allowedAudiences
                             case secondaryEmailUrl
                             case idTokenJwksUrl
@@ -62073,6 +62109,10 @@ public enum Operations {
                             public var jwksUrl: Swift.String?
                             /// - Remark: Generated from `#/paths/oauth/providers/POST/responses/201/content/json/identityMapping/requireEmailVerified`.
                             public var requireEmailVerified: Swift.Bool?
+                            /// - Remark: Generated from `#/paths/oauth/providers/POST/responses/201/content/json/identityMapping/emailVerifiedField`.
+                            public var emailVerifiedField: Swift.String?
+                            /// - Remark: Generated from `#/paths/oauth/providers/POST/responses/201/content/json/identityMapping/trustedEmailTenants`.
+                            public var trustedEmailTenants: [Swift.String]?
                             /// - Remark: Generated from `#/paths/oauth/providers/POST/responses/201/content/json/identityMapping/allowedAudiences`.
                             public var allowedAudiences: [Swift.String]?
                             /// - Remark: Generated from `#/paths/oauth/providers/POST/responses/201/content/json/identityMapping/secondaryEmailUrl`.
@@ -62128,6 +62168,8 @@ public enum Operations {
                             ///   - verificationUrl:
                             ///   - jwksUrl:
                             ///   - requireEmailVerified:
+                            ///   - emailVerifiedField:
+                            ///   - trustedEmailTenants:
                             ///   - allowedAudiences:
                             ///   - secondaryEmailUrl:
                             ///   - idTokenJwksUrl:
@@ -62142,6 +62184,8 @@ public enum Operations {
                                 verificationUrl: Swift.String? = nil,
                                 jwksUrl: Swift.String? = nil,
                                 requireEmailVerified: Swift.Bool? = nil,
+                                emailVerifiedField: Swift.String? = nil,
+                                trustedEmailTenants: [Swift.String]? = nil,
                                 allowedAudiences: [Swift.String]? = nil,
                                 secondaryEmailUrl: Swift.String? = nil,
                                 idTokenJwksUrl: Swift.String? = nil,
@@ -62156,6 +62200,8 @@ public enum Operations {
                                 self.verificationUrl = verificationUrl
                                 self.jwksUrl = jwksUrl
                                 self.requireEmailVerified = requireEmailVerified
+                                self.emailVerifiedField = emailVerifiedField
+                                self.trustedEmailTenants = trustedEmailTenants
                                 self.allowedAudiences = allowedAudiences
                                 self.secondaryEmailUrl = secondaryEmailUrl
                                 self.idTokenJwksUrl = idTokenJwksUrl
@@ -62171,6 +62217,8 @@ public enum Operations {
                                 case verificationUrl
                                 case jwksUrl
                                 case requireEmailVerified
+                                case emailVerifiedField
+                                case trustedEmailTenants
                                 case allowedAudiences
                                 case secondaryEmailUrl
                                 case idTokenJwksUrl
@@ -62502,6 +62550,10 @@ public enum Operations {
                             public var jwksUrl: Swift.String?
                             /// - Remark: Generated from `#/paths/oauth/providers/{slug}/GET/responses/200/content/json/identityMapping/requireEmailVerified`.
                             public var requireEmailVerified: Swift.Bool?
+                            /// - Remark: Generated from `#/paths/oauth/providers/{slug}/GET/responses/200/content/json/identityMapping/emailVerifiedField`.
+                            public var emailVerifiedField: Swift.String?
+                            /// - Remark: Generated from `#/paths/oauth/providers/{slug}/GET/responses/200/content/json/identityMapping/trustedEmailTenants`.
+                            public var trustedEmailTenants: [Swift.String]?
                             /// - Remark: Generated from `#/paths/oauth/providers/{slug}/GET/responses/200/content/json/identityMapping/allowedAudiences`.
                             public var allowedAudiences: [Swift.String]?
                             /// - Remark: Generated from `#/paths/oauth/providers/{slug}/GET/responses/200/content/json/identityMapping/secondaryEmailUrl`.
@@ -62557,6 +62609,8 @@ public enum Operations {
                             ///   - verificationUrl:
                             ///   - jwksUrl:
                             ///   - requireEmailVerified:
+                            ///   - emailVerifiedField:
+                            ///   - trustedEmailTenants:
                             ///   - allowedAudiences:
                             ///   - secondaryEmailUrl:
                             ///   - idTokenJwksUrl:
@@ -62571,6 +62625,8 @@ public enum Operations {
                                 verificationUrl: Swift.String? = nil,
                                 jwksUrl: Swift.String? = nil,
                                 requireEmailVerified: Swift.Bool? = nil,
+                                emailVerifiedField: Swift.String? = nil,
+                                trustedEmailTenants: [Swift.String]? = nil,
                                 allowedAudiences: [Swift.String]? = nil,
                                 secondaryEmailUrl: Swift.String? = nil,
                                 idTokenJwksUrl: Swift.String? = nil,
@@ -62585,6 +62641,8 @@ public enum Operations {
                                 self.verificationUrl = verificationUrl
                                 self.jwksUrl = jwksUrl
                                 self.requireEmailVerified = requireEmailVerified
+                                self.emailVerifiedField = emailVerifiedField
+                                self.trustedEmailTenants = trustedEmailTenants
                                 self.allowedAudiences = allowedAudiences
                                 self.secondaryEmailUrl = secondaryEmailUrl
                                 self.idTokenJwksUrl = idTokenJwksUrl
@@ -62600,6 +62658,8 @@ public enum Operations {
                                 case verificationUrl
                                 case jwksUrl
                                 case requireEmailVerified
+                                case emailVerifiedField
+                                case trustedEmailTenants
                                 case allowedAudiences
                                 case secondaryEmailUrl
                                 case idTokenJwksUrl
@@ -62906,6 +62966,10 @@ public enum Operations {
                         public var verificationUrl: Swift.String?
                         /// - Remark: Generated from `#/paths/oauth/providers/{slug}/PATCH/requestBody/json/identityMapping/requireEmailVerified`.
                         public var requireEmailVerified: Swift.Bool?
+                        /// - Remark: Generated from `#/paths/oauth/providers/{slug}/PATCH/requestBody/json/identityMapping/emailVerifiedField`.
+                        public var emailVerifiedField: Swift.String?
+                        /// - Remark: Generated from `#/paths/oauth/providers/{slug}/PATCH/requestBody/json/identityMapping/trustedEmailTenants`.
+                        public var trustedEmailTenants: [Swift.String]?
                         /// - Remark: Generated from `#/paths/oauth/providers/{slug}/PATCH/requestBody/json/identityMapping/allowedAudiences`.
                         public var allowedAudiences: [Swift.String]?
                         /// - Remark: Generated from `#/paths/oauth/providers/{slug}/PATCH/requestBody/json/identityMapping/secondaryEmailUrl`.
@@ -62960,6 +63024,8 @@ public enum Operations {
                         ///   - avatarField:
                         ///   - verificationUrl:
                         ///   - requireEmailVerified:
+                        ///   - emailVerifiedField:
+                        ///   - trustedEmailTenants:
                         ///   - allowedAudiences:
                         ///   - secondaryEmailUrl:
                         ///   - idTokenJwksUrl:
@@ -62973,6 +63039,8 @@ public enum Operations {
                             avatarField: Swift.String,
                             verificationUrl: Swift.String? = nil,
                             requireEmailVerified: Swift.Bool? = nil,
+                            emailVerifiedField: Swift.String? = nil,
+                            trustedEmailTenants: [Swift.String]? = nil,
                             allowedAudiences: [Swift.String]? = nil,
                             secondaryEmailUrl: Swift.String? = nil,
                             idTokenJwksUrl: Swift.String? = nil,
@@ -62986,6 +63054,8 @@ public enum Operations {
                             self.avatarField = avatarField
                             self.verificationUrl = verificationUrl
                             self.requireEmailVerified = requireEmailVerified
+                            self.emailVerifiedField = emailVerifiedField
+                            self.trustedEmailTenants = trustedEmailTenants
                             self.allowedAudiences = allowedAudiences
                             self.secondaryEmailUrl = secondaryEmailUrl
                             self.idTokenJwksUrl = idTokenJwksUrl
@@ -63000,6 +63070,8 @@ public enum Operations {
                             case avatarField
                             case verificationUrl
                             case requireEmailVerified
+                            case emailVerifiedField
+                            case trustedEmailTenants
                             case allowedAudiences
                             case secondaryEmailUrl
                             case idTokenJwksUrl
@@ -63121,6 +63193,10 @@ public enum Operations {
                             public var jwksUrl: Swift.String?
                             /// - Remark: Generated from `#/paths/oauth/providers/{slug}/PATCH/responses/200/content/json/identityMapping/requireEmailVerified`.
                             public var requireEmailVerified: Swift.Bool?
+                            /// - Remark: Generated from `#/paths/oauth/providers/{slug}/PATCH/responses/200/content/json/identityMapping/emailVerifiedField`.
+                            public var emailVerifiedField: Swift.String?
+                            /// - Remark: Generated from `#/paths/oauth/providers/{slug}/PATCH/responses/200/content/json/identityMapping/trustedEmailTenants`.
+                            public var trustedEmailTenants: [Swift.String]?
                             /// - Remark: Generated from `#/paths/oauth/providers/{slug}/PATCH/responses/200/content/json/identityMapping/allowedAudiences`.
                             public var allowedAudiences: [Swift.String]?
                             /// - Remark: Generated from `#/paths/oauth/providers/{slug}/PATCH/responses/200/content/json/identityMapping/secondaryEmailUrl`.
@@ -63176,6 +63252,8 @@ public enum Operations {
                             ///   - verificationUrl:
                             ///   - jwksUrl:
                             ///   - requireEmailVerified:
+                            ///   - emailVerifiedField:
+                            ///   - trustedEmailTenants:
                             ///   - allowedAudiences:
                             ///   - secondaryEmailUrl:
                             ///   - idTokenJwksUrl:
@@ -63190,6 +63268,8 @@ public enum Operations {
                                 verificationUrl: Swift.String? = nil,
                                 jwksUrl: Swift.String? = nil,
                                 requireEmailVerified: Swift.Bool? = nil,
+                                emailVerifiedField: Swift.String? = nil,
+                                trustedEmailTenants: [Swift.String]? = nil,
                                 allowedAudiences: [Swift.String]? = nil,
                                 secondaryEmailUrl: Swift.String? = nil,
                                 idTokenJwksUrl: Swift.String? = nil,
@@ -63204,6 +63284,8 @@ public enum Operations {
                                 self.verificationUrl = verificationUrl
                                 self.jwksUrl = jwksUrl
                                 self.requireEmailVerified = requireEmailVerified
+                                self.emailVerifiedField = emailVerifiedField
+                                self.trustedEmailTenants = trustedEmailTenants
                                 self.allowedAudiences = allowedAudiences
                                 self.secondaryEmailUrl = secondaryEmailUrl
                                 self.idTokenJwksUrl = idTokenJwksUrl
@@ -63219,6 +63301,8 @@ public enum Operations {
                                 case verificationUrl
                                 case jwksUrl
                                 case requireEmailVerified
+                                case emailVerifiedField
+                                case trustedEmailTenants
                                 case allowedAudiences
                                 case secondaryEmailUrl
                                 case idTokenJwksUrl
