@@ -13,6 +13,16 @@ final class ReviewGitTests: XCTestCase {
         XCTAssertEqual(branches, ["main"])
     }
 
+    /// `refname:short` would print `heads/v2` here, and the crawler would build `refs/heads/heads/v2`.
+    func testLocalBranchesNameABranchThatSharesItsNameWithATag() async throws {
+        let repo = try PartnerGitFixture()
+        try repo.commit(file: "a.txt", day: 1, message: "first")
+        try repo.git("branch", "v2")
+        try repo.git("tag", "v2")
+        let branches = try await repo.review.localBranches(in: repo.directory)
+        XCTAssertEqual(branches.sorted(), ["main", "v2"])
+    }
+
     func testDefaultBranchSkipsAnOriginHEADWithNoLocalBranch() async throws {
         let repo = try PartnerGitFixture()
         try repo.commit(file: "a.txt", day: 1, message: "first")
