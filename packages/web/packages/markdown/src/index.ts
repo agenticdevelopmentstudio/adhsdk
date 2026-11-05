@@ -12,6 +12,7 @@ export type { MarkdownViewerProps } from './components/MarkdownViewer'
 // Sub-components (exported for host-app composition if needed)
 export { MarkdownRenderer } from './components/MarkdownRenderer'
 export type { MarkdownRendererProps } from './components/MarkdownRenderer'
+export type { ProseMeasure } from './lib/prose-class'
 
 // JSON / JSON Lines, pretty-printed in the same code-block styling (`wrap` as MarkdownRenderer)
 export { JsonRenderer, JSON_HIGHLIGHT_LIMIT } from './components/JsonRenderer'

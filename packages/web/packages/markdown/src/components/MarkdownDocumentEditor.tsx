@@ -15,6 +15,7 @@ import {
 } from '@adh-sdk/ui/blocks/split-view-control'
 import { cn } from '@adh-sdk/ui/lib/utils'
 
+import type { ProseMeasure } from '../lib/prose-class'
 import { MarkdownRenderer } from './MarkdownRenderer'
 import { MarkdownReadingPalette } from './MarkdownReadingPalette'
 
@@ -76,6 +77,9 @@ export interface MarkdownDocumentEditorProps extends MarkdownEditorProps {
   /** Reading theme for the preview pane, forwarded to `MarkdownReadingPalette`. Defaults to
    *  that component's own default (`DEFAULT_THEME_ID`). */
   themeId?: string
+  /** How wide the preview's prose runs, forwarded to `MarkdownRenderer`: a ~72ch reading
+   *  column (default) or the full pane, for a tool showing files rather than a page to read. */
+  previewMeasure?: ProseMeasure
 }
 
 /**
@@ -106,6 +110,7 @@ export function MarkdownDocumentEditor({
   previewClassName,
   fill = true,
   themeId,
+  previewMeasure = 'reading',
   ...editor
 }: MarkdownDocumentEditorProps): React.JSX.Element {
   const view = useSplitView({ defaultLayout, defaultPane: defaultTab })
@@ -165,7 +170,7 @@ export function MarkdownDocumentEditor({
                 author stops typing. */}
             <div aria-live="off">
               {source.trim() ? (
-                <MarkdownRenderer content={source} />
+                <MarkdownRenderer content={source} measure={previewMeasure} />
               ) : (
                 <p className="text-sm text-apt-text-dim">Nothing to preview yet.</p>
               )}

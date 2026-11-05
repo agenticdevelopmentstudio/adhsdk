@@ -272,6 +272,12 @@
 
 /* `wrap`: long code lines wrap at the pane's edge instead of scrolling sideways.
  * Every <pre>, not `pre.shiki`: the rendered <pre> carries no shiki class. */
+/* measure="fill": prose runs the container's full width (a tool pane showing a file), not the
+   reading column above. */
+.adh-mv-prose--fill {
+  max-width: none;
+}
+
 .adh-mv-prose--wrap pre,
 .adh-mv-prose--wrap pre code {
   white-space: pre-wrap;

@@ -5,12 +5,15 @@
 // is chosen at runtime on the client with no server round-trip.
 
 import { processMarkdown } from '../lib/process-markdown'
+import { proseClassName, type ProseMeasure } from '../lib/prose-class'
 
 export interface MarkdownContentProps {
   /** Raw markdown string (frontmatter, if any, is stripped). */
   content: string
   /** Extra class(es) appended to the always-present `adh-mv-prose`. */
   className?: string
+  /** How wide the prose runs: a ~72ch reading column (default) or the container's width. */
+  measure?: ProseMeasure
 }
 
 /**
@@ -19,11 +22,11 @@ export interface MarkdownContentProps {
  * a host uses. Async (RSC): `await`s the shared unified pipeline; the shiki highlighter + frozen
  * processor are module-cached, so repeated calls in one process reuse them.
  */
-export async function MarkdownContent({ content, className }: MarkdownContentProps) {
+export async function MarkdownContent({ content, className, measure = 'reading' }: MarkdownContentProps) {
   const { html } = await processMarkdown(content)
   return (
     <div
-      className={className ? `adh-mv-prose ${className}` : 'adh-mv-prose'}
+      className={proseClassName({ measure, className })}
       // `html` is ALWAYS rehype-sanitize output (processMarkdown's final step) — XSS-safe sink (c6).
       dangerouslySetInnerHTML={{ __html: html }}
     />

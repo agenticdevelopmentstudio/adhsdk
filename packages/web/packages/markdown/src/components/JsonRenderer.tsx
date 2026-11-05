@@ -2,6 +2,7 @@
 
 import { useMemo } from 'react'
 import { fenceCode, prettyJson } from '../lib/pretty-json'
+import { proseClassName } from '../lib/prose-class'
 import { MarkdownRenderer } from './MarkdownRenderer'
 
 /** Past this many characters a pretty-printed document is shown without syntax colours:
@@ -25,7 +26,7 @@ export function JsonRenderer({ content, wrap = false }: JsonRendererProps): Reac
   const body = pretty ?? content
   if (body.length > JSON_HIGHLIGHT_LIMIT) {
     return (
-      <div className={wrap ? 'adh-mv-prose adh-mv-prose--wrap' : 'adh-mv-prose'}>
+      <div className={proseClassName({ wrap })}>
         {pretty === null && <p className="adh-mv-json-note">Not valid JSON — shown as written.</p>}
         <pre className="shiki">
           <code>{body}</code>

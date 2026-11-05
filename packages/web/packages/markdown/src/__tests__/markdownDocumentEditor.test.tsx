@@ -21,7 +21,9 @@ import { render, screen, cleanup, waitFor, fireEvent, act } from '@testing-libra
 import { useState } from 'react'
 
 vi.mock('../components/MarkdownRenderer', () => ({
-  MarkdownRenderer: ({ content }: { content: string }) => <div data-testid="rendered">{content}</div>,
+  MarkdownRenderer: ({ content, measure }: { content: string; measure?: string }) => (
+    <div data-testid="rendered" data-measure={measure}>{content}</div>
+  ),
 }))
 
 import { MarkdownDocumentEditor } from '../components/MarkdownDocumentEditor'
@@ -121,6 +123,14 @@ describe('MarkdownDocumentEditor — narrow', () => {
     )
     fireEvent.click(screen.getByRole('button', { name: /preview/i }))
     expect(document.querySelector('[data-slot="markdown-preview"]')).toHaveClass('min-h-[12rem]')
+  })
+
+  it('renders the preview at the reading measure unless the host asks it to fill', async () => {
+    const { unmount } = render(<MarkdownDocumentEditor value="hi" onChange={() => {}} defaultTab="preview" />)
+    expect((await screen.findByTestId('rendered')).dataset.measure).toBe('reading')
+    unmount()
+    render(<MarkdownDocumentEditor value="hi" onChange={() => {}} defaultTab="preview" previewMeasure="fill" />)
+    expect((await screen.findByTestId('rendered')).dataset.measure).toBe('fill')
   })
 
   it('collapses a `split` preference to tabbed on a phone — side-by-side is never available narrow', () => {
