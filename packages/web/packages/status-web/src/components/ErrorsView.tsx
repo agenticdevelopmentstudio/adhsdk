@@ -175,14 +175,18 @@ export function ErrorsView({ site, onSite }: ErrorsViewProps): ReactElement {
         )}
 
         {site !== null ? (
-          <ErrorsSitePage
-            key={site}
-            site={site}
-            sections={sections}
-            posthogOn={posthogOn}
-            refreshing={refreshing}
-            posthogUrl={posthogUrl}
-          />
+          // With no answer at all there is nothing to say about the site: drawing the page from empty
+          // sections would claim it is clean. The alert above is the whole story.
+          (body || refreshing) && (
+            <ErrorsSitePage
+              key={site}
+              site={site}
+              sections={sections}
+              posthogOn={posthogOn}
+              refreshing={refreshing}
+              posthogUrl={posthogUrl}
+            />
+          )
         ) : (
           <>
             {summary && !summary.complete && (
