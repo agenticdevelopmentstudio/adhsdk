@@ -229,23 +229,22 @@ export async function loadSiteErrorDetail(env: PosthogEnv, w: RangeWindow): Prom
   const status = "toFloat(properties.status)";
   const failed = `(${status} >= 500 OR ${status} = 0)`;
   const isFailure = `event = 'http_request' AND ${failed}`;
-  const [days, errors, requests] = await Promise.all([
-    rows(
-      env,
-      `SELECT ${HOST}, toStartOfDay(timestamp), countIf(event = 'error_reported'), countIf(${isFailure}) FROM events ` +
-        `WHERE event IN ('error_reported', 'http_request') AND ${since(w)} AND ${PRODUCTION_HOSTS} GROUP BY 1, 2 ORDER BY 2 LIMIT ${ERROR_DETAIL_ROW_LIMIT}`,
-    ),
-    rows(
-      env,
-      `SELECT ${HOST}, properties.error_name, properties.feature, properties.step, properties.boundary, properties.$pathname, count(), max(timestamp) FROM events ` +
-        `WHERE event = 'error_reported' AND ${since(w)} AND ${PRODUCTION_HOSTS} GROUP BY 1, 2, 3, 4, 5, 6 ORDER BY 7 DESC LIMIT ${ERROR_DETAIL_ROW_LIMIT}`,
-    ),
-    rows(
-      env,
-      `SELECT ${HOST}, ${status}, properties.method, properties.path, count(), max(timestamp) FROM events ` +
-        `WHERE ${isFailure} AND ${since(w)} AND ${PRODUCTION_HOSTS} GROUP BY 1, 2, 3, 4 ORDER BY 5 DESC LIMIT ${ERROR_DETAIL_ROW_LIMIT}`,
-    ),
-  ]);
+  // In turn, so the first failure ends the section without spending the other two scans.
+  const days = await rows(
+    env,
+    `SELECT ${HOST}, toStartOfDay(timestamp), countIf(event = 'error_reported'), countIf(${isFailure}) FROM events ` +
+      `WHERE event IN ('error_reported', 'http_request') AND ${since(w)} AND ${PRODUCTION_HOSTS} GROUP BY 1, 2 ORDER BY 2 LIMIT ${ERROR_DETAIL_ROW_LIMIT}`,
+  );
+  const errors = await rows(
+    env,
+    `SELECT ${HOST}, properties.error_name, properties.feature, properties.step, properties.boundary, properties.$pathname, count(), max(timestamp) FROM events ` +
+      `WHERE event = 'error_reported' AND ${since(w)} AND ${PRODUCTION_HOSTS} GROUP BY 1, 2, 3, 4, 5, 6 ORDER BY 7 DESC LIMIT ${ERROR_DETAIL_ROW_LIMIT}`,
+  );
+  const requests = await rows(
+    env,
+    `SELECT ${HOST}, ${status}, properties.method, properties.path, count(), max(timestamp) FROM events ` +
+      `WHERE ${isFailure} AND ${since(w)} AND ${PRODUCTION_HOSTS} GROUP BY 1, 2, 3, 4 ORDER BY 5 DESC LIMIT ${ERROR_DETAIL_ROW_LIMIT}`,
+  );
   return {
     buckets: w.buckets,
     days: shapeErrorDays(days, w.buckets),
