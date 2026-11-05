@@ -119,6 +119,23 @@ describe('appearance scope', () => {
     expect(painted()).toBe(false)
   })
 
+  // A site that only mounts a scope for the app's lifetime (homesite's main.tsx) relies on the
+  // first mount alone to arm OS-following: no adopt, no stored prefs, nothing else reads the store.
+  it('a scope mounted with nothing stored follows the OS when it flips', async () => {
+    const os = installSchemeQuery(false)
+    const store = await freshStore()
+
+    store.mountAppearanceScope()
+    expect(document.documentElement.classList.contains('dark')).toBe(false)
+    expect(document.documentElement.dataset.colorMode).toBe('auto')
+
+    os.flip(true)
+    expect(document.documentElement.classList.contains('dark')).toBe(true)
+
+    os.flip(false)
+    expect(document.documentElement.classList.contains('dark')).toBe(false)
+  })
+
   it('a site that never mounts a scope keeps painting on commit and on an OS change', async () => {
     const os = installSchemeQuery(false)
     const store = await freshStore()
