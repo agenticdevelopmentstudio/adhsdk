@@ -102,12 +102,33 @@ export function formatAge(iso: string | null, now: number): string {
   return text === "just now" ? text : `${text} ago`;
 }
 
-/** A panel fed by two providers: it has data if either answered, and shows the first failure. */
-export function eitherSection(a: DashboardSection<unknown>, b: DashboardSection<unknown>): DashboardSection<true> {
+/** The earliest of these times, null when none is known. */
+function oldest(times: readonly (string | null)[]): string | null {
+  let found: string | null = null;
+  for (const t of times) {
+    if (t !== null && (found === null || Date.parse(t) < Date.parse(found))) found = t;
+  }
+  return found;
+}
+
+/**
+ * A panel fed by several providers, keyed by provider name: it has data if any answered.
+ *
+ * The error and the time travel together. Each failure names its provider, and `updatedAt` is when
+ * the FAILED providers last read well, so "Last good data from 3h ago. The latest refresh failed"
+ * describes one provider's data, not one provider's failure beside the other's fresh read. With
+ * nothing failing, it is the oldest read on the panel, since that is how old part of it is.
+ */
+export function eitherSection(sources: Readonly<Record<string, DashboardSection<unknown>>>): DashboardSection<true> {
+  const all = Object.entries(sources);
+  const failed = all.filter(([, s]) => s.error !== null);
   return {
-    data: a.data !== null || b.data !== null ? true : null,
-    error: a.error ?? b.error,
-    updatedAt: a.updatedAt ?? b.updatedAt,
+    data: all.some(([, s]) => s.data !== null) ? true : null,
+    error:
+      failed.length === 0
+        ? null
+        : failed.map(([name, s]) => (all.length > 1 ? `${name}: ${s.error}` : s.error)).join("; "),
+    updatedAt: oldest((failed.length > 0 ? failed : all).map(([, s]) => s.updatedAt)),
   };
 }
 

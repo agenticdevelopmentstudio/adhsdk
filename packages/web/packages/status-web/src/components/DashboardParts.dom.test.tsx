@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
-import { OpenOnClickTable } from "./DashboardParts";
+import { eitherSection, OpenOnClickTable } from "./DashboardParts";
 
 afterEach(cleanup);
 
@@ -18,6 +18,30 @@ function table(onOpen: (id: string) => void): void {
     />,
   );
 }
+
+describe("eitherSection", () => {
+  const ok = (updatedAt: string) => ({ data: 1, error: null, updatedAt });
+
+  it("pairs a failure with the failing provider's own last good read, and names it", () => {
+    const s = eitherSection({
+      PostHog: { data: 1, error: "HTTP 503", updatedAt: "2026-11-04T09:00:00Z" },
+      Vercel: ok("2026-11-04T11:59:00Z"),
+    });
+    expect(s).toEqual({ data: true, error: "PostHog: HTTP 503", updatedAt: "2026-11-04T09:00:00Z" });
+  });
+
+  it("does not borrow a healthy provider's time for a failure that has none", () => {
+    const s = eitherSection({ PostHog: ok("2026-11-04T11:59:00Z"), Vercel: { data: null, error: "timeout", updatedAt: null } });
+    expect(s).toEqual({ data: true, error: "Vercel: timeout", updatedAt: null });
+  });
+
+  it("is as old as its oldest read when nothing failed, and leaves a lone provider unnamed", () => {
+    expect(eitherSection({ PostHog: ok("2026-11-04T11:00:00Z"), Vercel: ok("2026-11-04T10:00:00Z") }).updatedAt).toBe(
+      "2026-11-04T10:00:00Z",
+    );
+    expect(eitherSection({ Vercel: { data: null, error: "x", updatedAt: null } }).error).toBe("x");
+  });
+});
 
 describe("OpenOnClickTable", () => {
   it("opens the row that was clicked", () => {
