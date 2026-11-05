@@ -62,24 +62,28 @@ export function telemetryRoutes(
   const cachedAnalytics = cachedSingleFlight(ANALYTICS_CACHE_TTL_MS, async () => {
     const r = await analyticsFetcher.fetch();
     if (r.ok) lastGood.analytics = r.items;
-    return lastGood.analytics ?? [];
+    // With nothing ever read, a failure has no stream to stand in for it. Throwing keeps it out
+    // of the cache, so the next read polls again instead of serving nothing for a whole TTL.
+    if (!lastGood.analytics) throw new Error('no analytics read yet');
+    return lastGood.analytics;
   });
+
+  /** The analytics for one snapshot; null when none have been read yet (`analyticsPending`). */
+  type Analytics = AnalyticsMetricDTO[] | null;
 
   // PostHog takes 2–30s to answer, and the GlitchTip half of this snapshot is what the
   // Overview's error card and the board wait on. Awaiting both let the slow half hold up the
   // fast half: `/telemetry` was logging 18s stalls. So a normal read serves what we already
-  // have and lets the refresh land for the next poll; only a cold start waits, briefly.
-  async function analyticsForSnapshot(fresh: boolean): Promise<AnalyticsMetricDTO[]> {
-    const refresh = cachedAnalytics(fresh);
+  // have and lets the refresh land for the next poll; only a cold start waits, briefly, and
+  // says so when it gives up rather than passing an empty list off as the answer.
+  async function analyticsForSnapshot(fresh: boolean): Promise<Analytics> {
+    const refresh: Promise<Analytics> = cachedAnalytics(fresh).catch(() => lastGood.analytics);
     if (fresh) return refresh;
     const known = lastGood.analytics;
-    if (known) {
-      void refresh.catch(() => undefined);
-      return known;
-    }
+    if (known) return known;
     let timer: ReturnType<typeof setTimeout> | undefined;
-    const coldWait = new Promise<AnalyticsMetricDTO[]>((resolve) => {
-      timer = setTimeout(() => resolve([]), ANALYTICS_COLD_WAIT_MS);
+    const coldWait = new Promise<Analytics>((resolve) => {
+      timer = setTimeout(() => resolve(null), ANALYTICS_COLD_WAIT_MS);
     });
     try {
       return await Promise.race([refresh, coldWait]);
@@ -91,7 +95,12 @@ export function telemetryRoutes(
   app.get('/telemetry', async (c) => {
     const fresh = c.req.query('fresh') === '1';
     const [errors, analytics] = await Promise.all([cachedErrors(fresh), analyticsForSnapshot(fresh)]);
-    const snapshot: TelemetrySnapshot = { generatedAt: new Date().toISOString(), errors, analytics };
+    const snapshot: TelemetrySnapshot = {
+      generatedAt: new Date().toISOString(),
+      errors,
+      analytics: analytics ?? [],
+      ...(analytics ? {} : { analyticsPending: true }),
+    };
     return c.json(snapshot, 200, { 'Cache-Control': 'no-store' });
   });
 

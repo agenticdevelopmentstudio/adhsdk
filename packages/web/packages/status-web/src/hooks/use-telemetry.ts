@@ -1,9 +1,9 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useStatusApi } from "../api/client";
 import { cache, source } from "../telemetry/client";
-import { emptySnapshot, type TelemetrySnapshot } from "../telemetry/types";
+import { emptySnapshot, withKnownAnalytics, type TelemetrySnapshot } from "../telemetry/types";
 
 export const TELEMETRY_POLL_MS = 60_000;
 
@@ -28,11 +28,14 @@ export function useTelemetry(): TelemetrySnapshot {
     retry: 1,
   });
 
-  useEffect(() => {
-    if (query.data) cache.save(query.data);
-  }, [query.data]);
+  // Live data wins, except for analytics the backend says it has not read yet: those keep
+  // what was known. The cached snapshot covers the gap before the first poll lands (and a
+  // brief source outage); empty until either arrives.
+  const live = useMemo(() => (query.data ? withKnownAnalytics(query.data, cached) : null), [query.data, cached]);
 
-  // Live data wins; the cached snapshot covers the gap before the first poll
-  // lands (and a brief source outage); empty until either arrives.
-  return query.data ?? cached ?? emptySnapshot();
+  useEffect(() => {
+    if (live) cache.save(live);
+  }, [live]);
+
+  return live ?? cached ?? emptySnapshot();
 }
