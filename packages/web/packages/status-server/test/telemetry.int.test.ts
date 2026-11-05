@@ -191,4 +191,44 @@ describe('telemetry live snapshot — single-flight + stale fallback', () => {
       vi.useRealTimers();
     }
   });
+
+  it('a cold start that gives up on PostHog says the analytics are pending, not empty', async () => {
+    const errorsFetcher: Fetcher<ErrorDTO> = { fetch: async () => ({ ok: true as const, items: [errItem] }) };
+    const analyticsFetcher: Fetcher<AnalyticsMetricDTO> = { fetch: () => new Promise(() => undefined) };
+    const routes = telemetryRoutes(createLibsqlStorage(db), testConfig(), { errorsFetcher, analyticsFetcher });
+
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+    try {
+      const pending = routes.request('/telemetry');
+      await vi.advanceTimersByTimeAsync(3_000);
+      const body = (await (await pending).json()) as { errors: unknown[]; analytics: unknown[]; analyticsPending?: boolean };
+      expect(body.errors).toHaveLength(1);
+      expect(body.analytics).toEqual([]);
+      expect(body.analyticsPending).toBe(true);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('a failed first PostHog poll is not cached: the next read polls again', async () => {
+    const metric: AnalyticsMetricDTO = { metric: 'pageviews', window: '7d', scope: 'all', value: 5, capturedAt: 'x' };
+    const errorsFetcher: Fetcher<ErrorDTO> = { fetch: async () => ({ ok: true as const, items: [errItem] }) };
+    let fail = true;
+    const analyticsFetcher: Fetcher<AnalyticsMetricDTO> = {
+      fetch: vi.fn(async () => (fail ? { ok: false as const, items: [] } : { ok: true as const, items: [metric] })),
+    };
+    const routes = telemetryRoutes(createLibsqlStorage(db), testConfig(), { errorsFetcher, analyticsFetcher });
+
+    const first = (await (await routes.request('/telemetry')).json()) as { analyticsPending?: boolean };
+    expect(first.analyticsPending).toBe(true);
+
+    fail = false;
+    const second = (await (await routes.request('/telemetry')).json()) as {
+      analytics: AnalyticsMetricDTO[];
+      analyticsPending?: boolean;
+    };
+    expect(analyticsFetcher.fetch).toHaveBeenCalledTimes(2);
+    expect(second.analytics).toEqual([metric]);
+    expect(second.analyticsPending).toBeUndefined();
+  });
 });

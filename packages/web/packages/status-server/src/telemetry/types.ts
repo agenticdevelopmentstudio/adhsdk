@@ -34,6 +34,11 @@ export interface TelemetrySnapshot {
   generatedAt: string; // ISO
   errors: ErrorDTO[];
   analytics: AnalyticsMetricDTO[];
+  /**
+   * True when no analytics have been read since the backend started, so `analytics` is empty
+   * for want of an answer, not because there is no traffic. A client keeps what it last knew.
+   */
+  analyticsPending?: boolean;
 }
 
 export function emptySnapshot(): TelemetrySnapshot {

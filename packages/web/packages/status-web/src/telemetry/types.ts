@@ -34,8 +34,23 @@ export interface TelemetrySnapshot {
   generatedAt: string; // ISO
   errors: ErrorDTO[];
   analytics: AnalyticsMetricDTO[];
+  /**
+   * True when no analytics have been read since the backend started, so `analytics` is empty
+   * for want of an answer, not because there is no traffic. A client keeps what it last knew.
+   */
+  analyticsPending?: boolean;
 }
 
 export function emptySnapshot(): TelemetrySnapshot {
   return { generatedAt: "", errors: [], analytics: [] };
+}
+
+/**
+ * The live snapshot, with the analytics a client already knew standing in when the backend
+ * has none to give yet (`analyticsPending`). Without this a backend restart blanks the traffic
+ * figures, and the empty list is then saved over the good ones in the cache.
+ */
+export function withKnownAnalytics(live: TelemetrySnapshot, known: TelemetrySnapshot | null): TelemetrySnapshot {
+  if (!live.analyticsPending || !known?.analytics.length) return live;
+  return { ...live, analytics: known.analytics };
 }
