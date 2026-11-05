@@ -1364,48 +1364,28 @@ export function siteHomePath(id: SiteId): string {
   return getSite(id)?.hasHome ? '/home' : '/'
 }
 
-/** The brand origins a given backend environment must allow as OAuth `return`
- *  targets for the central `adh` cross-site-SSO client. Every brand site begins
- *  login by navigating to the shared Authorization Server with
- *  `return=https://<this site>/auth/callback`; the backend only honors a return
- *  whose origin is on the `adh` client's allowlist, so the seeder feeds it this
- *  list.
+/** The brand origins that were real sites in a given backend environment.
  *
- *  Each Vercel project talks ONLY to its same-env backend, so an env's allowlist
- *  needs exactly the origins that can reach that env: production = every site;
+ *  The backend no longer trusts this list. A site's sign-in returns and CORS come
+ *  from its `web` application's login registration in the hub's ecosystem
+ *  (adhbackend `docs/designs/client-auth.md` §11), so adding a site here grants it
+ *  nothing: give it an application in the hub's ecosystem instead. The backend
+ *  reads this list in one place, while moving the origins the `adh` client still
+ *  holds onto applications (`src/lib/move-site-origins.ts`): an origin on the
+ *  client that this list does not name is a retired site, and is dropped rather
+ *  than moved, so a lapsed domain's next owner cannot inherit hub sign-in.
+ *
+ *  Each Vercel project talks ONLY to its same-env backend, so an env's list
+ *  holds exactly the origins that can reach that env: production = every site;
  *  staging = sites with a staging deploy; testing = sites with a testing deploy.
  *  A site with no deploy in `env` is reached via the testing→staging fallback on
- *  a DIFFERENT env's host (see `hostForEnv`), so its origin never hits this env's
- *  backend and is intentionally absent here.
+ *  a DIFFERENT env's host (see `hostForEnv`), so its origin is absent here.
  *
- *  `external` sites (FishLamp Design) are excluded from EVERY env: they are
- *  link-outs, not ADH apps — they have no `/auth/callback` and never begin an
- *  ADH login, so listing them would widen the OAuth redirect surface for nothing.
- *  `nativeApp` sites (Kitchen, Stenographer) are excluded from every env for the
- *  same reason: they are a Mac app's home page, with no ADH login to return to.
- *
- *  ⚠️ `hasStaging` / `hasTesting` ARE THE OAUTH REDIRECT SURFACE, and editing one
- *  is a one-way door. The enforcement point is a DB column, and the deploy-time
- *  sync that fills it (`backend/src/adh/src/lib/sync-return-origins.ts`) is
- *  ADDITIVE, NEVER PRUNING — it adds what this function names and keeps whatever
- *  else is already there. So flipping a flag to `true` allow-lists that origin on
- *  that env permanently; flipping it back to `false` does NOT take it off, and
- *  nothing in the deploy path will. Un-widening is a deliberate, hand-run
- *  `tools/sync-return-origins.ts --prune` against that env. Treat a flag flip on
- *  an EXISTING row the way you would treat editing the allow-list itself, and
- *  flip one only for a site that really is deployed on that tier — a claimed tier
- *  with nothing behind it buys a live redirect target for a host we are not
- *  serving. (`testing/probe-auth-fleet.py` derives its roster from these same
- *  flags, so a tier claimed and not deployed shows up there as a failing probe
- *  rather than as silence.)
- *
- *  This has happened once. `messaging` was an in-hub-only feature id until
- *  2026-08-22 — `hasStaging: false, hasTesting: false, listed: false`, so only its
- *  production origin was ever listed — and became a real three-tier site that day
- *  (deployed by `.shipr`'s group4 shard, all three hosts live in DNS), which added
- *  `https://staging.agenticdevelopermessaging.com` and
- *  `https://testing.agenticdevelopermessaging.com` for good. Intended, and written
- *  down here because the diff that did it looked like a listing change. */
+ *  `external` sites (FishLamp Design) and `nativeApp` sites (Kitchen,
+ *  Stenographer) are excluded from every env: they have no `/auth/callback` and
+ *  never begin an ADH login. (`testing/probe-auth-fleet.py` derives its roster
+ *  from the same `hasStaging` / `hasTesting` flags, so a tier claimed and not
+ *  deployed shows up there as a failing probe rather than as silence.) */
 export function ssoReturnOrigins(env: 'production' | 'staging' | 'testing'): string[] {
   const prefix = env === 'production' ? '' : `${env}.`
   return SITES.filter(

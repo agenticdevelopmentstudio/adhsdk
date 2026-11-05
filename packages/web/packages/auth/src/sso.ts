@@ -430,11 +430,12 @@ export async function beginSilentLogin(
  * cross-origin SSO is unreachable): the switch is then a plain navigation, the
  * same as before. Used by the site switcher when the user is signed in.
  *
- * NOTE: the destination origin must be on the 'adh' client's return-origin
- * allow-list (it is, for every registered site — see registry.ssoReturnOrigins).
- * If a target's origin is ever missing from the seeded allow-list, the AS
- * `prompt=none` path falls through to the central login page instead of bouncing
- * a code back — the same allow-list dependency the silent cold-load restore has.
+ * NOTE: the destination origin must be a return origin the hub trusts: the
+ * hub's own, or one on a `web` application's login registration in the hub's
+ * ecosystem. Listing a site in the registry does not make it one. If a target's
+ * origin is not trusted, the AS `prompt=none` path falls through to the central
+ * login page instead of bouncing a code back — the same dependency the silent
+ * cold-load restore has.
  */
 export function ssoSwitchUrl(
   destUrl: string,
