@@ -6646,6 +6646,1398 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/integrations/end-user-connections": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Health of an ecosystem's end-user connections (operator)
+         * @description Provider, service type, status, last sync and last error for each END-USER connection in the ecosystem. No account name, username, external id or connection id: an operator can see that a connection is unhealthy, not whose it is. The caller must manage the ecosystem (400 when `ecosystemId` is omitted; 404/403 when unknown / not the caller's).
+         */
+        get: {
+            parameters: {
+                query: {
+                    ecosystemId: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description End-user connection health */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            connections: {
+                                provider: string;
+                                serviceType: string;
+                                /** @description active | error | revoked | pending */
+                                status: string;
+                                lastSyncAt: string | null;
+                                lastError: string | null;
+                            }[];
+                        };
+                    };
+                };
+                /** @description Problem Details (RFC 9457) */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Problem Details (RFC 9457) */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Problem Details (RFC 9457) */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Problem Details (RFC 9457) */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/integrations/{connectionId}/data/{resource}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                connectionId: string;
+                /** @description media-items | social-notifications | media-albums | email-labels | social-posts */
+                resource: string;
+            };
+            cookie?: never;
+        };
+        /**
+         * Read a connection's synced rows (Data tab)
+         * @description One page of live rows, ordered by `syncVersion`. Only the connection's own customer may read; any other caller, an end-user connection and a deleted connection all get the same 404. Unknown `resource` is 404; a bad `cursor` or `limit` is 400. `limit` defaults to 50 and is capped at 200.
+         */
+        get: {
+            parameters: {
+                query?: {
+                    cursor?: string;
+                    limit?: string;
+                };
+                header?: never;
+                path: {
+                    connectionId: string;
+                    /** @description media-items | social-notifications | media-albums | email-labels | social-posts */
+                    resource: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description A page of rows */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["IntegrationConnectionDataPage"];
+                    };
+                };
+                /** @description Problem Details (RFC 9457) */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Problem Details (RFC 9457) */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Problem Details (RFC 9457) */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/integrations/media-content/{token}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Signed token from the media content URL route */
+                token: string;
+            };
+            cookie?: never;
+        };
+        /**
+         * Fetch a Google Photos image by signed URL (public)
+         * @description No bearer: an `<img>` cannot send one. The token is the credential. It names one connection, one media item and one size, and expires after five minutes. Returns the image bytes with the upstream content type. Errors are opaque: 401 for a bad, expired or forged token, 404 for an unknown item, 502 when the image could not be fetched, 504 when the fetch timed out.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Signed token from the media content URL route */
+                    token: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Image bytes */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/octet-stream": string;
+                    };
+                };
+                /** @description Problem Details (RFC 9457) */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Problem Details (RFC 9457) */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Problem Details (RFC 9457) */
+                502: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Problem Details (RFC 9457) */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Problem Details (RFC 9457) */
+                504: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/integrations/me/providers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List providers the end user can connect
+         * @description Catalog entries marked end-user connectable AND enabled in the caller's ecosystem. Public fields only.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Providers */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            providers: components["schemas"]["IntegrationMeProvider"][];
+                        };
+                    };
+                };
+                /** @description Problem Details (RFC 9457) */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Problem Details (RFC 9457) */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Problem Details (RFC 9457) */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/integrations/me/providers/{providerId}/auth-url": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                providerId: string;
+            };
+            cookie?: never;
+        };
+        /**
+         * Get the OAuth authorize URL (end user)
+         * @description oauth providers only (400 otherwise). 404 when the provider is not connectable in the caller's ecosystem. `serviceType` must be one the provider offers (400 otherwise).
+         */
+        get: {
+            parameters: {
+                query: {
+                    redirectUri: string;
+                    serviceType?: string;
+                };
+                header?: never;
+                path: {
+                    providerId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Authorize URL + round-trip state */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            url: string;
+                            state: string;
+                        };
+                    };
+                };
+                /** @description Problem Details (RFC 9457) */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Problem Details (RFC 9457) */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Problem Details (RFC 9457) */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Problem Details (RFC 9457) */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Problem Details (RFC 9457) */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/integrations/me/providers/{providerId}/register-instance": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                providerId: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Register a self-hosted OAuth instance (end user)
+         * @description oauth_instance providers only (400 otherwise). The body is strict: `ecosystemId` and `providerConfigId` are refused. `serviceType` must be one the provider offers (400 otherwise).
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    providerId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        instanceUrl: string;
+                        redirectUri: string;
+                        serviceType?: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Instance registration -> authorize URL */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            state: string;
+                            authorizeUrl: string;
+                            clientId: string;
+                        };
+                    };
+                };
+                /** @description Problem Details (RFC 9457) */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Problem Details (RFC 9457) */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Problem Details (RFC 9457) */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Problem Details (RFC 9457) */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Problem Details (RFC 9457) */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/integrations/me/connect": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Connect an integration (end user)
+         * @description Finishes the connect flow for the caller. Returns the redacted connection. 404 when the provider is not connectable in the caller's ecosystem. `serviceType` must be one the provider offers (400 otherwise).
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["IntegrationMeConnectRequest"];
+                };
+            };
+            responses: {
+                /** @description Connected (redacted) */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["IntegrationConnection"];
+                    };
+                };
+                /** @description Problem Details (RFC 9457) */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Problem Details (RFC 9457) */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Problem Details (RFC 9457) */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Problem Details (RFC 9457) */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Problem Details (RFC 9457) */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/integrations/me/connections": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List the caller's own connections */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Connections */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            connections: components["schemas"]["IntegrationConnection"][];
+                        };
+                    };
+                };
+                /** @description Problem Details (RFC 9457) */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Problem Details (RFC 9457) */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/integrations/me/connections/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Disconnect one of the caller's connections
+         * @description Soft-deletes the connection and tombstones the rows it produced.
+         */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Success */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            ok: boolean;
+                        };
+                    };
+                };
+                /** @description Problem Details (RFC 9457) */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Problem Details (RFC 9457) */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Problem Details (RFC 9457) */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/integrations/me/connections/{id}/sync": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Sync one of the caller's connections now
+         * @description 503 when no worker is registered for its provider and service type.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Sync dispatched */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            ok: true;
+                        };
+                    };
+                };
+                /** @description Problem Details (RFC 9457) */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Problem Details (RFC 9457) */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Problem Details (RFC 9457) */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Problem Details (RFC 9457) */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/integrations/me/connections/{id}/settings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Update sync settings on one of the caller's connections
+         * @description Same settings and validation as PATCH /integrations/{connectionId}/settings. 400 on an invalid body.
+         */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            responses: {
+                /** @description Updated sync settings */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            ok: boolean;
+                            syncSettings: {
+                                [key: string]: unknown;
+                            };
+                        };
+                    };
+                };
+                /** @description Problem Details (RFC 9457) */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Problem Details (RFC 9457) */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Problem Details (RFC 9457) */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Problem Details (RFC 9457) */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        trace?: never;
+    };
+    "/integrations/me/connections/{id}/actions/{actionType}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                actionType: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Act as the user on one of their connections
+         * @description Same actions and payloads as the operator route. Unlike it, the response carries the action's raw `result`. An optional `Idempotency-Key` header collapses a repeat onto the first row.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: {
+                    /** @description Optional client key; a repeat returns the first recorded result. */
+                    "Idempotency-Key"?: string;
+                };
+                path: {
+                    id: string;
+                    actionType: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["IntegrationActionRequest"];
+                };
+            };
+            responses: {
+                /** @description Action recorded */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["IntegrationMeActionResult"];
+                    };
+                };
+                /** @description Problem Details (RFC 9457) */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Problem Details (RFC 9457) */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Problem Details (RFC 9457) */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Problem Details (RFC 9457) */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Problem Details (RFC 9457) */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Problem Details (RFC 9457) */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Problem Details (RFC 9457) */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/integrations/me/connections/{id}/google-photos/picker-sessions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Start a Google Photos Picker session
+         * @description google-photos connections only. The hub keeps no session state; the id belongs to the client.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Session */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["IntegrationPickerSessionStart"];
+                    };
+                };
+                /** @description Problem Details (RFC 9457) */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Problem Details (RFC 9457) */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Problem Details (RFC 9457) */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Problem Details (RFC 9457) */
+                502: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Problem Details (RFC 9457) */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/integrations/me/connections/{id}/google-photos/picker-sessions/{sessionId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                sessionId: string;
+            };
+            cookie?: never;
+        };
+        /** Check whether the user has finished picking */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                    sessionId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Session state */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["IntegrationPickerSessionState"];
+                    };
+                };
+                /** @description Problem Details (RFC 9457) */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Problem Details (RFC 9457) */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Problem Details (RFC 9457) */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Problem Details (RFC 9457) */
+                502: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Problem Details (RFC 9457) */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/integrations/me/connections/{id}/google-photos/uploads": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Upload photo bytes to Google Photos
+         * @description The request body is the raw bytes. They are streamed to Google, never buffered, and capped at 200 MB (413). Run action `upload` with the returned token to create the media item. 504 when Google is too slow, 502 on a network failure.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/octet-stream": string;
+                };
+            };
+            responses: {
+                /** @description Upload token */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            uploadToken: string;
+                        };
+                    };
+                };
+                /** @description Problem Details (RFC 9457) */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Problem Details (RFC 9457) */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Problem Details (RFC 9457) */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Problem Details (RFC 9457) */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Problem Details (RFC 9457) */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Problem Details (RFC 9457) */
+                502: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Problem Details (RFC 9457) */
+                504: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/integrations/me/connections/{id}/media/{mediaItemId}/content": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                mediaItemId: string;
+            };
+            cookie?: never;
+        };
+        /**
+         * Get a five-minute signed URL for one photo at one size
+         * @description Makes no Google call. The URL points at the public media-content route. 404 unless the connection is the caller's own google-photos one and the item is on it.
+         */
+        get: {
+            parameters: {
+                query: {
+                    w: string;
+                    h: string;
+                };
+                header?: never;
+                path: {
+                    id: string;
+                    mediaItemId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Signed URL */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            url: string;
+                            expiresAt: string;
+                        };
+                    };
+                };
+                /** @description Problem Details (RFC 9457) */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Problem Details (RFC 9457) */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Problem Details (RFC 9457) */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Problem Details (RFC 9457) */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/integrations/providers": {
         parameters: {
             query?: never;
@@ -67076,376 +68468,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/integration/integration-media-items": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** List integration_media_items */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description List */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            id: string;
-                            customerId: string;
-                            ownerKind: string;
-                            ownerId: string;
-                            deletedAt: string | null;
-                            ecosystemId: string;
-                            connectionId: string;
-                            externalId: string;
-                            sourceProvider: string;
-                            mediaType: string;
-                            title: string;
-                            artist: string | null;
-                            album: string | null;
-                            imageUrl: string | null;
-                            externalUrl: string | null;
-                            durationMs: number | null;
-                            popularity: number | null;
-                            isSaved: boolean;
-                            lastPlayedAt: string | null;
-                            isDeleted: boolean;
-                            createdAt: string;
-                            updatedAt: string;
-                            syncVersion: number;
-                            syncStampedAt: string | null;
-                            syncTxid: number;
-                        }[];
-                    };
-                };
-                /** @description Error */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["Error"];
-                    };
-                };
-            };
-        };
-        put?: never;
-        /** Create integration_media_items */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: {
-                content: {
-                    "application/json": {
-                        ecosystemId?: string;
-                        connectionId: string;
-                        externalId: string;
-                        sourceProvider: string;
-                        mediaType: string;
-                        title: string;
-                        artist?: string | null;
-                        album?: string | null;
-                        imageUrl?: string | null;
-                        externalUrl?: string | null;
-                        durationMs?: number | null;
-                        popularity?: number | null;
-                        isSaved?: boolean;
-                        lastPlayedAt?: string | null;
-                    };
-                };
-            };
-            responses: {
-                /** @description integration_media_items */
-                201: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            id: string;
-                            customerId: string;
-                            ownerKind: string;
-                            ownerId: string;
-                            deletedAt: string | null;
-                            ecosystemId: string;
-                            connectionId: string;
-                            externalId: string;
-                            sourceProvider: string;
-                            mediaType: string;
-                            title: string;
-                            artist: string | null;
-                            album: string | null;
-                            imageUrl: string | null;
-                            externalUrl: string | null;
-                            durationMs: number | null;
-                            popularity: number | null;
-                            isSaved: boolean;
-                            lastPlayedAt: string | null;
-                            isDeleted: boolean;
-                            createdAt: string;
-                            updatedAt: string;
-                            syncVersion: number;
-                            syncStampedAt: string | null;
-                            syncTxid: number;
-                        };
-                    };
-                };
-                /** @description Error */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["Error"];
-                    };
-                };
-                /** @description Error */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["Error"];
-                    };
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/integration/integration-media-items/{id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        /** Get integration_media_items by id */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    id: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description integration_media_items */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            id: string;
-                            customerId: string;
-                            ownerKind: string;
-                            ownerId: string;
-                            deletedAt: string | null;
-                            ecosystemId: string;
-                            connectionId: string;
-                            externalId: string;
-                            sourceProvider: string;
-                            mediaType: string;
-                            title: string;
-                            artist: string | null;
-                            album: string | null;
-                            imageUrl: string | null;
-                            externalUrl: string | null;
-                            durationMs: number | null;
-                            popularity: number | null;
-                            isSaved: boolean;
-                            lastPlayedAt: string | null;
-                            isDeleted: boolean;
-                            createdAt: string;
-                            updatedAt: string;
-                            syncVersion: number;
-                            syncStampedAt: string | null;
-                            syncTxid: number;
-                        };
-                    };
-                };
-                /** @description Error */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["Error"];
-                    };
-                };
-                /** @description Error */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["Error"];
-                    };
-                };
-            };
-        };
-        /** Update integration_media_items */
-        put: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    id: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: {
-                content: {
-                    "application/json": {
-                        ecosystemId?: string;
-                        connectionId?: string;
-                        externalId?: string;
-                        sourceProvider?: string;
-                        mediaType?: string;
-                        title?: string;
-                        artist?: string | null;
-                        album?: string | null;
-                        imageUrl?: string | null;
-                        externalUrl?: string | null;
-                        durationMs?: number | null;
-                        popularity?: number | null;
-                        isSaved?: boolean;
-                        lastPlayedAt?: string | null;
-                    };
-                };
-            };
-            responses: {
-                /** @description integration_media_items */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            id: string;
-                            customerId: string;
-                            ownerKind: string;
-                            ownerId: string;
-                            deletedAt: string | null;
-                            ecosystemId: string;
-                            connectionId: string;
-                            externalId: string;
-                            sourceProvider: string;
-                            mediaType: string;
-                            title: string;
-                            artist: string | null;
-                            album: string | null;
-                            imageUrl: string | null;
-                            externalUrl: string | null;
-                            durationMs: number | null;
-                            popularity: number | null;
-                            isSaved: boolean;
-                            lastPlayedAt: string | null;
-                            isDeleted: boolean;
-                            createdAt: string;
-                            updatedAt: string;
-                            syncVersion: number;
-                            syncStampedAt: string | null;
-                            syncTxid: number;
-                        };
-                    };
-                };
-                /** @description Error */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["Error"];
-                    };
-                };
-                /** @description Error */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["Error"];
-                    };
-                };
-                /** @description Error */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["Error"];
-                    };
-                };
-            };
-        };
-        post?: never;
-        /** Delete integration_media_items */
-        delete: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    id: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Deleted */
-                204: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Error */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["Error"];
-                    };
-                };
-                /** @description Error */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["Error"];
-                    };
-                };
-            };
-        };
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/integration/integration-pages": {
         parameters: {
             query?: never;
@@ -67755,364 +68777,6 @@ export interface paths {
         };
         post?: never;
         /** Delete integration_pages */
-        delete: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    id: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Deleted */
-                204: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Error */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["Error"];
-                    };
-                };
-                /** @description Error */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["Error"];
-                    };
-                };
-            };
-        };
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/integration/integration-social-notifications": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** List integration_social_notifications */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description List */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            id: string;
-                            customerId: string;
-                            ownerKind: string;
-                            ownerId: string;
-                            deletedAt: string | null;
-                            ecosystemId: string;
-                            connectionId: string;
-                            externalId: string;
-                            sourceProvider: string;
-                            notificationType: string;
-                            title: string | null;
-                            body: string | null;
-                            authorHandle: string | null;
-                            authorDisplayName: string | null;
-                            itemUrl: string | null;
-                            isRead: boolean;
-                            isDeleted: boolean;
-                            externalCreatedAt: string | null;
-                            createdAt: string;
-                            updatedAt: string;
-                            syncVersion: number;
-                            syncStampedAt: string | null;
-                            syncTxid: number;
-                        }[];
-                    };
-                };
-                /** @description Error */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["Error"];
-                    };
-                };
-            };
-        };
-        put?: never;
-        /** Create integration_social_notifications */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: {
-                content: {
-                    "application/json": {
-                        ecosystemId?: string;
-                        connectionId: string;
-                        externalId: string;
-                        sourceProvider: string;
-                        notificationType: string;
-                        title?: string | null;
-                        body?: string | null;
-                        authorHandle?: string | null;
-                        authorDisplayName?: string | null;
-                        itemUrl?: string | null;
-                        isRead?: boolean;
-                        externalCreatedAt?: string | null;
-                    };
-                };
-            };
-            responses: {
-                /** @description integration_social_notifications */
-                201: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            id: string;
-                            customerId: string;
-                            ownerKind: string;
-                            ownerId: string;
-                            deletedAt: string | null;
-                            ecosystemId: string;
-                            connectionId: string;
-                            externalId: string;
-                            sourceProvider: string;
-                            notificationType: string;
-                            title: string | null;
-                            body: string | null;
-                            authorHandle: string | null;
-                            authorDisplayName: string | null;
-                            itemUrl: string | null;
-                            isRead: boolean;
-                            isDeleted: boolean;
-                            externalCreatedAt: string | null;
-                            createdAt: string;
-                            updatedAt: string;
-                            syncVersion: number;
-                            syncStampedAt: string | null;
-                            syncTxid: number;
-                        };
-                    };
-                };
-                /** @description Error */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["Error"];
-                    };
-                };
-                /** @description Error */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["Error"];
-                    };
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/integration/integration-social-notifications/{id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        /** Get integration_social_notifications by id */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    id: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description integration_social_notifications */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            id: string;
-                            customerId: string;
-                            ownerKind: string;
-                            ownerId: string;
-                            deletedAt: string | null;
-                            ecosystemId: string;
-                            connectionId: string;
-                            externalId: string;
-                            sourceProvider: string;
-                            notificationType: string;
-                            title: string | null;
-                            body: string | null;
-                            authorHandle: string | null;
-                            authorDisplayName: string | null;
-                            itemUrl: string | null;
-                            isRead: boolean;
-                            isDeleted: boolean;
-                            externalCreatedAt: string | null;
-                            createdAt: string;
-                            updatedAt: string;
-                            syncVersion: number;
-                            syncStampedAt: string | null;
-                            syncTxid: number;
-                        };
-                    };
-                };
-                /** @description Error */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["Error"];
-                    };
-                };
-                /** @description Error */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["Error"];
-                    };
-                };
-            };
-        };
-        /** Update integration_social_notifications */
-        put: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    id: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: {
-                content: {
-                    "application/json": {
-                        ecosystemId?: string;
-                        connectionId?: string;
-                        externalId?: string;
-                        sourceProvider?: string;
-                        notificationType?: string;
-                        title?: string | null;
-                        body?: string | null;
-                        authorHandle?: string | null;
-                        authorDisplayName?: string | null;
-                        itemUrl?: string | null;
-                        isRead?: boolean;
-                        externalCreatedAt?: string | null;
-                    };
-                };
-            };
-            responses: {
-                /** @description integration_social_notifications */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            id: string;
-                            customerId: string;
-                            ownerKind: string;
-                            ownerId: string;
-                            deletedAt: string | null;
-                            ecosystemId: string;
-                            connectionId: string;
-                            externalId: string;
-                            sourceProvider: string;
-                            notificationType: string;
-                            title: string | null;
-                            body: string | null;
-                            authorHandle: string | null;
-                            authorDisplayName: string | null;
-                            itemUrl: string | null;
-                            isRead: boolean;
-                            isDeleted: boolean;
-                            externalCreatedAt: string | null;
-                            createdAt: string;
-                            updatedAt: string;
-                            syncVersion: number;
-                            syncStampedAt: string | null;
-                            syncTxid: number;
-                        };
-                    };
-                };
-                /** @description Error */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["Error"];
-                    };
-                };
-                /** @description Error */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["Error"];
-                    };
-                };
-                /** @description Error */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["Error"];
-                    };
-                };
-            };
-        };
-        post?: never;
-        /** Delete integration_social_notifications */
         delete: {
             parameters: {
                 query?: never;
@@ -76435,6 +77099,96 @@ export interface components {
         } | {
             /** @description The externalId returned by the broadcast action */
             broadcastId: string;
+        } | {
+            name: string;
+            labelListVisibility?: components["schemas"]["IntegrationGmailLabelListVisibility"];
+            messageListVisibility?: components["schemas"]["IntegrationGmailMessageListVisibility"];
+            color?: components["schemas"]["IntegrationGmailLabelColor"];
+        } | {
+            labelId: string;
+            name?: string;
+            labelListVisibility?: components["schemas"]["IntegrationGmailLabelListVisibility"];
+            messageListVisibility?: components["schemas"]["IntegrationGmailMessageListVisibility"];
+            color?: components["schemas"]["IntegrationGmailLabelColor"];
+        } | {
+            labelId: string;
+        } | {
+            messageIds: string[];
+            addLabelIds?: string[];
+            removeLabelIds?: string[];
+        } | {
+            title: string;
+        } | {
+            albumId: string;
+            title?: string;
+            coverPhotoMediaItemId?: string;
+        } | {
+            albumId: string;
+            mediaItemIds: string[];
+        } | {
+            uploadToken: string;
+            albumId?: string;
+            fileName: string;
+            description?: string;
+        } | {
+            sessionId: string;
+            albumId: string;
+            pageToken?: string;
+        };
+        /** @enum {string} */
+        IntegrationGmailLabelListVisibility: "labelShow" | "labelShowIfUnread" | "labelHide";
+        /** @enum {string} */
+        IntegrationGmailMessageListVisibility: "show" | "hide";
+        IntegrationGmailLabelColor: {
+            textColor: string;
+            backgroundColor: string;
+        };
+        IntegrationMeProvider: {
+            providerId: string;
+            displayName: string;
+            authMethod: string;
+            serviceTypes: string[];
+            /** @description read | write | auth */
+            capabilities: string[];
+        };
+        /** @description Same variants as IntegrationConnectRequest (matched on `type`), minus `ecosystemId`. `providerConfigId` is refused with 400. */
+        IntegrationMeConnectRequest: {
+            /** @description oauth | oauth_instance | api_key | app_password */
+            type: string;
+            providerId: string;
+            serviceType: string;
+        } & {
+            [key: string]: unknown;
+        };
+        IntegrationMeActionResult: {
+            ok: boolean;
+            /** @enum {string} */
+            status: "ok" | "error";
+            actionLogId: string;
+            externalId: string | null;
+            deduped: boolean;
+            error?: string;
+            /** @description The action's raw result, when it returned one. */
+            result?: unknown;
+        };
+        IntegrationPickerSessionStart: {
+            sessionId: string;
+            /** @description Send the user here to choose photos. */
+            pickerUri: string;
+            expireTime: string | null;
+        };
+        IntegrationPickerSessionState: {
+            sessionId: string;
+            /** @description true once the user has finished choosing. */
+            mediaItemsSet: boolean;
+            expireTime: string | null;
+        };
+        IntegrationConnectionDataPage: {
+            rows: {
+                [key: string]: unknown;
+            }[];
+            /** @description Pass as `cursor` for the next page. null on the last page. */
+            nextCursor: string | null;
         };
         IntegrationActionResult: {
             /** @description true when status is ok */

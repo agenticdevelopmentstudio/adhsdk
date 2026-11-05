@@ -104,6 +104,20 @@ export type SyncSettingsResult = SyncSettingsResultRow;
 
 const BASE = "/api/integrations";
 
+/** The synced tables `GET /integrations/{connectionId}/data/{resource}` serves. */
+export type ConnectionDataResource =
+  | "media-items"
+  | "social-notifications"
+  | "media-albums"
+  | "email-labels"
+  | "social-posts";
+
+/** One page of that route: rows in syncVersion order; `nextCursor` is null on the last page. */
+export interface ConnectionDataPage {
+  rows: Array<Record<string, unknown>>;
+  nextCursor: string | null;
+}
+
 /** The client route the OAuth/oauth_instance provider redirects back to with the
  *  authorization `code`. Kept as one constant so the connect flow and the callback
  *  page agree on the path. The backend must allow this path for the hub's origins
@@ -418,6 +432,23 @@ export const integrationsApi = {
       `${BASE}?ecosystemId=${enc(ecosystemId)}`,
     );
     return connections;
+  },
+
+  /** One page of a connection's synced rows (`GET /integrations/{id}/data/{resource}`),
+   *  ordered by syncVersion. Pass the previous page's `nextCursor` as `cursor`; the backend
+   *  defaults the limit to 50 and caps it at 200. Only the connection's own customer may read. */
+  async getConnectionData(
+    connectionId: string,
+    resource: ConnectionDataResource,
+    opts: { cursor?: string | null; limit?: number } = {},
+  ): Promise<ConnectionDataPage> {
+    const q = new URLSearchParams();
+    if (opts.cursor) q.set("cursor", opts.cursor);
+    if (opts.limit) q.set("limit", String(opts.limit));
+    const qs = q.size > 0 ? `?${q.toString()}` : "";
+    return authedJson<ConnectionDataPage>(
+      `${BASE}/${enc(connectionId)}/data/${enc(resource)}${qs}`,
+    );
   },
 
   /** Finish a connect for any auth method and persist the connection. The `body`
