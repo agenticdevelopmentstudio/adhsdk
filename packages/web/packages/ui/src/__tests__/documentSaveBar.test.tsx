@@ -40,7 +40,7 @@ describe('DocumentSaveBar', () => {
 
   it('names the document in its default notices', () => {
     render(<DocumentSaveBar noun="note" document={doc({ gone: true, changedElsewhere: true })} />)
-    expect(screen.getByText('This note no longer exists.')).toBeTruthy()
+    expect(screen.getByRole('alert').textContent).toBe('This note no longer exists.')
     expect(screen.getByText('This note changed since it was opened.')).toBeTruthy()
   })
 
@@ -58,6 +58,7 @@ describe('DocumentSaveBar', () => {
     const d = doc({ dirty: true, changedElsewhere: true, conflict: { text: 't', version: 'v9' } })
     render(<DocumentSaveBar noun="file" document={d} />)
     expect(screen.getByText('Someone else saved this file.')).toBeTruthy()
+    expect(screen.getByRole('alert').textContent).toContain('Someone else saved this file.')
     expect(screen.queryByText(/changed since/)).toBeNull()
     fireEvent.click(button('Reload theirs'))
     fireEvent.click(button('Overwrite'))

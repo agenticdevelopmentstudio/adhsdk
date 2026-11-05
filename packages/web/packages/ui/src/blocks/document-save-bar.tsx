@@ -1,17 +1,17 @@
 "use client"
 
-import type { ReactNode } from "react"
-
+import { Alert } from "../components/alert"
 import { Button } from "../components/button"
+import { ErrorText } from "../components/error-text"
 import type { VersionedDocument } from "../hooks/useVersionedDocument"
 
 export interface DocumentSaveBarMessages {
   /** A save found the document gone. */
-  gone?: ReactNode
+  gone?: string
   /** The stored document changed while there was a draft. */
-  changedElsewhere?: ReactNode
+  changedElsewhere?: string
   /** A save lost the race to someone else's. */
-  conflict?: ReactNode
+  conflict?: string
 }
 
 export interface DocumentSaveBarProps {
@@ -49,16 +49,16 @@ export function DocumentSaveBar({ document: d, noun = "document", messages = {} 
       <div data-slot="document-save-bar" className="flex flex-wrap items-center gap-2">
         <Button size="sm" onClick={() => void d.save()} disabled={d.saving || !d.dirty}>Save</Button>
         <Button size="sm" variant="outline" onClick={d.revert} disabled={!d.dirty}>Revert</Button>
-        {d.gone && <span className="text-sm text-destructive">{gone}</span>}
-        {d.changedElsewhere && !d.conflict && <span className="text-sm text-amber-600">{changed}</span>}
-        {d.saveError && <span role="alert" className="text-sm text-destructive">Save failed: {d.saveError}</span>}
+        {d.gone && <ErrorText error={gone} />}
+        {d.changedElsewhere && !d.conflict && <p className="text-sm text-apt-orange">{changed}</p>}
+        <ErrorText error={d.saveError && `Save failed: ${d.saveError}`} />
       </div>
       {d.conflict && (
-        <div data-slot="document-save-conflict" className="flex flex-wrap items-center gap-2 rounded border border-amber-500 p-2 text-sm">
+        <Alert variant="warning" data-slot="document-save-conflict" className="flex flex-wrap items-center gap-2 p-2">
           <span>{conflict}</span>
           <Button size="sm" variant="outline" onClick={d.takeTheirs}>Reload theirs</Button>
           <Button size="sm" variant="destructive" onClick={() => void d.overwrite()} disabled={d.saving}>Overwrite</Button>
-        </div>
+        </Alert>
       )}
     </>
   )

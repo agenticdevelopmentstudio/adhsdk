@@ -17,6 +17,8 @@ const alertVariants = cva(
           "border-apt-green/40 bg-apt-green/10 text-apt-text [&>svg]:text-apt-green",
         error:
           "border-apt-red/40 bg-apt-red/10 text-apt-text [&>svg]:text-apt-red",
+        warning:
+          "border-apt-orange/40 bg-apt-orange/10 text-apt-text [&>svg]:text-apt-orange",
         accent:
           "border-apt-gold/40 bg-apt-gold/10 text-apt-text [&>svg]:text-apt-gold",
       },
