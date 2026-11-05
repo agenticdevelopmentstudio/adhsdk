@@ -125,6 +125,17 @@ describe("useWorkspaceHubScope", () => {
     await waitFor(() => expect(screen.getByTestId("scope").textContent).toBe("infra-8|manage"));
   });
 
+  it("stays pending while the workspace read is in flight even when the child id is known", async () => {
+    mockedJson.mockImplementation(async (url: string) => {
+      if (String(url).includes("infrastructure=true")) return new Promise(() => {});
+      return [row("hub-7", { type: "personal" })];
+    });
+    mountScope("acme-scope-partial");
+    await waitFor(() => expect(mockedJson).toHaveBeenCalledTimes(2));
+    await new Promise((r) => setTimeout(r, 50));
+    expect(screen.getByTestId("scope").textContent).toBe("pending|manage");
+  });
+
   it("is pending while the lookups are in flight", () => {
     mockedJson.mockImplementation(() => new Promise(() => {}));
     mountScope("acme-scope-wait");

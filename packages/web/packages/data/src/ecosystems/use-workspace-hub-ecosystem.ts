@@ -44,7 +44,8 @@ export function useWorkspaceHubEcosystemId(
  * the hub-data child is the same principal's and has no permission rows of its own to read.
  *
  * `isPending` covers BOTH answers: the id is not final until the child lookup and the fallback
- * have each settled, so a caller that shows a "no ecosystem" notice must wait on this one.
+ * have each settled, so a caller that shows a "no ecosystem" notice must wait on this one. It also
+ * holds while the workspace read is pending, so `canManage` is never reported from its default.
  */
 export function useWorkspaceHubScope(
   workspaceSlug: string | undefined,
@@ -54,6 +55,6 @@ export function useWorkspaceHubScope(
   return {
     ...workspace,
     ecosystemId: hubId ?? undefined,
-    isPending: hubId === undefined,
+    isPending: hubId === undefined || workspace.isPending,
   };
 }
