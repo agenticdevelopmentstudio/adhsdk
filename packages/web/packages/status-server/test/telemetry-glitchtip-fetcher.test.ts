@@ -187,14 +187,35 @@ describe("glitchtipFetcher — walks every page", () => {
     expect(calls).toHaveLength(MAX_PAGES);
   });
 
-  // A partial walk reported as ok+complete would sweep every issue on the unread pages.
-  it("fails the whole poll when a later page fails", async () => {
+  // A partial walk reported as ok+complete would sweep every issue on the unread pages; one
+  // reported as failed would throw away the pages that answered and flag GlitchTip unreachable.
+  it.each([
+    ["an HTTP error", { status: 502 }],
+    ["a non-array body", { issues: { detail: "nope" } }],
+  ])("keeps the pages already read, INCOMPLETE, when a later page returns %s", async (_, page) => {
     vi.spyOn(console, "warn").mockImplementation(() => {});
-    stubPages([
-      { issues: fullPage("a"), link: linkHeader({ cursor: "c1", results: true }) },
-      { status: 502 },
-    ]);
-    expect(await glitchtipFetcher(ENV).fetch()).toMatchObject({ ok: false, items: [] });
+    stubPages([{ issues: fullPage("a"), link: linkHeader({ cursor: "c1", results: true }) }, page]);
+    const r = await glitchtipFetcher(ENV).fetch();
+    expect(r).toMatchObject({ ok: true, complete: false });
+    expect(r.items).toHaveLength(PAGE_LIMIT);
+  });
+
+  it("keeps the pages already read, INCOMPLETE, when a later page throws", async () => {
+    vi.spyOn(console, "warn").mockImplementation(() => {});
+    let n = 0;
+    vi.stubGlobal("fetch", async () => {
+      n += 1;
+      if (n > 1) throw Object.assign(new Error("aborted"), { name: "AbortError" });
+      return {
+        ok: true,
+        status: 200,
+        headers: new Headers({ Link: linkHeader({ cursor: "c1", results: true }) }),
+        json: async () => fullPage("a"),
+      };
+    });
+    const r = await glitchtipFetcher(ENV).fetch();
+    expect(r).toMatchObject({ ok: true, complete: false });
+    expect(r.items).toHaveLength(PAGE_LIMIT);
   });
 
   it("drops an issue a shifting cursor served twice", async () => {

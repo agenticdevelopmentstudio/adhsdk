@@ -113,9 +113,11 @@ export interface GlitchtipIssuesResult {
  * Every issue matching `query`, across all pages. Each `errorsStore` sweep and every line on
  * the Errors topic rest on this being the whole set or saying that it is not, so:
  *
- *   - any page failing fails the whole walk (`ok: false`): a partial set reported as complete
- *     would resolve every issue on the unread pages;
- *   - a repeated cursor or the page cap stops with what was read, `ok` but not `complete`.
+ *   - the FIRST page failing fails the poll (`ok: false`): nothing was read;
+ *   - a LATER page failing (HTTP error, bad body, timeout) stops with what was read, `ok` but
+ *     not `complete`, exactly like a repeated cursor or the page cap. Reporting it `complete`
+ *     would resolve every issue on the unread pages; reporting it `failed` would throw away the
+ *     pages that did answer and mark a reachable GlitchTip with a large backlog as an outage.
  *
  * The next URL is rebuilt from our own base + the cursor. The bearer token goes on every
  * request, so a header value must not be able to choose where it is sent.
@@ -136,10 +138,14 @@ export async function fetchGlitchtipIssues(
   // genuine outage. Logged CONCISELY (no stack).
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
+  // By id: a cursor walk over a moving list can serve one issue on two pages, and the
+  // store's batch upsert shouldn't have to care.
+  const byId = new Map<string, GlitchtipIssue>();
+  let pagesRead = 0;
+  /** What a failure after page 1 returns: the pages that answered, never claimed whole. */
+  const stopped = (): GlitchtipIssuesResult =>
+    pagesRead === 0 ? failed : { ok: true, issues: [...byId.values()], complete: false };
   try {
-    // By id: a cursor walk over a moving list can serve one issue on two pages, and the
-    // store's batch upsert shouldn't have to care.
-    const byId = new Map<string, GlitchtipIssue>();
     const seenCursors = new Set<string>();
     let url = first;
     for (let page = 1; page <= MAX_PAGES; page++) {
@@ -149,7 +155,7 @@ export async function fetchGlitchtipIssues(
       });
       if (!res.ok) {
         console.warn(`[telemetry] GlitchTip issues HTTP ${res.status}`);
-        return failed;
+        return stopped();
       }
       const issues = (await res.json()) as GlitchtipIssue[];
       if (!Array.isArray(issues)) {
@@ -161,9 +167,10 @@ export async function fetchGlitchtipIssues(
         // interstitial, a paginated `{results:[…]}` wrapper — means we did not get the
         // answer we asked for, which is exactly what `ok: false` is for.
         console.warn("[telemetry] GlitchTip issues returned a non-array body — treating as a failed poll");
-        return failed;
+        return stopped();
       }
       for (const issue of issues) byId.set(issue.id, issue);
+      pagesRead = page;
 
       const next = parseNextPage(res.headers.get("link"));
       const all = [...byId.values()];
@@ -183,7 +190,7 @@ export async function fetchGlitchtipIssues(
         ? `[telemetry] GlitchTip issues fetch timed out after ${TIMEOUT_MS}ms`
         : `[telemetry] GlitchTip issues fetch failed: ${(err as Error)?.message ?? String(err)}`,
     );
-    return failed;
+    return stopped();
   } finally {
     clearTimeout(timer);
   }
