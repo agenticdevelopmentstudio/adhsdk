@@ -232,7 +232,7 @@ export function AnalyticsView({
             <DashboardPanel
               title="Pageviews, all sites"
               source="PostHog and Vercel"
-              section={eitherSection(sections.traffic, sections.vercel)}
+              section={eitherSection({ PostHog: sections.traffic, Vercel: sections.vercel })}
               configured={posthogOn || vercelOn}
               refreshing={refreshing}
               skeletonHeight={240}
@@ -244,7 +244,7 @@ export function AnalyticsView({
             <DashboardPanel
               title="Sites"
               source="PostHog and Vercel"
-              section={eitherSection(sections.traffic, sections.vercel)}
+              section={eitherSection({ PostHog: sections.traffic, Vercel: sections.vercel })}
               configured={posthogOn || vercelOn}
               refreshing={refreshing}
               note="Select a site to open it. A dash means that source has not seen the site. Errors, failed requests and p95 come from PostHog."

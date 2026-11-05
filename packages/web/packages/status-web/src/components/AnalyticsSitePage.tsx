@@ -93,7 +93,10 @@ function BreakdownCard({
       title={title}
       source={both ? "PostHog and Vercel" : posthog ? "PostHog" : "Vercel"}
       sourceHref={posthog && !vercel ? posthogUrl : undefined}
-      section={eitherSection(posthog ? posthogSection : sections.vercel, vercel ? sections.vercel : posthogSection)}
+      section={eitherSection({
+        ...(posthog || !vercel ? { PostHog: posthogSection } : {}),
+        ...(vercel ? { Vercel: sections.vercel } : {}),
+      })}
       configured
       refreshing={refreshing}
       note={notes.length > 0 ? notes.join(" ") : undefined}
@@ -268,7 +271,7 @@ export function AnalyticsSitePage({
         <DashboardPanel
           title="Pageviews"
           source={bothCharted ? "PostHog and Vercel" : (posthog?.pageviews ?? 0) > 0 ? "PostHog" : "Vercel"}
-          section={eitherSection(sections.traffic, sections.vercel)}
+          section={eitherSection({ PostHog: sections.traffic, Vercel: sections.vercel })}
           configured
           refreshing={refreshing}
           note={bothCharted ? PAGEVIEWS_NOTE : undefined}
