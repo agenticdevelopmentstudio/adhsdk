@@ -13,7 +13,7 @@ import {
   shapeVitals,
 } from "../src/telemetry/dashboard/posthog-sections";
 import { analyticsEnabled, isProductionProject, loadVercelTraffic, productionDomain, shapeMarginal } from "../src/telemetry/dashboard/vercel-section";
-import { summarizeIssues, toErrorIssues } from "../src/telemetry/dashboard/errors-sections";
+import { loadErrorIssues, resolvedCounter, summarizeIssues, toErrorIssues } from "../src/telemetry/dashboard/errors-sections";
 
 const NOW = Date.parse("2026-11-04T15:30:20.000Z");
 const HOUR = 3_600_000;
@@ -432,6 +432,37 @@ describe("errors sections", () => {
     expect(one({ lastSeen: old })).toBe(false);
     expect(one({ lastSeen: null })).toBe(false);
     expect(one({ level: null })).toBe(false);
+  });
+
+  describe("the resolved count", () => {
+    const GT = { GLITCHTIP_URL: "https://gt", GLITCHTIP_API_TOKEN: "t", GLITCHTIP_ORG: "o" };
+    const page = (ok: boolean, n: number) => ({
+      ok,
+      status: ok ? 200 : 503,
+      headers: new Headers(),
+      json: async () => Array.from({ length: n }, (_, i) => ({ id: String(i) })),
+    });
+
+    it("is walked once per TTL, not on every issue-list refresh", async () => {
+      const fetch = vi.fn(async (url: string) => page(true, url.includes("is:resolved") ? 3 : 1));
+      vi.stubGlobal("fetch", fetch);
+      const count = resolvedCounter(GT);
+      const a = await loadErrorIssues(GT, null, count, NOW);
+      const b = await loadErrorIssues(GT, null, count, NOW);
+      expect(a.summary.resolved).toBe(3);
+      expect(b.summary.resolved).toBe(3);
+      const resolvedReads = fetch.mock.calls.filter(([url]) => url.includes("is:resolved"));
+      expect(resolvedReads).toHaveLength(1);
+    });
+
+    it("is read again after a failed read, rather than keeping the failure", async () => {
+      let fail = true;
+      vi.stubGlobal("fetch", async () => page(!fail, 2));
+      const count = resolvedCounter(GT);
+      expect(await count()).toBeNull();
+      fail = false;
+      expect(await count()).toBe(2);
+    });
   });
 
   it("active leaves out a project GLITCHTIP_PROJECTS does not allow, as the board does", () => {
