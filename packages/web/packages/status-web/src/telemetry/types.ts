@@ -18,6 +18,11 @@ export interface ErrorDTO {
   firstSeen: string | null; // ISO
   lastSeen: string | null; // ISO
   permalink: string | null;
+  /**
+   * Would this error hold a board Problem open: the board's own rule, allowlist and frozen feed
+   * included. Set on the live snapshot only; a stored row has no verdict.
+   */
+  active?: boolean;
 }
 
 /** One headline analytics KPI sample — anonymous + aggregate (from PostHog). */
@@ -34,6 +39,8 @@ export interface TelemetrySnapshot {
   generatedAt: string; // ISO
   errors: ErrorDTO[];
   analytics: AnalyticsMetricDTO[];
+  /** True when GlitchTip could not be read just now, so `errors` is its last answer. */
+  errorsFrozen?: boolean;
   /**
    * True when no analytics have been read since the backend started, so `analytics` is empty
    * for want of an answer, not because there is no traffic. A client keeps what it last knew.

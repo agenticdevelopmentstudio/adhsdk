@@ -47,17 +47,20 @@ function IssueLink({ href, title }: { href: string | undefined; title: string })
 /**
  * Errors card: what GlitchTip says is happening now, and how much old backlog sits behind it.
  *
- * Only ACTIVE issues (error or fatal, seen in the last 24h) turn this card red, because that is
- * the same test that raises a Problem. GlitchTip's unresolved set is a backlog nobody clears, so
+ * Only ACTIVE issues turn this card red: the backend's `active`, which is the very test that raises
+ * a Problem (error or fatal, seen in the last 24h, from an allowed project, with the recency test
+ * suspended while GlitchTip can't be read). GlitchTip's unresolved set is a backlog nobody clears, so
  * coloring by its size left this card permanently red on a healthy fleet, with nothing in Problems
  * to explain it and nothing an operator could do to clear it. The backlog is still counted, in a
  * neutral tone, and the Errors topic lists it.
  */
 export function ErrorsCard(): ReactElement {
-  const { errors } = useTelemetry();
+  const { errors, errorsFrozen } = useTelemetry();
   const now = useNow();
   const { glitchtipUrl } = useStatusHost();
-  const active = errors.filter((e) => isActiveError(e.level, e.lastSeen, now));
+  // The backend marks each error with the board's own verdict (allowlist and frozen feed
+  // included). `isActiveError` covers only a cached snapshot from before it did.
+  const active = errors.filter((e) => e.active ?? isActiveError(e.level, e.lastSeen, now));
   const totalEvents = errors.reduce((s, e) => s + (e.count || 0), 0);
   // Sort by event count desc so the shown "top 5" actually matches the prominent
   // {count}× label — the feed arrives in GlitchTip's last-seen order, not by volume.
@@ -78,8 +81,16 @@ export function ErrorsCard(): ReactElement {
           : undefined
       }
     >
+      {errorsFrozen && (
+        <p className="mb-2 font-mono text-[11px] text-apt-text-muted">
+          GlitchTip can&apos;t be read right now; this is its last answer.
+        </p>
+      )}
       {active.length === 0 ? (
-        <div className="font-mono text-[13px] font-semibold text-apt-green">✓ No errors in the last 24h</div>
+        // An unreadable feed can't vouch for the last 24h, so it makes no all-clear.
+        errorsFrozen ? null : (
+          <div className="font-mono text-[13px] font-semibold text-apt-green">✓ No errors in the last 24h</div>
+        )
       ) : (
         // Each deep-links to its GlitchTip page (the shared status-list block).
         <StatList divided>

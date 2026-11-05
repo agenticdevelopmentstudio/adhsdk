@@ -13,7 +13,7 @@ import {
   shapeVitals,
 } from "../src/telemetry/dashboard/posthog-sections";
 import { analyticsEnabled, isProductionProject, loadVercelTraffic, productionDomain, shapeMarginal } from "../src/telemetry/dashboard/vercel-section";
-import { isActiveIssue, summarizeIssues, toErrorIssues } from "../src/telemetry/dashboard/errors-sections";
+import { summarizeIssues, toErrorIssues } from "../src/telemetry/dashboard/errors-sections";
 
 const NOW = Date.parse("2026-11-04T15:30:20.000Z");
 const HOUR = 3_600_000;
@@ -398,13 +398,23 @@ describe("errors sections", () => {
   const recent = new Date(NOW - HOUR).toISOString();
   const old = new Date(NOW - 48 * HOUR).toISOString();
 
+  const judging = { nowMs: NOW, frozen: false, allowlist: null };
+  const one = (over: Record<string, unknown>, j: Parameters<typeof toErrorIssues>[1] = judging): boolean =>
+    toErrorIssues([{ id: "1", title: "t", level: "error", count: 1, lastSeen: recent, project: { slug: "app" }, ...over }], j)[0]!
+      .active;
+
   it("active is the board's rule: error or fatal, and seen in the last 24h", () => {
-    expect(isActiveIssue("error", recent, NOW)).toBe(true);
-    expect(isActiveIssue("FATAL", recent, NOW)).toBe(true);
-    expect(isActiveIssue("warning", recent, NOW)).toBe(false);
-    expect(isActiveIssue("error", old, NOW)).toBe(false);
-    expect(isActiveIssue("error", null, NOW)).toBe(false);
-    expect(isActiveIssue(null, recent, NOW)).toBe(false);
+    expect(one({})).toBe(true);
+    expect(one({ level: "FATAL" })).toBe(true);
+    expect(one({ level: "warning" })).toBe(false);
+    expect(one({ lastSeen: old })).toBe(false);
+    expect(one({ lastSeen: null })).toBe(false);
+    expect(one({ level: null })).toBe(false);
+  });
+
+  it("active leaves out a project GLITCHTIP_PROJECTS does not allow, as the board does", () => {
+    expect(one({}, { ...judging, allowlist: ["app"] })).toBe(true);
+    expect(one({ project: { slug: "scratch" } }, { ...judging, allowlist: ["app"] })).toBe(false);
   });
 
   it("summarizes a mostly stale backlog as mostly not active, active first", () => {
@@ -414,7 +424,7 @@ describe("errors sections", () => {
         { id: "2", title: "live", level: "error", count: 3, lastSeen: recent, firstSeen: "2026-11-02T11:00:00Z", shortId: "ADH-2", metadata: { type: "SyntaxError", filename: "/x.js" }, lastRelease: { version: "abc" } },
         { id: "3", title: "typeless", level: "warning", count: 1, lastSeen: recent },
       ],
-      NOW,
+      judging,
     );
     const s = summarizeIssues(issues, rangeWindow("30d", NOW), { resolved: 7, complete: true });
     expect(s.summary).toMatchObject({ active: 1, backlog: 2, events: 104, resolved: 7, complete: true });

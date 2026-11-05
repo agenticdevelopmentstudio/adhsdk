@@ -1,4 +1,4 @@
-import { ERROR_JUDGED_LEVELS, ERROR_RECENT_MS } from "../../board/derive-problems";
+import { errorCountsAsProblem, type ErrorJudging } from "../../board/derive-problems";
 import { fetchGlitchtipIssues, mapIssues, type GlitchtipEnv, type GlitchtipIssue } from "../fetchers/glitchtip";
 import { alignToBuckets, rangeWindow, type RangeWindow } from "./ranges";
 import type { ErrorIssue, ErrorsIssuesSection } from "./types";
@@ -11,14 +11,14 @@ import type { ErrorIssue, ErrorsIssuesSection } from "./types";
 
 const DAY_MS = 24 * 3_600_000;
 
-/** The board's rule for an error being a current Problem, on an API row. */
-export function isActiveIssue(level: string | null, lastSeen: string | null, nowMs: number): boolean {
-  if (!ERROR_JUDGED_LEVELS.has((level ?? "").toLowerCase())) return false;
-  const seen = lastSeen ? new Date(lastSeen).getTime() : Number.NaN;
-  return !Number.isNaN(seen) && nowMs - seen <= ERROR_RECENT_MS;
+/** An ISO time as epoch ms, null when absent or unreadable (which the board reads as not current). */
+export function isoMs(iso: string | null): number | null {
+  const ms = iso ? new Date(iso).getTime() : Number.NaN;
+  return Number.isNaN(ms) ? null : ms;
 }
 
-export function toErrorIssues(raw: GlitchtipIssue[], nowMs: number): ErrorIssue[] {
+/** `active` is the board's whole rule, allowlist and all: see `errorCountsAsProblem`. */
+export function toErrorIssues(raw: GlitchtipIssue[], judging: ErrorJudging): ErrorIssue[] {
   const mapped = mapIssues(raw);
   return raw.map((issue, i) => {
     const dto = mapped[i]!;
@@ -36,7 +36,7 @@ export function toErrorIssues(raw: GlitchtipIssue[], nowMs: number): ErrorIssue[
       release: issue.lastRelease?.version || null,
       project: dto.project,
       permalink: dto.permalink,
-      active: isActiveIssue(dto.level, dto.lastSeen, nowMs),
+      active: errorCountsAsProblem({ project: dto.project, level: dto.level, lastSeenMs: isoMs(dto.lastSeen) }, judging),
     };
   });
 }
@@ -80,12 +80,19 @@ export function summarizeIssues(
   };
 }
 
-export async function loadErrorIssues(env: GlitchtipEnv, nowMs: number = Date.now()): Promise<ErrorsIssuesSection> {
+export async function loadErrorIssues(
+  env: GlitchtipEnv,
+  allowlist: readonly string[] | null,
+  nowMs: number = Date.now(),
+): Promise<ErrorsIssuesSection> {
   const unresolved = await fetchGlitchtipIssues(env, "is:unresolved");
+  // A failed read throws, so the section keeps its last answer (and its `active` flags, judged
+  // when that answer was read) rather than judging anything as a frozen feed.
   if (!unresolved.ok) throw new Error("GlitchTip issues could not be read");
   // A nice-to-have on the KPI row: losing it must not cost the issue list.
   const resolved = await fetchGlitchtipIssues(env, "is:resolved");
-  return summarizeIssues(toErrorIssues(unresolved.issues, nowMs), rangeWindow("30d", nowMs), {
+  const judging: ErrorJudging = { nowMs, frozen: false, allowlist };
+  return summarizeIssues(toErrorIssues(unresolved.issues, judging), rangeWindow("30d", nowMs), {
     resolved: resolved.ok && resolved.complete ? resolved.issues.length : null,
     complete: unresolved.complete,
   });

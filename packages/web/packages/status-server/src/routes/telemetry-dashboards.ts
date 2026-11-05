@@ -76,7 +76,7 @@ export function dashboardRoutes(config: StatusConfig): Hono<{ Variables: { tier:
     ttlMs: ERRORS_TTL_MS,
     sections: GLITCHTIP_SECTIONS,
     loaders: () => ({
-      issues: () => loadErrorIssues(creds),
+      issues: () => loadErrorIssues(creds, config.glitchtipProjects),
     }),
   });
   const errorSites = sectionedDashboard<'all', SitesSections>({

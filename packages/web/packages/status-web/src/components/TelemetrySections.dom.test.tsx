@@ -8,15 +8,16 @@ import { StatusHostProvider } from "./StatusHost";
 // environment variable or a built-in hostname — the package must not know where a
 // deployment's GlitchTip or PostHog live. Both cards, both directions.
 
-const telemetry = vi.hoisted(() => ({ errors: [] as unknown[] }));
+const telemetry = vi.hoisted(() => ({ errors: [] as unknown[], errorsFrozen: undefined as boolean | undefined }));
 
 vi.mock("../hooks/use-telemetry", () => ({
-  useTelemetry: () => ({ errors: telemetry.errors, analytics: [], stale: false, offline: false }),
+  useTelemetry: () => ({ errors: telemetry.errors, errorsFrozen: telemetry.errorsFrozen, analytics: [], stale: false, offline: false }),
 }));
 
 afterEach(() => {
   cleanup();
   telemetry.errors = [];
+  telemetry.errorsFrozen = undefined;
 });
 
 function issue(id: string, level: string, hoursAgo: number, count: number): unknown {
@@ -43,6 +44,22 @@ describe("the Errors card", () => {
     const small = screen.getByText("Issue small");
     expect(big.compareDocumentPosition(small) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     expect(screen.getByText("active · 24h").parentElement?.textContent).toContain("2");
+  });
+
+  it("takes the backend's verdict over its own reading of level and time", () => {
+    // A fresh error from a project GLITCHTIP_PROJECTS leaves out: the board raises nothing for it.
+    telemetry.errors = [{ ...(issue("scratch", "error", 1, 9) as object), active: false }];
+    render(<ErrorsCard />);
+    expect(screen.queryByText("Issue scratch")).toBeNull();
+    expect(screen.getByText("active · 24h").parentElement?.textContent).toContain("0");
+  });
+
+  it("makes no all-clear while GlitchTip can't be read, and says why", () => {
+    telemetry.errors = [{ ...(issue("old", "warning", 72, 5) as object), active: false }];
+    telemetry.errorsFrozen = true;
+    render(<ErrorsCard />);
+    expect(screen.queryByText("✓ No errors in the last 24h")).toBeNull();
+    expect(screen.getByText(/GlitchTip can.t be read right now/)).toBeTruthy();
   });
 
   it("always leads to the Errors topic", () => {
