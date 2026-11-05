@@ -167,6 +167,7 @@ export async function loadVercelTraffic(env: VercelEnv, w: RangeWindow): Promise
   });
   if (enabled.length > 0 && failed === enabled.length) throw new Error("every Vercel analytics call failed");
 
+  let incomplete = 0;
   const withTraffic = counts.flatMap((c) => (c && c.pageviews > 0 ? [c] : []));
   const projects = await mapLimit(withTraffic, CONCURRENCY, async ({ p, pageviews, visitors }) => {
     const [series, countries, referrers, paths, devices] = await Promise.allSettled([
@@ -180,7 +181,9 @@ export async function loadVercelTraffic(env: VercelEnv, w: RangeWindow): Promise
     // A 429 ends the load, as it does in the counts phase; allSettled would otherwise hide it.
     const limited = all.find((r) => r.status === "rejected" && r.reason instanceof VercelRateLimited);
     if (limited?.status === "rejected") throw limited.reason;
-    if (all.some((r) => r.status === "rejected")) failed++;
+    // Not `failed`: this project's count is in the totals. What is short is its series and lists.
+    const short = all.some((r) => r.status === "rejected");
+    if (short) incomplete++;
     const ok = (r: PromiseSettledResult<Record<string, unknown>[]>): Record<string, unknown>[] =>
       r.status === "fulfilled" ? r.value : [];
     const seriesRows = ok(series);
@@ -194,6 +197,7 @@ export async function loadVercelTraffic(env: VercelEnv, w: RangeWindow): Promise
       referrers: shapeMarginal(ok(referrers), "referrerHostname"),
       paths: shapeMarginal(ok(paths), "requestPath"),
       devices: shapeMarginal(ok(devices), "deviceType"),
+      incomplete: short,
     };
     return { traffic, seriesRows };
   });
@@ -223,6 +227,7 @@ export async function loadVercelTraffic(env: VercelEnv, w: RangeWindow): Promise
     projectsTotal: listed.length,
     projectsEnabled: enabled.length,
     failed,
+    incomplete,
     roster,
     totals: {
       pageviews: withTraffic.reduce((a, c) => a + c.pageviews, 0),

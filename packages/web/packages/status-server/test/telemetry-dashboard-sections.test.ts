@@ -347,6 +347,22 @@ describe("Vercel section", () => {
     expect((await loadVercelTraffic(ENV, w)).failed).toBe(1);
   });
 
+  it("a failed breakdown marks the project incomplete, and keeps its count whole", async () => {
+    stubVercel((u) => {
+      if (u.pathname === "/v9/projects") return { body: PROJECTS };
+      if (u.pathname.endsWith("/count")) {
+        return { body: { data: u.searchParams.get("projectId") === "p1" ? { pageviews: 5, visitors: 2 } : { pageviews: 0, visitors: 0 } } };
+      }
+      if (u.searchParams.get("by") === "day") return { status: 504 };
+      return { body: { data: [] } };
+    });
+    const s = await loadVercelTraffic(ENV, w);
+    expect(s.failed).toBe(0);
+    expect(s.incomplete).toBe(1);
+    expect(s.totals.pageviews).toBe(5);
+    expect(s.projects[0]).toMatchObject({ project: "one", incomplete: true });
+  });
+
   it("every count failing fails the section", async () => {
     stubVercel((u) => (u.pathname === "/v9/projects" ? { body: PROJECTS } : { status: 503 }));
     await expect(loadVercelTraffic(ENV, w)).rejects.toThrow("every Vercel analytics call failed");

@@ -122,6 +122,11 @@ function ProjectsCard({
   refreshing: boolean;
 }): ReactElement {
   const failed = sections.vercel.data?.failed ?? 0;
+  const note = report.vercelIncomplete
+    ? "Part of this site's Vercel breakdown could not be read, so its chart and lists may be short."
+    : failed > 0
+      ? `${failed} Vercel projects could not be read, so these figures may be short.`
+      : undefined;
   return (
     <DashboardPanel
       title={report.projects.length === 1 ? "Project" : "Projects"}
@@ -129,7 +134,7 @@ function ProjectsCard({
       section={sections.vercel}
       configured
       refreshing={refreshing}
-      note={failed > 0 ? `${failed} Vercel projects could not be read, so these figures may be short.` : undefined}
+      note={note}
     >
       {() => (
         <div className="flex flex-col gap-4">

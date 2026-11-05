@@ -43,6 +43,12 @@ export interface SectionedDashboardOptions<K extends string, S> {
   sections: readonly (keyof S & string)[];
   /** Built per refresh, so a loader computes its time window from "now". */
   loaders: (key: K) => DashboardLoaders<S>;
+  /**
+   * True for an answer that is shown but known to be short (some of its calls failed). It is kept
+   * as a success, with no error, but retried after `retryMs` like a failure rather than held for
+   * the whole TTL.
+   */
+  incomplete?: (name: keyof S & string, data: S[keyof S]) => boolean;
   now?: () => number;
 }
 
@@ -79,6 +85,7 @@ export function sectionedDashboard<K extends string, S>(
         try {
           const data = await loaders[name]();
           state.sections[name] = { data, error: null, updatedAt: new Date(now()).toISOString() };
+          if (opts.incomplete?.(name, data)) anyFailed = true;
         } catch (err) {
           anyFailed = true;
           const error = err instanceof Error ? err.message : String(err);

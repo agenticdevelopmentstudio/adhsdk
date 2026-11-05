@@ -124,6 +124,29 @@ describe("sectionedDashboard", () => {
     await flush();
   });
 
+  it("an answer known to be short is shown as a success but retried like a failure", async () => {
+    const clock = { t: 1_000_000 };
+    const built = vi.fn();
+    const dash = sectionedDashboard<"k1", Sections>({
+      ttlMs: 10_000,
+      retryMs: 1_000,
+      sections: ["a", "b"],
+      now: () => clock.t,
+      incomplete: (name, data) => name === "a" && data === -1,
+      loaders: () => {
+        built();
+        return { a: async () => -1, b: async () => "x" };
+      },
+    });
+    dash.read("k1");
+    await flush();
+    expect(dash.read("k1").sections.a).toMatchObject({ data: -1, error: null });
+    clock.t += 1_000;
+    dash.read("k1");
+    expect(built).toHaveBeenCalledTimes(2);
+    await flush();
+  });
+
   it("keeps keys separate", async () => {
     const { dash, built } = setup({ a: async () => 1, b: async () => "x" });
     dash.read("k1");

@@ -294,6 +294,8 @@ export interface SiteReport {
   health: SiteHealthRow | null;
   breakdowns: SiteBreakdown[];
   projects: VercelTrafficSection["roster"];
+  /** One of this site's Vercel breakdowns failed: its pageviews are whole, its chart and lists short. */
+  vercelIncomplete: boolean;
   vitals: VitalsRow[];
 }
 
@@ -324,6 +326,7 @@ export function siteReport(sections: DashboardSections<AnalyticsSectionData>, si
       return lists.posthog || lists.vercel ? [{ topic, ...lists }] : [];
     }),
     projects: (sections.vercel.data?.roster ?? []).filter((row) => projectKey(row) === site),
+    vercelIncomplete: (sections.vercel.data?.projects ?? []).some((p) => p.incomplete && projectKey(p) === site),
     vitals: (sections.vitals.data ?? []).filter((row) => siteKey(row.host) === site),
   };
 }
