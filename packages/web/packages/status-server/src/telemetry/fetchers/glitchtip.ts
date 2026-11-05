@@ -119,6 +119,12 @@ export interface GlitchtipIssuesResult {
  *     would resolve every issue on the unread pages; reporting it `failed` would throw away the
  *     pages that did answer and mark a reachable GlitchTip with a large backlog as an outage.
  *
+ * A walk of more than one page is not a snapshot: an issue that fires mid-walk moves to the top
+ * of the list (newest event first), past the pages still to come, onto one already read. So a
+ * multi-page walk claims `complete` only after re-reading page 1 at the end, which is where
+ * every such mover (and every new issue) lands. The cursor is value-based, so a resolve
+ * mid-walk does not shift the unread pages. If that re-read fails, the walk is not `complete`.
+ *
  * The next URL is rebuilt from our own base + the cursor. The bearer token goes on every
  * request, so a header value must not be able to choose where it is sent.
  */
@@ -145,6 +151,20 @@ export async function fetchGlitchtipIssues(
   /** What a failure after page 1 returns: the pages that answered, never claimed whole. */
   const stopped = (): GlitchtipIssuesResult =>
     pagesRead === 0 ? failed : { ok: true, issues: [...byId.values()], complete: false };
+  /** Page 1 again, merged in; `complete` only if it answered. See the doc comment above. */
+  const confirmed = async (): Promise<GlitchtipIssuesResult> => {
+    const res = await fetch(first, {
+      headers: { Authorization: `Bearer ${GLITCHTIP_API_TOKEN}` },
+      signal: controller.signal,
+    });
+    const issues: unknown = res.ok ? await res.json() : null;
+    if (!Array.isArray(issues)) {
+      console.warn("[telemetry] GlitchTip issues re-read of page 1 failed — reporting the walk incomplete");
+      return stopped();
+    }
+    for (const issue of issues as GlitchtipIssue[]) byId.set(issue.id, issue);
+    return { ok: true, issues: [...byId.values()], complete: true };
+  };
   try {
     const seenCursors = new Set<string>();
     let url = first;
@@ -174,7 +194,7 @@ export async function fetchGlitchtipIssues(
 
       const next = parseNextPage(res.headers.get("link"));
       const all = [...byId.values()];
-      if (next.kind === "end") return { ok: true, issues: all, complete: true };
+      if (next.kind === "end") return page === 1 ? { ok: true, issues: all, complete: true } : await confirmed();
       // No usable header: a short page is the end, a full one is presumed truncated.
       // Errs toward "we may not have seen everything", which costs a delayed resolve;
       // the other way costs a flap.

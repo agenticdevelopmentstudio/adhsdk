@@ -129,17 +129,45 @@ describe("glitchtipFetcher — is this answer usable", () => {
 // of 100 reported `complete: false` on every poll, so `errorsStore` never swept and the
 // table could only ever grow.
 describe("glitchtipFetcher — walks every page", () => {
-  it("follows the cursor to the end and reports the whole set as complete", async () => {
+  it("follows the cursor to the end, re-reads page 1, and reports the whole set as complete", async () => {
     const calls = stubPages([
       { issues: fullPage("a"), link: linkHeader({ cursor: "c1:0:0", results: true }) },
       { issues: [issue("last")], link: linkHeader({ cursor: "c2:0:0", results: false }) },
+      { issues: fullPage("a") },
     ]);
     const r = await glitchtipFetcher(ENV).fetch();
     expect(r.ok).toBe(true);
     expect(r.complete).toBe(true);
     expect(r.items).toHaveLength(PAGE_LIMIT + 1);
-    expect(calls).toHaveLength(2);
+    expect(calls).toHaveLength(3);
     expect(calls[1]).toContain("cursor=c1%3A0%3A0");
+    expect(calls[2]).not.toContain("cursor=");
+  });
+
+  // An issue that fires between the page-1 and page-2 requests jumps to the top of the list,
+  // onto the page already read. Without the re-read it is missing from a "complete" answer, so
+  // the store resolves it and the next poll reopens it: a flap with an alert each way.
+  it("picks up an issue that moved to page 1 while the walk was on later pages", async () => {
+    stubPages([
+      { issues: fullPage("a"), link: linkHeader({ cursor: "c1", results: true }) },
+      { issues: [issue("b")], link: linkHeader({ cursor: "c2", results: false }) },
+      { issues: [issue("mover"), ...fullPage("a").slice(0, PAGE_LIMIT - 1)] },
+    ]);
+    const r = await glitchtipFetcher(ENV).fetch();
+    expect(r.complete).toBe(true);
+    expect(r.items.map((i) => i.issueKey)).toContain("mover");
+  });
+
+  it("is ok but INCOMPLETE when the re-read of page 1 fails", async () => {
+    vi.spyOn(console, "warn").mockImplementation(() => {});
+    stubPages([
+      { issues: fullPage("a"), link: linkHeader({ cursor: "c1", results: true }) },
+      { issues: [issue("b")], link: linkHeader({ cursor: "c2", results: false }) },
+      { status: 503 },
+    ]);
+    const r = await glitchtipFetcher(ENV).fetch();
+    expect(r).toMatchObject({ ok: true, complete: false });
+    expect(r.items).toHaveLength(PAGE_LIMIT + 1);
   });
 
   it("trusts an explicit results=false on a page that happens to be exactly full", async () => {
