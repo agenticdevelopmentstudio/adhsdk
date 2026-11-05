@@ -36,8 +36,6 @@ class GetPersonaMemoryMemoriesResponse200Item:
         valid_to (None | str):
         recall_count (int):
         last_recalled_at (None | str):
-        embedding (list[float] | None):
-        embedding_model (None | str):
         semantic_embedding (list[float] | None):
         semantic_stamp (None | str):
         semantic_source (None | str):
@@ -71,8 +69,6 @@ class GetPersonaMemoryMemoriesResponse200Item:
     valid_to: None | str
     recall_count: int
     last_recalled_at: None | str
-    embedding: list[float] | None
-    embedding_model: None | str
     semantic_embedding: list[float] | None
     semantic_stamp: None | str
     semantic_source: None | str
@@ -136,16 +132,6 @@ class GetPersonaMemoryMemoriesResponse200Item:
         last_recalled_at: None | str
         last_recalled_at = self.last_recalled_at
 
-        embedding: list[float] | None
-        if isinstance(self.embedding, list):
-            embedding = self.embedding
-
-        else:
-            embedding = self.embedding
-
-        embedding_model: None | str
-        embedding_model = self.embedding_model
-
         semantic_embedding: list[float] | None
         if isinstance(self.semantic_embedding, list):
             semantic_embedding = self.semantic_embedding
@@ -197,8 +183,6 @@ class GetPersonaMemoryMemoriesResponse200Item:
                 "validTo": valid_to,
                 "recallCount": recall_count,
                 "lastRecalledAt": last_recalled_at,
-                "embedding": embedding,
-                "embeddingModel": embedding_model,
                 "semanticEmbedding": semantic_embedding,
                 "semanticStamp": semantic_stamp,
                 "semanticSource": semantic_source,
@@ -296,28 +280,6 @@ class GetPersonaMemoryMemoriesResponse200Item:
 
         last_recalled_at = _parse_last_recalled_at(d.pop("lastRecalledAt"))
 
-        def _parse_embedding(data: object) -> list[float] | None:
-            if data is None:
-                return data
-            try:
-                if not isinstance(data, list):
-                    raise TypeError()
-                embedding_type_0 = cast(list[float], data)
-
-                return embedding_type_0
-            except (TypeError, ValueError, AttributeError, KeyError):
-                pass
-            return cast(list[float] | None, data)
-
-        embedding = _parse_embedding(d.pop("embedding"))
-
-        def _parse_embedding_model(data: object) -> None | str:
-            if data is None:
-                return data
-            return cast(None | str, data)
-
-        embedding_model = _parse_embedding_model(d.pop("embeddingModel"))
-
         def _parse_semantic_embedding(data: object) -> list[float] | None:
             if data is None:
                 return data
@@ -386,8 +348,6 @@ class GetPersonaMemoryMemoriesResponse200Item:
             valid_to=valid_to,
             recall_count=recall_count,
             last_recalled_at=last_recalled_at,
-            embedding=embedding,
-            embedding_model=embedding_model,
             semantic_embedding=semantic_embedding,
             semantic_stamp=semantic_stamp,
             semantic_source=semantic_source,

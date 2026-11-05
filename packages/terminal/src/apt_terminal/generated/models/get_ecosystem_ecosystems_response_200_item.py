@@ -5,6 +5,8 @@ from typing import Any, TypeVar, cast
 
 from attrs import define as _attrs_define
 
+from ..types import UNSET, Unset
+
 T = TypeVar("T", bound="GetEcosystemEcosystemsResponse200Item")
 
 
@@ -26,9 +28,11 @@ class GetEcosystemEcosystemsResponse200Item:
         is_deleted (bool):
         is_default (bool):
         is_infrastructure (bool):
+        type_ (str):
         namespace_id (None | str):
         parent_id (None | str):
         archived_at (None | str):
+        can_manage (bool | Unset): Workspace mode only: whether the caller may manage this ecosystem. Absent otherwise.
     """
 
     id: str
@@ -45,9 +49,11 @@ class GetEcosystemEcosystemsResponse200Item:
     is_deleted: bool
     is_default: bool
     is_infrastructure: bool
+    type_: str
     namespace_id: None | str
     parent_id: None | str
     archived_at: None | str
+    can_manage: bool | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
         id = self.id
@@ -80,6 +86,8 @@ class GetEcosystemEcosystemsResponse200Item:
 
         is_infrastructure = self.is_infrastructure
 
+        type_ = self.type_
+
         namespace_id: None | str
         namespace_id = self.namespace_id
 
@@ -88,6 +96,8 @@ class GetEcosystemEcosystemsResponse200Item:
 
         archived_at: None | str
         archived_at = self.archived_at
+
+        can_manage = self.can_manage
 
         field_dict: dict[str, Any] = {}
 
@@ -107,11 +117,14 @@ class GetEcosystemEcosystemsResponse200Item:
                 "isDeleted": is_deleted,
                 "isDefault": is_default,
                 "isInfrastructure": is_infrastructure,
+                "type": type_,
                 "namespaceId": namespace_id,
                 "parentId": parent_id,
                 "archivedAt": archived_at,
             }
         )
+        if can_manage is not UNSET:
+            field_dict["canManage"] = can_manage
 
         return field_dict
 
@@ -158,6 +171,8 @@ class GetEcosystemEcosystemsResponse200Item:
 
         is_infrastructure = d.pop("isInfrastructure")
 
+        type_ = d.pop("type")
+
         def _parse_namespace_id(data: object) -> None | str:
             if data is None:
                 return data
@@ -179,6 +194,8 @@ class GetEcosystemEcosystemsResponse200Item:
 
         archived_at = _parse_archived_at(d.pop("archivedAt"))
 
+        can_manage = d.pop("canManage", UNSET)
+
         get_ecosystem_ecosystems_response_200_item = cls(
             id=id,
             owner_id=owner_id,
@@ -194,9 +211,11 @@ class GetEcosystemEcosystemsResponse200Item:
             is_deleted=is_deleted,
             is_default=is_default,
             is_infrastructure=is_infrastructure,
+            type_=type_,
             namespace_id=namespace_id,
             parent_id=parent_id,
             archived_at=archived_at,
+            can_manage=can_manage,
         )
 
         return get_ecosystem_ecosystems_response_200_item

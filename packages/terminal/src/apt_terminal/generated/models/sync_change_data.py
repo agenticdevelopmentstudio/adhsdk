@@ -11,7 +11,7 @@ T = TypeVar("T", bound="SyncChangeData")
 
 @_attrs_define
 class SyncChangeData:
-    """Row for upserts, minus server-internal sync columns and derived columns such as a memory's embedding; absent for
+    """Row for upserts, minus server-internal sync columns and derived columns such as a memory's vector; absent for
     deletes
 
     """

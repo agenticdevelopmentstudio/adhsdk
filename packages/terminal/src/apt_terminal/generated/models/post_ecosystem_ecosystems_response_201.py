@@ -26,6 +26,7 @@ class PostEcosystemEcosystemsResponse201:
         is_deleted (bool):
         is_default (bool):
         is_infrastructure (bool):
+        type_ (str):
         namespace_id (None | str):
         parent_id (None | str):
         archived_at (None | str):
@@ -45,6 +46,7 @@ class PostEcosystemEcosystemsResponse201:
     is_deleted: bool
     is_default: bool
     is_infrastructure: bool
+    type_: str
     namespace_id: None | str
     parent_id: None | str
     archived_at: None | str
@@ -80,6 +82,8 @@ class PostEcosystemEcosystemsResponse201:
 
         is_infrastructure = self.is_infrastructure
 
+        type_ = self.type_
+
         namespace_id: None | str
         namespace_id = self.namespace_id
 
@@ -107,6 +111,7 @@ class PostEcosystemEcosystemsResponse201:
                 "isDeleted": is_deleted,
                 "isDefault": is_default,
                 "isInfrastructure": is_infrastructure,
+                "type": type_,
                 "namespaceId": namespace_id,
                 "parentId": parent_id,
                 "archivedAt": archived_at,
@@ -158,6 +163,8 @@ class PostEcosystemEcosystemsResponse201:
 
         is_infrastructure = d.pop("isInfrastructure")
 
+        type_ = d.pop("type")
+
         def _parse_namespace_id(data: object) -> None | str:
             if data is None:
                 return data
@@ -194,6 +201,7 @@ class PostEcosystemEcosystemsResponse201:
             is_deleted=is_deleted,
             is_default=is_default,
             is_infrastructure=is_infrastructure,
+            type_=type_,
             namespace_id=namespace_id,
             parent_id=parent_id,
             archived_at=archived_at,

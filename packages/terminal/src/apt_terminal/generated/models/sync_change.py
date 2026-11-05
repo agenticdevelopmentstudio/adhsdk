@@ -25,7 +25,7 @@ class SyncChange:
         op (SyncChangeOp):
         sync_version (str): Server-assigned monotonic version (bigint as string)
         data (SyncChangeData | Unset): Row for upserts, minus server-internal sync columns and derived columns such as a
-            memory's embedding; absent for deletes
+            memory's vector; absent for deletes
     """
 
     resource: str
