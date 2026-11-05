@@ -1,10 +1,18 @@
-import type { ReactElement, ReactNode } from 'react';
+import type { MouseEvent, ReactElement, ReactNode } from 'react';
 import { type SiteContact } from './identity';
 /** A plain link: the directory's entries, and the "This site" column a site passes. */
 export type SiteLink = {
     label: string;
     href: string;
 };
+type Entry = SiteLink & {
+    /** A small pill after the label: the platform of a native tool. */
+    badge?: string;
+    onClick?: (event: MouseEvent<HTMLAnchorElement>) => void;
+};
+/** Terms and Privacy open in a scrolling dialog over the page (LegalModals); the hrefs stay,
+ *  so a modified click, or a browser without the Popover API, still reaches the pages. */
+export declare const LEGAL_ENTRIES: Entry[];
 export type FamilyFooterProps = {
     /** The build identity ({@link buildVersionLabel}); null when none was baked, and then the
      *  fine print simply has no version. */
@@ -33,4 +41,5 @@ export type FamilyFooterProps = {
  * overview by id.
  */
 export declare function FamilyFooter({ version, links, anchored, contact, }: FamilyFooterProps): ReactElement;
+export {};
 //# sourceMappingURL=FamilyFooter.d.ts.map

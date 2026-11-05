@@ -345,6 +345,7 @@ describe('LISTED_SITES (the family roster)', () => {
       'narratives',
       'personaregistry',
       'devteam',
+      'hub-sdk',
       'toolkit',
       'myagenticteams',
       'mcp',
@@ -960,6 +961,7 @@ describe('FOOTER_SITES (SEO interlinks)', () => {
       'narratives',
       'personaregistry',
       'devteam',
+      'hub-sdk',
       'toolkit',
       'myagenticteams',
       // <gen:order> managed by scaffold-sites.py — do not edit by hand
@@ -1062,17 +1064,19 @@ describe('HUB_FEATURE_SEGMENT (in-hub workspace switching)', () => {
     for (const id of Object.keys(HUB_FEATURE_SEGMENT)) {
       expect(ids.has(id as (typeof SITES)[number]['id']), `${id} must be a registry site`).toBe(true)
     }
-    // Segments are unique per site, with exactly TWO documented aliases — both cases of one
+    // Segments are unique per site, with exactly THREE documented aliases — each a case of one
     // hub pane genuinely being two sites' implementation:
     //   products — ecosystems are managed as PRODUCTS in the hub, so the ecosystems and products
     //              sites resolve to the same view;
     //   integrations — the `messaging` site is email & SMS integrations, whose hub surface has
-    //              always been the integrations feature (a placeholder on its own domain).
+    //              always been the integrations feature (a placeholder on its own domain);
+    //   toolkit — hub-sdk is the toolkit's site copied to the hub's subdomain, the same app.
     // The rail is keyed by SEGMENT, so an alias draws one row rather than two. Any OTHER
     // duplicate is a drift bug: two different features would be claiming one URL.
     const ALIASES: Record<string, string[]> = {
       products: ['ecosystems', 'products'],
       integrations: ['integrations', 'messaging'],
+      toolkit: ['hub-sdk', 'toolkit'],
     }
     const bySegment = new Map<string, string[]>()
     for (const [id, seg] of Object.entries(HUB_FEATURE_SEGMENT)) {

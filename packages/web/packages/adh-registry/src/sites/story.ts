@@ -59,11 +59,14 @@ export const SITE_STORIES: Record<SiteId, SiteStory> = {
   hub: { tier: 'masterbrand', pillar: 'backend', funnelStage: 'discover', nextStep: 'hub-help' },
   // help.adh.com (the consolidated help surface). Its own chapter, converging straight on the hub.
   'hub-help': { tier: 'chapter', pillar: 'build', funnelStage: 'learn', nextStep: 'hub' },
-  cookbook: { tier: 'satellite', pillar: 'build', funnelStage: 'learn', nextStep: 'toolkit' },
+  cookbook: { tier: 'satellite', pillar: 'build', funnelStage: 'learn', nextStep: 'hub-sdk' },
   projects: { tier: 'chapter', pillar: 'build', funnelStage: 'build', nextStep: 'devteam' },
   narratives: { tier: 'chapter', pillar: 'build', funnelStage: 'discover', nextStep: 'hub' },
   personaregistry: { tier: 'satellite', pillar: 'identity', funnelStage: 'adopt', nextStep: 'hub' },
   devteam: { tier: 'chapter', pillar: 'build', funnelStage: 'build', nextStep: 'hub' },
+  // The SDK's site took over the toolkit's place in the journey; the toolkit keeps its story
+  // until the new toolkit replaces it.
+  'hub-sdk': { tier: 'chapter', pillar: 'build', funnelStage: 'build', nextStep: 'hub' },
   toolkit: { tier: 'satellite', pillar: 'build', funnelStage: 'build', nextStep: 'hub' },
   myagenticteams: { tier: 'proof', pillar: 'identity', funnelStage: 'adopt', nextStep: 'hub' },
   mcp: { tier: 'chapter', pillar: 'backend', funnelStage: 'build', nextStep: 'hub' },
@@ -71,10 +74,10 @@ export const SITE_STORIES: Record<SiteId, SiteStory> = {
   community: { tier: 'chapter', pillar: 'build', funnelStage: 'adopt', nextStep: 'hub' },
   support: { tier: 'chapter', pillar: 'build', funnelStage: 'adopt', nextStep: 'hub-help' },
   // docs.adh.com and the `docs` SiteId are retired (folded into help.adh.com, which serves the
-  // guides + /rest-api); help continues to toolkit (docs' former nextStep). The landing itself
+  // guides + /rest-api); help continues to hub-sdk (docs' former nextStep, the toolkit's until 2026-11-05). The landing itself
   // (agenticdeveloperhelp.com) is delisted — stories that used to flow INTO 'help' (hub, support)
   // now flow to 'hub-help', the family's Help destination.
-  help: { tier: 'chapter', pillar: 'build', funnelStage: 'learn', nextStep: 'toolkit' },
+  help: { tier: 'chapter', pillar: 'build', funnelStage: 'learn', nextStep: 'hub-sdk' },
   news: { tier: 'chapter', pillar: 'build', funnelStage: 'discover', nextStep: 'hub' },
   academy: { tier: 'chapter', pillar: 'build', funnelStage: 'learn', nextStep: 'cookbook' },
   dashboards: { tier: 'chapter', pillar: 'backend', funnelStage: 'ship', nextStep: 'hub' },
@@ -93,7 +96,7 @@ export const SITE_STORIES: Record<SiteId, SiteStory> = {
   devices: { tier: 'chapter', pillar: 'backend', funnelStage: 'ship', nextStep: 'hub' },
   notifications: { tier: 'chapter', pillar: 'backend', funnelStage: 'ship', nextStep: 'hub' },
   knowledgebases: { tier: 'chapter', pillar: 'backend', funnelStage: 'build', nextStep: 'hub' },
-  tools: { tier: 'chapter', pillar: 'build', funnelStage: 'build', nextStep: 'toolkit' },
+  tools: { tier: 'chapter', pillar: 'build', funnelStage: 'build', nextStep: 'hub-sdk' },
   education: { tier: 'chapter', pillar: 'build', funnelStage: 'learn', nextStep: 'academy' },
   teamregistry: { tier: 'chapter', pillar: 'identity', funnelStage: 'adopt', nextStep: 'hub' },
   teambuilder: { tier: 'chapter', pillar: 'identity', funnelStage: 'build', nextStep: 'teamregistry' },

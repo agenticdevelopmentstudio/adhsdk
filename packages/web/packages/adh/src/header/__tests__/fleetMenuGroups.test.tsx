@@ -178,7 +178,7 @@ describe('SITE_MENU_GROUPS', () => {
       'Hub',
       'Dev Team',
       'Cookbook',
-      'Toolkit',
+      'SDK',
       'Persona Registry',
       'Help',
       'Contact',
@@ -197,7 +197,7 @@ describe('SITE_MENU_GROUPS', () => {
     const links = allLinks(SITE_MENU_GROUPS)
     const sites = new Set(links.flatMap((l) => ('site' in l ? [l.site] : [])))
     expect([...sites].sort()).toEqual(
-      ['bitbag', 'cookbook', 'devteam', 'hub', 'hub-help', 'personaregistry', 'toolkit'].sort(),
+      ['bitbag', 'cookbook', 'devteam', 'hub', 'hub-help', 'hub-sdk', 'personaregistry'].sort(),
     )
     expect(links.flatMap((l) => ('route' in l ? [l.route] : []))).toEqual(['/contact'])
     expect(links.some((l) => 'href' in l)).toBe(false)

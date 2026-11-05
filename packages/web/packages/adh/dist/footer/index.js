@@ -432,7 +432,13 @@ function SiteFooter({ links = [], chat = true, live, specimen = false, contact =
         version && /* @__PURE__ */ jsxs7("span", { className: "adh-footer__copyright-version", children: [
           " \xB7 ",
           version
-        ] })
+        ] }),
+        LEGAL_ENTRIES.map((e) => /* @__PURE__ */ jsxs7("span", { children: [
+          " \xB7 ",
+          /* @__PURE__ */ jsx9("a", { className: "adh-footer__fallback-link", href: e.href, children: e.label })
+        ] }, e.href)),
+        " \xB7 ",
+        /* @__PURE__ */ jsx9("a", { className: "adh-footer__fallback-link", href: `mailto:${contact.email}`, children: "Contact" })
       ] })
     ] }) }),
     chat && !specimen && /* @__PURE__ */ jsx9(FooterChat, {}),

@@ -152,6 +152,9 @@ a.adh-footer__brand-link:focus-visible {
 .adh-footer__copyright-fallback {
   display: none;
 }
+.adh-footer__fallback-link {
+  color: inherit;
+}
 
 /* A phone: closer to the corner, as bitbag is on the other side. */
 @media (max-width: 40rem) {

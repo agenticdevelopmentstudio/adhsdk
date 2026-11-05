@@ -152,7 +152,7 @@ export const FLEET_MENU_GROUPS: MenuGroup[] = [
       { site: 'codereviews', description: 'Review your code' },
       { site: 'cookbook' },
       { site: 'recipes' },
-      { site: 'toolkit' },
+      { site: 'hub-sdk' },
       { site: 'tools' },
       { site: 'testing' },
       { site: 'shipr' },
@@ -226,7 +226,8 @@ export const FLEET_MENU_GROUPS: MenuGroup[] = [
 /**
  * The site menu EVERY site shows on its marketing pages (MarketingSiteMenu), cut down to
  * the seven sites the repo owner chose (Mike, 2026-10-23): the hub, Help (hub-help),
- * Bitbag, Dev Team, Cookbook, Toolkit and Persona Registry. It began as the hub's own
+ * Bitbag, Dev Team, Cookbook, the SDK (hub-sdk, which took the Toolkit's row
+ * on 2026-11-05) and Persona Registry. It began as the hub's own
  * menu, with satellites keeping the whole {@link FLEET_MENU_GROUPS}; the owner ruled that
  * the menu is shared code and every site gets this same one (Mike, 2026-10-25).
  *
@@ -251,7 +252,7 @@ export const SITE_MENU_GROUPS: MenuGroup[] = [
   leaf({ site: 'hub', description: 'The center of it all' }),
   leaf({ site: 'devteam', label: 'Dev Team' }),
   leaf({ site: 'cookbook' }),
-  leaf({ site: 'toolkit' }),
+  leaf({ site: 'hub-sdk' }),
   leaf({ site: 'personaregistry' }),
   { kind: 'leaf', section: HELP_SECTION, blurb: true, link: { site: 'hub-help' } },
   {

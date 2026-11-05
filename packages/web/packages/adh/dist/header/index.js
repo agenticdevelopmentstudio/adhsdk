@@ -1380,6 +1380,8 @@ var ICONS = {
   // matches FEATURE_META `personas`
   toolkit: Wrench3,
   // matches the myagenticteams landing's toolkit glyph
+  "hub-sdk": Wrench3,
+  // the SDK's site took the toolkit's row, and its glyph with it
   cookbook: ChefHat,
   // recipes/cookbook
   devteam: UsersRound,
@@ -1896,7 +1898,7 @@ var FLEET_MENU_GROUPS = [
       { site: "codereviews", description: "Review your code" },
       { site: "cookbook" },
       { site: "recipes" },
-      { site: "toolkit" },
+      { site: "hub-sdk" },
       { site: "tools" },
       { site: "testing" },
       { site: "shipr" },
@@ -1971,7 +1973,7 @@ var SITE_MENU_GROUPS = [
   leaf({ site: "hub", description: "The center of it all" }),
   leaf({ site: "devteam", label: "Dev Team" }),
   leaf({ site: "cookbook" }),
-  leaf({ site: "toolkit" }),
+  leaf({ site: "hub-sdk" }),
   leaf({ site: "personaregistry" }),
   { kind: "leaf", section: HELP_SECTION, blurb: true, link: { site: "hub-help" } },
   {

@@ -75,7 +75,7 @@ describe('MarketingSiteMenu', () => {
         /^Hub/,
         /^Dev Team/,
         /^Cookbook/,
-        /^Toolkit/,
+        /^SDK/,
         /^Persona Registry/,
         /^Help/,
         /^Contact/,

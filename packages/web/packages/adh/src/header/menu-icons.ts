@@ -117,6 +117,7 @@ const ICONS: Record<string, LucideIcon> = {
   community: Users, // the community site; the hub has no communities feature to match
   personaregistry: UserCircle, // matches FEATURE_META `personas`
   toolkit: Wrench, // matches the myagenticteams landing's toolkit glyph
+  'hub-sdk': Wrench, // the SDK's site took the toolkit's row, and its glyph with it
   cookbook: ChefHat, // recipes/cookbook
   devteam: UsersRound, // matches FEATURE_META `teams`
   myagenticteams: Sparkles, // matches the myagenticteams landing

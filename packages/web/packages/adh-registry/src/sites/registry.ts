@@ -17,6 +17,8 @@ export type SiteId =
   | 'consulting'
   | 'devteam'
   | 'toolkit'
+  // hub-sdk: the Agentic Developer Hub SDK's site, a subdomain of the hub built in its repo.
+  | 'hub-sdk'
   | 'myagenticteams'
   | 'mcp'
   | 'status'
@@ -268,7 +270,11 @@ export const SITES: SiteDef[] = [
   // the hub, so the signed-in surface this site used to mount rendered a placeholder.
   { id: 'personaregistry', label: 'Persona Registry', fullLabel: 'Agentic Persona Registry', description: 'Browse agentic personas', prodHost: 'agenticpersonaregistry.com', hasStaging: true, hasTesting: true, hasHome: false },
   { id: 'devteam', label: 'Team', fullLabel: 'Agentic Developer Team', description: 'Your agentic dev team', prodHost: 'agenticdeveloperteam.com', hasStaging: true, hasTesting: true, hasHome: true, workspaceRoute: 'root' },
-  { id: 'toolkit', label: 'Toolkit', fullLabel: 'Agentic Developer Hub SDK', description: 'The developer toolkit', prodHost: 'agenticdevelopertoolkit.com', hasStaging: true, hasTesting: true, hasHome: true, workspaceRoute: 'root' },
+  { id: 'hub-sdk', label: 'SDK', fullLabel: 'Agentic Developer Hub SDK', description: 'The developer SDK', prodHost: 'sdk.agenticdeveloperhub.com', hasStaging: true, hasTesting: true, hasHome: true, workspaceRoute: 'root' },
+  // toolkit: agenticdevelopertoolkit.com, kept while the new toolkit is assembled. Every link
+  // to the developer SDK goes to hub-sdk; the footer's All Sites overview is the one place
+  // that still lists this site.
+  { id: 'toolkit', label: 'Toolkit', fullLabel: 'Agentic Developer Toolkit', description: 'The developer toolkit', prodHost: 'agenticdevelopertoolkit.com', hasStaging: true, hasTesting: true, hasHome: true, workspaceRoute: 'root' },
   // myagenticteams: off-pattern consumer brand (not agenticdeveloper<x>.com), so
   // `fullLabel` is required — siteHeaderTitle can't derive the brand from the host.
   { id: 'myagenticteams', label: 'My Teams', fullLabel: 'My Agentic Teams', description: 'Build your own agentic teams', prodHost: 'myagenticteams.com', hasStaging: true, hasTesting: true, hasHome: true, workspaceRoute: 'root' },
@@ -543,7 +549,7 @@ export function siteIdForDir(name: string): SiteId | undefined {
  *  `messages`. A site and its hub view were always two things rather than a choice,
  *  which is why the route did not have to move when the id changed hands. */
 export const MAIN_SITE_IDS: SiteId[] = [
-  'admin', 'bitbag', 'community', 'cookbook', 'devteam', 'help', 'hub', 'hub-help',
+  'admin', 'bitbag', 'community', 'cookbook', 'devteam', 'help', 'hub', 'hub-help', 'hub-sdk',
   'myagenticteams', 'news', 'personaregistry', 'shipr', 'status', 'support', 'toolkit',
 ]
 export const MARKETING_SITE_IDS: SiteId[] = [
@@ -613,7 +619,7 @@ export const SITE_CATEGORIES: { label: string; ids: SiteId[] }[] = [
   // are developer tools too, on the Mac rather than the web, so they file here.
   {
     label: 'Build',
-    ids: ['devteam', 'codereviews', 'cookbook', 'toolkit', 'tools', 'testing', 'shipr', 'kitchen', 'stenographer', 'mcp'],
+    ids: ['devteam', 'codereviews', 'cookbook', 'hub-sdk', 'toolkit', 'tools', 'testing', 'shipr', 'kitchen', 'stenographer', 'mcp'],
   },
   {
     label: 'Personas',
@@ -948,6 +954,9 @@ export const HUB_FEATURE_SEGMENT = {
   support: 'support',
   teambuilder: 'teambuilder',
   testing: 'testing',
+  // hub-sdk is the toolkit's site copied to the hub's subdomain, so the hub mounts the same
+  // workspace view for both; `toolkit` names the segment, so the reverse map keeps that site.
+  'hub-sdk': 'toolkit',
   toolkit: 'toolkit',
   tools: 'tools',
 } as const satisfies Partial<Record<SiteId, string>>
