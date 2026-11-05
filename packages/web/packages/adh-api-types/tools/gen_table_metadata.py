@@ -176,6 +176,12 @@ def find_tables(paths: dict[str, Any]) -> list[dict[str, Any]]:
 
         columns = []
         for name, prop in row_props.items():
+            # A field the list route adds in one mode only (the ecosystem list's workspace-mode
+            # `canManage`) is not a column: the backend marks it `x-list-annotation`
+            # (src/openapi/build.ts DERIVED_READ_FIELDS), and it is absent from every other
+            # response. Projecting it would give the CRUD browser a column no table holds.
+            if prop.get("x-list-annotation") is True:
+                continue
             ctype, nullable, enum, max_length = column_shape(prop)
             # Optional CrudColumn fields only when present — emitting
             # `"enum": null` would violate the `enum?: string[]` contract.

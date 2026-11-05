@@ -109,10 +109,15 @@ describe.skipIf(!ADH_SPEC_PATH)('generated table metadata ↔ openapi.json drift
         'get', 'responses', '200', 'content', 'application/json', 'schema', 'items', 'properties',
       )
       expect(props, `${table.key} row schema missing — spec layout shifted?`).toBeDefined()
+      // A list-only field the backend marks `x-list-annotation` is not a column, so the
+      // generator leaves it out (gen_table_metadata.py); the comparison does the same.
+      const columnProps = Object.entries(props as Record<string, { 'x-list-annotation'?: unknown }>)
+        .filter(([, prop]) => prop['x-list-annotation'] !== true)
+        .map(([name]) => name)
       expect(
         table.columns.map((c) => c.name).sort(),
         `${table.key} columns drift from the spec — rerun pnpm gen:crud-metadata`,
-      ).toEqual(Object.keys(props as Record<string, unknown>).sort())
+      ).toEqual(columnProps.sort())
     }
   })
 

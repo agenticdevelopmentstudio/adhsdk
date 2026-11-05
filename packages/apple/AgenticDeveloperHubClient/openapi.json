@@ -105626,7 +105626,8 @@
                       },
                       "canManage": {
                         "type": "boolean",
-                        "description": "Workspace mode only: whether the caller may manage this ecosystem. Absent otherwise."
+                        "description": "Workspace mode only: whether the caller may manage this ecosystem. Absent otherwise.",
+                        "x-list-annotation": true
                       }
                     },
                     "required": [
