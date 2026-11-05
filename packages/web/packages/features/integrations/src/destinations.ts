@@ -5,7 +5,7 @@ import { useResourceList, workspacesApi, type Workspace } from "@adh-sdk/data";
 import { api as personasApi, type Persona } from "@adh-sdk/data/personas";
 import {
   ecosystemsApi,
-  useWorkspaceDefaultEcosystemId,
+  useWorkspaceHubScope,
   type Ecosystem,
 } from "@adh-sdk/data/ecosystems";
 
@@ -13,7 +13,7 @@ import {
  * The URL segment for the workspace's own destination — a RESERVED LITERAL, not an id.
  *
  * The workspace row is the one destination whose ecosystem id is not known when the URL is
- * written: it is resolved asynchronously (`useWorkspaceDefaultEcosystemId`), so addressing it by
+ * written: it is resolved asynchronously (`useWorkspaceHubScope`), so addressing it by
  * that id would make the first destination unlinkable until a second request came back, and would
  * change the URL of "My Integrations" the day an account's infrastructure ecosystem is
  * re-provisioned. A stable literal keeps the link stable and keeps the resolution an
@@ -164,7 +164,9 @@ function useDestinationRows(
     // is not "couldn't resolve".
     isLoadingError: workspaceFailed,
     canManage: workspaceManageable,
-  } = useWorkspaceDefaultEcosystemId(slug);
+    // The owner's HUB-DATA ecosystem (the Personal / Organization child), else the workspace's own
+    // before the move reaches it: "My Integrations" is hub data.
+  } = useWorkspaceHubScope(slug);
 
   const personaRows = personas.items;
   const productRows = products.items;

@@ -5,7 +5,7 @@ import { notFound } from "next/navigation";
 import { defineSiteHome } from "@adh-sdk/adh/home";
 import { StorageGroup, type RenderTransferSection } from "@adh-sdk/adh-ecosystem-panes";
 import { parseStoragePath, type StoragePathSelection } from "@adh-sdk/adh-ecosystem-panes/parse";
-import { useWorkspaceDefaultEcosystemId } from "@adh-sdk/data/ecosystems";
+import { useWorkspaceHubScope } from "@adh-sdk/data/ecosystems";
 // The panes fetch through the toolkit's react-query cache, which reads the toolkit's OWN
 // QueryClient context — mount its provider here (same physical module as the hooks; a
 // host-provided QueryClientProvider would be a different copy and invisible to them).
@@ -27,9 +27,10 @@ import { useBasePathRoute } from "@adh-sdk/resource";
  * or a third segment is a 404, not this same pane served at every depth (see `parse`).
  *
  * Host seams:
- * - scope is resolved HERE, from the slug the shell already settled on — the same
- *   `useWorkspaceDefaultEcosystemId` that the hub's own `useDefaultEcosystemId` is a two-line
- *   adapter over, so both hosts reach one resolution and the gate below it stays one decision.
+ * - scope is resolved HERE, from the slug the shell already settled on — through
+ *   `useWorkspaceHubScope` (the owner's Personal / Organization ecosystem, else the workspace's
+ *   own), which the hub's own `useHubDataEcosystemId` is a two-line adapter over, so both hosts
+ *   reach one resolution and the gate below it stays one decision.
  * - renderTransfer and renderAllData come from the MOUNT ({@link StorageHostSeams}), because
  *   neither can be built here and both can be built by the hub. This site supplies neither, and
  *   that is the honest result rather than a gap: a Transfer Ownership section has to name every
@@ -111,7 +112,9 @@ function StorageHome({
   workspaceSlug: string;
 } & StoragePathSelection &
   StorageHostSeams): ReactElement {
-  const scope = useWorkspaceDefaultEcosystemId(workspaceSlug);
+  // Storage is hub data: its buckets live in the owner's Personal / Organization ecosystem, else
+  // (before the move reaches them) the workspace's own.
+  const scope = useWorkspaceHubScope(workspaceSlug);
   // The same push semantics the hub's useFeatureRoute delegates to, against this site's base
   // instead of `/<workspace>/storage`.
   const { pushSegment, pushNested } = useBasePathRoute(base);

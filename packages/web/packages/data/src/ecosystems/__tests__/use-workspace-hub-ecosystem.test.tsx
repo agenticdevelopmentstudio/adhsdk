@@ -13,7 +13,7 @@ vi.mock("../../http", async (importOriginal) => ({
   authedJson: vi.fn(),
 }));
 
-import { useWorkspaceHubEcosystemId } from "../use-workspace-hub-ecosystem";
+import { useWorkspaceHubEcosystemId, useWorkspaceHubScope } from "../use-workspace-hub-ecosystem";
 import { isHubDataEcosystem, toEcosystem } from "../ecosystems";
 import { getToolkitQueryClient } from "../../query";
 import { authedJson } from "../../http";
@@ -93,6 +93,42 @@ describe("useWorkspaceHubEcosystemId", () => {
     serve([], []);
     mount("acme-none");
     await waitFor(() => expect(screen.getByTestId("probe").textContent).toBe("none"));
+  });
+});
+
+function ScopeProbe({ slug }: { slug: string }): ReactElement {
+  const s = useWorkspaceHubScope(slug);
+  return (
+    <div data-testid="scope">
+      {`${s.isPending ? "pending" : (s.ecosystemId ?? "none")}|${s.canManage ? "manage" : "view"}`}
+    </div>
+  );
+}
+
+describe("useWorkspaceHubScope", () => {
+  const mountScope = (slug: string) =>
+    render(
+      <QueryClientProvider client={qc}>
+        <ScopeProbe slug={slug} />
+      </QueryClientProvider>,
+    );
+
+  it("is the hub-data id with the workspace's management flag", async () => {
+    serve([row("hub-9", { type: "organization" })], [row("infra-9", { canManage: false })]);
+    mountScope("acme-scope");
+    await waitFor(() => expect(screen.getByTestId("scope").textContent).toBe("hub-9|view"));
+  });
+
+  it("falls back to the default ecosystem before the move", async () => {
+    serve([], [row("infra-8")]);
+    mountScope("acme-scope-old");
+    await waitFor(() => expect(screen.getByTestId("scope").textContent).toBe("infra-8|manage"));
+  });
+
+  it("is pending while the lookups are in flight", () => {
+    mockedJson.mockImplementation(() => new Promise(() => {}));
+    mountScope("acme-scope-wait");
+    expect(screen.getByTestId("scope").textContent).toBe("pending|manage");
   });
 });
 

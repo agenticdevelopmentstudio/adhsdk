@@ -36,3 +36,24 @@ export function useWorkspaceHubEcosystemId(
   if (fallback.isPending) return undefined;
   return fallback.ecosystemId ?? null;
 }
+
+/**
+ * {@link useWorkspaceDefaultEcosystemId}'s answer with `ecosystemId` swapped for the hub-data
+ * ecosystem: the one scope shape a pane that binds to "where this owner's hub data lives" reads
+ * (Storage, Integrations). The management flag and the error flags stay the workspace's, because
+ * the hub-data child is the same principal's and has no permission rows of its own to read.
+ *
+ * `isPending` covers BOTH answers: the id is not final until the child lookup and the fallback
+ * have each settled, so a caller that shows a "no ecosystem" notice must wait on this one.
+ */
+export function useWorkspaceHubScope(
+  workspaceSlug: string | undefined,
+): ReturnType<typeof useWorkspaceDefaultEcosystemId> {
+  const hubId = useWorkspaceHubEcosystemId(workspaceSlug);
+  const workspace = useWorkspaceDefaultEcosystemId(workspaceSlug);
+  return {
+    ...workspace,
+    ecosystemId: hubId ?? undefined,
+    isPending: hubId === undefined,
+  };
+}

@@ -27,7 +27,7 @@ vi.mock("@adh-sdk/data/personas", () => ({
 
 vi.mock("@adh-sdk/data/ecosystems", () => ({
   ecosystemsApi: { listForWorkspace: vi.fn() },
-  useWorkspaceDefaultEcosystemId: vi.fn(),
+  useWorkspaceHubScope: vi.fn(),
 }));
 
 vi.mock("@adh-sdk/data/integrations", () => ({
@@ -43,14 +43,14 @@ import { IntegrationsFeature } from "./IntegrationsFeature";
 import { api as personasApi, type Persona } from "@adh-sdk/data/personas";
 import {
   ecosystemsApi,
-  useWorkspaceDefaultEcosystemId,
+  useWorkspaceHubScope,
   type Ecosystem,
 } from "@adh-sdk/data/ecosystems";
 import { integrationsApi } from "@adh-sdk/data/integrations";
 
 const listPersonas = vi.mocked(personasApi.personas.list);
 const listProducts = vi.mocked(ecosystemsApi.listForWorkspace);
-const defaultEcosystem = vi.mocked(useWorkspaceDefaultEcosystemId);
+const defaultEcosystem = vi.mocked(useWorkspaceHubScope);
 const listConfigs = vi.mocked(integrationsApi.listProviderConfigs);
 const listProviders = vi.mocked(integrationsApi.listProviders);
 
