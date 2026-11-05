@@ -165,6 +165,21 @@ describe("PostHog shapers", () => {
       await expect(loadSiteErrorDetail(ENV, rangeWindow("30d", NOW))).rejects.toThrow("HTTP 504");
     });
 
+    // Left zone-less, HogQL reads these in the PostHog project's timezone, not the buckets' UTC.
+    it("states every bucket and window bound in UTC", async () => {
+      const queries: string[] = [];
+      vi.stubGlobal("fetch", async (_url: string, init: { body: string }) => {
+        queries.push((JSON.parse(init.body) as { query: { query: string } }).query.query);
+        return answer([]);
+      });
+      await loadTraffic(ENV, rangeWindow("24h", NOW));
+      await loadTraffic(ENV, rangeWindow("7d", NOW));
+      await loadSiteErrorDetail(ENV, rangeWindow("30d", NOW));
+      const times = queries.flatMap((q) => q.match(/toStartOf\w+\([^)]*\)|toDateTime\([^)]*\)/g) ?? []);
+      expect(times.length).toBeGreaterThanOrEqual(queries.length);
+      for (const t of times) expect(t).toMatch(/, 'UTC'\)$/);
+    });
+
     it("stops at the first failed query instead of spending the other scans", async () => {
       const fetch = vi.fn(async () => ({ ok: false, status: 503, json: async () => ({}) }));
       vi.stubGlobal("fetch", fetch);
