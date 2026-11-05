@@ -1,6 +1,6 @@
 "use client";
 import { keepPreviousData, useQuery, type UseQueryResult } from "@tanstack/react-query";
-import { useStatusApi } from "../api/client";
+import { errorMessage, useStatusApi } from "../api/client";
 import type {
   AnalyticsDashboardResponse,
   AnalyticsRange,
@@ -21,13 +21,7 @@ type Api = ReturnType<typeof useStatusApi>;
 
 async function getDashboard<T>(api: Api, path: string): Promise<T> {
   const response = await api.fetch(path);
-  if (!response.ok) {
-    const detail = await response
-      .json()
-      .then((body: { error?: string }) => body.error)
-      .catch(() => null);
-    throw new Error(detail || `status ${response.status}`);
-  }
+  if (!response.ok) throw new Error((await errorMessage(response)) ?? `status ${response.status}`);
   return (await response.json()) as T;
 }
 

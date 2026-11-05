@@ -34,9 +34,18 @@ interface ErrorBody {
   message?: string;
 }
 
-async function errorDetail(res: Response): Promise<string> {
+/**
+ * The message in an error response, or null. The backend sends `{ error: { message } }` from its
+ * error handler and `{ error: "..." }` from a route, so both shapes are read here and nowhere else.
+ */
+export async function errorMessage(res: Response): Promise<string | null> {
   const body = (await res.json().catch(() => null)) as ErrorBody | null;
   const text = typeof body?.error === "string" ? body.error : (body?.error?.message ?? body?.message);
+  return typeof text === "string" && text ? text : null;
+}
+
+async function errorDetail(res: Response): Promise<string> {
+  const text = await errorMessage(res);
   return text ? ` — ${text}` : "";
 }
 
