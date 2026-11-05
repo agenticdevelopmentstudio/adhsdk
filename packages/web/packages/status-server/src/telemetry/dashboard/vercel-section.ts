@@ -34,7 +34,14 @@ interface ListedProject {
 
 class VercelRateLimited extends Error {}
 
+/**
+ * Every call checks the shared cooldown first, not just the load's first call. Up to CONCURRENCY
+ * workers run at once, so after one 429 the rest would otherwise keep firing at a throttled API,
+ * and each of their 429s pushes the cooldown, which the deploy poll also honors, further out.
+ */
 async function vercelGet(env: VercelEnv, path: string, params: Record<string, string>): Promise<unknown> {
+  const cooling = rateLimitedUntil("vercel");
+  if (cooling) throw new VercelRateLimited(`Vercel rate limited until ${new Date(cooling).toISOString()}`);
   const url = new URL(path, API);
   if (env.VERCEL_TEAM_ID) url.searchParams.set("teamId", env.VERCEL_TEAM_ID);
   for (const [k, v] of Object.entries(params)) url.searchParams.set(k, v);
@@ -131,9 +138,6 @@ export function shapeMarginal(rows: Record<string, unknown>[], by: string): Marg
 }
 
 export async function loadVercelTraffic(env: VercelEnv, w: RangeWindow): Promise<VercelTrafficSection> {
-  const cooling = rateLimitedUntil("vercel");
-  if (cooling) throw new Error(`Vercel rate limited until ${new Date(cooling).toISOString()}`);
-
   const candidates = (await listProjects(env)).filter(
     (p): p is ListedProject & { id: string; name: string } => Boolean(p.id && p.name && isProductionProject(p)),
   );
@@ -173,6 +177,9 @@ export async function loadVercelTraffic(env: VercelEnv, w: RangeWindow): Promise
       aggregate(env, p.id, "deviceType", w),
     ]);
     const all = [series, countries, referrers, paths, devices];
+    // A 429 ends the load, as it does in the counts phase; allSettled would otherwise hide it.
+    const limited = all.find((r) => r.status === "rejected" && r.reason instanceof VercelRateLimited);
+    if (limited?.status === "rejected") throw limited.reason;
     if (all.some((r) => r.status === "rejected")) failed++;
     const ok = (r: PromiseSettledResult<Record<string, unknown>[]>): Record<string, unknown>[] =>
       r.status === "fulfilled" ? r.value : [];

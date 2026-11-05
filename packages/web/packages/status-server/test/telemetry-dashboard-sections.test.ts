@@ -359,6 +359,23 @@ describe("Vercel section", () => {
     await expect(loadVercelTraffic(ENV, w)).rejects.toThrow("rate limited");
     expect(calls).toHaveLength(0);
   });
+
+  // More busy projects than workers, so some breakdowns only start after the first 429 is in.
+  it("a 429 in a breakdown fails the section and stops the calls not yet made", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    const busy = Array.from({ length: 8 }, (_, i) => ({ id: `b${i}`, name: `busy${i}`, webAnalytics: { enabledAt: 1 } }));
+    const calls = stubVercel((u) => {
+      if (u.pathname === "/v9/projects") return { body: { projects: busy } };
+      if (u.pathname.endsWith("/count")) return { body: { data: { pageviews: 1, visitors: 1 } } };
+      if (u.searchParams.get("projectId") === "b0") return { status: 429 };
+      return { body: { data: [] } };
+    });
+    await expect(loadVercelTraffic(ENV, w)).rejects.toThrow("rate limited");
+    await new Promise((r) => setTimeout(r, 10)); // let the other workers drain
+    const broken = new Set(calls.filter((u) => u.pathname.endsWith("/aggregate")).map((u) => u.searchParams.get("projectId")));
+    expect(broken.has("b6")).toBe(false);
+    expect(broken.has("b7")).toBe(false);
+  });
 });
 
 describe("errors sections", () => {
