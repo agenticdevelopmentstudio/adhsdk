@@ -28,7 +28,16 @@ export interface AppearancePrefs {
   underlineLinks: boolean
 }
 
-export const APPEARANCE_STORAGE_KEY = "adh:appearance"
+// The storage key, the pref lists and the pre-paint script live in a plain .mjs so a Vite
+// config (plain Node, no TypeScript) can load them too — see appearance-prepaint.mjs.
+import {
+  APPEARANCE_PREPAINT_SCRIPT,
+  APPEARANCE_STORAGE_KEY,
+  BOOL_PREFS,
+  ENUM_PREF_DEFAULTS,
+} from "./appearance-prepaint.mjs"
+
+export { APPEARANCE_PREPAINT_SCRIPT, APPEARANCE_STORAGE_KEY }
 
 export const APPEARANCE_DEFAULTS: AppearancePrefs = {
   colorMode: "auto",
@@ -39,23 +48,6 @@ export const APPEARANCE_DEFAULTS: AppearancePrefs = {
   focusOutlines: false,
   underlineLinks: false,
 }
-
-
-/**
- * The enum prefs and the value that means "leave the attribute off" (so the
- * matching `@media` query governs). Shared by applyAppearance and the pre-paint
- * script so the two can't drift. The dataset key (camelCase) maps to the kebab
- * `data-*` the CSS reads, e.g. `reduceMotion` → `data-reduce-motion`.
- */
-const ENUM_PREF_DEFAULTS = {
-  reduceMotion: "auto",
-  contrast: "default",
-  textSize: "default",
-  spacing: "compact",
-} as const
-
-/** Boolean prefs: present as `data-*="always"` when on, removed when off. */
-const BOOL_PREFS = ["focusOutlines", "underlineLinks"] as const
 
 /** Merge a possibly-partial / untrusted stored object onto the defaults. */
 export function normalizeAppearance(raw: unknown): AppearancePrefs {
@@ -163,38 +155,3 @@ function setOrRemove(el: HTMLElement, dataKey: string, value: string | null): vo
   else el.dataset[dataKey] = value
 }
 
-// The enum/bool attribute statements for the pre-paint script, generated from
-// the SAME lists applyAppearance uses — add a pref in one place and both follow.
-const PREPAINT_ATTR_LINES = [
-  ...Object.entries(ENUM_PREF_DEFAULTS).map(
-    ([k, dflt]) => `s(${JSON.stringify(k)},p.${k}&&p.${k}!==${JSON.stringify(dflt)}?p.${k}:null);`,
-  ),
-  ...BOOL_PREFS.map((k) => `s(${JSON.stringify(k)},p.${k}?"always":null);`),
-].join("")
-
-/**
- * A self-contained IIFE (as a string) that reads the stored preferences and
- * applies them to <html> synchronously, before first paint, to avoid a flash of
- * unstyled / wrong-sized content. Inline it in <head> via
- * `<script dangerouslySetInnerHTML={{ __html: APPEARANCE_PREPAINT_SCRIPT }} />`.
- *
- * The attribute statements are generated from ENUM_PREF_DEFAULTS / BOOL_PREFS,
- * the same lists applyAppearance iterates, so the two stay in lock-step.
- *
- * What it reads is a CACHE, not the truth: localStorage holds whatever this browser
- * last saw, so a returning signed-in user repaints in their own colour mode with no
- * flash. The truth arrives moments later from the server (AppearanceSync), which
- * corrects the document if they differ — and clears the cache on sign-out, so the
- * next visitor to this browser starts from the OS setting rather than inheriting a
- * stranger's theme. With no cache at all, `colorMode` is absent ⇒ `auto` ⇒ the OS.
- */
-export const APPEARANCE_PREPAINT_SCRIPT = `(function(){try{
-var el=document.documentElement;
-var raw=localStorage.getItem(${JSON.stringify(APPEARANCE_STORAGE_KEY)});
-var p=raw&&typeof JSON.parse(raw)==="object"?JSON.parse(raw):{};
-var dark=p.colorMode==="light"?false:p.colorMode==="dark"?true:matchMedia("(prefers-color-scheme: dark)").matches;
-el.classList.toggle("dark",dark);
-el.dataset.colorMode=p.colorMode||"auto";
-function s(k,v){if(v==null){delete el.dataset[k];}else{el.dataset[k]=v;}}
-${PREPAINT_ATTR_LINES}
-}catch(e){}})();`
