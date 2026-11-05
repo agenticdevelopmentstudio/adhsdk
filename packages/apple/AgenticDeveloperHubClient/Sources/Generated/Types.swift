@@ -18811,18 +18811,26 @@ extension APIProtocol {
     ///
     /// - Remark: HTTP `GET /ecosystem/ecosystems`.
     /// - Remark: Generated from `#/paths//ecosystem/ecosystems/get`.
-    public func getEcosystemEcosystems(headers: Operations.GetEcosystemEcosystems.Input.Headers = .init()) async throws -> Operations.GetEcosystemEcosystems.Output {
-        try await getEcosystemEcosystems(Operations.GetEcosystemEcosystems.Input(headers: headers))
+    public func getEcosystemEcosystems(
+        query: Operations.GetEcosystemEcosystems.Input.Query = .init(),
+        headers: Operations.GetEcosystemEcosystems.Input.Headers = .init()
+    ) async throws -> Operations.GetEcosystemEcosystems.Output {
+        try await getEcosystemEcosystems(Operations.GetEcosystemEcosystems.Input(
+            query: query,
+            headers: headers
+        ))
     }
     /// Create ecosystems
     ///
     /// - Remark: HTTP `POST /ecosystem/ecosystems`.
     /// - Remark: Generated from `#/paths//ecosystem/ecosystems/post`.
     public func postEcosystemEcosystems(
+        query: Operations.PostEcosystemEcosystems.Input.Query = .init(),
         headers: Operations.PostEcosystemEcosystems.Input.Headers = .init(),
         body: Operations.PostEcosystemEcosystems.Input.Body? = nil
     ) async throws -> Operations.PostEcosystemEcosystems.Output {
         try await postEcosystemEcosystems(Operations.PostEcosystemEcosystems.Input(
+            query: query,
             headers: headers,
             body: body
         ))
@@ -345557,6 +345565,37 @@ public enum Operations {
     public enum GetEcosystemEcosystems {
         public static let id: Swift.String = "get/ecosystem/ecosystems"
         public struct Input: Sendable, Hashable {
+            /// - Remark: Generated from `#/paths/ecosystem/ecosystems/GET/query`.
+            public struct Query: Sendable, Hashable {
+                /// Rdid or uuid of a parent ecosystem the caller manages. Lists, or creates, its child ecosystems.
+                ///
+                /// - Remark: Generated from `#/paths/ecosystem/ecosystems/GET/query/parent`.
+                public var parent: Swift.String?
+                /// Slug of the workspace (the caller's own, or an org they belong to) whose owned ecosystems are listed or created. Empty is the same as absent. Ignored when `parent` is given.
+                ///
+                /// - Remark: Generated from `#/paths/ecosystem/ecosystems/GET/query/workspace`.
+                public var workspace: Swift.String?
+                /// Return only infrastructure ecosystems: with `workspace`, the workspace principal's own ecosystem; without it, the caller's own (at most one row). Ignored when `parent` is given.
+                ///
+                /// - Remark: Generated from `#/paths/ecosystem/ecosystems/GET/query/infrastructure`.
+                public var infrastructure: Swift.Bool?
+                /// Creates a new `Query`.
+                ///
+                /// - Parameters:
+                ///   - parent: Rdid or uuid of a parent ecosystem the caller manages. Lists, or creates, its child ecosystems.
+                ///   - workspace: Slug of the workspace (the caller's own, or an org they belong to) whose owned ecosystems are listed or created. Empty is the same as absent. Ignored when `parent` is given.
+                ///   - infrastructure: Return only infrastructure ecosystems: with `workspace`, the workspace principal's own ecosystem; without it, the caller's own (at most one row). Ignored when `parent` is given.
+                public init(
+                    parent: Swift.String? = nil,
+                    workspace: Swift.String? = nil,
+                    infrastructure: Swift.Bool? = nil
+                ) {
+                    self.parent = parent
+                    self.workspace = workspace
+                    self.infrastructure = infrastructure
+                }
+            }
+            public var query: Operations.GetEcosystemEcosystems.Input.Query
             /// - Remark: Generated from `#/paths/ecosystem/ecosystems/GET/header`.
             public struct Headers: Sendable, Hashable {
                 public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.GetEcosystemEcosystems.AcceptableContentType>]
@@ -345572,8 +345611,13 @@ public enum Operations {
             /// Creates a new `Input`.
             ///
             /// - Parameters:
+            ///   - query:
             ///   - headers:
-            public init(headers: Operations.GetEcosystemEcosystems.Input.Headers = .init()) {
+            public init(
+                query: Operations.GetEcosystemEcosystems.Input.Query = .init(),
+                headers: Operations.GetEcosystemEcosystems.Input.Headers = .init()
+            ) {
+                self.query = query
                 self.headers = headers
             }
         }
@@ -345803,6 +345847,57 @@ public enum Operations {
                     }
                 }
             }
+            public struct BadRequest: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/ecosystem/ecosystems/GET/responses/400/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/ecosystem/ecosystems/GET/responses/400/content/application\/json`.
+                    case json(Components.Schemas._Error)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas._Error {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.GetEcosystemEcosystems.Output.BadRequest.Body
+                /// Creates a new `BadRequest`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.GetEcosystemEcosystems.Output.BadRequest.Body) {
+                    self.body = body
+                }
+            }
+            /// Error
+            ///
+            /// - Remark: Generated from `#/paths//ecosystem/ecosystems/get/responses/400`.
+            ///
+            /// HTTP response code: `400 badRequest`.
+            case badRequest(Operations.GetEcosystemEcosystems.Output.BadRequest)
+            /// The associated value of the enum case if `self` is `.badRequest`.
+            ///
+            /// - Throws: An error if `self` is not `.badRequest`.
+            /// - SeeAlso: `.badRequest`.
+            public var badRequest: Operations.GetEcosystemEcosystems.Output.BadRequest {
+                get throws {
+                    switch self {
+                    case let .badRequest(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "badRequest",
+                            response: self
+                        )
+                    }
+                }
+            }
             public struct Unauthorized: Sendable, Hashable {
                 /// - Remark: Generated from `#/paths/ecosystem/ecosystems/GET/responses/401/content`.
                 @frozen public enum Body: Sendable, Hashable {
@@ -345854,6 +345949,108 @@ public enum Operations {
                     }
                 }
             }
+            public struct Forbidden: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/ecosystem/ecosystems/GET/responses/403/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/ecosystem/ecosystems/GET/responses/403/content/application\/json`.
+                    case json(Components.Schemas._Error)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas._Error {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.GetEcosystemEcosystems.Output.Forbidden.Body
+                /// Creates a new `Forbidden`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.GetEcosystemEcosystems.Output.Forbidden.Body) {
+                    self.body = body
+                }
+            }
+            /// Error
+            ///
+            /// - Remark: Generated from `#/paths//ecosystem/ecosystems/get/responses/403`.
+            ///
+            /// HTTP response code: `403 forbidden`.
+            case forbidden(Operations.GetEcosystemEcosystems.Output.Forbidden)
+            /// The associated value of the enum case if `self` is `.forbidden`.
+            ///
+            /// - Throws: An error if `self` is not `.forbidden`.
+            /// - SeeAlso: `.forbidden`.
+            public var forbidden: Operations.GetEcosystemEcosystems.Output.Forbidden {
+                get throws {
+                    switch self {
+                    case let .forbidden(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "forbidden",
+                            response: self
+                        )
+                    }
+                }
+            }
+            public struct NotFound: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/ecosystem/ecosystems/GET/responses/404/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/ecosystem/ecosystems/GET/responses/404/content/application\/json`.
+                    case json(Components.Schemas._Error)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas._Error {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.GetEcosystemEcosystems.Output.NotFound.Body
+                /// Creates a new `NotFound`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.GetEcosystemEcosystems.Output.NotFound.Body) {
+                    self.body = body
+                }
+            }
+            /// Error
+            ///
+            /// - Remark: Generated from `#/paths//ecosystem/ecosystems/get/responses/404`.
+            ///
+            /// HTTP response code: `404 notFound`.
+            case notFound(Operations.GetEcosystemEcosystems.Output.NotFound)
+            /// The associated value of the enum case if `self` is `.notFound`.
+            ///
+            /// - Throws: An error if `self` is not `.notFound`.
+            /// - SeeAlso: `.notFound`.
+            public var notFound: Operations.GetEcosystemEcosystems.Output.NotFound {
+                get throws {
+                    switch self {
+                    case let .notFound(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "notFound",
+                            response: self
+                        )
+                    }
+                }
+            }
             /// Undocumented response.
             ///
             /// A response with a code that is not documented in the OpenAPI document.
@@ -345892,6 +346089,30 @@ public enum Operations {
     public enum PostEcosystemEcosystems {
         public static let id: Swift.String = "post/ecosystem/ecosystems"
         public struct Input: Sendable, Hashable {
+            /// - Remark: Generated from `#/paths/ecosystem/ecosystems/POST/query`.
+            public struct Query: Sendable, Hashable {
+                /// Rdid or uuid of a parent ecosystem the caller manages. Lists, or creates, its child ecosystems.
+                ///
+                /// - Remark: Generated from `#/paths/ecosystem/ecosystems/POST/query/parent`.
+                public var parent: Swift.String?
+                /// Slug of the workspace (the caller's own, or an org they belong to) whose owned ecosystems are listed or created. Empty is the same as absent. Ignored when `parent` is given.
+                ///
+                /// - Remark: Generated from `#/paths/ecosystem/ecosystems/POST/query/workspace`.
+                public var workspace: Swift.String?
+                /// Creates a new `Query`.
+                ///
+                /// - Parameters:
+                ///   - parent: Rdid or uuid of a parent ecosystem the caller manages. Lists, or creates, its child ecosystems.
+                ///   - workspace: Slug of the workspace (the caller's own, or an org they belong to) whose owned ecosystems are listed or created. Empty is the same as absent. Ignored when `parent` is given.
+                public init(
+                    parent: Swift.String? = nil,
+                    workspace: Swift.String? = nil
+                ) {
+                    self.parent = parent
+                    self.workspace = workspace
+                }
+            }
+            public var query: Operations.PostEcosystemEcosystems.Input.Query
             /// - Remark: Generated from `#/paths/ecosystem/ecosystems/POST/header`.
             public struct Headers: Sendable, Hashable {
                 public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.PostEcosystemEcosystems.AcceptableContentType>]
@@ -346028,12 +346249,15 @@ public enum Operations {
             /// Creates a new `Input`.
             ///
             /// - Parameters:
+            ///   - query:
             ///   - headers:
             ///   - body:
             public init(
+                query: Operations.PostEcosystemEcosystems.Input.Query = .init(),
                 headers: Operations.PostEcosystemEcosystems.Input.Headers = .init(),
                 body: Operations.PostEcosystemEcosystems.Input.Body? = nil
             ) {
+                self.query = query
                 self.headers = headers
                 self.body = body
             }
@@ -346346,6 +346570,108 @@ public enum Operations {
                     default:
                         try throwUnexpectedResponseStatus(
                             expectedStatus: "unauthorized",
+                            response: self
+                        )
+                    }
+                }
+            }
+            public struct Forbidden: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/ecosystem/ecosystems/POST/responses/403/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/ecosystem/ecosystems/POST/responses/403/content/application\/json`.
+                    case json(Components.Schemas._Error)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas._Error {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.PostEcosystemEcosystems.Output.Forbidden.Body
+                /// Creates a new `Forbidden`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.PostEcosystemEcosystems.Output.Forbidden.Body) {
+                    self.body = body
+                }
+            }
+            /// Error
+            ///
+            /// - Remark: Generated from `#/paths//ecosystem/ecosystems/post/responses/403`.
+            ///
+            /// HTTP response code: `403 forbidden`.
+            case forbidden(Operations.PostEcosystemEcosystems.Output.Forbidden)
+            /// The associated value of the enum case if `self` is `.forbidden`.
+            ///
+            /// - Throws: An error if `self` is not `.forbidden`.
+            /// - SeeAlso: `.forbidden`.
+            public var forbidden: Operations.PostEcosystemEcosystems.Output.Forbidden {
+                get throws {
+                    switch self {
+                    case let .forbidden(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "forbidden",
+                            response: self
+                        )
+                    }
+                }
+            }
+            public struct NotFound: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/ecosystem/ecosystems/POST/responses/404/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/ecosystem/ecosystems/POST/responses/404/content/application\/json`.
+                    case json(Components.Schemas._Error)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas._Error {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.PostEcosystemEcosystems.Output.NotFound.Body
+                /// Creates a new `NotFound`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.PostEcosystemEcosystems.Output.NotFound.Body) {
+                    self.body = body
+                }
+            }
+            /// Error
+            ///
+            /// - Remark: Generated from `#/paths//ecosystem/ecosystems/post/responses/404`.
+            ///
+            /// HTTP response code: `404 notFound`.
+            case notFound(Operations.PostEcosystemEcosystems.Output.NotFound)
+            /// The associated value of the enum case if `self` is `.notFound`.
+            ///
+            /// - Throws: An error if `self` is not `.notFound`.
+            /// - SeeAlso: `.notFound`.
+            public var notFound: Operations.PostEcosystemEcosystems.Output.NotFound {
+                get throws {
+                    switch self {
+                    case let .notFound(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "notFound",
                             response: self
                         )
                     }

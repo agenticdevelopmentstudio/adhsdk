@@ -62321,7 +62321,14 @@ export interface paths {
         /** List ecosystems */
         get: {
             parameters: {
-                query?: never;
+                query?: {
+                    /** @description Rdid or uuid of a parent ecosystem the caller manages. Lists, or creates, its child ecosystems. */
+                    parent?: string;
+                    /** @description Slug of the workspace (the caller's own, or an org they belong to) whose owned ecosystems are listed or created. Empty is the same as absent. Ignored when `parent` is given. */
+                    workspace?: string;
+                    /** @description Return only infrastructure ecosystems: with `workspace`, the workspace principal's own ecosystem; without it, the caller's own (at most one row). Ignored when `parent` is given. */
+                    infrastructure?: boolean;
+                };
                 header?: never;
                 path?: never;
                 cookie?: never;
@@ -62359,7 +62366,34 @@ export interface paths {
                     };
                 };
                 /** @description Error */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Error */
                 401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Error */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Error */
+                404: {
                     headers: {
                         [name: string]: unknown;
                     };
@@ -62373,7 +62407,12 @@ export interface paths {
         /** Create ecosystems */
         post: {
             parameters: {
-                query?: never;
+                query?: {
+                    /** @description Rdid or uuid of a parent ecosystem the caller manages. Lists, or creates, its child ecosystems. */
+                    parent?: string;
+                    /** @description Slug of the workspace (the caller's own, or an org they belong to) whose owned ecosystems are listed or created. Empty is the same as absent. Ignored when `parent` is given. */
+                    workspace?: string;
+                };
                 header?: never;
                 path?: never;
                 cookie?: never;
@@ -62438,6 +62477,24 @@ export interface paths {
                 };
                 /** @description Error */
                 401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Error */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Error */
+                404: {
                     headers: {
                         [name: string]: unknown;
                     };

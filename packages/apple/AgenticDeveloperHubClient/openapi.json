@@ -105656,6 +105656,16 @@
               }
             }
           },
+          "400": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
           "401": {
             "description": "Error",
             "content": {
@@ -105665,8 +105675,57 @@
                 }
               }
             }
+          },
+          "403": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
           }
-        }
+        },
+        "parameters": [
+          {
+            "name": "parent",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Rdid or uuid of a parent ecosystem the caller manages. Lists, or creates, its child ecosystems."
+          },
+          {
+            "name": "workspace",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Slug of the workspace (the caller's own, or an org they belong to) whose owned ecosystems are listed or created. Empty is the same as absent. Ignored when `parent` is given."
+          },
+          {
+            "name": "infrastructure",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean"
+            },
+            "description": "Return only infrastructure ecosystems: with `workspace`, the workspace principal's own ecosystem; without it, the caller's own (at most one row). Ignored when `parent` is given."
+          }
+        ]
       },
       "post": {
         "tags": [
@@ -105934,8 +105993,48 @@
                 }
               }
             }
+          },
+          "403": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
           }
-        }
+        },
+        "parameters": [
+          {
+            "name": "parent",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Rdid or uuid of a parent ecosystem the caller manages. Lists, or creates, its child ecosystems."
+          },
+          {
+            "name": "workspace",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Slug of the workspace (the caller's own, or an org they belong to) whose owned ecosystems are listed or created. Empty is the same as absent. Ignored when `parent` is given."
+          }
+        ]
       }
     },
     "/ecosystem/ecosystems/{id}": {
