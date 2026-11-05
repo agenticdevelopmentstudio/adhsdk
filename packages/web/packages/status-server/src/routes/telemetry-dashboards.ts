@@ -1,7 +1,7 @@
 import { Hono } from 'hono';
 import { glitchtipConfigured, posthogConfigured, vercelConfigured, type StatusConfig } from '../config/port';
 import type { Tier } from '../middleware/auth';
-import { loadErrorIssues } from '../telemetry/dashboard/errors-sections';
+import { loadErrorIssues, resolvedCounter } from '../telemetry/dashboard/errors-sections';
 import {
   loadDimensions,
   loadPaths,
@@ -72,11 +72,12 @@ export function dashboardRoutes(config: StatusConfig): Hono<{ Variables: { tier:
     incomplete: (_name, data) => data.failed > 0 || data.incomplete > 0,
     loaders: (range) => ({ vercel: () => loadVercelTraffic(creds, rangeWindow(range, Date.now())) }),
   });
+  const resolvedCount = resolvedCounter(creds);
   const glitchtip = sectionedDashboard<'all', GlitchtipSections>({
     ttlMs: ERRORS_TTL_MS,
     sections: GLITCHTIP_SECTIONS,
     loaders: () => ({
-      issues: () => loadErrorIssues(creds, config.glitchtipProjects),
+      issues: () => loadErrorIssues(creds, config.glitchtipProjects, resolvedCount),
     }),
   });
   const errorSites = sectionedDashboard<'all', SitesSections>({

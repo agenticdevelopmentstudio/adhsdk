@@ -1,3 +1,4 @@
+import { cachedSingleFlight } from "@adh-sdk/deploy-platform/util";
 import { errorCountsAsProblem, type ErrorJudging } from "../../board/derive-problems";
 import { fetchGlitchtipIssues, mapIssues, type GlitchtipEnv, type GlitchtipIssue } from "../fetchers/glitchtip";
 import { alignToBuckets, rangeWindow, type RangeWindow } from "./ranges";
@@ -80,9 +81,34 @@ export function summarizeIssues(
   };
 }
 
+/** How long a resolved count stands. It only grows as issues are closed, and is one KPI figure. */
+export const RESOLVED_COUNT_TTL_MS = 60 * 60_000;
+
+/** The number of resolved issues, null when it could not be counted. */
+export type ResolvedCount = () => Promise<number | null>;
+
+/**
+ * The resolved count, read at most once per `ttlMs`.
+ *
+ * GlitchTip has no count endpoint, so counting means walking every `is:resolved` page (up to
+ * MAX_PAGES) only to take the list's length. Doing that on the issue list's own 60s refresh spent
+ * up to twenty requests a minute on one figure that barely moves. A failed read is not kept, so
+ * the next refresh tries again; a walk that hit the page cap is kept, since walking it again
+ * would hit the cap again.
+ */
+export function resolvedCounter(env: GlitchtipEnv, ttlMs: number = RESOLVED_COUNT_TTL_MS): ResolvedCount {
+  const cached = cachedSingleFlight(ttlMs, async () => {
+    const resolved = await fetchGlitchtipIssues(env, "is:resolved");
+    if (!resolved.ok) throw new Error("GlitchTip resolved issues could not be read");
+    return resolved.complete ? resolved.issues.length : null;
+  });
+  return () => cached().catch(() => null);
+}
+
 export async function loadErrorIssues(
   env: GlitchtipEnv,
   allowlist: readonly string[] | null,
+  resolvedCount: ResolvedCount,
   nowMs: number = Date.now(),
 ): Promise<ErrorsIssuesSection> {
   const unresolved = await fetchGlitchtipIssues(env, "is:unresolved");
@@ -90,10 +116,10 @@ export async function loadErrorIssues(
   // when that answer was read) rather than judging anything as a frozen feed.
   if (!unresolved.ok) throw new Error("GlitchTip issues could not be read");
   // A nice-to-have on the KPI row: losing it must not cost the issue list.
-  const resolved = await fetchGlitchtipIssues(env, "is:resolved");
+  const resolved = await resolvedCount();
   const judging: ErrorJudging = { nowMs, frozen: false, allowlist };
   return summarizeIssues(toErrorIssues(unresolved.issues, judging), rangeWindow("30d", nowMs), {
-    resolved: resolved.ok && resolved.complete ? resolved.issues.length : null,
+    resolved,
     complete: unresolved.complete,
   });
 }
