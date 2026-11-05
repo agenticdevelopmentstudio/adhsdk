@@ -5,6 +5,7 @@ import { useResourceList, workspacesApi, type Workspace } from "@adh-sdk/data";
 import { api as personasApi, type Persona } from "@adh-sdk/data/personas";
 import {
   ecosystemsApi,
+  isHubDataEcosystem,
   useWorkspaceHubScope,
   type Ecosystem,
 } from "@adh-sdk/data/ecosystems";
@@ -211,6 +212,10 @@ function useDestinationRows(
       });
     }
     for (const e of productRows ?? []) {
+      // The Personal / Organization child is hub data, not a product: "My Integrations" /
+      // "Org Integrations" above already resolves to it, so a row here would be a second
+      // destination for the same set (and, for a non-manager, a wrongly manageable one).
+      if (isHubDataEcosystem(e)) continue;
       rows.push({
         id: e.id,
         label: e.name,

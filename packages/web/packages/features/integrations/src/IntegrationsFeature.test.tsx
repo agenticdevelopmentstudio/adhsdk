@@ -27,6 +27,8 @@ vi.mock("@adh-sdk/data/personas", () => ({
 
 vi.mock("@adh-sdk/data/ecosystems", () => ({
   ecosystemsApi: { listForWorkspace: vi.fn() },
+  isHubDataEcosystem: (row: { type?: string } | null | undefined) =>
+    row?.type === "personal" || row?.type === "organization",
   useWorkspaceHubScope: vi.fn(),
 }));
 
@@ -151,6 +153,23 @@ describe("the destinations list", () => {
   it("names the workspace's own row for a PERSONAL account, and lists it first", async () => {
     const ws = workspaceFor("individual", "Mike Fullerton");
     listProducts.mockResolvedValue([product({})]);
+    render(
+      <Harness>
+        <IntegrationsFeature basePath="/home" workspace={ws} />
+      </Harness>,
+    );
+    await waitFor(() => expect(destinationRows()).toEqual(["My Integrations", "Acme App"]));
+  });
+
+  it("does not list the Personal / Organization hub-data child as a product", async () => {
+    // The backend's `?workspace=` list now carries the child (the Ecosystems list pins it first),
+    // but Integrations already shows it as "My Integrations" — a second row would duplicate it.
+    const ws = workspaceFor("individual", "Mike Fullerton");
+    listProducts.mockResolvedValue([
+      product({ id: "eco-personal", name: "Personal", type: "personal" }),
+      product({ id: "eco-org", name: "Organization", type: "organization" }),
+      product({ id: "eco-1", name: "Acme App", type: "product" }),
+    ]);
     render(
       <Harness>
         <IntegrationsFeature basePath="/home" workspace={ws} />

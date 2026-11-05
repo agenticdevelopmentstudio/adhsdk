@@ -231,6 +231,12 @@ export const RESERVED_HANDLE_WORDS: readonly string[] = [
   'logout',
   'me',
   'monitoring',
+  // The names of the two hub-data ecosystems under every workspace (`ecosystem.<ws>.personal`,
+  // `ecosystem.<ws>.organization`). The server refuses both as a principal slug and as an
+  // ecosystem slug (`HUB_DATA_ECOSYSTEM_SLUGS` in the backend's `lib/rdid.ts`), so a form that
+  // let them through would only fail on submit.
+  'organization',
+  'personal',
   // Held on the same footing as the rest of this list, not because anything routes it.
   // `games/parse-path.ts` matched `/<workspace>/new` for the create-game dialog until
   // 2026-08-22 (`product-gaming-modes`), and when that grammar went the word came here rather
