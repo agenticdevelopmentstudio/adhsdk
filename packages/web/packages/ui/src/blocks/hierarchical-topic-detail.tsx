@@ -127,8 +127,10 @@ export interface TopicLevel {
    *  nothing selected, the pane stays almost empty — one quiet, centered nudge to select
    *  something (`TopicSelectHint`), named as specifically as this level allows (see
    *  `itemNoun` / `overviewHelp`). Pass `false` ONLY where the pane is already holding a real
-   *  editor with nothing selected — the inline CREATE form (`useMasterDetailLevel`),
-   *  which the nudge would otherwise cover. Never to hang a landing page there: an
+   *  working surface with nothing selected, one the nudge would otherwise cover: the inline
+   *  CREATE form (`useMasterDetailLevel`), or controls that act on the list as a whole and
+   *  show their own result there (a list's action buttons and the output they stream).
+   *  Never to hang a landing page there: an
    *  unselected frontier is the nudge and nothing else, which is why there is no longer a
    *  card-grid opt-in: a grid of the rows the rail is already showing IS a second surface
    *  beside the rail. */
