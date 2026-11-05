@@ -1,7 +1,7 @@
 'use client'
 
 // The unified in-app notification inbox (messaging P5). Composes the shared
-// @agenticdevelopertoolkit/ui primitives so it renders identically to the rest of the platform
+// @adh-sdk/ui primitives so it renders identically to the rest of the platform
 // chrome, and is mount-agnostic: it fills its container (no fixed width), so it
 // works inside the header bell's Popover and as a standalone workspace panel.
 // Pass `className="max-h-[…]"` for a bounded popover, or `className="h-full"` to
@@ -20,8 +20,8 @@ import {
   X,
 } from 'lucide-react'
 
-import { Badge } from '@agenticdevelopertoolkit/ui/components/badge'
-import { Button } from '@agenticdevelopertoolkit/ui/components/button'
+import { Badge } from '@adh-sdk/ui/components/badge'
+import { Button } from '@adh-sdk/ui/components/button'
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -30,11 +30,11 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@agenticdevelopertoolkit/ui/components/dropdown-menu'
-import { EmptyState } from '@agenticdevelopertoolkit/ui/components/empty-state'
-import { Spinner } from '@agenticdevelopertoolkit/ui/components/spinner'
-import { Tabs, TabsList, TabsTab } from '@agenticdevelopertoolkit/ui/components/tabs'
-import { ErrorText } from '@agenticdevelopertoolkit/ui/components/error-text'
+} from '@adh-sdk/ui/components/dropdown-menu'
+import { EmptyState } from '@adh-sdk/ui/components/empty-state'
+import { Spinner } from '@adh-sdk/ui/components/spinner'
+import { Tabs, TabsList, TabsTab } from '@adh-sdk/ui/components/tabs'
+import { ErrorText } from '@adh-sdk/ui/components/error-text'
 
 import {
   useInbox,

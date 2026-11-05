@@ -22,13 +22,13 @@ import {
   LayoutTemplate,
   Store,
 } from "lucide-react";
-import { useDetailTitle } from "@agenticdevelopertoolkit/ui/blocks/detail-title";
-import type { TopicLeaf } from "@agentic-toolkit/resource";
+import { useDetailTitle } from "@adh-sdk/ui/blocks/detail-title";
+import type { TopicLeaf } from "@adh-sdk/resource";
 import {
   EcosystemsFeature,
   type EcosystemsTopicConfig,
   type RenderTopicPaneCtx,
-} from "@agentic-toolkit/ecosystems";
+} from "@adh-sdk/ecosystems";
 import {
   MessagingPane,
   SchemasPane,
@@ -36,16 +36,16 @@ import {
   ecosystemUsersApi,
   applicationsPrototypeApi,
   type RenderTransferSection,
-} from "@agentic-toolkit/adh-ecosystem-panes";
-import { IntegrationsPane } from "@agentic-toolkit/integrations";
+} from "@adh-sdk/adh-ecosystem-panes";
+import { IntegrationsPane } from "@adh-sdk/integrations";
 import {
   ClientAuthSettingsPane,
   FeatureFlagsPane,
   ServerBagsPane,
   StorageTokensPanel,
-} from "@agentic-toolkit/ecosystem-config";
-import { AccessPane } from "@agentic-toolkit/authentication";
-import { helpFor } from "@agentic-toolkit/adh/help/store";
+} from "@adh-sdk/ecosystem-config";
+import { AccessPane } from "@adh-sdk/authentication";
+import { helpFor } from "@adh-sdk/adh/help/store";
 import {
   PLACEHOLDER_TOPIC_IDS,
   PRODUCT_MEMBER_MOVES,
@@ -55,7 +55,7 @@ import {
 import { ApplicationsGroup } from "./ApplicationsGroup";
 import { GamingGroup } from "./GamingGroup";
 
-// The PRODUCTS feature — @agentic-toolkit/ecosystems's EcosystemsFeature presented as Products
+// The PRODUCTS feature — @adh-sdk/ecosystems's EcosystemsFeature presented as Products
 // (each product IS an ecosystem). This file is the composition: it builds the feature's injected
 // config from adh's own registries (topic icons, the unified help store, and the config panes the
 // feature composes but doesn't own) and renders the package entry with Product labels in

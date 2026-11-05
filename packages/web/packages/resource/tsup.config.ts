@@ -16,7 +16,7 @@ export default defineConfig({
   // Peer/shared libs stay external so dist imports them (single version, resolved
   // from the consumer) rather than bundling copies: react, the sibling toolkit
   // packages, next (the host app owns it), lucide-react, and base-ui.
-  external: [/^react/, /^@agentic-toolkit\//, /^next\//, 'lucide-react', '@base-ui/react', '@base-ui/react/*'],
+  external: [/^react/, /^@adh-sdk\//, /^next\//, 'lucide-react', '@base-ui/react', '@base-ui/react/*'],
   esbuildPlugins: [
     preserveDirectivesPlugin({
       directives: ['use client', 'use server'],

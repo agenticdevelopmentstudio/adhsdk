@@ -1,13 +1,13 @@
 "use client";
 
 import { useId } from "react";
-import { Card, CardContent } from "@agenticdevelopertoolkit/ui/components/card";
-import { Input } from "@agenticdevelopertoolkit/ui/components/input";
-import { Label } from "@agenticdevelopertoolkit/ui/components/label";
-import type { Team, TeamInput } from "@agentic-toolkit/data/teams";
-import { validateTeamIdentifier } from "@agentic-toolkit/data/teams";
-import { DetailSection, unchangedFromStored } from "@agentic-toolkit/resource";
-import { ErrorText } from "@agenticdevelopertoolkit/ui/components/error-text";
+import { Card, CardContent } from "@adh-sdk/ui/components/card";
+import { Input } from "@adh-sdk/ui/components/input";
+import { Label } from "@adh-sdk/ui/components/label";
+import type { Team, TeamInput } from "@adh-sdk/data/teams";
+import { validateTeamIdentifier } from "@adh-sdk/data/teams";
+import { DetailSection, unchangedFromStored } from "@adh-sdk/resource";
+import { ErrorText } from "@adh-sdk/ui/components/error-text";
 
 export function teamBlank(): TeamInput {
   return { displayName: "", identifier: "" };

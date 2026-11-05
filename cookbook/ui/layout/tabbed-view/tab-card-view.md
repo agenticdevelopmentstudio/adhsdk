@@ -1,7 +1,7 @@
 ---
 id: d906afe1-a621-42f1-87c5-c71ec9d43c1e
 title: "Tab Pane View"
-domain: adtoolkit://cookbook/ui/layout/tabbed-view/tab-card-view
+domain: adhsdk://cookbook/ui/layout/tabbed-view/tab-card-view
 type: ingredient
 version: 1.2.2
 status: review
@@ -22,7 +22,7 @@ tags:
   - layout
 depends-on: []
 related:
-  - adtoolkit://cookbook/ui/layout/tabbed-view
+  - adhsdk://cookbook/ui/layout/tabbed-view
   - agenticdevelopercookbook://guidelines/cookbook/ui/platform-design-languages
 references:
   - https://developer.apple.com/design/human-interface-guidelines/
@@ -35,7 +35,7 @@ approved-date: ""
 ## Overview
 
 The component is a card drawn as one tab in an edge bar of
-[the tabbed view](adtoolkit://cookbook/ui/layout/tabbed-view): a stacked
+[the tabbed view](adhsdk://cookbook/ui/layout/tabbed-view): a stacked
 block, the same arrangement on all four edges, showing a session's
 agent/model name, status symbols, session name, working directory, branch,
 and an optional summary. It is hosted by a controller that drives its stack
@@ -474,7 +474,7 @@ Not applicable: this component contains no logging call.
   rtl` on an inner span for head truncation (the directory-label case), and
   a `<button aria-label="Close">` for the close control.
 - **AppKit/UIKit** (source platform): Implemented in
-  `packages/apple/AgenticToolkit/macOS/UI/ViewControllers/MultiTabbedViewController/TabPane/TabPaneView.swift`
+  `packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/MultiTabbedViewController/TabPane/TabPaneView.swift`
   (`TabPaneView`, plus the file-private `InsetBox`, `CardSides`, and
   `TabCardBackgroundView` types), hosted by `TabPaneViewController.swift` in
   the same directory. This is a macOS-only, AppKit `NSView` component with no
@@ -538,7 +538,7 @@ Not applicable: this component contains no logging call.
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/macOS/UI/ViewControllers/MultiTabbedViewController/TabPane/TabPaneView.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/MultiTabbedViewController/TabPane/TabPaneView.swift` |
 
 ## Design Decisions
 

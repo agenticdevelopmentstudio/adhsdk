@@ -1,7 +1,7 @@
 ---
 id: 7add8e4b-922e-4518-aa45-79bf56cdf8bc
 title: "API Toolkit"
-domain: adtoolkit://cookbook/data/services/api-toolkit
+domain: adhsdk://cookbook/data/services/api-toolkit
 type: ingredient
 version: 1.1.2
 status: review
@@ -22,8 +22,8 @@ tags:
   - headless
 depends-on: []
 related:
-  - adtoolkit://cookbook/ui/crud/crud-table
-  - adtoolkit://cookbook/ui/crud/crud-record-form
+  - adhsdk://cookbook/ui/crud/crud-table
+  - adhsdk://cookbook/ui/crud/crud-record-form
 references: []
 approved-by: ""
 approved-date: ""
@@ -496,7 +496,7 @@ diagnostic output.
   resource state's use of a response-body-discarding request helper and a
   JSON-parsing request helper from the auth client recipe for the actual
   network calls, are specific to this source's implementation in
-  `@agentic-toolkit/api-explorer` and `@agentic-toolkit/crud`.
+  `@adh-sdk/api-explorer` and `@adh-sdk/crud`.
 - **Apple (Swift, not in source)**: `URLSession` (with `URLRequest`) is the
   equivalent of the request builder/executor; `Codable` is the equivalent of
   the schema-driven example/field-description derivation (though Codable is
@@ -568,7 +568,7 @@ create a second source of truth that could drift from the real one.
 ### Deliberate duplication of the shiki singleton
 
 **Decision**: `highlight.ts` maintains its own module-level `highlighterPromise`
-cache rather than sharing `@agenticdevelopertoolkit/markdown`'s existing shiki
+cache rather than sharing `@adh-sdk/markdown`'s existing shiki
 singleton.
 
 **Rationale**: The source's own doc comment states this is a deliberate,
@@ -595,7 +595,7 @@ metadata.
 
 **Decision**: `server.ts` imports `allTags`, `endpointsForTag`, `getEndpoint`,
 and `endpointKey` via the package path
-(`@agentic-toolkit/api-explorer/lib/getEndpoint`) rather than a relative
+(`@adh-sdk/api-explorer/lib/getEndpoint`) rather than a relative
 import.
 
 **Rationale**: The server entry and the client barrel are two separate build
@@ -624,7 +624,7 @@ credential leak vector, so the source trades away snippet convenience
 |---|---|---|
 | [server-side-authorization](agenticdevelopercookbook://compliance/security#server-side-authorization) | passed | `exposure.ts`'s gate is documented and implemented as presentation-only; the source's own doc comment states the server independently re-checks every request. |
 | [secure-transport](agenticdevelopercookbook://compliance/security#secure-transport) | partial | `buildRequest` issues only same-origin `/api` requests and never constructs an absolute URL, so transport (TLS) is inherited from the hosting page rather than configured or enforced by this source. |
-| [token-lifecycle](agenticdevelopercookbook://compliance/security#token-lifecycle) | Not applicable: not implemented here | Token issuance, refresh, and rotation are owned by `@agentic-toolkit/auth`'s `authedFetch`; the given sources only consume an already-valid token (`buildRequest`'s optional `token` parameter, or `authedRequest`/`authedJson` inside `useCrudResource`). |
+| [token-lifecycle](agenticdevelopercookbook://compliance/security#token-lifecycle) | Not applicable: not implemented here | Token issuance, refresh, and rotation are owned by `@adh-sdk/auth`'s `authedFetch`; the given sources only consume an already-valid token (`buildRequest`'s optional `token` parameter, or `authedRequest`/`authedJson` inside `useCrudResource`). |
 | [secure-data-storage](agenticdevelopercookbook://compliance/privacy-and-data#secure-data-storage) | Not applicable: not implemented here | None of the given sources persist a token, credential, or PII to any local or remote store. |
 | [error-recovery](agenticdevelopercookbook://compliance/reliability#error-recovery) | failed | `executeRequest` has no recovery path for a network-level (as opposed to HTTP-status) failure; it rejects and the caller only reports the message — see `network-failure-propagation`. |
 | [timeout-configuration](agenticdevelopercookbook://compliance/access-patterns#timeout-configuration) | failed | Neither `buildRequest` nor `executeRequest` configures a timeout or `AbortController` — see `request-timeout`. |
@@ -644,4 +644,4 @@ credential leak vector, so the source trades away snippet convenience
 | 1.1.1 | 2026-10-04 | Mike Fullerton | Inverted prohibitions (none/neither/no X MUST) restated as MUST NOT. |
 | 1.1.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to data/services/. |
 | 1.0.1 | 2026-09-25 | Mike Fullerton | Moved into the library cookbook; added Reference Implementations. |
-| 1.0.0 | 2026-09-23 | Mike Fullerton | Initial creation, documenting the shared headless logic of `@agentic-toolkit/api-explorer` and `@agentic-toolkit/crud`; records `executeRequest`'s network-failure propagation and absent request timeout. |
+| 1.0.0 | 2026-09-23 | Mike Fullerton | Initial creation, documenting the shared headless logic of `@adh-sdk/api-explorer` and `@adh-sdk/crud`; records `executeRequest`'s network-failure propagation and absent request timeout. |

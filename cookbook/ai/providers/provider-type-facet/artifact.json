@@ -3,7 +3,7 @@
   "meta": {
     "id": "80df89b9-a1d3-4fb5-b9e3-08bafd2720fb",
     "title": "Provider Type Facet",
-    "domain": "adtoolkit://cookbook/ai/providers/provider-type-facet",
+    "domain": "adhsdk://cookbook/ai/providers/provider-type-facet",
     "type": "ingredient",
     "version": "1.1.1",
     "status": "review",
@@ -25,7 +25,7 @@
     ],
     "depends-on": [],
     "related": [
-      "adtoolkit://cookbook/ai/plugins/plugin-descriptor"
+      "adhsdk://cookbook/ai/plugins/plugin-descriptor"
     ],
     "references": [],
     "approved-by": "",

@@ -2,17 +2,17 @@
 
 import type { ReactNode } from "react";
 import { Boxes, Building2, UserCircle, UserRound } from "lucide-react";
-import type { Workspace } from "@agentic-toolkit/data";
+import type { Workspace } from "@adh-sdk/data";
 import {
   RailHostBoundary,
   StackLevels,
   WorkspaceNotManageable,
   useBasePathRoute,
-} from "@agentic-toolkit/resource";
-import type { TopicDetailItem, TopicLevel } from "@agenticdevelopertoolkit/ui/blocks";
-import { TopicSelectHint } from "@agenticdevelopertoolkit/ui/blocks";
-import { EmptyState } from "@agenticdevelopertoolkit/ui/components/empty-state";
-import { ErrorText } from "@agenticdevelopertoolkit/ui/components/error-text";
+} from "@adh-sdk/resource";
+import type { TopicDetailItem, TopicLevel } from "@adh-sdk/ui/blocks";
+import { TopicSelectHint } from "@adh-sdk/ui/blocks";
+import { EmptyState } from "@adh-sdk/ui/components/empty-state";
+import { ErrorText } from "@adh-sdk/ui/components/error-text";
 
 import { IntegrationsPane } from "./IntegrationsPane";
 import { integrationsSegments, type IntegrationsPathSelection } from "./parse-path";

@@ -1,5 +1,5 @@
 /**
- * `@agenticdevelopertoolkit/editing/server` — the declarative half, with no React in it.
+ * `@adh-sdk/editing/server` — the declarative half, with no React in it.
  *
  * A `fields` map and a `sections` list are plain data: they describe what a record
  * holds and how it is grouped, and nothing in them renders. This entry exists so a

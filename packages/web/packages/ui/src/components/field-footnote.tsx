@@ -13,7 +13,7 @@ import { cn } from "../lib/utils"
  * It stands on its own rather than living inside {@link Field} because the one
  * control that CANNOT use `Field` still has to report its problem in the same place
  * and the same words: a checkbox reads as "[box] label" rather than as a caption
- * above a control, so it builds its own row (see `@agenticdevelopertoolkit/editing`'s bound
+ * above a control, so it builds its own row (see `@adh-sdk/editing`'s bound
  * controls) — and a second copy of these two spans is how one of them ends up
  * missing a fix made to the other.
  *

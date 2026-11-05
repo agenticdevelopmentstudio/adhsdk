@@ -2,20 +2,20 @@
 
 import { useCallback, useState, type ReactElement } from "react";
 import { CalendarRange } from "lucide-react";
-import { Badge } from "@agenticdevelopertoolkit/ui/components/badge";
-import { Button } from "@agenticdevelopertoolkit/ui/components/button";
-import { EmptyState } from "@agenticdevelopertoolkit/ui/components/empty-state";
-import { ErrorText } from "@agenticdevelopertoolkit/ui/components/error-text";
-import { Field } from "@agenticdevelopertoolkit/ui/blocks/field";
-import { List, ListItem } from "@agenticdevelopertoolkit/ui/components/list";
-import { Progress } from "@agenticdevelopertoolkit/ui/components/progress";
-import { Select } from "@agenticdevelopertoolkit/ui/components/select";
-import { useResourceList } from "@agentic-toolkit/data";
+import { Badge } from "@adh-sdk/ui/components/badge";
+import { Button } from "@adh-sdk/ui/components/button";
+import { EmptyState } from "@adh-sdk/ui/components/empty-state";
+import { ErrorText } from "@adh-sdk/ui/components/error-text";
+import { Field } from "@adh-sdk/ui/blocks/field";
+import { List, ListItem } from "@adh-sdk/ui/components/list";
+import { Progress } from "@adh-sdk/ui/components/progress";
+import { Select } from "@adh-sdk/ui/components/select";
+import { useResourceList } from "@adh-sdk/data";
 import {
   projectIterationsApi,
   type Iteration,
   type IterationWorkItem,
-} from "@agentic-toolkit/data/projects";
+} from "@adh-sdk/data/projects";
 import {
   CreateResourceDialog,
   DetailSection,
@@ -24,7 +24,7 @@ import {
   useMasterDetailForm,
   useMasterDetailLevel,
   type TopicLeaf,
-} from "@agentic-toolkit/resource";
+} from "@adh-sdk/resource";
 import { ItemKey } from "./ItemKey";
 import {
   IterationDetail,

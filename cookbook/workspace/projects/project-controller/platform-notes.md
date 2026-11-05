@@ -1,8 +1,8 @@
 
 - **SwiftUI**: The source is
-  `packages/apple/AgenticToolkit/macOS/Features/Projects/ProjectController.swift`,
+  `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectController.swift`,
   built on `AppKit` (indirectly, through `ComposableTabsTabItemDataSource`'s
-  `NSViewController`-hosting `TabItem`) and `AgenticToolkitCore`
+  `NSViewController`-hosting `TabItem`) and `AgenticDeveloperHubSDKCore`
   (`ProjectWorkspace`, `ProjectCheckout`, `ProjectTabReconciler`, `GitClient`,
   `CommandRegistry`, `Edge`, `TabRecord`, `Loggable`). It uses no SwiftUI API
   of its own; a SwiftUI-hosted window would still need this controller as a
@@ -54,7 +54,7 @@
   interface requiring thread-affinity of its own — mirror `@MainActor`
   confinement by only ever touching this object from the UI thread
   (`DispatcherQueue`), the same discipline `BranchController`'s WinUI port
-  already assumes (see `adtoolkit://cookbook/workspace/projects/branch-controller`).
+  already assumes (see `adhsdk://cookbook/workspace/projects/branch-controller`).
   Reproduce **reconcile-calls-chain-in-order** with a stored `Task`
   (previous reconcile) that the next call `await`s before starting its own
   work — the same continuation-chaining pattern, not a `SemaphoreSlim`, so
@@ -65,7 +65,7 @@
   rather than .NET's multicast-delegate convention). Read worktrees with
   `System.Diagnostics.Process` running `git worktree list --porcelain`
   through the same single-door `GitClient` WinUI port
-  `adtoolkit://cookbook/workspace/projects/branch-controller` describes,
+  `adhsdk://cookbook/workspace/projects/branch-controller` describes,
   and reproduce the main-first-then-git-order partition
   (**checkouts-ordered-main-first-then-git-order**) with `Where`/`Concat`
   rather than `OrderBy`, since LINQ's `OrderBy` is stable but a hand-rolled

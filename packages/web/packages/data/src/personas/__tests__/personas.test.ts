@@ -4,15 +4,15 @@
 // columns and cascades the new address onto the handle. `api.personas.update()` is therefore ONE
 // call, and the id it returns is the server's derived answer, never a client-side leaf swap. Only
 // the transport (`authedJson`, re-exported by `../personas` via `../http` from
-// `@agentic-toolkit/auth/client`) is stubbed.
+// `@adh-sdk/auth/client`) is stubbed.
 import { describe, expect, it, vi, beforeEach } from "vitest";
 
-vi.mock("@agentic-toolkit/auth/client", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("@agentic-toolkit/auth/client")>()),
+vi.mock("@adh-sdk/auth/client", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@adh-sdk/auth/client")>()),
   authedJson: vi.fn(),
 }));
 
-import { authedJson, AuthHttpError } from "@agentic-toolkit/auth/client";
+import { authedJson, AuthHttpError } from "@adh-sdk/auth/client";
 import { api } from "../personas";
 import type { Persona, PersonaBody } from "../personas";
 

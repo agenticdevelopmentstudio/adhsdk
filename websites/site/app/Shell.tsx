@@ -7,8 +7,8 @@ import {
   ThemeStyle,
   themeIds,
   type ThemeKey,
-} from '@agenticdevelopertoolkit/themes'
-import { AppearanceModeToggle } from '@agenticdevelopertoolkit/controls/appearance-mode-toggle'
+} from '@adh-sdk/themes'
+import { AppearanceModeToggle } from '@adh-sdk/controls/appearance-mode-toggle'
 import { ThemePicker } from '../src/ThemePicker'
 import { examples, groups } from '../src/manifest'
 import '../src/ThemePicker.css'

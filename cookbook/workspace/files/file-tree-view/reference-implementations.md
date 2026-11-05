@@ -1,5 +1,5 @@
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/macOS/UI/ViewControllers/FileBrowser/Views/FileTreeOutlineViewController.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/FileBrowser/Views/FileTreeOutlineViewController.swift` |
 

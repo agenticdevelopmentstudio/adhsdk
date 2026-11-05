@@ -1,5 +1,5 @@
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/macOS/UI/Help/HelpContentView.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/Help/HelpContentView.swift` |
 

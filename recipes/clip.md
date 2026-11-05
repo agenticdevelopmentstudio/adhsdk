@@ -1,7 +1,7 @@
 ---
 id: e268fe4f-8e83-4189-b1d2-105cd177308c
 title: Clip
-domain: agenticdevelopertoolkit://recipes/clip
+domain: adhsdk://recipes/clip
 type: ingredient
 version: 1.1.1
 status: review

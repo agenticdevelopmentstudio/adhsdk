@@ -1,7 +1,7 @@
 ---
 id: 6593a7e1-b42f-4015-8072-20b70800124e
 title: Hub Client — APT Terminal
-domain: agenticdevelopertoolkit://recipes/hub-client-apt-terminal
+domain: adhsdk://recipes/hub-client-apt-terminal
 type: ingredient
 version: 1.0.2
 status: review

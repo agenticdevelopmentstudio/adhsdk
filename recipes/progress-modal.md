@@ -1,7 +1,7 @@
 ---
 id: d9b07d1e-b53c-4efa-86f1-82a31ad9f02f
 title: Progress Modal
-domain: agenticdevelopertoolkit://recipes/progress-modal
+domain: adhsdk://recipes/progress-modal
 type: ingredient
 version: 1.2.1
 status: review
@@ -21,8 +21,8 @@ tags:
 - progress
 - batch-operations
 depends-on:
-- agenticdevelopertoolkit://recipes/dialog
-- agenticdevelopertoolkit://recipes/progress
+- adhsdk://recipes/dialog
+- adhsdk://recipes/progress
 related: []
 references: []
 approved-by: ''
@@ -101,7 +101,7 @@ The results log renders whenever `results` has items, independent of the state a
 
 ## Accessibility
 
-Accessibility is delegated to the composed `Dialog` and `Progress` components. `Dialog` (Base UI primitives — see `agenticdevelopertoolkit://recipes/dialog`) provides the ARIA dialog role, backdrop, and keyboard handling (Escape, focus trapped while open). `Progress` (see `agenticdevelopertoolkit://recipes/progress`) is a self-contained element with `role="progressbar"` and `aria-valuemin`/`aria-valuemax`/`aria-valuenow`. Neither component announces state changes via a live region in the current source: there is no `aria-live` region on the status text, no `role="alert"` on the error block, and no explicit focus movement when the run halts or finishes — focus stays wherever the user last left it inside the trapped dialog.
+Accessibility is delegated to the composed `Dialog` and `Progress` components. `Dialog` (Base UI primitives — see `adhsdk://recipes/dialog`) provides the ARIA dialog role, backdrop, and keyboard handling (Escape, focus trapped while open). `Progress` (see `adhsdk://recipes/progress`) is a self-contained element with `role="progressbar"` and `aria-valuemin`/`aria-valuemax`/`aria-valuenow`. Neither component announces state changes via a live region in the current source: there is no `aria-live` region on the status text, no `role="alert"` on the error block, and no explicit focus movement when the run halts or finishes — focus stays wherever the user last left it inside the trapped dialog.
 
 ## Conformance Test Vectors
 
@@ -188,7 +188,7 @@ Not applicable: This component does not perform logging. Debug information about
 
 ## Platform Notes
 
-- **React/Web**: Implemented using the shared `Dialog` (Base UI primitives, `agenticdevelopertoolkit://recipes/dialog`) and `Progress` (self-contained `role="progressbar"` element, `agenticdevelopertoolkit://recipes/progress`) components. `Dialog`'s `onOpenChange` swallows Escape/× internally and only calls `onClose` once `finished` is true. Progress percentage is calculated client-side (`Math.round((done / total) * 100)`, or `0` when `total` is `0`). Results are rendered as a flex column with overflow constraints.
+- **React/Web**: Implemented using the shared `Dialog` (Base UI primitives, `adhsdk://recipes/dialog`) and `Progress` (self-contained `role="progressbar"` element, `adhsdk://recipes/progress`) components. `Dialog`'s `onOpenChange` swallows Escape/× internally and only calls `onClose` once `finished` is true. Progress percentage is calculated client-side (`Math.round((done / total) * 100)`, or `0` when `total` is `0`). Results are rendered as a flex column with overflow constraints.
 - **SwiftUI**: Present with `.sheet()` or `.fullScreenCover()` bound to the `open` state. Use the determinate initializer `ProgressView(value: Double(done), total: Double(total))` — the bare `ProgressView()` initializer is indeterminate and would not reflect `done`/`total`. Block mid-run dismissal with `.interactiveDismissDisabled(!finished)`. Render the error block conditionally on `error != nil && !finished`. Use a `List` or `ScrollView` with a frame height constraint for the results log.
 - **Compose**: Build on `AlertDialog` or `Dialog`. Use `LinearProgressIndicator(progress = { done / total.toFloat() })` for a determinate bar. Set `onDismissRequest` to a callback that only closes if `finished` is true. Render the error and results sections conditionally on the same `error`/`finished` state used on other platforms. Use `LazyColumn` for the scrollable results list.
 - **AppKit / UIKit**: `NSAlert` (macOS) and `UIAlertController` (iOS) cannot host a progress bar plus a scrollable results list, so use a custom window or view controller instead. Add `NSProgressIndicator` (style `.bar`, `isIndeterminate = false`) on macOS or `UIProgressView` on iOS as a subview, driven by `done`/`total`. Prevent dismissal by disabling or intercepting the window/controller's close action until `finished` is true. Render the error and results sections in custom subviews.

@@ -29,7 +29,7 @@ vi.mock('next/link', () => ({
 }))
 
 // The bell opens a live channel the moment it mounts; who gets one is site-header.test's subject.
-vi.mock('@agentic-toolkit/messaging/components/notification-bell', () => ({
+vi.mock('@adh-sdk/messaging/components/notification-bell', () => ({
   NotificationBell: () => null,
 }))
 
@@ -40,7 +40,7 @@ vi.mock('../footer/FooterChat', () => ({
 }))
 
 import { AdhAppShell } from '../layout/AdhAppShell'
-import { SLIDE_ATTR } from '@agentic-toolkit/adh/layout/SlideNavigation'
+import { SLIDE_ATTR } from '@adh-sdk/adh/layout/SlideNavigation'
 import { SiteHeader } from '../header/SiteHeader'
 import { SiteFooter } from '../footer/SiteFooter'
 import { THEME_AREAS } from '../theme-editor/areas'

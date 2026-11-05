@@ -1,7 +1,7 @@
 ---
 id: 46e79f87-0dbb-4bd5-b11c-bd65ae0087a9
 title: "Project Scan Progress Window"
-domain: adtoolkit://cookbook/workspace/projects/project-scan-progress-window
+domain: adhsdk://cookbook/workspace/projects/project-scan-progress-window
 type: ingredient
 version: 1.1.1
 status: review
@@ -22,10 +22,10 @@ tags:
   - progress
 depends-on: []
 related:
-  - adtoolkit://cookbook/workspace/projects/git-repo-scanner
+  - adhsdk://cookbook/workspace/projects/git-repo-scanner
 references:
-  - packages/apple/AgenticToolkit/macOS/Features/Projects/ProjectScanProgressWindow.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/macOS/Features/Projects/ProjectsCoordinator.swift (agenticdevelopertoolkit)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectScanProgressWindow.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectsCoordinator.swift (adhsdk)
 approved-by: ""
 approved-date: ""
 ---
@@ -247,7 +247,7 @@ progress indicator.
   React `useEffect` teardown) MUST NOT clear that timer early, or the panel
   will never disappear.
 - **AppKit / UIKit**: The source is
-  `packages/apple/AgenticToolkit/macOS/Features/Projects/ProjectScanProgressWindow.swift`,
+  `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectScanProgressWindow.swift`,
   using `NSWindowController`, `NSPanel`, `NSProgressIndicator`,
   `NSStackView`, `NSLayoutConstraint`, and `DispatchQueue.main.asyncAfter`,
   plus two components from the project's shared AppKit UI toolkit,
@@ -303,7 +303,7 @@ progress indicator.
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/macOS/Features/Projects/ProjectScanProgressWindow.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectScanProgressWindow.swift` |
 
 ## Design Decisions
 

@@ -8,15 +8,15 @@ import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/re
 
 const { push } = vi.hoisted(() => ({ push: vi.fn() }));
 vi.mock("next/navigation", () => ({ useRouter: () => ({ push }) }));
-vi.mock("@agentic-toolkit/auth", () => ({ reportUnexpectedAuthError: vi.fn() }));
+vi.mock("@adh-sdk/auth", () => ({ reportUnexpectedAuthError: vi.fn() }));
 
 const { forEcosystem, update } = vi.hoisted(() => ({ forEcosystem: vi.fn(), update: vi.fn() }));
-vi.mock("@agentic-toolkit/data/games", () => ({ gamesApi: { forEcosystem, update } }));
-vi.mock("@agentic-toolkit/data/gamification", () => ({ gamificationApi: {} }));
+vi.mock("@adh-sdk/data/games", () => ({ gamesApi: { forEcosystem, update } }));
+vi.mock("@adh-sdk/data/gamification", () => ({ gamificationApi: {} }));
 
 // The on/off switch is the shared FeatureSwitch (its own test covers the feature write); here it
 // stands in as a marker, so what these tests pin is that it is there, and where.
-vi.mock("@agentic-toolkit/ecosystems", () => ({
+vi.mock("@adh-sdk/ecosystems", () => ({
   FeatureSwitch: ({ featureKey, lockedBy }: { featureKey: string; lockedBy?: string }) => (
     <div data-testid={`feature-switch-${featureKey}`} data-locked-by={lockedBy ?? ""} />
   ),

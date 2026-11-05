@@ -1,7 +1,7 @@
 ---
 id: 9a4aa2a8-c01b-4cec-b789-6c89c100d8d3
 title: "Git Status Provider"
-domain: adtoolkit://cookbook/workspace/files/git-status-provider
+domain: adhsdk://cookbook/workspace/files/git-status-provider
 type: ingredient
 version: 1.1.0
 status: review
@@ -22,16 +22,16 @@ tags:
   - color
 depends-on: []
 related:
-  - adtoolkit://cookbook/workspace/files/file-browser-view
-  - adtoolkit://cookbook/workspace/files/file-tree-view
+  - adhsdk://cookbook/workspace/files/file-browser-view
+  - adhsdk://cookbook/workspace/files/file-tree-view
 references:
-  - packages/apple/AgenticToolkit/macOS/UI/ViewControllers/FileBrowser/Model/Git/GitFileStatus+Color.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/macOS/UI/ViewControllers/FileBrowser/Model/Git/GitStatusProvider.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Core/Git/GitFileStatus.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Core/Git/GitClient.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Core/Git/GitClientError.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Core/Git/GitStatus.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Tests/AgenticToolkitMacOSTests/FileBrowser/GitStatusProviderRefreshTests.swift (agenticdevelopertoolkit)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/FileBrowser/Model/Git/GitFileStatus+Color.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/FileBrowser/Model/Git/GitStatusProvider.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Core/Git/GitFileStatus.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Core/Git/GitClient.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Core/Git/GitClientError.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Core/Git/GitStatus.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKMacOSTests/FileBrowser/GitStatusProviderRefreshTests.swift (adhsdk)
 approved-by: ""
 approved-date: ""
 ---
@@ -291,7 +291,7 @@ The companion color mapping performs no logging of its own.
 ## Platform Notes
 
 - **SwiftUI**: The sources are
-  `packages/apple/AgenticToolkit/macOS/UI/ViewControllers/FileBrowser/Model/Git/GitStatusProvider.swift`
+  `packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/FileBrowser/Model/Git/GitStatusProvider.swift`
   and `GitFileStatus+Color.swift` in the same directory, alongside their
   collaborators `GitClient.swift`, `GitStatus.swift`, `GitFileStatus.swift`,
   and `GitClientError.swift` (all under `Core/Git`). Both files are plain
@@ -362,7 +362,7 @@ The companion color mapping performs no logging of its own.
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/macOS/UI/ViewControllers/FileBrowser/Model/Git/` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/FileBrowser/Model/Git/` |
 
 ## Design Decisions
 

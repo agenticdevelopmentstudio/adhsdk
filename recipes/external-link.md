@@ -1,7 +1,7 @@
 ---
 id: b329d08b-9812-47d0-8094-516359d82d19
 title: ExternalLink
-domain: agenticdevelopertoolkit://recipes/external-link
+domain: adhsdk://recipes/external-link
 type: ingredient
 version: 1.3.1
 status: review
@@ -22,8 +22,8 @@ tags:
   - ui
 depends-on: []
 related:
-  - agenticdevelopertoolkit://recipes/stat-card
-  - agenticdevelopertoolkit://recipes/user-card
+  - adhsdk://recipes/stat-card
+  - adhsdk://recipes/user-card
 references: []
 approved-by: ''
 approved-date: ''
@@ -33,7 +33,7 @@ approved-date: ''
 
 ## Overview
 
-The shared `ExternalLink` in `@agenticdevelopertoolkit/ui` — the "{label} ↗" deep link out of
+The shared `ExternalLink` in `@adh-sdk/ui` — the "{label} ↗" deep link out of
 the app: an anchor that **always opens in a new tab** (`target="_blank"`) with
 the safe `rel="noopener noreferrer"`, ending in a trailing ↗ arrow affordance.
 Its default skin is the dashboard deep-link grammar — small, mono, info-blue,
@@ -49,7 +49,7 @@ already carries the "external" meaning — UserCard's social links do this
 (lucide `ExternalLink` icon + restyled to sans, muted text), and StatCard puts
 the default-skin link in its header actions slot.
 
-A single export ships from `@agenticdevelopertoolkit/ui/components/external-link`: the
+A single export ships from `@adh-sdk/ui/components/external-link`: the
 `ExternalLink` component. It is a stateless anchor with no `"use client"`
 directive.
 

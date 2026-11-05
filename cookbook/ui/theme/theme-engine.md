@@ -1,7 +1,7 @@
 ---
 id: 0e35ddf2-3e87-4a5a-9fd9-24bafc7325b6
 title: "Theme Engine"
-domain: adtoolkit://cookbook/ui/theme/theme-engine
+domain: adhsdk://cookbook/ui/theme/theme-engine
 type: ingredient
 version: 1.1.2
 status: review
@@ -22,13 +22,13 @@ tags:
   - import
   - logic
 depends-on:
-  - agenticdevelopertoolkit://recipes/theme-engine
-  - adtoolkit://cookbook/foundation/settings-storage
-  - adtoolkit://cookbook/foundation/formats/jsonc-preprocessor
-  - adtoolkit://cookbook/workspace/extensions/manifest/extension-resource-path
+  - adhsdk://recipes/theme-engine
+  - adhsdk://cookbook/foundation/settings-storage
+  - adhsdk://cookbook/foundation/formats/jsonc-preprocessor
+  - adhsdk://cookbook/workspace/extensions/manifest/extension-resource-path
 related:
-  - adtoolkit://cookbook/ui/settings/rows/theme-picker-view
-  - adtoolkit://cookbook/ui/settings/rows/theme-preview-view
+  - adhsdk://cookbook/ui/settings/rows/theme-picker-view
+  - adhsdk://cookbook/ui/settings/rows/theme-preview-view
 references:
   - https://code.visualstudio.com/api/extension-guides/color-theme
 approved-by: ""
@@ -42,7 +42,7 @@ approved-date: ""
 This recipe covers this toolkit's own half of the theme engine, layered on
 top of a shared model — a theme, its color roles, and the semantic palette
 that derives colors from it — specified separately by
-[Theme Engine (shared model)](agenticdevelopertoolkit://recipes/theme-engine).
+[Theme Engine (shared model)](adhsdk://recipes/theme-engine).
 This layer adds four things on top of that model, each in its own concern:
 
 - a syntax-role vocabulary (the ten syntax attributes a source editor
@@ -104,11 +104,11 @@ has no visual surface of its own.
 
 - **import-bytes-entry**: Parsing from raw bytes MUST produce a theme or fail with an error.
 - **import-jsonc**: Both parsing entry points MUST accept JSONC — `//` and block comments and trailing commas — and MUST produce the same theme a strict-JSON spelling of the same document produces.
-- **import-encodings**: Both parsing entry points MUST accept UTF-8, UTF-8 with a byte-order mark, and UTF-16 payloads (including UTF-16 JSONC), producing the same theme as the UTF-8 spelling, decoded through the shared JSONC preprocessor (see [JSONC Preprocessor](adtoolkit://cookbook/foundation/formats/jsonc-preprocessor)).
+- **import-encodings**: Both parsing entry points MUST accept UTF-8, UTF-8 with a byte-order mark, and UTF-16 payloads (including UTF-16 JSONC), producing the same theme as the UTF-8 spelling, decoded through the shared JSONC preprocessor (see [JSONC Preprocessor](adhsdk://cookbook/foundation/formats/jsonc-preprocessor)).
 - **import-bytes-ignores-include**: Parsing from raw bytes MUST NOT resolve an `include` key and MUST NOT reject a document for carrying one; the result MUST equal the result for the same document without the key.
 - **import-file-entry**: Parsing from a file location MUST read the file, resolve its `include` chain, and parse the merged document.
 - **import-file-default-root**: When no containment root is given, the containment root MUST be the theme file's own directory.
-- **import-file-url-precondition**: The top-level file location is a caller precondition: the importer MUST NOT containment-check it — only `include` targets are checked. The shipping caller resolves the manifest's declared path against the extension's resource-path rules before calling (see [Extension Resource Path](adtoolkit://cookbook/workspace/extensions/manifest/extension-resource-path)).
+- **import-file-url-precondition**: The top-level file location is a caller precondition: the importer MUST NOT containment-check it — only `include` targets are checked. The shipping caller resolves the manifest's declared path against the extension's resource-path rules before calling (see [Extension Resource Path](adhsdk://cookbook/workspace/extensions/manifest/extension-resource-path)).
 - **import-name-from-label**: The imported theme's name MUST be the given label; the theme file's own `name` and `type` keys MUST be ignored.
 - **import-lock-flags**: Parsing MUST return a theme that is neither built-in nor already marked imported, carrying a freshly generated identifier.
 
@@ -163,7 +163,7 @@ has no visual surface of its own.
 ### VS Code import: include chains
 
 - **include-detect**: A document MUST be treated as including another only when its `include` value is a non-empty string; any other value MUST be treated as no include.
-- **include-resolve**: An include path MUST be resolved relative to the including file's directory and MUST stay inside the containment root (see [Extension Resource Path](adtoolkit://cookbook/workspace/extensions/manifest/extension-resource-path)).
+- **include-resolve**: An include path MUST be resolved relative to the including file's directory and MUST stay inside the containment root (see [Extension Resource Path](adhsdk://cookbook/workspace/extensions/manifest/extension-resource-path)).
 - **include-containment**: An include that resolves outside the containment root MUST fail with an escapes-containment-root error.
 - **include-depth-bound**: The importer MUST follow at most 8 include hops; a document at depth 8 that still names an include MUST fail with an include-chain-too-deep error (limit 8).
 - **include-cycle**: A cycle (`a.json` including `b.json` including `a.json`) MUST be stopped by the depth bound and fail with the same include-chain-too-deep error (limit 8); there is no visited-set.
@@ -188,7 +188,7 @@ has no visual surface of its own.
 
 ### UserSettings-backed storage
 
-- **storage-custom-themes-key**: The custom-themes storage property MUST read and write the settings store's custom-themes setting — key `theme.custom_themes`, a JSON-encoded list of themes, default an empty list — in whichever provider the settings store holds (see [Settings Storage](adtoolkit://cookbook/foundation/settings-storage)).
+- **storage-custom-themes-key**: The custom-themes storage property MUST read and write the settings store's custom-themes setting — key `theme.custom_themes`, a JSON-encoded list of themes, default an empty list — in whichever provider the settings store holds (see [Settings Storage](adhsdk://cookbook/foundation/settings-storage)).
 - **storage-active-key**: The active-theme-id storage property MUST read and write the settings store's active-theme-id setting — key `theme.active_theme_id`, a plain string, default the built-in catalog's default theme id.
 - **storage-legacy-compatible**: The keys and encodings MUST NOT change; a value written by an earlier build under either key MUST read back unchanged, and a write MUST land under the historical key as a plain string for the active id.
 - **storage-nil-write**: Clearing the active-theme-id property MUST store the built-in catalog's default theme id, never leave it empty.
@@ -313,7 +313,7 @@ means a document with `editor.foreground` `#D8DEE9`, `editor.background`
 - **Concurrent access**: the importer has no shared state, so concurrent parses on different threads MUST NOT interfere (MUST). The theme store and its settings-backed storage are confined to a single designated thread, so their calls are serialised and cannot interleave (MUST).
 - **Write followed by callback**: a write through the settings-backed storage MUST produce an external-change callback on a later main-queue turn; a consumer that also reacts synchronously sees two notifications unless it de-duplicates, as the theme manager's reload does (MUST).
 - **Storage never hooked**: a theme store used without a theme manager MUST allocate no observers (MUST).
-- **Corrupt stored themes**: what the custom-themes setting returns when the stored JSON does not decode is owned by the active settings-storage provider (see [Settings Storage](adtoolkit://cookbook/foundation/settings-storage)); this storage returns whatever the setting holds without further validation (MUST).
+- **Corrupt stored themes**: what the custom-themes setting returns when the stored JSON does not decode is owned by the active settings-storage provider (see [Settings Storage](adhsdk://cookbook/foundation/settings-storage)); this storage returns whatever the setting holds without further validation (MUST).
 - **Large theme file**: the importer MUST read the whole file into memory with no size cap and no timeout (MUST); when importing into the theme store, this blocks that store's designated thread for the read.
 - **Cancellation**: no parse can be cancelled once started (MUST).
 - **Error states**: every failure MUST surface to the caller as an error — an import error, a resource-path error, a file-read error, or the underlying JSON-parsing error — and nothing is stored (MUST).
@@ -368,17 +368,17 @@ Not applicable: this engine logs nothing; every failure is reported to the calle
 - **SwiftUI**: The source is Swift and platform-neutral except the macOS manager-wiring file. The syntax-role/key-grammar and VS Code importer files are Foundation-only; the settings-backed storage file depends on this toolkit's settings store (which declares the two keys) and a settings-change observer that delivers on the main dispatch queue after skipping the first, already-current value. A SwiftUI host holds a theme manager and observes its change notification; nothing here is SwiftUI-specific.
 - **Compose**: Port the syntax-role vocabulary as a Kotlin `enum class` with the same lowercase names and the syntax style as a `data class`. Parse with `kotlinx.serialization.json.Json { isLenient = true; allowTrailingComma = true; allowComments = true }` into a `JsonObject` and read by key, as the source does, rather than a strict `@Serializable` model. Resolve includes with `java.nio.file.Path.resolve(...).toRealPath()` plus a `startsWith(root)` check. Back the storage seam with Jetpack `DataStore<Preferences>` under the same two keys; the external-change callback becomes collecting the DataStore `Flow` with `drop(1)`, dispatched on `Dispatchers.Main`.
 - **React/Web**: Port the importer as a pure TypeScript module over `JSON.parse` after a JSONC strip (`jsonc-parser`'s `parse` with `allowTrailingComma`); `Map` iteration order is insertion order, but keep the lexicographic tie-break so the result does not depend on it. File access and include containment only exist in Node/Electron (`fs.readFileSync`, `path.resolve` + `fs.realpathSync` + a prefix check); a browser port accepts bytes only, like the byte-based entry point. Persist with `localStorage` under the same keys; the cross-tab `storage` event is the external-change-callback equivalent, and it does not fire in the writing tab — unlike the source, which fires for its own writes too.
-- **AppKit / UIKit**: This is the source's own platform, and Swift throughout. The shared model types (`ColorTheme`, `RGBAColor`, `ThemeRole`, `SemanticPalette`) ship from AgenticDeveloperToolkit; this layer adds `SyntaxRole`/`SyntaxStyle` (`SyntaxRoleOverrides.swift`), `VSCodeThemeImporter` (a caseless `enum` of non-isolated static functions with no mutable state), `UserSettingsThemeStorage` (a `@MainActor final class` conforming to `ThemeStorage`), and, on macOS, `ThemeManager+UserSettings.swift`. `SyntaxRole` raw values equal `EditorTheme`'s field names verbatim (syntax-role-names); `SyntaxRole.overrideKey(bold:italic:)` computes the key grammar; `ColorTheme.syntaxStyles` reads it and `ColorTheme.withSyntaxStyles(_:)` replaces it, both operating on `roleOverrides`. `SyntaxRole` and `SyntaxStyle` are `Sendable`, `Equatable` value types. Errors are `VSCodeThemeParseError` cases — `.notAnObject`, `.missingColors`, `.missingColor(String)`, `.foregroundMatchesBackground`, `.missingANSIColors([String])`, `.includeChainTooDeep(limit:)` — plus `ExtensionResourcePathError.escapesExtensionDirectory` for include-containment failures; `VSCodeThemeParseError` does not conform to `LocalizedError` (import-error-descriptions), so `localizedDescription` falls back to Foundation's generic enum description. The two entry points are `VSCodeThemeImporter.parse(_:label:uiTheme:)` (bytes) and `.parse(contentsOf:label:uiTheme:containedIn:)` (file, resolving `include` via `ExtensionResourcePath.resolve(_:relativeTo:containedIn:)`); decoding goes through `JSONCPreprocessor.jsonObject(from:)`. `ThemeStore.importVSCodeTheme(contentsOf:label:uiTheme:)` wraps the file entry point and calls `ThemeStore.add(_:)`; it and every other `ThemeStore` member run on `@MainActor` because `ThemeStore` is `@MainActor`-isolated, so `importVSCodeTheme`'s file reads block the main actor. `UserSettingsThemeStorage.customThemes`/`.activeThemeID` read and write `UserSettings.customThemes`/`.activeThemeID` (declared in `UserSettings+Theme.swift`); assigning `nil` to `activeThemeID` stores `BuiltInThemes.defaultID` because the backing `UserSetting<String>` is non-optional. The external-change callback is backed by `UserSettingObserver`, which delivers on `DispatchQueue.main` after `dropFirst()` and holds the storage `weak`, so a deallocated storage receives no callback. `ThemeStore()` is sugar for `ThemeStore(storage: UserSettingsThemeStorage())`; on macOS, `ThemeManager()` installs `AppKitAppearanceDriver` with `autoAppearance` reading `UserSettings.appearanceMode.currentValue.nsAppearance`, read fresh on each call; a UIKit port swaps in a driver that sets `overrideUserInterfaceStyle` on the window scene instead. `ThemeManager.reload()` compares the resolved theme against `currentTheme` and returns early when unchanged, which is what keeps `didChangeNotification` from firing twice for one user-initiated selection (`selectTheme(id:)`). `hasValidPalette`, `composited(over:)` and `blended(withFraction:of:)` are the `ColorTheme`/`RGBAColor` members behind the palette-validity gate and the selection-colour derivation; `InMemoryThemeStorage` is the test double used by the storage-related test vectors. `ThemeContributionPoint.swift` is the production caller of `parse(contentsOf:…containedIn:)`, resolving the manifest's `path` through `ExtensionResourcePath.resolve(_:inside:)` first; `ThemeSettingsPanelViewController` is where a user duplicates an imported theme to edit it.
+- **AppKit / UIKit**: This is the source's own platform, and Swift throughout. The shared model types (`ColorTheme`, `RGBAColor`, `ThemeRole`, `SemanticPalette`) ship from AgenticDeveloperHubSDK; this layer adds `SyntaxRole`/`SyntaxStyle` (`SyntaxRoleOverrides.swift`), `VSCodeThemeImporter` (a caseless `enum` of non-isolated static functions with no mutable state), `UserSettingsThemeStorage` (a `@MainActor final class` conforming to `ThemeStorage`), and, on macOS, `ThemeManager+UserSettings.swift`. `SyntaxRole` raw values equal `EditorTheme`'s field names verbatim (syntax-role-names); `SyntaxRole.overrideKey(bold:italic:)` computes the key grammar; `ColorTheme.syntaxStyles` reads it and `ColorTheme.withSyntaxStyles(_:)` replaces it, both operating on `roleOverrides`. `SyntaxRole` and `SyntaxStyle` are `Sendable`, `Equatable` value types. Errors are `VSCodeThemeParseError` cases — `.notAnObject`, `.missingColors`, `.missingColor(String)`, `.foregroundMatchesBackground`, `.missingANSIColors([String])`, `.includeChainTooDeep(limit:)` — plus `ExtensionResourcePathError.escapesExtensionDirectory` for include-containment failures; `VSCodeThemeParseError` does not conform to `LocalizedError` (import-error-descriptions), so `localizedDescription` falls back to Foundation's generic enum description. The two entry points are `VSCodeThemeImporter.parse(_:label:uiTheme:)` (bytes) and `.parse(contentsOf:label:uiTheme:containedIn:)` (file, resolving `include` via `ExtensionResourcePath.resolve(_:relativeTo:containedIn:)`); decoding goes through `JSONCPreprocessor.jsonObject(from:)`. `ThemeStore.importVSCodeTheme(contentsOf:label:uiTheme:)` wraps the file entry point and calls `ThemeStore.add(_:)`; it and every other `ThemeStore` member run on `@MainActor` because `ThemeStore` is `@MainActor`-isolated, so `importVSCodeTheme`'s file reads block the main actor. `UserSettingsThemeStorage.customThemes`/`.activeThemeID` read and write `UserSettings.customThemes`/`.activeThemeID` (declared in `UserSettings+Theme.swift`); assigning `nil` to `activeThemeID` stores `BuiltInThemes.defaultID` because the backing `UserSetting<String>` is non-optional. The external-change callback is backed by `UserSettingObserver`, which delivers on `DispatchQueue.main` after `dropFirst()` and holds the storage `weak`, so a deallocated storage receives no callback. `ThemeStore()` is sugar for `ThemeStore(storage: UserSettingsThemeStorage())`; on macOS, `ThemeManager()` installs `AppKitAppearanceDriver` with `autoAppearance` reading `UserSettings.appearanceMode.currentValue.nsAppearance`, read fresh on each call; a UIKit port swaps in a driver that sets `overrideUserInterfaceStyle` on the window scene instead. `ThemeManager.reload()` compares the resolved theme against `currentTheme` and returns early when unchanged, which is what keeps `didChangeNotification` from firing twice for one user-initiated selection (`selectTheme(id:)`). `hasValidPalette`, `composited(over:)` and `blended(withFraction:of:)` are the `ColorTheme`/`RGBAColor` members behind the palette-validity gate and the selection-colour derivation; `InMemoryThemeStorage` is the test double used by the storage-related test vectors. `ThemeContributionPoint.swift` is the production caller of `parse(contentsOf:…containedIn:)`, resolving the manifest's `path` through `ExtensionResourcePath.resolve(_:inside:)` first; `ThemeSettingsPanelViewController` is where a user duplicates an imported theme to edit it.
 - **WinUI 3**: Port the model as C# `record` types (`SyntaxStyle(Color, bool Bold, bool Italic)`) and the syntax role as an `enum` with a lowercase-name mapping. Parse with `System.Text.Json.JsonDocument.Parse(bytes, new JsonDocumentOptions { CommentHandling = JsonCommentHandling.Skip, AllowTrailingCommas = true })` and walk `JsonElement`s by key (`TryGetProperty`, `ValueKind`) to keep the source's "read by key, absent on wrong type" rule; detect UTF-16 with `StreamReader`'s BOM detection before parsing. Read files with `Windows.Storage.StorageFile.GetFileFromPathAsync` + `FileIO.ReadBufferAsync`, or `System.IO.File.ReadAllBytes` in an unpackaged app; do include containment with `Path.GetFullPath` plus a case-insensitive `StartsWith(root)` check, resolving reparse points with `FileSystemInfo.ResolveLinkTarget(true)`. Where the source is synchronous, expose `Task<ColorTheme> ParseAsync(...)` so the UI thread is not blocked. Back the storage seam with `Windows.Storage.ApplicationData.Current.LocalSettings.Values["theme.active_theme_id"]` (a string) and a JSON string (or a `LocalFolder` file, since a settings value is capped at 8 KB) for `theme.custom_themes`; implement change notification with `INotifyPropertyChanged` on a storage class and dispatch the callback through `DispatcherQueue.TryEnqueue` to match the source's deferred main-queue delivery. Expose the catalog as an `ObservableCollection<ColorTheme>` for a `ListView` theme picker.
 
 ## Reference Implementations
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/Core/Theme/SyntaxRoleOverrides.swift` |
-| apple | `packages/apple/AgenticToolkit/Core/Theme/UserSettingsThemeStorage.swift` |
-| apple | `packages/apple/AgenticToolkit/Core/Theme/VSCodeThemeImporter.swift` |
-| apple | `packages/apple/AgenticToolkit/macOS/SystemIntegration/Theme/ThemeManager+UserSettings.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Theme/SyntaxRoleOverrides.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Theme/UserSettingsThemeStorage.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Theme/VSCodeThemeImporter.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/Theme/ThemeManager+UserSettings.swift` |
 
 ## Design Decisions
 
@@ -451,8 +451,8 @@ Parsing (`VSCodeThemeImporter`), the key grammar (`SyntaxRoleOverrides.swift`) a
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
-| 1.1.2 | 2026-10-04 | Mike Fullerton | Legacy recipe citations restored to the legacy recipes' own agenticdevelopertoolkit://recipes/ domains; the adtoolkit://recipes/ form named nothing. |
+| 1.1.2 | 2026-10-04 | Mike Fullerton | Legacy recipe citations restored to the legacy recipes' own adhsdk://recipes/ domains; the adhsdk://recipes/ form named nothing. |
 | 1.1.1 | 2026-10-04 | Mike Fullerton | Inverted prohibitions (none/neither/no X MUST) restated as MUST NOT. |
 | 1.1.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to ui/theme/. |
 | 1.0.1 | 2026-09-25 | Mike Fullerton | Moved into the library cookbook; added Reference Implementations. |
-| 1.0.0 | 2026-09-24 | Mike Fullerton | Initial creation from AgenticToolkit Core/Theme and the macOS ThemeManager initialiser. |
+| 1.0.0 | 2026-09-24 | Mike Fullerton | Initial creation from AgenticDeveloperHubSDK Core/Theme and the macOS ThemeManager initialiser. |

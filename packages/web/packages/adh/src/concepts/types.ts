@@ -1,4 +1,4 @@
-import type { SiteId } from '@agentic-toolkit/adh-registry'
+import type { SiteId } from '@adh-sdk/adh-registry'
 
 // The concept taxonomy — the single source of truth behind the shared concept
 // graph (the landing pages), the `/details/<topic>` routes, and the details-page

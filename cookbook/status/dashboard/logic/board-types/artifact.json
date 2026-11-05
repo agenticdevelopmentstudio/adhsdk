@@ -3,7 +3,7 @@
   "meta": {
     "id": "15c61cfc-543c-493d-b686-c605b773be83",
     "title": "Board Wire Types",
-    "domain": "adtoolkit://cookbook/status/dashboard/logic/board-types",
+    "domain": "adhsdk://cookbook/status/dashboard/logic/board-types",
     "type": "ingredient",
     "version": "1.0.2",
     "status": "review",
@@ -21,9 +21,9 @@
     "tags": [],
     "depends-on": [],
     "related": [
-      "adtoolkit://cookbook/status/dashboard/state/board",
-      "adtoolkit://cookbook/status/dashboard/state/activity-history",
-      "adtoolkit://cookbook/status/dashboard/api"
+      "adhsdk://cookbook/status/dashboard/state/board",
+      "adhsdk://cookbook/status/dashboard/state/activity-history",
+      "adhsdk://cookbook/status/dashboard/api"
     ],
     "references": [],
     "approved-by": "",

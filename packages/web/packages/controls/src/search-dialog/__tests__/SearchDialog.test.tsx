@@ -1,9 +1,9 @@
 import { describe, it, expect, vi } from 'vitest'
 import { render, fireEvent, renderHook, act } from '@testing-library/react'
 import { SearchDialog } from '../SearchDialog'
-import { createSearchIndex } from '@agenticdevelopertoolkit/model'
-import { useSearchState } from '@agenticdevelopertoolkit/model'
-import type { SiteEntry } from '@agenticdevelopertoolkit/model'
+import { createSearchIndex } from '@adh-sdk/model'
+import { useSearchState } from '@adh-sdk/model'
+import type { SiteEntry } from '@adh-sdk/model'
 
 const entries: SiteEntry[] = [
   {

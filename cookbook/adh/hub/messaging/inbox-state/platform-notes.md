@@ -1,8 +1,8 @@
 
 - **React/Web** (source platform): `packages/web/packages/messaging/src/hooks/use-dms.ts` and
   `use-notifications.ts` hold the hooks; both build on `authedJson`/`authedRequest`/`AuthHttpError`
-  from `@agentic-toolkit/auth/client`, `useAuth` from `@agentic-toolkit/auth`, and the shared
-  `connectSse`/`SseHandle` from `@agentic-toolkit/data/stream` — the one live-connection transport
+  from `@adh-sdk/auth/client`, `useAuth` from `@adh-sdk/auth`, and the shared
+  `connectSse`/`SseHandle` from `@adh-sdk/data/stream` — the one live-connection transport
   every real-time consumer in the web app now shares, per that package's own top-of-file comment.
   The live connection is a browser `EventSource`, which cannot set a request header — the reason
   its access token rides the URL query string instead; the client-generated message id uses

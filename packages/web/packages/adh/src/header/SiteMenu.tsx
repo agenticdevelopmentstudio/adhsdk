@@ -3,24 +3,24 @@
 import { useMemo, type ReactElement, type ReactNode } from 'react'
 import { usePathname } from 'next/navigation'
 import { CircleHelp } from 'lucide-react'
-// Sibling module, not the '@agentic-toolkit/adh/footer' subpath: a self-referencing package
+// Sibling module, not the '@adh-sdk/adh/footer' subpath: a self-referencing package
 // specifier would make tsup inline the whole footer entry into this header entry.
 import { SITES_OVERVIEW_POPOVER_ID } from '../footer/identity'
-import { getSite, siteHeaderTitle, type SiteId } from '@agentic-toolkit/adh-registry'
+import { getSite, siteHeaderTitle, type SiteId } from '@adh-sdk/adh-registry'
 import {
   HubMark,
   NavigationPopover,
   useWorkspacesMenu,
   type PopoverEntry,
   type PopoverItem,
-} from '@agentic-toolkit/adh/header'
+} from '@adh-sdk/adh/header'
 // PRESERVED IMPORT — the recents store's own subpath, never the barrel and never a
 // relative path. `recents.ts` holds module-level mutable state (`snapshot`, the
 // `listeners` Set); reaching it any other way risks a second copy in this bundle, so
 // a visit recorded by the hub's recorder would be invisible to this subscriber. See
 // the matching `external` entries in both tsup configs.
-import { useRecents } from '@agentic-toolkit/adh/header/recents'
-import { useHubPreferences } from '@agentic-toolkit/adh/header/hub-preferences'
+import { useRecents } from '@adh-sdk/adh/header/recents'
+import { useHubPreferences } from '@adh-sdk/adh/header/hub-preferences'
 import { useSiteMenu } from './useSiteMenu'
 import { useHeaderLinksCollapsed } from './useHeaderLinksCollapsed'
 import { buildSiteNavEntries } from './siteNavEntries'

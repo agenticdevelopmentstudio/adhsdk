@@ -1,13 +1,13 @@
-/* @agentic-toolkit/status-web — the dashboard panels' own hand-written rules.
+/* @adh-sdk/status-web — the dashboard panels' own hand-written rules.
    Everything the panels need that is NOT a Tailwind utility lives here: the
    container-query header collapse, the indicator glows and spinner, the project
    links, the range/checkbox controls and the snap-scroll hero. A host imports it
    ONCE from its global stylesheet:
 
-       @import "@agentic-toolkit/status-web/styles/panels.css";
+       @import "@adh-sdk/status-web/styles/panels.css";
 
    It ships from `src/styles/` (the package's `files` includes `src`, and the
-   export path points there — the same arrangement as @agenticdevelopertoolkit/ui's
+   export path points there — the same arrangement as @adh-sdk/ui's
    globals.css) so no build step has to mirror it. Only the neutral `--color-apt-*`
    tokens are named; the host's theme supplies their values. */
 

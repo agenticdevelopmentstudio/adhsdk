@@ -1,7 +1,7 @@
 ---
 id: 2beaca09-67b4-4e19-b4a4-f66f048687b8
 title: "VS Code Language Models Bridge"
-domain: adtoolkit://cookbook/workspace/extensions/vscode-api/language-models/main-thread-language-models
+domain: adhsdk://cookbook/workspace/extensions/vscode-api/language-models/main-thread-language-models
 type: ingredient
 version: 1.1.1
 status: review
@@ -22,19 +22,19 @@ tags:
   - streaming
 depends-on: []
 related:
-  - adtoolkit://cookbook/workspace/extensions/vscode-api/language-models/ai-plugin-language-model-provider
-  - adtoolkit://cookbook/workspace/extensions/host/extension-event
+  - adhsdk://cookbook/workspace/extensions/vscode-api/language-models/ai-plugin-language-model-provider
+  - adhsdk://cookbook/workspace/extensions/host/extension-event
 references:
-  - packages/apple/AgenticToolkit/macOS/Features/Extensions/VSCodeAPI/MainThreadLanguageModels.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Tests/AgenticToolkitMacOSTests/Extensions/MainThreadLanguageModelsTests.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/macOS/Features/Extensions/VSCodeAPI/VSCodeAPI.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/macOS/Features/Extensions/VSCodeAPI/JSValueBridge.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/macOS/Features/Extensions/Host/NotImplementedLedger.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/macOS/Features/Extensions/Host/ExtensionHost.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/macOS/Features/Extensions/VSCodeAPI/MainThreadWindow.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/macOS/Features/Extensions/VSCodeAPI/MainThreadDiagnostics.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Core/Loggable.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/project.yml (agenticdevelopertoolkit)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/MainThreadLanguageModels.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKMacOSTests/Extensions/MainThreadLanguageModelsTests.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/VSCodeAPI.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/JSValueBridge.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/Host/NotImplementedLedger.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/Host/ExtensionHost.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/MainThreadWindow.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/MainThreadDiagnostics.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Core/Loggable.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/project.yml (adhsdk)
 approved-by: ""
 approved-date: ""
 ---
@@ -257,8 +257,8 @@ No other event in this component is logged: a rejected `selectChatModels`/`sendR
 
 ## Platform Notes
 
-- **SwiftUI**: not applicable to this file — `MainThreadLanguageModels.swift` imports only `Foundation`, `JavaScriptCore`, `OSLog`, and `AgenticToolkitCore`, with no SwiftUI dependency; nothing here renders or observes view state.
-- **AppKit / UIKit**: this is the source. `packages/apple/AgenticToolkit/macOS/Features/Extensions/VSCodeAPI/MainThreadLanguageModels.swift` is part of the `AgenticToolkitMacOS` framework target, which `project.yml` declares `platform: macOS` only — no iOS target packages this file. It is installed onto an `ExtensionHost`'s `vscode.lm` namespace via `defineVSCodeMember(namespacePath:name:implementation:)`, the same seam every other `VSCodeAPI` adaptor in this directory uses. `MainThreadLanguageModels`, `ExtensionLanguageModelProviding`, `LanguageModelCancellation`, and `LanguageModelResponseRequest` are all declared `@MainActor`, so every stored property read, mutation, and method body is confined to the main actor — this is what makes the "single serialized execution domain" edge-case note above true on this platform, enforced by the compiler rather than by any lock or queue in the source. `LanguageModelChatDescriptor` additionally conforms to `Sendable` and `Equatable`, and each case of `ExtensionLanguageModelResponsePart` is `Sendable`, so both can cross the actor boundary and be compared for the id-set change check safely. `JSContext`/`JSValue` are not `Sendable` and JavaScriptCore always calls back on the thread that made the call, which is why the whole bridge lives on the main actor rather than a background queue. This is purely a Swift-concurrency fact about this implementation; a port to another platform's threading model documents its own equivalent confinement mechanism instead.
+- **SwiftUI**: not applicable to this file — `MainThreadLanguageModels.swift` imports only `Foundation`, `JavaScriptCore`, `OSLog`, and `AgenticDeveloperHubSDKCore`, with no SwiftUI dependency; nothing here renders or observes view state.
+- **AppKit / UIKit**: this is the source. `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/MainThreadLanguageModels.swift` is part of the `AgenticDeveloperHubSDKMacOS` framework target, which `project.yml` declares `platform: macOS` only — no iOS target packages this file. It is installed onto an `ExtensionHost`'s `vscode.lm` namespace via `defineVSCodeMember(namespacePath:name:implementation:)`, the same seam every other `VSCodeAPI` adaptor in this directory uses. `MainThreadLanguageModels`, `ExtensionLanguageModelProviding`, `LanguageModelCancellation`, and `LanguageModelResponseRequest` are all declared `@MainActor`, so every stored property read, mutation, and method body is confined to the main actor — this is what makes the "single serialized execution domain" edge-case note above true on this platform, enforced by the compiler rather than by any lock or queue in the source. `LanguageModelChatDescriptor` additionally conforms to `Sendable` and `Equatable`, and each case of `ExtensionLanguageModelResponsePart` is `Sendable`, so both can cross the actor boundary and be compared for the id-set change check safely. `JSContext`/`JSValue` are not `Sendable` and JavaScriptCore always calls back on the thread that made the call, which is why the whole bridge lives on the main actor rather than a background queue. This is purely a Swift-concurrency fact about this implementation; a port to another platform's threading model documents its own equivalent confinement mechanism instead.
 - **Compose**: model `ExtensionLanguageModelProviding` as a Kotlin interface exposing `val availableChatModels: List<LanguageModelChatDescriptor>` and `suspend fun streamResponse(...): Flow<ExtensionLanguageModelResponsePart>`. Model the tee (`stream`/`text`) as a small class holding a `MutableList` buffer plus two independent cursor indices, matching **tee-single-pump** and **tee-independent-cursors** exactly, rather than calling `Flow.shareIn` twice against the same upstream (which would re-collect, not replay, the source). Model `LanguageModelCancellation` against `kotlinx.coroutines.CancellationException`/`CoroutineScope.cancel()` in place of the duck-typed `CancellationToken` object this file reads.
 - **React/Web**: this is closest to the actual runtime shape — extension code in the real VS Code product already calls `vscode.lm.selectChatModels`/`sendRequest` against the genuine `vscode.d.ts` declarations these types mirror. A React/Web extension host implementing the same bridge would tee a single provider stream into two independent async generators reading a shared buffer array by index, exactly this file's **tee-single-pump** design, across whatever serialization boundary (for example `postMessage` to a worker) replaces this file's `JSContext` boundary.
 - **WinUI 3**: model `ExtensionLanguageModelProviding` as a C# interface — `IReadOnlyList<LanguageModelChatDescriptor> AvailableChatModels { get; }` and `IAsyncEnumerable<ExtensionLanguageModelResponsePart> StreamResponseAsync(IReadOnlyList<ExtensionLanguageModelMessage> messages, string? justification, string extensionIdentifier, CancellationToken cancellationToken)` — letting .NET's native `CancellationToken` replace this file's duck-typed `LanguageModelCancellation` wrapper entirely, since WinUI 3 has no JavaScript boundary to duck-type across. `IAsyncEnumerable<T>` has no built-in tee, so model the response object as a small class holding a `List<ExtensionLanguageModelResponsePart>` buffer plus two cursor offsets — the direct analogue of **tee-single-pump**, **tee-independent-cursors**, and **check-completion-both-cursors** — exposing two custom `IAsyncEnumerator<T>` implementations (one filtering to non-`.End` parts, one to `.Text` payloads only) rather than two independent `Channel<T>` readers, since a `Channel` broadcast would not preserve "already-buffered parts survive a later cancellation" (**cancellation-preserves-buffered-parts**). Parse tool-call arguments with `System.Text.Json.JsonDocument.Parse` inside a `try`/`catch` around `JsonException`, mirroring **tool-call-json-parse-failure-is-null-not-fatal**'s "log and deliver `null`, never fail the whole response" rule. Model `Dictionary<Guid, LanguageModelResponseRequest>` for `liveRequests` and a plain `event Action? AvailableChatModelsChanged`, firing only when a computed `HashSet<string>` of ids changes from the previous snapshot, for **available-chat-models-did-change-set-comparison**.
@@ -267,7 +267,7 @@ No other event in this component is logged: a rejected `selectChatModels`/`sendR
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/macOS/Features/Extensions/VSCodeAPI/MainThreadLanguageModels.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/MainThreadLanguageModels.swift` |
 
 ## Design Decisions
 

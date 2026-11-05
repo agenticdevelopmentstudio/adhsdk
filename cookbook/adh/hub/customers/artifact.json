@@ -3,7 +3,7 @@
   "meta": {
     "id": "f81157d7-766f-42c9-a98a-44df19698bea",
     "title": "Hub Domain: Customers",
-    "domain": "adtoolkit://cookbook/adh/hub/customers",
+    "domain": "adhsdk://cookbook/adh/hub/customers",
     "type": "ingredient",
     "version": "1.1.0",
     "status": "review",
@@ -28,13 +28,13 @@
     ],
     "depends-on": [],
     "related": [
-      "adtoolkit://cookbook/ui/navigation/htdv"
+      "adhsdk://cookbook/ui/navigation/htdv"
     ],
     "references": [
-      "packages/apple/AgenticToolkit/Hub/Features/Customers/CustomersDataSource.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/Hub/Features/Customers/CustomersModels.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/Hub/Features/Customers/CustomersTopic.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/Tests/AgenticToolkitHubTests/CustomersTopicTests.swift (agenticdevelopertoolkit)"
+      "packages/apple/AgenticDeveloperHubSDK/Hub/Features/Customers/CustomersDataSource.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/Hub/Features/Customers/CustomersModels.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/Hub/Features/Customers/CustomersTopic.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKHubTests/CustomersTopicTests.swift (adhsdk)"
     ],
     "approved-by": "",
     "approved-date": ""

@@ -2,7 +2,7 @@
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
 | `storage` (parameter) | `Storage` | required, caller-supplied | The storage port providing `storage.deploy.listInFlightCandidates`, `markDeployGone`, `markDeployPhases`, and `expireStaleInFlight`; this file never constructs or configures a storage implementation itself. |
-| `conn` (parameter, `reconcileVanishedDeploys` only) | `ProviderConn` | required, caller-supplied | Resolved provider connections (`@agentic-toolkit/deploy-platform/conn`), carrying `conn.vercel.token`/`conn.vercel.teamId` and `conn.railway.token`, used to gate and authenticate the per-provider by-id fetches. |
+| `conn` (parameter, `reconcileVanishedDeploys` only) | `ProviderConn` | required, caller-supplied | Resolved provider connections (`@adh-sdk/deploy-platform/conn`), carrying `conn.vercel.token`/`conn.vercel.teamId` and `conn.railway.token`, used to gate and authenticate the per-provider by-id fetches. |
 | `RECONCILE_WINDOW_DAYS` (module-internal constant, not exported) | `number` | `14` | Recency window in days; only in-flight rows created within this window are reconcile candidates. |
 | `RECONCILE_MAX_PER_CYCLE` (module-internal constant, not exported) | `number` | `10` | Maximum candidate rows queried and fetched per `reconcileVanishedDeploys` call. |
 | `RECONCILE_CONCURRENCY` (module-internal constant, not exported) | `number` | `4` | Maximum concurrent in-flight fetches passed to `mapLimit`. |

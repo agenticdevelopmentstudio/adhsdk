@@ -1,20 +1,20 @@
 "use client";
 
 import { useMemo, useState, type ReactElement } from "react";
-import { SearchFilterBar } from "@agenticdevelopertoolkit/ui/components/search-filter-bar";
-import { Button } from "@agenticdevelopertoolkit/ui/components/button";
-import { Disclosure } from "@agenticdevelopertoolkit/ui/components/disclosure";
-import { EntityChooser } from "@agenticdevelopertoolkit/ui/components/entity-chooser";
-import { Field } from "@agenticdevelopertoolkit/ui/blocks/field";
-import { Input } from "@agenticdevelopertoolkit/ui/components/input";
-import { ListChooser } from "@agenticdevelopertoolkit/ui/components/list-chooser";
+import { SearchFilterBar } from "@adh-sdk/ui/components/search-filter-bar";
+import { Button } from "@adh-sdk/ui/components/button";
+import { Disclosure } from "@adh-sdk/ui/components/disclosure";
+import { EntityChooser } from "@adh-sdk/ui/components/entity-chooser";
+import { Field } from "@adh-sdk/ui/blocks/field";
+import { Input } from "@adh-sdk/ui/components/input";
+import { ListChooser } from "@adh-sdk/ui/components/list-chooser";
 import type {
   Iteration,
   Milestone,
   PriorityScale,
   ProjectParticipant,
   ProjectStatus,
-} from "@agentic-toolkit/data/projects";
+} from "@adh-sdk/data/projects";
 import { participantLabel, toOptionValue } from "./AssigneePicker";
 import { PRIORITIES } from "./WorkItemEditor";
 import { DEFAULT_ITEM_WORDS, type ItemWords } from "./vocabulary";

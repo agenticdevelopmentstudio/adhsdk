@@ -13,7 +13,7 @@
 /* Accessibility / appearance-preference overrides (reduce-motion, contrast,
  * text-size, spacing, focus-outlines, link-underlines). Imported here in the
  * token owner so every site picks it up through its existing
- * @agenticdevelopertoolkit/themes/tailwind.css import. */
+ * @adh-sdk/themes/tailwind.css import. */
 @import "./styles/accessibility.css";
 
 /* Light color scheme for Appearance → Theme "Light": light values for the M3

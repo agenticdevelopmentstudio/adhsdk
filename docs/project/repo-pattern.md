@@ -1,6 +1,6 @@
 # Toolkit Repo Pattern
 
-How this repo (`agenticdevelopertoolkit`) is laid out and consumed. Capture
+How this repo (`adhsdk`) is laid out and consumed. Capture
 this pattern when starting a sibling toolkit repo — server packages, alternate
 domain SDKs, anything that ships reusable libraries to a mix of first-party
 and external consumers.
@@ -42,7 +42,7 @@ platform's native build system (its conventional manifest lives there).
 │   │       ├── themes/
 │   │       ├── features/            # feature packages, one level deeper
 │   │       └── …
-│   ├── apple/                       # agenticdevelopertoolkit.xcworkspace + one project.yml per project
+│   ├── apple/                       # AgenticDeveloperHubSDK.xcworkspace + one project.yml per project
 │   ├── terminal/                    # pyproject.toml
 │   ├── android/                     # (TBD)
 │   └── windows/                     # (TBD)
@@ -57,17 +57,17 @@ ad-hoc paths outside their workspace.
 ## The Apple platform shape
 
 `packages/apple/` is the Apple platform root. Each subdirectory is an
-XcodeGen-backed Xcode project, and `agenticdevelopertoolkit.xcworkspace`
+XcodeGen-backed Xcode project, and `AgenticDeveloperHubSDK.xcworkspace`
 wires the ones a developer builds together:
 
-- `AgenticDeveloperToolkit/` — the multi-platform core and UI frameworks
-  (`AgenticDeveloperToolkit`, `AgenticDeveloperToolkitUI`).
+- `AgenticDeveloperHubSDK/` — the multi-platform core and UI frameworks
+  (`AgenticDeveloperHubSDK`, `AgenticDeveloperHubSDKUI`).
 - `AgenticDeveloperHubClient/` — the hub client framework.
-- `AgenticToolkit/` — the macOS-first product frameworks
-  (`AgenticToolkitCore`, `AgenticToolkitMacOS`, `AIPluginKit`, the Hub, HTDV,
+- `AgenticDeveloperHubSDK/` — the macOS-first product frameworks
+  (`AgenticDeveloperHubSDKCore`, `AgenticDeveloperHubSDKMacOS`, `AIPluginKit`, the Hub, HTDV,
   Markdown, Sync and Database frameworks, and the rest) with their test
   bundles. It references the two projects above by their in-repo paths.
-- `AgenticToolkitApp/` — host app that embeds the toolkit frameworks.
+- `AgenticDeveloperHubSDKApp/` — host app that embeds the toolkit frameworks.
 - `AIPlugins/` — `.aiplugin` bundles that link (without embedding) the toolkit
   frameworks, so they share the host's loaded image at `dlopen` time.
 - `AvatarAnimationEngine/` and `SampleApp/` — standalone projects outside the
@@ -128,7 +128,7 @@ walkthrough. In short:
 Live edits in `vendor/<name>/packages/<platform>/packages/<pkg>/src/` flow
 through to the consumer's dev server via HMR.
 
-An Apple consumer adds `packages/apple/agenticdevelopertoolkit.xcworkspace`
+An Apple consumer adds `packages/apple/AgenticDeveloperHubSDK.xcworkspace`
 (or one of its projects) to its own Xcode workspace instead, and runs
 `./vendor/<name>/install.sh` after pulling a revision that changed a
 `project.yml`.

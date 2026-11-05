@@ -1,5 +1,5 @@
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/macOS/Scripting/` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Scripting/` |
 

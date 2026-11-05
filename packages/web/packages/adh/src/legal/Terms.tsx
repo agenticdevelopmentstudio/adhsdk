@@ -1,5 +1,5 @@
 import type { ReactElement } from 'react'
-import { LegalPageShell } from '@agentic-toolkit/adh/legal'
+import { LegalPageShell } from '@adh-sdk/adh/legal'
 import { LEGAL_CONTACT_EMAIL, LEGAL_EFFECTIVE_DATE } from './constants'
 
 /** The Terms of Service body (headings + paragraphs only), with no page chrome —

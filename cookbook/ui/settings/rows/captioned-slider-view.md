@@ -1,7 +1,7 @@
 ---
 id: 64825f85-8b4d-4406-befc-aa08ce55cc8b
 title: "Captioned Slider View"
-domain: adtoolkit://cookbook/ui/settings/rows/captioned-slider-view
+domain: adhsdk://cookbook/ui/settings/rows/captioned-slider-view
 type: ingredient
 version: 1.2.2
 status: review
@@ -21,10 +21,10 @@ tags:
   - range
 depends-on: []
 related:
-  - adtoolkit://cookbook/ui/settings/rows/slider-view
-  - adtoolkit://cookbook/ui/settings/rows/checkbox-view
-  - adtoolkit://cookbook/ui/settings/rows/number-field-view
-  - adtoolkit://cookbook/ui/settings/rows/popup-menu-choice-view
+  - adhsdk://cookbook/ui/settings/rows/slider-view
+  - adhsdk://cookbook/ui/settings/rows/checkbox-view
+  - adhsdk://cookbook/ui/settings/rows/number-field-view
+  - adhsdk://cookbook/ui/settings/rows/popup-menu-choice-view
 references: []
 approved-by: ""
 approved-date: ""
@@ -338,7 +338,7 @@ Not applicable: the source contains no logging call.
   comparing against the previous value before calling the parent's setter
   to mirror skips-redundant-commits.
 - **AppKit/UIKit** (source platform): Source file
-  `packages/apple/AgenticToolkit/macOS/SystemIntegration/ComposableSettingsWindow/Views/CaptionedSliderView.swift`.
+  `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/Views/CaptionedSliderView.swift`.
   A macOS-only (`import AppKit`) `NSView` subclass, `@MainActor`-isolated
   (the mechanism behind confines-to-ui-thread), inside the
   `ComposableSettings` namespace, conforming to `SettingsViewProtocol`.
@@ -383,7 +383,7 @@ Not applicable: the source contains no logging call.
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/macOS/SystemIntegration/ComposableSettingsWindow/Views/CaptionedSliderView.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/Views/CaptionedSliderView.swift` |
 
 ## Design Decisions
 
@@ -460,7 +460,7 @@ instances via `ComposableSettings.makeRow` and `makeRowLabel`/
 every write, and the file's single responsibility (row composition and
 value sync, with rendering and formatting delegated elsewhere).
 
-No test in the repository's test targets constructs `CaptionedSliderView`, so `unit-test-coverage` is `failed`: a search of `AgenticToolkitMacOSTests` and the other test targets for the type name finds nothing.
+No test in the repository's test targets constructs `CaptionedSliderView`, so `unit-test-coverage` is `failed`: a search of `AgenticDeveloperHubSDKMacOSTests` and the other test targets for the type name finds nothing.
 
 ## Change History
 

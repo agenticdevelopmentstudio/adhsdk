@@ -1,8 +1,8 @@
 /* adh/src/styles/adh-registry-theme.css
  *
  * The adh half of a seam two registry stylesheets designed and no adh host ever
- * used. `@agenticdevelopertoolkit/registry-profile`'s profile.css and
- * `@agentic-toolkit/registry`'s editor.css each declare their own neutral palette
+ * used. `@adh-sdk/registry-profile`'s profile.css and
+ * `@adh-sdk/registry`'s editor.css each declare their own neutral palette
  * — `--rp-*` and `--rf-*`, light-dark() pairs of raw greys — and each says why:
  *
  *   "It names NO host colour on purpose. A package stylesheet that hardcodes one

@@ -1,5 +1,5 @@
 import type { ComponentType, ReactNode } from 'react';
-import type { Workspace } from '@agentic-toolkit/data';
+import type { Workspace } from '@adh-sdk/data';
 import type { ProfilePrincipal } from '../profile/types';
 /**
  * What the shell hands whatever it renders below itself. Every field is derived from the
@@ -49,7 +49,7 @@ export type SiteHomeHostSeams = object;
  * and the site's own view as a FUNCTION to call once a workspace has actually resolved.
  *
  * Declared here rather than in SiteHomeShell so a site's model can name the type without
- * importing the shell — and therefore without pulling `@agentic-toolkit/data` in behind it.
+ * importing the shell — and therefore without pulling `@adh-sdk/data` in behind it.
  */
 export interface SiteHomeShellProps {
     /** The workspace segment as it stands in the URL, if any. */

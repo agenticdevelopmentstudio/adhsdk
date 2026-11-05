@@ -1,7 +1,7 @@
 ---
 id: 1d701cc5-5822-4465-8ad5-413e6b0c31fc
 title: Tour Strip
-domain: agenticdevelopertoolkit://recipes/tour-strip
+domain: adhsdk://recipes/tour-strip
 type: ingredient
 version: 1.1.1
 status: review
@@ -21,10 +21,10 @@ tags:
 - navigation
 - landing
 depends-on:
-- agenticdevelopertoolkit://recipes/screen
-- agenticdevelopertoolkit://recipes/wrap
+- adhsdk://recipes/screen
+- adhsdk://recipes/wrap
 related:
-- agenticdevelopertoolkit://recipes/landing-card
+- adhsdk://recipes/landing-card
 references: []
 approved-by: ''
 approved-date: ''

@@ -28,8 +28,8 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { useState } from "react";
 import { render, screen, fireEvent, waitFor, cleanup, within } from "@testing-library/react";
 
-vi.mock("@agentic-toolkit/data/projects", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("@agentic-toolkit/data/projects")>()),
+vi.mock("@adh-sdk/data/projects", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@adh-sdk/data/projects")>()),
   projectTemplatesApi: {
     list: vi.fn(),
     create: vi.fn(),
@@ -39,8 +39,8 @@ vi.mock("@agentic-toolkit/data/projects", async (importOriginal) => ({
 }));
 
 import { TemplatesPane, templateSublabel } from "./TemplatesPane";
-import { projectTemplatesApi, type Template } from "@agentic-toolkit/data/projects";
-import { RailHostBoundary, type TopicLeaf } from "@agentic-toolkit/resource";
+import { projectTemplatesApi, type Template } from "@adh-sdk/data/projects";
+import { RailHostBoundary, type TopicLeaf } from "@adh-sdk/resource";
 
 const list = vi.mocked(projectTemplatesApi.list);
 const create = vi.mocked(projectTemplatesApi.create);

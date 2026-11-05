@@ -1,7 +1,7 @@
 ---
 id: d6ff2cc3-89c8-4744-b3f4-7262e45a3414
 title: Help Content
-domain: agenticdevelopertoolkit://recipes/help-content
+domain: adhsdk://recipes/help-content
 type: ingredient
 version: 1.1.1
 status: review
@@ -22,7 +22,7 @@ tags:
 - localization
 depends-on: []
 related:
-- agenticdevelopertoolkit://recipes/help-enabled
+- adhsdk://recipes/help-enabled
 references: []
 approved-by: ''
 approved-date: ''

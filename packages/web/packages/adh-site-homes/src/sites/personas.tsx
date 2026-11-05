@@ -2,27 +2,27 @@
 
 import type { ReactNode } from "react";
 import dynamic from "next/dynamic";
-import { defineSiteHome } from "@agentic-toolkit/adh/home";
-import type { Persona } from "@agentic-toolkit/data/personas";
-import { personaProfileUrl } from "@agentic-toolkit/adh-registry";
-import { personaMemoryTables } from "@agentic-toolkit/knowledgebases/tables";
-import { PersonasFeature } from "@agentic-toolkit/personas";
+import { defineSiteHome } from "@adh-sdk/adh/home";
+import type { Persona } from "@adh-sdk/data/personas";
+import { personaProfileUrl } from "@adh-sdk/adh-registry";
+import { personaMemoryTables } from "@adh-sdk/knowledgebases/tables";
+import { PersonasFeature } from "@adh-sdk/personas";
 // Relative, not a package subpath: ProfilePersonas lives IN this site now (it imports the adh
-// vocabulary tier, which a portable @agentic-toolkit package may not — see its own docblock),
-// not in @agentic-toolkit/personas.
+// vocabulary tier, which a portable @adh-sdk package may not — see its own docblock),
+// not in @adh-sdk/personas.
 import { ProfilePersonas } from "./ProfilePersonas";
 // PersonasSection fetches through the toolkit's react-query cache, which reads the
 // toolkit's OWN QueryClient context — mount its provider here (same physical module
 // as the hooks; a host-provided QueryClientProvider would be a different copy and
 // invisible to them). Mirrors the sibling personabuilder site's mount.
-import { ToolkitQueryProvider } from "@agentic-toolkit/data/query";
+import { ToolkitQueryProvider } from "@adh-sdk/data/query";
 // Grammar from the server-safe ./parse subpath — the ONLY home for parse helpers now
 // (the barrels deliberately do not re-export them; see any feature barrel's note).
-import { parsePersonasPath } from "@agentic-toolkit/personas/parse";
+import { parsePersonasPath } from "@adh-sdk/personas/parse";
 
 const loading = () => <p className="p-4 text-sm text-apt-text-muted">Loading…</p>;
 const KnowledgeBasesPane = dynamic(
-  () => import("@agentic-toolkit/knowledgebases").then((m) => m.KnowledgeBasesPane),
+  () => import("@adh-sdk/knowledgebases").then((m) => m.KnowledgeBasesPane),
   { loading },
 );
 
@@ -31,7 +31,7 @@ const KB_TABLES = personaMemoryTables();
 
 /**
  * The Personas feature — this site's gated product surface, and the reason agenticdeveloperpersonas.com
- * exists: it is where you define personas now. This is the SAME @agentic-toolkit/personas surface
+ * exists: it is where you define personas now. This is the SAME @adh-sdk/personas surface
  * the hub's `/<workspace>/personas` route renders — since 2026-08-30 literally so, because that
  * route mounts THIS model (the hub's PersonasRoute).
  *
@@ -47,7 +47,7 @@ const KB_TABLES = personaMemoryTables();
  * Seams filled HERE, by the model, because nothing about them is a host's — the same two the
  * sibling personabuilder site supplies, from the same owners, so the mounts cannot drift:
  * - profileUrlFor: the persona's public registry profile — the shared
- *   @agentic-toolkit/adh-registry personaProfileUrl rule (the hub used the same one, from its own
+ *   @adh-sdk/adh-registry personaProfileUrl rule (the hub used the same one, from its own
  *   copy of the call, until this became its mount).
  * - renderKnowledgeBases: the Knowledge facet embeds the knowledgebases pane with the
  *   persona-memory tables from the toolkit's generated catalog. The hub passed its OWN table set
@@ -114,7 +114,7 @@ export interface PersonasHostSeams {
    */
   scopeToWorkspace?: boolean;
   /** The live try-it chat for a saved persona. Omitted ⇒ the editor's "Chat isn't available in
-   *  this view." fallback. Hub-only glue: @agentic-toolkit/persona/chat is not a dependency a
+   *  this view." fallback. Hub-only glue: @adh-sdk/persona/chat is not a dependency a
    *  portable feature site carries. */
   renderChatPane?: (persona: Persona) => ReactNode;
   /** The persona's auto-provisioned project (the editor's Project facet). Omitted ⇒ no facet. */
@@ -123,7 +123,7 @@ export interface PersonasHostSeams {
    *  the caller's whole workspace tree, which is a host's to build and not this package's. */
   renderTransferOwnership?: (persona: Persona) => ReactNode;
   /** The persona's own Integrations facet — the provider-config pane scoped to the ecosystem it
-   *  OWNS (@agentic-toolkit/integrations' IntegrationsPane is not a dependency a portable feature
+   *  OWNS (@adh-sdk/integrations' IntegrationsPane is not a dependency a portable feature
    *  site carries). Omitted ⇒ the editor's "not available in this view" fallback. */
   renderIntegrations?: (ecosystemId: string) => ReactNode;
 }

@@ -10,12 +10,12 @@ import {
   joinMeta,
   renderBlock,
   TourStrip,
-} from '@agenticdevelopertoolkit/landing'
-import type { BandTone, LandingSection, NavLink } from '@agenticdevelopertoolkit/landing'
+} from '@adh-sdk/landing'
+import type { BandTone, LandingSection, NavLink } from '@adh-sdk/landing'
 // Both client components by PACKAGE PATH and from `/client`, for the reason LandingDeck.tsx
 // gives in full: a bundled client module hoists its `'use client'` over this whole module and
 // turns every band of a site's landing copy into a Client Component.
-import { NavChrome, Reveal } from '@agenticdevelopertoolkit/landing/client'
+import { NavChrome, Reveal } from '@adh-sdk/landing/client'
 import { TOUR_SCREEN_ID, tourStep } from './tour'
 import type { LandingContent } from './tour'
 

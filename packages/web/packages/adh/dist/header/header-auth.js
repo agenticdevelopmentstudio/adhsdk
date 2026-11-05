@@ -9,8 +9,8 @@ import {
   isAdmin,
   ssoSwitchUrl,
   currentReturnTo
-} from "@agentic-toolkit/auth";
-import { siteHomePath } from "@agentic-toolkit/adh-registry";
+} from "@adh-sdk/auth";
+import { siteHomePath } from "@adh-sdk/adh-registry";
 function toAvatarUser(u, fallback = "User") {
   const fullName = u.name?.trim() || void 0;
   return {

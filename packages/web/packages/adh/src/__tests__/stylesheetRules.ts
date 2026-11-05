@@ -124,16 +124,16 @@ export function adhStylesheet(name: string): string {
 /** One of bitbag's stylesheets, by file name — through this package's own dependency link, so
  *  the file read is the one this package builds against. */
 export function bitbagStylesheet(name: string): string {
-  const bitbag = realpathSync(resolve(import.meta.dirname, '../../node_modules/@agentic-toolkit/bitbag'))
+  const bitbag = realpathSync(resolve(import.meta.dirname, '../../node_modules/@adh-sdk/bitbag'))
   return resolve(bitbag, 'src/styles', name)
 }
 
 /** One of ui's stylesheets, by its export name (`components.css`), resolved the way
- *  adh-components.css's own `@import "@agenticdevelopertoolkit/ui/styles/…"` is: from that
+ *  adh-components.css's own `@import "@adh-sdk/ui/styles/…"` is: from that
  *  file, through this package's workspace link and ui's `exports` map, so the rules read
  *  are the ones this package builds against — not a copy a site checkout may also hold. */
 export function uiStylesheet(name: string): string {
-  return createRequire(adhStylesheet('adh-components.css')).resolve(`@agenticdevelopertoolkit/ui/styles/${name}`)
+  return createRequire(adhStylesheet('adh-components.css')).resolve(`@adh-sdk/ui/styles/${name}`)
 }
 
 // ── Selectors ───────────────────────────────────────────────────────────────────────────────

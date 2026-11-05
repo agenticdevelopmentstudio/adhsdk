@@ -1,15 +1,15 @@
 "use client";
 
 import { useEffect, useId, useRef } from "react";
-import { Card, CardContent } from "@agenticdevelopertoolkit/ui/components/card";
-import { Input } from "@agenticdevelopertoolkit/ui/components/input";
-import { Label } from "@agenticdevelopertoolkit/ui/components/label";
-import { Textarea } from "@agenticdevelopertoolkit/ui/components/textarea";
-import { RdidEditor } from "@agentic-toolkit/adh-ui/components/rdid-editor";
-import { validateLeaf } from "@agentic-toolkit/adh-ui/rdid";
-import { DetailSection } from "@agentic-toolkit/resource";
-import { ErrorText } from "@agenticdevelopertoolkit/ui/components/error-text";
-import type { Ecosystem, EcosystemInput } from "@agentic-toolkit/data/ecosystems";
+import { Card, CardContent } from "@adh-sdk/ui/components/card";
+import { Input } from "@adh-sdk/ui/components/input";
+import { Label } from "@adh-sdk/ui/components/label";
+import { Textarea } from "@adh-sdk/ui/components/textarea";
+import { RdidEditor } from "@adh-sdk/adh-ui/components/rdid-editor";
+import { validateLeaf } from "@adh-sdk/adh-ui/rdid";
+import { DetailSection } from "@adh-sdk/resource";
+import { ErrorText } from "@adh-sdk/ui/components/error-text";
+import type { Ecosystem, EcosystemInput } from "@adh-sdk/data/ecosystems";
 
 export function ecoBlank(): EcosystemInput {
   return { identifier: "", name: "", description: "", region: "", domain: "" };

@@ -1,7 +1,7 @@
 
 - **SwiftUI**: The source
-  (`packages/apple/AgenticToolkit/macOS/Features/Projects/ProjectFilter.swift`,
-  tests `Tests/AgenticToolkitMacOSTests/Projects/ProjectFilterTests.swift`)
+  (`packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectFilter.swift`,
+  tests `Tests/AgenticDeveloperHubSDKMacOSTests/Projects/ProjectFilterTests.swift`)
   imports only `Foundation` — no AppKit, UIKit, or SwiftUI dependency — so it
   ports unchanged into a SwiftUI-hosted app. A SwiftUI list would call
   `ProjectFilter.matches(_:query:)` inside its data source's `filter` and

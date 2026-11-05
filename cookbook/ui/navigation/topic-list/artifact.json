@@ -3,7 +3,7 @@
   "meta": {
     "id": "ce223be3-818a-4310-b136-9e1e84e9af54",
     "title": "Topic List",
-    "domain": "adtoolkit://cookbook/ui/navigation/topic-list",
+    "domain": "adhsdk://cookbook/ui/navigation/topic-list",
     "type": "ingredient",
     "version": "1.2.2",
     "status": "review",
@@ -26,7 +26,7 @@
     ],
     "depends-on": [],
     "related": [
-      "adtoolkit://cookbook/ui/settings/settings-panel-list"
+      "adhsdk://cookbook/ui/settings/settings-panel-list"
     ],
     "references": [
       "https://developer.apple.com/design/human-interface-guidelines/lists-and-tables"

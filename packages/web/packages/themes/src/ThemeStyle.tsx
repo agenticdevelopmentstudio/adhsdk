@@ -1,7 +1,7 @@
 import { themes, type ThemeKey } from './manifest'
 
-const GLOBAL_ID = 'agentic-toolkit-theme'
-const SCOPED_ID = 'agentic-toolkit-theme-scoped'
+const GLOBAL_ID = 'adh-sdk-theme'
+const SCOPED_ID = 'adh-sdk-theme-scoped'
 
 /** One id per scope, not one id for all scoped blocks. A page can carry several
  *  scoped themes at once (a chat theming itself, plus a host app theming the

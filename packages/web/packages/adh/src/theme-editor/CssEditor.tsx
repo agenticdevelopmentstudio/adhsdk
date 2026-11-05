@@ -3,7 +3,7 @@
 import { useRef } from 'react'
 import Editor, { type BeforeMount, type OnMount } from '@monaco-editor/react'
 
-import { Button } from '@agenticdevelopertoolkit/ui/components/button'
+import { Button } from '@adh-sdk/ui/components/button'
 
 // A free-form CSS editor (Monaco) with CSS autocomplete, validation/lint, and a
 // Format action — all from Monaco's built-in CSS language service, no extra deps.

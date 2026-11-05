@@ -1,6 +1,6 @@
 "use client";
 
-// Auth HTTP logic now lives in @agentic-toolkit/auth. Re-exported here so the
+// Auth HTTP logic now lives in @adh-sdk/auth. Re-exported here so the
 // app's api modules keep importing from "./http". (SSO code exchange stays
 // host-side, so the toolkit auth client omits it and it is not re-exported.)
 export {
@@ -13,7 +13,7 @@ export {
   readTokenSubject,
   decodeBase64UrlJson,
   type BackendTokenFields,
-} from "@agentic-toolkit/auth/client";
+} from "@adh-sdk/auth/client";
 
 /** The HTTP status a thrown error carries, when it is a status-carrying HTTP
  *  error, else undefined. Duck-typed on a numeric `.status` rather than
@@ -31,7 +31,7 @@ export function httpStatus(err: unknown): number | undefined {
  * A refusal the shared error reporter DROPS — for the checks a client makes BEFORE it
  * reaches the backend, whose message is meant for the operator and no one else.
  *
- * The dialogs and forms in `@agentic-toolkit/resource` hand every error they catch to
+ * The dialogs and forms in `@adh-sdk/resource` hand every error they catch to
  * `reportUnexpectedAuthError`, whose gate keeps only errors with NO numeric `status` or a
  * 5xx one — a network failure or a backend outage. A plain `new Error("pick a game first")`
  * has no status, so it passes that gate and files an operator's mis-click in production

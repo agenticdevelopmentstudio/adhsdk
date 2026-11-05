@@ -10,12 +10,12 @@
 import type { AdhHeaderAuthProps } from './AdhHeader'
 import type { AvatarMenuUser } from './AvatarMenu'
 // VALUE import, so the opposite rule applies and the full package path is load-bearing:
-// this package builds `bundle: true, splitting: false`, and `@agentic-toolkit/auth` holds
+// this package builds `bundle: true, splitting: false`, and `@adh-sdk/auth` holds
 // the token store, the refresh timer and the AuthContext at module scope. Inlined, this
 // entry would carry a private, never-refreshed copy of the session — a visitor logged in
 // through the site's own toolkit-auth import would read as signed out here, in production
 // builds only (dev/vitest/tsc all resolve the `development` condition to src). The other
-// half of the remedy is the matching `@agentic-toolkit/auth` entry in tsup's `external`.
+// half of the remedy is the matching `@adh-sdk/auth` entry in tsup's `external`.
 import {
   useAuth,
   beginLogin,
@@ -23,11 +23,11 @@ import {
   ssoSwitchUrl,
   currentReturnTo,
   type AuthUser,
-} from '@agentic-toolkit/auth'
+} from '@adh-sdk/auth'
 // The site table, for the post-login landing rule below. Same package specifier
 // SiteHeader (this entry's sibling) already uses — `siteHomePath` is a pure lookup
 // over a static table, so it carries no module state to fork.
-import { siteHomePath, type SiteId } from '@agentic-toolkit/adh-registry'
+import { siteHomePath, type SiteId } from '@adh-sdk/adh-registry'
 
 /**
  * The resolved auth values the shared header needs — its only view of "who is

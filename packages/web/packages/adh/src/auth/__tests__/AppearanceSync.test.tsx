@@ -10,20 +10,20 @@
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { render, waitFor } from '@testing-library/react'
-import { APPEARANCE_STORAGE_KEY } from '@agenticdevelopertoolkit/themes'
+import { APPEARANCE_STORAGE_KEY } from '@adh-sdk/themes'
 
 // --- fakes ------------------------------------------------------------------------------------
 
 let auth: { isAuthenticated: boolean; isLoading: boolean; user: { id: string } | null }
-vi.mock('@agentic-toolkit/auth', () => ({ useAuth: () => auth }))
+vi.mock('@adh-sdk/auth', () => ({ useAuth: () => auth }))
 
 const authedJson = vi.fn()
-vi.mock('@agentic-toolkit/auth/client', () => ({ authedJson: (...a: unknown[]) => authedJson(...a) }))
+vi.mock('@adh-sdk/auth/client', () => ({ authedJson: (...a: unknown[]) => authedJson(...a) }))
 
 // Mocks the specifier AppearanceSync.tsx actually writes — the PACKAGE PATH
-// '@agentic-toolkit/adh/telemetry/report-error' (see its import comment) — not
+// '@adh-sdk/adh/telemetry/report-error' (see its import comment) — not
 // the former '@adh/chrome/telemetry', which nothing in this merged package imports anymore.
-vi.mock('@agentic-toolkit/adh/telemetry/report-error', () => ({ captureException: vi.fn() }))
+vi.mock('@adh-sdk/adh/telemetry/report-error', () => ({ captureException: vi.fn() }))
 
 // The OS setting. Both the store and the prepaint read it through matchMedia.
 function systemPrefersDark(dark: boolean) {

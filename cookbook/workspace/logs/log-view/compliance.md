@@ -9,7 +9,7 @@
 | [contrast-ratio](agenticdevelopercookbook://compliance/accessibility#contrast-ratio) | partial | Accessibility |
 | [no-hardcoded-strings](agenticdevelopercookbook://compliance/internationalization#no-hardcoded-strings) | passed | Internationalization |
 
-`separation-of-concerns` passes because `LogView` only renders: rows and columns come from the `LogProvider` contract and it reports clicks through hooks, with no data fetching or formatting of its own; `unit-test-coverage` passes because `LogViewTests.swift` in `AgenticToolkitMacOSTests/LoggingWindow` exercises the view's table, tail-follow and click dispatch behavior; `screen-reader-support` and `no-hardcoded-strings` pass because the source
+`separation-of-concerns` passes because `LogView` only renders: rows and columns come from the `LogProvider` contract and it reports clicks through hooks, with no data fetching or formatting of its own; `unit-test-coverage` passes because `LogViewTests.swift` in `AgenticDeveloperHubSDKMacOSTests/LoggingWindow` exercises the view's table, tail-follow and click dispatch behavior; `screen-reader-support` and `no-hardcoded-strings` pass because the source
 adds no custom accessibility overrides that would break AppKit's default
 table/row/cell hierarchy and defines no string literal of its own;
 `keyboard-navigable` is partial because row selection is keyboard-operable

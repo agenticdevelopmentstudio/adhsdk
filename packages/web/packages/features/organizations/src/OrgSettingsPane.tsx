@@ -3,27 +3,27 @@
 import { useCallback, useEffect, useMemo, useState, type ReactElement } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Building2, Gauge, MapPin, Share2 } from "lucide-react";
-import { ErrorText, useAction } from "@agentic-toolkit/crud";
-import { Button } from "@agenticdevelopertoolkit/ui/components/button";
-import { Input } from "@agenticdevelopertoolkit/ui/components/input";
-import { Textarea } from "@agenticdevelopertoolkit/ui/components/textarea";
-import { EmptyState } from "@agenticdevelopertoolkit/ui/components/empty-state";
-import { DeleteEntitySection } from "@agentic-toolkit/adh-ui/blocks";
-import { Field } from "@agenticdevelopertoolkit/ui/blocks/field";
-import { FieldGroup } from "@agenticdevelopertoolkit/ui/blocks/field-group";
-import { RdidEditor } from "@agentic-toolkit/adh-ui/components/rdid-editor";
-import { validateLeaf } from "@agentic-toolkit/adh-ui/rdid";
-import { approveNavigation } from "@agenticdevelopertoolkit/ui/lib/navigation-guard";
+import { ErrorText, useAction } from "@adh-sdk/crud";
+import { Button } from "@adh-sdk/ui/components/button";
+import { Input } from "@adh-sdk/ui/components/input";
+import { Textarea } from "@adh-sdk/ui/components/textarea";
+import { EmptyState } from "@adh-sdk/ui/components/empty-state";
+import { DeleteEntitySection } from "@adh-sdk/adh-ui/blocks";
+import { Field } from "@adh-sdk/ui/blocks/field";
+import { FieldGroup } from "@adh-sdk/ui/blocks/field-group";
+import { RdidEditor } from "@adh-sdk/adh-ui/components/rdid-editor";
+import { validateLeaf } from "@adh-sdk/adh-ui/rdid";
+import { approveNavigation } from "@adh-sdk/ui/lib/navigation-guard";
 import {
   checkWorkspaceSlugAvailable,
   useResourceItemWriter,
   WORKSPACES_QUERY_KEY,
-} from "@agentic-toolkit/data";
+} from "@adh-sdk/data";
 import {
   organizationsApi,
   ORGANIZATIONS_QUERY_KEY,
   type Organization,
-} from "@agentic-toolkit/data/organizations";
+} from "@adh-sdk/data/organizations";
 import {
   StackGroupDetail,
   useReportSettingsDirty,
@@ -31,8 +31,8 @@ import {
   type GroupTopicItem,
   type ResourceItem,
   type TopicLeaf,
-} from "@agentic-toolkit/resource";
-import { SocialLinksPanel, AddressesPanel, UsagePanel } from "@agentic-toolkit/profile";
+} from "@adh-sdk/resource";
+import { SocialLinksPanel, AddressesPanel, UsagePanel } from "@adh-sdk/profile";
 
 /**
  * The item-cache key the organization's own record is filed under, keyed by SLUG.

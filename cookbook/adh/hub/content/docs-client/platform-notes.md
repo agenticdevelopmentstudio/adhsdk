@@ -26,7 +26,7 @@
   category/tag-tree degrade helpers (`withTags`, `categoryNodes`,
   `tagNodes`), and re-exports `taxonomy.ts` unchanged. Transport
   (`authedJson`/`authedRequest`) comes from `http.ts`, itself re-exporting
-  `@agentic-toolkit/auth/client`; `enc`/`workspaceQuery` come from
+  `@adh-sdk/auth/client`; `enc`/`workspaceQuery` come from
   `client-helpers.ts`. Wire types live in `markdown/wire.ts`. Tests for the
   delegated helpers live in `markdown/__tests__/markdown.test.ts`; `docs.ts`
   has no test file of its own.

@@ -1,5 +1,5 @@
 {
-  "name": "@agentic-toolkit/status-web",
+  "name": "@adh-sdk/status-web",
   "version": "0.1.0",
   "description": "A status monitor's operator dashboard: React panels, hooks and the browser-side API client. A Next host mounts these in its own pages, providers and proxy.",
   "type": "module",
@@ -52,11 +52,11 @@
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "test": "vitest run"
   },
-  "comment:dependencies": "`link:`, not `workspace:*`: agenticdevelopertoolkit is a SEPARATE pnpm workspace reached through this repo's own submodule, and pnpm cannot nest workspaces. Same shape as adh-ui, api-explorer and persona — four levels up from packages/web/packages/<pkg>.",
+  "comment:dependencies": "`link:`, not `workspace:*`: adhsdk is a SEPARATE pnpm workspace reached through this repo's own submodule, and pnpm cannot nest workspaces. Same shape as adh-ui, api-explorer and persona — four levels up from packages/web/packages/<pkg>.",
   "dependencies": {
-    "@agentic-toolkit/deploy-platform": "workspace:*",
-    "@agenticdevelopertoolkit/themes": "workspace:*",
-    "@agenticdevelopertoolkit/ui": "workspace:*",
+    "@adh-sdk/deploy-platform": "workspace:*",
+    "@adh-sdk/themes": "workspace:*",
+    "@adh-sdk/ui": "workspace:*",
     "lucide-react": "^1.16.0"
   },
   "peerDependencies": {
@@ -65,9 +65,9 @@
     "react": "^19",
     "react-dom": "^19"
   },
-  "comment:devDependencies": "The runtime deps of the linked @agenticdevelopertoolkit/ui are repeated here so vitest's adtAlias (../../vitest.adt.ts) can pin them to THIS package's copy — one React, one clsx — in the test process. Same shape as api-explorer and adh-ui.",
+  "comment:devDependencies": "The runtime deps of the linked @adh-sdk/ui are repeated here so vitest's adtAlias (../../vitest.adt.ts) can pin them to THIS package's copy — one React, one clsx — in the test process. Same shape as api-explorer and adh-ui.",
   "devDependencies": {
-    "@agentic-toolkit/status-server": "workspace:*",
+    "@adh-sdk/status-server": "workspace:*",
     "@base-ui/react": "1.5.0",
     "@dnd-kit/core": "^6.3.1",
     "@dnd-kit/sortable": "^10.0.0",

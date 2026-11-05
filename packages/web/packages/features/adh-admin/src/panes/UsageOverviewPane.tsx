@@ -1,24 +1,24 @@
 "use client";
 
 import { useState } from "react";
-import { Label } from "@agenticdevelopertoolkit/ui/components/label";
-import { Select } from "@agenticdevelopertoolkit/ui/components/select";
-import { Stat } from "@agenticdevelopertoolkit/ui/components/stat";
-import { Alert, AlertTitle, AlertDescription } from "@agenticdevelopertoolkit/ui/components/alert";
-import { errorMessage } from "@agenticdevelopertoolkit/ui/lib/errors";
-import { formatMicros, formatMicrosFloor } from "@agenticdevelopertoolkit/ui/lib/money";
+import { Label } from "@adh-sdk/ui/components/label";
+import { Select } from "@adh-sdk/ui/components/select";
+import { Stat } from "@adh-sdk/ui/components/stat";
+import { Alert, AlertTitle, AlertDescription } from "@adh-sdk/ui/components/alert";
+import { errorMessage } from "@adh-sdk/ui/lib/errors";
+import { formatMicros, formatMicrosFloor } from "@adh-sdk/ui/lib/money";
 import {
   formatBytes,
   formatCompact,
   formatCount,
   formatDuration,
-} from "@agenticdevelopertoolkit/ui/lib/quantities";
-import { DateRangePicker } from "@agenticdevelopertoolkit/ui/components/date-range-picker";
+} from "@adh-sdk/ui/lib/quantities";
+import { DateRangePicker } from "@adh-sdk/ui/components/date-range-picker";
 import {
   TimeSeriesChart,
   type TimeSeriesPoint,
   type TimeSeriesSeries,
-} from "@agentic-toolkit/adh-ui/components/time-series-chart";
+} from "@adh-sdk/adh-ui/components/time-series-chart";
 import {
   useInsightOverview,
   type InsightInterval,

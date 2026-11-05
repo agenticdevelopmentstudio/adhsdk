@@ -16,25 +16,25 @@ import {
   isBagFormDirty,
   BAG_KEY_REQUIRED_MESSAGE,
   INVALID_JSON_MESSAGE,
-} from "@agentic-toolkit/adh/settings-dialogs";
-import { useAction } from "@agenticdevelopertoolkit/ui/hooks/useAction";
-import { Input } from "@agenticdevelopertoolkit/ui/components/input";
-import { Textarea } from "@agenticdevelopertoolkit/ui/components/textarea";
-import { Button } from "@agenticdevelopertoolkit/ui/components/button";
+} from "@adh-sdk/adh/settings-dialogs";
+import { useAction } from "@adh-sdk/ui/hooks/useAction";
+import { Input } from "@adh-sdk/ui/components/input";
+import { Textarea } from "@adh-sdk/ui/components/textarea";
+import { Button } from "@adh-sdk/ui/components/button";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogDescription,
-} from "@agenticdevelopertoolkit/ui/components/dialog";
-import { DialogActions } from "@agenticdevelopertoolkit/ui/components/dialog-actions";
-import { UnsavedChangesGuard } from "@agenticdevelopertoolkit/ui/components/unsaved-changes-guard";
-import { UnsavedChangesAlert } from "@agenticdevelopertoolkit/ui/components/unsaved-changes-alert";
-import { Field } from "@agenticdevelopertoolkit/ui/blocks/field";
-import { ErrorText } from "@agenticdevelopertoolkit/ui/components/error-text";
-import { ProgressModal } from "@agenticdevelopertoolkit/ui/blocks";
-import { FeatureTitle } from "@agentic-toolkit/resource";
+} from "@adh-sdk/ui/components/dialog";
+import { DialogActions } from "@adh-sdk/ui/components/dialog-actions";
+import { UnsavedChangesGuard } from "@adh-sdk/ui/components/unsaved-changes-guard";
+import { UnsavedChangesAlert } from "@adh-sdk/ui/components/unsaved-changes-alert";
+import { Field } from "@adh-sdk/ui/blocks/field";
+import { ErrorText } from "@adh-sdk/ui/components/error-text";
+import { ProgressModal } from "@adh-sdk/ui/blocks";
+import { FeatureTitle } from "@adh-sdk/resource";
 import {
   EditableList,
   TypeToConfirmDialog,

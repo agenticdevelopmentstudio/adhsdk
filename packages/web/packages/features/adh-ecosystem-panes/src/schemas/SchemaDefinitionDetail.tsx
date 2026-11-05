@@ -1,16 +1,16 @@
 "use client";
 
-import { Field } from "@agenticdevelopertoolkit/ui/blocks";
-import { Card, CardContent } from "@agenticdevelopertoolkit/ui/components/card";
-import { Input } from "@agenticdevelopertoolkit/ui/components/input";
-import { Textarea } from "@agenticdevelopertoolkit/ui/components/textarea";
-import { RdidEditor } from "@agentic-toolkit/adh-ui/components/rdid-editor";
-import { rdidPrefix, validateLeaf } from "@agentic-toolkit/adh-ui/rdid";
-import { ErrorText } from "@agenticdevelopertoolkit/ui/components/error-text";
+import { Field } from "@adh-sdk/ui/blocks";
+import { Card, CardContent } from "@adh-sdk/ui/components/card";
+import { Input } from "@adh-sdk/ui/components/input";
+import { Textarea } from "@adh-sdk/ui/components/textarea";
+import { RdidEditor } from "@adh-sdk/adh-ui/components/rdid-editor";
+import { rdidPrefix, validateLeaf } from "@adh-sdk/adh-ui/rdid";
+import { ErrorText } from "@adh-sdk/ui/components/error-text";
 import { slugifyBucketName } from "./schema-model";
 import type { SchemaDefinition, SchemaDefinitionInput, SchemaTable } from "./schema-model";
-import { DetailSection, unchangedFromStored } from "@agentic-toolkit/resource";
-import { DeleteEntitySection } from "@agentic-toolkit/adh-ui/blocks";
+import { DetailSection, unchangedFromStored } from "@adh-sdk/resource";
+import { DeleteEntitySection } from "@adh-sdk/adh-ui/blocks";
 import type { RenderTransferSection } from "../transfer-seam";
 
 export function schemaBlank(): SchemaDefinitionInput {

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { cachedSingleFlight } from '@agentic-toolkit/deploy-platform/util';
+import { cachedSingleFlight } from '@adh-sdk/deploy-platform/util';
 
 // The one TTL+single-flight primitive. Three routes had grown three copies of
 // this (telemetry inline, reads.ts, app.ts) — and the app.ts copy, guarding the

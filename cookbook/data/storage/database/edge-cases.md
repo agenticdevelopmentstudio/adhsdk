@@ -1,5 +1,5 @@
 
-- **Empty display name**: The token-deriving operation applied to an empty string, or to a name made only of spaces or punctuation, MUST return `"AgenticToolkit"`; a missing or empty declared display name MUST make the display-name reader return `"AgenticToolkit"`.
+- **Empty display name**: The token-deriving operation applied to an empty string, or to a name made only of spaces or punctuation, MUST return `"AgenticDeveloperHubSDK"`; a missing or empty declared display name MUST make the display-name reader return `"AgenticDeveloperHubSDK"`.
 - **Path separators in the name**: Path-separator characters, periods, and spaces MUST be dropped by the token-deriving operation, so the result can never escape the home directory or add a nested path component.
 - **Localized bundle name**: When an app localizes its declared display name, the display-name reader and the token-deriving operation MUST follow the active localization, so the storage directory can differ between locales (see Design Decisions).
 - **Non-ASCII names**: Letters, combining marks, and digits outside ASCII MUST survive the token-deriving operation; the directory then carries non-ASCII characters, lowercased by a locale-independent lowercasing operation.

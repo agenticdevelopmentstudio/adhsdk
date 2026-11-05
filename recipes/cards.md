@@ -1,7 +1,7 @@
 ---
 id: 7e4a2c5b-8f3d-4a7e-b9f2-1c5e8d3b6a2f
 title: "Cards"
-domain: agenticdevelopertoolkit://recipes/cards
+domain: adhsdk://recipes/cards
 type: ingredient
 version: 1.1.1
 status: review
@@ -46,7 +46,7 @@ A responsive grid container that arranges card items in a flexible column layout
 ## Appearance
 
 - **Container element**: `<div>`
-- **Base class**: `lp-cards` — `lp-` is the fixed class-prefix namespace of `@agenticdevelopertoolkit/landing`, not a per-consumer template variable.
+- **Base class**: `lp-cards` — `lp-` is the fixed class-prefix namespace of `@adh-sdk/landing`, not a per-consumer template variable.
 - **Variant classes**: `lp-cards--pair`, `lp-cards--trio`
 - **Layout basis**: CSS Grid. Base track (no `pair`/`trio`): `grid-template-columns: repeat(auto-fit, minmax(16.5rem, 1fr))` (a 231px floor at this package's 87.5% root font size), with `gap: 1rem` (14px).
 - **Default behavior**: The base auto-fit track above; no breakpoint applies.
@@ -126,7 +126,7 @@ Not applicable: Cards performs no operations requiring diagnostic logging beyond
 
 ## Platform Notes
 
-- **TypeScript/Web**: Component defined in `packages/web/packages/landing/src/blocks/Cards.tsx` (`@agenticdevelopertoolkit/landing`). Renders a plain `<div>` with CSS class composition — no ARIA role or semantics are added by the component itself. Grid behavior controlled by three CSS rules: `lp-cards` (base auto-fit track, 231px floor, 14px gap), `lp-cards--pair` (single column below 768px, explicit two-column track at 768px and above), and `lp-cards--trio` (single column below 896px, explicit three-column track at 896px and above). See `css/blocks.css` for the full rules.
+- **TypeScript/Web**: Component defined in `packages/web/packages/landing/src/blocks/Cards.tsx` (`@adh-sdk/landing`). Renders a plain `<div>` with CSS class composition — no ARIA role or semantics are added by the component itself. Grid behavior controlled by three CSS rules: `lp-cards` (base auto-fit track, 231px floor, 14px gap), `lp-cards--pair` (single column below 768px, explicit two-column track at 768px and above), and `lp-cards--trio` (single column below 896px, explicit three-column track at 896px and above). See `css/blocks.css` for the full rules.
 - **SwiftUI**: Use `LazyVGrid` with `GridItem(.adaptive(minimum: 231))` and `spacing: 14` for the default auto-fit floor. Accept a `@ViewBuilder` for children. When `pair` is `true`, use a single `GridItem(.flexible())` column below a 768pt container width and two `GridItem(.flexible())` columns at 768pt and above; when `trio` is `true`, use one column below 896pt and three columns at 896pt and above. Compute the column count and breakpoint check as plain properties, not `@Binding` values — `pair`/`trio` are fixed booleans passed in by the caller, not two-way state.
 - **Compose**: Use `LazyVerticalGrid` with `GridCells.Adaptive(minSize = 231.dp)` and `Arrangement.spacedBy(14.dp)` for the default floor. Accept a `@Composable` lambda for children. When `pair` is `true`, use `GridCells.Fixed(1)` below 768.dp of available width and `GridCells.Fixed(2)` at 768.dp and above (measure with `BoxWithConstraints`); when `trio` is `true`, use `GridCells.Fixed(1)` below 896.dp and `GridCells.Fixed(3)` at 896.dp and above.
 - **AppKit / UIKit**: On macOS and iOS, use `NSCollectionView` / `UICollectionView` with a compositional layout: an adaptive item group with a 231pt minimum item width and 14pt inter-item/inter-group spacing for the default floor. When `pair` is `true`, use a single-column group below a 768pt content width and a fixed two-column group at 768pt and above; when `trio` is `true`, use a single column below 896pt and a fixed three-column group at 896pt and above. Compute the column count from the current bounds width; do not use `NSStackView` or `UIStackView`, neither of which can express the auto-fit floor.

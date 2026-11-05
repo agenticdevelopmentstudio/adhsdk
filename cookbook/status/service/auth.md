@@ -1,7 +1,7 @@
 ---
 id: 735b4e58-bce9-4754-ad3f-bf0344fd4b32
 title: "Status Server Auth"
-domain: adtoolkit://cookbook/status/service/auth
+domain: adhsdk://cookbook/status/service/auth
 type: ingredient
 version: 1.0.3
 status: review
@@ -26,15 +26,15 @@ depends-on:
   - agenticdevelopercookbook://guidelines/implementing/security/sensitive-data
 related: []
 references:
-  - packages/web/packages/status-server/src/auth/cookie.ts (agenticdevelopertoolkit)
-  - packages/web/packages/status-server/src/auth/default-adapter.ts (agenticdevelopertoolkit)
-  - packages/web/packages/status-server/src/auth/github.ts (agenticdevelopertoolkit)
-  - packages/web/packages/status-server/src/auth/password.ts (agenticdevelopertoolkit)
-  - packages/web/packages/status-server/src/auth/port.ts (agenticdevelopertoolkit)
-  - packages/web/packages/status-server/test/auth-gate.test.ts (agenticdevelopertoolkit)
-  - packages/web/packages/status-server/test/auth.int.test.ts (agenticdevelopertoolkit)
-  - packages/web/packages/status-server/test/github-oauth.int.test.ts (agenticdevelopertoolkit)
-  - packages/web/packages/status-server/test/auth-edge.int.test.ts (agenticdevelopertoolkit)
+  - packages/web/packages/status-server/src/auth/cookie.ts (adhsdk)
+  - packages/web/packages/status-server/src/auth/default-adapter.ts (adhsdk)
+  - packages/web/packages/status-server/src/auth/github.ts (adhsdk)
+  - packages/web/packages/status-server/src/auth/password.ts (adhsdk)
+  - packages/web/packages/status-server/src/auth/port.ts (adhsdk)
+  - packages/web/packages/status-server/test/auth-gate.test.ts (adhsdk)
+  - packages/web/packages/status-server/test/auth.int.test.ts (adhsdk)
+  - packages/web/packages/status-server/test/github-oauth.int.test.ts (adhsdk)
+  - packages/web/packages/status-server/test/auth-edge.int.test.ts (adhsdk)
 approved-by: ""
 approved-date: ""
 ---

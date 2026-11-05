@@ -1,7 +1,7 @@
 ---
 id: fdfdaf38-95de-4475-98f4-e09fb998bb57
 title: "Status Server Monitor Live Buffer"
-domain: adtoolkit://cookbook/status/service/monitor/live-buffer
+domain: adhsdk://cookbook/status/service/monitor/live-buffer
 type: ingredient
 version: 1.0.3
 status: review
@@ -23,15 +23,15 @@ tags:
   - server
 depends-on: []
 related:
-  - adtoolkit://cookbook/status/service/monitor/provider-deploy
+  - adhsdk://cookbook/status/service/monitor/provider-deploy
 references:
-  - packages/web/packages/status-server/src/monitor/live-buffer.ts (agenticdevelopertoolkit)
-  - packages/web/packages/status-server/src/monitor/provider-deploy.ts (agenticdevelopertoolkit)
-  - packages/web/packages/status-server/src/routes/hooks.ts (agenticdevelopertoolkit)
-  - packages/web/packages/status-server/src/routes/reads.ts (agenticdevelopertoolkit)
-  - packages/web/packages/status-server/test/hooks.int.test.ts (agenticdevelopertoolkit)
-  - packages/web/packages/status-server/test/hooks-alerting.int.test.ts (agenticdevelopertoolkit)
-  - packages/web/packages/status-server/test/live-deploy-targets.int.test.ts (agenticdevelopertoolkit)
+  - packages/web/packages/status-server/src/monitor/live-buffer.ts (adhsdk)
+  - packages/web/packages/status-server/src/monitor/provider-deploy.ts (adhsdk)
+  - packages/web/packages/status-server/src/routes/hooks.ts (adhsdk)
+  - packages/web/packages/status-server/src/routes/reads.ts (adhsdk)
+  - packages/web/packages/status-server/test/hooks.int.test.ts (adhsdk)
+  - packages/web/packages/status-server/test/hooks-alerting.int.test.ts (adhsdk)
+  - packages/web/packages/status-server/test/live-deploy-targets.int.test.ts (adhsdk)
 approved-by: ""
 approved-date: ""
 ---

@@ -1,7 +1,7 @@
 ---
 id: 2d27892d-a3df-4e7d-ba47-dfd6c45b4c6d
 title: Three Pane Chat
-domain: agenticdevelopertoolkit://recipes/three-pane-chat
+domain: adhsdk://recipes/three-pane-chat
 type: ingredient
 version: 1.1.1
 status: review
@@ -24,12 +24,12 @@ tags:
 - pane
 - topic
 depends-on:
-- agenticdevelopertoolkit://recipes/topics-pane
-- agenticdevelopertoolkit://recipes/transcript
-- agenticdevelopertoolkit://recipes/chat-input
-- agenticdevelopertoolkit://recipes/panel-stack
-- agenticdevelopertoolkit://recipes/connector-svg
-- agenticdevelopertoolkit://recipes/connector-registry
+- adhsdk://recipes/topics-pane
+- adhsdk://recipes/transcript
+- adhsdk://recipes/chat-input
+- adhsdk://recipes/panel-stack
+- adhsdk://recipes/connector-svg
+- adhsdk://recipes/connector-registry
 related: []
 references: []
 approved-by: ''
@@ -170,7 +170,7 @@ Not applicable: Three Pane Chat does not collect, store, or transmit user data b
 
 ## Logging
 
-Subsystem: application (inherited from AgenticDeveloperToolkit) | Category: `ThreePaneChatView`
+Subsystem: application (inherited from AgenticDeveloperHubSDK) | Category: `ThreePaneChatView`
 
 | Event | Level | Message |
 |-------|-------|---------|

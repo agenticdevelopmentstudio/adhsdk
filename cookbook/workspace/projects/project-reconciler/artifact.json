@@ -3,7 +3,7 @@
   "meta": {
     "id": "fcff7387-19aa-49ab-b75d-f0c7bfcdf27c",
     "title": "Project Reconciler",
-    "domain": "adtoolkit://cookbook/workspace/projects/project-reconciler",
+    "domain": "adhsdk://cookbook/workspace/projects/project-reconciler",
     "type": "ingredient",
     "version": "1.2.0",
     "status": "review",
@@ -27,9 +27,9 @@
     "depends-on": [],
     "related": [],
     "references": [
-      "packages/apple/AgenticToolkit/macOS/Features/Projects/ProjectReconciler.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/macOS/Features/Projects/GitRepo.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/Tests/AgenticToolkitMacOSTests/Projects/ProjectReconcilerTests.swift (agenticdevelopertoolkit)"
+      "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectReconciler.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/GitRepo.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKMacOSTests/Projects/ProjectReconcilerTests.swift (adhsdk)"
     ],
     "approved-by": "",
     "approved-date": ""

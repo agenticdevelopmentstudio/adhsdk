@@ -3,7 +3,7 @@ import { HTTPException } from 'hono/http-exception';
 import type { Tier } from '../middleware/auth';
 import type { StatusConfig } from '../config/port';
 import type { Storage } from '../storage/ports';
-import { type ProviderConn } from '@agentic-toolkit/deploy-platform/conn';
+import { type ProviderConn } from '@adh-sdk/deploy-platform/conn';
 import { providerConn } from '../monitor/provider-conn';
 import { fetchVercelBuildLog } from '../monitor/fetch-vercel';
 import { fetchRailwayBuildLog } from '../monitor/fetch-railway';

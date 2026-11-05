@@ -2,7 +2,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import type { RegistryClient, ServiceRow } from '@agentic-toolkit/registry/client';
+import type { RegistryClient, ServiceRow } from '@adh-sdk/registry/client';
 
 import { EntryServicesPanel } from '../EntryServicesPanel';
 

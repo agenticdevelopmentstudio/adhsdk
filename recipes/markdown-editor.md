@@ -1,7 +1,7 @@
 ---
 id: b118c7bc-e163-40f0-bcc8-eb079e835794
 title: MarkdownEditor
-domain: agenticdevelopertoolkit://recipes/markdown-editor
+domain: adhsdk://recipes/markdown-editor
 type: recipe
 version: 1.2.1
 status: review
@@ -22,11 +22,11 @@ tags:
 - toolbar
 - form
 ingredients:
-- agenticdevelopertoolkit://recipes/textarea
-- agenticdevelopertoolkit://recipes/label
-- agenticdevelopertoolkit://recipes/editor-toolbar
-- agenticdevelopertoolkit://recipes/markdown-quick-reference
-- agenticdevelopertoolkit://recipes/button
+- adhsdk://recipes/textarea
+- adhsdk://recipes/label
+- adhsdk://recipes/editor-toolbar
+- adhsdk://recipes/markdown-quick-reference
+- adhsdk://recipes/button
 depends-on: []
 related: []
 references: []
@@ -38,7 +38,7 @@ approved-date: ''
 
 ## Overview
 
-A composition in `@agenticdevelopertoolkit/ui` (`blocks/markdown-editor`) that encapsulates
+A composition in `@adh-sdk/ui` (`blocks/markdown-editor`) that encapsulates
 markdown **body** editing: a labelled `Textarea` for the raw markdown source with
 an `EditorToolbar` row above it. The toolbar carries an optional built-in
 upload control (accepting `.md`, `.markdown`, and `.txt` files), a built-in
@@ -55,13 +55,13 @@ derives a title from an upload when it wants one.
 
 | Name | Domain | Role | Required | Configuration |
 |---|---|---|---|---|
-| Textarea | agenticdevelopertoolkit://recipes/textarea | The markdown source field | yes | `id` (from `useId`), `rows`, `spellCheck`, mono font |
-| Label | agenticdevelopertoolkit://recipes/label | Caption bound to the textarea via `htmlFor` | yes | mono uppercase caption styling |
-| EditorToolbar | agenticdevelopertoolkit://recipes/editor-toolbar | `role="toolbar"` row holding the controls | yes | `ariaLabel` |
-| MarkdownQuickReference | agenticdevelopertoolkit://recipes/markdown-quick-reference | Built-in quick-reference popover control | optional (`quickReference`, default on) | side/align defaults |
-| Button | agenticdevelopertoolkit://recipes/button | The "Upload .md" trigger | optional (only when `onUpload` set) | `variant="outline" size="sm"` |
+| Textarea | adhsdk://recipes/textarea | The markdown source field | yes | `id` (from `useId`), `rows`, `spellCheck`, mono font |
+| Label | adhsdk://recipes/label | Caption bound to the textarea via `htmlFor` | yes | mono uppercase caption styling |
+| EditorToolbar | adhsdk://recipes/editor-toolbar | `role="toolbar"` row holding the controls | yes | `ariaLabel` |
+| MarkdownQuickReference | adhsdk://recipes/markdown-quick-reference | Built-in quick-reference popover control | optional (`quickReference`, default on) | side/align defaults |
+| Button | adhsdk://recipes/button | The "Upload .md" trigger | optional (only when `onUpload` set) | `variant="outline" size="sm"` |
 
-> The Textarea, Label, and EditorToolbar are atomic `@agenticdevelopertoolkit/ui` primitives
+> The Textarea, Label, and EditorToolbar are atomic `@adh-sdk/ui` primitives
 > reused as-is; the upload control wraps a hidden native `<input
 > type="file">` (the only way to open a file picker — recorded with an
 > `adh-ui-allow: cs-no-bespoke` marker in the source).
@@ -169,7 +169,7 @@ derives a title from an upload when it wants one.
 
 ## Platform Notes
 
-- **React / Web (TypeScript):** Block at `packages/web/packages/ui/src/blocks/markdown-editor.tsx`, exported from `@agenticdevelopertoolkit/ui/blocks`. Composes `Textarea` + `Label` + `EditorToolbar` (`components/editor-toolbar`) + `MarkdownQuickReference` (`components/markdown-quick-reference`) + `Button`. Uses `useId()` for instance-unique textarea ids and `role="toolbar"` semantics. Consumed by the host application's own detail views. Demo lives in the workspace's component showcase (Compositions group).
+- **React / Web (TypeScript):** Block at `packages/web/packages/ui/src/blocks/markdown-editor.tsx`, exported from `@adh-sdk/ui/blocks`. Composes `Textarea` + `Label` + `EditorToolbar` (`components/editor-toolbar`) + `MarkdownQuickReference` (`components/markdown-quick-reference`) + `Button`. Uses `useId()` for instance-unique textarea ids and `role="toolbar"` semantics. Consumed by the host application's own detail views. Demo lives in the workspace's component showcase (Compositions group).
 - **SwiftUI:** Start with `TextEditor` for markdown source and `Text` for label. Wrap both in a `VStack`, with an `HStack` above it holding the toolbar controls — not a `ToolbarItem`, which targets window/navigation toolbars rather than an inline row. Use `@Binding<String>` for the controlled value. Note: `TextEditor` has no built-in file picker; use the `.fileImporter(isPresented:allowedContentTypes:onCompletion:)` modifier from `UniformTypeIdentifiers`, allowing `.plainText` plus UTTypes for `md`/`markdown`, or wrap a custom file picker.
 - **Compose:** Start with `BasicTextField` for markdown source and `Text` for label, taking `value: String` and `onValueChange: (String) -> Unit` parameters so the composable stays controlled by its caller. Wrap in a `Column` with a `Row` above it for the toolbar controls — a handful of controls doesn't need `LazyRow`'s virtualization. Note: For file picking, use `ActivityResultContracts.OpenDocument()` filtered to MIME types `text/markdown` and `text/plain`.
 - **AppKit / UIKit:** Start with `NSTextView` (macOS) or `UITextView` (iOS) for markdown source, `NSTextField` or `UILabel` for label. Add an `NSView` (macOS) or `UIView` (iOS) subclass for the toolbar, using `NSStackView` (macOS, `orientation: .horizontal`) or `UIStackView` (iOS, `axis: .horizontal`). Use `Combine` or property observers for value binding. Note: Native text views require a custom file picker for opening a file; use `NSOpenPanel` (macOS) or `UIDocumentPickerViewController` (iOS) with content types `net.daringfireball.markdown` and `public.plain-text` to accept markdown and plain text.
@@ -243,7 +243,7 @@ exercises `MarkdownEditor` or `UploadMarkdownControl`.
 
 ## API
 
-`@agenticdevelopertoolkit/ui/blocks/markdown-editor`:
+`@adh-sdk/ui/blocks/markdown-editor`:
 
 ```ts
 interface MarkdownEditorProps {

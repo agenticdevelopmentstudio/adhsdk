@@ -1,8 +1,8 @@
 "use client";
 
 import { useCallback, type ReactElement } from "react";
-import { projectActivityApi } from "@agentic-toolkit/data/projects";
-import { FeatureTitle } from "@agentic-toolkit/resource";
+import { projectActivityApi } from "@adh-sdk/data/projects";
+import { FeatureTitle } from "@adh-sdk/resource";
 import { ActivityFeed, ACTIVITY_PAGE_SIZE } from "./ActivityFeed";
 import { DEFAULT_ITEM_WORDS, type ItemWords } from "./vocabulary";
 

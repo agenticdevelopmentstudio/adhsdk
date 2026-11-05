@@ -1,7 +1,7 @@
 ---
 id: f6acc431-0443-4b14-8ae4-e1f2dc227c0c
 title: "Extension Resource Path"
-domain: adtoolkit://cookbook/workspace/extensions/manifest/extension-resource-path
+domain: adhsdk://cookbook/workspace/extensions/manifest/extension-resource-path
 type: ingredient
 version: 1.1.0
 status: review
@@ -22,21 +22,21 @@ tags:
   - installed-content-location
 depends-on: []
 related:
-  - adtoolkit://cookbook/workspace/extensions/manifest/extension-identity-component
-  - adtoolkit://cookbook/workspace/extensions/manifest/extension-manifest
-  - adtoolkit://cookbook/ai/plugins/plugin-manager
+  - adhsdk://cookbook/workspace/extensions/manifest/extension-identity-component
+  - adhsdk://cookbook/workspace/extensions/manifest/extension-manifest
+  - adhsdk://cookbook/ai/plugins/plugin-manager
 references:
-  - packages/apple/AgenticToolkit/Core/Extensions/ExtensionResourcePath.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Tests/AgenticToolkitCoreTests/Extensions/ExtensionResourcePathTests.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/macOS/Features/Extensions/ThemeContributionPoint.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/macOS/Features/Extensions/Host/ExtensionHost.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/macOS/Features/Extensions/Host/ExtensionHostInstaller.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Core/Theme/VSCodeThemeImporter.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Language/Snippets/SnippetStore.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/AIPluginKit/AIPluginManager.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Core/Extensions/VSIXInstaller.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Core/Extensions/WebviewResourceURL.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Core/Extensions/WebviewPanelOptions.swift (agenticdevelopertoolkit)
+  - packages/apple/AgenticDeveloperHubSDK/Core/Extensions/ExtensionResourcePath.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKCoreTests/Extensions/ExtensionResourcePathTests.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/ThemeContributionPoint.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/Host/ExtensionHost.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/Host/ExtensionHostInstaller.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Core/Theme/VSCodeThemeImporter.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Language/Snippets/SnippetStore.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/AIPluginKit/AIPluginManager.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Core/Extensions/VSIXInstaller.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Core/Extensions/WebviewResourceURL.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Core/Extensions/WebviewPanelOptions.swift (adhsdk)
 approved-by: ""
 approved-date: ""
 ---
@@ -345,7 +345,7 @@ itself.
 - **SwiftUI**: the source (`ExtensionResourcePath.swift`) is plain
   Foundation — `URL` and, transitively through `NSHomeDirectory()` and
   `FileManager.default.urls(for:in:)`, `FileManager` — with zero dependency
-  on SwiftUI or any view-layer framework. It sits in `AgenticToolkitCore`,
+  on SwiftUI or any view-layer framework. It sits in `AgenticDeveloperHubSDKCore`,
   the tier reachable from both `Language/` (the snippet store) and
   `macOS/` (the theme, host, and plugin-manager call sites).
   `ExtensionResourcePathError` is declared `public enum` conforming to
@@ -387,7 +387,7 @@ itself.
   operating systems.
 - **AppKit / UIKit**: identical to the SwiftUI note — the component depends
   on neither AppKit nor UIKit, so a macOS or iOS host consumes the same
-  `AgenticToolkitCore` type directly with no translation needed.
+  `AgenticDeveloperHubSDKCore` type directly with no translation needed.
 - **WinUI 3**: there is no .NET or Windows App SDK type that performs this
   exact resolve-then-contain check. `Path.GetFullPath` alone does not
   resolve symlinks or junctions the way symlink resolution does in the
@@ -412,7 +412,7 @@ itself.
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/Core/Extensions/ExtensionResourcePath.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Extensions/ExtensionResourcePath.swift` |
 
 ## Design Decisions
 

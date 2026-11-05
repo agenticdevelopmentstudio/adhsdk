@@ -13,7 +13,7 @@
 ## Global Constraints
 
 - **Toolkit worktree (every path below is relative to it unless stated otherwise):**
-  `/Users/mfullerton/Development/projects/adkitchen/.claude/worktrees/release-macos-app/external/agenticdevelopertoolkit`
+  `/Users/mfullerton/Development/projects/adkitchen/.claude/worktrees/release-macos-app/external/adhsdk`
   on branch `adkitchen/release-macos-app`.
 - **Stenographer sources, read-only, never modified:** `/Users/mfullerton/Development/projects/stenographer/`.
   - `scripts/release.py`, `release_verify.py`, `release_prepared.py`, `release_install.py`, `bundle_layout.py`, `app_processes.py`, `build_warnings.py`
@@ -231,7 +231,7 @@ def test_minimal_config_resolves_every_default(tmp_path):
     assert cfg.notes_path("1.2.0") == repo / "docs" / "release-notes" / "1.2.0.md"
     assert cfg.pkg_must_close == (cfg.bundle_id,)
     assert cfg.apps_dir == Path("/Applications")
-    assert cfg.toolkit == repo / "external/agenticdevelopertoolkit"
+    assert cfg.toolkit == repo / "external/adhsdk"
     assert cfg.site_origin == "https://kitchen.agenticdevelopmentstudio.com"
     assert cfg.cask_file == "Casks/adkitchen.rb"
     assert cfg.source_tag("1.2.0") == "release/1.2.0"
@@ -829,7 +829,7 @@ def test_registered_in_manifest():
     - It must not mention Claude, `PushNotification`, `ToolSearch`, `EnterWorktree` or `cwt`.
     - The shared-payload neutrality tests must stay green.
     - It ports Stenographer's `.claude/skills/prepare-release/SKILL.md` and `.claude/skills/release/SKILL.md`, merged into two modes per the spec's "The skill" section.
-    - Every Stenographer path and script becomes a CLI call. `CLI` is `python3 external/agenticdevelopertoolkit/tools/apple/release_macos_app.py`, or the `toolkit` value that `status --json` reports.
+    - Every Stenographer path and script becomes a CLI call. `CLI` is `python3 external/adhsdk/tools/apple/release_macos_app.py`, or the `toolkit` value that `status --json` reports.
     - The production rule appears near the top: typing the command is the owner's explicit trigger for exactly one release of one app; the skill never deploys the website, and it never re-runs `publish` after a part-way failure without the owner's explicit yes.
   - **`hosts/claude.yaml`:** `disable-model-invocation: true`, plus `argument-hint: "prepare [hotfix] | publish [hotfix] [--site ORIGIN]"`.
   - **`hosts/claude.md`:**

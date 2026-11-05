@@ -1,7 +1,7 @@
 ---
 id: add8a34c-a40d-417e-9ee8-aec108e73474
 title: "Status Server Monitor Overview"
-domain: adtoolkit://cookbook/status/service/monitor/overview
+domain: adhsdk://cookbook/status/service/monitor/overview
 type: ingredient
 version: 1.0.2
 status: review
@@ -22,25 +22,25 @@ tags:
   - server
 depends-on: []
 related:
-  - adtoolkit://cookbook/status/service/monitor/issue-sources
-  - adtoolkit://cookbook/status/service/monitor/deploy-status
-  - adtoolkit://cookbook/status/service/monitor/deploy-view
-  - adtoolkit://cookbook/status/service/board
+  - adhsdk://cookbook/status/service/monitor/issue-sources
+  - adhsdk://cookbook/status/service/monitor/deploy-status
+  - adhsdk://cookbook/status/service/monitor/deploy-view
+  - adhsdk://cookbook/status/service/board
 references:
-  - packages/web/packages/status-server/src/monitor/overview.ts (agenticdevelopertoolkit)
-  - packages/web/packages/status-server/src/monitor/types.ts (agenticdevelopertoolkit)
-  - packages/web/packages/deploy-platform/src/canon/index.ts (agenticdevelopertoolkit)
-  - packages/web/packages/deploy-platform/src/canon/canon.test.ts (agenticdevelopertoolkit)
-  - packages/web/packages/status-server/src/monitor/deploy-status.ts (agenticdevelopertoolkit)
-  - packages/web/packages/status-server/src/board/target-key.ts (agenticdevelopertoolkit)
-  - packages/web/packages/status-server/src/board/ownership.ts (agenticdevelopertoolkit)
-  - packages/web/packages/status-server/src/board/derive-problems.ts (agenticdevelopertoolkit)
-  - packages/web/packages/status-server/src/monitor/issue-sources.ts (agenticdevelopertoolkit)
-  - packages/web/packages/status-server/src/lib/links.ts (agenticdevelopertoolkit)
-  - packages/web/packages/status-server/src/routes/reads.ts (agenticdevelopertoolkit)
-  - packages/web/packages/status-server/src/routes/auto-configure.ts (agenticdevelopertoolkit)
-  - packages/web/packages/status-web/src/lib/deploy-view.ts (agenticdevelopertoolkit)
-  - packages/web/packages/status-web/src/lib/deploy-view.test.ts (agenticdevelopertoolkit)
+  - packages/web/packages/status-server/src/monitor/overview.ts (adhsdk)
+  - packages/web/packages/status-server/src/monitor/types.ts (adhsdk)
+  - packages/web/packages/deploy-platform/src/canon/index.ts (adhsdk)
+  - packages/web/packages/deploy-platform/src/canon/canon.test.ts (adhsdk)
+  - packages/web/packages/status-server/src/monitor/deploy-status.ts (adhsdk)
+  - packages/web/packages/status-server/src/board/target-key.ts (adhsdk)
+  - packages/web/packages/status-server/src/board/ownership.ts (adhsdk)
+  - packages/web/packages/status-server/src/board/derive-problems.ts (adhsdk)
+  - packages/web/packages/status-server/src/monitor/issue-sources.ts (adhsdk)
+  - packages/web/packages/status-server/src/lib/links.ts (adhsdk)
+  - packages/web/packages/status-server/src/routes/reads.ts (adhsdk)
+  - packages/web/packages/status-server/src/routes/auto-configure.ts (adhsdk)
+  - packages/web/packages/status-web/src/lib/deploy-view.ts (adhsdk)
+  - packages/web/packages/status-web/src/lib/deploy-view.test.ts (adhsdk)
 approved-by: ""
 approved-date: ""
 ---
@@ -49,7 +49,7 @@ approved-date: ""
 
 ## Overview
 
-`overview.ts` (`packages/web/packages/status-server/src/monitor/overview.ts`) is a pure, synchronous logic module in the status backend. It exports one platform-level aggregation, `summarizeByPlatform`, and three endpoint-level correlation helpers — `deploysForEndpoint`, `latestTerminalForEndpoint`, `failuresForEndpoint` — that all match a monitored endpoint to its deploys by the endpoint's EXPLICIT `platform`/`deployProject`/`environment` fields, never by guessing from a host. It also re-exports `platformCanon` and `deployTargetKey`, which it imports from the shared `@agentic-toolkit/deploy-platform/canon` package, so callers that already import them via `./overview` keep working after the two functions moved into that package. Within `status-server`, the re-exported `platformCanon` is imported by `board/target-key.ts`, `board/ownership.ts`, `board/derive-problems.ts`, `monitor/issue-sources.ts`, `lib/links.ts`, `routes/reads.ts`, and `routes/auto-configure.ts`; `deployTargetKey` is imported by `routes/reads.ts`. `summarizeByPlatform`, `deploysForEndpoint`, `latestTerminalForEndpoint`, `failuresForEndpoint`, and the `PlatformSummary`/`EndpointLike` interfaces they use have, as of this recipe's authoring, no importer anywhere in `status-server`'s own source or test files. The client package `status-web` ships its own re-implementation of the same four names and two interfaces at `src/lib/deploy-view.ts`, consumed by its `Dashboard`, `DetailPanel`, `StatusMatrix`, `KpiStrip`, and `GlobalPanel` components — that file is a separate, browser-side module with an added staleness-demotion parameter this file's version does not take, not a caller of this file.
+`overview.ts` (`packages/web/packages/status-server/src/monitor/overview.ts`) is a pure, synchronous logic module in the status backend. It exports one platform-level aggregation, `summarizeByPlatform`, and three endpoint-level correlation helpers — `deploysForEndpoint`, `latestTerminalForEndpoint`, `failuresForEndpoint` — that all match a monitored endpoint to its deploys by the endpoint's EXPLICIT `platform`/`deployProject`/`environment` fields, never by guessing from a host. It also re-exports `platformCanon` and `deployTargetKey`, which it imports from the shared `@adh-sdk/deploy-platform/canon` package, so callers that already import them via `./overview` keep working after the two functions moved into that package. Within `status-server`, the re-exported `platformCanon` is imported by `board/target-key.ts`, `board/ownership.ts`, `board/derive-problems.ts`, `monitor/issue-sources.ts`, `lib/links.ts`, `routes/reads.ts`, and `routes/auto-configure.ts`; `deployTargetKey` is imported by `routes/reads.ts`. `summarizeByPlatform`, `deploysForEndpoint`, `latestTerminalForEndpoint`, `failuresForEndpoint`, and the `PlatformSummary`/`EndpointLike` interfaces they use have, as of this recipe's authoring, no importer anywhere in `status-server`'s own source or test files. The client package `status-web` ships its own re-implementation of the same four names and two interfaces at `src/lib/deploy-view.ts`, consumed by its `Dashboard`, `DetailPanel`, `StatusMatrix`, `KpiStrip`, and `GlobalPanel` components — that file is a separate, browser-side module with an added staleness-demotion parameter this file's version does not take, not a caller of this file.
 
 ## Behavioral Requirements
 
@@ -57,7 +57,7 @@ approved-date: ""
 
 - **platform-summary-shape**: A `PlatformSummary` value MUST carry exactly five fields — `platform: string`, `ready: number`, `building: number`, `failed: number`, `total: number` — with no other field.
 - **endpoint-like-shape**: An `EndpointLike` value MUST carry `platform`, `deployProject`, and `environment`, each typed `string | null` and each OPTIONAL (a caller MAY omit any of the three entirely, not only pass `null`).
-- **canon-reexport**: This module MUST re-export the `platformCanon` and `deployTargetKey` functions it imports from `@agentic-toolkit/deploy-platform/canon` unchanged, so a caller importing either name from `./overview` gets the identical function, and identical results, as a caller importing it directly from the `canon` package.
+- **canon-reexport**: This module MUST re-export the `platformCanon` and `deployTargetKey` functions it imports from `@adh-sdk/deploy-platform/canon` unchanged, so a caller importing either name from `./overview` gets the identical function, and identical results, as a caller importing it directly from the `canon` package.
 
 ### Platform Summarization
 
@@ -104,7 +104,7 @@ Not applicable — this is a logic module, not a visual component.
 | status-server-monitor-overview-008 | latest-terminal-selection | `latestTerminalForEndpoint(deploys, ep)` where the matching, newest-first rows have statuses `"unknown"`, `"success"` in that order | Returns the `"success"` row, skipping the newer `"unknown"` row even though the source's doc comment names only `canceled`/`building`/`queued` as skipped statuses — no dedicated unit test exists in this package |
 | status-server-monitor-overview-009 | latest-terminal-selection | `latestTerminalForEndpoint(deploys, ep)` where every matching row has status `"building"` or `"queued"` | Returns `null` — no dedicated unit test exists in this package; traced to `.find(...) ?? null` |
 | status-server-monitor-overview-010 | failure-count | `failuresForEndpoint(deploys, ep)` where the matching rows for `ep` have statuses `"failed"`, `"failed"`, `"success"`, `"canceled"` | Returns `2` — no dedicated unit test exists in this package; traced to `.filter((d) => d.status === "failed").length` |
-| status-server-monitor-overview-011 | canon-reexport | `import { platformCanon, deployTargetKey } from "./overview"` then `platformCanon("cloudflare-pages")` and `deployTargetKey("vercel", "hub", null)` | Returns `"cloudflare"` and `"vercel\|hub\|"` respectively — identical to calling the same inputs against `@agentic-toolkit/deploy-platform/canon` directly, per `canon.test.ts`'s own assertions of `platformCanon` and `deployTargetKey`'s underlying behavior |
+| status-server-monitor-overview-011 | canon-reexport | `import { platformCanon, deployTargetKey } from "./overview"` then `platformCanon("cloudflare-pages")` and `deployTargetKey("vercel", "hub", null)` | Returns `"cloudflare"` and `"vercel\|hub\|"` respectively — identical to calling the same inputs against `@adh-sdk/deploy-platform/canon` directly, per `canon.test.ts`'s own assertions of `platformCanon` and `deployTargetKey`'s underlying behavior |
 | status-server-monitor-overview-012 | module-purity | `summarizeByPlatform(deploys)` called twice in sequence with the same `deploys` array reference, with a `deploysForEndpoint(deploys, ep)` call for an unrelated `ep` interleaved between the two calls | Both `summarizeByPlatform` calls return deep-equal results, and neither is affected by the intervening `deploysForEndpoint` call — no dedicated unit test exists in this package; traced to the absence of any module-level mutable state and the absence of any `await` in either function |
 
 ## Edge Cases
@@ -112,7 +112,7 @@ Not applicable — this is a logic module, not a visual component.
 - **Null and empty input**: `summarizeByPlatform([])` returns `[]` — MUST (platform-summary-ordering, vacuously). `deploysForEndpoint(deploys, {})` (an `EndpointLike` with all three fields omitted, e.g. a health-only check with no deploy target wired) returns `[]` regardless of `deploys` — MUST (deploy-target-key-precondition). `latestTerminalForEndpoint([], ep)` and `failuresForEndpoint([], ep)` return `null` and `0` respectively for any `ep`, because `deploysForEndpoint` on an empty `deploys` array is itself `[]` — MUST (latest-terminal-selection, failure-count).
 - **Boundary values**: the fixed platform-order list has exactly four entries; a fifth or later distinct unknown platform value is placed after all four known ones, in first-encountered order among the unknowns themselves — MUST (platform-summary-ordering). An endpoint with exactly one of `platform`/`deployProject` set and the other omitted still produces a `null` key from `deployTargetKey` (both are required for a non-`null` key), so `deploysForEndpoint` still returns `[]` — MUST (deploy-target-key-precondition).
 - **Concurrent access**: this file holds no state beyond the read-only platform-order array, and every exported function is synchronous and pure — MUST NOT require any lock or ordering guarantee, because there is no shared mutable state for concurrent calls to race over (module-purity).
-- **Error states**: none of this file's own functions throw for any input shape its types allow. `deployTargetKey` and `platformCanon`, both re-exported from `@agentic-toolkit/deploy-platform/canon`, handle a missing platform or project by returning `null` or an empty string rather than throwing, and `deploysForEndpoint` checks that `null` explicitly before doing any filtering. This file has no dependency on a network, database, or file system of its own to fail. `DeploymentDTO.createdAt` is typed as a required, non-`null` `string` (an ISO timestamp per its origin in the provider fetchers, external to this file); `deploysForEndpoint`'s sort computes `+new Date(b.createdAt) - +new Date(a.createdAt))` without validating that string, so a malformed `createdAt` would produce `NaN` from `+new Date(...)` and an unordered pair in the sort — this is a fact of an unvalidated precondition the type contract already guarantees is met by every caller in this codebase, not a gap this file's purpose calls for it to re-validate.
+- **Error states**: none of this file's own functions throw for any input shape its types allow. `deployTargetKey` and `platformCanon`, both re-exported from `@adh-sdk/deploy-platform/canon`, handle a missing platform or project by returning `null` or an empty string rather than throwing, and `deploysForEndpoint` checks that `null` explicitly before doing any filtering. This file has no dependency on a network, database, or file system of its own to fail. `DeploymentDTO.createdAt` is typed as a required, non-`null` `string` (an ISO timestamp per its origin in the provider fetchers, external to this file); `deploysForEndpoint`'s sort computes `+new Date(b.createdAt) - +new Date(a.createdAt))` without validating that string, so a malformed `createdAt` would produce `NaN` from `+new Date(...)` and an unordered pair in the sort — this is a fact of an unvalidated precondition the type contract already guarantees is met by every caller in this codebase, not a gap this file's purpose calls for it to re-validate.
 - **Offline or disconnected state**: Not applicable — this file performs no network I/O, holds no connection, and reads no external service; every function is a synchronous transform of a `deploys` array and an `ep`/`endpoint` value its caller already has in hand. The deploy rows these functions operate on were fetched by other files (`fetch-vercel.ts`, `fetch-railway.ts`, `fetch-cloudflare.ts`, `fetch-crunchy.ts`, all external to this file), whose own connectivity failure modes are theirs to document, not this module's.
 
 ## Configuration
@@ -186,7 +186,7 @@ Not applicable: this file contains no logging call of any kind — no `console` 
 | [explicit-error-handling](agenticdevelopercookbook://compliance/best-practices#explicit-error-handling) | passed | Best Practices |
 | [fault-tolerance](agenticdevelopercookbook://compliance/reliability#fault-tolerance) | passed | Reliability |
 
-`unit-test-coverage` is `partial`: the re-exported `platformCanon` and `deployTargetKey` are exercised indirectly — `canon.test.ts` tests the identical underlying functions in `@agentic-toolkit/deploy-platform/canon` directly, and because this file re-exports them unchanged (canon-reexport), that coverage carries over — but `summarizeByPlatform`, `deploysForEndpoint`, `latestTerminalForEndpoint`, and `failuresForEndpoint` have no dedicated test anywhere in this package, and, per the Overview and Design Decisions above, no runtime importer either; nothing in this repository currently exercises those four functions' logic at all, in a test or in production. `separation-of-concerns` passes: the file performs no I/O, reads no configuration, and does exactly one thing — deploy-platform summarization and endpoint correlation — with the shared canonicalization delegated to the `canon` package rather than reimplemented here. `explicit-error-handling` passes: the one real failure case, an endpoint with no usable platform/project, is surfaced as an explicit `null` key from `deployTargetKey` and handled by an explicit `if (!key) return [];` guard rather than silently proceeding with a bogus correlation or throwing. `fault-tolerance` passes: every function accepts an empty `deploys` array, an `EndpointLike` with any or all of its three fields omitted, and any `DeployStatus` value its type allows (including `"unknown"`, per the open question above) without throwing.
+`unit-test-coverage` is `partial`: the re-exported `platformCanon` and `deployTargetKey` are exercised indirectly — `canon.test.ts` tests the identical underlying functions in `@adh-sdk/deploy-platform/canon` directly, and because this file re-exports them unchanged (canon-reexport), that coverage carries over — but `summarizeByPlatform`, `deploysForEndpoint`, `latestTerminalForEndpoint`, and `failuresForEndpoint` have no dedicated test anywhere in this package, and, per the Overview and Design Decisions above, no runtime importer either; nothing in this repository currently exercises those four functions' logic at all, in a test or in production. `separation-of-concerns` passes: the file performs no I/O, reads no configuration, and does exactly one thing — deploy-platform summarization and endpoint correlation — with the shared canonicalization delegated to the `canon` package rather than reimplemented here. `explicit-error-handling` passes: the one real failure case, an endpoint with no usable platform/project, is surfaced as an explicit `null` key from `deployTargetKey` and handled by an explicit `if (!key) return [];` guard rather than silently proceeding with a bogus correlation or throwing. `fault-tolerance` passes: every function accepts an empty `deploys` array, an `EndpointLike` with any or all of its three fields omitted, and any `DeployStatus` value its type allows (including `"unknown"`, per the open question above) without throwing.
 
 `unit-test-coverage`'s gap is the open question on `summarizeByPlatform`, `deploysForEndpoint`, `latestTerminalForEndpoint`, and `failuresForEndpoint` — see the corresponding Design Decision above.
 

@@ -1,7 +1,7 @@
 ---
 id: 74ba9dde-4963-42cb-aa03-bf1ee4dcc794
 title: Avatar Engine Runtime
-domain: agenticdevelopertoolkit://recipes/avatar-engine-runtime
+domain: adhsdk://recipes/avatar-engine-runtime
 type: ingredient
 version: 1.0.1
 status: review

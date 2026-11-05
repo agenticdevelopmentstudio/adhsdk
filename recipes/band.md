@@ -1,7 +1,7 @@
 ---
 id: e0b59d60-0a56-4bf4-85cb-fb0e58170f8e
 title: Band
-domain: agenticdevelopertoolkit://recipes/band
+domain: adhsdk://recipes/band
 type: ingredient
 version: 1.1.1
 status: review
@@ -22,10 +22,10 @@ tags:
 - landing
 - flow
 depends-on:
-- agenticdevelopertoolkit://recipes/wrap
+- adhsdk://recipes/wrap
 related:
-- agenticdevelopertoolkit://recipes/flow
-- agenticdevelopertoolkit://recipes/flow-hero
+- adhsdk://recipes/flow
+- adhsdk://recipes/flow-hero
 references: []
 approved-by: ''
 approved-date: ''

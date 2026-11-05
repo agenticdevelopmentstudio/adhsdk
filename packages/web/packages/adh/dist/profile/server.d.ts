@@ -27,8 +27,8 @@ import type { ProfilePrincipal } from './types';
  *
  * SERVER ONLY, by convention rather than by the `server-only` package, which this workspace does
  * not install (it is in no package.json here and in no lockfile, so the import would not
- * resolve; no toolkit server module uses it, including `@agentic-toolkit/auth/server`, this
- * file's closest precedent). Import it from `@agentic-toolkit/adh/profile-server`; it is
+ * resolve; no toolkit server module uses it, including `@adh-sdk/auth/server`, this
+ * file's closest precedent). Import it from `@adh-sdk/adh/profile-server`; it is
  * deliberately absent from the `./profile` barrel so a client component cannot reach it through
  * the normal import.
  *

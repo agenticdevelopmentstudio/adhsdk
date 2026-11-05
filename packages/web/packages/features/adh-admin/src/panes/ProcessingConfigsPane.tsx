@@ -10,12 +10,12 @@ import {
   useSetDefaultConfigSet,
   type ConfigSet,
 } from "../api/processing";
-import { Button } from "@agenticdevelopertoolkit/ui/components/button";
-import { Badge } from "@agenticdevelopertoolkit/ui/components/badge";
-import { errorMessage } from "@agenticdevelopertoolkit/ui/lib/errors";
-import { ErrorText } from "@agenticdevelopertoolkit/ui/components/error-text";
-import { UnsavedChangesGuard } from "@agenticdevelopertoolkit/ui/components/unsaved-changes-guard";
-import { FeatureTitle } from "@agentic-toolkit/resource";
+import { Button } from "@adh-sdk/ui/components/button";
+import { Badge } from "@adh-sdk/ui/components/badge";
+import { errorMessage } from "@adh-sdk/ui/lib/errors";
+import { ErrorText } from "@adh-sdk/ui/components/error-text";
+import { UnsavedChangesGuard } from "@adh-sdk/ui/components/unsaved-changes-guard";
+import { FeatureTitle } from "@adh-sdk/resource";
 import {
   EditableList,
   TypeToConfirmDialog,

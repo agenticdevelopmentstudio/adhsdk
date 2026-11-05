@@ -3,7 +3,7 @@
   "meta": {
     "id": "b02bf1ad-408a-4ebc-9e62-2ad5ae5220d2",
     "title": "Stepper View",
-    "domain": "adtoolkit://cookbook/ui/settings/rows/stepper-view",
+    "domain": "adhsdk://cookbook/ui/settings/rows/stepper-view",
     "type": "ingredient",
     "version": "1.3.1",
     "status": "review",
@@ -26,9 +26,9 @@
     ],
     "depends-on": [],
     "related": [
-      "adtoolkit://cookbook/ui/settings/rows/checkbox-view",
-      "adtoolkit://cookbook/ui/settings/rows/integer-field-view",
-      "adtoolkit://cookbook/ui/settings/rows/number-field-view"
+      "adhsdk://cookbook/ui/settings/rows/checkbox-view",
+      "adhsdk://cookbook/ui/settings/rows/integer-field-view",
+      "adhsdk://cookbook/ui/settings/rows/number-field-view"
     ],
     "references": [],
     "approved-by": "",

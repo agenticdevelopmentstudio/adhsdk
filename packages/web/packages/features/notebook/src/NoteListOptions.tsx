@@ -6,7 +6,7 @@ import {
   CategoryTagFilterItems,
   filteringGearLabel,
   isCategoryTagFiltering,
-} from "@agentic-toolkit/categories";
+} from "@adh-sdk/categories";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -17,8 +17,8 @@ import {
   DropdownMenuSub,
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
-} from "@agenticdevelopertoolkit/ui/components/dropdown-menu";
-import { GearMenuTrigger } from "@agenticdevelopertoolkit/ui/blocks";
+} from "@adh-sdk/ui/components/dropdown-menu";
+import { GearMenuTrigger } from "@adh-sdk/ui/blocks";
 
 import {
   PREVIEW_LINES_MAX,

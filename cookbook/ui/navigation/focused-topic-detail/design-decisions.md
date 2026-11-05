@@ -7,7 +7,7 @@
   **Rationale**: Matches the platform-wide pattern of renaming organizations/namespaces via the identifiers route rather than an entity's own update endpoint, so FK relationships never need to be rewritten on rename; because the endpoint already exists, this recipe's remaining work is frontend wiring.
   **Approved**: pending
 
-- **Decision**: Replace `window.confirm()` with a two-step delete built as one shared block, `DeleteEntitySection` (`@agentic-toolkit/adh-ui/blocks`), parameterized by `Entity`, `rdid`, and `childEntities`; the step-1 warning copy is templated ("{gerund} {a/an} {entity} deletes all the data associated with the {entity}, including {childEntities}. Do you wish to proceed?") with the article chosen by the entity noun's leading sound (**warning-copy-article-agreement**).
+- **Decision**: Replace `window.confirm()` with a two-step delete built as one shared block, `DeleteEntitySection` (`@adh-sdk/adh-ui/blocks`), parameterized by `Entity`, `rdid`, and `childEntities`; the step-1 warning copy is templated ("{gerund} {a/an} {entity} deletes all the data associated with the {entity}, including {childEntities}. Do you wish to proceed?") with the article chosen by the entity noun's leading sound (**warning-copy-article-agreement**).
   **Rationale**: One authoritative implementation is shared by every FTD route (DRY) instead of each route re-deriving its own confirm copy and article agreement.
   **Approved**: pending
 
@@ -55,7 +55,7 @@ keeps ignoring `identifier` (it is server-managed).
 **Hub file map:**
 - `src/components/settings/topics.ts` — the ecosystem topic list: `Ecosystem` first (no divider above it), `Buckets` in place of `Schemas`.
 - `src/components/settings/ecosystems/EcosystemDetail.tsx` — editable Identifier; Danger Zone.
-- `@agentic-toolkit/adh-ui/blocks` — the shared `DeleteEntitySection` block, parameterized by `Entity`, `rdid`, `childEntities`.
+- `@adh-sdk/adh-ui/blocks` — the shared `DeleteEntitySection` block, parameterized by `Entity`, `rdid`, `childEntities`.
 - `src/components/home/resource/ResourcePopup.tsx` — the New action (trailing divider + non-radio `New {Entity}…`).
 - `src/components/home/resource/ResourceLanding.tsx` — the All toolbar: filter, card/list toggle, list renderer.
 - `src/components/home/resource/ResourceTab.tsx` — last-selected + view-mode persistence and bare-path resolution.

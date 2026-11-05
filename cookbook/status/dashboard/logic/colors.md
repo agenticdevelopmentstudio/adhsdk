@@ -1,7 +1,7 @@
 ---
 id: 63f8a602-58f8-4fdc-9461-b959be427a4d
 title: "Status Web Colors"
-domain: adtoolkit://cookbook/status/dashboard/logic/colors
+domain: adhsdk://cookbook/status/dashboard/logic/colors
 type: ingredient
 version: 1.0.2
 status: review
@@ -18,7 +18,7 @@ platforms:
 tags: []
 depends-on: []
 related:
-  - adtoolkit://cookbook/status/dashboard/session-client
+  - adhsdk://cookbook/status/dashboard/session-client
 references: []
 approved-by: ""
 approved-date: ""
@@ -28,7 +28,7 @@ approved-date: ""
 
 ## Overview
 
-`colors.ts` is the status board's palette module. It exports constant lookup tables that map status vocabularies (service health, overall board status, deploy status, environment) to CSS color strings, a set of named UI roles (`PALETTE`, `COLORS`) and semi-transparent tints (`TINT`), plus two pure helpers: `envColor` and `envBadgeLabel`. Every theme-dependent value is a CSS `var(--color-apt-*)` reference or a `color-mix(in srgb, …)` expression over one; the actual color values are owned by `@agenticdevelopertoolkit/themes`, not by this module ("No hard-coded hex: a token's value is owned by @agenticdevelopertoolkit/themes, not copied here"). The module is re-exported from the package entry point (`export * from "./lib/colors"` in `src/index.ts`) and is consumed by the board's components (for example `UptimeBar`, `ChecksStrip`, `ActivityPanel`, `Dashboard`) and by `deployStatusColor` in `deploy-display.ts`.
+`colors.ts` is the status board's palette module. It exports constant lookup tables that map status vocabularies (service health, overall board status, deploy status, environment) to CSS color strings, a set of named UI roles (`PALETTE`, `COLORS`) and semi-transparent tints (`TINT`), plus two pure helpers: `envColor` and `envBadgeLabel`. Every theme-dependent value is a CSS `var(--color-apt-*)` reference or a `color-mix(in srgb, …)` expression over one; the actual color values are owned by `@adh-sdk/themes`, not by this module ("No hard-coded hex: a token's value is owned by @adh-sdk/themes, not copied here"). The module is re-exported from the package entry point (`export * from "./lib/colors"` in `src/index.ts`) and is consumed by the board's components (for example `UptimeBar`, `ChecksStrip`, `ActivityPanel`, `Dashboard`) and by `deployStatusColor` in `deploy-display.ts`.
 
 Use it whenever a status-board view needs a color for a status value, an environment tag, or a surface/text/tint role, so the board tracks the suite theme.
 
@@ -74,7 +74,7 @@ Use it whenever a status-board view needs a color for a status value, an environ
 ### Data shape, purity and side effects
 
 - **css-string-values**: Every exported color value MUST be a CSS color string (a `var()` reference, a `color-mix()` expression, or a named color) that is resolved by the browser at render time, never a precomputed hex or RGB value.
-- **theme-token-owner**: Token values MUST be supplied by the host page's stylesheet from `@agenticdevelopertoolkit/themes`; this module MUST NOT define or inject any CSS custom property.
+- **theme-token-owner**: Token values MUST be supplied by the host page's stylesheet from `@adh-sdk/themes`; this module MUST NOT define or inject any CSS custom property.
 - **no-side-effects**: Importing the module and calling `envColor` or `envBadgeLabel` MUST perform no I/O, DOM access, logging, network, or storage access.
 - **pure-helpers**: `envColor` and `envBadgeLabel` MUST be deterministic: the same input MUST always produce the same output.
 - **readonly-at-type-level**: `PALETTE`, `COLORS` and `TINT` MUST be declared `as const` (readonly literal types); none of the exported objects is frozen at runtime.
@@ -134,7 +134,7 @@ The package has no `colors.test.ts`; these vectors are derived directly from the
 - **Case variants**: `"PRODUCTION"` or `"Production"` MUST NOT match `production`; `envColor` returns the fallback and `envBadgeLabel` returns the upper-cased input (`"PRODUCTION"`).
 - **Inherited object keys**: env strings such as `"constructor"`, `"toString"` or `"__proto__"` resolve inherited members of the object literals and return non-string values; see env-object-prototype-keys.
 - **Missing status key**: a status string absent from a status table MUST yield `undefined`; the module raises no error and the caller supplies the fallback.
-- **Undefined theme token**: if the host page does not define a referenced `--color-apt-*` property, the browser treats the `var()` as invalid at computed-value time and the CSS property falls back to its inherited or initial value; this module neither detects nor reports that, and the token set is owned by `@agenticdevelopertoolkit/themes`.
+- **Undefined theme token**: if the host page does not define a referenced `--color-apt-*` property, the browser treats the `var()` as invalid at computed-value time and the CSS property falls back to its inherited or initial value; this module neither detects nor reports that, and the token set is owned by `@adh-sdk/themes`.
 - **Browsers without color-mix()**: `COLORS.textSoft`, the amber surfaces and every `TINT` value depend on CSS `color-mix()`; in an engine without it the declaration is invalid and is dropped by the browser. The module provides no fallback value.
 - **Runtime mutation**: the exported objects are not frozen, so a consumer that writes to one (possible for the `Record<string, string>` tables without a type error) changes the value for every other consumer in the page. No consumer in the package does this.
 - **Concurrent access**: not applicable; the module has no mutable state and runs on the single JavaScript thread.
@@ -146,7 +146,7 @@ The package has no `colors.test.ts`; these vectors are derived directly from the
 |--------|------|---------|-------------|
 | `env` (argument to `envColor`) | `string \| null \| undefined` | — | Environment name to color; nullish or unknown yields `ENV_FALLBACK_COLOR`. |
 | `env` (argument to `envBadgeLabel`) | `string` | — | Environment name to label; unknown names are upper-cased. |
-| `--color-apt-*` CSS custom properties | CSS color | Supplied by `@agenticdevelopertoolkit/themes` | Theme tokens every `var()` reference resolves against: `green`, `gold`, `gold-bright`, `red`, `blue`, `bg`, `surface`, `surface-2`, `border`, `text`, `text-muted`, `text-dim`, `cat-blue`, `cat-violet`, `cat-pink`. |
+| `--color-apt-*` CSS custom properties | CSS color | Supplied by `@adh-sdk/themes` | Theme tokens every `var()` reference resolves against: `green`, `gold`, `gold-bright`, `red`, `blue`, `bg`, `surface`, `surface-2`, `border`, `text`, `text-muted`, `text-dim`, `cat-blue`, `cat-violet`, `cat-pink`. |
 
 The module reads no environment variables, settings keys or injected dependencies.
 
@@ -201,7 +201,7 @@ Not applicable: the module contains no logging calls.
 ## Design Decisions
 
 **Decision**: Every color is a theme-token reference, never a hard-coded hex value.
-**Rationale**: The authoring comment states the board "tracks the same theme as the rest of the suite" and that shade changes against the old bespoke values are intentional; ownership of values stays with `@agenticdevelopertoolkit/themes`.
+**Rationale**: The authoring comment states the board "tracks the same theme as the rest of the suite" and that shade changes against the old bespoke values are intentional; ownership of values stays with `@adh-sdk/themes`.
 **Approved**: pending
 
 **Decision**: Alpha is applied with `color-mix(in srgb, <token> N%, transparent)` rather than `rgba()`.

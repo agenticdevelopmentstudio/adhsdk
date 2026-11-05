@@ -1,7 +1,7 @@
 ---
 id: 2d18fdbd-b2c5-46c0-8e6f-ceb7467fafa6
 title: Markdown Content
-domain: agenticdevelopertoolkit://recipes/markdown-content
+domain: adhsdk://recipes/markdown-content
 type: ingredient
 version: 1.1.1
 status: review
@@ -21,7 +21,7 @@ tags:
 - content-rendering
 depends-on: []
 related:
-- agenticdevelopertoolkit://recipes/markdown-renderer
+- adhsdk://recipes/markdown-renderer
 references:
 - https://unifiedjs.com
 - https://github.com/rehypejs/rehype-sanitize

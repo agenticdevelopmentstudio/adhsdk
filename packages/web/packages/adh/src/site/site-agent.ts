@@ -1,5 +1,5 @@
-import { siteIdentity } from '@agentic-toolkit/adh-registry/seo'
-import { landingLlmsTxt, landingMarkdown } from '@agenticdevelopertoolkit/landing'
+import { siteIdentity } from '@adh-sdk/adh-registry/seo'
+import { landingLlmsTxt, landingMarkdown } from '@adh-sdk/landing'
 import { siteSitemapRoutes, type SiteConfig } from './SiteConfig'
 
 // What a family site tells agents and answer engines, from the same config and landing data

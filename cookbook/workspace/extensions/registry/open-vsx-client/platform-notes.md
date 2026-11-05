@@ -1,6 +1,6 @@
 
 - **SwiftUI**: Source:
-  `packages/apple/AgenticToolkit/Core/Extensions/OpenVSXClient.swift`, its
+  `packages/apple/AgenticDeveloperHubSDK/Core/Extensions/OpenVSXClient.swift`, its
   return types in `Core/Extensions/OpenVSXCatalog.swift`, its shared bounded
   body reader in `Core/Networking/BoundedBodyLoader.swift`, its identity
   guard in `Core/Extensions/ExtensionIdentityComponent.swift`, and its
@@ -37,8 +37,8 @@
 - **AppKit / UIKit**: No divergence from the SwiftUI bullet above — the
   source is framework-agnostic `Foundation`/`URLSession` code, callable
   identically from an AppKit-hosted (macOS) or UIKit-hosted (iOS) caller.
-  `AgenticToolkitCore`, the framework target that builds this file, is
-  configured `platform: macOS` in `packages/apple/AgenticToolkit/project.yml`
+  `AgenticDeveloperHubSDKCore`, the framework target that builds this file, is
+  configured `platform: macOS` in `packages/apple/AgenticDeveloperHubSDK/project.yml`
   today, so an iOS caller would first need the type made available to an
   iOS target; `OpenVSXClient` itself needs no AppKit/UIKit-specific change
   to run there.

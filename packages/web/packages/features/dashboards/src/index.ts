@@ -1,4 +1,4 @@
-// @agentic-toolkit/dashboards — the Dashboards (Site Monitoring) feature.
+// @adh-sdk/dashboards — the Dashboards (Site Monitoring) feature.
 //
 // A single DashboardsFeature<basePath> orchestrates the Groups/Sites rail ▸ each
 // section's master/detail editor (group/site fields, plus a site's endpoints) over

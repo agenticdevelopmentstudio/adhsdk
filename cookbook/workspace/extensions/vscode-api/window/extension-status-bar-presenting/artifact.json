@@ -3,7 +3,7 @@
   "meta": {
     "id": "84292002-9039-4f8b-9bfb-69f9b4832e4f",
     "title": "Extension Status Bar Presenting",
-    "domain": "adtoolkit://cookbook/workspace/extensions/vscode-api/window/extension-status-bar-presenting",
+    "domain": "adhsdk://cookbook/workspace/extensions/vscode-api/window/extension-status-bar-presenting",
     "type": "ingredient",
     "version": "1.1.2",
     "status": "review",
@@ -27,11 +27,11 @@
     "depends-on": [],
     "related": [],
     "references": [
-      "packages/apple/AgenticToolkit/macOS/Features/Extensions/VSCodeAPI/ExtensionStatusBarPresenting.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/macOS/Features/Extensions/VSCodeAPI/MainThreadWindow.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/macOS/Features/Extensions/UI/WindowFooterStatusBarPresenter.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/Tests/AgenticToolkitMacOSTests/Extensions/MainThreadWindowStatusBarTests.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/project.yml (agenticdevelopertoolkit)"
+      "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/ExtensionStatusBarPresenting.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/MainThreadWindow.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/UI/WindowFooterStatusBarPresenter.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKMacOSTests/Extensions/MainThreadWindowStatusBarTests.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/project.yml (adhsdk)"
     ],
     "approved-by": "",
     "approved-date": ""

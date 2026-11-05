@@ -1,5 +1,5 @@
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/Core/Editing/EditDeferredValue.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Editing/EditDeferredValue.swift` |
 

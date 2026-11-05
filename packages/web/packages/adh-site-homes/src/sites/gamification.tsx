@@ -1,10 +1,10 @@
 "use client";
 
-import { defineSiteHome } from "@agentic-toolkit/adh/home";
-import { helpFor } from "@agentic-toolkit/adh/help/store";
-import { ToolkitQueryProvider } from "@agentic-toolkit/data/query";
-import { GamificationFeature } from "@agentic-toolkit/gamification";
-import { parseGamificationPath } from "@agentic-toolkit/gamification/parse";
+import { defineSiteHome } from "@adh-sdk/adh/home";
+import { helpFor } from "@adh-sdk/adh/help/store";
+import { ToolkitQueryProvider } from "@adh-sdk/data/query";
+import { GamificationFeature } from "@adh-sdk/gamification";
+import { parseGamificationPath } from "@adh-sdk/gamification/parse";
 
 /**
  * This site's workspace route — `/<workspace>` and everything below it.
@@ -30,7 +30,7 @@ export const gamificationHome = defineSiteHome({
   parse: parseGamificationPath,
   render: ({ scopedBase, workspaceSlug, view }) => (
     // The toolkit's OWN react-query runtime, mounted once by the SITE — the same arrangement
-    // @agentic-toolkit/ecosystems' site uses, and the reason the feature doesn't mount one for
+    // @adh-sdk/ecosystems' site uses, and the reason the feature doesn't mount one for
     // itself. A host-constructed QueryClientProvider cannot serve toolkit hooks: `link:` gives the
     // package its own physical copy of react-query, so the client has to come from the toolkit.
     <ToolkitQueryProvider>

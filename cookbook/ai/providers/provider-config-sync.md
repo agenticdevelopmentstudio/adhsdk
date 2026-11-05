@@ -1,7 +1,7 @@
 ---
 id: 1d7812e7-28cb-4874-897f-43aab62fe009
 title: "Provider Configuration Synchronization"
-domain: adtoolkit://cookbook/ai/providers/provider-config-sync
+domain: adhsdk://cookbook/ai/providers/provider-config-sync
 type: ingredient
 version: 1.2.0
 status: review
@@ -22,17 +22,17 @@ tags:
   - wire-contract
 depends-on: []
 related:
-  - adtoolkit://cookbook/ai/providers/provider-config-keys
+  - adhsdk://cookbook/ai/providers/provider-config-keys
 references:
-  - packages/apple/AgenticToolkit/AIPluginKit/AIProviderConfigSync.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Tests/AIPluginKitTests/AIProviderConfigSyncTests.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/AIPluginKit/AIProviderConfigKeys.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/AIPluginKit/AIProviderConfiguration.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/AIPluginKit/DaemonProviderResolver.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/AIPluginKit/DaemonAIChat.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Tests/AIPluginKitTests/DaemonAIChatTests.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/macOS/Features/AIPlugins/AIProviderConfigStore.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/project.yml (agenticdevelopertoolkit)
+  - packages/apple/AgenticDeveloperHubSDK/AIPluginKit/AIProviderConfigSync.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Tests/AIPluginKitTests/AIProviderConfigSyncTests.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/AIPluginKit/AIProviderConfigKeys.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/AIPluginKit/AIProviderConfiguration.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/AIPluginKit/DaemonProviderResolver.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/AIPluginKit/DaemonAIChat.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Tests/AIPluginKitTests/DaemonAIChatTests.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/Features/AIPlugins/AIProviderConfigStore.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/project.yml (adhsdk)
 approved-by: ""
 approved-date: ""
 ---
@@ -337,7 +337,7 @@ Not applicable: this component contains no logging call of any kind.
 ## Platform Notes
 
 - **SwiftUI**: not applicable to this file — `AIProviderConfigSync.swift` imports only `Foundation`, with no SwiftUI dependency; a SwiftUI-based settings screen would construct and encode this type unchanged before handing it to whatever transport eventually sends it to the daemon.
-- **AppKit / UIKit**: this is the source. The file is `packages/apple/AgenticToolkit/AIPluginKit/AIProviderConfigSync.swift`, part of the `AIPluginKit` framework target, which `project.yml` declares `platform: macOS` only (no iOS target exists for it today). It declares two `public` value types, `AIProviderConfigSync` (the sync envelope) and `ResolvedProviderConfig` (the resolved-configuration record), each conforming to `Codable`, `Sendable`, and `Equatable` via the compiler-synthesized conformances, with every stored property declared `var` rather than `let` and a `public` memberwise initializer taking every property as a required parameter. `selectedConfigId: UUID?` relies on the compiler-synthesized `Encodable` conformance's `encodeIfPresent` call to omit the JSON key when `nil`, matching `selected-config-id-omits-key-when-nil`. It is plain Foundation with no AppKit import; the app-side `AIProviderConfigStore.swift` (`macOS/Features/AIPlugins/`, `@MainActor`-isolated) is the natural source of the field values this type would carry, and the daemon-side `DaemonProviderResolver`/`DaemonAIChat` are the natural consumers of what it would deliver, though neither side currently constructs or decodes one (see `sync-application-unimplemented`).
+- **AppKit / UIKit**: this is the source. The file is `packages/apple/AgenticDeveloperHubSDK/AIPluginKit/AIProviderConfigSync.swift`, part of the `AIPluginKit` framework target, which `project.yml` declares `platform: macOS` only (no iOS target exists for it today). It declares two `public` value types, `AIProviderConfigSync` (the sync envelope) and `ResolvedProviderConfig` (the resolved-configuration record), each conforming to `Codable`, `Sendable`, and `Equatable` via the compiler-synthesized conformances, with every stored property declared `var` rather than `let` and a `public` memberwise initializer taking every property as a required parameter. `selectedConfigId: UUID?` relies on the compiler-synthesized `Encodable` conformance's `encodeIfPresent` call to omit the JSON key when `nil`, matching `selected-config-id-omits-key-when-nil`. It is plain Foundation with no AppKit import; the app-side `AIProviderConfigStore.swift` (`macOS/Features/AIPlugins/`, `@MainActor`-isolated) is the natural source of the field values this type would carry, and the daemon-side `DaemonProviderResolver`/`DaemonAIChat` are the natural consumers of what it would deliver, though neither side currently constructs or decodes one (see `sync-application-unimplemented`).
 - **Compose**: model `AIProviderConfigSync` and `ResolvedProviderConfig` as `@Serializable` Kotlin `data class`es (`kotlinx.serialization`) with `var` properties to match the source's mutability, and `UUID` as `java.util.UUID` serialized to its string form. Note the same cross-platform case-sensitivity issue documented on the sibling provider-configuration-keys recipe: `UUID.toString()` on the JVM is lowercase, while Foundation's `uuidString` is uppercase — an Android daemon and an Apple app sharing this payload over the same wire MUST agree on one case (or compare case-insensitively) for `id`/`selectedConfigId` to match correctly.
 - **React/Web**: model as a plain TypeScript interface — `interface AIProviderConfigSync { enabled: boolean; selectedConfigId?: string; configs: ResolvedProviderConfig[] }` — with `id`s as `string` (JavaScript has no native `UUID` type). Replicating `selected-config-id-omits-key-when-nil` needs care: `JSON.stringify` omits a key whose value is `undefined` but keeps one whose value is `null`, so the field must be typed/constructed as `selectedConfigId?: string` (and left `undefined`, never set to `null`) to match Swift's "omit the key entirely" behavior exactly.
 - **WinUI 3**: model as C# `record`s using `System.Text.Json` — e.g. `public sealed record AIProviderConfigSync(bool Enabled, Guid? SelectedConfigId, IReadOnlyList<ResolvedProviderConfig> Configs);` and `public sealed record ResolvedProviderConfig(Guid Id, string Name, string PluginIdentifier, string TemplateId, string Model, IReadOnlyDictionary<string, string> Values, IReadOnlyDictionary<string, string> Secrets);`. Apply `[JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]` (or an equivalent serializer option) to `SelectedConfigId` to reproduce `selected-config-id-omits-key-when-nil` — `System.Text.Json` writes `null` by default for a `null` nullable property, unlike Swift's key-omitting `encodeIfPresent`. Normalize `Guid.ToString()` (default `"D"` format, lowercase) to uppercase with `.ToUpperInvariant()` — or normalize consistently on read — so `id`/`selectedConfigId` values match byte-for-byte against Foundation's uppercase `uuidString` on the Apple side of the wire. `IReadOnlyDictionary<string, string>`/`Dictionary<string, string>` replace `[String: String]` for `Values`/`Secrets`; preserve `empty-secret-clears-credential` by treating a present key with an empty string the same as the Swift side does, not as equivalent to the key's absence.
@@ -346,7 +346,7 @@ Not applicable: this component contains no logging call of any kind.
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/AIPluginKit/AIProviderConfigSync.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/AIPluginKit/AIProviderConfigSync.swift` |
 
 ## Design Decisions
 

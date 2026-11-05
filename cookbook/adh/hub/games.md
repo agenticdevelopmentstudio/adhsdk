@@ -1,7 +1,7 @@
 ---
 id: 5d44b127-7701-4d3f-8d34-fe50084e52b7
 title: "Hub Domain: Games"
-domain: adtoolkit://cookbook/adh/hub/games
+domain: adhsdk://cookbook/adh/hub/games
 type: ingredient
 version: 1.0.3
 status: review
@@ -22,16 +22,16 @@ tags:
   - jsonb
   - web
 depends-on:
-  - adtoolkit://cookbook/data/services/auth/auth-client
+  - adhsdk://cookbook/data/services/auth/auth-client
 related:
-  - adtoolkit://cookbook/adh/hub/ecosystems/ecosystems
+  - adhsdk://cookbook/adh/hub/ecosystems/ecosystems
 references:
-  - packages/web/packages/data/src/games/games.ts (agenticdevelopertoolkit)
-  - packages/web/packages/data/src/games/index.ts (agenticdevelopertoolkit)
-  - packages/web/packages/data/src/games/__tests__/games.test.ts (agenticdevelopertoolkit)
-  - packages/web/packages/data/src/http.ts (agenticdevelopertoolkit)
-  - packages/web/packages/data/src/client-helpers.ts (agenticdevelopertoolkit)
-  - packages/web/packages/auth/src/client.ts (agenticdevelopertoolkit)
+  - packages/web/packages/data/src/games/games.ts (adhsdk)
+  - packages/web/packages/data/src/games/index.ts (adhsdk)
+  - packages/web/packages/data/src/games/__tests__/games.test.ts (adhsdk)
+  - packages/web/packages/data/src/http.ts (adhsdk)
+  - packages/web/packages/data/src/client-helpers.ts (adhsdk)
+  - packages/web/packages/auth/src/client.ts (adhsdk)
 approved-by: ""
 approved-date: ""
 ---
@@ -379,7 +379,7 @@ Not applicable — this is domain logic, not a visual component.
   `child-create-update-no-conflict-mapping` — it would surface as the raw
   backend message.
 - **Error states**: Every request this module makes can reject with
-  whatever `authedJson`/`authedRequest` (`@agentic-toolkit/auth`'s client)
+  whatever `authedJson`/`authedRequest` (`@adh-sdk/auth`'s client)
   throws — an `AuthHttpError` carrying an HTTP status and a backend-derived
   message for a non-2xx response, or a plain rejected `Promise` for a
   network-level failure that never reached the server. `gamesApi.create`/
@@ -459,7 +459,7 @@ telemetry event.
 - **Storage**: This module holds no cache of its own; every call is a live
   round trip through `authedJson`/`authedRequest`.
 - **Transmission**: Every request travels through the injected
-  `@agentic-toolkit/auth` Bearer-token client (`authedJson`/
+  `@adh-sdk/auth` Bearer-token client (`authedJson`/
   `authedRequest`, re-exported via `./http`); this module itself attaches
   no credentials and reads no cookies (see `auth-client`).
 - **Retention**: Not applicable — this module retains nothing between

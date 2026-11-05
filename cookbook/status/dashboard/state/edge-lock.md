@@ -1,7 +1,7 @@
 ---
 id: 9f84dd73-abbf-4ad5-be6e-f3fb04f941c3
 title: "Edge Lock"
-domain: adtoolkit://cookbook/status/dashboard/state/edge-lock
+domain: adhsdk://cookbook/status/dashboard/state/edge-lock
 type: ingredient
 version: 1.1.1
 status: review
@@ -18,7 +18,7 @@ platforms:
 tags: []
 depends-on: []
 related:
-  - adtoolkit://cookbook/status/dashboard/state/activity-history
+  - adhsdk://cookbook/status/dashboard/state/activity-history
 references: []
 approved-by: ""
 approved-date: ""

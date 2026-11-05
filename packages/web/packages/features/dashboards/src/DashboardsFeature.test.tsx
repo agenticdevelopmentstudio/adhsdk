@@ -3,7 +3,7 @@
 // Component test for DashboardsFeature — the Dashboards (Site Monitoring) feature built on the
 // shared StackGroupDetail / master-detail substrate. This package's vitest config is jsdom (see
 // vitest.config.ts) and drives React with @testing-library/react. Only the data domain boundary
-// (@agentic-toolkit/data/monitored-sites) plus next/navigation's router are mocked, so the
+// (@adh-sdk/data/monitored-sites) plus next/navigation's router are mocked, so the
 // section → row → editor wiring is exercised, not the transport.
 //
 // DashboardsFeature PUBLISHES its rail levels into a rail HOST (via StackGroupDetail /
@@ -21,8 +21,8 @@ import {
   RailHostContext,
   type RailHostRegistry,
   type RegisteredLevels,
-} from "@agentic-toolkit/resource";
-import type { TopicLevel } from "@agenticdevelopertoolkit/ui/blocks";
+} from "@adh-sdk/resource";
+import type { TopicLevel } from "@adh-sdk/ui/blocks";
 
 // DashboardsFeature uses next/navigation's useRouter internally (via useBasePathRoute); a stub is
 // enough (selection is prop-driven, not click-driven, in these assertions).
@@ -31,7 +31,7 @@ vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: routerPush, replace: vi.fn(), prefetch: vi.fn() }),
 }));
 
-vi.mock("@agentic-toolkit/data/monitored-sites", () => ({
+vi.mock("@adh-sdk/data/monitored-sites", () => ({
   listGroups: vi.fn(),
   listSites: vi.fn(),
   createGroup: vi.fn(),
@@ -55,7 +55,7 @@ import {
   createSite,
   type SiteGroupView,
   type SiteView,
-} from "@agentic-toolkit/data/monitored-sites";
+} from "@adh-sdk/data/monitored-sites";
 
 const listGroupsMock = vi.mocked(listGroups);
 const listSitesMock = vi.mocked(listSites);

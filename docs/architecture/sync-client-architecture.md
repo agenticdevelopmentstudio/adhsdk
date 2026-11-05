@@ -36,13 +36,13 @@ not grant. Everything below is a mechanism in service of that.
 
 | Target | Holds |
 |---|---|
-| **`AgenticToolkitSync`** | The platform-neutral core: `SyncEngine` (the actor), the wire types (`SyncWire.swift`, mirroring adh's `wire.ts`), the `SyncStore` / `SyncTransport` / `SyncTriggerSource` protocols (`SyncProtocols.swift`), the observability events (`SyncEvents.swift`), the three trigger sources (`Triggers/*`), `ADHSyncCatalog`, and the test doubles (`Testing/InMemorySyncStore`, `Testing/ScriptedSyncTransport`). |
-| **`AgenticToolkitSyncGRDB`** | `GRDBSyncStore` — the on-disk `SyncStore` on a `BoundedDatabase` WAL pool: JSON-payload per-resource mirror tables, an outbox, and a conflicts audit. |
+| **`AgenticDeveloperHubSDKSync`** | The platform-neutral core: `SyncEngine` (the actor), the wire types (`SyncWire.swift`, mirroring adh's `wire.ts`), the `SyncStore` / `SyncTransport` / `SyncTriggerSource` protocols (`SyncProtocols.swift`), the observability events (`SyncEvents.swift`), the three trigger sources (`Triggers/*`), `ADHSyncCatalog`, and the test doubles (`Testing/InMemorySyncStore`, `Testing/ScriptedSyncTransport`). |
+| **`AgenticDeveloperHubSDKSyncGRDB`** | `GRDBSyncStore` — the on-disk `SyncStore` on a `BoundedDatabase` WAL pool: JSON-payload per-resource mirror tables, an outbox, and a conflicts audit. |
 
-Source lives under `packages/apple/AgenticToolkit/Sync/*` and
-`packages/apple/AgenticToolkit/SyncGRDB/*`; conformance is the two XCTest
-bundles (`Tests/AgenticToolkitSyncTests/*`,
-`Tests/AgenticToolkitSyncGRDBTests/*`).
+Source lives under `packages/apple/AgenticDeveloperHubSDK/Sync/*` and
+`packages/apple/AgenticDeveloperHubSDK/SyncGRDB/*`; conformance is the two XCTest
+bundles (`Tests/AgenticDeveloperHubSDKSyncTests/*`,
+`Tests/AgenticDeveloperHubSDKSyncGRDBTests/*`).
 
 ## Seams
 
@@ -129,7 +129,7 @@ public enum SyncTransportError: Error, Sendable, Equatable {
 ```
 
 **Who implements it:** the concrete wire client is **`ADHSyncAPI`** in the
-sibling `agenticdevelopertoolkit` repo
+sibling `adhsdk` repo
 (`packages/apple/AgenticDeveloperHubClient/Sources/Sync/ADHSyncAPI.swift`). It deliberately
 decodes nothing — it owns only URLs, bearer auth, and HTTP status → `Failure`
 mapping (`unauthorized` for 401, `resyncRequired` for 410, `http(code)`

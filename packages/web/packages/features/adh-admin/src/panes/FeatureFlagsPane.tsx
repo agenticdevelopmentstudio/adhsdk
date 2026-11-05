@@ -24,25 +24,25 @@ import {
   flagFormBlockedReason,
   isFlagFormDirty,
   FLAG_KEY_REQUIRED_MESSAGE,
-} from "@agentic-toolkit/adh/settings-dialogs";
-import { useAction } from "@agenticdevelopertoolkit/ui/hooks/useAction";
-import { Badge } from "@agenticdevelopertoolkit/ui/components/badge";
-import { Input } from "@agenticdevelopertoolkit/ui/components/input";
-import { Button } from "@agenticdevelopertoolkit/ui/components/button";
-import { Checkbox } from "@agenticdevelopertoolkit/ui/components/checkbox";
-import { Label } from "@agenticdevelopertoolkit/ui/components/label";
+} from "@adh-sdk/adh/settings-dialogs";
+import { useAction } from "@adh-sdk/ui/hooks/useAction";
+import { Badge } from "@adh-sdk/ui/components/badge";
+import { Input } from "@adh-sdk/ui/components/input";
+import { Button } from "@adh-sdk/ui/components/button";
+import { Checkbox } from "@adh-sdk/ui/components/checkbox";
+import { Label } from "@adh-sdk/ui/components/label";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogDescription,
-} from "@agenticdevelopertoolkit/ui/components/dialog";
-import { DialogActions } from "@agenticdevelopertoolkit/ui/components/dialog-actions";
-import { UnsavedChangesGuard } from "@agenticdevelopertoolkit/ui/components/unsaved-changes-guard";
-import { Field } from "@agenticdevelopertoolkit/ui/blocks/field";
-import { ProgressModal } from "@agenticdevelopertoolkit/ui/blocks";
-import { FeatureTitle } from "@agentic-toolkit/resource";
+} from "@adh-sdk/ui/components/dialog";
+import { DialogActions } from "@adh-sdk/ui/components/dialog-actions";
+import { UnsavedChangesGuard } from "@adh-sdk/ui/components/unsaved-changes-guard";
+import { Field } from "@adh-sdk/ui/blocks/field";
+import { ProgressModal } from "@adh-sdk/ui/blocks";
+import { FeatureTitle } from "@adh-sdk/resource";
 import {
   EditableList,
   TypeToConfirmDialog,

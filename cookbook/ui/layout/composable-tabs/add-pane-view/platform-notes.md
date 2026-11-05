@@ -30,7 +30,7 @@
   time, from `choices.length === 0`, mirroring the source's fixed-at-load
   enablement rather than a reactive binding.
 - **AppKit / UIKit** (source platform): Implemented in
-  `packages/apple/AgenticToolkit/macOS/UI/ViewControllers/ComposableTabs/ComposableTabsAddPaneViewController.swift`
+  `packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/ComposableTabs/ComposableTabsAddPaneViewController.swift`
   as a `@MainActor`, `final` `NSViewController` with no nib/XIB —
   `loadView()` builds an `NSGridView` of two `NSPopUpButton`s and their
   `ThemedLabel` captions, plus an `NSStackView` of Cancel/OK `NSButton`s,

@@ -4,21 +4,21 @@ import { useCallback, useMemo } from "react";
 import type { ReactElement } from "react";
 import { Building2, KeyRound, Server, Settings, UsersRound } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import { ResourceExplorer, type ResourceTopic } from "@agentic-toolkit/resource";
-import { notifyWorkspacesChanged, useResourceItemPrefetch } from "@agentic-toolkit/data";
+import { ResourceExplorer, type ResourceTopic } from "@adh-sdk/resource";
+import { notifyWorkspacesChanged, useResourceItemPrefetch } from "@adh-sdk/data";
 import {
   organizationsApi,
   ORGANIZATIONS_QUERY_KEY,
   type Organization,
   type OrganizationListRow,
-} from "@agentic-toolkit/data/organizations";
+} from "@adh-sdk/data/organizations";
 import {
   EcosystemConfigGate,
   ServerBagsPane,
   StorageTokensPanel,
-} from "@agentic-toolkit/ecosystem-config";
-import { TeamsFeature } from "@agentic-toolkit/teams";
-import { parseTeamsPath } from "@agentic-toolkit/teams/parse";
+} from "@adh-sdk/ecosystem-config";
+import { TeamsFeature } from "@adh-sdk/teams";
+import { parseTeamsPath } from "@adh-sdk/teams/parse";
 import {
   OrgSettingsGroup,
   ORG_RECORD_CACHE_KEY,
@@ -42,7 +42,7 @@ export interface OrganizationsFeatureProps extends OrganizationsPathSelection {
   /**
    * The host's help-store lookup, keyed by ROUTE — the keys are spelled at the topic that reads
    * one. Threaded rather than imported because the sentences live in adh's vocabulary tier, which
-   * a portable package may not reach (see `@agentic-toolkit/adh/help/store`).
+   * a portable package may not reach (see `@adh-sdk/adh/help/store`).
    */
   helpFor?: (key: string) => string | undefined;
 }
@@ -71,7 +71,7 @@ export interface OrganizationsFeatureProps extends OrganizationsPathSelection {
  *
  * They are the org's OWN knobs and nothing else. Auth, Feature flags and Sign-in apps are
  * configured per PRODUCT — they say how one product's customers sign in and what it has switched
- * on — so they live on the product rail (`@agentic-toolkit/adh-products`), not here; an org that
+ * on — so they live on the product rail (`@adh-sdk/adh-products`), not here; an org that
  * showed them would be claiming to own settings that belong to each product under it.
  *
  * Billing left for a different reason, and NOT because some other rail configures it: it is

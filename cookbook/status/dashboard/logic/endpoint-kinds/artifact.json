@@ -3,7 +3,7 @@
   "meta": {
     "id": "f1167221-f233-4b5d-822c-ae26de4634db",
     "title": "Endpoint Kinds",
-    "domain": "adtoolkit://cookbook/status/dashboard/logic/endpoint-kinds",
+    "domain": "adhsdk://cookbook/status/dashboard/logic/endpoint-kinds",
     "type": "ingredient",
     "version": "1.0.2",
     "status": "review",
@@ -21,8 +21,8 @@
     "tags": [],
     "depends-on": [],
     "related": [
-      "adtoolkit://cookbook/status/dashboard/api",
-      "adtoolkit://cookbook/status/dashboard/state/config-status"
+      "adhsdk://cookbook/status/dashboard/api",
+      "adhsdk://cookbook/status/dashboard/state/config-status"
     ],
     "references": [],
     "approved-by": "",

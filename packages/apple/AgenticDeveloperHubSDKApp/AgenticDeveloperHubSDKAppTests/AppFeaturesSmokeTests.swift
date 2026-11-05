@@ -1,0 +1,20 @@
+import XCTest
+@testable import AgenticDeveloperHubSDKApp
+
+final class AppFeaturesSmokeTests: XCTestCase {
+
+    @MainActor
+    func testFeaturesInstantiate() {
+        let features = Features()
+        XCTAssertNotNil(features.appearanceManager)
+        XCTAssertNotNil(features.permissionWalkthrough)
+        XCTAssertNotNil(features.terminalCoordinator)
+        XCTAssertNotNil(features.aiPluginsCoordinator)
+        XCTAssertNotNil(features.aiChatCoordinator)
+        XCTAssertNotNil(features.chatConfigProvider)
+        XCTAssertNotNil(features.windowContextsCoordinator)
+        XCTAssertNotNil(features.commandRegistry)
+        XCTAssertNotNil(features.settingsCoordinator)
+        XCTAssertNotNil(features.menuManager)
+    }
+}

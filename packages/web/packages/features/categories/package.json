@@ -1,5 +1,5 @@
 {
-  "name": "@agentic-toolkit/categories",
+  "name": "@adh-sdk/categories",
   "version": "0.1.0",
   "description": "The shared category rail: the level-builder hook every markdown surface's hierarchical category browser is built from, and the category/tag filter items every markdown list's gear offers.",
   "license": "UNLICENSED",
@@ -37,9 +37,9 @@
     "check:directives": "python3 ../tools/check-directives.py"
   },
   "dependencies": {
-    "@agentic-toolkit/data": "workspace:*",
+    "@adh-sdk/data": "workspace:*",
     "lucide-react": "^1.16.0",
-    "@agenticdevelopertoolkit/ui": "workspace:*"
+    "@adh-sdk/ui": "workspace:*"
   },
   "peerDependencies": {
     "next": ">=15",

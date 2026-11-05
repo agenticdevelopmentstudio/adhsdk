@@ -1,8 +1,8 @@
-// @agentic-toolkit/data — unified headless data model.
+// @adh-sdk/data — unified headless data model.
 //
 // The `.` entry surfaces the cross-cutting substrate (authed HTTP, tenant,
 // FTD persistence, the resource-list cache). Feature domains ship on subpaths
-// (e.g. `@agentic-toolkit/data/projects`).
+// (e.g. `@adh-sdk/data/projects`).
 
 // Authed HTTP transport + the status-error helpers the resource views read: the
 // raw `httpStatus` extractor, the 404/403/409/503 predicates, the friendly

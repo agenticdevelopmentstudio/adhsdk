@@ -1,7 +1,7 @@
 ---
 id: 402E0AB0-6488-403B-BC43-FBC9145A9A27
 title: "Settings Snapshot Push"
-domain: adtoolkit://cookbook/foundation/settings-snapshot-push
+domain: adhsdk://cookbook/foundation/settings-snapshot-push
 type: ingredient
 version: 1.0.1
 status: review
@@ -23,8 +23,8 @@ tags:
   - retry
 depends-on: []
 related:
-  - adtoolkit://cookbook/foundation/settings-storage
-  - adtoolkit://cookbook/foundation/raw-setting
+  - adhsdk://cookbook/foundation/settings-storage
+  - adhsdk://cookbook/foundation/raw-setting
 references: []
 approved-by: ""
 approved-date: ""
@@ -141,7 +141,7 @@ Not applicable: The push engine contains no analytics call.
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/Core/SettingStorage/SettingsSnapshotPush.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/SettingStorage/SettingsSnapshotPush.swift` |
 
 ## Design Decisions
 
@@ -164,7 +164,7 @@ Not applicable: The push engine contains no analytics call.
 | [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
 | [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
 
-`separation-of-concerns` passes because the engine owns observe, snapshot, supersede, bounded retry and reconnect, while the snapshot contents, encoding and transport are supplied by the caller. `unit-test-coverage` passes because `SettingsSnapshotPushTests` in `AgenticToolkitCoreTests/SettingsStore/RawSettingTests.swift` covers pushing on start and on every reconnect, bounded retry, ignoring reconnects while stopped, and sorted-key encoding; the supersession and snapshot-failure paths have no dedicated assertion.
+`separation-of-concerns` passes because the engine owns observe, snapshot, supersede, bounded retry and reconnect, while the snapshot contents, encoding and transport are supplied by the caller. `unit-test-coverage` passes because `SettingsSnapshotPushTests` in `AgenticDeveloperHubSDKCoreTests/SettingsStore/RawSettingTests.swift` covers pushing on start and on every reconnect, bounded retry, ignoring reconnects while stopped, and sorted-key encoding; the supersession and snapshot-failure paths have no dedicated assertion.
 
 ## Change History
 

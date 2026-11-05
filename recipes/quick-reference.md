@@ -1,7 +1,7 @@
 ---
 id: 40a6b717-cbdb-4d49-9f98-b318668b396c
 title: Syntax Quick Reference
-domain: agenticdevelopertoolkit://recipes/quick-reference
+domain: adhsdk://recipes/quick-reference
 type: ingredient
 version: 1.1.1
 status: review
@@ -22,7 +22,7 @@ tags:
 - cheatsheet
 - reference
 depends-on:
-- agenticdevelopertoolkit://recipes/popover
+- adhsdk://recipes/popover
 related: []
 references: []
 approved-by: ''
@@ -40,13 +40,13 @@ A toolbar control that opens a dismissible popover listing a language syntax che
 - **trigger-button-style**: The trigger MUST render as a subdued (non-primary) button at a small size, so it reads as a toolbar utility rather than a call to action. (Web: `variant="outline" size="sm"` — see React/Web platform note.)
 - **trigger-book-icon**: The trigger MUST display a book icon positioned at the inline start of any visible label. (Web: lucide-react `BookText` — see React/Web platform note.)
 - **trigger-accessible-name**: The trigger MUST have an `aria-label` set to the `ariaLabel` prop, and `ariaLabel` MUST be a non-empty string describing the cheatsheet's purpose (e.g., "Markdown quick reference"). When `triggerLabel` is also provided, `ariaLabel` MUST contain the visible `triggerLabel` text (WCAG 2.5.3 Label in Name), since the component does not derive one from the other — see #edge-cases and quick-ref-002.
-- **trigger-disclosure-state**: The trigger MUST expose `aria-expanded` reflecting whether the popover is open, and MUST expose `aria-haspopup` identifying it as a popup trigger (both inherited from the Popover primitive's Base UI `Trigger`; see agenticdevelopertoolkit://recipes/popover#accessibility/aria-expanded). On web, `aria-expanded="true"` additionally switches the trigger's own background/foreground color (the outline variant's `aria-expanded:` styling).
+- **trigger-disclosure-state**: The trigger MUST expose `aria-expanded` reflecting whether the popover is open, and MUST expose `aria-haspopup` identifying it as a popup trigger (both inherited from the Popover primitive's Base UI `Trigger`; see adhsdk://recipes/popover#accessibility/aria-expanded). On web, `aria-expanded="true"` additionally switches the trigger's own background/foreground color (the outline variant's `aria-expanded:` styling).
 - **popover-opens-on-click**: The component MUST open the popover when the trigger button is clicked, or activated via keyboard (the trigger is a native `button`, so Enter/Space also activate it).
 - **popover-title-display**: The popover MUST display the provided title using field-caption typography styling. (Web: `fieldCaptionClass` — see React/Web platform note.)
 - **entries-definition-list**: The component MUST render syntax entries as a definition list (`dl`) in a two-column layout with label (`dt`) and code (`dd`) pairs, the label column narrower than the code column.
 - **entry-label-style**: Entry labels (`dt`) MUST render at a small font size and in a muted foreground color, distinguishing them from the code values below them.
 - **entry-code-style**: Code values (`dd`) MUST render in a monospace font, smaller than the label text, with whitespace preserved (line breaks and indentation in the source syntax are not collapsed) and normal (non-loose) line spacing.
-- **escape-dismissal**: The popover MUST close when the Escape key is pressed (inherited from Popover primitive; see agenticdevelopertoolkit://recipes/popover#accessibility/escape-closes).
+- **escape-dismissal**: The popover MUST close when the Escape key is pressed (inherited from Popover primitive; see adhsdk://recipes/popover#accessibility/escape-closes).
 - **outside-click-dismissal**: The popover MUST close when the user clicks outside the popover bounds (inherited from Popover primitive).
 - **focus-restoration**: The component MUST restore focus to the trigger button after the popover is dismissed (inherited from Popover primitive).
 - **optional-trigger-label**: The component MUST accept an optional `triggerLabel` prop to display visible text on the trigger button.
@@ -85,10 +85,10 @@ A toolbar control that opens a dismissible popover listing a language syntax che
 - **Button role**: The trigger is a native `button` element with semantic button role.
 - **Accessible name**: See #requirements (trigger-accessible-name). The trigger's `aria-label` MUST be non-empty and, when `triggerLabel` is present, MUST contain its text (WCAG 2.5.3 Label in Name).
 - **Disclosure state**: See #requirements (trigger-disclosure-state). `aria-expanded` and `aria-haspopup` are set on the trigger by the Popover primitive, not by this component's own code.
-- **Popover accessible name**: The popover panel itself sets no `aria-labelledby` linking it to the title text (the `<p>` element). Popover's own spec only recommends, but does not require, this association (`label-association`; see agenticdevelopertoolkit://recipes/popover#accessibility/label-association), and this component does not add it. Screen readers get the panel's content without an explicit accessible name tied to the title.
+- **Popover accessible name**: The popover panel itself sets no `aria-labelledby` linking it to the title text (the `<p>` element). Popover's own spec only recommends, but does not require, this association (`label-association`; see adhsdk://recipes/popover#accessibility/label-association), and this component does not add it. Screen readers get the panel's content without an explicit accessible name tied to the title.
 - **Definition list structure**: Entries are marked up as `dl`, `dt`, and `dd` elements, providing semantic structure for assistive technology.
-- **Focus management**: The popover is non-modal and does not contain focus while open; restoring focus to the trigger on dismiss is handled by the Popover primitive (see agenticdevelopertoolkit://recipes/popover#accessibility/return-focus-on-close), not reimplemented here.
-- **Keyboard interaction**: Escape dismisses the popover (inherited from Popover; see agenticdevelopertoolkit://recipes/popover#accessibility/escape-closes). Tab and Shift+Tab navigate within the popover while it is open.
+- **Focus management**: The popover is non-modal and does not contain focus while open; restoring focus to the trigger on dismiss is handled by the Popover primitive (see adhsdk://recipes/popover#accessibility/return-focus-on-close), not reimplemented here.
+- **Keyboard interaction**: Escape dismisses the popover (inherited from Popover; see adhsdk://recipes/popover#accessibility/escape-closes). Tab and Shift+Tab navigate within the popover while it is open.
 - **Minimum touch target**: On web, the trigger MUST meet at least 24×24 CSS px (WCAG 2.5.8 Target Size Minimum) — the `sm` button size renders at 28px tall (`h-7`), which satisfies this. Native ports (iOS/Android) MUST meet the platform minimum (44×44pt / 48×48dp respectively).
 
 ## Conformance Test Vectors

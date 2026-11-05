@@ -1,9 +1,9 @@
 "use client";
 
 import type { ReactElement } from "react";
-import { EmptyState } from "@agenticdevelopertoolkit/ui/components/empty-state";
-import { useWorkspaceDefaultEcosystemId } from "@agentic-toolkit/data/ecosystems";
-import { WorkspaceNotManageable, WorkspaceResolutionError } from "@agentic-toolkit/resource";
+import { EmptyState } from "@adh-sdk/ui/components/empty-state";
+import { useWorkspaceDefaultEcosystemId } from "@adh-sdk/data/ecosystems";
+import { WorkspaceNotManageable, WorkspaceResolutionError } from "@adh-sdk/resource";
 
 /**
  * Resolves the workspace's own ecosystem and hands it to `children`, the scope every persona-memory

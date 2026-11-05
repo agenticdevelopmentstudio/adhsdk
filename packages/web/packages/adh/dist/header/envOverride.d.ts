@@ -1,4 +1,4 @@
-import { type SiteEnv } from '@agentic-toolkit/adh-registry';
+import { type SiteEnv } from '@adh-sdk/adh-registry';
 /**
  * Parse a raw stored value into a valid {@link SiteEnv}, or `null` when it's
  * absent or not a known env. Pure — the single validation point shared by the

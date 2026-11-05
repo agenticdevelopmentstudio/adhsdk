@@ -1,23 +1,23 @@
 "use client";
 
 import { Award, Cpu, Boxes, Sparkles, Settings, TrendingUp, Waypoints, Zap } from "lucide-react";
-import { reportUnexpectedAuthError } from "@agentic-toolkit/auth";
-import { isForbidden, useResourceItemQuery } from "@agentic-toolkit/data";
-import { gamificationApi, type RealmConfig } from "@agentic-toolkit/data/gamification";
-import { StackGroupDetail, type GroupTopicItem, type TopicLeaf } from "@agentic-toolkit/resource";
+import { reportUnexpectedAuthError } from "@adh-sdk/auth";
+import { isForbidden, useResourceItemQuery } from "@adh-sdk/data";
+import { gamificationApi, type RealmConfig } from "@adh-sdk/data/gamification";
+import { StackGroupDetail, type GroupTopicItem, type TopicLeaf } from "@adh-sdk/resource";
 import {
   CatalogTopicPane,
   EventTypesTopicPane,
   GamificationSettingsTopicPane,
   LevelsTopicPane,
-} from "@agentic-toolkit/gamification";
+} from "@adh-sdk/gamification";
 import {
   GameConnectionsPane,
   GameContentPane,
   GameEffectsPane,
   GameEnginePane,
   REALM_CONFIG_CACHE_KEY,
-} from "@agentic-toolkit/games";
+} from "@adh-sdk/games";
 import { GamingSettingsPane } from "./GamingSettingsPane";
 
 /**
@@ -25,7 +25,7 @@ import { GamingSettingsPane } from "./GamingSettingsPane";
  * `RealmSettingsPane`'s own `loadRealmConfig` does — a 403 here means "you can't administer
  * this product's gamification", not an incident.
  *
- * `REALM_CONFIG_CACHE_KEY` (imported above) is `@agentic-toolkit/games`'s canonical, exported
+ * `REALM_CONFIG_CACHE_KEY` (imported above) is `@adh-sdk/games`'s canonical, exported
  * constant for this row's cache key — the SAME key `RealmSettingsPane` and `useGameForEcosystem`
  * read/write, so a mode the backend moved when a feature was added or removed is reflected
  * here — and in which members even SHOW — as soon as that entry is refreshed. The LOADER function itself has no such shared export: `useGameForEcosystem.ts`
@@ -63,7 +63,7 @@ function subLeafOrUndefined(
 
 /**
  * The products site's Gaming and Gamification groups (design doc §4) — HOST-OWNED
- * `StackGroupDetail`s, not `@agentic-toolkit/ecosystems`'s hardcoded `GROUP_IDS`. They have to be
+ * `StackGroupDetail`s, not `@adh-sdk/ecosystems`'s hardcoded `GROUP_IDS`. They have to be
  * host-owned because the Gaming member list depends on DATA (the realm's `mode`), and the
  * toolkit's own group machinery is static by design (§4.2) — teaching it to read gamification
  * config would put gaming-specific knowledge in a package that has none today.

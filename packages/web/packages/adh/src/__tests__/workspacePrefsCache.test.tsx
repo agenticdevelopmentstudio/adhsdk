@@ -10,7 +10,7 @@ configure({ asyncUtilTimeout: 5000 });
 /**
  * What the shared cache BUYS the workspace route, asserted against the REAL hooks.
  *
- * siteHomeShell.test.tsx — the 58-case file next door — stubs the whole `@agentic-toolkit/data`
+ * siteHomeShell.test.tsx — the 58-case file next door — stubs the whole `@adh-sdk/data`
  * boundary, `useResourceItemQuery` included, so that each of its cases starts from a state it
  * declares rather than one it inherits from whichever case ran before it. That is the right trade
  * for a file about WHICH workspace resolves and WHEN children mount, and it is precisely why the
@@ -59,8 +59,8 @@ const writeCached = vi.fn();
 // which is exactly the property under test — and exactly the property `../data/vitest-setup.ts`
 // (wired into this package's vitest.config.ts) clears between tests so one case cannot seed the
 // next.
-vi.mock("@agentic-toolkit/data", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("@agentic-toolkit/data")>();
+vi.mock("@adh-sdk/data", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@adh-sdk/data")>();
   return {
     ...actual,
     workspacesApi: { list: () => list() },

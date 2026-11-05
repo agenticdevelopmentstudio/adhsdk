@@ -3,7 +3,7 @@
   "meta": {
     "id": "96bc198e-c726-476a-bc4a-ddc1d5c0c2f8",
     "title": "Delete Entity Section",
-    "domain": "adtoolkit://cookbook/adh/hub/admin/delete-entity-section",
+    "domain": "adhsdk://cookbook/adh/hub/admin/delete-entity-section",
     "type": "recipe",
     "version": "1.4.2",
     "status": "review",
@@ -26,14 +26,14 @@
       "settings"
     ],
     "ingredients": [
-      "agenticdevelopertoolkit://recipes/disclosure",
-      "agenticdevelopertoolkit://recipes/button",
-      "agenticdevelopertoolkit://recipes/dialog"
+      "adhsdk://recipes/disclosure",
+      "adhsdk://recipes/button",
+      "adhsdk://recipes/dialog"
     ],
     "depends-on": [],
     "related": [
-      "agenticdevelopertoolkit://recipes/field-group",
-      "adtoolkit://cookbook/ui/navigation/focused-topic-detail"
+      "adhsdk://recipes/field-group",
+      "adhsdk://cookbook/ui/navigation/focused-topic-detail"
     ],
     "references": [],
     "approved-by": "",

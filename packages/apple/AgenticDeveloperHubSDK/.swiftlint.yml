@@ -1,0 +1,22 @@
+disabled_rules:
+  - cyclomatic_complexity
+  - file_length
+  - function_body_length
+  - function_parameter_count
+  - large_tuple
+  - nesting
+  - type_body_length
+
+excluded:
+  # Moved verbatim from Olylo's OlyloCore, which was never linted; kept
+  # byte-for-byte rather than restyled as part of the move.
+  - Activity
+  - Tests/AgenticDeveloperHubSDKActivityTests
+  - .build
+  - .swiftpm
+  - DerivedData
+  - graphify-out
+  # The persona sources, which were a project of their own until Phase 5
+  # folded them in here. That project was never linted; they moved
+  # byte-for-byte rather than being restyled as part of the move.
+  - SDK

@@ -3,7 +3,7 @@
   "meta": {
     "id": "5141968f-3922-47f2-a31f-ba953b92a048",
     "title": "VS Code Commands Bridge",
-    "domain": "adtoolkit://cookbook/workspace/extensions/vscode-api/commands/main-thread-commands",
+    "domain": "adhsdk://cookbook/workspace/extensions/vscode-api/commands/main-thread-commands",
     "type": "ingredient",
     "version": "1.1.1",
     "status": "review",
@@ -26,15 +26,15 @@
     ],
     "depends-on": [],
     "related": [
-      "adtoolkit://cookbook/workspace/extensions/host/extension-event"
+      "adhsdk://cookbook/workspace/extensions/host/extension-event"
     ],
     "references": [
-      "packages/apple/AgenticToolkit/macOS/Features/Extensions/VSCodeAPI/MainThreadCommands.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/macOS/UI/AppShell/AppCommand.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/macOS/Features/Extensions/VSCodeAPI/VSCodeAPI.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/Core/Loggable.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/Tests/AgenticToolkitMacOSTests/Extensions/MainThreadCommandsTests.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/project.yml (agenticdevelopertoolkit)"
+      "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/MainThreadCommands.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/macOS/UI/AppShell/AppCommand.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/VSCodeAPI.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/Core/Loggable.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKMacOSTests/Extensions/MainThreadCommandsTests.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/project.yml (adhsdk)"
     ],
     "approved-by": "",
     "approved-date": ""

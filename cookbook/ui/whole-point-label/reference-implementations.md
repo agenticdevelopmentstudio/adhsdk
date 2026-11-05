@@ -1,5 +1,5 @@
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/CoreUI/WholePointLabel.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/CoreUI/WholePointLabel.swift` |
 

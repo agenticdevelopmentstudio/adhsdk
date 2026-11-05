@@ -1,7 +1,7 @@
 ---
 id: 8f2e4a12-7c3b-4d9f-a1e2-6b5f9c1d3e4a
 title: "Toast"
-domain: agenticdevelopertoolkit://recipes/toast
+domain: adhsdk://recipes/toast
 type: ingredient
 version: 1.1.2
 status: review
@@ -20,7 +20,7 @@ tags:
   - toast
 depends-on: []
 related:
-  - agenticdevelopertoolkit://recipes/button
+  - adhsdk://recipes/button
   - agenticdevelopercookbook://guidelines/implementing/ui/iconography
   - agenticdevelopercookbook://guidelines/implementing/ui/theming-with-tokens
 references: []

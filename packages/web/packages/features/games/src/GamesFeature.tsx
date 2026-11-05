@@ -1,8 +1,8 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { EcosystemsFeature, type RenderTopicPaneCtx } from "@agentic-toolkit/ecosystems";
-import type { EcosystemsPathSelection } from "@agentic-toolkit/ecosystems/parse";
+import { EcosystemsFeature, type RenderTopicPaneCtx } from "@adh-sdk/ecosystems";
+import type { EcosystemsPathSelection } from "@adh-sdk/ecosystems/parse";
 
 import { GameEnginePane } from "./GameEnginePane";
 import { GameContentPane } from "./GameContentPane";
@@ -15,7 +15,7 @@ import { GAME_TOPICS } from "./topics";
  * The Games feature: the workspace's products as the root list, and each product's game
  * split across five topics (Engine, Content, Connections, Effects, Settings).
  *
- * It is @agentic-toolkit/ecosystems in `listFirst` mode with a different topic set — NOT a
+ * It is @adh-sdk/ecosystems in `listFirst` mode with a different topic set — NOT a
  * second navigator, and NOT a games-owned rdid grammar any more (§1 of the
  * product-gaming-modes design: a game has no address of its own — it is reached through its
  * product's ecosystem id, one game per product, via `gamesApi.forEcosystem`). The list, its

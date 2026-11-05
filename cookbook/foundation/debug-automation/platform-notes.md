@@ -1,6 +1,6 @@
 
 - **SwiftUI**: The source is
-  `packages/apple/AgenticToolkit/CoreMacOS/DebugAutomation/{DebugLaunchSwitch,NSApplication+QuietActivation,NSWindow+TestHostVisibility,QuietWindowPresentation}.swift`.
+  `packages/apple/AgenticDeveloperHubSDK/CoreMacOS/DebugAutomation/{DebugLaunchSwitch,NSApplication+QuietActivation,NSWindow+TestHostVisibility,QuietWindowPresentation}.swift`.
   Nothing here is SwiftUI-specific: `DebugLaunchSwitch` depends only on
   `Foundation`'s `UserDefaults`, and the other three files operate on plain
   `AppKit` `NSApplication`/`NSWindow` instances beneath any SwiftUI

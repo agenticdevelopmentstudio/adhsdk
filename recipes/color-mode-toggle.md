@@ -1,7 +1,7 @@
 ---
 id: 7b54db6e-755d-4665-a091-d34cfcaac146
 title: Color Mode Toggle
-domain: agenticdevelopertoolkit://recipes/color-mode-toggle
+domain: adhsdk://recipes/color-mode-toggle
 type: ingredient
 version: 1.3.1
 status: review
@@ -22,7 +22,7 @@ tags:
 - toggle
 depends-on: []
 related:
-- agenticdevelopertoolkit://recipes/appearance-mode-toggle
+- adhsdk://recipes/appearance-mode-toggle
 references: []
 approved-by: ''
 approved-date: ''
@@ -36,7 +36,7 @@ The Color Mode Toggle is a button component that allows users to cycle between t
 
 The component visually indicates the current mode with three icon states (Sun for light, Moon for dark, RefreshCw refresh icon for auto). When the mode is "auto", the component queries the system's `prefers-color-scheme` to determine and display the currently active effective mode.
 
-Not to be confused with `agenticdevelopertoolkit://recipes/appearance-mode-toggle`, a separate ingredient with the same three-state cycling shape that binds a different, legacy document contract (`data-appearance-mode` plus an `awt:appearance-cycle` event) for one demo site. See Design Decisions for why the two stay separate.
+Not to be confused with `adhsdk://recipes/appearance-mode-toggle`, a separate ingredient with the same three-state cycling shape that binds a different, legacy document contract (`data-appearance-mode` plus an `awt:appearance-cycle` event) for one demo site. See Design Decisions for why the two stay separate.
 
 ## Behavioral Requirements
 
@@ -202,7 +202,7 @@ Not applicable. The component does not emit any log messages.
 **Rationale**: The check probes for the modern API rather than assuming it, for the same reason the host's own appearance store does. Supporting the legacy `addListener` path would mean carrying and testing a second, deprecated subscription mechanism for a browser version past its support window; the component instead degrades gracefully to a static `mode`-only render, keeping the subscription logic to one code path.
 **Approved**: pending
 
-**Decision**: `ColorModeToggle` and the separate `agenticdevelopertoolkit://recipes/appearance-mode-toggle` ingredient are not merged, despite both being a three-state (auto/dark/light) cycling icon button.
+**Decision**: `ColorModeToggle` and the separate `adhsdk://recipes/appearance-mode-toggle` ingredient are not merged, despite both being a three-state (auto/dark/light) cycling icon button.
 **Rationale**: They bind to two different, incompatible document contracts. This component's CSS reads `data-color-mode`/`.dark` on `<html>`, driven by a controlled `mode` prop and the family's own appearance store. `AppearanceModeToggle` reads `data-appearance-mode` and dispatches an `awt:appearance-cycle` custom event for a separate, legacy appearance system still used by one demo site. Merging them would change that site's live document contract, not just its markup, so they stay separate until that site migrates.
 **Approved**: pending
 

@@ -3,7 +3,7 @@
 // The client barrel. Every component here is a Client Component by construction —
 // preserve-directives puts this file's directive on the whole chunk. There is no
 // games-owned URL grammar any more (§1 of the product-gaming-modes design): the host site
-// parses with `@agentic-toolkit/ecosystems/parse`'s `parseEcosystemsPath` directly, so this
+// parses with `@adh-sdk/ecosystems/parse`'s `parseEcosystemsPath` directly, so this
 // package has no `./parse` subpath to keep separate from this bundle.
 
 export { GameEnginePane } from "./GameEnginePane";

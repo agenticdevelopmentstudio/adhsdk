@@ -1,4 +1,4 @@
-import { parseBackendTimestamp } from '@agenticdevelopertoolkit/ui/lib/timestamps';
+import { parseBackendTimestamp } from '@adh-sdk/ui/lib/timestamps';
 
 import type { RepoState } from './types';
 

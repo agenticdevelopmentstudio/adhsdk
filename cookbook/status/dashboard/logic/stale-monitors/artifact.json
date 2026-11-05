@@ -3,7 +3,7 @@
   "meta": {
     "id": "9d2d3132-0853-4e3a-8e81-503356e4585d",
     "title": "Stale Monitors",
-    "domain": "adtoolkit://cookbook/status/dashboard/logic/stale-monitors",
+    "domain": "adhsdk://cookbook/status/dashboard/logic/stale-monitors",
     "type": "ingredient",
     "version": "1.0.3",
     "status": "review",
@@ -20,10 +20,10 @@
     ],
     "tags": [],
     "depends-on": [
-      "adtoolkit://cookbook/status/dashboard/logic/live-types"
+      "adhsdk://cookbook/status/dashboard/logic/live-types"
     ],
     "related": [
-      "adtoolkit://cookbook/status/dashboard/logic/board-staleness"
+      "adhsdk://cookbook/status/dashboard/logic/board-staleness"
     ],
     "references": [],
     "approved-by": "",

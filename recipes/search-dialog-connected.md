@@ -1,7 +1,7 @@
 ---
 id: e626a6fc-0d60-4ba5-a42a-d1849d7e1506
 title: Search Dialog Connected
-domain: agenticdevelopertoolkit://recipes/search-dialog-connected
+domain: adhsdk://recipes/search-dialog-connected
 type: ingredient
 version: 1.1.1
 status: review
@@ -21,7 +21,7 @@ tags:
 - dialog
 - connected-component
 depends-on:
-- agenticdevelopertoolkit://recipes/search-dialog
+- adhsdk://recipes/search-dialog
 related: []
 references: []
 approved-by: ''
@@ -105,7 +105,7 @@ Not applicable: The source code contains no logging or debug output.
 
 ## Platform Notes
 
-- **React/Web**: SearchDialogConnected is defined in `packages/web/packages/controls/src/search-dialog/SearchDialogConnected.tsx`. It is a client component ('use client'). It uses four hooks from @agenticdevelopertoolkit/model: useContent (for searchIndex), useSiteConfig (for nav.sections), useCurrentRoute (for navigate), and useSearchState (for search state derivation). The sectionLabels are computed once via useMemo to avoid recalculation on every render.
+- **React/Web**: SearchDialogConnected is defined in `packages/web/packages/controls/src/search-dialog/SearchDialogConnected.tsx`. It is a client component ('use client'). It uses four hooks from @adh-sdk/model: useContent (for searchIndex), useSiteConfig (for nav.sections), useCurrentRoute (for navigate), and useSearchState (for search state derivation). The sectionLabels are computed once via useMemo to avoid recalculation on every render.
 - **SwiftUI**: A thin container view that reads the search index, site navigation, and router via `@Environment` injection (not local `@State`, which would make the container own that data), derives search state and section labels, and passes them to a presentational `SearchDialog` view — mirroring the web split of `SearchDialogConnected` around `SearchDialog`. It performs no search algorithm or list construction of its own; selection calls the environment's navigation function, then dismisses the presented dialog.
 - **Compose**: A stateful composable that reads `searchIndex` from a ViewModel or repository and `nav.sections` from a `SiteConfigRepository` via dependency injection, derives search state and the section-label map with `remember` / `derivedStateOf`, and composes a presentational `SearchDialog` composable with those values plus a select callback. It binds no list or search field itself; selection calls `NavController.navigate(entry.slug)`, then dismisses via the same state that shows the dialog.
 - **AppKit / UIKit**: A thin controller — an `NSWindowController` on macOS, a `UIViewController` on iOS — that reads the search index, navigation, and router from injected services, derives search state and section labels, and hands them to a presentational search surface: an `NSSearchField`-backed panel on macOS, or a `.searchable`/`UISearchController`-backed view on iOS. It performs no list binding or search-controller delegate work of its own; selection navigates via the injected router, then dismisses the presentational dialog.

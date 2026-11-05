@@ -3,7 +3,7 @@
   "meta": {
     "id": "52650804-a096-4b71-b4eb-da3afa95ac56",
     "title": "MCP Plumbing",
-    "domain": "adtoolkit://cookbook/ai/mcp/mcp-plumbing",
+    "domain": "adhsdk://cookbook/ai/mcp/mcp-plumbing",
     "type": "ingredient",
     "version": "1.2.1",
     "status": "review",
@@ -27,7 +27,7 @@
     ],
     "depends-on": [],
     "related": [
-      "adtoolkit://cookbook/ai/chat/chat-window/mcp-chips-bar-view"
+      "adhsdk://cookbook/ai/chat/chat-window/mcp-chips-bar-view"
     ],
     "references": [],
     "approved-by": "",

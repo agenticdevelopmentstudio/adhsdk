@@ -35,7 +35,7 @@
   with no locale argument, matching this type's `locale: nil`.
 - **AppKit/UIKit**: identical to the SwiftUI note — none of the six files
   imports `AppKit` or `UIKit`, so an AppKit- or UIKit-hosted app consumes
-  the same `AgenticToolkitCore` types unchanged. One platform-specific
+  the same `AgenticDeveloperHubSDKCore` types unchanged. One platform-specific
   nuance carries forward regardless of UI framework: `KeychainHelper`'s
   `kSecUseDataProtectionKeychain` flag (set only when `accessGroup` is
   non-nil) is required for access-group Keychain sharing on macOS

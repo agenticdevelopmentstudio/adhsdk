@@ -8,7 +8,7 @@ import {
   type PaneExitGuard,
   type TopicDetailItem,
   type TopicLevel,
-} from '@agenticdevelopertoolkit/ui/blocks'
+} from '@adh-sdk/ui/blocks'
 import { CRUD_TABLES } from './generated/table-metadata'
 import { CrudDataView } from './CrudDataView'
 import { readableTables } from './exposure'

@@ -9,10 +9,10 @@
 // (404 → no customer rows beyond what assignments already show), a workspace with no
 // ecosystem lists no teams — partial results beat an all-or-nothing failure.
 
-import { authedJson } from "@agentic-toolkit/auth/client";
-import { api as personasApi } from "@agentic-toolkit/data/personas";
-import { teamsApi } from "@agentic-toolkit/data/teams";
-import { ecosystemsApi } from "@agentic-toolkit/data/ecosystems";
+import { authedJson } from "@adh-sdk/auth/client";
+import { api as personasApi } from "@adh-sdk/data/personas";
+import { teamsApi } from "@adh-sdk/data/teams";
+import { ecosystemsApi } from "@adh-sdk/data/ecosystems";
 import type { AccessSubject } from "./ItemAccessPanel";
 
 export async function workspaceSubjectsDirectory(

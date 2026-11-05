@@ -81,14 +81,14 @@ async function getAdhTheme() {
 // src/themes/AdhThemeStyle.tsx
 import dynamic from "next/dynamic";
 import { preload } from "react-dom";
-import { themes as themes2 } from "@agenticdevelopertoolkit/themes/manifest";
-import { splitImports, parseRootProps } from "@agenticdevelopertoolkit/themes/tokens";
-import { APPEARANCE_PREPAINT_SCRIPT } from "@agenticdevelopertoolkit/themes/appearance";
-import { DocumentLoadScript } from "@agenticdevelopertoolkit/themes/DocumentLoadScript";
-import { THEME_FONT_PRELOADS } from "@agenticdevelopertoolkit/themes/fonts";
+import { themes as themes2 } from "@adh-sdk/themes/manifest";
+import { splitImports, parseRootProps } from "@adh-sdk/themes/tokens";
+import { APPEARANCE_PREPAINT_SCRIPT } from "@adh-sdk/themes/appearance";
+import { DocumentLoadScript } from "@adh-sdk/themes/DocumentLoadScript";
+import { THEME_FONT_PRELOADS } from "@adh-sdk/themes/fonts";
 
 // src/themes/theme-keys.ts
-import { themes } from "@agenticdevelopertoolkit/themes/manifest";
+import { themes } from "@adh-sdk/themes/manifest";
 var adhThemeKeys = () => Object.keys(themes).filter(
   (k) => k.startsWith("adh") && !isBaseCutAlias(k)
 );
@@ -108,11 +108,11 @@ function themePrePaintScript() {
 }
 
 // src/themes/AdhThemeStyle.tsx
-import { isDevDeploymentEnv } from "@agentic-toolkit/adh-registry/deployment-env";
+import { isDevDeploymentEnv } from "@adh-sdk/adh-registry/deployment-env";
 import { Fragment, jsx, jsxs } from "react/jsx-runtime";
 var switcherEnv = () => isDevDeploymentEnv(process.env.DEPLOYMENT_ENV);
 var DbThemeApplier = process.env.NEXT_PUBLIC_DEPLOYMENT_ENV === "local" || process.env.NEXT_PUBLIC_DEPLOYMENT_ENV === "testing" || process.env.NEXT_PUBLIC_DEPLOYMENT_ENV === "staging" ? dynamic(
-  () => import("@agentic-toolkit/adh/themes/DbThemeApplier").then((m) => m.DbThemeApplier)
+  () => import("@adh-sdk/adh/themes/DbThemeApplier").then((m) => m.DbThemeApplier)
 ) : null;
 function ThemeSwitcherAssets({ defaultImports }) {
   if (!switcherEnv()) return null;

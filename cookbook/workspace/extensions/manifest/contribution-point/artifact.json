@@ -3,7 +3,7 @@
   "meta": {
     "id": "088ed758-8c79-443d-999f-425c69df4d4d",
     "title": "Contribution Point",
-    "domain": "adtoolkit://cookbook/workspace/extensions/manifest/contribution-point",
+    "domain": "adhsdk://cookbook/workspace/extensions/manifest/contribution-point",
     "type": "ingredient",
     "version": "1.1.2",
     "status": "review",

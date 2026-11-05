@@ -126,10 +126,10 @@ describe("assertHoistableDeps", () => {
     mockSpawnSync.mockReturnValue({
       status: 1,
       signal: null,
-      stdout: "undeclared: @agentic-toolkit/integrations",
+      stdout: "undeclared: @adh-sdk/integrations",
       stderr: "",
       pid: 0,
-      output: [null, "undeclared: @agentic-toolkit/integrations", ""],
+      output: [null, "undeclared: @adh-sdk/integrations", ""],
     } as ReturnType<typeof spawnSync>);
 
     // Throwing at all is the assertion: a gate that had not found the script would have
@@ -152,7 +152,7 @@ describe("assertHoistableDeps", () => {
   it("stops at a .git boundary rather than answering from the enclosing repo", () => {
     const script = join(root, "websites", "tools", "vercel-isolate-deps.py");
     mkdirSync(join(root, "websites", "tools"), { recursive: true });
-    const inner = join(root, "websites", "external", "agentictoolkit");
+    const inner = join(root, "websites", "external", "adhsdk");
     const innerSite = join(inner, "websites", "site");
     mkdirSync(innerSite, { recursive: true });
     // A submodule's `.git` is a FILE, not a directory — `existsSync` answers for both, which

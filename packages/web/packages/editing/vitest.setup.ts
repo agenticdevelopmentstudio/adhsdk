@@ -1,11 +1,11 @@
 // Package-local addition to the root setupFiles (packages/web/vitest.setup.ts
 // already provides jest-dom + the ResizeObserver/localStorage/matchMedia shims).
 //
-// The default host's alert is @agenticdevelopertoolkit/ui's AlertModal, built on the
+// The default host's alert is @adh-sdk/ui's AlertModal, built on the
 // @base-ui/react Dialog, which runs a floating-point scroll/size check that needs
 // window.getComputedStyle to return sane values. jsdom's stub returns empty
 // strings; prime the properties Dialog queries so it can mount. Same patch as
-// @agenticdevelopertoolkit/ui's own setup, for the same components.
+// @adh-sdk/ui's own setup, for the same components.
 if (typeof window !== 'undefined') {
   const orig = window.getComputedStyle.bind(window)
   window.getComputedStyle = (el: Element, pseudo?: string | null) => {

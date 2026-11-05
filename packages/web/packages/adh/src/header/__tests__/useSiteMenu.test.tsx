@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs'
 import { dirname, resolve as resolvePath } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { Users, Hexagon, Handshake } from 'lucide-react'
-import { DEV_DEPLOYMENT_ENVS } from '@agentic-toolkit/adh-registry/deployment-env'
+import { DEV_DEPLOYMENT_ENVS } from '@adh-sdk/adh-registry/deployment-env'
 
 // useSiteMenu resolves the declarative config into PopoverEntry rows: icons from the
 // menu-icons single source of truth, hrefs per DEPLOYMENT_ENV, the SSO wrap, the
@@ -25,7 +25,7 @@ vi.mock('next/navigation', () => ({
 
 import { useSiteMenu } from '../useSiteMenu'
 import { FLEET_MENU_GROUPS } from '../fleetMenuGroups'
-import { type MenuGroup, type PopoverEntry, type PopoverItem } from '@agentic-toolkit/adh/header'
+import { type MenuGroup, type PopoverEntry, type PopoverItem } from '@adh-sdk/adh/header'
 
 /** A row anywhere in the resolved tree — top level or inside a flyout. */
 const row = (entries: PopoverEntry[], key: string): PopoverItem | undefined =>

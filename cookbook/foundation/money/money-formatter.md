@@ -1,7 +1,7 @@
 ---
 id: F1868607-3458-427A-B784-B05BE97C7E8F
 title: "Money Formatter"
-domain: adtoolkit://cookbook/foundation/money/money-formatter
+domain: adhsdk://cookbook/foundation/money/money-formatter
 type: ingredient
 version: 1.0.0
 status: review
@@ -22,8 +22,8 @@ tags:
   - parsing
 depends-on: []
 related:
-  - adtoolkit://cookbook/foundation/money
-  - adtoolkit://cookbook/foundation/money/money-totals
+  - adhsdk://cookbook/foundation/money
+  - adhsdk://cookbook/foundation/money/money-totals
 references: []
 approved-by: ""
 approved-date: ""
@@ -143,7 +143,7 @@ Not applicable: The formatter calls no logging API.
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/Core/Money/MoneyFormatter.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Money/MoneyFormatter.swift` |
 
 ## Design Decisions
 
@@ -167,7 +167,7 @@ Not applicable: The formatter calls no logging API.
 | [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
 | [explicit-error-handling](agenticdevelopercookbook://compliance/best-practices#explicit-error-handling) | passed | Best Practices |
 
-`separation-of-concerns` passes because the type only converts between integer hundredths and text; arithmetic is in the money type and per-currency totals in the totals spec. `unit-test-coverage` passes because `AgenticToolkitCoreTests/MoneyTests.swift` covers display, the editable form, parsing of pasted text, half-up rounding, the locale cases, ambiguity refusal, malformed amounts, the Unicode minus and overflow; the macOS field view tests additionally exercise it.
+`separation-of-concerns` passes because the type only converts between integer hundredths and text; arithmetic is in the money type and per-currency totals in the totals spec. `unit-test-coverage` passes because `AgenticDeveloperHubSDKCoreTests/MoneyTests.swift` covers display, the editable form, parsing of pasted text, half-up rounding, the locale cases, ambiguity refusal, malformed amounts, the Unicode minus and overflow; the macOS field view tests additionally exercise it.
 
 ## Change History
 

@@ -1,16 +1,16 @@
 "use client";
 
 import { RefreshCw } from "lucide-react";
-import { Button } from "@agenticdevelopertoolkit/ui/components/button";
-import { Badge } from "@agenticdevelopertoolkit/ui/components/badge";
-import { ErrorText } from "@agenticdevelopertoolkit/ui/components/error-text";
+import { Button } from "@adh-sdk/ui/components/button";
+import { Badge } from "@adh-sdk/ui/components/badge";
+import { ErrorText } from "@adh-sdk/ui/components/error-text";
 import {
   Card,
   CardHeader,
   CardTitle,
   CardDescription,
   CardContent,
-} from "@agenticdevelopertoolkit/ui/components/card";
+} from "@adh-sdk/ui/components/card";
 import { useSyncStatus, useRunSync } from "../api/llm-providers";
 import { formatRelativeTime, finiteCount } from "./sync-format";
 

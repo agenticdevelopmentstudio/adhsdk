@@ -1,6 +1,6 @@
 // The Billing group's URL grammar — the ONE authoritative parse of a billing route's path
 // segments into the group's selection, so the three hosts that mount BillingGroup cannot drift
-// apart. Mirrors @agentic-toolkit/adh-ecosystem-panes/parse.
+// apart. Mirrors @adh-sdk/adh-ecosystem-panes/parse.
 //
 // Directive-free, and its own tsup entry (the `./parse` subpath) for the reason the preset
 // describes: the barrel's dist hoists 'use client' over everything in it, so a parser re-exported

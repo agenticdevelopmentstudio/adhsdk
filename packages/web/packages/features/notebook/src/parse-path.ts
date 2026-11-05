@@ -12,10 +12,10 @@
 // same fact — `slugify` (see `ui/src/lib/slug.ts`) trims non-alphanumerics from both ends, so
 // a slug built from a real category NAME can never start with `-`, which reserves the whole
 // `-*` space for these tokens. The canonical writeup — including WHY the separator exists
-// rather than a UUID sniff or a reserved word — now lives in `@agentic-toolkit/categories`'
+// rather than a UUID sniff or a reserved word — now lives in `@adh-sdk/categories`'
 // `category-scope.ts`, the shared home of these values for every markdown surface's rail
 // (research's `parse-path.ts` needs the identical grammar). This package depends on
-// `@agentic-toolkit/categories` (it builds its category levels from the shared
+// `@adh-sdk/categories` (it builds its category levels from the shared
 // `useCategoryLevels` hook), so these are real re-exports rather than mirrors: the values do
 // not change, only where they come from.
 //
@@ -27,7 +27,7 @@
 // Re-exported (not re-declared) so nothing downstream that imports these from this module has
 // to change; `NOTE_SEPARATOR` is `CHAIN_SEPARATOR` under its old local name.
 //
-// FROM `@agentic-toolkit/categories/chain`, NOT the categories barrel. This module is built as
+// FROM `@adh-sdk/categories/chain`, NOT the categories barrel. This module is built as
 // its own directive-free chunk (the `./parse` subpath) so a server component can CALL the
 // parser — but the categories barrel is a whole-file `"use client"` module and the toolkit
 // packages are `external` in this build, so a barrel import survives verbatim into the
@@ -36,10 +36,10 @@
 // with no note open — silently, invisibly to `tsc` and vitest alike. No RSC calls this parser
 // today; it is written this way so that the first one to try does not rediscover the bug
 // research already shipped. See `categories/src/chain.ts`.
-export { CHAIN_SEPARATOR as NOTE_SEPARATOR, UNCATEGORIZED_SLUG, ALL_CATEGORIES_ID } from "@agentic-toolkit/categories/chain";
+export { CHAIN_SEPARATOR as NOTE_SEPARATOR, UNCATEGORIZED_SLUG, ALL_CATEGORIES_ID } from "@adh-sdk/categories/chain";
 // A separate import (a re-export alone creates no local binding) so the functions below can
 // still read the separator by its established local name.
-import { CHAIN_SEPARATOR as NOTE_SEPARATOR } from "@agentic-toolkit/categories/chain";
+import { CHAIN_SEPARATOR as NOTE_SEPARATOR } from "@adh-sdk/categories/chain";
 
 /** The selection NotebookFeature renders, parsed from a route's path segments.
  *  Maps 1:1 onto NotebookFeature's props (the host supplies `basePath`). */

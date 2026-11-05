@@ -1,5 +1,5 @@
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/macOS/UI/ViewControllers/TopicListViewController.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/TopicListViewController.swift` |
 

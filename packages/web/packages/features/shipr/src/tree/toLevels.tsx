@@ -3,13 +3,13 @@
 import * as React from 'react';
 import { Folder, GitBranch, TriangleAlert } from 'lucide-react';
 
-import { Checkbox } from '@agenticdevelopertoolkit/ui/components/checkbox';
-import { Spinner } from '@agenticdevelopertoolkit/ui/components/spinner';
-import { StatusDot } from '@agenticdevelopertoolkit/ui/components/status-dot';
+import { Checkbox } from '@adh-sdk/ui/components/checkbox';
+import { Spinner } from '@adh-sdk/ui/components/spinner';
+import { StatusDot } from '@adh-sdk/ui/components/status-dot';
 import type {
   TopicDetailItem,
   TopicLevel,
-} from '@agenticdevelopertoolkit/ui/blocks';
+} from '@adh-sdk/ui/blocks';
 
 import { isChecked, type Selection } from '../selection';
 import type { DevRepo, Group, RepoItem } from '../types';

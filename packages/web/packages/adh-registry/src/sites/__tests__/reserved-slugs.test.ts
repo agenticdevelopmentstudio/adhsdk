@@ -18,7 +18,7 @@ import { siteIdForDir, type SiteId } from '../registry'
 // The marker is the sites' pnpm workspace manifest, identified by the `-websites` SUFFIX of
 // its name — adh's `adh-websites`, adhmarketing's `adhmarketing-websites` — so a third
 // checkout holding site folders needs no edit here. It was `next-config-base.mjs` until that
-// file was split into `@agentic-toolkit/adh-next-config` and deleted, at which point this walk
+// file was split into `@adh-sdk/adh-next-config` and deleted, at which point this walk
 // returned null in an adh checkout too and every filesystem case below self-skipped GREEN in
 // the one repository it was about. A sentinel that can be deleted takes the test with it
 // silently; the workspace root every site installs from cannot be, and the name check is what

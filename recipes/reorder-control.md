@@ -1,7 +1,7 @@
 ---
 id: a70a5906-e2c2-4e15-8b2c-913453ff3714
 title: Reorder Control
-domain: agenticdevelopertoolkit://recipes/reorder-control
+domain: adhsdk://recipes/reorder-control
 type: ingredient
 version: 1.1.2
 status: review
@@ -22,7 +22,7 @@ tags:
 - list
 depends-on: []
 related:
-- agenticdevelopertoolkit://recipes/inline-commit-control
+- adhsdk://recipes/inline-commit-control
 references:
 - https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Reference/Attributes/aria-disabled
 approved-by: ''
@@ -177,7 +177,7 @@ Not applicable: The component has no internal logging or diagnostic output. Debu
 **Approved**: pending
 
 **Decision**: Use aria-disabled, not the HTML disabled attribute, to signal the busy state.
-**Rationale**: Borrowed from [InlineCommitControl](agenticdevelopertoolkit://recipes/inline-commit-control) and preserves keyboard focus for users navigating via keyboard, letting them remain in the control sequence during an in-flight request without losing their place (see **aria-disabled-while-busy**). The [MDN aria-disabled reference](https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Reference/Attributes/aria-disabled) documents this focus-preserving behavior, in contrast to the native disabled attribute.
+**Rationale**: Borrowed from [InlineCommitControl](adhsdk://recipes/inline-commit-control) and preserves keyboard focus for users navigating via keyboard, letting them remain in the control sequence during an in-flight request without losing their place (see **aria-disabled-while-busy**). The [MDN aria-disabled reference](https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Reference/Attributes/aria-disabled) documents this focus-preserving behavior, in contrast to the native disabled attribute.
 **Approved**: pending
 
 ## Compliance

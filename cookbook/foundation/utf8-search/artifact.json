@@ -3,7 +3,7 @@
   "meta": {
     "id": "CC43F118-215C-4794-BB67-6D97BAB9DFE4",
     "title": "UTF-8 Search",
-    "domain": "adtoolkit://cookbook/foundation/utf8-search",
+    "domain": "adhsdk://cookbook/foundation/utf8-search",
     "type": "ingredient",
     "version": "1.0.0",
     "status": "review",
@@ -26,7 +26,7 @@
     ],
     "depends-on": [],
     "related": [
-      "adtoolkit://cookbook/foundation/core-utilities"
+      "adhsdk://cookbook/foundation/core-utilities"
     ],
     "references": [],
     "approved-by": "",

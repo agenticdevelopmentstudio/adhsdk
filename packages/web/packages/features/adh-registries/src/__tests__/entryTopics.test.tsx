@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, render, screen } from '@testing-library/react';
-import type { GroupTopicItem } from '@agentic-toolkit/resource';
+import type { GroupTopicItem } from '@adh-sdk/resource';
 
 // See RegistryEditor.test.tsx: this repo's vitest config has no `test.globals`, so
 // @testing-library/react's automatic cleanup never registers — wired explicitly here too.

@@ -1,7 +1,7 @@
 ---
 id: d7a1229c-cf03-436f-8287-d99b52747510
 title: ConnectorSVG
-domain: agenticdevelopertoolkit://recipes/connector-svg
+domain: adhsdk://recipes/connector-svg
 type: ingredient
 version: 1.1.1
 status: review
@@ -21,7 +21,7 @@ tags:
 - svg
 - connector
 depends-on:
-- agenticdevelopertoolkit://recipes/connector-registry
+- adhsdk://recipes/connector-registry
 related: []
 references: []
 approved-by: ''
@@ -32,7 +32,7 @@ approved-date: ''
 
 ## Overview
 
-ConnectorSVG renders decorative SVG connector lines between pairs of DOM elements identified by reference. Elements are resolved by identifier through a registry supplied via an implicit context dependency rather than a prop (see **element-resolution** and the `agenticdevelopertoolkit://recipes/connector-registry` ingredient this component depends on: a snapshot mapping id &rarr; element). The component automatically tracks element positions and recomputes connections when elements resize, the viewport scrolls, or the window resizes, batching recomputation to at most once per frame. Connections are visual-only and hidden from accessibility trees.
+ConnectorSVG renders decorative SVG connector lines between pairs of DOM elements identified by reference. Elements are resolved by identifier through a registry supplied via an implicit context dependency rather than a prop (see **element-resolution** and the `adhsdk://recipes/connector-registry` ingredient this component depends on: a snapshot mapping id &rarr; element). The component automatically tracks element positions and recomputes connections when elements resize, the viewport scrolls, or the window resizes, batching recomputation to at most once per frame. Connections are visual-only and hidden from accessibility trees.
 
 ## Behavioral Requirements
 
@@ -40,7 +40,7 @@ ConnectorSVG renders decorative SVG connector lines between pairs of DOM element
 - **aria-hidden**: Component MUST set `aria-hidden="true"` on the SVG element.
 - **container-reference**: Component MUST accept a reference to the container element and use it as the coordinate origin for all connector calculations.
 - **connector-pairs**: Component MUST accept an array of connector pairs, each with `from` and `to` string identifiers.
-- **element-resolution**: Component MUST resolve each connector pair's `from` and `to` identifiers to elements using a registry (id &rarr; element lookup) supplied as an implicit dependency rather than a prop; see `agenticdevelopertoolkit://recipes/connector-registry`.
+- **element-resolution**: Component MUST resolve each connector pair's `from` and `to` identifiers to elements using a registry (id &rarr; element lookup) supplied as an implicit dependency rather than a prop; see `adhsdk://recipes/connector-registry`.
 - **line-endpoints**: For each resolvable pair, the component MUST draw a line from the center of the source element to the center of the target element.
 - **center-coordinates**: The component MUST calculate the center of each element's bounding rectangle and transform coordinates relative to the container element's position (see **container-reference**).
 - **unresolved-pair-omission**: If either element in a pair cannot be resolved from the registry, that connection MUST be omitted from the rendered output.
@@ -138,7 +138,7 @@ Not applicable: The component has no significant logging needs. Internal RAF sch
 
 ## Platform Notes
 
-- **React/Web**: Reference implementation uses `requestAnimationFrame` for batched updates, `ResizeObserver` for element tracking, and event listeners on `window` for resize/scroll. Key files: `ConnectorSVG.tsx` with hooks for effect cleanup and state management. Accepts a reference (`RefObject<HTMLDivElement | null>`) to the container element (**container-reference**) and resolves connector pair identifiers via `useRegistrySnapshot()` from an implicit React Context registry (`agenticdevelopertoolkit://recipes/connector-registry`), not a prop.
+- **React/Web**: Reference implementation uses `requestAnimationFrame` for batched updates, `ResizeObserver` for element tracking, and event listeners on `window` for resize/scroll. Key files: `ConnectorSVG.tsx` with hooks for effect cleanup and state management. Accepts a reference (`RefObject<HTMLDivElement | null>`) to the container element (**container-reference**) and resolves connector pair identifiers via `useRegistrySnapshot()` from an implicit React Context registry (`adhsdk://recipes/connector-registry`), not a prop.
 - **SwiftUI**: No native connector component exists. Implement using a custom `Canvas` view that draws `Path` elements with `stroke()` modifiers. Track element frames using `GeometryReader` and anchor preferences to establish connection endpoints, and recompute geometry on layout/size-change notifications (e.g. `onGeometryChange`), batching updates to at most once per frame rather than polling with a timer.
 - **Compose**: Implement using a `Canvas` composable that draws connector paths with `drawLine()`. Obtain element positions via layout measurement callbacks or `onGloballyPositioned` modifiers, and recompute on those layout-change callbacks, batching updates to at most once per frame (e.g. via `withFrameNanos`) rather than on a fixed timer.
 - **AppKit / UIKit**: Implement using `CAShapeLayer` with `CGPath` (or the platform's native path type — `NSBezierPath` on AppKit, `UIBezierPath` on UIKit). Create a custom view subclassing `NSView` (macOS) or `UIView` (iOS) that recomputes connector geometry when its layout changes (`layout`/`layoutSubviews`, or a bounds-changed notification for scroll views), batching updates to at most once per frame — gated to the next layout pass, not a continuous per-frame poll. Compute element frames using `convert(_:to:)` to transform coordinates relative to the connector view's bounds.

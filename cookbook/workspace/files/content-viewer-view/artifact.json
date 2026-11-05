@@ -3,7 +3,7 @@
   "meta": {
     "id": "081703b7-036f-4fff-b580-d5dc9e5342d2",
     "title": "File Content Viewer",
-    "domain": "adtoolkit://cookbook/workspace/files/content-viewer-view",
+    "domain": "adhsdk://cookbook/workspace/files/content-viewer-view",
     "type": "ingredient",
     "version": "1.2.1",
     "status": "review",
@@ -26,8 +26,8 @@
       "placeholder"
     ],
     "depends-on": [
-      "adtoolkit://cookbook/workspace/files/file-tree-view",
-      "adtoolkit://cookbook/workspace/files/file-browser-view"
+      "adhsdk://cookbook/workspace/files/file-tree-view",
+      "adhsdk://cookbook/workspace/files/file-browser-view"
     ],
     "related": [],
     "references": [],

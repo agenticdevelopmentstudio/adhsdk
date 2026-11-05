@@ -2,7 +2,7 @@
 - Role/trait: Not applicable — the component sets no accessibility role,
   trait, or identifier of its own. The window's accessibility identifier is
   already the single-instance window base's concern (see
-  `adtoolkit://cookbook/ui/windows/single-window-controller`); any
+  `adhsdk://cookbook/ui/windows/single-window-controller`); any
   content-level role belongs to whatever content-controller or view type the
   caller supplies — a child component with its own recipe, not this one.
 - Label requirements: Not applicable — the component sets no label, for the

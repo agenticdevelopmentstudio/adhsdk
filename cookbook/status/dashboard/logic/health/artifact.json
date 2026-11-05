@@ -3,7 +3,7 @@
   "meta": {
     "id": "4ed891c0-4e4f-4955-8314-d143c45490ec",
     "title": "Health Classification (status-web)",
-    "domain": "adtoolkit://cookbook/status/dashboard/logic/health",
+    "domain": "adhsdk://cookbook/status/dashboard/logic/health",
     "type": "ingredient",
     "version": "1.0.2",
     "status": "review",
@@ -21,8 +21,8 @@
     "tags": [],
     "depends-on": [],
     "related": [
-      "adtoolkit://cookbook/status/service/monitor/health",
-      "adtoolkit://cookbook/status/service/monitor/probe"
+      "adhsdk://cookbook/status/service/monitor/health",
+      "adhsdk://cookbook/status/service/monitor/probe"
     ],
     "references": [],
     "approved-by": "",

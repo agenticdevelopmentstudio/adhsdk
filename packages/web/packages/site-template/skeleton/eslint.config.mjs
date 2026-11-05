@@ -1,4 +1,4 @@
-// ESLint flat config for a content site, written by @agenticdevelopertoolkit/site-template's
+// ESLint flat config for a content site, written by @adh-sdk/site-template's
 // assembler — do not edit. Change the skeleton in the toolkit and re-assemble; a site's own
 // entries go in site/site.json `eslint`, which the assembler appends at the end of the array.
 //

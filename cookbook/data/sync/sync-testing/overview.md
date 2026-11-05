@@ -1,6 +1,6 @@
 
 Sync Engine Testing is the pair of reference fakes that ship inside the
-`AgenticToolkitSync` framework (the toolkit convention, per the source comment:
+`AgenticDeveloperHubSDKSync` framework (the toolkit convention, per the source comment:
 "fakes ship in the framework"), under `Sync/Testing/`:
 
 - `InMemorySyncStore` — a serialized component (every call runs one at a time) conforming to `SyncStore` that keeps
@@ -17,7 +17,7 @@ Sync Engine Testing is the pair of reference fakes that ship inside the
 - `SyncStoreFailure` — the error enum both stores throw
   (`unknownResource`, `invalidChange`, `pullOnlyResource`).
 
-Use them to drive [SyncEngine](adtoolkit://cookbook/data/sync/sync-engine) in unit
+Use them to drive [SyncEngine](adhsdk://cookbook/data/sync/sync-engine) in unit
 tests and previews without SQLite or a network, and as the executable
 specification a port's own store and transport fakes are checked against.
 

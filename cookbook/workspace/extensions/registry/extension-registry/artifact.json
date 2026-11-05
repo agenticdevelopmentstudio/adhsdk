@@ -3,7 +3,7 @@
   "meta": {
     "id": "4b6f3e1a-9c2d-4e7a-8b3f-1d5a6c9e2f70",
     "title": "Extension Registry",
-    "domain": "adtoolkit://cookbook/workspace/extensions/registry/extension-registry",
+    "domain": "adhsdk://cookbook/workspace/extensions/registry/extension-registry",
     "type": "ingredient",
     "version": "1.1.2",
     "status": "review",
@@ -26,16 +26,16 @@
       "contribution-point"
     ],
     "depends-on": [
-      "adtoolkit://cookbook/workspace/extensions/manifest/contribution-point",
-      "adtoolkit://cookbook/workspace/extensions/manifest/extension-manifest"
+      "adhsdk://cookbook/workspace/extensions/manifest/contribution-point",
+      "adhsdk://cookbook/workspace/extensions/manifest/extension-manifest"
     ],
     "related": [
-      "adtoolkit://cookbook/workspace/extensions/manifest/contribution-point",
-      "adtoolkit://cookbook/workspace/extensions/manifest/extension-manifest",
-      "adtoolkit://cookbook/workspace/extensions/manifest/contributed-views",
-      "adtoolkit://cookbook/workspace/extensions/manifest/contributed-settings",
-      "adtoolkit://cookbook/workspace/extensions/manifest/activation-event-matcher",
-      "adtoolkit://cookbook/ai/plugins/plugin-manager"
+      "adhsdk://cookbook/workspace/extensions/manifest/contribution-point",
+      "adhsdk://cookbook/workspace/extensions/manifest/extension-manifest",
+      "adhsdk://cookbook/workspace/extensions/manifest/contributed-views",
+      "adhsdk://cookbook/workspace/extensions/manifest/contributed-settings",
+      "adhsdk://cookbook/workspace/extensions/manifest/activation-event-matcher",
+      "adhsdk://cookbook/ai/plugins/plugin-manager"
     ],
     "references": [],
     "approved-by": "",

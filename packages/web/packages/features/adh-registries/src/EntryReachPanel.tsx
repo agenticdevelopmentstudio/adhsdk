@@ -1,10 +1,10 @@
 'use client';
 
-import { Field, FieldGroup, TagSetField } from '@agenticdevelopertoolkit/ui/blocks';
-import { Button } from '@agenticdevelopertoolkit/ui/components/button';
-import { Input } from '@agenticdevelopertoolkit/ui/components/input';
-import { Select } from '@agenticdevelopertoolkit/ui/components/select';
-import type { ContactMode, EntryDeliveryMode, EntryLink, EntryRow } from '@agentic-toolkit/registry/client';
+import { Field, FieldGroup, TagSetField } from '@adh-sdk/ui/blocks';
+import { Button } from '@adh-sdk/ui/components/button';
+import { Input } from '@adh-sdk/ui/components/input';
+import { Select } from '@adh-sdk/ui/components/select';
+import type { ContactMode, EntryDeliveryMode, EntryLink, EntryRow } from '@adh-sdk/registry/client';
 import { ENTRY_LIMITS } from './slug';
 
 export interface EntryReachPanelProps {

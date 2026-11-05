@@ -1,7 +1,7 @@
 ---
 id: 21cbbc1c-38a0-4e7a-8ca0-06e2f29429f5
 title: "Site Wordmark"
-domain: adtoolkit://cookbook/adh/sites/site-wordmark
+domain: adhsdk://cookbook/adh/sites/site-wordmark
 type: ingredient
 version: 1.4.1
 status: review
@@ -193,13 +193,13 @@ Presentational and static; emits no log events.
 - **Compose**: Not applicable — web-only shared component.
 - **React / Web (TypeScript):** Component at
   `packages/web/packages/adh/src/marketing/SiteWordmark.tsx`, exported on its own
-  subpath `@agentic-toolkit/adh/marketing/SiteWordmark` (with a dedicated `tsup`
+  subpath `@adh-sdk/adh/marketing/SiteWordmark` (with a dedicated `tsup`
   entry + `exports` key). Reuses `getSite` + `splitSiteTitle` from
-  `@agentic-toolkit/adh-registry`. It lives in `@agentic-toolkit/adh` — the
+  `@adh-sdk/adh-registry`. It lives in `@adh-sdk/adh` — the
   vocabulary package — rather than a generic package such as
-  `@agenticdevelopertoolkit/ui` or `@agenticdevelopertoolkit/themes`, since it
+  `@adh-sdk/ui` or `@adh-sdk/themes`, since it
   resolves the ADH site registry; the `HubMark` glyph inside it comes from
-  `@agentic-toolkit/adh/header` because that one piece is registry-free. Root
+  `@adh-sdk/adh/header` because that one piece is registry-free. Root
   element is a `<div>` carrying any `className`; the wordmark line is
   `font-serif text-lg leading-tight font-medium tracking-tight text-apt-text
   sm:text-xl`, with the accent word wrapped in `<span
@@ -243,14 +243,14 @@ generic toolkit package.
 brand string, and the boundary is mechanism → the generic packages, vocabulary →
 the site family's own package; a registry-bound component in a generic UI or theme
 package would make a generic package depend on one consumer's site list. On the web
-this means `@agentic-toolkit/adh` rather than `@agenticdevelopertoolkit/ui` or
-`@agenticdevelopertoolkit/themes`.
+this means `@adh-sdk/adh` rather than `@adh-sdk/ui` or
+`@adh-sdk/themes`.
 **Approved**: pending
 
 *History*: two namespaces ago this component sat in `@adh-shared/adh` for a Tailwind
 reason — marketing apps `@source`d the `adh` package but not `ui`, so a ui-package
 wordmark rendered unstyled. That reason has since expired: those apps `@source`
-`@agentic-toolkit/adh` too, and `@agenticdevelopertoolkit/ui` self-registers its own
+`@adh-sdk/adh` too, and `@adh-sdk/ui` self-registers its own
 sources. The vocabulary rule above is what governs now.
 
 **Decision**: Ship on its own importable entry point, importing only the pure registry.
@@ -289,6 +289,6 @@ prop with `undefined` vs. `null` distinguished.
 | 1.3.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to adh/sites/. |
 | 1.2.2 | 2026-09-25 | Mike Fullerton | Moved into the library cookbook; added Reference Implementations. |
 | 1.2.1 | 2026-09-24 | Mike Fullerton | Phase 6 lint: re-audited open-question markers against the marker rules; kept markers are one-line named bullets. |
-| 1.2.0 | 2026-09-23 | Mike Fullerton | Lint pass: reworded the unknown-`siteId` fallback and the empty-tagline case for consistency across Requirements/States/Edge Cases/vectors; reworded the contrast claim in Accessibility to what the source controls (theme token roles) instead of an unverified contrast assertion; added concrete T5 input/output, an off-pattern-brand vector (T6), and an empty-`tagline` vector (T7); filled in all five Platform Notes bullets; reformatted Design Decisions to the three-line form with `Approved: pending` and moved the superseded Tailwind `@source` history into a note; named the `@agenticdevelopertoolkit/*` scope for `ui`/`themes`/`controls`; rebuilt the Compliance table onto real catalog checks (screen-reader-support, contrast-ratio); records the unverified theme-token contrast as an open question. |
+| 1.2.0 | 2026-09-23 | Mike Fullerton | Lint pass: reworded the unknown-`siteId` fallback and the empty-tagline case for consistency across Requirements/States/Edge Cases/vectors; reworded the contrast claim in Accessibility to what the source controls (theme token roles) instead of an unverified contrast assertion; added concrete T5 input/output, an off-pattern-brand vector (T6), and an empty-`tagline` vector (T7); filled in all five Platform Notes bullets; reformatted Design Decisions to the three-line form with `Approved: pending` and moved the superseded Tailwind `@source` history into a note; named the `@adh-sdk/*` scope for `ui`/`themes`/`controls`; rebuilt the Compliance table onto real catalog checks (screen-reader-support, contrast-ratio); records the unverified theme-token contrast as an open question. |
 | 1.1.0 | 2026-09-23 | Mike Fullerton | Renamed every requirement to subject-only kebab-case, dropping the old prefix everywhere it is cited. |
 | 1.0.0 | 2026-06-26 | Mike Fullerton | Initial recipe — shared brand wordmark, first used on the research author index. |

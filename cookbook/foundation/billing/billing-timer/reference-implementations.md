@@ -1,5 +1,5 @@
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/Core/Billing/BillingTimer.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Billing/BillingTimer.swift` |
 

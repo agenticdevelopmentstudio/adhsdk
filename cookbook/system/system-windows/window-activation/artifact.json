@@ -3,7 +3,7 @@
   "meta": {
     "id": "54413e61-d82d-4526-b496-5daf917ce877",
     "title": "Window Activation",
-    "domain": "adtoolkit://cookbook/system/system-windows/window-activation",
+    "domain": "adhsdk://cookbook/system/system-windows/window-activation",
     "type": "ingredient",
     "version": "1.2.0",
     "status": "review",
@@ -24,10 +24,10 @@
       "diagnostics"
     ],
     "depends-on": [
-      "adtoolkit://cookbook/system/scripting"
+      "adhsdk://cookbook/system/scripting"
     ],
     "related": [
-      "adtoolkit://cookbook/ui/windows/screen-manager"
+      "adhsdk://cookbook/ui/windows/screen-manager"
     ],
     "references": [],
     "approved-by": "",

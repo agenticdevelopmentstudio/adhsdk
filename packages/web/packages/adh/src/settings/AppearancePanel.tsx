@@ -3,26 +3,26 @@
 import dynamic from "next/dynamic";
 import { type ReactElement, type ReactNode } from "react";
 
-import { type AppearancePrefs } from "@agenticdevelopertoolkit/themes";
+import { type AppearancePrefs } from "@adh-sdk/themes";
 // The PACKAGE PATH, not '../auth/useAppearanceSettings'. `src/auth/index.ts` is its own tsup
-// entry and `@agentic-toolkit/adh/auth` is `external`, so a relative import would inline a
-// SECOND copy of this hook (and its transitive `@agentic-toolkit/adh/telemetry/report-error`
+// entry and `@adh-sdk/adh/auth` is `external`, so a relative import would inline a
+// SECOND copy of this hook (and its transitive `@adh-sdk/adh/telemetry/report-error`
 // hop) into dist/settings/UserSettingsOverlay.js — which is what it did: three occurrences of
 // `useAppearanceSettings` in dist/auth/index.js AND three more in the overlay chunk. The
 // duplicate is only weight today, but every relative hop across an entry boundary in this
 // package is one refactor away from being the forked-state bug tsup.config.ts documents at
 // length — the hook's own file carries the same rule for the same reason.
-import { useAppearanceSettings } from "@agentic-toolkit/adh/auth";
+import { useAppearanceSettings } from "@adh-sdk/adh/auth";
 import {
   ToggleGroup,
   ToggleGroupItem,
-} from "@agenticdevelopertoolkit/ui/components/toggle-group";
-import { Checkbox } from "@agenticdevelopertoolkit/ui/components/checkbox";
-import { Label } from "@agenticdevelopertoolkit/ui/components/label";
+} from "@adh-sdk/ui/components/toggle-group";
+import { Checkbox } from "@adh-sdk/ui/components/checkbox";
+import { Label } from "@adh-sdk/ui/components/label";
 
-import { SettingRow } from "@agentic-toolkit/account";
-import { DetailSection, SettingsBody } from "@agentic-toolkit/resource";
-import { Card, CardContent } from "@agenticdevelopertoolkit/ui/components/card";
+import { SettingRow } from "@adh-sdk/account";
+import { DetailSection, SettingsBody } from "@adh-sdk/resource";
+import { Card, CardContent } from "@adh-sdk/ui/components/card";
 
 /**
  * Appearance: accessibility preferences, plus a dev-only theme picker. Each control writes
@@ -30,7 +30,7 @@ import { Card, CardContent } from "@agenticdevelopertoolkit/ui/components/card";
  * the USER, so the choice made here follows them to every other site in the family.
  *
  * There is no light/dark/system control. The family ships ONE presentation, and its theme
- * (DEFAULT_SITE_THEME in @agentic-toolkit/adh) is dark whatever the device says — a picker
+ * (DEFAULT_SITE_THEME in @adh-sdk/adh) is dark whatever the device says — a picker
  * offering "Light" would set a preference the theme's own palette overrides, which is
  * worse than not offering it.
  *
@@ -171,7 +171,7 @@ function CheckboxRow({
  * The dev-only theme picker's chunk gate. The comparisons are written out INLINE so
  * webpack folds them while parsing and never registers the import — reading the
  * equivalent `DEV_BUILD` boolean instead leaves an identifier it will not fold past, so
- * the picker and `@agentic-toolkit/adh/themes/theme-preview` shipped to every production
+ * the picker and `@adh-sdk/adh/themes/theme-preview` shipped to every production
  * site. The full contract is in adh-registry/src/deployment-env.ts.
  *
  * The production arm renders nothing rather than rejecting: unlike a lazily opened debug
@@ -189,7 +189,7 @@ const ThemePickerRow =
   process.env.NEXT_PUBLIC_DEPLOYMENT_ENV === "local" ||
   process.env.NEXT_PUBLIC_DEPLOYMENT_ENV === "testing" ||
   process.env.NEXT_PUBLIC_DEPLOYMENT_ENV === "staging"
-    ? dynamic(() => import("@agentic-toolkit/adh/settings/ThemePickerRow"), {
+    ? dynamic(() => import("@adh-sdk/adh/settings/ThemePickerRow"), {
         ssr: false,
       })
     : (): null => null;

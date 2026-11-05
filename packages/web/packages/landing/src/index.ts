@@ -8,7 +8,7 @@ export { Split } from './deck/Split'
 export { Glow } from './deck/Glow'
 // The `'use client'` modules — NavChrome and Clip — are deliberately NOT
 // re-exported here. Importing one from this barrel hoists its directive onto
-// the whole bundle. They ship from `@agenticdevelopertoolkit/landing/client`; see
+// the whole bundle. They ship from `@adh-sdk/landing/client`; see
 // src/client.ts.
 //
 // The `NavLink` type does stay here, and that is not an oversight: `export type`

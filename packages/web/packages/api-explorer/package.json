@@ -1,5 +1,5 @@
 {
-  "name": "@agentic-toolkit/api-explorer",
+  "name": "@adh-sdk/api-explorer",
   "version": "0.1.0",
   "description": "Reusable, authed \"try-it-out\" endpoint panel for agentic-web-toolkit consumers — spec-generated endpoint metadata plus a theme-aware React panel that documents one REST endpoint (URL, params, request/response schemas, errors, CRUD-family siblings) and calls it with the logged-in user's credentials.",
   "license": "UNLICENSED",
@@ -14,7 +14,7 @@
     "src/styles/api-explorer.css",
     "sources.css"
   ],
-  "comment:exports": "`development` → src for `next dev` (HMR, no build/restart); prod skips it → dist. Mirrors the @agenticdevelopertoolkit/ui + @agentic-toolkit/auth convention. `./generated/endpoints.generated` is a deliberate subpath export kept OFF the main barrel (see src/index.ts) — it exists only so the monorepo's drift test (websites/shared/api-explorer's src/__tests__/endpoints.test.ts, which stays monorepo-side to read openapi.json) can import the generated maps directly. `./lib/getEndpoint` and `./lib/highlight` are preserved-import subpaths (see the matching `external` entries + comment in tsup.config.ts): both hold module-level cache state and are consumed by the client barrel AND the server entry, which this package deliberately builds as two separate chunk graphs — so each needs importing by package path, not relatively, to keep one shared copy instead of a silent per-graph fork.",
+  "comment:exports": "`development` → src for `next dev` (HMR, no build/restart); prod skips it → dist. Mirrors the @adh-sdk/ui + @adh-sdk/auth convention. `./generated/endpoints.generated` is a deliberate subpath export kept OFF the main barrel (see src/index.ts) — it exists only so the monorepo's drift test (websites/shared/api-explorer's src/__tests__/endpoints.test.ts, which stays monorepo-side to read openapi.json) can import the generated maps directly. `./lib/getEndpoint` and `./lib/highlight` are preserved-import subpaths (see the matching `external` entries + comment in tsup.config.ts): both hold module-level cache state and are consumed by the client barrel AND the server entry, which this package deliberately builds as two separate chunk graphs — so each needs importing by package path, not relatively, to keep one shared copy instead of a silent per-graph fork.",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -53,10 +53,10 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@agentic-toolkit/auth": "workspace:*",
+    "@adh-sdk/auth": "workspace:*",
     "lucide-react": "^1.16.0",
     "shiki": "^1.0.0",
-    "@agenticdevelopertoolkit/ui": "workspace:*"
+    "@adh-sdk/ui": "workspace:*"
   },
   "peerDependencies": {
     "next": ">=15.0.0",

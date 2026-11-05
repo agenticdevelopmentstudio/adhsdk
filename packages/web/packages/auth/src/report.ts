@@ -7,7 +7,7 @@ type Reporter = (error: unknown, context?: ErrorContext) => void
 
 // Injected by the host once its error SDK is live; null = console-only (no host
 // wired, pre-init, or SSR). Explicit indirection — the same registered-reporter
-// pattern @agentic-toolkit/adh's report-error uses — rather than importing a telemetry
+// pattern @adh-sdk/adh's report-error uses — rather than importing a telemetry
 // SDK here, so this package stays a dependency-free leaf.
 let reporter: Reporter | null = null
 

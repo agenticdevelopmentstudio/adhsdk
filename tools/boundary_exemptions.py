@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Files that import adh vocabulary from a package not itself named adh-*.
 
-Added 2026-08-25, when @agentic-toolkit/adh-ui was carved out of ui. These
+Added 2026-08-25, when @adh-sdk/adh-ui was carved out of ui. These
 imports are not new — the vocabulary used to live inside `ui`, where the
 mechanism/vocabulary rule could not see it. Naming the carve-out honestly made
 a pre-existing violation visible, so it is listed here rather than hidden by

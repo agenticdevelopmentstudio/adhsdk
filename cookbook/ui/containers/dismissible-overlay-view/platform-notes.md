@@ -41,7 +41,7 @@
   when nothing else claimed the key (mirroring
   `key-equivalent-subview-priority`).
 - **AppKit/UIKit** (source platform): Implemented in
-  `packages/apple/AgenticToolkit/CoreUI/DismissibleOverlayView.swift` as an
+  `packages/apple/AgenticDeveloperHubSDK/CoreUI/DismissibleOverlayView.swift` as an
   `open`, `@MainActor`, `NSView` subclass; the only import is `AppKit`, and
   every API it uses (`NSVisualEffectView`, `NSAnimationContext`, `NSEvent`,
   `performKeyEquivalent`) is macOS-only, so there is no UIKit code path in

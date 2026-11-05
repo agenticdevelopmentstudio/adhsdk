@@ -2,10 +2,10 @@
 
 import * as React from "react"
 
-import { ListWithDetailsPane } from "@agenticdevelopertoolkit/ui/blocks/list-with-details-pane"
+import { ListWithDetailsPane } from "@adh-sdk/ui/blocks/list-with-details-pane"
 import { SendInvitationModal, type SendInvitationPayload } from "./send-invitation-modal"
-import { AddUsersModal, type DraftUser } from "@agenticdevelopertoolkit/ui/blocks/add-users-modal"
-import type { DataTableColumn } from "@agenticdevelopertoolkit/ui/components/data-table"
+import { AddUsersModal, type DraftUser } from "@adh-sdk/ui/blocks/add-users-modal"
+import type { DataTableColumn } from "@adh-sdk/ui/components/data-table"
 import {
   type InvitationRequest,
   type PendingUser,

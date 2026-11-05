@@ -217,7 +217,7 @@ export function NavChrome({
           can never be reached by keyboard however it is labelled, leaving only
           the cost: a full-viewport control read out as covering the page, with
           the same "close the menu" meaning as the button three lines below.
-          `@agenticdevelopertoolkit/ui`'s DocNav drawer answers this the same way, and
+          `@adh-sdk/ui`'s DocNav drawer answers this the same way, and
           two drawers in one toolkit should not answer it differently. Escape
           and the close button are the keyboard paths. */}
       <div

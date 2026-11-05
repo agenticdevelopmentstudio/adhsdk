@@ -1,7 +1,7 @@
 ---
 id: c61a220c-b63e-4dcd-a12b-715de20f7b5d
 title: Popover
-domain: agenticdevelopertoolkit://recipes/popover
+domain: adhsdk://recipes/popover
 type: ingredient
 version: 1.1.1
 status: review
@@ -22,10 +22,10 @@ tags:
 - positioning
 depends-on: []
 related:
-- agenticdevelopertoolkit://recipes/popup-menu
-- agenticdevelopertoolkit://recipes/facet-menu
-- agenticdevelopertoolkit://recipes/category-gear-menu
-- agenticdevelopertoolkit://recipes/dismissible-hint
+- adhsdk://recipes/popup-menu
+- adhsdk://recipes/facet-menu
+- adhsdk://recipes/category-gear-menu
+- adhsdk://recipes/dismissible-hint
 references:
 - https://base-ui.com/react/components/popover
 - https://base-ui.com/react/overview/accessibility

@@ -1,7 +1,7 @@
 ---
 id: 42e7a2ea-f138-4edb-899f-43c1946e4ef8
 title: FAQ
-domain: agenticdevelopertoolkit://recipes/faq
+domain: adhsdk://recipes/faq
 type: ingredient
 version: 1.1.1
 status: review
@@ -22,8 +22,8 @@ tags:
 - disclosure-list
 depends-on: []
 related:
-- agenticdevelopertoolkit://recipes/accordion
-- agenticdevelopertoolkit://recipes/disclosure
+- adhsdk://recipes/accordion
+- adhsdk://recipes/disclosure
 references: []
 approved-by: ''
 approved-date: ''
@@ -41,8 +41,8 @@ clicking expands to reveal the answer. Built entirely from native HTML
 expand/collapse behavior. The component supports setting one or more entries
 to start in the expanded state. It remains open when printed, and question
 text plus the content of any currently open entry is searchable with the
-browser's Find function. See agenticdevelopertoolkit://recipes/accordion for a
-single-open variant of this pattern, and agenticdevelopertoolkit://recipes/disclosure
+browser's Find function. See adhsdk://recipes/accordion for a
+single-open variant of this pattern, and adhsdk://recipes/disclosure
 for a single collapsible section.
 
 ## Behavioral Requirements
@@ -108,7 +108,7 @@ The component does not manage state internally — all state changes are handled
 - **Null or undefined question/answer**: React will render `null` or `undefined` as nothing (empty space). If this is undesirable, the caller MUST validate entries before passing to the component.
 - **Very long question or answer**: No constraint in source. Content renders as-is; CSS is responsible for text wrapping and overflow handling.
 - **Special characters or HTML in question/answer**: Behavior depends on the input type. If `question` is a string, HTML characters are rendered as text (safe). If `question` is a component containing HTML, that HTML renders as intended. No HTML sanitization is performed by the component.
-- **Multiple entries with open: true**: All MUST start expanded. Browser allows multiple `<details>` elements to be open simultaneously (unlike a single-open accordion — see agenticdevelopertoolkit://recipes/accordion); behavior matches the source design.
+- **Multiple entries with open: true**: All MUST start expanded. Browser allows multiple `<details>` elements to be open simultaneously (unlike a single-open accordion — see adhsdk://recipes/accordion); behavior matches the source design.
 - **Key collisions**: Entries are keyed by array index (`key={i}` in the source). If the entries array is mutated (items reordered or removed), React will reuse DOM nodes by index, which may cause state mismatches. This is a known limitation of index-based keying; the component does not validate or warn about it, and the source has no `id` field to key by instead — see **index-based-keying** under Design Decisions.
 - **Re-render with changed open**: See **initial-open-state**. A re-render that changes `entries[i].open` overrides the user's own toggle for that entry; a re-render that leaves the value unchanged does not touch the browser's live state. See #test-vectors/faq-008 and #test-vectors/faq-009.
 
@@ -181,7 +181,7 @@ Not applicable. The component does not emit any log messages.
   **Approved**: pending
 
 - **Decision**: Describe this component as a "disclosure list," not an "accordion," in its title, summary, and tags.
-  **Rationale**: Several entries can be open at the same time, which is not how an accordion usually behaves. agenticdevelopertoolkit://recipes/accordion is the single-open variant; readers who expect single-open behavior are pointed there instead of finding it here under a name that overpromises.
+  **Rationale**: Several entries can be open at the same time, which is not how an accordion usually behaves. adhsdk://recipes/accordion is the single-open variant; readers who expect single-open behavior are pointed there instead of finding it here under a name that overpromises.
   **Approved**: pending
 
 ## Compliance

@@ -3,7 +3,7 @@
   "meta": {
     "id": "cf3a3dc9-6fed-47ba-a699-71ff806dcedd",
     "title": "Core Utilities",
-    "domain": "adtoolkit://cookbook/foundation/core-utilities",
+    "domain": "adhsdk://cookbook/foundation/core-utilities",
     "type": "ingredient",
     "version": "1.1.1",
     "status": "review",
@@ -28,20 +28,20 @@
     ],
     "depends-on": [],
     "related": [
-      "adtoolkit://cookbook/ai/plugins/secret-storing",
-      "adtoolkit://cookbook/workspace/extensions/manifest/vs-code-engine-range"
+      "adhsdk://cookbook/ai/plugins/secret-storing",
+      "adhsdk://cookbook/workspace/extensions/manifest/vs-code-engine-range"
     ],
     "references": [
-      "packages/apple/AgenticToolkit/Core/CodableIgnored.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/Core/KeychainHelper.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/Core/Loggable.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/Core/MathUtils.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/Core/SemanticVersion.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/Core/TextFolding.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/Tests/AgenticToolkitCoreTests/KeychainHelperTests.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/Tests/AgenticToolkitCoreTests/Extensions/SemanticVersionTests.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/Tests/AgenticToolkitCoreTests/Extensions/TextFoldingTests.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/Tests/AgenticToolkitCoreTests/CGFloatClampedTests.swift (agenticdevelopertoolkit)"
+      "packages/apple/AgenticDeveloperHubSDK/Core/CodableIgnored.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/Core/KeychainHelper.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/Core/Loggable.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/Core/MathUtils.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/Core/SemanticVersion.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/Core/TextFolding.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKCoreTests/KeychainHelperTests.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKCoreTests/Extensions/SemanticVersionTests.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKCoreTests/Extensions/TextFoldingTests.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKCoreTests/CGFloatClampedTests.swift (adhsdk)"
     ],
     "approved-by": "",
     "approved-date": ""

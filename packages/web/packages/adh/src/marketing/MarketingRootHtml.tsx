@@ -1,7 +1,7 @@
 import type { ReactElement } from 'react'
-import { AdhThemeStyle } from '@agentic-toolkit/adh/server'
-import { getLocale, htmlLang, localeDir } from '@agentic-toolkit/adh/concepts'
-import { JsonLd, type JsonLdValue } from '@agenticdevelopertoolkit/landing'
+import { AdhThemeStyle } from '@adh-sdk/adh/server'
+import { getLocale, htmlLang, localeDir } from '@adh-sdk/adh/concepts'
+import { JsonLd, type JsonLdValue } from '@adh-sdk/landing'
 // Relative: a server module of this same entry with no module-level state (see index.ts).
 import { MarketingShell, type MarketingShellProps } from './MarketingShell'
 
@@ -59,7 +59,7 @@ export type MarketingRootHtmlProps = MarketingShellProps & {
  * site layout would. Per-site `metadata` (the one genuinely per-site, SEO-bearing
  * part) and the site's `globals.css` import stay in each `app/layout.tsx`.
  *
- * Home: `@agentic-toolkit/adh/marketing` — adh VOCABULARY end to end (the ADH marketing
+ * Home: `@adh-sdk/adh/marketing` — adh VOCABULARY end to end (the ADH marketing
  * family's root document, its siteId, its clientId). It lived in the @adh-shared auth shim only
  * because that package owned the header/auth chrome it composes; Task 6.2 folded `SiteHeader`
  * into the app tier's header barrel and the toolkit took the generic halves, so the

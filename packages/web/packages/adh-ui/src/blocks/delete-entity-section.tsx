@@ -2,12 +2,12 @@
 
 import * as React from "react";
 import { Archive, Trash2, TriangleAlert } from "lucide-react";
-import { Button } from "@agenticdevelopertoolkit/ui/components/button";
-import { Input } from "@agenticdevelopertoolkit/ui/components/input";
-import { Label } from "@agenticdevelopertoolkit/ui/components/label";
-import { Disclosure } from "@agenticdevelopertoolkit/ui/components/disclosure";
-import { ErrorText } from "@agenticdevelopertoolkit/ui/components/error-text";
-import { cn } from "@agenticdevelopertoolkit/ui/lib/utils";
+import { Button } from "@adh-sdk/ui/components/button";
+import { Input } from "@adh-sdk/ui/components/input";
+import { Label } from "@adh-sdk/ui/components/label";
+import { Disclosure } from "@adh-sdk/ui/components/disclosure";
+import { ErrorText } from "@adh-sdk/ui/components/error-text";
+import { cn } from "@adh-sdk/ui/lib/utils";
 import {
   Dialog,
   DialogContent,
@@ -15,7 +15,7 @@ import {
   DialogFooter,
   DialogTitle,
   DialogDescription,
-} from "@agenticdevelopertoolkit/ui/components/dialog";
+} from "@adh-sdk/ui/components/dialog";
 
 type Phase = "warn" | "confirm";
 

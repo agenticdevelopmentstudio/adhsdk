@@ -1,7 +1,7 @@
 ---
 id: 6f5f455d-b744-425d-a21e-494fc18caaf2
 title: Flow
-domain: agenticdevelopertoolkit://recipes/flow
+domain: adhsdk://recipes/flow
 type: ingredient
 version: 1.1.1
 status: review
@@ -23,10 +23,10 @@ tags:
 - landing
 depends-on: []
 related:
-- agenticdevelopertoolkit://recipes/band
-- agenticdevelopertoolkit://recipes/flow-hero
-- agenticdevelopertoolkit://recipes/deck
-- agenticdevelopertoolkit://recipes/viewport-shell
+- adhsdk://recipes/band
+- adhsdk://recipes/flow-hero
+- adhsdk://recipes/deck
+- adhsdk://recipes/viewport-shell
 references: []
 approved-by: ''
 approved-date: ''
@@ -36,7 +36,7 @@ approved-date: ''
 
 ## Overview
 
-Flow is a container component that wraps a page's sequential content sections — *bands* (see `agenticdevelopertoolkit://recipes/band`) — establishing the structural root for that content without implementing scroll behavior itself; scrolling is delegated to the document or a parent container. The component sets `tabIndex={-1}` on its root, making it a valid programmatic focus target without adding it to the default (Tab-key) focus order.
+Flow is a container component that wraps a page's sequential content sections — *bands* (see `adhsdk://recipes/band`) — establishing the structural root for that content without implementing scroll behavior itself; scrolling is delegated to the document or a parent container. The component sets `tabIndex={-1}` on its root, making it a valid programmatic focus target without adding it to the default (Tab-key) focus order.
 
 ## Behavioral Requirements
 

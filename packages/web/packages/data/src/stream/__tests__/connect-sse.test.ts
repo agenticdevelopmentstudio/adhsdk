@@ -11,7 +11,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 const token = vi.hoisted(() => ({ read: vi.fn(() => 'tok') }))
-vi.mock('@agentic-toolkit/auth/client', () => ({
+vi.mock('@adh-sdk/auth/client', () => ({
   readAccessToken: token.read,
 }))
 

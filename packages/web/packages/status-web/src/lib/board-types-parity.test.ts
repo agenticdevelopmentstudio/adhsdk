@@ -1,12 +1,12 @@
 import { describe, it, expect } from "vitest";
 // The SERVER's board types, imported by relative path (there is no shared build between the
 // backend and its embedded web app — see deploy-status-parity.test.ts for the precedent).
-import type * as server from "@agentic-toolkit/status-server/board";
+import type * as server from "@adh-sdk/status-server/board";
 import type * as web from "./board-types";
 // RUNTIME import from the pure ./activity subpath (derive-activity.ts and what it
 // reaches import no drizzle/libsql), so this browser-side package's tests never
 // load the ORM — ./board also re-exports the drizzle-backed facts reader.
-import { indicatorFor } from "@agentic-toolkit/status-server/activity";
+import { indicatorFor } from "@adh-sdk/status-server/activity";
 import { INDICATOR_STATE, indicatorFromProblems } from "./overview";
 import type { Problem } from "./board-types";
 

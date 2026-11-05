@@ -40,7 +40,7 @@
  * These are plain attributes with no runtime behaviour, so they are safe on any
  * `<input>`/`<textarea>`, server-rendered, with nothing to hydrate.
  *
- * Packages that cannot depend on `@agenticdevelopertoolkit/ui` (`@agenticdevelopertoolkit/chat`
+ * Packages that cannot depend on `@adh-sdk/ui` (`@adh-sdk/chat`
  * ships zero runtime deps on purpose, so a host site can render it without pulling the
  * UI kit in) repeat the literal attributes inline and point back here. This module
  * stays the list of record.

@@ -1,7 +1,7 @@
 ---
 id: 76d3e5ac-b014-4ba1-a8a4-7bf61f38529b
 title: Theme Engine
-domain: agenticdevelopertoolkit://recipes/theme-engine
+domain: adhsdk://recipes/theme-engine
 type: ingredient
 version: 1.0.2
 status: review
@@ -381,8 +381,8 @@ central fact this recipe records.
   up `themes[theme]` and MUST render `null` (not throw) when the key is
   absent from the catalog.
 - **theme-style-element-identity**: an unscoped `ThemeStyle` render MUST use
-  the fixed element id `"agentic-toolkit-theme"`; a scoped render MUST use
-  `"agentic-toolkit-theme-scoped-" + <scope, lowercased, with every run of
+  the fixed element id `"adh-sdk-theme"`; a scoped render MUST use
+  `"adh-sdk-theme-scoped-" + <scope, lowercased, with every run of
   non [A-Za-z0-9_-] characters and any leading/trailing "-" stripped>`.
 - **css-scoping-rewrite**: `buildScopedCss(css, scope, colorMode)` MUST
   rewrite, in this precedence, the html:root-anchored light-only pattern,
@@ -414,7 +414,7 @@ central fact this recipe records.
 ### Legacy color mode (Web)
 
 - **legacy-colormode-isolation**: `ColorModeProvider`/`useColorMode`
-  (storage key `"agentic-toolkit:color-mode"`, attribute
+  (storage key `"adh-sdk:color-mode"`, attribute
   `data-appearance-mode`) is a second, independent color-mode system from
   `AppearancePrefs` (`"adh:appearance"`, `data-color-mode`); the two MUST
   NOT both be mounted on one document, since each independently toggles the
@@ -484,7 +484,7 @@ engine stores and applies, not a UI surface of its own.
 | theme-engine-031 | appearance-sanitization | `normalizeAppearance({colorMode: "purple", textSize: "large", focusOutlines: "yes"})` | `colorMode` stays `"auto"` (invalid literal rejected), `textSize` becomes `"large"` (valid), `focusOutlines` stays `false` (wrong type rejected) |
 | theme-engine-032 | appearance-dom-application | `applyAppearance(el, {...defaults, textSize: "large", focusOutlines: true}, false)` | `el.dataset.textSize === "large"`; `el.dataset.focusOutlines === "always"`; `el.dataset.contrast` and `el.dataset.spacing` are both *absent* (equal their defaults) |
 | theme-engine-033 | appearance-sign-in-adopt, appearance-sign-out-reset | Call `adoptAppearance({...defaults, colorMode: "dark"})`, then later `resetAppearance()` | After adopt: `localStorage` holds the dark-mode prefs. After reset: `localStorage["adh:appearance"]` is removed entirely and the live snapshot equals `APPEARANCE_DEFAULTS` |
-| theme-engine-034 | theme-lookup-by-key, theme-style-element-identity | `render(<ThemeStyle theme="not-a-real-theme" />)`; `render(<ThemeStyle theme="dracula" scope="#a" />)` and `scope="#b"` | Unknown key: no `<style>` element rendered, no throw. Two scopes: two distinct `<style id="agentic-toolkit-theme-scoped-…">` elements with different ids |
+| theme-engine-034 | theme-lookup-by-key, theme-style-element-identity | `render(<ThemeStyle theme="not-a-real-theme" />)`; `render(<ThemeStyle theme="dracula" scope="#a" />)` and `scope="#b"` | Unknown key: no `<style>` element rendered, no throw. Two scopes: two distinct `<style id="adh-sdk-theme-scoped-…">` elements with different ids |
 | theme-engine-035 | css-scoping-forced-mode | `buildScopedCss(css, "#s", "dark")` vs. `buildScopedCss(css, "#s", "light")` for the same input `css` | The two outputs differ; the `"dark"` output contains `:scope` where the light block was and `:scope.pc-colormode-off` where the dark block was inverted, and vice versa for `"light"` |
 | theme-engine-036 | legacy-colormode-cycle, legacy-colormode-persistence | `useColorMode()` starting at `mode: "light"`; call `cycle()` once, then again | First `cycle()`: `mode === "auto"`, storage key removed. Second `cycle()`: `mode === "dark"`, storage key set to `"dark"` |
 
@@ -581,7 +581,7 @@ engine stores and applies, not a UI surface of its own.
 | `ThemeTypography.sizeScaleRange` | `ClosedRange<Double>` constant (Apple) | `0.5...4` | Shared clamp bound for both a reader's runtime text-size control and an imported theme's own declared `sizeScale`. |
 | `APPEARANCE_STORAGE_KEY` | `string` constant (Web) | `"adh:appearance"` | `localStorage` key for the current appearance system. |
 | `APPEARANCE_DEFAULTS` | `AppearancePrefs` constant (Web) | `{auto, auto, default, default, compact, false, false}` | The preference set a signed-out/never-configured visitor gets. |
-| `ColorModeProviderProps.storageKey` | `string` (Web, legacy) | `"agentic-toolkit:color-mode"` | Storage key for the separate legacy color-mode system. |
+| `ColorModeProviderProps.storageKey` | `string` (Web, legacy) | `"adh-sdk:color-mode"` | Storage key for the separate legacy color-mode system. |
 | `ColorModeProviderProps.defaultMode` | `ColorMode` (Web, legacy) | `"auto"` | Initial mode before any stored value is read. |
 | `ThemeStyleProps.colorMode` | `"system" \| "light" \| "dark"` (Web) | `"system"` | Forces a scoped theme's variant regardless of `html.dark`. |
 | `ThemeStyleProps.scope` | `string \| undefined` (Web) | `undefined` | When set, renders the theme scoped under `@scope`; when unset, renders globally under the fixed id. |
@@ -672,7 +672,7 @@ which.
 ## Platform Notes
 
 - **SwiftUI**: the given sources
-  (`packages/apple/AgenticDeveloperToolkit/Sources/Theme/*.swift`) are
+  (`packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Theme/*.swift`) are
   themselves the actual model — Foundation-only, with no `Color`/`Font`
   dependency. A SwiftUI layer reads `SemanticPalette.color(_:)`/`.size(_:)`
   and is responsible for its own `RGBAColor` → `Color(red:green:blue:opacity:)`

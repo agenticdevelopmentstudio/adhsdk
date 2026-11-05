@@ -1,7 +1,7 @@
 ---
 id: d8f2a1c3-9e4b-4a7b-8c6d-2f9a1e5b3c7d
 title: Drag-and-Drop
-domain: agenticdevelopertoolkit://recipes/dnd
+domain: adhsdk://recipes/dnd
 type: ingredient
 version: 1.1.1
 status: review

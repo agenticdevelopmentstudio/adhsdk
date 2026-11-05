@@ -1,7 +1,7 @@
 import { featureTsup } from '../features/tsup.preset'
 
 // Shares the feature build knowledge (ESM, browser, splitting, directives preserved,
-// react/next/@agentic-toolkit external) rather than restating it. The entry MAP is the
+// react/next/@adh-sdk external) rather than restating it. The entry MAP is the
 // only thing this package adds: one entry per site, so mounting one model never pulls
 // the other 47. Generated alongside package.json's exports -- the two must
 // name the same 48 sites, which `pnpm lint` in this package proves by resolving them.

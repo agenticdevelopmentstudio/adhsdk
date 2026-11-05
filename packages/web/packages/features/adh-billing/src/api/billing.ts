@@ -1,4 +1,4 @@
-import { authedJson, authedRequest } from "@agentic-toolkit/auth/client";
+import { authedJson, authedRequest } from "@adh-sdk/auth/client";
 
 /**
  * Every path here carries the `/api` prefix.
@@ -9,7 +9,7 @@ import { authedJson, authedRequest } from "@agentic-toolkit/auth/client";
  * written without it resolves against the Next app itself, which has no such
  * route, so the call returns the app's 404 HTML and fails as a JSON parse error
  * naming neither billing nor the missing prefix. Checked against every sibling
- * client in the repo: all of them, in both `@agentic-toolkit/data` and the
+ * client in the repo: all of them, in both `@adh-sdk/data` and the
  * feature packages' own `src/api/` directories, spell the prefix out.
  */
 const BASE = "/api/billing";

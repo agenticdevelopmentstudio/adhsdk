@@ -1,8 +1,8 @@
 /**
- * @agenticdevelopertoolkit/markdown — public API barrel.
+ * @adh-sdk/markdown — public API barrel.
  *
  * Import the CSS separately (once per host app):
- *   import '@agenticdevelopertoolkit/markdown/styles'
+ *   import '@adh-sdk/markdown/styles'
  */
 
 // Main viewer component
@@ -24,7 +24,7 @@ export { MarkdownContent } from './components/MarkdownContent'
 export type { MarkdownContentProps } from './components/MarkdownContent'
 
 // The shared document EDITING view — body editor + live preview + layout choice. The default
-// markdown editor for document surfaces; `@agenticdevelopertoolkit/ui`'s MarkdownEditor remains the
+// markdown editor for document surfaces; `@adh-sdk/ui`'s MarkdownEditor remains the
 // bare textarea this composes.
 export { MarkdownDocumentEditor, SPLIT_MIN_WIDTH } from './components/MarkdownDocumentEditor'
 export type {

@@ -1,13 +1,13 @@
 import type { ReactElement } from 'react'
-import type { ProfilePrincipal } from '@agentic-toolkit/adh/profile'
+import type { ProfilePrincipal } from '@adh-sdk/adh/profile'
 
 /**
  * This site's section of a principal's profile at `/<slug>/profile` — declared as
  * `profileSection` on `home-model.tsx` (the `SiteHomeModel` field documented in
- * `@agentic-toolkit/adh/home`).
+ * `@adh-sdk/adh/home`).
  *
- * Lives here, in the site, rather than in `@agentic-toolkit/projects`: it imports the adh
- * vocabulary tier (`@agentic-toolkit/adh/profile`) directly, which a portable feature package may
+ * Lives here, in the site, rather than in `@adh-sdk/projects`: it imports the adh
+ * vocabulary tier (`@adh-sdk/adh/profile`) directly, which a portable feature package may
  * not do (`tools/check_boundaries.py`) — a site is a consumer of that vocabulary, not a package
  * other products reuse, and this component's whole job is rendering one site's `profileSection`.
  *

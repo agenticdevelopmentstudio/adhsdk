@@ -1,7 +1,7 @@
 ---
 id: 64C9047D-53A2-4912-8817-2F35372E505F
 title: "Setting Observing"
-domain: adtoolkit://cookbook/ui/settings/setting-observing
+domain: adhsdk://cookbook/ui/settings/setting-observing
 type: ingredient
 version: 1.0.1
 status: review
@@ -21,7 +21,7 @@ tags:
   - binding
 depends-on: []
 related:
-  - adtoolkit://cookbook/ui/settings/views/value-row-view
+  - adhsdk://cookbook/ui/settings/views/value-row-view
 references: []
 approved-by: ""
 approved-date: ""
@@ -124,7 +124,7 @@ Not applicable: the component performs no logging of its own.
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/macOS/SystemIntegration/ComposableSettingsWindow/ViewModels/SettingObserving.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/ViewModels/SettingObserving.swift` |
 
 ## Design Decisions
 

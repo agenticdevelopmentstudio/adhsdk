@@ -9,13 +9,13 @@
 // deliberately injects NOTHING.
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { cleanup, render, screen } from "@testing-library/react";
-import type { CrudTableMeta } from "@agentic-toolkit/crud";
+import type { CrudTableMeta } from "@adh-sdk/crud";
 
 // The chosen table's leaf renders CrudDataView (network-backed) — stub it; this test is
 // about the RAIL existing at all, not the data view.
-vi.mock("@agentic-toolkit/crud", async () => {
-  const actual = await vi.importActual<typeof import("@agentic-toolkit/crud")>(
-    "@agentic-toolkit/crud",
+vi.mock("@adh-sdk/crud", async () => {
+  const actual = await vi.importActual<typeof import("@adh-sdk/crud")>(
+    "@adh-sdk/crud",
   );
   return {
     ...actual,

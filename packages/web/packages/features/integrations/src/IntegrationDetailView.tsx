@@ -1,12 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { Card, CardHeader, CardTitle, CardContent } from "@agenticdevelopertoolkit/ui/components/card";
-import { Button } from "@agenticdevelopertoolkit/ui/components/button";
-import { CopyButton } from "@agenticdevelopertoolkit/ui/components/copy-button";
-import { ErrorText } from "@agenticdevelopertoolkit/ui/components/error-text";
-import { Input } from "@agenticdevelopertoolkit/ui/components/input";
-import { Label } from "@agenticdevelopertoolkit/ui/components/label";
+import { Card, CardHeader, CardTitle, CardContent } from "@adh-sdk/ui/components/card";
+import { Button } from "@adh-sdk/ui/components/button";
+import { CopyButton } from "@adh-sdk/ui/components/copy-button";
+import { ErrorText } from "@adh-sdk/ui/components/error-text";
+import { Input } from "@adh-sdk/ui/components/input";
+import { Label } from "@adh-sdk/ui/components/label";
 import {
   integrationsApi,
   type DeliverabilityWebhook,
@@ -14,8 +14,8 @@ import {
   type MaskedProviderConfig,
   type ProviderAuthMethod,
   type ProviderCatalogEntry,
-} from "@agentic-toolkit/data/integrations";
-import { errMsg } from "@agentic-toolkit/data";
+} from "@adh-sdk/data/integrations";
+import { errMsg } from "@adh-sdk/data";
 import {
   ApiKeyFields,
   NonConfigurableNote,
@@ -32,7 +32,7 @@ import {
 } from "./IntegrationDetail";
 import { ProviderConnections } from "./ProviderConnections";
 import { IntegrationData, providerDataTables } from "./IntegrationData";
-import { DetailSection } from "@agentic-toolkit/resource";
+import { DetailSection } from "@adh-sdk/resource";
 
 /**
  * The shared 3-card provider view — one component behind both the Add-integration

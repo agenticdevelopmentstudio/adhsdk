@@ -1,7 +1,7 @@
 {
-  "name": "@agentic-toolkit/persona",
+  "name": "@adh-sdk/persona",
   "version": "0.1.0",
-  "description": "The single crossing point to @agenticdevelopertoolkit/*. Re-publishes the persona toolkit's chat, themes and viewport vocabulary so consumers never name that scope themselves — which is what keeps exactly one copy of it in a bundle.",
+  "description": "The single crossing point to @adh-sdk/*. Re-publishes the persona layer's chat, themes and viewport vocabulary so consumers never name that scope themselves — which is what keeps exactly one copy of it in a bundle.",
   "license": "UNLICENSED",
   "type": "module",
   "sideEffects": [
@@ -59,19 +59,19 @@
   },
   "//peerDependencies": "Declared as peers, not dependencies, for the same reason bitbag declares them: the consumer supplies the copy, so there is one instance rather than one per package that happens to re-export it. `themes` carries React context at module scope (colorMode.tsx), which splits silently across two copies.",
   "peerDependencies": {
-    "@agenticdevelopertoolkit/avatar": "*",
-    "@agenticdevelopertoolkit/chat": "*",
-    "@agenticdevelopertoolkit/themes": "*",
-    "@agenticdevelopertoolkit/viewport": "*",
+    "@adh-sdk/avatar": "*",
+    "@adh-sdk/chat": "*",
+    "@adh-sdk/themes": "*",
+    "@adh-sdk/viewport": "*",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   },
-  "//devDependencies": "The four @agenticdevelopertoolkit/* entries are peer deps above; these workspace:* devDependencies exist only so this package can build and typecheck itself.",
+  "//devDependencies": "The four @adh-sdk/* entries are peer deps above; these workspace:* devDependencies exist only so this package can build and typecheck itself.",
   "devDependencies": {
-    "@agenticdevelopertoolkit/avatar": "workspace:*",
-    "@agenticdevelopertoolkit/chat": "workspace:*",
-    "@agenticdevelopertoolkit/themes": "workspace:*",
-    "@agenticdevelopertoolkit/viewport": "workspace:*",
+    "@adh-sdk/avatar": "workspace:*",
+    "@adh-sdk/chat": "workspace:*",
+    "@adh-sdk/themes": "workspace:*",
+    "@adh-sdk/viewport": "workspace:*",
     "@types/react": "19.2.18",
     "@types/react-dom": "19.2.3",
     "esbuild-plugin-preserve-directives": "^0.0.11",

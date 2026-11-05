@@ -29,8 +29,8 @@ import type { ProfilePrincipal } from './types'
  *
  * SERVER ONLY, by convention rather than by the `server-only` package, which this workspace does
  * not install (it is in no package.json here and in no lockfile, so the import would not
- * resolve; no toolkit server module uses it, including `@agentic-toolkit/auth/server`, this
- * file's closest precedent). Import it from `@agentic-toolkit/adh/profile-server`; it is
+ * resolve; no toolkit server module uses it, including `@adh-sdk/auth/server`, this
+ * file's closest precedent). Import it from `@adh-sdk/adh/profile-server`; it is
  * deliberately absent from the `./profile` barrel so a client component cannot reach it through
  * the normal import.
  *
@@ -41,7 +41,7 @@ import type { ProfilePrincipal } from './types'
  * rather than here because the two CLIENT fetchers need exactly the same mapping.
  */
 export async function fetchPublicPrincipal(slug: string): Promise<ProfilePrincipal | null> {
-  // Trim then strip a trailing slash (`@agentic-toolkit/next-env`'s `resolveBackendUrl` does the
+  // Trim then strip a trailing slash (`@adh-sdk/next-env`'s `resolveBackendUrl` does the
   // same with `.replace(/\/+$/, '')`; this package does not depend on that package — its fallback
   // to `http://localhost:3000` is wrong here — so the one line is copied rather than the
   // dependency). Without it, `API_BACKEND_URL=https://x/` doubles the slash before `public/...`.

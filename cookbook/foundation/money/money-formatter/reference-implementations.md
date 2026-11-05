@@ -1,5 +1,5 @@
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/Core/Money/MoneyFormatter.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Money/MoneyFormatter.swift` |
 

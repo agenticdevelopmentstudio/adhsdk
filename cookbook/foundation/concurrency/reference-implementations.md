@@ -1,5 +1,5 @@
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/Core/Concurrency/` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Concurrency/` |
 

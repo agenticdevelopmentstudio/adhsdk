@@ -4,7 +4,7 @@ import type { Storage } from '../storage/ports';
 import type { Tier } from '../middleware/auth';
 import { buildAnalyticsFetcher, buildErrorsFetcher } from '../telemetry/server';
 import type { Fetcher } from '../telemetry/ports';
-import { cachedSingleFlight } from '@agentic-toolkit/deploy-platform/util';
+import { cachedSingleFlight } from '@adh-sdk/deploy-platform/util';
 import type { AnalyticsMetricDTO, ErrorDTO, TelemetrySnapshot } from '../telemetry/types';
 
 // ---------------------------------------------------------------------------

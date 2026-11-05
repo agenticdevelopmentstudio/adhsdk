@@ -1,7 +1,7 @@
 ---
 id: 47eb19ef-2c42-4a52-a60b-54b6f01c8791
 title: "AI Plugin"
-domain: adtoolkit://cookbook/ai/plugins/ai-plugin
+domain: adhsdk://cookbook/ai/plugins/ai-plugin
 type: ingredient
 version: 1.1.0
 status: review
@@ -19,13 +19,13 @@ tags:
   - ai-plugin-runtime
   - protocol
 depends-on:
-  - adtoolkit://cookbook/ai/chat/chat-context
-  - adtoolkit://cookbook/ai/plugins/request-spec
-  - adtoolkit://cookbook/ai/plugins/stream-event
+  - adhsdk://cookbook/ai/chat/chat-context
+  - adhsdk://cookbook/ai/plugins/request-spec
+  - adhsdk://cookbook/ai/plugins/stream-event
 related:
-  - adtoolkit://cookbook/ai/plugins/plugin-manager
-  - adtoolkit://cookbook/ai/plugins/plugin-transport
-  - adtoolkit://cookbook/ai/plugins/plugin-descriptor
+  - adhsdk://cookbook/ai/plugins/plugin-manager
+  - adhsdk://cookbook/ai/plugins/plugin-transport
+  - adhsdk://cookbook/ai/plugins/plugin-descriptor
 references: []
 approved-by: ""
 approved-date: ""
@@ -203,7 +203,7 @@ Not applicable: this contract contains no logging call; it is a pure contract de
 
 ## Platform Notes
 
-- **SwiftUI**: The source is `packages/apple/AgenticToolkit/AIPluginKit/AIPlugin.swift`, alongside `AIChatContext.swift`, `AIRequestSpec.swift`, and `AIStreamEvent.swift` (its parameter and return types). Nothing here is SwiftUI-specific — a SwiftUI-based host consumes an `AIPlugin` exactly as an AppKit one does, through `AIPluginManager`/`PluginTransport`. The protocol requires every conforming type to be `Sendable` and a class (`public protocol AIPlugin: AnyObject, Sendable`), so a single plugin instance may be captured and invoked from any concurrency domain — the doc comment states "The plugin itself is `Sendable`, so capturing it is safe" (quoted from `PluginTransport.swift`, which captures a plugin inside a `Task`). Swift's strict concurrency checking (`SWIFT_STRICT_CONCURRENCY: complete`) enforces this for ordinary stored state; a conforming type assumes the safety obligation manually when it opts out with `@unchecked Sendable`, as `OpenAIPlugin` does. The framework declaring this protocol (`AIPluginKit`) is a Foundation-only dynamic framework, with no dependency beyond it.
+- **SwiftUI**: The source is `packages/apple/AgenticDeveloperHubSDK/AIPluginKit/AIPlugin.swift`, alongside `AIChatContext.swift`, `AIRequestSpec.swift`, and `AIStreamEvent.swift` (its parameter and return types). Nothing here is SwiftUI-specific — a SwiftUI-based host consumes an `AIPlugin` exactly as an AppKit one does, through `AIPluginManager`/`PluginTransport`. The protocol requires every conforming type to be `Sendable` and a class (`public protocol AIPlugin: AnyObject, Sendable`), so a single plugin instance may be captured and invoked from any concurrency domain — the doc comment states "The plugin itself is `Sendable`, so capturing it is safe" (quoted from `PluginTransport.swift`, which captures a plugin inside a `Task`). Swift's strict concurrency checking (`SWIFT_STRICT_CONCURRENCY: complete`) enforces this for ordinary stored state; a conforming type assumes the safety obligation manually when it opts out with `@unchecked Sendable`, as `OpenAIPlugin` does. The framework declaring this protocol (`AIPluginKit`) is a Foundation-only dynamic framework, with no dependency beyond it.
 - **Compose**: Android has no analogue of `dlopen`-loading an arbitrary `.aiplugin` bundle's principal class at runtime. A Kotlin port would define the same contract as a plain `interface AIPlugin` and resolve implementations from a build-time registry or a `ServiceLoader`-style mechanism instead of loading foreign bundles from disk.
 - **React/Web**: Model the contract as a plain TypeScript interface (`buildRequest`, `makeDecoder`, `buildValidationRequest`, `describeError`) with plugins as ES modules loaded via dynamic `import()` instead of `dlopen`. Use `fetch`/`ReadableStream` in place of `URLSession`/subprocess transport, and return `Promise`s from methods that are synchronous-but-throwing in Swift, since browser I/O is inherently asynchronous.
 - **AppKit / UIKit**: Identical to the SwiftUI note — this protocol is UI-framework-agnostic; only the host application embedding `AIPluginKit` differs, never this contract.
@@ -213,7 +213,7 @@ Not applicable: this contract contains no logging call; it is a pure contract de
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/AIPluginKit/AIPlugin.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/AIPluginKit/AIPlugin.swift` |
 
 ## Design Decisions
 
@@ -230,7 +230,7 @@ Not applicable: this contract contains no logging call; it is a pure contract de
 **Approved**: pending
 
 **Decision**: In the Apple/Swift implementation, `AIPluginKit` is linked, not embedded, by each plugin bundle, so it resolves to the host's single loaded image at `dlopen` time.
-**Rationale**: The doc comment states this is what lets the host cast a freshly loaded principal class to `AIPlugin`; embedding a second copy of the framework would give the plugin's `AIPlugin` type a distinct identity from the host's, and the cast in `AIPluginManager.loadPlugin(identifier:)` (`principalClass as? any AIPlugin.Type`) would fail. This is confirmed in `packages/apple/AIPlugins/project.yml`, where every plugin target (`ClaudeAPI`, `ClaudeLocal`, `Google`, `OpenAI`, `OpenAICompatible`) declares its `AgenticToolkit/AIPluginKit` dependency with `embed: false`. Any platform that dynamically loads plugin modules against a shared type system faces the same "one copy, not two" concern under its own name — see the WinUI 3 note on `AssemblyLoadContext` above.
+**Rationale**: The doc comment states this is what lets the host cast a freshly loaded principal class to `AIPlugin`; embedding a second copy of the framework would give the plugin's `AIPlugin` type a distinct identity from the host's, and the cast in `AIPluginManager.loadPlugin(identifier:)` (`principalClass as? any AIPlugin.Type`) would fail. This is confirmed in `packages/apple/AIPlugins/project.yml`, where every plugin target (`ClaudeAPI`, `ClaudeLocal`, `Google`, `OpenAI`, `OpenAICompatible`) declares its `AgenticDeveloperHubSDK/AIPluginKit` dependency with `embed: false`. Any platform that dynamically loads plugin modules against a shared type system faces the same "one copy, not two" concern under its own name — see the WinUI 3 note on `AssemblyLoadContext` above.
 **Approved**: pending
 
 ## Compliance

@@ -9,15 +9,15 @@ import { useState, type ReactElement } from 'react'
 // `retriedInits` WeakSet the http client tags would both be invisible from here.
 // Same class as layout/RouteError.tsx + layout/GlobalError.tsx; matching `external`
 // entries required (see tsup.config.ts).
-import { captureException } from '@agentic-toolkit/adh/telemetry/report-error'
-import { markRetriedRequest } from '@agentic-toolkit/adh/telemetry/retry'
+import { captureException } from '@adh-sdk/adh/telemetry/report-error'
+import { markRetriedRequest } from '@adh-sdk/adh/telemetry/retry'
 import {
   AuthProvider as ToolkitAuthProvider,
   setAuthErrorReporter,
   setAuthRetryMarker,
   type AuthProviderProps,
   type AuthUser,
-} from '@agentic-toolkit/auth'
+} from '@adh-sdk/auth'
 import { AppearanceSync } from './AppearanceSync'
 
 // The one adh-specific piece of the AuthProvider: bridge the toolkit's
@@ -35,7 +35,7 @@ import { AppearanceSync } from './AppearanceSync'
 // provider), that entry inlines its OWN private copy of `wired`, and the wiring
 // silently re-runs — or worse, setAuthErrorReporter/setAuthRetryMarker get called
 // against a forked telemetry module instance. Task 6.3: reach this via the package
-// path '@agentic-toolkit/adh/auth', not a relative import, or add this entry to the
+// path '@adh-sdk/adh/auth', not a relative import, or add this entry to the
 // preserved-import `external` list the same way the telemetry leaves are.
 let wired = false
 function wireAdhTelemetry(): null {

@@ -32,7 +32,7 @@
   `child-create-update-no-conflict-mapping` — it would surface as the raw
   backend message.
 - **Error states**: Every request this module makes can reject with
-  whatever `authedJson`/`authedRequest` (`@agentic-toolkit/auth`'s client)
+  whatever `authedJson`/`authedRequest` (`@adh-sdk/auth`'s client)
   throws — an `AuthHttpError` carrying an HTTP status and a backend-derived
   message for a non-2xx response, or a plain rejected `Promise` for a
   network-level failure that never reached the server. `gamesApi.create`/

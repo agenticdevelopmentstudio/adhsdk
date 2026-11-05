@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect } from 'react'
-import { offerSwipeBack } from '@agenticdevelopertoolkit/ui/lib/swipe-back'
+import { offerSwipeBack } from '@adh-sdk/ui/lib/swipe-back'
 
 /** Where a touch went down and came up, plus when. Viewport pixels and milliseconds. */
 export type SwipeSample = { x: number; y: number; t: number }

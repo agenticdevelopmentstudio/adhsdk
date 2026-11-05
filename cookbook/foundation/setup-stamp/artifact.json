@@ -3,7 +3,7 @@
   "meta": {
     "id": "469A222D-AF34-409F-9675-9B1F2659BAEC",
     "title": "Setup Stamp",
-    "domain": "adtoolkit://cookbook/foundation/setup-stamp",
+    "domain": "adhsdk://cookbook/foundation/setup-stamp",
     "type": "ingredient",
     "version": "1.0.0",
     "status": "review",
@@ -26,7 +26,7 @@
     ],
     "depends-on": [],
     "related": [
-      "adtoolkit://cookbook/foundation/file-system"
+      "adhsdk://cookbook/foundation/file-system"
     ],
     "references": [],
     "approved-by": "",

@@ -1,9 +1,9 @@
 # Web workspace
 
 The pnpm workspace for every web package in this repo: the persona chat
-toolkit and shared UI vocabulary under `@agenticdevelopertoolkit/*`, and the
+toolkit and shared UI vocabulary under `@adh-sdk/*`, and the
 application platform, family-site chrome and feature packages under
-`@agentic-toolkit/*`. Both scopes are workspace siblings and depend on each
+`@adh-sdk/*`. Both scopes are workspace siblings and depend on each
 other by `workspace:*`. Ships pre-built ESM packages.
 
 ## Packages
@@ -15,47 +15,47 @@ covered by the repo-root [`README.md`](../../README.md).
 
 | Package | Description | Depends on |
 |---|---|---|
-| `@agenticdevelopertoolkit/ui` | shadcn slot; `cn` helper, `useIsomorphicLayoutEffect`, blocks, `styles/globals.css` | — |
-| `@agenticdevelopertoolkit/themes` | `ColorModeProvider`, `ThemeStyle`, theme manifest + CSS | `ui` |
-| `@agenticdevelopertoolkit/model` | Providers, hooks, lib (search, breadcrumbs, nav, lookup) | — |
-| `@agenticdevelopertoolkit/markdown` | Markdown rendering | `ui` |
-| `@agenticdevelopertoolkit/search` | Search index + dialog | `markdown`, `ui` |
-| `@agenticdevelopertoolkit/controls` | filtered-list, source-code-panel, logging-panel, user-settings, search-dialog, appearance-mode-toggle, orb-row, dev-banner | `model` |
-| `@agenticdevelopertoolkit/editing` | The editing container — one owner of the draft, the Save button and the unsaved-changes guard for every editable surface | `ui` |
-| `@agenticdevelopertoolkit/landing` | Scroll-snapping landing deck (`Deck`, `Screen`, `NavChrome`) plus ~20 presentational blocks. Names no colour, font or copy — every visual value reads a `--lp-*` custom property, every block takes its content as props | — |
+| `@adh-sdk/ui` | shadcn slot; `cn` helper, `useIsomorphicLayoutEffect`, blocks, `styles/globals.css` | — |
+| `@adh-sdk/themes` | `ColorModeProvider`, `ThemeStyle`, theme manifest + CSS | `ui` |
+| `@adh-sdk/model` | Providers, hooks, lib (search, breadcrumbs, nav, lookup) | — |
+| `@adh-sdk/markdown` | Markdown rendering | `ui` |
+| `@adh-sdk/search` | Search index + dialog | `markdown`, `ui` |
+| `@adh-sdk/controls` | filtered-list, source-code-panel, logging-panel, user-settings, search-dialog, appearance-mode-toggle, orb-row, dev-banner | `model` |
+| `@adh-sdk/editing` | The editing container — one owner of the draft, the Save button and the unsaved-changes guard for every editable surface | `ui` |
+| `@adh-sdk/landing` | Scroll-snapping landing deck (`Deck`, `Screen`, `NavChrome`) plus ~20 presentational blocks. Names no colour, font or copy — every visual value reads a `--lp-*` custom property, every block takes its content as props | — |
 
 Where a `Depends on` cell below names a bare `ui`, `themes`, `model`,
 `markdown`, `search`, `controls`, `editing` or `landing`, it means the
-`@agenticdevelopertoolkit/*` package of that name.
+`@adh-sdk/*` package of that name.
 
 Application platform — auth, data access, and the generated-CRUD stack:
 
 | Package | Description | Depends on |
 |---|---|---|
-| `@agentic-toolkit/auth` | Session, sign-in surfaces, auth context | `ui` |
-| `@agentic-toolkit/data` | Typed data access over the backend API | `auth`, `ui` |
-| `@agentic-toolkit/resource` | Resource shells — list/detail scaffolding | `auth`, `data`, `ui` |
-| `@agentic-toolkit/crud` | Generated CRUD surfaces | `api-explorer`, `auth`, `ui` |
-| `@agentic-toolkit/api-explorer` | Interactive API explorer | `auth`, `ui` |
-| `@agentic-toolkit/adh` | Family site chrome — header, footer, legal, themes, debug | `themes`, `ui` |
-| `@agentic-toolkit/adh-ui` | The adh vocabulary the shared UI must not know about — rdid pickers and editors, invitation panes, the delete-entity danger zone | `ui` |
-| `@agentic-toolkit/messaging` | DMs, notifications, presence | `auth`, `data`, `ui` |
-| `@agentic-toolkit/persona` | The crossing consumers use to reach the persona vocabulary (`chat`, `themes`, `viewport`) without pulling a persona in | — |
-| `@agentic-toolkit/deploy-platform` | Deployment/tier helpers | — |
+| `@adh-sdk/auth` | Session, sign-in surfaces, auth context | `ui` |
+| `@adh-sdk/data` | Typed data access over the backend API | `auth`, `ui` |
+| `@adh-sdk/resource` | Resource shells — list/detail scaffolding | `auth`, `data`, `ui` |
+| `@adh-sdk/crud` | Generated CRUD surfaces | `api-explorer`, `auth`, `ui` |
+| `@adh-sdk/api-explorer` | Interactive API explorer | `auth`, `ui` |
+| `@adh-sdk/adh` | Family site chrome — header, footer, legal, themes, debug | `themes`, `ui` |
+| `@adh-sdk/adh-ui` | The adh vocabulary the shared UI must not know about — rdid pickers and editors, invitation panes, the delete-entity danger zone | `ui` |
+| `@adh-sdk/messaging` | DMs, notifications, presence | `auth`, `data`, `ui` |
+| `@adh-sdk/persona` | The crossing consumers use to reach the persona vocabulary (`chat`, `themes`, `viewport`) without pulling a persona in | — |
+| `@adh-sdk/deploy-platform` | Deployment/tier helpers | — |
 
 Features (`packages/features/*`) — one package per product area:
 
 | Package | Depends on |
 |---|---|
-| `@agentic-toolkit/bitbag` | — |
-| `@agentic-toolkit/authentication` | `auth`, `data`, `resource`, `ui` |
-| `@agentic-toolkit/dashboards` | `auth`, `data`, `resource`, `ui` |
-| `@agentic-toolkit/ecosystems` | `auth`, `data`, `resource`, `ui` |
-| `@agentic-toolkit/knowledgebases` | `auth`, `crud`, `data`, `resource`, `ui` |
-| `@agentic-toolkit/personas` | `auth`, `crud`, `data`, `resource`, `teams`, `ui` |
-| `@agentic-toolkit/projects` | `auth`, `data`, `resource`, `teams`, `ui` |
-| `@agentic-toolkit/research` | `auth`, `crud`, `data`, `resource`, `ui` |
-| `@agentic-toolkit/teams` | `auth`, `data`, `resource`, `ui` |
+| `@adh-sdk/bitbag` | — |
+| `@adh-sdk/authentication` | `auth`, `data`, `resource`, `ui` |
+| `@adh-sdk/dashboards` | `auth`, `data`, `resource`, `ui` |
+| `@adh-sdk/ecosystems` | `auth`, `data`, `resource`, `ui` |
+| `@adh-sdk/knowledgebases` | `auth`, `crud`, `data`, `resource`, `ui` |
+| `@adh-sdk/personas` | `auth`, `crud`, `data`, `resource`, `teams`, `ui` |
+| `@adh-sdk/projects` | `auth`, `data`, `resource`, `teams`, `ui` |
+| `@adh-sdk/research` | `auth`, `crud`, `data`, `resource`, `ui` |
+| `@adh-sdk/teams` | `auth`, `data`, `resource`, `ui` |
 
 Each package ships its own `dist/` with `"use client"` directives preserved,
 type declarations, sourcemaps, and mirrored CSS files. Consumers do **not**
@@ -96,7 +96,7 @@ packages/web/            # workspace root — pnpm/build config lives here
   copy-css.mjs           # only build helper, called from each package's build:css
   packages/              # libraries — zero loose files
     ui/ themes/ model/ markdown/ search/ controls/ editing/ landing/
-                         # the shared UI vocabulary (@agenticdevelopertoolkit/*)
+                         # the shared UI vocabulary (@adh-sdk/*)
     avatar/ chat/ viewport/ ...                   # persona chat toolkit
     auth/ data/ resource/ crud/ api-explorer/     # application platform
     adh/                 # family site chrome (header, footer, legal, themes, debug)
@@ -152,7 +152,7 @@ Iterate on a package **and** the site together:
 
 ```bash
 # In one shell — package(s) in watch mode, from packages/web/
-pnpm --filter '@agenticdevelopertoolkit/ui...' run dev
+pnpm --filter '@adh-sdk/ui...' run dev
 # In another shell — site dev server, from websites/site/
 npm run dev
 ```

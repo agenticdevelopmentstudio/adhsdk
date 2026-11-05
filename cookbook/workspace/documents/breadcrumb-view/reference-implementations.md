@@ -1,5 +1,5 @@
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/macOS/UI/ViewControllers/DocumentPane/BreadcrumbView.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/DocumentPane/BreadcrumbView.swift` |
 

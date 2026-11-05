@@ -1,7 +1,7 @@
 ---
 id: bd101720-9fd3-4978-a0aa-7671e301e64b
 title: Avatar Engine
-domain: agenticdevelopertoolkit://recipes/avatar-engine
+domain: adhsdk://recipes/avatar-engine
 type: ingredient
 version: 1.0.1
 status: review
@@ -25,9 +25,9 @@ tags:
 - animation
 - state-machine
 depends-on:
-- agenticdevelopertoolkit://recipes/avatar-engine-config
-- agenticdevelopertoolkit://recipes/avatar-engine-math
-- agenticdevelopertoolkit://recipes/avatar-engine-runtime
+- adhsdk://recipes/avatar-engine-config
+- adhsdk://recipes/avatar-engine-math
+- adhsdk://recipes/avatar-engine-runtime
 related: []
 references: []
 approved-by: ''
@@ -41,23 +41,23 @@ approved-date: ''
 Avatar Engine is the top-level orchestrator of the cross-platform avatar
 animation stack: `Engine` (`Engine.swift`, the Apple `AvatarAnimationEngine`
 package) and `createEngine` (`engine.ts`, the
-`@agenticdevelopertoolkit/avatar-engine` web package) are two independent
+`@adh-sdk/avatar-engine` web package) are two independent
 implementations of the same deterministic, frame-clocked state machine, built
 to produce byte-for-byte identical output from the same seed, the same
 `CharacterConfig`, and the same sequence of `tick`/command calls. It is a
 headless **engine** — no visual surface of its own — that composes a
 `CharacterConfig` (documented in
-`agenticdevelopertoolkit://recipes/avatar-engine-config`), a `Prng`
-(`agenticdevelopertoolkit://recipes/avatar-engine-math`), and a
+`adhsdk://recipes/avatar-engine-config`), a `Prng`
+(`adhsdk://recipes/avatar-engine-math`), and a
 `Channels`/`Scheduler`/`Tweens` runtime
-(`agenticdevelopertoolkit://recipes/avatar-engine-runtime`) with two internal
+(`adhsdk://recipes/avatar-engine-runtime`) with two internal
 collaborators not covered by this recipe or any sibling recipe at the time of
 writing — a mood/timeline arbiter (`Arbiter.swift`/`arbiter.ts`) and an
 ambient-reflex driver (`Reflexes.swift`/`reflexes.ts`) — to turn per-frame
 commands into a `DisplayList` a renderer can paint. This package name is
 deliberately distinct from the older, web-only
-`@agenticdevelopertoolkit/avatar` package (`useAvatarEngine`, documented in
-`agenticdevelopertoolkit://recipes/avatar-behavior`): the two share the word
+`@adh-sdk/avatar` package (`useAvatarEngine`, documented in
+`adhsdk://recipes/avatar-behavior`): the two share the word
 "avatar" and little else, and this recipe does not treat them as related.
 
 ## Behavioral Requirements
@@ -464,5 +464,5 @@ entirely in the sibling avatar-engine-render recipe.
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
-| 1.0.1 | 2026-09-25 | Mike Fullerton | Un-hard-wrapped four agenticdevelopertoolkit:// recipe URIs split across code-span line breaks; renamed config-exposure/saying-emptiness-divergence requirement names to kebab-case; reduced-motion-gating corrected to describe re-arm/mood-effect-restart when the predicate later returns false. Added best-practices compliance rows (separation-of-concerns: passed). |
+| 1.0.1 | 2026-09-25 | Mike Fullerton | Un-hard-wrapped four adhsdk:// recipe URIs split across code-span line breaks; renamed config-exposure/saying-emptiness-divergence requirement names to kebab-case; reduced-motion-gating corrected to describe re-arm/mood-effect-restart when the predicate later returns false. Added best-practices compliance rows (separation-of-concerns: passed). |
 | 1.0.0 | 2026-09-23 | Mike Fullerton | Initial creation |

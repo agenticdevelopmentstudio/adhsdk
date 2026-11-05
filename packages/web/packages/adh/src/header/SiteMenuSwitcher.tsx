@@ -7,7 +7,7 @@ import { MarketingSiteMenu } from './MarketingSiteMenu'
 import { WorkspaceSiteMenu } from './WorkspaceSiteMenu'
 import { WorkspaceMenu } from './WorkspaceMenu'
 // The package path, like SiteMenu's: the context must be the ONE the host's provider fills.
-import { useWorkspacesMenu } from '@agentic-toolkit/adh/header'
+import { useWorkspacesMenu } from '@adh-sdk/adh/header'
 import { isWorkspaceMenuRoute } from './activeMenuGroups'
 import { PrefetchSiblingSites } from './PrefetchSiblingSites'
 

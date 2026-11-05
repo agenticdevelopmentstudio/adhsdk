@@ -1,9 +1,9 @@
 // The Organizations URL grammar — the ONE authoritative parse of an organizations route's path
 // segments into OrganizationsFeature's selection props, so a host route can't drift its parsing
-// away from what the feature expects (mirrors @agentic-toolkit/ecosystems and
-// @agentic-toolkit/teams's parse-path).
+// away from what the feature expects (mirrors @adh-sdk/ecosystems and
+// @adh-sdk/teams's parse-path).
 //
-// SERVER-SAFE, and its own entry (`@agentic-toolkit/organizations/parse`) for that reason: the
+// SERVER-SAFE, and its own entry (`@adh-sdk/organizations/parse`) for that reason: the
 // package barrel's dist carries "use client", so an RSC importing the parser from there would
 // throw on a render-only client reference.
 

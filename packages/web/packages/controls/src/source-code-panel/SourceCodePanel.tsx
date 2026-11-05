@@ -36,7 +36,7 @@ export function SourceCodePanel(props: SourceCodePanelProps) {
     }
     const update = () => setResolvedTheme(readShikiTheme(rootRef.current))
     update()
-    const styleEl = document.getElementById('agentic-toolkit-theme')
+    const styleEl = document.getElementById('adh-sdk-theme')
     if (!styleEl) return
     const observer = new MutationObserver(update)
     observer.observe(styleEl, { childList: true, characterData: true, subtree: true })

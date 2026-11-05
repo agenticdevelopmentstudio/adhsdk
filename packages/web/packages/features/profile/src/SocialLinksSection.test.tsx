@@ -9,19 +9,19 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 // under vitest (same mock as settingsDirtyBridge.test.tsx).
 const { push } = vi.hoisted(() => ({ push: vi.fn() }));
 vi.mock("next/navigation", () => ({ useRouter: () => ({ push }) }));
-import { SettingsDirtyProvider, useSettingsDirty } from "@agentic-toolkit/resource";
+import { SettingsDirtyProvider, useSettingsDirty } from "@adh-sdk/resource";
 import {
   SocialLinksSection,
   socialLinkBlockedReason,
   SOCIAL_LINK_URL_REQUIRED_MESSAGE,
 } from "./SocialLinksSection";
-import { createSocialLink, updateSocialLink, type SocialLink } from "@agentic-toolkit/data/profile";
+import { createSocialLink, updateSocialLink, type SocialLink } from "@adh-sdk/data/profile";
 
 // The section calls useMutation/useQueryClient directly (no wrapper hook to swap), so a
 // real QueryClient context is required; only the three network functions are stubbed.
 // `resolvePrivacyLevel`/`socialLinksKey` stay real — they are pure helpers.
-vi.mock("@agentic-toolkit/data/profile", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("@agentic-toolkit/data/profile")>();
+vi.mock("@adh-sdk/data/profile", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@adh-sdk/data/profile")>();
   return {
     ...actual,
     createSocialLink: vi.fn(),

@@ -1,7 +1,7 @@
 ---
 id: 775f1761-f757-41d0-b51b-354a410a11f4
 title: "Group View"
-domain: adtoolkit://cookbook/ui/settings/layout/group-view
+domain: adhsdk://cookbook/ui/settings/layout/group-view
 type: ingredient
 version: 1.2.2
 status: review
@@ -21,8 +21,8 @@ tags:
   - layout
 depends-on: []
 related:
-  - adtoolkit://cookbook/ui/settings/layout/conditional-view
-  - adtoolkit://cookbook/ui/settings/layout/dismissible-hint-view
+  - adhsdk://cookbook/ui/settings/layout/conditional-view
+  - adhsdk://cookbook/ui/settings/layout/dismissible-hint-view
   - agenticdevelopercookbook://guidelines/cookbook/ui/platform-design-languages
 references:
   - https://developer.apple.com/design/human-interface-guidelines/lists-and-tables
@@ -390,13 +390,13 @@ Not applicable: the component contains no logging call.
   `display: none` alone, so the surrounding gap actually closes, mirroring
   `#requirements/row-visibility-binding`.
 - **AppKit/UIKit** (source platform): Source file
-  `packages/apple/AgenticToolkit/macOS/SystemIntegration/ComposableSettingsWindow/Views/GroupView.swift`,
+  `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/Views/GroupView.swift`,
   with layout constants from `ViewLayout.swift` (`SettingsLayout.default`,
   keyed `.cardCornerRadius` = 10pt, `.captionSpacing` = 6pt,
   `.cardHorizontalInset` = 14pt, `.cardVerticalInset` = 9pt,
   `.dividerThickness` = 1pt — the source of every fixed number in this
   recipe), `ThemedBox`/`ThemedSeparatorView`/`ThemedLabel` from the
-  `agenticdevelopertoolkit` submodule's `ThemedViews.swift` (`card-surface`
+  `adhsdk` submodule's `ThemedViews.swift` (`card-surface`
   is a `ThemedBox` filled with `.elevatedSurface`, `stroke: nil`), and the
   caption view from `HeaderView.swift`. A macOS-only (`import AppKit`)
   `NSView` subclass, `@MainActor`, inside the `ComposableSettings`
@@ -450,7 +450,7 @@ Not applicable: the component contains no logging call.
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/macOS/SystemIntegration/ComposableSettingsWindow/Views/GroupView.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/Views/GroupView.swift` |
 
 ## Design Decisions
 

@@ -1,7 +1,7 @@
 ---
 id: fa6a7094-40c2-4302-8cf3-742a072f5bb3
 title: "File System File Browser"
-domain: adtoolkit://cookbook/workspace/files/file-browser-model
+domain: adhsdk://cookbook/workspace/files/file-browser-model
 type: ingredient
 version: 1.2.2
 status: review
@@ -21,8 +21,8 @@ tags:
   - restoration
 depends-on: []
 related:
-  - adtoolkit://cookbook/workspace/files/file-browser-view
-  - adtoolkit://cookbook/workspace/files/file-tree-view
+  - adhsdk://cookbook/workspace/files/file-browser-view
+  - adhsdk://cookbook/workspace/files/file-tree-view
 references:
   - https://developer.apple.com/documentation/combine/observableobject
   - https://developer.apple.com/documentation/foundation/url/resolvingsymlinksinpath()
@@ -391,7 +391,7 @@ recipe specifies.
   "only report when it actually changed" callback this recipe requires;
   `FileTreeManager`'s two debounces map directly onto `setTimeout`/
   `clearTimeout` with the same 500ms/2000ms delays.
-- **AppKit / UIKit**: This is the source platform (the `AgenticToolkitMacOS`
+- **AppKit / UIKit**: This is the source platform (the `AgenticDeveloperHubSDKMacOS`
   module), but that placement is a module-organization fact, not a technical
   one: none of `FileBrowserDirectories.swift`, `FileBrowserRestorationState.swift`,
   or `FileTreeManager.swift` imports AppKit. Porting these three types to
@@ -425,9 +425,9 @@ recipe specifies.
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/macOS/UI/ViewControllers/FileBrowser/Model/FileBrowserDirectories.swift` |
-| apple | `packages/apple/AgenticToolkit/macOS/UI/ViewControllers/FileBrowser/Model/FileBrowserRestorationState.swift` |
-| apple | `packages/apple/AgenticToolkit/macOS/UI/ViewControllers/FileBrowser/Model/FileTreeManager.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/FileBrowser/Model/FileBrowserDirectories.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/FileBrowser/Model/FileBrowserRestorationState.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/FileBrowser/Model/FileTreeManager.swift` |
 
 ## Design Decisions
 

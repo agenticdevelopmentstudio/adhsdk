@@ -6,7 +6,7 @@ import {
   neededByMessage,
   FeatureRequiredError,
   type CatalogFeature,
-} from "@agentic-toolkit/data/ecosystems";
+} from "@adh-sdk/data/ecosystems";
 import { FeaturePickerDialog } from "./FeaturePickerDialog";
 
 /**

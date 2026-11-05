@@ -1,8 +1,8 @@
-// The persona toolkit's chat vocabulary, re-published from its owner.
+// The persona layer's chat vocabulary, re-published from its owner.
 //
-// Consumers import from here rather than naming `@agenticdevelopertoolkit/chat`
+// Consumers import from here rather than naming `@adh-sdk/chat`
 // themselves. That is not a style preference — it is the only thing that keeps
-// ONE copy of the package in a bundle. adh holds `agenticdevelopertoolkit` twice
+// ONE copy of the package in a bundle. adh holds `adhsdk` twice
 // (its own submodule, and the one nested inside this repo), and a bare specifier
 // in a shipped `dist` resolves from the importing file's REAL path, not from the
 // consuming site. So a site that names the scope directly resolves adh's copy,
@@ -10,8 +10,8 @@
 // nothing dedupes across two different directories. A site that never names the
 // scope cannot acquire the second copy.
 //
-// The older, pruned `@agentic-toolkit/chat` snapshot this comment used to warn
-// against was deleted in 2026-08; `@agenticdevelopertoolkit/chat` is now the only one.
+// The older, pruned `@adh-sdk/chat` snapshot this comment used to warn
+// against was deleted in 2026-08; `@adh-sdk/chat` is now the only one.
 
 export {
   InlineChat,
@@ -32,14 +32,14 @@ export {
   // vocabulary, only the plumbing a terminal-style composer needs (a native
   // <input> caret cannot be reshaped in CSS, so a theme that wants a block
   // cursor has to have one drawn for it). Re-exported here for the same reason
-  // as everything above: a consumer that named `@agenticdevelopertoolkit/chat`
+  // as everything above: a consumer that named `@adh-sdk/chat`
   // to reach them would pull a second copy of the whole chat package.
   caretMetrics,
   useCaretTracker,
   useBlockCursor,
   useInputFocusReclaim,
   CHAT_INPUT_SELECTOR,
-} from '@agenticdevelopertoolkit/chat'
+} from '@adh-sdk/chat'
 
 export type {
   CaretMetrics,
@@ -58,4 +58,4 @@ export type {
   StatusWordPair,
   StatusTintSpec,
   TypingIndicatorProps,
-} from '@agenticdevelopertoolkit/chat'
+} from '@adh-sdk/chat'

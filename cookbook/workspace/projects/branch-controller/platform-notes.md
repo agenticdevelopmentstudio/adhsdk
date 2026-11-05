@@ -1,8 +1,8 @@
 
 - **SwiftUI**: The source is
-  `packages/apple/AgenticToolkit/macOS/Features/Projects/BranchController.swift`,
+  `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/BranchController.swift`,
   built on `AppKit` (`NSHashTable`, `NSMenu`, `NSMenuItem`, `NSWorkspace`,
-  `NSPasteboard`) and `AgenticToolkitCore` (`ProjectCheckout`, `GitClient`,
+  `NSPasteboard`) and `AgenticDeveloperHubSDKCore` (`ProjectCheckout`, `GitClient`,
   `GitStatusProvider`, `AppCommand`, `TabPaneDataSource`/`TabPaneDelegate`,
   `Edge`, `TabPaneStatusSymbol`, `ClosureMenuItemTarget`). It uses no
   SwiftUI API; a SwiftUI-hosted pane would still need an `NSViewController`
@@ -44,7 +44,7 @@
   thread-affinity of its own — mirror the main-thread confinement by only
   ever touching this object from the UI thread (`DispatcherQueue`), the
   same discipline the git status provider's WinUI port already assumes
-  (see `adtoolkit://cookbook/workspace/files/git-status-provider`).
+  (see `adhsdk://cookbook/workspace/files/git-status-provider`).
   Replace `NSHashTable<TabPaneViewController>.weakObjects()` with a
   `List<WeakReference<TabPaneViewController>>` (or a
   `ConditionalWeakTable`), pruning dead entries on each scan since .NET has

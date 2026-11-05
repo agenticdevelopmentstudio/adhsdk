@@ -1,7 +1,7 @@
 ---
 id: d3e1f776-8ad1-431f-9485-386ac285a039
 title: Avatar Engine Config
-domain: agenticdevelopertoolkit://recipes/avatar-engine-config
+domain: adhsdk://recipes/avatar-engine-config
 type: ingredient
 category: engine
 version: 1.0.3

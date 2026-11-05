@@ -1,7 +1,7 @@
 ---
 id: 471eb7b8-6821-4fd3-ab89-022c56757421
 title: Avatar Engine Math
-domain: agenticdevelopertoolkit://recipes/avatar-engine-math
+domain: adhsdk://recipes/avatar-engine-math
 type: ingredient
 version: 1.0.2
 status: review

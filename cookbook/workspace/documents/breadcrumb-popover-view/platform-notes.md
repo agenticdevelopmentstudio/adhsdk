@@ -32,7 +32,7 @@
   mirroring `attributedTitle(for:)`. A directory row should ignore both click
   and Enter-to-choose, mirroring `guard !node.isDirectory`.
 - **AppKit/UIKit** (source platform): Implemented in
-  `packages/apple/AgenticToolkit/macOS/UI/ViewControllers/DocumentPane/BreadcrumbPopoverViewController.swift`.
+  `packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/DocumentPane/BreadcrumbPopoverViewController.swift`.
   A `@MainActor`, `final` `NSViewController` presented as the content view
   controller of an `NSPopover` opened by a `BreadcrumbView` crumb. It loads
   the directory's immediate children via `FileTreeNode.loadChildren(for:)`

@@ -1,4 +1,4 @@
-/* Tailwind v4 source registration for @agentic-toolkit/games.
+/* Tailwind v4 source registration for @adh-sdk/games.
    Both globs are needed: `next dev` resolves this package's `development` export
    condition to src, a production build resolves it to dist, and a class that only
    appears in the half Tailwind was not told to scan is simply not emitted. */
@@ -11,7 +11,7 @@
    it is chained unconditionally rather than "only when no host already covers it":
    a rule whose answer depends on composition is how the settings overlay shipped
    half-styled across the fleet. */
-@import "@agentic-toolkit/resource/sources.css";
+@import "@adh-sdk/resource/sources.css";
 
 /* And `ecosystems`, for the same reason and by the same rule — new as of
    product-gaming-modes (2026-08-22). GamesFeature no longer draws a rail of its own: it
@@ -22,7 +22,7 @@
    blind to which files Tailwind was told to scan, and the page still renders, just wrong.
    Registered here rather than in the games site's `site.css` so it holds for EVERY host of
    this package, present and future, instead of for the one host that remembered. */
-@import "@agentic-toolkit/ecosystems/sources.css";
+@import "@adh-sdk/ecosystems/sources.css";
 
 @source "./src/**/*.{ts,tsx}";
 @source "./dist/**/*.js";

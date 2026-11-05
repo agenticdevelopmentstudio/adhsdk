@@ -29,7 +29,7 @@
   React `useEffect` teardown) MUST NOT clear that timer early, or the panel
   will never disappear.
 - **AppKit / UIKit**: The source is
-  `packages/apple/AgenticToolkit/macOS/Features/Projects/ProjectScanProgressWindow.swift`,
+  `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectScanProgressWindow.swift`,
   using `NSWindowController`, `NSPanel`, `NSProgressIndicator`,
   `NSStackView`, `NSLayoutConstraint`, and `DispatchQueue.main.asyncAfter`,
   plus two components from the project's shared AppKit UI toolkit,

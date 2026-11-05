@@ -2,7 +2,7 @@
 - **SwiftUI**: the source (`ExtensionResourcePath.swift`) is plain
   Foundation — `URL` and, transitively through `NSHomeDirectory()` and
   `FileManager.default.urls(for:in:)`, `FileManager` — with zero dependency
-  on SwiftUI or any view-layer framework. It sits in `AgenticToolkitCore`,
+  on SwiftUI or any view-layer framework. It sits in `AgenticDeveloperHubSDKCore`,
   the tier reachable from both `Language/` (the snippet store) and
   `macOS/` (the theme, host, and plugin-manager call sites).
   `ExtensionResourcePathError` is declared `public enum` conforming to
@@ -44,7 +44,7 @@
   operating systems.
 - **AppKit / UIKit**: identical to the SwiftUI note — the component depends
   on neither AppKit nor UIKit, so a macOS or iOS host consumes the same
-  `AgenticToolkitCore` type directly with no translation needed.
+  `AgenticDeveloperHubSDKCore` type directly with no translation needed.
 - **WinUI 3**: there is no .NET or Windows App SDK type that performs this
   exact resolve-then-contain check. `Path.GetFullPath` alone does not
   resolve symlinks or junctions the way symlink resolution does in the

@@ -9,12 +9,12 @@
 //   /<base>/-/<docId>                      → an uncategorised document open
 //   /<base>/work/notes/-/<docId>           → a document open inside that chain
 //
-// This is the SAME grammar `@agentic-toolkit/notebook`'s `parse-path.ts` shipped first — see
+// This is the SAME grammar `@adh-sdk/notebook`'s `parse-path.ts` shipped first — see
 // that file for why the separator is `-` and not a UUID sniff or a reserved word. The token
 // itself is shared (`CHAIN_SEPARATOR`), so the two features can never drift into two different
 // ideas of where a chain ends.
 //
-// IT COMES FROM `@agentic-toolkit/categories/chain`, NOT the categories barrel, and that is
+// IT COMES FROM `@adh-sdk/categories/chain`, NOT the categories barrel, and that is
 // load-bearing rather than tidy. This module is built as its own directive-free chunk precisely
 // so an RSC host page can CALL `parseResearchPath` — but the categories barrel is a whole-file
 // `"use client"` module, and the toolkit packages are `external` in this build, so importing the
@@ -36,7 +36,7 @@
 // would open on the empty list. The grammar still supports both shapes (chain and doc together)
 // because the parser has no way to know which host is calling it, and a narrower grammar here
 // would be a fact about one host leaking into the shared parser.
-import { CHAIN_SEPARATOR } from "@agentic-toolkit/categories/chain";
+import { CHAIN_SEPARATOR } from "@adh-sdk/categories/chain";
 
 /** The selection ResearchFeature renders, parsed from a route's path segments.
  *  Maps 1:1 onto ResearchFeature's props (the host supplies `basePath`). */

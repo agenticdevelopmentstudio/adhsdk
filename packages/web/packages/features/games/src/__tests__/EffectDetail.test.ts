@@ -8,7 +8,7 @@ import {
   effectValidate,
 } from "../EffectDetail";
 import { optionalWholeNumberProblem, wholeNumberProblem } from "../fields";
-import type { GameEffect } from "@agentic-toolkit/data/games";
+import type { GameEffect } from "@adh-sdk/data/games";
 
 function row(over: Partial<GameEffect> = {}): GameEffect {
   return {

@@ -2,10 +2,10 @@
 
 import { useCallback, useRef, useState } from 'react';
 import { ImageIcon, Upload } from 'lucide-react';
-import { authedJson } from '@agentic-toolkit/auth/client';
-import { useResourceItemQuery } from '@agentic-toolkit/data';
-import { Avatar, AvatarFallback, AvatarImage } from '@agenticdevelopertoolkit/ui/components/avatar';
-import { Button } from '@agenticdevelopertoolkit/ui/components/button';
+import { authedJson } from '@adh-sdk/auth/client';
+import { useResourceItemQuery } from '@adh-sdk/data';
+import { Avatar, AvatarFallback, AvatarImage } from '@adh-sdk/ui/components/avatar';
+import { Button } from '@adh-sdk/ui/components/button';
 
 /**
  * The listing's photo, on the platform's existing presigned R2 flow:
@@ -17,7 +17,7 @@ import { Button } from '@agenticdevelopertoolkit/ui/components/button';
  * it needs its own accessible description. It is a copy rather than a generalisation of that
  * component because generalising it means changing the props of a shipped toolkit component —
  * whose prop is literally `personaId` — for its second consumer. Two copies is the fleet's
- * pattern here; when a third uploader appears, the extraction target is `@agenticdevelopertoolkit/ui`,
+ * pattern here; when a third uploader appears, the extraction target is `@adh-sdk/ui`,
  * and this comment is the pointer to it.
  *
  * The id is reported UP and saved by the editor with everything else. Nothing here writes to

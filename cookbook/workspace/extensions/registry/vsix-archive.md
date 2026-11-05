@@ -1,7 +1,7 @@
 ---
 id: dbe4b3b6-ac5b-4d45-ba2a-84aad1a8582e
 title: "VSIX Archive"
-domain: adtoolkit://cookbook/workspace/extensions/registry/vsix-archive
+domain: adhsdk://cookbook/workspace/extensions/registry/vsix-archive
 type: ingredient
 version: 1.2.0
 status: review
@@ -22,12 +22,12 @@ tags:
   - code-signing
 depends-on: []
 related:
-  - adtoolkit://cookbook/workspace/extensions/registry/open-vsx-client
+  - adhsdk://cookbook/workspace/extensions/registry/open-vsx-client
 references:
-  - packages/apple/AgenticToolkit/Core/Extensions/VSIXArchive.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Core/Process/CommandRunner.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Core/Loggable.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Core/Extensions/VSIXInstaller.swift (agenticdevelopertoolkit)
+  - packages/apple/AgenticDeveloperHubSDK/Core/Extensions/VSIXArchive.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Core/Process/CommandRunner.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Core/Loggable.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Core/Extensions/VSIXInstaller.swift (adhsdk)
 approved-by: ""
 approved-date: ""
 ---
@@ -395,7 +395,7 @@ Subsystem: the host's logging subsystem | Category: this concept's own category
 ## Platform Notes
 
 - **SwiftUI**: Source:
-  `packages/apple/AgenticToolkit/Core/Extensions/VSIXArchive.swift`, its
+  `packages/apple/AgenticDeveloperHubSDK/Core/Extensions/VSIXArchive.swift`, its
   process runner in `Core/Process/CommandRunner.swift`, and its `Loggable`
   conformance from `Core/Loggable.swift`. The type is plain `Foundation`,
   `CryptoKit`, and `OSLog` with no SwiftUI dependency; a SwiftUI-hosted
@@ -434,9 +434,9 @@ Subsystem: the host's logging subsystem | Category: this concept's own category
 - **AppKit / UIKit**: No divergence from the SwiftUI bullet above — the
   source is framework-agnostic `Foundation`/`CryptoKit` code plus one
   `Process` launch, callable identically from an AppKit-hosted (macOS) or
-  UIKit-hosted (iOS) caller. `AgenticToolkitCore`, the framework target that
+  UIKit-hosted (iOS) caller. `AgenticDeveloperHubSDKCore`, the framework target that
   builds this file, is configured `platform: macOS` in
-  `packages/apple/AgenticToolkit/project.yml` today; `/usr/bin/ditto` itself
+  `packages/apple/AgenticDeveloperHubSDK/project.yml` today; `/usr/bin/ditto` itself
   is a macOS command-line tool with no iOS equivalent, so an iOS port of
   `expand` specifically (not `verify`) would need a pure-Swift or
   `libarchive`-based unzip that re-implements the same two containment
@@ -471,7 +471,7 @@ Subsystem: the host's logging subsystem | Category: this concept's own category
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/Core/Extensions/VSIXArchive.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Extensions/VSIXArchive.swift` |
 
 ## Design Decisions
 

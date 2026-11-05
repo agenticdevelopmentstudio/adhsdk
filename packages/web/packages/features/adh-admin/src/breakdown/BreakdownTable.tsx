@@ -2,9 +2,9 @@
 
 import { useMemo } from "react";
 import { Bot, Boxes, Building2, Info, User, type LucideIcon } from "lucide-react";
-import { DataTable, type DataTableColumn } from "@agenticdevelopertoolkit/ui/components/data-table";
-import { formatMicrosFloor } from "@agenticdevelopertoolkit/ui/lib/money";
-import { formatCompact, formatCount, formatDuration } from "@agenticdevelopertoolkit/ui/lib/quantities";
+import { DataTable, type DataTableColumn } from "@adh-sdk/ui/components/data-table";
+import { formatMicrosFloor } from "@adh-sdk/ui/lib/money";
+import { formatCompact, formatCount, formatDuration } from "@adh-sdk/ui/lib/quantities";
 import type { Breakdown, BreakdownBy, BreakdownSort } from "../api/insight";
 import { llmTokenTotal } from "../costs/totals";
 

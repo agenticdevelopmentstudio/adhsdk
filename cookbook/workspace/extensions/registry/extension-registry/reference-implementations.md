@@ -1,5 +1,5 @@
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/Core/Extensions/ExtensionRegistry.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Extensions/ExtensionRegistry.swift` |
 

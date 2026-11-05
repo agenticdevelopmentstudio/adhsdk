@@ -48,7 +48,7 @@ export const WORKSPACES_CHANGED_EVENT = "adh:workspaces-changed";
  *  - the toolkit's resource cache, under `useResourceList('workspaces')` — SiteHomeShell's chooser,
  *    which is a different entry over the same endpoint;
  *  - **the host app's own client**, which is a different PHYSICAL react-query module from this one
- *    (see `@agentic-toolkit/data/query`). The hub bundles its own copy, so its provider is
+ *    (see `@adh-sdk/data/query`). The hub bundles its own copy, so its provider is
  *    invisible to any toolkit component and no `useQueryClient()` here can ever reach it. That is
  *    the bug this exists for: an org created from the Organizations rail refetched the org list and
  *    left the hub's workspace switcher showing the pre-create list for the whole 5-minute

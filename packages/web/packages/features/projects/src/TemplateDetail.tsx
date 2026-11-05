@@ -2,16 +2,16 @@
 
 import { type ReactElement } from "react";
 import { Plus, Trash2 } from "lucide-react";
-import { Button } from "@agenticdevelopertoolkit/ui/components/button";
-import { Card, CardContent } from "@agenticdevelopertoolkit/ui/components/card";
-import { Field } from "@agenticdevelopertoolkit/ui/blocks/field";
-import { FieldGroup } from "@agenticdevelopertoolkit/ui/blocks/field-group";
-import { Input } from "@agenticdevelopertoolkit/ui/components/input";
-import { Select } from "@agenticdevelopertoolkit/ui/components/select";
-import { Textarea } from "@agenticdevelopertoolkit/ui/components/textarea";
-import { TagSetField } from "@agenticdevelopertoolkit/ui/blocks/tag-set-field";
-import { ErrorText } from "@agenticdevelopertoolkit/ui/components/error-text";
-import { DetailSection, unchangedFromStored } from "@agentic-toolkit/resource";
+import { Button } from "@adh-sdk/ui/components/button";
+import { Card, CardContent } from "@adh-sdk/ui/components/card";
+import { Field } from "@adh-sdk/ui/blocks/field";
+import { FieldGroup } from "@adh-sdk/ui/blocks/field-group";
+import { Input } from "@adh-sdk/ui/components/input";
+import { Select } from "@adh-sdk/ui/components/select";
+import { Textarea } from "@adh-sdk/ui/components/textarea";
+import { TagSetField } from "@adh-sdk/ui/blocks/tag-set-field";
+import { ErrorText } from "@adh-sdk/ui/components/error-text";
+import { DetailSection, unchangedFromStored } from "@adh-sdk/resource";
 import {
   projectBodyOf,
   workItemBodyOf,
@@ -26,7 +26,7 @@ import {
   type Template,
   type TemplateKind,
   type WorkItemTemplateBody,
-} from "@agentic-toolkit/data/projects";
+} from "@adh-sdk/data/projects";
 import {
   ESTIMATE_SCALES,
   estimateScaleOptionLabel,

@@ -17,5 +17,5 @@ other rows rest on source composing only stock
 `NSView`/`NSControl` instances with no custom drawing, network, or persistence
 code of its own.
 
-No test in the repository's test targets constructs `SliderView`, so `unit-test-coverage` is `failed`: a search of `AgenticToolkitMacOSTests` and the other test targets for the type name finds nothing.
+No test in the repository's test targets constructs `SliderView`, so `unit-test-coverage` is `failed`: a search of `AgenticDeveloperHubSDKMacOSTests` and the other test targets for the type name finds nothing.
 

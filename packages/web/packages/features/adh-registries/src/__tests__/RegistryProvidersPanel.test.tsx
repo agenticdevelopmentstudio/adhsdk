@@ -2,7 +2,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import type { EntryRow, RegistryClient } from '@agentic-toolkit/registry/client';
+import type { EntryRow, RegistryClient } from '@adh-sdk/registry/client';
 import { RegistryProvidersPanel } from '../RegistryProvidersPanel';
 
 // See RegistryEditor.test.tsx: no `test.globals`, so @testing-library's automatic cleanup

@@ -18,7 +18,7 @@ Every change proposed here is close to free today and expensive later:
 |---|---|
 | `Backend` conformers | **zero** — `grep ": Backend"` across `packages/apple` returns nothing |
 | `InboundEvent` producers | **zero** |
-| `AgenticDeveloperToolkit` tests | **zero** — no `Tests/` directory exists |
+| `AgenticDeveloperHubSDK` tests | **zero** — no `Tests/` directory exists |
 | Planned ports of the same contract | **three** (M6: Apple, Windows, Android) |
 
 A protocol with no implementations can absorb a new case for the cost of typing
@@ -27,7 +27,7 @@ is a coordinated migration. `small-reversible-decisions` says spend the decision
 now, while it is still small.
 
 The forcing detail is M6. `contract/index.ts` opens with "TypeScript expression
-of the Swift protocols under `apple/AgenticDeveloperToolkit/Sources/`. Keep both in
+of the Swift protocols under `apple/AgenticDeveloperHubSDK/SDK/Sources/`. Keep both in
 lockstep" — and lockstep is currently enforced by nothing but discipline across
 two languages, with two more coming.
 
@@ -37,7 +37,7 @@ two languages, with two more coming.
 OpenAI-compatible gateways, plus `LanguageModelConformance` — sixteen scenarios
 any correct provider must pass. Its code is not reusable here: it is Swift, it
 is gateway-specific, and it targets an OS floor nine major versions above
-AgenticDeveloperToolkit's.
+AgenticDeveloperHubSDK's.
 
 What transfers is the catalogue of **rules a chat contract does not enforce and
 that fail silently when broken**. Each one below compiles, runs, answers, and is
@@ -202,7 +202,7 @@ Two rules that make the difference between a catalogue and decoration:
   quietly stops declaring a capability must not turn its scenarios green by
   deleting them.
 
-`AgenticDeveloperToolkit` having zero tests today makes this the natural first thing to
+`AgenticDeveloperHubSDK` having zero tests today makes this the natural first thing to
 put under it.
 
 ## Direction 4 — Apple (M6): Foundation Models behind `Backend`, not the reverse
@@ -214,7 +214,7 @@ the same contract as the remote persona path.
 This is the opposite of the recommendation that fits a single-platform Apple
 toolkit, and the reasons are specific to apt:
 
-- **The floor.** `AgenticDeveloperToolkit` targets iOS 17 / macOS 14 on Swift 5.10.
+- **The floor.** `AgenticDeveloperHubSDK` targets iOS 17 / macOS 14 on Swift 5.10.
   Foundation Models needs 26+, and its executor protocols 27+. Adopting Apple's
   `LanguageModel` as *the* seam would raise apt's floor by nine major versions
   on every platform, to serve one.

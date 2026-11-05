@@ -3,17 +3,17 @@
 import { useCallback } from "react";
 import type { ReactNode } from "react";
 
-import { reportUnexpectedAuthError } from "@agentic-toolkit/auth";
-import { isForbidden, useResourceItemQuery, useResourceItemWriter } from "@agentic-toolkit/data";
-import { gamificationApi, type RealmConfig } from "@agentic-toolkit/data/gamification";
-import { type Game, type GameInput, gamesApi } from "@agentic-toolkit/data/games";
+import { reportUnexpectedAuthError } from "@adh-sdk/auth";
+import { isForbidden, useResourceItemQuery, useResourceItemWriter } from "@adh-sdk/data";
+import { gamificationApi, type RealmConfig } from "@adh-sdk/data/gamification";
+import { type Game, type GameInput, gamesApi } from "@adh-sdk/data/games";
 import {
   DetailsPane,
   SettingsDirtyProvider,
   useDetailsSection,
   useSettingsDraft,
-} from "@agentic-toolkit/resource";
-import { ErrorText } from "@agenticdevelopertoolkit/ui/components/error-text";
+} from "@adh-sdk/resource";
+import { ErrorText } from "@adh-sdk/ui/components/error-text";
 import {
   GAME_FOR_ECOSYSTEM_CACHE_KEY,
   GameOperationalFields,
@@ -23,13 +23,13 @@ import {
   gameValidate,
   REALM_CONFIG_CACHE_KEY,
   useGameForEcosystem,
-} from "@agentic-toolkit/games";
-import { RealmSettingsPane, realmConfigApi } from "@agentic-toolkit/gamification";
-import { FeatureSwitch } from "@agentic-toolkit/ecosystems";
+} from "@adh-sdk/games";
+import { RealmSettingsPane, realmConfigApi } from "@adh-sdk/gamification";
+import { FeatureSwitch } from "@adh-sdk/ecosystems";
 
 /**
  * Read one realm's gaming mode — a private copy of `RealmSettingsPane`'s (and
- * `GamingGroup.tsx`'s) own `loadRealmConfig`: `@agentic-toolkit/games` keeps its own version of
+ * `GamingGroup.tsx`'s) own `loadRealmConfig`: `@adh-sdk/games` keeps its own version of
  * this loader package-internal, so there is no shared function to import here — only
  * `REALM_CONFIG_CACHE_KEY` (imported above) is a real, public export, and it is what keeps all
  * three copies of this loader pointed at the SAME cache entry.

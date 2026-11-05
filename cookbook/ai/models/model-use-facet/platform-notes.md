@@ -1,5 +1,5 @@
 
-- **SwiftUI**: The source (`packages/apple/AgenticToolkit/AIPluginKit/ModelUseFacet.swift`,
+- **SwiftUI**: The source (`packages/apple/AgenticDeveloperHubSDK/AIPluginKit/ModelUseFacet.swift`,
   companion `ModelCapability.swift`, tests
   `Tests/AIPluginKitTests/ModelUseFacetTests.swift`) has no SwiftUI or AppKit
   dependency of its own — it is plain Swift, framework-agnostic. It is

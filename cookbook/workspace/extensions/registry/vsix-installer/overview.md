@@ -24,6 +24,6 @@ paths alike, because the manifest is a document neither a registry response
 nor a user's file selection can be trusted to agree with.
 
 All line references below are to
-`packages/apple/AgenticToolkit/Core/Extensions/VSIXInstaller.swift` unless
+`packages/apple/AgenticDeveloperHubSDK/Core/Extensions/VSIXInstaller.swift` unless
 another file is named.
 

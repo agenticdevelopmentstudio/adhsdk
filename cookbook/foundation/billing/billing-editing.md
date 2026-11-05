@@ -1,7 +1,7 @@
 ---
 id: 359A896F-ECC0-45D7-991A-B4FBC24C9511
 title: "Billing Editing"
-domain: adtoolkit://cookbook/foundation/billing/billing-editing
+domain: adhsdk://cookbook/foundation/billing/billing-editing
 type: ingredient
 version: 1.0.0
 status: review
@@ -21,8 +21,8 @@ tags:
   - editing
 depends-on: []
 related:
-  - adtoolkit://cookbook/foundation/billing/billing-dt-os
-  - adtoolkit://cookbook/foundation/billing/billing-rate
+  - adhsdk://cookbook/foundation/billing/billing-dt-os
+  - adhsdk://cookbook/foundation/billing/billing-rate
 references: []
 approved-by: ""
 approved-date: ""
@@ -123,7 +123,7 @@ Not applicable: this code makes no log calls.
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/Core/Billing/BillingEditing.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Billing/BillingEditing.swift` |
 
 ## Design Decisions
 

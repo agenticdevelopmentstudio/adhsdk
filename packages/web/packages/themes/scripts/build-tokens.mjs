@@ -115,7 +115,7 @@ const THEMES = {
   },
   'adh-dev-preview': {
     header:
-      'ADH · Dev Preview — copy of adh-manrope swept to JetBrains Mono for every role: the chrome (sans/serif/mono) AND the adh chat theme (--pc-font follows font.sans). The persona-toolkit prebaked chat themes are untouched.',
+      'ADH · Dev Preview — copy of adh-manrope swept to JetBrains Mono for every role: the chrome (sans/serif/mono) AND the adh chat theme (--pc-font follows font.sans). The adh-sdk prebaked chat themes are untouched.',
     fontImports: [
       'https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,400;0,500;0,700;1,400;1,700&display=swap',
     ],

@@ -1,5 +1,5 @@
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/Language/LSP/` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Language/LSP/` |
 

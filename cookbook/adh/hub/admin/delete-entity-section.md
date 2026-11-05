@@ -1,7 +1,7 @@
 ---
 id: 96bc198e-c726-476a-bc4a-ddc1d5c0c2f8
 title: "Delete Entity Section"
-domain: adtoolkit://cookbook/adh/hub/admin/delete-entity-section
+domain: adhsdk://cookbook/adh/hub/admin/delete-entity-section
 type: recipe
 version: 1.4.2
 status: review
@@ -22,13 +22,13 @@ tags:
   - disclosure
   - settings
 ingredients:
-  - agenticdevelopertoolkit://recipes/disclosure
-  - agenticdevelopertoolkit://recipes/button
-  - agenticdevelopertoolkit://recipes/dialog
+  - adhsdk://recipes/disclosure
+  - adhsdk://recipes/button
+  - adhsdk://recipes/dialog
 depends-on: []
 related:
-  - agenticdevelopertoolkit://recipes/field-group
-  - adtoolkit://cookbook/ui/navigation/focused-topic-detail
+  - adhsdk://recipes/field-group
+  - adhsdk://cookbook/ui/navigation/focused-topic-detail
 references: []
 approved-by: ""
 approved-date: ""
@@ -62,15 +62,15 @@ dialog, plus the shared text-input and label primitives.
 
 | Name | Domain | Role | Required | Configuration |
 |---|---|---|---|---|
-| Disclosure | agenticdevelopertoolkit://recipes/disclosure | The collapsed-by-default Danger-zone container; its open/closed state is controlled by the section so the red accent tracks whether it is disclosed | yes | Open state bound to the section's disclosed state; red styling and title color applied only while disclosed; carries the warning glyph in its title |
-| Button | agenticdevelopertoolkit://recipes/button | The disclosed Delete trigger, and the dialog's Cancel/Yes/Permanently-Delete actions | yes | Uses the shared button ingredient's destructive-ghost style for Delete and Yes, a neutral style for Cancel, and its strongest destructive style for the final Permanently Delete action |
-| Dialog | agenticdevelopertoolkit://recipes/dialog | The modal that carries the two-phase confirm (warn → type-to-confirm) | yes | Open state controlled by the section; its close control is hidden while busy; uses the shared header/title/description/footer structure |
+| Disclosure | adhsdk://recipes/disclosure | The collapsed-by-default Danger-zone container; its open/closed state is controlled by the section so the red accent tracks whether it is disclosed | yes | Open state bound to the section's disclosed state; red styling and title color applied only while disclosed; carries the warning glyph in its title |
+| Button | adhsdk://recipes/button | The disclosed Delete trigger, and the dialog's Cancel/Yes/Permanently-Delete actions | yes | Uses the shared button ingredient's destructive-ghost style for Delete and Yes, a neutral style for Cancel, and its strongest destructive style for the final Permanently Delete action |
+| Dialog | adhsdk://recipes/dialog | The modal that carries the two-phase confirm (warn → type-to-confirm) | yes | Open state controlled by the section; its close control is hidden while busy; uses the shared header/title/description/footer structure |
 
 Composed shared primitives without their own recipe domains: a text input (the
 type-to-confirm field, which autofocuses and disables autocomplete and spell-check),
 a label (visually hidden, for that input), and the trash/warning/archive glyphs.
 
-The frontmatter `ingredients` field points to `agenticdevelopertoolkit://recipes/…`
+The frontmatter `ingredients` field points to `adhsdk://recipes/…`
 domains rather than `ingredients/…` domains because Disclosure, Button, and
 Dialog are each documented as their own recipe in that toolkit, not as bare
 ingredients — this recipe composes those recipes, it doesn't restate them as
@@ -292,7 +292,7 @@ Dialog · phase "warn"                    Dialog · phase "confirm"
   block dismissal, and swap `Icons.Filled.Delete` for `Icons.Filled.Archive` when
   `actionVerb.reversible` is `true`.
 - **React/Web**: `packages/web/packages/adh-ui/src/blocks/delete-entity-section.tsx`
-  (`"use client"`), exported via `@agentic-toolkit/adh-ui/blocks/delete-entity-section`.
+  (`"use client"`), exported via `@adh-sdk/adh-ui/blocks/delete-entity-section`.
   Composes `Disclosure`, `Button`, `Dialog` (+ `DialogHeader`/`Title`/`Description`/
   `Footer`), `Input`, and `Label`, with the `Trash2`/`TriangleAlert`/`Archive`
   glyphs from `lucide-react`. Props: `entityNoun`, `confirmValue`, `childEntities`,
@@ -305,7 +305,7 @@ Dialog · phase "warn"                    Dialog · phase "confirm"
   `delete-entity-section` (regenerate `sources.generated.ts` via
   `gen-sources.py` after source changes); verify responsively via Playwright at
   375 / 768 / 1440. Shared across every focused-topic-detail settings route
-  (`adtoolkit://cookbook/ui/navigation/focused-topic-detail`), usually as the final
+  (`adhsdk://cookbook/ui/navigation/focused-topic-detail`), usually as the final
   group in a settings pane below the `FieldGroup`s.
 - **AppKit/UIKit**: On macOS, build the disclosure from an `NSButton` with
   `bezelStyle = .disclosure` (there is no `NSDisclosureButton` class) toggling a
@@ -423,11 +423,11 @@ consistent no matter which verb a caller passes.
 
 | Version | Date | Author | Summary |
 |---|---|---|---|
-| 1.4.2 | 2026-10-04 | Mike Fullerton | Legacy recipe citations restored to the legacy recipes' own agenticdevelopertoolkit://recipes/ domains; the adtoolkit://recipes/ form named nothing. |
+| 1.4.2 | 2026-10-04 | Mike Fullerton | Legacy recipe citations restored to the legacy recipes' own adhsdk://recipes/ domains; the adhsdk://recipes/ form named nothing. |
 | 1.4.1 | 2026-10-04 | Mike Fullerton | Add separation-of-concerns and unit-test-coverage compliance. |
 | 1.4.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to adh/hub/admin/. |
 | 1.3.1 | 2026-09-25 | Mike Fullerton | Moved into the library cookbook; added Reference Implementations. |
 | 1.3.0 | 2026-09-23 | Mike Fullerton | Lint pass: added disable-actions-while-busy and select-article-from-first-letter requirements with new test vectors (T17-T19), and extended call-onconfirm-once-enabled/surface-error-inline/reset-on-cancel-or-success to spell out the gerund-based busy label, the non-Error fallback message, and that a reset never collapses the Disclosure nor auto-clears a stale error; aligned T11's banned-phrase list with avoid-permanence-claims-when-reversible and set explicit `entityNoun` inputs on T12/T16; replaced the ad hoc `{Entity}` placeholder with `{entityNoun}` throughout; replaced the undefined "rdid" jargon with "the entity's unique identifier"; added a Design Decision for the reversible `actionVerb` variant and a note on why `ingredients` points to sibling recipes; corrected the WinUI 3 failure path (`args.Cancel = true` then `deferral.Complete()`) and the AppKit notes (no `NSDisclosureButton`; a sheet, not a chained `NSAlert`, for the type-to-confirm phase). |
-| 1.2.0 | 2026-09-23 | Mike Fullerton | Migrated `domain` to `agentictoolkit://` and added `approved-by`/`approved-date`; set `status: review` (no unresolved gaps); renamed requirement identifiers to subject-only kebab-case (dropped the `must-` prefix) across Integration Requirements and Integration Test Vectors; filled in all five Platform Notes bullets (SwiftUI, Compose, React/Web, AppKit/UIKit, WinUI 3), including concrete `Expander`/`ContentDialog`/deferral guidance for WinUI 3; reformatted Design Decisions into Decision/Rationale/Approved lines and Compliance checks into linked `agenticdevelopercookbook://compliance/...` IDs. |
+| 1.2.0 | 2026-09-23 | Mike Fullerton | Migrated `domain` to `adhsdk://` and added `approved-by`/`approved-date`; set `status: review` (no unresolved gaps); renamed requirement identifiers to subject-only kebab-case (dropped the `must-` prefix) across Integration Requirements and Integration Test Vectors; filled in all five Platform Notes bullets (SwiftUI, Compose, React/Web, AppKit/UIKit, WinUI 3), including concrete `Expander`/`ContentDialog`/deferral guidance for WinUI 3; reformatted Design Decisions into Decision/Rationale/Approved lines and Compliance checks into linked `agenticdevelopercookbook://compliance/...` IDs. |
 | 1.1.0 | 2026-08-04 | Mike Fullerton | Documented the `actionVerb.reversible` copy variant (Archive-style, non-destructive wording) across Integration Requirements, Layout, and Test Vectors T11-T16; fixed the stale `websites/shared/ui/...` source path in Platform Notes to `packages/web/packages/ui/...`. |
 | 1.0.0 | 2026-07-03 | Mike Fullerton | Initial recipe for the Danger-zone DeleteEntitySection with two-phase confirm. |

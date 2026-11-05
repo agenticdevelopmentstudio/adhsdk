@@ -1,7 +1,7 @@
 ---
 id: 633ab7e7-828e-4e7d-b2dc-9ba189536b6e
 title: "Send Invitation Modal"
-domain: adtoolkit://cookbook/adh/hub/invitations/send-invitation-modal
+domain: adhsdk://cookbook/adh/hub/invitations/send-invitation-modal
 type: recipe
 version: 1.3.3
 status: review
@@ -21,8 +21,8 @@ tags:
   - invitations
   - recipients
 ingredients:
-  - agenticdevelopertoolkit://recipes/alert-and-dialog
-  - agenticdevelopertoolkit://recipes/recipient-input
+  - adhsdk://recipes/alert-and-dialog
+  - adhsdk://recipes/recipient-input
 depends-on: []
 related: []
 references: []
@@ -49,8 +49,8 @@ populated) or sends.
 
 | Name | Domain | Role | Required | Configuration |
 |---|---|---|---|---|
-| AlertAndDialog | agenticdevelopertoolkit://recipes/alert-and-dialog | The dialog shell, sized to a moderate maximum width, plus the discard-confirm alert | yes | modal semantics; discard-confirm copy |
-| RecipientInput | agenticdevelopertoolkit://recipes/recipient-input | Per-section recipient list, configured for email recipients or phone recipients | yes | recipient kind, seeded value, read-only |
+| AlertAndDialog | adhsdk://recipes/alert-and-dialog | The dialog shell, sized to a moderate maximum width, plus the discard-confirm alert | yes | modal semantics; discard-confirm copy |
+| RecipientInput | adhsdk://recipes/recipient-input | Per-section recipient list, configured for email recipients or phone recipients | yes | recipient kind, seeded value, read-only |
 
 Composed shared primitives without their own recipe domains: a multiline text field
 (the per-section admin note), a field-grouping/label primitive (section structure +
@@ -255,7 +255,7 @@ Statuses rest on: `ariaLabel`'d `RecipientInput`s, text-labeled `Button`s, and t
 | Version | Date | Author | Summary |
 |---|---|---|---|
 | 1.3.3 | 2026-10-04 | Mike Fullerton | Matches its type's shape: required fields, title heading, and only the type's own sections. |
-| 1.3.2 | 2026-10-04 | Mike Fullerton | Legacy recipe citations restored to the legacy recipes' own agenticdevelopertoolkit://recipes/ domains; the adtoolkit://recipes/ form named nothing. |
+| 1.3.2 | 2026-10-04 | Mike Fullerton | Legacy recipe citations restored to the legacy recipes' own adhsdk://recipes/ domains; the adhsdk://recipes/ form named nothing. |
 | 1.3.1 | 2026-10-04 | Mike Fullerton | Add separation-of-concerns and unit-test-coverage compliance. |
 | 1.3.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to adh/hub/invitations/. |
 | 1.2.1 | 2026-09-25 | Mike Fullerton | Moved into the library cookbook; added Reference Implementations. |

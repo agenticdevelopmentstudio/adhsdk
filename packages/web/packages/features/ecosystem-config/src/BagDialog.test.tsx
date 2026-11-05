@@ -2,7 +2,7 @@
 import { describe, it, expect, afterEach, vi } from "vitest";
 import { render, screen, fireEvent, cleanup } from "@testing-library/react";
 import { BagDialog } from "./ServerBagsPane";
-import type { EcosystemServerBag } from "@agentic-toolkit/data/ecosystem-config";
+import type { EcosystemServerBag } from "@adh-sdk/data/ecosystem-config";
 
 // The hub vitest config has no global afterEach; tear each render (+ its portalled
 // dialog) down explicitly so it doesn't leak into the next test.

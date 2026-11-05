@@ -2,7 +2,7 @@
 | Version | Date | Author | Summary |
 |---|---|---|---|
 | 1.2.3 | 2026-10-04 | Mike Fullerton | Design Decisions keep the Decision / Rationale / Approved triple; each decision's platform line is folded into its rationale. |
-| 1.2.2 | 2026-10-04 | Mike Fullerton | Legacy recipe citations restored to the legacy recipes' own agenticdevelopertoolkit://recipes/ domains; the adtoolkit://recipes/ form named nothing. |
+| 1.2.2 | 2026-10-04 | Mike Fullerton | Legacy recipe citations restored to the legacy recipes' own adhsdk://recipes/ domains; the adhsdk://recipes/ form named nothing. |
 | 1.2.1 | 2026-10-04 | Mike Fullerton | Add separation-of-concerns and unit-test-coverage compliance. |
 | 1.2.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to adh/hub/admin/. |
 | 1.1.2 | 2026-09-25 | Mike Fullerton | Moved into the library cookbook; added Reference Implementations. |

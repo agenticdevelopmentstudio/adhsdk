@@ -1,4 +1,4 @@
-# `@agenticdevelopertoolkit/controls/logging-panel`
+# `@adh-sdk/controls/logging-panel`
 
 A configurable, themeable log/event panel — a web port of a native macOS
 `LogView` / `LogColumn` / `LogLine` model.
@@ -15,8 +15,8 @@ theming + click-routing keeps consumers to a configuration object.
 ## Usage
 
 ```tsx
-import { LogPanel } from '@agenticdevelopertoolkit/controls/logging-panel'
-import '@agenticdevelopertoolkit/controls/logging-panel/styles.css'
+import { LogPanel } from '@adh-sdk/controls/logging-panel'
+import '@adh-sdk/controls/logging-panel/styles.css'
 
 type Ctx = { sessionId: string }
 
@@ -94,7 +94,7 @@ back to the bottom resumes it.
 ## Theming
 
 Driven by CSS custom properties from
-`@agenticdevelopertoolkit/themes`. Level colours can be
+`@adh-sdk/themes`. Level colours can be
 overridden globally:
 
 ```css

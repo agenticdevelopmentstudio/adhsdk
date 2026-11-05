@@ -12,17 +12,17 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 
-vi.mock("@agentic-toolkit/auth", () => ({
+vi.mock("@adh-sdk/auth", () => ({
   reportUnexpectedAuthError: vi.fn(),
 }));
 
 // Add goes through the shared markdown door, not a per-corpus client: the category vocabulary
 // is one owner's, spanning notes, docs and papers alike.
-vi.mock("@agentic-toolkit/data/markdown", () => ({
+vi.mock("@adh-sdk/data/markdown", () => ({
   markdownApi: { createCategory: vi.fn() },
 }));
 
-vi.mock("@agentic-toolkit/data/notes", () => ({
+vi.mock("@adh-sdk/data/notes", () => ({
   taxonomyApi: {
     renameCategory: vi.fn(),
     addCategoryParent: vi.fn(),
@@ -31,8 +31,8 @@ vi.mock("@agentic-toolkit/data/notes", () => ({
   },
 }));
 
-import { markdownApi } from "@agentic-toolkit/data/markdown";
-import { taxonomyApi, type NoteCategory } from "@agentic-toolkit/data/notes";
+import { markdownApi } from "@adh-sdk/data/markdown";
+import { taxonomyApi, type NoteCategory } from "@adh-sdk/data/notes";
 import { CategoryManagerDialog } from "./CategoryManagerDialog";
 
 const createCategory = vi.mocked(markdownApi.createCategory);

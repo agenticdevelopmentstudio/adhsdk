@@ -1,7 +1,7 @@
 ---
 id: d04eef56-2dbf-4148-964b-c095f242227f
 title: "DataTable"
-domain: agenticdevelopertoolkit://recipes/data-table
+domain: adhsdk://recipes/data-table
 type: ingredient
 version: 1.4.1
 status: review
@@ -21,12 +21,12 @@ tags:
   - table
   - ui
 depends-on:
-  - agenticdevelopertoolkit://recipes/checkbox
-  - agenticdevelopertoolkit://recipes/dnd
-  - agenticdevelopertoolkit://recipes/inline-commit-control
+  - adhsdk://recipes/checkbox
+  - adhsdk://recipes/dnd
+  - adhsdk://recipes/inline-commit-control
 related:
-  - agenticdevelopertoolkit://recipes/list-with-details-pane
-  - agenticdevelopertoolkit://recipes/add-users-modal
+  - adhsdk://recipes/list-with-details-pane
+  - adhsdk://recipes/add-users-modal
 references: []
 approved-by: ''
 approved-date: ''
@@ -36,7 +36,7 @@ approved-date: ''
 
 ## Overview
 
-A generic, selectable, optionally-sortable, optionally-reorderable table primitive in `@agenticdevelopertoolkit/ui`.
+A generic, selectable, optionally-sortable, optionally-reorderable table primitive in `@adh-sdk/ui`.
 It is a **controlled** table: the caller owns `rows`, the `selectedIds` set, and
 the optional `sort`. The component renders columns, handles pointer + keyboard
 selection, and reports changes up. It is generic over the row type `T` and owns

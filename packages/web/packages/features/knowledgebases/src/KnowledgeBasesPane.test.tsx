@@ -4,7 +4,7 @@
 // (via useStackLevel) rather than rendering the table list itself, so a tiny <Rail> harness backed
 // by the toolkit's RailHostContext renders the published rows — the same path the hub's workspace
 // shell (or a standalone feature site) would. CrudDataView is mocked (its own transport is tested
-// in @agentic-toolkit/crud) so this file exercises only the pane's own selection + guard wiring and
+// in @adh-sdk/crud) so this file exercises only the pane's own selection + guard wiring and
 // its use of the host-supplied `tables` prop, never a hub catalog.
 import { describe, it, expect, vi, afterEach } from "vitest";
 import { render, screen, fireEvent, cleanup } from "@testing-library/react";
@@ -13,9 +13,9 @@ import {
   RailHostContext,
   type RailHostRegistry,
   type RegisteredLevels,
-} from "@agentic-toolkit/resource";
-import type { TopicLevel } from "@agenticdevelopertoolkit/ui/blocks";
-import type { CrudTableMeta } from "@agentic-toolkit/crud";
+} from "@adh-sdk/resource";
+import type { TopicLevel } from "@adh-sdk/ui/blocks";
+import type { CrudTableMeta } from "@adh-sdk/crud";
 
 // The viewer behind the exposure gate. Hoisted so each test can set who is looking without
 // standing up an AuthProvider; `readableTables` itself stays the REAL implementation, so these
@@ -24,9 +24,9 @@ const { viewerRef } = vi.hoisted(() => ({
   viewerRef: { current: { isAdmin: false, ready: true } },
 }));
 
-vi.mock("@agentic-toolkit/crud", async () => {
-  const actual = await vi.importActual<typeof import("@agentic-toolkit/crud")>(
-    "@agentic-toolkit/crud",
+vi.mock("@adh-sdk/crud", async () => {
+  const actual = await vi.importActual<typeof import("@adh-sdk/crud")>(
+    "@adh-sdk/crud",
   );
   return {
     ...actual,

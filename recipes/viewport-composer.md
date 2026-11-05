@@ -1,7 +1,7 @@
 ---
 id: c10a6fd9-470a-45a1-a025-3c75554c2a41
 title: ViewportComposer
-domain: agenticdevelopertoolkit://recipes/viewport-composer
+domain: adhsdk://recipes/viewport-composer
 type: ingredient
 version: 1.1.1
 status: review
@@ -21,10 +21,10 @@ tags:
 - keyboard
 - safe-area
 depends-on:
-- agenticdevelopertoolkit://recipes/viewport-shell
+- adhsdk://recipes/viewport-shell
 related:
-- agenticdevelopertoolkit://recipes/viewport-shell
-- agenticdevelopertoolkit://recipes/viewport-spacer
+- adhsdk://recipes/viewport-shell
+- adhsdk://recipes/viewport-spacer
 references: []
 approved-by: ''
 approved-date: ''
@@ -41,14 +41,14 @@ ViewportComposer is a container component that anchors to the bottom of a Viewpo
 - **render-children**: Component MUST render its children as direct descendants, in document order, with no wrapper element inserted around them.
 - **compose-classname**: Component MUST accept an optional `className` prop. When provided, the rendered element's `class` attribute MUST contain both the internal `vp-composer` class and the provided `className`, space-separated; when omitted, only `vp-composer` MUST appear.
 - **adjust-bottom-padding**: Component MUST set its bottom padding to `calc(var(--kb-inset) + env(safe-area-inset-bottom))` (implemented as `calc(var(--kb-inset) + var(--safe-bottom))`, with `--safe-bottom` resolving `env(safe-area-inset-bottom, 0px)`) so it lifts above the keyboard and respects the home indicator, animating the change over 180ms ease-out.
-- **kb-inset-read-only**: Component MUST read the `--kb-inset` custom property but MUST NOT set it. The value is written by `useKeyboardInset()`, which the parent `ViewportShell` mounts; see agenticdevelopertoolkit://recipes/viewport-shell (the **keyboard-inset** requirement) — `useKeyboardInset` is not itself a separate recipe.
+- **kb-inset-read-only**: Component MUST read the `--kb-inset` custom property but MUST NOT set it. The value is written by `useKeyboardInset()`, which the parent `ViewportShell` mounts; see adhsdk://recipes/viewport-shell (the **keyboard-inset** requirement) — `useKeyboardInset` is not itself a separate recipe.
 
 ## Appearance
 
 - **Background**: Transparent; the component sets no background or border of its own.
 - **Padding**: Bottom padding is `calc(var(--kb-inset) + var(--safe-bottom))` (see adjust-bottom-padding), animated over 180ms ease-out; left, right, and top padding are not set by the composer itself — add them via `className`.
 - **Border**: None; the component sets no border.
-- **Width / position / stacking order**: Not owned by ViewportComposer. It renders a plain block `<div>` with no explicit `width` or `position`; its full width and its position at the bottom of the page come from being the last child inside `ViewportShell`'s column-flex layout — see agenticdevelopertoolkit://recipes/viewport-shell.
+- **Width / position / stacking order**: Not owned by ViewportComposer. It renders a plain block `<div>` with no explicit `width` or `position`; its full width and its position at the bottom of the page come from being the last child inside `ViewportShell`'s column-flex layout — see adhsdk://recipes/viewport-shell.
 - **Height**: Auto (sized by children and padding)
 
 ## States
@@ -161,4 +161,4 @@ keyboard-navigable and semantic-markup pass because the source renders a single 
 |---------|------|--------|---------|
 | 1.0.0 | 2026-09-22 | Claude Haiku 4.5 | Initial creation from web source |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: replace nonexistent Platform Notes APIs with real mechanisms; rename requirements to subject-only kebab-case and merge the duplicate classname requirements/vectors; add a kb-inset-read-only requirement plus ViewportShell/useKeyboardInset dependencies; split the untestable keyboard vector into a unit test and a Playwright test; correct the base-stylesheet and safe-area-prerequisite edge cases; reformat Design Decisions into Decision/Rationale/Approved blocks; and replace "Not applicable" Compliance with a real table |
-| 1.1.1 | 2026-09-25 | Mike Fullerton | Dropped the dangling agenticdevelopertoolkit://recipes/use-keyboard-inset URI from depends-on, related, and kb-inset-read-only; pointed to viewport-shell's keyboard-inset requirement instead. Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: failed). |
+| 1.1.1 | 2026-09-25 | Mike Fullerton | Dropped the dangling URI of the never-written use-keyboard-inset recipe from depends-on, related, and kb-inset-read-only; pointed to viewport-shell's keyboard-inset requirement instead. Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: failed). |

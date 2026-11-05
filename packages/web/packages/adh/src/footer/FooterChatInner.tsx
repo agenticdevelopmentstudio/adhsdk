@@ -1,15 +1,15 @@
 'use client'
 
 import { createPortal } from 'react-dom'
-import { BitbagDock } from '@agentic-toolkit/bitbag'
+import { BitbagDock } from '@adh-sdk/bitbag'
 import { useChatTheme } from './chat-theme-store'
 // bitbag's CSS rides with THIS lazily-loaded chunk (not the always-loaded shared
 // stylesheet), so pages that never open the chat don't pay for it. ONE sheet, not
 // three: `bitbag-dock.css` `@import`s the underlying persona-chat base + inline sheets
 // itself, because bitbag is what renders `InlineChatView` and this package must not
-// name the persona toolkit — reaching into it for a dependency that was never its own
+// name the persona layer — reaching into it for a dependency that was never its own
 // is exactly the crossing the persona boundary bans.
-import '@agentic-toolkit/bitbag/css/bitbag-dock.css'
+import '@adh-sdk/bitbag/css/bitbag-dock.css'
 
 /**
  * bitbag in the footer — the SAME fixture fishlamp.com runs, not a second chat

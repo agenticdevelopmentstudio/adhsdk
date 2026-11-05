@@ -239,7 +239,7 @@
 - **accept-is-authenticated**: `accept` calls `authedJson` to POST `{
   token }` to an accept route as the signed-in caller, so its authentication,
   one-refresh-then-retry-on-401, and `AuthHttpError` behavior on failure are
-  entirely `authedJson`'s (documented in `adtoolkit://cookbook/adh/hub/security/authentication-client`),
+  entirely `authedJson`'s (documented in `adhsdk://cookbook/adh/hub/security/authentication-client`),
   not redefined here.
 - **register-with-invite-extracts-message**: `registerWithInvite` issues an
   unauthenticated `fetch` POSTing the full `RegisterWithInviteInput` (`email`,

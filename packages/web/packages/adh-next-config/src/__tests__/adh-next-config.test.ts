@@ -1,5 +1,5 @@
 import { describe, expect, it, vi, afterEach } from "vitest";
-import { FONT_CACHE_HEADERS, PRERENDER_HEADERS, SECURITY_HEADERS } from "@agentic-toolkit/next-headers";
+import { FONT_CACHE_HEADERS, PRERENDER_HEADERS, SECURITY_HEADERS } from "@adh-sdk/next-headers";
 
 // BOTH are required, and `restoreAllMocks` alone is the trap. `vi.doMock` registers a
 // mock for the NEXT import of a module, but a module already imported in an earlier test
@@ -39,17 +39,17 @@ function mockDeps(
     materializeThemeFonts?: () => void;
   } = {},
 ) {
-  vi.doMock("@agentic-toolkit/next-preflight", () => ({
+  vi.doMock("@adh-sdk/next-preflight", () => ({
     assertHoistableDeps: overrides.assertHoistableDeps ?? (() => {}),
     assertAuthApiUrl: overrides.assertAuthApiUrl ?? ((u: string | undefined) => u),
     assertLinkedDepsInstalled: overrides.assertLinkedDepsInstalled ?? (() => {}),
   }));
-  vi.doMock("@agenticdevelopertoolkit/themes/materialize-fonts", () => ({
+  vi.doMock("@adh-sdk/themes/materialize-fonts", () => ({
     materializeThemeFonts: overrides.materializeThemeFonts ?? (() => {}),
   }));
 }
 
-// For tests asserting env/rewrites values precisely: the real `@agentic-toolkit/next-env`
+// For tests asserting env/rewrites values precisely: the real `@adh-sdk/next-env`
 // reads a real (nonexistent) VERSION file and shells out to `git rev-parse HEAD`, which is
 // deterministic enough for the redirect-only tests above but not worth relying on here —
 // mock it so the "version/SHA wiring resolves through next-env" claim is actually pinned
@@ -59,7 +59,7 @@ function mockNextEnv(overrides: {
   readSiteVersion?: () => string;
   commitSha?: () => string;
 } = {}) {
-  vi.doMock("@agentic-toolkit/next-env", () => ({
+  vi.doMock("@adh-sdk/next-env", () => ({
     resolveBackendUrl: overrides.resolveBackendUrl ?? (() => "http://backend.example"),
     readSiteVersion: overrides.readSiteVersion ?? (() => "1.2.3"),
     commitSha: overrides.commitSha ?? (() => "abc123def456"),
@@ -79,12 +79,12 @@ describe("adhNextConfig", () => {
   it("propagates the assertion's failure instead of returning a config", async () => {
     mockDeps({
       assertHoistableDeps: () => {
-        throw new Error("undeclared: @agenticdevelopertoolkit/chat");
+        throw new Error("undeclared: @adh-sdk/chat");
       },
     });
     vi.spyOn(process, "cwd").mockReturnValue("/repo/frontend/src/sites/help");
     const { adhNextConfig } = await import("../index.js");
-    expect(() => adhNextConfig()).toThrowError(/@agenticdevelopertoolkit\/chat/);
+    expect(() => adhNextConfig()).toThrowError(/@adh-sdk\/chat/);
   });
 
   // Fix round finding 4: `next-config-base.mjs:429-431` ran the auth check FIRST,
@@ -119,7 +119,7 @@ describe("adhNextConfig", () => {
   });
 
   // CI deleted its own stale-install guard on the grounds that the check "moved into
-  // @agentic-toolkit/next-preflight". That is only honest if something calls the moved
+  // @adh-sdk/next-preflight". That is only honest if something calls the moved
   // code with the right argument — the site directory, not the repo root, not the
   // workspace root. These two tests are what makes it honest.
   it("runs the stale-install check against the site directory", async () => {
@@ -185,7 +185,7 @@ describe("adhNextConfig", () => {
   });
 
   // Fix round finding 2: `headers()` had zero coverage. Assert the REAL header sets from
-  // `@agentic-toolkit/next-headers` (not a re-derived literal), at the sources
+  // `@adh-sdk/next-headers` (not a re-derived literal), at the sources
   // `mergeHeaders` is documented to use, in order — including PRERENDER_HEADERS (fix
   // round finding 1b), which the review found silently dropped.
   it("merges the security, font-cache, and prerender header baselines", async () => {
@@ -220,7 +220,7 @@ describe("adhNextConfig", () => {
 
   // Fix round finding 2: `env` had zero coverage beyond the auth-url wiring test above.
   // Assert all four keys, with version/SHA resolving through the (mocked)
-  // `@agentic-toolkit/next-env`, and the auth url resolving through `assertAuthApiUrl`.
+  // `@adh-sdk/next-env`, and the auth url resolving through `assertAuthApiUrl`.
   it("wires all four env keys, with version/SHA resolving through next-env", async () => {
     mockDeps();
     mockNextEnv({ readSiteVersion: () => "1.2.3", commitSha: () => "abc123def456" });

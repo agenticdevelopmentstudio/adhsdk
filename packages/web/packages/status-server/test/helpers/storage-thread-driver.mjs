@@ -3,8 +3,8 @@
 // storage-thread.int.test.ts as a child process (vitest's resolver would hand back the
 // TypeScript source), including a monitor worker that holds no connection of its own;
 // prints RESULT:<json> and exits 0, or exits non-zero on failure.
-import { connectStorage, envConfig, MonitorWorkerClient } from "@agentic-toolkit/status-server";
-import { startStorageThread } from "@agentic-toolkit/status-server/libsql";
+import { connectStorage, envConfig, MonitorWorkerClient } from "@adh-sdk/status-server";
+import { startStorageThread } from "@adh-sdk/status-server/libsql";
 
 const [url] = process.argv.slice(2);
 if (!url) {

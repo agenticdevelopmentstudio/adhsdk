@@ -1,7 +1,7 @@
 ---
 id: f679a77e-04f7-4e43-b898-6d78a637a760
 title: DialogActions
-domain: agenticdevelopertoolkit://recipes/dialog-actions
+domain: adhsdk://recipes/dialog-actions
 type: ingredient
 version: 1.4.1
 status: review
@@ -22,10 +22,10 @@ tags:
 - footer
 - ui
 depends-on:
-- agenticdevelopertoolkit://recipes/button
+- adhsdk://recipes/button
 related:
-- agenticdevelopertoolkit://recipes/alert-and-dialog
-- agenticdevelopertoolkit://recipes/dialog
+- adhsdk://recipes/alert-and-dialog
+- adhsdk://recipes/dialog
 references: []
 approved-by: ''
 approved-date: ''
@@ -35,7 +35,7 @@ approved-date: ''
 
 ## Overview
 
-`DialogActions` (`@agenticdevelopertoolkit/ui`) is the standard footer for a dialog or alert:
+`DialogActions` (`@adh-sdk/ui`) is the standard footer for a dialog or alert:
 a cancel button (optional) and a confirm button, laid out per the rule in
 **alert-and-dialog §Layout**, which resolves to one of two shapes according to how
 much room the container gives them:
@@ -52,7 +52,7 @@ The layout engine therefore resolves equal-vs-natural during first layout, and t
 first painted frame is the final one. The component also sets initial focus on
 mount (defaulting to the safe button) and renders a spinner while `busy`.
 
-One symbol ships from `@agenticdevelopertoolkit/ui/components/dialog-actions`: the
+One symbol ships from `@adh-sdk/ui/components/dialog-actions`: the
 `DialogActions` component. There is no exported layout helper — see *Design
 Decisions*.
 

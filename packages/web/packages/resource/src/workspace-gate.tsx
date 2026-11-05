@@ -1,8 +1,8 @@
 "use client";
 
 import type { ReactElement } from "react";
-import { EmptyState } from "@agenticdevelopertoolkit/ui/components/empty-state";
-import { useDetailTitle } from "@agenticdevelopertoolkit/ui/blocks/detail-title";
+import { EmptyState } from "@adh-sdk/ui/components/empty-state";
+import { useDetailTitle } from "@adh-sdk/ui/blocks/detail-title";
 
 // The shared surfaces a workspace-scoped feature shows INSTEAD of its pane: two for an ecosystem
 // gate that did not open, one for a feature that isn't built yet. They live here rather than in

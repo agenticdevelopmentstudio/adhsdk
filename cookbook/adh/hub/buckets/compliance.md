@@ -18,7 +18,7 @@ server-`HubError.conflict` fallback branches (`create-bucket-conflict-fallback`,
 `create-table-conflict-fallback`) are exercised only by inspection of the
 source's `catch` blocks, not by a dedicated test, per Conformance Test
 Vectors 011 and 021. separation-of-concerns passes because all three given
-sources import only `Foundation` (plus `AgenticToolkitHTDV` for the HTDV/
+sources import only `Foundation` (plus `AgenticDeveloperHubSDKHTDV` for the HTDV/
 Forms types) and hold no AppKit/UIKit dependency of their own.
 explicit-error-handling passes because every `throws` boundary in these
 three sources is caught and converted into an explicit `HubError` (via a

@@ -1,7 +1,7 @@
 ---
 id: 6579e030-0455-453c-81cf-177dae3dd82e
 title: Field Value
-domain: agenticdevelopertoolkit://recipes/field-value
+domain: adhsdk://recipes/field-value
 type: ingredient
 version: 1.1.1
 status: review
@@ -22,8 +22,8 @@ tags:
 - data-presentation
 depends-on: []
 related:
-- agenticdevelopertoolkit://recipes/registry-profile
-- agenticdevelopertoolkit://recipes/service-list
+- adhsdk://recipes/registry-profile
+- adhsdk://recipes/service-list
 references: []
 approved-by: ''
 approved-date: ''

@@ -1,7 +1,7 @@
 ---
 id: 77dbd38e-9acd-4053-ba54-738b45101f6b
 title: "Window Matching Heuristics"
-domain: adtoolkit://cookbook/system/system-windows/matching/title-heuristics
+domain: adhsdk://cookbook/system/system-windows/matching/title-heuristics
 type: ingredient
 version: 1.2.0
 status: review
@@ -22,15 +22,15 @@ tags:
 depends-on: []
 related: []
 references:
-  - packages/apple/AgenticToolkit/Core/SystemWindows/Matching/Heuristics/XcodeHeuristic.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Core/SystemWindows/Matching/Heuristics/WarpHeuristic.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Core/SystemWindows/Matching/Heuristics/BraveHeuristic.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Core/SystemWindows/Matching/Heuristics/VSCodeHeuristic.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Core/SystemWindows/Matching/Heuristics/TerminalHeuristic.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Core/SystemWindows/Matching/AppHeuristic.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Core/SystemWindows/MatchStrategy.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Core/SystemWindows/Matching/HeuristicRegistry.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Tests/AgenticToolkitMacOSTests/SystemWindows/HeuristicTests.swift (agenticdevelopertoolkit)
+  - packages/apple/AgenticDeveloperHubSDK/Core/SystemWindows/Matching/Heuristics/XcodeHeuristic.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Core/SystemWindows/Matching/Heuristics/WarpHeuristic.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Core/SystemWindows/Matching/Heuristics/BraveHeuristic.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Core/SystemWindows/Matching/Heuristics/VSCodeHeuristic.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Core/SystemWindows/Matching/Heuristics/TerminalHeuristic.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Core/SystemWindows/Matching/AppHeuristic.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Core/SystemWindows/MatchStrategy.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Core/SystemWindows/Matching/HeuristicRegistry.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKMacOSTests/SystemWindows/HeuristicTests.swift (adhsdk)
 approved-by: ""
 approved-date: ""
 ---
@@ -280,7 +280,7 @@ Not applicable: none of the five heuristics nor the title-parser helper logs any
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/Core/SystemWindows/Matching/Heuristics/` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/SystemWindows/Matching/Heuristics/` |
 
 ## Design Decisions
 

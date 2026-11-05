@@ -2,7 +2,7 @@
 - **SwiftUI**: the source (`WebviewPanelState.swift`) is plain
   `Foundation` — `JSONEncoder`, `JSONDecoder`, `Data`, `String` — with no
   dependency on SwiftUI or any view-layer framework. It sits in
-  `AgenticToolkitCore`, alongside its sibling `WebviewPanelOptions`, and is
+  `AgenticDeveloperHubSDKCore`, alongside its sibling `WebviewPanelOptions`, and is
   consumed by the `macOS`-tier `WebviewPanelViewController` and
   `WebviewPanelSerializer`. A port that keeps this type in Swift needs
   nothing beyond `Foundation` and `Codable`. `WebviewPanelState` is a
@@ -53,7 +53,7 @@
   that enforces per-field presence the way Swift's `Codable` does.
 - **AppKit / UIKit**: identical to the SwiftUI note — the type depends on
   neither AppKit nor UIKit, so a macOS host consumes the same
-  `AgenticToolkitCore` type directly with no translation needed. (The panel
+  `AgenticDeveloperHubSDKCore` type directly with no translation needed. (The panel
   that actually renders from a restored value, `WebviewPanelViewController`,
   is AppKit and is out of this file's own scope.)
 - **WinUI 3**: use `System.Text.Json` with a `JsonSerializerOptions` whose

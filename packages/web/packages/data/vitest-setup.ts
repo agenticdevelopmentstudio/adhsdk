@@ -13,7 +13,7 @@ import { getToolkitQueryClient } from './src/query'
  * nothing to do with caching.
  *
  * It lives here, in the package that owns the client, rather than in the workspace-root setup
- * file: that file sits above `packages/`, where no `@agentic-toolkit/*` resolves. A consuming
+ * file: that file sits above `packages/`, where no `@adh-sdk/*` resolves. A consuming
  * package adds it by path — `featureVitest({ setupFiles: ['../../data/vitest-setup.ts'] })` — and
  * gets the teardown for every test file it will ever have, instead of one copy per file that the
  * next test written is free to forget.

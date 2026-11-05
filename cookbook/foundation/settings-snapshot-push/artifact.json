@@ -3,7 +3,7 @@
   "meta": {
     "id": "402E0AB0-6488-403B-BC43-FBC9145A9A27",
     "title": "Settings Snapshot Push",
-    "domain": "adtoolkit://cookbook/foundation/settings-snapshot-push",
+    "domain": "adhsdk://cookbook/foundation/settings-snapshot-push",
     "type": "ingredient",
     "version": "1.0.1",
     "status": "review",
@@ -27,8 +27,8 @@
     ],
     "depends-on": [],
     "related": [
-      "adtoolkit://cookbook/foundation/settings-storage",
-      "adtoolkit://cookbook/foundation/raw-setting"
+      "adhsdk://cookbook/foundation/settings-storage",
+      "adhsdk://cookbook/foundation/raw-setting"
     ],
     "references": [],
     "approved-by": "",

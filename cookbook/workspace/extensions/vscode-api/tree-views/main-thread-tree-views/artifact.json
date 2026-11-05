@@ -3,7 +3,7 @@
   "meta": {
     "id": "8a2a51ce-eee3-4c8b-b6df-90daa35f7ad0",
     "title": "VS Code Tree Views Bridge",
-    "domain": "adtoolkit://cookbook/workspace/extensions/vscode-api/tree-views/main-thread-tree-views",
+    "domain": "adhsdk://cookbook/workspace/extensions/vscode-api/tree-views/main-thread-tree-views",
     "type": "ingredient",
     "version": "1.2.1",
     "status": "review",
@@ -26,20 +26,20 @@
     ],
     "depends-on": [],
     "related": [
-      "adtoolkit://cookbook/workspace/extensions/vscode-api/tree-views/extension-tree-data-source",
-      "adtoolkit://cookbook/workspace/extensions/vscode-api/commands/main-thread-commands"
+      "adhsdk://cookbook/workspace/extensions/vscode-api/tree-views/extension-tree-data-source",
+      "adhsdk://cookbook/workspace/extensions/vscode-api/commands/main-thread-commands"
     ],
     "references": [
-      "packages/apple/AgenticToolkit/macOS/Features/Extensions/VSCodeAPI/MainThreadTreeViews.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/macOS/Features/Extensions/VSCodeAPI/ExtensionTreeDataSource.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/macOS/Features/Extensions/Tree/ContributedTreeItem.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/macOS/Features/Extensions/Host/NotImplementedLedger.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/macOS/Features/Extensions/VSCodeAPI/VSCodeAPI.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/macOS/UI/AppShell/AppCommand.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/Core/Extensions/ContributedViews.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/Core/Loggable.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/Tests/AgenticToolkitMacOSTests/Extensions/MainThreadTreeViewsTests.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/project.yml (agenticdevelopertoolkit)"
+      "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/MainThreadTreeViews.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/ExtensionTreeDataSource.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/Tree/ContributedTreeItem.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/Host/NotImplementedLedger.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/VSCodeAPI.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/macOS/UI/AppShell/AppCommand.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/Core/Extensions/ContributedViews.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/Core/Loggable.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKMacOSTests/Extensions/MainThreadTreeViewsTests.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/project.yml (adhsdk)"
     ],
     "approved-by": "",
     "approved-date": ""

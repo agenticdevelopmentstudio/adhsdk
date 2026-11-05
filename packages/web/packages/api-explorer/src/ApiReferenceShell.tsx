@@ -5,9 +5,9 @@
 
 import Link from 'next/link'
 import type { ReactNode } from 'react'
-import { cn } from '@agenticdevelopertoolkit/ui'
+import { cn } from '@adh-sdk/ui'
 // Package path (not relative): see the matching comment in ApiBrowser.tsx / tsup.config.ts.
-import { allTags, endpointsForTag } from '@agentic-toolkit/api-explorer/lib/getEndpoint'
+import { allTags, endpointsForTag } from '@adh-sdk/api-explorer/lib/getEndpoint'
 import { endpointSlug } from './lib/slug'
 import { methodDotClass } from './lib/tone'
 import type { EndpointMeta } from './types'

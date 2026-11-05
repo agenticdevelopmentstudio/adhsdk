@@ -1,7 +1,7 @@
 ---
 id: 86b4d53c-8122-480c-9a33-43e08b063469
 title: TopicSelectHint
-domain: agenticdevelopertoolkit://recipes/topic-select-hint
+domain: adhsdk://recipes/topic-select-hint
 type: ingredient
 version: 1.1.1
 status: review
@@ -22,8 +22,8 @@ tags:
 - empty-state
 depends-on: []
 related:
-- agenticdevelopertoolkit://recipes/empty-state
-- agenticdevelopertoolkit://recipes/card
+- adhsdk://recipes/empty-state
+- adhsdk://recipes/card
 references: []
 approved-by: ''
 approved-date: ''

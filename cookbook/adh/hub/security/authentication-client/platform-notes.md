@@ -5,10 +5,10 @@
   any rendering itself.
 - **AppKit / UIKit**: this is the source. `AuthenticationModule.swift`, `ApiTokensRail.swift`,
   `AuthenticationModels.swift`, and `AccessListsTopic.swift` live in the `Hub` module of the
-  `AgenticToolkitHub-macOS`/`AgenticToolkitHub-iOS` targets (both declared in `project.yml`, sharing one
+  `AgenticDeveloperHubSDKHub-macOS`/`AgenticDeveloperHubSDKHub-iOS` targets (both declared in `project.yml`, sharing one
   source set); `StorageTokensRail.swift` lives in the sibling `EcosystemConfig` feature folder of the
   same module. None of the five files imports `AppKit` or `UIKit` directly — each is plain
-  `AgenticToolkitHTDV` + `Foundation`, with the platform-specific `NSViewController`/`UIViewController`
+  `AgenticDeveloperHubSDKHTDV` + `Foundation`, with the platform-specific `NSViewController`/`UIViewController`
   split handled entirely inside `FormViewController` (a different file), one level below where these
   types operate. All four roles (`AuthenticationModule`, `ApiTokensRail`, `StorageTokensRail`,
   `AccessListsTopic`) are declared `@MainActor final class`: every stored property (`revealedSecrets`,

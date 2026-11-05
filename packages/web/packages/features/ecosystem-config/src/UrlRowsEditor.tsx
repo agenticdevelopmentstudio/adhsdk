@@ -3,9 +3,9 @@
 import { useState } from "react";
 import type { ReactNode } from "react";
 
-import { Button } from "@agenticdevelopertoolkit/ui/components/button";
-import { Input } from "@agenticdevelopertoolkit/ui/components/input";
-import { Label } from "@agenticdevelopertoolkit/ui/components/label";
+import { Button } from "@adh-sdk/ui/components/button";
+import { Input } from "@adh-sdk/ui/components/input";
+import { Label } from "@adh-sdk/ui/components/label";
 import { Plus, Trash2 } from "lucide-react";
 
 /**

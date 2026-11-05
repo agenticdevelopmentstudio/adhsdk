@@ -3,7 +3,7 @@
   "meta": {
     "id": "267CDB61-52E4-440C-BFA2-799D8E9E12DC",
     "title": "Edit Deferred Value",
-    "domain": "adtoolkit://cookbook/foundation/editing/edit-deferred-value",
+    "domain": "adhsdk://cookbook/foundation/editing/edit-deferred-value",
     "type": "ingredient",
     "version": "1.0.0",
     "status": "review",

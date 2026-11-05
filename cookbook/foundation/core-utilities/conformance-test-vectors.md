@@ -4,7 +4,7 @@
 | fc-001 | encoding-skip-shape, encoding-skip-decode-yields-nothing, decode-integration-skips-key | decode `{"a": 1, "b": 2}` into a model with a plain integer field `a` and an encoding-skip-wrapped optional integer field `b` | `b`'s stored value is nothing; the `2` in the input is discarded |
 | fc-002 | encoding-skip-encode-noop, encode-integration-skips-key, encoding-skip-round-trip-loses-value | encode a model with an encoding-skip-wrapped optional integer field `b` set to 42, then decode the result | encoded JSON has no `"b"` key at all; the decoded field's stored value is nothing |
 | fc-003 | encoding-skip-concurrency | one wrapper instance's stored value mutated from two concurrent tasks with no external synchronization | undefined/racy result; the type provides no protection of its own (no concurrency-safety guarantee, mutable storage) |
-| fc-004 | keychain-service-default | read the store's `service` in a process where no bundle identifier is available | `"com.agentictoolkit"` |
+| fc-004 | keychain-service-default | read the store's `service` in a process where no bundle identifier is available | `"com.mikefullerton.agenticdeveloperhubsdk"` |
 | fc-005 | keychain-set-returns-status, keychain-get-primary-lookup | `set("hello-world", forKey: key)` then `get(forKey: key)` | `set` returns `true`; `get` returns `"hello-world"` |
 | fc-006 | keychain-get-exhausted-returns-nothing | `get(forKey:)` for a key never set | nothing |
 | fc-007 | keychain-exists-checks-current-scope, keychain-delete-idempotent | set a key, check `exists` (`true`), `delete` it, check `exists` again (`false`), `delete` it a second time | first `exists` is `true`, second is `false`, second `delete` still returns `true` |

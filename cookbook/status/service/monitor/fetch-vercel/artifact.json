@@ -3,7 +3,7 @@
   "meta": {
     "id": "c7b38706-a6bc-4ad6-852c-425a4ed11a27",
     "title": "Status Server Monitor Fetch Vercel",
-    "domain": "adtoolkit://cookbook/status/service/monitor/fetch-vercel",
+    "domain": "adhsdk://cookbook/status/service/monitor/fetch-vercel",
     "type": "ingredient",
     "version": "1.0.2",
     "status": "review",
@@ -31,18 +31,18 @@
       "agenticdevelopercookbook://guidelines/implementing/networking/rate-limiting"
     ],
     "related": [
-      "adtoolkit://cookbook/status/service/monitor/alerts",
-      "adtoolkit://cookbook/status/service/monitor/deploy-status"
+      "adhsdk://cookbook/status/service/monitor/alerts",
+      "adhsdk://cookbook/status/service/monitor/deploy-status"
     ],
     "references": [
-      "packages/web/packages/status-server/src/monitor/fetch-vercel.ts (agenticdevelopertoolkit)",
-      "packages/web/packages/status-server/src/monitor/deploy-status.ts (agenticdevelopertoolkit)",
-      "packages/web/packages/status-server/src/monitor/format.ts (agenticdevelopertoolkit)",
-      "packages/web/packages/status-server/src/monitor/provider-deploy.ts (agenticdevelopertoolkit)",
-      "packages/web/packages/deploy-platform/src/cooldown/provider-cooldown.ts (agenticdevelopertoolkit)",
-      "packages/web/packages/status-server/test/vercel-deploys-pagination.test.ts (agenticdevelopertoolkit)",
-      "packages/web/packages/status-server/test/deploy-error-shaping.test.ts (agenticdevelopertoolkit)",
-      "packages/web/packages/status-server/test/provider-cooldown.test.ts (agenticdevelopertoolkit)"
+      "packages/web/packages/status-server/src/monitor/fetch-vercel.ts (adhsdk)",
+      "packages/web/packages/status-server/src/monitor/deploy-status.ts (adhsdk)",
+      "packages/web/packages/status-server/src/monitor/format.ts (adhsdk)",
+      "packages/web/packages/status-server/src/monitor/provider-deploy.ts (adhsdk)",
+      "packages/web/packages/deploy-platform/src/cooldown/provider-cooldown.ts (adhsdk)",
+      "packages/web/packages/status-server/test/vercel-deploys-pagination.test.ts (adhsdk)",
+      "packages/web/packages/status-server/test/deploy-error-shaping.test.ts (adhsdk)",
+      "packages/web/packages/status-server/test/provider-cooldown.test.ts (adhsdk)"
     ],
     "approved-by": "",
     "approved-date": ""

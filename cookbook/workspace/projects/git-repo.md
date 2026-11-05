@@ -1,7 +1,7 @@
 ---
 id: 1463e7a2-e290-4b8c-8643-df9462a758e6
 title: "Git Repository Record"
-domain: adtoolkit://cookbook/workspace/projects/git-repo
+domain: adhsdk://cookbook/workspace/projects/git-repo
 type: ingredient
 version: 1.1.0
 status: review
@@ -22,9 +22,9 @@ tags:
 depends-on: []
 related: []
 references:
-  - packages/apple/AgenticToolkit/macOS/Features/Projects/GitRepo.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Tests/AgenticToolkitMacOSTests/Projects/GitRepoScannerTests.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Tests/AgenticToolkitMacOSTests/Projects/ProjectReconcilerTests.swift (agenticdevelopertoolkit)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/GitRepo.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKMacOSTests/Projects/GitRepoScannerTests.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKMacOSTests/Projects/ProjectReconcilerTests.swift (adhsdk)
 approved-by: ""
 approved-date: ""
 ---
@@ -305,7 +305,7 @@ Not applicable: this component contains no logging call of any kind.
 ## Platform Notes
 
 - **SwiftUI**: The source is
-  `packages/apple/AgenticToolkit/macOS/Features/Projects/GitRepo.swift`, a
+  `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/GitRepo.swift`, a
   plain Foundation file with no import beyond `Foundation` and no dependency
   on SwiftUI, AppKit, or UIKit at all — the three types are UI-framework-free
   and port unchanged into any Swift target.
@@ -351,7 +351,7 @@ Not applicable: this component contains no logging call of any kind.
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/macOS/Features/Projects/GitRepo.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/GitRepo.swift` |
 
 ## Design Decisions
 

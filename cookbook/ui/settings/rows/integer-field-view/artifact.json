@@ -3,7 +3,7 @@
   "meta": {
     "id": "a7653559-cb70-43db-a75c-d032e4f599b3",
     "title": "Integer Field View",
-    "domain": "adtoolkit://cookbook/ui/settings/rows/integer-field-view",
+    "domain": "adhsdk://cookbook/ui/settings/rows/integer-field-view",
     "type": "ingredient",
     "version": "1.2.4",
     "status": "review",
@@ -25,11 +25,11 @@
       "numeric"
     ],
     "depends-on": [
-      "adtoolkit://cookbook/ui/settings/rows/number-field-view"
+      "adhsdk://cookbook/ui/settings/rows/number-field-view"
     ],
     "related": [
-      "adtoolkit://cookbook/ui/settings/rows/checkbox-view",
-      "adtoolkit://cookbook/ui/settings/rows/captioned-slider-view"
+      "adhsdk://cookbook/ui/settings/rows/checkbox-view",
+      "adhsdk://cookbook/ui/settings/rows/captioned-slider-view"
     ],
     "references": [],
     "approved-by": "",

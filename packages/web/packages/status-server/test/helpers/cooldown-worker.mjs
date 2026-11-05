@@ -5,7 +5,7 @@ import { register } from "tsx/esm/api";
 import { parentPort, workerData } from "node:worker_threads";
 
 register();
-const { attachCooldownState, rateLimitedUntil, noteRateLimited } = await import("@agentic-toolkit/deploy-platform/cooldown");
+const { attachCooldownState, rateLimitedUntil, noteRateLimited } = await import("@adh-sdk/deploy-platform/cooldown");
 
 attachCooldownState(workerData.cooldowns);
 

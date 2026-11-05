@@ -1,7 +1,7 @@
 ---
 id: 00136AA1-B327-4765-932A-F11AF12F09C9
 title: "Money Field View"
-domain: adtoolkit://cookbook/ui/settings/views/money-field-view
+domain: adhsdk://cookbook/ui/settings/views/money-field-view
 type: ingredient
 version: 1.0.1
 status: review
@@ -22,7 +22,7 @@ tags:
   - form
 depends-on: []
 related:
-  - adtoolkit://cookbook/ui/settings/views/contact-fields-view
+  - adhsdk://cookbook/ui/settings/views/contact-fields-view
 references: []
 approved-by: ""
 approved-date: ""
@@ -145,7 +145,7 @@ Not applicable: the component performs no logging of its own.
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/macOS/SystemIntegration/ComposableSettingsWindow/Views/MoneyFieldView.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/Views/MoneyFieldView.swift` |
 
 ## Design Decisions
 

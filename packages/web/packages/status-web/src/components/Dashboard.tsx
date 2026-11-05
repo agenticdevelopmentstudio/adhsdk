@@ -1,6 +1,6 @@
 "use client";
 import { type ReactElement, useState } from "react";
-import { ResizableSplit } from "@agenticdevelopertoolkit/ui/components/resizable-split";
+import { ResizableSplit } from "@adh-sdk/ui/components/resizable-split";
 import { useStatus } from "../hooks/use-status";
 import { useUptime } from "../hooks/use-uptime";
 import { useLiveSnapshot } from "../hooks/use-live-snapshot";
@@ -18,7 +18,7 @@ import { DetailPanel } from "./DetailPanel";
 import { GlobalPanel } from "./GlobalPanel";
 import { StatusDot } from "./StatusDot";
 import { endpointLabel } from "../lib/url";
-import { endpointHasUrl } from "@agentic-toolkit/deploy-platform/engine";
+import { endpointHasUrl } from "@adh-sdk/deploy-platform/engine";
 
 import { COLORS, PALETTE, envBadgeLabel, envColor } from "../lib/colors";
 const SPLIT_KEY = "adh-status-split";

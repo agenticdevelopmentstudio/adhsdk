@@ -1,30 +1,30 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useResourceList } from "@agentic-toolkit/data";
-import { docsApi } from "@agentic-toolkit/data/docs";
+import { useResourceList } from "@adh-sdk/data";
+import { docsApi } from "@adh-sdk/data/docs";
 import {
   markdownApi,
   type MarkdownListOptions,
   type MarkdownScope,
   type ResearchFilters,
   type ResearchSummary,
-} from "@agentic-toolkit/data/markdown";
-import { notesApi } from "@agentic-toolkit/data/notes";
-import { CrudTable, type CrudRow, type CrudTableMeta } from "@agentic-toolkit/crud";
-import { AlertModal } from "@agenticdevelopertoolkit/ui/components/alert-modal";
-import { Button } from "@agenticdevelopertoolkit/ui/components/button";
+} from "@adh-sdk/data/markdown";
+import { notesApi } from "@adh-sdk/data/notes";
+import { CrudTable, type CrudRow, type CrudTableMeta } from "@adh-sdk/crud";
+import { AlertModal } from "@adh-sdk/ui/components/alert-modal";
+import { Button } from "@adh-sdk/ui/components/button";
 import {
   Dialog,
   DialogContent,
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@agenticdevelopertoolkit/ui/components/dialog";
-import { DialogErrorText, ErrorText } from "@agenticdevelopertoolkit/ui/components/error-text";
-import { Textarea } from "@agenticdevelopertoolkit/ui/components/textarea";
-import { UnsavedChangesAlert } from "@agenticdevelopertoolkit/ui/components/unsaved-changes-alert";
-import { useExitGate } from "@agenticdevelopertoolkit/ui/hooks/useExitGate";
+} from "@adh-sdk/ui/components/dialog";
+import { DialogErrorText, ErrorText } from "@adh-sdk/ui/components/error-text";
+import { Textarea } from "@adh-sdk/ui/components/textarea";
+import { UnsavedChangesAlert } from "@adh-sdk/ui/components/unsaved-changes-alert";
+import { useExitGate } from "@adh-sdk/ui/hooks/useExitGate";
 
 /**
  * The rows of a MARKDOWN-backed bucket table — `content.markdown` and the three marker tables

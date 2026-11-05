@@ -1,9 +1,9 @@
 'use client';
 
-import { Field, FieldGroup } from '@agenticdevelopertoolkit/ui/blocks';
-import { Select } from '@agenticdevelopertoolkit/ui/components/select';
-import type { PublishBlocker } from '@agentic-toolkit/registry/types';
-import type { EntryRow, EntryStatus, EntryVisibility } from '@agentic-toolkit/registry/client';
+import { Field, FieldGroup } from '@adh-sdk/ui/blocks';
+import { Select } from '@adh-sdk/ui/components/select';
+import type { PublishBlocker } from '@adh-sdk/registry/types';
+import type { EntryRow, EntryStatus, EntryVisibility } from '@adh-sdk/registry/client';
 
 export interface EntryPublishPanelProps {
   draft: EntryRow;

@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const authedJson = vi.fn();
 const authedRequest = vi.fn();
-vi.mock("@agentic-toolkit/auth/client", () => ({
+vi.mock("@adh-sdk/auth/client", () => ({
   authedJson: (...a: unknown[]) => authedJson(...a),
   authedRequest: (...a: unknown[]) => authedRequest(...a),
 }));

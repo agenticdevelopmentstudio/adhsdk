@@ -1,6 +1,6 @@
 {
   "fishlamp": {
-    "css": "@agenticdevelopertoolkit/themes/styles/fishlamp.css",
+    "css": "@adh-sdk/themes/styles/fishlamp.css",
     "fonts": [
       {
         "variable": "--font-iosevka",
@@ -15,7 +15,7 @@
     ]
   },
   "mikefullerton": {
-    "css": "@agenticdevelopertoolkit/themes/styles/mikefullerton-landing.css",
+    "css": "@adh-sdk/themes/styles/mikefullerton-landing.css",
     "fonts": [
       {
         "variable": "--font-iosevka",
@@ -30,7 +30,7 @@
     ]
   },
   "charcoal": {
-    "css": "@agenticdevelopertoolkit/themes/styles/charcoal.css",
+    "css": "@adh-sdk/themes/styles/charcoal.css",
     "fonts": [
       {
         "variable": "--font-iosevka",

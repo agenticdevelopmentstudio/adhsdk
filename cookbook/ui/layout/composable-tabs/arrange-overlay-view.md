@@ -1,7 +1,7 @@
 ---
 id: bfc2dcde-d905-4923-bff2-577c85f17d5f
 title: "Composable Tabs Arrange Overlay"
-domain: adtoolkit://cookbook/ui/layout/composable-tabs/arrange-overlay-view
+domain: adhsdk://cookbook/ui/layout/composable-tabs/arrange-overlay-view
 type: ingredient
 version: 1.2.1
 status: review
@@ -22,7 +22,7 @@ tags:
   - toolbar
 depends-on: []
 related:
-  - adtoolkit://cookbook/ui/layout/composable-tabs/leaf-pane-view
+  - adhsdk://cookbook/ui/layout/composable-tabs/leaf-pane-view
 references: []
 approved-by: ""
 approved-date: ""
@@ -393,7 +393,7 @@ this file.
   "select this pane" handler is needed, unlike SwiftUI/Compose, where
   gesture modifiers consume the touch before it can propagate.
 - **AppKit/UIKit** (source platform): Implemented in
-  `packages/apple/AgenticToolkit/macOS/UI/ViewControllers/ComposableTabs/ComposableTabsArrangeOverlayView.swift`
+  `packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/ComposableTabs/ComposableTabsArrangeOverlayView.swift`
   as a `@MainActor`, `final` `NSView` built from `NSStackView`s and Auto
   Layout constraints, installed and removed as a subview by
   `ComposableTabsPaneViewController.installArrangeOverlay()`/
@@ -405,7 +405,7 @@ this file.
   `init(coder:)` — which this type overrides to trigger a fatal error
   immediately, since no code path in this app constructs this overlay from
   an archived storyboard/xib. There is no UIKit code path in source (the
-  imports — `AppKit`, `AgenticToolkitCore`, `AgenticToolkitCoreMacOS` — are
+  imports — `AppKit`, `AgenticDeveloperHubSDKCore`, `AgenticDeveloperHubSDKCoreMacOS` — are
   macOS-only); a UIKit port would replace `NSButton`/`NSPopUpButton` with
   `UIButton`/`UIMenu`, replace the responder-chain click-through with an
   explicit `UITapGestureRecognizer` on the scrim that calls the pane-select
@@ -455,7 +455,7 @@ this file.
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/macOS/UI/ViewControllers/ComposableTabs/ComposableTabsArrangeOverlayView.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/ComposableTabs/ComposableTabsArrangeOverlayView.swift` |
 
 ## Design Decisions
 

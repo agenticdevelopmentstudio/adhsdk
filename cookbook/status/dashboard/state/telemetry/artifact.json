@@ -3,7 +3,7 @@
   "meta": {
     "id": "9ff57831-bdf9-47ad-b009-bcc1de59d5f4",
     "title": "Telemetry State",
-    "domain": "adtoolkit://cookbook/status/dashboard/state/telemetry",
+    "domain": "adhsdk://cookbook/status/dashboard/state/telemetry",
     "type": "ingredient",
     "version": "1.2.1",
     "status": "review",
@@ -21,7 +21,7 @@
     "tags": [],
     "depends-on": [],
     "related": [
-      "adtoolkit://cookbook/status/service/telemetry"
+      "adhsdk://cookbook/status/service/telemetry"
     ],
     "references": [],
     "approved-by": "",

@@ -1,8 +1,8 @@
 /** Left-sidebar sections inside User Settings, in rail order — alphabetical by label. Shared by hub's
  *  /settings route and the User Settings overlay every site mounts.
  *
- *  Import these from "@agentic-toolkit/adh/settings/topics" — this exact subpath, never
- *  the "@agentic-toolkit/adh/settings" barrel. This module carries no "use client" and
+ *  Import these from "@adh-sdk/adh/settings/topics" — this exact subpath, never
+ *  the "@adh-sdk/adh/settings" barrel. This module carries no "use client" and
  *  imports nothing that does, so it is the one route into these exports a Server
  *  Component can use safely; the barrel re-exports SettingsOverlayProvider, which is
  *  "use client", and a built dist chunk hoists that directive onto everything else the

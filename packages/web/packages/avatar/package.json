@@ -1,5 +1,5 @@
 {
-  "name": "@agenticdevelopertoolkit/avatar",
+  "name": "@adh-sdk/avatar",
   "version": "0.1.0",
   "description": "Headless avatar behavior + animation engine. A persona-agnostic `useAvatarEngine` hook that gives any SVG face reflexes (blink, idle ladder, gaze, speech) and an expression-driven pose engine over optional channels (eyes, brows, antennae, mouth, body). Driven by an `expression` prop.",
   "license": "Apache-2.0",

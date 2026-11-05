@@ -1,4 +1,4 @@
-// `@agentic-toolkit/adh/server` (src/server.ts) also exports AdhThemeStyle, as a
+// `@adh-sdk/adh/server` (src/server.ts) also exports AdhThemeStyle, as a
 // server module — that is the intended import path. This barrel is 'use client',
 // so importing AdhThemeStyle from here yields a CLIENT instance, which renders
 // after hydration instead of during SSR, defeating the pre-paint style injection
@@ -26,7 +26,7 @@ export type {
 // The theme editor surface — merged in from the pre-rename @adh-shared/adh's themes tree.
 export { useThemeEditor } from './useThemeEditor'
 export type { ThemeEditorApi, ThemeSource, EditorTheme, CssMap } from './useThemeEditor'
-export { DbThemeApplier } from '@agentic-toolkit/adh/themes/DbThemeApplier'
+export { DbThemeApplier } from '@adh-sdk/adh/themes/DbThemeApplier'
 export {
   THEME_STORAGE_KEY,
   ALT_STYLE_SELECTOR,

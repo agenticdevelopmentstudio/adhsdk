@@ -1,7 +1,7 @@
 'use client'
 
 import { useSyncExternalStore } from 'react'
-import { detectEnv, type SiteEnv } from '@agentic-toolkit/adh-registry'
+import { detectEnv, type SiteEnv } from '@adh-sdk/adh-registry'
 
 /** localStorage key holding the dev-only environment override. */
 const STORAGE_KEY = 'adh:debug:env-override'

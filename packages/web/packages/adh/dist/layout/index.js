@@ -33,7 +33,7 @@ function recoverFromChunkError(error) {
 }
 
 // src/layout/ErrorFallback.tsx
-import { Button } from "@agenticdevelopertoolkit/ui/components/button";
+import { Button } from "@adh-sdk/ui/components/button";
 import { jsx, jsxs } from "react/jsx-runtime";
 function ErrorFallback({
   onRetry,
@@ -72,7 +72,7 @@ function AppErrorBoundary({ children }) {
 
 // src/layout/DevAnimScale.tsx
 import { useEffect as useEffect2 } from "react";
-import { useSlowAnimations, slowAnimationVars } from "@agenticdevelopertoolkit/ui/blocks";
+import { useSlowAnimations, slowAnimationVars } from "@adh-sdk/ui/blocks";
 function DevAnimScale() {
   const slow = useSlowAnimations();
   useEffect2(() => {
@@ -88,7 +88,7 @@ function DevAnimScale() {
 }
 
 // src/layout/HierarchicalDetailViewFlag.tsx
-import { HierarchicalDetailViewProvider } from "@agenticdevelopertoolkit/ui/blocks";
+import { HierarchicalDetailViewProvider } from "@adh-sdk/ui/blocks";
 import { jsx as jsx3 } from "react/jsx-runtime";
 function HierarchicalDetailViewFlag({ children }) {
   return /* @__PURE__ */ jsx3(HierarchicalDetailViewProvider, { menuDetail: false, children });
@@ -96,7 +96,7 @@ function HierarchicalDetailViewFlag({ children }) {
 
 // src/layout/HtdvLayoutLogSwitch.tsx
 import { useEffect as useEffect3 } from "react";
-import { setHtdvLayoutLog } from "@agenticdevelopertoolkit/ui/blocks";
+import { setHtdvLayoutLog } from "@adh-sdk/ui/blocks";
 function HtdvLayoutLogSwitch() {
   useEffect3(() => {
     setHtdvLayoutLog(true);
@@ -105,11 +105,11 @@ function HtdvLayoutLogSwitch() {
 }
 
 // src/layout/AdhAppShell.tsx
-import { SlideTransitions } from "@agentic-toolkit/adh/layout/SlideNavigation";
+import { SlideTransitions } from "@adh-sdk/adh/layout/SlideNavigation";
 
 // src/layout/SwipeHistory.tsx
 import { useEffect as useEffect4 } from "react";
-import { offerSwipeBack } from "@agenticdevelopertoolkit/ui/lib/swipe-back";
+import { offerSwipeBack } from "@adh-sdk/ui/lib/swipe-back";
 var SWIPE_MIN_DISTANCE = 80;
 var SWIPE_MAX_DURATION_MS = 600;
 var SWIPE_AXIS_RATIO = 2;
@@ -197,11 +197,11 @@ function AdhAppShell({ header, children, footer, devTools = false }) {
 }
 
 // src/layout/index.ts
-import { SlideTransitions as SlideTransitions2, slideNavigate, canSlide } from "@agentic-toolkit/adh/layout/SlideNavigation";
+import { SlideTransitions as SlideTransitions2, slideNavigate, canSlide } from "@adh-sdk/adh/layout/SlideNavigation";
 
 // src/layout/RouteError.tsx
 import { useEffect as useEffect5 } from "react";
-import { captureException } from "@agentic-toolkit/adh/telemetry/report-error";
+import { captureException } from "@adh-sdk/adh/telemetry/report-error";
 import { jsx as jsx5 } from "react/jsx-runtime";
 function RouteError({
   error,
@@ -220,7 +220,7 @@ function RouteError({
 
 // src/layout/GlobalError.tsx
 import { useEffect as useEffect6 } from "react";
-import { captureException as captureException2 } from "@agentic-toolkit/adh/telemetry/report-error";
+import { captureException as captureException2 } from "@adh-sdk/adh/telemetry/report-error";
 import { jsx as jsx6, jsxs as jsxs3 } from "react/jsx-runtime";
 function GlobalError({
   error,
@@ -304,14 +304,14 @@ function HomePlaceholder({ siteLabel, blurb }) {
 
 // src/layout/AppShell.tsx
 import { Fragment as Fragment4 } from "react";
-import { FooterChat, FooterForRoute, SiteFooter } from "@agentic-toolkit/adh/footer";
-import { SiteTelemetryProvider as TelemetryProvider } from "@agentic-toolkit/adh/telemetry";
-import { FeatureFlagsProvider } from "@agentic-toolkit/adh/flags";
-import { HelpProvider } from "@agentic-toolkit/adh/help";
-import { SettingsOverlayProvider } from "@agentic-toolkit/adh/settings";
-import { AdhAppShell as AdhAppShell2 } from "@agentic-toolkit/adh/layout";
-import { liveBuildIdentity } from "@agentic-toolkit/adh/live-build-identity";
-import { DEV_BUILD } from "@agentic-toolkit/adh-registry/deployment-env";
+import { FooterChat, FooterForRoute, SiteFooter } from "@adh-sdk/adh/footer";
+import { SiteTelemetryProvider as TelemetryProvider } from "@adh-sdk/adh/telemetry";
+import { FeatureFlagsProvider } from "@adh-sdk/adh/flags";
+import { HelpProvider } from "@adh-sdk/adh/help";
+import { SettingsOverlayProvider } from "@adh-sdk/adh/settings";
+import { AdhAppShell as AdhAppShell2 } from "@adh-sdk/adh/layout";
+import { liveBuildIdentity } from "@adh-sdk/adh/live-build-identity";
+import { DEV_BUILD } from "@adh-sdk/adh-registry/deployment-env";
 
 // src/marketing/LandingFooter.tsx
 import {
@@ -319,7 +319,7 @@ import {
   PrivacyModal,
   SitesPopover,
   TermsModal
-} from "@agentic-toolkit/adh/footer";
+} from "@adh-sdk/adh/footer";
 
 // src/footer/identity.tsx
 import {
@@ -328,7 +328,7 @@ import {
   getSite,
   groupSitesByCategory,
   siteProdUrl
-} from "@agentic-toolkit/adh-registry";
+} from "@adh-sdk/adh-registry";
 import { jsx as jsx9 } from "react/jsx-runtime";
 var FAMILY_OMITTED = /* @__PURE__ */ new Set(["shipr", "registry", "fishlamp", "fishlampdesign"]);
 var FAMILY_SITES = DIRECTORY_SITES.filter((s) => !FAMILY_OMITTED.has(s.id));
@@ -417,16 +417,16 @@ function AppShellProviders({ children }) {
 }
 
 // src/layout/SiteSwitchNotFound.tsx
-import { SITE_SWITCH_HASH } from "@agentic-toolkit/adh-registry";
-import { SiteNotFound as AdhSiteNotFound } from "@agentic-toolkit/adh/layout";
+import { SITE_SWITCH_HASH } from "@adh-sdk/adh-registry";
+import { SiteNotFound as AdhSiteNotFound } from "@adh-sdk/adh/layout";
 import { jsx as jsx12 } from "react/jsx-runtime";
 function SiteSwitchNotFound({ children }) {
   return /* @__PURE__ */ jsx12(AdhSiteNotFound, { siteSwitchHash: SITE_SWITCH_HASH, children });
 }
 
 // src/layout/SiteHomePlaceholder.tsx
-import { getSite as getSite2 } from "@agentic-toolkit/adh-registry";
-import { HomePlaceholder as AdhHomePlaceholder } from "@agentic-toolkit/adh/layout";
+import { getSite as getSite2 } from "@adh-sdk/adh-registry";
+import { HomePlaceholder as AdhHomePlaceholder } from "@adh-sdk/adh/layout";
 import { jsx as jsx13 } from "react/jsx-runtime";
 function SiteHomePlaceholder({ siteId, blurb }) {
   return /* @__PURE__ */ jsx13(AdhHomePlaceholder, { siteLabel: getSite2(siteId)?.label ?? "", blurb });

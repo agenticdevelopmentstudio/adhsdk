@@ -1,7 +1,7 @@
 ---
 id: 51d3b1ba-ced7-4c08-8a63-c83094d91299
 title: Wrap
-domain: agenticdevelopertoolkit://recipes/wrap
+domain: adhsdk://recipes/wrap
 type: ingredient
 version: 1.1.1
 status: review
@@ -23,8 +23,8 @@ tags:
 - content-column
 depends-on: []
 related:
-- agenticdevelopertoolkit://recipes/screen
-- agenticdevelopertoolkit://recipes/deck
+- adhsdk://recipes/screen
+- adhsdk://recipes/deck
 references: []
 approved-by: ''
 approved-date: ''

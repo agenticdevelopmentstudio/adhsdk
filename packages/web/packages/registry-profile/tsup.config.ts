@@ -6,5 +6,5 @@ export default defineConfig({
   dts: false,
   sourcemap: true,
   clean: true,
-  external: ['react', 'react-dom', '@agenticdevelopertoolkit/registry-types'],
+  external: ['react', 'react-dom', '@adh-sdk/registry-types'],
 });

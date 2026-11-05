@@ -40,7 +40,7 @@ throws.
 rather than as a bare top-level type.
 **Rationale**: A bare top-level `public enum JSONValue` in this module is
 flagged `duplicate_name` by `abstractr check --content-file` against the
-sibling foundation tier `AgenticToolkitSync`'s own top-level `JSONValue` —
+sibling foundation tier `AgenticDeveloperHubSDKSync`'s own top-level `JSONValue` —
 `apple-sync` and `apple-core` are declared sibling foundation tiers in
 `.abstractr.json`, not a tier/sub-tier pair, so nesting rather than renaming
 resolves the collision without introducing a downward dependency between

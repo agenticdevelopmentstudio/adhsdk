@@ -1,5 +1,5 @@
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/AIPluginKit/PluginTransport.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/AIPluginKit/PluginTransport.swift` |
 

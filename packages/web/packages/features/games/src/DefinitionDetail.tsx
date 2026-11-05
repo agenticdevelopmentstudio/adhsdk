@@ -1,17 +1,17 @@
 "use client";
 
 import { useId } from "react";
-import { Card, CardContent } from "@agenticdevelopertoolkit/ui/components/card";
-import { Input } from "@agenticdevelopertoolkit/ui/components/input";
-import { Label } from "@agenticdevelopertoolkit/ui/components/label";
-import { Select } from "@agenticdevelopertoolkit/ui/components/select";
-import { Textarea } from "@agenticdevelopertoolkit/ui/components/textarea";
-import { ErrorText } from "@agenticdevelopertoolkit/ui/components/error-text";
+import { Card, CardContent } from "@adh-sdk/ui/components/card";
+import { Input } from "@adh-sdk/ui/components/input";
+import { Label } from "@adh-sdk/ui/components/label";
+import { Select } from "@adh-sdk/ui/components/select";
+import { Textarea } from "@adh-sdk/ui/components/textarea";
+import { ErrorText } from "@adh-sdk/ui/components/error-text";
 import type {
   GameDefinition,
   GameDefinitionInput,
   GameDefinitionStatus,
-} from "@agentic-toolkit/data/games";
+} from "@adh-sdk/data/games";
 import { wholeNumberProblem } from "./fields";
 import { IntegerInput } from "./IntegerInput";
 import { readSlots, validateSlots, writeSlots } from "./slots";

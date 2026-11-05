@@ -1,6 +1,6 @@
 'use client'
 
-import { ApiBrowser } from '@agentic-toolkit/api-explorer'
+import { ApiBrowser } from '@adh-sdk/api-explorer'
 
 /**
  * The API help topic: the full interactive {@link ApiBrowser} (its own Tags → Endpoints

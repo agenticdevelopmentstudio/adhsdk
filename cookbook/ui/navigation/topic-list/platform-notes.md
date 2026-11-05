@@ -50,7 +50,7 @@
   AppKit's `isHidden` on a stack view's arranged subview) rather than
   `visibility: hidden`.
 - **AppKit/UIKit** (source platform): Implemented in
-  `packages/apple/AgenticToolkit/macOS/UI/ViewControllers/TopicListViewController.swift`
+  `packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/TopicListViewController.swift`
   as a `@MainActor`, `open` `NSViewController` that builds its entire view
   hierarchy by hand in `loadView()` - a single-column `NSOutlineView`
   (`ColumnFillingOutlineView`) inside an `NSScrollView`, stacked with an
@@ -58,7 +58,7 @@
   vertical `NSStackView`. It is its own `NSOutlineViewDataSource`/
   `NSOutlineViewDelegate`, with row appearance and theming driven by
   `SemanticPalette` via `ThemePaletteObserver` and `ThemedTableRowView`
-  (both defined in the vendored `AgenticDeveloperToolkitUI` framework this
+  (both defined in the vendored `AgenticDeveloperHubSDKUI` framework this
   target re-exports). There is no UIKit code path in source; a UIKit port
   would replace `NSOutlineView`/`NSScrollView` with a `UITableView` (a flat
   list needs no `UICollectionView` compositional layout), use

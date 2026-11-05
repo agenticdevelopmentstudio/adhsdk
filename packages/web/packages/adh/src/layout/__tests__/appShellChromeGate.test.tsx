@@ -10,7 +10,7 @@ vi.mock('next/navigation', () => ({ usePathname: () => '/', useRouter: () => ({ 
 // Stubbed to a marker for the reason appShellSettings.test.tsx gives (the real footer barrel
 // reaches a sibling submodule with no built dist here) — and because a marker is exactly what
 // this file needs: proof the footer slot rendered, or did not.
-vi.mock('@agentic-toolkit/adh/footer', () => ({
+vi.mock('@adh-sdk/adh/footer', () => ({
   SiteFooter: () => <footer>FOOTER</footer>,
 }))
 

@@ -3,7 +3,7 @@
   "meta": {
     "id": "A8BFCD0B-0759-4801-AAF6-A14D7AA3FE49",
     "title": "Raw Setting",
-    "domain": "adtoolkit://cookbook/foundation/raw-setting",
+    "domain": "adhsdk://cookbook/foundation/raw-setting",
     "type": "ingredient",
     "version": "1.0.0",
     "status": "review",
@@ -26,7 +26,7 @@
     ],
     "depends-on": [],
     "related": [
-      "adtoolkit://cookbook/foundation/settings-storage"
+      "adhsdk://cookbook/foundation/settings-storage"
     ],
     "references": [],
     "approved-by": "",

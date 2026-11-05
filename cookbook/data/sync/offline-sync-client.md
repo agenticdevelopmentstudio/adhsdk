@@ -1,7 +1,7 @@
 ---
 id: d3a0b65f-92c0-43c1-b04c-77638eb72044
 title: "Offline Sync Client"
-domain: adtoolkit://cookbook/data/sync/offline-sync-client
+domain: adhsdk://cookbook/data/sync/offline-sync-client
 type: ingredient
 category: engine
 version: 1.3.2
@@ -23,13 +23,13 @@ tags:
   - adh
 depends-on: []
 related:
-  - agenticdevelopertoolkit://recipes/offline-sync-client
+  - adhsdk://recipes/offline-sync-client
 references:
   - src/adh/src/sync/wire.ts (adhbackend)
   - src/adh/src/sync/registry.ts (adhbackend)
   - src/adh/docs/architecture/sync.md (adhbackend)
-  - packages/apple/AgenticToolkit/Sync (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/SyncGRDB (agenticdevelopertoolkit)
+  - packages/apple/AgenticDeveloperHubSDK/Sync (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/SyncGRDB (adhsdk)
 approved-by: ""
 approved-date: ""
 ---
@@ -37,7 +37,7 @@ approved-date: ""
 # Offline Sync Client
 
 > **Two recipes, one contract.** The public `offline-sync-client`
-> (`agenticdevelopertoolkit://recipes/offline-sync-client`, in the agenticdevelopertoolkit
+> (`adhsdk://recipes/offline-sync-client`, in the adhsdk
 > repo — see `related` above) states the same contract as a *pattern*, for readers with no
 > access to adh — it names no files, because that repo holds no implementation of it.
 > **This** is the adh-concrete version: every path below resolves in this repo or in
@@ -313,19 +313,19 @@ purpose, so a new event forces a decision at this call site.
 ## Platform Notes
 
 - **WinUI 3**: No WinUI 3 implementation exists in this repository. A .NET port would implement the same store, transport and trigger-source contracts, hosting the engine as a single-reader task loop, using `Task.Delay` with the same backoff math, a SQLite-backed store for the mirror and outbox, and `NetworkChange` availability events as the connectivity trigger; the wire fixtures are the conformance contract.
-- **Core (`AgenticToolkitSync`):** `packages/apple/AgenticToolkit/Sync/*` —
+- **Core (`AgenticDeveloperHubSDKSync`):** `packages/apple/AgenticDeveloperHubSDK/Sync/*` —
   `SyncEngine.swift`, `SyncEvents.swift`, `SyncWire.swift`, `SyncProtocols.swift`,
   `ADHSyncCatalog.swift`, `JSONValue.swift`, `SyncID.swift`, the `Triggers/*`
   trigger sources. The `Testing/*` fakes (`InMemorySyncStore`, `ScriptedSyncTransport`) are specified separately in `data/sync/sync-testing`.
-- **On-disk store (`AgenticToolkitSyncGRDB`):**
-  `packages/apple/AgenticToolkit/SyncGRDB/GRDBSyncStore.swift` — the SQLite/GRDB
+- **On-disk store (`AgenticDeveloperHubSDKSyncGRDB`):**
+  `packages/apple/AgenticDeveloperHubSDK/SyncGRDB/GRDBSyncStore.swift` — the SQLite/GRDB
   `SyncStore` on a `BoundedDatabase` WAL pool.
 - **Conformance = the two XCTest bundles:**
-  `Tests/AgenticToolkitSyncTests/*` (engine, wire, catalog, events, in-memory
-  store) and `Tests/AgenticToolkitSyncGRDBTests/*` (the GRDB store + a
+  `Tests/AgenticDeveloperHubSDKSyncTests/*` (engine, wire, catalog, events, in-memory
+  store) and `Tests/AgenticDeveloperHubSDKSyncGRDBTests/*` (the GRDB store + a
   SyncEngine-over-GRDB integration test).
 - **No TypeScript / web implementation exists yet.** The wire types and the
-  vendored fixtures (`Tests/AgenticToolkitSyncTests/Fixtures/*.json`) are the
+  vendored fixtures (`Tests/AgenticDeveloperHubSDKSyncTests/Fixtures/*.json`) are the
   cross-language contract a future web client would conform to; the fixtures must
   not be edited locally.
 
@@ -333,7 +333,7 @@ purpose, so a new event forces a decision at this call site.
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/Tests/AgenticToolkitSyncGRDBTests/SyncEngineGRDBIntegrationTests.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKSyncGRDBTests/SyncEngineGRDBIntegrationTests.swift` |
 
 ## Design Decisions
 
@@ -379,10 +379,10 @@ Notes: separation-of-concerns passes because the pull, reconcile, and push phase
 | Version | Date | Author | Summary |
 |---|---|---|---|
 | 1.0.0 | 2026-07-22 | Mike Fullerton | Initial draft |
-| 1.1.0 | 2026-09-09 | Mike Fullerton | Split from the public `offline-sync-client`, which was genericized when it moved to agenticdevelopertoolkit. Restores the file-level citations against the Swift targets in this repo; repoints the backend paths at adhbackend after the 2026-09 split; refreshes the catalog counts (79/27 → 97/44). |
+| 1.1.0 | 2026-09-09 | Mike Fullerton | Split from the public `offline-sync-client`, which was genericized when it moved to adhsdk. Restores the file-level citations against the Swift targets in this repo; repoints the backend paths at adhbackend after the 2026-09 split; refreshes the catalog counts (79/27 → 97/44). |
 | 1.1.1 | 2026-09-24 | Mike Fullerton | Compliance section rewritten as linked checks against the compliance catalog |
 | 1.1.2 | 2026-09-25 | Mike Fullerton | Moved into the library cookbook; added Reference Implementations. |
 | 1.2.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to data/sync/. |
 | 1.3.0 | 2026-10-04 | Mike Fullerton | Fill Reference Implementations with the engine-over-store integration test that exercises the composed contract (the component code is owned by sync-engine, sync-triggers and sql-sync-store); add missing sections, WinUI 3 note, decision triples; move to review. |
-| 1.3.1 | 2026-10-04 | Mike Fullerton | Legacy recipe citations restored to the legacy recipes' own agenticdevelopertoolkit://recipes/ domains; the adtoolkit://recipes/ form named nothing. |
+| 1.3.1 | 2026-10-04 | Mike Fullerton | Legacy recipe citations restored to the legacy recipes' own adhsdk://recipes/ domains; the adhsdk://recipes/ form named nothing. |
 | 1.3.2 | 2026-10-04 | Mike Fullerton | Matches its type's shape: required fields, title heading, and only the type's own sections. |

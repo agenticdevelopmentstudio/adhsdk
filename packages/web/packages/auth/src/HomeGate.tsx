@@ -37,7 +37,7 @@ export type HomeGateProps = {
  *
  * A gated site's `app/home/layout.tsx` is just:
  *
- *   export { HomeGate as default } from '@agentic-toolkit/auth'
+ *   export { HomeGate as default } from '@adh-sdk/auth'
  */
 export function HomeGate({
   children,

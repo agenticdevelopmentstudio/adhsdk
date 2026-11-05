@@ -2,7 +2,7 @@
 import { createContext, useCallback, useContext, useMemo, useRef, useState, type ReactElement, type ReactNode } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { type DeployProject, fetchUnconfigured } from "../hooks/use-deploy-projects";
-import { summarizeAutoConfigure } from "@agentic-toolkit/deploy-platform/engine";
+import { summarizeAutoConfigure } from "@adh-sdk/deploy-platform/engine";
 import { skipDetail, noteDetail } from "../lib/auto-configure";
 import { listGroups } from "../api/monitored-sites";
 import { useStatusApi, type StatusApiClient } from "../api/client";

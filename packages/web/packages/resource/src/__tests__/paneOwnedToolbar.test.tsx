@@ -10,7 +10,7 @@
 import type { ReactNode } from "react";
 import { describe, it, expect, vi, afterEach } from "vitest";
 import { render, screen, cleanup } from "@testing-library/react";
-import type { TopicLevel } from "@agenticdevelopertoolkit/ui/blocks";
+import type { TopicLevel } from "@adh-sdk/ui/blocks";
 import { StandaloneRailHost } from "../standalone-rail-host";
 import { StackLevels, ToolbarPortal, useToolbarPortal } from "../rail-host";
 import { useMasterDetailLevel } from "../master-detail/useMasterDetailLevel";

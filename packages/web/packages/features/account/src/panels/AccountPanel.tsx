@@ -5,15 +5,15 @@ import Link from "next/link";
 
 // The base hook, not hub's `useAuth` wrapper (which only adds `tenantId`) — this
 // panel reads nothing but `user.email`, so the base `AuthUser` is behaviour-identical.
-import { useAuth } from "@agentic-toolkit/auth";
+import { useAuth } from "@adh-sdk/auth";
 import { changePassword } from "../api/auth";
-import { reportUnexpectedAuthError } from "@agentic-toolkit/auth";
-import { DetailsPane, type DetailsSection } from "@agentic-toolkit/resource";
-import { Card, CardContent } from "@agenticdevelopertoolkit/ui/components/card";
-import { Input } from "@agenticdevelopertoolkit/ui/components/input";
-import { Label } from "@agenticdevelopertoolkit/ui/components/label";
-import { ErrorText } from "@agenticdevelopertoolkit/ui/components/error-text";
-import { DetailSection } from "@agentic-toolkit/resource";
+import { reportUnexpectedAuthError } from "@adh-sdk/auth";
+import { DetailsPane, type DetailsSection } from "@adh-sdk/resource";
+import { Card, CardContent } from "@adh-sdk/ui/components/card";
+import { Input } from "@adh-sdk/ui/components/input";
+import { Label } from "@adh-sdk/ui/components/label";
+import { ErrorText } from "@adh-sdk/ui/components/error-text";
+import { DetailSection } from "@adh-sdk/resource";
 import { useSettingsNav } from "../layout/settings-nav";
 
 const MIN_PASSWORD_LENGTH = 8;

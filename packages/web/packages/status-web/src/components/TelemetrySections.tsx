@@ -1,10 +1,10 @@
 "use client";
 import type { ReactElement } from "react";
 import { Bug, TrendingUp } from "lucide-react";
-import { StatCard } from "@agenticdevelopertoolkit/ui/blocks/stat-card";
-import { StatList, StatListRow } from "@agenticdevelopertoolkit/ui/blocks/stat-list";
-import { ExternalLink } from "@agenticdevelopertoolkit/ui/components/external-link";
-import { type StatusDotTone } from "@agenticdevelopertoolkit/ui/components/status-dot";
+import { StatCard } from "@adh-sdk/ui/blocks/stat-card";
+import { StatList, StatListRow } from "@adh-sdk/ui/blocks/stat-list";
+import { ExternalLink } from "@adh-sdk/ui/components/external-link";
+import { type StatusDotTone } from "@adh-sdk/ui/components/status-dot";
 import { useTelemetry } from "../hooks/use-telemetry";
 import { useStatusHost } from "./StatusHost";
 import type { AnalyticsMetricDTO } from "../telemetry/types";

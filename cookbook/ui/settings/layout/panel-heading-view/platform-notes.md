@@ -28,7 +28,7 @@
   `matches-caption-width-to-stack`; use `gap: 6px` (flex or grid column) for
   the title-to-caption spacing, matching `spaces-title-from-caption`.
 - **AppKit / UIKit** (source platform): Source at
-  `packages/apple/AgenticToolkit/macOS/SystemIntegration/ComposableSettingsWindow/Views/PanelHeadingView.swift`
+  `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/Views/PanelHeadingView.swift`
   (this recipe's source): a macOS-only (`import AppKit`) `NSView` subclass,
   `@MainActor`, `final`, inside the `ComposableSettings` namespace,
   conforming to `SettingsViewProtocol` (a marker protocol with no

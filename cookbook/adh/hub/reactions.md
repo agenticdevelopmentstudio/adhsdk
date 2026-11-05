@@ -1,7 +1,7 @@
 ---
 id: 5e7bafd6-fb7e-45fc-a1de-31e34edf5431
 title: "Hub Domain: Reactions"
-domain: adtoolkit://cookbook/adh/hub/reactions
+domain: adhsdk://cookbook/adh/hub/reactions
 type: ingredient
 version: 1.0.3
 status: review
@@ -23,15 +23,15 @@ tags:
   - crud
 depends-on: []
 related:
-  - agenticdevelopertoolkit://recipes/reaction-bar
+  - adhsdk://recipes/reaction-bar
 references:
-  - packages/web/packages/data/src/reactions/reactions.ts (agenticdevelopertoolkit)
-  - packages/web/packages/data/src/reactions/wire.ts (agenticdevelopertoolkit)
-  - packages/web/packages/data/src/reactions/__tests__/reactions.test.ts (agenticdevelopertoolkit)
-  - packages/web/packages/data/src/http.ts (agenticdevelopertoolkit)
-  - packages/web/packages/data/src/client-helpers.ts (agenticdevelopertoolkit)
-  - packages/web/packages/auth/src/client.ts (agenticdevelopertoolkit)
-  - packages/web/packages/auth/src/tokens.ts (agenticdevelopertoolkit)
+  - packages/web/packages/data/src/reactions/reactions.ts (adhsdk)
+  - packages/web/packages/data/src/reactions/wire.ts (adhsdk)
+  - packages/web/packages/data/src/reactions/__tests__/reactions.test.ts (adhsdk)
+  - packages/web/packages/data/src/http.ts (adhsdk)
+  - packages/web/packages/data/src/client-helpers.ts (adhsdk)
+  - packages/web/packages/auth/src/client.ts (adhsdk)
+  - packages/web/packages/auth/src/tokens.ts (adhsdk)
 approved-by: ""
 approved-date: ""
 ---
@@ -57,7 +57,7 @@ reaction state of its own.
 
 ### Module-wide
 
-- **wire-types-own-transcription**: `ReactionRow` and `ReactionCreateBody` MUST come from this module's own `./wire`, hand-narrowed from the backend's OpenAPI `Reaction` schema rather than imported from `@agentic-toolkit/adh-api-types`, per `wire.ts`'s own comment ("a generic data client must not take on" adh's product vocabulary).
+- **wire-types-own-transcription**: `ReactionRow` and `ReactionCreateBody` MUST come from this module's own `./wire`, hand-narrowed from the backend's OpenAPI `Reaction` schema rather than imported from `@adh-sdk/adh-api-types`, per `wire.ts`'s own comment ("a generic data client must not take on" adh's product vocabulary).
 - **api-proxy-path-prefix**: every request `reactionsApi` issues MUST address the fixed `BASE` path `/api/content/reactions`, or an id-suffixed path under it.
 - **path-segment-encoding**: every dynamic value interpolated into a request path (`targetKind`, the joined `targetIds` batch, `reactionId`) MUST be passed through `enc` (`encodeURIComponent`) first.
 - **stateless-module**: `reactionsApi` MUST hold no instance- or module-level mutable state between calls; every method's request MUST be built solely from the arguments passed to that call. `MAX_TARGET_IDS` is a fixed constant, not per-call state.
@@ -104,7 +104,7 @@ Not applicable — this is a data client, not a visual component.
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
-| reactions-001 | wire-types-own-transcription | Read the import statement at the top of `reactions.ts` | Imports `ReactionCreateBody`/`ReactionRow` only from `./wire`; no import from `@agentic-toolkit/adh-api-types` |
+| reactions-001 | wire-types-own-transcription | Read the import statement at the top of `reactions.ts` | Imports `ReactionCreateBody`/`ReactionRow` only from `./wire`; no import from `@adh-sdk/adh-api-types` |
 | reactions-002 | api-proxy-path-prefix, path-segment-encoding | `reactionsApi.list("project.comments", ["c1", "c2"])` | `authedJson` called once with `"/api/content/reactions?targetKind=project.comments&targetIds=c1%2Cc2"` (per `reactions.test.ts`, "reads MANY subjects in one request") |
 | reactions-003 | list-empty-input-short-circuits | `reactionsApi.list("project.comments", [])` | Resolves to `[]`; `authedJson` is never called (per `reactions.test.ts`, "issues NO request for an empty subject list") |
 | reactions-004 | list-deduplicates-target-ids | `reactionsApi.list("project.comments", ["c1", "c1", "c2"])` | `authedJson` called with `targetIds=c1%2Cc2` — `"c1"` appears once (per `reactions.test.ts`, "de-duplicates subjects before asking") |
@@ -131,7 +131,7 @@ Not applicable — this is a data client, not a visual component.
 - **Concurrent calls to `list`, `add`, or `remove`**: `reactionsApi` holds no shared state between calls (`stateless-module`); two concurrent calls — even the same operation against the same subject — MUST NOT be serialized, deduplicated, or coalesced by this module; each fires its own independent request whose relative completion order depends on the network, not this file. MUST.
 - **One chunk of a multi-chunk `list` rejects**: `Promise.all` rejects as soon as any one chunk's `authedJson` call rejects; the rows from any OTHER chunk that already resolved are discarded — `list` never returns a partial result, per `error-propagation-unmodified`. MUST.
 - **Network unreachable**: a `fetch` failure (no connectivity) rejects before any `Response` exists; per `error-propagation-unmodified`, the calling method's promise rejects with that same underlying error, uncaught. MUST.
-- **Non-2xx response**: per `authedFetch` (in `@agentic-toolkit/auth/client.ts`, outside these two given files but read to resolve this contract), a non-ok response becomes an `AuthHttpError` carrying the response's status and an extracted message; exactly one `401` triggers one token-refresh-and-retry before this conversion. MUST.
+- **Non-2xx response**: per `authedFetch` (in `@adh-sdk/auth/client.ts`, outside these two given files but read to resolve this contract), a non-ok response becomes an `AuthHttpError` carrying the response's status and an extracted message; exactly one `401` triggers one token-refresh-and-retry before this conversion. MUST.
 - **Offline or disconnected mid-request**: none of `list`, `add`, or `remove` registers a retry, timeout, or an abort signal of its own; a request that never settles leaves the returned promise pending for as long as the underlying `fetch` call takes to settle. MUST.
 - **Malformed `list` response body (missing `items` key)**: `list` calls `p.items.map(toReaction)` unconditionally on each resolved page; a page missing `items` throws a `TypeError` from inside the `.then`/`await` chain, rejecting `list`'s promise rather than being caught. MUST.
 - **`add` called twice with the same `(actor, target, emoji)`**: per the module's own comment, the second call resolves with the SAME existing reaction row rather than rejecting with a 409 — this is the documented idempotency contract, not a race. MUST.
@@ -148,7 +148,7 @@ Not applicable — this is a data client, not a visual component.
 | `reactionId` | `string` | none (required) | The reaction's own id passed to `remove`, URL-encoded via `enc()` into the DELETE path. |
 | `viewerId` | `string \| null` | none (required parameter of `tally`) | The reader's own user id (typically from `readTokenSubject()`, outside these given sources); `null`/`""` makes every `ReactionTally.mine` read as not-mine. |
 | `MAX_TARGET_IDS` | `number` (module constant) | `200` | The backend's cap on one batched `list` read; fixed in `reactions.ts`, not caller-configurable — changing it requires editing the source. |
-| Bearer access token | implicit environment dependency | none | Attached to every request by `authedJson`/`authedRequest`/`authedFetch` (in `@agentic-toolkit/auth/client.ts`, outside these two given files) via `readAccessToken()`; not a parameter of any `reactionsApi` method. |
+| Bearer access token | implicit environment dependency | none | Attached to every request by `authedJson`/`authedRequest`/`authedFetch` (in `@adh-sdk/auth/client.ts`, outside these two given files) via `readAccessToken()`; not a parameter of any `reactionsApi` method. |
 | Request base path | implicit environment dependency | `/api/content/reactions` (relative) | Every path is relative, resolved against the current page origin through the host's `/api/:path*` BFF proxy; no base-URL environment variable appears in `reactions.ts`. |
 
 ## Deep Linking
@@ -198,7 +198,7 @@ Not applicable: neither `reactions.ts` nor `wire.ts` calls `console.log`, `Logge
 
 ## Design Decisions
 
-**Decision**: `reactions.ts` transcribes its own wire types into `wire.ts` by hand from the backend's OpenAPI `Reaction` schema, rather than importing generated types from `@agentic-toolkit/adh-api-types`.
+**Decision**: `reactions.ts` transcribes its own wire types into `wire.ts` by hand from the backend's OpenAPI `Reaction` schema, rather than importing generated types from `@adh-sdk/adh-api-types`.
 **Rationale**: `wire.ts`'s own comment states this directly — the toolkit's generic data client "must not take on" adh's product vocabulary. This keeps the `packages/data` layer product-agnostic at the cost of a second, hand-maintained copy of the backend's `Reaction` schema that must be kept in sync by hand, per the same comment ("the cost is that a backend contract change is caught by keeping this in sync, not by the build").
 **Approved**: pending
 
@@ -207,7 +207,7 @@ Not applicable: neither `reactions.ts` nor `wire.ts` calls `console.log`, `Logge
 **Approved**: pending
 
 **Decision**: this component owns no reaction UI state — no toggle logic, no optimistic update, no re-fetch-after-write. `add`/`remove` resolve once and return; the caller decides when and how to re-read.
-**Rationale**: `tally` and `byTarget` are pure folds over whatever `Reaction[]` a caller already has; the module comment frames the batched `list` read as the caller's job "rendering a pane," not this client's. The sibling presentational component [ReactionBar](agenticdevelopertoolkit://recipes/reaction-bar) is built on exactly this split — it is stateless itself and calls back with an emoji, leaving the write and the re-read to its consumer — the same division this data client assumes.
+**Rationale**: `tally` and `byTarget` are pure folds over whatever `Reaction[]` a caller already has; the module comment frames the batched `list` read as the caller's job "rendering a pane," not this client's. The sibling presentational component [ReactionBar](adhsdk://recipes/reaction-bar) is built on exactly this split — it is stateless itself and calls back with an emoji, leaving the write and the re-read to its consumer — the same division this data client assumes.
 **Approved**: pending
 
 ## Compliance
@@ -227,7 +227,7 @@ Not applicable: neither `reactions.ts` nor `wire.ts` calls `console.log`, `Logge
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
-| 1.0.3 | 2026-10-04 | Mike Fullerton | Legacy recipe citations restored to the legacy recipes' own agenticdevelopertoolkit://recipes/ domains; the adtoolkit://recipes/ form named nothing. |
+| 1.0.3 | 2026-10-04 | Mike Fullerton | Legacy recipe citations restored to the legacy recipes' own adhsdk://recipes/ domains; the adhsdk://recipes/ form named nothing. |
 | 1.0.2 | 2026-09-27 | Mike Fullerton | Moved into the concept grouping. |
 | 1.0.1 | 2026-09-25 | Mike Fullerton | Moved into the library cookbook; added Reference Implementations. |
 | 1.0.0 | 2026-09-24 | Mike Fullerton | Initial creation |

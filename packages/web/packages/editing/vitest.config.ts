@@ -1,6 +1,6 @@
 import { defineConfig } from 'vitest/config'
 
-// Self-contained so `pnpm --filter @agenticdevelopertoolkit/editing run test` (cwd = this
+// Self-contained so `pnpm --filter @adh-sdk/editing run test` (cwd = this
 // package) discovers src/__tests__/*. The workspace-root config's `dir: '../packages'`
 // resolves outside the web workspace, so it finds nothing. The root setup file
 // supplies the deterministic jsdom shims (jest-dom, localStorage, ResizeObserver,

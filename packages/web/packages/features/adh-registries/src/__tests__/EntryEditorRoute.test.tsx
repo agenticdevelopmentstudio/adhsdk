@@ -2,7 +2,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import type { RegistryClient } from '@agentic-toolkit/registry/client';
+import type { RegistryClient } from '@adh-sdk/registry/client';
 
 const push = vi.fn();
 vi.mock('next/navigation', () => ({

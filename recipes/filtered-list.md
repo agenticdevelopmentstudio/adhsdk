@@ -1,7 +1,7 @@
 ---
 id: 17433dd1-f3db-4d7b-9f58-997996a2b92e
 title: Filtered List
-domain: agenticdevelopertoolkit://recipes/filtered-list
+domain: adhsdk://recipes/filtered-list
 type: ingredient
 version: 1.2.2
 status: review

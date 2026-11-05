@@ -3,7 +3,7 @@
   "meta": {
     "id": "775f1761-f757-41d0-b51b-354a410a11f4",
     "title": "Group View",
-    "domain": "adtoolkit://cookbook/ui/settings/layout/group-view",
+    "domain": "adhsdk://cookbook/ui/settings/layout/group-view",
     "type": "ingredient",
     "version": "1.2.2",
     "status": "review",
@@ -25,8 +25,8 @@
     ],
     "depends-on": [],
     "related": [
-      "adtoolkit://cookbook/ui/settings/layout/conditional-view",
-      "adtoolkit://cookbook/ui/settings/layout/dismissible-hint-view",
+      "adhsdk://cookbook/ui/settings/layout/conditional-view",
+      "adhsdk://cookbook/ui/settings/layout/dismissible-hint-view",
       "agenticdevelopercookbook://guidelines/cookbook/ui/platform-design-languages"
     ],
     "references": [

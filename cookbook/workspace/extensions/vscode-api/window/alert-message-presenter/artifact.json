@@ -3,7 +3,7 @@
   "meta": {
     "id": "77fe79f8-7d45-4e51-aee0-d6de78b459e1",
     "title": "Alert Message Presenter",
-    "domain": "adtoolkit://cookbook/workspace/extensions/vscode-api/window/alert-message-presenter",
+    "domain": "adhsdk://cookbook/workspace/extensions/vscode-api/window/alert-message-presenter",
     "type": "ingredient",
     "version": "1.1.1",
     "status": "review",
@@ -24,14 +24,14 @@
       "message-presenting"
     ],
     "depends-on": [
-      "adtoolkit://cookbook/workspace/extensions/vscode-api/window/extension-message-presenting"
+      "adhsdk://cookbook/workspace/extensions/vscode-api/window/extension-message-presenting"
     ],
     "related": [],
     "references": [
-      "packages/apple/AgenticToolkit/macOS/Features/Extensions/VSCodeAPI/NSAlertMessagePresenter.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/macOS/Features/Extensions/VSCodeAPI/ExtensionMessagePresenting.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/Core/Loggable.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/Tests/AgenticToolkitMacOSTests/Extensions/MainThreadWindowTests.swift (agenticdevelopertoolkit)"
+      "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/NSAlertMessagePresenter.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/ExtensionMessagePresenting.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/Core/Loggable.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKMacOSTests/Extensions/MainThreadWindowTests.swift (adhsdk)"
     ],
     "approved-by": "",
     "approved-date": ""

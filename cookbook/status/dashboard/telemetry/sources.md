@@ -1,7 +1,7 @@
 ---
 id: 77a6910a-090c-464a-b3f2-4a7af36aa212
 title: "Telemetry Sources"
-domain: adtoolkit://cookbook/status/dashboard/telemetry/sources
+domain: adhsdk://cookbook/status/dashboard/telemetry/sources
 type: ingredient
 version: 1.1.0
 status: review
@@ -17,10 +17,10 @@ platforms:
   - web
 tags: []
 depends-on:
-  - adtoolkit://cookbook/status/dashboard/api
+  - adhsdk://cookbook/status/dashboard/api
 related:
-  - adtoolkit://cookbook/status/dashboard/state/telemetry
-  - adtoolkit://cookbook/status/service/telemetry
+  - adhsdk://cookbook/status/dashboard/state/telemetry
+  - adhsdk://cookbook/status/service/telemetry
 references: []
 approved-by: ""
 approved-date: ""

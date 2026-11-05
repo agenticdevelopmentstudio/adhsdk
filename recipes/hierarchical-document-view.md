@@ -1,7 +1,7 @@
 ---
 id: b7a4e24c-3dfe-4a33-b5bc-88736e520d90
 title: Hierarchical Document View
-domain: agenticdevelopertoolkit://recipes/hierarchical-document-view
+domain: adhsdk://recipes/hierarchical-document-view
 type: ingredient
 version: 1.7.1
 status: review
@@ -23,8 +23,8 @@ tags:
 - ui
 depends-on: []
 related:
-- agenticdevelopertoolkit://recipes/hierarchical-topic-detail
-- agenticdevelopertoolkit://recipes/disclosure
+- adhsdk://recipes/hierarchical-topic-detail
+- adhsdk://recipes/disclosure
 references: []
 approved-by: ''
 approved-date: ''
@@ -701,7 +701,7 @@ render tracing would not already show.
   rendering. XAML pattern: compose the layout as a nested `Grid` with
   row/column definitions for the three-column structure, with a
   `ScrollViewer` wrapping the document content to handle long articles.
-- **React/Web**: `packages/web/packages/ui/src/blocks/doc-breadcrumbs.tsx`, `doc-article.tsx`, `doc-metadata.tsx`, `doc-table-of-contents.tsx`, `view-source-disclosure.tsx`, `doc-nav.tsx`, `hierarchical-document-view.tsx`, `doc-link.tsx`, and the shared types in `doc-types.ts`. Exported from `@agenticdevelopertoolkit/ui/blocks`. `useScrollSpy` lives at `src/hooks/useScrollSpy.ts` and needed its own `./hooks/useScrollSpy` key in the package's `exports` map: unlike `./components/*` and `./blocks/*`, `./hooks/*` is not a wildcard, so a new hook is unreachable until its key exists. `doc-types.ts` is a `.ts` file, so the package's `./blocks/*` export wildcard (which resolves `.tsx` only) does not reach it; the `./blocks` barrel is its one public import path. No `transpilePackages` needed — a Next consumer resolves the package's `development` condition to raw `src/` under `next dev` and `import` to `dist/` in a production build. Tailwind classes are self-registered by `src/styles/components.css` (`@source "../blocks/**/*.{ts,tsx}"`). First consumer: an internal docs site's entry view and layout chrome. Implementation details: the two frames go in different files on purpose — `HierarchicalDocumentView` belongs in the host's layout and `DocPage` in its page; putting the nav in the page remounts the tree on every navigation. Demo: `ui-showcase` Topic `hierarchical-document-view`. Responsive: verify at 375 / 768 / 1440px that breadcrumbs wrap and metadata stays right-aligned.
+- **React/Web**: `packages/web/packages/ui/src/blocks/doc-breadcrumbs.tsx`, `doc-article.tsx`, `doc-metadata.tsx`, `doc-table-of-contents.tsx`, `view-source-disclosure.tsx`, `doc-nav.tsx`, `hierarchical-document-view.tsx`, `doc-link.tsx`, and the shared types in `doc-types.ts`. Exported from `@adh-sdk/ui/blocks`. `useScrollSpy` lives at `src/hooks/useScrollSpy.ts` and needed its own `./hooks/useScrollSpy` key in the package's `exports` map: unlike `./components/*` and `./blocks/*`, `./hooks/*` is not a wildcard, so a new hook is unreachable until its key exists. `doc-types.ts` is a `.ts` file, so the package's `./blocks/*` export wildcard (which resolves `.tsx` only) does not reach it; the `./blocks` barrel is its one public import path. No `transpilePackages` needed — a Next consumer resolves the package's `development` condition to raw `src/` under `next dev` and `import` to `dist/` in a production build. Tailwind classes are self-registered by `src/styles/components.css` (`@source "../blocks/**/*.{ts,tsx}"`). First consumer: an internal docs site's entry view and layout chrome. Implementation details: the two frames go in different files on purpose — `HierarchicalDocumentView` belongs in the host's layout and `DocPage` in its page; putting the nav in the page remounts the tree on every navigation. Demo: `ui-showcase` Topic `hierarchical-document-view`. Responsive: verify at 375 / 768 / 1440px that breadcrumbs wrap and metadata stays right-aligned.
 
 ## Design Decisions
 
@@ -721,7 +721,7 @@ render tracing would not already show.
   an accidental structural match with `<a>` (`explicit-over-implicit`).
   **Approved**: pending
 - **Decision**: types are re-declared here rather than imported from
-  `@agenticdevelopertoolkit/model`.
+  `@adh-sdk/model`.
   **Rationale**: `model` is not in the consuming build's
   package filter, its `NavNode` lacks the fields HDV needs, and it also exports a
   whole alternate site-shell framework — depending on it would re-couple consumers,

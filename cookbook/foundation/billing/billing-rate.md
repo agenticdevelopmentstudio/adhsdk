@@ -1,7 +1,7 @@
 ---
 id: BBE7358F-2001-4E67-83CB-0627DE522C42
 title: "Billing Rate"
-domain: adtoolkit://cookbook/foundation/billing/billing-rate
+domain: adhsdk://cookbook/foundation/billing/billing-rate
 type: ingredient
 version: 1.0.0
 status: review
@@ -21,8 +21,8 @@ tags:
   - rate
 depends-on: []
 related:
-  - adtoolkit://cookbook/foundation/billing/billing-rollup
-  - adtoolkit://cookbook/foundation/billing/billing-dt-os
+  - adhsdk://cookbook/foundation/billing/billing-rollup
+  - adhsdk://cookbook/foundation/billing/billing-dt-os
 references: []
 approved-by: ""
 approved-date: ""
@@ -121,7 +121,7 @@ Not applicable: this code makes no log calls.
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/Core/Billing/BillingRate.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Billing/BillingRate.swift` |
 
 ## Design Decisions
 

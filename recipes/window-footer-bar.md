@@ -1,7 +1,7 @@
 ---
 id: 3ec6618a-03a4-4740-9655-e6e47c05cf2b
 title: WindowFooterBar
-domain: agenticdevelopertoolkit://recipes/window-footer-bar
+domain: adhsdk://recipes/window-footer-bar
 type: ingredient
 version: 1.1.1
 status: review
@@ -152,7 +152,7 @@ Not applicable: No logging instrumentation defined in component source.
 
 ## Platform Notes
 
-- **AppKit** (source): `WindowFooterBar` in `packages/apple/AgenticDeveloperToolkit/SourcesUI/macOS/Chrome/WindowFooterBar.swift`. Composed of `NSStackView` for trailing accessories and `NSView` constraints for layout. Uses `ThemedLabel`, `ThemedBackgroundView`, and `ThemedSeparatorView` for theme integration. `NSTextField`'s accessibility value is backed by `stringValue`, so the full status string remains the accessible value regardless of the label's visual middle-truncation (**full-text-accessible-label**). Accessibility requires a string prefix at init time.
+- **AppKit** (source): `WindowFooterBar` in `packages/apple/AgenticDeveloperHubSDK/SDK/SourcesUI/macOS/Chrome/WindowFooterBar.swift`. Composed of `NSStackView` for trailing accessories and `NSView` constraints for layout. Uses `ThemedLabel`, `ThemedBackgroundView`, and `ThemedSeparatorView` for theme integration. `NSTextField`'s accessibility value is backed by `stringValue`, so the full status string remains the accessible value regardless of the label's visual middle-truncation (**full-text-accessible-label**). Accessibility requires a string prefix at init time.
 - **SwiftUI**: `VStack(spacing: 0) { Divider(); HStack { Text(status).lineLimit(1).truncationMode(.middle); Spacer(minLength: 8); HStack(spacing: 6) { accessories } } }`. Apply `.help(status)` for the pointer-platform tooltip and `.accessibilityLabel(status)` so the full string remains the accessible value on all platforms (**full-text-accessible-label**). Map colors to the toolkit's theme roles (elevated surface, border, secondary text) rather than raw `@Environment(\.colorScheme)`. Set the identifier via `.accessibilityIdentifier()`.
 - **Compose**: `Row` with a top `Divider`. Leading: `Text(status, maxLines = 1, overflow = TextOverflow.MiddleEllipsis, modifier = Modifier.weight(1f))` — `Arrangement.SpaceBetween` does not guarantee the 8dp minimum gap, so pair the weighted leading `Text` with an explicit `Spacer(Modifier.width(8.dp))` before the trailing `Row`. Trailing: `Row` with 6dp spacing for accessories. Apply Material 3 surface colors mapped to the toolkit's theme roles. Compose has no hover tooltip, so set `Modifier.semantics { contentDescription = status }` on the leading `Text` as the full-text fallback (**full-text-accessible-label**); accessibility ID via `testTag()`.
 - **UIKit**: `UIView` subclass using a horizontal `UIStackView`. Leading: `UILabel` with `lineBreakMode = .byTruncatingMiddle`. Add a hairline `UIView` separator at the top via `CALayer`. Trailing: horizontal `UIStackView` with 6pt spacing. Apply `UIColor` semantic colors mapped to the toolkit's elevated-surface and border roles. iOS has no hover tooltip, so explicitly set `accessibilityLabel = status` (the full string) on the leading label rather than relying on the truncated `text` (**full-text-accessible-label**); set `accessibilityIdentifier` on the label.

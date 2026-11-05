@@ -3,15 +3,15 @@ import { type AdhThemeKey, type SwitcherThemeKey } from './adh-themes';
  * The two theme-key sets that are DERIVED from the theme manifest, kept apart from
  * adh-themes.ts for one bundling reason.
  *
- * `@agenticdevelopertoolkit/themes/manifest` is a record of every registered theme with its
+ * `@adh-sdk/themes/manifest` is a record of every registered theme with its
  * whole stylesheet inlined as a string — ~39 of them. This package builds with tsup's
  * `splitting: false`, so a module reached by an entry is INLINED into that entry, and
  * esbuild tree-shakes the unused declarations but keeps the `import` statement of an
- * EXTERNAL package (it cannot prove the package has no side effects; `@agentic-toolkit/
+ * EXTERNAL package (it cannot prove the package has no side effects; `@adh-sdk/
  * themes` does declare `sideEffects: ["**\/*.css"]`). So while these two functions lived
  * in adh-themes.ts, every entry that touched ANY constant in that file — `theme-preview`
  * wants one, `DEFAULT_SITE_THEME`, for the pre-paint script — emitted a live
- * `import { themes } from '@agenticdevelopertoolkit/themes/manifest'` and pulled all 39
+ * `import { themes } from '@adh-sdk/themes/manifest'` and pulled all 39
  * stylesheets into the consumer's graph, with `themes` referenced nowhere in the module.
  *
  * The direction of the import below is therefore load-bearing: theme-keys → adh-themes,

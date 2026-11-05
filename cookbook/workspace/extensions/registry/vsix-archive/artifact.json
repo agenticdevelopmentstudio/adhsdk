@@ -3,7 +3,7 @@
   "meta": {
     "id": "dbe4b3b6-ac5b-4d45-ba2a-84aad1a8582e",
     "title": "VSIX Archive",
-    "domain": "adtoolkit://cookbook/workspace/extensions/registry/vsix-archive",
+    "domain": "adhsdk://cookbook/workspace/extensions/registry/vsix-archive",
     "type": "ingredient",
     "version": "1.2.0",
     "status": "review",
@@ -26,13 +26,13 @@
     ],
     "depends-on": [],
     "related": [
-      "adtoolkit://cookbook/workspace/extensions/registry/open-vsx-client"
+      "adhsdk://cookbook/workspace/extensions/registry/open-vsx-client"
     ],
     "references": [
-      "packages/apple/AgenticToolkit/Core/Extensions/VSIXArchive.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/Core/Process/CommandRunner.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/Core/Loggable.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/Core/Extensions/VSIXInstaller.swift (agenticdevelopertoolkit)"
+      "packages/apple/AgenticDeveloperHubSDK/Core/Extensions/VSIXArchive.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/Core/Process/CommandRunner.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/Core/Loggable.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/Core/Extensions/VSIXInstaller.swift (adhsdk)"
     ],
     "approved-by": "",
     "approved-date": ""

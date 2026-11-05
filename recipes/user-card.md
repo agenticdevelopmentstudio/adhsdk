@@ -1,7 +1,7 @@
 ---
 id: db6178e1-c613-4358-a0b4-8c6f5bfaaff9
 title: UserCard
-domain: agenticdevelopertoolkit://recipes/user-card
+domain: adhsdk://recipes/user-card
 type: ingredient
 version: 1.3.1
 status: review
@@ -21,12 +21,12 @@ tags:
   - profile
   - ui
 depends-on:
-  - agenticdevelopertoolkit://recipes/avatar
-  - agenticdevelopertoolkit://recipes/skeleton
-  - agenticdevelopertoolkit://recipes/separator
-  - agenticdevelopertoolkit://recipes/badge
-  - agenticdevelopertoolkit://recipes/external-link
-  - agenticdevelopertoolkit://recipes/section-label
+  - adhsdk://recipes/avatar
+  - adhsdk://recipes/skeleton
+  - adhsdk://recipes/separator
+  - adhsdk://recipes/badge
+  - adhsdk://recipes/external-link
+  - adhsdk://recipes/section-label
 related: []
 references: []
 approved-by: ''
@@ -200,7 +200,7 @@ from this module for its own platform picker.
 
 **Import path:**
 ```ts
-import { UserCard, UserCardSkeleton, type UserCardDto } from '@agenticdevelopertoolkit/ui/blocks/user-card';
+import { UserCard, UserCardSkeleton, type UserCardDto } from '@adh-sdk/ui/blocks/user-card';
 ```
 
 **Props:**
@@ -304,7 +304,7 @@ can't be enumerated in a consuming Next.js app's image-optimizer allowlist.
 
 **Decision**: `UserCardDto` structurally mirrors the backend's public-profile
 schema rather than importing a generated type.
-**Rationale**: Keeps `@agenticdevelopertoolkit/ui` free of any API-types
+**Rationale**: Keeps `@adh-sdk/ui` free of any API-types
 dependency; the structural match is enforced at the call site by the
 TypeScript compiler.
 **Approved**: pending

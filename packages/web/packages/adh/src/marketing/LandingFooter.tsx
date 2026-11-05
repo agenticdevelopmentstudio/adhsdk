@@ -6,7 +6,7 @@ import {
   PrivacyModal,
   SitesPopover,
   TermsModal,
-} from "@agentic-toolkit/adh/footer";
+} from "@adh-sdk/adh/footer";
 // Relative, deliberately: identity holds constants and one pure function, no state and no
 // directive, so the copy inlined here forks nothing.
 import { ADH_CONTACT, buildVersionLabel, type SiteContact } from "../footer/identity";

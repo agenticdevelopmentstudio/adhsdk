@@ -7,7 +7,7 @@
   to `rootNode`'s `children`, calling `loadChildrenIfNeeded()` from
   `.onAppear` or the row's disclosure action, in place of the AppKit
   `NSOutlineView` consumer described in
-  [File Tree View](adtoolkit://cookbook/workspace/files/file-tree-view).
+  [File Tree View](adhsdk://cookbook/workspace/files/file-tree-view).
 - **Compose**: Model `@Published var children`/`isSyncing` as
   `mutableStateOf`/`StateFlow` fields observed from a `ViewModel`; run
   `fullSync()`/`handleChanges`'s background reads on
@@ -25,13 +25,13 @@
   (Zustand/Redux), and render the tree with a virtualized list component
   that calls the lazy-load function on row expansion.
 - **AppKit / UIKit**: The source
-  (`packages/apple/AgenticToolkit/macOS/UI/ViewControllers/FileBrowser/Model/FileSystem/`,
-  tested by `Tests/AgenticToolkitMacOSTests/FileBrowser/DirectoryWatchCoordinatorTests.swift`
+  (`packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/FileBrowser/Model/FileSystem/`,
+  tested by `Tests/AgenticDeveloperHubSDKMacOSTests/FileBrowser/DirectoryWatchCoordinatorTests.swift`
   and `FileTreeNodeTests.swift`) is macOS-only — it imports `CoreServices`
   for `FSEvents`, which has no iOS counterpart, and lives under a
   `macOS`-specific source directory with no `#if os(iOS)` branch. The direct
   AppKit consumer is `FileTreeOutlineViewController`
-  (see [File Tree View](adtoolkit://cookbook/workspace/files/file-tree-view)).
+  (see [File Tree View](adhsdk://cookbook/workspace/files/file-tree-view)).
   An iOS port needs a different watch mechanism entirely — a
   `DispatchSource` file-descriptor watch or a polling timer — since
   `FSEventStreamCreate` is unavailable there.

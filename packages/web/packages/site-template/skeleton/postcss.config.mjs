@@ -5,6 +5,6 @@
 export default {
   plugins: {
     "@tailwindcss/postcss": {},
-    "@agenticdevelopertoolkit/site-template/postcss-confine": {},
+    "@adh-sdk/site-template/postcss-confine": {},
   },
 };

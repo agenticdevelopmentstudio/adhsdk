@@ -1,7 +1,7 @@
 ---
 id: dffc1431-7386-4acf-94bc-6043c5c7eebc
 title: ToggleGroup
-domain: agenticdevelopertoolkit://recipes/toggle-group
+domain: adhsdk://recipes/toggle-group
 type: ingredient
 version: 1.2.1
 status: review
@@ -32,14 +32,14 @@ approved-date: ''
 
 ## Overview
 
-The shared `ToggleGroup` in `@agenticdevelopertoolkit/ui` — a segmented control, i.e. a row of
+The shared `ToggleGroup` in `@adh-sdk/ui` — a segmented control, i.e. a row of
 mutually-exclusive option buttons (e.g. a light/dark/system theme switcher, or a
 left/center/right alignment picker). It is built on Base UI's `ToggleGroup` +
 `Toggle` primitives so it stays consistent with the family's other base-ui
 primitives (radio/switch), and it is themed entirely from `apt-*` tokens: the group
 sits on the shared field shell and the pressed item takes a gold fill.
 
-Two exports ship from `@agenticdevelopertoolkit/ui/components/toggle-group`:
+Two exports ship from `@adh-sdk/ui/components/toggle-group`:
 
 - `ToggleGroup` — the container. It renders the Base UI `ToggleGroup` on the
   `fieldShellClass` (border + `apt-bg`) as an `inline-flex w-fit` row with `gap-1 p-1`.
@@ -200,7 +200,7 @@ any telemetry belong to the consumer's `onValueChange` handler, not the control.
 
 ## Platform Notes
 
-- **React/Web**: File: `packages/web/packages/ui/src/components/toggle-group.tsx`. Built on `@base-ui/react/toggle-group` + `@base-ui/react/toggle`; the group sits on `fieldShellClass` exported from `./input`, keeping it visually aligned with the other field-shell inputs. Carries `"use client"` (Base UI interactivity). Demo: `ui-showcase` Topic `toggle-group` (regenerate `sources.generated.ts` after source changes via `gen-sources.py`). Token-driven so it themes with the rest of `@agenticdevelopertoolkit/ui`.
+- **React/Web**: File: `packages/web/packages/ui/src/components/toggle-group.tsx`. Built on `@base-ui/react/toggle-group` + `@base-ui/react/toggle`; the group sits on `fieldShellClass` exported from `./input`, keeping it visually aligned with the other field-shell inputs. Carries `"use client"` (Base UI interactivity). Demo: `ui-showcase` Topic `toggle-group` (regenerate `sources.generated.ts` after source changes via `gen-sources.py`). Token-driven so it themes with the rest of `@adh-sdk/ui`.
 - **SwiftUI**: Start from `Picker` with `.pickerStyle(.segmented)`, which already supplies roving keyboard focus and accessibility for free — do not reach for `.keyboardShortcut()`, which binds a specific key/character shortcut, not arrow-key navigation. Apply a border using `.border()`, and tint the selected segment from the toolkit's gold accent token (its Apple theme equivalent of `apt-gold`) rather than a hardcoded `Color` literal.
 - **Compose**: Start from Material 3's `SingleChoiceSegmentedButtonRow` with `SegmentedButton` children, which supply pressed/selected state, focus, and arrow-key handling out of the box — drop manual `Modifier.focusable()` + key handlers. Track selection in a `mutableStateOf` and apply the toolkit's gold accent token to the selected button instead of a literal gold background.
 - **AppKit / UIKit**: Use `NSSegmentedControl` (macOS) or `UISegmentedControl` (iOS), which already provide roving keyboard focus, activation, and a built-in pressed/selected state — no `UIKeyCommand` or custom appearance proxy needed (`NSSegmentedControl` has none). Tint the selected segment via `selectedSegmentBezelColor` (AppKit) or `selectedSegmentTintColor` (UIKit), set from the toolkit's gold accent token. Implement disabled state via the control's built-in `isEnabled` property.

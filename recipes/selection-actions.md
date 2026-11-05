@@ -1,7 +1,7 @@
 ---
 id: 86aedf2f-b353-4770-a6dd-9e29b3d9b76a
 title: Selection Actions
-domain: agenticdevelopertoolkit://recipes/selection-actions
+domain: adhsdk://recipes/selection-actions
 type: ingredient
 version: 1.1.1
 status: review
@@ -21,10 +21,10 @@ tags:
 - toolbar
 - actions
 depends-on:
-- agenticdevelopertoolkit://recipes/button
-- agenticdevelopertoolkit://recipes/alert-modal
+- adhsdk://recipes/button
+- adhsdk://recipes/alert-modal
 related:
-- agenticdevelopertoolkit://recipes/list-header
+- adhsdk://recipes/list-header
 references:
 - https://www.w3.org/TR/WCAG21/
 - https://www.w3.org/WAI/ARIA/apg/patterns/toolbar/

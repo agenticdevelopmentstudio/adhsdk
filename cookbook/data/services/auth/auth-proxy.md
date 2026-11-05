@@ -1,7 +1,7 @@
 ---
 id: 4a345333-b18d-48f1-806d-453c15155dfa
 title: "Authentication Proxy"
-domain: adtoolkit://cookbook/data/services/auth/auth-proxy
+domain: adhsdk://cookbook/data/services/auth/auth-proxy
 type: ingredient
 version: 1.1.1
 status: review
@@ -23,9 +23,9 @@ tags:
 depends-on: []
 related: []
 references:
-  - packages/web/packages/auth/src/server/proxy.ts (agenticdevelopertoolkit)
-  - packages/web/packages/auth/src/server/index.ts (agenticdevelopertoolkit)
-  - packages/web/packages/auth/src/__tests__/proxy.test.ts (agenticdevelopertoolkit)
+  - packages/web/packages/auth/src/server/proxy.ts (adhsdk)
+  - packages/web/packages/auth/src/server/index.ts (adhsdk)
+  - packages/web/packages/auth/src/__tests__/proxy.test.ts (adhsdk)
 approved-by: ""
 approved-date: ""
 ---
@@ -316,7 +316,7 @@ writes to a log at any level.
   catch-all Next.js App Router Route Handler,
   `app/<prefix>/[...path]/route.ts`:
   ```
-  import { makeProxyHandlers } from '@agentic-toolkit/auth/server'
+  import { makeProxyHandlers } from '@adh-sdk/auth/server'
   export const dynamic = 'force-dynamic'
   export const { GET, POST, PUT, PATCH, DELETE } = makeProxyHandlers('api')
   ```

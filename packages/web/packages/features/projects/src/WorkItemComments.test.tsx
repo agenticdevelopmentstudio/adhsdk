@@ -2,11 +2,11 @@
 //
 // Component test for WorkItemComments — the conversation on a card.
 //
-// Only the api-client boundaries are mocked (@agentic-toolkit/data/projects and
-// @agentic-toolkit/data/reactions), so the load → post → reload wiring, the threading, and the
+// Only the api-client boundaries are mocked (@adh-sdk/data/projects and
+// @adh-sdk/data/reactions), so the load → post → reload wiring, the threading, and the
 // reaction toggle are exercised rather than the transport.
 //
-// @agentic-toolkit/data is NOT wholesale-mocked, for the same reason WorkItemRelations' test
+// @adh-sdk/data is NOT wholesale-mocked, for the same reason WorkItemRelations' test
 // leaves it alone: the pane runs through the REAL useResourceList, whose module-scope cache is
 // keyed `work-item:<id>:comments` and OUTLIVES cleanup(). Every test therefore uses its own item
 // id, or it would seed the next one's first paint with rows that test never stubbed. The one
@@ -17,13 +17,13 @@ import { render, screen, fireEvent, waitFor, cleanup, within } from "@testing-li
 
 const VIEWER = "cust-1";
 
-vi.mock("@agentic-toolkit/data", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("@agentic-toolkit/data")>()),
+vi.mock("@adh-sdk/data", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@adh-sdk/data")>()),
   readTokenSubject: () => VIEWER,
 }));
 
-vi.mock("@agentic-toolkit/data/projects", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("@agentic-toolkit/data/projects")>()),
+vi.mock("@adh-sdk/data/projects", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@adh-sdk/data/projects")>()),
   projectCommentsApi: {
     list: vi.fn(),
     add: vi.fn(),
@@ -32,14 +32,14 @@ vi.mock("@agentic-toolkit/data/projects", async (importOriginal) => ({
   },
 }));
 
-vi.mock("@agentic-toolkit/data/reactions", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("@agentic-toolkit/data/reactions")>()),
+vi.mock("@adh-sdk/data/reactions", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@adh-sdk/data/reactions")>()),
   reactionsApi: { list: vi.fn(), add: vi.fn(), remove: vi.fn() },
 }));
 
 import { WorkItemComments } from "./WorkItemComments";
-import { projectCommentsApi, type ProjectComment } from "@agentic-toolkit/data/projects";
-import { reactionsApi, type Reaction } from "@agentic-toolkit/data/reactions";
+import { projectCommentsApi, type ProjectComment } from "@adh-sdk/data/projects";
+import { reactionsApi, type Reaction } from "@adh-sdk/data/reactions";
 
 const list = vi.mocked(projectCommentsApi.list);
 const add = vi.mocked(projectCommentsApi.add);

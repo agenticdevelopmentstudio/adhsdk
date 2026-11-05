@@ -21,14 +21,14 @@
  */
 
 import { useCallback, useState } from "react";
-import { readTextFile, saveTextFile } from "@agenticdevelopertoolkit/ui/lib/file-exchange";
+import { readTextFile, saveTextFile } from "@adh-sdk/ui/lib/file-exchange";
 import {
   integrationsApi,
   type IntegrationTestResult,
   type MaskedProviderConfig,
   type ProviderCatalogEntry,
-} from "@agentic-toolkit/data/integrations";
-import { errMsg } from "@agentic-toolkit/data";
+} from "@adh-sdk/data/integrations";
+import { errMsg } from "@adh-sdk/data";
 
 import { intToCreateBody } from "./IntegrationDetail";
 import {

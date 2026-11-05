@@ -30,9 +30,9 @@ const SEMVER_RE = /^\d+\.\d+\.\d+$/
  * to the client footer as a plain serializable prop — no per-site plumbing, no
  * client-side fetch, and 45 sites inherit it from one seam.
  *
- * DELIBERATELY NOT `@agentic-toolkit/next-env`, whose `readSiteVersion` and
+ * DELIBERATELY NOT `@adh-sdk/next-env`, whose `readSiteVersion` and
  * `commitSha` own this knowledge for CONFIG evaluation. Taking that dependency
- * would add a transitive package to `@agentic-toolkit/adh`, and adh is consumed
+ * would add a transitive package to `@adh-sdk/adh`, and adh is consumed
  * by two backends through a committed `vendor/` tree whose map records what a
  * missing transitive costs there: "died with 10 `Module not found`, and neither
  * the freshness hashes nor the presence gate could see it". A dev-only convenience

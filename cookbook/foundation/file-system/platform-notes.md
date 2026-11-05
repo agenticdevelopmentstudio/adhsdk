@@ -1,13 +1,13 @@
 
-- **SwiftUI**: Source: `packages/apple/AgenticToolkit/Core/FileSystem/
+- **SwiftUI**: Source: `packages/apple/AgenticDeveloperHubSDK/Core/FileSystem/
   FileSystemService.swift`, `Core/FileSystem/FileSystemServicing.swift`, and
   `Core/FileSystem/FileSignature.swift`. The type is plain `Foundation` with
   no SwiftUI dependency; a SwiftUI-hosted caller awaits one of the seven
   `async throws` operations from a `Task` and renders the returned value or
   caught `FileSystemServiceError` into its own `@State`/`@Observable` view
-  state — `FileSystemService` itself holds none, and `AgenticToolkitCore`,
+  state — `FileSystemService` itself holds none, and `AgenticDeveloperHubSDKCore`,
   the framework target that builds it, is configured `platform: macOS` in
-  `packages/apple/AgenticToolkit/project.yml` today.
+  `packages/apple/AgenticDeveloperHubSDK/project.yml` today.
 - **Compose**: On Kotlin/Android, port to a class exposing seven `suspend
   fun` equivalents (`readFile`, `readDirectory`, `stat`, `writeFile`,
   `createDirectory`, `delete`, `rename`), each running its `java.io.File`/
@@ -45,7 +45,7 @@
   POSIX-code classification (`error-classification-posix-first`).
 - **AppKit / UIKit**: This recipe is extracted directly from Foundation,
   callable identically from an AppKit-hosted (macOS) or UIKit-hosted (iOS)
-  caller; since `AgenticToolkitCore` is configured `platform: macOS` today,
+  caller; since `AgenticDeveloperHubSDKCore` is configured `platform: macOS` today,
   an iOS caller would first need the type made available to an iOS target,
   but the type itself needs no AppKit/UIKit-specific change to run there.
   The file system service is `FileSystemService` (`FileSystemService.swift`),

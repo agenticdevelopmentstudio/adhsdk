@@ -2,9 +2,9 @@
 
 import { useCallback, useState } from "react";
 import { Boxes } from "lucide-react";
-import { reportUnexpectedAuthError } from "@agentic-toolkit/auth";
-import { useDirtyDraft } from "@agenticdevelopertoolkit/ui/hooks/useDirtyDraft";
-import { useDualModeSelection } from "@agenticdevelopertoolkit/ui/hooks/useDualModeSelection";
+import { reportUnexpectedAuthError } from "@adh-sdk/auth";
+import { useDirtyDraft } from "@adh-sdk/ui/hooks/useDirtyDraft";
+import { useDualModeSelection } from "@adh-sdk/ui/hooks/useDualModeSelection";
 import {
   HierarchicalDetailView,
   type TopicDetailItem,
@@ -12,19 +12,19 @@ import {
   FieldGroup,
   Field,
   SectionHeader,
-} from "@agenticdevelopertoolkit/ui/blocks";
-import { Button } from "@agenticdevelopertoolkit/ui/components/button";
-import { Input } from "@agenticdevelopertoolkit/ui/components/input";
-import { Select } from "@agenticdevelopertoolkit/ui/components/select";
+} from "@adh-sdk/ui/blocks";
+import { Button } from "@adh-sdk/ui/components/button";
+import { Input } from "@adh-sdk/ui/components/input";
+import { Select } from "@adh-sdk/ui/components/select";
 import {
   ButtonBar,
   StackLevels,
   useRailExitGuard,
   useRailHost,
   CreateResourceDialog,
-} from "@agentic-toolkit/resource";
-import { ErrorText } from "@agenticdevelopertoolkit/ui/components/error-text";
-import { useResourceList } from "@agentic-toolkit/data";
+} from "@adh-sdk/resource";
+import { ErrorText } from "@adh-sdk/ui/components/error-text";
+import { useResourceList } from "@adh-sdk/data";
 import { fmtDate } from "./format";
 import { useUserServices } from "./useUserServices";
 import {
@@ -36,7 +36,7 @@ import {
   type ConnectionSpec,
   type ConnectionSpecUrlVar,
   type ConnectionSpecHeaderVar,
-} from "@agentic-toolkit/data/personas";
+} from "@adh-sdk/data/personas";
 
 // ─── helpers ──────────────────────────────────────────────────────────────────
 

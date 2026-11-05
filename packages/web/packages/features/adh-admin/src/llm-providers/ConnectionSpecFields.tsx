@@ -1,13 +1,13 @@
 "use client";
 
 import { Plus, Trash2 } from "lucide-react";
-import { Button } from "@agenticdevelopertoolkit/ui/components/button";
-import { Input } from "@agenticdevelopertoolkit/ui/components/input";
-import { Select } from "@agenticdevelopertoolkit/ui/components/select";
-import { Checkbox } from "@agenticdevelopertoolkit/ui/components/checkbox";
-import { Label } from "@agenticdevelopertoolkit/ui/components/label";
-import { Field } from "@agenticdevelopertoolkit/ui/blocks/field";
-import { FieldGroup } from "@agenticdevelopertoolkit/ui/blocks/field-group";
+import { Button } from "@adh-sdk/ui/components/button";
+import { Input } from "@adh-sdk/ui/components/input";
+import { Select } from "@adh-sdk/ui/components/select";
+import { Checkbox } from "@adh-sdk/ui/components/checkbox";
+import { Label } from "@adh-sdk/ui/components/label";
+import { Field } from "@adh-sdk/ui/blocks/field";
+import { FieldGroup } from "@adh-sdk/ui/blocks/field-group";
 import {
   newLocalId,
   type ConnectionSpecDraft,

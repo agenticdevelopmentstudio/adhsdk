@@ -1,8 +1,8 @@
 'use client';
 
 import { useCallback } from 'react';
-import { useResourceItemQuery } from '@agentic-toolkit/data';
-import type { FieldDefRow, RegistryClient, SectionRow } from '@agentic-toolkit/registry/client';
+import { useResourceItemQuery } from '@adh-sdk/data';
+import type { FieldDefRow, RegistryClient, SectionRow } from '@adh-sdk/registry/client';
 
 /**
  * Everything `EntryEditor` needs that belongs to the REGISTRY rather than to the entry — the

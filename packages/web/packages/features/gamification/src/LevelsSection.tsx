@@ -3,14 +3,14 @@
 import { useEffect, useMemo, useState } from "react";
 import { Plus, Trash2 } from "lucide-react";
 
-import { reportUnexpectedAuthError } from "@agentic-toolkit/auth";
-import { isForbidden } from "@agentic-toolkit/data";
-import { gamificationApi, type LevelRung } from "@agentic-toolkit/data/gamification";
-import { useReportSettingsDirty } from "@agentic-toolkit/resource";
-import { Button } from "@agenticdevelopertoolkit/ui/components/button";
-import { Field } from "@agenticdevelopertoolkit/ui/blocks";
-import { Input } from "@agenticdevelopertoolkit/ui/components/input";
-import { ErrorText } from "@agenticdevelopertoolkit/ui/components/error-text";
+import { reportUnexpectedAuthError } from "@adh-sdk/auth";
+import { isForbidden } from "@adh-sdk/data";
+import { gamificationApi, type LevelRung } from "@adh-sdk/data/gamification";
+import { useReportSettingsDirty } from "@adh-sdk/resource";
+import { Button } from "@adh-sdk/ui/components/button";
+import { Field } from "@adh-sdk/ui/blocks";
+import { Input } from "@adh-sdk/ui/components/input";
+import { ErrorText } from "@adh-sdk/ui/components/error-text";
 
 import { useRealmCatalog } from "./realm-catalog";
 import { forbiddenAware } from "./err-text";

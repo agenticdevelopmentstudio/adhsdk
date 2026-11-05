@@ -1,5 +1,5 @@
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/Language/Snippets/` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Language/Snippets/` |
 

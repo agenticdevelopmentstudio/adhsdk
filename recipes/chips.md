@@ -1,7 +1,7 @@
 ---
 id: 12cc7564-cb08-4b62-9785-c3b1cc0c46f0
 title: Chips
-domain: agenticdevelopertoolkit://recipes/chips
+domain: adhsdk://recipes/chips
 type: ingredient
 version: 1.1.1
 status: review

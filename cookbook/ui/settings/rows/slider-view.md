@@ -1,7 +1,7 @@
 ---
 id: 0cbe1932-5c7e-4546-829d-0294708d499c
 title: "Slider View"
-domain: adtoolkit://cookbook/ui/settings/rows/slider-view
+domain: adhsdk://cookbook/ui/settings/rows/slider-view
 type: ingredient
 version: 1.3.1
 status: review
@@ -21,7 +21,7 @@ tags:
   - range
 depends-on: []
 related:
-  - adtoolkit://cookbook/ui/settings/rows/captioned-slider-view
+  - adhsdk://cookbook/ui/settings/rows/captioned-slider-view
 references: []
 approved-by: ""
 approved-date: ""
@@ -34,7 +34,7 @@ approved-date: ""
 The Slider View is a settings row: a title label and a slider in one
 horizontal row, with no trailing caption (contrast with the sibling
 captioned slider row
-(adtoolkit://cookbook/ui/settings/rows/captioned-slider-view), which
+(adhsdk://cookbook/ui/settings/rows/captioned-slider-view), which
 adds a formatter-derived value label). The row is driven by a range view
 model: the component sets the slider's range and value from the view
 model at construction, writes the user's slider interactions back into
@@ -288,7 +288,7 @@ logger reference anywhere in source).
   attributes together whenever the parent's bound range or value props
   change, to mirror syncs-on-external-change.
 - **AppKit/UIKit** (source platform): Source file
-  `packages/apple/AgenticToolkit/macOS/SystemIntegration/ComposableSettingsWindow/Views/SliderView.swift`.
+  `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/Views/SliderView.swift`.
   A macOS-only (`import AppKit`) `NSView` subclass, `@MainActor`, inside
   the `ComposableSettings` namespace, conforming to `SettingsViewProtocol`.
   It composes two subviews — an `NSTextField` label from
@@ -326,14 +326,14 @@ logger reference anywhere in source).
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/macOS/SystemIntegration/ComposableSettingsWindow/Views/SliderView.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/Views/SliderView.swift` |
 
 ## Design Decisions
 
 - **Decision**: Re-apply the slider's minimum and maximum (in addition to the
   label text and the slider's value) inside the external-change handler,
   not just at initialization — unlike the sibling captioned slider row
-  (adtoolkit://cookbook/ui/settings/rows/captioned-slider-view),
+  (adhsdk://cookbook/ui/settings/rows/captioned-slider-view),
   whose sync leaves the slider's range untouched after construction.
   **Rationale**: Lets a caller mutate the view model's range after the row is
   built and have the slider reflect the new bounds without recreating the
@@ -397,7 +397,7 @@ other rows rest on source composing only stock
 `NSView`/`NSControl` instances with no custom drawing, network, or persistence
 code of its own.
 
-No test in the repository's test targets constructs `SliderView`, so `unit-test-coverage` is `failed`: a search of `AgenticToolkitMacOSTests` and the other test targets for the type name finds nothing.
+No test in the repository's test targets constructs `SliderView`, so `unit-test-coverage` is `failed`: a search of `AgenticDeveloperHubSDKMacOSTests` and the other test targets for the type name finds nothing.
 
 ## Change History
 

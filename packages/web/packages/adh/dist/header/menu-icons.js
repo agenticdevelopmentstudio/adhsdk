@@ -74,7 +74,7 @@ import {
   UsersRound,
   Wrench
 } from "lucide-react";
-import { SITE_FOR_HUB_SEGMENT } from "@agentic-toolkit/adh-registry";
+import { SITE_FOR_HUB_SEGMENT } from "@adh-sdk/adh-registry";
 var ICONS = {
   // --- Hub + its ecosystem sites (inline sub-items under Hub) ---
   hub: Hexagon,

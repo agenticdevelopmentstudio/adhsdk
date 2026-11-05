@@ -1,7 +1,7 @@
 ---
 id: 7B3E5D12-9A64-4C0F-8E21-5F1D6A7C3B90
 title: "UseTablesWithRows"
-domain: adtoolkit://cookbook/ui/crud/use-tables-with-rows
+domain: adhsdk://cookbook/ui/crud/use-tables-with-rows
 type: ingredient
 version: 1.0.0
 status: review
@@ -11,7 +11,7 @@ modified: 2026-10-04
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
-summary: "Has-rows sweep from @agentic-toolkit/crud: probes each candidate table with a limit-one list, sorts tables into populated, empty and unknown, and remembers the answer per user, filter, scope and table set."
+summary: "Has-rows sweep from @adh-sdk/crud: probes each candidate table with a limit-one list, sorts tables into populated, empty and unknown, and remembers the answer per user, filter, scope and table set."
 platforms:
   - typescript
   - web
@@ -22,7 +22,7 @@ tags:
   - cache
 depends-on: []
 related:
-  - adtoolkit://cookbook/ui/crud/crud-table
+  - adhsdk://cookbook/ui/crud/crud-table
 references: []
 approved-by: ""
 approved-date: ""
@@ -32,7 +32,7 @@ approved-date: ""
 
 ## Overview
 
-`useTablesWithRows` in `@agentic-toolkit/crud` answers one question for a
+`useTablesWithRows` in `@adh-sdk/crud` answers one question for a
 data browser's table rail: **which of these tables hold at least one row**,
 for the open filter and scope. It is a state-and-network operation with no
 visual surface of its own; the `CrudDataBrowser` rail consumes its answer to
@@ -214,7 +214,7 @@ Not applicable: the operation calls no logging API; failures are reported only t
 
 - **SwiftUI**: There is no source for Swift. Port the operation as an observable object (or an `actor` holding the cache) with an `async` sweep using a `TaskGroup` limited to 8 child tasks, `URLSession` data tasks carrying a cancellation-aware `URLRequest`, and `Task.checkCancellation` to stop on leave. Hold remembered answers in a process-wide actor keyed by the same principal, filter, scope and table-key string, with a `Date` stamp for the 60-second window, and clear it on the app's sign-in-changed notification.
 - **Compose**: Port as a `ViewModel` exposing a `StateFlow<TablesWithRows>`; run the sweep in `viewModelScope` with a `Semaphore(8)` around `async` probes and cancel the `Job` on leave. Keep remembered answers in a singleton `ConcurrentHashMap` with `System.currentTimeMillis()` stamps, cleared when the auth session flow emits a new subject.
-- **React/Web**: The source is `packages/web/packages/crud/src/useTablesWithRows.ts`, a `'use client'` React hook. State is a `useState` seeded from the module-level `answers` map; the sweep runs in a `useEffect` keyed on the joined signature, uses 8 worker loops draining a shared queue, `authedJson` from `@agentic-toolkit/auth/client` with an `AbortController` signal, and `AuthHttpError` to recognize 403 and 404. The session watcher binds `onSessionChange` and a `storage` event listener on first use, and a `generation` counter stops an overtaken sweep from writing its answer back.
+- **React/Web**: The source is `packages/web/packages/crud/src/useTablesWithRows.ts`, a `'use client'` React hook. State is a `useState` seeded from the module-level `answers` map; the sweep runs in a `useEffect` keyed on the joined signature, uses 8 worker loops draining a shared queue, `authedJson` from `@adh-sdk/auth/client` with an `AbortController` signal, and `AuthHttpError` to recognize 403 and 404. The session watcher binds `onSessionChange` and a `storage` event listener on first use, and a `generation` counter stops an overtaken sweep from writing its answer back.
 - **AppKit / UIKit**: Same as the SwiftUI note: an `@MainActor` model object whose results update the table rail, with probes on `URLSession` and the cache in an `actor`. The sign-in-changed hook is the app's authentication notification rather than a `storage` event.
 - **WinUI 3**: Port as a view-model class implementing `INotifyPropertyChanged`, exposing a `TablesWithRows` record of `HashSet<string>?` properties. Run the sweep with `Task.Run` and a `SemaphoreSlim(8)` bounding `HttpClient.GetAsync` probes, each given a `CancellationToken` from a `CancellationTokenSource` cancelled when the page navigates away, and treat `HttpStatusCode.Forbidden` and `NotFound` as the no-set case. Keep remembered answers in a static `ConcurrentDictionary<string, (TablesWithRows Answer, DateTimeOffset At)>` with a `Stopwatch` or `DateTimeOffset` freshness check, raise changes on the `DispatcherQueue`, and clear the dictionary from the app's auth-session-changed event, bumping an `Interlocked` generation counter so an overtaken sweep cannot store its answer.
 

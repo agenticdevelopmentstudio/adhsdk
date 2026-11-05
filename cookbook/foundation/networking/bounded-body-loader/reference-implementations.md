@@ -1,5 +1,5 @@
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/Core/Networking/BoundedBodyLoader.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Networking/BoundedBodyLoader.swift` |
 

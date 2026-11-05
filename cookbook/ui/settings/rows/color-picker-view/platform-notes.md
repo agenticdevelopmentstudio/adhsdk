@@ -19,7 +19,7 @@
   value on the input's `onInput`/`onChange` handler unconditionally,
   mirroring `commits-color-value`.
 - **AppKit / UIKit** (source platform): Source file
-  `packages/apple/AgenticToolkit/macOS/SystemIntegration/ComposableSettingsWindow/Views/ColorPickerView.swift`.
+  `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/Views/ColorPickerView.swift`.
   A macOS-only (`import AppKit`) `NSView` subclass, `@MainActor`, inside
   the `ComposableSettings` namespace, conforming to `SettingsViewProtocol`.
   It composes two subviews — a `ThemedLabel` from

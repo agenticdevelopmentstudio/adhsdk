@@ -6,7 +6,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import '@testing-library/jest-dom/vitest'
 import { cleanup, render, screen, waitFor } from '@testing-library/react'
-import { FeatureFlagsProvider } from '@agentic-toolkit/adh/flags'
+import { FeatureFlagsProvider } from '@adh-sdk/adh/flags'
 import { LandingHeroGate } from '../marketing/LandingHeroGate'
 
 type FlagRow = { id: number; key: string; enabled: boolean }
@@ -68,7 +68,7 @@ describe('LandingHeroGate — landing_site_explorer_diagram gate', () => {
     // one. Re-import after stubbing: the seed is read once, at module load.
     vi.stubEnv('NEXT_PUBLIC_DEV_FEATURE_FLAGS', 'landing_site_explorer_diagram')
     vi.resetModules()
-    const { FeatureFlagsProvider: Provider } = await import('@agentic-toolkit/adh/flags')
+    const { FeatureFlagsProvider: Provider } = await import('@adh-sdk/adh/flags')
     const { LandingHeroGate: Gate } = await import('../marketing/LandingHeroGate')
     mockFlagTable([]) // the table says nothing — the build flag alone must carry it
     render(
@@ -89,7 +89,7 @@ describe('LandingHeroGate — landing_site_explorer_diagram gate', () => {
     // the request would 404 on every page load. Opting out must not cost them the overrides.
     vi.stubEnv('NEXT_PUBLIC_DEV_FEATURE_FLAGS', 'landing_site_explorer_diagram')
     vi.resetModules()
-    const { FeatureFlagsProvider: Provider } = await import('@agentic-toolkit/adh/flags')
+    const { FeatureFlagsProvider: Provider } = await import('@adh-sdk/adh/flags')
     const { LandingHeroGate: Gate } = await import('../marketing/LandingHeroGate')
     mockFlagTable([])
     render(

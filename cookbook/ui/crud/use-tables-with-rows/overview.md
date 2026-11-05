@@ -1,5 +1,5 @@
 
-`useTablesWithRows` in `@agentic-toolkit/crud` answers one question for a
+`useTablesWithRows` in `@adh-sdk/crud` answers one question for a
 data browser's table rail: **which of these tables hold at least one row**,
 for the open filter and scope. It is a state-and-network operation with no
 visual surface of its own; the `CrudDataBrowser` rail consumes its answer to

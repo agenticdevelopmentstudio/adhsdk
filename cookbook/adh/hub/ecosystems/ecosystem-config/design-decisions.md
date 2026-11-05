@@ -9,7 +9,7 @@ Platform scope: Swift implementation (the alternate client has no equivalent cre
 **Approved**: pending
 
 **Decision**: the storage-tokens detail sources its post-reveal notice text from a constant declared in a sibling Applications module (Applications' own token-reveal notice), rather than declaring its own copy.
-**Rationale**: the source's own comment states this directly — the reveal-once behavior exists specifically because that sibling constant's promise ("you won't be able to see it again") must actually hold; the same lifecycle and constant are documented as canonical in the sibling recipe `adtoolkit://cookbook/adh/hub/security/authentication-client`, which this recipe treats as the complete reference for that shared behavior rather than re-deriving it here. The coupling means a future rename of that constant would need to be tracked across both modules with no compiler-enforced link beyond the direct reference.
+**Rationale**: the source's own comment states this directly — the reveal-once behavior exists specifically because that sibling constant's promise ("you won't be able to see it again") must actually hold; the same lifecycle and constant are documented as canonical in the sibling recipe `adhsdk://cookbook/adh/hub/security/authentication-client`, which this recipe treats as the complete reference for that shared behavior rather than re-deriving it here. The coupling means a future rename of that constant would need to be tracked across both modules with no compiler-enforced link beyond the direct reference.
 Platform scope: Swift implementation — this is a cross-module source-file coupling specific to that codebase's module layout.
 **Approved**: pending
 

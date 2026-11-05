@@ -1,0 +1,105 @@
+import AppKit
+import AgenticDeveloperHubSDK
+
+/// AppKit accessors for a `SemanticPalette`. Lives in `AgenticDeveloperHubSDKUI`
+/// (next to the `RGBAColor`↔`NSColor` bridge it reuses) so the Foundation-only
+/// `AgenticDeveloperHubSDK` module stays AppKit-free.
+extension SemanticPalette {
+
+    /// The `NSColor` for `role`, in the sRGB color space.
+    public func nsColor(_ role: ThemeRole) -> NSColor {
+        NSColor(color(role))
+    }
+
+    public var windowBackgroundColor: NSColor { nsColor(.windowBackground) }
+    public var surfaceColor: NSColor { nsColor(.surface) }
+    public var elevatedSurfaceColor: NSColor { nsColor(.elevatedSurface) }
+    public var cardColor: NSColor { nsColor(.card) }
+    public var controlBackgroundColor: NSColor { nsColor(.controlBackground) }
+    public var primaryTextColor: NSColor { nsColor(.primaryText) }
+    public var secondaryTextColor: NSColor { nsColor(.secondaryText) }
+    public var tertiaryTextColor: NSColor { nsColor(.tertiaryText) }
+    public var placeholderTextColor: NSColor { nsColor(.placeholderText) }
+    public var onAccentTextColor: NSColor { nsColor(.onAccentText) }
+    public var accentColor: NSColor { nsColor(.accent) }
+    public var successColor: NSColor { nsColor(.success) }
+    public var warningColor: NSColor { nsColor(.warning) }
+    public var dangerColor: NSColor { nsColor(.danger) }
+    public var infoColor: NSColor { nsColor(.info) }
+    public var borderColor: NSColor { nsColor(.border) }
+    public var outlineColor: NSColor { nsColor(.outline) }
+    public var dividerColor: NSColor { nsColor(.divider) }
+    public var selectionColor: NSColor { nsColor(.selection) }
+    public var selectionTextColor: NSColor { nsColor(.selectionText) }
+    public var selectionEdgeColor: NSColor { nsColor(.selectionEdge) }
+    public var cursorColor: NSColor { nsColor(.cursor) }
+
+    /// The 16 ANSI colors as `NSColor`s (for chart series, terminal previews, etc.).
+    public var ansiColors: [NSColor] {
+        theme.ansi.map { NSColor($0) }
+    }
+
+    /// The standard `NSAppearance` this palette reads as.
+    ///
+    /// Stock AppKit control chrome — a push button's bezel, a checkbox glyph, a
+    /// popup's arrow — is drawn by the appearance, not the palette, and a
+    /// *custom* appearance draws some of it invisibly (the non-default Cancel
+    /// button's bezel is the usual casualty). So a window that hosts stock
+    /// controls over a themed backdrop pins itself to whichever of the two
+    /// standard appearances the theme's background actually reads as.
+    ///
+    /// `ThemeManager` applies this app-wide; the property is here so a window
+    /// that has to set its own does not re-derive the rule.
+    public var standardAppearance: NSAppearance? {
+        let brightness = nsColor(.windowBackground)
+            .usingColorSpace(.sRGB)?.brightnessComponent ?? 0.5
+        return NSAppearance(named: brightness < 0.5 ? .darkAqua : .aqua)
+    }
+
+    /// The chart-series colors as `NSColor`s — distinct theme-derived hues for
+    /// N-of-a-kind UI (series lines, per-pane tints) where the *difference*
+    /// between the colors is what carries the meaning. Mirrors `chartSeries` on
+    /// the SwiftUI face.
+    public var chartSeriesNSColors: [NSColor] {
+        chartSeriesColors.map { NSColor($0) }
+    }
+
+    /// `identitySeriesColors` as `NSColor`s — the hues for telling members of a
+    /// set apart in a view that also colors by state.
+    public var identitySeriesNSColors: [NSColor] {
+        identitySeriesColors.map { NSColor($0) }
+    }
+
+    /// Maps a server-supplied color *name* (e.g. `"red"`, `"orange"`, `"gray"`)
+    /// onto a themed semantic color. Single source of truth shared by the Usage
+    /// views so the name→role mapping cannot drift between them. (`"orange"` and
+    /// `"yellow"` both map to `warning` — the palette has no separate orange role.)
+    public func color(named name: String?) -> NSColor? {
+        switch name {
+        case "red":               return dangerColor
+        case "yellow":            return warningColor
+        case "green":             return successColor
+        case "orange":            return warningColor
+        case "blue":              return accentColor
+        case "purple":            return infoColor
+        case "gray", "secondary": return secondaryTextColor
+        default:                  return nil
+        }
+    }
+}
+
+/// A same-module-only `RGBAColor`→`NSColor` bridge. AgenticDeveloperHubSDK's
+/// `RGBAColor+NSColor.swift` (in `AgenticDeveloperHubSDKCoreMacOS`, staying put — it is
+/// still used directly by `ThemeDetailPanelViewController`) already declares
+/// this initializer *publicly*. Once `AgenticDeveloperHubSDKMacOS` re-exports this
+/// module (see the `@_exported import AgenticDeveloperHubSDKUI` shim), both
+/// declarations become visible there; making this one `public` too would turn
+/// every call site in that module into an "ambiguous use of init" error. Kept
+/// `internal` (the default access level) so it is usable everywhere inside this
+/// target — including here and in `ThemeManager.swift` — without leaking across
+/// the module boundary.
+extension NSColor {
+    convenience init(_ rgba: RGBAColor) {
+        self.init(srgbRed: rgba.red, green: rgba.green, blue: rgba.blue, alpha: rgba.alpha)
+    }
+}

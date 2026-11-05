@@ -1,7 +1,7 @@
 ---
 id: ba8d9517-2528-4ae9-bc52-16046d68b126
 title: "Settings Panel Split"
-domain: adtoolkit://cookbook/ui/settings/settings-panel-split
+domain: adhsdk://cookbook/ui/settings/settings-panel-split
 type: ingredient
 version: 1.2.2
 status: review
@@ -21,10 +21,10 @@ tags:
   - view-controller
   - nesting
 depends-on:
-  - adtoolkit://cookbook/ui/settings/settings-split-view
+  - adhsdk://cookbook/ui/settings/settings-split-view
 related:
-  - adtoolkit://cookbook/ui/settings/settings-panel
-  - adtoolkit://cookbook/ui/settings/settings-panel-list
+  - adhsdk://cookbook/ui/settings/settings-panel
+  - adhsdk://cookbook/ui/settings/settings-panel-list
 references: []
 approved-by: ""
 approved-date: ""
@@ -284,7 +284,7 @@ Not applicable: no logging call appears anywhere in this component.
   `ComposableSettingsPanel` (`ComposableSettingsPanel.swift`) through that
   inheritance, and stores a `ComposableSettings.SettingsPanelDescriptor`
   (`SettingsPanelDescriptor.swift`) — all three defined elsewhere in
-  `AgenticToolkit` and not reimplemented here. The class is `@MainActor`,
+  `AgenticDeveloperHubSDK` and not reimplemented here. The class is `@MainActor`,
   so construction and every property access are rejected off the main
   actor at compile time. It does not support construction via
   `init?(coder:)`: that initializer is overridden to call `fatalError()`,
@@ -315,7 +315,7 @@ Not applicable: no logging call appears anywhere in this component.
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/macOS/SystemIntegration/ComposableSettingsWindow/SettingsPanel/SettingsPanelSplitViewController.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/SettingsPanel/SettingsPanelSplitViewController.swift` |
 
 ## Design Decisions
 

@@ -1,7 +1,7 @@
 ---
 id: eb7e9eeb-86f3-4053-827a-ea259833c6ad
 title: "Dashboard API"
-domain: adtoolkit://cookbook/status/dashboard/api
+domain: adhsdk://cookbook/status/dashboard/api
 type: ingredient
 version: 1.1.0
 status: review
@@ -26,15 +26,15 @@ depends-on:
   - agenticdevelopercookbook://guidelines/implementing/networking/retry-and-resilience
   - agenticdevelopercookbook://guidelines/implementing/security/token-handling
 related:
-  - adtoolkit://cookbook/status/service/routes
-  - adtoolkit://cookbook/status/service/peers
-  - adtoolkit://cookbook/status/service/monitor/endpoint-kinds
+  - adhsdk://cookbook/status/service/routes
+  - adhsdk://cookbook/status/service/peers
+  - adhsdk://cookbook/status/service/monitor/endpoint-kinds
 references:
-  - packages/web/packages/status-web/src/api/client.ts (agenticdevelopertoolkit)
-  - packages/web/packages/status-web/src/api/monitored-sites.ts (agenticdevelopertoolkit)
-  - packages/web/packages/status-web/src/api/monitored-sites.test.ts (agenticdevelopertoolkit)
-  - packages/web/packages/status-web/src/api/peers.ts (agenticdevelopertoolkit)
-  - packages/web/packages/status-web/src/lib/endpoint-kinds.ts (agenticdevelopertoolkit)
+  - packages/web/packages/status-web/src/api/client.ts (adhsdk)
+  - packages/web/packages/status-web/src/api/monitored-sites.ts (adhsdk)
+  - packages/web/packages/status-web/src/api/monitored-sites.test.ts (adhsdk)
+  - packages/web/packages/status-web/src/api/peers.ts (adhsdk)
+  - packages/web/packages/status-web/src/lib/endpoint-kinds.ts (adhsdk)
 approved-by: ""
 approved-date: ""
 ---

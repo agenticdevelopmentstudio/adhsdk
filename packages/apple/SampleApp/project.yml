@@ -1,6 +1,6 @@
-name: AgenticDeveloperToolkitSampleApp
+name: AgenticDeveloperHubSDKSampleApp
 options:
-  bundleIdPrefix: com.mikefullerton.AgenticDeveloperToolkit
+  bundleIdPrefix: com.mikefullerton.AgenticDeveloperHubSDK
   createIntermediateGroups: true
   deploymentTarget:
     macOS: "14.0"
@@ -16,16 +16,16 @@ settings:
     CURRENT_PROJECT_VERSION: "1"
     MARKETING_VERSION: "0.1.0"
     CODE_SIGN_STYLE: Automatic
-    PRODUCT_NAME: "Agentic Developer Toolkit"
+    PRODUCT_NAME: "Agentic Developer Hub SDK"
     ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
     ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
 
 projectReferences:
-  AgenticDeveloperToolkit:
-    path: ../AgenticDeveloperToolkit/AgenticDeveloperToolkit.xcodeproj
+  AgenticDeveloperHubSDK:
+    path: ../AgenticDeveloperHubSDK/AgenticDeveloperHubSDK.xcodeproj
 
 targets:
-  AgenticDeveloperToolkitSampleApp-macOS:
+  AgenticDeveloperHubSDKSampleApp-macOS:
     type: application
     platform: macOS
     sources:
@@ -33,33 +33,33 @@ targets:
       - path: Resources
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.mikefullerton.AgenticDeveloperToolkit.macos
+        PRODUCT_BUNDLE_IDENTIFIER: com.mikefullerton.AgenticDeveloperHubSDK.macos
         CODE_SIGN_IDENTITY: "-"
         ENABLE_HARDENED_RUNTIME: YES
         INFOPLIST_KEY_LSApplicationCategoryType: public.app-category.developer-tools
 
-  AgenticDeveloperToolkitSampleApp-iOS:
+  AgenticDeveloperHubSDKSampleApp-iOS:
     type: application
     platform: iOS
     sources:
       - path: Sources
       - path: Resources
     dependencies:
-      - target: AgenticDeveloperToolkit/AgenticDeveloperToolkitUI-iOS
+      - target: AgenticDeveloperHubSDK/AgenticDeveloperHubSDKUI-iOS
         embed: true
         codeSign: true
-      - target: AgenticDeveloperToolkit/AgenticDeveloperToolkit-iOS
+      - target: AgenticDeveloperHubSDK/AgenticDeveloperHubSDK-iOS
         embed: true
         codeSign: true
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.mikefullerton.AgenticDeveloperToolkit.ios
+        PRODUCT_BUNDLE_IDENTIFIER: com.mikefullerton.AgenticDeveloperHubSDK.ios
         TARGETED_DEVICE_FAMILY: "1,2"
         INFOPLIST_KEY_UILaunchScreen_Generation: YES
         INFOPLIST_KEY_UIApplicationSceneManifest_Generation: YES
         INFOPLIST_KEY_UISupportedInterfaceOrientations: "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight"
 
-  AgenticDeveloperToolkitSampleApp-watchOS:
+  AgenticDeveloperHubSDKSampleApp-watchOS:
     type: application
     platform: watchOS
     sources:
@@ -67,11 +67,11 @@ targets:
       - path: Resources
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.mikefullerton.AgenticDeveloperToolkit.watchos
+        PRODUCT_BUNDLE_IDENTIFIER: com.mikefullerton.AgenticDeveloperHubSDK.watchos
         INFOPLIST_KEY_WKApplication: YES
         INFOPLIST_KEY_WKRunsIndependentlyOfCompanionApp: YES
 
-  AgenticDeveloperToolkitSampleApp-tvOS:
+  AgenticDeveloperHubSDKSampleApp-tvOS:
     type: application
     platform: tvOS
     sources:
@@ -79,9 +79,9 @@ targets:
       - path: Resources
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.mikefullerton.AgenticDeveloperToolkit.tvos
+        PRODUCT_BUNDLE_IDENTIFIER: com.mikefullerton.AgenticDeveloperHubSDK.tvos
 
-  AgenticDeveloperToolkitSampleApp-visionOS:
+  AgenticDeveloperHubSDKSampleApp-visionOS:
     type: application
     platform: visionOS
     sources:
@@ -89,14 +89,14 @@ targets:
       - path: Resources
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.mikefullerton.AgenticDeveloperToolkit.visionos
+        PRODUCT_BUNDLE_IDENTIFIER: com.mikefullerton.AgenticDeveloperHubSDK.visionos
         TARGETED_DEVICE_FAMILY: "7"
 
 schemes:
-  AgenticDeveloperToolkitSampleApp-macOS:
+  AgenticDeveloperHubSDKSampleApp-macOS:
     build:
       targets:
-        AgenticDeveloperToolkitSampleApp-macOS: all
+        AgenticDeveloperHubSDKSampleApp-macOS: all
     run:
       config: Debug
     profile:
@@ -105,27 +105,27 @@ schemes:
       config: Debug
     archive:
       config: Release
-  AgenticDeveloperToolkitSampleApp-iOS:
+  AgenticDeveloperHubSDKSampleApp-iOS:
     build:
       targets:
-        AgenticDeveloperToolkitSampleApp-iOS: all
+        AgenticDeveloperHubSDKSampleApp-iOS: all
     run:
       config: Debug
-  AgenticDeveloperToolkitSampleApp-watchOS:
+  AgenticDeveloperHubSDKSampleApp-watchOS:
     build:
       targets:
-        AgenticDeveloperToolkitSampleApp-watchOS: all
+        AgenticDeveloperHubSDKSampleApp-watchOS: all
     run:
       config: Debug
-  AgenticDeveloperToolkitSampleApp-tvOS:
+  AgenticDeveloperHubSDKSampleApp-tvOS:
     build:
       targets:
-        AgenticDeveloperToolkitSampleApp-tvOS: all
+        AgenticDeveloperHubSDKSampleApp-tvOS: all
     run:
       config: Debug
-  AgenticDeveloperToolkitSampleApp-visionOS:
+  AgenticDeveloperHubSDKSampleApp-visionOS:
     build:
       targets:
-        AgenticDeveloperToolkitSampleApp-visionOS: all
+        AgenticDeveloperHubSDKSampleApp-visionOS: all
     run:
       config: Debug

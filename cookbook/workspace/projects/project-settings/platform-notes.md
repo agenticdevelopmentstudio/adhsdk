@@ -1,7 +1,7 @@
 
-- **SwiftUI**: the source is `packages/apple/AgenticToolkit/macOS/Features/Projects/UserSettings+Projects.swift`,
-  part of the macOS-only `AgenticToolkitMacOS` target (`project.yml`),
-  importing `AgenticToolkitCore` for `UserSettings`/`UserSetting` and
+- **SwiftUI**: the source is `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/UserSettings+Projects.swift`,
+  part of the macOS-only `AgenticDeveloperHubSDKMacOS` target (`project.yml`),
+  importing `AgenticDeveloperHubSDKCore` for `UserSettings`/`UserSetting` and
   referring to its target-mate `GitRepoScanner.defaultRootSkipPatterns`
   with no import needed. The isolation described in
   **main-thread-confinement** comes from the extended type's own primary
@@ -12,7 +12,7 @@
   provides; a SwiftUI consumer would bind to them through the
   `@ObservedSetting` property wrapper (`Core/SettingStorage/UserSetting.swift`).
 - **AppKit / UIKit**: this is the source. The file imports only
-  `Foundation` and `AgenticToolkitCore` — no AppKit or UIKit type appears
+  `Foundation` and `AgenticDeveloperHubSDKCore` — no AppKit or UIKit type appears
   in it, so it would compile unchanged behind a UIKit consumer if the
   target were extended to iOS. Its first setting's default, however,
   reaches into `GitRepoScanner.defaultRootSkipPatterns`, and that

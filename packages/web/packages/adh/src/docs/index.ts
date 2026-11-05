@@ -1,5 +1,5 @@
 /**
- * @agentic-toolkit/adh/docs — the ADH-native documentation shell.
+ * @adh-sdk/adh/docs — the ADH-native documentation shell.
  *
  * A server-rendered sidebar + article layout (no third-party docs framework), driven by the shared
  * {@link DOCS_NAV}. Feed it the pre-rendered HTML for a slug via {@link getDocHtml} + {@link MarkdownHtml}:
@@ -10,7 +10,7 @@
  *     </DocsShell>
  *   </AppShell>
  *
- * Import the CSS once per app: `import '@agentic-toolkit/adh/docs.css'`.
+ * Import the CSS once per app: `import '@adh-sdk/adh/docs.css'`.
  */
 export { DocsShell } from './DocsShell'
 export type { DocsShellProps } from './DocsShell'

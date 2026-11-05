@@ -3,7 +3,7 @@
   "meta": {
     "id": "c68fdd3a-092a-4718-b16e-4cc7a0037edd",
     "title": "Notes Client",
-    "domain": "adtoolkit://cookbook/adh/hub/content/notes-client",
+    "domain": "adhsdk://cookbook/adh/hub/content/notes-client",
     "type": "ingredient",
     "version": "1.0.3",
     "status": "review",
@@ -27,18 +27,18 @@
     ],
     "depends-on": [],
     "related": [
-      "adtoolkit://cookbook/adh/hub/content/markdown-client",
-      "adtoolkit://cookbook/adh/hub/content/docs-client"
+      "adhsdk://cookbook/adh/hub/content/markdown-client",
+      "adhsdk://cookbook/adh/hub/content/docs-client"
     ],
     "references": [
-      "packages/web/packages/data/src/notes/notes.ts (agenticdevelopertoolkit)",
-      "packages/web/packages/data/src/notes/index.ts (agenticdevelopertoolkit)",
-      "packages/web/packages/data/src/markdown/markdown.ts (agenticdevelopertoolkit)",
-      "packages/web/packages/data/src/markdown/wire.ts (agenticdevelopertoolkit)",
-      "packages/web/packages/data/src/markdown/taxonomy.ts (agenticdevelopertoolkit)",
-      "packages/web/packages/data/src/markdown/__tests__/markdown.test.ts (agenticdevelopertoolkit)",
-      "packages/web/packages/data/src/http.ts (agenticdevelopertoolkit)",
-      "packages/web/packages/data/src/client-helpers.ts (agenticdevelopertoolkit)"
+      "packages/web/packages/data/src/notes/notes.ts (adhsdk)",
+      "packages/web/packages/data/src/notes/index.ts (adhsdk)",
+      "packages/web/packages/data/src/markdown/markdown.ts (adhsdk)",
+      "packages/web/packages/data/src/markdown/wire.ts (adhsdk)",
+      "packages/web/packages/data/src/markdown/taxonomy.ts (adhsdk)",
+      "packages/web/packages/data/src/markdown/__tests__/markdown.test.ts (adhsdk)",
+      "packages/web/packages/data/src/http.ts (adhsdk)",
+      "packages/web/packages/data/src/client-helpers.ts (adhsdk)"
     ],
     "approved-by": "",
     "approved-date": ""

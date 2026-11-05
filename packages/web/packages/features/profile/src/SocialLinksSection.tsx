@@ -9,20 +9,20 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
-} from "@agenticdevelopertoolkit/ui/components/dialog";
-import { AlertModal } from "@agenticdevelopertoolkit/ui/components/alert-modal";
-import { DialogErrorText } from "@agenticdevelopertoolkit/ui/components/error-text";
-import { UnsavedChangesAlert } from "@agenticdevelopertoolkit/ui/components/unsaved-changes-alert";
+} from "@adh-sdk/ui/components/dialog";
+import { AlertModal } from "@adh-sdk/ui/components/alert-modal";
+import { DialogErrorText } from "@adh-sdk/ui/components/error-text";
+import { UnsavedChangesAlert } from "@adh-sdk/ui/components/unsaved-changes-alert";
 import {
   EditableList,
   PLATFORM_LABELS,
   useEditableList,
   type EditableListColumn,
-} from "@agenticdevelopertoolkit/ui/blocks";
-import { Field } from "@agenticdevelopertoolkit/ui/blocks";
-import { Button } from "@agenticdevelopertoolkit/ui/components/button";
-import { Input } from "@agenticdevelopertoolkit/ui/components/input";
-import { Select } from "@agenticdevelopertoolkit/ui/components/select";
+} from "@adh-sdk/ui/blocks";
+import { Field } from "@adh-sdk/ui/blocks";
+import { Button } from "@adh-sdk/ui/components/button";
+import { Input } from "@adh-sdk/ui/components/input";
+import { Select } from "@adh-sdk/ui/components/select";
 import {
   createSocialLink,
   updateSocialLink,
@@ -31,13 +31,13 @@ import {
   socialLinksKey,
   type SocialLink,
   type PrivacyGrant,
-} from "@agentic-toolkit/data/profile";
+} from "@adh-sdk/data/profile";
 import {
   DetailSection,
   ListBarActions,
   useBulkRemove,
   useReportSettingsDirty,
-} from "@agentic-toolkit/resource";
+} from "@adh-sdk/resource";
 import { PrivacyLevelControl } from "./PrivacyLevelControl";
 
 // ── Types ──────────────────────────────────────────────────────────────────────

@@ -2,13 +2,13 @@
 
 import type { ReactElement } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Card, CardContent } from "@agenticdevelopertoolkit/ui/components/card";
-import { EmptyState } from "@agenticdevelopertoolkit/ui/components/empty-state";
-import { Select } from "@agenticdevelopertoolkit/ui/components/select";
-import { ErrorText } from "@agenticdevelopertoolkit/ui/components/error-text";
-import { accessApi, type AccessRoleRow } from "@agentic-toolkit/data/access";
-import { workspaceMembersApi, type WorkspaceMember } from "@agentic-toolkit/data/organizations";
-import { useReportBusy } from "@agentic-toolkit/resource";
+import { Card, CardContent } from "@adh-sdk/ui/components/card";
+import { EmptyState } from "@adh-sdk/ui/components/empty-state";
+import { Select } from "@adh-sdk/ui/components/select";
+import { ErrorText } from "@adh-sdk/ui/components/error-text";
+import { accessApi, type AccessRoleRow } from "@adh-sdk/data/access";
+import { workspaceMembersApi, type WorkspaceMember } from "@adh-sdk/data/organizations";
+import { useReportBusy } from "@adh-sdk/resource";
 
 // Takes its workspace as PROPS rather than reading the hub's workspace context: three apps
 // mount this roster now, and only one of them has that context. A hook that silently returns

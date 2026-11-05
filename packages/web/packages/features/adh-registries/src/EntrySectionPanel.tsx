@@ -5,7 +5,7 @@ import type {
   FieldDefRow,
   FieldVisibility,
   SectionRow,
-} from '@agentic-toolkit/registry/client';
+} from '@adh-sdk/registry/client';
 
 export interface EntrySectionPanelProps {
   section: SectionRow;

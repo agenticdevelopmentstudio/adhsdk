@@ -3,7 +3,7 @@
 invented scope, and must never fire on a wildcard export or a third party.
 
 Every case is a real shape from the migration. `test_wrong_scope_is_caught`
-mirrors chat's README, which named itself `@agentic-cookbook/agenticdevelopertoolkit/chat`
+mirrors chat's README, which named itself `@agentic-cookbook/adhsdk/chat`
 and passed every existing gate because neither greps for the right string.
 """
 import json
@@ -36,10 +36,10 @@ def test_clean_tree_passes() -> None:
     with tempfile.TemporaryDirectory() as tmp:
         root = Path(tmp)
         _make_package(
-            root, "widget", "@agenticdevelopertoolkit/widget",
+            root, "widget", "@adh-sdk/widget",
             {".": "./dist/index.js", "./css/base.css": "./dist/css/base.css"},
-            "# `@agenticdevelopertoolkit/widget`\n\n"
-            "```tsx\nimport '@agenticdevelopertoolkit/widget/css/base.css'\n```\n",
+            "# `@adh-sdk/widget`\n\n"
+            "```tsx\nimport '@adh-sdk/widget/css/base.css'\n```\n",
         )
         result = run(root)
         assert result.returncode == 0, f"clean tree rejected: {result.stderr}"
@@ -51,9 +51,9 @@ def test_unexported_subpath_is_caught() -> None:
     with tempfile.TemporaryDirectory() as tmp:
         root = Path(tmp)
         _make_package(
-            root, "widget", "@agenticdevelopertoolkit/widget",
+            root, "widget", "@adh-sdk/widget",
             {".": "./dist/index.js", "./styles.css": "./dist/styles/widget.css"},
-            "```tsx\nimport '@agenticdevelopertoolkit/widget/styles/widget.css'\n```\n",
+            "```tsx\nimport '@adh-sdk/widget/styles/widget.css'\n```\n",
         )
         result = run(root)
         assert result.returncode == 1, "unexported subpath survived the guard"
@@ -66,10 +66,10 @@ def test_wrong_scope_is_caught() -> None:
     with tempfile.TemporaryDirectory() as tmp:
         root = Path(tmp)
         _make_package(
-            root, "widget", "@agenticdevelopertoolkit/widget",
+            root, "widget", "@adh-sdk/widget",
             {".": "./dist/index.js"},
-            "# `@agentic-cookbook/agenticdevelopertoolkit/widget`\n\n"
-            "```tsx\nimport { Widget } from '@agentic-cookbook/agenticdevelopertoolkit/widget'\n```\n",
+            "# `@agentic-cookbook/adhsdk/widget`\n\n"
+            "```tsx\nimport { Widget } from '@agentic-cookbook/adhsdk/widget'\n```\n",
         )
         result = run(root)
         assert result.returncode == 1, "invented scope survived the guard"
@@ -83,7 +83,7 @@ def test_filesystem_path_in_a_command_is_not_a_specifier() -> None:
     with tempfile.TemporaryDirectory() as tmp:
         root = Path(tmp)
         _make_package(
-            root, "widget", "@agenticdevelopertoolkit/widget",
+            root, "widget", "@adh-sdk/widget",
             {".": "./dist/index.js"},
             '"buildCommand": "python3 ../external/adhsdk/packages/web/packages/widget/tools/b.py"\n',
         )
@@ -97,9 +97,9 @@ def test_wildcard_export_resolves() -> None:
     with tempfile.TemporaryDirectory() as tmp:
         root = Path(tmp)
         _make_package(
-            root, "widget", "@agenticdevelopertoolkit/widget",
+            root, "widget", "@adh-sdk/widget",
             {".": "./dist/index.js", "./components/*": "./dist/components/*.js"},
-            "```tsx\nimport { Button } from '@agenticdevelopertoolkit/widget/components/button'\n```\n",
+            "```tsx\nimport { Button } from '@adh-sdk/widget/components/button'\n```\n",
         )
         result = run(root)
         assert result.returncode == 0, f"wildcard export false-flagged: {result.stderr}"
@@ -111,7 +111,7 @@ def test_third_party_subpath_is_skipped() -> None:
     with tempfile.TemporaryDirectory() as tmp:
         root = Path(tmp)
         _make_package(
-            root, "widget", "@agenticdevelopertoolkit/widget",
+            root, "widget", "@adh-sdk/widget",
             {".": "./dist/index.js"},
             "See also `some-other-lib/widget/docs` for the underlying primitive.\n",
         )
@@ -137,7 +137,7 @@ def test_empty_scan_is_not_a_pass() -> None:
         pkg = root / "widget"
         pkg.mkdir()
         (pkg / "package.json").write_text(
-            json.dumps({"name": "@agenticdevelopertoolkit/widget", "exports": {}}),
+            json.dumps({"name": "@adh-sdk/widget", "exports": {}}),
             encoding="utf-8",
         )
         result = run(root)

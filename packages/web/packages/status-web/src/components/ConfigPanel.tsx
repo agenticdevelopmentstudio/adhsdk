@@ -6,13 +6,13 @@ import {
   readStoredAppearance,
   writeStoredAppearance,
   type ReduceMotionPref,
-} from "@agenticdevelopertoolkit/themes/appearance";
-import { Input } from "@agenticdevelopertoolkit/ui/components/input";
-import { Select } from "@agenticdevelopertoolkit/ui/components/select";
-import { Switch } from "@agenticdevelopertoolkit/ui/components/switch";
-import { Label } from "@agenticdevelopertoolkit/ui/components/label";
-import { Badge } from "@agenticdevelopertoolkit/ui/components/badge";
-import { Field, ListHeader, type TopicLevel } from "@agenticdevelopertoolkit/ui/blocks";
+} from "@adh-sdk/themes/appearance";
+import { Input } from "@adh-sdk/ui/components/input";
+import { Select } from "@adh-sdk/ui/components/select";
+import { Switch } from "@adh-sdk/ui/components/switch";
+import { Label } from "@adh-sdk/ui/components/label";
+import { Badge } from "@adh-sdk/ui/components/badge";
+import { Field, ListHeader, type TopicLevel } from "@adh-sdk/ui/blocks";
 import { useStatusApi } from "../api/client";
 import * as api from "../api/monitored-sites";
 import { PLATFORMS, type SiteGroupView, type SiteView, type IntegrationView, type EndpointView } from "../api/monitored-sites";

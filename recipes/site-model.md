@@ -1,7 +1,7 @@
 ---
 id: 120ac7e5-949e-40c9-bb15-b24350356763
 title: Site Model
-domain: agenticdevelopertoolkit://recipes/site-model
+domain: adhsdk://recipes/site-model
 type: ingredient
 version: 1.0.2
 status: review

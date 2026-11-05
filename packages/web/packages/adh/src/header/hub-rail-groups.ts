@@ -23,7 +23,7 @@
 import {
   hubFeatureSegment, SITE_FOR_HUB_SEGMENT,
   type HubFeatureSegment, type SiteId,
-} from '@agentic-toolkit/adh-registry'
+} from '@adh-sdk/adh-registry'
 import { FLEET_MENU_GROUPS } from './fleetMenuGroups'
 import type { MenuLink } from './SiteMenu'
 

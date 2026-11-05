@@ -3,7 +3,7 @@ import { preserveDirectivesPlugin } from 'esbuild-plugin-preserve-directives'
 
 export default defineConfig({
   // Globbed entries mirror the exports map so a new module auto-builds
-  // without editing this file — same pattern as @agenticdevelopertoolkit/ui.
+  // without editing this file — same pattern as @adh-sdk/ui.
   entry: [
     'src/index.ts',
     'src/hooks/*.ts',
@@ -27,8 +27,8 @@ export default defineConfig({
     'react',
     'react-dom',
     'react/jsx-runtime',
-    '@agenticdevelopertoolkit/ui',
-    '@agenticdevelopertoolkit/ui/*',
+    '@adh-sdk/ui',
+    '@adh-sdk/ui/*',
     // Heavy markdown/highlight deps stay external so the consumer's bundler
     // can tree-shake and deduplicate them.
     'shiki',

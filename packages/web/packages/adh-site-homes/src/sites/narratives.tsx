@@ -1,7 +1,7 @@
 "use client";
 
-import { defineSiteHome, noSubPath } from "@agentic-toolkit/adh/home";
-import { SiteHomePlaceholder } from "@agentic-toolkit/adh/layout";
+import { defineSiteHome, noSubPath } from "@adh-sdk/adh/home";
+import { SiteHomePlaceholder } from "@adh-sdk/adh/layout";
 
 /**
  * This site's workspace route — `/<workspace>`.
@@ -21,7 +21,7 @@ import { SiteHomePlaceholder } from "@agentic-toolkit/adh/layout";
  * visitor, in every workspace, in every organization, saw the identical narratives. A
  * workspace chooser above a surface that does not vary by workspace is worse than no
  * chooser — it states a scoping that isn't there. So the embed is gone, along with the
- * machinery that existed only to serve it: the `@agentic-toolkit/narratives` package, its
+ * machinery that existed only to serve it: the `@adh-sdk/narratives` package, its
  * `NarrativesFrame`/`NarrativesFeature` pair, and the inner/outer path grammar whose only
  * job was to mirror the iframe's hash into the outer URL via `replaceState`.
  *

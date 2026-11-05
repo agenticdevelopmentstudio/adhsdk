@@ -1,6 +1,6 @@
 // Wire types for the integrations domain — package-local mirrors of the OpenAPI-generated
 // request/response shapes the hub previously imported as `RequestBody`/`SuccessBody` from
-// `@agentic-toolkit/adh-api-types` (for /integrations/*). These carry full backend-schema fidelity
+// `@adh-sdk/adh-api-types` (for /integrations/*). These carry full backend-schema fidelity
 // (not just the fields today's call sites touch) so the toolkit stays decoupled from the
 // hub's generated types without narrowing what a caller can rely on.
 

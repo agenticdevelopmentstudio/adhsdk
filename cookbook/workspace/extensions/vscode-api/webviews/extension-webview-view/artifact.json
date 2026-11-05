@@ -3,7 +3,7 @@
   "meta": {
     "id": "7152ec0d-01a9-433d-b1fd-1ac708400f40",
     "title": "Extension Webview View",
-    "domain": "adtoolkit://cookbook/workspace/extensions/vscode-api/webviews/extension-webview-view",
+    "domain": "adhsdk://cookbook/workspace/extensions/vscode-api/webviews/extension-webview-view",
     "type": "ingredient",
     "version": "1.2.2",
     "status": "review",
@@ -25,11 +25,11 @@
       "placeholder"
     ],
     "depends-on": [
-      "adtoolkit://cookbook/ui/layout/pane-view",
-      "adtoolkit://cookbook/ui/layout/composable-tabs/view-registry"
+      "adhsdk://cookbook/ui/layout/pane-view",
+      "adhsdk://cookbook/ui/layout/composable-tabs/view-registry"
     ],
     "related": [
-      "adtoolkit://cookbook/workspace/extensions/vscode-api/webviews/webview-panel-view",
+      "adhsdk://cookbook/workspace/extensions/vscode-api/webviews/webview-panel-view",
       "agenticdevelopercookbook://guidelines/cookbook/ui/platform-design-languages"
     ],
     "references": [],

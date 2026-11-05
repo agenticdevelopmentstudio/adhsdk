@@ -1,9 +1,9 @@
 
 - **SwiftUI**: The source is
-  `packages/apple/AgenticToolkit/macOS/Features/Projects/ProjectWindowManager.swift`,
+  `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectWindowManager.swift`,
   built on `AppKit` (`NSApp`, `NSWindow`, `NSNotification`), `Combine`
   (`ObservableObject`/`@Published`), `os` (its `Logger`, via `Loggable`), and
-  `AgenticToolkitCore` (`GitRepo`, `GitClient`, `ProjectWorkspace`,
+  `AgenticDeveloperHubSDKCore` (`GitRepo`, `GitClient`, `ProjectWorkspace`,
   `ProjectController`, `ProjectsCoordinator`, `ProjectOpening`,
   `CommandRegistry`, `ComposableTabsWindowController`, `ProjectLanguageServices`,
   `PendingTeardowns`). It uses no SwiftUI API; a SwiftUI-hosted project
@@ -42,7 +42,7 @@
   thread-affinity of its own — mirror `@MainActor` confinement by only ever
   touching this object from the UI thread (`DispatcherQueue`), the same
   discipline `ProjectController`'s WinUI port already assumes (see
-  `adtoolkit://cookbook/workspace/projects/project-controller`). Reproduce
+  `adhsdk://cookbook/workspace/projects/project-controller`). Reproduce
   `NSWindow.willCloseNotification`'s `queue: nil` synchronous delivery
   (**close-observer-uses-nil-queue**) with `Window.Closed`, handled inline on
   the UI thread rather than through a dispatcher post, so a scan that closes a
@@ -53,7 +53,7 @@
   own async shutdown drains in a loop — rather than firing a bare
   `Task.Run(async () => ...)` that a process exit can orphan. Read and write
   the persisted "window open" flag through the same `System.Data.Sqlite`-backed
-  settings store `adtoolkit://cookbook/workspace/projects/project-database`
+  settings store `adhsdk://cookbook/workspace/projects/project-database`
   describes, using `HttpClient`/`System.Text.Json`/`Task`/`async` and
   `Windows.Storage` only where a networked or file-based collaborator this
   manager delegates to (git, language servers) needs them — this type itself

@@ -48,7 +48,7 @@ export default defineConfig([
     ...shared,
     // `./next`: what the skeleton's next.config.ts imports. Node runs it when Next loads the
     // config, so it is built for node and shares no chunk with the page entries above.
-    // `@agentic-toolkit/next-env` is a devDependency, so it is bundled in: the config loads
+    // `@adh-sdk/next-env` is a devDependency, so it is bundled in: the config loads
     // nothing at build that the site's install has to have hoisted. The themes package stays
     // external — its font copier finds its faces by its own `import.meta.url`.
     entry: { next: 'src/frame-next.ts' },

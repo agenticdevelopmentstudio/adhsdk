@@ -1,7 +1,7 @@
 ---
 id: 6c034a7a-3a43-4da6-bc1a-0cbc39f32cc4
 title: Registry Profile
-domain: agenticdevelopertoolkit://recipes/registry-profile
+domain: adhsdk://recipes/registry-profile
 type: ingredient
 version: 1.1.1
 status: review
@@ -20,11 +20,11 @@ tags:
 - profile
 - registry
 depends-on:
-- agenticdevelopertoolkit://recipes/field-value
-- agenticdevelopertoolkit://recipes/service-list
+- adhsdk://recipes/field-value
+- adhsdk://recipes/service-list
 related:
-- agenticdevelopertoolkit://recipes/field-value
-- agenticdevelopertoolkit://recipes/service-list
+- adhsdk://recipes/field-value
+- adhsdk://recipes/service-list
 references: []
 approved-by: ''
 approved-date: ''
@@ -53,7 +53,7 @@ Registry Profile displays a comprehensive view of a single registry entry, inclu
 - **omit-fields-section-when-empty**: Component MUST render the profile without a `rp__fields` section when `entry.fields.length === 0`.
 - **render-field-visibility-marker**: Component MUST render a visibility marker span inside the field label if the field's visibility is not `public`. The marker text MUST be "Signed-in members only" for `authenticated` visibility and "Private" for `private` visibility.
 - **omit-marker-for-public-fields**: Component MUST NOT render a visibility marker for fields with `public` visibility.
-- **render-service-list**: Component MUST render a `ServiceList` component with the entry's `services` array. When `services` is empty, whether anything is shown is entirely delegated to `ServiceList`, which itself renders nothing for an empty array (see agenticdevelopertoolkit://recipes/service-list).
+- **render-service-list**: Component MUST render a `ServiceList` component with the entry's `services` array. When `services` is empty, whether anything is shown is entirely delegated to `ServiceList`, which itself renders nothing for an empty array (see adhsdk://recipes/service-list).
 - **render-links-section**: Component MUST render a navigation section with `aria-label="Elsewhere"` containing an unordered list of links if `entry.links` array length is greater than zero.
 - **render-links-with-fallback-label**: Component MUST render each link with the link's `label` as display text if the label is truthy, otherwise use the `url` as display text.
 - **set-link-security-attributes**: Component MUST set `rel="noopener noreferrer nofollow"` and `target="_blank"` on all links.
@@ -113,8 +113,8 @@ Registry Profile displays a comprehensive view of a single registry entry, inclu
 - **Links section**: The links navigation has `aria-label="Elsewhere"` to describe the section purpose to assistive technology users.
 - **Field labels**: Each field is rendered with a `<dt>` label paired with a `<dd>` value in a definition list, providing semantic structure.
 - **Visibility markers**: Visibility markers are inline in the field label, ensuring users encounter the visibility restriction immediately when they reach the field.
-- **Field values**: `FieldValue` renders each value by type: `url` as an `<a>` with `rel="noopener noreferrer nofollow"` and `target="_blank"`, `image` as an `<img>` whose `alt` is the field label, and every other type (text, textarea, markdown, date, select, multi_select, boolean, address, email, phone) as text content. The `<dt>` label supplies the accessible name for each `<dd>` value. See agenticdevelopertoolkit://recipes/field-value.
-- **Services**: `ServiceList` is a static section headed by an `<h2>` ("Services") with one `<h3>` per service, continuing the heading hierarchy under the profile's `<h1>`. It has no interactive elements, so there is nothing to reach by keyboard. See agenticdevelopertoolkit://recipes/service-list.
+- **Field values**: `FieldValue` renders each value by type: `url` as an `<a>` with `rel="noopener noreferrer nofollow"` and `target="_blank"`, `image` as an `<img>` whose `alt` is the field label, and every other type (text, textarea, markdown, date, select, multi_select, boolean, address, email, phone) as text content. The `<dt>` label supplies the accessible name for each `<dd>` value. See adhsdk://recipes/field-value.
+- **Services**: `ServiceList` is a static section headed by an `<h2>` ("Services") with one `<h3>` per service, continuing the heading hierarchy under the profile's `<h1>`. It has no interactive elements, so there is nothing to reach by keyboard. See adhsdk://recipes/service-list.
 - **Touch targets**: The only interactive elements are inline text links (the "Elsewhere" links and `url` field values). Inline links within text are exempt from the WCAG 2.5.8 minimum target size; the profile adds no buttons or controls.
 
 ## Conformance Test Vectors
@@ -222,9 +222,9 @@ Not applicable: RegistryProfile does not emit logging. The host application is r
 ## Platform Notes
 
 - **TypeScript/React Web**: Source is a React functional component in TypeScript at `packages/web/packages/registry-profile/src/RegistryProfile.tsx`. Key implementation details: the component uses conditional rendering (`? :`) for optional sections, a resolver pattern for image URLs with a nullish coalescing fallback to `entry.imageUrls`, and an exhaustive `Record<FieldVisibility, string | null>` to ensure visibility markers are defined for every audience type. The component does not fetch data; all content is provided via props.
-- **SwiftUI**: Translate the component as a View that renders a scrollable VStack. The header is an HStack with the photo (Image, if available) and a VStack for identity details. The component has no internal state — every section is driven entirely by its inputs — so gate each optional section with a plain `if` on the input values (`entry.summary`, `entry.category`, and so on), not `@State`. Map `FieldVisibility` to a conditional `Text` rendered inline with the field's label. Delegate field value rendering to a FieldValue View and service rendering to a ServiceList View (see agenticdevelopertoolkit://recipes/field-value and agenticdevelopertoolkit://recipes/service-list). Links (the "Elsewhere" list and any `url`-typed field) are external destinations, not in-app routes, so open them with `Link` or the `@Environment(\.openURL)` action; `navigationLink(destination:)` pushes an in-app SwiftUI view and does not open an external URL.
+- **SwiftUI**: Translate the component as a View that renders a scrollable VStack. The header is an HStack with the photo (Image, if available) and a VStack for identity details. The component has no internal state — every section is driven entirely by its inputs — so gate each optional section with a plain `if` on the input values (`entry.summary`, `entry.category`, and so on), not `@State`. Map `FieldVisibility` to a conditional `Text` rendered inline with the field's label. Delegate field value rendering to a FieldValue View and service rendering to a ServiceList View (see adhsdk://recipes/field-value and adhsdk://recipes/service-list). Links (the "Elsewhere" list and any `url`-typed field) are external destinations, not in-app routes, so open them with `Link` or the `@Environment(\.openURL)` action; `navigationLink(destination:)` pushes an in-app SwiftUI view and does not open an external URL.
 - **Compose**: Implement as a Composable function that renders a Column (scrollable) with a Row header containing the photo (Image) and identity content. Use conditional composition (`if`) for optional sections, driven entirely by the incoming parameters. Render metadata rows and field items as plain rows inside that same scrollable Column rather than nesting a `LazyColumn` inside it — a scrollable `LazyColumn` inside a scrollable `Column` throws at runtime; use a single `LazyColumn` for the whole screen instead if the field list needs lazy loading. Delegate to FieldValue and ServiceList Composables. Open external links (the "Elsewhere" list, `url`-typed fields) with `LocalUriHandler.current.openUri(url)`; there is no `navController.openUrl()` API.
-- **AppKit / UIKit**: On UIKit, implement as a `UIViewController` with a scroll view containing a stack view (horizontal or vertical) for the header (image view, vertical stack for identity), followed by nested stack views for metadata, keywords, contact, fields, and links; use `UILabel` for display name and summary, and `UIStackView` for fields and metadata rows. On AppKit, use an `NSScrollView` with an `NSStackView` hierarchy of the same shape, `NSTextField` (non-editable, bezel-less) in place of `UILabel`, and `NSImageView` for the photo. Delegate field rendering to a FieldValue view (see agenticdevelopertoolkit://recipes/field-value). This component defines no deep linking (see Deep Linking above); do not add custom URL scheme or universal link handling here. Render the visibility marker inline within the field label's text/stack item, not as an overlay on the field row, matching the inline-in-label design decision.
+- **AppKit / UIKit**: On UIKit, implement as a `UIViewController` with a scroll view containing a stack view (horizontal or vertical) for the header (image view, vertical stack for identity), followed by nested stack views for metadata, keywords, contact, fields, and links; use `UILabel` for display name and summary, and `UIStackView` for fields and metadata rows. On AppKit, use an `NSScrollView` with an `NSStackView` hierarchy of the same shape, `NSTextField` (non-editable, bezel-less) in place of `UILabel`, and `NSImageView` for the photo. Delegate field rendering to a FieldValue view (see adhsdk://recipes/field-value). This component defines no deep linking (see Deep Linking above); do not add custom URL scheme or universal link handling here. Render the visibility marker inline within the field label's text/stack item, not as an overlay on the field row, matching the inline-in-label design decision.
 - **WinUI 3**: Implement as a XAML UserControl or Page. Use Grid and StackPanel for layout: a StackPanel header contains an Image for the photo and a StackPanel for identity (TextBlock for name, TextBlock for summary). Use `ItemsControl`/`ItemsRepeater` for the metadata definition list, rendering each row as a Grid with two TextBlocks, and the same for fields, with a custom `DataTemplate` that includes a TextBlock for the label, a conditional TextBlock for the visibility marker, and a custom FieldValue control for the value — WinUI 3 has no `DataGrid` control. Use `ItemsControl` for keywords, styling each as a Border with a TextBlock. Conditionally include a ContentPresenter for the contact affordance. Render links as a ListView or ItemsControl with HyperlinkButton controls, opening each with `Launcher.LaunchUriAsync(uri)`; WinUI 3 opens external URIs out-of-process, so there is no `rel="noopener"` equivalent to set.
 
 ## Design Decisions

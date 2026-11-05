@@ -3,7 +3,7 @@
   "meta": {
     "id": "0640ca96-95c5-4234-925e-386425cc4435",
     "title": "Composable Tabs",
-    "domain": "adtoolkit://cookbook/ui/layout/composable-tabs",
+    "domain": "adhsdk://cookbook/ui/layout/composable-tabs",
     "type": "ingredient",
     "version": "1.3.0",
     "status": "review",
@@ -26,8 +26,8 @@
     ],
     "depends-on": [],
     "related": [
-      "adtoolkit://cookbook/ui/layout/composable-tabs/leaf-pane-view",
-      "adtoolkit://cookbook/ui/layout/composable-tabs/pane-spacing"
+      "adhsdk://cookbook/ui/layout/composable-tabs/leaf-pane-view",
+      "adhsdk://cookbook/ui/layout/composable-tabs/pane-spacing"
     ],
     "references": [],
     "approved-by": "",

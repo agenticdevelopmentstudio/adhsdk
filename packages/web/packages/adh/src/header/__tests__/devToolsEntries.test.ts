@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, afterEach } from 'vitest'
 import { debugOptionsAvailable, debugOptionsHint, isDevEnv } from '../devToolsEntries'
-import { type SiteEnv } from '@agentic-toolkit/adh-registry'
+import { type SiteEnv } from '@adh-sdk/adh-registry'
 
 // The gate behind the header's "Debug Options" door. The safety property under test
 // is that it cannot leak to an ordinary production visitor — while a signed-in adh

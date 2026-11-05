@@ -1,5 +1,5 @@
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/PermissionsUI/PermissionRowView.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/PermissionsUI/PermissionRowView.swift` |
 

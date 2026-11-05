@@ -1,7 +1,7 @@
 ---
 id: 720cc52e-9567-4643-9639-014403ef0ea7
 title: "Extension Quick Pick Presenting"
-domain: adtoolkit://cookbook/workspace/extensions/vscode-api/window/extension-quick-pick-presenting
+domain: adhsdk://cookbook/workspace/extensions/vscode-api/window/extension-quick-pick-presenting
 type: ingredient
 version: 1.1.1
 status: review
@@ -22,18 +22,18 @@ tags:
   - presenting
 depends-on: []
 related:
-  - adtoolkit://cookbook/workspace/extensions/vscode-api/window/extension-quick-pick-view
-  - adtoolkit://cookbook/workspace/extensions/vscode-api/window/extension-input-box-view
+  - adhsdk://cookbook/workspace/extensions/vscode-api/window/extension-quick-pick-view
+  - adhsdk://cookbook/workspace/extensions/vscode-api/window/extension-input-box-view
 references:
-  - packages/apple/AgenticToolkit/macOS/Features/Extensions/VSCodeAPI/ExtensionQuickPickPresenting.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/macOS/Features/Extensions/VSCodeAPI/MainThreadWindow.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/macOS/Features/Extensions/VSCodeAPI/ExtensionMessagePresenting.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/macOS/Features/Extensions/VSCodeAPI/ExtensionInputBoxPresenting.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/macOS/Features/Extensions/UI/ExtensionPickerPresenter.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/macOS/Features/Extensions/UI/ExtensionQuickPickModel.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Tests/AgenticToolkitMacOSTests/Extensions/MainThreadWindowQuickPickTests.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Tests/AgenticToolkitMacOSTests/Extensions/ExtensionPickerPresenterTests.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/project.yml (agenticdevelopertoolkit)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/ExtensionQuickPickPresenting.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/MainThreadWindow.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/ExtensionMessagePresenting.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/ExtensionInputBoxPresenting.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/UI/ExtensionPickerPresenter.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/UI/ExtensionQuickPickModel.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKMacOSTests/Extensions/MainThreadWindowQuickPickTests.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKMacOSTests/Extensions/ExtensionPickerPresenterTests.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/project.yml (adhsdk)
 approved-by: ""
 approved-date: ""
 ---
@@ -178,7 +178,7 @@ Not applicable: this component contains no logging call of its own.
 ## Platform Notes
 
 - **SwiftUI**: not this file's own dependency — `ExtensionQuickPickPresenting.swift` imports only `Foundation`, with no SwiftUI reference. A SwiftUI-hosted picker would need its own concrete conformer (the role `ExtensionPickerPresenter` plays for AppKit), but the protocol and its two data types are UI-framework agnostic and would not change.
-- **AppKit / UIKit**: this is the source. `packages/apple/AgenticToolkit/macOS/Features/Extensions/VSCodeAPI/ExtensionQuickPickPresenting.swift` is part of the `AgenticToolkitMacOS` framework target, which `project.yml` declares `platform: macOS` only — no iOS target packages this file. It is `@MainActor`-isolated per its own declaration, and its production conformer among the given sources, `ExtensionPickerPresenter` (`macOS/Features/Extensions/UI/ExtensionPickerPresenter.swift`), is an AppKit window/view-controller-backed panel that also conforms to `ExtensionInputBoxPresenting`. Per the file's own header comment, it was split out of `MainThreadWindow.swift` once that file grew past 2,800 lines — a file-boundary split, not a tier split, and `MainThreadWindow` remains this contract's only caller among the given sources; `MainThreadWindow.parseQuickPickItems(from:)` is what validates a malformed extension-supplied item one layer up, and `MainThreadWindow.presentQuickPickPromise` is the caller that awaits a conformer's suspended `presentQuickPick` call. The two test doubles among the given sources, `RecordingQuickPickPresenter` and `SuspendingQuickPickPresenter`, use `withCheckedContinuation` to model that suspension explicitly. `ExtensionQuickPickItem`/`ExtensionQuickPickRequest` are declared `Sendable`, which the project's `SWIFT_STRICT_CONCURRENCY: complete` build setting requires for any value captured across an actor-isolated suspension point.
+- **AppKit / UIKit**: this is the source. `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/ExtensionQuickPickPresenting.swift` is part of the `AgenticDeveloperHubSDKMacOS` framework target, which `project.yml` declares `platform: macOS` only — no iOS target packages this file. It is `@MainActor`-isolated per its own declaration, and its production conformer among the given sources, `ExtensionPickerPresenter` (`macOS/Features/Extensions/UI/ExtensionPickerPresenter.swift`), is an AppKit window/view-controller-backed panel that also conforms to `ExtensionInputBoxPresenting`. Per the file's own header comment, it was split out of `MainThreadWindow.swift` once that file grew past 2,800 lines — a file-boundary split, not a tier split, and `MainThreadWindow` remains this contract's only caller among the given sources; `MainThreadWindow.parseQuickPickItems(from:)` is what validates a malformed extension-supplied item one layer up, and `MainThreadWindow.presentQuickPickPromise` is the caller that awaits a conformer's suspended `presentQuickPick` call. The two test doubles among the given sources, `RecordingQuickPickPresenter` and `SuspendingQuickPickPresenter`, use `withCheckedContinuation` to model that suspension explicitly. `ExtensionQuickPickItem`/`ExtensionQuickPickRequest` are declared `Sendable`, which the project's `SWIFT_STRICT_CONCURRENCY: complete` build setting requires for any value captured across an actor-isolated suspension point.
 - **Compose**: model this as a Kotlin `interface ExtensionQuickPickPresenting` with `suspend fun presentQuickPick(request: ExtensionQuickPickRequest, onHighlight: (Int) -> Unit): List<Int>?`, confined to the main dispatcher (`Dispatchers.Main.immediate`) in place of `@MainActor`; `ExtensionQuickPickItem`/`ExtensionQuickPickRequest` become Kotlin `data class`es, whose structural equality already gives `Equatable` and whose immutability already gives `Sendable`'s guarantee across coroutine dispatch. `List<Int>?`'s `null` vs `emptyList()` distinction maps the `nil`-vs-`[]` contract directly.
 - **React/Web**: model as a TypeScript `interface ExtensionQuickPickPresenting { presentQuickPick(request: ExtensionQuickPickRequest, onHighlight: (index: number) => void): Promise<number[] | undefined> }`; `undefined` vs `[]` is the same distinction JavaScript's own `showQuickPick` promise already makes (`extHostQuickOpen.ts`'s `handle.map(...)` resolving `[]` rather than `undefined`), so no adapter is needed for that part of the contract. `ExtensionQuickPickItem`/`ExtensionQuickPickRequest` become plain `interface`s (or `readonly` object types) rather than classes, since there is no initializer-visibility concern to solve on this platform.
 - **WinUI 3**: model `ExtensionQuickPickPresenting` as `public interface IExtensionQuickPickPresenting { Task<IReadOnlyList<int>?> PresentQuickPickAsync(ExtensionQuickPickRequest request, Action<int> onHighlight, CancellationToken cancellationToken = default); }`, called only from the UI thread (the `DispatcherQueue` a WinUI 3 window owns, in place of `@MainActor`); a nullable `IReadOnlyList<int>?` gives the same `null`-vs-empty-collection distinction as `[Int]?` without a wrapper type. `ExtensionQuickPickItem` and `ExtensionQuickPickRequest` become `sealed record`s (`record ExtensionQuickPickItem(string Label, string? Description, string? Detail, bool IsSeparator, bool IsPicked, bool AlwaysShow)`), whose generated value-based `Equals`/`GetHashCode` gives `Equatable`'s guarantee, and whose immutability gives the same cross-thread-handoff safety `Sendable` states explicitly on the Swift side. `System.Text.Json` has no role here since nothing in this file serializes; it is Windows App SDK's own extension-host bridge (analogous to `MainThreadWindow`) that would decode the incoming request before constructing these types.
@@ -187,7 +187,7 @@ Not applicable: this component contains no logging call of its own.
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/macOS/Features/Extensions/VSCodeAPI/ExtensionQuickPickPresenting.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/ExtensionQuickPickPresenting.swift` |
 
 ## Design Decisions
 

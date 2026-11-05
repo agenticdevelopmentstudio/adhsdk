@@ -1,7 +1,7 @@
 ---
 id: 4cd07922-a00d-4029-8cb5-2307463129cc
 title: Rule
-domain: agenticdevelopertoolkit://recipes/rule
+domain: adhsdk://recipes/rule
 type: ingredient
 version: 1.1.1
 status: review

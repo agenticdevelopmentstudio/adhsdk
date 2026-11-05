@@ -3,7 +3,7 @@
   "meta": {
     "id": "e36ff99d-0ebd-42ca-87f0-2881a8bfedea",
     "title": "Hierarchical Category Browser",
-    "domain": "adtoolkit://cookbook/ui/navigation/hierarchical-category-browser",
+    "domain": "adhsdk://cookbook/ui/navigation/hierarchical-category-browser",
     "type": "recipe",
     "version": "1.3.5",
     "status": "review",
@@ -26,20 +26,20 @@
       "master-detail"
     ],
     "ingredients": [
-      "agenticdevelopertoolkit://recipes/category-picker-dialog"
+      "adhsdk://recipes/category-picker-dialog"
     ],
     "depends-on": [
-      "agenticdevelopertoolkit://recipes/hierarchical-topic-detail"
+      "adhsdk://recipes/hierarchical-topic-detail"
     ],
     "related": [
-      "agenticdevelopertoolkit://recipes/hierarchical-topic-detail",
-      "agenticdevelopertoolkit://recipes/topic-detail",
-      "agenticdevelopertoolkit://recipes/category-picker-dialog",
-      "agenticdevelopertoolkit://recipes/list-chooser",
-      "agenticdevelopertoolkit://recipes/entity-chooser",
-      "agenticdevelopertoolkit://recipes/dialog",
-      "agenticdevelopertoolkit://recipes/dialog-actions",
-      "agenticdevelopertoolkit://recipes/alert-and-dialog"
+      "adhsdk://recipes/hierarchical-topic-detail",
+      "adhsdk://recipes/topic-detail",
+      "adhsdk://recipes/category-picker-dialog",
+      "adhsdk://recipes/list-chooser",
+      "adhsdk://recipes/entity-chooser",
+      "adhsdk://recipes/dialog",
+      "adhsdk://recipes/dialog-actions",
+      "adhsdk://recipes/alert-and-dialog"
     ],
     "references": [],
     "approved-by": "",

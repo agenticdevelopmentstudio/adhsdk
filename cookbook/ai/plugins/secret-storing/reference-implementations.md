@@ -1,5 +1,5 @@
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/AIPluginKit/SecretStoring.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/AIPluginKit/SecretStoring.swift` |
 

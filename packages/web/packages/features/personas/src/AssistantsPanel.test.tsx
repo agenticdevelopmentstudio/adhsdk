@@ -6,7 +6,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, fireEvent, waitFor, cleanup, within, act } from "@testing-library/react";
 
-vi.mock("@agentic-toolkit/data/personas", () => ({
+vi.mock("@adh-sdk/data/personas", () => ({
   personaUserToolsApi: {
     listActable: vi.fn(),
     listTools: vi.fn(),
@@ -19,7 +19,7 @@ import {
   personaUserToolsApi,
   type UserActablePersona,
   type UserTool,
-} from "@agentic-toolkit/data/personas";
+} from "@adh-sdk/data/personas";
 
 const listActable = vi.mocked(personaUserToolsApi.listActable);
 const listTools = vi.mocked(personaUserToolsApi.listTools);

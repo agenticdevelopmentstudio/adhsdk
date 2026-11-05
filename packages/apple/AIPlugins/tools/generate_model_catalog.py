@@ -36,11 +36,11 @@ import generate_ai_descriptors as descriptors
 
 SCHEMA_VERSION = 1
 
-# packages/apple/AIPlugins/tools -> packages/apple/AgenticToolkit/AIPluginKit.
+# packages/apple/AIPlugins/tools -> packages/apple/AgenticDeveloperHubSDK/AIPluginKit.
 # The catalog ships as a resource of AIPluginKit, the one framework both the host
 # app and every .aiplugin bundle link, so a single copy serves all of them.
 CATALOG_PATH = (
-    descriptors.AIPLUGINS_DIR.parent / "AgenticToolkit" / "AIPluginKit" / "model-catalog.json"
+    descriptors.AIPLUGINS_DIR.parent / "AgenticDeveloperHubSDK" / "AIPluginKit" / "model-catalog.json"
 )
 
 # Quantization/precision suffixes: the same weights served at lower precision, so

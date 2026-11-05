@@ -1,10 +1,10 @@
 "use client";
 
 import { type ReactElement } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@agenticdevelopertoolkit/ui/components/dialog";
-import { Button } from "@agenticdevelopertoolkit/ui/components/button";
-import { AdminNotesModal as SharedAdminNotesModal } from "@agentic-toolkit/adh-ui/blocks";
-import { useEcoRowNotes, useEcoSaveNotes } from "@agentic-toolkit/data/ecosystems";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@adh-sdk/ui/components/dialog";
+import { Button } from "@adh-sdk/ui/components/button";
+import { AdminNotesModal as SharedAdminNotesModal } from "@adh-sdk/adh-ui/blocks";
+import { useEcoRowNotes, useEcoSaveNotes } from "@adh-sdk/data/ecosystems";
 
 /**
  * Thin react-query wrapper around the shared, prop-driven staged notes editor,

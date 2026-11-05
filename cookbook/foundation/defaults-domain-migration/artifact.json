@@ -3,7 +3,7 @@
   "meta": {
     "id": "21CBC5BD-350A-4AB6-8C37-3290ACB70460",
     "title": "Defaults Domain Migration",
-    "domain": "adtoolkit://cookbook/foundation/defaults-domain-migration",
+    "domain": "adhsdk://cookbook/foundation/defaults-domain-migration",
     "type": "ingredient",
     "version": "1.0.0",
     "status": "review",
@@ -26,7 +26,7 @@
     ],
     "depends-on": [],
     "related": [
-      "adtoolkit://cookbook/foundation/settings-storage"
+      "adhsdk://cookbook/foundation/settings-storage"
     ],
     "references": [],
     "approved-by": "",

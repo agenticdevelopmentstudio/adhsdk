@@ -1,7 +1,7 @@
 {
-  "name": "@agenticdevelopertoolkit/controls",
+  "name": "@adh-sdk/controls",
   "version": "0.1.0",
-  "description": "Reusable controls for agenticdevelopertoolkit (filtered-list, source-code-panel, logging-panel, user-settings, search-dialog, appearance-mode-toggle, orb-row, dev-banner).",
+  "description": "Reusable controls for adhsdk (filtered-list, source-code-panel, logging-panel, user-settings, search-dialog, appearance-mode-toggle, orb-row, dev-banner).",
   "license": "Apache-2.0",
   "type": "module",
   "sideEffects": [
@@ -96,7 +96,7 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@agenticdevelopertoolkit/model": "workspace:*",
+    "@adh-sdk/model": "workspace:*",
     "shiki": "^1.24.0"
   },
   "peerDependencies": {
@@ -104,7 +104,7 @@
     "react-dom": "^19.0.0"
   },
   "devDependencies": {
-    "@agenticdevelopertoolkit/themes": "workspace:*",
+    "@adh-sdk/themes": "workspace:*",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
     "@types/react": "^19.2.14",

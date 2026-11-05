@@ -26,13 +26,13 @@ vi.mock("next/navigation", () => ({
 const { useWorkspaceDefaultEcosystemId } = vi.hoisted(() => ({
   useWorkspaceDefaultEcosystemId: vi.fn(),
 }));
-vi.mock("@agentic-toolkit/data/ecosystems", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("@agentic-toolkit/data/ecosystems")>()),
+vi.mock("@adh-sdk/data/ecosystems", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@adh-sdk/data/ecosystems")>()),
   useWorkspaceDefaultEcosystemId,
 }));
 
-import type { TopicLevel } from "@agenticdevelopertoolkit/ui/blocks";
-import { RailHostBoundary, StackLevels } from "@agentic-toolkit/resource";
+import type { TopicLevel } from "@adh-sdk/ui/blocks";
+import { RailHostBoundary, StackLevels } from "@adh-sdk/resource";
 import { EcosystemConfigGate } from "./EcosystemConfigGate";
 
 /** What the resolver hands back, one state at a time. `canManage` stays true throughout: a member

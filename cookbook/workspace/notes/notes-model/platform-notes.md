@@ -24,7 +24,7 @@
 - **AppKit / UIKit**: The six sources given here — `Note.swift`,
   `NoteFolder.swift`, `NoteStorage.swift`, `NoteTaxonomyProviding.swift`,
   `MarkdownNoteStorage.swift`, and `NotesManager.swift`, all under
-  `packages/apple/AgenticToolkit/macOS/Features/NotesWindow/` — are the
+  `packages/apple/AgenticDeveloperHubSDK/macOS/Features/NotesWindow/` — are the
   source platform: a macOS-only target consumed by
   `NotesCoordinator`/`NotesSplitViewController` (out of scope for this
   recipe) via `NotificationCenter` observation and `@MainActor` calls.
@@ -43,8 +43,8 @@
   nor `NotesManager` add Keychain storage or any protection beyond what
   that store applies (see Privacy). Nothing in these six files is itself
   AppKit-specific — they import only `Foundation`, `os`,
-  `AgenticToolkitCore`, `AgenticToolkitMarkdown`, and
-  `AgenticToolkitDatabase` — so the same files would compile unchanged
+  `AgenticDeveloperHubSDKCore`, `AgenticDeveloperHubSDKMarkdown`, and
+  `AgenticDeveloperHubSDKDatabase` — so the same files would compile unchanged
   into a UIKit iOS target.
 - **WinUI 3**: `Note`/`NoteFolder` become a `record`/`class` pair (or a
   lightweight `INotifyPropertyChanged` model if the folder tree needs to

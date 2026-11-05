@@ -1,7 +1,7 @@
 ---
 id: e029def6-7d5d-4e52-b565-e2a6612179bb
 title: "Status Server Monitor Enrich Deploy Errors"
-domain: adtoolkit://cookbook/status/service/monitor/enrich-deploy-errors
+domain: adhsdk://cookbook/status/service/monitor/enrich-deploy-errors
 type: ingredient
 version: 1.0.2
 status: review
@@ -28,15 +28,15 @@ depends-on:
   - agenticdevelopercookbook://guidelines/implementing/networking/rate-limiting
 related: []
 references:
-  - packages/web/packages/status-server/src/monitor/enrich-deploy-errors.ts (agenticdevelopertoolkit)
-  - packages/web/packages/status-server/src/monitor/fetch-vercel.ts (agenticdevelopertoolkit)
-  - packages/web/packages/status-server/src/monitor/fetch-railway.ts (agenticdevelopertoolkit)
-  - packages/web/packages/status-server/src/storage/ports.ts (agenticdevelopertoolkit)
-  - packages/web/packages/status-server/src/libsql/stores/deploy-store.ts (agenticdevelopertoolkit)
-  - packages/web/packages/deploy-platform/src/conn/index.ts (agenticdevelopertoolkit)
-  - packages/web/packages/deploy-platform/src/cooldown/provider-cooldown.ts (agenticdevelopertoolkit)
-  - packages/web/packages/deploy-platform/src/util/map-limit.ts (agenticdevelopertoolkit)
-  - packages/web/packages/status-server/test/deploy-error-shaping.test.ts (agenticdevelopertoolkit)
+  - packages/web/packages/status-server/src/monitor/enrich-deploy-errors.ts (adhsdk)
+  - packages/web/packages/status-server/src/monitor/fetch-vercel.ts (adhsdk)
+  - packages/web/packages/status-server/src/monitor/fetch-railway.ts (adhsdk)
+  - packages/web/packages/status-server/src/storage/ports.ts (adhsdk)
+  - packages/web/packages/status-server/src/libsql/stores/deploy-store.ts (adhsdk)
+  - packages/web/packages/deploy-platform/src/conn/index.ts (adhsdk)
+  - packages/web/packages/deploy-platform/src/cooldown/provider-cooldown.ts (adhsdk)
+  - packages/web/packages/deploy-platform/src/util/map-limit.ts (adhsdk)
+  - packages/web/packages/status-server/test/deploy-error-shaping.test.ts (adhsdk)
 approved-by: ""
 approved-date: ""
 ---
@@ -135,7 +135,7 @@ Not applicable — this is a server-side deploy-error enrichment healer, not a v
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
 | `storage` (parameter) | `Storage` | required, caller-supplied | The storage port providing `storage.deploy.listFailedWithoutError` and `storage.deploy.setErrorText`; this file never constructs or configures a storage implementation itself. |
-| `conn` (parameter) | `ProviderConn` | required, caller-supplied | Resolved provider connections (`@agentic-toolkit/deploy-platform/conn`), carrying `conn.vercel.token`/`conn.vercel.teamId` and `conn.railway.token`, used only to gate and authenticate the per-provider fetches this file dispatches to. |
+| `conn` (parameter) | `ProviderConn` | required, caller-supplied | Resolved provider connections (`@adh-sdk/deploy-platform/conn`), carrying `conn.vercel.token`/`conn.vercel.teamId` and `conn.railway.token`, used only to gate and authenticate the per-provider fetches this file dispatches to. |
 | `ENRICH_WINDOW_DAYS` (module constant) | `number` | `14` | Recency window in days; only failed deploys created within this window are candidates. Not configurable per call and has no environment override in this file. |
 | `ENRICH_MAX_PER_CYCLE` (module constant) | `number` | `8` | Maximum candidate rows queried and enriched per call. Not configurable per call. |
 | `ENRICH_CONCURRENCY` (module constant) | `number` | `4` | Maximum concurrent in-flight fetches passed to `mapLimit`. Not configurable per call. |
@@ -183,7 +183,7 @@ No log line is emitted on a successful enrichment, an empty candidate set, or a 
 
 - **SwiftUI**: not a SwiftUI concern (no view). An Apple-side status monitor port would model this healer as an `async` function isolated to an actor that owns the monitor cycle, using `URLSession` for the Vercel/Railway calls (the Swift equivalents of `fetchVercelDeployError`/`fetchRailwayBuildLogTail`), a `withThrowingTaskGroup` capped at 4 concurrently-running child tasks as the `mapLimit` analogue, and each child task racing its fetch against a `Task.sleep(for: .seconds(8))` (or `URLRequest.timeoutInterval = 8`) as the `AbortController`/8,000ms deadline analogue.
 - **Compose**: a Kotlin port models this as a `suspend fun` using a `kotlinx.coroutines.sync.Semaphore(4)` (or a bounded dispatcher) as the direct substitute for `mapLimit` — Kotlin coroutines have no built-in bounded-map primitive, so `async` + `Semaphore.withPermit` per candidate is the idiomatic shape — `withTimeout(8_000)` for the per-call deadline, and the candidate query/persist behind a Room or Exposed repository mirroring `listFailedWithoutError`/`setErrorText`.
-- **React/Web** (source platform): lives at `packages/web/packages/status-server/src/monitor/enrich-deploy-errors.ts` as a plain exported `async` function on the Node status backend — not client-side React, and no framework dependency beyond the `Storage` port and the shared `@agentic-toolkit/deploy-platform` cooldown/util/conn modules it imports. It is imported and awaited exactly once per full cycle by `sync.ts`'s `runCycle`, itself invoked from `runMonitorCycle` in `cycle-runner.ts`.
+- **React/Web** (source platform): lives at `packages/web/packages/status-server/src/monitor/enrich-deploy-errors.ts` as a plain exported `async` function on the Node status backend — not client-side React, and no framework dependency beyond the `Storage` port and the shared `@adh-sdk/deploy-platform` cooldown/util/conn modules it imports. It is imported and awaited exactly once per full cycle by `sync.ts`'s `runCycle`, itself invoked from `runMonitorCycle` in `cycle-runner.ts`.
 - **AppKit / UIKit**: same non-UI framing as SwiftUI; a macOS/iOS agent embedding this healer pattern has no UIKit/AppKit-specific concern, since this is a background sync task rather than a view-driven one — the actor + `URLSession` + `TaskGroup` shape described under SwiftUI applies unchanged.
 - **WinUI 3**: model `DeployIdPlatformRow` as a `readonly record struct(string Id, string Platform)`, the candidate query as an `async Task<IReadOnlyList<DeployIdPlatformRow>> ListFailedWithoutErrorAsync(...)` over EF Core or Dapper mirroring `listFailedWithoutError`'s predicate (`ErrorText == null`, platform `IN`, `CreatedAt > cutoff`, ordered newest-first, `Take(8)`), and the per-row dispatch as `Task<string?> FetchErrorForAsync(DeployIdPlatformRow row, ProviderConn conn, CancellationToken ct)` using a `switch` expression on `row.Platform` in place of the source's `if`/`else` chain in `fetchErrorFor`. Give each call a `CancellationTokenSource(TimeSpan.FromSeconds(8))` — composed with any caller-supplied token via `CancellationTokenSource.CreateLinkedTokenSource` — as the `AbortController`/`AbortSignal.timeout` analogue, and cap concurrency with `Parallel.ForEachAsync(candidates, new ParallelOptions { MaxDegreeOfParallelism = 4 }, ...)` (the .NET 6+ idiomatic equivalent of `mapLimit`; a hand-rolled `SemaphoreSlim(4)` loop is the alternative on older targets). Persist via `DeployStoreAsync.SetErrorTextAsync(id, text)` inside a per-item `try`/`catch` that logs through `ILogger<T>` with the same `[enrich]`-prefixed message shapes, in place of `console.error`.
 

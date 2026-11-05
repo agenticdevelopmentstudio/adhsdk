@@ -16,5 +16,5 @@ Label requirements in Accessibility above, no accessibility label or
 title-UI-element link connects `progressIndicator` to `viewModel.title`, so
 `ProgressView` plainly does not implement this check today.
 
-`separation-of-concerns` passes because `ProgressView` only maps the view model's optional `progress` onto its indicator (a value means determinate at that value with animation stopped, `nil` means indeterminate with animation started) through one Combine subscription; the progress itself is produced elsewhere. No test in the repository's test targets constructs `ProgressView`, so `unit-test-coverage` is `failed`: a search of `AgenticToolkitMacOSTests` and the other test targets for the type name finds nothing.
+`separation-of-concerns` passes because `ProgressView` only maps the view model's optional `progress` onto its indicator (a value means determinate at that value with animation stopped, `nil` means indeterminate with animation started) through one Combine subscription; the progress itself is produced elsewhere. No test in the repository's test targets constructs `ProgressView`, so `unit-test-coverage` is `failed`: a search of `AgenticDeveloperHubSDKMacOSTests` and the other test targets for the type name finds nothing.
 

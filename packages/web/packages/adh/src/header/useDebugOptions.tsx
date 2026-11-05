@@ -2,8 +2,8 @@
 
 import { useState, type ReactElement } from 'react'
 import dynamic from 'next/dynamic'
-import { detectEnv } from '@agentic-toolkit/adh-registry'
-import { useClientHost } from '@agentic-toolkit/adh/header'
+import { detectEnv } from '@adh-sdk/adh-registry'
+import { useClientHost } from '@adh-sdk/adh/header'
 import { debugOptionsAvailable, debugOptionsHint, DEV_TOOLS_BUILD_ENABLED } from './devToolsEntries'
 import { useEnvOverride } from './envOverride'
 
@@ -11,7 +11,7 @@ import { useEnvOverride } from './envOverride'
 // production included, so the chunk has to exist everywhere — and laziness, not
 // dead-code elimination, is what keeps it off the wire until a door is actually used.
 const DebugConsoleWindow = dynamic(() =>
-  import('@agentic-toolkit/adh/debug-console').then((m) => m.DebugConsoleWindow),
+  import('@adh-sdk/adh/debug-console').then((m) => m.DebugConsoleWindow),
 )
 
 export type DebugOptionsDoor = {

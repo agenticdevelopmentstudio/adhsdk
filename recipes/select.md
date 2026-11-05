@@ -1,7 +1,7 @@
 ---
 id: fba584ed-a87c-4223-a4a9-de9c6dd342d3
 title: Select
-domain: agenticdevelopertoolkit://recipes/select
+domain: adhsdk://recipes/select
 type: ingredient
 version: 1.3.2
 status: review

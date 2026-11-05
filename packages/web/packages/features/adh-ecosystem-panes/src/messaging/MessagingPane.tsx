@@ -1,8 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useState, type ReactElement, type ReactNode } from "react";
-import { DetailHeaderActions, type TopicLeaf, useSettingsDirty } from "@agentic-toolkit/resource";
-import { MessagingSurface, type SendMessageDraft } from "@agentic-toolkit/adh/messaging";
+import { DetailHeaderActions, type TopicLeaf, useSettingsDirty } from "@adh-sdk/resource";
+import { MessagingSurface, type SendMessageDraft } from "@adh-sdk/adh/messaging";
 import {
   useMessagingStatus,
   useMessagingTemplates,

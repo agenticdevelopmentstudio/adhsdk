@@ -8,14 +8,14 @@ import {
   type CSSProperties,
   type ReactElement,
 } from 'react'
-import { MarkdownRenderer, DEFAULT_THEME_ID, getThemeById } from '@agenticdevelopertoolkit/markdown'
-import { Button } from '@agenticdevelopertoolkit/ui/components/button'
+import { MarkdownRenderer, DEFAULT_THEME_ID, getThemeById } from '@adh-sdk/markdown'
+import { Button } from '@adh-sdk/ui/components/button'
 import { DEFAULT_CONTENT_ENDPOINT, type DocumentPreviewProps, type SearchSource } from '../../types'
 import type { PaperSearchHit } from '../../registry/markdown'
 import { DEFAULT_TIMEOUT_MS } from '../../data/useDocumentSearch'
 
 /**
- * The markdown PREVIEW BODY (criterion c4): reuses @agenticdevelopertoolkit/markdown's
+ * The markdown PREVIEW BODY (criterion c4): reuses @adh-sdk/markdown's
  * `MarkdownRenderer` — the same GitHub-flavoured, shiki-highlighted, rehype-sanitised
  * pipeline every adh site uses — rather than a bespoke parser. It fetches the selected
  * paper's full content from the public-by-(slug, route) endpoint through the injected

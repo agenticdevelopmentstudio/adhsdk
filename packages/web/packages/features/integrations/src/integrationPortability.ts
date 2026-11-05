@@ -2,7 +2,7 @@
  * THE EXPORT DOCUMENT — what an integration is when it is a file rather than a row.
  *
  * Pure functions from data to data, deliberately: every browser-facing part of export and import
- * (the save dialog, the file picker, the reading of a `File`) is `@agenticdevelopertoolkit/ui`'s
+ * (the save dialog, the file picker, the reading of a `File`) is `@adh-sdk/ui`'s
  * `lib/file-exchange`, and everything here can be tested by handing it rows and reading back a
  * string. The pane composes the two.
  *
@@ -15,7 +15,7 @@
  * silently creates half-configured integrations and says nothing is the failure that avoids.
  */
 
-import type { MaskedProviderConfig, ProviderCatalogEntry } from "@agentic-toolkit/data/integrations";
+import type { MaskedProviderConfig, ProviderCatalogEntry } from "@adh-sdk/data/integrations";
 
 import {
   credentialShape,

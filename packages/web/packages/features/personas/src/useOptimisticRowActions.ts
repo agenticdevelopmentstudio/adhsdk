@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useRef, useState } from "react";
-import { revalidateResources, useResourceList } from "@agentic-toolkit/data";
+import { revalidateResources, useResourceList } from "@adh-sdk/data";
 
 /**
  * The persona-facet load/mutate machine shared by AbilitiesPanel (tool grants) and

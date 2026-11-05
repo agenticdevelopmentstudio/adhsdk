@@ -3,7 +3,7 @@
   "meta": {
     "id": "ec64b22b-8a25-431d-8866-b7a01acd91fe",
     "title": "CrudTable",
-    "domain": "adtoolkit://cookbook/ui/crud/crud-table",
+    "domain": "adhsdk://cookbook/ui/crud/crud-table",
     "type": "ingredient",
     "version": "1.3.1",
     "status": "review",
@@ -13,7 +13,7 @@
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
-    "summary": "Metadata-driven row list from @agentic-toolkit/crud: renders a table's PK + scalar columns from its CrudTableMeta, with per-row Edit/Delete and a New action.",
+    "summary": "Metadata-driven row list from @adh-sdk/crud: renders a table's PK + scalar columns from its CrudTableMeta, with per-row Edit/Delete and a New action.",
     "platforms": [
       "typescript",
       "web"
@@ -26,7 +26,7 @@
     ],
     "depends-on": [],
     "related": [
-      "adtoolkit://cookbook/ui/crud/crud-record-form"
+      "adhsdk://cookbook/ui/crud/crud-record-form"
     ],
     "references": [],
     "approved-by": "",

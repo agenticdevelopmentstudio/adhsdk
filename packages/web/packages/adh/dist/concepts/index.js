@@ -1,5 +1,5 @@
 // src/concepts/index.ts
-import "@agentic-toolkit/adh-registry";
+import "@adh-sdk/adh-registry";
 
 // src/concepts/assemble.ts
 var DEFAULT_LOCALE = "en";
@@ -1462,11 +1462,11 @@ var en = parseCatalog(en_default, "en");
 var catalogs = { en };
 
 // src/concepts/index.ts
-import { siteProdUrl } from "@agentic-toolkit/adh-registry";
+import { siteProdUrl } from "@adh-sdk/adh-registry";
 import {
   CONCEPT_SITE_IDS,
   isConceptSite
-} from "@agentic-toolkit/adh/concepts/participating";
+} from "@adh-sdk/adh/concepts/participating";
 var conceptTree = assembleTree(
   conceptStructure,
   catalogs,

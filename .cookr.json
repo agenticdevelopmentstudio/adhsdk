@@ -1,6 +1,6 @@
 {
   "recipes": "recipes",
-  "scheme": "agenticdevelopertoolkit",
+  "scheme": "adhsdk",
   "roots": [
     {
       "path": "packages/web/packages/ui/src/components",
@@ -28,17 +28,17 @@
       "platform": "web"
     },
     {
-      "path": "packages/apple/AgenticDeveloperToolkit/SourcesUI/macOS/Chat",
+      "path": "packages/apple/AgenticDeveloperHubSDK/SDK/SourcesUI/macOS/Chat",
       "tier": "chat",
       "platform": "apple"
     },
     {
-      "path": "packages/apple/AgenticDeveloperToolkit/SourcesUI/iOS/Chat",
+      "path": "packages/apple/AgenticDeveloperHubSDK/SDK/SourcesUI/iOS/Chat",
       "tier": "chat",
       "platform": "apple"
     },
     {
-      "path": "packages/apple/AgenticDeveloperToolkit/SourcesUI/Shared/Chat",
+      "path": "packages/apple/AgenticDeveloperHubSDK/SDK/SourcesUI/Shared/Chat",
       "tier": "chat",
       "platform": "apple"
     },
@@ -58,7 +58,7 @@
       "platform": "web"
     },
     {
-      "path": "packages/apple/AgenticDeveloperToolkit/SourcesUI/macOS/Chrome",
+      "path": "packages/apple/AgenticDeveloperHubSDK/SDK/SourcesUI/macOS/Chrome",
       "tier": "chrome",
       "platform": "apple"
     },
@@ -68,17 +68,17 @@
       "platform": "web"
     },
     {
-      "path": "packages/apple/AgenticDeveloperToolkit/SourcesUI/macOS/Markdown",
+      "path": "packages/apple/AgenticDeveloperHubSDK/SDK/SourcesUI/macOS/Markdown",
       "tier": "markdown",
       "platform": "apple"
     },
     {
-      "path": "packages/apple/AgenticDeveloperToolkit/SourcesUI/iOS/Markdown",
+      "path": "packages/apple/AgenticDeveloperHubSDK/SDK/SourcesUI/iOS/Markdown",
       "tier": "markdown",
       "platform": "apple"
     },
     {
-      "path": "packages/apple/AgenticDeveloperToolkit/SourcesUI/Shared/Markdown",
+      "path": "packages/apple/AgenticDeveloperHubSDK/SDK/SourcesUI/Shared/Markdown",
       "tier": "markdown",
       "platform": "apple"
     },
@@ -98,67 +98,67 @@
       "platform": "web"
     },
     {
-      "path": "packages/apple/AgenticDeveloperToolkit/Sources/Attachments",
+      "path": "packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Attachments",
       "tier": "chat-contract",
       "platform": "apple",
       "kind": "logic"
     },
     {
-      "path": "packages/apple/AgenticDeveloperToolkit/Sources/Backend",
+      "path": "packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Backend",
       "tier": "chat-contract",
       "platform": "apple",
       "kind": "logic"
     },
     {
-      "path": "packages/apple/AgenticDeveloperToolkit/Sources/Chat",
+      "path": "packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Chat",
       "tier": "chat-contract",
       "platform": "apple",
       "kind": "logic"
     },
     {
-      "path": "packages/apple/AgenticDeveloperToolkit/Sources/Commands",
+      "path": "packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Commands",
       "tier": "chat-contract",
       "platform": "apple",
       "kind": "logic"
     },
     {
-      "path": "packages/apple/AgenticDeveloperToolkit/Sources/Configuration",
+      "path": "packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Configuration",
       "tier": "chat-contract",
       "platform": "apple",
       "kind": "logic"
     },
     {
-      "path": "packages/apple/AgenticDeveloperToolkit/Sources/Hooks",
+      "path": "packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Hooks",
       "tier": "chat-contract",
       "platform": "apple",
       "kind": "logic"
     },
     {
-      "path": "packages/apple/AgenticDeveloperToolkit/Sources/Media",
+      "path": "packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Media",
       "tier": "chat-contract",
       "platform": "apple",
       "kind": "logic"
     },
     {
-      "path": "packages/apple/AgenticDeveloperToolkit/Sources/Messages",
+      "path": "packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Messages",
       "tier": "chat-contract",
       "platform": "apple",
       "kind": "logic"
     },
     {
-      "path": "packages/apple/AgenticDeveloperToolkit/Sources/Orchestrator",
+      "path": "packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Orchestrator",
       "tier": "chat-contract",
       "platform": "apple",
       "kind": "logic"
     },
     {
-      "path": "packages/apple/AgenticDeveloperToolkit/Sources/Participants",
+      "path": "packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Participants",
       "tier": "chat-contract",
       "platform": "apple",
       "kind": "logic"
     },
     {
-      "path": "packages/apple/AgenticDeveloperToolkit/Sources/Permissions",
+      "path": "packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Permissions",
       "tier": "chat-contract",
       "platform": "apple",
       "kind": "logic"
@@ -170,7 +170,7 @@
       "kind": "logic"
     },
     {
-      "path": "packages/apple/AgenticDeveloperToolkit/Sources/Coordinator",
+      "path": "packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Coordinator",
       "tier": "chat-coordinator",
       "platform": "apple",
       "kind": "logic"
@@ -218,7 +218,7 @@
       "kind": "logic"
     },
     {
-      "path": "packages/apple/AgenticDeveloperToolkit/Sources/Markdown",
+      "path": "packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Markdown",
       "tier": "markdown-core",
       "platform": "apple",
       "kind": "logic"
@@ -242,7 +242,7 @@
       "kind": "logic"
     },
     {
-      "path": "packages/apple/AgenticDeveloperToolkit/Sources/Theme",
+      "path": "packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Theme",
       "tier": "theme-engine",
       "platform": "apple",
       "kind": "logic"
@@ -315,23 +315,23 @@
     "**/styles/**",
     "**/internal/**",
     "**/Resources/**",
-    "packages/apple/AgenticDeveloperToolkit/SourcesUI/macOS/Chat/ChatWindowAppearanceController.swift",
-    "packages/apple/AgenticDeveloperToolkit/SourcesUI/macOS/Chat/InlineChatChrome.swift",
-    "packages/apple/AgenticDeveloperToolkit/SourcesUI/macOS/Chat/PromptGlyphAlignment.swift",
-    "packages/apple/AgenticDeveloperToolkit/SourcesUI/Shared/Chat/InlineChatSizing.swift",
-    "packages/apple/AgenticDeveloperToolkit/SourcesUI/Shared/Chat/PersonaChatMode.swift",
-    "packages/apple/AgenticDeveloperToolkit/SourcesUI/Shared/Chat/ThinkingPhase.swift",
-    "packages/apple/AgenticDeveloperToolkit/SourcesUI/macOS/Chrome/AnimatedBackdrop.swift",
-    "packages/apple/AgenticDeveloperToolkit/SourcesUI/macOS/Chrome/PaneDisplayPath.swift",
-    "packages/apple/AgenticDeveloperToolkit/SourcesUI/macOS/Chrome/PaneEdge.swift",
-    "packages/apple/AgenticDeveloperToolkit/SourcesUI/macOS/Chrome/WindowAppearanceDefaults.swift",
-    "packages/apple/AgenticDeveloperToolkit/SourcesUI/macOS/Chrome/WindowToolbarBuilder.swift",
-    "packages/apple/AgenticDeveloperToolkit/SourcesUI/Shared/Markdown/MarkdownBlockMetrics.swift",
-    "packages/apple/AgenticDeveloperToolkit/SourcesUI/Shared/Markdown/MarkdownEditorMode.swift",
-    "packages/apple/AgenticDeveloperToolkit/SourcesUI/Shared/Markdown/MarkdownSyntaxReference.swift",
-    "packages/apple/AgenticDeveloperToolkit/SourcesUI/Shared/Markdown/PlatformKit.swift",
-    "packages/apple/AgenticDeveloperToolkit/SourcesUI/iOS/Markdown/MarkdownFileImporter.swift",
-    "packages/apple/AgenticDeveloperToolkit/SourcesUI/macOS/Markdown/MarkdownFileImporter.swift",
+    "packages/apple/AgenticDeveloperHubSDK/SDK/SourcesUI/macOS/Chat/ChatWindowAppearanceController.swift",
+    "packages/apple/AgenticDeveloperHubSDK/SDK/SourcesUI/macOS/Chat/InlineChatChrome.swift",
+    "packages/apple/AgenticDeveloperHubSDK/SDK/SourcesUI/macOS/Chat/PromptGlyphAlignment.swift",
+    "packages/apple/AgenticDeveloperHubSDK/SDK/SourcesUI/Shared/Chat/InlineChatSizing.swift",
+    "packages/apple/AgenticDeveloperHubSDK/SDK/SourcesUI/Shared/Chat/PersonaChatMode.swift",
+    "packages/apple/AgenticDeveloperHubSDK/SDK/SourcesUI/Shared/Chat/ThinkingPhase.swift",
+    "packages/apple/AgenticDeveloperHubSDK/SDK/SourcesUI/macOS/Chrome/AnimatedBackdrop.swift",
+    "packages/apple/AgenticDeveloperHubSDK/SDK/SourcesUI/macOS/Chrome/PaneDisplayPath.swift",
+    "packages/apple/AgenticDeveloperHubSDK/SDK/SourcesUI/macOS/Chrome/PaneEdge.swift",
+    "packages/apple/AgenticDeveloperHubSDK/SDK/SourcesUI/macOS/Chrome/WindowAppearanceDefaults.swift",
+    "packages/apple/AgenticDeveloperHubSDK/SDK/SourcesUI/macOS/Chrome/WindowToolbarBuilder.swift",
+    "packages/apple/AgenticDeveloperHubSDK/SDK/SourcesUI/Shared/Markdown/MarkdownBlockMetrics.swift",
+    "packages/apple/AgenticDeveloperHubSDK/SDK/SourcesUI/Shared/Markdown/MarkdownEditorMode.swift",
+    "packages/apple/AgenticDeveloperHubSDK/SDK/SourcesUI/Shared/Markdown/MarkdownSyntaxReference.swift",
+    "packages/apple/AgenticDeveloperHubSDK/SDK/SourcesUI/Shared/Markdown/PlatformKit.swift",
+    "packages/apple/AgenticDeveloperHubSDK/SDK/SourcesUI/iOS/Markdown/MarkdownFileImporter.swift",
+    "packages/apple/AgenticDeveloperHubSDK/SDK/SourcesUI/macOS/Markdown/MarkdownFileImporter.swift",
     "**/*.test.ts",
     "**/*.d.ts",
     "**/index.ts",
@@ -362,20 +362,20 @@
     "packages/apple/AgenticDeveloperHubClient/Sources/Auth": "hub-client-auth",
     "packages/apple/AgenticDeveloperHubClient/Sources/Sync/ADHSyncAPI.swift": "hub-client-sync",
     "packages/apple/AgenticDeveloperHubClient/Sources/Transport": "hub-client-transport",
-    "packages/apple/AgenticDeveloperToolkit/Sources/Attachments": "chat-contract",
-    "packages/apple/AgenticDeveloperToolkit/Sources/Backend": "chat-contract",
-    "packages/apple/AgenticDeveloperToolkit/Sources/Chat": "chat-contract",
-    "packages/apple/AgenticDeveloperToolkit/Sources/Commands": "chat-contract",
-    "packages/apple/AgenticDeveloperToolkit/Sources/Configuration": "chat-contract",
-    "packages/apple/AgenticDeveloperToolkit/Sources/Coordinator": "chat-coordinator",
-    "packages/apple/AgenticDeveloperToolkit/Sources/Hooks": "chat-contract",
-    "packages/apple/AgenticDeveloperToolkit/Sources/Markdown": "markdown-core",
-    "packages/apple/AgenticDeveloperToolkit/Sources/Media": "chat-contract",
-    "packages/apple/AgenticDeveloperToolkit/Sources/Messages": "chat-contract",
-    "packages/apple/AgenticDeveloperToolkit/Sources/Orchestrator/Orchestrator.swift": "chat-contract",
-    "packages/apple/AgenticDeveloperToolkit/Sources/Participants": "chat-contract",
-    "packages/apple/AgenticDeveloperToolkit/Sources/Permissions": "chat-contract",
-    "packages/apple/AgenticDeveloperToolkit/Sources/Theme": "theme-engine",
+    "packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Attachments": "chat-contract",
+    "packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Backend": "chat-contract",
+    "packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Chat": "chat-contract",
+    "packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Commands": "chat-contract",
+    "packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Configuration": "chat-contract",
+    "packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Coordinator": "chat-coordinator",
+    "packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Hooks": "chat-contract",
+    "packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Markdown": "markdown-core",
+    "packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Media": "chat-contract",
+    "packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Messages": "chat-contract",
+    "packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Orchestrator/Orchestrator.swift": "chat-contract",
+    "packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Participants": "chat-contract",
+    "packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Permissions": "chat-contract",
+    "packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Theme": "theme-engine",
     "packages/apple/AvatarAnimationEngine/Sources/Anim": "avatar-engine-anim",
     "packages/apple/AvatarAnimationEngine/Sources/Config": "avatar-engine-config",
     "packages/apple/AvatarAnimationEngine/Sources/Engine.swift": "avatar-engine",

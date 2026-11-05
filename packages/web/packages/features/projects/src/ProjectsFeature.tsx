@@ -2,20 +2,20 @@
 
 import { useCallback, type ReactElement, type ReactNode } from "react";
 import { FolderKanban } from "lucide-react";
-import { ErrorText } from "@agenticdevelopertoolkit/ui/components/error-text";
-import { Card, CardContent } from "@agenticdevelopertoolkit/ui/components/card";
-import { Input } from "@agenticdevelopertoolkit/ui/components/input";
-import { Label } from "@agenticdevelopertoolkit/ui/components/label";
-import { Select } from "@agenticdevelopertoolkit/ui/components/select";
-import { Textarea } from "@agenticdevelopertoolkit/ui/components/textarea";
+import { ErrorText } from "@adh-sdk/ui/components/error-text";
+import { Card, CardContent } from "@adh-sdk/ui/components/card";
+import { Input } from "@adh-sdk/ui/components/input";
+import { Label } from "@adh-sdk/ui/components/label";
+import { Select } from "@adh-sdk/ui/components/select";
+import { Textarea } from "@adh-sdk/ui/components/textarea";
 import {
   projectTemplatesApi,
   projectsApi,
   type Project,
   type Template,
-} from "@agentic-toolkit/data/projects";
-import { useResourceItemPrefetch, useResourceList } from "@agentic-toolkit/data";
-import { ResourceExplorer, CreateResourceDialog, type ResourceTopic } from "@agentic-toolkit/resource";
+} from "@adh-sdk/data/projects";
+import { useResourceItemPrefetch, useResourceList } from "@adh-sdk/data";
+import { ResourceExplorer, CreateResourceDialog, type ResourceTopic } from "@adh-sdk/resource";
 import { projectTopics } from "./projectTopics";
 import { ProjectsCommandPalette } from "./ProjectsCommandPalette";
 import { itemWordsOf } from "./vocabulary";
@@ -28,7 +28,7 @@ import { useBoardLive } from "./useBoardLive";
  * (T3). Shared selection/URL wiring lives in ResourceExplorer; this file supplies the
  * project-specific topics, landing, and create dialog. Rendered by the hub's
  * /[slug]/projects/[[...path]] route and by the projects site's workspace route
- * (app/[workspace]/[[...path]]), where @agentic-toolkit/adh/home's SiteHomeShell picks
+ * (app/[workspace]/[[...path]]), where @adh-sdk/adh/home's SiteHomeShell picks
  * the workspace and mounts this at /<slug> — the site's SiteHomeModel declares
  * `basePath: ""`, so the workspace IS its first path segment. (A site whose model names a
  * prefix mounts its own feature under that prefix instead; the base is the model's to
@@ -153,7 +153,7 @@ export function ProjectsFeature({
   /** Pins list/create to the WORKSPACE'S owning principal (backend `?workspace=`), so an org
    *  workspace shows the ORG'S projects and creates org-owned ones. Omitted: the caller's
    *  ownership reach (owned + participating). Choosing the workspace is the HOST's job —
-   *  the hub's route segment, or @agentic-toolkit/adh/home's SiteHomeShell. */
+   *  the hub's route segment, or @adh-sdk/adh/home's SiteHomeShell. */
   workspaceSlug?: string;
   /** Host-injected Transfer Ownership section for the OPEN project, forwarded to the Overview
    *  topic's pane (see {@link ProjectOverviewPane}'s own prop for what it is handed). Omit it and

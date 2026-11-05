@@ -1,7 +1,7 @@
 ---
 id: ef2a5ca9-04a4-46ab-8fef-3fdc6db2041d
 title: "Daemon Provider Resolver"
-domain: adtoolkit://cookbook/ai/providers/daemon-provider-resolver
+domain: adhsdk://cookbook/ai/providers/daemon-provider-resolver
 type: ingredient
 version: 1.2.0
 status: review
@@ -21,17 +21,17 @@ tags:
   - configuration
   - provider-resolver
 depends-on:
-  - adtoolkit://cookbook/ai/providers/provider-config-keys
+  - adhsdk://cookbook/ai/providers/provider-config-keys
 related: []
 references:
-  - packages/apple/AgenticToolkit/AIPluginKit/DaemonProviderResolver.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/AIPluginKit/AIProviderConfigKeys.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/AIPluginKit/AIProviderConfiguration.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/AIPluginKit/AIProviderConfigSync.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/AIPluginKit/DaemonAIChat.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Tests/AIPluginKitTests/DaemonAIChatTests.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/macOS/Features/AIPlugins/AIProviderResolver.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/project.yml (agenticdevelopertoolkit)
+  - packages/apple/AgenticDeveloperHubSDK/AIPluginKit/DaemonProviderResolver.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/AIPluginKit/AIProviderConfigKeys.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/AIPluginKit/AIProviderConfiguration.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/AIPluginKit/AIProviderConfigSync.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/AIPluginKit/DaemonAIChat.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Tests/AIPluginKitTests/DaemonAIChatTests.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/Features/AIPlugins/AIProviderResolver.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/project.yml (adhsdk)
 approved-by: ""
 approved-date: ""
 ---
@@ -314,7 +314,7 @@ decode-failure-diagnostics for the one place this absence is a recorded gap.
 ## Platform Notes
 
 - **SwiftUI**: not applicable to this file — `DaemonProviderResolver.swift` imports only `Foundation`, with no SwiftUI dependency; any SwiftUI-based daemon-status surface would call these same static functions unchanged.
-- **AppKit / UIKit**: this is the source. `packages/apple/AgenticToolkit/AIPluginKit/DaemonProviderResolver.swift` is part of the `AIPluginKit` framework target, which `project.yml` declares `platform: macOS` only (no iOS target exists for it today). It has no AppKit or UIKit import and is consumed by `DaemonAIChat` (same framework, also plain Foundation) from the daemon process, not from any app UI layer. The app-side mirror, `AIProviderResolver` (`macOS/Features/AIPlugins/AIProviderResolver.swift`), is `@MainActor`-isolated because it touches the AppKit-adjacent `AIPluginManager`; `DaemonProviderResolver` declares no such isolation because it touches nothing but the passed-in closure. Concretely, `DaemonProviderResolver` is a case-less `public enum` exposing three static functions — `configurations(_:)`, `selectedConfiguration(_:)`, and `model(config:_:)` — over a `ProviderSettingsReader` typealias declared `@Sendable (_ key: String) -> String?`. `configurations(_:)` decodes with `try? JSONDecoder().decode([AIProviderConfiguration].self, from: Data(json.utf8))`, so any decode failure collapses via `try?` to `nil`, which the function turns into `[]`; `selectedConfiguration(_:)` parses the selected-id string with `UUID(uuidString:)`, returning `nil` on failure, and otherwise calls `configurations(settings).first { $0.id == uuid }`; `model(config:_:)` reads `settings(AIProviderConfigKeys.modelKey(config: id)) ?? ""` directly. The requirement names above (configurations-empty-when-*, selected-configuration-malformed-id, model-*) each trace to one of these three function bodies.
+- **AppKit / UIKit**: this is the source. `packages/apple/AgenticDeveloperHubSDK/AIPluginKit/DaemonProviderResolver.swift` is part of the `AIPluginKit` framework target, which `project.yml` declares `platform: macOS` only (no iOS target exists for it today). It has no AppKit or UIKit import and is consumed by `DaemonAIChat` (same framework, also plain Foundation) from the daemon process, not from any app UI layer. The app-side mirror, `AIProviderResolver` (`macOS/Features/AIPlugins/AIProviderResolver.swift`), is `@MainActor`-isolated because it touches the AppKit-adjacent `AIPluginManager`; `DaemonProviderResolver` declares no such isolation because it touches nothing but the passed-in closure. Concretely, `DaemonProviderResolver` is a case-less `public enum` exposing three static functions — `configurations(_:)`, `selectedConfiguration(_:)`, and `model(config:_:)` — over a `ProviderSettingsReader` typealias declared `@Sendable (_ key: String) -> String?`. `configurations(_:)` decodes with `try? JSONDecoder().decode([AIProviderConfiguration].self, from: Data(json.utf8))`, so any decode failure collapses via `try?` to `nil`, which the function turns into `[]`; `selectedConfiguration(_:)` parses the selected-id string with `UUID(uuidString:)`, returning `nil` on failure, and otherwise calls `configurations(settings).first { $0.id == uuid }`; `model(config:_:)` reads `settings(AIProviderConfigKeys.modelKey(config: id)) ?? ""` directly. The requirement names above (configurations-empty-when-*, selected-configuration-malformed-id, model-*) each trace to one of these three function bodies.
 - **Compose**: model as a Kotlin top-level `object DaemonProviderResolver` with `fun configurations(settings: (String) -> String?): List<AIProviderConfiguration>`, `fun selectedConfiguration(settings: (String) -> String?): AIProviderConfiguration?`, and `fun model(configId: UUID, settings: (String) -> String?): String`, using `kotlinx.serialization.json.Json.decodeFromString` wrapped in `runCatching { }.getOrNull()` in place of Swift's `try?`, to match the same fail-to-empty/fail-to-null contract. `UUID.toString()` on the JVM is lowercase, unlike Foundation's uppercase `uuidString`; a shared registry with an Apple host needs the same case-normalization decision the sibling `AIProviderConfigKeys` recipe calls out.
 - **React/Web**: model as a module of plain exported functions over a UUID already serialized as a string — `configurations(settings: (key: string) => string | null): AIProviderConfiguration[]`, etc. — using `JSON.parse` wrapped in `try { } catch { return [] }` to match the swallow-to-empty contract. JavaScript has no native `UUID` type, so the id-equality check in `selectedConfiguration` becomes a plain string comparison.
 - **WinUI 3**: model `DaemonProviderResolver` as a `static class` with `static` methods over a `Func<string, string?>` in place of `ProviderSettingsReader` (a pure, side-effect-free delegate preserves the same any-thread-safety property `@Sendable` gives the Swift closure): `public static List<AIProviderConfiguration> Configurations(Func<string, string?> settings)`, decoding with `System.Text.Json.JsonSerializer.Deserialize<List<AIProviderConfiguration>>(json)` inside a `try`/`catch (JsonException)` that returns an empty `List<AIProviderConfiguration>` to match the Swift `try?`-to-`[]` contract; `public static AIProviderConfiguration? SelectedConfiguration(Func<string, string?> settings)` using `Guid.TryParse` in place of `UUID(uuidString:)` (returning `null` on `false`, matching the Swift guard); and `public static string Model(Guid configId, Func<string, string?> settings) => settings(AIProviderConfigKeys.ModelKey(configId)) ?? "";`. Because `Guid.ToString("D")` is lowercase while Foundation's `uuidString` is uppercase, a WinUI 3 daemon sharing a settings store with the Apple app/daemon MUST normalize case exactly as the `AIProviderConfigKeys` recipe's WinUI 3 note requires, or `Guid`-keyed lookups against Apple-written keys will silently miss. No `ObservableCollection`/`INotifyPropertyChanged` applies — like the Swift source, this is a stateless, one-shot read API, not an observable data source.
@@ -323,7 +323,7 @@ decode-failure-diagnostics for the one place this absence is a recorded gap.
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/AIPluginKit/DaemonProviderResolver.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/AIPluginKit/DaemonProviderResolver.swift` |
 
 ## Design Decisions
 

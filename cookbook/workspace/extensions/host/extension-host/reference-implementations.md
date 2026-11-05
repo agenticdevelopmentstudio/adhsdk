@@ -1,5 +1,5 @@
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/macOS/Features/Extensions/Host/` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/Host/` |
 

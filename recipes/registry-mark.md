@@ -1,7 +1,7 @@
 ---
 id: f8e3d2a1-4c9b-4d7e-8f2b-a5c3e7b1d4f6
 title: Registry Mark
-domain: agenticdevelopertoolkit://recipes/registry-mark
+domain: adhsdk://recipes/registry-mark
 type: ingredient
 version: 1.1.1
 status: review
@@ -21,11 +21,11 @@ tags:
 - registry
 - credential
 depends-on:
-- agenticdevelopertoolkit://recipes/persona-chat
-- agenticdevelopertoolkit://recipes/viewport-shell
+- adhsdk://recipes/persona-chat
+- adhsdk://recipes/viewport-shell
 related:
-- agenticdevelopertoolkit://recipes/popover
-- agenticdevelopertoolkit://recipes/registry-profile
+- adhsdk://recipes/popover
+- adhsdk://recipes/registry-profile
 references: []
 approved-by: ''
 approved-date: ''
@@ -186,7 +186,7 @@ Not applicable: the component does not emit debug or error logs.
 **Rationale**: This lets it fill the @ counter's tall-narrow opening without spilling past the glyph into the ring, maintaining visual balance and legibility.
 **Approved**: pending
 
-**Decision**: The `tip` is rendered as a plain conditional `<span className="pc-rm-tip">`, styled entirely by the companion `registry-mark.css`, rather than composed from the toolkit's own `@agenticdevelopertoolkit/popover` (`InlinePopover`).
+**Decision**: The `tip` is rendered as a plain conditional `<span className="pc-rm-tip">`, styled entirely by the companion `registry-mark.css`, rather than composed from the toolkit's own `@adh-sdk/popover` (`InlinePopover`).
 **Rationale**: `InlinePopover` is a JS-driven, click-to-toggle popover (title + description + action links) anchored to interactive content; this mark needs a passive, CSS-only hover/focus tooltip with zero JS and zero added client bundle, so a static credential mark stays static. The two have a different interaction model, trigger, and accessibility timing — sharing one abstraction would bend both out of shape, so they are kept separate on purpose (see `registry-mark.css`).
 **Approved**: pending
 
@@ -215,5 +215,5 @@ The `passed` statuses rest on the native `<a>`/`aria-hidden`/`aria-label` markup
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
 | 1.1.1 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: passed). |
-| 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed all requirements to subject-only kebab-case; promoted the stable-tip, clip-safe-placement, and popover-focus obligations out of Edge Cases into named Behavioral Requirements; reworked Design Decisions into Decision/Rationale/Approved form and added a single-sourced-path-data decision with a grounded rationale for not using `@agenticdevelopertoolkit/popover`; fixed Platform Notes so every port draws from the same path data instead of a system font; corrected States and Accessibility Options to match the companion CSS's actual hover/focus/motion behavior; rebuilt Compliance with real catalog checks; inlined exact path data in the glyph/star vectors and reworded the anchor and memoization vectors to assert observable outcomes; added `depends-on`/`related` cross-references; defined ADH gold and AI star on first use; unquoted `modified`. |
+| 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed all requirements to subject-only kebab-case; promoted the stable-tip, clip-safe-placement, and popover-focus obligations out of Edge Cases into named Behavioral Requirements; reworked Design Decisions into Decision/Rationale/Approved form and added a single-sourced-path-data decision with a grounded rationale for not using `@adh-sdk/popover`; fixed Platform Notes so every port draws from the same path data instead of a system font; corrected States and Accessibility Options to match the companion CSS's actual hover/focus/motion behavior; rebuilt Compliance with real catalog checks; inlined exact path data in the glyph/star vectors and reworded the anchor and memoization vectors to assert observable outcomes; added `depends-on`/`related` cross-references; defined ADH gold and AI star on first use; unquoted `modified`. |
 | 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation from source analysis |

@@ -1,7 +1,7 @@
 "use client";
 
-import type { CrudTableMeta } from "@agentic-toolkit/crud";
-import { RailHostBoundary } from "@agentic-toolkit/resource";
+import type { CrudTableMeta } from "@adh-sdk/crud";
+import { RailHostBoundary } from "@adh-sdk/resource";
 import { KnowledgeBasesPane } from "./KnowledgeBasesPane";
 
 /**

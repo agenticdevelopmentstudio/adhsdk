@@ -1,9 +1,9 @@
 'use client';
 
-import { Field, FieldGroup } from '@agenticdevelopertoolkit/ui/blocks';
-import { Input } from '@agenticdevelopertoolkit/ui/components/input';
-import { Select } from '@agenticdevelopertoolkit/ui/components/select';
-import type { EntryRow, ProviderType } from '@agentic-toolkit/registry/client';
+import { Field, FieldGroup } from '@adh-sdk/ui/blocks';
+import { Input } from '@adh-sdk/ui/components/input';
+import { Select } from '@adh-sdk/ui/components/select';
+import type { EntryRow, ProviderType } from '@adh-sdk/registry/client';
 import { EntryPhotoField } from './EntryPhotoField';
 import { ENTRY_LIMITS, SLUG_MAX, normalizeSlugInput } from './slug';
 

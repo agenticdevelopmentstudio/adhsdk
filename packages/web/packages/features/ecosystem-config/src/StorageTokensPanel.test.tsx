@@ -16,10 +16,10 @@ const { list, mint, revoke } = vi.hoisted(() => ({
   mint: vi.fn(),
   revoke: vi.fn(),
 }));
-vi.mock("@agentic-toolkit/data/ecosystem-config", () => ({ tokenPrincipalsApi: { list, mint, revoke } }));
+vi.mock("@adh-sdk/data/ecosystem-config", () => ({ tokenPrincipalsApi: { list, mint, revoke } }));
 
 import { StorageTokensPanel } from "./StorageTokensPanel";
-import { SettingsDirtyProvider, useSettingsDirty } from "@agentic-toolkit/resource";
+import { SettingsDirtyProvider, useSettingsDirty } from "@adh-sdk/resource";
 
 // This vitest config has no auto-cleanup setup file, so each render must be torn down explicitly
 // or the next test's queries see BOTH mounted trees.

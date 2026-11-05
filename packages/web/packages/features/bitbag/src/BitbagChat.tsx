@@ -16,8 +16,8 @@ import {
   type ChatBackend,
   type GazeVector,
   type InlineChatSizing,
-} from '@agenticdevelopertoolkit/chat'
-import { ThemeStyle, type ThemeKey } from '@agenticdevelopertoolkit/themes'
+} from '@adh-sdk/chat'
+import { ThemeStyle, type ThemeKey } from '@adh-sdk/themes'
 import { BitbagBackend } from './backend'
 import type { BitbagExpression } from './avatar'
 import {
@@ -128,7 +128,7 @@ export interface BitbagChatProps {
   /**
    * His profile page (e.g. on the Agentic Persona Registry). When set, a circled
    * "i" on the chat frame's top-left corner links there; the host imports
-   * `css/chat/components/profile-info.css` from `@agentic-toolkit/persona`.
+   * `css/chat/components/profile-info.css` from `@adh-sdk/persona`.
    */
   profileUrl?: string
   /**

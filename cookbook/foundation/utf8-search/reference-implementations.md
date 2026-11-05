@@ -1,5 +1,5 @@
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/Core/UTF8Search.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/UTF8Search.swift` |
 

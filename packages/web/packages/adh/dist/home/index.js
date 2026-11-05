@@ -10,8 +10,8 @@ import { useParams } from "next/navigation";
 // src/home/SiteHomeShell.tsx
 import { useCallback as useCallback3 } from "react";
 import { usePathname } from "next/navigation";
-import { TopicSelectHint } from "@agenticdevelopertoolkit/ui/blocks";
-import { useResourceList, workspacesApi } from "@agentic-toolkit/data";
+import { TopicSelectHint } from "@adh-sdk/ui/blocks";
+import { useResourceList, workspacesApi } from "@adh-sdk/data";
 
 // src/profile/ProfileFallback.tsx
 import { useEffect as useEffect3, useMemo, useState as useState4 } from "react";
@@ -40,10 +40,10 @@ function principalFromOrgCard(body) {
 import { useState, useCallback, useRef } from "react";
 import Link from "next/link";
 import { Search } from "lucide-react";
-import { Avatar, AvatarImage, AvatarFallback } from "@agenticdevelopertoolkit/ui/components/avatar";
-import { Input } from "@agenticdevelopertoolkit/ui/components/input";
-import { Button } from "@agenticdevelopertoolkit/ui/components/button";
-import { ErrorText } from "@agenticdevelopertoolkit/ui/components/error-text";
+import { Avatar, AvatarImage, AvatarFallback } from "@adh-sdk/ui/components/avatar";
+import { Input } from "@adh-sdk/ui/components/input";
+import { Button } from "@adh-sdk/ui/components/button";
+import { ErrorText } from "@adh-sdk/ui/components/error-text";
 
 // src/profile/frame.ts
 var PROFILE_FRAME_CLASS = "mx-auto max-w-2xl px-4 py-16 sm:px-6";
@@ -191,8 +191,8 @@ function ProfileNotFound() {
 }
 
 // src/profile/ProfileView.tsx
-import { siteUrl, siteProdUrl } from "@agentic-toolkit/adh-registry";
-import { UserCard, UserCardSkeleton } from "@agenticdevelopertoolkit/ui/blocks/user-card";
+import { siteUrl, siteProdUrl } from "@adh-sdk/adh-registry";
+import { UserCard, UserCardSkeleton } from "@adh-sdk/ui/blocks/user-card";
 
 // src/header/useClientHost.ts
 import { useEffect, useState as useState2 } from "react";
@@ -204,8 +204,8 @@ function useClientHost() {
 
 // src/profile/useViewerPrincipal.ts
 import { useEffect as useEffect2, useState as useState3 } from "react";
-import { useOptionalAuth } from "@agentic-toolkit/auth";
-import { authedJson } from "@agentic-toolkit/auth/client";
+import { useOptionalAuth } from "@adh-sdk/auth";
+import { authedJson } from "@adh-sdk/auth/client";
 function useViewerPrincipal(slug, seed, enabled = true) {
   const auth = useOptionalAuth();
   const signedIn = auth?.isAuthenticated ?? false;
@@ -334,7 +334,7 @@ function ProfileFallback({ slug, siteId, section }) {
 }
 
 // src/home/SiteHomeShell.tsx
-import { useSiteIdOrNull } from "@agentic-toolkit/adh/site/site-id";
+import { useSiteIdOrNull } from "@adh-sdk/adh/site/site-id";
 
 // src/home/WorkspaceBar.tsx
 import "react";
@@ -342,7 +342,7 @@ import "react";
 // src/home/WorkspacePicker.tsx
 import "react";
 import { ChevronDown } from "lucide-react";
-import { PopupMenu } from "@agenticdevelopertoolkit/ui/blocks";
+import { PopupMenu } from "@adh-sdk/ui/blocks";
 import { jsx as jsx4 } from "react/jsx-runtime";
 function WorkspacePicker({
   workspaces,
@@ -392,7 +392,7 @@ import {
   workspacePrefsApi,
   readCachedWorkspace,
   writeCachedWorkspace
-} from "@agentic-toolkit/data";
+} from "@adh-sdk/data";
 var PREFS_CACHE_KEY = "workspace-prefs";
 var PREFS_ID = "me";
 var loadPrefs = () => workspacePrefsApi.get();
@@ -576,8 +576,8 @@ function noSubPath(segments) {
 
 // src/home/WorkspaceOrProfileGate.tsx
 import { useParams as useParams2 } from "next/navigation";
-import { useAuth } from "@agentic-toolkit/auth";
-import { useSiteId } from "@agentic-toolkit/adh/site/site-id";
+import { useAuth } from "@adh-sdk/auth";
+import { useSiteId } from "@adh-sdk/adh/site/site-id";
 import { Fragment as Fragment2, jsx as jsx8 } from "react/jsx-runtime";
 function WorkspaceOrProfileGate({ children }) {
   const { isAuthenticated, isLoading } = useAuth();

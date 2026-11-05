@@ -1,5 +1,5 @@
-// The local traceable copy, NOT `@agenticdevelopertoolkit/chat` — that package is
-// part of the persona toolkit this one keeps out of its shipped graph (see the header
+// The local traceable copy, NOT `@adh-sdk/chat` — that package is
+// part of the persona layer this one keeps out of its shipped graph (see the header
 // of chat-types.ts for why). These are type-only, so nothing crosses at runtime; the structural shape
 // is what a consumer's real chat package has to satisfy.
 import type {
@@ -10,7 +10,7 @@ import type {
 
 // Shared, dependency-free chat backend MECHANISM for the family's canned
 // assistant. There is NO anonymous chat-completion endpoint yet — the registry's
-// `complete`/`chat` route is still pending (the persona toolkit's M1) and the
+// `complete`/`chat` route is still pending (the persona layer's M1) and the
 // only real backend we have (PersonaLlmBackend in hub settings) needs a
 // user-supplied API key. So until then the Help sites use this deterministic,
 // regex-seeded stand-in with their own topical replies.

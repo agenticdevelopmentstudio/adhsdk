@@ -1,7 +1,7 @@
 // An application's client auth section rides on the application's one bar: its edits light Save
 // and Cancel, and its Cancel must not close the application the way the form's own Cancel does.
 import { describe, it, expect, vi } from "vitest";
-import type { MasterDetailActions } from "@agentic-toolkit/resource";
+import type { MasterDetailActions } from "@adh-sdk/resource";
 import { composeActions } from "./ApplicationsPane";
 
 function formActions(over: Partial<MasterDetailActions> = {}): MasterDetailActions {

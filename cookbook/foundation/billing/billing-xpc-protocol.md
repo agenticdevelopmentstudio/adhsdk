@@ -1,7 +1,7 @@
 ---
 id: 36C76E0F-B41C-4FD6-A349-A0E9241FB489
 title: "Billing XPC Protocol"
-domain: adtoolkit://cookbook/foundation/billing/billing-xpc-protocol
+domain: adhsdk://cookbook/foundation/billing/billing-xpc-protocol
 type: ingredient
 version: 1.0.0
 status: review
@@ -22,8 +22,8 @@ tags:
   - wire
 depends-on: []
 related:
-  - adtoolkit://cookbook/foundation/billing/billing-xpc-client
-  - adtoolkit://cookbook/foundation/billing/billing-dt-os
+  - adhsdk://cookbook/foundation/billing/billing-xpc-client
+  - adhsdk://cookbook/foundation/billing/billing-dt-os
 references: []
 approved-by: ""
 approved-date: ""
@@ -130,7 +130,7 @@ Not applicable: this code makes no log calls.
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/Core/Billing/BillingXPCProtocol.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Billing/BillingXPCProtocol.swift` |
 
 ## Design Decisions
 

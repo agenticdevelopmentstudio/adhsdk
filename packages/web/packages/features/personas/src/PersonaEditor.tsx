@@ -17,30 +17,30 @@ import {
   Target,
   Wrench,
 } from "lucide-react";
-import { reportUnexpectedAuthError } from "@agentic-toolkit/auth";
-import { CRUD_TABLES, CrudDataView, useExitGuardChannel } from "@agentic-toolkit/crud";
-import { ErrorText } from "@agenticdevelopertoolkit/ui/components/error-text";
-import { Field, FieldGroup } from "@agenticdevelopertoolkit/ui/blocks";
-import { useDirtyDraft } from "@agenticdevelopertoolkit/ui/hooks/useDirtyDraft";
-import { useExitGate, type PaneExitGuard } from "@agenticdevelopertoolkit/ui/hooks/useExitGate";
-import { UnsavedChangesAlert } from "@agenticdevelopertoolkit/ui/components/unsaved-changes-alert";
+import { reportUnexpectedAuthError } from "@adh-sdk/auth";
+import { CRUD_TABLES, CrudDataView, useExitGuardChannel } from "@adh-sdk/crud";
+import { ErrorText } from "@adh-sdk/ui/components/error-text";
+import { Field, FieldGroup } from "@adh-sdk/ui/blocks";
+import { useDirtyDraft } from "@adh-sdk/ui/hooks/useDirtyDraft";
+import { useExitGate, type PaneExitGuard } from "@adh-sdk/ui/hooks/useExitGate";
+import { UnsavedChangesAlert } from "@adh-sdk/ui/components/unsaved-changes-alert";
 import {
   ButtonBar,
   DetailHeaderActions,
   StackGroupDetail,
   useRailExitGuard,
   type GroupTopicItem,
-} from "@agentic-toolkit/resource";
-import { Input } from "@agenticdevelopertoolkit/ui/components/input";
-import { Textarea } from "@agenticdevelopertoolkit/ui/components/textarea";
-import { Select } from "@agenticdevelopertoolkit/ui/components/select";
+} from "@adh-sdk/resource";
+import { Input } from "@adh-sdk/ui/components/input";
+import { Textarea } from "@adh-sdk/ui/components/textarea";
+import { Select } from "@adh-sdk/ui/components/select";
 import {
   PrivacyLevelSelect,
   PRIVACY_WIRE_VALUE,
   PRIVACY_LEVEL_FROM_WIRE,
-} from "@agenticdevelopertoolkit/ui/components/privacy-level-select";
-import { RdidEditor } from "@agentic-toolkit/adh-ui/components/rdid-editor";
-import { rdidPrefix, validateLeaf } from "@agentic-toolkit/adh-ui/rdid";
+} from "@adh-sdk/ui/components/privacy-level-select";
+import { RdidEditor } from "@adh-sdk/adh-ui/components/rdid-editor";
+import { rdidPrefix, validateLeaf } from "@adh-sdk/adh-ui/rdid";
 import { PersonaAvatarField } from "./PersonaAvatarField";
 import { AbilitiesPanel } from "./AbilitiesPanel";
 import { PermissionsPanel } from "./PermissionsPanel";
@@ -48,7 +48,7 @@ import { InterestsEditor } from "./InterestsEditor";
 import { KnowledgeFacet } from "./InterestDocumentsPane";
 import { DemoFacet } from "./DemoFacet";
 import { ChatStatusFacet } from "./ChatStatusFacet";
-import { ItemAccessPanel, workspaceSubjectsDirectory } from "@agentic-toolkit/teams";
+import { ItemAccessPanel, workspaceSubjectsDirectory } from "@adh-sdk/teams";
 import {
   api,
   personaBlank,
@@ -58,7 +58,7 @@ import {
   type PersonaBody,
   type PersonaDraft,
   type UserService,
-} from "@agentic-toolkit/data/personas";
+} from "@adh-sdk/data/personas";
 
 /** A multi-field topic pane: padded + edge-to-edge (GroupTopicDetail renders
  *  panes with no inset, so the fields carry their own) and scrolls if tall. */
@@ -213,7 +213,7 @@ export function saveBlockedReason(draft: PersonaDraft): SaveBlock | null {
  *  - `renderKnowledgeBases` — the Knowledge Bases browser (a separate feature package this one
  *    doesn't depend on);
  *  - `renderIntegrations` — the provider-config pane scoped to the ecosystem this persona OWNS
- *    (same @agentic-toolkit/integrations pane the Products FTD mounts for a product's ecosystem —
+ *    (same @adh-sdk/integrations pane the Products FTD mounts for a product's ecosystem —
  *    a persona is an ecosystem too, and its integrations are reached by going into it rather than
  *    from a destination picker; see the Integrations facet below).
  * Each is optional, and omitting one degrades rather than breaks: the affordance is hidden (profile
@@ -278,14 +278,14 @@ export function PersonaEditor({
   renderKnowledgeBases?: (scopeEcosystemId: string) => ReactNode;
   /** Renders the persona's auto-provisioned PROJECT (the Project facet — a separate feature
    *  package this one doesn't depend on, so the host injects the pane, e.g.
-   *  @agentic-toolkit/projects' SubjectProjectPane). Omit to show a "not available in this
+   *  @adh-sdk/projects' SubjectProjectPane). Omit to show a "not available in this
    *  view" notice instead. */
   renderProject?: (personaId: string) => ReactNode;
   /** Host-rendered "Transfer Ownership" section for the Identity topic. The workspace list and the
    *  transfer mutation live in the host; this package stays host-agnostic. Omitted ⇒ no section. */
   renderTransferOwnership?: (persona: Persona) => ReactNode;
   /** Renders the integrations pane scoped to the persona's OWNED ecosystem (the Integrations
-   *  facet) — @agentic-toolkit/integrations' IntegrationsPane is a separate feature package this
+   *  facet) — @adh-sdk/integrations' IntegrationsPane is a separate feature package this
    *  one doesn't depend on, so the host injects it, the same seam shape as renderKnowledgeBases.
    *  Omit to show a "not available in this view" notice instead. */
   renderIntegrations?: (ecosystemId: string) => ReactNode;
@@ -593,7 +593,7 @@ export function PersonaEditor({
       // are reached by going INTO it (this facet) rather than from the workspace-level
       // Integrations destination picker, which deliberately dropped personas (see
       // agenticdeveloperhub's IntegrationsRoute doc comment). Host-injected because
-      // @agentic-toolkit/integrations is a sibling package this one doesn't depend on — same seam
+      // @adh-sdk/integrations is a sibling package this one doesn't depend on — same seam
       // shape as Knowledge/Memory above. Gated behind the first save and the owned ecosystem
       // existing, same as Memory.
       render: () => {

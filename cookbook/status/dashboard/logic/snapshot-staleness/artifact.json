@@ -3,7 +3,7 @@
   "meta": {
     "id": "ac044c52-64bb-4e4f-b0d8-56dd88ab7d47",
     "title": "Snapshot Staleness",
-    "domain": "adtoolkit://cookbook/status/dashboard/logic/snapshot-staleness",
+    "domain": "adhsdk://cookbook/status/dashboard/logic/snapshot-staleness",
     "type": "ingredient",
     "version": "1.0.2",
     "status": "review",
@@ -21,9 +21,9 @@
     "tags": [],
     "depends-on": [],
     "related": [
-      "adtoolkit://cookbook/status/dashboard/logic/board-staleness",
-      "adtoolkit://cookbook/status/dashboard/state/portfolio-indicator",
-      "adtoolkit://cookbook/status/dashboard/state/live-snapshot"
+      "adhsdk://cookbook/status/dashboard/logic/board-staleness",
+      "adhsdk://cookbook/status/dashboard/state/portfolio-indicator",
+      "adhsdk://cookbook/status/dashboard/state/live-snapshot"
     ],
     "references": [],
     "approved-by": "",

@@ -1,7 +1,7 @@
 ---
 id: 21CBC5BD-350A-4AB6-8C37-3290ACB70460
 title: "Defaults Domain Migration"
-domain: adtoolkit://cookbook/foundation/defaults-domain-migration
+domain: adhsdk://cookbook/foundation/defaults-domain-migration
 type: ingredient
 version: 1.0.0
 status: review
@@ -22,7 +22,7 @@ tags:
   - defaults
 depends-on: []
 related:
-  - adtoolkit://cookbook/foundation/settings-storage
+  - adhsdk://cookbook/foundation/settings-storage
 references: []
 approved-by: ""
 approved-date: ""
@@ -131,7 +131,7 @@ Not applicable: The migration calls no logging API.
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/Core/SettingStorage/DefaultsDomainMigration.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/SettingStorage/DefaultsDomainMigration.swift` |
 
 ## Design Decisions
 
@@ -151,7 +151,7 @@ Not applicable: The migration calls no logging API.
 | [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
 | [idempotent-operations](agenticdevelopercookbook://compliance/reliability#idempotent-operations) | passed | Reliability |
 
-`separation-of-concerns` passes because the type does one thing, the one-time domain copy, and leaves when to call it and what the settings mean to the host. `unit-test-coverage` passes because `AgenticToolkitCoreTests/SettingsStore/DefaultsDomainMigrationTests.swift` covers copy into an empty domain, refusal to overwrite, no legacy settings and idempotence.
+`separation-of-concerns` passes because the type does one thing, the one-time domain copy, and leaves when to call it and what the settings mean to the host. `unit-test-coverage` passes because `AgenticDeveloperHubSDKCoreTests/SettingsStore/DefaultsDomainMigrationTests.swift` covers copy into an empty domain, refusal to overwrite, no legacy settings and idempotence.
 
 ## Change History
 

@@ -1,4 +1,4 @@
-import type { FunnelStage, StoryPillar } from '@agentic-toolkit/adh-registry'
+import type { FunnelStage, StoryPillar } from '@adh-sdk/adh-registry'
 
 // The message house (adh/docs/planning/brand-story-plan.md §3) — the one promise and
 // the three pillar statements every logged-out landing renders. English-only

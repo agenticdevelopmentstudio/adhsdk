@@ -1,7 +1,7 @@
 ---
 id: ff445185-2322-4c94-ad9d-3ad27a50677d
 title: App Tabs
-domain: agenticdevelopertoolkit://recipes/app-tabs
+domain: adhsdk://recipes/app-tabs
 type: ingredient
 version: 1.1.1
 status: review
@@ -20,7 +20,7 @@ tags:
 - navigation
 - tabs
 depends-on:
-- agenticdevelopertoolkit://recipes/tabs
+- adhsdk://recipes/tabs
 related: []
 references: []
 approved-by: ''
@@ -75,7 +75,7 @@ Tabs use the shared tab styling defined by `tabItemClass` and `tabListClass` fro
 - **State communication**: Active state is conveyed via the `aria-selected` attribute (`"true"` or `"false"`).
 - **Label**: Each tab's label is rendered as visible text content within the button. No additional `aria-label` is present in source; labels are the visible text.
 - **Icon handling**: Icons are rendered as visual content within the tab; they are not decorated with `aria-hidden` or labeled in source.
-- **Keyboard interaction**: Handled by browser default button keyboard support (Tab to focus, Space/Enter to activate). No custom keyboard navigation (arrow keys, roving tabindex, or `aria-controls`) is implemented in source — this component uses `role="tablist"`/`role="tab"` for visual/semantic styling only, not the full WAI-ARIA APG tabs pattern (compare `agenticdevelopertoolkit://recipes/tabs`, which does implement that pattern via Base UI).
+- **Keyboard interaction**: Handled by browser default button keyboard support (Tab to focus, Space/Enter to activate). No custom keyboard navigation (arrow keys, roving tabindex, or `aria-controls`) is implemented in source — this component uses `role="tablist"`/`role="tab"` for visual/semantic styling only, not the full WAI-ARIA APG tabs pattern (compare `adhsdk://recipes/tabs`, which does implement that pattern via Base UI).
 - **Minimum tap target**: `tabItemClass`'s padding (`py-2`, 8px vertical) yields a computed tab height of approximately 33px — below the 44×44pt (iOS) / 48×48dp (Android) platform touch-target minimums. This is a web-only CSS component; those native minimums are not applied by any shared class. Implementations on touch platforms SHOULD increase padding or add touch-specific sizing.
 
 ## Conformance Test Vectors
@@ -140,7 +140,7 @@ Not applicable: No logging is implemented in the component source.
 
 ## Platform Notes
 
-- **React/Web**: Defined in `packages/web/packages/ui/src/blocks/app-tabs.tsx`. Exported as `AppTabs`. Renders plain `<button type="button">` elements — not a Base UI `<Tabs>` component (see **no-content-panels**) — styled with `tabItemClass` and `tabListClass` imported from the shared tab-grammar component (`agenticdevelopertoolkit://recipes/tabs`). Uses React's `onClick` for tab selection and a managed `value` prop for active-state control; `endItem` is pushed to the trailing edge via the `ml-auto` utility class (LTR-only — see Localization).
+- **React/Web**: Defined in `packages/web/packages/ui/src/blocks/app-tabs.tsx`. Exported as `AppTabs`. Renders plain `<button type="button">` elements — not a Base UI `<Tabs>` component (see **no-content-panels**) — styled with `tabItemClass` and `tabListClass` imported from the shared tab-grammar component (`adhsdk://recipes/tabs`). Uses React's `onClick` for tab selection and a managed `value` prop for active-state control; `endItem` is pushed to the trailing edge via the `ml-auto` utility class (LTR-only — see Localization).
 - **SwiftUI**: Use a custom `HStack` of `Button`s with an underline indicator — not `TabView`, which owns app-level/root navigation and associated panels, and not a segmented `Picker` — matching the source's plain-button, no-panel design (see **no-content-panels**). Track the active tab with the equivalent of the `value` prop and apply the underline styling equivalent of the shared tab grammar. The `endItem` property translates to a trailing `Spacer()` followed by the settings/action button, with its own independent `active` binding.
 - **Compose**: Use Material 3's `PrimaryTabRow` (or `SecondaryTabRow`) with `Tab` composables instead of hand-rolled `Button`s in a `Row` — it provides the tab-row affordance without requiring an associated `Pager`/content panel (see **no-content-panels**). Drive `selectedTabIndex` from the equivalent of `value`, and call the equivalent of `onValueChange` from each `Tab`'s `onClick`. The `endItem` property would be placed after a `Spacer(Modifier.weight(1f))` for trailing alignment, with its own independent selected state passed to that `Tab`.
 - **UIKit / AppKit**: Create a custom view — not a Base UI-equivalent tab control — using a horizontal stack (`UIStackView` on iOS, `NSStackView` on macOS) of plain buttons; `NSSegmentedControl` implies a single mutually-exclusive control surface and does not model an independent `endItem`, so it does not fit. Manage active state via a data property and update the UI on value changes. The `endItem` property would be positioned at the trailing edge with a spacer.

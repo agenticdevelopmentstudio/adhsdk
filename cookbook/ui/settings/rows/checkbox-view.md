@@ -1,7 +1,7 @@
 ---
 id: e9c10ff7-4e13-4007-a963-d2a9e4006745
 title: "Checkbox View"
-domain: adtoolkit://cookbook/ui/settings/rows/checkbox-view
+domain: adhsdk://cookbook/ui/settings/rows/checkbox-view
 type: ingredient
 version: 1.2.3
 status: review
@@ -21,8 +21,8 @@ tags:
   - toggle
 depends-on: []
 related:
-  - adtoolkit://cookbook/ui/settings/rows/popup-menu-choice-view
-  - adtoolkit://cookbook/ui/settings/rows/stepper-view
+  - adhsdk://cookbook/ui/settings/rows/popup-menu-choice-view
+  - adhsdk://cookbook/ui/settings/rows/stepper-view
 references: []
 approved-by: ""
 approved-date: ""
@@ -283,7 +283,7 @@ Not applicable: the source contains no logging call.
   input's `onChange` handler, comparing against the previous value before
   calling the parent's setter to mirror skips-redundant-commits.
 - **AppKit/UIKit** (source platform): Source file
-  `packages/apple/AgenticToolkit/macOS/SystemIntegration/ComposableSettingsWindow/Views/CheckboxView.swift`.
+  `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/Views/CheckboxView.swift`.
   A macOS-only (`import AppKit`) `NSView` subclass, `@MainActor`-isolated
   (the mechanism behind confines-to-ui-thread), inside the
   `ComposableSettings` namespace, conforming to `SettingsViewProtocol`. It
@@ -324,7 +324,7 @@ Not applicable: the source contains no logging call.
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/macOS/SystemIntegration/ComposableSettingsWindow/Views/CheckboxView.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/Views/CheckboxView.swift` |
 
 ## Design Decisions
 

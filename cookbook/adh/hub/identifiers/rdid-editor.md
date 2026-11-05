@@ -1,7 +1,7 @@
 ---
 id: 071e67a8-54a7-4f8b-b747-e6384713efde
 title: "RDID Editor"
-domain: adtoolkit://cookbook/adh/hub/identifiers/rdid-editor
+domain: adhsdk://cookbook/adh/hub/identifiers/rdid-editor
 type: ingredient
 version: 1.3.0
 status: review
@@ -313,16 +313,16 @@ console output, no logger import).
 
 - **React/Web**: Source at
   `packages/web/packages/adh-ui/src/components/rdid-editor.tsx`, exported
-  as `RdidEditor` from `@agentic-toolkit/adh-ui`. Its props
+  as `RdidEditor` from `@adh-sdk/adh-ui`. Its props
   (`RdidEditorProps`): `label: React.ReactNode`, `prefix: string`,
   `value: string`, `onChange: (next: string) => void`,
   `placeholder?: string`, `hint?: React.ReactNode`,
   `error?: React.ReactNode`, `disabled?: boolean`, `id?: string`.
-  Composes `Input` from `@agenticdevelopertoolkit/ui`
+  Composes `Input` from `@adh-sdk/ui`
   (`packages/web/packages/ui/src/components/input.tsx`)
   for the field shell and `FieldFootnote` from
-  `@agenticdevelopertoolkit/ui` for the hint/error slot, plus
-  `fieldCaptionClass` from `@agenticdevelopertoolkit/ui`'s typography
+  `@adh-sdk/ui` for the hint/error slot, plus
+  `fieldCaptionClass` from `@adh-sdk/ui`'s typography
   module for the caption (**renders-associated-label** uses a native
   `<label htmlFor>` bound to the input's `id`, generated via
   `React.useId` when not supplied — **generates-stable-input-id**). The

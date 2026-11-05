@@ -1,5 +1,5 @@
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/AIPluginKit/AIRequestSpec.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/AIPluginKit/AIRequestSpec.swift` |
 

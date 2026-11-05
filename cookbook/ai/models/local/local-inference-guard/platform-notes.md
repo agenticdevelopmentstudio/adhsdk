@@ -1,6 +1,6 @@
 
 - **SwiftUI**: The source is
-  `packages/apple/AgenticToolkit/AIPluginKit/LocalInferenceGuard.swift`,
+  `packages/apple/AgenticDeveloperHubSDK/AIPluginKit/LocalInferenceGuard.swift`,
   alongside its collaborators `ModelFitPolicy.swift`,
   `LocalModelCatalog.swift`, and `SystemMemoryMonitor.swift`, and its
   consumer `DaemonAIChat.swift`/`DaemonProviderResolver.swift` (the source of

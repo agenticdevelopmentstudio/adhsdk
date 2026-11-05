@@ -1,7 +1,7 @@
 ---
 id: e1859aa2-d0c4-4d9a-b926-203dd5fbbca3
 title: "AddUsersModal"
-domain: agenticdevelopertoolkit://recipes/add-users-modal
+domain: adhsdk://recipes/add-users-modal
 type: recipe
 version: 1.1.1
 status: review
@@ -21,8 +21,8 @@ tags:
   - table
   - users
 ingredients:
-  - agenticdevelopertoolkit://recipes/data-table
-  - agenticdevelopertoolkit://recipes/alert-and-dialog
+  - adhsdk://recipes/data-table
+  - adhsdk://recipes/alert-and-dialog
 depends-on: []
 related: []
 references: []
@@ -34,7 +34,7 @@ approved-date: ''
 
 ## Overview
 
-A modal in `@agenticdevelopertoolkit/ui` for building a list of users to add. It composes
+A modal in `@adh-sdk/ui` for building a list of users to add. It composes
 `Dialog` + `DataTable` + `Input` + `UnsavedChangesAlert` + `Button`. Each "Add" appends
 the entry row to a table above; the dialog's final "Add" hands the rows to a
 caller callback (`onAdd`).
@@ -47,8 +47,8 @@ button, and a footer (Cancel / Add).
 
 | Name | Domain | Role | Required | Configuration |
 |---|---|---|---|---|
-| DataTable | agenticdevelopertoolkit://recipes/data-table | Growing table of staged `DraftUser` rows | yes | columns Name · Email · Phone · Admin note; selection; empty label |
-| AlertAndDialog | agenticdevelopertoolkit://recipes/alert-and-dialog | The modal `Dialog` shell (`DialogContent max-w-2xl`) + the discard-confirm `UnsavedChangesAlert` | yes | modal semantics; discard-confirm copy |
+| DataTable | adhsdk://recipes/data-table | Growing table of staged `DraftUser` rows | yes | columns Name · Email · Phone · Admin note; selection; empty label |
+| AlertAndDialog | adhsdk://recipes/alert-and-dialog | The modal `Dialog` shell (`DialogContent max-w-2xl`) + the discard-confirm `UnsavedChangesAlert` | yes | modal semantics; discard-confirm copy |
 
 Composed shared primitives without their own recipe domains: `Input` and `Field`
 (the entry row inputs) and `Button` (entry Add + footer Cancel/Add).
@@ -235,7 +235,7 @@ passed).
 
 ## API
 
-`@agenticdevelopertoolkit/ui/blocks/add-users-modal`:
+`@adh-sdk/ui/blocks/add-users-modal`:
 
 ```ts
 interface DraftUser { name: string; email: string; phone: string; note: string }

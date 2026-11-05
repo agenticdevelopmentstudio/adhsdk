@@ -7,18 +7,18 @@ import {
   DialogHeader,
   DialogTitle,
   DialogDescription,
-} from "@agenticdevelopertoolkit/ui/components/dialog";
-import { DialogActions } from "@agenticdevelopertoolkit/ui/components/dialog-actions";
-import { UnsavedChangesAlert } from "@agenticdevelopertoolkit/ui/components/unsaved-changes-alert";
-import { Input } from "@agenticdevelopertoolkit/ui/components/input";
-import { Select } from "@agenticdevelopertoolkit/ui/components/select";
-import { Textarea } from "@agenticdevelopertoolkit/ui/components/textarea";
-import { Checkbox } from "@agenticdevelopertoolkit/ui/components/checkbox";
-import { Label } from "@agenticdevelopertoolkit/ui/components/label";
-import { Field } from "@agenticdevelopertoolkit/ui/blocks/field";
-import { FieldGroup } from "@agenticdevelopertoolkit/ui/blocks/field-group";
-import { useAction } from "@agenticdevelopertoolkit/ui/hooks/useAction";
-import { ErrorText } from "@agenticdevelopertoolkit/ui/components/error-text";
+} from "@adh-sdk/ui/components/dialog";
+import { DialogActions } from "@adh-sdk/ui/components/dialog-actions";
+import { UnsavedChangesAlert } from "@adh-sdk/ui/components/unsaved-changes-alert";
+import { Input } from "@adh-sdk/ui/components/input";
+import { Select } from "@adh-sdk/ui/components/select";
+import { Textarea } from "@adh-sdk/ui/components/textarea";
+import { Checkbox } from "@adh-sdk/ui/components/checkbox";
+import { Label } from "@adh-sdk/ui/components/label";
+import { Field } from "@adh-sdk/ui/blocks/field";
+import { FieldGroup } from "@adh-sdk/ui/blocks/field-group";
+import { useAction } from "@adh-sdk/ui/hooks/useAction";
+import { ErrorText } from "@adh-sdk/ui/components/error-text";
 import {
   useCreateProviderTemplate,
   useUpdateProviderTemplate,

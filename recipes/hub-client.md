@@ -1,7 +1,7 @@
 ---
 id: 9041d819-d6bf-405a-9129-9730bb2c8a6b
 title: Hub Client
-domain: agenticdevelopertoolkit://recipes/hub-client
+domain: adhsdk://recipes/hub-client
 type: ingredient
 version: 1.0.0
 status: review

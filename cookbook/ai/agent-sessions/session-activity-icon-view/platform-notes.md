@@ -37,7 +37,7 @@
   four state strings, and re-render the fill color from CSS custom
   properties bound to the active theme rather than hardcoding it.
 - **AppKit / UIKit**: Source at
-  `packages/apple/AgenticToolkit/macOS/Features/SessionWatcher/SessionListWindow/SessionWatcherActivityIconView.swift`
+  `packages/apple/AgenticDeveloperHubSDK/macOS/Features/SessionWatcher/SessionListWindow/SessionWatcherActivityIconView.swift`
   (this recipe's source): `SessionWatcher.SessionWatcherActivityIconView`, a
   nested type implemented as a `final` `NSView` subclass conforming to
   `Themeable`, drawing into a private `CALayer` sublayer rather than the

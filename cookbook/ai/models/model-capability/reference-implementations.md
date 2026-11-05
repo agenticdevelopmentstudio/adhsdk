@@ -1,5 +1,5 @@
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/AIPluginKit/ModelCapability.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/AIPluginKit/ModelCapability.swift` |
 

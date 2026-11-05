@@ -1,7 +1,7 @@
 ---
 id: 3e548aa3-1103-4b3f-96ff-d2e7ff564810
 title: "Font Chooser Button"
-domain: adtoolkit://cookbook/ui/settings/rows/font-chooser-button
+domain: adhsdk://cookbook/ui/settings/rows/font-chooser-button
 type: ingredient
 version: 1.2.3
 status: review
@@ -21,8 +21,8 @@ tags:
   - picker
 depends-on: []
 related:
-  - adtoolkit://cookbook/ui/settings/rows/color-picker-view
-  - adtoolkit://cookbook/ui/settings/rows/button-view
+  - adhsdk://cookbook/ui/settings/rows/color-picker-view
+  - adhsdk://cookbook/ui/settings/rows/button-view
 references: []
 approved-by: ""
 approved-date: ""
@@ -336,7 +336,7 @@ Not applicable: the source contains no logging call.
   a callback prop, mirroring `onChange`, with the parent responsible for
   any persistence.
 - **AppKit / UIKit (source)**: Source file
-  `packages/apple/AgenticToolkit/macOS/SystemIntegration/ComposableSettingsWindow/Views/FontChooserButton.swift`.
+  `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/Views/FontChooserButton.swift`.
   A macOS-only (`import AppKit`) `NSButton` subclass, `@MainActor`, nested
   inside the `ComposableSettings` namespace, conforming to
   `NSFontChanging`. On construction it also sets
@@ -389,7 +389,7 @@ Not applicable: the source contains no logging call.
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/macOS/SystemIntegration/ComposableSettingsWindow/Views/FontChooserButton.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/Views/FontChooserButton.swift` |
 
 ## Design Decisions
 

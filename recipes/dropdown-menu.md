@@ -1,7 +1,7 @@
 ---
 id: 25de0c8f-b6cb-4e9f-ba30-38afca642232
 title: Dropdown Menu
-domain: agenticdevelopertoolkit://recipes/dropdown-menu
+domain: adhsdk://recipes/dropdown-menu
 type: ingredient
 version: 1.1.1
 status: review
@@ -23,9 +23,9 @@ tags:
 - navigation
 depends-on: []
 related:
-- agenticdevelopertoolkit://recipes/popup-menu
-- agenticdevelopertoolkit://recipes/gear-menu-trigger
-- agenticdevelopertoolkit://recipes/category-gear-menu
+- adhsdk://recipes/popup-menu
+- adhsdk://recipes/gear-menu-trigger
+- adhsdk://recipes/category-gear-menu
 references:
 - https://base-ui.com/react/components/menu
 - https://www.w3.org/WAI/WCAG21/Understanding/target-size.html
@@ -189,7 +189,7 @@ Not applicable: The dropdown menu component does not implement logging. Consumin
 
 ## Platform Notes
 
-- **React/Web**: Implemented using Base UI's `Menu` primitive (`@base-ui/react/menu`) in the `@agenticdevelopertoolkit/ui` package's dropdown-menu component (see the reference-implementation design decision). Trigger, Content, MenuItem, CheckboxItem, RadioItem, SubmenuTrigger, SubmenuRoot, SubmenuContent, Positioner, and Portal are pass-through wrappers around MenuPrimitive components. Icons (Check, ChevronRight, Circle) are from lucide-react. Semantic CSS classes (`adh-dropdown-menu__*`) are applied to support theming via a public surface; consumers may pass an additional `className`, which is merged with the semantic classes rather than replacing them.
+- **React/Web**: Implemented using Base UI's `Menu` primitive (`@base-ui/react/menu`) in the `@adh-sdk/ui` package's dropdown-menu component (see the reference-implementation design decision). Trigger, Content, MenuItem, CheckboxItem, RadioItem, SubmenuTrigger, SubmenuRoot, SubmenuContent, Positioner, and Portal are pass-through wrappers around MenuPrimitive components. Icons (Check, ChevronRight, Circle) are from lucide-react. Semantic CSS classes (`adh-dropdown-menu__*`) are applied to support theming via a public surface; consumers may pass an additional `className`, which is merged with the semantic classes rather than replacing them.
 - **SwiftUI**: Use a SwiftUI `Menu`, which already renders native `Toggle` for checkbox items and `Picker(.inline)` for radio-style single-select groups with native checkmarks — custom indicator views are not needed. Differences: SwiftUI Menu does not support arbitrary positioning (side/sideOffset/align); it positions itself relative to its anchor, so a popover-based menu with custom positioning logic is only needed when explicit offset control is required. Semantic class mapping is not applicable; use SwiftUI native styling instead. Support `inset` and `accent` via SwiftUI padding and foreground color/tint modifiers.
 - **Compose**: Start from Material Design's DropdownMenu or build a custom menu composition. Differences: Material DropdownMenu has limited positioning control; use a Popup or Dialog for full side/offset control. Checkbox and RadioItem support is available via native Compose components. No semantic CSS classes; use Compose's Material theming system. Map `inset` to padding and `accent` to color overrides.
 - **AppKit / UIKit**: Use NSMenu on macOS or UIMenu on iOS (iOS 13+). Differences: NSMenu and UIMenu do not support custom positioning props (side/sideOffset/align); positioning is determined by the platform. CheckboxItem and RadioItem state is supported via NSMenuItem/UIAction state. No semantic CSS classes; use native platform styling. `inset` and `accent` map to platform menu item attributes and custom appearance if needed.
@@ -223,7 +223,7 @@ Not applicable: The dropdown menu component does not implement logging. Consumin
 **Approved**: pending
 
 **Reference implementation**
-**Decision**: The `@agenticdevelopertoolkit/ui` package's dropdown-menu component — `DropdownMenu`, `DropdownMenuContent`, `DropdownMenuItem`, `DropdownMenuLinkItem`, `DropdownMenuCheckboxItem`, `DropdownMenuRadioItem`, and related exports, built on Base UI's `Menu` primitive — is the reference implementation for this ingredient's behavioral contract.
+**Decision**: The `@adh-sdk/ui` package's dropdown-menu component — `DropdownMenu`, `DropdownMenuContent`, `DropdownMenuItem`, `DropdownMenuLinkItem`, `DropdownMenuCheckboxItem`, `DropdownMenuRadioItem`, and related exports, built on Base UI's `Menu` primitive — is the reference implementation for this ingredient's behavioral contract.
 **Rationale**: Citing the package and exported symbol names, rather than a file path or line numbers, keeps the reference stable as the file is refactored. See the Base UI `Menu` documentation in references.
 **Approved**: pending
 

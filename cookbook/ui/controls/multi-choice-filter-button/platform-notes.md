@@ -25,7 +25,7 @@
   multiple picks, unlike the source's per-pick close, so matching the
   source exactly means closing the menu explicitly after each selection.
 - **AppKit / UIKit** (source platform): Source file
-  `packages/apple/AgenticToolkit/macOS/UI/Controls/MultiChoiceFilterButton.swift`.
+  `packages/apple/AgenticDeveloperHubSDK/macOS/UI/Controls/MultiChoiceFilterButton.swift`.
   A macOS-only (`import AppKit`) `NSPopUpButton` subclass, `@MainActor`,
   configured `pullsDown: true`. `confines-to-ui-thread` is enforced by
   the class being declared `@MainActor`, so construction or mutation from

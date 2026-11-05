@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { fetchVercelProductionStates, __resetTeamSlugCache } from '../src/monitor/fetch-vercel-projects';
-import { _resetProviderCooldowns } from '@agentic-toolkit/deploy-platform/cooldown';
+import { _resetProviderCooldowns } from '@adh-sdk/deploy-platform/cooldown';
 
 // The overall-budget / partial-return behavior of the projects poll — the same
 // contract the Railway and Cloudflare fetchers already carry: a poll that can't

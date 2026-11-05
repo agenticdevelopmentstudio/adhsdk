@@ -1,7 +1,7 @@
 ---
 id: 08bfb299-851b-4b01-a84a-6a2a13e07c12
 title: "Composable Tabs Active Pane"
-domain: adtoolkit://cookbook/ui/layout/composable-tabs/active-pane
+domain: adhsdk://cookbook/ui/layout/composable-tabs/active-pane
 type: ingredient
 version: 1.3.0
 status: review
@@ -20,9 +20,9 @@ tags:
   - active-pane
   - focus
 depends-on:
-  - adtoolkit://cookbook/ui/layout/composable-tabs/leaf-pane-view
+  - adhsdk://cookbook/ui/layout/composable-tabs/leaf-pane-view
 related:
-  - adtoolkit://cookbook/ui/layout/composable-tabs/arrange-overlay-view
+  - adhsdk://cookbook/ui/layout/composable-tabs/arrange-overlay-view
 references:
   - https://developer.apple.com/documentation/appkit/nsevent/addlocalmonitorforevents(matching:handler:)
   - https://developer.apple.com/documentation/appkit/nswindow/makefirstresponder(_:)
@@ -481,7 +481,7 @@ this file.
   gate pointer-move-driven switching behind a user preference the same way
   `activePaneFollowsMouse` gates it here.
 - **AppKit/UIKit**: This is the source platform; see
-  `packages/apple/AgenticToolkit/macOS/UI/ViewControllers/ComposableTabs/ComposableTabsActivePane.swift`.
+  `packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/ComposableTabs/ComposableTabsActivePane.swift`.
   It is macOS-only — `NSEvent` local monitors, `NSWindow.firstResponder`/
   `makeFirstResponder`, weak `NSHashTable` collections, and
   `NSWindow.didBecomeKeyNotification`/`didResignKeyNotification` all have no
@@ -532,7 +532,7 @@ this file.
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/macOS/UI/ViewControllers/ComposableTabs/ComposableTabsActivePane.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/ComposableTabs/ComposableTabsActivePane.swift` |
 
 ## Design Decisions
 

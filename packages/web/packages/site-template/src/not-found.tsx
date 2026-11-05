@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import type { ReactElement } from 'react'
-import { FlowHero } from '@agenticdevelopertoolkit/landing'
+import { FlowHero } from '@adh-sdk/landing'
 import type { FrameCopy } from './types'
 import { Words } from './words'
 

@@ -1,10 +1,10 @@
-// WRITTEN by @agenticdevelopertoolkit/site-template's assembler — do not edit. Change the
+// WRITTEN by @adh-sdk/site-template's assembler — do not edit. Change the
 // skeleton in the toolkit and re-assemble.
 import type { Metadata, Viewport } from 'next'
 import type { ReactElement, ReactNode } from 'react'
-import { JsonLd } from '@agenticdevelopertoolkit/landing'
-import { FrameZoomGuard, frameJsonLd, frameMetadata, frameViewport } from '@agenticdevelopertoolkit/site-template'
-import type { FrameCopy } from '@agenticdevelopertoolkit/site-template'
+import { JsonLd } from '@adh-sdk/landing'
+import { FrameZoomGuard, frameJsonLd, frameMetadata, frameViewport } from '@adh-sdk/site-template'
+import type { FrameCopy } from '@adh-sdk/site-template'
 import siteCopy from '../src/content/site/site.json'
 import { SiteAnalytics } from '../src/site/analytics'
 import { config } from '../src/site/config'

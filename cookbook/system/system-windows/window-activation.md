@@ -1,7 +1,7 @@
 ---
 id: 54413e61-d82d-4526-b496-5daf917ce877
 title: "Window Activation"
-domain: adtoolkit://cookbook/system/system-windows/window-activation
+domain: adhsdk://cookbook/system/system-windows/window-activation
 type: ingredient
 version: 1.2.0
 status: review
@@ -20,9 +20,9 @@ tags:
   - terminals
   - diagnostics
 depends-on:
-  - adtoolkit://cookbook/system/scripting
+  - adhsdk://cookbook/system/scripting
 related:
-  - adtoolkit://cookbook/ui/windows/screen-manager
+  - adhsdk://cookbook/ui/windows/screen-manager
 references: []
 approved-by: ""
 approved-date: ""
@@ -296,7 +296,7 @@ Levels are descriptive only; the log has no level field.
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/macOS/SystemIntegration/WindowManager/WindowActivation/` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/WindowManager/WindowActivation/` |
 
 ## Design Decisions
 

@@ -1,8 +1,8 @@
 "use client";
 
 import type { ReactElement } from "react";
-import { InvitationPendingUsersPane } from "@agentic-toolkit/adh-ui/blocks";
-import { ErrorText } from "@agenticdevelopertoolkit/ui/components/error-text";
+import { InvitationPendingUsersPane } from "@adh-sdk/adh-ui/blocks";
+import { ErrorText } from "@adh-sdk/ui/components/error-text";
 import { NotesAndHistory } from "./NotesAndHistory";
 import { AdminNotesModal } from "../components/AdminNotesModal";
 import {

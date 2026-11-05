@@ -5,7 +5,7 @@
 //
 // GroupsSection is rendered directly rather than through DashboardsFeature: selection is a prop
 // here (`leaf`), so a group can be opened without a router, and the popup is one rail click away.
-// Only the data domain boundary (@agentic-toolkit/data/monitored-sites) is mocked — the three
+// Only the data domain boundary (@adh-sdk/data/monitored-sites) is mocked — the three
 // writers the section imports — so the section → editor → seam wiring is exercised, not the
 // transport.
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
@@ -15,16 +15,16 @@ import {
   RailHostContext,
   type RailHostRegistry,
   type RegisteredLevels,
-} from "@agentic-toolkit/resource";
+} from "@adh-sdk/resource";
 
-vi.mock("@agentic-toolkit/data/monitored-sites", () => ({
+vi.mock("@adh-sdk/data/monitored-sites", () => ({
   createGroup: vi.fn(),
   updateGroup: vi.fn(),
   deleteGroup: vi.fn(),
 }));
 
 import { GroupsSection } from "./GroupsSection";
-import type { SiteGroupView } from "@agentic-toolkit/data/monitored-sites";
+import type { SiteGroupView } from "@adh-sdk/data/monitored-sites";
 
 const GROUP: SiteGroupView = {
   id: "g1",

@@ -21,7 +21,7 @@
   a callback prop, mirroring `onChange`, with the parent responsible for
   any persistence.
 - **AppKit / UIKit (source)**: Source file
-  `packages/apple/AgenticToolkit/macOS/SystemIntegration/ComposableSettingsWindow/Views/FontChooserButton.swift`.
+  `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/Views/FontChooserButton.swift`.
   A macOS-only (`import AppKit`) `NSButton` subclass, `@MainActor`, nested
   inside the `ComposableSettings` namespace, conforming to
   `NSFontChanging`. On construction it also sets

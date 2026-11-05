@@ -1,7 +1,7 @@
 ---
 id: f064de5a-b117-4147-96a9-c1ed11d5c976
 title: "Spacing Control"
-domain: adtoolkit://cookbook/ui/controls/spacing-control
+domain: adhsdk://cookbook/ui/controls/spacing-control
 type: ingredient
 version: 1.3.0
 status: review
@@ -22,10 +22,10 @@ tags:
   - range
 depends-on: []
 related:
-  - adtoolkit://cookbook/ui/layout/composable-tabs/pane-spacing
-  - adtoolkit://cookbook/ui/layout/composable-tabs/settings-view
+  - adhsdk://cookbook/ui/layout/composable-tabs/pane-spacing
+  - adhsdk://cookbook/ui/layout/composable-tabs/settings-view
   - agenticdevelopercookbook://guidelines/cookbook/ui/platform-design-languages
-  - adtoolkit://cookbook/ui/settings/rows/captioned-slider-view
+  - adhsdk://cookbook/ui/settings/rows/captioned-slider-view
 references: []
 approved-by: ""
 approved-date: ""
@@ -229,7 +229,7 @@ began, per `drags-gutter-two-to-one-outward`).
   space"), which the screen reader reads as the button's label. This
   mirrors the same control-to-title linkage gap already noted on the
   sibling ingredient
-  (`adtoolkit://cookbook/ui/settings/rows/captioned-slider-view#accessibility`).
+  (`adhsdk://cookbook/ui/settings/rows/captioned-slider-view#accessibility`).
 - **Announce state changes (e.g., loading, disabled)**: Not applicable — the
   component has no loading or disabled state (see States) for a change to
   announce.
@@ -444,7 +444,7 @@ Not applicable: source contains no logging call anywhere.
   1:1/2:1 gains to it, to mirror "measured from the value at drag start,
   not accumulated step by step".
 - **AppKit / UIKit** (source platform): Source file
-  `packages/apple/AgenticToolkit/macOS/UI/Controls/Spacing/SpacingControl.swift`,
+  `packages/apple/AgenticDeveloperHubSDK/macOS/UI/Controls/Spacing/SpacingControl.swift`,
   with two companions this recipe also draws from:
   `Spacing.swift` (the spacing value type and the edge/gutter/arrow/axis
   enums it edits) and `SpacingControlLayout.swift` (the pure,
@@ -509,7 +509,7 @@ Not applicable: source contains no logging call anywhere.
   `palette.nsColor(.windowBackground)`, `palette.font(.code)`,
   `palette.font(.body)`. The open contrast question
   (minimum-contrast-ratio) concerns `SemanticPalette.derive(_:theme:)`
-  (`packages/apple/AgenticDeveloperToolkit/Sources/Theme/SemanticPalette.swift`)
+  (`packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Theme/SemanticPalette.swift`)
   and would need a `SemanticPalette`-derived Increase-Contrast variant
   sourced from `NSWorkspace.accessibilityDisplayShouldIncreaseContrast`.
 
@@ -587,7 +587,7 @@ Not applicable: source contains no logging call anywhere.
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/macOS/UI/Controls/Spacing/SpacingControl.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/Controls/Spacing/SpacingControl.swift` |
 
 ## Design Decisions
 

@@ -1,7 +1,7 @@
 {
-  "name": "agenticdevelopertoolkit",
+  "name": "adhsdk",
   "version": "0.1.0",
-  "description": "Agentic developer toolkit — shared React + TypeScript packages for persona chat, the ADH client, and the Agentic Cookbook family sites. pnpm monorepo.",
+  "description": "Agentic Developer Hub SDK — shared React + TypeScript packages for persona chat, the ADH client, and the Agentic Cookbook family sites. pnpm monorepo.",
   "license": "Apache-2.0",
   "type": "module",
   "packageManager": "pnpm@9.15.9",

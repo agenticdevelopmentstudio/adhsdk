@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { RailHostBoundary } from "@agentic-toolkit/resource";
+import { RailHostBoundary } from "@adh-sdk/resource";
 
 const listProviderConfigs = vi.fn();
 const listProviders = vi.fn();
@@ -11,7 +11,7 @@ const createProviderConfig = vi.fn(async (..._a: unknown[]) => ({}) as unknown);
 const testProviderConfig = vi.fn();
 const transferProviderConfig = vi.fn();
 
-vi.mock("@agentic-toolkit/data/integrations", () => ({
+vi.mock("@adh-sdk/data/integrations", () => ({
   integrationsApi: {
     listProviderConfigs: (...a: unknown[]) => listProviderConfigs(...a),
     listProviders: (...a: unknown[]) => listProviders(...a),
@@ -27,7 +27,7 @@ vi.mock("@agentic-toolkit/data/integrations", () => ({
 // file is about is WHAT the bar hands them, and `showSaveFilePicker` does not exist in jsdom.
 const saveTextFile = vi.fn(async () => true);
 const readTextFile = vi.fn(async () => "");
-vi.mock("@agenticdevelopertoolkit/ui/lib/file-exchange", () => ({
+vi.mock("@adh-sdk/ui/lib/file-exchange", () => ({
   saveTextFile: (...a: unknown[]) => saveTextFile(...(a as [])),
   readTextFile: (...a: unknown[]) => readTextFile(...(a as [])),
 }));

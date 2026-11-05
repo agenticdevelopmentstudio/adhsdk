@@ -2,14 +2,14 @@
 
 import { useState } from 'react';
 import { Plus } from 'lucide-react';
-import type { FieldVisibility, SectionRow } from '@agentic-toolkit/registry/client';
-// The hub does not depend on @agenticdevelopertoolkit/registry-types directly —
+import type { FieldVisibility, SectionRow } from '@adh-sdk/registry/client';
+// The hub does not depend on @adh-sdk/registry-types directly —
 // evaluateShowIf crosses through the registry package's own re-export, the same path
 // EntryEditor.tsx already uses for the registrant-facing side of the same rule.
-import { evaluateShowIf } from '@agentic-toolkit/registry/types';
-import { Field, FieldGroup, SplitViewControl, useSplitView } from '@agenticdevelopertoolkit/ui/blocks';
-import { Button } from '@agenticdevelopertoolkit/ui/components/button';
-import { Input } from '@agenticdevelopertoolkit/ui/components/input';
+import { evaluateShowIf } from '@adh-sdk/registry/types';
+import { Field, FieldGroup, SplitViewControl, useSplitView } from '@adh-sdk/ui/blocks';
+import { Button } from '@adh-sdk/ui/components/button';
+import { Input } from '@adh-sdk/ui/components/input';
 import { EntrySectionPanel } from './EntrySectionPanel';
 import { RegistrySectionPanel } from './RegistrySectionPanel';
 import type { RegistryDraftState, UseRegistryDraft } from './useRegistryDraft';

@@ -1,4 +1,4 @@
-import { type Topic } from "@agentic-toolkit/account";
+import { type Topic } from "@adh-sdk/account";
 /** The settings sections (Account, Subscription, Profile) as master-detail
  *  topics — each leads with a gold title and carries its own panel + button bar.
  *  Shared by hub's /settings route and the User Settings overlay every site mounts. */

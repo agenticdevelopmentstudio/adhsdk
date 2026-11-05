@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { useQueryClient, type QueryKey } from "@tanstack/react-query";
-import type { ProgressError, ProgressResult } from "@agenticdevelopertoolkit/ui/blocks";
+import type { ProgressError, ProgressResult } from "@adh-sdk/ui/blocks";
 
 /**
  * Run one action over a SELECTION, one item at a time, halting on the first failure.

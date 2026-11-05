@@ -1,4 +1,4 @@
-// @agentic-toolkit/gamification — a product's gamification realm: config, badge catalog, level
+// @adh-sdk/gamification — a product's gamification realm: config, badge catalog, level
 // ladder and custom event types.
 //
 // TWO arrangements of ONE set of sections, because two hosts want different things from them:
@@ -29,5 +29,5 @@ export { RealmCatalogProvider, useRealmCatalog } from "./realm-catalog";
 // The URL grammar lives at the SERVER-SAFE ./parse subpath ONLY — deliberately NOT re-exported
 // here: this barrel's dist is a "use client" module, so an RSC page that imported the parse
 // helper from it would throw in prod (render-only client refs). Same rule as
-// @agentic-toolkit/ecosystems.
+// @adh-sdk/ecosystems.
 export type { GamificationPathSelection } from "./parse-path";

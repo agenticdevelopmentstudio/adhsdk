@@ -3,7 +3,7 @@
   "meta": {
     "id": "4b068644-9e3a-42bf-bce8-4f3068dea7e3",
     "title": "Status Web Deploy Status",
-    "domain": "adtoolkit://cookbook/status/dashboard/logic/deploy-status",
+    "domain": "adhsdk://cookbook/status/dashboard/logic/deploy-status",
     "type": "ingredient",
     "version": "1.0.2",
     "status": "review",
@@ -25,8 +25,8 @@
     ],
     "depends-on": [],
     "related": [
-      "adtoolkit://cookbook/status/service/monitor/deploy-status",
-      "adtoolkit://cookbook/status/dashboard/logic/board-types"
+      "adhsdk://cookbook/status/service/monitor/deploy-status",
+      "adhsdk://cookbook/status/dashboard/logic/board-types"
     ],
     "references": [],
     "approved-by": "",

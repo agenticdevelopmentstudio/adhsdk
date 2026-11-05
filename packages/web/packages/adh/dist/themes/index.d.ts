@@ -6,7 +6,7 @@ export { switcherThemeKeys } from './theme-keys';
 export type { AdhThemeKey, AdhThemeOption, SwitcherThemeKey, FullPaletteThemeKey, } from './adh-themes';
 export { useThemeEditor } from './useThemeEditor';
 export type { ThemeEditorApi, ThemeSource, EditorTheme, CssMap } from './useThemeEditor';
-export { DbThemeApplier } from '@agentic-toolkit/adh/themes/DbThemeApplier';
+export { DbThemeApplier } from '@adh-sdk/adh/themes/DbThemeApplier';
 export { THEME_STORAGE_KEY, ALT_STYLE_SELECTOR, cookieDomain, readStoredTheme, persistTheme, applyBaseTheme, readPreviewTheme, appendThemePreview, themePrePaintScript, } from './theme-preview';
 export { applyThemeCss, clearThemeOverride } from './theme-overrides';
 export { isSwitcherSeed, concatItemCss } from './resolve';

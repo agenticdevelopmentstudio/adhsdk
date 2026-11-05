@@ -12,7 +12,7 @@ import { describe, it, expect, vi, afterEach } from "vitest";
 import { render, screen, fireEvent, cleanup } from "@testing-library/react";
 
 import { TimelineView } from "./TimelineView";
-import { type WorkItem } from "@agentic-toolkit/data/projects";
+import { type WorkItem } from "@adh-sdk/data/projects";
 
 function makeItem(over: Partial<WorkItem> & Pick<WorkItem, "id" | "title">): WorkItem {
   return {

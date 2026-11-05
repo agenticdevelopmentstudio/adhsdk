@@ -14,14 +14,14 @@ import { useState, type ReactNode } from "react";
 import { describe, it, expect, vi, afterEach, beforeEach } from "vitest";
 import { render, screen, cleanup, fireEvent } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import type { Ecosystem } from "@agentic-toolkit/data/ecosystems";
+import type { Ecosystem } from "@adh-sdk/data/ecosystems";
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: vi.fn(), replace: vi.fn(), prefetch: vi.fn() }),
 }));
 
-vi.mock("@agentic-toolkit/data/ecosystems", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("@agentic-toolkit/data/ecosystems")>()),
+vi.mock("@adh-sdk/data/ecosystems", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@adh-sdk/data/ecosystems")>()),
   ecosystemsApi: {
     list: vi.fn(),
     listChildren: vi.fn(),
@@ -41,8 +41,8 @@ vi.mock("@agentic-toolkit/data/ecosystems", async (importOriginal) => ({
   useProvisionedFeatures: vi.fn(() => ({ data: [], isPending: false, isError: false })),
 }));
 
-vi.mock("@agentic-toolkit/resource", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("@agentic-toolkit/resource")>()),
+vi.mock("@adh-sdk/resource", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@adh-sdk/resource")>()),
   ResourceExplorer: function StandInExplorer({
     activeId,
     topicsTitle,
@@ -92,7 +92,7 @@ vi.mock("./ManageFeaturesDialog", () => ({
 }));
 
 import { EcosystemsFeature, IN_PACKAGE_TOPICS, type EcosystemsFeatureProps } from "./EcosystemsFeature";
-import { ecosystemsApi } from "@agentic-toolkit/data/ecosystems";
+import { ecosystemsApi } from "@adh-sdk/data/ecosystems";
 
 const ACME: Ecosystem = {
   id: "ecosystem.acme",

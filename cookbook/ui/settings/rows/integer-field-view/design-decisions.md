@@ -6,7 +6,7 @@
   field is still exactly this call" — the generic view generalizes to
   optional, one-sided bounds that the range view model (which requires
   both) cannot express, so the behavior moved there (see
-  `adtoolkit://cookbook/ui/settings/rows/number-field-view`) while
+  `adhsdk://cookbook/ui/settings/rows/number-field-view`) while
   this component stayed as the compatible entry point.
   **Approved**: pending
 - **Decision**: Default the field width to 52pt in this component's

@@ -1,7 +1,7 @@
 ---
 id: 33086772-2d36-49f5-8e1d-725163d7ce8f
 title: "Project Workspace"
-domain: adtoolkit://cookbook/workspace/projects/project-workspace
+domain: adhsdk://cookbook/workspace/projects/project-workspace
 type: ingredient
 version: 1.2.1
 status: review
@@ -24,31 +24,31 @@ tags:
   - caching
 depends-on: []
 related:
-  - adtoolkit://cookbook/workspace/projects/project-database
-  - adtoolkit://cookbook/workspace/projects/project-database-layout
-  - adtoolkit://cookbook/workspace/projects/git-repo
-  - adtoolkit://cookbook/workspace/projects/project-checkout
-  - adtoolkit://cookbook/workspace/projects/branch-controller
-  - adtoolkit://cookbook/workspace/projects/project-controller
-  - adtoolkit://cookbook/ui/layout/composable-tabs/tabs-window
-  - adtoolkit://cookbook/foundation/git/git-client
+  - adhsdk://cookbook/workspace/projects/project-database
+  - adhsdk://cookbook/workspace/projects/project-database-layout
+  - adhsdk://cookbook/workspace/projects/git-repo
+  - adhsdk://cookbook/workspace/projects/project-checkout
+  - adhsdk://cookbook/workspace/projects/branch-controller
+  - adhsdk://cookbook/workspace/projects/project-controller
+  - adhsdk://cookbook/ui/layout/composable-tabs/tabs-window
+  - adhsdk://cookbook/foundation/git/git-client
 references:
-  - packages/apple/AgenticToolkit/macOS/Features/Projects/ProjectWorkspace.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Tests/AgenticToolkitMacOSTests/Projects/ProjectWorkspaceTabsTests.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/macOS/Features/Projects/ProjectDatabase.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/macOS/Features/Projects/ProjectDatabase+Layout.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/macOS/Features/Projects/GitRepo.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/macOS/Features/Projects/ProjectTabReconciler.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/macOS/UI/ViewControllers/ComposableTabs/ComposableTabsLayout.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/macOS/UI/ViewControllers/ComposableTabs/ComposableTabLayoutSpec.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/macOS/UI/ViewControllers/ComposableTabs/LayoutNode.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/macOS/UI/ViewControllers/MultiTabbedViewController/Edge.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/macOS/UI/ViewControllers/FileBrowser/Model/FileBrowserDirectories.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/macOS/UI/ViewControllers/FileBrowser/Model/Git/GitStatusProvider.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Core/Git/GitClient.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/macOS/Features/Editor/ProjectLanguageServices.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/macOS/Features/Extensions/VSCodeAPI/MainThreadWorkspace.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Core/Loggable.swift (agenticdevelopertoolkit)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectWorkspace.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKMacOSTests/Projects/ProjectWorkspaceTabsTests.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectDatabase.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectDatabase+Layout.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/GitRepo.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectTabReconciler.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/ComposableTabs/ComposableTabsLayout.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/ComposableTabs/ComposableTabLayoutSpec.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/ComposableTabs/LayoutNode.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/MultiTabbedViewController/Edge.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/FileBrowser/Model/FileBrowserDirectories.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/FileBrowser/Model/Git/GitStatusProvider.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Core/Git/GitClient.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Editor/ProjectLanguageServices.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/MainThreadWorkspace.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Core/Loggable.swift (adhsdk)
 approved-by: ""
 approved-date: ""
 ---
@@ -281,7 +281,7 @@ renders itself.
   project directories from one instance are not serialized against
   calls from another — but ordering that race, when it matters, is the
   project controller's job (see
-  `adtoolkit://cookbook/workspace/projects/project-controller`),
+  `adhsdk://cookbook/workspace/projects/project-controller`),
   not this file's; the workspace itself makes no ordering claim across
   instances.
 - **Error states**: Every database-backed operation except reading
@@ -299,7 +299,7 @@ renders itself.
   git-status-provider lookup hands out an object built on the project's
   git client, but the git subprocess calls that object goes on to make
   are that object's own concern, not this file's (see
-  `adtoolkit://cookbook/foundation/git/git-client`).
+  `adhsdk://cookbook/foundation/git/git-client`).
 - **Cancellation and timeouts**: No operation on the workspace is
   asynchronous; every operation here is a synchronous database call, a
   synchronous cache lookup, or a pure computation, so there is no
@@ -374,8 +374,8 @@ Not applicable: this file makes no analytics or event-tracking call.
 - **Storage**: Everything persisted here (tabs, pane state, project
   settings, extra directories) is written to the one database this
   project was constructed with, scoped by the repository's id; see
-  `adtoolkit://cookbook/workspace/projects/project-database` and
-  `adtoolkit://cookbook/workspace/projects/project-database-layout`
+  `adhsdk://cookbook/workspace/projects/project-database` and
+  `adhsdk://cookbook/workspace/projects/project-database-layout`
   for that store's own durability guarantees. The cache directory names,
   but does not itself populate, a filesystem location beside the
   database.
@@ -411,9 +411,9 @@ produces no log line at all — see the pending decision on stored-tabs-load-fai
 ## Platform Notes
 
 - **SwiftUI**: The source is
-  `packages/apple/AgenticToolkit/macOS/Features/Projects/ProjectWorkspace.swift`,
-  importing `AppKit`, `AgenticToolkitCore`, `AgenticToolkitCoreUI`,
-  `AgenticToolkitCoreMacOS`, and `os`. It calls no AppKit UI API directly —
+  `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectWorkspace.swift`,
+  importing `AppKit`, `AgenticDeveloperHubSDKCore`, `AgenticDeveloperHubSDKCoreUI`,
+  `AgenticDeveloperHubSDKCoreMacOS`, and `os`. It calls no AppKit UI API directly —
   it is a plain `@MainActor` model object holding a `GitRepo`, a
   `ProjectDatabase`, a `ComposableTabsLayout`, and two weak object caches. A
   SwiftUI host would still need this exact object feeding a tab-bar view, as
@@ -436,7 +436,7 @@ produces no log line at all — see the pending decision on stored-tabs-load-fai
   scope this object to on the web; a browser-hosted project workspace would
   keep `repo`/tabs/pane-state/settings as component state populated from and
   persisted through a server-side API standing in for `ProjectDatabase` (see
-  `adtoolkit://cookbook/workspace/projects/project-database`), and would
+  `adhsdk://cookbook/workspace/projects/project-database`), and would
   reproduce the two weak, directory-keyed caches with a JavaScript `WeakMap`
   (optionally paired with `FinalizationRegistry` to detect eviction) keyed by
   a normalized directory identifier, since JavaScript has no
@@ -447,13 +447,13 @@ produces no log line at all — see the pending decision on stored-tabs-load-fai
   and directory-cache logic unchanged; it would still need its own
   `FileBrowserDirectories`/`GitStatusProvider`-equivalent collaborators, and,
   per the multi-checkout note in
-  `adtoolkit://cookbook/workspace/projects/project-controller`, iOS
+  `adhsdk://cookbook/workspace/projects/project-controller`, iOS
   sandboxing makes exposing more than one linked worktree under one project
   an unusual arrangement to design a browser for.
 - **WinUI 3**: Port `ProjectWorkspace` as a plain C# class with no interface
   requiring thread-affinity of its own, touched only from the UI thread
   (`DispatcherQueue`) by convention — the same discipline
-  `adtoolkit://cookbook/workspace/projects/branch-controller`'s WinUI
+  `adhsdk://cookbook/workspace/projects/branch-controller`'s WinUI
   port assumes for `@MainActor`. Reproduce the two `WeakCache`s with a
   `Dictionary<string, WeakReference<T>>` (or `ConditionalWeakTable`) keyed by
   a normalized, reparse-point-resolved path (`Path.GetFullPath`/
@@ -466,8 +466,8 @@ produces no log line at all — see the pending decision on stored-tabs-load-fai
   `JSONEncoder`/`JSONDecoder`. Route every persisted accessor
   (`storedTabs`/`saveTabs`, `paneState`/`setPaneState`, `setting`/
   `setSetting`, `loadProjectDirectories`/`saveProjectDirectories`) through
-  the same SQLite-backed port `adtoolkit://cookbook/workspace/projects/project-database`
-  and `adtoolkit://cookbook/workspace/projects/project-database-layout`
+  the same SQLite-backed port `adhsdk://cookbook/workspace/projects/project-database`
+  and `adhsdk://cookbook/workspace/projects/project-database-layout`
   describe, keeping this file's swallow-and-log convention on every path
   except the one flagged as a pending decision above.
 - **confines-to-ui-thread** (scope): The workspace has no thread-safety guarantee of its own; every stored property and method is confined to the UI thread by that declaration alone.
@@ -476,7 +476,7 @@ produces no log line at all — see the pending decision on stored-tabs-load-fai
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/macOS/Features/Projects/ProjectWorkspace.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectWorkspace.swift` |
 
 ## Design Decisions
 

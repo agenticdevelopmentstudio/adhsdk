@@ -1,13 +1,13 @@
 "use client";
 
-import { defineSiteHome } from "@agentic-toolkit/adh/home";
-import { KnowledgeBasesFeature, WorkspaceKnowledgeBases } from "@agentic-toolkit/knowledgebases";
+import { defineSiteHome } from "@adh-sdk/adh/home";
+import { KnowledgeBasesFeature, WorkspaceKnowledgeBases } from "@adh-sdk/knowledgebases";
 // personaMemoryTables comes from the server-safe ./tables subpath (same reason as ./parse:
 // the barrel dist is a "use client" module).
-import { personaMemoryTables } from "@agentic-toolkit/knowledgebases/tables";
+import { personaMemoryTables } from "@adh-sdk/knowledgebases/tables";
 // The parse helper comes from the server-safe ./parse subpath, and keeping the grammar in one
 // module is what stops this host and the hub drifting into parsing the same URL differently.
-import { parseKnowledgeBasesPath } from "@agentic-toolkit/knowledgebases/parse";
+import { parseKnowledgeBasesPath } from "@adh-sdk/knowledgebases/parse";
 
 // The persona-memory CRUD tables — the package's ONE implementation of the rule the hub's
 // feature def encodes (every persona-memory-schema table, sorted by key); this site has no
@@ -18,7 +18,7 @@ const TABLES = personaMemoryTables();
 /**
  * The Knowledge Bases feature — this site's gated product surface
  * (adh/docs/platform/feature-platform-phase2.md): CRUD data views over the persona-memory tables,
- * the SAME @agentic-toolkit/knowledgebases surface the hub's /<slug>/knowledgebases route and
+ * the SAME @adh-sdk/knowledgebases surface the hub's /<slug>/knowledgebases route and
  * persona editor render, now rooted at the workspace rather than at /home. Selection is local,
  * so the optional catch-all segment is accepted (parseKnowledgeBasesPath) but not URL-driven.
  *

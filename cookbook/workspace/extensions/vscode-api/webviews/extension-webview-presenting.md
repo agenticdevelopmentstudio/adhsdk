@@ -1,7 +1,7 @@
 ---
 id: c4f76978-5aef-430c-a7e1-a20326da6709
 title: "Extension Webview Presenting"
-domain: adtoolkit://cookbook/workspace/extensions/vscode-api/webviews/extension-webview-presenting
+domain: adhsdk://cookbook/workspace/extensions/vscode-api/webviews/extension-webview-presenting
 type: ingredient
 version: 1.1.2
 status: review
@@ -23,14 +23,14 @@ tags:
 depends-on:
   - agenticdevelopercookbook://principles/fail-fast
 related:
-  - adtoolkit://cookbook/workspace/extensions/vscode-api/webviews/webview-panel-options
+  - adhsdk://cookbook/workspace/extensions/vscode-api/webviews/webview-panel-options
 references:
-  - packages/apple/AgenticToolkit/macOS/Features/Extensions/VSCodeAPI/ExtensionWebviewPresenting.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/macOS/Features/Extensions/Webview/PaneWebviewPresenter.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/macOS/Features/Extensions/VSCodeAPI/MainThreadWebviews.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Core/Extensions/WebviewPanelOptions.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Tests/AgenticToolkitMacOSTests/Extensions/PaneWebviewPresenterTests.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Tests/AgenticToolkitMacOSTests/Extensions/MainThreadWebviewsTests.swift (agenticdevelopertoolkit)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/ExtensionWebviewPresenting.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/Webview/PaneWebviewPresenter.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/MainThreadWebviews.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Core/Extensions/WebviewPanelOptions.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKMacOSTests/Extensions/PaneWebviewPresenterTests.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKMacOSTests/Extensions/MainThreadWebviewsTests.swift (adhsdk)
 approved-by: ""
 approved-date: ""
 ---
@@ -152,7 +152,7 @@ Not applicable: the given source contains no logging call of its own — diagnos
 - **SwiftUI**: this is already Swift; a SwiftUI-hosted pane tree would keep `ExtensionWebviewPresenting` and `ExtensionWebviewPanel` unchanged and replace `PaneWebviewPresenter`'s `place` closure — which currently answers with an AppKit-facing `ExtensionWebviewPlacement` of `reveal`/`remove` closures — with one that drives a `NavigationSplitView`'s selection binding instead of an `NSSplitViewItem` pane tree.
 - **Compose**: model `ExtensionWebviewPresenting`/`ExtensionWebviewPanel` as a Kotlin interface pair confined to the main/UI thread (`Dispatchers.Main`, in place of `@MainActor`); `ExtensionWebviewPanelRequest` becomes an immutable `data class` (Kotlin's `Sendable`-equivalent by construction); `presentWebviewPanel` becomes a plain function returning a nullable panel interface, and `reveal`/`dispose` become functions posted to the main dispatcher rather than assumed to already run there.
 - **React/Web**: model the presenter as a factory function returning a panel "handle" object (`post`, `reveal`, `dispose` methods, an `isDisposed` getter) backed by an `iframe` or a Web Component; `onDidReceiveMessage` maps to a `window.addEventListener('message', ...)` bridge scoped to that `iframe`, and `isDisposed` maps to tracking whether the backing element has been removed from the DOM.
-- **AppKit / UIKit**: this is the source's own home — `PaneWebviewPresenter` and `WebviewPanelViewController` are AppKit types in the `AgenticToolkitMacOS` framework. A UIKit port would keep `ExtensionWebviewPresenting`/`ExtensionWebviewPanel` unchanged and replace the AppKit-specific pane-tree placement closure with a `UISplitViewController` detail push or a `UINavigationController` push, since UIKit has no `NSSplitViewItem`-style pane tree to place into. Both protocols are declared `@MainActor` (**confines-to-ui-thread**), matching AppKit's own main-thread requirement for window and view mutation. `ExtensionWebviewPanel` is also constrained to `AnyObject` and deliberately does not conform to `Sendable`: because it is both `@MainActor`-isolated and a class-bound protocol, the compiler already prevents any instance from crossing an actor boundary, making a `Sendable` conformance unnecessary; this follows from **confines-to-ui-thread**.
+- **AppKit / UIKit**: this is the source's own home — `PaneWebviewPresenter` and `WebviewPanelViewController` are AppKit types in the `AgenticDeveloperHubSDKMacOS` framework. A UIKit port would keep `ExtensionWebviewPresenting`/`ExtensionWebviewPanel` unchanged and replace the AppKit-specific pane-tree placement closure with a `UISplitViewController` detail push or a `UINavigationController` push, since UIKit has no `NSSplitViewItem`-style pane tree to place into. Both protocols are declared `@MainActor` (**confines-to-ui-thread**), matching AppKit's own main-thread requirement for window and view mutation. `ExtensionWebviewPanel` is also constrained to `AnyObject` and deliberately does not conform to `Sendable`: because it is both `@MainActor`-isolated and a class-bound protocol, the compiler already prevents any instance from crossing an actor boundary, making a `Sendable` conformance unnecessary; this follows from **confines-to-ui-thread**.
 - **WinUI 3**: model `ExtensionWebviewPresenting` as a C# interface `IExtensionWebviewPresenting` with `IExtensionWebviewPanel? PresentWebviewPanel(ExtensionWebviewPanelRequest request)`; `@MainActor` isolation becomes confinement to the UI thread, enforced by asserting `DispatcherQueue.GetForCurrentThread().HasThreadAccess` at entry. `ExtensionWebviewPanelRequest` becomes an immutable `record ExtensionWebviewPanelRequest(string ViewType, string Title, WebviewPanelOptions Options, IReadOnlyList<Uri> LocalResourceRoots, bool PreserveFocus, string ExtensionIdentifier)`. `IExtensionWebviewPanel` wraps a `Microsoft.UI.Xaml.Controls.WebView2` hosted inside a `TabViewItem`: `Html` is a settable `string` property whose setter calls `WebView2.NavigateToString(...)`; `OnDidReceiveMessage` is an `event Action<object>?` wired to `WebView2.WebMessageReceived`; `Reveal(bool preserveFocus)` selects the hosting `TabViewItem` in the owning `TabView` and conditionally calls `webView.Focus(FocusState.Programmatic)` only when `preserveFocus` is `false`; and `Dispose()` implements `IDisposable`, removing the `TabViewItem` from the `TabView.TabItems` collection and calling `WebView2.Close()`, guarded so a second call is a no-op.
 - **confines-to-ui-thread** (scope): The rule covers both roles: presenting a webview panel, with every read of state it depends on, and every member of the panel handle, matching a native UI framework's own main-thread requirement for window and view mutation.
 
@@ -160,7 +160,7 @@ Not applicable: the given source contains no logging call of its own — diagnos
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/macOS/Features/Extensions/VSCodeAPI/ExtensionWebviewPresenting.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/ExtensionWebviewPresenting.swift` |
 
 ## Design Decisions
 

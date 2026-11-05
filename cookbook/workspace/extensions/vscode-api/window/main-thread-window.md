@@ -1,6 +1,6 @@
 ---
 id: 7fc91996-6f04-415c-9119-fc6f9fccccd4
-domain: adtoolkit://cookbook/workspace/extensions/vscode-api/window/main-thread-window
+domain: adhsdk://cookbook/workspace/extensions/vscode-api/window/main-thread-window
 title: "MainThreadWindow"
 summary: "The vscode.window adaptor for show*Message, showQuickPick, showInputBox and createStatusBarItem, dispatching each to an injected presenter and recording unimplemented member shapes to NotImplementedLedger."
 version: 1.0.4
@@ -19,27 +19,27 @@ tags:
   - javascriptcore
   - mainactor
 related:
-  - adtoolkit://cookbook/workspace/extensions/vscode-api/commands/main-thread-commands
-  - adtoolkit://cookbook/workspace/extensions/vscode-api/window/extension-message-presenting
-  - adtoolkit://cookbook/workspace/extensions/vscode-api/window/extension-quick-pick-presenting
-  - adtoolkit://cookbook/workspace/extensions/vscode-api/window/extension-input-box-presenting
-  - adtoolkit://cookbook/workspace/extensions/vscode-api/window/extension-status-bar-presenting
-  - adtoolkit://cookbook/workspace/extensions/host/js-value-bridge
+  - adhsdk://cookbook/workspace/extensions/vscode-api/commands/main-thread-commands
+  - adhsdk://cookbook/workspace/extensions/vscode-api/window/extension-message-presenting
+  - adhsdk://cookbook/workspace/extensions/vscode-api/window/extension-quick-pick-presenting
+  - adhsdk://cookbook/workspace/extensions/vscode-api/window/extension-input-box-presenting
+  - adhsdk://cookbook/workspace/extensions/vscode-api/window/extension-status-bar-presenting
+  - adhsdk://cookbook/workspace/extensions/host/js-value-bridge
 references:
-  - packages/apple/AgenticToolkit/macOS/Features/Extensions/VSCodeAPI/MainThreadWindow.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/macOS/Features/Extensions/VSCodeAPI/ExtensionMessagePresenting.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/macOS/Features/Extensions/VSCodeAPI/ExtensionQuickPickPresenting.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/macOS/Features/Extensions/VSCodeAPI/ExtensionInputBoxPresenting.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/macOS/Features/Extensions/VSCodeAPI/ExtensionStatusBarPresenting.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/macOS/Features/Extensions/Host/NotImplementedLedger.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/macOS/Features/Extensions/VSCodeAPI/VSCodeAPI.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/macOS/Features/Extensions/VSCodeAPI/JSValueBridge.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Core/Loggable.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Tests/AgenticToolkitMacOSTests/Extensions/MainThreadWindowTests.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Tests/AgenticToolkitMacOSTests/Extensions/MainThreadWindowQuickPickTests.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Tests/AgenticToolkitMacOSTests/Extensions/MainThreadWindowInputBoxTests.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Tests/AgenticToolkitMacOSTests/Extensions/MainThreadWindowStatusBarTests.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/project.yml (agenticdevelopertoolkit)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/MainThreadWindow.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/ExtensionMessagePresenting.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/ExtensionQuickPickPresenting.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/ExtensionInputBoxPresenting.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/ExtensionStatusBarPresenting.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/Host/NotImplementedLedger.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/VSCodeAPI.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/JSValueBridge.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Core/Loggable.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKMacOSTests/Extensions/MainThreadWindowTests.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKMacOSTests/Extensions/MainThreadWindowQuickPickTests.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKMacOSTests/Extensions/MainThreadWindowInputBoxTests.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKMacOSTests/Extensions/MainThreadWindowStatusBarTests.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/project.yml (adhsdk)
 created: 2026-09-24
 modified: 2026-10-04
 author: Mike Fullerton
@@ -231,7 +231,7 @@ This adaptor does not persist or transmit anything itself, but it is a conduit f
 ## Platform Notes
 
 - **SwiftUI**: Not applicable — this is app/extension-host plumbing with no view; a SwiftUI host would call the same presenter protocols this adaptor calls, not reimplement this type.
-- **AppKit/UIKit**: This is the source; the surrounding app is macOS-only (see `project.yml`'s `AgenticToolkitMacOS` target), and there is no iOS/UIKit build of this file today.
+- **AppKit/UIKit**: This is the source; the surrounding app is macOS-only (see `project.yml`'s `AgenticDeveloperHubSDKMacOS` target), and there is no iOS/UIKit build of this file today.
 - **Compose (Android/Kotlin)**: A Kotlin port would model this as a class implementing the JS-engine bridge callbacks (e.g. via a J2V8/QuickJS binding) that dispatches to Kotlin interfaces mirroring the four presenter protocols, with the same argument-shape validation performed before any dispatch, and the same permanently-unsettled-on-dispose behavior for a `Deferred`/`CompletableDeferred` standing in for the pending promise.
 - **React/Web**: A web-hosted equivalent would run the extension in a Web Worker or sandboxed iframe and marshal these same calls over `postMessage`, replacing the synchronous JavaScriptCore bridge with an asynchronous message protocol; the argument-shape validation, the last-wins close-affordance rule, and the unclamped-`Infinity`-priority behavior would all need to be reproduced explicitly, since none of them fall out of `postMessage`'s own semantics.
 - **WinUI 3**: A .NET port would implement this as a class exposing the same members to a `ClearScript` or `Jint` JavaScript engine instance, using `TaskCompletionSource<object>` in place of `PromiseSettlementBox` (with `TrySetResult`/`TrySetCanceled` guarded the same way `isDisposed` is checked here, since `TaskCompletionSource` has no built-in "leave pending forever" state — a disposed instance would need to hold the `TaskCompletionSource` without ever completing it), `ObservableCollection<T>`/`INotifyPropertyChanged` for a status bar item's live-mutable properties surfaced back to the engine, `DispatcherQueue.TryEnqueue` to guarantee the same single-thread affinity `@MainActor` guarantees here, and a `System.Text.Json`-based decoder for the same options-object shape checks (`valueSelection`, `canPickMany`, etc.) this file performs by hand against `JSValue`.
@@ -241,7 +241,7 @@ This adaptor does not persist or transmit anything itself, but it is a conduit f
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/macOS/Features/Extensions/VSCodeAPI/MainThreadWindow.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/MainThreadWindow.swift` |
 
 ## Design Decisions
 

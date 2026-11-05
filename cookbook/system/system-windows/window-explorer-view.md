@@ -1,7 +1,7 @@
 ---
 id: 8aee173a-25e4-443e-a9ab-d629b58817e1
 title: "Window Explorer View"
-domain: adtoolkit://cookbook/system/system-windows/window-explorer-view
+domain: adhsdk://cookbook/system/system-windows/window-explorer-view
 type: ingredient
 version: 1.2.1
 status: review
@@ -21,7 +21,7 @@ tags:
   - window-selection
 depends-on: []
 related:
-  - adtoolkit://cookbook/ui/controls/badge
+  - adhsdk://cookbook/ui/controls/badge
 references: []
 approved-by: ""
 approved-date: ""
@@ -395,7 +395,7 @@ anywhere in the source.
 ## Platform Notes
 
 - **SwiftUI**: this is the source form. File:
-  `packages/apple/AgenticToolkit/macOS/SystemWindows/UI/WindowExplorerView.swift`.
+  `packages/apple/AgenticDeveloperHubSDK/macOS/SystemWindows/UI/WindowExplorerView.swift`.
   It reads `@EnvironmentObject private var appState: SystemWindowContextsModel`
   and a custom `@Environment(\.theme)` palette, builds its list with
   `List`/`Section`/`ForEach` and `.toggleStyle(.checkbox)` — a macOS-only
@@ -468,7 +468,7 @@ anywhere in the source.
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/macOS/SystemWindows/UI/WindowExplorerView.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemWindows/UI/WindowExplorerView.swift` |
 
 ## Design Decisions
 

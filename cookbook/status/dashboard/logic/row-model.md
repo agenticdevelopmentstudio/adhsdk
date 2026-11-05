@@ -1,7 +1,7 @@
 ---
 id: a0ae2ae1-7d51-4639-8f3b-062dcf750b66
 title: "Status Row Model"
-domain: adtoolkit://cookbook/status/dashboard/logic/row-model
+domain: adhsdk://cookbook/status/dashboard/logic/row-model
 type: ingredient
 version: 1.2.0
 status: review
@@ -17,11 +17,11 @@ platforms:
   - web
 tags: []
 depends-on:
-  - adtoolkit://cookbook/status/dashboard/logic/board-types
-  - adtoolkit://cookbook/status/dashboard/logic/format
-  - adtoolkit://cookbook/status/dashboard/logic/deploy-status
-  - adtoolkit://cookbook/status/dashboard/logic/colors
-  - adtoolkit://cookbook/status/dashboard/logic/issue-sources
+  - adhsdk://cookbook/status/dashboard/logic/board-types
+  - adhsdk://cookbook/status/dashboard/logic/format
+  - adhsdk://cookbook/status/dashboard/logic/deploy-status
+  - adhsdk://cookbook/status/dashboard/logic/colors
+  - adhsdk://cookbook/status/dashboard/logic/issue-sources
 related: []
 references: []
 approved-by: ""

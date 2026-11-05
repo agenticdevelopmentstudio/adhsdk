@@ -1,4 +1,4 @@
-// @agentic-toolkit/teams — the Teams feature.
+// @adh-sdk/teams — the Teams feature.
 //
 // A single TeamsFeature<basePath> orchestrates the team list ▸ its topics (Team ▸
 // Members ▸ Permissions) over the resource substrate. It runs inside the hub's

@@ -2,10 +2,10 @@
 import { useState } from "react";
 import { describe, it, expect, afterEach, beforeEach, vi } from "vitest";
 import { render, screen, fireEvent, cleanup } from "@testing-library/react";
-import type { ProviderCatalogEntry, SafeConnection } from "@agentic-toolkit/data/integrations";
-import { SettingsDirtyProvider, useSettingsDirty } from "@agentic-toolkit/resource";
+import type { ProviderCatalogEntry, SafeConnection } from "@adh-sdk/data/integrations";
+import { SettingsDirtyProvider, useSettingsDirty } from "@adh-sdk/resource";
 
-vi.mock("@agentic-toolkit/auth", () => ({
+vi.mock("@adh-sdk/auth", () => ({
   reportUnexpectedAuthError: vi.fn(),
 }));
 
@@ -19,7 +19,7 @@ const { patchSettings, listConnections } = vi.hoisted(() => ({
   patchSettings: vi.fn(),
   listConnections: vi.fn(),
 }));
-vi.mock("@agentic-toolkit/data/integrations", () => ({
+vi.mock("@adh-sdk/data/integrations", () => ({
   integrationsApi: {
     listConnections,
     sync: vi.fn(),

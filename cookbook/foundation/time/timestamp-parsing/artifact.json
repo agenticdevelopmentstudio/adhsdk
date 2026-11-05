@@ -3,7 +3,7 @@
   "meta": {
     "id": "29A3044C-F785-4FA3-A1B9-746D069AE198",
     "title": "Timestamp Parsing",
-    "domain": "adtoolkit://cookbook/foundation/time/timestamp-parsing",
+    "domain": "adhsdk://cookbook/foundation/time/timestamp-parsing",
     "type": "ingredient",
     "version": "1.0.0",
     "status": "review",
@@ -26,8 +26,8 @@
     ],
     "depends-on": [],
     "related": [
-      "adtoolkit://cookbook/foundation/time/utc-timestamp",
-      "adtoolkit://cookbook/foundation/time/local-time-text"
+      "adhsdk://cookbook/foundation/time/utc-timestamp",
+      "adhsdk://cookbook/foundation/time/local-time-text"
     ],
     "references": [],
     "approved-by": "",

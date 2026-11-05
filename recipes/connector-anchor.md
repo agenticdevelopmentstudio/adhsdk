@@ -1,7 +1,7 @@
 ---
 id: 8d76adce-493b-4e44-9b15-826c4899d3cd
 title: ConnectorAnchor
-domain: agenticdevelopertoolkit://recipes/connector-anchor
+domain: adhsdk://recipes/connector-anchor
 type: ingredient
 version: 1.1.1
 status: review
@@ -22,9 +22,9 @@ tags:
 - layout
 - registry
 depends-on:
-- agenticdevelopertoolkit://recipes/connector-registry
+- adhsdk://recipes/connector-registry
 related:
-- agenticdevelopertoolkit://recipes/connector-registry
+- adhsdk://recipes/connector-registry
 references: []
 approved-by: ''
 approved-date: ''
@@ -36,7 +36,7 @@ approved-date: ''
 
 ConnectorAnchor is a registration anchor for visual connectors that link UI elements across a multi-pane layout. The component renders as an invisible span that registers its DOM reference with a shared connector registry, enabling external connector logic to query anchor positions and draw lines or other visual connections between designated points. The component is not visible to end users or assistive technologies.
 
-The connector registry is any object implementing the `ConnectorRegistry` contract (see agenticdevelopertoolkit://recipes/connector-registry): `register(id: string, el: HTMLElement): () => void`. Every call to `register` returns a cleanup function that removes the entry when invoked; ConnectorAnchor relies on this to unregister unconditionally on unmount and on `id` change.
+The connector registry is any object implementing the `ConnectorRegistry` contract (see adhsdk://recipes/connector-registry): `register(id: string, el: HTMLElement): () => void`. Every call to `register` returns a cleanup function that removes the entry when invoked; ConnectorAnchor relies on this to unregister unconditionally on unmount and on `id` change.
 
 ## Behavioral Requirements
 
@@ -136,7 +136,7 @@ Not applicable: The source code contains no logging statements.
 
 ## Platform Notes
 
-- **Web (React)**: Implement using the React `<span>` element. Use `useRef` to capture the DOM reference and `useEffect` with dependency array `[id, reg]` to register when both become available. Use optional chaining or conditional checks to guard against null registry. Render nothing (return null) when registry is unavailable. Apply classes by string concatenation; no CSS-in-JS framework is required. The `useConnectorRegistryOptional` hook is exported by the connector registry provider ingredient (agenticdevelopertoolkit://recipes/connector-registry) — ensure a `ConnectorRegistryProvider` ancestor is mounted so the hook resolves to a registry.
+- **Web (React)**: Implement using the React `<span>` element. Use `useRef` to capture the DOM reference and `useEffect` with dependency array `[id, reg]` to register when both become available. Use optional chaining or conditional checks to guard against null registry. Render nothing (return null) when registry is unavailable. Apply classes by string concatenation; no CSS-in-JS framework is required. The `useConnectorRegistryOptional` hook is exported by the connector registry provider ingredient (adhsdk://recipes/connector-registry) — ensure a `ConnectorRegistryProvider` ancestor is mounted so the hook resolves to a registry.
 
 - **SwiftUI**: Implement as a lightweight view (ZStack or plain View) that registers itself with an environment-injected connector registry on appear. Use an `@Environment` property to access the registry; if unavailable, render `EmptyView()`. Store the view's frame using `GeometryReader` and pass it to the registry's register method. Unregister on disappear or when the `id` changes.
 

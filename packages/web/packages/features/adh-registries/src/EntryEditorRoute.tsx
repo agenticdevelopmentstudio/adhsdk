@@ -1,9 +1,9 @@
 'use client';
 
 import { useCallback } from 'react';
-import { useResourceItemQuery, useResourceItemWriter } from '@agentic-toolkit/data';
-import type { EntryRow } from '@agentic-toolkit/registry/client';
-import { useBasePathRoute } from '@agentic-toolkit/resource';
+import { useResourceItemQuery, useResourceItemWriter } from '@adh-sdk/data';
+import type { EntryRow } from '@adh-sdk/registry/client';
+import { useBasePathRoute } from '@adh-sdk/resource';
 import { MY_ENTRY_CACHE_KEY, revalidateRegistryEntries } from './entriesCache';
 import { EntryEditor } from './EntryEditor';
 import { JOINED } from './paths';

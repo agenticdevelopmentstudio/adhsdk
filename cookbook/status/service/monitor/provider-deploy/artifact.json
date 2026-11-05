@@ -3,7 +3,7 @@
   "meta": {
     "id": "7ba98112-0f6d-4236-ab6b-aa18b72d76bd",
     "title": "Status Server Monitor Provider Deploy",
-    "domain": "adtoolkit://cookbook/status/service/monitor/provider-deploy",
+    "domain": "adhsdk://cookbook/status/service/monitor/provider-deploy",
     "type": "ingredient",
     "version": "1.0.3",
     "status": "review",
@@ -26,17 +26,17 @@
     ],
     "depends-on": [],
     "related": [
-      "adtoolkit://cookbook/status/service/monitor/deploy-status",
-      "adtoolkit://cookbook/status/service/monitor/deploy-view"
+      "adhsdk://cookbook/status/service/monitor/deploy-status",
+      "adhsdk://cookbook/status/service/monitor/deploy-view"
     ],
     "references": [
-      "packages/web/packages/status-server/src/monitor/provider-deploy.ts (agenticdevelopertoolkit)",
-      "packages/web/packages/status-server/test/timestamp-validation.test.ts (agenticdevelopertoolkit)",
-      "packages/web/packages/status-server/test/deploy-env.test.ts (agenticdevelopertoolkit)",
-      "packages/web/packages/status-server/src/monitor/deploy-status.ts (agenticdevelopertoolkit)",
-      "packages/web/packages/status-server/src/monitor/deploy-view.ts (agenticdevelopertoolkit)",
-      "packages/web/packages/status-server/src/monitor/types.ts (agenticdevelopertoolkit)",
-      "packages/web/packages/status-server/src/routes/reads.ts (agenticdevelopertoolkit)"
+      "packages/web/packages/status-server/src/monitor/provider-deploy.ts (adhsdk)",
+      "packages/web/packages/status-server/test/timestamp-validation.test.ts (adhsdk)",
+      "packages/web/packages/status-server/test/deploy-env.test.ts (adhsdk)",
+      "packages/web/packages/status-server/src/monitor/deploy-status.ts (adhsdk)",
+      "packages/web/packages/status-server/src/monitor/deploy-view.ts (adhsdk)",
+      "packages/web/packages/status-server/src/monitor/types.ts (adhsdk)",
+      "packages/web/packages/status-server/src/routes/reads.ts (adhsdk)"
     ],
     "approved-by": "",
     "approved-date": ""

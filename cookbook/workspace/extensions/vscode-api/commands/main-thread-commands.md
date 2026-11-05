@@ -1,7 +1,7 @@
 ---
 id: 5141968f-3922-47f2-a31f-ba953b92a048
 title: "VS Code Commands Bridge"
-domain: adtoolkit://cookbook/workspace/extensions/vscode-api/commands/main-thread-commands
+domain: adhsdk://cookbook/workspace/extensions/vscode-api/commands/main-thread-commands
 type: ingredient
 version: 1.1.1
 status: review
@@ -22,14 +22,14 @@ tags:
   - disposable
 depends-on: []
 related:
-  - adtoolkit://cookbook/workspace/extensions/host/extension-event
+  - adhsdk://cookbook/workspace/extensions/host/extension-event
 references:
-  - packages/apple/AgenticToolkit/macOS/Features/Extensions/VSCodeAPI/MainThreadCommands.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/macOS/UI/AppShell/AppCommand.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/macOS/Features/Extensions/VSCodeAPI/VSCodeAPI.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Core/Loggable.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Tests/AgenticToolkitMacOSTests/Extensions/MainThreadCommandsTests.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/project.yml (agenticdevelopertoolkit)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/MainThreadCommands.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/UI/AppShell/AppCommand.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/VSCodeAPI.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Core/Loggable.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKMacOSTests/Extensions/MainThreadCommandsTests.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/project.yml (adhsdk)
 approved-by: ""
 approved-date: ""
 ---
@@ -365,8 +365,8 @@ No other event in this file is logged: `registerCommand`'s refusals (missing id,
 
 ## Platform Notes
 
-- **SwiftUI**: not applicable to this file — `MainThreadCommands.swift` imports only `Foundation`, `JavaScriptCore`, `OSLog`, and `AgenticToolkitCore`, with no SwiftUI dependency; nothing in this component renders a view.
-- **AppKit / UIKit**: this is the source. `packages/apple/AgenticToolkit/macOS/Features/Extensions/VSCodeAPI/MainThreadCommands.swift` is part of the `AgenticToolkitMacOS` framework target, which `project.yml` declares `platform: macOS` only — no iOS target packages this file. It is `@MainActor`-isolated per its class declaration (satisfying "thread-confined access" above because `JSValue` is not `Sendable` and JavaScriptCore always calls an installed block on the thread that made the call), and the `CommandRegistry` it wraps (`AppCommand.swift`) is likewise `@MainActor` and macOS-only in this codebase today. The "caller flag" of **dispatch-has-caller-is-static-not-instance** is `dispatchHasCaller`, a `static` property of `MainThreadCommands`. The ownership record is `ownedCallbacks`, mapping a command id to its registered `JSValue` callback and its `CommandRegistration` token. "Callback failure" and "dispatch unavailable" are the private `CallbackFailure` and `DispatchUnavailable` wrapper values `invoke` returns through `AppCommand.run`'s `([Any]) -> Any?` signature.
+- **SwiftUI**: not applicable to this file — `MainThreadCommands.swift` imports only `Foundation`, `JavaScriptCore`, `OSLog`, and `AgenticDeveloperHubSDKCore`, with no SwiftUI dependency; nothing in this component renders a view.
+- **AppKit / UIKit**: this is the source. `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/MainThreadCommands.swift` is part of the `AgenticDeveloperHubSDKMacOS` framework target, which `project.yml` declares `platform: macOS` only — no iOS target packages this file. It is `@MainActor`-isolated per its class declaration (satisfying "thread-confined access" above because `JSValue` is not `Sendable` and JavaScriptCore always calls an installed block on the thread that made the call), and the `CommandRegistry` it wraps (`AppCommand.swift`) is likewise `@MainActor` and macOS-only in this codebase today. The "caller flag" of **dispatch-has-caller-is-static-not-instance** is `dispatchHasCaller`, a `static` property of `MainThreadCommands`. The ownership record is `ownedCallbacks`, mapping a command id to its registered `JSValue` callback and its `CommandRegistration` token. "Callback failure" and "dispatch unavailable" are the private `CallbackFailure` and `DispatchUnavailable` wrapper values `invoke` returns through `AppCommand.run`'s `([Any]) -> Any?` signature.
 - **Compose**: model this adaptor as a Kotlin `class MainThreadCommands(private val registry: CommandRegistry)` confined to the main dispatcher, with the ownership record as a plain `MutableMap` guarded by that confinement (no `Mutex` needed, matching the source's own single-actor argument). The extension callback becomes whatever function-reference type the host's own JavaScript engine binding (a J2V8 or Rhino function reference, say) exposes, and the caller flag becomes a top-level (or companion-object) `var`, matching its shared-not-per-instance requirement.
 - **React/Web**: this component's own upstream is VS Code's real `MainThreadCommands` (`mainThreadCommands.ts`), already TypeScript, so a web port is closer to restoring the original than translating it: a class wrapping a `CommandsRegistry`-equivalent map, with `registerCommand` returning a disposable-shaped object and `executeCommand` returning a native `Promise` rather than the settled-synchronously thenable this host constructs by hand.
 - **WinUI 3**: model this adaptor as a class whose every member runs on a captured `DispatcherQueue` (the confined-execution-context equivalent — WinUI 3 has no compiler-enforced actor isolation, so every entry point MUST assert `DispatcherQueue.HasThreadAccess` or marshal via `DispatcherQueue.TryEnqueue` at the top of the method, since nothing else catches a wrong-thread call at compile time the way Swift's `@MainActor` does). The shared registry's role is filled by a class exposing `Register(ICommand)`, `Execute(string, object[])` and `Unregister(string, Guid token)`, where `ICommand`'s `Execute(object[] args)` mirrors the shared command's `([Any]) -> Any?` shape rather than WinUI's own parameterless `ICommand.Execute(object? parameter)`. `registerCommand`'s returned disposable becomes an `IDisposable` whose `Dispose()` is guarded by an `Interlocked.Exchange`-backed idempotence flag, matching the underlying disposable-building operation's single-call guarantee. The extension callback becomes whatever the chosen JavaScript engine binding uses — ClearScript's `ScriptObject`/`dynamic`, or Jint's `JsValue`, standing in for `JavaScriptCore.JSValue` — and `executeCommand`'s settled-promise handoff becomes a `TaskCompletionSource<object?>` that is already completed by the time it is returned, for the synchronous-dispatch case, or the extension's own awaited `Task` passed straight through for an async callback.
@@ -375,7 +375,7 @@ No other event in this file is logged: `registerCommand`'s refusals (missing id,
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/macOS/Features/Extensions/VSCodeAPI/MainThreadCommands.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/MainThreadCommands.swift` |
 
 ## Design Decisions
 

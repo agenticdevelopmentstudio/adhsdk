@@ -1,7 +1,7 @@
 ---
 id: 81b8d777-f5c2-4a9a-8d5f-bbddf6e4e094
 title: Markdown Spell Check
-domain: agenticdevelopertoolkit://recipes/markdown-spellcheck
+domain: adhsdk://recipes/markdown-spellcheck
 type: ingredient
 version: 1.2.1
 status: review
@@ -22,10 +22,10 @@ tags:
   - harper
   - toolbar
 depends-on:
-  - agenticdevelopertoolkit://recipes/button
-  - agenticdevelopertoolkit://recipes/markdown-editor
+  - adhsdk://recipes/button
+  - adhsdk://recipes/markdown-editor
 related:
-  - agenticdevelopertoolkit://recipes/markdown-quick-reference
+  - adhsdk://recipes/markdown-quick-reference
 references:
   - https://writewithharper.com
 approved-by: ''
@@ -36,7 +36,7 @@ approved-date: ''
 
 ## Overview
 
-A standalone editor-toolbar control in `@agenticdevelopertoolkit/ui`
+A standalone editor-toolbar control in `@adh-sdk/ui`
 (`components/markdown-spellcheck`) that adds an **optional**, **markdown-aware**
 spelling & grammar check to a markdown editor. It is built for the
 `MarkdownEditor` `toolbarExtras` slot: the consumer passes the same markdown
@@ -194,7 +194,7 @@ toolbar ────────────────────────
 
 ## Configuration
 
-`@agenticdevelopertoolkit/ui/components/markdown-spellcheck`
+`@adh-sdk/ui/components/markdown-spellcheck`
 
 | Option | Type | Default | Description |
 |---|---|---|---|
@@ -287,8 +287,8 @@ is surfaced to the user via the error state rather than logged.
 - **Compose**: Render the toggle as a `Button`/`IconToggleButton` driving `var expanded by remember { mutableStateOf(false) }`, presenting the panel via `DropdownMenu`/`Popup` anchored to the toggle. Lazy-load the checker in a `LaunchedEffect(expanded)` guarded on `expanded`, keyed so it runs at most once, and cancel/release it in `DisposableEffect`'s `onDispose` (lazy-load-harper, dispose-on-unmount). Inside, a `Column` of flagged text + message + a `Button`/`AssistChip` per suggestion realizes list-problems/offer-suggestions; a `CircularProgressIndicator` covers loading, a `Text` the empty state, and a `Text` with an error `Icon` the error state. Jetpack Compose has no Compose-native spellcheck API; the platform's checker is reached through the View-based `TextServicesManager` / `SpellCheckerSession` that backs `BasicTextField`'s `InputConnection`, not through a Compose call. To replicate markdown-aware filtering, iterate over the document range and identify prose sections (excluding code blocks and markup) before submitting them to a `SpellCheckerSession`.
 - **React/Web (TypeScript)**: Component at
   `packages/web/packages/ui/src/components/markdown-spellcheck.tsx`, exported from
-  `@agenticdevelopertoolkit/ui/components/markdown-spellcheck`. Built on the shared `Popover`,
-  `Button`, `Badge`, and `Spinner` components. harper.js is a dependency of `@agenticdevelopertoolkit/ui`,
+  `@adh-sdk/ui/components/markdown-spellcheck`. Built on the shared `Popover`,
+  `Button`, `Badge`, and `Spinner` components. harper.js is a dependency of `@adh-sdk/ui`,
   marked `external` in `tsup.config.ts` so the dist re-emits the dynamic
   `import('harper.js')` verbatim and the **consumer's** bundler (Next.js)
   code-splits and lazy-loads the WASM binary. Consumed by hub's `ResearchDetail` (in the

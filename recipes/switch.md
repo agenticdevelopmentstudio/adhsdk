@@ -1,7 +1,7 @@
 ---
 id: 951b86ac-cf75-46ec-9746-d15fcb4618b4
 title: Switch
-domain: agenticdevelopertoolkit://recipes/switch
+domain: adhsdk://recipes/switch
 type: ingredient
 version: 1.2.2
 status: review
@@ -21,9 +21,9 @@ tags:
 - interactive
 depends-on: []
 related:
-- agenticdevelopertoolkit://recipes/label
-- agenticdevelopertoolkit://recipes/checkbox
-- agenticdevelopertoolkit://recipes/field
+- adhsdk://recipes/label
+- adhsdk://recipes/checkbox
+- adhsdk://recipes/field
 references: []
 approved-by: ''
 approved-date: ''

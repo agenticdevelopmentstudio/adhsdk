@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactElement } from "react";
-import { Button } from "@agenticdevelopertoolkit/ui/components/button";
+import { Button } from "@adh-sdk/ui/components/button";
 
 export interface WindowFooterProps {
   /** How many rows the window holds — everything fetched, before any filtering. */

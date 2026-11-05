@@ -1,9 +1,9 @@
 'use client'
 
 import type { ReactElement, ReactNode } from 'react'
-import type { SiteId } from '@agentic-toolkit/adh-registry'
-import { siteUrl, siteProdUrl } from '@agentic-toolkit/adh-registry'
-import { UserCard, UserCardSkeleton } from '@agenticdevelopertoolkit/ui/blocks/user-card'
+import type { SiteId } from '@adh-sdk/adh-registry'
+import { siteUrl, siteProdUrl } from '@adh-sdk/adh-registry'
+import { UserCard, UserCardSkeleton } from '@adh-sdk/ui/blocks/user-card'
 import { useClientHost } from '../header/useClientHost'
 import { PROFILE_FRAME_CLASS } from './frame'
 import type { ProfilePrincipal } from './types'
@@ -32,7 +32,7 @@ export interface ProfileViewProps {
  *   [ this site's own section, or nothing ]
  *   [ Full Profile → the hub, unless this IS the hub ]
  *
- * Lives in `@agentic-toolkit/adh` rather than `packages/ui` because it has to know site ids and
+ * Lives in `@adh-sdk/adh` rather than `packages/ui` because it has to know site ids and
  * which one is the hub, and `ui` is the generic layer that must not.
  *
  * The header is `<UserCard>` unchanged — it already renders exactly what "general public info"

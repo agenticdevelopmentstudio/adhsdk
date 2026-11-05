@@ -19,7 +19,7 @@ import {
   act,
 } from "@testing-library/react";
 
-vi.mock("@agentic-toolkit/data/personas", () => ({
+vi.mock("@adh-sdk/data/personas", () => ({
   personaApprovalsApi: { list: vi.fn(), approve: vi.fn(), reject: vi.fn() },
   personaMayActApi: { list: vi.fn(), grant: vi.fn(), revoke: vi.fn() },
 }));
@@ -30,7 +30,7 @@ import {
   personaMayActApi,
   type Approval,
   type MayActKind,
-} from "@agentic-toolkit/data/personas";
+} from "@adh-sdk/data/personas";
 
 const list = vi.mocked(personaApprovalsApi.list);
 const approve = vi.mocked(personaApprovalsApi.approve);

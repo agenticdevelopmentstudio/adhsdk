@@ -3,7 +3,7 @@
   "meta": {
     "id": "2c8b4572-3851-4111-97d6-a42792fb7150",
     "title": "Status Server Monitor Live Types",
-    "domain": "adtoolkit://cookbook/status/service/monitor/live-types",
+    "domain": "adhsdk://cookbook/status/service/monitor/live-types",
     "type": "ingredient",
     "version": "1.0.2",
     "status": "review",
@@ -27,15 +27,15 @@
     ],
     "depends-on": [],
     "related": [
-      "adtoolkit://cookbook/status/service/live-events"
+      "adhsdk://cookbook/status/service/live-events"
     ],
     "references": [
-      "packages/web/packages/status-server/src/monitor/live-types.ts (agenticdevelopertoolkit)",
-      "packages/web/packages/status-server/src/monitor/types.ts (agenticdevelopertoolkit)",
-      "packages/web/packages/status-server/src/routes/reads.ts (agenticdevelopertoolkit)",
-      "packages/web/packages/status-server/test/reads.int.test.ts (agenticdevelopertoolkit)",
-      "packages/web/packages/status-server/test/helpers/snapshot.ts (agenticdevelopertoolkit)",
-      "packages/web/packages/status-server/src/openapi/paths/reads.ts (agenticdevelopertoolkit)"
+      "packages/web/packages/status-server/src/monitor/live-types.ts (adhsdk)",
+      "packages/web/packages/status-server/src/monitor/types.ts (adhsdk)",
+      "packages/web/packages/status-server/src/routes/reads.ts (adhsdk)",
+      "packages/web/packages/status-server/test/reads.int.test.ts (adhsdk)",
+      "packages/web/packages/status-server/test/helpers/snapshot.ts (adhsdk)",
+      "packages/web/packages/status-server/src/openapi/paths/reads.ts (adhsdk)"
     ],
     "approved-by": "",
     "approved-date": ""

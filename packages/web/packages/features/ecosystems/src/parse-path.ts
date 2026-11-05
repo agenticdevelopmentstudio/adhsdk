@@ -1,7 +1,7 @@
 // The Ecosystems URL grammar — the ONE authoritative parse of an ecosystems route's path
 // segments into EcosystemsFeature's selection props, so a host route can't drift its
-// parsing away from what the feature expects (mirrors @agentic-toolkit/projects and
-// @agentic-toolkit/teams's parse-path).
+// parsing away from what the feature expects (mirrors @adh-sdk/projects and
+// @adh-sdk/teams's parse-path).
 
 /** The selection EcosystemsFeature renders, parsed from a route's path segments.
  *  Maps 1:1 onto EcosystemsFeature's props (the host supplies `basePath` + the

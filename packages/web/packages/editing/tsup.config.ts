@@ -20,7 +20,7 @@ const shared = {
     'react',
     'react-dom',
     'react/jsx-runtime',
-    /^@agenticdevelopertoolkit\//,
+    /^@adh-sdk\//,
     '@base-ui/react',
     '@base-ui/react/*',
     'lucide-react',

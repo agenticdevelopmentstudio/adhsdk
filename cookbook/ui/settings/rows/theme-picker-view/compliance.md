@@ -16,7 +16,7 @@ own native-control choices rather than introducing new UI of its own.
 adds no keyboard or screen-reader behavior of its own, inheriting the
 popup's own inherited `NSPopUpButton` navigation and its already-linked
 accessible name from `PopupMenuChoiceView.swift` (see
-`adtoolkit://cookbook/ui/settings/rows/popup-menu-choice-view`), but the popup's visible
+`adhsdk://cookbook/ui/settings/rows/popup-menu-choice-view`), but the popup's visible
 title is the unlocalized `"Theme"` default this file cannot override (see
 Localization) and the row itself offers no disable path (see States,
 Disabled), so this file's own compliance can't be called a full pass.

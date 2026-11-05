@@ -1,7 +1,7 @@
 ---
 id: 0f65ea61-3b0f-4a9b-842e-912555b7af62
 title: "Provider Configuration Keys"
-domain: adtoolkit://cookbook/ai/providers/provider-config-keys
+domain: adhsdk://cookbook/ai/providers/provider-config-keys
 type: ingredient
 version: 1.2.0
 status: review
@@ -22,17 +22,17 @@ tags:
 depends-on: []
 related: []
 references:
-  - packages/apple/AgenticToolkit/AIPluginKit/AIProviderConfigKeys.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Tests/AIPluginKitTests/AIProviderConfigKeysTests.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/macOS/Features/AIPlugins/AIProviderConfigStore.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/AIPluginKit/DaemonProviderResolver.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/AIPluginKit/DaemonAIChat.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/AIPluginKit/AIProviderConfigSync.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/AIPluginKit/AIProviderConfiguration.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Tests/AIPluginKitTests/DaemonAIChatTests.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Tests/AIPluginKitTests/DaemonAIChatGuardTests.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/macOS/Features/AIChatWindow/AIModelChatConfig.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/project.yml (agenticdevelopertoolkit)
+  - packages/apple/AgenticDeveloperHubSDK/AIPluginKit/AIProviderConfigKeys.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Tests/AIPluginKitTests/AIProviderConfigKeysTests.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/Features/AIPlugins/AIProviderConfigStore.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/AIPluginKit/DaemonProviderResolver.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/AIPluginKit/DaemonAIChat.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/AIPluginKit/AIProviderConfigSync.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/AIPluginKit/AIProviderConfiguration.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Tests/AIPluginKitTests/DaemonAIChatTests.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Tests/AIPluginKitTests/DaemonAIChatGuardTests.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/Features/AIChatWindow/AIModelChatConfig.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/project.yml (adhsdk)
 approved-by: ""
 approved-date: ""
 ---
@@ -294,7 +294,7 @@ Not applicable: this component contains no logging call of any kind.
 ## Platform Notes
 
 - **SwiftUI**: not applicable to this file — `AIProviderConfigKeys.swift` imports only `Foundation`, with no SwiftUI dependency; a SwiftUI-based settings screen calls the same static functions unchanged.
-- **AppKit / UIKit**: this is the source. The file is `packages/apple/AgenticToolkit/AIPluginKit/AIProviderConfigKeys.swift`, part of the `AIPluginKit` framework target, which `project.yml` declares `platform: macOS` only (no iOS target exists for it today). It declares `AIProviderConfigKeys` as a case-less `public enum` — the Swift idiom for a namespace — with four static functions, `fieldKey(config:field:)`, `modelKey(config:)`, `secretFieldsKey(config:)`, and `fieldsKey(config:)`, each taking a `UUID` and interpolating `id.uuidString` (Foundation's canonical uppercase, hyphenated 36-character form) into the returned `String`, plus four `static let` constants (`selectedConfigIdKey`, `configurationsKey`, `enabledKey`, `legacyCleanedKey`). It declares no `actor`, `@MainActor`, or `Sendable` annotation, so every static member is `nonisolated` by default. It is consumed by the AppKit-facing, `@MainActor`-isolated `AIProviderConfigStore.swift` (`macOS/Features/AIPlugins/`) and by the daemon-side `DaemonProviderResolver`/`DaemonAIChat`, both plain Foundation with no AppKit import of their own. The one documented deviation from `single-source-of-truth-usage` — `AIModelChatConfig.swift`'s independent `UserSettings.aiSummariesEnabled = UserSetting<Bool>("ai_summaries_enabled", default: false)` literal — is a Swift-specific `UserSetting` property wrapper duplicating `enabledKey`'s string by hand.
+- **AppKit / UIKit**: this is the source. The file is `packages/apple/AgenticDeveloperHubSDK/AIPluginKit/AIProviderConfigKeys.swift`, part of the `AIPluginKit` framework target, which `project.yml` declares `platform: macOS` only (no iOS target exists for it today). It declares `AIProviderConfigKeys` as a case-less `public enum` — the Swift idiom for a namespace — with four static functions, `fieldKey(config:field:)`, `modelKey(config:)`, `secretFieldsKey(config:)`, and `fieldsKey(config:)`, each taking a `UUID` and interpolating `id.uuidString` (Foundation's canonical uppercase, hyphenated 36-character form) into the returned `String`, plus four `static let` constants (`selectedConfigIdKey`, `configurationsKey`, `enabledKey`, `legacyCleanedKey`). It declares no `actor`, `@MainActor`, or `Sendable` annotation, so every static member is `nonisolated` by default. It is consumed by the AppKit-facing, `@MainActor`-isolated `AIProviderConfigStore.swift` (`macOS/Features/AIPlugins/`) and by the daemon-side `DaemonProviderResolver`/`DaemonAIChat`, both plain Foundation with no AppKit import of their own. The one documented deviation from `single-source-of-truth-usage` — `AIModelChatConfig.swift`'s independent `UserSettings.aiSummariesEnabled = UserSetting<Bool>("ai_summaries_enabled", default: false)` literal — is a Swift-specific `UserSetting` property wrapper duplicating `enabledKey`'s string by hand.
 - **Compose**: model as a Kotlin top-level `object AIProviderConfigKeys` — the direct analog of a case-less Swift `enum` used as a namespace — with functions taking a `java.util.UUID`. Note that `UUID.toString()` on the JVM returns *lowercase* hex, unlike Foundation's uppercase `uuidString`; an Android daemon and an Apple app sharing this key format over the same settings store MUST agree on one case (or do a case-insensitive lookup), or otherwise-identical configuration ids will produce non-matching keys.
 - **React/Web**: model as a module of plain exported functions (e.g. `fieldKey(id: string, field: string): string`) over a UUID already serialized as a string, since JavaScript has no native `UUID` type. The same cross-platform case-sensitivity note applies: `crypto.randomUUID()` produces a lowercase string, so a web client sharing this key format with the Apple app/daemon needs the same case-normalization decision noted for Compose.
 - **WinUI 3**: model `AIProviderConfigKeys` as a `static class` with `static string` methods and `const string` fields, e.g. `public static string FieldKey(Guid configId, string field) => $"aiplugin.config.{configId}.field.{field}";`, `public static string ModelKey(Guid configId) => $"aiplugin.config.{configId}.model";`, `public static string SecretFieldsKey(Guid configId) => $"aiplugin.config.{configId}.secretfields";`, `public static string FieldsKey(Guid configId) => $"aiplugin.config.{configId}.fields";`, and `public const string SelectedConfigIdKey = "ai_selected_config_id";` (plus `ConfigurationsKey`, `EnabledKey`, `LegacyCleanedKey` as further `const string` fields). Critically, `Guid.ToString()`'s default `"D"` format is *lowercase*, unlike Foundation's uppercase `UUID.uuidString` — call `configId.ToString("D").ToUpperInvariant()` (or normalize consistently on read) so a WinUI 3 client and an Apple app/daemon sharing one settings store produce byte-identical keys for the same configuration id. Persist the ledger values (`FieldsKey`/`SecretFieldsKey`) as a `\n`-joined `string` (e.g. `string.Join("\n", fieldNames)`) to match the Swift side's `split(separator: "\n")` parsing exactly, including the same unresolved risk if a field name itself contains `\n` (see `field-name-newline-safety`).
@@ -303,7 +303,7 @@ Not applicable: this component contains no logging call of any kind.
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/AIPluginKit/AIProviderConfigKeys.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/AIPluginKit/AIProviderConfigKeys.swift` |
 
 ## Design Decisions
 

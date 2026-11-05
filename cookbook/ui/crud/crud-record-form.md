@@ -1,7 +1,7 @@
 ---
 id: 3dc693ab-28e4-4624-9b2d-8dc81f81e037
 title: "CRUD Record Form"
-domain: adtoolkit://cookbook/ui/crud/crud-record-form
+domain: adhsdk://cookbook/ui/crud/crud-record-form
 type: recipe
 version: 1.4.2
 status: review
@@ -21,10 +21,10 @@ tags:
   - metadata
   - validation
 ingredients:
-  - agenticdevelopertoolkit://recipes/field
+  - adhsdk://recipes/field
 depends-on: []
 related:
-  - adtoolkit://cookbook/ui/crud/crud-table
+  - adhsdk://cookbook/ui/crud/crud-table
 references: []
 approved-by: ""
 approved-date: ""
@@ -60,7 +60,7 @@ hand-authored fields (see Platform Notes for its first consumer).
 
 | Name | Domain | Role | Required | Configuration |
 |---|---|---|---|---|
-| Field | agenticdevelopertoolkit://recipes/field | Label + optional hint wrapper around each non-boolean control | yes | `label` = `name` (+ ` *` when required); `hint="JSON"` for object/array/unknown columns |
+| Field | adhsdk://recipes/field | Label + optional hint wrapper around each non-boolean control | yes | `label` = `name` (+ ` *` when required); `hint="JSON"` for object/array/unknown columns |
 
 Composed shared primitives without their own recipe domains: the per-type
 control picker (rendering a select, checkbox, textarea, or text input
@@ -212,11 +212,11 @@ implementation.
 ## Platform Notes
 
 - **React / Web (TypeScript):** `packages/web/packages/crud/src/CrudRecordForm.tsx`,
-  exported from `@agentic-toolkit/crud`. Composes the shared `Field`, `Button`,
-  `useAction` (from `@agenticdevelopertoolkit/ui`) and the package-local
+  exported from `@adh-sdk/crud`. Composes the shared `Field`, `Button`,
+  `useAction` (from `@adh-sdk/ui`) and the package-local
   `CrudFieldInput` (rendering `Select`/`Checkbox`/`Textarea`/`Input` per
-  column type) + `ErrorText`. Note it lives in `@agentic-toolkit/crud`, not
-  `@agenticdevelopertoolkit/ui`.
+  column type) + `ErrorText`. Note it lives in `@adh-sdk/crud`, not
+  `@adh-sdk/ui`.
 - The pure metadata→payload helpers are exported for reuse/testing: `writableColumns`,
   `toDraft`, `buildPayload`, plus the `CrudDraft` / `CrudFormMode` types. An
   untouched create checkbox is represented as `undefined` in the draft.
@@ -225,7 +225,7 @@ implementation.
 - Root form: `<form className="flex flex-col gap-3">`. Boolean rows: a
   `<label className="flex items-center gap-2">` wrapping the `Checkbox`, with
   the caption styled via `fieldCaptionClass` (the shared uppercase-mono
-  caption class from `@agenticdevelopertoolkit/ui/lib/typography`). Footer:
+  caption class from `@adh-sdk/ui/lib/typography`). Footer:
   `flex justify-end gap-2`; Cancel is `type="button"`, Save is
   `type="submit"`, both `size="sm"`. Colors/typography come from the
   toolkit's `apt-*` design tokens (e.g. `text-apt-text-muted`); no raw hex,
@@ -328,10 +328,10 @@ literal English strings with no localization call.
 | Version | Date | Author | Summary |
 |---|---|---|---|
 | 1.4.2 | 2026-10-04 | Mike Fullerton | Matches its type's shape: required fields, title heading, and only the type's own sections. |
-| 1.4.1 | 2026-10-04 | Mike Fullerton | Legacy recipe citations restored to the legacy recipes' own agenticdevelopertoolkit://recipes/ domains; the adtoolkit://recipes/ form named nothing. |
+| 1.4.1 | 2026-10-04 | Mike Fullerton | Legacy recipe citations restored to the legacy recipes' own adhsdk://recipes/ domains; the adhsdk://recipes/ form named nothing. |
 | 1.4.0 | 2026-10-04 | Mike Fullerton | Added the lock-form-when-read-only and gate-save-on-dirty-on-edit requirements with vectors T21-T24 to match the code; filled Reference Implementations; added separation-of-concerns and unit-test-coverage compliance rows. |
 | 1.3.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to ui/crud/. |
 | 1.2.1 | 2026-09-25 | Mike Fullerton | Moved into the library cookbook; added Reference Implementations. |
-| 1.2.0 | 2026-09-23 | Mike Fullerton | Lint pass: added a Design Decision for the `initial`-presence mode inference; named the backend OpenAPI spec (`gen_table_metadata.py`) in place of "the spec" in two places; added the boolean exception to reject-empty-required and the createOnly-before-validation ordering to disable-and-skip-create-only-on-edit; added clear-field-by-type-on-edit with test vectors T17-T19 and T20 for the createOnly/validation ordering; added T13-T16 for JSON pretty-printing, untouched booleans, and `1e999`; defined `rdid`, `fieldCaptionClass`, and `apt-*` on first use; moved the `/all-data` reference out of Overview into a Platform Notes consumer note; added AppKit/UIKit and WinUI 3 Platform Notes bullets and rewrote the SwiftUI/Compose one so none reads "Not applicable"; reformatted every Design Decision into the three-line form with `**Approved**: pending`; rewrote Compliance to link real catalog checks (accessibility, platform-compliance, internationalization), dropping the two rows with no catalog equivalent; fixed the stale source path and the `@agentic-toolkit`/`@agenticdevelopertoolkit/ui` scope mismatch. |
+| 1.2.0 | 2026-09-23 | Mike Fullerton | Lint pass: added a Design Decision for the `initial`-presence mode inference; named the backend OpenAPI spec (`gen_table_metadata.py`) in place of "the spec" in two places; added the boolean exception to reject-empty-required and the createOnly-before-validation ordering to disable-and-skip-create-only-on-edit; added clear-field-by-type-on-edit with test vectors T17-T19 and T20 for the createOnly/validation ordering; added T13-T16 for JSON pretty-printing, untouched booleans, and `1e999`; defined `rdid`, `fieldCaptionClass`, and `apt-*` on first use; moved the `/all-data` reference out of Overview into a Platform Notes consumer note; added AppKit/UIKit and WinUI 3 Platform Notes bullets and rewrote the SwiftUI/Compose one so none reads "Not applicable"; reformatted every Design Decision into the three-line form with `**Approved**: pending`; rewrote Compliance to link real catalog checks (accessibility, platform-compliance, internationalization), dropping the two rows with no catalog equivalent; fixed the stale source path and the `@adh-sdk`/`@adh-sdk/ui` scope mismatch. |
 | 1.1.0 | 2026-09-23 | Mike Fullerton | Renamed every requirement to subject-only kebab-case, dropping the old prefix everywhere it is cited. |
 | 1.0.0 | 2026-07-03 | Mike Fullerton | Initial recipe; documents the metadata-driven CrudRecordForm from @adh-shared/crud. |

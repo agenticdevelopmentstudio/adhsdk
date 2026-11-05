@@ -1,10 +1,10 @@
-# agenticdevelopertoolkit
+# adhsdk
 
 A set of reusable per-platform packages: the shared web libraries (`ui`,
 `chat`, `editing`, `markdown`, `search`, `themes`, and more) beside the adh app
 platform and its feature packages, a workspace of Xcode projects for Apple,
 and a Python package for Terminal. Android and Windows are port plans in
-`docs/planning/ports/`, with no code yet. The former `agentictoolkit` repo was
+`docs/planning/ports/`, with no code yet. The former `adhsdk` repo was
 merged in with its history; its Apple frameworks, plugins and host app, its web
 app platform and its `cookbook/` live here now. Persona-chat wiring
 is one capability among them, not the toolkit's identity: the `chat`
@@ -66,7 +66,7 @@ there. See `AGENTS.md` at the repo root for the layout map.
 | Platform | Folder | Manifest |
 |---|---|---|
 | Web (TS) | `packages/web/` | `package.json` (pnpm workspace) |
-| Apple | `packages/apple/` | `agenticdevelopertoolkit.xcworkspace` + one `project.yml` (XcodeGen) per project |
+| Apple | `packages/apple/` | `AgenticDeveloperHubSDK.xcworkspace` + one `project.yml` (XcodeGen) per project |
 | Terminal (Python) | `packages/terminal/` | `pyproject.toml` |
 | Android | `packages/android/` | (Gradle — planned, see `docs/planning/ports/`) |
 | Windows | `packages/windows/` | (`.csproj` — planned, see `docs/planning/ports/`) |
@@ -103,24 +103,24 @@ The shared libraries:
 
 | Package | Source dir |
 |---|---|
-| `@agenticdevelopertoolkit/avatar` | `packages/web/packages/avatar/src/` (engine, gaze, pose, reflexes, idleLife, arbitration) |
-| `@agenticdevelopertoolkit/chat` | `packages/web/packages/chat/src/` (modes/, components/, hooks/, backends/, css/) |
-| `@agenticdevelopertoolkit/chrome` | `packages/web/packages/chrome/src/` (MenuButton, css/) |
-| `@agenticdevelopertoolkit/controls` | `packages/web/packages/controls/src/` (appearance-mode-toggle, dev-banner, filtered-list, logging-panel, orb-row, search-dialog, source-code-panel, user-settings) |
-| `@agenticdevelopertoolkit/editing` | `packages/web/packages/editing/src/` (host, container, controls, sections, repair, validation, descriptors, scope, server) |
-| `@agenticdevelopertoolkit/landing` | `packages/web/packages/landing/src/` (deck/, chrome/, blocks/, flow/, client.ts, css/) |
-| `@agenticdevelopertoolkit/markdown` | `packages/web/packages/markdown/src/` (components/, hooks/, lib/, themes/, types.ts) |
-| `@agenticdevelopertoolkit/model` | `packages/web/packages/model/src/` (providers/, hooks/, lib/, types.ts) |
-| `@agenticdevelopertoolkit/popover` | `packages/web/packages/popover/src/` (Popover, PopoverAnchor, useHoverPopoverGroup, css/) |
-| `@agenticdevelopertoolkit/registry-profile` | `packages/web/packages/registry-profile/src/` (RegistryProfile, FieldValue, ServiceList, css/) |
-| `@agenticdevelopertoolkit/registry-types` | `packages/web/packages/registry-types/src/` (types, validate, visibility, show-if) |
-| `@agenticdevelopertoolkit/search` | `packages/web/packages/search/src/` (components/, data/, lib/, registry/, styles/, types.ts) |
-| `@agenticdevelopertoolkit/textlens` | `packages/web/packages/textlens/src/` (createLens, useTextLens, color) |
-| `@agenticdevelopertoolkit/themes` | `packages/web/packages/themes/src/` (manifest, ThemeStyle, colorMode, styles/) |
-| `@agenticdevelopertoolkit/ui` | `packages/web/packages/ui/src/` (components/, blocks/, hooks/, lib/, styles/) |
-| `@agenticdevelopertoolkit/viewport` | `packages/web/packages/viewport/src/` (ViewportShell, ViewportSpacer, ViewportComposer, useKeyboardInset) |
+| `@adh-sdk/avatar` | `packages/web/packages/avatar/src/` (engine, gaze, pose, reflexes, idleLife, arbitration) |
+| `@adh-sdk/chat` | `packages/web/packages/chat/src/` (modes/, components/, hooks/, backends/, css/) |
+| `@adh-sdk/chrome` | `packages/web/packages/chrome/src/` (MenuButton, css/) |
+| `@adh-sdk/controls` | `packages/web/packages/controls/src/` (appearance-mode-toggle, dev-banner, filtered-list, logging-panel, orb-row, search-dialog, source-code-panel, user-settings) |
+| `@adh-sdk/editing` | `packages/web/packages/editing/src/` (host, container, controls, sections, repair, validation, descriptors, scope, server) |
+| `@adh-sdk/landing` | `packages/web/packages/landing/src/` (deck/, chrome/, blocks/, flow/, client.ts, css/) |
+| `@adh-sdk/markdown` | `packages/web/packages/markdown/src/` (components/, hooks/, lib/, themes/, types.ts) |
+| `@adh-sdk/model` | `packages/web/packages/model/src/` (providers/, hooks/, lib/, types.ts) |
+| `@adh-sdk/popover` | `packages/web/packages/popover/src/` (Popover, PopoverAnchor, useHoverPopoverGroup, css/) |
+| `@adh-sdk/registry-profile` | `packages/web/packages/registry-profile/src/` (RegistryProfile, FieldValue, ServiceList, css/) |
+| `@adh-sdk/registry-types` | `packages/web/packages/registry-types/src/` (types, validate, visibility, show-if) |
+| `@adh-sdk/search` | `packages/web/packages/search/src/` (components/, data/, lib/, registry/, styles/, types.ts) |
+| `@adh-sdk/textlens` | `packages/web/packages/textlens/src/` (createLens, useTextLens, color) |
+| `@adh-sdk/themes` | `packages/web/packages/themes/src/` (manifest, ThemeStyle, colorMode, styles/) |
+| `@adh-sdk/ui` | `packages/web/packages/ui/src/` (components/, blocks/, hooks/, lib/, styles/) |
+| `@adh-sdk/viewport` | `packages/web/packages/viewport/src/` (ViewportShell, ViewportSpacer, ViewportComposer, useKeyboardInset) |
 
-Beside them sits the adh app platform, under the `@agentic-toolkit/*` scope it
+Beside them sits the adh app platform, under the `@adh-sdk/*` scope it
 shipped with: `adh`, `adh-ui`, `auth`, `data`, `resource`, `crud`,
 `api-explorer`, `messaging`, `persona` and the rest, plus one package per
 product area under `packages/web/packages/features/` (`bitbag` among them —
@@ -133,12 +133,12 @@ Library packages may only depend on other `packages/web/packages/*`
 
 **Two packages own the persona vocabulary (`chat`, `themes`, `viewport`), and
 nothing else in the adh platform may name it.** `persona`
-(`@agentic-toolkit/persona`) is the crossing for *consumers*: it re-publishes
-those three under its own name and keeps every `@agenticdevelopertoolkit/*`
+(`@adh-sdk/persona`) is the crossing for *consumers*: it re-publishes
+those three under its own name and keeps every `@adh-sdk/*`
 specifier bare in its `dist` (tsup `external`). `features/bitbag` owns the
 crossing for *the persona itself* — his avatar rig and chat surface genuinely
 render that vocabulary. Every other platform package reaches it through one of
-those two, which keeps the persona toolkit out of the shipped graph of
+those two, which keeps the persona layer out of the shipped graph of
 consumers who want nothing to do with personas. That is also why `adh` keeps a
 copy of chat's contract types rather than a dependency
 (`packages/web/tools/verify_chat_types_copy.py` catches drift); its one direct entry is a
@@ -155,22 +155,22 @@ so its wiring mirrors what external consumers use.
 
 ## Apple platform: `packages/apple/`
 
-`agenticdevelopertoolkit.xcworkspace` wires these XcodeGen-backed projects
+`AgenticDeveloperHubSDK.xcworkspace` wires these XcodeGen-backed projects
 together, each with its own `project.yml`:
 
-- `AgenticDeveloperToolkit/` — the multi-platform core and UI frameworks
-  (`AgenticDeveloperToolkit`, `AgenticDeveloperToolkitUI`), five platforms.
+- `AgenticDeveloperHubSDK/` — the multi-platform core and UI frameworks
+  (`AgenticDeveloperHubSDK`, `AgenticDeveloperHubSDKUI`), five platforms.
 - `AgenticDeveloperHubClient/` — the hub client framework.
-- `AgenticToolkit/` — the macOS-first product frameworks and their test
+- `AgenticDeveloperHubSDK/` — the macOS-first product frameworks and their test
   bundles. SPM packages: `SwiftTerm`, `CodeEditSourceEditor`,
   `CodeEditLanguages`. Multi-platform (macOS + iOS) targets live beside them:
-  `AgenticToolkitHTDV` (native Hierarchical Topic Detail View, forms, markdown
+  `AgenticDeveloperHubSDKHTDV` (native Hierarchical Topic Detail View, forms, markdown
   hooks — Foundation/AppKit/UIKit only, see `docs/architecture/htdv.md`) and
-  `AgenticToolkitHub` (shared hub feature layer; depends on HTDV and
-  `AgenticToolkitHubAuth`, which it re-exports). Neither may import
-  `AgenticToolkitCore`.
+  `AgenticDeveloperHubSDKHub` (shared hub feature layer; depends on HTDV and
+  `AgenticDeveloperHubSDKHubAuth`, which it re-exports). Neither may import
+  `AgenticDeveloperHubSDKCore`.
 - The hub is opt-in in tiers, by what a product links.
-  `AgenticToolkitHubAuth` (`HubAuth/`) is the login alone: session, transports,
+  `AgenticDeveloperHubSDKHubAuth` (`HubAuth/`) is the login alone: session, transports,
   `HubError`, `HubAccount`, sign-in model. It links only
   `AgenticDeveloperHubAuth`, the client project's auth-only generated client
   (`AuthSources/`, `openapi-generator-auth-config.yaml`), never the full
@@ -178,7 +178,7 @@ together, each with its own `project.yml`:
   `Hub` → `HubService` → `HubUI` build the full hub on top of it. A product
   that only needs "sign in to the hub" (Stenographer) links the two auth
   frameworks and nothing above them.
-- `AgenticToolkitApp/` — host app (`AgenticToolkitApp.app`). Links and embeds
+- `AgenticDeveloperHubSDKApp/` — host app (`AgenticDeveloperHubSDKApp.app`). Links and embeds
   the toolkit frameworks. macOS 26+.
 - `AIPlugins/` — `AIPluginsShared.framework` + five `.aiplugin` bundles
   (`ClaudeAPI`, `ClaudeLocal`, `Google`, `OpenAI`, `OpenAICompatible`). Each
@@ -194,7 +194,7 @@ regenerates every project) before building. Hand-edits to `project.pbxproj` are
 lost on the next regeneration.
 
 **Each framework is reached through exactly one project path.**
-`AgenticToolkit/project.yml` references `AgenticDeveloperToolkit` and
+`AgenticDeveloperHubSDK/project.yml` references `AgenticDeveloperHubSDK` and
 `AgenticDeveloperHubClient` as sibling projects in this same `packages/apple/`.
 A workspace (this one or a consumer's) that reached either by a second path
 would build a duplicate target into the same products directory, and Xcode
@@ -210,55 +210,55 @@ for trust in the SwiftLint plugin and the packages' macros.
 # Regenerate every xcodeproj from its project.yml:
 ./install.sh            # or: cc-xcgen packages/apple/<Project> ...
 
-DD=~/Library/Developer/Xcode/DerivedData/agenticdevelopertoolkit-managed
+DD=~/Library/Developer/Xcode/DerivedData/adhsdk-managed
 FLAGS="-skipPackagePluginValidation -skipMacroValidation"
 
 # The macOS frameworks:
-xcodebuild -workspace packages/apple/agenticdevelopertoolkit.xcworkspace \
-           -scheme AgenticToolkitMacOSAll \
+xcodebuild -workspace packages/apple/AgenticDeveloperHubSDK.xcworkspace \
+           -scheme AgenticDeveloperHubSDKMacOSAll \
            -destination 'platform=macOS,arch=arm64' \
            -derivedDataPath "$DD" $FLAGS build
 
-# Frameworks plus every test bundle:   -scheme AgenticToolkitMacOSTestsAll
-# The iOS half (simulator):            -scheme AgenticToolkitiOSAll -destination 'generic/platform=iOS Simulator'
+# Frameworks plus every test bundle:   -scheme AgenticDeveloperHubSDKMacOSTestsAll
+# The iOS half (simulator):            -scheme AgenticDeveloperHubSDKiOSAll -destination 'generic/platform=iOS Simulator'
 # All plugins:                         -scheme AIPluginsMacOSAll
-# Host app:                            -scheme AgenticToolkitApp
+# Host app:                            -scheme AgenticDeveloperHubSDKApp
 
-open packages/apple/agenticdevelopertoolkit.xcworkspace
+open packages/apple/AgenticDeveloperHubSDK.xcworkspace
 ```
 
 ### Apple framework layout
 
 | Target | Source dir | Depends on |
 |---|---|---|
-| `AgenticToolkitCore` | `Core/` | `AgenticDeveloperToolkit` (cross-project) |
-| `AgenticToolkitCoreUI` | `CoreUI/` | `AgenticToolkitCore` |
-| `AgenticToolkitCoreMacOS` | `CoreMacOS/` | `AgenticToolkitCore`, `AgenticToolkitCoreUI` |
-| `AgenticToolkitMacOS` | `macOS/` | `AgenticToolkitCore`, `AgenticToolkitCoreUI`, `AgenticToolkitCoreMacOS`, SwiftTerm, CodeEditSourceEditor, CodeEditLanguages |
-| `AgenticToolkitSystemMonitor` | `SystemMonitor/` | `AgenticToolkitCore` |
-| `AgenticToolkitSystemMonitorUI` | `SystemMonitorUI/` | `AgenticToolkitSystemMonitor`, `AgenticToolkitCore`, `AgenticToolkitMacOS`, `AgenticDeveloperToolkitUI` |
+| `AgenticDeveloperHubSDKCore` | `Core/` | `AgenticDeveloperHubSDK` (cross-project) |
+| `AgenticDeveloperHubSDKCoreUI` | `CoreUI/` | `AgenticDeveloperHubSDKCore` |
+| `AgenticDeveloperHubSDKCoreMacOS` | `CoreMacOS/` | `AgenticDeveloperHubSDKCore`, `AgenticDeveloperHubSDKCoreUI` |
+| `AgenticDeveloperHubSDKMacOS` | `macOS/` | `AgenticDeveloperHubSDKCore`, `AgenticDeveloperHubSDKCoreUI`, `AgenticDeveloperHubSDKCoreMacOS`, SwiftTerm, CodeEditSourceEditor, CodeEditLanguages |
+| `AgenticDeveloperHubSDKSystemMonitor` | `SystemMonitor/` | `AgenticDeveloperHubSDKCore` |
+| `AgenticDeveloperHubSDKSystemMonitorUI` | `SystemMonitorUI/` | `AgenticDeveloperHubSDKSystemMonitor`, `AgenticDeveloperHubSDKCore`, `AgenticDeveloperHubSDKMacOS`, `AgenticDeveloperHubSDKUI` |
 
-`AgenticToolkitCore` is Foundation-only; `AgenticToolkitCoreUI` holds
-cross-cutting AppKit utilities; `AgenticToolkitCoreMacOS` adds macOS-only
-foundations; `AgenticToolkitMacOS` is the feature-rich macOS framework consumed
+`AgenticDeveloperHubSDKCore` is Foundation-only; `AgenticDeveloperHubSDKCoreUI` holds
+cross-cutting AppKit utilities; `AgenticDeveloperHubSDKCoreMacOS` adds macOS-only
+foundations; `AgenticDeveloperHubSDKMacOS` is the feature-rich macOS framework consumed
 by the host app, plugins, Whippet, and Stenographer.
-`AgenticToolkitSystemMonitor` samples disk, memory, CPU and process groups
+`AgenticDeveloperHubSDKSystemMonitor` samples disk, memory, CPU and process groups
 (Docker, Ollama) through `SystemMonitorEngine` with no UI, so a CLI or daemon
 can link it. `UniversalControlMonitor` (not in `standardMonitors()`) follows
 Universal Control's session messages through a `log stream` child and goes
-critical while this Mac is dropping a source Mac's input; `AgenticToolkitSystemMonitorUI` is the themed System Status window.
+critical while this Mac is dropping a source Mac's input; `AgenticDeveloperHubSDKSystemMonitorUI` is the themed System Status window.
 
-Aggregate targets in `AgenticToolkit/project.yml`: `AgenticToolkitMacOSAll`
-(every macOS framework), `AgenticToolkitMacOSTestsAll` (those plus every test
-bundle) and `AgenticToolkitiOSAll` (every target that claims iOS).
+Aggregate targets in `AgenticDeveloperHubSDK/project.yml`: `AgenticDeveloperHubSDKMacOSAll`
+(every macOS framework), `AgenticDeveloperHubSDKMacOSTestsAll` (those plus every test
+bundle) and `AgenticDeveloperHubSDKiOSAll` (every target that claims iOS).
 
-#### The theme model lives in AgenticDeveloperToolkit
+#### The theme model lives in AgenticDeveloperHubSDK
 
 `RGBAColor`, `ColorTheme`, `SemanticPalette`, `ThemeTypography`,
 `BuiltInThemes`, `ITermColorsParser` and `ThemeStore` live in
-`AgenticDeveloperToolkit`, which builds for five platforms and ships to
+`AgenticDeveloperHubSDK`, which builds for five platforms and ships to
 customers on its own. `Core/Theme/ThemeReExports.swift` `@_exported import`s
-it, so call sites resolve them through `AgenticToolkitCore`.
+it, so call sites resolve them through `AgenticDeveloperHubSDKCore`.
 
 `ThemeStore` persists through a seam: ADT declares `protocol ThemeStorage`
 with the one property the store uses (`customThemes`), and
@@ -269,11 +269,11 @@ what already-saved user themes are stored under, and changing either orphans
 them silently.
 
 The re-export publishes **all** of ADT, not just the theme model, so a new
-name added there can make an unrelated file in `AgenticToolkit` ambiguous.
+name added there can make an unrelated file in `AgenticDeveloperHubSDK` ambiguous.
 Prefer renaming when the name is the product framework's to give up
 (`ChatViewModel` → `AIChatViewModel`, `MessageBubbleView` →
 `AIChatBubbleView`); module-qualify only when both have a real claim to it
-(`AgenticToolkitPermissions.Permission`).
+(`AgenticDeveloperHubSDKPermissions.Permission`).
 
 ### Plugin runtime model
 
@@ -305,7 +305,7 @@ cd packages/web && pnpm test
 - `learntruefacts` is the test bed. New apt features must demonstrate
   themselves in `learntruefacts/sites/main` before being considered done.
 - AppKit only for macOS UI.
-- The adh platform packages keep the `@agentic-toolkit/*` scope — published
+- The adh platform packages keep the `@adh-sdk/*` scope — published
   consumers depend on it; do not rename without a deprecation plan.
 
 <!-- mytools:web BEGIN -->

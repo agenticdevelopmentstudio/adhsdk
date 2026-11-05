@@ -1,5 +1,5 @@
 {
-  "name": "@agenticdevelopertoolkit/registry-types",
+  "name": "@adh-sdk/registry-types",
   "version": "0.1.0",
   "description": "Framework-free registry field-type catalog: type ids, config shapes, validators and value coercion. No React, no runtime dependencies — the backend vendors this file so both sides validate owner-defined values against the same rules.",
   "license": "Apache-2.0",

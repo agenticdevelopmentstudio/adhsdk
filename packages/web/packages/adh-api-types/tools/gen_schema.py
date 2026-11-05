@@ -9,7 +9,7 @@ calling convention.
 
 Before this existed, `gen` was
 `openapi-typescript "${ADH_OPENAPI_SPEC:?…}" -o src/schema.ts` — env-var
-only, so `pnpm --filter @agentic-toolkit/adh-api-types gen -- <spec>` (the
+only, so `pnpm --filter @adh-sdk/adh-api-types gen -- <spec>` (the
 form `gen:crud-metadata` and `gen:api-endpoints` already accept) expanded to
 `openapi-typescript "" -o src/schema.ts -- <spec>` and died on the `:?`
 guard.

@@ -1,6 +1,6 @@
 
 **Decision**: Every color is a theme-token reference, never a hard-coded hex value.
-**Rationale**: The authoring comment states the board "tracks the same theme as the rest of the suite" and that shade changes against the old bespoke values are intentional; ownership of values stays with `@agenticdevelopertoolkit/themes`.
+**Rationale**: The authoring comment states the board "tracks the same theme as the rest of the suite" and that shade changes against the old bespoke values are intentional; ownership of values stays with `@adh-sdk/themes`.
 **Approved**: pending
 
 **Decision**: Alpha is applied with `color-mix(in srgb, <token> N%, transparent)` rather than `rgba()`.

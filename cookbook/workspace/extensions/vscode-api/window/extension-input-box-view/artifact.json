@@ -3,7 +3,7 @@
   "meta": {
     "id": "b85dc186-31e9-472b-99ea-2c097fc926c8",
     "title": "Extension Input Box",
-    "domain": "adtoolkit://cookbook/workspace/extensions/vscode-api/window/extension-input-box-view",
+    "domain": "adhsdk://cookbook/workspace/extensions/vscode-api/window/extension-input-box-view",
     "type": "ingredient",
     "version": "1.2.2",
     "status": "review",
@@ -26,7 +26,7 @@
     ],
     "depends-on": [],
     "related": [
-      "adtoolkit://cookbook/workspace/extensions/vscode-api/window/extension-quick-pick-view"
+      "adhsdk://cookbook/workspace/extensions/vscode-api/window/extension-quick-pick-view"
     ],
     "references": [],
     "approved-by": "",

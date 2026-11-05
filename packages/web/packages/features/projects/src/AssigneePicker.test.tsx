@@ -3,7 +3,7 @@
 // Component test for AssigneePicker — the work-item assignment control. It is a Field over the
 // shared ListChooser typeahead, so nothing is mocked: the test opens the chooser, drives its
 // filter field, and asserts the composite-key ↔ {assigneeKind, assigneeId} mapping (and the
-// Unassigned → null sentinel). Only a TYPE is pulled from @agentic-toolkit/data/projects (erased
+// Unassigned → null sentinel). Only a TYPE is pulled from @adh-sdk/data/projects (erased
 // at runtime), so the real api module never loads.
 //
 // What is worth pinning here beyond the codec: that the typeahead actually NARROWS (the reason
@@ -14,7 +14,7 @@ import { describe, it, expect, vi, afterEach } from "vitest";
 import { render, screen, fireEvent, cleanup, within } from "@testing-library/react";
 
 import { AssigneePicker } from "./AssigneePicker";
-import type { ProjectParticipant } from "@agentic-toolkit/data/projects";
+import type { ProjectParticipant } from "@adh-sdk/data/projects";
 
 const PARTICIPANTS: ProjectParticipant[] = [
   {

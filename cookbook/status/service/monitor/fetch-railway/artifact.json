@@ -3,7 +3,7 @@
   "meta": {
     "id": "6a84b15a-5e4e-4b1c-9d73-0ae8a8b602af",
     "title": "Status Server Monitor Fetch Railway",
-    "domain": "adtoolkit://cookbook/status/service/monitor/fetch-railway",
+    "domain": "adhsdk://cookbook/status/service/monitor/fetch-railway",
     "type": "ingredient",
     "version": "1.0.3",
     "status": "review",
@@ -31,16 +31,16 @@
       "agenticdevelopercookbook://guidelines/implementing/networking/rate-limiting"
     ],
     "related": [
-      "adtoolkit://cookbook/status/service/monitor/fetch-cloudflare",
-      "adtoolkit://cookbook/status/service/monitor/deploy-status",
-      "adtoolkit://cookbook/status/service/monitor/alerts",
-      "adtoolkit://cookbook/status/service/monitor/enrich-deploy-errors"
+      "adhsdk://cookbook/status/service/monitor/fetch-cloudflare",
+      "adhsdk://cookbook/status/service/monitor/deploy-status",
+      "adhsdk://cookbook/status/service/monitor/alerts",
+      "adhsdk://cookbook/status/service/monitor/enrich-deploy-errors"
     ],
     "references": [
-      "packages/web/packages/status-server/src/monitor/fetch-railway.ts (agenticdevelopertoolkit)",
-      "packages/web/packages/status-server/test/railway-deployments.test.ts (agenticdevelopertoolkit)",
-      "packages/web/packages/status-server/test/deploy-error-shaping.test.ts (agenticdevelopertoolkit)",
-      "packages/web/packages/status-server/test/provider-cooldown.test.ts (agenticdevelopertoolkit)"
+      "packages/web/packages/status-server/src/monitor/fetch-railway.ts (adhsdk)",
+      "packages/web/packages/status-server/test/railway-deployments.test.ts (adhsdk)",
+      "packages/web/packages/status-server/test/deploy-error-shaping.test.ts (adhsdk)",
+      "packages/web/packages/status-server/test/provider-cooldown.test.ts (adhsdk)"
     ],
     "approved-by": "",
     "approved-date": ""

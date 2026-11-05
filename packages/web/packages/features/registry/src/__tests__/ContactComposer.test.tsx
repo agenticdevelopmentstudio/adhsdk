@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { AuthHttpError } from '@agentic-toolkit/auth/client';
+import { AuthHttpError } from '@adh-sdk/auth/client';
 import { ContactComposer } from '../contact/ContactComposer';
 
 const ok = (body: unknown, status = 201) =>

@@ -52,7 +52,7 @@ function announceSessionChange(): void {
  * Returns an unsubscribe.
  *
  * Exists because the session is a PROCESS-WIDE fact that outlives any one React tree, and things
- * that cache per-principal data at module scope (`@agentic-toolkit/data`'s query client) have to
+ * that cache per-principal data at module scope (`@adh-sdk/data`'s query client) have to
  * hear about a change without being reachable from a component. Announced from here — the only
  * two writers of the storage key — rather than from the AuthProvider, so a refresh that swaps the
  * session from `refresh.ts` is heard just as loudly as a login.
@@ -110,7 +110,7 @@ export function readAccessToken(): string | null {
  * U+FFFD: these segments are covered by a signature computed over the original bytes, so a
  * claim silently rewritten to replacement characters is a value nothing ever signed.
  *
- * It lives HERE, in the package with no `@agentic-toolkit` dependency of its own, because
+ * It lives HERE, in the package with no `@adh-sdk` dependency of its own, because
  * three copies of this decode existed in two packages and all three had the same bug — the
  * shape of a defect that is fixed once and returns in the copies nobody grepped for.
  */

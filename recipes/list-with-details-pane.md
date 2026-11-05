@@ -1,7 +1,7 @@
 ---
 id: 6acd3c5f-7bb5-4d6d-8c8d-141e1909cf73
 title: "ListWithDetailsPane"
-domain: agenticdevelopertoolkit://recipes/list-with-details-pane
+domain: adhsdk://recipes/list-with-details-pane
 type: recipe
 version: 2.2.1
 status: review
@@ -21,10 +21,10 @@ tags:
   - layout
   - selection
 ingredients:
-  - agenticdevelopertoolkit://recipes/list-header
-  - agenticdevelopertoolkit://recipes/data-table
-  - agenticdevelopertoolkit://recipes/resizable-split
-  - agenticdevelopertoolkit://recipes/alert-and-dialog
+  - adhsdk://recipes/list-header
+  - adhsdk://recipes/data-table
+  - adhsdk://recipes/resizable-split
+  - adhsdk://recipes/alert-and-dialog
 depends-on: []
 related: []
 references: []
@@ -36,7 +36,7 @@ approved-date: ''
 
 ## Overview
 
-A master/detail block in `@agenticdevelopertoolkit/ui`: the shared `ListHeader`
+A master/detail block in `@adh-sdk/ui`: the shared `ListHeader`
 (filter + actions + delete) over a `DataTable`, over a details pane. The list
 and the details pane are PEERS in the column — the details never overlays the
 list — and the divider between them renders as the details pane's always-visible
@@ -53,10 +53,10 @@ parameter for deep-linking (when `paramKey` is provided).
 
 | Name | Domain | Role | Required | Configuration |
 |---|---|---|---|---|
-| DataTable | agenticdevelopertoolkit://recipes/data-table | Renders filtered, multi-select rows | yes | `columns`, `rows`, `getRowId`, selection, `loading`, `emptyLabel`, `autoSizeColumns`, `columnWidthsKey`, `reorder` |
-| ListHeader | agenticdevelopertoolkit://recipes/list-header | The filter + actions bar above the table | yes | `search` from `filterText`/`onFilterTextChange`; `actions` from `actions` + Delete |
-| ResizableSplit | agenticdevelopertoolkit://recipes/resizable-split | Top/bottom split: table on top, details below its header-bar divider (`header={detailsLabel}`) | yes | `storageKey` forwarded from props; persists split bar position |
-| AlertAndDialog | agenticdevelopertoolkit://recipes/alert-and-dialog | Destructive confirm shown before delete | yes | `destructive` tone; copy from `deleteConfirm` |
+| DataTable | adhsdk://recipes/data-table | Renders filtered, multi-select rows | yes | `columns`, `rows`, `getRowId`, selection, `loading`, `emptyLabel`, `autoSizeColumns`, `columnWidthsKey`, `reorder` |
+| ListHeader | adhsdk://recipes/list-header | The filter + actions bar above the table | yes | `search` from `filterText`/`onFilterTextChange`; `actions` from `actions` + Delete |
+| ResizableSplit | adhsdk://recipes/resizable-split | Top/bottom split: table on top, details below its header-bar divider (`header={detailsLabel}`) | yes | `storageKey` forwarded from props; persists split bar position |
+| AlertAndDialog | adhsdk://recipes/alert-and-dialog | Destructive confirm shown before delete | yes | `destructive` tone; copy from `deleteConfirm` |
 
 Composed shared primitives without their own recipe domains: `Button` (toolbar
 actions + Delete), `Input` (filter box), and `Separator` (`dividerBefore`).
@@ -239,7 +239,7 @@ directly, so its Ingredients table names the recipes it wires together.
 
 ### API
 
-`@agenticdevelopertoolkit/ui/blocks/list-with-details-pane`:
+`@adh-sdk/ui/blocks/list-with-details-pane`:
 
 ```ts
 interface ListAction {

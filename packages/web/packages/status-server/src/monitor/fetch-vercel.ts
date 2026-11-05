@@ -1,7 +1,7 @@
 import { vercelPhases } from "./deploy-status";
 import { shortSha, commitFullMessage } from "./format";
 import { toValidDate, type ProviderDeploy } from "./provider-deploy";
-import { noteRateLimited, rateLimitedUntil } from "@agentic-toolkit/deploy-platform/cooldown";
+import { noteRateLimited, rateLimitedUntil } from "@adh-sdk/deploy-platform/cooldown";
 
 interface VercelDeployment {
   uid: string;

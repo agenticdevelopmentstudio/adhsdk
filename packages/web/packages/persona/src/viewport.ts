@@ -1,5 +1,5 @@
-// The persona toolkit's viewport primitives, re-published from their owner.
-// See ./chat.ts for why consumers must not name `@agenticdevelopertoolkit/*`
+// The persona layer's viewport primitives, re-published from their owner.
+// See ./chat.ts for why consumers must not name `@adh-sdk/*`
 // directly.
 
 export {
@@ -7,4 +7,4 @@ export {
   ViewportSpacer,
   ViewportComposer,
   useKeyboardInset,
-} from '@agenticdevelopertoolkit/viewport'
+} from '@adh-sdk/viewport'

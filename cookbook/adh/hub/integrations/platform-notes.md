@@ -1,7 +1,7 @@
 
 - **React/Web** (source platform): `packages/web/packages/data/src/integrations/integrations.ts` and
   `wire.ts` hold the client; `integrationsApi` and the standalone OAuth-state helpers are built entirely on
-  `authedJson`/`authedRequest` from `@agentic-toolkit/auth/client` (re-exported through `./http`) and `enc`
+  `authedJson`/`authedRequest` from `@adh-sdk/auth/client` (re-exported through `./http`) and `enc`
   (`encodeURIComponent`) from `./client-helpers`; `index.ts` re-exports both files as the package's public
   surface. Requirement/operation names in this recipe map onto the module's own exports as follows:
   listing providers → `listProviders`; listing/getting/saving/deleting a provider config by provider id →

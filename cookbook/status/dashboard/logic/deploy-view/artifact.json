@@ -3,7 +3,7 @@
   "meta": {
     "id": "66cf24b9-04bf-4767-8af9-f82d7e2b5268",
     "title": "Deploy View",
-    "domain": "adtoolkit://cookbook/status/dashboard/logic/deploy-view",
+    "domain": "adhsdk://cookbook/status/dashboard/logic/deploy-view",
     "type": "ingredient",
     "version": "1.1.0",
     "status": "review",
@@ -21,8 +21,8 @@
     "tags": [],
     "depends-on": [],
     "related": [
-      "adtoolkit://cookbook/status/dashboard/logic/board-staleness",
-      "adtoolkit://cookbook/status/dashboard/session-client"
+      "adhsdk://cookbook/status/dashboard/logic/board-staleness",
+      "adhsdk://cookbook/status/dashboard/session-client"
     ],
     "references": [],
     "approved-by": "",

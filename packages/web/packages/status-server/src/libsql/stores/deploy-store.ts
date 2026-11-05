@@ -2,7 +2,7 @@ import { sql, eq, and, or, gt, lt, isNull, isNotNull, inArray, notInArray, desc 
 import type { SQL } from "drizzle-orm";
 import type { Db } from "../client";
 import { deployments, monitoredEndpoints, deployProjectMeta } from "../schema";
-import { platformCanon } from "@agentic-toolkit/deploy-platform";
+import { platformCanon } from "@adh-sdk/deploy-platform";
 import {
   webhookKeepsStoredSql,
   inFlightSql,

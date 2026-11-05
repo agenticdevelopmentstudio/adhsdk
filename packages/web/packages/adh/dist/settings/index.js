@@ -45,7 +45,7 @@ function recoverFromChunkError(error) {
 // src/settings/settings-overlay.tsx
 import { jsx, jsxs } from "react/jsx-runtime";
 var UserSettingsOverlay = lazy(
-  () => import("@agentic-toolkit/adh/settings/UserSettingsOverlay").then((m) => ({
+  () => import("@adh-sdk/adh/settings/UserSettingsOverlay").then((m) => ({
     default: m.UserSettingsOverlay
   }))
 );

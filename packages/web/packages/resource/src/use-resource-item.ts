@@ -1,6 +1,6 @@
 "use client";
 
-import { useResourceItemQuery, type ResourceItem } from "@agentic-toolkit/data";
+import { useResourceItemQuery, type ResourceItem } from "@adh-sdk/data";
 
 import { useReportMissing } from "./rail-host";
 
@@ -16,7 +16,7 @@ export type { ResourceItem };
  *    over the server's real copy;
  *  - feed `isFetching` to the level's `busy`, so the topic list shows the read is happening.
  *
- * It lives here rather than in `@agentic-toolkit/data` because it talks to the rail host, and
+ * It lives here rather than in `@adh-sdk/data` because it talks to the rail host, and
  * `data` must never depend on `resource`.
  */
 export function useResourceItem<T>(

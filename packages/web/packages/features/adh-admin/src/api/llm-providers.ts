@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import type { RequestBody, SuccessBody, components } from "@agentic-toolkit/adh-api-types";
+import type { RequestBody, SuccessBody, components } from "@adh-sdk/adh-api-types";
 import { authedJson, authedRequest } from "./http";
 import { useWindowedList, type WindowedList } from "./windowed";
 
@@ -14,7 +14,7 @@ import { useWindowedList, type WindowedList } from "./windowed";
 // (the full desired name set, not a diff) and `connectionSpec` is a typed JSON
 // column, so this is a hand-written client like oauth/feature-flags/server-bag.
 //
-// Types are spec-derived (@agentic-toolkit/adh-api-types) so a backend schema change
+// Types are spec-derived (@adh-sdk/adh-api-types) so a backend schema change
 // (new field, renamed key, a new providerKind) fails this file's tsc instead
 // of drifting silently at runtime.
 

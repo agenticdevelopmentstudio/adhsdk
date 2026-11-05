@@ -1,7 +1,7 @@
 ---
 id: A8BFCD0B-0759-4801-AAF6-A14D7AA3FE49
 title: "Raw Setting"
-domain: adtoolkit://cookbook/foundation/raw-setting
+domain: adhsdk://cookbook/foundation/raw-setting
 type: ingredient
 version: 1.0.0
 status: review
@@ -22,7 +22,7 @@ tags:
   - defaults
 depends-on: []
 related:
-  - adtoolkit://cookbook/foundation/settings-storage
+  - adhsdk://cookbook/foundation/settings-storage
 references: []
 approved-by: ""
 approved-date: ""
@@ -130,7 +130,7 @@ Not applicable: The reader calls no logging API.
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/Core/SettingStorage/RawSetting.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/SettingStorage/RawSetting.swift` |
 
 ## Design Decisions
 
@@ -149,7 +149,7 @@ Not applicable: The reader calls no logging API.
 | [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
 | [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
 
-`separation-of-concerns` passes because the type only converts raw text to typed values; where the text comes from is the caller's. `unit-test-coverage` passes because `AgenticToolkitCoreTests/SettingsStore/RawSettingTests.swift` has tests for every spelling of the boolean and its fallback, integer clamping and fallback, and string trimming and fallback.
+`separation-of-concerns` passes because the type only converts raw text to typed values; where the text comes from is the caller's. `unit-test-coverage` passes because `AgenticDeveloperHubSDKCoreTests/SettingsStore/RawSettingTests.swift` has tests for every spelling of the boolean and its fallback, integer clamping and fallback, and string trimming and fallback.
 
 ## Change History
 

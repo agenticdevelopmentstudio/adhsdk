@@ -3,17 +3,17 @@ set -euo pipefail
 cd "$(dirname "$0")"
 
 # Apple platform: regenerate XcodeGen-backed Xcode projects from project.yml.
-# ADT's frameworks first — AgenticToolkit's project references their xcodeprojs.
+# ADT's frameworks first — AgenticDeveloperHubSDK's project references their xcodeprojs.
 if command -v xcodegen >/dev/null; then
   echo "==> Regenerating Apple Xcode projects from project.yml"
   for proj in \
-      packages/apple/AgenticDeveloperToolkit \
+      packages/apple/AgenticDeveloperHubSDK \
       packages/apple/AgenticDeveloperHubClient \
       packages/apple/AvatarAnimationEngine \
       packages/apple/SampleApp \
-      packages/apple/AgenticToolkit \
+      packages/apple/AgenticDeveloperHubSDK \
       packages/apple/AIPlugins \
-      packages/apple/AgenticToolkitApp; do
+      packages/apple/AgenticDeveloperHubSDKApp; do
     echo "    $proj"
     ( cd "$proj" && xcodegen generate )
   done
@@ -22,8 +22,8 @@ else
   echo "      Install it with: brew install xcodegen"
 fi
 
-# Web platform: pnpm workspace. Build after installing: the @agentic-toolkit/* packages
-# typecheck against the @agenticdevelopertoolkit/* packages' emitted .d.ts, and themes'
+# Web platform: pnpm workspace. Build after installing: the @adh-sdk/* packages
+# typecheck against the @adh-sdk/* packages' emitted .d.ts, and themes'
 # generated theme-data.ts, neither of which is committed. Both steps are idempotent, so
 # this is safe on every ./install.sh, not just the first.
 if command -v pnpm >/dev/null && command -v node >/dev/null; then
@@ -39,7 +39,7 @@ cat <<'EOF'
 Workspace ready.
 
 Apple:
-    open packages/apple/agenticdevelopertoolkit.xcworkspace
+    open packages/apple/AgenticDeveloperHubSDK.xcworkspace
 
 Web:
     cd packages/web && pnpm test

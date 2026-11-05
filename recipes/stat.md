@@ -1,7 +1,7 @@
 ---
 id: bba42d5f-8a52-487f-88c5-4f988dfa714b
 title: Stat
-domain: agenticdevelopertoolkit://recipes/stat
+domain: adhsdk://recipes/stat
 type: ingredient
 version: 1.1.1
 status: review
@@ -23,7 +23,7 @@ tags:
 - ui
 depends-on: []
 related:
-- agenticdevelopertoolkit://recipes/stat-card
+- adhsdk://recipes/stat-card
 references: []
 approved-by: ''
 approved-date: ''
@@ -33,7 +33,7 @@ approved-date: ''
 
 ## Overview
 
-The stat family in `@agenticdevelopertoolkit/ui` renders one label/value figure in the shared
+The stat family in `@adh-sdk/ui` renders one label/value figure in the shared
 dashboard grammar: a micro **uppercase mono** caption paired with a big, bold, mono
 **value** tinted by a status tone. Two exports ship the same grammar in two shapes:
 
@@ -164,7 +164,7 @@ No interactive states — the primitive is not focusable, hoverable, or disable-
 | `valueClassName` | `string` | — | Extra classes for the value; merged after the tone class (escape hatch for categorical hues). |
 | `className` | `string` | — | Extra classes for the wrapper; merged via `cn()`. |
 
-Exports from `@agenticdevelopertoolkit/ui/components/stat`: `StatRow`, `Stat`, the `StatTone`
+Exports from `@adh-sdk/ui/components/stat`: `StatRow`, `Stat`, the `StatTone`
 type, and the `StatProps` interface.
 
 ## Deep Linking

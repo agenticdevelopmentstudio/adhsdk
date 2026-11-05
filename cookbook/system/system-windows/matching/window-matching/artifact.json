@@ -3,7 +3,7 @@
   "meta": {
     "id": "840dc813-b4a3-483c-be87-2959ac551ea7",
     "title": "Window Matching",
-    "domain": "adtoolkit://cookbook/system/system-windows/matching/window-matching",
+    "domain": "adhsdk://cookbook/system/system-windows/matching/window-matching",
     "type": "ingredient",
     "version": "1.1.0",
     "status": "review",
@@ -26,11 +26,11 @@
       "persistence"
     ],
     "depends-on": [
-      "adtoolkit://cookbook/system/system-windows/window-context-model"
+      "adhsdk://cookbook/system/system-windows/window-context-model"
     ],
     "related": [
-      "adtoolkit://cookbook/system/system-windows/matching/title-heuristics",
-      "adtoolkit://cookbook/system/system-windows/system-windows-engine"
+      "adhsdk://cookbook/system/system-windows/matching/title-heuristics",
+      "adhsdk://cookbook/system/system-windows/system-windows-engine"
     ],
     "references": [
       "https://developer.apple.com/documentation/foundation/nsregularexpression",

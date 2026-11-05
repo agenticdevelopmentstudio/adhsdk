@@ -3,7 +3,7 @@
   "meta": {
     "id": "cb25bd84-9a11-4070-8b3c-f178cff76068",
     "title": "JavaScript Value Bridge",
-    "domain": "adtoolkit://cookbook/workspace/extensions/host/js-value-bridge",
+    "domain": "adhsdk://cookbook/workspace/extensions/host/js-value-bridge",
     "type": "ingredient",
     "version": "1.1.0",
     "status": "review",
@@ -25,26 +25,26 @@
     ],
     "depends-on": [],
     "related": [
-      "adtoolkit://cookbook/workspace/extensions/host/extension-event",
-      "adtoolkit://cookbook/workspace/extensions/vscode-api/window/extension-input-box-presenting",
-      "adtoolkit://cookbook/workspace/extensions/vscode-api/window/extension-status-bar-presenting",
-      "adtoolkit://cookbook/workspace/extensions/vscode-api/language-models/ai-plugin-language-model-provider",
-      "adtoolkit://cookbook/workspace/extensions/vscode-api/window/extension-quick-pick-presenting",
-      "adtoolkit://cookbook/workspace/extensions/vscode-api/tree-views/extension-tree-data-source",
-      "adtoolkit://cookbook/workspace/extensions/vscode-api/window/extension-message-presenting",
-      "adtoolkit://cookbook/workspace/extensions/vscode-api/webviews/extension-webview-presenting"
+      "adhsdk://cookbook/workspace/extensions/host/extension-event",
+      "adhsdk://cookbook/workspace/extensions/vscode-api/window/extension-input-box-presenting",
+      "adhsdk://cookbook/workspace/extensions/vscode-api/window/extension-status-bar-presenting",
+      "adhsdk://cookbook/workspace/extensions/vscode-api/language-models/ai-plugin-language-model-provider",
+      "adhsdk://cookbook/workspace/extensions/vscode-api/window/extension-quick-pick-presenting",
+      "adhsdk://cookbook/workspace/extensions/vscode-api/tree-views/extension-tree-data-source",
+      "adhsdk://cookbook/workspace/extensions/vscode-api/window/extension-message-presenting",
+      "adhsdk://cookbook/workspace/extensions/vscode-api/webviews/extension-webview-presenting"
     ],
     "references": [
-      "packages/apple/AgenticToolkit/macOS/Features/Extensions/VSCodeAPI/JSValueBridge.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/Tests/AgenticToolkitMacOSTests/Extensions/JSValueBridgeTests.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/macOS/Features/Extensions/VSCodeAPI/VSCodeAPI.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/macOS/Features/Extensions/VSCodeAPI/MainThreadWindow.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/macOS/Features/Extensions/VSCodeAPI/MainThreadWorkspace.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/macOS/Features/Extensions/VSCodeAPI/MainThreadDiagnostics.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/macOS/Features/Extensions/VSCodeAPI/MainThreadLanguageModels.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/macOS/Features/Extensions/VSCodeAPI/MainThreadWebviews.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/macOS/Features/Extensions/VSCodeAPI/MainThreadTreeViews.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/project.yml (agenticdevelopertoolkit)"
+      "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/JSValueBridge.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKMacOSTests/Extensions/JSValueBridgeTests.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/VSCodeAPI.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/MainThreadWindow.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/MainThreadWorkspace.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/MainThreadDiagnostics.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/MainThreadLanguageModels.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/MainThreadWebviews.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/MainThreadTreeViews.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/project.yml (adhsdk)"
     ],
     "approved-by": "",
     "approved-date": ""

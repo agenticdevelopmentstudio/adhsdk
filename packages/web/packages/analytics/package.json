@@ -1,5 +1,5 @@
 {
-  "name": "@agenticdevelopertoolkit/analytics",
+  "name": "@adh-sdk/analytics",
   "version": "0.1.0",
   "description": "Privacy-first product analytics for any site: PostHog, anonymous and cookieless, started once from a single shared config. PostHogAnalytics mounts it; startPostHog is the same start for hosts with their own telemetry provider.",
   "license": "Apache-2.0",

@@ -3,7 +3,7 @@
   "meta": {
     "id": "1996A181-6B83-4000-9671-7E872C625B4C",
     "title": "Legacy Directory Migration",
-    "domain": "adtoolkit://cookbook/foundation/legacy-directory-migration",
+    "domain": "adhsdk://cookbook/foundation/legacy-directory-migration",
     "type": "ingredient",
     "version": "1.0.0",
     "status": "review",
@@ -25,8 +25,8 @@
     ],
     "depends-on": [],
     "related": [
-      "adtoolkit://cookbook/foundation/defaults-domain-migration",
-      "adtoolkit://cookbook/foundation/file-system"
+      "adhsdk://cookbook/foundation/defaults-domain-migration",
+      "adhsdk://cookbook/foundation/file-system"
     ],
     "references": [],
     "approved-by": "",

@@ -1,7 +1,7 @@
 'use client'
 
 // Posthog-free LEAF module: a host's auth client imports ONLY this (via
-// `@agentic-toolkit/adh/telemetry/retry`) to tag its post-refresh retry, so it never pulls posthog-js / @sentry/react into its
+// `@adh-sdk/adh/telemetry/retry`) to tag its post-refresh retry, so it never pulls posthog-js / @sentry/react into its
 // module graph. Identity-keyed WeakSet so a never-consumed init is GC'd.
 
 const retriedInits = new WeakSet<object>()

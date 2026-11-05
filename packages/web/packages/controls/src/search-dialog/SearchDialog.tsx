@@ -1,8 +1,8 @@
 'use client'
 
 import { useEffect, useRef, type KeyboardEvent } from 'react'
-import type { SearchState } from '@agenticdevelopertoolkit/model'
-import type { SiteEntry } from '@agenticdevelopertoolkit/model'
+import type { SearchState } from '@adh-sdk/model'
+import type { SiteEntry } from '@adh-sdk/model'
 import { noAutofillProps } from '../internal/autofill'
 
 export type SearchDialogProps = {

@@ -1,4 +1,4 @@
-# `@agenticdevelopertoolkit/landing`
+# `@adh-sdk/landing`
 
 A snap-scrolling, long-form landing page kit: the scroll deck (snap mechanism,
 arming script, screen unit), the fixed-header chrome (burger, drawer, scrim),
@@ -10,7 +10,7 @@ site becomes a palette, a token map, and a set of compositions.
 
 ## Why a new package, and not an extension of `viewport`
 
-`@agenticdevelopertoolkit/viewport` — a sibling package in this same repo,
+`@adh-sdk/viewport` — a sibling package in this same repo,
 which several consumer sites load alongside this one — opens its
 `css/base.css` with `html, body { overflow: hidden }`. It
 **locks the page to the visible viewport** so an inner shell can scroll. This
@@ -20,7 +20,7 @@ The two stylesheets can never be loaded on the same page, so `landing` is a
 sibling of `viewport`, not a layer on it. A site may use both packages, but not
 on the same element: it may reuse `viewport`'s hooks (JS) and never its CSS.
 
-## Why not route page colour through `@agenticdevelopertoolkit/themes`
+## Why not route page colour through `@adh-sdk/themes`
 
 `themes` skins a widget subtree: `ThemeStyle` rewrites a theme stylesheet into
 `@scope (.pc-theme-scope) { … }`, so by construction it cannot reach `html`,
@@ -37,11 +37,11 @@ from palette, it styles no `--lp-*` token, and nothing here overrides it.
 ## Install
 
 ```tsx
-import { Deck, Screen /* … */ } from '@agenticdevelopertoolkit/landing'
-import { NavChrome } from '@agenticdevelopertoolkit/landing/client'
-import '@agenticdevelopertoolkit/landing/css/base.css'   // deck + screen mechanics
-import '@agenticdevelopertoolkit/landing/css/chrome.css' // header, burger, drawer
-import '@agenticdevelopertoolkit/landing/css/blocks.css' // the block vocabulary
+import { Deck, Screen /* … */ } from '@adh-sdk/landing'
+import { NavChrome } from '@adh-sdk/landing/client'
+import '@adh-sdk/landing/css/base.css'   // deck + screen mechanics
+import '@adh-sdk/landing/css/chrome.css' // header, burger, drawer
+import '@adh-sdk/landing/css/blocks.css' // the block vocabulary
 ```
 
 **Everything that carries `'use client'` comes from `/client`, and that split is
@@ -88,11 +88,11 @@ Composes the scroll mechanism (`DeckScript`, `Deck`, `Screen`), the chrome
 (`NavChrome`), and two blocks (`Hero`, `Wrap` + `Head`):
 
 ```tsx
-import { DeckScript, Deck, Hero, Screen, Wrap, Head } from '@agenticdevelopertoolkit/landing'
-import { NavChrome } from '@agenticdevelopertoolkit/landing/client'
-import '@agenticdevelopertoolkit/landing/css/base.css'
-import '@agenticdevelopertoolkit/landing/css/chrome.css'
-import '@agenticdevelopertoolkit/landing/css/blocks.css'
+import { DeckScript, Deck, Hero, Screen, Wrap, Head } from '@adh-sdk/landing'
+import { NavChrome } from '@adh-sdk/landing/client'
+import '@adh-sdk/landing/css/base.css'
+import '@adh-sdk/landing/css/chrome.css'
+import '@adh-sdk/landing/css/blocks.css'
 
 export default function Page() {
   return (
@@ -116,8 +116,8 @@ function component.
 
 ## What's in the package
 
-Everything below ships from `@agenticdevelopertoolkit/landing` except the three marked
-**client**, which ship from `@agenticdevelopertoolkit/landing/client` for the reason
+Everything below ships from `@adh-sdk/landing` except the three marked
+**client**, which ship from `@adh-sdk/landing/client` for the reason
 under **Install**.
 
 | Export | Layer | What it is |
@@ -128,7 +128,7 @@ under **Install**.
 | `Wrap` | deck | The width-limited content column inside a `Screen`. |
 | `Split` | deck | Two panels side by side above a breakpoint, stacked below it. |
 | `Glow` | deck | A screen's decorative radial light (`aria-hidden`). Reach it through `Screen`'s `glow` prop rather than rendering it yourself — it has to come before the content it sits behind. Its offset follows the screen's alignment: centred on a `align="center"` screen, anchored below the top padding on the default one, because that is where each puts its content. |
-| `NavChrome` | chrome · **client** | Fixed header + burger + drawer + scrim, as one client component. `brand` is optional: omit it and the bar carries the burger alone, for a host that already has a site header — set `--lp-chrome-top` to that header's height and the whole chrome opens below it. Focus is trapped inside the open drawer; Escape and the close button are the exits, and the scrim is a pointer-only dismiss (`aria-hidden`, unfocusable), matching `@agenticdevelopertoolkit/ui`'s DocNav drawer. `action` is one call to action pinned to the bar's right end at 62rem and wider, the fixed-bar counterpart of `SiteHeader`'s. |
+| `NavChrome` | chrome · **client** | Fixed header + burger + drawer + scrim, as one client component. `brand` is optional: omit it and the bar carries the burger alone, for a host that already has a site header — set `--lp-chrome-top` to that header's height and the whole chrome opens below it. Focus is trapped inside the open drawer; Escape and the close button are the exits, and the scrim is a pointer-only dismiss (`aria-hidden`, unfocusable), matching `@adh-sdk/ui`'s DocNav drawer. `action` is one call to action pinned to the bar's right end at 62rem and wider, the fixed-bar counterpart of `SiteHeader`'s. |
 | `Head` | blocks | A section's eyebrow + title + lede slot. |
 | `Lede` | blocks | The standalone paragraph under a `Head` (or after a card grid, a chip list…). |
 | `Cards` / `Card` | blocks | A tile grid and its tiles. `Cards pair` forces an explicit two-column track. |
@@ -150,7 +150,7 @@ under **Install**.
 | `StatusPill` | blocks | The hero's status line; `free` switches to the accented "free" treatment (`--lp-status-free-border`). |
 | `Hero` | blocks | The one centred `Screen` on the page: glow, mark, headline, tagline, children (`Cta`/`Trust`/`StatusPill`, in the host's own order). |
 | `PulseRule` | blocks | A hairline `<hr>` in `--lp-accent` that slowly breathes, for under a hero's name; at rest, full strength, under reduced motion. `className` is appended (placement is the host's). `--lp-pulse-rule-period` (6s) and `--lp-pulse-rule-floor` (0.35) slow it or deepen it. |
-| `HeroNav` | flow · **client** | A page's table of contents as one centred line of plain anchors (`rows`, e.g. `indexRows(page)`; `label` names the `<nav>`), separated by drawn bars and swept once by `@agenticdevelopertoolkit/textlens` from `--lp-ink-dim` to `--lp-accent-bright`. Set in `--lp-font-mono`. |
+| `HeroNav` | flow · **client** | A page's table of contents as one centred line of plain anchors (`rows`, e.g. `indexRows(page)`; `label` names the `<nav>`), separated by drawn bars and swept once by `@adh-sdk/textlens` from `--lp-ink-dim` to `--lp-accent-bright`. Set in `--lp-font-mono`. |
 
 None of these render an `<img>` or a `next/link` — the package depends on
 nothing outside `packages/web/packages/*`. Anything image-shaped is a
@@ -290,9 +290,9 @@ clothes.
 From `packages/web/`:
 
 ```bash
-pnpm --filter @agenticdevelopertoolkit/landing build   # tsup + tsc + copy-css.mjs + check-directives.py
-pnpm --filter @agenticdevelopertoolkit/landing lint    # tsc --noEmit
-pnpm --filter @agenticdevelopertoolkit/landing test    # vitest, this package's suites
+pnpm --filter @adh-sdk/landing build   # tsup + tsc + copy-css.mjs + check-directives.py
+pnpm --filter @adh-sdk/landing lint    # tsc --noEmit
+pnpm --filter @adh-sdk/landing test    # vitest, this package's suites
 ```
 
 Note the `--filter` on the test line. The root `test` script is `pnpm -r run

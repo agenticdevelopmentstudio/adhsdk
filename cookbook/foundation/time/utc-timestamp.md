@@ -1,7 +1,7 @@
 ---
 id: 59F7893E-58FE-4F11-ABD9-F80C1E05C002
 title: "UTC Timestamp"
-domain: adtoolkit://cookbook/foundation/time/utc-timestamp
+domain: adhsdk://cookbook/foundation/time/utc-timestamp
 type: ingredient
 version: 1.0.0
 status: review
@@ -22,9 +22,9 @@ tags:
   - wire-format
 depends-on: []
 related:
-  - adtoolkit://cookbook/foundation/time/timestamp-parsing
-  - adtoolkit://cookbook/foundation/time/local-time-text
-  - adtoolkit://cookbook/foundation/time/activity-runs
+  - adhsdk://cookbook/foundation/time/timestamp-parsing
+  - adhsdk://cookbook/foundation/time/local-time-text
+  - adhsdk://cookbook/foundation/time/activity-runs
 references: []
 approved-by: ""
 approved-date: ""
@@ -135,7 +135,7 @@ Not applicable: The wire instant type calls no logging API.
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/Core/Time/UTCTimestamp.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Time/UTCTimestamp.swift` |
 
 ## Design Decisions
 
@@ -158,7 +158,7 @@ Not applicable: The wire instant type calls no logging API.
 | [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
 | [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
 
-`separation-of-concerns` passes because the type owns the wire format and day keys while delegating other shapes to the shared timestamp parser and keeping locale display in the local-time spec. `unit-test-coverage` passes because `AgenticToolkitCoreTests/Time/UTCTimestampTests.swift` covers writing, fraction truncation, days-ago, day keys, every stored shape, fast-path refusal, canonicalization, non-negative seconds, adding and date round-trips.
+`separation-of-concerns` passes because the type owns the wire format and day keys while delegating other shapes to the shared timestamp parser and keeping locale display in the local-time spec. `unit-test-coverage` passes because `AgenticDeveloperHubSDKCoreTests/Time/UTCTimestampTests.swift` covers writing, fraction truncation, days-ago, day keys, every stored shape, fast-path refusal, canonicalization, non-negative seconds, adding and date round-trips.
 
 ## Change History
 

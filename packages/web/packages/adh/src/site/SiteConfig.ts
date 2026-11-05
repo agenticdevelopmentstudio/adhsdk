@@ -1,20 +1,20 @@
 import type { ComponentType, ReactNode } from 'react'
-import type { SiteId } from '@agentic-toolkit/adh-registry'
-import { siteIdentity, type SiteRoute, type SiteSeo } from '@agentic-toolkit/adh-registry/seo'
-import { withWebSite } from '@agenticdevelopertoolkit/landing'
+import type { SiteId } from '@adh-sdk/adh-registry'
+import { siteIdentity, type SiteRoute, type SiteSeo } from '@adh-sdk/adh-registry/seo'
+import { withWebSite } from '@adh-sdk/landing'
 // The ID comes from `lib/help-ids`, not from `components/help-content` where the rest of
 // the help vocabulary lives. This module is in the SERVER graph (see SiteConfig's own doc
 // below), `help-content` is `"use client"`, and a server module cannot read a plain value
 // out of a client one — React hands it a client reference and the read throws. `lib/help-ids`
 // carries no directive, so both graphs may import it. The TYPE is erased either way.
-import { SITE_TITLE_HELP_ID } from '@agentic-toolkit/adh-ui/help-ids'
-import type { SiteHelp } from '@agenticdevelopertoolkit/ui/components/help-content'
+import { SITE_TITLE_HELP_ID } from '@adh-sdk/adh-ui/help-ids'
+import type { SiteHelp } from '@adh-sdk/ui/components/help-content'
 // Type-only, so nothing crosses at runtime and no `external` pairing is owed — the
 // whole-statement `import type … from` form is erased before the bundler sees it, and
 // <adh-tools>/sites/scripts/verify-bundle-boundaries.py skips exactly that form (see its comment at
 // the top of `_iter_self_specifiers`). The shell's prop type is imported rather than
 // restated so `shell` cannot drift from what <MarketingRootHtml> actually accepts.
-import type { MarketingRootHtmlProps } from '@agentic-toolkit/adh/marketing'
+import type { MarketingRootHtmlProps } from '@adh-sdk/adh/marketing'
 
 /** The paths every site in the family keeps out of its production index.
  *
@@ -167,7 +167,7 @@ export type SiteGate = ComponentType<{ children: ReactNode }>
  * That split is not tidiness. Fold the home model in here and the config becomes reachable
  * from a `'use client'` page, which drags whatever the config imports into the browser
  * bundle — including `research`'s sitemap reads, which resolve a backend URL through
- * `@agentic-toolkit/auth/server`. The split runs along the boundary React already draws,
+ * `@adh-sdk/auth/server`. The split runs along the boundary React already draws,
  * so each half stays in one graph and neither has to know about the other.
  */
 export interface SiteConfig {
@@ -190,9 +190,9 @@ export interface SiteConfig {
    *  So the `??` lives at the mount, where the reader is.
    *
    *  This used to claim a runtime reason — that resolving them would drag
-   *  `@agentic-toolkit/auth`'s module graph ("a token store and a refresh timer at module
+   *  `@adh-sdk/auth`'s module graph ("a token store and a refresh timer at module
    *  scope") behind `app/robots.ts` and `app/sitemap.ts`. That was wrong twice over, and the
-   *  correction matters because sites were being told to reason from it: `@agentic-toolkit/auth`
+   *  correction matters because sites were being told to reason from it: `@adh-sdk/auth`
    *  is itself a `'use client'` barrel, so a server module importing it gets client REFERENCES
    *  and never evaluates a line of it — which is why hub's `site.config.tsx` can hold four
    *  client components and its `app/robots.ts` still executes nothing but this file. And there

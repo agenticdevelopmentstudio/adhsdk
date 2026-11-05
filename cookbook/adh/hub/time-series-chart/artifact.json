@@ -3,7 +3,7 @@
   "meta": {
     "id": "f571e2ee-ce27-4405-9e79-f69f601f9e1f",
     "title": "Time Series Chart",
-    "domain": "adtoolkit://cookbook/adh/hub/time-series-chart",
+    "domain": "adhsdk://cookbook/adh/hub/time-series-chart",
     "type": "ingredient",
     "version": "1.0.0",
     "status": "review",

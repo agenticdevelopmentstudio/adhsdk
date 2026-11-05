@@ -48,9 +48,9 @@ import {
 // in settings/index.js, the always-loaded barrel every site's SettingsOverlayProvider
 // imports. UserSettingsOverlay.tsx has its own tsup entry and `external` pairing for
 // exactly this reason (mirroring help/HelpProvider's identical
-// `@agentic-toolkit/adh/help/HelpWindow` lazy import) — see tsup.config.ts.
+// `@adh-sdk/adh/help/HelpWindow` lazy import) — see tsup.config.ts.
 const UserSettingsOverlay = lazy(() =>
-  import("@agentic-toolkit/adh/settings/UserSettingsOverlay").then((m) => ({
+  import("@adh-sdk/adh/settings/UserSettingsOverlay").then((m) => ({
     default: m.UserSettingsOverlay,
   })),
 );
@@ -280,7 +280,7 @@ function SettingsOverlayError({
  * Keeps a failed overlay chunk fetch inside the overlay.
  *
  * A class because React has no hook form of an error boundary, and local rather than
- * `@agentic-toolkit/adh/layout`'s AppErrorBoundary because that one reaches @sentry/react
+ * `@adh-sdk/adh/layout`'s AppErrorBoundary because that one reaches @sentry/react
  * and ErrorFallback's ui graph — the eager cost this module refuses (and because
  * layout/AppShell imports this file, so importing layout back would close a cycle between
  * two tsup entries).

@@ -1,7 +1,7 @@
 ---
 id: 10cd0ad8-b7b7-4674-9f8c-80a071fecb6f
 title: Sheet
-domain: agenticdevelopertoolkit://recipes/sheet
+domain: adhsdk://recipes/sheet
 type: ingredient
 version: 1.1.1
 status: review
@@ -23,8 +23,8 @@ tags:
 - dialog
 depends-on: []
 related:
-- agenticdevelopertoolkit://recipes/dialog
-- agenticdevelopertoolkit://recipes/popover
+- adhsdk://recipes/dialog
+- adhsdk://recipes/popover
 references: []
 approved-by: ''
 approved-date: ''

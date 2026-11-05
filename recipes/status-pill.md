@@ -1,7 +1,7 @@
 ---
 id: ba2377b1-f831-4ef8-bf2c-d8393e5eb2c1
 title: Status Pill
-domain: agenticdevelopertoolkit://recipes/status-pill
+domain: adhsdk://recipes/status-pill
 type: ingredient
 version: 1.1.1
 status: review
@@ -22,7 +22,7 @@ tags:
 - indicator
 depends-on: []
 related:
-- agenticdevelopertoolkit://recipes/badge
+- adhsdk://recipes/badge
 references: []
 approved-by: ''
 approved-date: ''
@@ -146,7 +146,7 @@ Not applicable: No logging is implemented in the source.
 **Rationale**: The source docstring documents `free` as marking "the one status that gets the accented treatment" for a specific known use (a complimentary/free tier); the component was built for that one accent, not a general variant system, so the name says what it does.
 **Approved**: pending
 
-**Decision**: Keep StatusPill separate from `badge` (agenticdevelopertoolkit://recipes/badge) rather than folding it in as a variant.
+**Decision**: Keep StatusPill separate from `badge` (adhsdk://recipes/badge) rather than folding it in as a variant.
 **Rationale**: The two differ in root element (block `<p>` here vs. inline `<span>` in badge), token namespace (`--lp-*` landing tokens vs. badge's own tokens), and variant model (one binary accent here vs. badge's six tone variants); merging them would mean badge's `<span>` consumers inherit a block element, or StatusPill's callers inherit six unrelated tones.
 **Approved**: pending
 

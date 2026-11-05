@@ -1,5 +1,5 @@
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/macOS/Features/NotesWindow/` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/NotesWindow/` |
 

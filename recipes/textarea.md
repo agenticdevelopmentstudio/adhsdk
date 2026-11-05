@@ -1,7 +1,7 @@
 ---
 id: 1e323e69-44d2-4a15-a11e-22a68e8e6a8c
 title: Textarea
-domain: agenticdevelopertoolkit://recipes/textarea
+domain: adhsdk://recipes/textarea
 type: ingredient
 version: 1.1.1
 status: review

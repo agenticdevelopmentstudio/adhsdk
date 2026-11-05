@@ -1,6 +1,6 @@
 
 - **SwiftUI**: Source:
-  `packages/apple/AgenticToolkit/Core/Extensions/VSIXArchive.swift`, its
+  `packages/apple/AgenticDeveloperHubSDK/Core/Extensions/VSIXArchive.swift`, its
   process runner in `Core/Process/CommandRunner.swift`, and its `Loggable`
   conformance from `Core/Loggable.swift`. The type is plain `Foundation`,
   `CryptoKit`, and `OSLog` with no SwiftUI dependency; a SwiftUI-hosted
@@ -39,9 +39,9 @@
 - **AppKit / UIKit**: No divergence from the SwiftUI bullet above — the
   source is framework-agnostic `Foundation`/`CryptoKit` code plus one
   `Process` launch, callable identically from an AppKit-hosted (macOS) or
-  UIKit-hosted (iOS) caller. `AgenticToolkitCore`, the framework target that
+  UIKit-hosted (iOS) caller. `AgenticDeveloperHubSDKCore`, the framework target that
   builds this file, is configured `platform: macOS` in
-  `packages/apple/AgenticToolkit/project.yml` today; `/usr/bin/ditto` itself
+  `packages/apple/AgenticDeveloperHubSDK/project.yml` today; `/usr/bin/ditto` itself
   is a macOS command-line tool with no iOS equivalent, so an iOS port of
   `expand` specifically (not `verify`) would need a pure-Swift or
   `libarchive`-based unzip that re-implements the same two containment

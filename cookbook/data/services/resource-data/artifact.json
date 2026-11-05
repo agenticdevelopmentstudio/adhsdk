@@ -3,7 +3,7 @@
   "meta": {
     "id": "ec6e6ca5-8780-4ce2-8b3a-087adc50ed35",
     "title": "Resource Data",
-    "domain": "adtoolkit://cookbook/data/services/resource-data",
+    "domain": "adhsdk://cookbook/data/services/resource-data",
     "type": "ingredient",
     "version": "1.2.1",
     "status": "review",
@@ -27,26 +27,26 @@
       "http"
     ],
     "depends-on": [
-      "adtoolkit://cookbook/data/services/auth/auth-client"
+      "adhsdk://cookbook/data/services/auth/auth-client"
     ],
     "related": [],
     "references": [
-      "packages/web/packages/data/src/client-helpers.ts (agenticdevelopertoolkit)",
-      "packages/web/packages/data/src/config.ts (agenticdevelopertoolkit)",
-      "packages/web/packages/data/src/ftd-storage.ts (agenticdevelopertoolkit)",
-      "packages/web/packages/data/src/http.ts (agenticdevelopertoolkit)",
-      "packages/web/packages/data/src/tenant.ts (agenticdevelopertoolkit)",
-      "packages/web/packages/data/src/use-resource-item.ts (agenticdevelopertoolkit)",
-      "packages/web/packages/data/src/use-resource-list.ts (agenticdevelopertoolkit)",
-      "packages/web/packages/data/src/workspace-prefs.ts (agenticdevelopertoolkit)",
-      "packages/web/packages/data/src/workspaces.ts (agenticdevelopertoolkit)",
-      "packages/web/packages/data/src/__tests__/ftd-storage.test.ts (agenticdevelopertoolkit)",
-      "packages/web/packages/data/src/__tests__/http.test.ts (agenticdevelopertoolkit)",
-      "packages/web/packages/data/src/__tests__/tenant.test.ts (agenticdevelopertoolkit)",
-      "packages/web/packages/data/src/__tests__/workspace-prefs.test.ts (agenticdevelopertoolkit)",
-      "packages/web/packages/data/src/__tests__/workspaces-changed.test.ts (agenticdevelopertoolkit)",
-      "packages/web/packages/data/src/__tests__/use-resource-item.test.tsx (agenticdevelopertoolkit)",
-      "packages/web/packages/data/src/__tests__/use-resource-list.test.tsx (agenticdevelopertoolkit)"
+      "packages/web/packages/data/src/client-helpers.ts (adhsdk)",
+      "packages/web/packages/data/src/config.ts (adhsdk)",
+      "packages/web/packages/data/src/ftd-storage.ts (adhsdk)",
+      "packages/web/packages/data/src/http.ts (adhsdk)",
+      "packages/web/packages/data/src/tenant.ts (adhsdk)",
+      "packages/web/packages/data/src/use-resource-item.ts (adhsdk)",
+      "packages/web/packages/data/src/use-resource-list.ts (adhsdk)",
+      "packages/web/packages/data/src/workspace-prefs.ts (adhsdk)",
+      "packages/web/packages/data/src/workspaces.ts (adhsdk)",
+      "packages/web/packages/data/src/__tests__/ftd-storage.test.ts (adhsdk)",
+      "packages/web/packages/data/src/__tests__/http.test.ts (adhsdk)",
+      "packages/web/packages/data/src/__tests__/tenant.test.ts (adhsdk)",
+      "packages/web/packages/data/src/__tests__/workspace-prefs.test.ts (adhsdk)",
+      "packages/web/packages/data/src/__tests__/workspaces-changed.test.ts (adhsdk)",
+      "packages/web/packages/data/src/__tests__/use-resource-item.test.tsx (adhsdk)",
+      "packages/web/packages/data/src/__tests__/use-resource-list.test.tsx (adhsdk)"
     ],
     "approved-by": "",
     "approved-date": ""

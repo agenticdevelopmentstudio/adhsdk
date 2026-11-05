@@ -1,7 +1,7 @@
 ---
 id: 70f5dcb1-9d00-445b-a691-0dc1e7dd7a67
 title: "Profile"
-domain: adtoolkit://cookbook/adh/hub/profile
+domain: adhsdk://cookbook/adh/hub/profile
 type: ingredient
 version: 1.1.1
 status: review
@@ -25,14 +25,14 @@ tags:
 depends-on: []
 related: []
 references:
-  - packages/web/packages/data/src/profile/profile.ts (agenticdevelopertoolkit)
-  - packages/web/packages/data/src/profile/usage.ts (agenticdevelopertoolkit)
-  - packages/web/packages/data/src/profile/wire.ts (agenticdevelopertoolkit)
-  - packages/web/packages/data/src/profile/index.ts (agenticdevelopertoolkit)
-  - packages/web/packages/data/src/profile/__tests__/profile.test.ts (agenticdevelopertoolkit)
-  - packages/web/packages/data/src/http.ts (agenticdevelopertoolkit)
-  - packages/web/packages/auth/src/client.ts (agenticdevelopertoolkit)
-  - packages/web/packages/adh-api-types/src/data-profile-wire.test-d.ts (agenticdevelopertoolkit)
+  - packages/web/packages/data/src/profile/profile.ts (adhsdk)
+  - packages/web/packages/data/src/profile/usage.ts (adhsdk)
+  - packages/web/packages/data/src/profile/wire.ts (adhsdk)
+  - packages/web/packages/data/src/profile/index.ts (adhsdk)
+  - packages/web/packages/data/src/profile/__tests__/profile.test.ts (adhsdk)
+  - packages/web/packages/data/src/http.ts (adhsdk)
+  - packages/web/packages/auth/src/client.ts (adhsdk)
+  - packages/web/packages/adh-api-types/src/data-profile-wire.test-d.ts (adhsdk)
 approved-by: ""
 approved-date: ""
 ---
@@ -360,7 +360,7 @@ Not applicable: this domain contains no logging call of any kind.
 - **React/Web** (source platform): `packages/web/packages/data/src/profile/profile.ts`,
   `usage.ts`, and `wire.ts` hold the client, re-exported as the package's public surface by
   `index.ts`; every network operation is built on `authedJson`/`authedRequest` from
-  `@agentic-toolkit/auth/client` (re-exported through `./http`), and the four cache-key functions
+  `@adh-sdk/auth/client` (re-exported through `./http`), and the four cache-key functions
   are plain string-array builders with no framework dependency of their own — a consumer wires them
   into whatever cache layer (e.g. react-query) it uses.
 - **SwiftUI**: model `SocialLink`/`SocialLinkWrite`/`Address`/`AddressWrite`/`PrivacyGrant`/

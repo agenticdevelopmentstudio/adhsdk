@@ -1,6 +1,6 @@
 // Local wire types for the reactions client — the backend row + request-body shapes it
 // reads/sends. Narrowed by hand from the OpenAPI schema (`Reaction`) rather than imported from
-// `@agentic-toolkit/adh-api-types`, which is adh product vocabulary a generic data client must
+// `@adh-sdk/adh-api-types`, which is adh product vocabulary a generic data client must
 // not take on; the cost is that a backend contract change is caught by keeping this in sync,
 // not by the build. Type-only file.
 

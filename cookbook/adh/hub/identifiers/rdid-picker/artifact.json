@@ -3,7 +3,7 @@
   "meta": {
     "id": "bd0d7595-f186-4aaf-bb45-5c733cfdb03d",
     "title": "RDID Picker",
-    "domain": "adtoolkit://cookbook/adh/hub/identifiers/rdid-picker",
+    "domain": "adhsdk://cookbook/adh/hub/identifiers/rdid-picker",
     "type": "ingredient",
     "version": "1.2.1",
     "status": "review",

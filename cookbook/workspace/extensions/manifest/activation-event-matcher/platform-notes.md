@@ -33,7 +33,7 @@
   tokenizer the source implements, not a general-purpose glob library.
 - **AppKit / UIKit**: identical to the SwiftUI note — the component depends
   on neither AppKit nor UIKit, so a macOS or iOS host consumes the same
-  `AgenticToolkitCore` type directly with no translation.
+  `AgenticDeveloperHubSDKCore` type directly with no translation.
 - **WinUI 3**: there is no .NET or Windows App SDK type that already
   implements VS Code's `activationEvents` grammar or its `engines.vscode`
   range grammar, so both need a direct C# port rather than an existing

@@ -1,5 +1,5 @@
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/macOS/UI/Cards/DisclosureCardView.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/Cards/DisclosureCardView.swift` |
 

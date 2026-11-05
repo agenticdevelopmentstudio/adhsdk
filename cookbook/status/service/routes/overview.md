@@ -18,7 +18,7 @@ Route modules delegate policy to lower layers rather than re-implementing it:
 persistence and atomic guards live behind the `Storage` port, roster-vs-board
 folding lives in `reconcileBoardLedger`/`deriveBoard` (documented in the
 sibling `status-server-board` recipe), and project-matching/wiring for
-auto-configure lives in the external `@agentic-toolkit/deploy-platform/engine`
+auto-configure lives in the external `@adh-sdk/deploy-platform/engine`
 package. This recipe documents the route layer's own contract: what each
 endpoint validates, what it returns, what authorization tier gates it, and
 where its error/edge-case behavior is and isn't defined.

@@ -1,6 +1,6 @@
 import type { ReactElement } from 'react'
-import { Card, Cards, Head } from '@agenticdevelopertoolkit/landing'
-import type { BandTone } from '@agenticdevelopertoolkit/landing'
+import { Card, Cards, Head } from '@adh-sdk/landing'
+import type { BandTone } from '@adh-sdk/landing'
 import { FrameBand } from './frame-band'
 import type { SiteFamily } from './types'
 

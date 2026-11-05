@@ -1,7 +1,7 @@
 ---
 id: 016f5ba0-f4ee-4b39-b1a2-83629768acdd
 title: "File System"
-domain: adtoolkit://cookbook/foundation/file-system
+domain: adhsdk://cookbook/foundation/file-system
 type: ingredient
 version: 1.1.1
 status: review
@@ -20,14 +20,14 @@ tags:
   - concurrency
 depends-on: []
 related:
-  - adtoolkit://cookbook/workspace/extensions/host/extension-host
-  - adtoolkit://cookbook/workspace/extensions/vscode-api/workspace/main-thread-workspace
+  - adhsdk://cookbook/workspace/extensions/host/extension-host
+  - adhsdk://cookbook/workspace/extensions/vscode-api/workspace/main-thread-workspace
 references:
-  - packages/apple/AgenticToolkit/Core/FileSystem/FileSystemService.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Core/FileSystem/FileSystemServicing.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Core/FileSystem/FileSignature.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Tests/AgenticToolkitCoreTests/FileSystem/FileSystemServiceTests.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Tests/AgenticToolkitCoreTests/FileSystem/FileSignatureTests.swift (agenticdevelopertoolkit)
+  - packages/apple/AgenticDeveloperHubSDK/Core/FileSystem/FileSystemService.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Core/FileSystem/FileSystemServicing.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Core/FileSystem/FileSignature.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKCoreTests/FileSystem/FileSystemServiceTests.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKCoreTests/FileSystem/FileSignatureTests.swift (adhsdk)
 approved-by: ""
 approved-date: ""
 ---
@@ -484,15 +484,15 @@ at its own call site.
 
 ## Platform Notes
 
-- **SwiftUI**: Source: `packages/apple/AgenticToolkit/Core/FileSystem/
+- **SwiftUI**: Source: `packages/apple/AgenticDeveloperHubSDK/Core/FileSystem/
   FileSystemService.swift`, `Core/FileSystem/FileSystemServicing.swift`, and
   `Core/FileSystem/FileSignature.swift`. The type is plain `Foundation` with
   no SwiftUI dependency; a SwiftUI-hosted caller awaits one of the seven
   `async throws` operations from a `Task` and renders the returned value or
   caught `FileSystemServiceError` into its own `@State`/`@Observable` view
-  state — `FileSystemService` itself holds none, and `AgenticToolkitCore`,
+  state — `FileSystemService` itself holds none, and `AgenticDeveloperHubSDKCore`,
   the framework target that builds it, is configured `platform: macOS` in
-  `packages/apple/AgenticToolkit/project.yml` today.
+  `packages/apple/AgenticDeveloperHubSDK/project.yml` today.
 - **Compose**: On Kotlin/Android, port to a class exposing seven `suspend
   fun` equivalents (`readFile`, `readDirectory`, `stat`, `writeFile`,
   `createDirectory`, `delete`, `rename`), each running its `java.io.File`/
@@ -530,7 +530,7 @@ at its own call site.
   POSIX-code classification (`error-classification-posix-first`).
 - **AppKit / UIKit**: This recipe is extracted directly from Foundation,
   callable identically from an AppKit-hosted (macOS) or UIKit-hosted (iOS)
-  caller; since `AgenticToolkitCore` is configured `platform: macOS` today,
+  caller; since `AgenticDeveloperHubSDKCore` is configured `platform: macOS` today,
   an iOS caller would first need the type made available to an iOS target,
   but the type itself needs no AppKit/UIKit-specific change to run there.
   The file system service is `FileSystemService` (`FileSystemService.swift`),
@@ -606,7 +606,7 @@ at its own call site.
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/Core/FileSystem/` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/FileSystem/` |
 
 ## Design Decisions
 

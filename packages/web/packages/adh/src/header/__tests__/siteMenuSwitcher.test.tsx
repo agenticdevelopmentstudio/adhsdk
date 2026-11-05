@@ -17,7 +17,7 @@ import {
   SiteMenuSwitcher,
   WorkspacesMenuProvider,
   type WorkspacesMenu,
-} from '@agentic-toolkit/adh/header'
+} from '@adh-sdk/adh/header'
 
 afterEach(cleanup)
 

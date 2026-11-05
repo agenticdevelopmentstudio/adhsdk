@@ -10,7 +10,7 @@
   `GitCaller.swift`, `GitClient.swift`, `GitClientConfiguration.swift`,
   `GitClientError.swift`, `GitCommandLog.swift`, `GitConfigEntry.swift`,
   `GitFileStatus.swift`, `GitStatus.swift`, `GitWorktree.swift`) live in
-  the shared `AgenticToolkitCore` framework (`Core/Git/`) and import only
+  the shared `AgenticDeveloperHubSDKCore` framework (`Core/Git/`) and import only
   `Foundation` and `OSLog` — no `AppKit`/`UIKit` dependency at all.
   `GitClient` is declared as a Swift `actor`, whose verbs each suspend at
   the `await SubprocessChannel.run` point, releasing the actor for the

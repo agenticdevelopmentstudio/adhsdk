@@ -3,7 +3,7 @@
   "meta": {
     "id": "06a425eb-e854-440b-97bc-0df5070ed72f",
     "title": "Language Services Snippets",
-    "domain": "adtoolkit://cookbook/workspace/language/snippets",
+    "domain": "adhsdk://cookbook/workspace/language/snippets",
     "type": "ingredient",
     "version": "1.0.3",
     "status": "review",
@@ -27,9 +27,9 @@
     ],
     "depends-on": [],
     "related": [
-      "adtoolkit://cookbook/workspace/extensions/manifest/contribution-point",
-      "adtoolkit://cookbook/workspace/extensions/manifest/extension-resource-path",
-      "adtoolkit://cookbook/workspace/extensions/manifest/extension-manifest"
+      "adhsdk://cookbook/workspace/extensions/manifest/contribution-point",
+      "adhsdk://cookbook/workspace/extensions/manifest/extension-resource-path",
+      "adhsdk://cookbook/workspace/extensions/manifest/extension-manifest"
     ],
     "references": [],
     "approved-by": "",

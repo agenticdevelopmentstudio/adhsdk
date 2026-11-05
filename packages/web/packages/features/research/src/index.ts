@@ -1,4 +1,4 @@
-// @agentic-toolkit/research — the Research feature: a master/detail surface over
+// @adh-sdk/research — the Research feature: a master/detail surface over
 // the signed-in user's markdown research documents (search, editor, publish flow).
 // The entry mounts the deep-linked `/<slug>/research` route (the host passes
 // `basePath`); the barrel exposes only the feature entry + the URL grammar it owns.

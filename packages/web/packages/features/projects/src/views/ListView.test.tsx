@@ -7,7 +7,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, fireEvent, waitFor, cleanup } from "@testing-library/react";
 
-vi.mock("@agentic-toolkit/data/projects", async (importOriginal) => {
+vi.mock("@adh-sdk/data/projects", async (importOriginal) => {
   const actual = await importOriginal<Record<string, unknown>>();
   return {
     ...actual,
@@ -25,8 +25,8 @@ vi.mock("@agentic-toolkit/data/projects", async (importOriginal) => {
 
 import { ListView } from "./ListView";
 import { itemWordsOf } from "../vocabulary";
-import { projectWorkItemsApi, type WorkItem } from "@agentic-toolkit/data/projects";
-import { type ProjectStatus, type ProjectParticipant } from "@agentic-toolkit/data/projects";
+import { projectWorkItemsApi, type WorkItem } from "@adh-sdk/data/projects";
+import { type ProjectStatus, type ProjectParticipant } from "@adh-sdk/data/projects";
 
 const update = vi.mocked(projectWorkItemsApi.update);
 const remove = vi.mocked(projectWorkItemsApi.remove);

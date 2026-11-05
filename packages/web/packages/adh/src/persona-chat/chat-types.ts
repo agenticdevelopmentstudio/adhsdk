@@ -2,8 +2,8 @@
 // `packages/web/packages/chat/src/types.ts` (and its
 // `src/backends/types.ts` for `ChatBackend`).
 //
-// WHY A COPY RATHER THAN A DEPENDENCY. `@agenticdevelopertoolkit/chat` is a workspace
-// sibling, so a dependency would resolve — but it would put the persona toolkit into
+// WHY A COPY RATHER THAN A DEPENDENCY. `@adh-sdk/chat` is a workspace
+// sibling, so a dependency would resolve — but it would put the persona layer into
 // this package's shipped graph, and keeping it out is the layering (see the
 // `//devDependencies` note in package.json). Even a type-only import would not stay
 // private: the emitted `.d.ts` re-imports it, so every consumer's type check would need

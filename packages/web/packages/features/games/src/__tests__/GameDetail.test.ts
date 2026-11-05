@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { gameBlank, gameToInput, gameValidate, gameDiffers, gameNormalize } from "../GameDetail";
 import { wholeNumberProblem } from "../fields";
-import type { Game } from "@agentic-toolkit/data/games";
+import type { Game } from "@adh-sdk/data/games";
 
 // A plain, opaque uuid — not an rdid — matching the post-§1 contract: a game has no
 // address of its own any more, it is reached through its product's ecosystem id.

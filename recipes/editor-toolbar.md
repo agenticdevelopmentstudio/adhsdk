@@ -1,7 +1,7 @@
 ---
 id: 3C65C844-6C3C-43E2-B792-8575F5DDA9CF
 title: EditorToolbar
-domain: agenticdevelopertoolkit://recipes/editor-toolbar
+domain: adhsdk://recipes/editor-toolbar
 type: ingredient
 version: 1.1.1
 status: review

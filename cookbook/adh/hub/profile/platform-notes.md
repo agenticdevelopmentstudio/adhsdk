@@ -2,7 +2,7 @@
 - **React/Web** (source platform): `packages/web/packages/data/src/profile/profile.ts`,
   `usage.ts`, and `wire.ts` hold the client, re-exported as the package's public surface by
   `index.ts`; every network operation is built on `authedJson`/`authedRequest` from
-  `@agentic-toolkit/auth/client` (re-exported through `./http`), and the four cache-key functions
+  `@adh-sdk/auth/client` (re-exported through `./http`), and the four cache-key functions
   are plain string-array builders with no framework dependency of their own — a consumer wires them
   into whatever cache layer (e.g. react-query) it uses.
 - **SwiftUI**: model `SocialLink`/`SocialLinkWrite`/`Address`/`AddressWrite`/`PrivacyGrant`/

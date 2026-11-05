@@ -2,19 +2,19 @@
 
 import { useCallback, useMemo, useState, type ReactNode } from "react";
 import { Trash2 } from "lucide-react";
-import { Field, FieldGroup, ButtonBar } from "@agenticdevelopertoolkit/ui/blocks";
-import { Input } from "@agenticdevelopertoolkit/ui/components/input";
-import { Textarea } from "@agenticdevelopertoolkit/ui/components/textarea";
-import { Button } from "@agenticdevelopertoolkit/ui/components/button";
-import { ErrorText } from "@agenticdevelopertoolkit/ui/components/error-text";
-import { errMsg, useResourceList, useTenantId } from "@agentic-toolkit/data";
+import { Field, FieldGroup, ButtonBar } from "@adh-sdk/ui/blocks";
+import { Input } from "@adh-sdk/ui/components/input";
+import { Textarea } from "@adh-sdk/ui/components/textarea";
+import { Button } from "@adh-sdk/ui/components/button";
+import { ErrorText } from "@adh-sdk/ui/components/error-text";
+import { errMsg, useResourceList, useTenantId } from "@adh-sdk/data";
 import {
   interestDocumentsApi,
   specialInterestsApi,
   type InterestDocumentRow,
   type SpecialInterestRow,
   type Persona,
-} from "@agentic-toolkit/data/personas";
+} from "@adh-sdk/data/personas";
 import { specialInterestsCacheKey } from "./interests-cache";
 
 // The research corpus behind one special interest: the documents the persona searches mid-

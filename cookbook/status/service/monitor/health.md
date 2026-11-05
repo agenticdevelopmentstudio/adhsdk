@@ -1,7 +1,7 @@
 ---
 id: 2871e97f-f971-46fe-a4d2-de57ad5c94c5
 title: "Status Server Monitor Health"
-domain: adtoolkit://cookbook/status/service/monitor/health
+domain: adhsdk://cookbook/status/service/monitor/health
 type: ingredient
 version: 1.0.2
 status: review
@@ -24,9 +24,9 @@ tags:
 depends-on: []
 related: []
 references:
-  - packages/web/packages/status-server/src/monitor/health.ts (agenticdevelopertoolkit)
-  - packages/web/packages/status-server/test/health.test.ts (agenticdevelopertoolkit)
-  - packages/web/packages/status-server/src/monitor/probe.ts (agenticdevelopertoolkit)
+  - packages/web/packages/status-server/src/monitor/health.ts (adhsdk)
+  - packages/web/packages/status-server/test/health.test.ts (adhsdk)
+  - packages/web/packages/status-server/src/monitor/probe.ts (adhsdk)
 approved-by: ""
 approved-date: ""
 ---

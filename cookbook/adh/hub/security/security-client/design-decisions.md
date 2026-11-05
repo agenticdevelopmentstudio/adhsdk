@@ -19,7 +19,7 @@ inconsistency forward.
 **Approved**: pending
 
 **Decision**: `wire.ts`'s types are declared as a package-local mirror of the OpenAPI-generated shapes
-in `@agentic-toolkit/adh-api-types`, rather than importing them directly.
+in `@adh-sdk/adh-api-types`, rather than importing them directly.
 **Rationale**: per `wire.ts`'s own header comment, this keeps the toolkit decoupled from the hub's
 generated types "without narrowing what a caller can rely on" — the mirrored interfaces carry full
 backend-schema fidelity (every field the backend's OpenAPI schema declares), not only the subset

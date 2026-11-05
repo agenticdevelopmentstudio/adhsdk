@@ -10,7 +10,7 @@ import { Wrench as Wrench2 } from "lucide-react";
 import { useId } from "react";
 import Link from "next/link";
 import { ChevronDown, Home, LogOut, Settings, User as UserIcon, Wrench } from "lucide-react";
-import { Avatar, AvatarFallback, AvatarImage } from "@agenticdevelopertoolkit/ui/components/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@adh-sdk/ui/components/avatar";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -18,9 +18,9 @@ import {
   DropdownMenuItem,
   DropdownMenuLinkItem,
   DropdownMenuSeparator
-} from "@agenticdevelopertoolkit/ui/components/dropdown-menu";
-import { isModifiedClick } from "@agenticdevelopertoolkit/ui/lib/navigation-guard";
-import { slideNavigate } from "@agentic-toolkit/adh/layout/SlideNavigation";
+} from "@adh-sdk/ui/components/dropdown-menu";
+import { isModifiedClick } from "@adh-sdk/ui/lib/navigation-guard";
+import { slideNavigate } from "@adh-sdk/adh/layout/SlideNavigation";
 import { Fragment, jsx, jsxs } from "react/jsx-runtime";
 function firstNameOf(name) {
   return name.trim().split(/\s+/)[0] || name;
@@ -157,7 +157,7 @@ function AuthButtons({
   loginLabel = "login"
 }) {
   const loginNode = onLogin ? (
-    // adh-ui-allow: cs-no-bespoke — this is the <a> two lines down in button clothing: same affordance, same .adh-header__nav-link identity, chosen only by whether a handler or an href was passed. A @agenticdevelopertoolkit/ui <Button> brings its own visual identity, which is exactly what must NOT happen to a nav link.
+    // adh-ui-allow: cs-no-bespoke — this is the <a> two lines down in button clothing: same affordance, same .adh-header__nav-link identity, chosen only by whether a handler or an href was passed. A @adh-sdk/ui <Button> brings its own visual identity, which is exactly what must NOT happen to a nav link.
     /* @__PURE__ */ jsx2("button", { type: "button", onClick: onLogin, className: "adh-header__nav-link adh-header__nav-link--button", children: loginLabel })
   ) : loginHref ? /* @__PURE__ */ jsx2("a", { href: loginHref, className: "adh-header__nav-link", children: loginLabel }) : null;
   const signupNode = onSignup ? (
@@ -215,13 +215,13 @@ function NavLinkItem({ link }) {
 }
 
 // src/header/NavigationPopover.tsx
-import { cn, noAutofillProps } from "@agenticdevelopertoolkit/ui";
+import { cn, noAutofillProps } from "@adh-sdk/ui";
 import {
   confirmNavigation,
   GUARDED_NAV_ATTR,
   isModifiedClick as isModifiedClick2
-} from "@agenticdevelopertoolkit/ui/lib/navigation-guard";
-import { useShortcut, chordFromEvent, sameChord } from "@agenticdevelopertoolkit/ui/hooks/useShortcut";
+} from "@adh-sdk/ui/lib/navigation-guard";
+import { useShortcut, chordFromEvent, sameChord } from "@adh-sdk/ui/hooks/useShortcut";
 import {
   DropdownMenu as DropdownMenu2,
   DropdownMenuTrigger as DropdownMenuTrigger2,
@@ -231,7 +231,7 @@ import {
   DropdownMenuSub,
   DropdownMenuSubTrigger,
   DropdownMenuSubContent
-} from "@agenticdevelopertoolkit/ui/components/dropdown-menu";
+} from "@adh-sdk/ui/components/dropdown-menu";
 import { Fragment as Fragment4, jsx as jsx4, jsxs as jsxs3 } from "react/jsx-runtime";
 var GUARDED_NAV_PROPS = { [GUARDED_NAV_ATTR]: "" };
 function highlightMatch(text, query) {
@@ -853,7 +853,7 @@ import {
   DropdownMenuLinkItem as DropdownMenuLinkItem2,
   DropdownMenuLabel as DropdownMenuLabel2,
   DropdownMenuSeparator as DropdownMenuSeparator3
-} from "@agenticdevelopertoolkit/ui/components/dropdown-menu";
+} from "@adh-sdk/ui/components/dropdown-menu";
 import { jsx as jsx6, jsxs as jsxs4 } from "react/jsx-runtime";
 function SiteOptionsMenu({
   sites,
@@ -980,8 +980,8 @@ function PreviewNotice({
 }
 
 // src/header/AdhHeader.tsx
-import { Badge } from "@agenticdevelopertoolkit/ui/components/badge";
-import { HelpEnabled } from "@agenticdevelopertoolkit/ui/components/help-enabled";
+import { Badge } from "@adh-sdk/ui/components/badge";
+import { HelpEnabled } from "@adh-sdk/ui/components/help-enabled";
 import { Fragment as Fragment5, jsx as jsx9, jsxs as jsxs6 } from "react/jsx-runtime";
 function AdhHeader({
   siteName,

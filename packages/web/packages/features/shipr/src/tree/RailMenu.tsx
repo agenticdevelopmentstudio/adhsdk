@@ -17,7 +17,7 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@agenticdevelopertoolkit/ui/components/dropdown-menu';
+} from '@adh-sdk/ui/components/dropdown-menu';
 
 import type { ActionId, ToolbarState } from '../toolbar/actions';
 

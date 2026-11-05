@@ -34,7 +34,7 @@
   no `min-width` so it shrinks with its container, mirroring
   yields-width-to-container.
 - **AppKit / UIKit** (source platform): Source at
-  `packages/apple/AgenticToolkit/macOS/SystemIntegration/ComposableSettingsWindow/Views/PathView.swift`
+  `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/Views/PathView.swift`
   (this recipe's source): a macOS-only (`import AppKit`) `NSView` subclass,
   `@MainActor`, inside the `ComposableSettings` namespace, wrapping one
   `ComposableSettings.makeValueLabel`-built `ThemedLabel` reconfigured for

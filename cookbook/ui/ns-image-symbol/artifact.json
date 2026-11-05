@@ -3,7 +3,7 @@
   "meta": {
     "id": "5CACE721-E5EB-4D7A-AD2B-3EB67775CB88",
     "title": "Symbol Image",
-    "domain": "adtoolkit://cookbook/ui/ns-image-symbol",
+    "domain": "adhsdk://cookbook/ui/ns-image-symbol",
     "type": "ingredient",
     "version": "1.0.0",
     "status": "review",

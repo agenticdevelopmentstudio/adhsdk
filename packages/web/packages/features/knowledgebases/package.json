@@ -1,5 +1,5 @@
 {
-  "name": "@agentic-toolkit/knowledgebases",
+  "name": "@adh-sdk/knowledgebases",
   "version": "0.1.0",
   "description": "The Knowledge Bases feature: CRUD data views over the feature tables.",
   "license": "UNLICENSED",
@@ -41,12 +41,12 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@agentic-toolkit/auth": "workspace:*",
-    "@agentic-toolkit/crud": "workspace:*",
-    "@agentic-toolkit/data": "workspace:*",
-    "@agentic-toolkit/resource": "workspace:*",
+    "@adh-sdk/auth": "workspace:*",
+    "@adh-sdk/crud": "workspace:*",
+    "@adh-sdk/data": "workspace:*",
+    "@adh-sdk/resource": "workspace:*",
     "lucide-react": "^1.16.0",
-    "@agenticdevelopertoolkit/ui": "workspace:*"
+    "@adh-sdk/ui": "workspace:*"
   },
   "peerDependencies": {
     "next": ">=15",

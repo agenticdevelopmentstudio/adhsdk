@@ -14,11 +14,11 @@ import {
   releaseExplanation,
   releaseRunSummary,
 } from "../lib/reserved-identifiers-copy";
-import { Badge } from "@agenticdevelopertoolkit/ui/components/badge";
-import { Button } from "@agenticdevelopertoolkit/ui/components/button";
-import { Alert, AlertDescription, AlertTitle } from "@agenticdevelopertoolkit/ui/components/alert";
-import { errorMessage } from "@agenticdevelopertoolkit/ui/lib/errors";
-import { FeatureTitle } from "@agentic-toolkit/resource";
+import { Badge } from "@adh-sdk/ui/components/badge";
+import { Button } from "@adh-sdk/ui/components/button";
+import { Alert, AlertDescription, AlertTitle } from "@adh-sdk/ui/components/alert";
+import { errorMessage } from "@adh-sdk/ui/lib/errors";
+import { FeatureTitle } from "@adh-sdk/resource";
 import {
   EditableList,
   TypeToConfirmDialog,

@@ -2,7 +2,7 @@
 
 import { useCallback, useMemo } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
-import { confirmNavigation } from '@agenticdevelopertoolkit/ui/lib/navigation-guard'
+import { confirmNavigation } from '@adh-sdk/ui/lib/navigation-guard'
 import {
   buildSiteHref,
   detectEnv,
@@ -15,24 +15,24 @@ import {
   siteUrl,
   type SiteDef,
   type SiteId,
-} from '@agentic-toolkit/adh-registry'
+} from '@adh-sdk/adh-registry'
 // From `site`, not the registry: which URLs are the hub's workspace is now decided by the first
 // segment against the reserved-slug list, which lives there. By the PACKAGE PATH, not
 // '../site/hubWorkspacePath': the subpath has its own entry and is listed `external`, so this
-// pulls in the word lists alone (`@agentic-toolkit/adh/site`'s barrel also carries `defineSite`)
+// pulls in the word lists alone (`@adh-sdk/adh/site`'s barrel also carries `defineSite`)
 // and the module stays one copy instead of being inlined into the header bundle as a second.
-import { hubWorkspaceSlug, isHubWorkspacePath } from '@agentic-toolkit/adh/site/hubWorkspacePath'
-// By the theme-preview SUBPATH, not the `@agentic-toolkit/adh/themes` barrel and not
+import { hubWorkspaceSlug, isHubWorkspacePath } from '@adh-sdk/adh/site/hubWorkspacePath'
+// By the theme-preview SUBPATH, not the `@adh-sdk/adh/themes` barrel and not
 // '../themes/theme-preview': the subpath has its own entry and is listed `external`, so it
 // stays a preserved import in this dist instead of being inlined into the header bundle
 // every production page loads — which is what lets the folded gates below leave it
 // unreferenced and the bundler drop it. See the chunk-gate contract in adh-registry's deployment-env.
-import { appendThemePreview, readPreviewTheme } from '@agentic-toolkit/adh/themes/theme-preview'
+import { appendThemePreview, readPreviewTheme } from '@adh-sdk/adh/themes/theme-preview'
 import {
   useClientHost,
   type PopoverEntry,
   type PopoverItem,
-} from '@agentic-toolkit/adh/header'
+} from '@adh-sdk/adh/header'
 import { menuIcon } from './menu-icons'
 import { type MenuGroup, type MenuLink } from './SiteMenu'
 

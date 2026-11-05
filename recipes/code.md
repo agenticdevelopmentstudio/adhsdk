@@ -1,7 +1,7 @@
 ---
 id: 335f37a4-cd9e-4575-a78a-8717b34e5a2d
 title: Code
-domain: agenticdevelopertoolkit://recipes/code
+domain: adhsdk://recipes/code
 type: ingredient
 version: 1.1.1
 status: review

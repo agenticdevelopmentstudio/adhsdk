@@ -1,7 +1,7 @@
 
 **Decision**: `gamification.ts` transcribes its own wire types into
 `wire.ts` rather than importing generated types from
-`@agentic-toolkit/adh-api-types`.
+`@adh-sdk/adh-api-types`.
 **Rationale**: the module's own comment states this directly — "a
 generic data client does not take a dependency on adh's generated
 product vocabulary," following the same pattern the comment cites for
@@ -16,7 +16,7 @@ documented 400/404/409 response into a friendlier, entity-named message
 (`error-propagation-unmodified`).
 **Rationale**: the source does not explain why. This is a notable
 divergence from the sibling component
-[Ecosystems](adtoolkit://cookbook/adh/hub/ecosystems/ecosystems),
+[Ecosystems](adhsdk://cookbook/adh/hub/ecosystems/ecosystems),
 whose `ecosystems.ts` and `identifiers.ts` call `rethrowConflict` to
 turn a backend 409 into a friendly, entity-named message before it
 reaches a caller. This recipe records the observed divergence rather

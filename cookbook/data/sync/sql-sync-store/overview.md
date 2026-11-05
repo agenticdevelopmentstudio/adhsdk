@@ -1,6 +1,6 @@
 
 This store is a SQLite-backed implementation of the store contract driven by
-the sync engine (see [Sync Engine](adtoolkit://cookbook/data/sync/sync-engine)).
+the sync engine (see [Sync Engine](adhsdk://cookbook/data/sync/sync-engine)).
 It sits on a bounded, deadline-guarded write-ahead-logged connection pool and
 keeps four bookkeeping tables plus one mirror table per registered resource:
 

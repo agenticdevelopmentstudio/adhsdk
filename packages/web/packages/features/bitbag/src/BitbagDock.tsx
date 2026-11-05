@@ -16,10 +16,10 @@ import {
   submitChatInput,
   type ChatBackend,
   type GazeVector,
-} from '@agenticdevelopertoolkit/chat'
-import { travelFrom } from '@agenticdevelopertoolkit/avatar'
-import type { ThemeKey } from '@agenticdevelopertoolkit/themes'
-import { useKeyboardInset, usePageScrollLock } from '@agenticdevelopertoolkit/viewport'
+} from '@adh-sdk/chat'
+import { travelFrom } from '@adh-sdk/avatar'
+import type { ThemeKey } from '@adh-sdk/themes'
+import { useKeyboardInset, usePageScrollLock } from '@adh-sdk/viewport'
 import { BitbagChat } from './BitbagChat'
 import { BitbagInfo } from './BitbagInfo'
 import { Bitbag, type BitbagExpression, type BitbagHandle } from './avatar'

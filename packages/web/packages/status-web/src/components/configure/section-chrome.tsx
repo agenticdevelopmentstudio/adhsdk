@@ -1,7 +1,7 @@
 "use client";
 import { useState, type ReactElement, type ReactNode } from "react";
-import { ButtonBar } from "@agenticdevelopertoolkit/ui/blocks";
-import { AlertModal } from "@agenticdevelopertoolkit/ui/components/alert-modal";
+import { ButtonBar } from "@adh-sdk/ui/blocks";
+import { AlertModal } from "@adh-sdk/ui/components/alert-modal";
 
 /** How the shared `["configure-data"]` read is doing, as the roster levels need to
  *  render it. Threaded from ConfigPanel — the ONE component that holds the query — down

@@ -7,7 +7,7 @@ import type {
 // What the persona is doing, as a KIND rather than a phrase. The words shown for a kind are
 // the persona's own — resolved from its `chatStatus` config by the surface that renders the
 // chat — so this module no longer holds any user-visible copy. `null` ends the turn.
-import type { ChatStatusKind } from "@agentic-toolkit/data/personas";
+import type { ChatStatusKind } from "@adh-sdk/data/personas";
 
 // Shared persona-chat backend + status vocabulary, consumed by every persona
 // chat surface (the persona-registry preview panel and the hub editor pane).
@@ -42,13 +42,13 @@ export interface ChatAward {
 
 /**
  * The two auth-aware fetch helpers this backend needs, INJECTED by the consumer.
- * Each app owns its own `@agentic-toolkit/auth/client` import and passes these in, so
- * this shared module does NOT depend on `@agentic-toolkit/auth` — which would close an
+ * Each app owns its own `@adh-sdk/auth/client` import and passes these in, so
+ * this shared module does NOT depend on `@adh-sdk/auth` — which would close an
  * `adh ↔ auth` workspace cycle (auth already depends on adh) and break clean builds.
  */
 export interface AuthedFetchers {
   /** Bearer-attaching fetch → raw Response (used for the SSE stream); this backend
-   *  always supplies an init, matching @agentic-toolkit/auth's required-init signature. */
+   *  always supplies an init, matching @adh-sdk/auth's required-init signature. */
   authedFetch: (path: string, init: RequestInit) => Promise<Response>;
   /** Bearer-attaching fetch → parsed JSON. */
   authedJson: <T>(path: string, init?: RequestInit) => Promise<T>;

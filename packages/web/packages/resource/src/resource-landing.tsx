@@ -9,16 +9,16 @@ import {
   CardTitle,
   CardDescription,
   CardContent,
-} from "@agenticdevelopertoolkit/ui/components/card";
-import { Button } from "@agenticdevelopertoolkit/ui/components/button";
-import { Input } from "@agenticdevelopertoolkit/ui/components/input";
-import { cn } from "@agenticdevelopertoolkit/ui/lib/utils";
+} from "@adh-sdk/ui/components/card";
+import { Button } from "@adh-sdk/ui/components/button";
+import { Input } from "@adh-sdk/ui/components/input";
+import { cn } from "@adh-sdk/ui/lib/utils";
 import {
   ToggleGroup,
   ToggleGroupItem,
-} from "@agenticdevelopertoolkit/ui/components/toggle-group";
+} from "@adh-sdk/ui/components/toggle-group";
 import { FeatureTitle } from "./master-detail/MasterDetailLayout";
-import { readViewMode, writeViewMode, type ViewMode } from "@agentic-toolkit/data";
+import { readViewMode, writeViewMode, type ViewMode } from "@adh-sdk/data";
 
 /**
  * The "All" landing for a resource tab: a filterable index of every resource,

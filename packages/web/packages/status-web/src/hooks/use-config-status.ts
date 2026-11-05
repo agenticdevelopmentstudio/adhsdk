@@ -5,7 +5,7 @@ import { useStatusApi, type StatusApiClient } from "../api/client";
 import * as monitoredSites from "../api/monitored-sites";
 import type { SiteGroupView, SiteView, IntegrationView, EndpointView } from "../api/monitored-sites";
 import { fetchUnconfigured, type DeployProject, type UnconfiguredResponse } from "./use-deploy-projects";
-import type { ConfigStatus } from "@agentic-toolkit/deploy-platform/engine";
+import type { ConfigStatus } from "@adh-sdk/deploy-platform/engine";
 // The PREDICATE is this app's (it folds in the paused-monitor opt-out); the SHAPE it
 // fills is the engine's.
 import { endpointUnconfigured } from "../lib/config-status";

@@ -1,12 +1,12 @@
 "use client";
 
 import { useCallback, useEffect, useLayoutEffect, useMemo, useState, type KeyboardEvent, type ReactElement } from "react";
-import { HierarchicalDetailView, ListHeader, type TopicLevel, type TopicDetailItem } from "@agenticdevelopertoolkit/ui/blocks";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@agenticdevelopertoolkit/ui/components/dialog";
-import { DialogActions } from "@agenticdevelopertoolkit/ui/components/dialog-actions";
-import { AlertModal } from "@agenticdevelopertoolkit/ui/components/alert-modal";
-import { ErrorText } from "@agenticdevelopertoolkit/ui/components/error-text";
-import { Badge } from "@agenticdevelopertoolkit/ui/components/badge";
+import { HierarchicalDetailView, ListHeader, type TopicLevel, type TopicDetailItem } from "@adh-sdk/ui/blocks";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@adh-sdk/ui/components/dialog";
+import { DialogActions } from "@adh-sdk/ui/components/dialog-actions";
+import { AlertModal } from "@adh-sdk/ui/components/alert-modal";
+import { ErrorText } from "@adh-sdk/ui/components/error-text";
+import { Badge } from "@adh-sdk/ui/components/badge";
 import {
   featuresAddedWith,
   neededBy,
@@ -14,7 +14,7 @@ import {
   requiredClosure,
   type CatalogFeature,
   type FeatureChange,
-} from "@agentic-toolkit/data/ecosystems";
+} from "@adh-sdk/data/ecosystems";
 
 /**
  * The FEATURE PICKER ("Manage features"): what an ecosystem has.

@@ -3,7 +3,7 @@
   "meta": {
     "id": "f236e0ab-2623-4543-a3d9-9ffb4ba3f147",
     "title": "Status Server Monitor Fetch Crunchy",
-    "domain": "adtoolkit://cookbook/status/service/monitor/fetch-crunchy",
+    "domain": "adhsdk://cookbook/status/service/monitor/fetch-crunchy",
     "type": "ingredient",
     "version": "1.0.2",
     "status": "review",
@@ -31,11 +31,11 @@
     ],
     "related": [],
     "references": [
-      "packages/web/packages/status-server/src/monitor/fetch-crunchy.ts (agenticdevelopertoolkit)",
-      "packages/web/packages/status-server/src/monitor/deploy-status.ts (agenticdevelopertoolkit)",
-      "packages/web/packages/status-server/src/monitor/provider-deploy.ts (agenticdevelopertoolkit)",
-      "packages/web/packages/deploy-platform/src/cooldown/provider-cooldown.ts (agenticdevelopertoolkit)",
-      "packages/web/packages/status-server/test/crunchy-deployments.test.ts (agenticdevelopertoolkit)"
+      "packages/web/packages/status-server/src/monitor/fetch-crunchy.ts (adhsdk)",
+      "packages/web/packages/status-server/src/monitor/deploy-status.ts (adhsdk)",
+      "packages/web/packages/status-server/src/monitor/provider-deploy.ts (adhsdk)",
+      "packages/web/packages/deploy-platform/src/cooldown/provider-cooldown.ts (adhsdk)",
+      "packages/web/packages/status-server/test/crunchy-deployments.test.ts (adhsdk)"
     ],
     "approved-by": "",
     "approved-date": ""

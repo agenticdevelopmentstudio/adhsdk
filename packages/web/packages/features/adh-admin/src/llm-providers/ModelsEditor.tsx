@@ -1,9 +1,9 @@
 "use client";
 
 import { Plus, Trash2 } from "lucide-react";
-import { Button } from "@agenticdevelopertoolkit/ui/components/button";
-import { Input } from "@agenticdevelopertoolkit/ui/components/input";
-import { FieldGroup } from "@agenticdevelopertoolkit/ui/blocks/field-group";
+import { Button } from "@adh-sdk/ui/components/button";
+import { Input } from "@adh-sdk/ui/components/input";
+import { FieldGroup } from "@adh-sdk/ui/blocks/field-group";
 
 /**
  * The model-name list editor: add/remove rows of plain strings. Mirrors the

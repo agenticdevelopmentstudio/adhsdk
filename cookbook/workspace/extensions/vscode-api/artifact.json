@@ -3,7 +3,7 @@
   "meta": {
     "id": "94dc5dad-be14-4520-8afe-e944e59a0117",
     "title": "VS Code API Bridge",
-    "domain": "adtoolkit://cookbook/workspace/extensions/vscode-api",
+    "domain": "adhsdk://cookbook/workspace/extensions/vscode-api",
     "type": "ingredient",
     "version": "1.2.1",
     "status": "review",
@@ -26,19 +26,19 @@
     ],
     "depends-on": [],
     "related": [
-      "adtoolkit://cookbook/workspace/extensions/vscode-api/commands/main-thread-commands",
-      "adtoolkit://cookbook/workspace/extensions/vscode-api/languages/main-thread-diagnostics",
-      "adtoolkit://cookbook/workspace/extensions/vscode-api/language-models/main-thread-language-models",
-      "adtoolkit://cookbook/workspace/extensions/vscode-api/languages/main-thread-languages",
-      "adtoolkit://cookbook/workspace/extensions/host/js-value-bridge"
+      "adhsdk://cookbook/workspace/extensions/vscode-api/commands/main-thread-commands",
+      "adhsdk://cookbook/workspace/extensions/vscode-api/languages/main-thread-diagnostics",
+      "adhsdk://cookbook/workspace/extensions/vscode-api/language-models/main-thread-language-models",
+      "adhsdk://cookbook/workspace/extensions/vscode-api/languages/main-thread-languages",
+      "adhsdk://cookbook/workspace/extensions/host/js-value-bridge"
     ],
     "references": [
-      "packages/apple/AgenticToolkit/macOS/Features/Extensions/VSCodeAPI/VSCodeAPI.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/Tests/AgenticToolkitMacOSTests/Extensions/VSCodeAPISettlementTests.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/Tests/AgenticToolkitMacOSTests/Extensions/VSCodeAPIDisposableTests.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/Tests/AgenticToolkitMacOSTests/Extensions/VSCodeAPISubNamespaceTests.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/macOS/Features/Extensions/VSCodeAPI/MainThreadCommands.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/project.yml (agenticdevelopertoolkit)"
+      "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/VSCodeAPI.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKMacOSTests/Extensions/VSCodeAPISettlementTests.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKMacOSTests/Extensions/VSCodeAPIDisposableTests.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKMacOSTests/Extensions/VSCodeAPISubNamespaceTests.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/MainThreadCommands.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/project.yml (adhsdk)"
     ],
     "approved-by": "",
     "approved-date": ""

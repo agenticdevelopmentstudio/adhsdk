@@ -1,18 +1,18 @@
 "use client";
 
-import { Input } from "@agenticdevelopertoolkit/ui/components/input";
-import { Textarea } from "@agenticdevelopertoolkit/ui/components/textarea";
-import { noAutofillProps } from "@agenticdevelopertoolkit/ui/lib/autofill";
-import { Label } from "@agenticdevelopertoolkit/ui/components/label";
-import { Select } from "@agenticdevelopertoolkit/ui/components/select";
-import { Disclosure } from "@agenticdevelopertoolkit/ui/components/disclosure";
+import { Input } from "@adh-sdk/ui/components/input";
+import { Textarea } from "@adh-sdk/ui/components/textarea";
+import { noAutofillProps } from "@adh-sdk/ui/lib/autofill";
+import { Label } from "@adh-sdk/ui/components/label";
+import { Select } from "@adh-sdk/ui/components/select";
+import { Disclosure } from "@adh-sdk/ui/components/disclosure";
 import type {
   CreateProviderConfig,
   MaskedProviderConfig,
   ProviderAuthMethod,
   ProviderCatalogEntry,
   ProviderConfigInput,
-} from "@agentic-toolkit/data/integrations";
+} from "@adh-sdk/data/integrations";
 
 /**
  * The controlled draft for an ecosystem's owner-scoped provider config. The

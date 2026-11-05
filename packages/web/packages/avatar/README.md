@@ -1,4 +1,4 @@
-# @agenticdevelopertoolkit/avatar
+# @adh-sdk/avatar
 
 A headless avatar **behavior + animation engine**. You bring an SVG face and a
 table of poses; the engine gives it reflexes (blink, idle ladder, gaze, speech)
@@ -42,7 +42,7 @@ mechanism. Reflex timings live in `Tuning` (override per avatar; see
 ```tsx
 "use client";
 import { useRef } from "react";
-import { useAvatarEngine, type AvatarRig, type Pose } from "@agenticdevelopertoolkit/avatar";
+import { useAvatarEngine, type AvatarRig, type Pose } from "@adh-sdk/avatar";
 
 type Mood = "idle" | "happy" | "sad" | "asleep";
 

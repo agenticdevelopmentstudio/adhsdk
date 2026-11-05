@@ -1,7 +1,7 @@
 ---
 id: ba1406b3-bcf8-4580-9d65-daed2311cccf
 title: "Floating Chooser Panel"
-domain: adtoolkit://cookbook/ui/containers/floating-chooser-panel
+domain: adhsdk://cookbook/ui/containers/floating-chooser-panel
 type: ingredient
 version: 1.3.0
 status: review
@@ -21,8 +21,8 @@ tags:
   - window-controller
 depends-on: []
 related:
-  - adtoolkit://cookbook/workspace/extensions/vscode-api/window/extension-quick-pick-view
-  - adtoolkit://cookbook/workspace/extensions/vscode-api/window/extension-input-box-view
+  - adhsdk://cookbook/workspace/extensions/vscode-api/window/extension-quick-pick-view
+  - adhsdk://cookbook/workspace/extensions/vscode-api/window/extension-input-box-view
 references: []
 approved-by: ""
 approved-date: ""
@@ -397,7 +397,7 @@ source.
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/macOS/UI/Panels/FloatingChooserPanelController.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/Panels/FloatingChooserPanelController.swift` |
 
 ## Design Decisions
 

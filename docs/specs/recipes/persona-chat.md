@@ -1,7 +1,7 @@
 ---
 id: E8EC809E-9B37-471B-A31A-F71BE67499C5
 title: "Persona Chat"
-domain: agenticdevelopertoolkit://recipes/chat/persona-chat
+domain: adhsdk://recipes/persona-chat
 type: recipe
 version: 1.0.0
 status: draft
@@ -26,10 +26,10 @@ tags:
   - adh
 ingredients:
   - agenticdevelopercookbook://ingredients/ui/components/ai-chat-control
-  - agenticdevelopertoolkit://ingredients/chat/persona-chat-coordinator
+  - adhsdk://ingredients/chat/persona-chat-coordinator
 depends-on: []
 related:
-  - agenticdevelopertoolkit://docs/planning/llm-backend-direction
+  - adhsdk://docs/planning/llm-backend-direction
 references:
   - "docs/planning/planning.md — M1"
 ---
@@ -54,11 +54,11 @@ composition M1 delivers.
 | Name | Domain | Role | Required | Configuration |
 |------|--------|------|----------|---------------|
 | AI Chat Control | `agenticdevelopercookbook://ingredients/ui/components/ai-chat-control` | Renders transcript, takes input, shows turn status | Yes | `statusUtterance` bound to the coordinator's status sink; `thinkingLabels` non-empty to enable rich status |
-| Persona Chat Coordinator | `agenticdevelopertoolkit://ingredients/chat/persona-chat-coordinator` | Conforms to `Backend`; relays turns to adh | Yes | `personaSlug` required; `authorize` injected by the host app |
+| Persona Chat Coordinator | `adhsdk://ingredients/chat/persona-chat-coordinator` | Conforms to `Backend`; relays turns to adh | Yes | `personaSlug` required; `authorize` injected by the host app |
 
 The orchestrator is not an ingredient. It is contract machinery that every
 platform already has — `DefaultOrchestrator` in TypeScript, its Swift twin under
-`AgenticDeveloperToolkit` — and this recipe consumes it rather than specifying it.
+`AgenticDeveloperHubSDK` — and this recipe consumes it rather than specifying it.
 
 ## Integration Requirements
 
@@ -263,7 +263,7 @@ behaviour, which both paths agree on.
 
 `rf-ingredients` is **partial**: the check requires every ingredient to resolve
 under `agenticdevelopercookbook://ingredients/`, and the coordinator currently
-lives in this repo under `agenticdevelopertoolkit://`. It resolves when the
+lives in this repo under `adhsdk://`. It resolves when the
 artifacts move to the cookbook.
 
 ## Change History

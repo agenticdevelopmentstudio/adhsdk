@@ -1,9 +1,9 @@
 import type { ReactElement, ReactNode } from 'react'
-import { Band } from '@agenticdevelopertoolkit/landing'
-import type { BandTone } from '@agenticdevelopertoolkit/landing'
+import { Band } from '@adh-sdk/landing'
+import type { BandTone } from '@adh-sdk/landing'
 // By package path and from `/client`: tsup leaves the landing kit external, so Reveal's
 // `'use client'` stays on its own module and cannot hoist over this server component.
-import { Reveal } from '@agenticdevelopertoolkit/landing/client'
+import { Reveal } from '@adh-sdk/landing/client'
 
 /**
  * One band of the frame: the kit's `Band`, its contents revealed on scroll. Every band of `/`

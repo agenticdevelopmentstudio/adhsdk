@@ -72,7 +72,7 @@ export async function checkpointWal(db: Db, conn: LibsqlConnection): Promise<{ b
  *  code in) and from a host's vendored copy under node_modules. */
 function packageRoot(): string {
   const require = createRequire(import.meta.url);
-  return dirname(require.resolve("@agentic-toolkit/status-server/package.json"));
+  return dirname(require.resolve("@adh-sdk/status-server/package.json"));
 }
 
 /** The migrations this package ships. They are applied in production already and

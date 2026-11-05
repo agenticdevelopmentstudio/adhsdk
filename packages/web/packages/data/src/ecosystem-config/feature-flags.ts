@@ -6,7 +6,7 @@
 // are split so a "New flag" whose key already exists is a 409, not a silent overwrite;
 // the key is IMMUTABLE (it lives in the path on update). Mirrors signin-apps.ts.
 //
-// The types are hand-written here rather than derived from `@agentic-toolkit/adh-api-types`:
+// The types are hand-written here rather than derived from `@adh-sdk/adh-api-types`:
 // every client in this package transcribes the wire shape it touches (see
 // ecosystems/wire.ts), because a generic data client must not take a dependency on adh's
 // generated product vocabulary.

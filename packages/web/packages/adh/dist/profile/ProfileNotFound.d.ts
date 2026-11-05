@@ -8,7 +8,7 @@ import { type ReactElement } from "react";
  * Includes a search box that calls `GET /api/public/users/search?q=<query>` — one endpoint over
  * both namespaces, which is why each hit carries its `kind`.
  *
- * Lives in @agentic-toolkit/adh rather than in the hub: every site in the fleet renders a
+ * Lives in @adh-sdk/adh rather than in the hub: every site in the fleet renders a
  * profile now, so every site can miss one.
  */
 export declare function ProfileNotFound(): ReactElement;

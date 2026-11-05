@@ -1,7 +1,7 @@
 ---
 id: 79f7ed30-3193-49bc-856b-d7dd01303baa
 title: EntityChooser
-domain: agenticdevelopertoolkit://recipes/entity-chooser
+domain: adhsdk://recipes/entity-chooser
 type: ingredient
 version: 1.2.1
 status: review
@@ -22,11 +22,11 @@ tags:
   - tags
   - ui
 depends-on:
-  - agenticdevelopertoolkit://recipes/list-chooser
-  - agenticdevelopertoolkit://recipes/removable-chip
+  - adhsdk://recipes/list-chooser
+  - adhsdk://recipes/removable-chip
 related:
-  - agenticdevelopertoolkit://recipes/combobox
-  - agenticdevelopertoolkit://recipes/recipient-input
+  - adhsdk://recipes/combobox
+  - adhsdk://recipes/recipient-input
   - agenticdevelopercookbook://guidelines/cookbook/ui/platform-design-languages
 references: []
 approved-by: ''
@@ -39,7 +39,7 @@ approved-date: ''
 
 `EntityChooser` is a browse / filter / select / add surface for a list of string
 entities — the account's categories or tags. It is a thin composition over
-`ListChooser` (`@agenticdevelopertoolkit/ui/components/list-chooser`), which supplies the
+`ListChooser` (`@adh-sdk/ui/components/list-chooser`), which supplies the
 disclosed, text-filtered list with a roving keyboard highlight and an "add a new
 one" affordance. `EntityChooser` adds only the **selection semantics** on top:
 
@@ -229,7 +229,7 @@ Not applicable: `EntityChooser` emits no structured log events. Logging of user 
 
 ## Platform Notes
 
-- **React/Web (TypeScript)**: Source is `packages/web/packages/ui/src/components/entity-chooser.tsx`. The component exports `EntityChooser` (the main control) and `EntitySelectionChips` (a companion for rendering the multi-mode selection outside the chooser when `selectionPlacement="host"`). Both are React functional components using hooks for state management. Import from `@agenticdevelopertoolkit/ui/components/entity-chooser`.
+- **React/Web (TypeScript)**: Source is `packages/web/packages/ui/src/components/entity-chooser.tsx`. The component exports `EntityChooser` (the main control) and `EntitySelectionChips` (a companion for rendering the multi-mode selection outside the chooser when `selectionPlacement="host"`). Both are React functional components using hooks for state management. Import from `@adh-sdk/ui/components/entity-chooser`.
 - **SwiftUI**: Start with `Picker` or a custom presentation wrapping `List` with a search/filter field. Mirror the dual-mode dispatch: single uses a standard picker binding, multi uses a `State` set that appends on selection and omits selected values from the list. Render selected items as removable chips using `HStack` with a trailing `Image(systemName: "xmark.circle.fill")` per item.
 - **Compose (Kotlin)**: Build on `LazyColumn` for the filtered list with `TextField` for the search input. Single mode: update a mutable state holder; multi mode: maintain a mutable set, append on accept, filter the list to exclude already-selected items. Use Material 3's `InputChip` (with its trailing icon slot) for removable chips. Handle focus transitions (focus to input on open, return focus to trigger on close) via `FocusRequester`.
 - **UIKit / AppKit**: On iOS, use `UISearchController` to manage the filtered list within a `UITableViewController` popover. Present modally for consistency with navigation. On macOS, use an `NSSearchField` + `NSTableView` in a popover or sheet. Single mode stores the selection as a string; multi mode as a `Set<String>` or array. Render chips with removable `NSButton` subviews in a wrapping `NSStackView` (NSView-based) or `UIStackView` (UIKit).

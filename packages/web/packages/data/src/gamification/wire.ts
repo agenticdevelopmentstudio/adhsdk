@@ -1,7 +1,7 @@
 // Local wire types for the Gamification realm-config client — the backend row +
 // request-body shapes the client reads/sends (see ecosystems/wire.ts for the
 // pattern: these replace the hub's generated `SuccessBody<...>` /
-// `RequestBody<...>` from `@agentic-toolkit/adh-api-types`, adh product
+// `RequestBody<...>` from `@adh-sdk/adh-api-types`, adh product
 // vocabulary a generic data client must not take on). Each interface carries
 // exactly the fields the client and its call sites touch, transcribed from the
 // `Gamification*` component schemas the backend's openapi.json documents for

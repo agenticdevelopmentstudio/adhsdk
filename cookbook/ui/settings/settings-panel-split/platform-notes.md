@@ -29,7 +29,7 @@
   `ComposableSettingsPanel` (`ComposableSettingsPanel.swift`) through that
   inheritance, and stores a `ComposableSettings.SettingsPanelDescriptor`
   (`SettingsPanelDescriptor.swift`) — all three defined elsewhere in
-  `AgenticToolkit` and not reimplemented here. The class is `@MainActor`,
+  `AgenticDeveloperHubSDK` and not reimplemented here. The class is `@MainActor`,
   so construction and every property access are rejected off the main
   actor at compile time. It does not support construction via
   `init?(coder:)`: that initializer is overridden to call `fatalError()`,

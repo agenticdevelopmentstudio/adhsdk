@@ -8,14 +8,14 @@ import {
   type ReactElement,
 } from "react";
 
-import { Button } from "@agenticdevelopertoolkit/ui/components/button";
+import { Button } from "@adh-sdk/ui/components/button";
 import {
   chordFromEvent,
   formatChord,
   sameChord,
   useRegisteredShortcuts,
-} from "@agenticdevelopertoolkit/ui/hooks/useShortcut";
-import { SettingRow } from "@agentic-toolkit/account";
+} from "@adh-sdk/ui/hooks/useShortcut";
+import { SettingRow } from "@adh-sdk/account";
 
 // The PACKAGE PATH, not "../header/hub-preferences" — the store holds module-level mutable
 // state and has its own tsup entry + `external` pairing for it. A relative import here would
@@ -23,14 +23,14 @@ import { SettingRow } from "@agentic-toolkit/account";
 // that matters: this panel would write the new chord into its own private snapshot while the
 // header kept listening on the old one, with nothing wrong in dev (which resolves the
 // `development` condition to src/, where there is only ever one module). Same rule, same
-// reason, as AppearancePanel's note on `@agentic-toolkit/adh/auth`.
+// reason, as AppearancePanel's note on `@adh-sdk/adh/auth`.
 import {
   DEFAULT_SITE_MENU_SHORTCUT,
   setSiteMenuShortcut,
   useHubPreferences,
-} from "@agentic-toolkit/adh/header/hub-preferences";
-import { DetailSection, SettingsBody } from "@agentic-toolkit/resource";
-import { Card, CardContent } from "@agenticdevelopertoolkit/ui/components/card";
+} from "@adh-sdk/adh/header/hub-preferences";
+import { DetailSection, SettingsBody } from "@adh-sdk/resource";
+import { Card, CardContent } from "@adh-sdk/ui/components/card";
 
 /** The site menu's own registration, so the conflict check does not report the shortcut
  *  colliding with itself. Must match the `label` SiteMenu passes as `openShortcut`. */

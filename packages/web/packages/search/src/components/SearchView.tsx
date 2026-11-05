@@ -10,12 +10,12 @@ import {
   type ReactElement,
   type RefObject,
 } from 'react'
-import { SearchFilterBar } from '@agenticdevelopertoolkit/ui/components/search-filter-bar'
-import { Badge } from '@agenticdevelopertoolkit/ui/components/badge'
-import { Button } from '@agenticdevelopertoolkit/ui/components/button'
-import { CollapseToggle } from '@agenticdevelopertoolkit/ui/components/collapse-toggle'
-import { EmptyState } from '@agenticdevelopertoolkit/ui/components/empty-state'
-import { SplitDivider } from '@agenticdevelopertoolkit/ui/components/split-divider'
+import { SearchFilterBar } from '@adh-sdk/ui/components/search-filter-bar'
+import { Badge } from '@adh-sdk/ui/components/badge'
+import { Button } from '@adh-sdk/ui/components/button'
+import { CollapseToggle } from '@adh-sdk/ui/components/collapse-toggle'
+import { EmptyState } from '@adh-sdk/ui/components/empty-state'
+import { SplitDivider } from '@adh-sdk/ui/components/split-divider'
 import type { DocumentTypeConfig, SearchFilters, SearchSource } from '../types'
 import { isActiveSearch, useDocumentSearch, useFacets } from '../data/useDocumentSearch'
 import { useUrlFilters } from '../data/useUrlFilters'

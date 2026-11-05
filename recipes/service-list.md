@@ -1,7 +1,7 @@
 ---
 id: fe09968a-6575-40d0-b0b8-af6ce52d8efd
 title: Service List
-domain: agenticdevelopertoolkit://recipes/service-list
+domain: adhsdk://recipes/service-list
 type: ingredient
 version: 1.1.1
 status: review
@@ -22,8 +22,8 @@ tags:
 - pricing
 depends-on: []
 related:
-- agenticdevelopertoolkit://recipes/registry-profile
-- agenticdevelopertoolkit://recipes/field-value
+- adhsdk://recipes/registry-profile
+- adhsdk://recipes/field-value
 references: []
 approved-by: ''
 approved-date: ''

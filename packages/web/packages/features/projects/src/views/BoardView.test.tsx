@@ -11,8 +11,8 @@ import { render, screen, fireEvent, cleanup, within } from "@testing-library/rea
 
 import { BoardView } from "./BoardView";
 import { itemWordsOf } from "../vocabulary";
-import { type WorkItem } from "@agentic-toolkit/data/projects";
-import { type ProjectStatus } from "@agentic-toolkit/data/projects";
+import { type WorkItem } from "@adh-sdk/data/projects";
+import { type ProjectStatus } from "@adh-sdk/data/projects";
 
 function status(over: Partial<ProjectStatus>): ProjectStatus {
   return {

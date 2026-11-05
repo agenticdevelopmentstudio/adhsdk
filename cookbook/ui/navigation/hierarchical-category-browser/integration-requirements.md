@@ -20,7 +20,7 @@
   own `sortOrder`, then name — and MUST NOT re-sort. The root is the one exception
   (above) because it is the one level with no context to read an order from; deeper,
   the arriving order is the owner's, `buildCategoryTree` documents that it preserves
-  it, and the [Category Picker](agenticdevelopertoolkit://recipes/category-picker-dialog)
+  it, and the [Category Picker](adhsdk://recipes/category-picker-dialog)
   browsing the same forest does not sort — so a rail
   that re-sorted would discard a deliberate ordering and disagree with the picker
   about the same subtree in the same session.

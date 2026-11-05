@@ -3,7 +3,7 @@
   "meta": {
     "id": "c4375e0e-091f-4627-b3c9-e7d36221802f",
     "title": "Contributed Settings",
-    "domain": "adtoolkit://cookbook/workspace/extensions/manifest/contributed-settings",
+    "domain": "adhsdk://cookbook/workspace/extensions/manifest/contributed-settings",
     "type": "ingredient",
     "version": "1.2.1",
     "status": "review",
@@ -28,11 +28,11 @@
     "depends-on": [],
     "related": [],
     "references": [
-      "packages/apple/AgenticToolkit/Core/Extensions/ContributedSettings.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/Core/Extensions/ExtensionManifest.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/Core/Extensions/ContributionPoint.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/Tests/AgenticToolkitCoreTests/Extensions/ContributedSettingsBuilderTests.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/macOS/Features/Extensions/ConfigurationContributionPoint.swift (agenticdevelopertoolkit)"
+      "packages/apple/AgenticDeveloperHubSDK/Core/Extensions/ContributedSettings.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/Core/Extensions/ExtensionManifest.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/Core/Extensions/ContributionPoint.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKCoreTests/Extensions/ContributedSettingsBuilderTests.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/ConfigurationContributionPoint.swift (adhsdk)"
     ],
     "approved-by": "",
     "approved-date": ""

@@ -12,14 +12,14 @@
 // typecheck, still render, still pass a screenshot. Only holding the query open and watching the
 // spinner track it proves the wiring.
 //
-// Mocking style matches EcosystemSettingsPane.test.tsx: only `@agentic-toolkit/data/ecosystems`'s
+// Mocking style matches EcosystemSettingsPane.test.tsx: only `@adh-sdk/data/ecosystems`'s
 // TRANSPORT is replaced (`importOriginal` spread), so `Ecosystem`, `toEcosystem`, and every other
 // mapper/type stay real — the fixtures below are genuine `Ecosystem` values, not stand-ins for the
 // shape the feature happens to read today.
 import { describe, it, expect, vi, afterEach } from "vitest";
 import { render, screen, cleanup, within, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import type { Ecosystem } from "@agentic-toolkit/data/ecosystems";
+import type { Ecosystem } from "@adh-sdk/data/ecosystems";
 
 // EcosystemsFeature, ChildEcosystemsLevel, and ResourceExplorer all call next/navigation's
 // useRouter() directly (never through a router prop), so the App Router context that provides it
@@ -35,12 +35,12 @@ vi.mock("next/navigation", () => ({
 // scoped ecosystem the feature opens on; `listChildren` is the one this test holds open by hand.
 // `useWorkspaceDefaultEcosystemId` is stubbed rather than left real: it reaches `ecosystemsApi`
 // through the MODULE'S OWN relative import (`./ecosystems`), a path this mock never intercepts
-// (vi.mock only rewrites the "@agentic-toolkit/data/ecosystems" specifier), so left alone it would
+// (vi.mock only rewrites the "@adh-sdk/data/ecosystems" specifier), so left alone it would
 // hit the genuine, un-mocked transport. This feature never opens the create dialog the resolved
 // value feeds, so a fixed "no infrastructure ecosystem, already settled" answer is enough to keep
 // that corner inert.
-vi.mock("@agentic-toolkit/data/ecosystems", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("@agentic-toolkit/data/ecosystems")>()),
+vi.mock("@adh-sdk/data/ecosystems", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@adh-sdk/data/ecosystems")>()),
   ecosystemsApi: {
     list: vi.fn(),
     listChildren: vi.fn(),
@@ -59,7 +59,7 @@ vi.mock("@agentic-toolkit/data/ecosystems", async (importOriginal) => ({
 }));
 
 import { EcosystemsFeature, IN_PACKAGE_TOPICS } from "./EcosystemsFeature";
-import { ecosystemsApi } from "@agentic-toolkit/data/ecosystems";
+import { ecosystemsApi } from "@adh-sdk/data/ecosystems";
 
 afterEach(() => {
   cleanup();

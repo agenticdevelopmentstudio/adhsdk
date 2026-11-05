@@ -2,7 +2,7 @@ import '@testing-library/jest-dom/vitest'
 import { describe, it, expect, vi } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import type { AuthUser } from '@agentic-toolkit/auth'
+import type { AuthUser } from '@adh-sdk/auth'
 import type { CrudColumn, CrudTableMeta } from '../types'
 import type { CrudShellProps } from '../CrudDataBrowser'
 
@@ -16,20 +16,20 @@ const ECO = 'ecosystem.ads.ape'
 const member = { id: 'u1', email: 'u@example.com', capabilities: [] as string[] } as AuthUser
 
 vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn() }) }))
-vi.mock('@agentic-toolkit/auth', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('@agentic-toolkit/auth')>()),
+vi.mock('@adh-sdk/auth', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@adh-sdk/auth')>()),
   useOptionalAuth: () => ({ user: member, isLoading: false }),
   useAuth: () => ({ user: member, isLoading: false }),
 }))
 // The has-rows probe and the editor both reach the network through this client. The real module
 // underneath supplies AuthHttpError, which the probe tells a refusal from a failure by.
-vi.mock('@agentic-toolkit/auth/client', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('@agentic-toolkit/auth/client')>()),
+vi.mock('@adh-sdk/auth/client', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@adh-sdk/auth/client')>()),
   authedJson: vi.fn(),
   authedRequest: vi.fn(),
 }))
 
-const { authedJson } = vi.mocked(await import('@agentic-toolkit/auth/client'))
+const { authedJson } = vi.mocked(await import('@adh-sdk/auth/client'))
 const { CrudDataBrowser } = await import('../CrudDataBrowser')
 
 const col = (name: string, overrides: Partial<CrudColumn> = {}): CrudColumn => ({

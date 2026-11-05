@@ -9,7 +9,7 @@ export type EndpointKind = (typeof ENDPOINT_KINDS)[number];
 // `endpointNeedsWiring` is what acts on it. Re-exported (never restated) so the auto-wirer
 // here and the engine behind POST /auto-configure can't come to disagree about `dns` —
 // they used to be three separate literal Sets, here, in the browser, and in the engine.
-export { NON_DEPLOY_KINDS } from '@agentic-toolkit/deploy-platform/engine';
+export { NON_DEPLOY_KINDS } from '@adh-sdk/deploy-platform/engine';
 
 export function isEndpointKind(k: string): k is EndpointKind {
   return (ENDPOINT_KINDS as readonly string[]).includes(k);

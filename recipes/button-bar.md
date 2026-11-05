@@ -1,7 +1,7 @@
 ---
 id: 81db83fc-b30c-4ba3-b4d5-572dc8b4e335
 title: Button Bar
-domain: agenticdevelopertoolkit://recipes/button-bar
+domain: adhsdk://recipes/button-bar
 type: ingredient
 version: 1.1.1
 status: review
@@ -20,7 +20,7 @@ tags:
 - toolbar
 - editing-actions
 depends-on:
-- agenticdevelopertoolkit://recipes/button
+- adhsdk://recipes/button
 related: []
 references: []
 approved-by: ''
@@ -184,7 +184,7 @@ This table names the strings the component would need to externalize to be fully
 
 | Option | Behavior |
 |--------|----------|
-| Reduce Motion | The Button Bar itself renders no motion or animated transitions; the Save label's text change ("Save" → "Saving…") is a text swap, not an animation, and needs no Reduce Motion accommodation. Buttons composed within it SHOULD follow the shared Button component's own Reduce Motion behavior (agenticdevelopertoolkit://recipes/button#accessibility-options), which is that component's concern, not this one's. |
+| Reduce Motion | The Button Bar itself renders no motion or animated transitions; the Save label's text change ("Save" → "Saving…") is a text swap, not an animation, and needs no Reduce Motion accommodation. Buttons composed within it SHOULD follow the shared Button component's own Reduce Motion behavior (adhsdk://recipes/button#accessibility-options), which is that component's concern, not this one's. |
 | Increase Contrast | Buttons inherit Increase Contrast behavior from the shared Button component. The muted text color (`text-apt-text-muted`) for disabled Save button MUST maintain sufficient contrast when Increase Contrast is enabled. |
 | Differentiate Without Color | Buttons MUST be distinguishable without relying on color alone; the disabled state is indicated by both color and the HTML `disabled` attribute. The destructive-ghost variant for Delete MUST be distinguishable via shape, icon, or other non-color properties. |
 
@@ -206,7 +206,7 @@ Not applicable: The component does not emit logs. Logging (if needed) is the res
 
 ## Platform Notes
 
-- **Web/React**: The component is defined in `packages/web/packages/ui/src/blocks/button-bar.tsx`. It composes the shared Button component (agenticdevelopertoolkit://recipes/button), rendering each icon inline via `data-icon="inline-start"` with a Lucide React icon: `Plus` for Create, `Trash2` for Delete (using Button's `destructive-ghost` variant), `X` for Cancel, and `Check` for Save. The Save button uses Button's `default` variant when enabled and switches to its `ghost` variant with the `text-apt-text-muted` class when disabled; Create and Cancel use `ghost`. The styling uses Tailwind utility classes with design tokens (`apt-bg`, `apt-border`, `apt-text-muted`). The toolbar role and aria-label are applied via the root `div`. The separator is a 1px × 20px div with `aria-hidden="true"`.
+- **Web/React**: The component is defined in `packages/web/packages/ui/src/blocks/button-bar.tsx`. It composes the shared Button component (adhsdk://recipes/button), rendering each icon inline via `data-icon="inline-start"` with a Lucide React icon: `Plus` for Create, `Trash2` for Delete (using Button's `destructive-ghost` variant), `X` for Cancel, and `Check` for Save. The Save button uses Button's `default` variant when enabled and switches to its `ghost` variant with the `text-apt-text-muted` class when disabled; Create and Cancel use `ghost`. The styling uses Tailwind utility classes with design tokens (`apt-bg`, `apt-border`, `apt-text-muted`). The toolbar role and aria-label are applied via the root `div`. The separator is a 1px × 20px div with `aria-hidden="true"`.
 
 - **SwiftUI**: Compose an HStack with equal spacing and a Divider between the Create and Delete groups, mirroring the source's conditional rendering (a separate `EditingActions` view). The Save button's background switches to the accent/tint color when `canSave` is `true` and `saving` is `false`, matching the source's `default`-vs-`ghost` variant swap; when `saving` is `true`, its label reads "Saving…" and it is disabled — the source has no progress indicator, so none is required here. Apply `.accessibilityElement(children: .contain)` and `.accessibilityLabel("Editing actions")` to the HStack; SwiftUI has no built-in "toolbar" accessibility role to assign.
 

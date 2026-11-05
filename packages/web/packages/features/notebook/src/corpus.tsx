@@ -9,8 +9,8 @@ import {
   type NoteSummary,
   type NoteTag,
   type UpdateNoteBody,
-} from "@agentic-toolkit/data/notes";
-import { docsApi } from "@agentic-toolkit/data/docs";
+} from "@adh-sdk/data/notes";
+import { docsApi } from "@adh-sdk/data/docs";
 
 /**
  * A CORPUS is which shelf of markdown documents this pane is standing in front of.

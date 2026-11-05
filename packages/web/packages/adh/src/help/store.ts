@@ -5,7 +5,7 @@
 // `./index` and `./surface` are the help WINDOW (a topic tree the reader navigates), while this is
 // the one-line blurb a pane shows in place. They share a content package and nothing else.
 
-import helpContent from '@agentic-toolkit/adh-site-config/content/help.en.json'
+import helpContent from '@adh-sdk/adh-site-config/content/help.en.json'
 
 const help = helpContent as Record<string, string>
 

@@ -2,13 +2,13 @@
 
 import * as React from 'react';
 
-import { Button } from '@agenticdevelopertoolkit/ui/components/button';
-import { Checkbox } from '@agenticdevelopertoolkit/ui/components/checkbox';
-import { DialogActions } from '@agenticdevelopertoolkit/ui/components/dialog-actions';
-import { ErrorText } from '@agenticdevelopertoolkit/ui/components/error-text';
-import { Input } from '@agenticdevelopertoolkit/ui/components/input';
-import { List, ListItem } from '@agenticdevelopertoolkit/ui/components/list';
-import { Select } from '@agenticdevelopertoolkit/ui/components/select';
+import { Button } from '@adh-sdk/ui/components/button';
+import { Checkbox } from '@adh-sdk/ui/components/checkbox';
+import { DialogActions } from '@adh-sdk/ui/components/dialog-actions';
+import { ErrorText } from '@adh-sdk/ui/components/error-text';
+import { Input } from '@adh-sdk/ui/components/input';
+import { List, ListItem } from '@adh-sdk/ui/components/list';
+import { Select } from '@adh-sdk/ui/components/select';
 
 import type { ForgeRepository, RegisterRequest } from '../types';
 import type { ForgeCatalogue } from '../forge/useForgeCatalogue';

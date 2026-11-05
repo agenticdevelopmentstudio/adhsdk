@@ -1,5 +1,5 @@
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/Core/FileSystem/` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/FileSystem/` |
 

@@ -2,7 +2,7 @@ import { describe, expect, it, vi, beforeEach } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { InterestDocumentsPane, KnowledgeFacet } from "./InterestDocumentsPane";
-import type { Persona } from "@agentic-toolkit/data/personas";
+import type { Persona } from "@adh-sdk/data/personas";
 
 const listDocs = vi.fn();
 const createDoc = vi.fn();
@@ -10,11 +10,11 @@ const deleteDoc = vi.fn();
 const tenantId = vi.fn();
 const listInterests = vi.fn();
 
-vi.mock("@agentic-toolkit/data", async (orig) => ({
+vi.mock("@adh-sdk/data", async (orig) => ({
   ...(await orig<Record<string, unknown>>()),
   useTenantId: () => tenantId(),
 }));
-vi.mock("@agentic-toolkit/data/personas", () => ({
+vi.mock("@adh-sdk/data/personas", () => ({
   interestDocumentsApi: {
     list: (...a: unknown[]) => listDocs(...a),
     create: (...a: unknown[]) => createDoc(...a),

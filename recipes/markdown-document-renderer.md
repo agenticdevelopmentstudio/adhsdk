@@ -1,7 +1,7 @@
 ---
 id: 840b5a7a-921a-4770-8dea-5ffbf9a2ee6c
 title: Markdown Document Renderer
-domain: agenticdevelopertoolkit://recipes/markdown-document-renderer
+domain: adhsdk://recipes/markdown-document-renderer
 type: ingredient
 version: 1.1.1
 status: review
@@ -22,7 +22,7 @@ tags:
 - document-rendering
 - text-rendering
 depends-on:
-- agenticdevelopertoolkit://recipes/markdown-renderer
+- adhsdk://recipes/markdown-renderer
 related: []
 references: []
 approved-by: ''

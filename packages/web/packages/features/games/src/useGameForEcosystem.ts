@@ -1,9 +1,9 @@
 "use client";
 
-import { reportUnexpectedAuthError } from "@agentic-toolkit/auth";
-import { isForbidden, useResourceItemQuery } from "@agentic-toolkit/data";
-import { gamesApi, type Game } from "@agentic-toolkit/data/games";
-import { gamificationApi, type GamingMode, type RealmConfig } from "@agentic-toolkit/data/gamification";
+import { reportUnexpectedAuthError } from "@adh-sdk/auth";
+import { isForbidden, useResourceItemQuery } from "@adh-sdk/data";
+import { gamesApi, type Game } from "@adh-sdk/data/games";
+import { gamificationApi, type GamingMode, type RealmConfig } from "@adh-sdk/data/gamification";
 
 /** The cache key the underlying game-row lookup reads/writes. Exported so
  *  `GameSettingsPane` can read the RAW (mode-independent) row — it needs to know whether a
@@ -14,7 +14,7 @@ import { gamificationApi, type GamingMode, type RealmConfig } from "@agentic-too
 export const GAME_FOR_ECOSYSTEM_CACHE_KEY = "game-for-ecosystem";
 
 /** The cache key the realm config lookup reads/writes — the SAME key
- *  `@agentic-toolkit/gamification`'s `RealmSettingsPane` uses for the identical
+ *  `@adh-sdk/gamification`'s `RealmSettingsPane` uses for the identical
  *  `RealmConfig` row. Sharing it (rather than games keeping its own copy) is deliberate:
  *  it is what lets a realm-config save on the gamification side replace the exact entry
  *  this hook reads, with no cross-package

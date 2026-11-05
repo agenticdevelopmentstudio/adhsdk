@@ -6,7 +6,7 @@ import {
   rateLimitedUntil,
   cooldownState,
   _resetProviderCooldowns,
-} from '@agentic-toolkit/deploy-platform/cooldown';
+} from '@adh-sdk/deploy-platform/cooldown';
 
 // The monitor cycle runs on a WORKER thread; the dashboard's /deploy-projects and
 // /integrations enumerations call the same fetchers on the MAIN thread — against

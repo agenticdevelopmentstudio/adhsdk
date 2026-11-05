@@ -46,7 +46,7 @@
   1:1/2:1 gains to it, to mirror "measured from the value at drag start,
   not accumulated step by step".
 - **AppKit / UIKit** (source platform): Source file
-  `packages/apple/AgenticToolkit/macOS/UI/Controls/Spacing/SpacingControl.swift`,
+  `packages/apple/AgenticDeveloperHubSDK/macOS/UI/Controls/Spacing/SpacingControl.swift`,
   with two companions this recipe also draws from:
   `Spacing.swift` (the spacing value type and the edge/gutter/arrow/axis
   enums it edits) and `SpacingControlLayout.swift` (the pure,
@@ -111,7 +111,7 @@
   `palette.nsColor(.windowBackground)`, `palette.font(.code)`,
   `palette.font(.body)`. The open contrast question
   (minimum-contrast-ratio) concerns `SemanticPalette.derive(_:theme:)`
-  (`packages/apple/AgenticDeveloperToolkit/Sources/Theme/SemanticPalette.swift`)
+  (`packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Theme/SemanticPalette.swift`)
   and would need a `SemanticPalette`-derived Increase-Contrast variant
   sourced from `NSWorkspace.accessibilityDisplayShouldIncreaseContrast`.
 

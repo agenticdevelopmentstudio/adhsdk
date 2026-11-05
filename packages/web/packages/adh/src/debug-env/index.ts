@@ -12,7 +12,7 @@
 export { DebugConsoleWindow, type DebugConsoleWindowProps } from './DebugConsole'
 // Re-exported because this package's own `help/HelpWindow.tsx` (and any other host that wants a
 // backdrop-less draggable window) reaches it through this barrel rather than a deep path. Since
-// Task 5.5 that reach is a SELF-reference — `@agentic-toolkit/adh/debug-env`, kept in tsup's
+// Task 5.5 that reach is a SELF-reference — `@adh-sdk/adh/debug-env`, kept in tsup's
 // `external` so the console and the help window share one FloatingWindow geometry module.
 export { FloatingWindow } from './FloatingWindow'
 export {

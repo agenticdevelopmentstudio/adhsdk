@@ -2,18 +2,18 @@
 """A documented subpath must be one the package's `exports` map actually exports.
 
 Task 9's review found three `controls` READMEs instructing the reader to import
-`@agenticdevelopertoolkit/controls/filtered-list/styles/filtered-list.css`.
+`@adh-sdk/controls/filtered-list/styles/filtered-list.css`.
 That is the path the `exports` map points AT (`dist/filtered-list/styles/filtered-list.css`),
 not the subpath it EXPORTS (`./filtered-list/styles.css`) — following the README's
 version raises `ERR_PACKAGE_PATH_NOT_EXPORTED`. No compiler reads a README, and the
 scope name was perfectly correct, so nothing caught it until a human read the file.
 
 A second, sharper shape of the same defect shipped in `chat`'s README: five lines
-named the package `@agentic-cookbook/agenticdevelopertoolkit/chat` — an invented
-scope, not a bad subpath. Neither existing gate could see it. The private-scope
-guard (`check_no_private_scope.py`) searches for the literal string
-`@agentic-toolkit/` and this string does not contain it. A by-hand sweep keyed on
-the package's real name (`@agenticdevelopertoolkit/chat`) misses it for the same
+named the package `@agentic-cookbook/adhsdk/chat` — an invented
+scope, not a bad subpath. Neither existing gate could see it: the retired-names
+guard (`check_no_retired_names.py`) searches for names this SDK used to go by,
+and an invented scope is not one of them. A by-hand sweep keyed on
+the package's real name (`@adh-sdk/chat`) misses it for the same
 reason in reverse: the bogus prefix means the correct name never appears in the
 file for the sweep to find. So this guard does not search prose for a known-bad
 string either — it starts from each package's OWN manifest name, finds every place
@@ -22,17 +22,17 @@ whether the specifier surrounding it is what the manifest says it should be.
 
 ## What counts as a hit
 
-For every `@agenticdevelopertoolkit/*` package discovered under `--root`, scan its
+For every `@adh-sdk/*` package discovered under `--root`, scan its
 markdown for a quoted string or backtick span containing `<basename>` as a path
 segment (`/<basename>` followed by `/` or end-of-string) and inspect what precedes
 it:
 
-  * the text before `/<basename>` is not exactly `@agenticdevelopertoolkit`, and
-    the text contains "agenticdevelopertoolkit" somewhere — a real attempt to name
+  * the text before `/<basename>` is not exactly `@adh-sdk`, and
+    the text contains "adhsdk" somewhere — a real attempt to name
     this package that got the scope wrong. Reported as a wrong-scope finding.
-  * the prefix IS `@agenticdevelopertoolkit` and a subpath follows — the subpath
+  * the prefix IS `@adh-sdk` and a subpath follows — the subpath
     must match one of the package's own `exports` keys.
-  * the prefix does not match and the text never mentions "agenticdevelopertoolkit"
+  * the prefix does not match and the text never mentions "adhsdk"
     at all — a genuine third party whose name happens to share this package's
     basename (e.g. some unrelated `.../chat/...`). This guard has no exports map
     for a third-party package and must not invent one, so it is skipped.
@@ -43,7 +43,7 @@ it:
 export keys with `fnmatch`, never as a set-membership test — the set form would
 report `ui/components/button` as broken when it resolves fine.
 
-Exit 0 clean, 1 on a finding, 2 on an empty scan (no `@agenticdevelopertoolkit/*`
+Exit 0 clean, 1 on a finding, 2 on an empty scan (no `@adh-sdk/*`
 packages found, or none of them ship any markdown) — an empty scan is never a
 pass, it is a guard that scanned nothing and has no business reporting clean.
 
@@ -60,7 +60,7 @@ import re
 import sys
 from pathlib import Path
 
-SCOPE = "@agenticdevelopertoolkit"
+SCOPE = "@adh-sdk"
 DEFAULT_ROOT = Path(__file__).resolve().parents[1] / "packages" / "web" / "packages"
 
 SKIP_DIRS = {"node_modules", "dist", ".turbo", ".git", "coverage"}
@@ -73,7 +73,7 @@ BACKTICK_RE = re.compile(r"`([^`]+)`")
 
 def discover_packages(root: Path) -> "dict[str, Path]":
     """Top-level dirs under root whose own package.json names an
-    @agenticdevelopertoolkit/* package. npm name -> package directory."""
+    @adh-sdk/* package. npm name -> package directory."""
     found: dict[str, Path] = {}
     if not root.is_dir():
         return found
@@ -118,6 +118,9 @@ def markdown_files(pkg_dir: Path) -> "list[Path]":
     files = []
     for path in sorted(pkg_dir.rglob("*.md")):
         if any(part in SKIP_DIRS for part in path.relative_to(pkg_dir).parts):
+            continue
+        # A directory can be named like a file (skeleton/app/index.md is a route).
+        if not path.is_file():
             continue
         files.append(path)
     return files
@@ -175,7 +178,7 @@ def find_violations(root: Path) -> "tuple[list[tuple[Path, int, str]], int, int]
                             continue
                         prefix, subpath = hit
                         if prefix != SCOPE:
-                            if "agenticdevelopertoolkit" not in text.lower():
+                            if "adhsdk" not in text.lower():
                                 continue  # a third party sharing this basename
                             violations.append((
                                 md_path, lineno,

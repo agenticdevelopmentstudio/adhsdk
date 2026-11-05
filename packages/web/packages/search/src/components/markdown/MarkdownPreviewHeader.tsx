@@ -1,7 +1,7 @@
 'use client'
 
 import type { ReactElement } from 'react'
-import { Badge } from '@agenticdevelopertoolkit/ui/components/badge'
+import { Badge } from '@adh-sdk/ui/components/badge'
 import type { DocumentPreviewHeaderProps } from '../../types'
 import type { PaperSearchHit } from '../../registry/markdown'
 import { kindRendererFor, nonEmpty } from '../../registry/kinds'

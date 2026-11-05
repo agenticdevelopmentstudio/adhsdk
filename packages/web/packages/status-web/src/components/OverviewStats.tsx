@@ -1,14 +1,14 @@
 "use client";
 import { type ReactElement, useMemo } from "react";
-import { Stat, StatRow, type StatTone } from "@agenticdevelopertoolkit/ui/components/stat";
-import { sectionLabelClass } from "@agenticdevelopertoolkit/ui/components/section-label";
+import { Stat, StatRow, type StatTone } from "@adh-sdk/ui/components/stat";
+import { sectionLabelClass } from "@adh-sdk/ui/components/section-label";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
   DropdownMenuContent,
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
-} from "@agenticdevelopertoolkit/ui/components/dropdown-menu";
+} from "@adh-sdk/ui/components/dropdown-menu";
 import { menuTriggerPillClass } from "./menu-pill";
 import { useResponseHistory } from "../hooks/use-response-history";
 import { useBoard } from "../hooks/use-board";

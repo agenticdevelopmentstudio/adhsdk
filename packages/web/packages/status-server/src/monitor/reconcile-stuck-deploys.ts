@@ -1,9 +1,9 @@
 import type { Storage } from "../storage/ports";
-import { mapLimit } from "@agentic-toolkit/deploy-platform/util";
+import { mapLimit } from "@adh-sdk/deploy-platform/util";
 import { vercelPhases, railwayPhases, type Phases } from "./deploy-status";
-import { pollableByIdPlatforms, type ProviderConn } from "@agentic-toolkit/deploy-platform/conn";
-import { gqlPost } from "@agentic-toolkit/deploy-platform/providers";
-import { rateLimitedUntil, noteIfRateLimited } from "@agentic-toolkit/deploy-platform/cooldown";
+import { pollableByIdPlatforms, type ProviderConn } from "@adh-sdk/deploy-platform/conn";
+import { gqlPost } from "@adh-sdk/deploy-platform/providers";
+import { rateLimitedUntil, noteIfRateLimited } from "@adh-sdk/deploy-platform/cooldown";
 
 /** The provider answered definitively that this deployment no longer exists —
  *  distinct from `null` (transient: network, auth, rate limit → retry later). */

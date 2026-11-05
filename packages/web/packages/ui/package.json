@@ -1,7 +1,7 @@
 {
-  "name": "@agenticdevelopertoolkit/ui",
+  "name": "@adh-sdk/ui",
   "version": "0.1.0",
-  "description": "shadcn slot for the agentic developer toolkit. Ships globals.css, cn() helper, and shared hooks.",
+  "description": "shadcn slot for the agentic developer hub SDK. Ships globals.css, cn() helper, and shared hooks.",
   "license": "Apache-2.0",
   "type": "module",
   "main": "./dist/index.js",

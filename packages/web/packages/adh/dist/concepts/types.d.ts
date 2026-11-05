@@ -1,4 +1,4 @@
-import type { SiteId } from '@agentic-toolkit/adh-registry';
+import type { SiteId } from '@adh-sdk/adh-registry';
 /** A call-to-action / link rendered under a node's blurb or in a details page. */
 export interface ConceptCta {
     label: string;

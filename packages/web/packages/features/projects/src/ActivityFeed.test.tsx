@@ -8,7 +8,7 @@ import { describe, it, expect, vi, afterEach } from "vitest";
 import { render, screen, fireEvent, waitFor, cleanup } from "@testing-library/react";
 
 import { ActivityFeed } from "./ActivityFeed";
-import type { ActivityPage, ProjectActivity } from "@agentic-toolkit/data/projects";
+import type { ActivityPage, ProjectActivity } from "@adh-sdk/data/projects";
 
 // Build a ProjectActivity from the id + action (the only per-row varying bits).
 function activity(

@@ -1,6 +1,6 @@
 import type { DeploymentDTO } from "./types";
 import { projectPageUrl } from "./url";
-import { envFromProject } from "@agentic-toolkit/deploy-platform/canon";
+import { envFromProject } from "@adh-sdk/deploy-platform/canon";
 
 // ---------------------------------------------------------------------------
 // Deploy/env derivation + link derivation, and the Indicator shape the sign /
@@ -16,7 +16,7 @@ export interface Indicator {
   count: number;
 }
 
-// envFromProject now lives in @agentic-toolkit/deploy-platform/canon. Imported above
+// envFromProject now lives in @adh-sdk/deploy-platform/canon. Imported above
 // for use in this module; re-exported so existing `./deploy-view` importers keep
 // their path.
 export { envFromProject };

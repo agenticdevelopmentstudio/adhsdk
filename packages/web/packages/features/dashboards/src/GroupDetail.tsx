@@ -1,12 +1,12 @@
 "use client";
 
-import type { SiteGroupView } from "@agentic-toolkit/data/monitored-sites";
-import { validateSlug } from "@agenticdevelopertoolkit/ui/lib/slug";
-import { Card, CardContent } from "@agenticdevelopertoolkit/ui/components/card";
-import { Input } from "@agenticdevelopertoolkit/ui/components/input";
-import { Label } from "@agenticdevelopertoolkit/ui/components/label";
-import { DetailSection, unchangedFromStored } from "@agentic-toolkit/resource";
-import { ErrorText } from "@agenticdevelopertoolkit/ui/components/error-text";
+import type { SiteGroupView } from "@adh-sdk/data/monitored-sites";
+import { validateSlug } from "@adh-sdk/ui/lib/slug";
+import { Card, CardContent } from "@adh-sdk/ui/components/card";
+import { Input } from "@adh-sdk/ui/components/input";
+import { Label } from "@adh-sdk/ui/components/label";
+import { DetailSection, unchangedFromStored } from "@adh-sdk/resource";
+import { ErrorText } from "@adh-sdk/ui/components/error-text";
 
 export interface GroupDraft {
   name: string;
@@ -28,7 +28,7 @@ export function groupToInput(g: SiteGroupView): GroupDraft {
  *
  *  `storedSlug` is the slug already on the group being edited (absent on a create). It exempts
  *  the slug's FORMAT rule only — same reasoning as `teamValidate`'s stored-identifier exemption
- *  (`@agentic-toolkit/teams`): a group the backend already accepted need not satisfy a
+ *  (`@adh-sdk/teams`): a group the backend already accepted need not satisfy a
  *  client-side format rule added later, and refusing it holds the Name/Retention fields' Save
  *  hostage to a slug nobody is touching. Uniqueness and the required-ness rules stay unconditional
  *  (Mike, 2026-09-25). */

@@ -1,5 +1,5 @@
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/Hub/Features/Authentication/` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Hub/Features/Authentication/` |
 

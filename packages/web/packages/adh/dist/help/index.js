@@ -69,7 +69,7 @@ function findTopicPath(id, topics = HELP_TOPICS) {
 // src/help/HelpProvider.tsx
 import { jsx, jsxs } from "react/jsx-runtime";
 var HelpWindow = dynamic(
-  () => import("@agentic-toolkit/adh/help/HelpWindow").then((m) => m.HelpWindow)
+  () => import("@adh-sdk/adh/help/HelpWindow").then((m) => m.HelpWindow)
 );
 var HelpContext = createContext(null);
 function HelpProvider({ children }) {
@@ -97,7 +97,7 @@ var NOOP = { isOpen: false, open: () => {
 } };
 
 // src/help/index.ts
-import { HelpWindow as HelpWindow2 } from "@agentic-toolkit/adh/help/HelpWindow";
+import { HelpWindow as HelpWindow2 } from "@adh-sdk/adh/help/HelpWindow";
 export {
   HELP_TOPICS,
   HelpProvider,

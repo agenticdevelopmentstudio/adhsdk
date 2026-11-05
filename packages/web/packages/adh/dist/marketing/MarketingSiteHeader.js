@@ -3,8 +3,8 @@
 "use client";
 
 // src/marketing/MarketingSiteHeader.tsx
-import { makeSmartHeaderAuth } from "@agentic-toolkit/adh/header-auth";
-import { SiteHeader } from "@agentic-toolkit/adh/header";
+import { makeSmartHeaderAuth } from "@adh-sdk/adh/header-auth";
+import { SiteHeader } from "@adh-sdk/adh/header";
 import { jsx } from "react/jsx-runtime";
 var useMarketingHeaderAuth = makeSmartHeaderAuth({ clientId: "adh" });
 function MarketingSiteHeader({

@@ -3,7 +3,7 @@
   "meta": {
     "id": "dcfe8ed6-2129-44ea-a084-eb30b640c0e3",
     "title": "Environment Filter",
-    "domain": "adtoolkit://cookbook/status/dashboard/state/env-filter",
+    "domain": "adhsdk://cookbook/status/dashboard/state/env-filter",
     "type": "ingredient",
     "version": "1.1.1",
     "status": "review",
@@ -21,7 +21,7 @@
     "tags": [],
     "depends-on": [],
     "related": [
-      "adtoolkit://cookbook/status/dashboard/state/activity-ttl"
+      "adhsdk://cookbook/status/dashboard/state/activity-ttl"
     ],
     "references": [],
     "approved-by": "",

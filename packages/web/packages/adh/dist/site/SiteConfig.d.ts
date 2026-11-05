@@ -1,8 +1,8 @@
 import type { ComponentType, ReactNode } from 'react';
-import type { SiteId } from '@agentic-toolkit/adh-registry';
-import { type SiteRoute, type SiteSeo } from '@agentic-toolkit/adh-registry/seo';
-import type { SiteHelp } from '@agenticdevelopertoolkit/ui/components/help-content';
-import type { MarketingRootHtmlProps } from '@agentic-toolkit/adh/marketing';
+import type { SiteId } from '@adh-sdk/adh-registry';
+import { type SiteRoute, type SiteSeo } from '@adh-sdk/adh-registry/seo';
+import type { SiteHelp } from '@adh-sdk/ui/components/help-content';
+import type { MarketingRootHtmlProps } from '@adh-sdk/adh/marketing';
 /** The paths every site in the family keeps out of its production index.
  *
  *  Measured, not assumed: all but three of the sites in content/landing/manifest.json want
@@ -148,7 +148,7 @@ export type SiteGate = ComponentType<{
  * That split is not tidiness. Fold the home model in here and the config becomes reachable
  * from a `'use client'` page, which drags whatever the config imports into the browser
  * bundle — including `research`'s sitemap reads, which resolve a backend URL through
- * `@agentic-toolkit/auth/server`. The split runs along the boundary React already draws,
+ * `@adh-sdk/auth/server`. The split runs along the boundary React already draws,
  * so each half stays in one graph and neither has to know about the other.
  */
 export interface SiteConfig {
@@ -171,9 +171,9 @@ export interface SiteConfig {
      *  So the `??` lives at the mount, where the reader is.
      *
      *  This used to claim a runtime reason — that resolving them would drag
-     *  `@agentic-toolkit/auth`'s module graph ("a token store and a refresh timer at module
+     *  `@adh-sdk/auth`'s module graph ("a token store and a refresh timer at module
      *  scope") behind `app/robots.ts` and `app/sitemap.ts`. That was wrong twice over, and the
-     *  correction matters because sites were being told to reason from it: `@agentic-toolkit/auth`
+     *  correction matters because sites were being told to reason from it: `@adh-sdk/auth`
      *  is itself a `'use client'` barrel, so a server module importing it gets client REFERENCES
      *  and never evaluates a line of it — which is why hub's `site.config.tsx` can hold four
      *  client components and its `app/robots.ts` still executes nothing but this file. And there

@@ -21,11 +21,11 @@ For day-to-day usage, prefer:
 This doc is the *historical* and *architectural* record.
 
 > **Note (July 2026):** three of the eight original packages —
-> `@agenticdevelopertoolkit/layout`, `@agenticdevelopertoolkit/content`, and
+> `@adh-sdk/layout`, `@adh-sdk/content`, and
 > `site-templates/reference-web-site` — have since been **deleted**. They
 > had no importers left: the cookbook site that descended from
 > `reference-web-site` had long since forked away from it, and its
-> document-reading UI was re-extracted into `@agenticdevelopertoolkit/ui`'s
+> document-reading UI was re-extracted into `@adh-sdk/ui`'s
 > `blocks/` as the HDV (Hierarchical Document View) family instead. The
 > workspace root also moved from `packaging/` to `packages/web/`, and the
 > examples site from `site/` to `websites/site/`.
@@ -37,15 +37,15 @@ This doc is the *historical* and *architectural* record.
 
 > **Note (August 2026):** four of the eight packages in the table below — `ui`,
 > `themes`, `model` and `controls` — left this repository for the public
-> `agenticdevelopertoolkit` and are now `@agenticdevelopertoolkit/*`. Four more
+> `adhsdk` and are now `@adh-sdk/*`. Four more
 > packages made the same move without ever appearing in this table: `landing`,
 > `markdown`, `search` and `editing`. Four of this table's other rows were
 > deleted outright rather than moved: three in July (see that note), and
 > `chat` in August 2026, once its only consumer (`websites/site`) moved onto
-> the public `@agenticdevelopertoolkit/chat` package instead. The table
+> the public `@adh-sdk/chat` package instead. The table
 > and the sub-export example below deliberately keep the OLD names anyway, for
 > the same reason as the July note: they record what shipped in May 2026, when
-> `@agentic-toolkit` was the only scope those packages had ever had. Rewriting
+> `@adh-sdk` was the only scope those packages had ever had. Rewriting
 > them would produce a package list that never existed at any moment in history.
 > A scope sweep reading this doc should skip everything under "What the toolkit
 > ships now".
@@ -54,19 +54,19 @@ This doc is the *historical* and *architectural* record.
 
 ## What the toolkit ships now
 
-Eight packages under the `@agenticdevelopertoolkit/*` scope, each built to
+Eight packages under the `@adh-sdk/*` scope, each built to
 its own `dist/` and published-or-federated via pnpm workspaces:
 
 | Package                                  | Depends on                | Notes                                            |
 | ---------------------------------------- | ------------------------- | ------------------------------------------------ |
-| `@agenticdevelopertoolkit/ui`                | —                         | shadcn slot; `cn`, `useIsomorphicLayoutEffect`, `styles/globals.css` |
-| `@agenticdevelopertoolkit/themes`            | `ui`                      | `ColorModeProvider`, `ThemeStyle`, theme manifest + CSS |
-| `@agenticdevelopertoolkit/model`             | —                         | Providers, hooks, search/breadcrumbs/nav/lookup  |
-| `@agenticdevelopertoolkit/layout`            | —                         | Layout CSS bundles                               |
-| `@agenticdevelopertoolkit/content`           | `model`                   | Markdown view, cards, home, section index        |
-| `@agenticdevelopertoolkit/controls`          | `model`, `themes`         | One package, per-control sub-exports             |
-| `@agenticdevelopertoolkit/chat`              | —                         | InlineChat / ThreePaneChat / MobileChat / PersonaChat |
-| `@agenticdevelopertoolkit/reference-web-site`| `controls`, `model`, `themes` | Vite-only template + plugin                  |
+| `@adh-sdk/ui`                | —                         | shadcn slot; `cn`, `useIsomorphicLayoutEffect`, `styles/globals.css` |
+| `@adh-sdk/themes`            | `ui`                      | `ColorModeProvider`, `ThemeStyle`, theme manifest + CSS |
+| `@adh-sdk/model`             | —                         | Providers, hooks, search/breadcrumbs/nav/lookup  |
+| `@adh-sdk/layout`            | —                         | Layout CSS bundles                               |
+| `@adh-sdk/content`           | `model`                   | Markdown view, cards, home, section index        |
+| `@adh-sdk/controls`          | `model`, `themes`         | One package, per-control sub-exports             |
+| `@adh-sdk/chat`              | —                         | InlineChat / ThreePaneChat / MobileChat / PersonaChat |
+| `@adh-sdk/reference-web-site`| `controls`, `model`, `themes` | Vite-only template + plugin                  |
 
 Plus the examples site at `site/` — **Next.js 15 App Router**, static
 export, deployed to GitHub Pages.
@@ -94,7 +94,7 @@ Two problems forced the same conversion:
 
 Consumers still git-submodule the toolkit. The *only* consumer-side
 change is adding `external/agentic-web-toolkit/packages/**` to
-`pnpm-workspace.yaml` and switching deps to `"@agenticdevelopertoolkit/<pkg>": "workspace:*"`.
+`pnpm-workspace.yaml` and switching deps to `"@adh-sdk/<pkg>": "workspace:*"`.
 Version lock is still the submodule SHA. The `**` glob covers the
 nested groups (`packages/features/*`,
 `packages/site-templates/*`); pnpm filters by `package.json` presence
@@ -105,7 +105,7 @@ so it's safe.
 Splitting controls per-package would have added ceremony without
 buying anything. Cross-control sharing (the appearance-mode-toggle ↔
 theme bus) is non-trivial. Each control gets a barrel sub-export
-(`@agenticdevelopertoolkit/controls/filtered-list`) so consumers still
+(`@adh-sdk/controls/filtered-list`) so consumers still
 only pay for what they import.
 
 ### `"use client"` directive preservation
@@ -131,7 +131,7 @@ enforcing this: see `feedback_packages_dependency_boundary`.
 
 Consumers point Tailwind v4's `@source` directive at
 `external/agentic-web-toolkit/packages/*/dist/**/*.{js,d.ts}` (or
-`node_modules/@agenticdevelopertoolkit/*/dist/**` for published consumers).
+`node_modules/@adh-sdk/*/dist/**` for published consumers).
 The JIT sees what the library's *compiled* JSX actually renders.
 
 ### No `transpilePackages` in Next.js

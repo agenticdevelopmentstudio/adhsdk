@@ -1,7 +1,7 @@
 ---
 id: 1be6e1bd-ee8c-4247-9020-c0d84356eb10
 title: CategoryField
-domain: agenticdevelopertoolkit://recipes/category-field
+domain: adhsdk://recipes/category-field
 type: ingredient
 version: 1.1.1
 status: review
@@ -21,12 +21,12 @@ tags:
 - category-selection
 - tree-navigation
 depends-on:
-- agenticdevelopertoolkit://recipes/field
-- agenticdevelopertoolkit://recipes/combobox
-- agenticdevelopertoolkit://recipes/entity-chooser
-- agenticdevelopertoolkit://recipes/category-rename-dialog
+- adhsdk://recipes/field
+- adhsdk://recipes/combobox
+- adhsdk://recipes/entity-chooser
+- adhsdk://recipes/category-rename-dialog
 related:
-- agenticdevelopertoolkit://recipes/tag-set-field
+- adhsdk://recipes/tag-set-field
 references: []
 approved-by: ''
 approved-date: ''
@@ -96,7 +96,7 @@ CategoryField is a form row component for selecting a single category from a hie
 | No hierarchy | Breadcrumb section is hidden even if `value` is set; combobox and chooser are visible. | When `nodes` is omitted or empty. |
 | Renaming | CategoryRenameDialog modal is open and centered over the component; combobox and chooser remain visible but input is not focused. | When user clicks a breadcrumb button and `onRename` is defined. |
 | Rename success | Dialog closes; breadcrumbs update if the renamed node was selected, and `value` follows the new name via `onChange` (see **rename-follows-selected**). | After the `onRename` callback resolves successfully. |
-| Rename error | Dialog behavior on a rejected rename is CategoryRenameDialog's own — see `agenticdevelopertoolkit://recipes/category-rename-dialog`. CategoryField's `value` does not change. | When `onRename` callback rejects or throws. |
+| Rename error | Dialog behavior on a rejected rename is CategoryRenameDialog's own — see `adhsdk://recipes/category-rename-dialog`. CategoryField's `value` does not change. | When `onRename` callback rejects or throws. |
 | Multi-path | Multiple breadcrumb trails are displayed vertically. | When the selected category node has multiple parents in the hierarchy. |
 
 ## Accessibility
@@ -148,7 +148,7 @@ CategoryField is a form row component for selecting a single category from a hie
 | category-field-030 | browser-input-label | Render with `noun="skill"`. | Entity chooser input label is "Filter or add a skill"; placeholder is "Filter or add a skill…". |
 | category-field-031 | browser-aria-label-from-label | Render with `label="Skills"`. | Entity chooser `ariaLabel` is "Browse skills". |
 | category-field-032 | hide-breadcrumbs-without-trail | Render with `value="missing"` where no node in `nodes` has that name. | `nodeForName` resolves to `null`; breadcrumb `<nav>` section is not rendered; combobox and chooser remain interactive. |
-| category-field-033 | rename-follows-selected | Click a breadcrumb to open the rename dialog; submit a name for which `onRename` rejects. | `onChange` is NOT called and `value`/breadcrumbs are unchanged; the dialog's own error handling is CategoryRenameDialog's — see `agenticdevelopertoolkit://recipes/category-rename-dialog`. |
+| category-field-033 | rename-follows-selected | Click a breadcrumb to open the rename dialog; submit a name for which `onRename` rejects. | `onChange` is NOT called and `value`/breadcrumbs are unchanged; the dialog's own error handling is CategoryRenameDialog's — see `adhsdk://recipes/category-rename-dialog`. |
 | category-field-034 | disabled-state | Open the rename dialog via a breadcrumb click, then re-render CategoryField with `disabled={true}`. | The dialog remains open; the source does not close it or otherwise alter it on this transition — CategoryField's `renaming` state is independent of `disabled`. |
 | category-field-035 | show-all-filing-paths | Render with `value="shared"` where "shared" has 5 parents in `nodes` (5 distinct filing paths). | Only 4 breadcrumb trails are displayed (`MAX_TRAILS`); the 5th filing path is not rendered. |
 
@@ -160,7 +160,7 @@ CategoryField is a form row component for selecting a single category from a hie
 - **Category with multiple parents (DAG)**: When a category node has multiple parents, `categoryTrails` returns multiple trails, up to `MAX_TRAILS` (4). MUST display one `<ol>` per returned trail, each showing the distinct path to the leaf node (see **show-all-filing-paths**). Past 4 distinct filing paths, `categoryTrails` stops walking and later paths are not displayed; the cap exists because a DAG can have exponentially many paths and this is a form row, not a full hierarchy browser.
 - **Category renamed while form is in focus**: If `onRename` succeeds, the dialog closes; if the renamed node is selected, the component calls `onChange` with the new name (see **rename-follows-selected**), so breadcrumbs and downstream form state follow the new name. If the renamed node is not selected, the rename does not affect the current value (see **rename-ignores-unselected**).
 - **Rename cancelled by user**: When the user closes the rename dialog without confirming, `onClose` is called and `renaming` state is set to `null`. MUST close the dialog without modifying the component's value or breadcrumbs.
-- **Rename rejected by callback**: If `onRename` rejects or throws, the dialog's own error handling is CategoryRenameDialog's — see `agenticdevelopertoolkit://recipes/category-rename-dialog`. CategoryField's `value` does not change, because `onChange` is only called after a successful rename (see **rename-follows-selected**).
+- **Rename rejected by callback**: If `onRename` rejects or throws, the dialog's own error handling is CategoryRenameDialog's — see `adhsdk://recipes/category-rename-dialog`. CategoryField's `value` does not change, because `onChange` is only called after a successful rename (see **rename-follows-selected**).
 - **Combobox with no matching options**: User types a string that does not match any option in the list. Combobox behavior is determined by the Combobox component; this component passes the typed value through `onChange` when confirmed. MUST allow free-form input.
 - **Very long category names**: Category names longer than the viewport width will be truncated by the `truncate` class. MUST prevent text overflow; readability is preserved by focusing on the leaf node name (leaf-accent color draws attention).
 - **Narrow viewport with multiple filings**: When breadcrumb trails wrap due to viewport width, the `flex-wrap` class allows trails to stack vertically. MUST display every trail `categoryTrails` returns (up to the `MAX_TRAILS` cap — see **show-all-filing-paths**); the component remains usable and accessible.
@@ -279,7 +279,7 @@ Statuses rest on the source: `aria-label`s and the `<nav>`/`<ol>`/`<li>`/`<butto
 | `disabled` | `boolean` | No | `false` | Disables the combobox, the entity chooser, and breadcrumb rename buttons. |
 | `className` | `string` | No | `undefined` | Forwarded to `Field` for custom styling. |
 
-`onRenamed` is not a prop of CategoryField — it is `CategoryRenameDialog`'s own callback (see `agenticdevelopertoolkit://recipes/category-rename-dialog`), which CategoryField wires internally to call `onChange` only when the renamed node is the selected one.
+`onRenamed` is not a prop of CategoryField — it is `CategoryRenameDialog`'s own callback (see `adhsdk://recipes/category-rename-dialog`), which CategoryField wires internally to call `onChange` only when the renamed node is the selected one.
 
 ## Change History
 

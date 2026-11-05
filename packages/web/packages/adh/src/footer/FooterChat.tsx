@@ -8,7 +8,7 @@ import dynamic from 'next/dynamic'
 // CSS out of every site's first-paint bundle (fetched only when the footer
 // actually mounts on the client). The separate `FooterChatInner` dist entry is
 // kept un-inlined via the package subpath export (see tsup.config.ts external).
-const FooterChatInner = dynamic(() => import('@agentic-toolkit/adh/footer/FooterChatInner'), {
+const FooterChatInner = dynamic(() => import('@adh-sdk/adh/footer/FooterChatInner'), {
   ssr: false,
 })
 

@@ -1,11 +1,11 @@
 "use client";
 
-import { Input } from "@agenticdevelopertoolkit/ui/components/input";
-import { Label } from "@agenticdevelopertoolkit/ui/components/label";
-import { Button } from "@agenticdevelopertoolkit/ui/components/button";
-import { Alert, AlertTitle, AlertDescription } from "@agenticdevelopertoolkit/ui/components/alert";
-import { errorMessage } from "@agenticdevelopertoolkit/ui/lib/errors";
-import { formatMicros, formatMicrosFloor } from "@agenticdevelopertoolkit/ui/lib/money";
+import { Input } from "@adh-sdk/ui/components/input";
+import { Label } from "@adh-sdk/ui/components/label";
+import { Button } from "@adh-sdk/ui/components/button";
+import { Alert, AlertTitle, AlertDescription } from "@adh-sdk/ui/components/alert";
+import { errorMessage } from "@adh-sdk/ui/lib/errors";
+import { formatMicros, formatMicrosFloor } from "@adh-sdk/ui/lib/money";
 import type { RunRate } from "../api/insight";
 
 function Stat({ label, value, title }: { label: string; value: string; title?: string }) {

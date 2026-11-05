@@ -1,5 +1,5 @@
 {
-  "name": "@agentic-toolkit/notebook",
+  "name": "@adh-sdk/notebook",
   "version": "0.1.0",
   "description": "The Notebook feature: the owner's notes, browsed through a hierarchical category rail.",
   "license": "UNLICENSED",
@@ -37,13 +37,13 @@
     "check:directives": "python3 ../tools/check-directives.py"
   },
   "dependencies": {
-    "@agentic-toolkit/auth": "workspace:*",
-    "@agentic-toolkit/categories": "workspace:*",
-    "@agentic-toolkit/data": "workspace:*",
-    "@agentic-toolkit/resource": "workspace:*",
+    "@adh-sdk/auth": "workspace:*",
+    "@adh-sdk/categories": "workspace:*",
+    "@adh-sdk/data": "workspace:*",
+    "@adh-sdk/resource": "workspace:*",
     "lucide-react": "^1.16.0",
-    "@agenticdevelopertoolkit/markdown": "workspace:*",
-    "@agenticdevelopertoolkit/ui": "workspace:*"
+    "@adh-sdk/markdown": "workspace:*",
+    "@adh-sdk/ui": "workspace:*"
   },
   "peerDependencies": {
     "next": ">=15",
@@ -84,11 +84,11 @@
     "vitest": "^4.1.4",
     "yaml": "^2.9.0"
   },
-  "comment:directives": "`./parse` is the URL grammar a host page may CALL from a server component, so it must stay directive-free TRANSITIVELY: `@agentic-toolkit/*` stays external in this build, so whatever it imports is resolved inside the caller. The one allowed import is the categories package's own server-safe entry.",
+  "comment:directives": "`./parse` is the URL grammar a host page may CALL from a server component, so it must stay directive-free TRANSITIVELY: `@adh-sdk/*` stays external in this build, so whatever it imports is resolved inside the caller. The one allowed import is the categories package's own server-safe entry.",
   "directives": {
     "index": "client",
     "parse-path": [
-      "@agentic-toolkit/categories/chain"
+      "@adh-sdk/categories/chain"
     ]
   }
 }

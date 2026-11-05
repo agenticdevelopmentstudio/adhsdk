@@ -1,7 +1,7 @@
 ---
 id: 61f589a9-d32f-4e9b-85db-1f9aa0eee009
 title: Markdown Text Pane
-domain: agenticdevelopertoolkit://recipes/markdown-text-pane
+domain: adhsdk://recipes/markdown-text-pane
 type: ingredient
 version: 1.2.2
 status: review
@@ -23,8 +23,8 @@ tags:
 - markdown
 depends-on: []
 related:
-- agenticdevelopertoolkit://recipes/markdown-document-editor
-- agenticdevelopertoolkit://recipes/markdown-viewer
+- adhsdk://recipes/markdown-document-editor
+- adhsdk://recipes/markdown-viewer
 references: []
 approved-by: ''
 approved-date: ''

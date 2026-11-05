@@ -106,7 +106,7 @@ import {
   Wrench,
   type LucideIcon,
 } from 'lucide-react'
-import { SITE_FOR_HUB_SEGMENT } from '@agentic-toolkit/adh-registry'
+import { SITE_FOR_HUB_SEGMENT } from '@adh-sdk/adh-registry'
 
 /** entry key → icon. See the module comment for the key scheme. Not the export: the fleet's
  *  own workspace-route keys are folded in below before this becomes {@link MENU_ICONS}. */

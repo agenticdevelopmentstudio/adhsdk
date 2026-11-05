@@ -23,9 +23,9 @@ Use it whenever a window must be persisted by identity rather than by a
 volatile OS handle. The data types it consumes (a match strategy, a window
 fingerprint, a live window record, a dormant window snapshot, a window
 context) are specified in
-[Window Matching Core System Windows](adtoolkit://cookbook/system/system-windows/window-context-model).
+[Window Matching Core System Windows](adhsdk://cookbook/system/system-windows/window-context-model).
 The per-app built-in heuristics (Xcode, Warp, Brave, VS Code, Terminal) are
 specified in
-[Window Matching Heuristics](adtoolkit://cookbook/system/system-windows/matching/title-heuristics);
+[Window Matching Heuristics](adhsdk://cookbook/system/system-windows/matching/title-heuristics);
 this recipe specifies only their registration, not their parsing rules.
 

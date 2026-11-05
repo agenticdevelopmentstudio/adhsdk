@@ -15,6 +15,6 @@
   both auth states with seeded workspaces + recents.
 - Responsive: verify via Playwright at 375 / 768 / 1440; keyboard + pointer.
 - Tailwind sources: no new package boundary; icons are lucide (already a dependency
-  of `@agentic-toolkit/adh` and externalized by it, so the host supplies the one copy).
+  of `@adh-sdk/adh` and externalized by it, so the host supplies the one copy).
 - **WinUI 3**: Build the menu from a `Flyout`/`MenuFlyout` anchored to the wordmark button, with a `NavigationViewItem`-style row template of icon (`FontIcon`/`SymbolIcon` from a single `MenuIcons` dictionary keyed by site id, route, or chrome key), label and description `TextBlock`s. Inline sub-items map to a nested `ItemsRepeater` with a left margin; the Workspaces and Recents flyouts map to `MenuFlyoutSubItem`. Port Recents as a class holding a capped `List<Place>` persisted through `ApplicationData.Current.LocalSettings`, with a `DispatcherTimer` as the settle debounce; keyboard navigation comes from `MenuFlyout`'s built-in arrow, Escape and focus-return behavior.
 

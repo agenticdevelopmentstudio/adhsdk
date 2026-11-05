@@ -18,7 +18,7 @@
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { PHONE_SHEET_CLASSES } from '@agenticdevelopertoolkit/ui/components/dialog'
+import { PHONE_SHEET_CLASSES } from '@adh-sdk/ui/components/dialog'
 
 import { FloatingWindow } from '../FloatingWindow'
 

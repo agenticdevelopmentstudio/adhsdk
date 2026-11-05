@@ -9,7 +9,7 @@
   persistence is the backend's.
 - **Transmission**: Every request travels through `authedJson`/
   `authedRequest` (`packages/web/packages/data/src/http.ts`, itself
-  re-exporting `@agentic-toolkit/auth/client`), the same bearer-token
+  re-exporting `@adh-sdk/auth/client`), the same bearer-token
   authenticated channel every other data client in this package uses;
   `docs.ts` adds no transmission of its own and performs no additional
   encryption, redaction, or inspection of the document content it sends.

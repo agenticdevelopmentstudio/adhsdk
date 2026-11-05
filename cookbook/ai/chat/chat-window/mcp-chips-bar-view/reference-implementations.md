@@ -1,5 +1,5 @@
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/macOS/Features/AIChatWindow/MCPChipsBarView.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/AIChatWindow/MCPChipsBarView.swift` |
 

@@ -36,7 +36,7 @@
   rtl` on an inner span for head truncation (the directory-label case), and
   a `<button aria-label="Close">` for the close control.
 - **AppKit/UIKit** (source platform): Implemented in
-  `packages/apple/AgenticToolkit/macOS/UI/ViewControllers/MultiTabbedViewController/TabPane/TabPaneView.swift`
+  `packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/MultiTabbedViewController/TabPane/TabPaneView.swift`
   (`TabPaneView`, plus the file-private `InsetBox`, `CardSides`, and
   `TabCardBackgroundView` types), hosted by `TabPaneViewController.swift` in
   the same directory. This is a macOS-only, AppKit `NSView` component with no

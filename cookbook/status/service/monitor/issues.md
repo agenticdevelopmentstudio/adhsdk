@@ -1,7 +1,7 @@
 ---
 id: 130fb0f2-e3a0-452a-bf7d-e49dbb56843e
 title: "Monitor Issues"
-domain: adtoolkit://cookbook/status/service/monitor/issues
+domain: adhsdk://cookbook/status/service/monitor/issues
 type: ingredient
 version: 1.2.0
 status: review
@@ -24,14 +24,14 @@ depends-on:
   - agenticdevelopercookbook://guidelines/implementing/data/constraints-and-validation
   - agenticdevelopercookbook://guidelines/implementing/observability/logging
 related:
-  - adtoolkit://cookbook/status/service/monitor/alerts
-  - adtoolkit://cookbook/status/service/monitor/issue-sources
-  - adtoolkit://cookbook/status/service/board
-  - adtoolkit://cookbook/status/service/monitor/cycle-runner
-  - adtoolkit://cookbook/status/service/storage/libsql
+  - adhsdk://cookbook/status/service/monitor/alerts
+  - adhsdk://cookbook/status/service/monitor/issue-sources
+  - adhsdk://cookbook/status/service/board
+  - adhsdk://cookbook/status/service/monitor/cycle-runner
+  - adhsdk://cookbook/status/service/storage/libsql
 references:
-  - packages/web/packages/status-server/src/monitor/issues.ts (agenticdevelopertoolkit)
-  - packages/web/packages/status-server/test/issues.test.ts (agenticdevelopertoolkit)
+  - packages/web/packages/status-server/src/monitor/issues.ts (adhsdk)
+  - packages/web/packages/status-server/test/issues.test.ts (adhsdk)
 approved-by: ""
 approved-date: ""
 ---

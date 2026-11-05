@@ -3,14 +3,14 @@
 import { useCallback, useState } from "react";
 import { Plus } from "lucide-react";
 
-import { useResourceList } from "@agentic-toolkit/data";
-import { Button } from "@agenticdevelopertoolkit/ui/components/button";
-import { Select } from "@agenticdevelopertoolkit/ui/components/select";
-import { EmptyState } from "@agenticdevelopertoolkit/ui/components/empty-state";
-import { schemasApi } from "@agentic-toolkit/data/markdown";
+import { useResourceList } from "@adh-sdk/data";
+import { Button } from "@adh-sdk/ui/components/button";
+import { Select } from "@adh-sdk/ui/components/select";
+import { EmptyState } from "@adh-sdk/ui/components/empty-state";
+import { schemasApi } from "@adh-sdk/data/markdown";
 import { bucketsCacheKey } from "../schemas/schema-model";
 import type { SchemaDefinition } from "../schemas/schema-model";
-import { DetailSection } from "@agentic-toolkit/resource";
+import { DetailSection } from "@adh-sdk/resource";
 import { SchemaGrantNode } from "./SchemaGrantNode";
 import { type SchemaGrant, newSchemaGrant } from "./permission-model";
 

@@ -1,7 +1,7 @@
 ---
 id: ce157d5a-c145-4348-b58f-6a76c9fda1d6
 title: "Status Server MCP"
-domain: adtoolkit://cookbook/status/service/mcp
+domain: adhsdk://cookbook/status/service/mcp
 type: ingredient
 version: 1.0.2
 status: review
@@ -25,14 +25,14 @@ depends-on:
   - agenticdevelopercookbook://guidelines/implementing/networking/mcp-server-design
   - agenticdevelopercookbook://guidelines/implementing/security/authorization
 related:
-  - adtoolkit://cookbook/status/service/auth
+  - adhsdk://cookbook/status/service/auth
 references:
-  - packages/web/packages/status-server/src/mcp/route.ts (agenticdevelopertoolkit)
-  - packages/web/packages/status-server/src/mcp/server.ts (agenticdevelopertoolkit)
-  - packages/web/packages/status-server/src/mcp/tools.ts (agenticdevelopertoolkit)
-  - packages/web/packages/status-server/test/mcp.int.test.ts (agenticdevelopertoolkit)
-  - packages/web/packages/status-server/test/mcp-deploy-tools.int.test.ts (agenticdevelopertoolkit)
-  - packages/web/packages/status-server/test/board-route.test.ts (agenticdevelopertoolkit)
+  - packages/web/packages/status-server/src/mcp/route.ts (adhsdk)
+  - packages/web/packages/status-server/src/mcp/server.ts (adhsdk)
+  - packages/web/packages/status-server/src/mcp/tools.ts (adhsdk)
+  - packages/web/packages/status-server/test/mcp.int.test.ts (adhsdk)
+  - packages/web/packages/status-server/test/mcp-deploy-tools.int.test.ts (adhsdk)
+  - packages/web/packages/status-server/test/board-route.test.ts (adhsdk)
 approved-by: ""
 approved-date: ""
 ---

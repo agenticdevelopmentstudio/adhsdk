@@ -1,6 +1,6 @@
 
-- **SwiftUI**: Source: `packages/apple/AgenticToolkit/Core/JSON/
-  JSONCPreprocessor.swift`, part of the `AgenticToolkitCore` framework
+- **SwiftUI**: Source: `packages/apple/AgenticDeveloperHubSDK/Core/JSON/
+  JSONCPreprocessor.swift`, part of the `AgenticDeveloperHubSDKCore` framework
   target, which `project.yml` declares `platform: macOS` only (no iOS
   target exists for it today). The file imports only `Foundation`; nothing
   in it is SwiftUI- or AppKit-specific, so a macOS or iOS host consumes it
@@ -52,7 +52,7 @@
   via `JSONSerialization.data(withJSONObject:options: [.fragmentsAllowed])`.
   Per its own doc comment, this type was lifted out of `VSCodeThemeImporter`
   's private copy when a second caller, `SnippetFile` in the
-  `AgenticToolkitLanguage` framework target, needed the same JSONC-reading
+  `AgenticDeveloperHubSDKLanguage` framework target, needed the same JSONC-reading
   behavior; `ExtensionManifestLocalization`, `ExtensionRegistry`, and
   `VSIXInstaller` are its other callers in this repository, reading
   extension `package.json` manifests, `package.nls*.json` localization

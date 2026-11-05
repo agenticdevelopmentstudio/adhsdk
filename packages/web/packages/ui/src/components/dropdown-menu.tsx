@@ -231,7 +231,7 @@ function DropdownMenuLinkItem({
   //
   // Not a new package-wide default so much as the implementation catching up: that
   // docstring shipped long before this line, so "still closing the menu" was already
-  // the published contract of `@agenticdevelopertoolkit/ui` while the primitive quietly
+  // the published contract of `@adh-sdk/ui` while the primitive quietly
   // did the opposite. Setting it per call site instead would leave the contradiction in
   // place for every call site that didn't think to pass it.
   closeOnClick = true,

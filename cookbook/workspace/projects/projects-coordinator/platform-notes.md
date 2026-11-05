@@ -1,9 +1,9 @@
 
 - **SwiftUI**: The source is
-  `packages/apple/AgenticToolkit/macOS/Features/Projects/ProjectsCoordinator.swift`,
+  `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectsCoordinator.swift`,
   built on `AppKit` (indirectly, through the `ProjectOpening`/
   `ProjectWindowManager` seam and the `ComposableTabsWindowController`/
-  `WindowManager` frame cleanup) and `AgenticToolkitCore` (`GitRepo`,
+  `WindowManager` frame cleanup) and `AgenticDeveloperHubSDKCore` (`GitRepo`,
   `ProjectDatabase`, `ProjectReconciler`, `GitRepoScanner`, `AppFeature`,
   `AppCommand`, `MenuContribution`, `CommandRegistry`, `Loggable`). It uses
   no SwiftUI API of its own; a SwiftUI host would still construct this same
@@ -49,7 +49,7 @@
   layout (`Ctrl+Alt+P` for Open Project, mirroring the macOS
   `[.command, .option]` combination). Back `database` with the same
   SQLite file through `Microsoft.Data.Sqlite` (see
-  `adtoolkit://cookbook/workspace/projects/project-database`'s WinUI
+  `adhsdk://cookbook/workspace/projects/project-database`'s WinUI
   bullet for the schema/migration port) and call its `Checkpoint()`
   equivalent from `Stop()`, logging any exception there explicitly to
   close **stop-checkpoint-failure-unsignaled** rather than reproducing the

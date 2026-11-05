@@ -76,18 +76,18 @@ with tempfile.TemporaryDirectory() as tmp:
         True,
     )
 
-    # (7) The private-scope guard's own self-test carries a recipe-URI fixture
+    # (7) The retired-names guard's own self-test may carry a recipe-URI fixture
     #     string that does not name a real recipe. It is skipped by filename, not
     #     scanned as a citation into this repo.
-    root = Path(tmp) / "private-scope-self-test-skipped"
+    root = Path(tmp) / "retired-names-self-test-skipped"
     (root / "tools").mkdir(parents=True)
-    (root / "tools" / "check_no_private_scope_test.py").write_text(
+    (root / "tools" / "check_no_retired_names_test.py").write_text(
         'domain: agenticdeveloperhub://recipes/does-not-exist\n'
     )
     (root / "recipes").mkdir(parents=True)
     (root / "recipes" / "button.md").write_text("hello\n")
     check(
-        "private-scope self-test fixture is skipped",
+        "retired-names self-test fixture is skipped",
         run(root).returncode,
         0,
     )

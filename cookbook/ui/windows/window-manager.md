@@ -1,7 +1,7 @@
 ---
 id: 61c7b509-78d1-4407-9a4e-25b155f06fbb
 title: "Window Manager"
-domain: adtoolkit://cookbook/ui/windows/window-manager
+domain: adhsdk://cookbook/ui/windows/window-manager
 type: ingredient
 version: 1.2.1
 status: review
@@ -20,11 +20,11 @@ tags:
   - persistence
   - recents
 depends-on:
-  - adtoolkit://cookbook/foundation/settings-storage
-  - adtoolkit://cookbook/ui/windows/screen-manager
-  - adtoolkit://cookbook/ui/windows/single-window-controller
+  - adhsdk://cookbook/foundation/settings-storage
+  - adhsdk://cookbook/ui/windows/screen-manager
+  - adhsdk://cookbook/ui/windows/single-window-controller
 related:
-  - adtoolkit://cookbook/ui/windows/window-recents
+  - adhsdk://cookbook/ui/windows/window-recents
 references: []
 approved-by: ""
 approved-date: ""
@@ -39,10 +39,10 @@ infrastructure. It owns:
 
 - a frame manager that persists window frames and visibility and reacts to
   screen changes (specified by the frame-manager and
-  [the screen manager](adtoolkit://cookbook/ui/windows/screen-manager)
+  [the screen manager](adhsdk://cookbook/ui/windows/screen-manager)
   recipes);
 - a window registry that looks up live instances of
-  [the single-instance window base](adtoolkit://cookbook/ui/windows/single-window-controller)
+  [the single-instance window base](adhsdk://cookbook/ui/windows/single-window-controller)
   by window id through weak references;
 - the launch-restore pass (registering a restorable id and factory, running
   the launch-restore pass, reopening recents on launch);
@@ -529,7 +529,7 @@ Not applicable: the source emits no analytics events.
 
 ## Logging
 
-Subsystem: `com.agenticdevelopmentstudio.agentictoolkit` | Category: `WindowManager`
+Subsystem: `com.mikefullerton.agenticdeveloperhubsdk` | Category: `WindowManager`
 
 | Event | Level | Message |
 |-------|-------|---------|
@@ -603,13 +603,13 @@ decisions, document-open failures and screenshot failures are not logged.
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/macOS/SystemIntegration/WindowManager/SettingsStoreWindowStateStorage.swift` |
-| apple | `packages/apple/AgenticToolkit/macOS/SystemIntegration/WindowManager/UserDefaultsWindowStateStorage.swift` |
-| apple | `packages/apple/AgenticToolkit/macOS/SystemIntegration/WindowManager/WindowManager.swift` |
-| apple | `packages/apple/AgenticToolkit/macOS/SystemIntegration/WindowManager/WindowRegistry.swift` |
-| apple | `packages/apple/AgenticToolkit/macOS/Scripting/WindowScreenshot.swift` |
-| apple | `packages/apple/AgenticToolkit/macOS/SystemIntegration/WindowManager/WindowStateNamespace.swift` |
-| apple | `packages/apple/AgenticToolkit/macOS/SystemIntegration/WindowManager/WindowStateStorage.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/WindowManager/SettingsStoreWindowStateStorage.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/WindowManager/UserDefaultsWindowStateStorage.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/WindowManager/WindowManager.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/WindowManager/WindowRegistry.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Scripting/WindowScreenshot.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/WindowManager/WindowStateNamespace.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/WindowManager/WindowStateStorage.swift` |
 
 ## Design Decisions
 

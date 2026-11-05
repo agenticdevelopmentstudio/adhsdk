@@ -3,18 +3,18 @@
 import { useCallback, type ReactElement } from "react";
 import { useRouter } from "next/navigation";
 import { Settings, Users, Shield, UsersRound } from "lucide-react";
-import { teamsApi, type Team } from "@agentic-toolkit/data/teams";
-import { ecosystemsApi } from "@agentic-toolkit/data/ecosystems";
+import { teamsApi, type Team } from "@adh-sdk/data/teams";
+import { ecosystemsApi } from "@adh-sdk/data/ecosystems";
 import {
   useResourceItemQuery,
   useResourceList,
   makeEntityDeleteHandler,
-} from "@agentic-toolkit/data";
+} from "@adh-sdk/data";
 import {
   ResourceExplorer,
   CreateResourceDialog,
   type ResourceTopic,
-} from "@agentic-toolkit/resource";
+} from "@adh-sdk/resource";
 import { TeamSettingsPane } from "./TeamSettingsPane";
 import { TeamMembersPane } from "./TeamMembersPane";
 import { TeamPermissionsPane } from "./TeamPermissionsPane";

@@ -3,23 +3,23 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { UserCircle } from "lucide-react";
-import { reportUnexpectedAuthError } from "@agentic-toolkit/auth";
-import { readTokenSubject, revalidateResources } from "@agentic-toolkit/data";
-import { HierarchicalDetailView, type TopicDetailItem, type TopicLevel } from "@agenticdevelopertoolkit/ui/blocks";
-import { Input } from "@agenticdevelopertoolkit/ui/components/input";
-import { Card, CardContent } from "@agenticdevelopertoolkit/ui/components/card";
-import { Label } from "@agenticdevelopertoolkit/ui/components/label";
-import { Textarea } from "@agenticdevelopertoolkit/ui/components/textarea";
-import { useDualModeSelection } from "@agenticdevelopertoolkit/ui/hooks/useDualModeSelection";
-import { slugify } from "@agenticdevelopertoolkit/ui/lib/slug";
-import { validateLeaf } from "@agentic-toolkit/adh-ui/rdid";
+import { reportUnexpectedAuthError } from "@adh-sdk/auth";
+import { readTokenSubject, revalidateResources } from "@adh-sdk/data";
+import { HierarchicalDetailView, type TopicDetailItem, type TopicLevel } from "@adh-sdk/ui/blocks";
+import { Input } from "@adh-sdk/ui/components/input";
+import { Card, CardContent } from "@adh-sdk/ui/components/card";
+import { Label } from "@adh-sdk/ui/components/label";
+import { Textarea } from "@adh-sdk/ui/components/textarea";
+import { useDualModeSelection } from "@adh-sdk/ui/hooks/useDualModeSelection";
+import { slugify } from "@adh-sdk/ui/lib/slug";
+import { validateLeaf } from "@adh-sdk/adh-ui/rdid";
 import {
   StackLevels,
   useRailHost,
   CreateResourceDialog,
-} from "@agentic-toolkit/resource";
-import { ErrorText } from "@agenticdevelopertoolkit/ui/components/error-text";
-import { api, type Persona } from "@agentic-toolkit/data/personas";
+} from "@adh-sdk/resource";
+import { ErrorText } from "@adh-sdk/ui/components/error-text";
+import { api, type Persona } from "@adh-sdk/data/personas";
 import { PersonaEditor } from "./PersonaEditor";
 import { PERSONA_SERVICES_CACHE_KEY, useUserServices } from "./useUserServices";
 

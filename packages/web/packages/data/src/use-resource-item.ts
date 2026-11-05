@@ -2,7 +2,7 @@
 
 import { useCallback, useState } from "react";
 import { useQuery, type QueryKey, type PlaceholderDataFunction } from "@tanstack/react-query";
-import { reportUnexpectedAuthError } from "@agentic-toolkit/auth";
+import { reportUnexpectedAuthError } from "@adh-sdk/auth";
 import { RESOURCE_GC_TIME, getToolkitQueryClient } from "./query";
 import { isNotFound } from "./http";
 import { useTenantId } from "./tenant";
@@ -67,7 +67,7 @@ export interface ResourceItem<T> {
 }
 
 export interface ResourceItemQuery<T> extends ResourceItem<T> {
-  /** The item is GONE: the read 404'd. The composed hook in `@agentic-toolkit/resource` turns this
+  /** The item is GONE: the read 404'd. The composed hook in `@adh-sdk/resource` turns this
    *  into the host's alert; nothing else should act on it directly.
    *
    *  A 404 and nothing else. List-absence looks like the other half of the same fact and is not:

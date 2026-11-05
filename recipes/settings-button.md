@@ -1,7 +1,7 @@
 ---
 id: a05c5131-d626-4e2a-9832-9ba517535971
 title: Settings Button
-domain: agenticdevelopertoolkit://recipes/settings-button
+domain: adhsdk://recipes/settings-button
 type: ingredient
 version: 1.1.1
 status: review

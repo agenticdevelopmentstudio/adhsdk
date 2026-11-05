@@ -7,9 +7,9 @@
 // are sent on to `<appId>`, and the old Settings, Client Auth and Users ▸ Settings ids to the list.
 import { describe, it, expect, vi, afterEach } from "vitest";
 import { render, screen, cleanup } from "@testing-library/react";
-import type { GroupTopicItem } from "@agentic-toolkit/resource";
+import type { GroupTopicItem } from "@adh-sdk/resource";
 
-vi.mock("@agentic-toolkit/resource", () => ({
+vi.mock("@adh-sdk/resource", () => ({
   StackGroupDetail: ({
     title,
     items,
@@ -28,19 +28,19 @@ vi.mock("@agentic-toolkit/resource", () => ({
 }));
 
 let mode: "none" | "gamification" | "game" = "none";
-vi.mock("@agentic-toolkit/data", () => ({
+vi.mock("@adh-sdk/data", () => ({
   isForbidden: () => false,
   useResourceItemQuery: () => ({ item: { mode } }),
 }));
-vi.mock("@agentic-toolkit/data/gamification", () => ({ gamificationApi: {} }));
-vi.mock("@agentic-toolkit/auth", () => ({ reportUnexpectedAuthError: vi.fn() }));
-vi.mock("@agentic-toolkit/gamification", () => ({
+vi.mock("@adh-sdk/data/gamification", () => ({ gamificationApi: {} }));
+vi.mock("@adh-sdk/auth", () => ({ reportUnexpectedAuthError: vi.fn() }));
+vi.mock("@adh-sdk/gamification", () => ({
   CatalogTopicPane: () => null,
   EventTypesTopicPane: () => null,
   GamificationSettingsTopicPane: () => null,
   LevelsTopicPane: () => null,
 }));
-vi.mock("@agentic-toolkit/games", () => ({
+vi.mock("@adh-sdk/games", () => ({
   GameConnectionsPane: () => null,
   GameContentPane: () => null,
   GameEffectsPane: () => null,
@@ -48,7 +48,7 @@ vi.mock("@agentic-toolkit/games", () => ({
   REALM_CONFIG_CACHE_KEY: "realm-config",
 }));
 vi.mock("../GamingSettingsPane", () => ({ GamingSettingsPane: () => null }));
-vi.mock("@agentic-toolkit/adh-ecosystem-panes", () => ({
+vi.mock("@adh-sdk/adh-ecosystem-panes", () => ({
   ApplicationsPane: (props: { leaf?: { leafId: string | null } }) => (
     <div
       data-testid="applications"

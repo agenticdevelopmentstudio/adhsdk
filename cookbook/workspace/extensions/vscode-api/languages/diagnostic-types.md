@@ -1,7 +1,7 @@
 ---
 id: 6fa79a51-8e62-4a99-8979-c93a4269dac8
 title: "Diagnostic Types"
-domain: adtoolkit://cookbook/workspace/extensions/vscode-api/languages/diagnostic-types
+domain: adhsdk://cookbook/workspace/extensions/vscode-api/languages/diagnostic-types
 type: ingredient
 version: 1.1.3
 status: review
@@ -22,13 +22,13 @@ tags:
 depends-on: []
 related: []
 references:
-  - packages/apple/AgenticToolkit/macOS/Features/Extensions/VSCodeAPI/DiagnosticTypes.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Tests/AgenticToolkitMacOSTests/Extensions/DiagnosticTypesTests.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/macOS/Features/Extensions/VSCodeAPI/TextGeometry.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/macOS/Features/Extensions/VSCodeAPI/Uri.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/macOS/Features/Extensions/VSCodeAPI/VSCodeAPI.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Core/Loggable.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/project.yml (agenticdevelopertoolkit)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/DiagnosticTypes.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKMacOSTests/Extensions/DiagnosticTypesTests.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/TextGeometry.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/Uri.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/VSCodeAPI.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Core/Loggable.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/project.yml (adhsdk)
 approved-by: ""
 approved-date: ""
 ---
@@ -193,8 +193,8 @@ No other event in this component is logged: neither a constructor's error nor a 
 
 ## Platform Notes
 
-- **SwiftUI**: not applicable to this file — `DiagnosticTypes.swift` imports only `Foundation`, `JavaScriptCore`, `OSLog`, and `AgenticToolkitCore`, with no SwiftUI dependency; nothing here renders or observes view state.
-- **AppKit / UIKit**: this is the source. `packages/apple/AgenticToolkit/macOS/Features/Extensions/VSCodeAPI/DiagnosticTypes.swift` is part of the `AgenticToolkitMacOS` framework target, which `project.yml` declares `platform: macOS` only — no iOS target packages this file. It is an extension of `VSCodeAPI`, itself `@MainActor`, and its consumers among the given sources are the JS-side `vscode.languages` diagnostics collection machinery and `MainThreadDiagnostics` (not among the given sources), which reads decoded `ExtensionDiagnostic` values back through `diagnostic(from:in:)`. Every function in this file MUST execute on the main actor: `VSCodeAPI` is declared `@MainActor` because `JSContext`/`JSValue` are not `Sendable` and JavaScriptCore always calls back on the thread that made the call, so there is no path by which two calls into this file's functions execute concurrently against the same context — the compiler enforces this rather than any lock or queue in the source. The Swift mirror types (`ExtensionDiagnosticSeverity`, `ExtensionDiagnosticTag`, `ExtensionDiagnosticCodeValue`, `ExtensionDiagnosticCode`, `ExtensionDiagnosticRelatedInformation`, and `ExtensionDiagnostic`) are each declared `Sendable` and `Equatable`, so a decoded value MAY be passed across actor boundaries once it has left the `JSContext`.
+- **SwiftUI**: not applicable to this file — `DiagnosticTypes.swift` imports only `Foundation`, `JavaScriptCore`, `OSLog`, and `AgenticDeveloperHubSDKCore`, with no SwiftUI dependency; nothing here renders or observes view state.
+- **AppKit / UIKit**: this is the source. `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/DiagnosticTypes.swift` is part of the `AgenticDeveloperHubSDKMacOS` framework target, which `project.yml` declares `platform: macOS` only — no iOS target packages this file. It is an extension of `VSCodeAPI`, itself `@MainActor`, and its consumers among the given sources are the JS-side `vscode.languages` diagnostics collection machinery and `MainThreadDiagnostics` (not among the given sources), which reads decoded `ExtensionDiagnostic` values back through `diagnostic(from:in:)`. Every function in this file MUST execute on the main actor: `VSCodeAPI` is declared `@MainActor` because `JSContext`/`JSValue` are not `Sendable` and JavaScriptCore always calls back on the thread that made the call, so there is no path by which two calls into this file's functions execute concurrently against the same context — the compiler enforces this rather than any lock or queue in the source. The Swift mirror types (`ExtensionDiagnosticSeverity`, `ExtensionDiagnosticTag`, `ExtensionDiagnosticCodeValue`, `ExtensionDiagnosticCode`, `ExtensionDiagnosticRelatedInformation`, and `ExtensionDiagnostic`) are each declared `Sendable` and `Equatable`, so a decoded value MAY be passed across actor boundaries once it has left the `JSContext`.
 - **Compose**: model the four installed declarations as Kotlin: `DiagnosticSeverity`/`DiagnosticTag` as enum classes with an explicit numeric `value` property (Kotlin enums do not compile to a bidirectional-mapping object the way `tsc` does, so a small companion-object lookup table is needed to reproduce **severity-reverse-mapping**/**tag-reverse-mapping**), and `DiagnosticRelatedInformation`/`Diagnostic` as `data class`es whose "constructor" is a factory function performing the same `range`/`location`/`message` validation and throwing an `IllegalArgumentException` in place of a JS `TypeError`. The "never assign `undefined`" contract (**diagnostic-constructor-leaves-optionals-unassigned**) has no direct Kotlin analogue on a `data class`; model it with nullable properties defaulted to `null` and treat "absent" and "explicitly null" as the same case throughout, mirroring **diagnostic-decode-optional-field-absence**.
 - **React/Web**: this is closest to the actual runtime shape — extension code in the real VS Code product already runs against the genuine `vscode.d.ts` declarations these mirror. A React/Web host embedding a similar extension bridge would decode/encode the same four shapes across whatever serialization boundary (e.g. `postMessage` to a worker) replaces this file's `JSContext` boundary, and would need the same "refuse the whole value on any malformed optional field" discipline (**diagnostic-decode-optional-field-malformed-refuses-whole-value**) when deserializing untrusted extension-authored data.
 - **WinUI 3**: model `DiagnosticSeverity`/`DiagnosticTag` as `public enum DiagnosticSeverity { Error = 0, Warning = 1, Information = 2, Hint = 3 }` (a real C# enum already gives the forward mapping; `Enum.GetName(typeof(DiagnosticSeverity), value)` reproduces the reverse mapping on demand rather than needing a hand-built table). Model `DiagnosticRelatedInformation` and `Diagnostic` as `sealed record`s or plain classes whose constructors validate `location`/`range` with `is Location`/`is Range` pattern-matching (WinUI 3's `Location`/`Range` equivalents) and throw `ArgumentException` in place of a JS `TypeError`, matching **related-information-constructor-validates-location** and **diagnostic-constructor-validates-range**. `ExtensionDiagnosticCode`'s three-shape union (`code?: string | number | { value: string | number; target: Uri }`) has no built-in C# union type; model it as a small discriminated `abstract record CodeValue` with `Scalar`/`Link` subtypes, the direct analogue of the Swift `enum ExtensionDiagnosticCode { case scalar(...); case link(...) }` this file declares. `System.Text.Json.JsonSerializer` with a custom converter is the .NET equivalent of this file's manual `diagnosticCode(from:in:)`/`diagnosticCodeJSValue(for:in:)` pair, since the WinUI host would decode extension-authored diagnostics from a JSON-shaped bridge rather than a `JSValue`. The "assign only when present, never `null`/`undefined`" contract (**diagnostic-value-optional-fields-set-only-when-present**) maps to `JsonIgnoreCondition.WhenWritingNull` combined with nullable reference types, so an absent field is omitted from serialized output rather than written as `null`.
@@ -203,7 +203,7 @@ No other event in this component is logged: neither a constructor's error nor a 
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/macOS/Features/Extensions/VSCodeAPI/DiagnosticTypes.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/DiagnosticTypes.swift` |
 
 ## Design Decisions
 

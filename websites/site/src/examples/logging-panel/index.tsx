@@ -2,11 +2,11 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { ExamplePanel } from '../../ExamplePanel'
-import { LogPanel } from '@agenticdevelopertoolkit/controls/logging-panel'
-import type { LogColumn, LogLevel, LogLine } from '@agenticdevelopertoolkit/controls/logging-panel'
-import '@agenticdevelopertoolkit/controls/logging-panel/styles.css'
-import { SourceCodePanel } from '@agenticdevelopertoolkit/controls/source-code-panel'
-import '@agenticdevelopertoolkit/controls/source-code-panel/styles.css'
+import { LogPanel } from '@adh-sdk/controls/logging-panel'
+import type { LogColumn, LogLevel, LogLine } from '@adh-sdk/controls/logging-panel'
+import '@adh-sdk/controls/logging-panel/styles.css'
+import { SourceCodePanel } from '@adh-sdk/controls/source-code-panel'
+import '@adh-sdk/controls/source-code-panel/styles.css'
 
 export const meta = { id: 'logging-panel', label: 'Logging Panel' }
 
@@ -234,9 +234,9 @@ function controlButtonStyle(active: boolean): React.CSSProperties {
   }
 }
 
-const CONSUMER_SOURCE = `import { LogPanel } from '@agenticdevelopertoolkit/controls/logging-panel'
-import type { LogColumn, LogLine } from '@agenticdevelopertoolkit/controls/logging-panel'
-import '@agenticdevelopertoolkit/controls/logging-panel/styles.css'
+const CONSUMER_SOURCE = `import { LogPanel } from '@adh-sdk/controls/logging-panel'
+import type { LogColumn, LogLine } from '@adh-sdk/controls/logging-panel'
+import '@adh-sdk/controls/logging-panel/styles.css'
 
 type Ctx = { sessionId: string }
 

@@ -32,7 +32,7 @@
   attribute) to police what each type accepts — the same generalization the
   number value contract gives the Swift source.
 - **AppKit/UIKit** (source platform): Source file
-  `packages/apple/AgenticToolkit/macOS/SystemIntegration/ComposableSettingsWindow/Views/NumberFieldView.swift`.
+  `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/Views/NumberFieldView.swift`.
   A macOS-only (`import AppKit`) `NSView` subclass, `@MainActor`, generic
   over `Value: SettingsNumberValue`, inside the `ComposableSettings`
   namespace, conforming to `SettingsViewProtocol` and

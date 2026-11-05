@@ -3,13 +3,13 @@ import { act, renderHook, waitFor } from '@testing-library/react'
 import { itemUrl, listUrl, rowKey, useCrudResource } from '../useCrudResource'
 import type { CrudTableMeta } from '../types'
 
-vi.mock('@agentic-toolkit/auth/client', () => ({
+vi.mock('@adh-sdk/auth/client', () => ({
   authedJson: vi.fn(),
   authedRequest: vi.fn(),
 }))
 
 const { authedJson, authedRequest } = vi.mocked(
-  await import('@agentic-toolkit/auth/client'),
+  await import('@adh-sdk/auth/client'),
 )
 
 const tiers: CrudTableMeta = {

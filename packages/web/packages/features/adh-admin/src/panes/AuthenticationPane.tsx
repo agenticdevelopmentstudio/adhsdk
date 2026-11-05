@@ -10,25 +10,25 @@ import {
   type ReactNode,
 } from "react";
 import { useRouter } from "next/navigation";
-import { FeatureTitle } from "@agentic-toolkit/resource";
+import { FeatureTitle } from "@adh-sdk/resource";
 import { useQueries, useQueryClient } from "@tanstack/react-query";
 import { Eye, EyeOff, Plus, Trash2 } from "lucide-react";
-import { Button } from "@agenticdevelopertoolkit/ui/components/button";
-import { Input } from "@agenticdevelopertoolkit/ui/components/input";
-import { Label } from "@agenticdevelopertoolkit/ui/components/label";
-import { Checkbox } from "@agenticdevelopertoolkit/ui/components/checkbox";
-import { Select } from "@agenticdevelopertoolkit/ui/components/select";
-import { Switch } from "@agenticdevelopertoolkit/ui/components/switch";
-import { Separator } from "@agenticdevelopertoolkit/ui/components/separator";
-import { Disclosure } from "@agenticdevelopertoolkit/ui/components/disclosure";
-import { SectionHeader } from "@agenticdevelopertoolkit/ui/blocks/section-header";
-import { Field } from "@agenticdevelopertoolkit/ui/blocks/field";
-import { railLinkVariants } from "@agenticdevelopertoolkit/ui/lib/nav-rail";
-import { noAutofillProps } from "@agenticdevelopertoolkit/ui/lib/autofill";
+import { Button } from "@adh-sdk/ui/components/button";
+import { Input } from "@adh-sdk/ui/components/input";
+import { Label } from "@adh-sdk/ui/components/label";
+import { Checkbox } from "@adh-sdk/ui/components/checkbox";
+import { Select } from "@adh-sdk/ui/components/select";
+import { Switch } from "@adh-sdk/ui/components/switch";
+import { Separator } from "@adh-sdk/ui/components/separator";
+import { Disclosure } from "@adh-sdk/ui/components/disclosure";
+import { SectionHeader } from "@adh-sdk/ui/blocks/section-header";
+import { Field } from "@adh-sdk/ui/blocks/field";
+import { railLinkVariants } from "@adh-sdk/ui/lib/nav-rail";
+import { noAutofillProps } from "@adh-sdk/ui/lib/autofill";
 import { cn } from "../lib/utils";
 import { ConfirmDialog } from "../components/ConfirmDialog";
-import { AlertModal } from "@agenticdevelopertoolkit/ui/components/alert-modal";
-import { UnsavedChangesGuard } from "@agenticdevelopertoolkit/ui/components/unsaved-changes-guard";
+import { AlertModal } from "@adh-sdk/ui/components/alert-modal";
+import { UnsavedChangesGuard } from "@adh-sdk/ui/components/unsaved-changes-guard";
 import {
   useProviders,
   useClients,
@@ -47,7 +47,7 @@ import {
   type ProviderTemplate,
 } from "../api/auth-config";
 import { authedJson } from "../api/http";
-import { reportUnexpectedAuthError } from "@agentic-toolkit/auth";
+import { reportUnexpectedAuthError } from "@adh-sdk/auth";
 
 function SecretInput({
   id,

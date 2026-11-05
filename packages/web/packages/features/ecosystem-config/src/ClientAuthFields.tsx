@@ -2,20 +2,20 @@
 
 import type { ReactNode } from "react";
 
-import { Button } from "@agenticdevelopertoolkit/ui/components/button";
-import { Card, CardContent } from "@agenticdevelopertoolkit/ui/components/card";
-import { ErrorText } from "@agenticdevelopertoolkit/ui/components/error-text";
-import { Input } from "@agenticdevelopertoolkit/ui/components/input";
-import { Label } from "@agenticdevelopertoolkit/ui/components/label";
-import { Select } from "@agenticdevelopertoolkit/ui/components/select";
-import { Switch } from "@agenticdevelopertoolkit/ui/components/switch";
-import { DetailSection } from "@agentic-toolkit/resource";
-import type { SignupMode } from "@agentic-toolkit/data/ecosystems";
+import { Button } from "@adh-sdk/ui/components/button";
+import { Card, CardContent } from "@adh-sdk/ui/components/card";
+import { ErrorText } from "@adh-sdk/ui/components/error-text";
+import { Input } from "@adh-sdk/ui/components/input";
+import { Label } from "@adh-sdk/ui/components/label";
+import { Select } from "@adh-sdk/ui/components/select";
+import { Switch } from "@adh-sdk/ui/components/switch";
+import { DetailSection } from "@adh-sdk/resource";
+import type { SignupMode } from "@adh-sdk/data/ecosystems";
 import type {
   ApplicationPlatform,
   AuthProviderChoice,
   ClientAuthPolicy,
-} from "@agentic-toolkit/data/ecosystem-config";
+} from "@adh-sdk/data/ecosystem-config";
 import { UrlRowsEditor } from "./UrlRowsEditor";
 import { blankRegistration, providerOn, toggleProvider, type RegistrationDraft } from "./client-auth-model";
 

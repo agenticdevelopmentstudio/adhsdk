@@ -4,7 +4,7 @@
   plugin consumes these value types unchanged, since all four are
   `Sendable` and carry no UI state.
 - **AppKit / UIKit**: this is the source. The file is
-  `packages/apple/AgenticToolkit/AIPluginKit/AIChatContext.swift`, part of
+  `packages/apple/AgenticDeveloperHubSDK/AIPluginKit/AIChatContext.swift`, part of
   the `AIPluginKit` framework target, which `project.yml` declares as
   `platform: macOS` only (no iOS target exists for it today). It declares
   four Foundation-only, `Sendable` value types: `AIChatMessage` (with a

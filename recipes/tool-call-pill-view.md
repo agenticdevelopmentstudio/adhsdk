@@ -1,7 +1,7 @@
 ---
 id: e5165b31-6a06-4d79-8fb8-98ba491623b1
 title: Tool Call Pill View
-domain: agenticdevelopertoolkit://recipes/tool-call-pill-view
+domain: adhsdk://recipes/tool-call-pill-view
 type: ingredient
 version: 1.1.2
 status: review
@@ -23,7 +23,7 @@ tags:
 - theming
 depends-on: []
 related:
-- agenticdevelopertoolkit://recipes/message-bubble
+- adhsdk://recipes/message-bubble
 references: []
 approved-by: ''
 approved-date: ''
@@ -142,7 +142,7 @@ Not applicable: The component does not emit log messages.
 
 ## Platform Notes
 
-- **Source (Apple/Swift)**: Implemented as an `NSView` subclass in `packages/apple/AgenticDeveloperToolkit/SourcesUI/macOS/Chat/ToolCallPillView.swift` (path relative to the repo root). Uses `NSTextField` for text rendering and `CALayer` for border, corner radius, and background. Text uses the semantic palette's `caption` style (`palette.font(.caption)`); background uses its `elevatedSurface` role (`palette.nsColor(.elevatedSurface)`). Integrates with the semantic palette via the `ThemePaletteObserver` pattern (see **observe-theme-changes**).
+- **Source (Apple/Swift)**: Implemented as an `NSView` subclass in `packages/apple/AgenticDeveloperHubSDK/SDK/SourcesUI/macOS/Chat/ToolCallPillView.swift` (path relative to the repo root). Uses `NSTextField` for text rendering and `CALayer` for border, corner radius, and background. Text uses the semantic palette's `caption` style (`palette.font(.caption)`); background uses its `elevatedSurface` role (`palette.nsColor(.elevatedSurface)`). Integrates with the semantic palette via the `ThemePaletteObserver` pattern (see **observe-theme-changes**).
 - **SwiftUI**: A SwiftUI wrapper would apply `RoundedRectangle(cornerRadius: 9)` as the pill's background/border shape with a `Text` overlay, applying the same padding and semantic colors — not `Capsule`, which would not match the fixed 9pt corner radius. Live theme observation would read the palette via `@Environment` from an `@Observable` palette type, rather than the older `@EnvironmentObject`.
 - **Compose**: An Android Compose equivalent would use `Box` or `Surface` with a `border` modifier, applying the same padding and corner radius. Status color would be driven by a Compose state or `remember` block observing the palette. Material 3 would use `Surface` with `contentColor` for theming.
 - **AppKit / UIKit**: On AppKit (macOS), see **Source (Apple/Swift)** above. On UIKit (iOS), replace `NSView` with `UIView`, `NSTextField` with `UILabel`, and `CALayer` properties with frame-based layout or Auto Layout. The `ThemePaletteObserver` pattern adapts to UIKit lifecycle (e.g. observer registration in `viewWillAppear`). The toolkit's semantic palette is injected the same way on UIKit as it is on AppKit; UIKit itself has no semantic palette concept, but this toolkit's palette does not depend on one.

@@ -15,7 +15,7 @@ Three manifests carry them:
 | `packages/terminal/pyproject.toml` | pip | bump the generator, then regenerate the client |
 
 Check a lockfile against the open alerts before you push, not after. The
-alert ranges are in `gh api repos/agenticdevelopmentstudio/adtoolkit/dependabot/alerts`.
+alert ranges are in `gh api repos/agenticdevelopmentstudio/adhsdk/dependabot/alerts`.
 Each alert's `vulnerable_version_range` can be compared with the versions the
 lockfile resolves.
 
@@ -51,11 +51,11 @@ destructure the named export.
 glob 14 also keeps the `./raw` subpath that `@bundled-es-modules/glob`
 re-exports, so the glob floor is safe for style-dictionary. The themes token
 build confirms it: `pnpm --filter ./packages/themes run build:tokens` should
-leave `packages/themes/src` unchanged.
+leave `packages/web/packages/themes/src` unchanged.
 
 ## status-server: exact pins, and the hosts that follow them
 
-`packages/status-server` pins hono, zod and `@hono/zod-openapi` **exactly** in
+`packages/web/packages/status-server` pins hono, zod and `@hono/zod-openapi` **exactly** in
 its devDependencies. The committed `openapi.json` is generated from them and
 checked byte for byte, both here and in each host that vendors status-server.
 Bumping either package therefore changes the spec. zod 4.6, for example,
@@ -70,11 +70,11 @@ When you bump them:
    new `openapi.json`.
 3. In each host, move hono and zod to the same versions, advance the toolkit
    submodule and re-vendor. The status site
-   (`websites/statussite`, PR #22, `2ca36d63`) follows the order in its
+   (the statussite repo, PR #22, `2ca36d63`) follows the order in its
    `.claude/CLAUDE.md` and finishes with `check-vendor-fresh.py`.
 
 Advancing a host's submodule can also pull in packages it has never vendored.
-In this pass, adh's telemetry imported `@agenticdevelopertoolkit/analytics`, so
+In this pass, adh's telemetry imported `@adh-sdk/analytics`, so
 the status site had to add it to `WEB_PACKAGES`. `check-vendor-fresh` exits 5
 when this happens.
 
@@ -82,7 +82,7 @@ when this happens.
 
 Every package and the site-template skeleton pins Next to one version (16.4.3
 as of this pass). The "Next is pinned" section of
-`packages/site-template/README.md` says how to move it. The test
+`packages/web/packages/site-template/README.md` says how to move it. The test
 `assemble_site_test.py` asserts the version, so it must change alongside the
 pin. The demo site is still on Next 15, kept at `^15.5.28`.
 

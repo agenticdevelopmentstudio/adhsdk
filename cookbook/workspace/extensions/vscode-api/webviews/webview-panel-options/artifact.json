@@ -3,7 +3,7 @@
   "meta": {
     "id": "66759d9a-3884-42e1-acd9-5bad563e1e52",
     "title": "Webview Panel Options",
-    "domain": "adtoolkit://cookbook/workspace/extensions/vscode-api/webviews/webview-panel-options",
+    "domain": "adhsdk://cookbook/workspace/extensions/vscode-api/webviews/webview-panel-options",
     "type": "ingredient",
     "version": "1.1.0",
     "status": "review",
@@ -29,20 +29,20 @@
       "agenticdevelopercookbook://guidelines/implementing/security/content-security-policy"
     ],
     "related": [
-      "adtoolkit://cookbook/workspace/extensions/vscode-api/webviews/webview-panel-view",
-      "adtoolkit://cookbook/workspace/extensions/manifest/extension-resource-path"
+      "adhsdk://cookbook/workspace/extensions/vscode-api/webviews/webview-panel-view",
+      "adhsdk://cookbook/workspace/extensions/manifest/extension-resource-path"
     ],
     "references": [
-      "packages/apple/AgenticToolkit/Core/Extensions/WebviewPanelOptions.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/Tests/AgenticToolkitCoreTests/Extensions/WebviewPanelOptionsTests.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/Core/Extensions/WebviewPanelState.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/Core/Extensions/ExtensionResourcePath.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/Core/Extensions/WebviewResourceURL.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/macOS/Features/Extensions/Webview/WebviewPanelViewController.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/macOS/Features/Extensions/VSCodeAPI/MainThreadWebviews.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/macOS/Features/Extensions/VSCodeAPI/ExtensionWebviewPresenting.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/macOS/Features/Extensions/Host/ExtensionHostInstaller.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/macOS/Features/Extensions/ExtensionsCoordinator.swift (agenticdevelopertoolkit)"
+      "packages/apple/AgenticDeveloperHubSDK/Core/Extensions/WebviewPanelOptions.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKCoreTests/Extensions/WebviewPanelOptionsTests.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/Core/Extensions/WebviewPanelState.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/Core/Extensions/ExtensionResourcePath.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/Core/Extensions/WebviewResourceURL.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/Webview/WebviewPanelViewController.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/MainThreadWebviews.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/ExtensionWebviewPresenting.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/Host/ExtensionHostInstaller.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/ExtensionsCoordinator.swift (adhsdk)"
     ],
     "approved-by": "",
     "approved-date": ""

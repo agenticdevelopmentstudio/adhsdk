@@ -1,6 +1,6 @@
 import type { ReactElement, ReactNode } from 'react';
-import type { SiteId } from '@agentic-toolkit/adh-registry';
-import type { NavLink } from '@agentic-toolkit/adh/header';
+import type { SiteId } from '@adh-sdk/adh-registry';
+import type { NavLink } from '@adh-sdk/adh/header';
 export type MarketingSiteHeaderProps = {
     /** The marketing site this header is for — drives the header brand. */
     siteId: SiteId;
@@ -26,7 +26,7 @@ export type MarketingSiteHeaderProps = {
  * server component: a hook prop (`useAuthSource`) can't cross the server→client
  * boundary, so the source is bound here, on the client side of it.
  *
- * Home: `@agentic-toolkit/adh/marketing` — adh VOCABULARY end to end (the ADH marketing family's
+ * Home: `@adh-sdk/adh/marketing` — adh VOCABULARY end to end (the ADH marketing family's
  * header, bound to adh's `clientId`). It is its OWN export subpath, not just a member of
  * the `marketing` barrel: this module is `'use client'` while its barrel-mates
  * (MarketingRootHtml, MarketingLanding, StorySections) are server components, and under

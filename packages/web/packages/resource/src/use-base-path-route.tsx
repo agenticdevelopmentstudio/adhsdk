@@ -2,7 +2,7 @@
 
 import { useCallback } from "react";
 import { useRouter } from "next/navigation";
-import type { TopicSelectOptions } from "@agenticdevelopertoolkit/ui/blocks";
+import type { TopicSelectOptions } from "@adh-sdk/ui/blocks";
 
 /**
  * URL push helpers for a deep-linked feature mounted at an explicit `basePath`

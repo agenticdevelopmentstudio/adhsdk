@@ -6,11 +6,11 @@ import {
   DEMO_MAX_THINK_MS,
   DEMO_MAX_TOKEN_MS,
   type CannedChatConfig,
-} from "@agentic-toolkit/data/personas";
-import { Field, FieldGroup } from "@agenticdevelopertoolkit/ui/blocks";
-import { Input } from "@agenticdevelopertoolkit/ui/components/input";
-import { Select } from "@agenticdevelopertoolkit/ui/components/select";
-import { Checkbox } from "@agenticdevelopertoolkit/ui/components/checkbox";
+} from "@adh-sdk/data/personas";
+import { Field, FieldGroup } from "@adh-sdk/ui/blocks";
+import { Input } from "@adh-sdk/ui/components/input";
+import { Select } from "@adh-sdk/ui/components/select";
+import { Checkbox } from "@adh-sdk/ui/components/checkbox";
 import { useState } from "react";
 import { CommaListInput } from "./CommaListInput";
 import { InkScriptEditor } from "./InkScriptEditor";

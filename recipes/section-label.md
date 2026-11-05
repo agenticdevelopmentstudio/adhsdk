@@ -1,7 +1,7 @@
 ---
 id: fce1333d-7f42-49f8-86da-508159701043
 title: SectionLabel
-domain: agenticdevelopertoolkit://recipes/section-label
+domain: adhsdk://recipes/section-label
 type: ingredient
 version: 1.2.1
 status: review
@@ -22,9 +22,9 @@ tags:
 - ui
 depends-on: []
 related:
-- agenticdevelopertoolkit://recipes/user-card
-- agenticdevelopertoolkit://recipes/field
-- agenticdevelopertoolkit://recipes/section-header
+- adhsdk://recipes/user-card
+- adhsdk://recipes/field
+- adhsdk://recipes/section-header
 references: []
 approved-by: ''
 approved-date: ''
@@ -34,10 +34,10 @@ approved-date: ''
 
 ## Overview
 
-The shared `SectionLabel` in `@agenticdevelopertoolkit/ui` — the **display micro-heading**: the
+The shared `SectionLabel` in `@adh-sdk/ui` — the **display micro-heading**: the
 quiet, wide-tracked uppercase-mono label that heads a pane or an in-card section
 ("RECENT ACTIVITY", "SOCIAL LINKS", "MONITORED SITES"). It ships as two exports
-from `@agenticdevelopertoolkit/ui/components/section-label`: the `sectionLabelClass` string (so
+from `@adh-sdk/ui/components/section-label`: the `sectionLabelClass` string (so
 any element can wear the treatment) and the `SectionLabel` component (the div
 that applies it, with an optional trailing slot).
 

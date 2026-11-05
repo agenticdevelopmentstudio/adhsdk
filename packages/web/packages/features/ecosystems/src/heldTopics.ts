@@ -2,7 +2,7 @@ import {
   featureHoldings,
   featureRowState,
   type ProvisionedFeature,
-} from "@agentic-toolkit/data/ecosystems";
+} from "@adh-sdk/data/ecosystems";
 
 /** The fields of a topic row {@link heldTopics} reads: see `EcosystemsTopicConfig.features`. */
 interface FeatureKeyedTopic {

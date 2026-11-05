@@ -26,7 +26,7 @@ export default defineConfig({
   bundle: true,
   splitting: false,
   outExtension: () => ({ js: '.js' }),
-  // THE point of this package: every `@agenticdevelopertoolkit/*` specifier must
+  // THE point of this package: every `@adh-sdk/*` specifier must
   // survive into `dist` as a bare specifier. Bundling one in would defeat the
   // whole exercise — the copy would be inlined here AND resolved separately by
   // any consumer that also reaches it through bitbag, which is exactly the
@@ -36,10 +36,10 @@ export default defineConfig({
     'react-dom',
     'react/jsx-runtime',
     'gsap',
-    '@agenticdevelopertoolkit/avatar',
-    '@agenticdevelopertoolkit/chat',
-    '@agenticdevelopertoolkit/themes',
-    '@agenticdevelopertoolkit/viewport',
+    '@adh-sdk/avatar',
+    '@adh-sdk/chat',
+    '@adh-sdk/themes',
+    '@adh-sdk/viewport',
   ],
   esbuildPlugins: [
     preserveDirectivesPlugin({

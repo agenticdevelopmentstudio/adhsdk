@@ -9,7 +9,7 @@ import { featureTsup } from '../tsup.preset'
 // The other two entries are client code, and they exist for the bundler rather than for the
 // directive. A static import of ANY barrel export pulls the whole bundled module, so a host that
 // reached `useBillingContext` or `claimPurchase` through the barrel would eagerly load all five
-// panes — and, through the Stripe topic, `@agentic-toolkit/integrations`' pane — however carefully
+// panes — and, through the Stripe topic, `@adh-sdk/integrations`' pane — however carefully
 // it wrapped `BillingGroup` in `next/dynamic`. That is not hypothetical: the hub's workspace shell
 // and the products site both need the hook to decide what to render BEFORE the rail mounts, and
 // `/claim` is a public page that needs no operator surface at all.

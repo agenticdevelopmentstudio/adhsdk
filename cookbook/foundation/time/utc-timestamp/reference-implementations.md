@@ -1,5 +1,5 @@
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/Core/Time/UTCTimestamp.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Time/UTCTimestamp.swift` |
 

@@ -14,7 +14,7 @@
   `Job` (from a `CoroutineScope`) when a new target is chosen, mirroring the sequence guard here.
 - **React/Web**: This is the source. See
   `packages/web/packages/adh-ui/src/blocks/transfer-ownership-section.tsx`, which composes
-  `@agenticdevelopertoolkit/ui`'s `Disclosure`, `Button`, `Input`, `Label`, `ErrorText`, the
+  `@adh-sdk/ui`'s `Disclosure`, `Button`, `Input`, `Label`, `ErrorText`, the
   `DropdownMenu` family (including `DropdownMenuSub`/`DropdownMenuSubContent`/`DropdownMenuItem`),
   and the `Dialog`/`DialogContent` family. The component's own doc comment names it a sibling of
   `DeleteEntitySection`, whose confirm vocabulary and type-to-confirm gate it follows. State is
@@ -43,7 +43,7 @@
   `Button`/`DropdownMenuItem`/`Input` components (all `size="sm"` or their defaults).
   Contrast/color is governed by the `apt-*` semantic color tokens (`apt-text`, `apt-text-muted`,
   `apt-gold`); no raw hex value appears in source. The dialog's `DialogContent`
-  (`@agenticdevelopertoolkit/ui/components/dialog`, whose `DialogContent` renders a plain
+  (`@adh-sdk/ui/components/dialog`, whose `DialogContent` renders a plain
   `DialogPrimitive.Popup` with no live-region wrapper) carries no `aria-live`/`role="status"`
   region. Layout: the disclosed body is `flex flex-col gap-3`; the dialog's status/preview area is
   `flex flex-col gap-2 text-sm`; the confirm-gate group is `flex flex-col gap-2`; body/dialog copy

@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 import { describe, expect, it } from 'vitest'
 import { defineSite, siteLandingMarkdown, siteLlmsTxt, siteSitemapRoutes, FAMILY_ROBOTS_DISALLOW } from '../site'
-import type { SiteRoute } from '@agentic-toolkit/adh-registry/seo'
+import type { SiteRoute } from '@adh-sdk/adh-registry/seo'
 
 const seo = { title: 'T', description: 'D' }
 const routes: SiteRoute[] = [{ path: '/' }]

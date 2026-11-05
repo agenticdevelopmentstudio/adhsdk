@@ -1,7 +1,7 @@
 ---
 id: 37DFDD98-266A-4253-8F0A-42987017844A
 title: "Billing Activity Cache"
-domain: adtoolkit://cookbook/foundation/billing/billing-activity-cache
+domain: adhsdk://cookbook/foundation/billing/billing-activity-cache
 type: ingredient
 version: 1.0.0
 status: review
@@ -21,9 +21,9 @@ tags:
   - cache
 depends-on: []
 related:
-  - adtoolkit://cookbook/foundation/billing/billing-persistence
-  - adtoolkit://cookbook/foundation/billing/billing-derivation
-  - adtoolkit://cookbook/foundation/billing/billing-store
+  - adhsdk://cookbook/foundation/billing/billing-persistence
+  - adhsdk://cookbook/foundation/billing/billing-derivation
+  - adhsdk://cookbook/foundation/billing/billing-store
 references: []
 approved-by: ""
 approved-date: ""
@@ -124,7 +124,7 @@ Not applicable: this code makes no log calls.
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/Core/Billing/BillingActivityCache.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Billing/BillingActivityCache.swift` |
 
 ## Design Decisions
 

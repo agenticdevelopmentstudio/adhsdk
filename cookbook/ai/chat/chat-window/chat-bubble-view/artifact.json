@@ -3,7 +3,7 @@
   "meta": {
     "id": "24199c9b-53ce-41a7-9cce-3b914f0a424a",
     "title": "Chat Bubble View",
-    "domain": "adtoolkit://cookbook/ai/chat/chat-window/chat-bubble-view",
+    "domain": "adhsdk://cookbook/ai/chat/chat-window/chat-bubble-view",
     "type": "ingredient",
     "version": "1.2.2",
     "status": "review",
@@ -25,9 +25,9 @@
     ],
     "depends-on": [],
     "related": [
-      "adtoolkit://cookbook/ai/chat/chat-window/chat-day-banner-view",
-      "adtoolkit://cookbook/ai/chat/chat-window/chat-transcript-row-view",
-      "agenticdevelopertoolkit://recipes/message-bubble"
+      "adhsdk://cookbook/ai/chat/chat-window/chat-day-banner-view",
+      "adhsdk://cookbook/ai/chat/chat-window/chat-transcript-row-view",
+      "adhsdk://recipes/message-bubble"
     ],
     "references": [],
     "approved-by": "",

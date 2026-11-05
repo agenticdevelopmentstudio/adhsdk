@@ -1,7 +1,7 @@
 "use client";
 import type { ReactElement } from "react";
-import { Button } from "@agenticdevelopertoolkit/ui/components/button";
-import { cn } from "@agenticdevelopertoolkit/ui/lib/utils";
+import { Button } from "@adh-sdk/ui/components/button";
+import { cn } from "@adh-sdk/ui/lib/utils";
 import { useAutoConfigure } from "./AutoConfigureProvider";
 
 /**

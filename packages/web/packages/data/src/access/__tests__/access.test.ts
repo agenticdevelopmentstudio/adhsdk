@@ -2,7 +2,7 @@ import { describe, expect, it, vi, beforeEach } from "vitest";
 import { accessApi } from "../access";
 
 // `accessApi.listFeatures` is otherwise NEVER exercised: every consumer test mocks
-// `@agentic-toolkit/data/access` wholesale (see TeamPermissionsPane.test.tsx), so neither the
+// `@adh-sdk/data/access` wholesale (see TeamPermissionsPane.test.tsx), so neither the
 // request it builds nor its response unwrap has ever run for real. That matters more than usual
 // here — TeamPermissionsPane treats ANY thrown error as "this backend predates the endpoint" and
 // silently degrades to the two-area fallback, so a wrong URL or a wrong response key would not

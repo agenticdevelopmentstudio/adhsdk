@@ -1,7 +1,7 @@
 ---
 id: 972be0d0-a9f5-45cd-a23b-c8329410b3d1
 title: Dialog
-domain: agenticdevelopertoolkit://recipes/dialog
+domain: adhsdk://recipes/dialog
 type: ingredient
 version: 1.1.1
 status: review
@@ -22,7 +22,7 @@ tags:
   - base-ui
 depends-on: []
 related:
-  - agenticdevelopertoolkit://recipes/alert-and-dialog
+  - adhsdk://recipes/alert-and-dialog
 references: []
 approved-by: ''
 approved-date: ''
@@ -148,7 +148,7 @@ None — a presentational primitive that emits no logs of its own.
 - **React/Web**: Implemented in `packages/web/packages/ui/src/components/dialog.tsx`. Built on `@base-ui/react/dialog`. Marked `"use client"` for Next.js. Responsive behavior verified via Playwright (ui-showcase) at 375px, 768px, and 1440px viewport widths.
 - **SwiftUI**: Web-only shared component; no SwiftUI implementation exists in `packages/apple` yet. A SwiftUI-native equivalent would present via `.sheet(isPresented:)` (or `.fullScreenCover`), pairing `interactiveDismissDisabled()` with the backdrop-dismissal-disabled default.
 - **Compose**: Web-only shared component; no Compose implementation exists yet. A Compose equivalent would use the `Dialog` composable from Material Design 3.
-- **AppKit / UIKit**: Web-only shared component. A native equivalent would use `NSWindow.beginSheet(_:completionHandler:)` on AppKit or `UIModalPresentationStyle.formSheet` on UIKit for arbitrary content — not `UIAlertController`, which is scoped to alert/action-sheet styles. `packages/apple`'s existing dialogs (e.g. `WindowOptionsDialog` in `AgenticDeveloperToolkit/SourcesUI/macOS/Chrome`) are bespoke `NSWindow` presentations built for a different purpose, not a shared counterpart to this primitive.
+- **AppKit / UIKit**: Web-only shared component. A native equivalent would use `NSWindow.beginSheet(_:completionHandler:)` on AppKit or `UIModalPresentationStyle.formSheet` on UIKit for arbitrary content — not `UIAlertController`, which is scoped to alert/action-sheet styles. `packages/apple`'s existing dialogs (e.g. `WindowOptionsDialog` in `AgenticDeveloperHubSDK/SDK/SourcesUI/macOS/Chrome`) are bespoke `NSWindow` presentations built for a different purpose, not a shared counterpart to this primitive.
 - **WinUI 3**: A WinUI equivalent would use the `ContentDialog` control with `PrimaryButtonText`, `SecondaryButtonText`, and `CloseButtonText` for its action buttons. Apply theme colors via `Application.Current.Resources` for dark/light mode token equivalents. The backdrop is handled by `ContentDialog`'s built-in smoke layer (`SmokeLayerBackground`), which approximates the `bg-black/30` dimming effect.
 
 ## Design Decisions

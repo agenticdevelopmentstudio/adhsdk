@@ -16,9 +16,9 @@ vi.mock('node:dns', () => ({
 
 import { createApp } from '../src/app';
 import { deployProjectMeta, healthChecks, monitoredEndpoints } from '../src/libsql/schema';
-import { PLACEHOLDER_URL } from '@agentic-toolkit/deploy-platform/engine';
+import { PLACEHOLDER_URL } from '@adh-sdk/deploy-platform/engine';
 import { statusAdapter } from '../src/routes/auto-configure';
-import { runAutoConfigure } from '@agentic-toolkit/deploy-platform/engine';
+import { runAutoConfigure } from '@adh-sdk/deploy-platform/engine';
 import { createLibsqlStorage } from '../src/libsql';
 import type { Storage } from '../src/storage/ports';
 import { runCycle } from '../src/monitor/sync';

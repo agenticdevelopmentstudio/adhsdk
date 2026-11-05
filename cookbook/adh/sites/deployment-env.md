@@ -1,7 +1,7 @@
 ---
 id: 8d05d4b2-06a8-44db-816a-ce839836fd71
 title: "Deployment Environment"
-domain: adtoolkit://cookbook/adh/sites/deployment-env
+domain: adhsdk://cookbook/adh/sites/deployment-env
 type: ingredient
 version: 1.1.0
 status: review
@@ -22,10 +22,10 @@ tags:
 depends-on: []
 related: []
 references:
-  - packages/web/packages/adh-registry/src/deployment-env.ts (agenticdevelopertoolkit)
-  - packages/web/packages/adh-registry/src/__tests__/deploymentEnv.test.ts (agenticdevelopertoolkit)
-  - packages/web/packages/adh-registry/src/seo/metadata.ts (agenticdevelopertoolkit)
-  - packages/web/packages/adh/src/__tests__/productionBundleGates.test.ts (agenticdevelopertoolkit)
+  - packages/web/packages/adh-registry/src/deployment-env.ts (adhsdk)
+  - packages/web/packages/adh-registry/src/__tests__/deploymentEnv.test.ts (adhsdk)
+  - packages/web/packages/adh-registry/src/seo/metadata.ts (adhsdk)
+  - packages/web/packages/adh/src/__tests__/productionBundleGates.test.ts (adhsdk)
   - adhbackend/src/adh/test/themeSurfaceEnv.test.ts (adhbackend)
 approved-by: ""
 approved-date: ""
@@ -300,7 +300,7 @@ input, including the fail-closed paths.
   with its own tests in `src/__tests__/deploymentEnv.test.ts`; exposed
   outside the package through the `./deployment-env` subpath declared in
   `package.json`'s `exports`, and re-verified from outside the package by
-  `@agentic-toolkit/adh`'s `productionBundleGates.test.ts` and, across a repo
+  `@adh-sdk/adh`'s `productionBundleGates.test.ts` and, across a repo
   boundary, by `adhbackend`'s `src/adh/test/themeSurfaceEnv.test.ts`. What is
   specific to this platform: the entire build-time-flag-vs.-server-side-check
   split, and the whole chunk-gate contract, exist only because Next.js/webpack
@@ -386,8 +386,8 @@ input, including the fail-closed paths.
   only a literal comparison visible while parsing that exact call site, and
   does not follow an imported identifier back to its definition.
   **Approved**: pending
-- **Decision**: Place this module in `@agentic-toolkit/adh-registry` rather
-  than in `@agentic-toolkit/adh`, where most of its consumers live.
+- **Decision**: Place this module in `@adh-sdk/adh-registry` rather
+  than in `@adh-sdk/adh`, where most of its consumers live.
   **Rationale**: `adh` depends on `adh-registry`, so a home in `adh-registry`
   is readable from both sides of that dependency edge — including
   `adh-registry`'s own `seo/metadata.ts`, which needs the same fact — while a

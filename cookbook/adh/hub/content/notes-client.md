@@ -1,7 +1,7 @@
 ---
 id: c68fdd3a-092a-4718-b16e-4cc7a0037edd
 title: "Notes Client"
-domain: adtoolkit://cookbook/adh/hub/content/notes-client
+domain: adhsdk://cookbook/adh/hub/content/notes-client
 type: ingredient
 version: 1.0.3
 status: review
@@ -23,17 +23,17 @@ tags:
   - web
 depends-on: []
 related:
-  - adtoolkit://cookbook/adh/hub/content/markdown-client
-  - adtoolkit://cookbook/adh/hub/content/docs-client
+  - adhsdk://cookbook/adh/hub/content/markdown-client
+  - adhsdk://cookbook/adh/hub/content/docs-client
 references:
-  - packages/web/packages/data/src/notes/notes.ts (agenticdevelopertoolkit)
-  - packages/web/packages/data/src/notes/index.ts (agenticdevelopertoolkit)
-  - packages/web/packages/data/src/markdown/markdown.ts (agenticdevelopertoolkit)
-  - packages/web/packages/data/src/markdown/wire.ts (agenticdevelopertoolkit)
-  - packages/web/packages/data/src/markdown/taxonomy.ts (agenticdevelopertoolkit)
-  - packages/web/packages/data/src/markdown/__tests__/markdown.test.ts (agenticdevelopertoolkit)
-  - packages/web/packages/data/src/http.ts (agenticdevelopertoolkit)
-  - packages/web/packages/data/src/client-helpers.ts (agenticdevelopertoolkit)
+  - packages/web/packages/data/src/notes/notes.ts (adhsdk)
+  - packages/web/packages/data/src/notes/index.ts (adhsdk)
+  - packages/web/packages/data/src/markdown/markdown.ts (adhsdk)
+  - packages/web/packages/data/src/markdown/wire.ts (adhsdk)
+  - packages/web/packages/data/src/markdown/taxonomy.ts (adhsdk)
+  - packages/web/packages/data/src/markdown/__tests__/markdown.test.ts (adhsdk)
+  - packages/web/packages/data/src/http.ts (adhsdk)
+  - packages/web/packages/data/src/client-helpers.ts (adhsdk)
 approved-by: ""
 approved-date: ""
 ---
@@ -287,7 +287,7 @@ Not applicable: `notes.ts` and its `markdownApi`/`taxonomyApi` dependencies emit
 
 - **Data collected**: None beyond what the caller explicitly supplies — `content`, `category`, `tags`, and (per `create-may-double-file`) `doc` — plus the fixed `note: true` marker this client always adds on create. No field is appended that the caller did not provide or that this recipe's other requirements do not already name.
 - **Storage**: None client-side. `notesApi` holds no cache and no local copy of any note, category, or tag (`stateless-client`); all persistence is the backend's.
-- **Transmission**: Every request travels through `authedJson`/`authedRequest` (`packages/web/packages/data/src/http.ts`, itself re-exporting `@agentic-toolkit/auth/client`), the same bearer-token authenticated channel every other data client in this package uses; `notes.ts` adds no transmission of its own and performs no additional encryption, redaction, or inspection of the note content it sends.
+- **Transmission**: Every request travels through `authedJson`/`authedRequest` (`packages/web/packages/data/src/http.ts`, itself re-exporting `@adh-sdk/auth/client`), the same bearer-token authenticated channel every other data client in this package uses; `notes.ts` adds no transmission of its own and performs no additional encryption, redaction, or inspection of the note content it sends.
 - **Retention**: Not controlled at this layer. `notesApi.remove` performs a soft delete on the backend (per the module comment: "the backend tombstones the note marker with the document"); how long a tombstoned row is retained is a backend policy this client has no visibility into.
 
 ## Logging
@@ -298,7 +298,7 @@ Not applicable: `notes.ts` and the `markdown.ts`/`taxonomy.ts` modules it delega
 
 - **SwiftUI**: Port as a plain Swift API namespace (e.g. an `enum NotesAPI` or a struct of static members) that wraps a shared `MarkdownAPI` type the same way `notesApi` wraps `markdownApi` — never issue a fresh `URLSession` call from this type itself. Model `Note`/`NoteSummary`/`NoteFilters`/`NoteCategory`/`NoteTag` as `Codable`, `Sendable` structs mirroring the wire fields, with a custom `init(from:)` (or a post-decode step) that defaults a missing/null `tags` key to `[]`, matching `withTags`. Keep the create body's optional `doc` field on the Swift type explicitly, to preserve the double-filing behavior in `create-may-double-file`, and surface the category-name conflict as a typed error case (e.g. an `enum NotesError { case categoryNameTaken(String) }`) instead of a generic thrown error. The repo's existing `NotesManager`/`NoteStorage` types (`packages/apple/AgenticAppKit`) are a local, on-device notes store, not a client for this backend surface — do not conflate the two when porting.
 - **Compose**: Port as a Kotlin `object NotesApi` delegating every operation to a shared `MarkdownApi` interface or class, using `suspend fun` for each one and `kotlinx.serialization` `@Serializable data class`es for `Note`/`NoteSummary`/`NoteCategory`/`NoteTag`, with constructor defaults (`val tags: List<String> = emptyList()`) reproducing the same never-null-tags guarantee. Use the project's existing HTTP client (e.g. Ktor or Retrofit) in place of `authedJson`, and keep the 200-row page cap as a named constant rather than a literal embedded in a query builder. Model `categories()`'s tree-vs-flat divergence from `tags()` as two distinctly named methods so a caller cannot mistake one shape for the other.
-- **React/Web (source platform)**: this is the source implementation; `authedJson`/`authedRequest` (from `@agentic-toolkit/auth/client` via `../http`) and the helpers in `../client-helpers` (`enc`, `workspaceQuery`) are shared with every other client in this data package and MUST be reused, not reimplemented. `notes.ts` has no test file of its own; the fallback helpers it depends on (`withTags`, `categoryNodes`, `tagNodes`) are exercised only via `markdown/__tests__/markdown.test.ts`.
+- **React/Web (source platform)**: this is the source implementation; `authedJson`/`authedRequest` (from `@adh-sdk/auth/client` via `../http`) and the helpers in `../client-helpers` (`enc`, `workspaceQuery`) are shared with every other client in this data package and MUST be reused, not reimplemented. `notes.ts` has no test file of its own; the fallback helpers it depends on (`withTags`, `categoryNodes`, `tagNodes`) are exercised only via `markdown/__tests__/markdown.test.ts`.
 - **AppKit / UIKit**: Same guidance as SwiftUI — this is a data-layer client with no view code, so AppKit and UIKit consumers call the same ported async functions; nothing about the port differs between an AppKit, UIKit, or SwiftUI host.
 - **WinUI 3**: This is the platform this recipe exists to steer. Port `notesApi` as a static class or a singleton service (`NotesApi`) that wraps a shared `MarkdownApi` service the same way the source wraps `markdownApi` — `NotesApi` itself should never call `HttpClient` directly. Model `Note`/`NoteSummary`/`NoteCategory`/`NoteTag` as `sealed record` types deserialized with `System.Text.Json` (`JsonSerializer.Deserialize<Note>`), adding a custom converter or a post-deserialize step that defaults `Tags` to an empty `List<string>` rather than `null`, mirroring `withTags`. Use `HttpClient` with `async`/`Task<T>` for every operation, injecting the bearer-token header inside the shared `MarkdownApi` service rather than in `NotesApi`. Give `Categories()` and `Tags()` two distinct return-shape methods on the service interface (one returning tree nodes, one a flat `IReadOnlyList<string>`) so the source's own tree-vs-flat naming split is not accidentally collapsed into one. Return plain `IReadOnlyList<T>` from this client (build an `ObservableCollection<T>` only at the ViewModel layer, matching the source's plain-array contract), and keep the fixed 200-row page size and the absence of a cursor explicit as a named constant so a future consumer does not assume paging support exists. Map the backend's category-name-conflict 409 to a typed exception (e.g. a `CategoryNameConflictException`) the way `markdownApi.createCategory` maps it to a friendly `Error` in TypeScript.
 

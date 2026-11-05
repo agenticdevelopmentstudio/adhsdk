@@ -3,7 +3,7 @@ import { preserveDirectivesPlugin } from 'esbuild-plugin-preserve-directives'
 
 export default defineConfig({
   // Globbed entries mirror the exports map so a new module auto-builds without
-  // editing this file — same pattern as @agenticdevelopertoolkit/ui and @agenticdevelopertoolkit/markdown.
+  // editing this file — same pattern as @adh-sdk/ui and @adh-sdk/markdown.
   entry: [
     'src/index.ts',
     'src/data/*.ts',
@@ -33,10 +33,10 @@ export default defineConfig({
     'react',
     'react-dom',
     'react/jsx-runtime',
-    '@agenticdevelopertoolkit/ui',
-    '@agenticdevelopertoolkit/ui/*',
-    '@agenticdevelopertoolkit/markdown',
-    '@agenticdevelopertoolkit/markdown/*',
+    '@adh-sdk/ui',
+    '@adh-sdk/ui/*',
+    '@adh-sdk/markdown',
+    '@adh-sdk/markdown/*',
   ],
   esbuildPlugins: [
     preserveDirectivesPlugin({

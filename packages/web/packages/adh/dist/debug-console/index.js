@@ -5,14 +5,14 @@
 // src/debug-console/index.tsx
 import {
   DebugConsoleWindow as ToolkitDebugConsoleWindow
-} from "@agentic-toolkit/adh/debug-env";
+} from "@adh-sdk/adh/debug-env";
 import {
   useEnvOverride,
   setEnvOverride,
   parseEnvOverride
-} from "@agentic-toolkit/adh/header";
+} from "@adh-sdk/adh/header";
 import { jsx } from "react/jsx-runtime";
-var themeAreas = process.env.NEXT_PUBLIC_DEPLOYMENT_ENV === "local" || process.env.NEXT_PUBLIC_DEPLOYMENT_ENV === "testing" || process.env.NEXT_PUBLIC_DEPLOYMENT_ENV === "staging" ? () => import("@agentic-toolkit/adh/theme-editor").then((m) => m.themeAreasSurface) : () => Promise.reject(new Error("The site-theme editor is not built into production bundles."));
+var themeAreas = process.env.NEXT_PUBLIC_DEPLOYMENT_ENV === "local" || process.env.NEXT_PUBLIC_DEPLOYMENT_ENV === "testing" || process.env.NEXT_PUBLIC_DEPLOYMENT_ENV === "staging" ? () => import("@adh-sdk/adh/theme-editor").then((m) => m.themeAreasSurface) : () => Promise.reject(new Error("The site-theme editor is not built into production bundles."));
 function DebugConsoleWindow({ open, onClose }) {
   return /* @__PURE__ */ jsx(
     ToolkitDebugConsoleWindow,

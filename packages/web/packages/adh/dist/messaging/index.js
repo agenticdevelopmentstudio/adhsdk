@@ -2,17 +2,17 @@
 
 // src/messaging/MessagingSurface.tsx
 import { useEffect, useMemo, useState } from "react";
-import { Button } from "@agenticdevelopertoolkit/ui/components/button";
-import { Input } from "@agenticdevelopertoolkit/ui/components/input";
-import { Select } from "@agenticdevelopertoolkit/ui/components/select";
-import { Textarea } from "@agenticdevelopertoolkit/ui/components/textarea";
-import { Badge } from "@agenticdevelopertoolkit/ui/components/badge";
-import { ErrorText } from "@agenticdevelopertoolkit/ui/components/error-text";
-import { Alert, AlertDescription } from "@agenticdevelopertoolkit/ui/components/alert";
-import { Card, CardContent } from "@agenticdevelopertoolkit/ui/components/card";
-import { Field } from "@agenticdevelopertoolkit/ui/blocks/field";
-import { DataTable } from "@agenticdevelopertoolkit/ui/components/data-table";
-import { Pagination } from "@agenticdevelopertoolkit/ui/components/pagination";
+import { Button } from "@adh-sdk/ui/components/button";
+import { Input } from "@adh-sdk/ui/components/input";
+import { Select } from "@adh-sdk/ui/components/select";
+import { Textarea } from "@adh-sdk/ui/components/textarea";
+import { Badge } from "@adh-sdk/ui/components/badge";
+import { ErrorText } from "@adh-sdk/ui/components/error-text";
+import { Alert, AlertDescription } from "@adh-sdk/ui/components/alert";
+import { Card, CardContent } from "@adh-sdk/ui/components/card";
+import { Field } from "@adh-sdk/ui/blocks/field";
+import { DataTable } from "@adh-sdk/ui/components/data-table";
+import { Pagination } from "@adh-sdk/ui/components/pagination";
 import { Fragment, jsx, jsxs } from "react/jsx-runtime";
 function templateVars(t) {
   const text = [t.subject, t.htmlBody, t.textBody, t.smsBody ?? ""].join(" ");

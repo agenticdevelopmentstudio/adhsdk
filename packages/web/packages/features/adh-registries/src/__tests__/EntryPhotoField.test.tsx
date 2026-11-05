@@ -8,7 +8,7 @@ import userEvent from '@testing-library/user-event';
 const { authedJson } = vi.hoisted(() => ({ authedJson: vi.fn() }));
 // `readAccessToken` is the toolkit cache's tenant lookup, reached through the hook that
 // presigns the preview: null is a signed-out tenant, which is all these tests need it to be.
-vi.mock('@agentic-toolkit/auth/client', () => ({ authedJson, readAccessToken: () => null }));
+vi.mock('@adh-sdk/auth/client', () => ({ authedJson, readAccessToken: () => null }));
 
 import { EntryPhotoField } from '../EntryPhotoField';
 

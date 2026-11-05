@@ -41,14 +41,14 @@ vi.mock("next/navigation", () => ({ useRouter: () => router }));
 // `returnTo`. Stubbed away, that call threw, the store read the throw as a corrupt stash, and
 // every test with a stash landed on the same wrong branch with no clue pointing at this mock.
 // Only the two the component uses are replaced; the origin check runs for real.
-vi.mock("@agentic-toolkit/auth", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("@agentic-toolkit/auth")>();
+vi.mock("@adh-sdk/auth", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@adh-sdk/auth")>();
   return { ...actual, reportUnexpectedAuthError, useAuth: () => authed };
 });
 // The REAL `decodeOAuthStateClaims`: the recovery case below is about the actual grammar the
 // backend mints, so a stubbed decoder would assert this file against itself.
-vi.mock("@agentic-toolkit/data/integrations", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("@agentic-toolkit/data/integrations")>();
+vi.mock("@adh-sdk/data/integrations", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@adh-sdk/data/integrations")>();
   return { ...actual, integrationsApi: { connect } };
 });
 

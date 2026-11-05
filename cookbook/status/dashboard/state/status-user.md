@@ -1,7 +1,7 @@
 ---
 id: 5c202bb7-c4b6-4da9-a9b0-9d58f664461f
 title: "Status User State"
-domain: adtoolkit://cookbook/status/dashboard/state/status-user
+domain: adhsdk://cookbook/status/dashboard/state/status-user
 type: ingredient
 version: 1.1.1
 status: review
@@ -18,7 +18,7 @@ platforms:
 tags: []
 depends-on: []
 related:
-  - adtoolkit://cookbook/status/dashboard/api
+  - adhsdk://cookbook/status/dashboard/api
 references: []
 approved-by: ""
 approved-date: ""

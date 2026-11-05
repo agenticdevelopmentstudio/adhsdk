@@ -1,6 +1,6 @@
 # Contributing
 
-Thanks for your interest in agenticdevelopertoolkit.
+Thanks for your interest in adhsdk.
 
 ## Getting set up
 

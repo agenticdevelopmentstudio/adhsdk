@@ -1,5 +1,5 @@
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/macOS/Features/Projects/UserSettings+Projects.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/UserSettings+Projects.swift` |
 

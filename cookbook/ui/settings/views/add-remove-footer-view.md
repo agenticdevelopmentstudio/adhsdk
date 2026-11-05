@@ -1,7 +1,7 @@
 ---
 id: A1D787E2-2E3F-4742-A30B-120A8607C518
 title: "Add Remove Footer View"
-domain: adtoolkit://cookbook/ui/settings/views/add-remove-footer-view
+domain: adhsdk://cookbook/ui/settings/views/add-remove-footer-view
 type: ingredient
 version: 1.0.1
 status: review
@@ -21,7 +21,7 @@ tags:
   - footer
 depends-on: []
 related:
-  - adtoolkit://cookbook/ui/settings/views/editable-table-card
+  - adhsdk://cookbook/ui/settings/views/editable-table-card
 references: []
 approved-by: ""
 approved-date: ""
@@ -141,7 +141,7 @@ Not applicable: the component performs no logging of its own.
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/macOS/SystemIntegration/ComposableSettingsWindow/Views/AddRemoveFooterView.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/Views/AddRemoveFooterView.swift` |
 
 ## Design Decisions
 

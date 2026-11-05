@@ -1,7 +1,7 @@
 ---
 id: ded9b397-958d-437d-8235-48ef85ae7386
 title: "Project Layout Persistence"
-domain: adtoolkit://cookbook/workspace/projects/project-database-layout
+domain: adhsdk://cookbook/workspace/projects/project-database-layout
 type: ingredient
 version: 1.2.1
 status: review
@@ -23,13 +23,13 @@ tags:
   - database
 depends-on: []
 related:
-  - adtoolkit://cookbook/ui/layout/composable-tabs/tabs-window
-  - adtoolkit://cookbook/workspace/projects/git-repo
+  - adhsdk://cookbook/ui/layout/composable-tabs/tabs-window
+  - adhsdk://cookbook/workspace/projects/git-repo
 references:
-  - packages/apple/AgenticToolkit/macOS/Features/Projects/ProjectDatabase+Layout.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/macOS/Features/Projects/ProjectDatabase.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Tests/AgenticToolkitMacOSTests/Projects/ProjectDatabaseLayoutTests.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Tests/AgenticToolkitMacOSTests/Projects/ProjectDatabaseWorkingDirectoryTests.swift (agenticdevelopertoolkit)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectDatabase+Layout.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectDatabase.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKMacOSTests/Projects/ProjectDatabaseLayoutTests.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKMacOSTests/Projects/ProjectDatabaseWorkingDirectoryTests.swift (adhsdk)
 approved-by: ""
 approved-date: ""
 ---
@@ -56,7 +56,7 @@ Every row this extension touches is scoped to one `repo_id`, matching a
 here reads or writes a row for any repository id other than the one a
 caller passes in. The project database carries no concurrency-safety
 guarantee of its own (see the sibling
-`adtoolkit://cookbook/workspace/projects/project-database` recipe),
+`adhsdk://cookbook/workspace/projects/project-database` recipe),
 so this extension's operations carry no concurrency guarantee of their own
 either — they run wherever the caller runs, synchronously, against one
 shared SQLite connection.
@@ -443,7 +443,7 @@ in **load-tabs-corrupt-row-signal**.
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/macOS/Features/Projects/ProjectDatabase+Layout.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectDatabase+Layout.swift` |
 
 ## Design Decisions
 

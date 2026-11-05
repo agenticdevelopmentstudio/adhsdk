@@ -1,7 +1,7 @@
 ---
 id: c5703986-6d14-4341-8719-b89e44f2ab80
 title: Label
-domain: agenticdevelopertoolkit://recipes/label
+domain: adhsdk://recipes/label
 type: ingredient
 version: 1.1.1
 status: review
@@ -20,10 +20,10 @@ tags:
 - label
 depends-on: []
 related:
-- agenticdevelopertoolkit://recipes/field
-- agenticdevelopertoolkit://recipes/text-field
-- agenticdevelopertoolkit://recipes/checkbox
-- agenticdevelopertoolkit://recipes/select
+- adhsdk://recipes/field
+- adhsdk://recipes/text-field
+- adhsdk://recipes/checkbox
+- adhsdk://recipes/select
 references: []
 approved-by: ''
 approved-date: ''

@@ -3,7 +3,7 @@
   "meta": {
     "id": "18ad68ea-187b-463d-9f5c-b855b9bc36a9",
     "title": "Divider View",
-    "domain": "adtoolkit://cookbook/ui/settings/layout/divider-view",
+    "domain": "adhsdk://cookbook/ui/settings/layout/divider-view",
     "type": "ingredient",
     "version": "1.2.2",
     "status": "review",
@@ -25,7 +25,7 @@
     ],
     "depends-on": [],
     "related": [
-      "adtoolkit://cookbook/ui/settings/rows/button-view"
+      "adhsdk://cookbook/ui/settings/rows/button-view"
     ],
     "references": [],
     "approved-by": "",

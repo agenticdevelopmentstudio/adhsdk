@@ -6,11 +6,11 @@ import {
   relatedOf,
   siteConcept,
   subtreeOf
-} from "@agentic-toolkit/adh/concepts";
+} from "@adh-sdk/adh/concepts";
 
 // src/concepts/details-links.ts
-import { SITE_ROUTES } from "@agentic-toolkit/adh-registry/routes";
-import { siteProdUrl } from "@agentic-toolkit/adh-registry";
+import { SITE_ROUTES } from "@adh-sdk/adh-registry/routes";
+import { siteProdUrl } from "@adh-sdk/adh-registry";
 var SHARED_TOPIC_ROUTE = "/details/[topic]";
 function servesConceptDetails(siteId) {
   return (SITE_ROUTES[siteId] ?? []).includes(SHARED_TOPIC_ROUTE);
@@ -21,13 +21,13 @@ function conceptDetailsUrl(conceptId, ownerSiteId, currentSiteId) {
 }
 
 // src/details/DetailsPage.tsx
-import { siteProdUrl as siteProdUrl3 } from "@agentic-toolkit/adh-registry";
-import { DetailsRail } from "@agentic-toolkit/adh/details/DetailsRail";
+import { siteProdUrl as siteProdUrl3 } from "@adh-sdk/adh-registry";
+import { DetailsRail } from "@adh-sdk/adh/details/DetailsRail";
 
 // src/details/Breadcrumb.tsx
-import { ancestorsOf, getConcept, hasDetailPage } from "@agentic-toolkit/adh/concepts";
-import { siteProdUrl as siteProdUrl2 } from "@agentic-toolkit/adh-registry";
-import { JsonLd } from "@agenticdevelopertoolkit/landing";
+import { ancestorsOf, getConcept, hasDetailPage } from "@adh-sdk/adh/concepts";
+import { siteProdUrl as siteProdUrl2 } from "@adh-sdk/adh-registry";
+import { JsonLd } from "@adh-sdk/landing";
 import { jsx, jsxs } from "react/jsx-runtime";
 function pathFor(node) {
   if (hasDetailPage(node)) return `/details/${node.id}`;
@@ -138,9 +138,9 @@ function DetailsPage({ siteId, topic }) {
 }
 
 // src/details/metadata.ts
-import { getConcept as getConcept3, siteConcept as siteConcept2 } from "@agentic-toolkit/adh/concepts";
-import { getSite, siteProdUrl as siteProdUrl4 } from "@agentic-toolkit/adh-registry";
-import { siteMetadata } from "@agentic-toolkit/adh-registry/seo";
+import { getConcept as getConcept3, siteConcept as siteConcept2 } from "@adh-sdk/adh/concepts";
+import { getSite, siteProdUrl as siteProdUrl4 } from "@adh-sdk/adh-registry";
+import { siteMetadata } from "@adh-sdk/adh-registry/seo";
 function detailsMetadata(siteId, topic) {
   const site = getSite(siteId);
   const brand = site ? site.fullLabel ?? site.label : "Agentic Developer Hub";

@@ -36,9 +36,8 @@ def sh(cmd: list[str], cwd: str = ".") -> None:
 # seconds rather than after the whole workspace builds. Self-test first, for each
 # guard: a guard whose failing case has rotted passes vacuously. The drift check's
 # own test (deployment/run_local_ci_test.py) leads for the same reason.
-# The guards' roots: check_no_private_scope.py scans packages/web/packages, recipes,
-# docs, websites plus README.md, AGENTS.md and .claude/CLAUDE.md; check_doc_links.py
-# scans the whole repo; check_recipe_scope.py scans recipes and docs; check_site_deps.py
+# The guards' roots: check_no_retired_names.py and check_doc_links.py both
+# scan the whole repo; check_recipe_scope.py scans recipes and docs; check_site_deps.py
 # scans websites, which nothing else here enters (install/build/test all run inside
 # packages/web). There is no path filter any more: every run runs everything.
 def repo_guards() -> None:
@@ -53,7 +52,6 @@ def repo_guards() -> None:
         ["tools/check_doc_subpaths.py"],
         ["tools/check_site_deps_test.py"],
         ["tools/check_site_deps.py"],
-        ["tools/rewrite_toolkit_scope_test.py"],
         ["tools/classify_recipes_test.py"],
         ["packages/web/tools/copy_css_orphan_test.py"],
     ]:
@@ -69,7 +67,7 @@ def license_fields() -> None:
 
 
 # adh's persona-chat keeps a COPY of chat's contract types rather than a dep (the
-# layering in packages/web/packages/adh keeps the persona toolkit out of adh's shipped
+# layering in packages/web/packages/adh keeps the persona layer out of adh's shipped
 # graph), so nothing but this check notices the two drifting. Run from packages/web
 # because the verifier resolves both files from there.
 def chat_contract() -> None:
@@ -81,9 +79,9 @@ def chat_contract() -> None:
 # wrote about it. The per-package arrival checks scan src/, which is where the imports
 # are, and imports are not where this leaks. It leaks in a README, a CHANGELOG, a
 # comment in a config file: the files nobody greps because they do not compile.
-def no_private_scope() -> None:
-    sh([PY, "tools/check_no_private_scope_test.py"])
-    sh([PY, "tools/check_no_private_scope.py"])
+def no_retired_names() -> None:
+    sh([PY, "tools/check_no_retired_names_test.py"])
+    sh([PY, "tools/check_no_retired_names.py"])
 
 
 def install() -> None:
@@ -154,7 +152,7 @@ STEPS = [
     ("repo-guards", repo_guards),
     ("license-fields", license_fields),
     ("chat-contract", chat_contract),
-    ("no-private-scope", no_private_scope),
+    ("no-retired-names", no_retired_names),
     ("install", install),
     ("build", build),
     ("adh-dist-drift", adh_dist_drift),

@@ -1,0 +1,399 @@
+import Foundation
+import AgenticDeveloperHubSDKCore
+import os
+
+/// Why a review tool refused.
+public enum ReviewError: Error, LocalizedError, Equatable {
+    case notFound(String)
+    /// `start` takes only a queued review.
+    case notQueued(String, PartnerReviewState)
+    /// Reviews in one repo share its worktree, so they run one at a time.
+    case anotherRunningInRepo(String)
+    /// `finish` takes `done`, `failed` or `skipped`, for a review that is still queued or running.
+    case cannotFinish(String, PartnerReviewState)
+    /// ``UserSettings/partnerReviewsConcurrency`` reviews are already running, across all repos.
+    case concurrencyLimit(Int)
+    /// The repo's review worktree or fix branch needs the owner (uncommitted changes, a fix branch that no
+    /// longer rebases onto the tip); the review stays queued. Carries the repo name and the reason.
+    case worktreeBlocked(String, String)
+
+    public var errorDescription: String? {
+        switch self {
+        case .notFound(let id): return "no review \(id)"
+        case .notQueued(let id, let state): return "review \(id) is \(state.rawValue), not queued"
+        case .anotherRunningInRepo(let repo): return "another review is already running in \(repo)"
+        case .cannotFinish(let id, let state): return "review \(id) cannot be finished as or from \(state.rawValue)"
+        case .concurrencyLimit(let limit):
+            return "\(limit) review\(limit == 1 ? " is" : "s are") already running, the most allowed at once"
+        case .worktreeBlocked(let repo, let reason):
+            return "the review worktree for \(repo) needs the owner: \(reason); the review stays queued"
+        }
+    }
+}
+
+/// The app's half of a code review: the git checks, the worktree, the session and the bookkeeping behind
+/// `partner_review_next`, `partner_review_start` and `partner_review_finish`. What a session's screen means is
+/// the partner's call, not this type's.
+@MainActor
+public final class ReviewService {
+
+    private let store: PartnerStore
+    private let sessions: PartnerSessionRegistry
+    private let notifier: PartnerNotifier
+    private let paths: PartnerPaths
+    private let git: ReviewGit
+    private let worktree: ReviewWorktree
+    private let settings: SettingsStore
+    private let steps: () -> [PartnerJobStep]
+    private let now: () -> Date
+
+    /// Repos with a `start` between its checks and its final write. Taken before the first suspension, so two
+    /// overlapping starts in one repo cannot both pass the one-at-a-time check while git runs.
+    private var startingRepos: Set<String> = []
+
+    /// The reason last raised to the owner for each repo and branch whose worktree is blocked, so a blocked
+    /// worktree raises one item however many starts it refuses. Cleared when that worktree next prepares.
+    private var blockedWorktrees: [String: String] = [:]
+
+    public init(store: PartnerStore, sessions: PartnerSessionRegistry, notifier: PartnerNotifier, paths: PartnerPaths,
+                git: ReviewGit = ReviewGit(), worktree: ReviewWorktree = ReviewWorktree(),
+                settings: SettingsStore = UserSettings.shared, steps: @escaping () -> [PartnerJobStep],
+                now: @escaping () -> Date = Date.init) {
+        self.store = store
+        self.sessions = sessions
+        self.notifier = notifier
+        self.paths = paths
+        self.git = git
+        self.worktree = worktree
+        self.settings = settings
+        self.steps = steps
+        self.now = now
+    }
+
+    /// Queued reviews oldest first, the running ones (so a partner with a fresh conversation can see what
+    /// holds the limit), the concurrency limit, and how many are running. Reconciles the running reviews with
+    /// their sessions first (``requeueInterrupted()``).
+    public func next() throws -> (reviews: [PartnerReview], runningReviews: [PartnerReview], concurrency: Int,
+                                  running: Int) {
+        _ = try requeueInterrupted()
+        let concurrency = max(1, settings.get(UserSettings.partnerReviewsConcurrency))
+        let running = try store.reviews(state: .running)
+        return (try store.reviews(state: .queued), running, concurrency, running.count)
+    }
+
+    /// Starts one queued review: skips it when its commit has left the branch, otherwise brings the repo's
+    /// review worktree to the branch tip, works out what later commits changed, opens a session in the worktree
+    /// and returns the job's steps filled in. When the shared worktree or fix branch needs the owner, the review
+    /// stays queued, one `blocked` item is raised for that worktree and ``ReviewError/worktreeBlocked(_:_:)`` is
+    /// thrown. Any other failure in the git work marks the review `failed`, raises a `blocked` attention item and
+    /// is rethrown, so a review never stays queued because git failed. A store
+    /// failure after that leaves the review queued, closes any session it opened and is rethrown; nothing ever
+    /// leaves it running without a session.
+    public func start(id: String) async throws -> PartnerReviewStart {
+        guard var review = try store.review(id: id) else { throw ReviewError.notFound(id) }
+        guard review.state == .queued else { throw ReviewError.notQueued(id, review.state) }
+        _ = try requeueInterrupted()
+        let running = try store.reviews(state: .running)
+        guard !startingRepos.contains(review.repoID), !running.contains(where: { $0.repoID == review.repoID }) else {
+            throw ReviewError.anotherRunningInRepo(review.repoName)
+        }
+        // The guidelines ask the partner to respect the limit; this holds it to it. Starts still in their git
+        // work count, so overlapping starts in different repos cannot together pass it.
+        let limit = max(1, settings.get(UserSettings.partnerReviewsConcurrency))
+        guard running.count + startingRepos.count < limit else { throw ReviewError.concurrencyLimit(limit) }
+        startingRepos.insert(review.repoID)
+        defer { startingRepos.remove(review.repoID) }
+
+        let baseFixBranch = Self.baseFixBranch(
+            repoSetting: try store.reviewSetting(repoID: review.repoID, key: "fix_branch"),
+            global: settings.get(UserSettings.partnerReviewsFixBranch),
+            defaultValue: UserSettings.partnerReviewsFixBranch.defaultValue)
+        let prepared: Prepared
+        do {
+            // A mistyped setting is the owner's to fix, not this review's failure: it stays queued until then.
+            // Inside the `do`, so git failing to run the check fails the review like any other git work.
+            guard try await git.isValidBranchName(baseFixBranch, in: URL(fileURLWithPath: review.repoPath)) else {
+                let reason = "the fix branch \"\(baseFixBranch)\" is not a valid branch name; correct it in the "
+                    + "Coding Partner's Code Reviews settings"
+                raiseBlockedWorktree(review, reason: reason)
+                throw ReviewError.worktreeBlocked(review.repoName, reason)
+            }
+            review = try await retargetedIfLanded(review)
+            switch try await prepare(review, baseFixBranch: baseFixBranch) {
+            case .skip(let reason): return try skip(review, reason: reason, fixBranch: baseFixBranch)
+            case .ready(let found): prepared = found
+            }
+        } catch let refusal as ReviewError {
+            throw refusal
+        } catch let failure as ReviewWorktree.Failure {
+            let reason = failure.localizedDescription
+            raiseBlockedWorktree(review, reason: reason)
+            throw ReviewError.worktreeBlocked(review.repoName, reason)
+        } catch {
+            // A cancelled start (the MCP request timed out) is not the review's failure: it stays queued.
+            if error is CancellationError || Task.isCancelled { throw CancellationError() }
+            markFailed(review, reason: error.localizedDescription)
+            throw error
+        }
+        blockedWorktrees[Self.worktreeKey(review)] = nil
+
+        // Finished or requeued by someone else while git ran: leave it as they left it.
+        let latest = try store.review(id: id)
+        guard let current = latest, current.state == .queued else {
+            throw ReviewError.notQueued(id, latest?.state ?? review.state)
+        }
+
+        let session = sessions.open(directory: prepared.worktree.path, title: "review \(review.sha.prefix(7))",
+                                    firstCommand: nil, reviewID: review.id)
+        var started = current
+        started.state = .running
+        started.sessionID = session.id.uuidString
+        started.startedAt = now()
+        started.supersededBy = prepared.superseded
+        do {
+            try store.updateReview(started)
+        } catch {
+            sessions.close(id: session.id)
+            throw error
+        }
+        do {
+            try store.setReviewSetting(repoID: review.repoID, key: prepared.worktreeKey,
+                                       value: prepared.worktree.path)
+        } catch {
+            Self.logger.error("Recording the review worktree failed: \(error.localizedDescription)")
+        }
+
+        let model = settings.get(UserSettings.partnerReviewsReviewerModel)
+        let values = [
+            "repo": review.repoName, "path": prepared.worktree.path, "branch": review.branch, "sha": review.sha,
+            "parent": review.parent, "subject": review.subject, "model": model, "fix_branch": prepared.fixBranch,
+            "superseded": prepared.superseded.isEmpty ? "none" : prepared.superseded.joined(separator: ", ")
+        ]
+        return PartnerReviewStart(review: started, worktreePath: prepared.worktree.path, fixBranch: prepared.fixBranch,
+                                  tipDiff: prepared.tipDiff, steps: Self.fill(steps(), values: values))
+    }
+
+    /// How many finished reviews keep their session open for the owner to read.
+    public static let finishedSessionsKept = 3
+
+    /// Sets a queued or running review to `done`, `failed` or `skipped` and leaves a "review done" item for the
+    /// owner. Its session stays open for the owner to read, but only the newest
+    /// ``finishedSessionsKept`` finished reviews keep theirs: older ones are closed, each Claude Code with
+    /// them, and the store keeps their final screens.
+    public func finish(id: String, state: PartnerReviewState, summary: String) throws -> PartnerReview {
+        guard var review = try store.review(id: id) else { throw ReviewError.notFound(id) }
+        guard [.done, .failed, .skipped].contains(state) else { throw ReviewError.cannotFinish(id, state) }
+        guard [.queued, .running].contains(review.state) else { throw ReviewError.cannotFinish(id, review.state) }
+        review.state = state
+        review.summary = summary
+        review.finishedAt = now()
+        if state == .skipped, review.skipReason == nil { review.skipReason = summary }
+        try store.updateReview(review)
+        try notifier.notify(title: "review done",
+                            body: "\(review.repoName) \(review.sha.prefix(7)) \(state.rawValue): \(summary)",
+                            reference: ["review": review.id], createdBy: "partner")
+        closeOldFinishedSessions()
+        return review
+    }
+
+    /// Sessions are newest first, so everything past the first few finished ones goes.
+    private func closeOldFinishedSessions() {
+        let finished = sessions.sessions.filter { session in
+            guard let reviewID = session.reviewID, let review = try? store.review(id: reviewID) else { return false }
+            return ![.queued, .running].contains(review.state)
+        }
+        for session in finished.dropFirst(Self.finishedSessionsKept) {
+            sessions.close(id: session.id)
+        }
+    }
+
+    /// At every partner start, and before every `next` and `start`: each review left `running` whose session
+    /// is not open in this process (closed, or from an earlier launch) goes back to the queue, since nothing can
+    /// finish it any more. One whose session exited without `partner_review_finish` is marked `failed` with a
+    /// `blocked` item, so it stops holding the concurrency limit. A review whose session is still running stays
+    /// running. Returns how many were requeued.
+    public func requeueInterrupted() throws -> Int {
+        let open = Dictionary(uniqueKeysWithValues: sessions.sessions.map { ($0.id.uuidString, $0) })
+        var requeued = 0
+        for var review in try store.reviews(state: .running) {
+            let session = review.sessionID.flatMap { open[$0] }
+            if let session {
+                if session.state == .exited {
+                    markFailed(review, reason: "its session exited before the review finished", from: .running)
+                }
+                continue
+            }
+            review.state = .queued
+            review.sessionID = nil
+            review.startedAt = nil
+            try store.updateReview(review)
+            requeued += 1
+        }
+        return requeued
+    }
+
+    // MARK: - Start's parts
+
+    private struct Prepared {
+        var worktree: URL
+        /// The `review_setting` key the worktree's path is recorded under.
+        var worktreeKey: String
+        var fixBranch: String
+        var superseded: [String]
+        var tipDiff: String
+    }
+
+    private enum Preparation {
+        case skip(String)
+        case ready(Prepared)
+    }
+
+    /// A review whose branch is gone, or no longer holds its commit, moves to the default branch when the commit
+    /// landed there (the branch was merged, then deleted or reset). Otherwise it would be skipped, and the crawl
+    /// of the default branch never queues it again: a repo and sha are queued once, whatever the first row's
+    /// state. Saved, so the session, the fix branch and the store all name the branch the review ran on, but
+    /// only over a review still queued: one finished while git ran keeps what its finisher wrote.
+    private func retargetedIfLanded(_ review: PartnerReview) async throws -> PartnerReview {
+        let repo = URL(fileURLWithPath: review.repoPath)
+        let branchRef = "refs/heads/\(review.branch)"
+        if try await git.resolveCommit(branchRef, in: repo) != nil,
+           try await git.isAncestor(review.sha, of: branchRef, in: repo) {
+            return review
+        }
+        guard let main = try? await git.defaultBranch(in: repo), main != review.branch,
+              try await git.isAncestor(review.sha, of: "refs/heads/\(main)", in: repo) else { return review }
+        guard var moved = try store.review(id: review.id), moved.state == .queued else { return review }
+        moved.branch = main
+        try store.updateReview(moved)
+        return moved
+    }
+
+    /// The default branch's reviews use `baseFixBranch` and `reviews/<repo>-<id>`; any other branch gets
+    /// `<base>-<branch>` and `reviews/<repo>-<id>-<branch>`, since git checks a branch out in one worktree only.
+    /// `<id>` is the first 8 characters of the repo id, so two listed repos with one name get two directories.
+    /// A worktree already recorded for the repo and branch is reused wherever it is: its fix branch is checked
+    /// out there, and git refuses to check it out a second time.
+    private func prepare(_ review: PartnerReview, baseFixBranch: String) async throws -> Preparation {
+        let repo = URL(fileURLWithPath: review.repoPath)
+        let branchRef = "refs/heads/\(review.branch)"
+        guard try await git.resolveCommit(branchRef, in: repo) != nil else {
+            return .skip("branch \(review.branch) no longer exists")
+        }
+        guard try await git.isAncestor(review.sha, of: branchRef, in: repo) else {
+            return .skip("commit is no longer in \(review.branch)")
+        }
+
+        let isDefault = try await review.branch == git.defaultBranch(in: repo)
+        let suffix = isDefault ? "" : "-\(Self.refSafe(review.branch))"
+        let fixBranch = baseFixBranch + suffix
+        let worktreeKey = isDefault ? "worktree_path" : "worktree_path:\(review.branch)"
+        let directory = try store.reviewSetting(repoID: review.repoID, key: worktreeKey)
+            .flatMap { $0.isEmpty ? nil : URL(fileURLWithPath: $0) }
+            ?? paths.reviewsDirectory.appendingPathComponent(Self.worktreeName(review) + suffix)
+        try FileManager.default.createDirectory(at: paths.reviewsDirectory, withIntermediateDirectories: true)
+        _ = try await worktree.prepare(repo: repo, branch: review.branch, fixBranch: fixBranch, worktree: directory)
+
+        let files = try await git.changedFiles(parent: review.parent, sha: review.sha, in: repo)
+        let superseded = try await git.supersedingCommits(after: review.sha, on: branchRef, files: files, in: repo)
+        let tipDiff = try await git.tipDiff(from: review.sha, to: branchRef, files: files, in: repo)
+        return .ready(Prepared(worktree: directory, worktreeKey: worktreeKey,
+                               fixBranch: fixBranch, superseded: superseded, tipDiff: tipDiff))
+    }
+
+    /// The repo's fix branch base: its own `fix_branch` setting when there is one, else the global setting,
+    /// else (the field was cleared) `defaultValue`; each trimmed of surrounding whitespace. Fix branches are this
+    /// base, or `<base>-<branch>` for a branch other than the default one.
+    nonisolated static func baseFixBranch(repoSetting: String?, global: String, defaultValue: String) -> String {
+        let trimmed = { (value: String?) -> String? in
+            value.map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }.flatMap { $0.isEmpty ? nil : $0 }
+        }
+        return trimmed(repoSetting) ?? trimmed(global) ?? defaultValue
+    }
+
+    /// Whether `branch` is one of the partner's own fix branches for `base`, which the crawler leaves alone:
+    /// reviewing them would review the reviews' fixes, and again under a new sha after every rebase. Fix
+    /// commits merged onto another branch are left alone by their `Reviewed-Commit:` trailer instead
+    /// (``CommitCrawler/crawl(repos:branches:since:store:)``).
+    nonisolated static func isFixBranch(_ branch: String, base: String) -> Bool {
+        branch == base || branch.hasPrefix(base + "-")
+    }
+
+    /// `<repo name>-<first 8 of the repo id>`, both made safe as a file name.
+    static func worktreeName(_ review: PartnerReview) -> String {
+        "\(refSafe(review.repoName))-\(refSafe(review.repoID).prefix(8))"
+    }
+
+    /// `name` with every character git refuses in a ref, and `/`, turned into `-`; also safe as a file name.
+    static func refSafe(_ name: String) -> String {
+        let allowed = Set("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789._-")
+        var result = String(name.map { allowed.contains($0) ? $0 : "-" })
+        while result.contains("..") { result = result.replacingOccurrences(of: "..", with: "-") }
+        if result.hasSuffix(".lock") { result.removeLast(".lock".count) }
+        result = result.trimmingCharacters(in: CharacterSet(charactersIn: "."))
+        return result.isEmpty ? "-" : result
+    }
+
+    /// Writes only over a review still queued: one finished while git ran keeps what its finisher wrote.
+    private func skip(_ review: PartnerReview, reason: String, fixBranch: String) throws -> PartnerReviewStart {
+        guard var skipped = try store.review(id: review.id), skipped.state == .queued else {
+            let current = try store.review(id: review.id) ?? review
+            return PartnerReviewStart(review: current, worktreePath: "", fixBranch: fixBranch, tipDiff: "",
+                                      steps: [])
+        }
+        skipped.state = .skipped
+        skipped.skipReason = reason
+        skipped.finishedAt = now()
+        try store.updateReview(skipped)
+        return PartnerReviewStart(review: skipped, worktreePath: "", fixBranch: fixBranch, tipDiff: "", steps: [])
+    }
+
+    /// Like `skip`, leaves a review someone finished while git ran alone, and raises no item for it.
+    private func markFailed(_ review: PartnerReview, reason: String, from expected: PartnerReviewState = .queued) {
+        do {
+            guard var failed = try store.review(id: review.id), failed.state == expected else { return }
+            failed.state = .failed
+            failed.summary = reason
+            failed.finishedAt = now()
+            try store.updateReview(failed)
+            try notifier.notify(kind: .blocked, title: "review of \(review.repoName) \(review.sha.prefix(7)) failed",
+                                body: reason, reference: ["review": review.id], createdBy: "partner")
+        } catch {
+            Self.logger.error("Recording review \(review.id) as failed: \(error.localizedDescription)")
+        }
+    }
+
+    /// Raises one `blocked` item per worktree and reason; the review it came from stays queued.
+    private func raiseBlockedWorktree(_ review: PartnerReview, reason: String) {
+        let key = Self.worktreeKey(review)
+        guard blockedWorktrees[key] != reason else { return }
+        blockedWorktrees[key] = reason
+        do {
+            try notifier.notify(kind: .blocked, title: "reviews of \(review.repoName) \(review.branch) are blocked",
+                                body: reason + ". Reviews stay queued until the review worktree is fixed.",
+                                reference: ["repo": review.repoID, "branch": review.branch], createdBy: "partner")
+        } catch {
+            Self.logger.error("Raising the blocked worktree of \(review.repoName): \(error.localizedDescription)")
+        }
+    }
+
+    /// One review worktree per repo and branch.
+    private static func worktreeKey(_ review: PartnerReview) -> String {
+        "\(review.repoID)\n\(review.branch)"
+    }
+
+    /// An empty model means Claude Code's own default: the `--model {model}` option is dropped, not left blank.
+    static func fill(_ steps: [PartnerJobStep], values: [String: String]) -> [PartnerJobStep] {
+        guard values["model"]?.isEmpty ?? true else { return PartnerStepTemplate.fill(steps, values: values) }
+        let withoutModel = steps.map { step in
+            var trimmed = step
+            trimmed.command = step.command.replacingOccurrences(
+                of: #"[ \t]*--model(?:[ \t]+|=)\{model\}"#, with: "", options: .regularExpression)
+            return trimmed
+        }
+        return PartnerStepTemplate.fill(withoutModel, values: values)
+    }
+}
+
+extension ReviewService: Loggable {
+    public static nonisolated let logger = makeLogger()
+}

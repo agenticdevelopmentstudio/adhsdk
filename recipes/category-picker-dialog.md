@@ -1,7 +1,7 @@
 ---
 id: 88d69611-4a12-4777-9509-8af6c0626dc7
 title: CategoryPickerDialog
-domain: agenticdevelopertoolkit://recipes/category-picker-dialog
+domain: adhsdk://recipes/category-picker-dialog
 type: ingredient
 version: 1.2.1
 status: review
@@ -21,12 +21,12 @@ tags:
 - tree
 - dialog
 depends-on:
-- agenticdevelopertoolkit://recipes/dialog
-- agenticdevelopertoolkit://recipes/dialog-actions
+- adhsdk://recipes/dialog
+- adhsdk://recipes/dialog-actions
 related:
-- agenticdevelopertoolkit://recipes/list-chooser
-- agenticdevelopertoolkit://recipes/entity-chooser
-- agenticdevelopertoolkit://recipes/alert-and-dialog
+- adhsdk://recipes/list-chooser
+- adhsdk://recipes/entity-chooser
+- adhsdk://recipes/alert-and-dialog
 references: []
 approved-by: ''
 approved-date: ''
@@ -47,7 +47,7 @@ over a **flat** list, and a place in a tree cannot be expressed as a bare name.
 The dialog folds the caller's flat `nodes: CategoryTreeNode[]` into a forest with
 `buildCategoryTree` (`category-tree.ts`), inside a `useMemo` keyed on `nodes` — so
 it recomputes only when the caller's rows actually change, always browsing the
-same materialisation [Topic Detail](agenticdevelopertoolkit://recipes/topic-detail)
+same materialisation [Topic Detail](adhsdk://recipes/topic-detail)
 draws for its own rail. Browsing is a real WAI-ARIA `tree` — one roving tab stop,
 arrow-key expand/move/collapse — and typing into the field switches the list to a
 flat, trail-annotated filter (`role="listbox"`) so a match three levels down is
@@ -287,8 +287,8 @@ Consumes `buildCategoryTree`, `categoryKey`, `CategoryNode`, `CategoryTreeNode` 
 
 **Decision**: Build a tree browser on the base `Dialog` primitives, not on
 `ListChooser`/`EntityChooser`'s flat filter-and-add pattern.
-**Rationale**: [list-chooser](agenticdevelopertoolkit://recipes/list-chooser)
-and [entity-chooser](agenticdevelopertoolkit://recipes/entity-chooser) both pick
+**Rationale**: [list-chooser](adhsdk://recipes/list-chooser)
+and [entity-chooser](adhsdk://recipes/entity-chooser) both pick
 a RECORD from a flat set — the correct model when a name is already a unique,
 sufficient answer (a document's category via `CategoryField`, or a tag). This
 dialog picks a **place** in a tree — a parent — and a place cannot be named
@@ -307,7 +307,7 @@ land on this file first.
 **Approved**: pending
 
 **Decision**: Compose the base `Dialog` primitives, not
-[alert-and-dialog](agenticdevelopertoolkit://recipes/alert-and-dialog)'s
+[alert-and-dialog](adhsdk://recipes/alert-and-dialog)'s
 `AlertModal`.
 **Rationale**: `AlertModal` is an alert/confirm shape with a single description
 slot; this dialog needs an interactive tree body, a search field, and an OK
@@ -320,7 +320,7 @@ onto them.
 **Decision**: The filter result dedupes by category id; the browse tree does
 not.
 **Rationale**: Browsing shows every real placement (the honest DAG picture
-[Topic Detail](agenticdevelopertoolkit://recipes/topic-detail) itself shows for
+[Topic Detail](adhsdk://recipes/topic-detail) itself shows for
 its own rail); a filter result is read as one answer per id, so showing the
 same category twice there would look like two different categories. Deduping
 only the filter view keeps both readings correct for what each is for.
@@ -342,8 +342,8 @@ nothing measurable.
 **Rationale**: `nodes` is a controlled in-memory prop; the host owns fetching,
 loading and error, and reports a REJECTED confirm through `error`/`busy` —
 consistent with the sibling form controls
-([list-chooser](agenticdevelopertoolkit://recipes/list-chooser),
-[entity-chooser](agenticdevelopertoolkit://recipes/entity-chooser)).
+([list-chooser](adhsdk://recipes/list-chooser),
+[entity-chooser](adhsdk://recipes/entity-chooser)).
 **Approved**: pending
 
 ## Compliance

@@ -1,6 +1,6 @@
 ---
 id: 3b310d80-e18d-4f45-9041-10a278f775c1
-domain: adtoolkit://cookbook/ai/providers/provider-runtime
+domain: adhsdk://cookbook/ai/providers/provider-runtime
 type: ingredient
 title: "Provider Runtime"
 version: 1.2.0
@@ -30,19 +30,19 @@ license: MIT
 depends-on: []
 related: []
 references:
-  - packages/apple/AgenticToolkit/Core/AI/AIProvider.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Core/AI/AIRequestBuilder.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Core/AI/ArtificialAnalysisStore.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Core/AI/ClaudeCLI.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Core/AI/ModelCatalogStore.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Core/AI/OllamaModelMetadata.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Core/AI/OllamaModelPageStore.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Core/AI/OpenAIModelCatalog.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Tests/AgenticToolkitCoreTests/ModelCatalogStoreTests.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Tests/AgenticToolkitCoreTests/ArtificialAnalysisStoreTests.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Tests/AgenticToolkitCoreTests/OllamaModelPageStoreTests.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Tests/AgenticToolkitCoreTests/OllamaModelMetadataTests.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Tests/AgenticToolkitCoreTests/OpenAIModelCatalogTests.swift (agenticdevelopertoolkit)
+  - packages/apple/AgenticDeveloperHubSDK/Core/AI/AIProvider.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Core/AI/AIRequestBuilder.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Core/AI/ArtificialAnalysisStore.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Core/AI/ClaudeCLI.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Core/AI/ModelCatalogStore.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Core/AI/OllamaModelMetadata.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Core/AI/OllamaModelPageStore.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Core/AI/OpenAIModelCatalog.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKCoreTests/ModelCatalogStoreTests.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKCoreTests/ArtificialAnalysisStoreTests.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKCoreTests/OllamaModelPageStoreTests.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKCoreTests/OllamaModelMetadataTests.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKCoreTests/OpenAIModelCatalogTests.swift (adhsdk)
 ---
 
 # Provider Runtime
@@ -106,7 +106,7 @@ All eight parts are pure logic with no rendering of their own and no dependency 
 - **cli-binary-missing-throws**: Running the CLI MUST fail with a binary-not-found error before spawning anything when no binary can be located.
 - **cli-argument-shape**: Running the CLI MUST invoke the resolved binary with `-p --system-prompt <systemPrompt>`, and MUST append `--model <model>` only when a model is non-empty, leaving the CLI's own default model selection intact otherwise.
 - **cli-path-augmentation**: Running the CLI MUST prepend `~/.local/bin`, `/usr/local/bin`, and `/opt/homebrew/bin` to the child process's inherited `PATH` environment variable before launch.
-- **cli-headless-marker**: Running the CLI MUST set `AGENTIC_TOOLKIT_HEADLESS=1` in the child's environment so an inherited session-tracking hook can identify this as a programmatic invocation rather than a real interactive session.
+- **cli-headless-marker**: Running the CLI MUST set `ADH_SDK_HEADLESS=1` in the child's environment so an inherited session-tracking hook can identify this as a programmatic invocation rather than a real interactive session.
 - **cli-launch-failure**: Running the CLI MUST catch a failure to launch the process and re-surface it as a launch-failed error carrying the underlying failure's description, never letting the underlying error type escape.
 - **cli-stdin-write-non-fatal**: Running the CLI MUST write the prompt to the child's standard input and close it, and MUST treat a write failure (child already exited) as non-fatal — it MUST proceed to read whatever the child emitted rather than failing the call.
 - **cli-concurrent-drain**: Running the CLI MUST read the child's standard output and standard error streams concurrently with waiting for exit, never sequentially, to avoid deadlocking against a child that fills a stream buffer (~64KB) before draining starts.
@@ -271,7 +271,7 @@ Not applicable: no feature-flag or remote-config check appears in any of the 8 p
 
 ## Analytics
 
-Not applicable: none of the 8 parts emit an analytics or telemetry event. Running the CLI sets an environment marker (`AGENTIC_TOOLKIT_HEADLESS=1`) that a downstream session-tracking hook uses to EXCLUDE, not record, the invocation.
+Not applicable: none of the 8 parts emit an analytics or telemetry event. Running the CLI sets an environment marker (`ADH_SDK_HEADLESS=1`) that a downstream session-tracking hook uses to EXCLUDE, not record, the invocation.
 
 ## Privacy
 
@@ -298,7 +298,7 @@ Not applicable: none of the 8 parts call a logger of any kind — every failure 
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/Core/AI/` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/AI/` |
 
 ## Design Decisions
 
@@ -314,7 +314,7 @@ Not applicable: none of the 8 parts call a logger of any kind — every failure 
 **Rationale**: the source doc comment gives both reasons — a child that writes past the ~64KB pipe buffer would deadlock against a synchronous wait, and `Process.waitUntilExit()` blocks its calling thread, which would otherwise pin a concurrency worker for the duration of the call.
 **Approved**: pending
 
-**Decision**: `ClaudeCLI.run` marks its child process's environment with `AGENTIC_TOOLKIT_HEADLESS=1`.
+**Decision**: `ClaudeCLI.run` marks its child process's environment with `ADH_SDK_HEADLESS=1`.
 **Rationale**: the source doc comment explains this lets an inherited session-tracking hook (named as "stenographer") distinguish a programmatic/headless invocation from a real interactive Claude Code session and exclude it from recording.
 **Approved**: pending
 

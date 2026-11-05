@@ -1,5 +1,5 @@
-import { tightestVisibility, visibilitiesWithin } from '@agenticdevelopertoolkit/registry-types';
-import type { FieldDefLike } from '@agenticdevelopertoolkit/registry-types';
+import { tightestVisibility, visibilitiesWithin } from '@adh-sdk/registry-types';
+import type { FieldDefLike } from '@adh-sdk/registry-types';
 import type { FieldVisibility } from '../client';
 
 /**

@@ -1,7 +1,7 @@
 ---
 id: f98e53f7-ac16-48b0-afa5-544d05bf3f70
 title: Call-to-Action Group
-domain: agenticdevelopertoolkit://recipes/cta
+domain: adhsdk://recipes/cta
 type: ingredient
 version: 1.1.1
 status: review
@@ -23,8 +23,8 @@ tags:
 - landing
 depends-on: []
 related:
-- agenticdevelopertoolkit://recipes/hero
-- agenticdevelopertoolkit://recipes/closer
+- adhsdk://recipes/hero
+- adhsdk://recipes/closer
 references: []
 approved-by: ''
 approved-date: ''

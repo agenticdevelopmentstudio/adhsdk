@@ -1,6 +1,6 @@
 
 - **SwiftUI**: this is the source form. File:
-  `packages/apple/AgenticToolkit/macOS/SystemWindows/UI/WindowExplorerView.swift`.
+  `packages/apple/AgenticDeveloperHubSDK/macOS/SystemWindows/UI/WindowExplorerView.swift`.
   It reads `@EnvironmentObject private var appState: SystemWindowContextsModel`
   and a custom `@Environment(\.theme)` palette, builds its list with
   `List`/`Section`/`ForEach` and `.toggleStyle(.checkbox)` — a macOS-only

@@ -30,11 +30,11 @@ export default defineConfig({
     'next',
     'next/link',
     'next/navigation',
-    '@agentic-toolkit/auth',
-    '@agentic-toolkit/auth/client',
-    '@agentic-toolkit/api-explorer',
-    '@agenticdevelopertoolkit/ui',
-    '@agenticdevelopertoolkit/ui/*',
+    '@adh-sdk/auth',
+    '@adh-sdk/auth/client',
+    '@adh-sdk/api-explorer',
+    '@adh-sdk/ui',
+    '@adh-sdk/ui/*',
   ],
   esbuildPlugins: [
     preserveDirectivesPlugin({

@@ -3,7 +3,7 @@
   "meta": {
     "id": "653874b6-86c4-41cb-9350-5f61bb5fca85",
     "title": "Typing Indicator View",
-    "domain": "adtoolkit://cookbook/ai/chat/chat-window/typing-indicator-view",
+    "domain": "adhsdk://cookbook/ai/chat/chat-window/typing-indicator-view",
     "type": "ingredient",
     "version": "1.3.1",
     "status": "review",
@@ -26,8 +26,8 @@
     ],
     "depends-on": [],
     "related": [
-      "adtoolkit://cookbook/ai/chat/chat-window/chat-transcript-row-view",
-      "adtoolkit://cookbook/ai/chat/chat-window/chat-view"
+      "adhsdk://cookbook/ai/chat/chat-window/chat-transcript-row-view",
+      "adhsdk://cookbook/ai/chat/chat-window/chat-view"
     ],
     "references": [
       "https://developer.apple.com/design/human-interface-guidelines/layout",

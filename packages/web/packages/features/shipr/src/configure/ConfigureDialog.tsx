@@ -2,18 +2,18 @@
 
 import * as React from 'react';
 
-import { StackLevels, StandaloneRailHost } from '@agentic-toolkit/resource';
-import type { TopicLevel } from '@agenticdevelopertoolkit/ui/blocks';
-import { TopicSelectHint } from '@agenticdevelopertoolkit/ui/blocks';
-import { AlertModal } from '@agenticdevelopertoolkit/ui/components/alert-modal';
-import { Button } from '@agenticdevelopertoolkit/ui/components/button';
+import { StackLevels, StandaloneRailHost } from '@adh-sdk/resource';
+import type { TopicLevel } from '@adh-sdk/ui/blocks';
+import { TopicSelectHint } from '@adh-sdk/ui/blocks';
+import { AlertModal } from '@adh-sdk/ui/components/alert-modal';
+import { Button } from '@adh-sdk/ui/components/button';
 import {
   Dialog,
   DialogContent,
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@agenticdevelopertoolkit/ui/components/dialog';
+} from '@adh-sdk/ui/components/dialog';
 import { Download, Minus, Plus, TriangleAlert, Upload } from 'lucide-react';
 
 import { buildDocument } from '../exchange/document';

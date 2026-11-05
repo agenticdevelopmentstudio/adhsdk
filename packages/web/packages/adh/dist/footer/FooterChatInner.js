@@ -4,12 +4,12 @@
 
 // src/footer/FooterChatInner.tsx
 import { createPortal } from "react-dom";
-import { BitbagDock } from "@agentic-toolkit/bitbag";
+import { BitbagDock } from "@adh-sdk/bitbag";
 
 // src/footer/chat-theme-store.ts
 import { useCallback, useSyncExternalStore } from "react";
-import { themeIds } from "@agentic-toolkit/bitbag";
-import { DEV_BUILD } from "@agentic-toolkit/adh-registry/deployment-env";
+import { themeIds } from "@adh-sdk/bitbag";
+import { DEV_BUILD } from "@adh-sdk/adh-registry/deployment-env";
 var STORAGE_KEY = "adh-chat-theme";
 var THEME_SWITCH_ENABLED = DEV_BUILD;
 function readStored() {
@@ -48,7 +48,7 @@ function useChatTheme() {
 }
 
 // src/footer/FooterChatInner.tsx
-import "@agentic-toolkit/bitbag/css/bitbag-dock.css";
+import "@adh-sdk/bitbag/css/bitbag-dock.css";
 import { jsx } from "react/jsx-runtime";
 function FooterChatInner() {
   const [chatTheme] = useChatTheme();

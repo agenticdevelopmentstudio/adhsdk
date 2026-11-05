@@ -2,8 +2,8 @@ import { describe, it, expect } from 'vitest'
 import { conceptDetailsUrl, servesConceptDetails } from '../concepts/details-links'
 import { CONCEPT_SITE_IDS } from '../concepts'
 import { conceptIds, ownerSiteOf } from '../concepts'
-import { SITE_ROUTES } from '@agentic-toolkit/adh-registry/routes'
-import { getSite, type SiteId } from '@agentic-toolkit/adh-registry'
+import { SITE_ROUTES } from '@adh-sdk/adh-registry/routes'
+import { getSite, type SiteId } from '@adh-sdk/adh-registry'
 
 /**
  * A related-concept chip must never point at a URL its owner does not serve.

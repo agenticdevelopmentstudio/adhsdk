@@ -4,20 +4,20 @@ import {
   assertAuthApiUrl,
   assertHoistableDeps,
   assertLinkedDepsInstalled,
-} from "@agentic-toolkit/next-preflight";
-import { mergeHeaders } from "@agentic-toolkit/next-headers";
-import { commitSha, readSiteVersion, resolveBackendUrl } from "@agentic-toolkit/next-env";
-import { siteBuildConfig, type SiteRedirect } from "@agentic-toolkit/adh-registry";
+} from "@adh-sdk/next-preflight";
+import { mergeHeaders } from "@adh-sdk/next-headers";
+import { commitSha, readSiteVersion, resolveBackendUrl } from "@adh-sdk/next-env";
+import { siteBuildConfig, type SiteRedirect } from "@adh-sdk/adh-registry";
 // By NAME, not by relative path — the point of this package existing at all. The old
 // `next-config-base.mjs:13` had to reach across the filesystem
-// (`./external/agentictoolkit/packages/web/packages/themes/src/materialize-fonts.mjs`)
+// (`./external/adhsdk/packages/web/packages/themes/src/materialize-fonts.mjs`)
 // because it sat at the pnpm-workspace root, which declared no dependencies and so
 // could not resolve the bare specifier. This package CAN declare
-// `@agenticdevelopertoolkit/themes` (see package.json), which is what makes the relative path
+// `@adh-sdk/themes` (see package.json), which is what makes the relative path
 // obsolete. Kept EXTERNAL in tsup.config.ts, unlike the other four siblings — see the
 // comment there — because the module locates its own font files relative to its own
 // `import.meta.url` and must not move.
-import { materializeThemeFonts } from "@agenticdevelopertoolkit/themes/materialize-fonts";
+import { materializeThemeFonts } from "@adh-sdk/themes/materialize-fonts";
 import { currentSiteId } from "./site-id.js";
 
 export { currentSiteId };

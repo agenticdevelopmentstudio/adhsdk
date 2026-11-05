@@ -1,7 +1,7 @@
 ---
 id: d46b3e1c-9cd9-41b6-bdd2-524ece5e294b
 title: "Notes Model"
-domain: adtoolkit://cookbook/workspace/notes/notes-model
+domain: adhsdk://cookbook/workspace/notes/notes-model
 type: ingredient
 version: 1.1.3
 status: review
@@ -24,15 +24,15 @@ tags:
   - concurrency
   - taxonomy
 depends-on:
-  - agenticdevelopertoolkit://recipes/markdown-core
+  - adhsdk://recipes/markdown-core
 related: []
 references:
-  - packages/apple/AgenticToolkit/macOS/Features/NotesWindow/Note.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/macOS/Features/NotesWindow/NoteFolder.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/macOS/Features/NotesWindow/NoteStorage.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/macOS/Features/NotesWindow/NoteTaxonomyProviding.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/macOS/Features/NotesWindow/MarkdownNoteStorage.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/macOS/Features/NotesWindow/NotesManager.swift (agenticdevelopertoolkit)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/Features/NotesWindow/Note.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/Features/NotesWindow/NoteFolder.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/Features/NotesWindow/NoteStorage.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/Features/NotesWindow/NoteTaxonomyProviding.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/Features/NotesWindow/MarkdownNoteStorage.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/Features/NotesWindow/NotesManager.swift (adhsdk)
 approved-by: ""
 approved-date: ""
 ---
@@ -473,7 +473,7 @@ factory) | Category: the manager's name
 - **AppKit / UIKit**: The six sources given here — `Note.swift`,
   `NoteFolder.swift`, `NoteStorage.swift`, `NoteTaxonomyProviding.swift`,
   `MarkdownNoteStorage.swift`, and `NotesManager.swift`, all under
-  `packages/apple/AgenticToolkit/macOS/Features/NotesWindow/` — are the
+  `packages/apple/AgenticDeveloperHubSDK/macOS/Features/NotesWindow/` — are the
   source platform: a macOS-only target consumed by
   `NotesCoordinator`/`NotesSplitViewController` (out of scope for this
   recipe) via `NotificationCenter` observation and `@MainActor` calls.
@@ -492,8 +492,8 @@ factory) | Category: the manager's name
   nor `NotesManager` add Keychain storage or any protection beyond what
   that store applies (see Privacy). Nothing in these six files is itself
   AppKit-specific — they import only `Foundation`, `os`,
-  `AgenticToolkitCore`, `AgenticToolkitMarkdown`, and
-  `AgenticToolkitDatabase` — so the same files would compile unchanged
+  `AgenticDeveloperHubSDKCore`, `AgenticDeveloperHubSDKMarkdown`, and
+  `AgenticDeveloperHubSDKDatabase` — so the same files would compile unchanged
   into a UIKit iOS target.
 - **WinUI 3**: `Note`/`NoteFolder` become a `record`/`class` pair (or a
   lightweight `INotifyPropertyChanged` model if the folder tree needs to
@@ -511,7 +511,7 @@ factory) | Category: the manager's name
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/macOS/Features/NotesWindow/` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/NotesWindow/` |
 
 ## Design Decisions
 
@@ -561,7 +561,7 @@ Separation of concerns holds structurally: `NoteStorage` is a narrow, four-metho
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
 | 1.1.3 | 2026-10-04 | Mike Fullerton | Dropped the stray reference to the hub's notes client from the overview. |
-| 1.1.2 | 2026-10-04 | Mike Fullerton | Legacy recipe citations restored to the legacy recipes' own agenticdevelopertoolkit://recipes/ domains; the adtoolkit://recipes/ form named nothing. |
+| 1.1.2 | 2026-10-04 | Mike Fullerton | Legacy recipe citations restored to the legacy recipes' own adhsdk://recipes/ domains; the adhsdk://recipes/ form named nothing. |
 | 1.1.1 | 2026-10-04 | Mike Fullerton | Removed the upward dependency on adh/hub/content/markdown-store (frontmatter depends-on and in-text links); the document store is described in plain terms. |
 | 1.1.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to workspace/notes/. |
 | 1.0.1 | 2026-09-25 | Mike Fullerton | Moved into the library cookbook; added Reference Implementations. |

@@ -44,9 +44,9 @@
   cancelling and reassigning the private `refreshTask` field; and its
   private `isObserving` flag guards `startObservingActivation()` against
   registering the activation observer more than once. Because
-  `AgenticDeveloperToolkit` also exports a type named `Permission`, a
+  `AgenticDeveloperHubSDK` also exports a type named `Permission`, a
   caller whose target imports both modules must spell this component's
-  permission type `AgenticToolkitPermissions.Permission` to resolve the
+  permission type `AgenticDeveloperHubSDKPermissions.Permission` to resolve the
   ambiguity. `PermissionsPanelView.init(coder:)` is marked
   `@available(*, unavailable)` at compile time and calls `fatalError` if
   invoked at runtime, since this component is never instantiated from a

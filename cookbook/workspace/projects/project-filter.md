@@ -1,7 +1,7 @@
 ---
 id: 0396e49d-f933-4454-bacc-5cf97beda7de
 title: "Project Filter"
-domain: adtoolkit://cookbook/workspace/projects/project-filter
+domain: adhsdk://cookbook/workspace/projects/project-filter
 type: ingredient
 version: 1.1.0
 status: review
@@ -23,11 +23,11 @@ tags:
 depends-on: []
 related: []
 references:
-  - packages/apple/AgenticToolkit/macOS/Features/Projects/ProjectFilter.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/macOS/Features/Projects/GitRepo.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/macOS/Features/Projects/ProjectBrowserViewController.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/macOS/UI/ViewControllers/DocumentPane/BreadcrumbPopoverViewController.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Tests/AgenticToolkitMacOSTests/Projects/ProjectFilterTests.swift (agenticdevelopertoolkit)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectFilter.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/GitRepo.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectBrowserViewController.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/DocumentPane/BreadcrumbPopoverViewController.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKMacOSTests/Projects/ProjectFilterTests.swift (adhsdk)
 approved-by: ""
 approved-date: ""
 ---
@@ -248,8 +248,8 @@ Not applicable: this component contains no logging call of any kind.
 ## Platform Notes
 
 - **SwiftUI**: The source
-  (`packages/apple/AgenticToolkit/macOS/Features/Projects/ProjectFilter.swift`,
-  tests `Tests/AgenticToolkitMacOSTests/Projects/ProjectFilterTests.swift`)
+  (`packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectFilter.swift`,
+  tests `Tests/AgenticDeveloperHubSDKMacOSTests/Projects/ProjectFilterTests.swift`)
   imports only `Foundation` — no AppKit, UIKit, or SwiftUI dependency — so it
   ports unchanged into a SwiftUI-hosted app. A SwiftUI list would call
   `ProjectFilter.matches(_:query:)` inside its data source's `filter` and
@@ -303,7 +303,7 @@ Not applicable: this component contains no logging call of any kind.
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/macOS/Features/Projects/ProjectFilter.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectFilter.swift` |
 
 ## Design Decisions
 

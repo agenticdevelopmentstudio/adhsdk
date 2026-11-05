@@ -1,7 +1,7 @@
 ---
 id: bc4c4fe9-aa33-47a7-94d2-fb688e70caec
 title: "OpenVSXClient"
-domain: adtoolkit://cookbook/workspace/extensions/registry/open-vsx-client
+domain: adhsdk://cookbook/workspace/extensions/registry/open-vsx-client
 type: ingredient
 version: 1.0.4
 status: review
@@ -22,13 +22,13 @@ tags:
   - registry-client
 depends-on: []
 related:
-  - adtoolkit://cookbook/workspace/extensions/manifest/extension-identity-component
+  - adhsdk://cookbook/workspace/extensions/manifest/extension-identity-component
 references:
-  - packages/apple/AgenticToolkit/Core/Extensions/OpenVSXClient.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Core/Networking/BoundedBodyLoader.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Core/Extensions/ExtensionIdentityComponent.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Core/Extensions/OpenVSXCatalog.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Core/Loggable.swift (agenticdevelopertoolkit)
+  - packages/apple/AgenticDeveloperHubSDK/Core/Extensions/OpenVSXClient.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Core/Networking/BoundedBodyLoader.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Core/Extensions/ExtensionIdentityComponent.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Core/Extensions/OpenVSXCatalog.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Core/Loggable.swift (adhsdk)
 approved-by: ""
 approved-date: ""
 ---
@@ -59,7 +59,7 @@ never installs anything; it only hands back registry-published bytes and
 metadata, safely, to whichever caller does.
 
 All line references below are to
-`packages/apple/AgenticToolkit/Core/Extensions/OpenVSXClient.swift` unless
+`packages/apple/AgenticDeveloperHubSDK/Core/Extensions/OpenVSXClient.swift` unless
 another file is named.
 
 ## Behavioral Requirements
@@ -453,7 +453,7 @@ Category: `OpenVSXClient`
 ## Platform Notes
 
 - **SwiftUI**: Source:
-  `packages/apple/AgenticToolkit/Core/Extensions/OpenVSXClient.swift`, its
+  `packages/apple/AgenticDeveloperHubSDK/Core/Extensions/OpenVSXClient.swift`, its
   return types in `Core/Extensions/OpenVSXCatalog.swift`, its shared bounded
   body reader in `Core/Networking/BoundedBodyLoader.swift`, its identity
   guard in `Core/Extensions/ExtensionIdentityComponent.swift`, and its
@@ -490,8 +490,8 @@ Category: `OpenVSXClient`
 - **AppKit / UIKit**: No divergence from the SwiftUI bullet above — the
   source is framework-agnostic `Foundation`/`URLSession` code, callable
   identically from an AppKit-hosted (macOS) or UIKit-hosted (iOS) caller.
-  `AgenticToolkitCore`, the framework target that builds this file, is
-  configured `platform: macOS` in `packages/apple/AgenticToolkit/project.yml`
+  `AgenticDeveloperHubSDKCore`, the framework target that builds this file, is
+  configured `platform: macOS` in `packages/apple/AgenticDeveloperHubSDK/project.yml`
   today, so an iOS caller would first need the type made available to an
   iOS target; `OpenVSXClient` itself needs no AppKit/UIKit-specific change
   to run there.
@@ -532,7 +532,7 @@ Category: `OpenVSXClient`
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/Core/Extensions/OpenVSXClient.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Extensions/OpenVSXClient.swift` |
 
 ## Design Decisions
 

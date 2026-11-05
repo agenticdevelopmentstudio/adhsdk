@@ -1,5 +1,5 @@
 {
-  "name": "@agentic-toolkit/profile",
+  "name": "@adh-sdk/profile",
   "version": "0.1.0",
   "description": "A principal's PROFILE surface: social links, addresses, the per-row privacy tiers that publish them, and metered usage — the panels a user's settings and an organization's both render.",
   "license": "UNLICENSED",
@@ -31,11 +31,11 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@agentic-toolkit/data": "workspace:*",
-    "@agentic-toolkit/resource": "workspace:*",
+    "@adh-sdk/data": "workspace:*",
+    "@adh-sdk/resource": "workspace:*",
     "@tanstack/react-query": "^5.62.0",
     "lucide-react": "^1.16.0",
-    "@agenticdevelopertoolkit/ui": "workspace:*"
+    "@adh-sdk/ui": "workspace:*"
   },
   "peerDependencies": {
     "next": ">=15",

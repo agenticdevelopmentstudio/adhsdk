@@ -4,8 +4,8 @@
 // hang below the form in edit mode — the card's conversation and its activity trail. This
 // package's vitest config is jsdom (see vitest.config.ts).
 //
-// The api boundaries are mocked in the domain barrels (@agentic-toolkit/data/projects and
-// @agentic-toolkit/data/reactions), so the editor's own wiring is exercised, not the transport.
+// The api boundaries are mocked in the domain barrels (@adh-sdk/data/projects and
+// @adh-sdk/data/reactions), so the editor's own wiring is exercised, not the transport.
 // The mocks are PARTIAL (importOriginal-spread) because the panes below also use pure folds from
 // those barrels — `threadOf`, the reaction kind constant — which have nothing to stub.
 //
@@ -19,8 +19,8 @@ import { render, screen, fireEvent, waitFor, cleanup } from "@testing-library/re
 
 // The former @/api/{project-activity,project-work-items} hub modules now ship in ONE domain
 // barrel, so their stubs merge into a single mock.
-vi.mock("@agentic-toolkit/data/projects", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("@agentic-toolkit/data/projects")>()),
+vi.mock("@adh-sdk/data/projects", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@adh-sdk/data/projects")>()),
   projectActivityApi: {
     projectActivity: vi.fn(),
     workItemActivity: vi.fn(),
@@ -29,8 +29,8 @@ vi.mock("@agentic-toolkit/data/projects", async (importOriginal) => ({
   projectCommentsApi: { list: vi.fn(), add: vi.fn(), edit: vi.fn(), remove: vi.fn() },
 }));
 
-vi.mock("@agentic-toolkit/data/reactions", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("@agentic-toolkit/data/reactions")>()),
+vi.mock("@adh-sdk/data/reactions", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@adh-sdk/data/reactions")>()),
   reactionsApi: { list: vi.fn(), add: vi.fn(), remove: vi.fn() },
 }));
 
@@ -40,8 +40,8 @@ import {
   projectActivityApi,
   projectCommentsApi,
   type ProjectActivity,
-} from "@agentic-toolkit/data/projects";
-import { reactionsApi } from "@agentic-toolkit/data/reactions";
+} from "@adh-sdk/data/projects";
+import { reactionsApi } from "@adh-sdk/data/reactions";
 import {
   projectWorkItemsApi,
   type EstimateScale,
@@ -49,7 +49,7 @@ import {
   type Milestone,
   type ProjectStatus,
   type WorkItem,
-} from "@agentic-toolkit/data/projects";
+} from "@adh-sdk/data/projects";
 
 const workItemActivity = vi.mocked(projectActivityApi.workItemActivity);
 const listComments = vi.mocked(projectCommentsApi.list);

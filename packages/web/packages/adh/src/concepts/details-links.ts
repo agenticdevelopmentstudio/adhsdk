@@ -1,5 +1,5 @@
-import { SITE_ROUTES } from '@agentic-toolkit/adh-registry/routes'
-import { siteProdUrl, type SiteId } from '@agentic-toolkit/adh-registry'
+import { SITE_ROUTES } from '@adh-sdk/adh-registry/routes'
+import { siteProdUrl, type SiteId } from '@adh-sdk/adh-registry'
 
 /** The shared concept-details route. A site that has this file serves a details
  *  page for ANY concept id the tree gives it; a site without it does not. */

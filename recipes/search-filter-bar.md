@@ -1,7 +1,7 @@
 ---
 id: c57b1aed-ef38-4803-b38a-2d7e0aeced5f
 title: SearchFilterBar
-domain: agenticdevelopertoolkit://recipes/search-filter-bar
+domain: adhsdk://recipes/search-filter-bar
 type: ingredient
 version: 1.3.2
 status: review
@@ -22,8 +22,8 @@ tags:
 - select
 - toolbar
 depends-on:
-- agenticdevelopertoolkit://recipes/input
-- agenticdevelopertoolkit://recipes/select
+- adhsdk://recipes/input
+- adhsdk://recipes/select
 related: []
 references: []
 approved-by: ''
@@ -34,7 +34,7 @@ approved-date: ''
 
 ## Overview
 
-A search-and-filter bar in `@agenticdevelopertoolkit/ui` that sits above a list. It combines a
+A search-and-filter bar in `@adh-sdk/ui` that sits above a list. It combines a
 single icon-led search `Input` with a configurable row of filter `Select`s. Every
 axis is **fully controlled** by the caller (value + `onChange`), and the option
 sets for each select are supplied by the caller — so narrowing the list (which
@@ -171,7 +171,7 @@ role="search"
 
 ## Configuration
 
-`@agenticdevelopertoolkit/ui/components/search-filter-bar`
+`@adh-sdk/ui/components/search-filter-bar`
 
 | Option | Type | Default | Description |
 |---|---|---|---|

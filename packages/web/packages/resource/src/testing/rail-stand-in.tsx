@@ -1,9 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import type { TopicDetailItem, TopicLevel, TopicListSearch } from "@agenticdevelopertoolkit/ui/blocks";
+import type { TopicDetailItem, TopicLevel, TopicListSearch } from "@adh-sdk/ui/blocks";
 
-// ONE shared stand-in for the real rail (`TopicRail` in `@agenticdevelopertoolkit/ui`'s
+// ONE shared stand-in for the real rail (`TopicRail` in `@adh-sdk/ui`'s
 // `topic-detail.tsx`), used by every feature package's component tests that render a rail HOST
 // harness rather than mount the real one. Before this file, five suites
 // (teams/notebook/research/projects' — and DocsCorpus's — feature tests) each hand-rolled a

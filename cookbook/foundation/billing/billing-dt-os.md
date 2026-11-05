@@ -1,7 +1,7 @@
 ---
 id: ED610AA4-2717-4242-A8B9-C4616377DBD9
 title: "Billing DTOs"
-domain: adtoolkit://cookbook/foundation/billing/billing-dt-os
+domain: adhsdk://cookbook/foundation/billing/billing-dt-os
 type: ingredient
 version: 1.0.0
 status: review
@@ -22,10 +22,10 @@ tags:
   - wire
 depends-on: []
 related:
-  - adtoolkit://cookbook/foundation/billing/billing-xpc-client
-  - adtoolkit://cookbook/foundation/billing/billing-xpc-protocol
-  - adtoolkit://cookbook/foundation/billing/billing-model
-  - adtoolkit://cookbook/foundation/billing/billing-prefs
+  - adhsdk://cookbook/foundation/billing/billing-xpc-client
+  - adhsdk://cookbook/foundation/billing/billing-xpc-protocol
+  - adhsdk://cookbook/foundation/billing/billing-model
+  - adhsdk://cookbook/foundation/billing/billing-prefs
 references: []
 approved-by: ""
 approved-date: ""
@@ -142,7 +142,7 @@ Not applicable: this code makes no log calls.
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/Core/Billing/BillingDTOs.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Billing/BillingDTOs.swift` |
 
 ## Design Decisions
 

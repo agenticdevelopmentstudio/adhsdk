@@ -1,21 +1,21 @@
 "use client";
 
 import { useState, type ReactElement } from "react";
-import { Badge } from "@agenticdevelopertoolkit/ui/components/badge";
-import { Button } from "@agenticdevelopertoolkit/ui/components/button";
-import { ErrorText } from "@agenticdevelopertoolkit/ui/components/error-text";
-import { ListChooser } from "@agenticdevelopertoolkit/ui/components/list-chooser";
-import { AlertModal } from "@agenticdevelopertoolkit/ui/components/alert-modal";
+import { Badge } from "@adh-sdk/ui/components/badge";
+import { Button } from "@adh-sdk/ui/components/button";
+import { ErrorText } from "@adh-sdk/ui/components/error-text";
+import { ListChooser } from "@adh-sdk/ui/components/list-chooser";
+import { AlertModal } from "@adh-sdk/ui/components/alert-modal";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogFooter,
-} from "@agenticdevelopertoolkit/ui/components/dialog";
-import { DialogActions } from "@agenticdevelopertoolkit/ui/components/dialog-actions";
-import { Field } from "@agenticdevelopertoolkit/ui/blocks/field";
-import { Input } from "@agenticdevelopertoolkit/ui/components/input";
+} from "@adh-sdk/ui/components/dialog";
+import { DialogActions } from "@adh-sdk/ui/components/dialog-actions";
+import { Field } from "@adh-sdk/ui/blocks/field";
+import { Input } from "@adh-sdk/ui/components/input";
 import type { SavedViewsController } from "./useSavedViews";
 import { DEFAULT_ITEM_WORDS, type ItemWords } from "./vocabulary";
 

@@ -18,10 +18,10 @@ def test_the_real_spec_has_complete_aggregates():
 def test_activity_is_in_every_aggregate_that_claims_it():
     spec = yaml.safe_load(at.DEFAULT_SPEC.read_text())
     aggregates = {name: body["targets"] for name, body in spec["aggregateTargets"].items()}
-    assert "AgenticToolkitActivity-macOS" in aggregates[at.MACOS_ALL]
-    assert "AgenticToolkitActivity-macOS" in aggregates[at.MACOS_TESTS_ALL]
-    assert "AgenticToolkitActivityTests" in aggregates[at.MACOS_TESTS_ALL]
-    assert "AgenticToolkitActivity-iOS" in aggregates[at.IOS_ALL]
+    assert "AgenticDeveloperHubSDKActivity-macOS" in aggregates[at.MACOS_ALL]
+    assert "AgenticDeveloperHubSDKActivity-macOS" in aggregates[at.MACOS_TESTS_ALL]
+    assert "AgenticDeveloperHubSDKActivityTests" in aggregates[at.MACOS_TESTS_ALL]
+    assert "AgenticDeveloperHubSDKActivity-iOS" in aggregates[at.IOS_ALL]
 
 
 def test_a_target_left_out_is_named():

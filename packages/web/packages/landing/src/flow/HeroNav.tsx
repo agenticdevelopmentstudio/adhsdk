@@ -2,7 +2,7 @@
 
 import { Fragment, useRef } from 'react'
 import type { ReactElement } from 'react'
-import { useTextLens } from '@agenticdevelopertoolkit/textlens'
+import { useTextLens } from '@adh-sdk/textlens'
 import type { NavLink } from '../chrome/types'
 
 export interface HeroNavProps {

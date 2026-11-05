@@ -35,7 +35,7 @@ export async function startStorageThread(
 ): Promise<StorageThread> {
   // Resolved through this package's `exports`, never a relative path, so the entry is
   // always the BUILT dist — same reason as MonitorWorkerClient.spawn.
-  const entry = createRequire(import.meta.url).resolve("@agentic-toolkit/status-server/storage-worker");
+  const entry = createRequire(import.meta.url).resolve("@adh-sdk/status-server/storage-worker");
   const worker = new Worker(entry, { workerData: { db: conn } satisfies StorageWorkerData });
 
   await new Promise<void>((resolve, reject) => {

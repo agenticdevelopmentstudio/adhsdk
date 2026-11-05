@@ -1,7 +1,7 @@
 ---
 id: 01942F60-6711-43E7-A7B2-A8E7CB4C2CDA
 title: "Billing Model"
-domain: adtoolkit://cookbook/foundation/billing/billing-model
+domain: adhsdk://cookbook/foundation/billing/billing-model
 type: ingredient
 version: 1.0.1
 status: review
@@ -21,9 +21,9 @@ tags:
   - state
 depends-on: []
 related:
-  - adtoolkit://cookbook/foundation/billing/billing-xpc-client
-  - adtoolkit://cookbook/foundation/billing/billing-dt-os
-  - adtoolkit://cookbook/foundation/billing/billing-editing
+  - adhsdk://cookbook/foundation/billing/billing-xpc-client
+  - adhsdk://cookbook/foundation/billing/billing-dt-os
+  - adhsdk://cookbook/foundation/billing/billing-editing
 references: []
 approved-by: ""
 approved-date: ""
@@ -144,7 +144,7 @@ Not applicable: this code makes no log calls.
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/Core/Billing/BillingModel.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Billing/BillingModel.swift` |
 
 ## Design Decisions
 
@@ -159,7 +159,7 @@ Not applicable: this code makes no log calls.
 | [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
 | [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
 
-separation-of-concerns passes: the model owns cached state, polling and write sequencing and is written against the service interface, so transport, storage and presentation are elsewhere. unit-test-coverage passes: `BillingModelTests` and `BillingModelAssignmentTests` in `AgenticToolkitCoreTests/Billing` cover refresh, sticky failure, refusals, consumer-aware polling, quiet polls, the write-versus-refresh race, assignment, timers, backfill and date parsing.
+separation-of-concerns passes: the model owns cached state, polling and write sequencing and is written against the service interface, so transport, storage and presentation are elsewhere. unit-test-coverage passes: `BillingModelTests` and `BillingModelAssignmentTests` in `AgenticDeveloperHubSDKCoreTests/Billing` cover refresh, sticky failure, refusals, consumer-aware polling, quiet polls, the write-versus-refresh race, assignment, timers, backfill and date parsing.
 
 ## Change History
 

@@ -1,7 +1,7 @@
 ---
 id: a17a8253-0be8-4646-a76a-6941b1af3528
 title: Tooltip
-domain: agenticdevelopertoolkit://recipes/tooltip
+domain: adhsdk://recipes/tooltip
 type: ingredient
 version: 1.1.1
 status: review
@@ -22,8 +22,8 @@ tags:
 - tooltips
 depends-on: []
 related:
-- agenticdevelopertoolkit://recipes/popover
-- agenticdevelopertoolkit://recipes/inline-popover
+- adhsdk://recipes/popover
+- adhsdk://recipes/inline-popover
 references:
 - https://base-ui.io/react/components/tooltip/
 approved-by: ''

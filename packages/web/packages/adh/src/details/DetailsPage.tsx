@@ -7,20 +7,20 @@ import {
   subtreeOf,
   type ConceptNode,
   type DetailSection,
-} from '@agentic-toolkit/adh/concepts'
+} from '@adh-sdk/adh/concepts'
 // Relative on purpose, unlike the two package-path imports around it: this leaf holds no
 // module state and carries no directive, so inlining it into the `details` entry costs a
 // duplicate of two pure functions and nothing else. The route map it reads is external
-// (`@agentic-toolkit/adh-registry`), which is where the one-copy rule actually applies.
+// (`@adh-sdk/adh-registry`), which is where the one-copy rule actually applies.
 import { conceptDetailsUrl } from '../concepts/details-links'
-import { siteProdUrl, type SiteId } from '@agentic-toolkit/adh-registry'
+import { siteProdUrl, type SiteId } from '@adh-sdk/adh-registry'
 // PRESERVED IMPORT — the package path, never './DetailsRail'. Same directive boundary
 // as graph/ConceptGraph → graph/ConceptGraphClient: this page is a server module and the
 // rail (which filters + arrow-key navigates) is 'use client', so under `bundle: true,
 // splitting: false` a relative specifier would inline it and hoist its directive over
 // this whole chunk. Its own tsup entry + `external` + exports subpath is the other half
 // of the remedy; see verify-bundle-boundaries.py.
-import { DetailsRail } from '@agentic-toolkit/adh/details/DetailsRail'
+import { DetailsRail } from '@adh-sdk/adh/details/DetailsRail'
 import { Breadcrumb } from './Breadcrumb'
 import { DetailSections } from './DetailSections'
 

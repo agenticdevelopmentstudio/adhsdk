@@ -2,7 +2,7 @@
 import { cleanup, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import type { ApplicationPlatform } from "@agentic-toolkit/data/ecosystem-config";
+import type { ApplicationPlatform } from "@adh-sdk/data/ecosystem-config";
 import type { PrototypeApplication } from "../api/applications-prototype";
 import { ApplicationDetail, appBlank } from "./ApplicationDetail";
 

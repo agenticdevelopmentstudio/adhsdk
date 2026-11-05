@@ -3,7 +3,7 @@
   "meta": {
     "id": "aaf56f9b-896b-4f74-9e18-1ef4116270a9",
     "title": "Window Contexts",
-    "domain": "adtoolkit://cookbook/system/system-windows/window-contexts",
+    "domain": "adhsdk://cookbook/system/system-windows/window-contexts",
     "type": "ingredient",
     "version": "1.2.0",
     "status": "review",
@@ -26,9 +26,9 @@
     ],
     "depends-on": [],
     "related": [
-      "adtoolkit://cookbook/system/system-windows/window-context-model",
-      "adtoolkit://cookbook/system/system-windows/system-windows-engine",
-      "adtoolkit://cookbook/system/system-windows/matching/title-heuristics"
+      "adhsdk://cookbook/system/system-windows/window-context-model",
+      "adhsdk://cookbook/system/system-windows/system-windows-engine",
+      "adhsdk://cookbook/system/system-windows/matching/title-heuristics"
     ],
     "references": [
       "https://developer.apple.com/documentation/coregraphics/cgwindowid",

@@ -1,7 +1,7 @@
 ---
 id: 4b16f67f-3877-47d3-97eb-af99581a5b11
 title: "Status Server Monitor Fetch Vercel Projects"
-domain: adtoolkit://cookbook/status/service/monitor/fetch-vercel-projects
+domain: adhsdk://cookbook/status/service/monitor/fetch-vercel-projects
 type: ingredient
 version: 1.0.2
 status: review
@@ -28,22 +28,22 @@ depends-on:
   - agenticdevelopercookbook://guidelines/implementing/networking/pagination
   - agenticdevelopercookbook://guidelines/implementing/networking/caching
 related:
-  - adtoolkit://cookbook/status/service/monitor/alerts
-  - adtoolkit://cookbook/status/service/monitor/fetch-cloudflare
-  - adtoolkit://cookbook/status/service/monitor/fetch-crunchy
-  - adtoolkit://cookbook/status/service/monitor/deploy-status
+  - adhsdk://cookbook/status/service/monitor/alerts
+  - adhsdk://cookbook/status/service/monitor/fetch-cloudflare
+  - adhsdk://cookbook/status/service/monitor/fetch-crunchy
+  - adhsdk://cookbook/status/service/monitor/deploy-status
 references:
-  - packages/web/packages/status-server/src/monitor/fetch-vercel-projects.ts (agenticdevelopertoolkit)
-  - packages/web/packages/status-server/src/monitor/deploy-status.ts (agenticdevelopertoolkit)
-  - packages/web/packages/status-server/src/monitor/provider-deploy.ts (agenticdevelopertoolkit)
-  - packages/web/packages/status-server/src/monitor/format.ts (agenticdevelopertoolkit)
-  - packages/web/packages/status-server/src/monitor/time-ago.ts (agenticdevelopertoolkit)
-  - packages/web/packages/deploy-platform/src/cooldown/provider-cooldown.ts (agenticdevelopertoolkit)
-  - packages/web/packages/deploy-platform/src/util/map-limit.ts (agenticdevelopertoolkit)
-  - packages/web/packages/status-server/test/vercel-projects-budget.test.ts (agenticdevelopertoolkit)
-  - packages/web/packages/status-server/test/vercel-conclusive-backfill.test.ts (agenticdevelopertoolkit)
-  - packages/web/packages/status-server/test/prod-staleness.test.ts (agenticdevelopertoolkit)
-  - packages/web/packages/status-server/test/latest-deploys-of.test.ts (agenticdevelopertoolkit)
+  - packages/web/packages/status-server/src/monitor/fetch-vercel-projects.ts (adhsdk)
+  - packages/web/packages/status-server/src/monitor/deploy-status.ts (adhsdk)
+  - packages/web/packages/status-server/src/monitor/provider-deploy.ts (adhsdk)
+  - packages/web/packages/status-server/src/monitor/format.ts (adhsdk)
+  - packages/web/packages/status-server/src/monitor/time-ago.ts (adhsdk)
+  - packages/web/packages/deploy-platform/src/cooldown/provider-cooldown.ts (adhsdk)
+  - packages/web/packages/deploy-platform/src/util/map-limit.ts (adhsdk)
+  - packages/web/packages/status-server/test/vercel-projects-budget.test.ts (adhsdk)
+  - packages/web/packages/status-server/test/vercel-conclusive-backfill.test.ts (adhsdk)
+  - packages/web/packages/status-server/test/prod-staleness.test.ts (adhsdk)
+  - packages/web/packages/status-server/test/latest-deploys-of.test.ts (adhsdk)
 approved-by: ""
 approved-date: ""
 ---
@@ -60,7 +60,7 @@ approved-date: ""
 
 - **env-shape**: `fetchVercelProductionStates` MUST accept one `env` object with optional fields `VERCEL_API_TOKEN?: string`, `VERCEL_TEAM_ID?: string`, `overallBudgetMs?: number`, `metaOnly?: boolean`, and `callTimeoutMs?: number`, and MUST return a `Promise` resolving to a `VercelProjectsResult` (`{ ok: boolean; states: VercelProdState[]; meta: VercelProjectMeta[]; deploys: ProviderDeploy[] }`).
 - **noop-missing-token**: When `env.VERCEL_API_TOKEN` is falsy (absent, empty string, or otherwise falsy), `fetchVercelProductionStates` MUST return `{ ok: true, states: [], meta: [], deploys: [] }` immediately, performing no network call.
-- **cooldown-gate-on-entry**: After the token check and before any network call, `fetchVercelProductionStates` MUST check `rateLimitedUntil("vercel")` (`@agentic-toolkit/deploy-platform/cooldown`, external) and, when it returns a truthy cooldown expiry, MUST return `{ ok: false, states: [], meta: [], deploys: [] }` immediately, performing no network call. This is the identical shared-registry check the deploys fetcher (`fetch-vercel.ts`, external) performs, and — per that module's own header comment — the registry is deliberately shared across the Node `Worker` thread the monitor cycle runs on and the API thread that enumerates `/deploy-projects`, so a 429 either side records is visible to this function's very next call.
+- **cooldown-gate-on-entry**: After the token check and before any network call, `fetchVercelProductionStates` MUST check `rateLimitedUntil("vercel")` (`@adh-sdk/deploy-platform/cooldown`, external) and, when it returns a truthy cooldown expiry, MUST return `{ ok: false, states: [], meta: [], deploys: [] }` immediately, performing no network call. This is the identical shared-registry check the deploys fetcher (`fetch-vercel.ts`, external) performs, and — per that module's own header comment — the registry is deliberately shared across the Node `Worker` thread the monitor cycle runs on and the API thread that enumerates `/deploy-projects`, so a 429 either side records is visible to this function's very next call.
 
 ### Budget and Timeouts
 
@@ -274,7 +274,7 @@ A fully successful poll (every page fetched cleanly, no unparseable `createdAt`,
 
 - **SwiftUI**: not a SwiftUI concern (no view). An Apple companion backend embedding this polling pattern would model `VercelProjectsResult` as a `Sendable` `struct { ok: Bool; states: [VercelProdState]; meta: [VercelProjectMeta]; deploys: [ProviderDeploy] }`, the two module-scope caches (`teamSlugCache`, `domainListCache`) as `actor`-isolated state so a concurrent read/write from two `Task`s cannot race the way two same-thread JavaScript calls can, and the domain/backfill fan-outs as `TaskGroup`s capped to 8 concurrent child tasks (mirroring `mapLimit`'s "at most `limit` in flight" contract by hand, since structured concurrency has no direct equivalent). The distinct 5,000ms-fixed vs. deadline-derived timeouts are worth preserving explicitly, e.g. via two separate `Task.sleep`-racing helpers rather than one shared timeout wrapper.
 - **Compose**: same non-UI framing as SwiftUI. A Kotlin port models the two caches behind a `Mutex`-guarded holder (or a `StateFlow` if a later reader needs to observe slug/domain changes), the bounded fan-outs with `kotlinx.coroutines`' `Semaphore(8)` guarding a `coroutineScope { names.map { async { ... } } }`, and the fixed-vs-shared-deadline timeout distinction with two separate `withTimeoutOrNull` call sites rather than one shared client-level timeout (Ktor/OkHttp's own timeout config is static per client, not computed per call the way this file recomputes `remaining` before nearly every request).
-- **React/Web** (source platform): lives at `packages/web/packages/status-server/src/monitor/fetch-vercel-projects.ts` as a set of plain async/pure functions on the Node status backend, imported by `sync.ts`'s poll cycle and by `deploy-projects`/`integrations` reconciliation routes (both external); it depends on four sibling in-repo modules (`./time-ago`, `./deploy-status`, `./format`, `./provider-deploy`) and two exports of the vendored `@agentic-toolkit/deploy-platform` package (`util`'s `mapLimit`, `cooldown`'s `noteRateLimited`/`rateLimitedUntil`) — none of it is client-side React.
+- **React/Web** (source platform): lives at `packages/web/packages/status-server/src/monitor/fetch-vercel-projects.ts` as a set of plain async/pure functions on the Node status backend, imported by `sync.ts`'s poll cycle and by `deploy-projects`/`integrations` reconciliation routes (both external); it depends on four sibling in-repo modules (`./time-ago`, `./deploy-status`, `./format`, `./provider-deploy`) and two exports of the vendored `@adh-sdk/deploy-platform` package (`util`'s `mapLimit`, `cooldown`'s `noteRateLimited`/`rateLimitedUntil`) — none of it is client-side React.
 - **AppKit / UIKit**: same non-UI framing as SwiftUI. A macOS/iOS agent embedding this pattern has no Node-`Worker`-per-thread module-duplication concern to solve for its OWN caches the way this file's `teamSlugCache`/`domainListCache` implicitly have (per the Concurrent Access edge case above) — a Swift `actor` wrapping each cache is a single shared instance regardless of which thread or `Task` calls into it, so the "each thread gets its own copy" quirk this file exhibits has no direct analogue to reproduce; it would need to be deliberately introduced (e.g. one actor instance per isolation domain) to match this file's behavior, or more likely simply avoided as an improvement.
 - **WinUI 3**: a .NET port models `ProviderDeploy`, `VercelProjectMeta`, and `VercelProdState` as `record`s with the same fields this file populates, the two 1-hour caches as `IMemoryCache` entries (or a hand-rolled `(value, expiresAt)` tuple behind a `lock`, matching this file's own hand-rolled TTL check rather than pulling in a full cache library), the bounded fan-outs as `Task.WhenAll` over a `SemaphoreSlim(8, 8)`-gated set of tasks (acquire before starting a project's `Task`, release in a `finally`, the direct `mapLimit` analogue), and each request via `HttpClient.GetAsync` with a `CancellationTokenSource` whose `CancelAfter` is computed per call from either the shared deadline (`remaining`) or a fixed 5,000ms literal — not `HttpClient.Timeout`, which is static per client and cannot express either "whatever time is left in the overall budget" or "skip the call below a minimum window" (slug-minimum-call-window) without per-call logic layered on top. Vercel's JSON bodies deserialize via `System.Text.Json` records shaped like `VercelDeploymentSummary`/`VercelProject`/`VercelDomain`; `toValidDate`'s accept-ISO-or-epoch-or-Date, reject-anything-else contract is worth porting explicitly over `DateTime.Parse`, which throws by default rather than returning a sentinel. The cross-thread cooldown registry this file gates on (`SharedArrayBuffer`/`Atomics` in `provider-cooldown.ts`, external) has no direct .NET analogue needed for a single-process Windows App SDK host; a `static` field guarded by `Interlocked`/`lock` suffices there, unlike this file's OWN two caches, which — per the Concurrent Access edge case — are NOT cross-thread shared in the source and so need no special treatment to match on a single-process .NET host either.
 

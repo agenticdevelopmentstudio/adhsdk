@@ -1,7 +1,7 @@
 ---
 id: 5c2d7315-314e-4343-93fd-f3aa1a0c803e
 title: "Extension Quick Pick"
-domain: adtoolkit://cookbook/workspace/extensions/vscode-api/window/extension-quick-pick-view
+domain: adhsdk://cookbook/workspace/extensions/vscode-api/window/extension-quick-pick-view
 type: ingredient
 version: 1.2.2
 status: review
@@ -402,7 +402,7 @@ logging call.
   closing the accessible-label gap flagged in Accessibility above rather
   than reproducing it.
 - **AppKit/UIKit** (source platform): Source file
-  `packages/apple/AgenticToolkit/macOS/Features/Extensions/UI/ExtensionQuickPickViewController.swift`.
+  `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/UI/ExtensionQuickPickViewController.swift`.
   A macOS-only (`import AppKit`) `NSViewController`, `@MainActor`,
   composing an `NSSearchField` and a `ThemedTableView` inside an
   `NSScrollView`, with `PickerKeyboardController` for keyboard routing and
@@ -484,7 +484,7 @@ logging call.
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/macOS/Features/Extensions/UI/ExtensionQuickPickViewController.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/UI/ExtensionQuickPickViewController.swift` |
 
 ## Design Decisions
 

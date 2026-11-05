@@ -6,7 +6,7 @@ import {
   consumeRetriedFlag,
   type EventProps,
 } from './analytics'
-import { scrubPath } from '@agenticdevelopertoolkit/analytics'
+import { scrubPath } from '@adh-sdk/analytics'
 
 // A single wrapper around window.fetch times EVERY browser request — authenticated and
 // unauthenticated alike — so we get one real-user latency dataset with no per-call-site

@@ -1,7 +1,7 @@
 // Local wire types for the Organizations + workspace-members clients — the backend row and
 // request-body shapes those clients read/send (see ecosystems/wire.ts for the pattern: these
 // replace the hub's generated `SuccessBody<…>` / `RequestBody<…>` from
-// `@agentic-toolkit/adh-api-types`, adh product vocabulary a generic data client must not take
+// `@adh-sdk/adh-api-types`, adh product vocabulary a generic data client must not take
 // on). Transcribed from the `RegistryOrganization` / `RegistryProvisionedOrganization` /
 // `WorkspaceMember` component schemas the backend's openapi.json documents for
 // `/organization/organizations*` and `/workspaces/{slug}/members`.

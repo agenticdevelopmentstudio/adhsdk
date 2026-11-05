@@ -1,7 +1,7 @@
 ---
 id: 8F4C2B7A-9D3E-4C5F-B2E8-7F6A3C1D5E9B
 title: Split
-domain: agenticdevelopertoolkit://recipes/split
+domain: adhsdk://recipes/split
 type: ingredient
 version: 1.1.1
 status: review
@@ -21,9 +21,9 @@ tags:
 - responsive
 depends-on: []
 related:
-- agenticdevelopertoolkit://recipes/deck
-- agenticdevelopertoolkit://recipes/screen
-- agenticdevelopertoolkit://recipes/wrap
+- adhsdk://recipes/deck
+- adhsdk://recipes/screen
+- adhsdk://recipes/wrap
 references: []
 approved-by: ''
 approved-date: ''

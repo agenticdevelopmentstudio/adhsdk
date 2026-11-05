@@ -1,8 +1,8 @@
 import type { ReactElement } from 'react'
-import { getSite, siteHeaderTitle, siteProdUrl, type SiteId } from '@agentic-toolkit/adh-registry'
-import { getSiteStory, type StoryPillar } from '@agentic-toolkit/adh-registry'
+import { getSite, siteHeaderTitle, siteProdUrl, type SiteId } from '@adh-sdk/adh-registry'
+import { getSiteStory, type StoryPillar } from '@adh-sdk/adh-registry'
 // Package path, not relative — see the matching comment in MarketingLanding.tsx.
-import { siteConcept } from '@agentic-toolkit/adh/concepts'
+import { siteConcept } from '@adh-sdk/adh/concepts'
 import { BRAND_PROMISE, PILLAR_COPY, STAGE_LABEL } from './story-copy'
 
 // Insertion order of PILLAR_COPY = display order of the masterbrand's three cards.

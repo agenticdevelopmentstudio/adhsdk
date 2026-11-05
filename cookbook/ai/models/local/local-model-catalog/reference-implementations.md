@@ -1,5 +1,5 @@
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/AIPluginKit/LocalModelCatalog.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/AIPluginKit/LocalModelCatalog.swift` |
 

@@ -1,7 +1,7 @@
 ---
 id: eb0b16a5-f27e-4b28-9517-12bedc892b7f
 title: Doc Article
-domain: agenticdevelopertoolkit://recipes/doc-article
+domain: adhsdk://recipes/doc-article
 type: ingredient
 version: 1.1.1
 status: review

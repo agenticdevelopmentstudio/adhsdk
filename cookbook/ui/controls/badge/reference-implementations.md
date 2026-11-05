@@ -1,5 +1,5 @@
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/macOS/UI/Badge/Badge.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/Badge/Badge.swift` |
 

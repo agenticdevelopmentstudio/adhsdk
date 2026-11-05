@@ -3,11 +3,11 @@
 import type { ReactNode } from "react";
 import { Plus, Trash2 } from "lucide-react";
 
-import { AlertModal } from "@agenticdevelopertoolkit/ui/components/alert-modal";
-import { cn } from "@agenticdevelopertoolkit/ui/lib/utils";
-import { Button } from "@agenticdevelopertoolkit/ui/components/button";
-import { Separator } from "@agenticdevelopertoolkit/ui/components/separator";
-import { useDetailTitle } from "@agenticdevelopertoolkit/ui/blocks/detail-title";
+import { AlertModal } from "@adh-sdk/ui/components/alert-modal";
+import { cn } from "@adh-sdk/ui/lib/utils";
+import { Button } from "@adh-sdk/ui/components/button";
+import { Separator } from "@adh-sdk/ui/components/separator";
+import { useDetailTitle } from "@adh-sdk/ui/blocks/detail-title";
 import { SaveCancelButtons } from "./SaveCancelButtons";
 import { HelpPopover } from "../HelpPopover";
 import { ToolbarPortal } from "../rail-host";

@@ -1,21 +1,21 @@
 "use client";
 
 import { useMemo, type ReactElement } from "react";
-import { defineSiteHome } from "@agentic-toolkit/adh/home";
-import { ProductsFeature, type ProductsFeatureProps } from "@agentic-toolkit/adh-products";
-import type { EcosystemsPathSelection } from "@agentic-toolkit/ecosystems";
+import { defineSiteHome } from "@adh-sdk/adh/home";
+import { ProductsFeature, type ProductsFeatureProps } from "@adh-sdk/adh-products";
+import type { EcosystemsPathSelection } from "@adh-sdk/ecosystems";
 // Grammar from the server-safe ./parse subpath — the ONLY home for parse helpers now
 // (the barrels deliberately do not re-export them; see any feature barrel's note).
-import { parseEcosystemsPath } from "@agentic-toolkit/ecosystems/parse";
+import { parseEcosystemsPath } from "@adh-sdk/ecosystems/parse";
 // The feature fetches through the toolkit's react-query cache, which reads the toolkit's OWN
 // QueryClient context — mount its provider here (same physical module as the hooks; a
 // host-provided QueryClientProvider would be a different copy and invisible to them).
-import { ToolkitQueryProvider } from "@agentic-toolkit/data/query";
+import { ToolkitQueryProvider } from "@adh-sdk/data/query";
 import { productFeaturePanelRenderer } from "./feature-panels";
 
 /**
  * The Products feature — this site's gated product surface: agenticdeveloperproducts.com is where
- * you manage products. This is the SAME @agentic-toolkit/adh-products surface the hub's
+ * you manage products. This is the SAME @adh-sdk/adh-products surface the hub's
  * `/<workspace>/products` route renders — since 2026-08-30 literally so, because that route mounts
  * THIS model.
  *

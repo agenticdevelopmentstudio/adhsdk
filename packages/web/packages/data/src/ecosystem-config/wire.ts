@@ -1,7 +1,7 @@
 // Local wire types for the storage token-principal client — the backend row + request-body
 // shapes the client reads/sends (see ecosystems/wire.ts for the pattern: these replace the
 // hub's generated `SuccessBody<"/tokens", …>` / `RequestBody<"/tokens", "post">` from
-// `@agentic-toolkit/adh-api-types`, adh product vocabulary a generic data client must not
+// `@adh-sdk/adh-api-types`, adh product vocabulary a generic data client must not
 // take on). Transcribed from the `TokenPrincipal` / `TokenPrincipalCreated` component
 // schemas and the POST body the backend's openapi.json documents for `/tokens`.
 // Type-only file.

@@ -1,7 +1,7 @@
 ---
 id: c97bebaf-9e6d-49a7-a4bb-90e8e0ea0181
 title: Spinner
-domain: agenticdevelopertoolkit://recipes/spinner
+domain: adhsdk://recipes/spinner
 type: ingredient
 version: 1.1.1
 status: review

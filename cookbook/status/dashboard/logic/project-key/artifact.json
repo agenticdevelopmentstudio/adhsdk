@@ -3,7 +3,7 @@
   "meta": {
     "id": "1ea53189-24d5-4ba3-9d83-507ed2d44cfb",
     "title": "Project Key",
-    "domain": "adtoolkit://cookbook/status/dashboard/logic/project-key",
+    "domain": "adhsdk://cookbook/status/dashboard/logic/project-key",
     "type": "ingredient",
     "version": "1.1.0",
     "status": "review",
@@ -21,8 +21,8 @@
     "tags": [],
     "depends-on": [],
     "related": [
-      "adtoolkit://cookbook/status/dashboard/logic/auto-configure",
-      "adtoolkit://cookbook/status/dashboard/state/deploy-projects"
+      "adhsdk://cookbook/status/dashboard/logic/auto-configure",
+      "adhsdk://cookbook/status/dashboard/state/deploy-projects"
     ],
     "references": [],
     "approved-by": "",

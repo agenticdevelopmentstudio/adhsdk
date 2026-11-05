@@ -15,7 +15,7 @@ filtering, and its selection model belong entirely to
 `ProjectBrowserViewController`, and the registry data belongs to
 `ProjectsCoordinator`; neither is duplicated here. unit-test-coverage fails
 because no test file exercises `ProjectChooserWindow` or
-`ProjectChooserContentViewController` at all — `packages/apple/AgenticToolkit/Tests`
+`ProjectChooserContentViewController` at all — `packages/apple/AgenticDeveloperHubSDK/Tests`
 has no `ProjectChooserWindowTests.swift` or equivalent, so none of this
 recipe's requirements (the onFinish wiring, the modal-identity guard on
 close, the button enablement synchronization) has automated coverage.

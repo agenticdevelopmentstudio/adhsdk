@@ -36,7 +36,7 @@
   equality check or partial-update path. The content-setting operation is
   called only when the panel/topic selection changes — `SplitViewController.show(_:)` and
   `refreshHelp()`, in
-  `packages/apple/AgenticToolkit/macOS/SystemIntegration/ComposableSettingsWindow/SplitViewController/SplitViewController.swift`,
+  `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/SplitViewController/SplitViewController.swift`,
   are the only call sites (reached through `PanelHostView` and
   `HelpDrawerController.setHelp(_:)`), and both fire from the reader
   changing which panel or topic is selected — not on a hot or

@@ -3,7 +3,7 @@
   "meta": {
     "id": "FA95BD9D-DE48-4B37-8B30-748DC7B09280",
     "title": "LRU Cache",
-    "domain": "adtoolkit://cookbook/foundation/collections/lru-cache",
+    "domain": "adhsdk://cookbook/foundation/collections/lru-cache",
     "type": "ingredient",
     "version": "1.0.0",
     "status": "review",
@@ -26,7 +26,7 @@
     ],
     "depends-on": [],
     "related": [
-      "adtoolkit://cookbook/foundation/collections/expiring-memo"
+      "adhsdk://cookbook/foundation/collections/expiring-memo"
     ],
     "references": [],
     "approved-by": "",

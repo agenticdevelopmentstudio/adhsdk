@@ -3,7 +3,7 @@
   "meta": {
     "id": "4d0c6859-ed34-46ca-bfe4-ca87234ad684",
     "title": "Chat View",
-    "domain": "adtoolkit://cookbook/ai/chat/chat-window/chat-view",
+    "domain": "adhsdk://cookbook/ai/chat/chat-window/chat-view",
     "type": "ingredient",
     "version": "1.2.1",
     "status": "review",
@@ -26,10 +26,10 @@
       "transcript"
     ],
     "depends-on": [
-      "adtoolkit://cookbook/ai/chat/chat-window/chat-day-banner-view",
-      "adtoolkit://cookbook/ai/chat/chat-window/chat-transcript-row-view",
-      "adtoolkit://cookbook/ai/chat/chat-window/chat-bubble-view",
-      "adtoolkit://cookbook/ai/chat/chat-window/typing-indicator-view"
+      "adhsdk://cookbook/ai/chat/chat-window/chat-day-banner-view",
+      "adhsdk://cookbook/ai/chat/chat-window/chat-transcript-row-view",
+      "adhsdk://cookbook/ai/chat/chat-window/chat-bubble-view",
+      "adhsdk://cookbook/ai/chat/chat-window/typing-indicator-view"
     ],
     "related": [],
     "references": [],

@@ -1,4 +1,4 @@
-# @agenticdevelopertoolkit/editing
+# @adh-sdk/editing
 
 One owner of the draft, the Save button and the unsaved-changes guard, for every
 editable surface on the platform.
@@ -8,7 +8,7 @@ no dirty flag to compute, no `canSave` to assemble, no guard to remember to
 publish. Forgetting is what this package removes.
 
 ```tsx
-import { EditingContainer, checkbox, rdid, section, dangerZone, text } from "@agenticdevelopertoolkit/editing"
+import { EditingContainer, checkbox, rdid, section, dangerZone, text } from "@adh-sdk/editing"
 
 const fields = {
   displayName: text({ label: "Display name", required: true }),

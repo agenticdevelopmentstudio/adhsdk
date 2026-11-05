@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useState, type ReactElement, type ReactNode } from "react";
-import { FeatureTitle } from "@agentic-toolkit/resource";
+import { FeatureTitle } from "@adh-sdk/resource";
 import { cn } from "../lib/utils";
-import { railLinkVariants } from "@agenticdevelopertoolkit/ui/lib/nav-rail";
+import { railLinkVariants } from "@adh-sdk/ui/lib/nav-rail";
 import { RequestsPane } from "../invitations/RequestsPane";
 import { PendingUsersPane } from "../invitations/PendingUsersPane";
 import { InvitesPane } from "../invitations/InvitesPane";

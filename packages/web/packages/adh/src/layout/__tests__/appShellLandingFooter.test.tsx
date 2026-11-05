@@ -11,7 +11,7 @@ vi.mock('next/navigation', () => ({
 
 // Markers for the bar and bitbag, for the reason appShellChromeGate.test.tsx gives; the route
 // switch is the real one, since which footer it picks is what this file is about.
-vi.mock('@agentic-toolkit/adh/footer', async () => {
+vi.mock('@adh-sdk/adh/footer', async () => {
   const { FooterForRoute } = await import('../../footer/FooterForRoute')
   return {
     FooterForRoute,

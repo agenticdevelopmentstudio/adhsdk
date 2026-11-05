@@ -1,7 +1,7 @@
 ---
 id: 412B845B-7496-4347-A710-1BD29325C1BE
 title: "Persona Chat Coordinator"
-domain: agenticdevelopertoolkit://ingredients/chat/persona-chat-coordinator
+domain: adhsdk://ingredients/chat/persona-chat-coordinator
 type: ingredient
 version: 1.3.0
 status: draft

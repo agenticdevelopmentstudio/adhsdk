@@ -364,7 +364,7 @@ describe("/snapshot.openIssues agrees with /board.problems", () => {
 // pill — with the whole suite still passing. These are the tests that catch that.
 describe("/live derives staleProd and provider health from the board", () => {
   // The seeded detail and the asserted detail DIFFER, and that is the point. `hub-help-testing`
-  // ends in `-testing`, so `envFromProject` (vendor/@agentic-toolkit/deploy-platform/src/canon,
+  // ends in `-testing`, so `envFromProject` (vendor/@adh-sdk/deploy-platform/src/canon,
   // via `deployEnv`) calls its logical environment "testing" even though Vercel's own target for
   // it is "production" — the promotion-vs-tier distinction this whole branch exists to get right.
   // `staleProdProblems` (derive-problems.ts:347-349) therefore rewrites the word `production` out

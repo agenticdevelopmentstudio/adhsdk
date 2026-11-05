@@ -19,8 +19,8 @@ import {
   type BackendInvite,
   type BackendAdminNote,
   type BackendHistoryEntry,
-} from "@agentic-toolkit/adh-ui/invitations-types";
-import { adminInvitationEndpoints } from "@agentic-toolkit/adh-ui/invitations-endpoints";
+} from "@adh-sdk/adh-ui/invitations-types";
+import { adminInvitationEndpoints } from "@adh-sdk/adh-ui/invitations-endpoints";
 
 // Platform-admin endpoint surface (/api/auth/* + /api/system/*).
 const E = adminInvitationEndpoints();

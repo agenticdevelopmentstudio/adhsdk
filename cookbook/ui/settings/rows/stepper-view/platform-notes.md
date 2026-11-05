@@ -28,7 +28,7 @@
   this source omits. Clamp at the bounds with no wraparound, mirroring
   disables-stepper-wraparound.
 - **AppKit/UIKit** (source platform): Source file
-  `packages/apple/AgenticToolkit/macOS/SystemIntegration/ComposableSettingsWindow/Views/StepperView.swift`.
+  `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/Views/StepperView.swift`.
   A macOS-only (`import AppKit`) `NSView` subclass, `@MainActor`, inside
   the `ComposableSettings` namespace, conforming to
   `SettingsViewProtocol`. It composes a label, a monospaced value label,

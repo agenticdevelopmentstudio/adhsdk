@@ -1,8 +1,8 @@
 'use client'
 
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { authedJson, authedRequest } from '@agentic-toolkit/auth/client'
-import { errorMessage } from '@agenticdevelopertoolkit/ui/lib/errors'
+import { authedJson, authedRequest } from '@adh-sdk/auth/client'
+import { errorMessage } from '@adh-sdk/ui/lib/errors'
 import type { CrudRow, CrudTableMeta } from './types'
 
 /** Every site mounts its BFF proxy at /api (stripped on forward). */

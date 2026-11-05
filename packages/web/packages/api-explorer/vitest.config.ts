@@ -1,6 +1,6 @@
 import { defineConfig } from 'vitest/config'
 
-// Self-contained config so `pnpm --filter @agentic-toolkit/api-explorer run test`
+// Self-contained config so `pnpm --filter @adh-sdk/api-explorer run test`
 // (cwd = this package) discovers src/__tests__/*. The workspace-root
 // config excludes every package that owns a config, so this is the only one that runs
 // these tests. No test files exist here yet — the one test this package had

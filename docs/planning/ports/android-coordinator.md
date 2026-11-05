@@ -14,10 +14,10 @@ marked so it can be argued with before code exists.
 packages/android/
   settings.gradle.kts
   build.gradle.kts
-  persona-toolkit/                     # library module
+  adh-sdk/                     # library module
     build.gradle.kts
-    src/main/kotlin/com/agenticdevelopertoolkit/agenticdevelopertoolkit/
-      contract/                        # mirrors packages/apple/AgenticDeveloperToolkit/Sources one-to-one
+    src/main/kotlin/com/mikefullerton/agenticdeveloperhubsdk/
+      contract/                        # mirrors packages/apple/AgenticDeveloperHubSDK/SDK/Sources one-to-one
         backend/Backend.kt
         backend/InboundEvent.kt
         messages/Message.kt
@@ -138,7 +138,7 @@ Kotlin equivalent; the two harnesses in this repo's history are the model.
    whether `java.time` is available directly or needs desugaring for `Message`
    timestamps.
 2. **Is the contract package published separately from the coordinator?** Web
-   splits them (`@agenticdevelopertoolkit/chat/contract`); Apple does not. A
+   splits them (`@adh-sdk/chat/contract`); Apple does not. A
    consumer writing its own `Backend` wants the contract without OkHttp.
 3. **Compose UI.** Out of this port's scope — this is the coordinator only. The
    chat control is a separate ingredient (`ai-chat-control`) and a separate plan.

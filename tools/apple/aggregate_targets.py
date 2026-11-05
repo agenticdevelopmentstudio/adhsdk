@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""Checks that AgenticToolkit's aggregate targets reach every target they claim to.
+"""Checks that AgenticDeveloperHubSDK's aggregate targets reach every target they claim to.
 
-`AgenticToolkitMacOSAll` promises every macOS framework,
-`AgenticToolkitMacOSTestsAll` those plus every test bundle, and
-`AgenticToolkitiOSAll` every target that claims iOS. A target added to
+`AgenticDeveloperHubSDKMacOSAll` promises every macOS framework,
+`AgenticDeveloperHubSDKMacOSTestsAll` those plus every test bundle, and
+`AgenticDeveloperHubSDKiOSAll` every target that claims iOS. A target added to
 `project.yml` but to none of them is compiled by nothing that runs the whole
 suite — the Activity framework and its 449 tests sat outside both macOS
 aggregates that way. This reads the spec and names each target an aggregate
@@ -19,11 +19,11 @@ from pathlib import Path
 
 import yaml
 
-DEFAULT_SPEC = Path(__file__).resolve().parents[2] / "packages/apple/AgenticToolkit/project.yml"
+DEFAULT_SPEC = Path(__file__).resolve().parents[2] / "packages/apple/AgenticDeveloperHubSDK/project.yml"
 
-MACOS_ALL = "AgenticToolkitMacOSAll"
-MACOS_TESTS_ALL = "AgenticToolkitMacOSTestsAll"
-IOS_ALL = "AgenticToolkitiOSAll"
+MACOS_ALL = "AgenticDeveloperHubSDKMacOSAll"
+MACOS_TESTS_ALL = "AgenticDeveloperHubSDKMacOSTestsAll"
+IOS_ALL = "AgenticDeveloperHubSDKiOSAll"
 
 
 def _platforms(target: dict) -> set[str]:

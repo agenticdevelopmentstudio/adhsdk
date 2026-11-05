@@ -49,22 +49,22 @@ class ToolkitPackages(unittest.TestCase):
             site.mkdir()
             site = site_with(site, {})
             deps = {
-                "@agenticdevelopertoolkit/site-template": link("site-template", site),
-                "@agentic-toolkit/bitbag": link("features/bitbag", site),
+                "@adh-sdk/site-template": link("site-template", site),
+                "@adh-sdk/bitbag": link("features/bitbag", site),
                 "next": "16.0.0",
                 "local": "link:../somewhere-else",
             }
             (site / "package.json").write_text(json.dumps({"dependencies": deps}))
             self.assertEqual(
                 build_site.toolkit_packages(site / "package.json"),
-                ["@agentic-toolkit/bitbag", "@agenticdevelopertoolkit/site-template"],
+                ["@adh-sdk/bitbag", "@adh-sdk/site-template"],
             )
 
     def test_a_link_into_another_toolkit_checkout_is_refused(self):
         with tempfile.TemporaryDirectory() as tmp:
             other = Path(tmp) / "external" / "adhsdk" / "packages" / "web" / "packages" / "landing"
             other.mkdir(parents=True)
-            site = site_with(Path(tmp), {"@agenticdevelopertoolkit/landing": f"link:{other}"})
+            site = site_with(Path(tmp), {"@adh-sdk/landing": f"link:{other}"})
             with self.assertRaises(SystemExit) as raised:
                 build_site.toolkit_packages(site / "package.json")
             self.assertIn("not the toolkit this script belongs to", str(raised.exception.code))
@@ -85,7 +85,7 @@ class PeerWorkspaces(unittest.TestCase):
     def test_a_link_into_another_workspace_is_grouped_under_its_root(self):
         site = site_with(self.root, {
             "@peer/avatar": "link:../external/peer/web/packages/avatar",
-            "@agenticdevelopertoolkit/site-template": link("site-template", self.root / "site"),
+            "@adh-sdk/site-template": link("site-template", self.root / "site"),
             "next": "16.0.0",
         })
         self.assertEqual(build_site.peer_workspaces(site / "package.json"), {self.peer: ["@peer/avatar"]})
@@ -98,8 +98,8 @@ class PeerWorkspaces(unittest.TestCase):
 class ToolkitFilters(unittest.TestCase):
     def test_each_package_is_built_with_its_workspace_dependencies(self):
         self.assertEqual(
-            build_site.toolkit_filters(["@agenticdevelopertoolkit/site-template", "@agentic-toolkit/auth"]),
-            ["--filter", "@agenticdevelopertoolkit/site-template...", "--filter", "@agentic-toolkit/auth..."],
+            build_site.toolkit_filters(["@adh-sdk/site-template", "@adh-sdk/auth"]),
+            ["--filter", "@adh-sdk/site-template...", "--filter", "@adh-sdk/auth..."],
         )
 
 
@@ -126,13 +126,13 @@ class Main(unittest.TestCase):
         root.mkdir()
         self.site = site_with(root, {})
         (self.site / "package.json").write_text(json.dumps({"dependencies": {
-            "@agenticdevelopertoolkit/site-template": link("site-template", self.site),
+            "@adh-sdk/site-template": link("site-template", self.site),
         }}))
         self.calls: list[tuple[list[str], Path, dict[str, str]]] = []
         patches = [
             mock.patch.object(build_site, "run", side_effect=lambda cmd, cwd, env: self.calls.append((cmd, cwd, env))),
             mock.patch.object(build_site, "pnpm", side_effect=lambda args: ["pnpm", *args]),
-            mock.patch.object(build_site, "workspace_projects", return_value={"@agenticdevelopertoolkit/site-template"}),
+            mock.patch.object(build_site, "workspace_projects", return_value={"@adh-sdk/site-template"}),
             mock.patch.dict(build_site.os.environ, {"NODE_ENV": "production"}),
         ]
         for patch in patches:
@@ -141,7 +141,7 @@ class Main(unittest.TestCase):
 
     def test_installs_and_builds_the_filtered_toolkit_then_the_site(self):
         self.assertEqual(build_site.main(["--site", str(self.site)]), 0)
-        filters = ["--filter", "@agenticdevelopertoolkit/site-template..."]
+        filters = ["--filter", "@adh-sdk/site-template..."]
         self.assertEqual(
             [(cmd, cwd) for cmd, cwd, _ in self.calls],
             [
@@ -160,7 +160,7 @@ class Main(unittest.TestCase):
         (self.site / "package.json").write_text(json.dumps({"dependencies": deps}))
         with mock.patch.object(
             build_site, "workspace_projects",
-            side_effect=lambda env, workspace: {"@agenticdevelopertoolkit/site-template", "@peer/avatar"},
+            side_effect=lambda env, workspace: {"@adh-sdk/site-template", "@peer/avatar"},
         ):
             build_site.main(["--site", str(self.site), "--toolkits-only"])
         self.assertEqual(

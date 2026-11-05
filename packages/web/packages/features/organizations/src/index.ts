@@ -1,4 +1,4 @@
-// @agentic-toolkit/organizations — the Organizations feature: the caller's organizations as a
+// @adh-sdk/organizations — the Organizations feature: the caller's organizations as a
 // list, and each one's Server bags / Tokens / Teams / Settings beside it.
 //
 // The feature is one export; the three below it are the pieces the HUB still mounts on its own

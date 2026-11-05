@@ -1,5 +1,5 @@
 import type { DeploymentDTO } from "./types";
-import { platformCanon, deployTargetKey } from "@agentic-toolkit/deploy-platform/canon";
+import { platformCanon, deployTargetKey } from "@adh-sdk/deploy-platform/canon";
 
 export interface PlatformSummary {
   platform: string;
@@ -50,7 +50,7 @@ export interface EndpointLike {
   environment?: string | null;
 }
 
-// platformCanon + deployTargetKey now live in @agentic-toolkit/deploy-platform/canon.
+// platformCanon + deployTargetKey now live in @adh-sdk/deploy-platform/canon.
 // Imported above for use in this module; re-exported so existing `./overview`
 // importers keep their path.
 export { platformCanon, deployTargetKey };

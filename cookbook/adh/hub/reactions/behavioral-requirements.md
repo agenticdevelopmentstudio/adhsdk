@@ -1,7 +1,7 @@
 
 ### Module-wide
 
-- **wire-types-own-transcription**: `ReactionRow` and `ReactionCreateBody` MUST come from this module's own `./wire`, hand-narrowed from the backend's OpenAPI `Reaction` schema rather than imported from `@agentic-toolkit/adh-api-types`, per `wire.ts`'s own comment ("a generic data client must not take on" adh's product vocabulary).
+- **wire-types-own-transcription**: `ReactionRow` and `ReactionCreateBody` MUST come from this module's own `./wire`, hand-narrowed from the backend's OpenAPI `Reaction` schema rather than imported from `@adh-sdk/adh-api-types`, per `wire.ts`'s own comment ("a generic data client must not take on" adh's product vocabulary).
 - **api-proxy-path-prefix**: every request `reactionsApi` issues MUST address the fixed `BASE` path `/api/content/reactions`, or an id-suffixed path under it.
 - **path-segment-encoding**: every dynamic value interpolated into a request path (`targetKind`, the joined `targetIds` batch, `reactionId`) MUST be passed through `enc` (`encodeURIComponent`) first.
 - **stateless-module**: `reactionsApi` MUST hold no instance- or module-level mutable state between calls; every method's request MUST be built solely from the arguments passed to that call. `MAX_TARGET_IDS` is a fixed constant, not per-call state.

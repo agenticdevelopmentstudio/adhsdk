@@ -9,11 +9,11 @@ import {
   Screen,
   TourStrip,
   Wrap
-} from "@agenticdevelopertoolkit/landing";
-import { NavChrome } from "@agenticdevelopertoolkit/landing/client";
+} from "@adh-sdk/landing";
+import { NavChrome } from "@adh-sdk/landing/client";
 
 // src/landing/tour.ts
-import { siteProdUrl } from "@agentic-toolkit/adh-registry";
+import { siteProdUrl } from "@adh-sdk/adh-registry";
 var TOUR_SCREEN_ID = "tour";
 function tourStep(edge) {
   if (edge === void 0) return void 0;
@@ -80,8 +80,8 @@ import {
   joinMeta,
   renderBlock as renderBlock2,
   TourStrip as TourStrip2
-} from "@agenticdevelopertoolkit/landing";
-import { NavChrome as NavChrome2, Reveal } from "@agenticdevelopertoolkit/landing/client";
+} from "@adh-sdk/landing";
+import { NavChrome as NavChrome2, Reveal } from "@adh-sdk/landing/client";
 import { Fragment as Fragment2, jsx as jsx2, jsxs as jsxs2 } from "react/jsx-runtime";
 var TONES = ["soft", "dark"];
 function renderBand(section, key) {
@@ -141,7 +141,7 @@ function LandingFlowTour({ content, heroFillsWindow = false }) {
 // src/landing/index.ts
 import {
   landingFromData
-} from "@agenticdevelopertoolkit/landing";
+} from "@adh-sdk/landing";
 export {
   LandingDeck,
   LandingFlow,

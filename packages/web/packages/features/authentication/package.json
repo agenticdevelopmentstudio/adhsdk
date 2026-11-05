@@ -1,5 +1,5 @@
 {
-  "name": "@agentic-toolkit/authentication",
+  "name": "@adh-sdk/authentication",
   "version": "0.1.0",
   "description": "The Authentication feature: API tokens, ecosystem access, and bucket-access panes.",
   "license": "UNLICENSED",
@@ -31,13 +31,13 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@agentic-toolkit/adh-ui": "workspace:*",
-    "@agentic-toolkit/auth": "workspace:*",
-    "@agentic-toolkit/data": "workspace:*",
-    "@agentic-toolkit/resource": "workspace:*",
+    "@adh-sdk/adh-ui": "workspace:*",
+    "@adh-sdk/auth": "workspace:*",
+    "@adh-sdk/data": "workspace:*",
+    "@adh-sdk/resource": "workspace:*",
     "@tanstack/react-query": "^5.62.0",
     "lucide-react": "^1.16.0",
-    "@agenticdevelopertoolkit/ui": "workspace:*"
+    "@adh-sdk/ui": "workspace:*"
   },
   "peerDependencies": {
     "next": ">=15",

@@ -2,11 +2,11 @@
 
 import * as React from "react"
 
-import { Checkbox } from "@agenticdevelopertoolkit/ui/components/checkbox"
-import { Input } from "@agenticdevelopertoolkit/ui/components/input"
-import { Select } from "@agenticdevelopertoolkit/ui/components/select"
-import { Textarea } from "@agenticdevelopertoolkit/ui/components/textarea"
-import { Field, FieldFootnote } from "@agenticdevelopertoolkit/ui/blocks/field"
+import { Checkbox } from "@adh-sdk/ui/components/checkbox"
+import { Input } from "@adh-sdk/ui/components/input"
+import { Select } from "@adh-sdk/ui/components/select"
+import { Textarea } from "@adh-sdk/ui/components/textarea"
+import { Field, FieldFootnote } from "@adh-sdk/ui/blocks/field"
 
 import type { AnyFieldDescriptor } from "./descriptors"
 
@@ -21,7 +21,7 @@ import type { AnyFieldDescriptor } from "./descriptors"
  * is no import path that produces an unwired control, and therefore no syntax for
  * the mistake. The rule needs no linting because it cannot be written down.
  *
- * The unbound primitives in `@agenticdevelopertoolkit/ui` stay available for display-only
+ * The unbound primitives in `@adh-sdk/ui` stay available for display-only
  * surfaces; what is unavailable is a control that LOOKS wired and is not.
  */
 

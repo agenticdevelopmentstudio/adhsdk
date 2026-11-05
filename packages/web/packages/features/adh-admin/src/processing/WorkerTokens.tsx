@@ -9,15 +9,15 @@ import {
   DialogHeader,
   DialogTitle,
   DialogDescription,
-} from "@agenticdevelopertoolkit/ui/components/dialog";
-import { AlertModal } from "@agenticdevelopertoolkit/ui/components/alert-modal";
-import { Button } from "@agenticdevelopertoolkit/ui/components/button";
-import { CopyButton } from "@agenticdevelopertoolkit/ui/components/copy-button";
-import { DialogErrorText, ErrorText } from "@agenticdevelopertoolkit/ui/components/error-text";
-import { Input } from "@agenticdevelopertoolkit/ui/components/input";
-import { Field } from "@agenticdevelopertoolkit/ui/blocks/field";
-import { errorMessage } from "@agenticdevelopertoolkit/ui/lib/errors";
-import { ListBarActions, useBulkRemove } from "@agentic-toolkit/resource";
+} from "@adh-sdk/ui/components/dialog";
+import { AlertModal } from "@adh-sdk/ui/components/alert-modal";
+import { Button } from "@adh-sdk/ui/components/button";
+import { CopyButton } from "@adh-sdk/ui/components/copy-button";
+import { DialogErrorText, ErrorText } from "@adh-sdk/ui/components/error-text";
+import { Input } from "@adh-sdk/ui/components/input";
+import { Field } from "@adh-sdk/ui/blocks/field";
+import { errorMessage } from "@adh-sdk/ui/lib/errors";
+import { ListBarActions, useBulkRemove } from "@adh-sdk/resource";
 import {
   EditableList,
   useEditableList,

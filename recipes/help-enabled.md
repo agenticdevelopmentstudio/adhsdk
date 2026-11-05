@@ -1,7 +1,7 @@
 ---
 id: fcb8a0a4-2446-46f9-99bb-49b0317529d4
 title: HelpEnabled
-domain: agenticdevelopertoolkit://recipes/help-enabled
+domain: adhsdk://recipes/help-enabled
 type: ingredient
 version: 1.1.1
 status: review
@@ -21,9 +21,9 @@ tags:
 - popover
 - inline-help
 depends-on:
-- agenticdevelopertoolkit://recipes/popover
-- agenticdevelopertoolkit://recipes/help-popover
-- agenticdevelopertoolkit://recipes/help-content
+- adhsdk://recipes/popover
+- adhsdk://recipes/help-popover
+- adhsdk://recipes/help-content
 related: []
 references: []
 approved-by: ''

@@ -1,6 +1,6 @@
 import { render } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi, type MockInstance } from 'vitest'
-import { SWIPE_BACK_EVENT } from '@agenticdevelopertoolkit/ui/lib/swipe-back'
+import { SWIPE_BACK_EVENT } from '@adh-sdk/ui/lib/swipe-back'
 import { SwipeHistory } from '../SwipeHistory'
 
 // The gesture end to end, through real document listeners. `swipeHistory.test.ts` covers the

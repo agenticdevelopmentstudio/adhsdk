@@ -1,7 +1,7 @@
 # Opening a chat window (Apple)
 
 Everything a tool needs to put a persona chat on screen lives in
-`AgenticDeveloperToolkitUI`. A host supplies three things — a backend, a
+`AgenticDeveloperHubSDKUI`. A host supplies three things — a backend, a
 name to save settings under, and (optionally) a backdrop — and gets the
 same window every other tool's chat is: no title bar furniture, a
 translucent surface, a themed border, and a gear at the trailing edge
@@ -14,8 +14,8 @@ for the next one.
 
 ```swift
 import AppKit
-import AgenticDeveloperToolkit
-import AgenticDeveloperToolkitUI
+import AgenticDeveloperHubSDK
+import AgenticDeveloperHubSDKUI
 
 let viewModel = ObservableChatViewModel(
     backend: myBackend,                  // any `Backend`

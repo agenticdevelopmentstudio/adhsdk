@@ -1,7 +1,7 @@
 ---
 id: e71918a5-9874-48eb-927a-cea5e9b51cdc
 title: "Window Management Recents"
-domain: adtoolkit://cookbook/ui/windows/window-recents
+domain: adhsdk://cookbook/ui/windows/window-recents
 type: ingredient
 version: 1.1.2
 status: review
@@ -203,7 +203,7 @@ Not applicable: the policy and preferences perform no logging, and the decode fa
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/macOS/SystemIntegration/WindowManager/Recents/` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/WindowManager/Recents/` |
 
 ## Design Decisions
 

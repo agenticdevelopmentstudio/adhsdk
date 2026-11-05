@@ -1,4 +1,4 @@
-// @agentic-toolkit/ecosystem-config — the panes that configure an ECOSYSTEM.
+// @adh-sdk/ecosystem-config — the panes that configure an ECOSYSTEM.
 //
 // The package is named for the ECOSYSTEM, not for any one owner: the hub mounts these panes for a
 // product's ecosystem and for a workspace's default ecosystem, and the organizations site mounts

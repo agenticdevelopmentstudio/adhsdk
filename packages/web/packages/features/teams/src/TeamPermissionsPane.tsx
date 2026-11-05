@@ -4,15 +4,15 @@ import { useCallback, useState } from "react";
 import type { ReactNode } from "react";
 import { Shield } from "lucide-react";
 
-import { reportUnexpectedAuthError } from "@agentic-toolkit/auth";
-import { isNotFound, useResourceList } from "@agentic-toolkit/data";
+import { reportUnexpectedAuthError } from "@adh-sdk/auth";
+import { isNotFound, useResourceList } from "@adh-sdk/data";
 import {
   accessApi,
   ACCESS_FEATURES,
   type AccessFeatureRow,
   type AccessGrantRow,
   type AccessRoleRow,
-} from "@agentic-toolkit/data/access";
+} from "@adh-sdk/data/access";
 import {
   ButtonBar,
   CreateResourceDialog,
@@ -20,18 +20,18 @@ import {
   useMasterDetailForm,
   useMasterDetailLevel,
   type TopicLeaf,
-} from "@agentic-toolkit/resource";
-import { EmptyState } from "@agenticdevelopertoolkit/ui/components/empty-state";
-import { ErrorText } from "@agenticdevelopertoolkit/ui/components/error-text";
-import { Badge } from "@agenticdevelopertoolkit/ui/components/badge";
-import { PermissionToggles } from "@agenticdevelopertoolkit/ui/components/permission-toggles";
-import type { Crud } from "@agenticdevelopertoolkit/ui/components/crud";
-import { Input } from "@agenticdevelopertoolkit/ui/components/input";
-import { Textarea } from "@agenticdevelopertoolkit/ui/components/textarea";
-import { Select } from "@agenticdevelopertoolkit/ui/components/select";
-import { Card, CardContent } from "@agenticdevelopertoolkit/ui/components/card";
-import { Field, FieldGroup, TopicSelectHint } from "@agenticdevelopertoolkit/ui/blocks";
-import { cn } from "@agenticdevelopertoolkit/ui/lib/utils";
+} from "@adh-sdk/resource";
+import { EmptyState } from "@adh-sdk/ui/components/empty-state";
+import { ErrorText } from "@adh-sdk/ui/components/error-text";
+import { Badge } from "@adh-sdk/ui/components/badge";
+import { PermissionToggles } from "@adh-sdk/ui/components/permission-toggles";
+import type { Crud } from "@adh-sdk/ui/components/crud";
+import { Input } from "@adh-sdk/ui/components/input";
+import { Textarea } from "@adh-sdk/ui/components/textarea";
+import { Select } from "@adh-sdk/ui/components/select";
+import { Card, CardContent } from "@adh-sdk/ui/components/card";
+import { Field, FieldGroup, TopicSelectHint } from "@adh-sdk/ui/blocks";
+import { cn } from "@adh-sdk/ui/lib/utils";
 
 // A role slug is lowercase and dash-joined (matches the server's own key). Validated
 // only on create — slugs are immutable afterwards (the PATCH surface omits `slug`).

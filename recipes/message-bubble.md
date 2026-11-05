@@ -1,7 +1,7 @@
 ---
 id: 46e0a509-8eac-460a-b24a-d39a8b71b02c
 title: Message Bubble
-domain: agenticdevelopertoolkit://recipes/message-bubble
+domain: adhsdk://recipes/message-bubble
 type: ingredient
 version: 1.1.1
 status: review
@@ -25,8 +25,8 @@ tags:
 - ui-component
 depends-on: []
 related:
-- agenticdevelopertoolkit://recipes/transcript
-- agenticdevelopertoolkit://recipes/markdown-renderer
+- adhsdk://recipes/transcript
+- adhsdk://recipes/markdown-renderer
 references: []
 approved-by: ''
 approved-date: ''

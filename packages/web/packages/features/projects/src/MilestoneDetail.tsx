@@ -1,13 +1,13 @@
 "use client";
 
 import { type ReactElement } from "react";
-import { Card, CardContent } from "@agenticdevelopertoolkit/ui/components/card";
-import { Field } from "@agenticdevelopertoolkit/ui/blocks/field";
-import { Input } from "@agenticdevelopertoolkit/ui/components/input";
-import { Textarea } from "@agenticdevelopertoolkit/ui/components/textarea";
-import { ErrorText } from "@agenticdevelopertoolkit/ui/components/error-text";
-import { DetailSection, unchangedFromStored } from "@agentic-toolkit/resource";
-import type { Milestone } from "@agentic-toolkit/data/projects";
+import { Card, CardContent } from "@adh-sdk/ui/components/card";
+import { Field } from "@adh-sdk/ui/blocks/field";
+import { Input } from "@adh-sdk/ui/components/input";
+import { Textarea } from "@adh-sdk/ui/components/textarea";
+import { ErrorText } from "@adh-sdk/ui/components/error-text";
+import { DetailSection, unchangedFromStored } from "@adh-sdk/resource";
+import type { Milestone } from "@adh-sdk/data/projects";
 
 /**
  * The controlled form for ONE point in a project's plan — name, description, target date.

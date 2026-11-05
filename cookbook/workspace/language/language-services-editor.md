@@ -1,7 +1,7 @@
 ---
 id: 8f3c2a6e-9d41-4b8a-9c2e-7a1d5f6b3e90
 title: "Language Services Editor"
-domain: adtoolkit://cookbook/workspace/language/language-services-editor
+domain: adhsdk://cookbook/workspace/language/language-services-editor
 type: ingredient
 version: 1.2.0
 status: review
@@ -27,29 +27,29 @@ tags:
 depends-on: []
 related: []
 references:
-  - packages/apple/AgenticToolkit/macOS/Features/Editor/LSPCompletionDelegate.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/macOS/Features/Editor/LSPCompletionEntry.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/macOS/Features/Editor/LSPEditorAnnotationCoordinator.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/macOS/Features/Editor/LSPHoverController.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/macOS/Features/Editor/LSPJumpToDefinitionDelegate.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/macOS/Features/Editor/LanguageServerStatusModel.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/macOS/Features/Editor/OpenDocumentReloader.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/macOS/Features/Editor/ProjectLanguageServices.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/macOS/Features/Editor/SemanticTokenCaptureMapping.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/macOS/Features/Editor/SemanticTokenHighlightProvider.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/macOS/Features/Editor/TextDocumentCoordinator.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/macOS/Features/Editor/TextDocumentStorage.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Tests/AgenticToolkitMacOSTests/Editor/LSPCompletionDelegateTests.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Tests/AgenticToolkitMacOSTests/Editor/LSPCompletionEntryTests.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Tests/AgenticToolkitMacOSTests/Editor/LSPCompletionSnippetTests.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Tests/AgenticToolkitMacOSTests/Editor/LSPEditorAnnotationTests.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Tests/AgenticToolkitMacOSTests/Editor/LSPJumpToDefinitionDelegateTests.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Tests/AgenticToolkitMacOSTests/Editor/LanguageServerStatusModelTests.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Tests/AgenticToolkitMacOSTests/Editor/OpenDocumentReloaderTests.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Tests/AgenticToolkitMacOSTests/Editor/ProjectLanguageServicesTests.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Tests/AgenticToolkitMacOSTests/Editor/SemanticTokenCaptureMappingTests.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Tests/AgenticToolkitMacOSTests/Editor/SemanticTokenHighlightProviderTests.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Tests/AgenticToolkitMacOSTests/Editor/TextDocumentStorageTests.swift (agenticdevelopertoolkit)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Editor/LSPCompletionDelegate.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Editor/LSPCompletionEntry.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Editor/LSPEditorAnnotationCoordinator.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Editor/LSPHoverController.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Editor/LSPJumpToDefinitionDelegate.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Editor/LanguageServerStatusModel.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Editor/OpenDocumentReloader.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Editor/ProjectLanguageServices.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Editor/SemanticTokenCaptureMapping.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Editor/SemanticTokenHighlightProvider.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Editor/TextDocumentCoordinator.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Editor/TextDocumentStorage.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKMacOSTests/Editor/LSPCompletionDelegateTests.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKMacOSTests/Editor/LSPCompletionEntryTests.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKMacOSTests/Editor/LSPCompletionSnippetTests.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKMacOSTests/Editor/LSPEditorAnnotationTests.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKMacOSTests/Editor/LSPJumpToDefinitionDelegateTests.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKMacOSTests/Editor/LanguageServerStatusModelTests.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKMacOSTests/Editor/OpenDocumentReloaderTests.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKMacOSTests/Editor/ProjectLanguageServicesTests.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKMacOSTests/Editor/SemanticTokenCaptureMappingTests.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKMacOSTests/Editor/SemanticTokenHighlightProviderTests.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKMacOSTests/Editor/TextDocumentStorageTests.swift (adhsdk)
 approved-by: ""
 approved-date: ""
 ---
@@ -291,7 +291,7 @@ The hover controller and the jump-to-definition delegate conform to that logging
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/macOS/Features/Editor/` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Editor/` |
 
 ## Design Decisions
 

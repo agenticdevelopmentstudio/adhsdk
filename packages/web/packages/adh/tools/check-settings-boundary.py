@@ -23,7 +23,7 @@ cannot.
 1b. THE LAZY BOUNDARY IS NOT ENOUGH ON ITS OWN, and this is the one that shipped: check 1
    passes for a barrel that merely POINTS at the overlay entry instead of inlining it —
    including when it points STATICALLY. It did. `export { UserSettingsOverlay,
-   buildSettingsTopics, SettingsTab } from "@agentic-toolkit/adh/settings/
+   buildSettingsTopics, SettingsTab } from "@adh-sdk/adh/settings/
    UserSettingsOverlay"` sat one line below the `lazy()` import of the identical specifier,
    and under Turbopack (what every consuming site builds with) the static edge re-anchors
    that chunk in the EAGER graph, after which the dynamic import resolves to something
@@ -193,7 +193,7 @@ def main() -> int:
             "this entry at all (which would make the check above pass for the wrong reason)."
         )
 
-    lazy_import = '"@agentic-toolkit/adh/settings/UserSettingsOverlay"'
+    lazy_import = '"@adh-sdk/adh/settings/UserSettingsOverlay"'
     if f"import({lazy_import})" not in index_text:
         failures.append(
             "dist/settings/index.js does not contain a literal "
@@ -225,7 +225,7 @@ def main() -> int:
             "fatal one repository downstream: the static edge re-anchors the overlay chunk "
             "in every consuming site's EAGER graph, so ~45 sites ship the whole panel graph "
             "on every page for a dialog a signed-out visitor cannot open. Import "
-            "'@agentic-toolkit/adh/settings/UserSettingsOverlay' at the one host that needs "
+            "'@adh-sdk/adh/settings/UserSettingsOverlay' at the one host that needs "
             "it instead of republishing it here."
         )
 
@@ -272,7 +272,7 @@ def main() -> int:
             "directives hoists a chunk's directive onto every entry that reaches it, so "
             "anything reachable ONLY through here is client-tainted in a production build "
             "even though topics.ts itself carries no directive. Import from "
-            "'@agentic-toolkit/adh/settings/topics' directly instead."
+            "'@adh-sdk/adh/settings/topics' directly instead."
         )
 
     # The type-only sibling of the rule above, over every declaration file: a type export
@@ -287,12 +287,12 @@ def main() -> int:
         failures.append(
             f"{decl.relative_to(PKG).as_posix()} re-exports {republished} — the type-only "
             "sibling of the runtime check above. Same rule, same fix: import from "
-            "'@agentic-toolkit/adh/settings/topics', not from another entry."
+            "'@adh-sdk/adh/settings/topics', not from another entry."
         )
 
     # `export * from "…/settings/topics"` republishes all four names at once and names none
     # of them, so neither loop above can see it.
-    topics_specifier = '"@agentic-toolkit/adh/settings/topics"'
+    topics_specifier = '"@adh-sdk/adh/settings/topics"'
     for built in sorted(p for p in DIST.parent.rglob("*")
                         if p.name.endswith(".js") or p.name.endswith(".d.ts")):
         if built in (TOPICS_JS, TOPICS_DTS):

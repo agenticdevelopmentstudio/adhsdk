@@ -2,9 +2,9 @@
 
 import { createContext, useCallback, useContext, useMemo, type ReactNode } from "react";
 
-import { reportUnexpectedAuthError } from "@agentic-toolkit/auth";
-import { isForbidden, useResourceItemQuery } from "@agentic-toolkit/data";
-import { gamificationApi, type RealmCatalog } from "@agentic-toolkit/data/gamification";
+import { reportUnexpectedAuthError } from "@adh-sdk/auth";
+import { isForbidden, useResourceItemQuery } from "@adh-sdk/data";
+import { gamificationApi, type RealmCatalog } from "@adh-sdk/data/gamification";
 
 /**
  * The realm's effective catalog, fetched ONCE for however many sections read it.

@@ -1,7 +1,7 @@
 ---
 id: 77fe79f8-7d45-4e51-aee0-d6de78b459e1
 title: "Alert Message Presenter"
-domain: adtoolkit://cookbook/workspace/extensions/vscode-api/window/alert-message-presenter
+domain: adhsdk://cookbook/workspace/extensions/vscode-api/window/alert-message-presenter
 type: ingredient
 version: 1.1.1
 status: review
@@ -20,13 +20,13 @@ tags:
   - vscode-api
   - message-presenting
 depends-on:
-  - adtoolkit://cookbook/workspace/extensions/vscode-api/window/extension-message-presenting
+  - adhsdk://cookbook/workspace/extensions/vscode-api/window/extension-message-presenting
 related: []
 references:
-  - packages/apple/AgenticToolkit/macOS/Features/Extensions/VSCodeAPI/NSAlertMessagePresenter.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/macOS/Features/Extensions/VSCodeAPI/ExtensionMessagePresenting.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Core/Loggable.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Tests/AgenticToolkitMacOSTests/Extensions/MainThreadWindowTests.swift (agenticdevelopertoolkit)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/NSAlertMessagePresenter.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/ExtensionMessagePresenting.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Core/Loggable.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKMacOSTests/Extensions/MainThreadWindowTests.swift (adhsdk)
 approved-by: ""
 approved-date: ""
 ---
@@ -36,7 +36,7 @@ approved-date: ""
 ## Overview
 
 This component is the one production implementation of the message-presenting
-role documented in [Extension Message Presenting](adtoolkit://cookbook/workspace/extensions/vscode-api/window/extension-message-presenting)
+role documented in [Extension Message Presenting](adhsdk://cookbook/workspace/extensions/vscode-api/window/extension-message-presenting)
 given among the sources: it turns a `vscode.window.show*Message` request into
 a native alert attached to a window. Where the protocol recipe documents the
 contract every implementation must satisfy, this recipe documents this
@@ -244,7 +244,7 @@ Not applicable — this is a message-presentation implementation that hands the 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
 | `window` | window-lookup function | none (required; construction takes no default) | Queried fresh on every presentation call to decide which window an alert attaches to; an absent result falls back to selecting any visible window before the message is dropped. |
-| `request` | message request | none (required, supplied per presentation call) | The per-call payload — severity, message, detail, modal flag, item titles, close-affordance indices; its own field shapes, defaults, and invariants are documented in [Extension Message Presenting](adtoolkit://cookbook/workspace/extensions/vscode-api/window/extension-message-presenting) rather than restated here. |
+| `request` | message request | none (required, supplied per presentation call) | The per-call payload — severity, message, detail, modal flag, item titles, close-affordance indices; its own field shapes, defaults, and invariants are documented in [Extension Message Presenting](adhsdk://cookbook/workspace/extensions/vscode-api/window/extension-message-presenting) rather than restated here. |
 
 ## Deep Linking
 
@@ -303,14 +303,14 @@ Subsystem: the app's own identifier (or a fixed fallback literal when unset) | C
 - **SwiftUI**: reproduce `buttonPlan(for:)` as a plain Swift function and feed its entries into `.alert(_:isPresented:actions:)` (or `.confirmationDialog` for a longer button list, since SwiftUI's alert API is best suited to a small, fixed count), giving the cancel-slot entry's `Button` a `role: .cancel` so SwiftUI supplies its own default/Escape handling rather than a manually assigned key equivalent the way `addButtons(for:to:)` does.
 - **Compose**: `AlertDialog`'s `confirmButton`/`dismissButton` slots cover at most two buttons; for the general case, matching this presenter's unbounded `itemTitles` list, render a `Column` of `TextButton`s inside `AlertDialog`'s `text` slot, driven by the same `buttonPlan`-equivalent skip-and-collapse function. Compose has no sheet-versus-application-modal distinction to preserve, so the source's "never activate the app" constraint has no direct analogue to violate.
 - **React/Web**: build a modal (a native `dialog` element, or a design-system modal) rather than `window.confirm`/`window.alert`, since neither supports more than one fixed OK/Cancel pair; reproduce `buttonPlan(for:)` as a pure function over `itemTitles`/`closeAffordanceIndices` driving the rendered button list, and model the "nothing to attach to" fallback as resolving the returned `Promise` with `null`, logged rather than thrown, when no container element is mounted.
-- **AppKit / UIKit**: this is the source. `NSAlertMessagePresenter.swift` (`packages/apple/AgenticToolkit/macOS/Features/Extensions/VSCodeAPI/`) belongs to the `AgenticToolkitMacOS` framework target and uses `NSAlert`, `NSAlert.Style`, `NSApplication.ModalResponse`, and `beginSheetModal(for:completionHandler:)` bridged into `async` with `withCheckedContinuation`. Concretely: the type is declared `final`, `public`, and `@MainActor`, and conforms to `ExtensionMessagePresenting`; the injected window-lookup function is stored as `private let window: () -> NSWindow?`; `sheetWindow()` returns `window()`'s value when non-nil, else `anyVisibleWindow()`'s value, which itself scans `NSApp.windows` for the first entry with both `isVisible` and `canBecomeMain` true; `presentMessage(_:)` calls `NSAlert.beginSheetModal(for:completionHandler:)` on that window and never `NSAlert.runModal()`; it sets `NSAlert.messageText`/`informativeText`, maps severity to `NSAlert.Style` (`.information`→`.informational`, `.warning`→`.warning`, `.error`→`.critical`) and assigns `NSAlert.alertStyle`; it computes `buttonIndex` from the user's `NSApplication.ModalResponse` minus `NSApplication.ModalResponse.alertFirstButtonReturn`; `presentedResponse(for:)` bridges `beginSheetModal(for:completionHandler:)`'s completion handler into `async` using `withCheckedContinuation`, resuming with the `NSApplication.ModalResponse` the handler is given; `buttonPlan(for:)` and `escapeKeyEquivalentPosition(in:)` are kept at `internal` access rather than `private` specifically because `MainThreadWindowTests` calls each directly through `@testable import AgenticToolkitMacOS`; the type declares no `Sendable` conformance of its own, and because it is `@MainActor`-isolated, its stored-property access and the synchronous portion of every method run on the main actor; it conforms to `Loggable` with `logger = makeLogger()`, giving it an `OSLog` category of `NSAlertMessagePresenter` and a subsystem of `Bundle.main.bundleIdentifier` (or the literal string `"nil"` when unset), per `Loggable`'s own defaults, and its dropped-message log line marks `alert.messageText` with `privacy: .public` rather than `.private` so it is not redacted from the unified log. The app itself is an `LSUIElement` menu-bar app, which is why an app-modal alert is avoided. Per the file's own header comment, this type was split out of `MainThreadWindow.swift` once that adaptor grew past 2,800 lines. A UIKit iOS port would use `UIAlertController` with `UIAlertAction`s and `present(_:animated:completion:)`; because an iOS app is always in the foreground, the "no window anywhere, drop the message" fallback this file implements has a much narrower analogue there — a root view controller that has not yet attached to a window.
+- **AppKit / UIKit**: this is the source. `NSAlertMessagePresenter.swift` (`packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/`) belongs to the `AgenticDeveloperHubSDKMacOS` framework target and uses `NSAlert`, `NSAlert.Style`, `NSApplication.ModalResponse`, and `beginSheetModal(for:completionHandler:)` bridged into `async` with `withCheckedContinuation`. Concretely: the type is declared `final`, `public`, and `@MainActor`, and conforms to `ExtensionMessagePresenting`; the injected window-lookup function is stored as `private let window: () -> NSWindow?`; `sheetWindow()` returns `window()`'s value when non-nil, else `anyVisibleWindow()`'s value, which itself scans `NSApp.windows` for the first entry with both `isVisible` and `canBecomeMain` true; `presentMessage(_:)` calls `NSAlert.beginSheetModal(for:completionHandler:)` on that window and never `NSAlert.runModal()`; it sets `NSAlert.messageText`/`informativeText`, maps severity to `NSAlert.Style` (`.information`→`.informational`, `.warning`→`.warning`, `.error`→`.critical`) and assigns `NSAlert.alertStyle`; it computes `buttonIndex` from the user's `NSApplication.ModalResponse` minus `NSApplication.ModalResponse.alertFirstButtonReturn`; `presentedResponse(for:)` bridges `beginSheetModal(for:completionHandler:)`'s completion handler into `async` using `withCheckedContinuation`, resuming with the `NSApplication.ModalResponse` the handler is given; `buttonPlan(for:)` and `escapeKeyEquivalentPosition(in:)` are kept at `internal` access rather than `private` specifically because `MainThreadWindowTests` calls each directly through `@testable import AgenticDeveloperHubSDKMacOS`; the type declares no `Sendable` conformance of its own, and because it is `@MainActor`-isolated, its stored-property access and the synchronous portion of every method run on the main actor; it conforms to `Loggable` with `logger = makeLogger()`, giving it an `OSLog` category of `NSAlertMessagePresenter` and a subsystem of `Bundle.main.bundleIdentifier` (or the literal string `"nil"` when unset), per `Loggable`'s own defaults, and its dropped-message log line marks `alert.messageText` with `privacy: .public` rather than `.private` so it is not redacted from the unified log. The app itself is an `LSUIElement` menu-bar app, which is why an app-modal alert is avoided. Per the file's own header comment, this type was split out of `MainThreadWindow.swift` once that adaptor grew past 2,800 lines. A UIKit iOS port would use `UIAlertController` with `UIAlertAction`s and `present(_:animated:completion:)`; because an iOS app is always in the foreground, the "no window anywhere, drop the message" fallback this file implements has a much narrower analogue there — a root view controller that has not yet attached to a window.
 - **WinUI 3**: present with `ContentDialog`, whose `PrimaryButtonText`/`SecondaryButtonText`/`CloseButtonText` give exactly three button slots — fewer than `NSAlert`'s unbounded button list — so a request needing more than three effective buttons, after the same last-wins cancel-slot collapse **button-plan-cancel-slot** requires, needs either a custom `ContentDialog` body with its own `StackPanel` of `Button` controls wired to close the dialog with a result, or `Windows.UI.Popups.MessageDialog` with its own capped `UICommand` list — either way the port must reimplement `buttonPlan(for:)`'s skip-and-collapse logic itself. Call `ContentDialog.ShowAsync`, which is already the WinUI analogue of a sheet attached to the current window rather than an application-modal call that activates a different one, and marshal onto the `DispatcherQueue` a `@MainActor` maps to via `DispatcherQueue.TryEnqueue` when invoked off that queue. Model "no window to attach to" as "no `XamlRoot` is available," logged and resolved as `ContentDialogResult.None` rather than shown, mirroring this file's own drop-and-log fallback; `Task`/`async`/`await` plays the role of Swift's `async`, and there is no `CancellationToken` wired up here, matching the Edge Cases entry on cancellation.
 
 ## Reference Implementations
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/macOS/Features/Extensions/VSCodeAPI/NSAlertMessagePresenter.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/NSAlertMessagePresenter.swift` |
 
 ## Design Decisions
 
@@ -327,7 +327,7 @@ Subsystem: the app's own identifier (or a fixed fallback literal when unset) | C
 **Approved**: pending
 
 **Decision**: `buttonPlan(for:)` and `escapeKeyEquivalentPosition(in:)` are `internal`, not `private`.
-**Rationale**: stated in both functions' own doc comments — `MainThreadWindowTests` calls each directly through `@testable import AgenticToolkitMacOS`, and tightening either to `private` compiles here but breaks that suite.
+**Rationale**: stated in both functions' own doc comments — `MainThreadWindowTests` calls each directly through `@testable import AgenticDeveloperHubSDKMacOS`, and tightening either to `private` compiles here but breaks that suite.
 **Approved**: pending
 
 **Decision**: Escape is assigned to the cancel-slot button only when the plan has more than one entry.
@@ -335,7 +335,7 @@ Subsystem: the app's own identifier (or a fixed fallback literal when unset) | C
 **Approved**: pending
 
 **Decision**: `closeAffordanceIndices`'s last-wins tie-break in the cancel slot is applied here, not re-derived here.
-**Rationale**: the rule itself — the *last* flagged item's index wins the single cancel slot — is documented in full, with its upstream justification, in [ExtensionMessagePresenting](adtoolkit://cookbook/workspace/extensions/vscode-api/window/extension-message-presenting)'s Design Decisions; **button-plan-cancel-slot** in this recipe applies that same rule to this conformer's concrete AppKit button layout rather than restating the rationale.
+**Rationale**: the rule itself — the *last* flagged item's index wins the single cancel slot — is documented in full, with its upstream justification, in [ExtensionMessagePresenting](adhsdk://cookbook/workspace/extensions/vscode-api/window/extension-message-presenting)'s Design Decisions; **button-plan-cancel-slot** in this recipe applies that same rule to this conformer's concrete AppKit button layout rather than restating the rationale.
 **Approved**: pending
 
 **Decision**: `presentedResponse(for:)` bridges `beginSheetModal(for:completionHandler:)` into `async` with `withCheckedContinuation`, unlike every other `beginSheetModal` site in this tier.

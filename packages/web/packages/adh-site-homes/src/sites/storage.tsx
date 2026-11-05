@@ -2,21 +2,21 @@
 
 import type { ReactElement, ReactNode } from "react";
 import { notFound } from "next/navigation";
-import { defineSiteHome } from "@agentic-toolkit/adh/home";
-import { StorageGroup, type RenderTransferSection } from "@agentic-toolkit/adh-ecosystem-panes";
-import { parseStoragePath, type StoragePathSelection } from "@agentic-toolkit/adh-ecosystem-panes/parse";
-import { useWorkspaceDefaultEcosystemId } from "@agentic-toolkit/data/ecosystems";
+import { defineSiteHome } from "@adh-sdk/adh/home";
+import { StorageGroup, type RenderTransferSection } from "@adh-sdk/adh-ecosystem-panes";
+import { parseStoragePath, type StoragePathSelection } from "@adh-sdk/adh-ecosystem-panes/parse";
+import { useWorkspaceDefaultEcosystemId } from "@adh-sdk/data/ecosystems";
 // The panes fetch through the toolkit's react-query cache, which reads the toolkit's OWN
 // QueryClient context — mount its provider here (same physical module as the hooks; a
 // host-provided QueryClientProvider would be a different copy and invisible to them).
-import { ToolkitQueryProvider } from "@agentic-toolkit/data/query";
-import { useBasePathRoute } from "@agentic-toolkit/resource";
+import { ToolkitQueryProvider } from "@adh-sdk/data/query";
+import { useBasePathRoute } from "@adh-sdk/resource";
 
 /**
  * The Storage feature — this site's gated product surface, and the REASON Storage left the hub's
  * workspace rail: agenticdeveloperstorage.com is where you manage buckets now, so the hub stopped
  * offering the topic (see ALL_FEATURES in the hub's workspace-features.ts). This is the SAME
- * @agentic-toolkit/adh-ecosystem-panes StorageGroup the hub's `/<workspace>/storage` route renders
+ * @adh-sdk/adh-ecosystem-panes StorageGroup the hub's `/<workspace>/storage` route renders
  * — one rail, two hosts. A product's Storage topic looks identical but is NOT this component: it is
  * a list EcosystemsFeature hand-declares, so it carries only the first three members and does not
  * follow this one when a member is added.

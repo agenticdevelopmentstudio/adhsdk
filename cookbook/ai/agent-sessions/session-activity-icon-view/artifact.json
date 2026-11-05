@@ -3,7 +3,7 @@
   "meta": {
     "id": "1cecd319-1cc2-40a5-8ef0-56267eb78b89",
     "title": "Session Activity Icon View",
-    "domain": "adtoolkit://cookbook/ai/agent-sessions/session-activity-icon-view",
+    "domain": "adhsdk://cookbook/ai/agent-sessions/session-activity-icon-view",
     "type": "ingredient",
     "version": "1.3.0",
     "status": "review",

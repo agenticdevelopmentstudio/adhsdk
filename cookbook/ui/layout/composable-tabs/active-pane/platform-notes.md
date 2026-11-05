@@ -27,7 +27,7 @@
   gate pointer-move-driven switching behind a user preference the same way
   `activePaneFollowsMouse` gates it here.
 - **AppKit/UIKit**: This is the source platform; see
-  `packages/apple/AgenticToolkit/macOS/UI/ViewControllers/ComposableTabs/ComposableTabsActivePane.swift`.
+  `packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/ComposableTabs/ComposableTabsActivePane.swift`.
   It is macOS-only — `NSEvent` local monitors, `NSWindow.firstResponder`/
   `makeFirstResponder`, weak `NSHashTable` collections, and
   `NSWindow.didBecomeKeyNotification`/`didResignKeyNotification` all have no

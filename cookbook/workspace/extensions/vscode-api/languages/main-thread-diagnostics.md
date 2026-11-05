@@ -1,7 +1,7 @@
 ---
 id: f5432726-5b0f-47c5-b0f6-c0b19a9db5bb
 title: "VS Code Diagnostics Bridge"
-domain: adtoolkit://cookbook/workspace/extensions/vscode-api/languages/main-thread-diagnostics
+domain: adhsdk://cookbook/workspace/extensions/vscode-api/languages/main-thread-diagnostics
 type: ingredient
 version: 1.1.2
 status: review
@@ -21,18 +21,18 @@ tags:
   - diagnostics
   - event-emitter
 depends-on:
-  - adtoolkit://cookbook/workspace/extensions/vscode-api/languages/diagnostic-types
-  - adtoolkit://cookbook/workspace/extensions/host/extension-event
+  - adhsdk://cookbook/workspace/extensions/vscode-api/languages/diagnostic-types
+  - adhsdk://cookbook/workspace/extensions/host/extension-event
 related: []
 references:
-  - packages/apple/AgenticToolkit/macOS/Features/Extensions/VSCodeAPI/MainThreadDiagnostics.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Tests/AgenticToolkitMacOSTests/Extensions/MainThreadDiagnosticsTests.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/macOS/Features/Extensions/VSCodeAPI/DiagnosticTypes.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/macOS/Features/Extensions/VSCodeAPI/HostDiagnosticSink.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/macOS/Features/Extensions/VSCodeAPI/ExtensionEvent.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/macOS/Features/Extensions/VSCodeAPI/VSCodeAPI.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/macOS/Features/Extensions/VSCodeAPI/MainThreadWindow.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Core/Loggable.swift (agenticdevelopertoolkit)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/MainThreadDiagnostics.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKMacOSTests/Extensions/MainThreadDiagnosticsTests.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/DiagnosticTypes.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/HostDiagnosticSink.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/ExtensionEvent.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/VSCodeAPI.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/MainThreadWindow.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Core/Loggable.swift (adhsdk)
 approved-by: ""
 approved-date: ""
 ---
@@ -470,8 +470,8 @@ No other event in this component is logged: this component itself contains no di
 
 ## Platform Notes
 
-- **SwiftUI**: not applicable to this file — `MainThreadDiagnostics.swift` imports only `Foundation`, `JavaScriptCore`, `OSLog`, and `AgenticToolkitCore`, with no SwiftUI dependency; nothing here renders or observes view state.
-- **AppKit / UIKit**: this is the source. `packages/apple/AgenticToolkit/macOS/Features/Extensions/VSCodeAPI/MainThreadDiagnostics.swift` is part of the `AgenticToolkitMacOS` framework target, which `project.yml` declares `platform: macOS` only — no iOS target packages this file. It is consumed by the JS-side `vscode.languages` diagnostics machinery, and it itself consumes `DiagnosticTypes.swift`'s `VSCodeAPI.diagnostic(from:in:)`/`diagnosticValue(for:in:)` and `ExtensionEvent.swift`'s `ExtensionEventEmitter`. `ExtensionDiagnosticStore` and `MainThreadDiagnostics` MUST both be declared `@MainActor`; every call into either type happens on the thread that made the extension's call, because `JSContext`/`JSValue` are not `Sendable`.
+- **SwiftUI**: not applicable to this file — `MainThreadDiagnostics.swift` imports only `Foundation`, `JavaScriptCore`, `OSLog`, and `AgenticDeveloperHubSDKCore`, with no SwiftUI dependency; nothing here renders or observes view state.
+- **AppKit / UIKit**: this is the source. `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/MainThreadDiagnostics.swift` is part of the `AgenticDeveloperHubSDKMacOS` framework target, which `project.yml` declares `platform: macOS` only — no iOS target packages this file. It is consumed by the JS-side `vscode.languages` diagnostics machinery, and it itself consumes `DiagnosticTypes.swift`'s `VSCodeAPI.diagnostic(from:in:)`/`diagnosticValue(for:in:)` and `ExtensionEvent.swift`'s `ExtensionEventEmitter`. `ExtensionDiagnosticStore` and `MainThreadDiagnostics` MUST both be declared `@MainActor`; every call into either type happens on the thread that made the extension's call, because `JSContext`/`JSValue` are not `Sendable`.
 - **Compose**: model `ExtensionDiagnosticStore` as a plain Kotlin class with a `MutableMap<String, CollectionState>` and `MutableList<String>` for `ownerOrder`, guarded by the same single-writer-thread discipline `@MainActor` gives here (a Kotlin coroutine confined to a single dispatcher, or `synchronized`, since Kotlin has no compiler-enforced actor isolation). Model the "refuse the whole array/event on one bad element" contract (**get-diagnostics-refuses-whole-array-on-undecodable-entry**, **collection-foreach-decode-failure-raises-never-skips**, **ondidchangediagnostics-refuses-whole-event-on-bad-uri**) as a decode function returning `Result<T>`/nullable rather than a partial `List`, mirroring this file's own `nil`-refuses-whole-value discipline throughout.
 - **React/Web**: this is closest to the actual runtime shape — extension code in the real VS Code product already runs against the genuine `vscode.d.ts` `languages.createDiagnosticCollection`/`getDiagnostics`/`onDidChangeDiagnostics` declarations this file mirrors. A React/Web host embedding a similar extension bridge would decode/encode the same `Diagnostic`/`Uri` shapes across whatever serialization boundary (e.g. `postMessage` to a worker) replaces this file's `JSContext` boundary, and would need the same debounced, deduplicated, order-preserving, frozen-array event contract (**ondidchangediagnostics-*** requirements) for its own `onDidChangeDiagnostics` equivalent.
 - **WinUI 3**: model `ExtensionDiagnosticStore` as a plain C# class with a `Dictionary<string, CollectionState>` and a `List<string>` for owner order, confined to the UI thread the way `@MainActor` confines this file (a `DispatcherQueue` check, or simply never crossing threads). Model the debounced `onDidChangeDiagnostics` emitter with a `System.Threading.Timer`-backed coalescing queue analogous to `ExtensionEventEmitter`, deduplicating by `Uri.AbsoluteUri` (the .NET analogue of `absoluteString`) and exposing the delivered collection as a `ReadOnlyCollection<Uri>` in place of `Object.freeze`. The "disposed collection is inert, not throwing" contract (**disposed-collection-methods-are-inert-not-throwing**) maps to a `DiagnosticCollection` whose methods check an `IsDisposed` boolean field first and return default values (`null`, `false`) rather than throwing `ObjectDisposedException`, a deliberate divergence from the .NET idiom that should be called out in the WinUI port's own docs the same way this file calls it out against upstream VS Code.
@@ -481,7 +481,7 @@ No other event in this component is logged: this component itself contains no di
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/macOS/Features/Extensions/VSCodeAPI/MainThreadDiagnostics.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/MainThreadDiagnostics.swift` |
 
 ## Design Decisions
 

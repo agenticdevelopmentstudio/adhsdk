@@ -1,7 +1,7 @@
 
 ### Data shapes
 
-- **row-input-shape**: The detail-building function MUST accept a row with these fields (named as in [Status Row Model](adtoolkit://cookbook/status/dashboard/logic/row-model)): `key`, `source`, `platform` (string or absent), `name`, `environment` (string or absent), `statusWord`, `tone` (one of `good`, `bad`, `progress`, `neutral`, `stale`), `sha`, `commitUrl`, `message`, `detail`, `at` (an ISO timestamp), `sourceUrl`, `liveUrl`, plus the optional `commitBody`, `statusCode`, `responseTimeMs`, `lastCheckedAt`, `downSince`, `branch` and `errorText`.
+- **row-input-shape**: The detail-building function MUST accept a row with these fields (named as in [Status Row Model](adhsdk://cookbook/status/dashboard/logic/row-model)): `key`, `source`, `platform` (string or absent), `name`, `environment` (string or absent), `statusWord`, `tone` (one of `good`, `bad`, `progress`, `neutral`, `stale`), `sha`, `commitUrl`, `message`, `detail`, `at` (an ISO timestamp), `sourceUrl`, `liveUrl`, plus the optional `commitBody`, `statusCode`, `responseTimeMs`, `lastCheckedAt`, `downSince`, `branch` and `errorText`.
 - **row-detail-shape**: The row detail MUST hold exactly these fields: `title` (a string), and the following, each nullable: `titleUrl`, `environment`, `platformText`, `platformLink`, `problem`, `problemLink`, `statusCode` (a number or null), `responseTime`, `branch`, `since`, `lastChecked`, `sha`, `commitSubject`, `commitUrl`, `commitBody`, `errorText`, and `deployOutcome` (one of `success`, `failed`, or null).
 - **optional-fields-null**: Every optional row field that is absent MUST become `null` in the row detail. This covers `statusCode`, `branch`, `lastChecked`, `commitBody` and `errorText`.
 

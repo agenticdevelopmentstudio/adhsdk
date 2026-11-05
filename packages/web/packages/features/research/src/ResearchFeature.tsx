@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback } from "react";
-import { RailHostBoundary, useBasePathRoute } from "@agentic-toolkit/resource";
+import { RailHostBoundary, useBasePathRoute } from "@adh-sdk/resource";
 import { ResearchPane } from "./ResearchPane";
 import { researchSegments } from "./parse-path";
 

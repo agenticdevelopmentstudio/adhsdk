@@ -3,7 +3,7 @@
 |--------|------|---------|-------------|
 | `configuration` (parameter to constructing a client) | `MCPServerConfiguration` | none — required | The server this client connects to: its transport, name, and id. |
 | `secrets` (parameter to constructing a client) | `[String: String]` | `[:]` | Secret environment values merged over the configuration's own environment for a `.stdio` server, per secrets-override-environment. |
-| `clientName` (parameter to constructing a client) | `String` | `"AgenticToolkit"` | The name this client presents to the MCP server during initialization. |
+| `clientName` (parameter to constructing a client) | `String` | `"AgenticDeveloperHubSDK"` | The name this client presents to the MCP server during initialization. |
 | `clientVersion` (parameter to constructing a client) | `String` | `"1.0.0"` | The version this client presents to the MCP server during initialization. |
 | `store` (parameter to constructing the registry) | `SettingsStore` | none — required | Source of the server-configurations and server-secrets settings the registry reconciles against. |
 | `clientFactory` (parameter to constructing the registry) | `ClientFactory` (a function, invoked on the UI thread, from a server configuration and a string-to-string secrets map to an MCP client) | Constructs a real client from a server configuration and its secrets | Lets a caller substitute a test double; production code accepts the default. |

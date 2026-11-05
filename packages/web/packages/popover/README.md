@@ -1,4 +1,4 @@
-# `@agenticdevelopertoolkit/popover`
+# `@adh-sdk/popover`
 
 A hover popover: an anchored panel, the arrow that points back at whatever
 opened it, the invisible bridge that lets the pointer cross the gap between
@@ -34,8 +34,8 @@ import {
   Popover,
   PopoverAnchor,
   useHoverPopoverGroup,
-} from '@agenticdevelopertoolkit/popover'
-import '@agenticdevelopertoolkit/popover/css/base.css'
+} from '@adh-sdk/popover'
+import '@adh-sdk/popover/css/base.css'
 
 function Row({ items }: { items: Record<string, { title: string; body: string }> }) {
   const group = useHoverPopoverGroup()

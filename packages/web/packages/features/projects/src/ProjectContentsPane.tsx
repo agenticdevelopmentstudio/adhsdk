@@ -2,22 +2,22 @@
 
 import { useCallback, useEffect, useRef, useState, type ReactElement } from "react";
 import { ExternalLink, Trash2 } from "lucide-react";
-import { ErrorText } from "@agenticdevelopertoolkit/ui/components/error-text";
-import { Badge } from "@agenticdevelopertoolkit/ui/components/badge";
-import { Button } from "@agenticdevelopertoolkit/ui/components/button";
-import { EmptyState } from "@agenticdevelopertoolkit/ui/components/empty-state";
-import { Field } from "@agenticdevelopertoolkit/ui/blocks/field";
-import { List, ListItem } from "@agenticdevelopertoolkit/ui/components/list";
-import { ListChooser, type ListChooserItem } from "@agenticdevelopertoolkit/ui/components/list-chooser";
-import { Select } from "@agenticdevelopertoolkit/ui/components/select";
-import { useResourceList } from "@agentic-toolkit/data";
+import { ErrorText } from "@adh-sdk/ui/components/error-text";
+import { Badge } from "@adh-sdk/ui/components/badge";
+import { Button } from "@adh-sdk/ui/components/button";
+import { EmptyState } from "@adh-sdk/ui/components/empty-state";
+import { Field } from "@adh-sdk/ui/blocks/field";
+import { List, ListItem } from "@adh-sdk/ui/components/list";
+import { ListChooser, type ListChooserItem } from "@adh-sdk/ui/components/list-chooser";
+import { Select } from "@adh-sdk/ui/components/select";
+import { useResourceList } from "@adh-sdk/data";
 import {
   projectArtifactsApi,
   type ArtifactDirection,
   type ProjectArtifact,
   type TargetDescriptor,
-} from "@agentic-toolkit/data/projects";
-import { FeatureTitle } from "@agentic-toolkit/resource";
+} from "@adh-sdk/data/projects";
+import { FeatureTitle } from "@adh-sdk/resource";
 
 /**
  * WHAT THE PROJECT HOLDS — the Contents topic.

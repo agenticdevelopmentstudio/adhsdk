@@ -3,7 +3,7 @@
 
 - **env-shape**: `fetchRailwayDeployments` MUST accept one `env` object with optional fields `RAILWAY_API_TOKEN?: string`, `projects?: readonly RailwayProject[]`, `overallBudgetMs?: number`, and `callTimeoutMs?: number`, and MUST return a `Promise` resolving to `{ ok: boolean; deploys: ProviderDeploy[] }`.
 - **noop-missing-token**: When `env.RAILWAY_API_TOKEN` is falsy (absent, empty string, or otherwise falsy), `fetchRailwayDeployments` MUST return `{ ok: true, deploys: [] }` immediately, performing no network call.
-- **cooldown-gate-on-entry**: Before any network call, `fetchRailwayDeployments` MUST check `rateLimitedUntil("railway")` (`@agentic-toolkit/deploy-platform/cooldown`, external) and, when it returns a truthy cooldown expiry, MUST return `{ ok: false, deploys: [] }` immediately, performing no network call. This check is a self-contained precondition of this function, independent of the caller-side `guard()` wrapper in `sync.ts` (external), which checks the same shared registry before invoking this function during the normal poll cycle; `provider-cooldown.test.ts` exercises this function directly, with no `guard` wrapper, to assert the second of two back-to-back calls makes no additional request.
+- **cooldown-gate-on-entry**: Before any network call, `fetchRailwayDeployments` MUST check `rateLimitedUntil("railway")` (`@adh-sdk/deploy-platform/cooldown`, external) and, when it returns a truthy cooldown expiry, MUST return `{ ok: false, deploys: [] }` immediately, performing no network call. This check is a self-contained precondition of this function, independent of the caller-side `guard()` wrapper in `sync.ts` (external), which checks the same shared registry before invoking this function during the normal poll cycle; `provider-cooldown.test.ts` exercises this function directly, with no `guard` wrapper, to assert the second of two back-to-back calls makes no additional request.
 
 ### Budget
 
@@ -18,13 +18,13 @@
 
 ### Project Listing and Fallback
 
-- **prefer-live-listing**: `fetchRailwayDeployments` MUST call `listRailwayProjects(token, signal)` (`@agentic-toolkit/deploy-platform/providers`, external), which enumerates every project the token can see via the root `projects` GraphQL query, preferring it over any caller-supplied list.
+- **prefer-live-listing**: `fetchRailwayDeployments` MUST call `listRailwayProjects(token, signal)` (`@adh-sdk/deploy-platform/providers`, external), which enumerates every project the token can see via the root `projects` GraphQL query, preferring it over any caller-supplied list.
 - **fallback-to-configured-projects**: When `listRailwayProjects` resolves `null` across all listing attempts, `fetchRailwayDeployments` MUST fall back to `(env.projects ?? []).slice()`.
 - **blind-spot-vs-empty-account**: When the resulting project list (live or fallback) has length zero, `fetchRailwayDeployments` MUST return `deploys: []` and MUST set `ok` to the boolean `listed !== null` — `false` when the live listing failed (returned `null`) and no fallback list resolved to a non-empty array either, because holding a token that can see nothing is a blind spot warranting a platform-health issue; `true` when the live listing itself succeeded with a genuinely empty, authorized workspace (`listed` was `[]`, not `null`).
 
 ### Bounded Concurrent Fan-Out
 
-- **bounded-concurrency-five**: `fetchRailwayDeployments` MUST poll projects through `mapLimit` (`@agentic-toolkit/deploy-platform/util`, external) with a concurrency limit of 5 (`RAILWAY_PROJECT_CONCURRENCY`), never serially and never fully unbounded. Per the source's own comment, a serial loop made total time `N × 6s`, which with enough projects and a degraded API "alone blows the cycle budget and wedges the whole monitor."
+- **bounded-concurrency-five**: `fetchRailwayDeployments` MUST poll projects through `mapLimit` (`@adh-sdk/deploy-platform/util`, external) with a concurrency limit of 5 (`RAILWAY_PROJECT_CONCURRENCY`), never serially and never fully unbounded. Per the source's own comment, a serial loop made total time `N × 6s`, which with enough projects and a degraded API "alone blows the cycle budget and wedges the whole monitor."
 
 ### Per-Project Environment Resolution
 

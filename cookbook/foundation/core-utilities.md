@@ -1,7 +1,7 @@
 ---
 id: cf3a3dc9-6fed-47ba-a699-71ff806dcedd
 title: "Core Utilities"
-domain: adtoolkit://cookbook/foundation/core-utilities
+domain: adhsdk://cookbook/foundation/core-utilities
 type: ingredient
 version: 1.1.1
 status: review
@@ -24,19 +24,19 @@ tags:
   - value-types
 depends-on: []
 related:
-  - adtoolkit://cookbook/ai/plugins/secret-storing
-  - adtoolkit://cookbook/workspace/extensions/manifest/vs-code-engine-range
+  - adhsdk://cookbook/ai/plugins/secret-storing
+  - adhsdk://cookbook/workspace/extensions/manifest/vs-code-engine-range
 references:
-  - packages/apple/AgenticToolkit/Core/CodableIgnored.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Core/KeychainHelper.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Core/Loggable.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Core/MathUtils.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Core/SemanticVersion.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Core/TextFolding.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Tests/AgenticToolkitCoreTests/KeychainHelperTests.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Tests/AgenticToolkitCoreTests/Extensions/SemanticVersionTests.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Tests/AgenticToolkitCoreTests/Extensions/TextFoldingTests.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Tests/AgenticToolkitCoreTests/CGFloatClampedTests.swift (agenticdevelopertoolkit)
+  - packages/apple/AgenticDeveloperHubSDK/Core/CodableIgnored.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Core/KeychainHelper.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Core/Loggable.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Core/MathUtils.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Core/SemanticVersion.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Core/TextFolding.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKCoreTests/KeychainHelperTests.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKCoreTests/Extensions/SemanticVersionTests.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKCoreTests/Extensions/TextFoldingTests.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKCoreTests/CGFloatClampedTests.swift (adhsdk)
 approved-by: ""
 approved-date: ""
 ---
@@ -106,7 +106,7 @@ anything, holds view state, or performs networking.
 ### Secret storage
 
 - **keychain-service-default**: the store's `service` identifier MUST
-  default to the app's bundle identifier, or `"com.agentictoolkit"` when
+  default to the app's bundle identifier, or `"com.mikefullerton.agenticdeveloperhubsdk"` when
   none is available, and MUST be reassignable by a caller at any time.
 - **keychain-access-group-default**: the store's `accessGroup` MUST default
   to nothing.
@@ -300,7 +300,7 @@ accessibility label, trait, or focus order to attach to.
 | fc-001 | encoding-skip-shape, encoding-skip-decode-yields-nothing, decode-integration-skips-key | decode `{"a": 1, "b": 2}` into a model with a plain integer field `a` and an encoding-skip-wrapped optional integer field `b` | `b`'s stored value is nothing; the `2` in the input is discarded |
 | fc-002 | encoding-skip-encode-noop, encode-integration-skips-key, encoding-skip-round-trip-loses-value | encode a model with an encoding-skip-wrapped optional integer field `b` set to 42, then decode the result | encoded JSON has no `"b"` key at all; the decoded field's stored value is nothing |
 | fc-003 | encoding-skip-concurrency | one wrapper instance's stored value mutated from two concurrent tasks with no external synchronization | undefined/racy result; the type provides no protection of its own (no concurrency-safety guarantee, mutable storage) |
-| fc-004 | keychain-service-default | read the store's `service` in a process where no bundle identifier is available | `"com.agentictoolkit"` |
+| fc-004 | keychain-service-default | read the store's `service` in a process where no bundle identifier is available | `"com.mikefullerton.agenticdeveloperhubsdk"` |
 | fc-005 | keychain-set-returns-status, keychain-get-primary-lookup | `set("hello-world", forKey: key)` then `get(forKey: key)` | `set` returns `true`; `get` returns `"hello-world"` |
 | fc-006 | keychain-get-exhausted-returns-nothing | `get(forKey:)` for a key never set | nothing |
 | fc-007 | keychain-exists-checks-current-scope, keychain-delete-idempotent | set a key, check `exists` (`true`), `delete` it, check `exists` again (`false`), `delete` it a second time | first `exists` is `true`, second is `false`, second `delete` still returns `true` |
@@ -379,7 +379,7 @@ accessibility label, trait, or focus order to attach to.
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `service` (of the secret store) | string (mutable, shared) | app's bundle identifier, or `"com.agentictoolkit"` when none is available | Credential-store service identifier that scopes every query, set, and delete. |
+| `service` (of the secret store) | string (mutable, shared) | app's bundle identifier, or `"com.mikefullerton.agenticdeveloperhubsdk"` when none is available | Credential-store service identifier that scopes every query, set, and delete. |
 | `accessGroup` (of the secret store) | optional string (mutable, shared) | nothing | Optional shared credential-store access group; when set, forces data-protection-keychain semantics and after-first-unlock-this-device-only accessibility on new writes. |
 | `legacyServices` (of the secret store) | list of strings (mutable, shared) | empty list | Retired service identifiers `get`/`exists` fall back to, newest-retired-first, for migrating secrets forward. |
 | the semantic-version component ceiling | integer constant | `2,147,483,647` | Fixed plausibility bound on `major`/`minor`/`patch`; not caller-configurable. |
@@ -491,7 +491,7 @@ their logger from.
   with no locale argument, matching this type's `locale: nil`.
 - **AppKit/UIKit**: identical to the SwiftUI note — none of the six files
   imports `AppKit` or `UIKit`, so an AppKit- or UIKit-hosted app consumes
-  the same `AgenticToolkitCore` types unchanged. One platform-specific
+  the same `AgenticDeveloperHubSDKCore` types unchanged. One platform-specific
   nuance carries forward regardless of UI framework: `KeychainHelper`'s
   `kSecUseDataProtectionKeychain` flag (set only when `accessGroup` is
   non-nil) is required for access-group Keychain sharing on macOS
@@ -526,12 +526,12 @@ their logger from.
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/Core/CodableIgnored.swift` |
-| apple | `packages/apple/AgenticToolkit/Core/KeychainHelper.swift` |
-| apple | `packages/apple/AgenticToolkit/Core/Loggable.swift` |
-| apple | `packages/apple/AgenticToolkit/Core/MathUtils.swift` |
-| apple | `packages/apple/AgenticToolkit/Core/SemanticVersion.swift` |
-| apple | `packages/apple/AgenticToolkit/Core/TextFolding.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/CodableIgnored.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/KeychainHelper.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Loggable.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/MathUtils.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/SemanticVersion.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/TextFolding.swift` |
 
 ## Design Decisions
 

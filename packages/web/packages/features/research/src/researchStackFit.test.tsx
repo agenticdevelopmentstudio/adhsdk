@@ -24,11 +24,11 @@ const { push } = vi.hoisted(() => ({ push: vi.fn() }));
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push, replace: vi.fn(), prefetch: vi.fn() }),
 }));
-vi.mock("@agentic-toolkit/auth", () => ({
+vi.mock("@adh-sdk/auth", () => ({
   useAuth: () => ({ user: { name: "Ada Lovelace" } }),
   reportUnexpectedAuthError: vi.fn(),
 }));
-vi.mock("@agentic-toolkit/data/markdown", () => ({
+vi.mock("@adh-sdk/data/markdown", () => ({
   markdownApi: {
     list: vi.fn(), get: vi.fn(), create: vi.fn(), update: vi.fn(),
     categories: vi.fn(), categoryTree: vi.fn(), createCategory: vi.fn(),
@@ -41,7 +41,7 @@ vi.mock("@agentic-toolkit/data/markdown", () => ({
 }));
 
 import { ResearchFeature } from "./ResearchFeature";
-import { markdownApi } from "@agentic-toolkit/data/markdown";
+import { markdownApi } from "@adh-sdk/data/markdown";
 
 const list = vi.mocked(markdownApi.list);
 const get = vi.mocked(markdownApi.get);

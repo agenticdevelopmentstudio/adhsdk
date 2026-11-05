@@ -1,7 +1,7 @@
 ---
 id: 44544cfb-39e5-419d-81b9-8e1c504c6e64
 title: WindowFooterContentViewController
-domain: agenticdevelopertoolkit://recipes/window-footer-content-view-controller
+domain: adhsdk://recipes/window-footer-content-view-controller
 type: ingredient
 version: 1.1.1
 status: review
@@ -21,7 +21,7 @@ tags:
 - view-controller
 - layout
 depends-on:
-- agenticdevelopertoolkit://recipes/window-footer-bar
+- adhsdk://recipes/window-footer-bar
 related: []
 references: []
 approved-by: ''
@@ -128,7 +128,7 @@ Not applicable. This component performs no logging.
 
 ## Platform Notes
 
-- **AppKit / UIKit**: Reference implementation. Located in `SourcesUI/macOS/Chrome/WindowFooterContentViewController.swift` in AgenticDeveloperToolkit. Uses `NSViewController` adoption via `addChild(_:)` and Auto Layout with `NSLayoutConstraint`. The `@MainActor` annotation ensures thread-safe access to AppKit objects. No UIKit port exists in this codebase; a UIKit implementation would follow the same `addChild(_:)` pattern, anchoring the footer to the safe area's bottom edge instead of the window's bottom edge.
+- **AppKit / UIKit**: Reference implementation. Located in `SourcesUI/macOS/Chrome/WindowFooterContentViewController.swift` in AgenticDeveloperHubSDK. Uses `NSViewController` adoption via `addChild(_:)` and Auto Layout with `NSLayoutConstraint`. The `@MainActor` annotation ensures thread-safe access to AppKit objects. No UIKit port exists in this codebase; a UIKit implementation would follow the same `addChild(_:)` pattern, anchoring the footer to the safe area's bottom edge instead of the window's bottom edge.
 - **SwiftUI**: For a from-scratch SwiftUI implementation, use a `VStack` with the content view above a native footer view below, or `.safeAreaInset(edge: .bottom)` if the footer should stay pinned while content scrolls beneath it; bind `status` to `@State` for dynamic updates. Wrapping this `NSViewController` in an `NSViewControllerRepresentable` conformer is available as an interop fallback for reusing the AppKit implementation as-is, but is not the native SwiftUI idiom.
 - **Compose**: Create a vertical `Column` with `Modifier.weight(1f)` on the content area and a fixed-height footer below. The `Column` layout primitive maps to the vertical stacking behavior. Apply `Modifier.testTag("$namespacePrefix.status")` to the footer's status text, mirroring the prefix-based namespacing `WindowFooterBar` uses for its accessibility identifier.
 - **React/Web**: Use a vertical flexbox container (`display: flex; flex-direction: column`). Set `flex: 1` on the content element so it expands; set a fixed `height` on the footer. Pass `status` straight through as a prop to the footer component—no ref or state callback is needed, since forwarding a prop down is the plain React equivalent of the property-forwarding behavior.

@@ -1,7 +1,7 @@
 ---
 id: 35dd47a6-23f3-4306-9c81-e3823b79a7a3
 title: "VSIXInstaller"
-domain: adtoolkit://cookbook/workspace/extensions/registry/vsix-installer
+domain: adhsdk://cookbook/workspace/extensions/registry/vsix-installer
 type: ingredient
 version: 1.1.1
 status: review
@@ -22,31 +22,31 @@ tags:
   - filesystem
 depends-on: []
 related:
-  - adtoolkit://cookbook/workspace/extensions/manifest/extension-identity-component
-  - adtoolkit://cookbook/workspace/extensions/manifest/extension-resource-path
-  - adtoolkit://cookbook/workspace/extensions/manifest/extension-manifest
-  - adtoolkit://cookbook/workspace/extensions/manifest/extension-manifest-localization
-  - adtoolkit://cookbook/workspace/extensions/manifest/vs-code-engine-range
-  - adtoolkit://cookbook/workspace/extensions/registry/vsix-archive
-  - adtoolkit://cookbook/workspace/extensions/registry/open-vsx-catalog
-  - adtoolkit://cookbook/workspace/extensions/registry/open-vsx-client
-  - adtoolkit://cookbook/workspace/extensions/registry/extension-registry
+  - adhsdk://cookbook/workspace/extensions/manifest/extension-identity-component
+  - adhsdk://cookbook/workspace/extensions/manifest/extension-resource-path
+  - adhsdk://cookbook/workspace/extensions/manifest/extension-manifest
+  - adhsdk://cookbook/workspace/extensions/manifest/extension-manifest-localization
+  - adhsdk://cookbook/workspace/extensions/manifest/vs-code-engine-range
+  - adhsdk://cookbook/workspace/extensions/registry/vsix-archive
+  - adhsdk://cookbook/workspace/extensions/registry/open-vsx-catalog
+  - adhsdk://cookbook/workspace/extensions/registry/open-vsx-client
+  - adhsdk://cookbook/workspace/extensions/registry/extension-registry
 references:
-  - packages/apple/AgenticToolkit/Core/Extensions/VSIXInstaller.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Core/Extensions/VSIXArchive.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Core/Extensions/ExtensionIdentityComponent.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Core/Extensions/ExtensionResourcePath.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Core/Extensions/ExtensionManifest.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Core/Extensions/ExtensionManifestLocalization.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Core/Extensions/VSCodeEngineRange.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Core/Extensions/OpenVSXCatalog.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Core/Extensions/OpenVSXClient.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Core/Extensions/ExtensionRegistry.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Core/Concurrency/BlockingWork.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Core/Loggable.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Tests/AgenticToolkitCoreTests/Extensions/VSIXInstallerTests.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Tests/AgenticToolkitCoreTests/Extensions/VSIXInstallerFileSystemFailureTests.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Tests/AgenticToolkitCoreTests/Extensions/VSIXRegistryInstallTests.swift (agenticdevelopertoolkit)
+  - packages/apple/AgenticDeveloperHubSDK/Core/Extensions/VSIXInstaller.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Core/Extensions/VSIXArchive.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Core/Extensions/ExtensionIdentityComponent.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Core/Extensions/ExtensionResourcePath.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Core/Extensions/ExtensionManifest.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Core/Extensions/ExtensionManifestLocalization.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Core/Extensions/VSCodeEngineRange.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Core/Extensions/OpenVSXCatalog.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Core/Extensions/OpenVSXClient.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Core/Extensions/ExtensionRegistry.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Core/Concurrency/BlockingWork.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Core/Loggable.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKCoreTests/Extensions/VSIXInstallerTests.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKCoreTests/Extensions/VSIXInstallerFileSystemFailureTests.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKCoreTests/Extensions/VSIXRegistryInstallTests.swift (adhsdk)
 approved-by: ""
 approved-date: ""
 ---
@@ -80,7 +80,7 @@ paths alike, because the manifest is a document neither a registry response
 nor a user's file selection can be trusted to agree with.
 
 All line references below are to
-`packages/apple/AgenticToolkit/Core/Extensions/VSIXInstaller.swift` unless
+`packages/apple/AgenticDeveloperHubSDK/Core/Extensions/VSIXInstaller.swift` unless
 another file is named.
 
 ## Behavioral Requirements
@@ -524,7 +524,7 @@ Category: `VSIXInstaller`
 ## Platform Notes
 
 - **SwiftUI**: Source:
-  `packages/apple/AgenticToolkit/Core/Extensions/VSIXInstaller.swift`, its
+  `packages/apple/AgenticDeveloperHubSDK/Core/Extensions/VSIXInstaller.swift`, its
   verification and expansion in `Core/Extensions/VSIXArchive.swift`, its
   identity and containment guards in `Core/Extensions/
   ExtensionIdentityComponent.swift` and `Core/Extensions/
@@ -565,9 +565,9 @@ Category: `VSIXInstaller`
   extracted or joined path is used.
 - **AppKit / UIKit**: No divergence from the SwiftUI bullet above — the
   source is framework-agnostic `Foundation` code, callable identically from an
-  AppKit-hosted (macOS) or UIKit-hosted (iOS) caller. `AgenticToolkitCore`, the
+  AppKit-hosted (macOS) or UIKit-hosted (iOS) caller. `AgenticDeveloperHubSDKCore`, the
   framework target that builds this file, is configured `platform: macOS` in
-  `packages/apple/AgenticToolkit/project.yml` today, so an iOS caller would
+  `packages/apple/AgenticDeveloperHubSDK/project.yml` today, so an iOS caller would
   first need the type made available to an iOS target; `VSIXInstaller` itself
   needs no AppKit/UIKit-specific change to run there.
 - **WinUI 3**: Port to a class exposing `async Task<VsixInstallation>
@@ -608,7 +608,7 @@ Category: `VSIXInstaller`
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/Core/Extensions/VSIXInstaller.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Extensions/VSIXInstaller.swift` |
 
 ## Design Decisions
 

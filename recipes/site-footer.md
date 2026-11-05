@@ -1,7 +1,7 @@
 ---
 id: d80699f9-1020-4f8a-85ce-f6406e765631
 title: Site Footer
-domain: agenticdevelopertoolkit://recipes/site-footer
+domain: adhsdk://recipes/site-footer
 type: ingredient
 version: 1.1.1
 status: review
@@ -22,9 +22,9 @@ tags:
 - layout
 - landing
 depends-on:
-- agenticdevelopertoolkit://recipes/wrap
+- adhsdk://recipes/wrap
 related:
-- agenticdevelopertoolkit://recipes/band
+- adhsdk://recipes/band
 references: []
 approved-by: ''
 approved-date: ''

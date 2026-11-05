@@ -1,7 +1,7 @@
 ---
 id: 081703b7-036f-4fff-b580-d5dc9e5342d2
 title: "File Content Viewer"
-domain: adtoolkit://cookbook/workspace/files/content-viewer-view
+domain: adhsdk://cookbook/workspace/files/content-viewer-view
 type: ingredient
 version: 1.2.1
 status: review
@@ -22,8 +22,8 @@ tags:
   - metadata
   - placeholder
 depends-on:
-  - adtoolkit://cookbook/workspace/files/file-tree-view
-  - adtoolkit://cookbook/workspace/files/file-browser-view
+  - adhsdk://cookbook/workspace/files/file-tree-view
+  - adhsdk://cookbook/workspace/files/file-browser-view
 related: []
 references: []
 approved-by: ""
@@ -156,8 +156,8 @@ This component is the detail pane of a file browser: it renders a placeholder me
 - **Null input — no selection**: `selectedNode == nil` renders the placeholder only; no grid, header, or divider appears. MUST (see `show-placeholder-without-selection`).
 - **Null input — no file size**: `node.fileSize == nil` (always true for directories, and possible for a file whose attributes read failed upstream) omits the "Size:" row entirely rather than showing a placeholder value. MUST (see `grid-size-row-conditional`).
 - **Null input — no modification date**: `node.modificationDate == nil` omits the "Modified:" row entirely. MUST (see `grid-modified-row-conditional`).
-- **Null input — no children**: `node.children == nil` omits the "Items:" row entirely. Per `adtoolkit://cookbook/workspace/files/file-tree-view`'s Design Decision on `FileTreeNode`'s children semantics, `nil` covers every file, every package, and any directory that has already been read and found to have no children; `FileTreeNode` deliberately reserves an empty array (`[]`) for a directory whose children have not been read yet (see the next edge case). MUST (see `grid-items-row-conditional`).
-- **Boundary — children not yet loaded**: `node.children == []` (an empty, non-`nil` array — per `adtoolkit://cookbook/workspace/files/file-tree-view`, a directory whose children have not been read yet) still satisfies `node.children != nil`, so the "Items:" row is shown with value "0" — indistinguishable, from this view alone, from a directory that was read and genuinely has zero children. MUST (see `grid-items-row-conditional`).
+- **Null input — no children**: `node.children == nil` omits the "Items:" row entirely. Per `adhsdk://cookbook/workspace/files/file-tree-view`'s Design Decision on `FileTreeNode`'s children semantics, `nil` covers every file, every package, and any directory that has already been read and found to have no children; `FileTreeNode` deliberately reserves an empty array (`[]`) for a directory whose children have not been read yet (see the next edge case). MUST (see `grid-items-row-conditional`).
+- **Boundary — children not yet loaded**: `node.children == []` (an empty, non-`nil` array — per `adhsdk://cookbook/workspace/files/file-tree-view`, a directory whose children have not been read yet) still satisfies `node.children != nil`, so the "Items:" row is shown with value "0" — indistinguishable, from this view alone, from a directory that was read and genuinely has zero children. MUST (see `grid-items-row-conditional`).
 - **Empty input — no extension**: A file with an empty `pathExtension` omits the "Extension:" row and reports the type description as the literal "File" rather than "` File"` with a blank extension. MUST (see `grid-extension-row-conditional`, `type-description-fallback-extension`).
 - **Boundary — very long name**: `node.name` longer than fits two lines is clipped to 2 lines with default (tail) truncation, since no other truncation mode is set — unlike this pane's own Path row, which allows 3 lines before truncating, also with the default tail mode. MUST.
 - **Boundary — very long path**: `node.url.path` longer than fits 3 lines is clipped to 3 lines with default tail truncation, but because that value's text remains selectable, the full untruncated string remains selectable and copyable regardless of what is visually clipped. MUST (see `grid-path-line-limit`, `grid-path-value-selectable`).
@@ -227,7 +227,7 @@ Not applicable: no logging call appears anywhere in this component.
 
 ## Platform Notes
 
-- **SwiftUI**: This is the source implementation: `ContentViewerView.swift` (packages/apple/AgenticToolkit/macOS/UI/ViewControllers/FileBrowser/Views/), a `Group` switching between a private `PlaceholderView` and a private `FileDetailView`, both reading colors and fonts from `@Environment(\.theme)` (a `SwiftUIPalette`), with `Grid`/`GridRow` for the metadata table and static `ByteCountFormatter`/`DateFormatter` instances shared across renders.
+- **SwiftUI**: This is the source implementation: `ContentViewerView.swift` (packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/FileBrowser/Views/), a `Group` switching between a private `PlaceholderView` and a private `FileDetailView`, both reading colors and fonts from `@Environment(\.theme)` (a `SwiftUIPalette`), with `Grid`/`GridRow` for the metadata table and static `ByteCountFormatter`/`DateFormatter` instances shared across renders.
 - **Compose**: A Jetpack Compose port would branch a `Box` on whether a node is selected, using a `Column` for the placeholder (an `Icon` plus `Text`) and a second `Column` for the detail view; Compose's `Grid`-like layouts (a two-column `Row`-per-`GridRow`, or `LazyVerticalGrid` for a fixed row count) reproduce the label/value pairing, and wrapping just the Path row's value `Text` in a `SelectionContainer` reproduces its selectable text, which is otherwise off by default in Compose, the reverse of SwiftUI's opt-in model.
 - **React/Web**: A web port renders the same two states as a conditional block, using a `<dl>` (description list) for the metadata grid — `<dt>` for each label, `<dd>` for each value — which gives the label/value pairing built-in semantic structure that this SwiftUI `Grid` does not provide on its own; the Path value needs no special CSS to be selectable (browser text is selectable by default, the reverse of this component's explicit `textSelection(.enabled)` opt-in), and the byte-count and date formatting need explicit helpers (`Intl.NumberFormat`-based byte formatting, `Intl.DateTimeFormat` with a long/medium equivalent) in place of `ByteCountFormatter`/`DateFormatter`.
 - **AppKit / UIKit**: An AppKit port would replace `Grid`/`GridRow` with an `NSGridView` (AppKit's direct, longstanding equivalent, predating SwiftUI's `Grid`) or a stack of horizontal `NSStackView` rows, `Text` with `NSTextField` (label style, non-editable, `isSelectable` set only on the Path field's value to reproduce `textSelection(.enabled)`), and the two SF Symbol images with `NSImageView` configured from `NSImage(systemSymbolName:accessibilityDescription:)`. A UIKit port (iOS) would use `UICollectionView` with a list configuration or a stack of `UIStackView` rows for the grid, `UILabel` for every text element (`UILabel` has no built-in text-selection toggle the way `NSTextField.isSelectable` does; reproducing the Path row's selectable behavior needs `UITextView` configured as non-editable but selectable), and `UIImageView` with `UIImage(systemName:)` for the icons.
@@ -237,7 +237,7 @@ Not applicable: no logging call appears anywhere in this component.
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/macOS/UI/ViewControllers/FileBrowser/Views/ContentViewerView.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/FileBrowser/Views/ContentViewerView.swift` |
 
 ## Design Decisions
 

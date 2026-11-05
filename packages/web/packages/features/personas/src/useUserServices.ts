@@ -1,8 +1,8 @@
 "use client";
 
-import { reportUnexpectedAuthError } from "@agentic-toolkit/auth";
-import { useResourceList, type ResourceList } from "@agentic-toolkit/data";
-import { api, type UserService } from "@agentic-toolkit/data/personas";
+import { reportUnexpectedAuthError } from "@adh-sdk/auth";
+import { useResourceList, type ResourceList } from "@adh-sdk/data";
+import { api, type UserService } from "@adh-sdk/data/personas";
 
 /**
  * The caller's LLM services — ONE cache entry, read by both surfaces that show them.

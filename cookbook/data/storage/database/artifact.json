@@ -3,7 +3,7 @@
   "meta": {
     "id": "ea580796-8b16-4832-b11d-ad3cae991ecd",
     "title": "Database",
-    "domain": "adtoolkit://cookbook/data/storage/database",
+    "domain": "adhsdk://cookbook/data/storage/database",
     "type": "ingredient",
     "version": "1.2.0",
     "status": "review",
@@ -26,16 +26,16 @@
     ],
     "depends-on": [],
     "related": [
-      "adtoolkit://cookbook/data/sync/sync-engine",
-      "adtoolkit://cookbook/data/sync/offline-sync-client",
-      "adtoolkit://cookbook/adh/hub/content/markdown-store",
-      "adtoolkit://cookbook/workspace/projects/project-database"
+      "adhsdk://cookbook/data/sync/sync-engine",
+      "adhsdk://cookbook/data/sync/offline-sync-client",
+      "adhsdk://cookbook/adh/hub/content/markdown-store",
+      "adhsdk://cookbook/workspace/projects/project-database"
     ],
     "references": [
-      "packages/apple/AgenticToolkit/Database/BoundedDatabase.swift",
-      "packages/apple/AgenticToolkit/Database/AppStorageLocation.swift",
-      "packages/apple/AgenticToolkit/Tests/AgenticToolkitDatabaseTests/BoundedDatabaseTests.swift",
-      "packages/apple/AgenticToolkit/Tests/AgenticToolkitDatabaseTests/AppStorageLocationTests.swift"
+      "packages/apple/AgenticDeveloperHubSDK/Database/BoundedDatabase.swift",
+      "packages/apple/AgenticDeveloperHubSDK/Database/AppStorageLocation.swift",
+      "packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKDatabaseTests/BoundedDatabaseTests.swift",
+      "packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKDatabaseTests/AppStorageLocationTests.swift"
     ],
     "approved-by": "",
     "approved-date": ""

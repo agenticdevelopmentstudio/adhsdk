@@ -2,7 +2,7 @@
 // A group's sub-rail closes on Settings under a divider like every other topics list, whatever
 // order the group authored its members in (Mike, 2026-09-29).
 import { render } from "@testing-library/react";
-import type { TopicLevel } from "@agenticdevelopertoolkit/ui/blocks";
+import type { TopicLevel } from "@adh-sdk/ui/blocks";
 import { describe, expect, it, vi } from "vitest";
 
 const seen: TopicLevel[][] = [];

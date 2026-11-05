@@ -3,7 +3,7 @@
   "meta": {
     "id": "4b16f67f-3877-47d3-97eb-af99581a5b11",
     "title": "Status Server Monitor Fetch Vercel Projects",
-    "domain": "adtoolkit://cookbook/status/service/monitor/fetch-vercel-projects",
+    "domain": "adhsdk://cookbook/status/service/monitor/fetch-vercel-projects",
     "type": "ingredient",
     "version": "1.0.2",
     "status": "review",
@@ -33,23 +33,23 @@
       "agenticdevelopercookbook://guidelines/implementing/networking/caching"
     ],
     "related": [
-      "adtoolkit://cookbook/status/service/monitor/alerts",
-      "adtoolkit://cookbook/status/service/monitor/fetch-cloudflare",
-      "adtoolkit://cookbook/status/service/monitor/fetch-crunchy",
-      "adtoolkit://cookbook/status/service/monitor/deploy-status"
+      "adhsdk://cookbook/status/service/monitor/alerts",
+      "adhsdk://cookbook/status/service/monitor/fetch-cloudflare",
+      "adhsdk://cookbook/status/service/monitor/fetch-crunchy",
+      "adhsdk://cookbook/status/service/monitor/deploy-status"
     ],
     "references": [
-      "packages/web/packages/status-server/src/monitor/fetch-vercel-projects.ts (agenticdevelopertoolkit)",
-      "packages/web/packages/status-server/src/monitor/deploy-status.ts (agenticdevelopertoolkit)",
-      "packages/web/packages/status-server/src/monitor/provider-deploy.ts (agenticdevelopertoolkit)",
-      "packages/web/packages/status-server/src/monitor/format.ts (agenticdevelopertoolkit)",
-      "packages/web/packages/status-server/src/monitor/time-ago.ts (agenticdevelopertoolkit)",
-      "packages/web/packages/deploy-platform/src/cooldown/provider-cooldown.ts (agenticdevelopertoolkit)",
-      "packages/web/packages/deploy-platform/src/util/map-limit.ts (agenticdevelopertoolkit)",
-      "packages/web/packages/status-server/test/vercel-projects-budget.test.ts (agenticdevelopertoolkit)",
-      "packages/web/packages/status-server/test/vercel-conclusive-backfill.test.ts (agenticdevelopertoolkit)",
-      "packages/web/packages/status-server/test/prod-staleness.test.ts (agenticdevelopertoolkit)",
-      "packages/web/packages/status-server/test/latest-deploys-of.test.ts (agenticdevelopertoolkit)"
+      "packages/web/packages/status-server/src/monitor/fetch-vercel-projects.ts (adhsdk)",
+      "packages/web/packages/status-server/src/monitor/deploy-status.ts (adhsdk)",
+      "packages/web/packages/status-server/src/monitor/provider-deploy.ts (adhsdk)",
+      "packages/web/packages/status-server/src/monitor/format.ts (adhsdk)",
+      "packages/web/packages/status-server/src/monitor/time-ago.ts (adhsdk)",
+      "packages/web/packages/deploy-platform/src/cooldown/provider-cooldown.ts (adhsdk)",
+      "packages/web/packages/deploy-platform/src/util/map-limit.ts (adhsdk)",
+      "packages/web/packages/status-server/test/vercel-projects-budget.test.ts (adhsdk)",
+      "packages/web/packages/status-server/test/vercel-conclusive-backfill.test.ts (adhsdk)",
+      "packages/web/packages/status-server/test/prod-staleness.test.ts (adhsdk)",
+      "packages/web/packages/status-server/test/latest-deploys-of.test.ts (adhsdk)"
     ],
     "approved-by": "",
     "approved-date": ""

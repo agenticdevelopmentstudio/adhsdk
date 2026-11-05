@@ -1,7 +1,7 @@
 ---
 id: 76CD6DDF-9736-4478-B5A5-8E4DCB999EF9
 title: "Field Sync"
-domain: adtoolkit://cookbook/ui/settings/field-sync
+domain: adhsdk://cookbook/ui/settings/field-sync
 type: ingredient
 version: 1.0.1
 status: review
@@ -21,7 +21,7 @@ tags:
   - forms
 depends-on: []
 related:
-  - adtoolkit://cookbook/ui/settings/record-detail-panel
+  - adhsdk://cookbook/ui/settings/record-detail-panel
 references: []
 approved-by: ""
 approved-date: ""
@@ -178,7 +178,7 @@ Not applicable: the component performs no logging.
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/macOS/SystemIntegration/ComposableSettingsWindow/FieldSync.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/FieldSync.swift` |
 
 ## Design Decisions
 

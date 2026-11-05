@@ -8,11 +8,11 @@ import {
   Dialog,
   DialogContent,
   DialogTitle
-} from "@agenticdevelopertoolkit/ui/components/dialog";
-import { UnsavedChangesAlert } from "@agenticdevelopertoolkit/ui/components/unsaved-changes-alert";
-import { SettingsLayout as SettingsLayout2 } from "@agentic-toolkit/account";
-import { SettingsDirtyProvider as SettingsDirtyProvider2, useSettingsDirty } from "@agentic-toolkit/resource";
-import { ToolkitQueryProvider } from "@agentic-toolkit/data/query";
+} from "@adh-sdk/ui/components/dialog";
+import { UnsavedChangesAlert } from "@adh-sdk/ui/components/unsaved-changes-alert";
+import { SettingsLayout as SettingsLayout2 } from "@adh-sdk/account";
+import { SettingsDirtyProvider as SettingsDirtyProvider2, useSettingsDirty } from "@adh-sdk/resource";
+import { ToolkitQueryProvider } from "@adh-sdk/data/query";
 
 // src/settings/registry.tsx
 import {
@@ -40,16 +40,16 @@ import {
   SecurityWorkspace,
   SettingsLayout,
   SubscriptionPanel
-} from "@agentic-toolkit/account";
-import { UsagePanel, SocialLinksPanel, AddressesPanel } from "@agentic-toolkit/profile";
-import { TokensPanel } from "@agentic-toolkit/authentication";
-import { AssistantsPanel } from "@agentic-toolkit/personas";
+} from "@adh-sdk/account";
+import { UsagePanel, SocialLinksPanel, AddressesPanel } from "@adh-sdk/profile";
+import { TokensPanel } from "@adh-sdk/authentication";
+import { AssistantsPanel } from "@adh-sdk/personas";
 import {
   FeatureTitle,
   RecordAffordanceContext,
   SettingsDirtyProvider
-} from "@agentic-toolkit/resource";
-import { RecordApiButton } from "@agentic-toolkit/api-explorer";
+} from "@adh-sdk/resource";
+import { RecordApiButton } from "@adh-sdk/api-explorer";
 
 // src/site/reservedSlugs.ts
 var FAMILY_ROUTE_SEGMENTS = [
@@ -263,25 +263,25 @@ function reservedWorkspaceSlugs() {
 }
 
 // src/site/index.ts
-import { isHubWorkspacePath, hubWorkspaceSlug } from "@agentic-toolkit/adh/site/hubWorkspacePath";
+import { isHubWorkspacePath, hubWorkspaceSlug } from "@adh-sdk/adh/site/hubWorkspacePath";
 
 // src/settings/registry.tsx
-import { siteUrl } from "@agentic-toolkit/adh-registry";
+import { siteUrl } from "@adh-sdk/adh-registry";
 
 // src/settings/AppearancePanel.tsx
 import dynamic from "next/dynamic";
 import "react";
-import "@agenticdevelopertoolkit/themes";
-import { useAppearanceSettings } from "@agentic-toolkit/adh/auth";
+import "@adh-sdk/themes";
+import { useAppearanceSettings } from "@adh-sdk/adh/auth";
 import {
   ToggleGroup,
   ToggleGroupItem
-} from "@agenticdevelopertoolkit/ui/components/toggle-group";
-import { Checkbox } from "@agenticdevelopertoolkit/ui/components/checkbox";
-import { Label } from "@agenticdevelopertoolkit/ui/components/label";
-import { SettingRow } from "@agentic-toolkit/account";
-import { DetailSection, SettingsBody } from "@agentic-toolkit/resource";
-import { Card, CardContent } from "@agenticdevelopertoolkit/ui/components/card";
+} from "@adh-sdk/ui/components/toggle-group";
+import { Checkbox } from "@adh-sdk/ui/components/checkbox";
+import { Label } from "@adh-sdk/ui/components/label";
+import { SettingRow } from "@adh-sdk/account";
+import { DetailSection, SettingsBody } from "@adh-sdk/resource";
+import { Card, CardContent } from "@adh-sdk/ui/components/card";
 import { jsx, jsxs } from "react/jsx-runtime";
 var REDUCE_MOTION_OPTIONS = [
   { value: "auto", label: "Default" },
@@ -360,7 +360,7 @@ function CheckboxRow({
     ] })
   ] });
 }
-var ThemePickerRow = process.env.NEXT_PUBLIC_DEPLOYMENT_ENV === "local" || process.env.NEXT_PUBLIC_DEPLOYMENT_ENV === "testing" || process.env.NEXT_PUBLIC_DEPLOYMENT_ENV === "staging" ? dynamic(() => import("@agentic-toolkit/adh/settings/ThemePickerRow"), {
+var ThemePickerRow = process.env.NEXT_PUBLIC_DEPLOYMENT_ENV === "local" || process.env.NEXT_PUBLIC_DEPLOYMENT_ENV === "testing" || process.env.NEXT_PUBLIC_DEPLOYMENT_ENV === "staging" ? dynamic(() => import("@adh-sdk/adh/settings/ThemePickerRow"), {
   ssr: false
 }) : () => null;
 function AppearancePanel() {
@@ -440,21 +440,21 @@ import {
   useRef,
   useState
 } from "react";
-import { Button } from "@agenticdevelopertoolkit/ui/components/button";
+import { Button } from "@adh-sdk/ui/components/button";
 import {
   chordFromEvent,
   formatChord,
   sameChord,
   useRegisteredShortcuts
-} from "@agenticdevelopertoolkit/ui/hooks/useShortcut";
-import { SettingRow as SettingRow2 } from "@agentic-toolkit/account";
+} from "@adh-sdk/ui/hooks/useShortcut";
+import { SettingRow as SettingRow2 } from "@adh-sdk/account";
 import {
   DEFAULT_SITE_MENU_SHORTCUT,
   setSiteMenuShortcut,
   useHubPreferences
-} from "@agentic-toolkit/adh/header/hub-preferences";
-import { DetailSection as DetailSection2, SettingsBody as SettingsBody2 } from "@agentic-toolkit/resource";
-import { Card as Card2, CardContent as CardContent2 } from "@agenticdevelopertoolkit/ui/components/card";
+} from "@adh-sdk/adh/header/hub-preferences";
+import { DetailSection as DetailSection2, SettingsBody as SettingsBody2 } from "@adh-sdk/resource";
+import { Card as Card2, CardContent as CardContent2 } from "@adh-sdk/ui/components/card";
 import { jsx as jsx2, jsxs as jsxs2 } from "react/jsx-runtime";
 var SITE_MENU_LABEL = "Site menu";
 function HubPreferencesPanel() {
@@ -568,7 +568,7 @@ function HubPreferencesPanel() {
 import {
   SETTINGS_TOPICS,
   resolveSettingsTopic
-} from "@agentic-toolkit/adh/settings/topics";
+} from "@adh-sdk/adh/settings/topics";
 import { jsx as jsx3, jsxs as jsxs3 } from "react/jsx-runtime";
 var renderSettingsApi = (props) => /* @__PURE__ */ jsx3(RecordApiButton, { ...props });
 var ICONS = {
@@ -676,7 +676,7 @@ function SettingsTab({ activeTopic }) {
 }
 
 // src/settings/UserSettingsOverlay.tsx
-import { DEFAULT_SETTINGS_TOPIC } from "@agentic-toolkit/adh/settings/topics";
+import { DEFAULT_SETTINGS_TOPIC } from "@adh-sdk/adh/settings/topics";
 import { jsx as jsx4, jsxs as jsxs4 } from "react/jsx-runtime";
 function UserSettingsOverlay({
   open,

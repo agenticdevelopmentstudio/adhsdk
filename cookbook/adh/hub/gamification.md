@@ -1,7 +1,7 @@
 ---
 id: cef42b4b-e10e-4816-b1f8-0156699bec21
 title: "Gamification"
-domain: adtoolkit://cookbook/adh/hub/gamification
+domain: adhsdk://cookbook/adh/hub/gamification
 type: ingredient
 version: 1.1.0
 status: review
@@ -24,13 +24,13 @@ tags:
   - event-types
 depends-on: []
 related:
-  - adtoolkit://cookbook/adh/hub/ecosystems/ecosystem-config
+  - adhsdk://cookbook/adh/hub/ecosystems/ecosystem-config
 references:
-  - packages/web/packages/data/src/gamification/gamification.ts (agenticdevelopertoolkit)
-  - packages/web/packages/data/src/gamification/wire.ts (agenticdevelopertoolkit)
-  - packages/web/packages/data/src/http.ts (agenticdevelopertoolkit)
-  - packages/web/packages/data/src/client-helpers.ts (agenticdevelopertoolkit)
-  - packages/web/packages/auth/src/client.ts (agenticdevelopertoolkit)
+  - packages/web/packages/data/src/gamification/gamification.ts (adhsdk)
+  - packages/web/packages/data/src/gamification/wire.ts (adhsdk)
+  - packages/web/packages/data/src/http.ts (adhsdk)
+  - packages/web/packages/data/src/client-helpers.ts (adhsdk)
+  - packages/web/packages/auth/src/client.ts (adhsdk)
 approved-by: ""
 approved-date: ""
 ---
@@ -422,7 +422,7 @@ Not applicable: this component calls no logger or other logging API.
   (**levels-replace-wholesale**). Every method issues its request
   through `authedJson` and never wraps it in a `try`/`catch`
   (**error-propagation-unmodified**, **no-response-caching**);
-  `authedJson`/`authedFetch` (in `@agentic-toolkit/auth/client.ts`,
+  `authedJson`/`authedFetch` (in `@adh-sdk/auth/client.ts`,
   outside these two given files) attach the bearer access token, convert
   a non-ok response to `AuthHttpError`, and perform the
   one-refresh-and-retry described in Edge Cases. `listEventTypes`
@@ -471,7 +471,7 @@ Not applicable: this component calls no logger or other logging API.
 
 **Decision**: `gamification.ts` transcribes its own wire types into
 `wire.ts` rather than importing generated types from
-`@agentic-toolkit/adh-api-types`.
+`@adh-sdk/adh-api-types`.
 **Rationale**: the module's own comment states this directly — "a
 generic data client does not take a dependency on adh's generated
 product vocabulary," following the same pattern the comment cites for
@@ -486,7 +486,7 @@ documented 400/404/409 response into a friendlier, entity-named message
 (`error-propagation-unmodified`).
 **Rationale**: the source does not explain why. This is a notable
 divergence from the sibling component
-[Ecosystems](adtoolkit://cookbook/adh/hub/ecosystems/ecosystems),
+[Ecosystems](adhsdk://cookbook/adh/hub/ecosystems/ecosystems),
 whose `ecosystems.ts` and `identifiers.ts` call `rethrowConflict` to
 turn a backend 409 into a friendly, entity-named message before it
 reaches a caller. This recipe records the observed divergence rather

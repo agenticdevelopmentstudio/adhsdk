@@ -3,7 +3,7 @@
   "meta": {
     "id": "519d4419-8f80-478d-aa08-912b66bbe5cf",
     "title": "Hub Domain Applications",
-    "domain": "adtoolkit://cookbook/adh/hub/applications",
+    "domain": "adhsdk://cookbook/adh/hub/applications",
     "type": "ingredient",
     "version": "1.2.1",
     "status": "review",
@@ -27,13 +27,13 @@
     ],
     "depends-on": [],
     "related": [
-      "adtoolkit://cookbook/adh/hub/security/authentication-client"
+      "adhsdk://cookbook/adh/hub/security/authentication-client"
     ],
     "references": [
-      "packages/apple/AgenticToolkit/Hub/Features/Applications/ApplicationsDataSource.swift (apple)",
-      "packages/apple/AgenticToolkit/Hub/Features/Applications/ApplicationsModels.swift (apple)",
-      "packages/apple/AgenticToolkit/Hub/Features/Applications/ApplicationsTopic.swift (apple)",
-      "packages/apple/AgenticToolkit/Tests/AgenticToolkitHubTests/ApplicationsTopicTests.swift (apple)"
+      "packages/apple/AgenticDeveloperHubSDK/Hub/Features/Applications/ApplicationsDataSource.swift (apple)",
+      "packages/apple/AgenticDeveloperHubSDK/Hub/Features/Applications/ApplicationsModels.swift (apple)",
+      "packages/apple/AgenticDeveloperHubSDK/Hub/Features/Applications/ApplicationsTopic.swift (apple)",
+      "packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKHubTests/ApplicationsTopicTests.swift (apple)"
     ],
     "approved-by": "",
     "approved-date": ""

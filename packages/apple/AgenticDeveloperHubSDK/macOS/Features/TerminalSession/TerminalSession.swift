@@ -1,0 +1,432 @@
+import AppKit
+import Combine
+import Foundation
+import SwiftTerm
+import os
+import AgenticDeveloperHubSDKCore
+
+private let kMaxProcPathSize: Int32 = 4096
+
+public enum TerminalSessionState: Sendable {
+    case running
+    case terminated
+}
+
+/// Manages a single terminal session backed by a shell process via PTY.
+@MainActor
+public final class TerminalSession: ObservableObject, Identifiable {
+    public let id = UUID()
+
+    @Published public var name: String
+    @Published public var title: String?
+    /// The shell's directory as the shell knows it — real, for a private
+    /// session too. Show it through ``tildeAbbreviatedDirectory`` or
+    /// ``presentable(_:)``, never as it is.
+    @Published public var currentDirectory: String?
+    @Published public var gitBranch: String?
+    @Published public var foregroundProcess: String?
+    @Published public var dotColor: NSColor = .green
+    @Published public var customSubtitles: [TerminalSessionSubtitle] = []
+    @Published public var summary: String?
+    @Published public var state: TerminalSessionState = .running
+    @Published public var layoutState: TerminalSessionLayoutState = TerminalSessionLayoutState()
+
+    public var displayTitle: String {
+        if let title { return title }
+        if let dir = currentDirectory {
+            let home = FileManager.default.homeDirectoryForCurrentUser.path
+            let folder = dir == home ? "~" : (dir as NSString).lastPathComponent
+            if let branch = gitBranch {
+                return presentable("\(folder): \(branch)")
+            }
+            return presentable(folder)
+        }
+        return name
+    }
+
+    /// The directory for display: `~` for home, and concealed for a private
+    /// session.
+    public var tildeAbbreviatedDirectory: String? {
+        Self.tildeAbbreviated(currentDirectory).map(presentable)
+    }
+
+    /// `path` with the home directory written `~`. Abbreviate the real path,
+    /// then conceal it — a concealed path no longer starts with the real home.
+    public static func tildeAbbreviated(_ path: String?) -> String? {
+        guard let dir = path else { return nil }
+        let home = FileManager.default.homeDirectoryForCurrentUser.path
+        if dir == home { return "~" }
+        if dir.hasPrefix(home + "/") { return "~" + dir.dropFirst(home.count) }
+        return dir
+    }
+
+    public func recentScrollbackText(lineCount: Int = 200) -> String {
+        let terminal = terminalView.getTerminal()
+        let data = terminal.getBufferAsData()
+        guard let fullText = String(data: data, encoding: .utf8) else { return "" }
+
+        let allLines = fullText.components(separatedBy: "\n")
+        let nonEmpty = allLines.filter { !$0.trimmingCharacters(in: .whitespaces).isEmpty }
+        let recentLines = nonEmpty.suffix(lineCount)
+
+        var result: [String] = []
+        var charCount = 0
+        let charBudget = 20_000
+
+        for line in recentLines {
+            charCount += line.count
+            if charCount > charBudget { break }
+            result.append(line)
+        }
+
+        return result.joined(separator: "\n")
+    }
+
+    /// Fires each time the shell's output has been drawn into the buffer —
+    /// many times a second while a command prints. Carries nothing: what was
+    /// printed is read from the rendered screen (`screenSnapshot()`), where
+    /// escape sequences and cursor moves have already been applied.
+    public let outputActivity = PassthroughSubject<Void, Never>()
+
+    /// Fires each time input is on its way to the shell — typed into the
+    /// view, pasted, or sent through ``sendInput(_:)``. Not for the terminal's
+    /// automatic replies to the program's queries. A new piece of work in a
+    /// shell, a REPL or an agent begins here, which is what makes it the
+    /// signal that a session is busy again; output alone is not, since a
+    /// program can keep printing at a prompt nobody has answered.
+    public let inputActivity = PassthroughSubject<Void, Never>()
+
+    /// Sends `text` to the shell exactly as if it had been typed — through
+    /// the privacy words, for a private session. Dropped while the shell has
+    /// not started, and once it has exited.
+    public func sendInput(_ text: String) {
+        guard isRunning else { return }
+        terminalView.send(txt: text)
+    }
+
+    // MARK: - Privacy
+
+    /// Whether this session runs behind privacy words: what is typed is
+    /// revealed on its way to the shell, and what the shell prints is concealed
+    /// before it reaches the screen — and so before anything that reads the
+    /// screen, the scrollback, the title or the directory.
+    public let isPrivate: Bool
+
+    /// Whether the shell has been started. A private session's shell waits for
+    /// its first ``privacyFilter``: until the words are known, nothing it
+    /// printed could be concealed.
+    public private(set) var isStarted = false
+
+    /// Whether there is a shell to type into: started, and not yet exited.
+    public var isRunning: Bool { isStarted && state == .running }
+
+    /// The words a private session's streams pass through. Setting it the
+    /// first time starts the shell; later settings apply from the next byte.
+    /// Ignored by a session that is not private.
+    public var privacyFilter: TextSubstitutionFilter? {
+        didSet {
+            guard isPrivate, let privacyFilter else { return }
+            (terminalView as? PrivateTerminalView)?.substitutions = privacyFilter
+            if !isStarted { startShellProcess(in: terminalView) }
+        }
+    }
+
+    /// `text` as this terminal would show it — concealed, for a private
+    /// session. For anything that reports on the terminal from outside it, so
+    /// a name or a directory reads the same there as on its screen.
+    public func presentable(_ text: String) -> String {
+        guard isPrivate else { return text }
+        return privacyFilter?.concealing(text) ?? ""
+    }
+
+    /// `text` as the shell knows it — revealed, for a private session. For
+    /// what the app itself does with something the screen shows concealed,
+    /// such as finding the branch of the current directory.
+    func programForm(_ text: String) -> String {
+        guard isPrivate else { return text }
+        return privacyFilter?.revealing(text) ?? text
+    }
+
+    /// The terminal's rendered lines and cursor, rows numbered so the same
+    /// line keeps its number as output scrolls older lines away.
+    public func screenSnapshot() -> TerminalScreenSnapshot {
+        let terminal = terminalView.getTerminal()
+        let text = String(bytes: terminal.getBufferAsData(), encoding: .utf8) ?? ""
+        // Every line is written followed by a newline, so the split ends on an
+        // empty string that is not a row.
+        var lines = text.components(separatedBy: "\n")
+        if lines.last == "" { lines.removeLast() }
+        // The screen is the last `rows` lines; the cursor is counted from its top.
+        let screenTop = max(0, lines.count - terminal.getDims().rows)
+        let firstRow = terminal.buffer.totalLinesTrimmed
+        return TerminalScreenSnapshot(
+            lines: lines,
+            firstRow: firstRow,
+            cursorRow: firstRow + screenTop + terminal.buffer.y,
+            isAlternateScreen: terminal.isCurrentBufferAlternate
+        )
+    }
+
+    public private(set) lazy var terminalView: LocalProcessTerminalView = {
+        let frame = CGRect(x: 0, y: 0, width: 800, height: 600)
+        let view = isPrivate ? PrivateTerminalView(frame: frame) : ThemedTerminalView(frame: frame)
+        view.processDelegate = processHandler
+        view.onDataReceived = { [weak self] in self?.outputActivity.send() }
+        // `sendInput` types through the view, so this covers it too.
+        view.onDataSent = { [weak self] in self?.inputActivity.send() }
+        if !isPrivate { startShellProcess(in: view) }
+        return view
+    }()
+
+    private let processHandler: TerminalSessionProcessHandler
+    private var gitBranchRequestID: UUID?
+    private var processPollingTimer: Timer?
+    private let workingDirectory: String?
+    private let shell: String?
+    /// Extra variables for the shell, on top of the terminal's and the
+    /// process's. What a pane uses to tell the shell which pane it is.
+    public let environment: [String: String]
+    private let gitClient: GitClient
+
+    /// - Parameters:
+    ///   - isPrivate: Runs the session behind privacy words; its shell
+    ///     starts when ``privacyFilter`` is first set.
+    ///   - shell: The shell to run; the user's `$SHELL` when nil.
+    ///   - environment: Extra shell variables; they win over the inherited ones.
+    public init(
+        name: String, workingDirectory: String? = nil, gitClient: GitClient = .shared, isPrivate: Bool = false,
+        shell: String? = nil, environment: [String: String] = [:]
+    ) {
+        self.name = name
+        self.isPrivate = isPrivate
+        self.workingDirectory = workingDirectory
+        self.shell = shell
+        self.environment = environment
+        self.gitClient = gitClient
+        self.processHandler = TerminalSessionProcessHandler()
+        self.processHandler.session = self
+    }
+
+    /// `base` with every pair in `extra` applied: a key already present is
+    /// replaced where it stands, a new one is appended, in key order so the
+    /// result is the same from one launch to the next.
+    public nonisolated static func shellEnvironment(base: [String], extra: [String: String]) -> [String] {
+        var env = base
+        for key in extra.keys.sorted() {
+            let pair = "\(key)=\(extra[key]!)"
+            if let index = env.firstIndex(where: { $0.hasPrefix("\(key)=") }) {
+                env[index] = pair
+            } else {
+                env.append(pair)
+            }
+        }
+        return env
+    }
+
+    private func startShellProcess(in view: LocalProcessTerminalView) {
+        guard !isStarted else { return }
+        isStarted = true
+        let shell = self.shell ?? ProcessInfo.processInfo.environment["SHELL"] ?? "/bin/zsh"
+        let startDir = workingDirectory ?? FileManager.default.homeDirectoryForCurrentUser.path
+        // swiftlint:disable:next line_length
+        logger.info("Starting shell '\(shell, privacy: .public)' for session '\(self.name)' in \(startDir, privacy: .public)")
+
+        let processEnv = ProcessInfo.processInfo.environment
+        let inherited = ["HOME", "USER", "LOGNAME", "PATH", "LANG", "LC_ALL", "LC_CTYPE"]
+            .reduce(into: [String: String]()) { acc, key in if let value = processEnv[key] { acc[key] = value } }
+        var env = Terminal.getEnvironmentVariables(termName: "xterm-256color")
+        env = Self.shellEnvironment(base: env, extra: inherited)
+        env = Self.shellEnvironment(base: env, extra: environment)
+
+        let shellName = (shell as NSString).lastPathComponent
+        view.startProcess(
+            executable: shell,
+            args: [],
+            environment: env,
+            execName: "-\(shellName)",
+            currentDirectory: startDir
+        )
+
+        view.getTerminal().registerOscHandler(code: 7770) { [weak self] data in
+            guard let payload = String(bytes: data, encoding: .utf8) else { return }
+            DispatchQueue.main.async {
+                self?.handleOsc7770(payload: payload)
+            }
+        }
+
+        startProcessPolling()
+    }
+
+    private func handleOsc7770(payload: String) {
+        logger.debug("OSC 7770 received: \(payload, privacy: .public)")
+        if payload.hasPrefix("color=") {
+            let hex = String(payload.dropFirst("color=".count))
+            if let color = NSColor(hex: hex) {
+                dotColor = color
+            }
+        } else if payload.hasPrefix("subtitle:") {
+            let rest = String(payload.dropFirst("subtitle:".count))
+            guard let equalsIndex = rest.firstIndex(of: "=") else { return }
+            let key = String(rest[rest.startIndex..<equalsIndex])
+            let value = String(rest[rest.index(after: equalsIndex)...])
+            guard !key.isEmpty else { return }
+            if let index = customSubtitles.firstIndex(where: { $0.key == key }) {
+                customSubtitles[index] = TerminalSessionSubtitle(key: key, value: value)
+            } else {
+                customSubtitles.append(TerminalSessionSubtitle(key: key, value: value))
+            }
+        } else if payload.hasPrefix("clear-subtitle:") {
+            let key = String(payload.dropFirst("clear-subtitle:".count))
+            customSubtitles.removeAll { $0.key == key }
+        } else if payload == "clear-all-subtitles" {
+            customSubtitles.removeAll()
+        }
+    }
+
+    private func startProcessPolling() {
+        processPollingTimer = Timer.scheduledTimer(withTimeInterval: 1.5, repeats: true) { [weak self] _ in
+            MainActor.assumeIsolated {
+                self?.pollForegroundProcess()
+            }
+        }
+    }
+
+    private func pollForegroundProcess() {
+        guard state == .running else {
+            processPollingTimer?.invalidate()
+            processPollingTimer = nil
+            return
+        }
+
+        let descriptor = terminalView.process.childfd
+        guard descriptor >= 0 else { return }
+
+        let fgpid = tcgetpgrp(descriptor)
+        guard fgpid > 0 else { return }
+
+        let pathBuffer = UnsafeMutablePointer<CChar>.allocate(capacity: Int(kMaxProcPathSize))
+        defer { pathBuffer.deallocate() }
+
+        let pathLength = proc_pidpath(fgpid, pathBuffer, UInt32(kMaxProcPathSize))
+        guard pathLength > 0 else { return }
+
+        let fullPath = String(cString: pathBuffer)
+        let processName = (fullPath as NSString).lastPathComponent
+
+        if foregroundProcess != processName {
+            foregroundProcess = processName
+        }
+    }
+
+    /// Detached HEAD renders as `HEAD`, not as nothing.
+    ///
+    /// `GitClient.currentBranch` returns `nil` there, which is the right answer
+    /// for an API whose question is "which branch?" — but this label's job is to
+    /// tell the user where they are standing, and a blank label reads as "not a
+    /// repository". The two cases stay distinguishable without a second call:
+    /// `currentBranch` *throws* when git could not answer, and returns `nil`
+    /// only when git answered `HEAD`.
+    public func detectGitBranch(for directory: String) {
+        let requestID = UUID()
+        gitBranchRequestID = requestID
+        let client = gitClient
+        Task { [weak self] in
+            let branch: String?
+            do {
+                branch = try await client.currentBranch(in: URL(fileURLWithPath: directory)) ?? "HEAD"
+            } catch is CancellationError {
+                // Defensive, and unreachable as written: the `Task` above is
+                // unstructured and its handle is discarded, so nothing holds a
+                // reference that could cancel it. It states the policy anyway,
+                // because the day someone keeps that handle, a cancelled
+                // detection must leave the label alone rather than blank it.
+                return
+            } catch {
+                branch = nil
+            }
+            guard let self, self.gitBranchRequestID == requestID else { return }
+            self.gitBranch = branch
+        }
+    }
+
+    public func stopProcessPolling() {
+        processPollingTimer?.invalidate()
+        processPollingTimer = nil
+    }
+
+    public func terminateProcess() {
+        stopProcessPolling()
+        if state == .running, isStarted {
+            logger.info("Terminating shell process for session '\(self.name)'")
+            terminalView.terminate()
+        }
+    }
+}
+
+extension TerminalSession: Loggable {
+    public static nonisolated let logger = makeLogger()
+}
+
+/// A key/value pair shown as a subtitle line on a terminal session cell.
+public struct TerminalSessionSubtitle: Sendable, Equatable {
+    public let key: String
+    public let value: String
+
+    public init(key: String, value: String) {
+        self.key = key
+        self.value = value
+    }
+}
+
+// MARK: - Process Delegate Handler
+
+@MainActor
+private final class TerminalSessionProcessHandler: NSObject, LocalProcessTerminalViewDelegate {
+    public weak var session: TerminalSession?
+
+    public nonisolated func sizeChanged(source: LocalProcessTerminalView, newCols: Int, newRows: Int) {}
+
+    public nonisolated func setTerminalTitle(source: LocalProcessTerminalView, title: String) {
+        DispatchQueue.main.async {
+            MainActor.assumeIsolated {
+                self.session?.title = title
+            }
+        }
+    }
+
+    public nonisolated func hostCurrentDirectoryUpdate(source: TerminalView, directory: String?) {
+        guard let directory = directory else { return }
+        let path: String
+        if let url = URL(string: directory), url.scheme == "file" {
+            path = url.path
+        } else {
+            path = directory
+        }
+        DispatchQueue.main.async {
+            MainActor.assumeIsolated {
+                guard let session = self.session else { return }
+                // A private session's directory arrives concealed, like
+                // everything else it printed. It is kept real, so `~` and the
+                // branch lookup work on it, and concealed again for display.
+                let directory = session.programForm(path)
+                session.currentDirectory = directory
+                session.detectGitBranch(for: directory)
+            }
+        }
+    }
+
+    public nonisolated func processTerminated(source: TerminalView, exitCode: Int32?) {
+        let code = exitCode
+        DispatchQueue.main.async {
+            MainActor.assumeIsolated {
+                self.logger.info("Shell process terminated with exit code \(code.map { String($0) } ?? "nil")")
+                self.session?.stopProcessPolling()
+                self.session?.state = .terminated
+            }
+        }
+    }
+}
+
+extension TerminalSessionProcessHandler: Loggable {
+    public static nonisolated let logger = makeLogger()
+}

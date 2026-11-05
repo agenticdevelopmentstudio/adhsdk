@@ -1,5 +1,5 @@
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/AIPluginKit/LocalModelServer.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/AIPluginKit/LocalModelServer.swift` |
 

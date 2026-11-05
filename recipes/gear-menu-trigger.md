@@ -1,7 +1,7 @@
 ---
 id: cebee4d7-3d01-440d-a35e-6220957c1603
 title: Gear Menu Trigger
-domain: agenticdevelopertoolkit://recipes/gear-menu-trigger
+domain: adhsdk://recipes/gear-menu-trigger
 type: ingredient
 version: 1.1.1
 status: review
@@ -22,7 +22,7 @@ tags:
 - trigger
 - action
 depends-on:
-- agenticdevelopertoolkit://recipes/dropdown-menu
+- adhsdk://recipes/dropdown-menu
 related: []
 references: []
 approved-by: ''
@@ -53,7 +53,7 @@ A small, fixed-size icon button that triggers a dropdown menu. The component is 
 - **Size**: 24px × 24px (Tailwind `size-6`). Fixed; no resize.
 - **Corner radius**: Small rounded corners (Tailwind `rounded`).
 - **Icon size**: 14px (Lucide `Settings` component `size={14}`).
-- **Default text color**: `text-apt-text-dim` — the dimmed-text token, sourced from the theme's `--color-text-dim` role (`@agenticdevelopertoolkit/themes`).
+- **Default text color**: `text-apt-text-dim` — the dimmed-text token, sourced from the theme's `--color-text-dim` role (`@adh-sdk/themes`).
 - **Hover text color**: `text-apt-text` — the normal-text token, sourced from the theme's `--color-on-surface` role, shown on hover (requirement **hover-color**).
 - **Focus ring**: 2px solid ring with `apt-gold/40` — the theme's primary/accent role at 40% opacity — shown on `focus-visible` (requirement **focus-indicator**).
 - **Disabled opacity**: 40% opacity (Tailwind `opacity-40`) when disabled.

@@ -1,5 +1,5 @@
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/CoreMacOS/DebugAutomation/` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/CoreMacOS/DebugAutomation/` |
 

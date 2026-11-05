@@ -2,16 +2,16 @@
 import { describe, expect, it, vi } from "vitest";
 import type { ReactElement } from "react";
 import { fireEvent, render, screen } from "@testing-library/react";
-import { ToolkitQueryProvider } from "@agentic-toolkit/data/query";
-import { DEMO_MAX_THINK_MS, DEMO_MAX_TOKEN_MS } from "@agentic-toolkit/data/personas";
+import { ToolkitQueryProvider } from "@adh-sdk/data/query";
+import { DEMO_MAX_THINK_MS, DEMO_MAX_TOKEN_MS } from "@adh-sdk/data/personas";
 import { DEMO_DEFAULT_CONFIG, DemoFacet } from "./DemoFacet";
 
 // The facet now nests the ink editor, which lints the draft through the server. Its own
 // behaviour is pinned in InkScriptEditor.test.tsx; here the call is stubbed so these tests
 // stay about the facet, and so nothing reaches the network. The rest of the module is real —
 // `canDemoChat` and the pacing ceilings are what several assertions below are about.
-vi.mock("@agentic-toolkit/data/personas", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("@agentic-toolkit/data/personas")>();
+vi.mock("@adh-sdk/data/personas", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@adh-sdk/data/personas")>();
   return { ...actual, demoPreviewApi: { play: vi.fn(async () => null as never) } };
 });
 

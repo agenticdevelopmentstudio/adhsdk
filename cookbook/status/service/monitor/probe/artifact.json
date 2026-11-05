@@ -3,7 +3,7 @@
   "meta": {
     "id": "1094926a-e89e-416d-aa62-8bfd42afa1b4",
     "title": "Status Server Monitor Probe",
-    "domain": "adtoolkit://cookbook/status/service/monitor/probe",
+    "domain": "adhsdk://cookbook/status/service/monitor/probe",
     "type": "ingredient",
     "version": "1.0.2",
     "status": "review",
@@ -31,16 +31,16 @@
       "agenticdevelopercookbook://guidelines/implementing/networking/retry-and-resilience"
     ],
     "related": [
-      "adtoolkit://cookbook/status/service/monitor/health",
-      "adtoolkit://cookbook/status/service/monitor/endpoint-kinds"
+      "adhsdk://cookbook/status/service/monitor/health",
+      "adhsdk://cookbook/status/service/monitor/endpoint-kinds"
     ],
     "references": [
-      "packages/web/packages/status-server/src/monitor/probe.ts (agenticdevelopertoolkit)",
-      "packages/web/packages/status-server/test/probe.test.ts (agenticdevelopertoolkit)",
-      "packages/web/packages/status-server/src/monitor/health.ts (agenticdevelopertoolkit)",
-      "packages/web/packages/status-server/src/monitor/endpoint-kinds.ts (agenticdevelopertoolkit)",
-      "packages/web/packages/status-server/src/storage/ports.ts (agenticdevelopertoolkit)",
-      "packages/web/packages/deploy-platform/src/util/map-limit.ts (agenticdevelopertoolkit)"
+      "packages/web/packages/status-server/src/monitor/probe.ts (adhsdk)",
+      "packages/web/packages/status-server/test/probe.test.ts (adhsdk)",
+      "packages/web/packages/status-server/src/monitor/health.ts (adhsdk)",
+      "packages/web/packages/status-server/src/monitor/endpoint-kinds.ts (adhsdk)",
+      "packages/web/packages/status-server/src/storage/ports.ts (adhsdk)",
+      "packages/web/packages/deploy-platform/src/util/map-limit.ts (adhsdk)"
     ],
     "approved-by": "",
     "approved-date": ""

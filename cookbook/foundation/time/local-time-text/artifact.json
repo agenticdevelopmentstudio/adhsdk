@@ -3,7 +3,7 @@
   "meta": {
     "id": "A98DFCA4-B6B0-4565-91B3-0657981D1AC8",
     "title": "Local Time Text",
-    "domain": "adtoolkit://cookbook/foundation/time/local-time-text",
+    "domain": "adhsdk://cookbook/foundation/time/local-time-text",
     "type": "ingredient",
     "version": "1.0.0",
     "status": "review",
@@ -26,8 +26,8 @@
     ],
     "depends-on": [],
     "related": [
-      "adtoolkit://cookbook/foundation/time/utc-timestamp",
-      "adtoolkit://cookbook/foundation/time/timestamp-parsing"
+      "adhsdk://cookbook/foundation/time/utc-timestamp",
+      "adhsdk://cookbook/foundation/time/timestamp-parsing"
     ],
     "references": [],
     "approved-by": "",

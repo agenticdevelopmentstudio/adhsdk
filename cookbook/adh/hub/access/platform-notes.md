@@ -1,7 +1,7 @@
 
 - **React/Web** (source platform): `packages/web/packages/data/src/access/access.ts` and
   `wire.ts` hold the client; `accessApi` is built entirely on `authedJson`/`authedRequest`
-  from `@agentic-toolkit/auth/client` (re-exported through `./http`) and `enc`
+  from `@adh-sdk/auth/client` (re-exported through `./http`) and `enc`
   (`encodeURIComponent`) from `./client-helpers`; `index.ts` re-exports both files as the
   package's public surface for the rest of the web app. The wire row types are
   `AccessFeatureRow`, `AccessGrantRow`, `AccessRoleRow`, `AccessAssignmentRow`,

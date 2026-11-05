@@ -1,5 +1,5 @@
 {
-  "name": "@agentic-toolkit/auth",
+  "name": "@adh-sdk/auth",
   "version": "0.1.0",
   "description": "Shared authentication for Agentic Developer Hub sites — capabilities-based AuthProvider with SSO/MFA, Bearer HTTP client with CAS refresh, auth gates, login/signup cards, and the BFF proxy.",
   "license": "UNLICENSED",
@@ -12,7 +12,7 @@
   "files": [
     "dist"
   ],
-  "comment:exports": "`development` → src for `next dev` (HMR, no build/restart); prod (NODE_ENV=production) skips it → dist. Matches the sibling @agentic-toolkit/data pattern.",
+  "comment:exports": "`development` → src for `next dev` (HMR, no build/restart); prod (NODE_ENV=production) skips it → dist. Matches the sibling @adh-sdk/data pattern.",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -47,7 +47,7 @@
   },
   "dependencies": {
     "@simplewebauthn/browser": "^13.3.0",
-    "@agenticdevelopertoolkit/ui": "workspace:*"
+    "@adh-sdk/ui": "workspace:*"
   },
   "peerDependencies": {
     "next": ">=15.0.0",

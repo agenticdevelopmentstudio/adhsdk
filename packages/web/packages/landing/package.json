@@ -1,5 +1,5 @@
 {
-  "name": "@agenticdevelopertoolkit/landing",
+  "name": "@adh-sdk/landing",
   "version": "0.1.0",
   "description": "Snap-scrolling long-form landing page kit — Deck, Screen, NavChrome and a block vocabulary, themed by CSS custom properties.",
   "license": "Apache-2.0",
@@ -37,7 +37,7 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@agenticdevelopertoolkit/textlens": "workspace:*"
+    "@adh-sdk/textlens": "workspace:*"
   },
   "peerDependencies": {
     "react": "^19.0.0",

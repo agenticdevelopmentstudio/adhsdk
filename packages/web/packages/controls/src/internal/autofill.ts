@@ -1,11 +1,11 @@
 /**
  * Password-manager opt-out for this package's own fields.
  *
- * A deliberate copy of `@agenticdevelopertoolkit/ui/lib/autofill`, which is the fleet's list of
+ * A deliberate copy of `@adh-sdk/ui/lib/autofill`, which is the fleet's list of
  * record and carries the full rationale (which vendor reads which attribute, and
  * why `autocomplete="off"` alone moves none of them). It is copied rather than
- * imported because `@agenticdevelopertoolkit/controls` depends on nothing from the UI kit —
- * `@agenticdevelopertoolkit/model` and `shiki` are its only runtime deps — and a host site is
+ * imported because `@adh-sdk/controls` depends on nothing from the UI kit —
+ * `@adh-sdk/model` and `shiki` are its only runtime deps — and a host site is
  * expected to be able to mount one control without pulling the kit in. Six string
  * literals are the cheaper of the two prices; a guard script in the private
  * application that consumes this package is what keeps them in step, since
@@ -31,7 +31,7 @@ export const noAutofillProps = {
 /**
  * The opt-out for a field whose caller may name an autofill token.
  *
- * Same rule as `@agenticdevelopertoolkit/ui`'s helper of this name: a field naming a real
+ * Same rule as `@adh-sdk/ui`'s helper of this name: a field naming a real
  * token (`email`, `tel`, `url`, `name`, …) is *asking* for a manager and gets
  * handed straight back with none of the ignore attributes; `"off"` counts as no
  * token, because it is the same request this makes, only weaker. The value is

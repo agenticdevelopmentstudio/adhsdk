@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 
-import { Button } from '@agenticdevelopertoolkit/ui/components/button';
+import { Button } from '@adh-sdk/ui/components/button';
 import {
   Dialog,
   DialogContent,
@@ -10,10 +10,10 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@agenticdevelopertoolkit/ui/components/dialog';
-import { ErrorText } from '@agenticdevelopertoolkit/ui/components/error-text';
-import { Label } from '@agenticdevelopertoolkit/ui/components/label';
-import { Select } from '@agenticdevelopertoolkit/ui/components/select';
+} from '@adh-sdk/ui/components/dialog';
+import { ErrorText } from '@adh-sdk/ui/components/error-text';
+import { Label } from '@adh-sdk/ui/components/label';
+import { Select } from '@adh-sdk/ui/components/select';
 
 import { DocumentError, parseDocument, writtenBy, type ShiprDocument } from './document';
 import { readTextFile } from './files';

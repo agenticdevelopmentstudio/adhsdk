@@ -4,19 +4,19 @@ import { useCallback, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { Bot, Trash2, UserRound, UsersRound } from "lucide-react";
 
-import { useResourceItemQuery, useResourceList } from "@agentic-toolkit/data";
+import { useResourceItemQuery, useResourceList } from "@adh-sdk/data";
 import {
   accessApi,
   type AccessAssignmentRow,
   type AccessRoleRow,
   type EffectiveAccessRow,
-} from "@agentic-toolkit/data/access";
-import { ErrorText } from "@agenticdevelopertoolkit/ui/components/error-text";
-import { EmptyState } from "@agenticdevelopertoolkit/ui/components/empty-state";
-import { List, ListItem } from "@agenticdevelopertoolkit/ui/components/list";
-import { Select } from "@agenticdevelopertoolkit/ui/components/select";
-import { Button } from "@agenticdevelopertoolkit/ui/components/button";
-import { FeatureTitle } from "@agentic-toolkit/resource";
+} from "@adh-sdk/data/access";
+import { ErrorText } from "@adh-sdk/ui/components/error-text";
+import { EmptyState } from "@adh-sdk/ui/components/empty-state";
+import { List, ListItem } from "@adh-sdk/ui/components/list";
+import { Select } from "@adh-sdk/ui/components/select";
+import { Button } from "@adh-sdk/ui/components/button";
+import { FeatureTitle } from "@adh-sdk/resource";
 
 /** A share target the host resolves from its member registry — a customer, a
  *  persona, or a whole team. Same host-owned seam as AccessPane's usersDirectory:

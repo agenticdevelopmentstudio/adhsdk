@@ -1,5 +1,5 @@
 
-- **SwiftUI**: The source (`packages/apple/AgenticToolkit/AIPluginKit/ModelCapability.swift`,
+- **SwiftUI**: The source (`packages/apple/AgenticDeveloperHubSDK/AIPluginKit/ModelCapability.swift`,
   tests `Tests/AIPluginKitTests/ModelCapabilityTests.swift`) has no
   SwiftUI dependency of its own — it is plain Swift, framework-agnostic.
   A SwiftUI consumer would render `ForEach(ModelCapability.allCases)` as a

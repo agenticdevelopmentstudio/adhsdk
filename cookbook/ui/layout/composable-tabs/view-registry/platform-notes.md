@@ -32,7 +32,7 @@
   function in place of `PaneContentTeardown`, and removal confirmation to a
   plain callback prop returning a string or `undefined`.
 - **AppKit/UIKit**: This is the source platform; see
-  `packages/apple/AgenticToolkit/macOS/UI/ViewControllers/ComposableTabs/ComposableTabsViewRegistry.swift`.
+  `packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/ComposableTabs/ComposableTabsViewRegistry.swift`.
   It is macOS/AppKit-only: the registry (`ComposableTabsViewRegistry`), the
   context (`ComposableTabsViewContext`), and the placeholder
   (`PlaceholderPaneViewController`) are all `@MainActor`-isolated, which is

@@ -55,7 +55,7 @@ const buttonVariants = cva(
         // The `destructive` treatment one step down the status spectrum, for a
         // consequential-but-not-destructive action: an ownership transfer moves an
         // object and drops other people's access, but destroys nothing. Reads the M3
-        // `warning` role (exposed as apt-orange by @agenticdevelopertoolkit/themes)
+        // `warning` role (exposed as apt-orange by @adh-sdk/themes)
         // rather than minting a second alias for it — every theme defines that role, so
         // this needs no new token and no per-theme work.
         warning:

@@ -68,7 +68,7 @@ let warnedNoAsBase = false
  * (`suite.toml` — `NEXT_PUBLIC_AUTH_API_URL = "https://{ADH_BACKEND_HOST}"`). An
  * unset var means a MISCONFIGURED DEPLOY, and it had gone unnoticed on all three
  * tiers of one site — a build guard now fails such a build
- * (`@agentic-toolkit/next-preflight`'s `assertAuthApiUrl`, run by `adhNextConfig()`),
+ * (`@adh-sdk/next-preflight`'s `assertAuthApiUrl`, run by `adhNextConfig()`),
  * and this is the runtime half: one console
  * error naming the variable, at the moment a restore is declined because of it.
  */
@@ -695,7 +695,7 @@ export function centralLoginTarget(opts: {
  * visitor anonymous on the other 40-odd sites. Failing outright is the lesser harm by
  * a wide margin: a build that cannot log in gets fixed, and one that logs you in
  * exactly once, on one site, is the bug that took weeks to find. It is also not a
- * path any deploy takes — `@agentic-toolkit/next-preflight`'s `assertAuthApiUrl` fails
+ * path any deploy takes — `@adh-sdk/next-preflight`'s `assertAuthApiUrl` fails
  * a hosted build with the
  * variable unset, and the dev suite sets it — so this is the backstop for a build
  * that slipped past the guard, not a supported mode.

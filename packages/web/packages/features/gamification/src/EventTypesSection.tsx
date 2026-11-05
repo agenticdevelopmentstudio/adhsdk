@@ -3,29 +3,29 @@
 import { useCallback, useMemo, useState } from "react";
 import { Pencil, Plus, Trash2 } from "lucide-react";
 
-import { reportUnexpectedAuthError } from "@agentic-toolkit/auth";
-import { isForbidden, useResourceList } from "@agentic-toolkit/data";
+import { reportUnexpectedAuthError } from "@adh-sdk/auth";
+import { isForbidden, useResourceList } from "@adh-sdk/data";
 import {
   gamificationApi,
   type RealmEventType,
   type RealmEventTypeInput,
-} from "@agentic-toolkit/data/gamification";
-import { useReportSettingsDirty } from "@agentic-toolkit/resource";
-import { Button } from "@agenticdevelopertoolkit/ui/components/button";
+} from "@adh-sdk/data/gamification";
+import { useReportSettingsDirty } from "@adh-sdk/resource";
+import { Button } from "@adh-sdk/ui/components/button";
 import {
   Dialog,
   DialogContent,
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@agenticdevelopertoolkit/ui/components/dialog";
-import { AlertModal } from "@agenticdevelopertoolkit/ui/components/alert-modal";
-import { UnsavedChangesAlert } from "@agenticdevelopertoolkit/ui/components/unsaved-changes-alert";
-import { EmptyState } from "@agenticdevelopertoolkit/ui/components/empty-state";
-import { Field } from "@agenticdevelopertoolkit/ui/blocks";
-import { Input } from "@agenticdevelopertoolkit/ui/components/input";
-import { List, ListItem } from "@agenticdevelopertoolkit/ui/components/list";
-import { DialogErrorText, ErrorText } from "@agenticdevelopertoolkit/ui/components/error-text";
+} from "@adh-sdk/ui/components/dialog";
+import { AlertModal } from "@adh-sdk/ui/components/alert-modal";
+import { UnsavedChangesAlert } from "@adh-sdk/ui/components/unsaved-changes-alert";
+import { EmptyState } from "@adh-sdk/ui/components/empty-state";
+import { Field } from "@adh-sdk/ui/blocks";
+import { Input } from "@adh-sdk/ui/components/input";
+import { List, ListItem } from "@adh-sdk/ui/components/list";
+import { DialogErrorText, ErrorText } from "@adh-sdk/ui/components/error-text";
 
 import { forbiddenAware } from "./err-text";
 

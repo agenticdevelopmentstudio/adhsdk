@@ -2,10 +2,10 @@
 
 import { useCallback, useId, useState } from "react";
 
-import { FeatureRequiredError, useEcosystemFeatures } from "@agentic-toolkit/data/ecosystems";
-import { useDetailsSection } from "@agentic-toolkit/resource";
-import { Label } from "@agenticdevelopertoolkit/ui/components/label";
-import { Switch } from "@agenticdevelopertoolkit/ui/components/switch";
+import { FeatureRequiredError, useEcosystemFeatures } from "@adh-sdk/data/ecosystems";
+import { useDetailsSection } from "@adh-sdk/resource";
+import { Label } from "@adh-sdk/ui/components/label";
+import { Switch } from "@adh-sdk/ui/components/switch";
 
 /**
  * An on/off switch for ONE feature of an ecosystem, as a section of the enclosing

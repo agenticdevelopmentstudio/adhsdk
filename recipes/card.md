@@ -1,7 +1,7 @@
 ---
 id: ea565474-df7a-42bd-9613-5dd0cd861911
 title: Card
-domain: agenticdevelopertoolkit://recipes/card
+domain: adhsdk://recipes/card
 type: ingredient
 version: 1.2.3
 status: review
@@ -24,7 +24,7 @@ tags:
 depends-on: []
 related:
 - agenticdevelopercookbook://guidelines/cookbook/ui/platform-design-languages
-- agenticdevelopertoolkit://recipes/landing-card
+- adhsdk://recipes/landing-card
 references: []
 approved-by: ''
 approved-date: ''

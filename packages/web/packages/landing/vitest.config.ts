@@ -1,6 +1,6 @@
 import { defineConfig } from 'vitest/config'
 
-// Self-contained config so `pnpm --filter @agenticdevelopertoolkit/landing run test`
+// Self-contained config so `pnpm --filter @adh-sdk/landing run test`
 // (cwd = this package) discovers src/__tests__/*. The workspace-root config's
 // `dir: '../packages'` resolves outside the web workspace, so it finds nothing.
 // We reuse the root setup file for its deterministic jest-dom/localStorage/

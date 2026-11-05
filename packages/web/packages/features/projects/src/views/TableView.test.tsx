@@ -11,13 +11,13 @@ import { render, screen, fireEvent, cleanup, within } from "@testing-library/rea
 
 import { TableView } from "./TableView";
 import { itemWordsOf } from "../vocabulary";
-import { type WorkItem } from "@agentic-toolkit/data/projects";
+import { type WorkItem } from "@adh-sdk/data/projects";
 import {
   type Iteration,
   type Milestone,
   type ProjectStatus,
   type ProjectParticipant,
-} from "@agentic-toolkit/data/projects";
+} from "@adh-sdk/data/projects";
 
 const STATUS: ProjectStatus = {
   id: "s1",

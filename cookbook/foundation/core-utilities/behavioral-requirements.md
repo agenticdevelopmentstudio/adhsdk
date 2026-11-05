@@ -28,7 +28,7 @@
 ### Secret storage
 
 - **keychain-service-default**: the store's `service` identifier MUST
-  default to the app's bundle identifier, or `"com.agentictoolkit"` when
+  default to the app's bundle identifier, or `"com.mikefullerton.agenticdeveloperhubsdk"` when
   none is available, and MUST be reassignable by a caller at any time.
 - **keychain-access-group-default**: the store's `accessGroup` MUST default
   to nothing.

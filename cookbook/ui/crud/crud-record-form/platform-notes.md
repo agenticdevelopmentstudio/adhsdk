@@ -1,10 +1,10 @@
 
 - **React / Web (TypeScript):** `packages/web/packages/crud/src/CrudRecordForm.tsx`,
-  exported from `@agentic-toolkit/crud`. Composes the shared `Field`, `Button`,
-  `useAction` (from `@agenticdevelopertoolkit/ui`) and the package-local
+  exported from `@adh-sdk/crud`. Composes the shared `Field`, `Button`,
+  `useAction` (from `@adh-sdk/ui`) and the package-local
   `CrudFieldInput` (rendering `Select`/`Checkbox`/`Textarea`/`Input` per
-  column type) + `ErrorText`. Note it lives in `@agentic-toolkit/crud`, not
-  `@agenticdevelopertoolkit/ui`.
+  column type) + `ErrorText`. Note it lives in `@adh-sdk/crud`, not
+  `@adh-sdk/ui`.
 - The pure metadata→payload helpers are exported for reuse/testing: `writableColumns`,
   `toDraft`, `buildPayload`, plus the `CrudDraft` / `CrudFormMode` types. An
   untouched create checkbox is represented as `undefined` in the draft.
@@ -13,7 +13,7 @@
 - Root form: `<form className="flex flex-col gap-3">`. Boolean rows: a
   `<label className="flex items-center gap-2">` wrapping the `Checkbox`, with
   the caption styled via `fieldCaptionClass` (the shared uppercase-mono
-  caption class from `@agenticdevelopertoolkit/ui/lib/typography`). Footer:
+  caption class from `@adh-sdk/ui/lib/typography`). Footer:
   `flex justify-end gap-2`; Cancel is `type="button"`, Save is
   `type="submit"`, both `size="sm"`. Colors/typography come from the
   toolkit's `apt-*` design tokens (e.g. `text-apt-text-muted`); no raw hex,

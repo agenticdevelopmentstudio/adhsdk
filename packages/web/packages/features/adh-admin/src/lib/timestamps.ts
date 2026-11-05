@@ -1,5 +1,5 @@
 /**
- * Rendering the backend's timestamps — moved to `@agenticdevelopertoolkit/ui/lib/timestamps`, because the
+ * Rendering the backend's timestamps — moved to `@adh-sdk/ui/lib/timestamps`, because the
  * rule it encodes (a Postgres `timestamp` arrives with a space and no zone, and `new Date()` reads
  * that as LOCAL time) is a property of the transport, and the ecosystem panes read the same
  * columns off the same backend. Kept as this path so the four pages that import it did not each
@@ -9,4 +9,4 @@ export {
   parseBackendTimestamp,
   formatDate,
   formatDateTime,
-} from "@agenticdevelopertoolkit/ui/lib/timestamps";
+} from "@adh-sdk/ui/lib/timestamps";

@@ -3,11 +3,11 @@
 import { useCallback, useEffect, useRef, type ReactNode, type RefObject } from 'react'
 import dynamic from 'next/dynamic'
 import { MessagesSquare, Palette, SlidersHorizontal, SquareTerminal } from 'lucide-react'
-import type { TopicLevel } from '@agenticdevelopertoolkit/ui/blocks'
-import { HierarchicalDetailView } from '@agenticdevelopertoolkit/ui/blocks'
-import { EmptyState } from '@agenticdevelopertoolkit/ui/components/empty-state'
-import { DEV_BUILD } from '@agentic-toolkit/adh-registry/deployment-env'
-import { settingsLast } from '@agentic-toolkit/resource'
+import type { TopicLevel } from '@adh-sdk/ui/blocks'
+import { HierarchicalDetailView } from '@adh-sdk/ui/blocks'
+import { EmptyState } from '@adh-sdk/ui/components/empty-state'
+import { DEV_BUILD } from '@adh-sdk/adh-registry/deployment-env'
+import { settingsLast } from '@adh-sdk/resource'
 import { FloatingWindow } from './FloatingWindow'
 import { useDebugConsoleConfig } from './DebugConsoleProvider'
 import { EnvironmentPanel } from './EnvironmentPanel'
@@ -77,7 +77,7 @@ const SiteThemeConsole =
   process.env.NEXT_PUBLIC_DEPLOYMENT_ENV === 'testing' ||
   process.env.NEXT_PUBLIC_DEPLOYMENT_ENV === 'staging'
     ? dynamic(() =>
-        import('@agentic-toolkit/adh/debug-env/SiteThemeConsole').then((m) => m.SiteThemeConsole),
+        import('@adh-sdk/adh/debug-env/SiteThemeConsole').then((m) => m.SiteThemeConsole),
       )
     : null
 

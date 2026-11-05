@@ -2,10 +2,10 @@
 
 import * as React from "react"
 
-import { ButtonBar } from "@agenticdevelopertoolkit/ui/blocks/button-bar"
-import { FieldGroup } from "@agenticdevelopertoolkit/ui/blocks/field-group"
-import { useDirtyDraft } from "@agenticdevelopertoolkit/ui/hooks/useDirtyDraft"
-import { cn } from "@agenticdevelopertoolkit/ui/lib/utils"
+import { ButtonBar } from "@adh-sdk/ui/blocks/button-bar"
+import { FieldGroup } from "@adh-sdk/ui/blocks/field-group"
+import { useDirtyDraft } from "@adh-sdk/ui/hooks/useDirtyDraft"
+import { cn } from "@adh-sdk/ui/lib/utils"
 
 import { BoundField } from "./controls"
 import type { AnyFieldDescriptor, FieldDescriptor } from "./descriptors"
@@ -216,7 +216,7 @@ export function EditingContainer<
   }, [sections, fields])
 
   React.useEffect(() => {
-    for (const fault of layoutFaults) console.error(`[@agenticdevelopertoolkit/editing] ${fault}`)
+    for (const fault of layoutFaults) console.error(`[@adh-sdk/editing] ${fault}`)
   }, [layoutFaults])
 
   // THE REPAIR PASS. Runs once per loaded record, before the pane is usable, and
@@ -243,7 +243,7 @@ export function EditingContainer<
       // A repair that produces another invalid value is a defect in the repair
       // function. Saving it would write a second bad row over the first, so the
       // pass stops here and says so — loudly, but without discarding anything.
-      console.error(`[@agenticdevelopertoolkit/editing] repair() left a value still invalid — ${detail}`)
+      console.error(`[@adh-sdk/editing] repair() left a value still invalid — ${detail}`)
       setRepair({ phase: "failed", message: detail })
       return
     }

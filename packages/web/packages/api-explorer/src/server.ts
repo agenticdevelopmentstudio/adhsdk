@@ -18,7 +18,7 @@ export {
   endpointsForTag,
   getEndpoint,
   endpointKey,
-} from '@agentic-toolkit/api-explorer/lib/getEndpoint'
+} from '@adh-sdk/api-explorer/lib/getEndpoint'
 export type { EndpointMeta, EndpointRef } from './types'
 
 // The authoritative HTTP-method palette (pure string helpers), so a consumer that renders its own

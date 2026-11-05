@@ -1,5 +1,5 @@
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/Core/Billing/BillingModel.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Billing/BillingModel.swift` |
 

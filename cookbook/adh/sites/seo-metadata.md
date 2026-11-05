@@ -1,7 +1,7 @@
 ---
 id: 0a627830-a764-4f44-8300-faf4279089a1
 title: "SEO Metadata"
-domain: adtoolkit://cookbook/adh/sites/seo-metadata
+domain: adhsdk://cookbook/adh/sites/seo-metadata
 type: ingredient
 version: 1.1.0
 status: review

@@ -4,45 +4,45 @@ import { useCallback, useRef, useState } from "react";
 import type { ReactNode } from "react";
 
 import { Pencil, Settings, Table2, Trash2, Wrench } from "lucide-react";
-import { useResourceList } from "@agentic-toolkit/data";
-import { EmptyState } from "@agenticdevelopertoolkit/ui/components/empty-state";
-import { AlertModal } from "@agenticdevelopertoolkit/ui/components/alert-modal";
+import { useResourceList } from "@adh-sdk/data";
+import { EmptyState } from "@adh-sdk/ui/components/empty-state";
+import { AlertModal } from "@adh-sdk/ui/components/alert-modal";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@agenticdevelopertoolkit/ui/components/dropdown-menu";
-import { Field, ListToolButton } from "@agenticdevelopertoolkit/ui/blocks";
-import type { TopicLevel } from "@agenticdevelopertoolkit/ui/blocks";
-import { Button } from "@agenticdevelopertoolkit/ui/components/button";
+} from "@adh-sdk/ui/components/dropdown-menu";
+import { Field, ListToolButton } from "@adh-sdk/ui/blocks";
+import type { TopicLevel } from "@adh-sdk/ui/blocks";
+import { Button } from "@adh-sdk/ui/components/button";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from "@agenticdevelopertoolkit/ui/components/dialog";
-import { Input } from "@agenticdevelopertoolkit/ui/components/input";
-import { Select } from "@agenticdevelopertoolkit/ui/components/select";
-import { Textarea } from "@agenticdevelopertoolkit/ui/components/textarea";
-import { DialogErrorText, ErrorText } from "@agenticdevelopertoolkit/ui/components/error-text";
-import { CreateResourceDialog, StackLevels } from "@agentic-toolkit/resource";
+} from "@adh-sdk/ui/components/dialog";
+import { Input } from "@adh-sdk/ui/components/input";
+import { Select } from "@adh-sdk/ui/components/select";
+import { Textarea } from "@adh-sdk/ui/components/textarea";
+import { DialogErrorText, ErrorText } from "@adh-sdk/ui/components/error-text";
+import { CreateResourceDialog, StackLevels } from "@adh-sdk/resource";
 import {
   ApiAffordanceScope,
   CRUD_TABLES,
   CrudDataView,
   useExitGuardChannel,
-} from "@agentic-toolkit/crud";
-import { UnsavedChangesAlert } from "@agenticdevelopertoolkit/ui/components/unsaved-changes-alert";
-import { useExitGate } from "@agenticdevelopertoolkit/ui/hooks/useExitGate";
-import { useRailExitGuard } from "@agentic-toolkit/resource";
-import { schemasApi } from "@agentic-toolkit/data/markdown";
+} from "@adh-sdk/crud";
+import { UnsavedChangesAlert } from "@adh-sdk/ui/components/unsaved-changes-alert";
+import { useExitGate } from "@adh-sdk/ui/hooks/useExitGate";
+import { useRailExitGuard } from "@adh-sdk/resource";
+import { schemasApi } from "@adh-sdk/data/markdown";
 import { bucketsCacheKey, newSchemaTable, slugifyTableName, tableNameInput } from "./schema-model";
 import type { SchemaDefinition, SchemaDefinitionInput, SchemaTable } from "./schema-model";
-import { ButtonBar } from "@agentic-toolkit/resource";
-import { useMasterDetailForm } from "@agentic-toolkit/resource";
-import { useMasterDetailLevel } from "@agentic-toolkit/resource";
-import type { TopicLeaf } from "@agentic-toolkit/resource";
+import { ButtonBar } from "@adh-sdk/resource";
+import { useMasterDetailForm } from "@adh-sdk/resource";
+import { useMasterDetailLevel } from "@adh-sdk/resource";
+import type { TopicLeaf } from "@adh-sdk/resource";
 import {
   BucketSlugField,
   bucketSlugPrefix,

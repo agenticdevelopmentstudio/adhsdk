@@ -2,9 +2,9 @@
 
 import { useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
-import { MessagingSurface, type SendMessageDraft } from "@agentic-toolkit/adh/messaging";
-import { FeatureTitle } from "@agentic-toolkit/resource";
-import { UnsavedChangesGuard } from "@agenticdevelopertoolkit/ui/components/unsaved-changes-guard";
+import { MessagingSurface, type SendMessageDraft } from "@adh-sdk/adh/messaging";
+import { FeatureTitle } from "@adh-sdk/resource";
+import { UnsavedChangesGuard } from "@adh-sdk/ui/components/unsaved-changes-guard";
 import {
   useMessageLog,
   useSendMessage,

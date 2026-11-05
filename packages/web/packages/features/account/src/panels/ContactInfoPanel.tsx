@@ -3,7 +3,7 @@
 import { useCallback } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
-import { PrivacyLevelSelect } from "@agenticdevelopertoolkit/ui/components/privacy-level-select";
+import { PrivacyLevelSelect } from "@adh-sdk/ui/components/privacy-level-select";
 import { ContactsCard } from "../notifications/ContactsCard";
 import {
   getPrivacyGrants,
@@ -11,8 +11,8 @@ import {
   resolvePrivacyLevel,
   PRIVACY_KEY,
   type PrivacyLevel,
-} from "@agentic-toolkit/data/profile";
-import { SettingsBody } from "@agentic-toolkit/resource";
+} from "@adh-sdk/data/profile";
+import { SettingsBody } from "@adh-sdk/resource";
 import type { ContactMethod } from "../api/account";
 
 // ── Component ──────────────────────────────────────────────────────────────────

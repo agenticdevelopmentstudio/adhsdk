@@ -1,7 +1,7 @@
 ---
 id: c7201487-b696-43b9-a4f9-d1a9e6141f7c
 title: "Path View"
-domain: adtoolkit://cookbook/ui/settings/rows/path-view
+domain: adhsdk://cookbook/ui/settings/rows/path-view
 type: ingredient
 version: 1.3.1
 status: review
@@ -20,7 +20,7 @@ tags:
   - static-text
 depends-on: []
 related:
-  - adtoolkit://cookbook/ui/settings/layout/explanation-view
+  - adhsdk://cookbook/ui/settings/layout/explanation-view
 references:
   - https://www.w3.org/WAI/WCAG21/Understanding/contrast-minimum.html
 approved-by: ""
@@ -35,7 +35,7 @@ The Path View is a settings row: a single label showing one filesystem
 path "as a path rather than as prose." It conforms to the settings row
 interface every settings row implements, with no requirements of its own.
 The design rationale: the sibling row
-[Explanation View](adtoolkit://cookbook/ui/settings/layout/explanation-view)
+[Explanation View](adhsdk://cookbook/ui/settings/layout/explanation-view)
 word-wraps, which is right for a sentence and wrong for a path — a real
 path wrapped inside a settings panel's ~134pt content column broke across
 nine hyphenated lines, long enough to push the group heading off the bottom
@@ -315,7 +315,7 @@ logger reference anywhere in source).
   no `min-width` so it shrinks with its container, mirroring
   yields-width-to-container.
 - **AppKit / UIKit** (source platform): Source at
-  `packages/apple/AgenticToolkit/macOS/SystemIntegration/ComposableSettingsWindow/Views/PathView.swift`
+  `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/Views/PathView.swift`
   (this recipe's source): a macOS-only (`import AppKit`) `NSView` subclass,
   `@MainActor`, inside the `ComposableSettings` namespace, wrapping one
   `ComposableSettings.makeValueLabel`-built `ThemedLabel` reconfigured for
@@ -372,7 +372,7 @@ logger reference anywhere in source).
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/macOS/SystemIntegration/ComposableSettingsWindow/Views/PathView.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/Views/PathView.swift` |
 
 ## Design Decisions
 

@@ -26,8 +26,8 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { useState } from "react";
 import { render, screen, fireEvent, waitFor, cleanup, within } from "@testing-library/react";
 
-vi.mock("@agentic-toolkit/data/projects", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("@agentic-toolkit/data/projects")>()),
+vi.mock("@adh-sdk/data/projects", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@adh-sdk/data/projects")>()),
   projectTriageApi: { listForProject: vi.fn(), accept: vi.fn() },
   projectsApi: {
     statuses: { list: vi.fn() },
@@ -51,8 +51,8 @@ import {
   type ProjectParticipant,
   type ProjectStatus,
   type WorkItem,
-} from "@agentic-toolkit/data/projects";
-import { RailHostBoundary, type TopicLeaf } from "@agentic-toolkit/resource";
+} from "@adh-sdk/data/projects";
+import { RailHostBoundary, type TopicLeaf } from "@adh-sdk/resource";
 
 const listForProject = vi.mocked(projectTriageApi.listForProject);
 const accept = vi.mocked(projectTriageApi.accept);

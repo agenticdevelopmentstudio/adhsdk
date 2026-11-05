@@ -3,17 +3,17 @@
 import { useCallback, useMemo, type ReactElement } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import { ChevronDown } from 'lucide-react'
-import { confirmNavigation } from '@agenticdevelopertoolkit/ui/lib/navigation-guard'
+import { confirmNavigation } from '@adh-sdk/ui/lib/navigation-guard'
 import {
   HubMark,
   NavigationPopover,
   type PopoverEntry,
   type PopoverItem,
   type PopoverListEntry,
-} from '@agentic-toolkit/adh/header'
+} from '@adh-sdk/adh/header'
 // Type-only, so erased: a VALUE import of the sibling would bundle a second copy of its context.
 import type { WorkspacesMenu } from './workspaces-menu'
-import { useHubPreferences } from '@agentic-toolkit/adh/header/hub-preferences'
+import { useHubPreferences } from '@adh-sdk/adh/header/hub-preferences'
 import { useHeaderLinksCollapsed } from './useHeaderLinksCollapsed'
 import { buildSiteNavEntries } from './siteNavEntries'
 import { menuIcon } from './menu-icons'

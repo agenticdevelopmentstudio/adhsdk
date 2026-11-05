@@ -1,7 +1,7 @@
 ---
 id: 26df832c-a7f7-4cf6-b3f5-240c61e8bd68
 title: InlineCommitControl
-domain: agenticdevelopertoolkit://recipes/inline-commit-control
+domain: adhsdk://recipes/inline-commit-control
 type: ingredient
 version: 1.2.1
 status: review
@@ -23,10 +23,10 @@ tags:
 - table
 depends-on: []
 related:
-- agenticdevelopertoolkit://recipes/data-table
-- agenticdevelopertoolkit://recipes/button
-- agenticdevelopertoolkit://recipes/alert-modal
-- agenticdevelopertoolkit://recipes/button-bar
+- adhsdk://recipes/data-table
+- adhsdk://recipes/button
+- adhsdk://recipes/alert-modal
+- adhsdk://recipes/button-bar
 references: []
 approved-by: ''
 approved-date: ''
@@ -46,7 +46,7 @@ delete — the consumer dims and strikes the content — and the same ✓ then
 commits the removal.
 
 Five cooperating exports form the pattern, all from
-`@agenticdevelopertoolkit/ui/components/inline-commit-control` (plus the sibling
+`@adh-sdk/ui/components/inline-commit-control` (plus the sibling
 `unsaved-changes-guard`):
 
 - `InlineCommitControl` — the stateless control itself.
@@ -61,7 +61,7 @@ Five cooperating exports form the pattern, all from
   AlertModal, hard navigation via `beforeunload`, Back/Forward via a
   history sentinel, and opted-in programmatic navigation via the
   navigation-guard registry).
-- `useInlineDrafts` (`@agenticdevelopertoolkit/ui/hooks/useInlineDrafts`) — the
+- `useInlineDrafts` (`@adh-sdk/ui/hooks/useInlineDrafts`) — the
   optional per-row state machine consumers were copy-pasting: PATCH-based
   drafts (only touched fields, so a commit never clobbers a field a
   background refetch changed), per-row in-flight gating, per-row errors, and
@@ -189,7 +189,7 @@ requirement (any data layer plugs in).
 | T12 | preserve-focus | pending group has focus, click ✓ (or ✕) to collapse the pair | The idle trash button regains focus |
 | T13 | render-armed-delete | apply `inlineCommitDeletingClass` to the affected content while `deleting` | Content class list includes `opacity-50` and `line-through` |
 
-`@agenticdevelopertoolkit/ui` `src/__tests__/inlineCommitControl.test.tsx`,
+`@adh-sdk/ui` `src/__tests__/inlineCommitControl.test.tsx`,
 `src/__tests__/unsavedChangesGuard.test.tsx`, and
 `src/__tests__/useInlineDrafts.test.tsx` implement these vectors.
 
@@ -309,7 +309,7 @@ mutation layer.
 
 ## Platform Notes
 
-- **React/Web**: The component ships in `@agenticdevelopertoolkit/ui` from `components/inline-commit-control` and `components/unsaved-changes-guard` (TypeScript, React 19, Base UI components, Tailwind v4). DataTable rows already carry the hover scope; other containers opt in with `inlineCommitHoverScopeClass`. The guard intercepts document-capture clicks before Next.js `<Link>` handlers run; programmatic navigation is covered by a registry callback.
+- **React/Web**: The component ships in `@adh-sdk/ui` from `components/inline-commit-control` and `components/unsaved-changes-guard` (TypeScript, React 19, Base UI components, Tailwind v4). DataTable rows already carry the hover scope; other containers opt in with `inlineCommitHoverScopeClass`. The guard intercepts document-capture clicks before Next.js `<Link>` handlers run; programmatic navigation is covered by a registry callback.
 - **SwiftUI**: Start from an `HStack` of icon buttons composed from the shared `Button` component. Drive `dirty`/`deleting`/`busy` from an `@Observable` model (or plain `@State` in the row view); focus uses `@FocusState` to move focus onto the ✓ button when arming a delete and back onto the idle trash when the pair collapses. The optional `useInlineDrafts` equivalent is an `@Observable` store, keyed by row id, holding each row's PATCH draft.
 - **Compose**: Start from a `Row` of `IconButton` composables. State uses Compose `State`/`MutableState`; focus uses `FocusRequester` (`requestFocus()` on arm/collapse) together with `Modifier.hoverable`/`onFocusChanged` for the hover-or-focus trash reveal — Compose has no `keyboardInteractionModifier`. The PATCH draft pattern maps to a ViewModel holding the row's draft map.
 - **AppKit / UIKit**: Use `NSStackView` / `UIStackView` with `NSButton` / `UIButton` (icon style). State is held in the owning view controller (or an observable object it references), not a SwiftUI view. Focus navigation uses the responder chain and `becomeFirstResponder()`. The draft state machine maps to `@Published` properties in an observable object.

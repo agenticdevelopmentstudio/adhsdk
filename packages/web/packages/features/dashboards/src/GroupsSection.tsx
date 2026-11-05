@@ -2,15 +2,15 @@
 
 import { useState, type ReactNode } from "react";
 import { Layers } from "lucide-react";
-import type { SiteGroupView } from "@agentic-toolkit/data/monitored-sites";
-import { createGroup, deleteGroup, updateGroup } from "@agentic-toolkit/data/monitored-sites";
+import type { SiteGroupView } from "@adh-sdk/data/monitored-sites";
+import { createGroup, deleteGroup, updateGroup } from "@adh-sdk/data/monitored-sites";
 import {
   CreateResourceDialog,
   MasterDetailLeaf,
   useMasterDetailForm,
   useMasterDetailLevel,
   type TopicLeaf,
-} from "@agentic-toolkit/resource";
+} from "@adh-sdk/resource";
 import {
   GroupDetail,
   groupBlank,
@@ -61,7 +61,7 @@ export function GroupsSection({
    * `DashboardsFeature` without it) — the host owns the workspace list and the mutation.
    *
    * A group, not a site: `SitesSection` has no equivalent seam, because `SiteView.groupId`
-   * (@agentic-toolkit/data/monitored-sites) is a required field — "the single group this site
+   * (@adh-sdk/data/monitored-sites) is a required field — "the single group this site
    * belongs to" — so a site moved on its own would still be a member of a group in the workspace
    * it just left.
    */

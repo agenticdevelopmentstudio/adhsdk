@@ -3,7 +3,7 @@
   "meta": {
     "id": "691f84ba-242a-40bc-a164-c95e535bb387",
     "title": "Deploy Display",
-    "domain": "adtoolkit://cookbook/status/dashboard/logic/deploy-display",
+    "domain": "adhsdk://cookbook/status/dashboard/logic/deploy-display",
     "type": "ingredient",
     "version": "1.1.0",
     "status": "review",
@@ -21,7 +21,7 @@
     "tags": [],
     "depends-on": [],
     "related": [
-      "adtoolkit://cookbook/status/service/monitor/deploy-status"
+      "adhsdk://cookbook/status/service/monitor/deploy-status"
     ],
     "references": [],
     "approved-by": "",

@@ -2,10 +2,10 @@
 import {
   hubFeatureSegment,
   SITE_FOR_HUB_SEGMENT
-} from "@agentic-toolkit/adh-registry";
+} from "@adh-sdk/adh-registry";
 
 // src/header/fleetMenuGroups.ts
-import { ADMIN_SITE_IDS } from "@agentic-toolkit/adh-registry";
+import { ADMIN_SITE_IDS } from "@adh-sdk/adh-registry";
 var FLEET_SECTION = 1;
 var ADMIN_SECTION = FLEET_SECTION + 1;
 var HELP_SECTION = FLEET_SECTION + 1;

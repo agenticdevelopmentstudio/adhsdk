@@ -35,15 +35,15 @@
   only the highlighted-row state (`aria-selected`/`aria-current`) without
   invoking that prop, mirroring **callback-free-selection**.
 - **AppKit** (source platform): Source file
-  `packages/apple/AgenticToolkit/macOS/SystemIntegration/ComposableSettingsWindow/SplitViewController/SettingsPanelListViewController.swift`,
+  `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/SplitViewController/SettingsPanelListViewController.swift`,
   declaring `ComposableSettings.PanelListViewController`. A macOS-only,
   `@MainActor`, `open` subclass of `ComposableSettings.TopicListViewController`
-  (`packages/apple/AgenticToolkit/macOS/UI/ViewControllers/TopicListViewController.swift`).
+  (`packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/TopicListViewController.swift`).
   It composes `ComposableSettings.SettingsSearchIndex`
-  (`packages/apple/AgenticToolkit/macOS/SystemIntegration/ComposableSettingsWindow/SplitViewController/SettingsSearchIndex.swift`)
+  (`packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/SplitViewController/SettingsSearchIndex.swift`)
   for filtering and reads `any ComposableSettingsPanel`'s `descriptor`
   (`ComposableSettings.SettingsPanelDescriptor`,
-  `packages/apple/AgenticToolkit/macOS/SystemIntegration/ComposableSettingsWindow/SettingsPanel/SettingsPanelDescriptor.swift`)
+  `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/SettingsPanel/SettingsPanelDescriptor.swift`)
   to build each row, rather than reimplementing outline-view layout,
   theming, or row accessibility — all of that stays in the ancestor. The
   selection-callback bridge (**selection-callback-bridge**) is wired only

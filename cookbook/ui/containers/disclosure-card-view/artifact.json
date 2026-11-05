@@ -3,7 +3,7 @@
   "meta": {
     "id": "d5aba939-471d-48cd-9a9c-888ac92adf38",
     "title": "Disclosure Card View",
-    "domain": "adtoolkit://cookbook/ui/containers/disclosure-card-view",
+    "domain": "adhsdk://cookbook/ui/containers/disclosure-card-view",
     "type": "ingredient",
     "version": "1.4.0",
     "status": "review",

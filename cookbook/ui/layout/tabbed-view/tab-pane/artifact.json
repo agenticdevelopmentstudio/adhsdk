@@ -3,7 +3,7 @@
   "meta": {
     "id": "a30725ca-fa2f-4a04-8cb0-8beddf264a0a",
     "title": "Tab Pane",
-    "domain": "adtoolkit://cookbook/ui/layout/tabbed-view/tab-pane",
+    "domain": "adhsdk://cookbook/ui/layout/tabbed-view/tab-pane",
     "type": "ingredient",
     "version": "1.2.2",
     "status": "review",
@@ -26,7 +26,7 @@
     ],
     "depends-on": [],
     "related": [
-      "adtoolkit://cookbook/ui/layout/tabbed-view",
+      "adhsdk://cookbook/ui/layout/tabbed-view",
       "agenticdevelopercookbook://guidelines/cookbook/ui/platform-design-languages"
     ],
     "references": [

@@ -1,7 +1,7 @@
 ---
 id: 2ad7c681-6a9e-43ae-a9d9-b448939d3455
 title: InfoPanel
-domain: agenticdevelopertoolkit://recipes/info-panel
+domain: adhsdk://recipes/info-panel
 type: ingredient
 version: 1.3.1
 status: review
@@ -32,7 +32,7 @@ approved-date: ''
 
 ## Overview
 
-`InfoPanel` (`@agenticdevelopertoolkit/ui`) is the standard dashboard panel: a bordered,
+`InfoPanel` (`@adh-sdk/ui`) is the standard dashboard panel: a bordered,
 rounded card with a consistent header over a body that is either **content-sized**
 (a stat card) or a **fill + scroll** pane (a list). It is generic on purpose — the
 host supplies whatever goes in the header slots and the body (icons, copy buttons,
@@ -49,7 +49,7 @@ The header has a shared minimum height (`INFO_PANEL_HEADER_HEIGHT`, 41px), also
 exported, so sibling panels laid side by side on a rail line their headers up even
 when their content differs.
 
-Two symbols ship from `@agenticdevelopertoolkit/ui/blocks/info-panel`:
+Two symbols ship from `@adh-sdk/ui/blocks/info-panel`:
 
 - `InfoPanel` — the component.
 - `INFO_PANEL_HEADER_HEIGHT` — the shared default header height, exported so hosts

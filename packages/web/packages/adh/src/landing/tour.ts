@@ -1,10 +1,10 @@
 import type { ReactNode } from 'react'
-import type { SiteId } from '@agentic-toolkit/adh-registry'
-import { siteProdUrl } from '@agentic-toolkit/adh-registry'
-import type { LandingPage, TourPillar, TourStep } from '@agenticdevelopertoolkit/landing'
+import type { SiteId } from '@adh-sdk/adh-registry'
+import { siteProdUrl } from '@adh-sdk/adh-registry'
+import type { LandingPage, TourPillar, TourStep } from '@adh-sdk/landing'
 
 // What the family's landing pages add to the landing kit's page model: the tour. The page
-// itself — hero, sections, blocks, and how each renders — is `@agenticdevelopertoolkit/landing`'s
+// itself — hero, sections, blocks, and how each renders — is `@adh-sdk/landing`'s
 // (src/page/); this module holds only what needs the family's registry to mean anything.
 
 /**

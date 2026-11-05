@@ -1,5 +1,5 @@
 import type { ReactElement } from 'react';
-import { type SiteId } from '@agentic-toolkit/adh-registry';
+import { type SiteId } from '@adh-sdk/adh-registry';
 export type StorySectionsProps = {
     /** The site whose story the sections tell. */
     siteId: SiteId;

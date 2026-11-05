@@ -1,7 +1,7 @@
 ---
 id: 82d3214f-620d-4fab-b817-f194d93ac296
 title: "SyncEngineTriggers"
-domain: adtoolkit://cookbook/data/sync/sync-triggers
+domain: adhsdk://cookbook/data/sync/sync-triggers
 type: ingredient
 version: 1.0.3
 status: review
@@ -22,15 +22,15 @@ tags:
   - engine
 depends-on: []
 related:
-  - adtoolkit://cookbook/data/sync/sync-engine
-  - adtoolkit://cookbook/data/sync/offline-sync-client
+  - adhsdk://cookbook/data/sync/sync-engine
+  - adhsdk://cookbook/data/sync/offline-sync-client
 references:
-  - packages/apple/AgenticToolkit/Sync/Triggers/PeriodicTriggerSource.swift
-  - packages/apple/AgenticToolkit/Sync/Triggers/ConnectivityTriggerSource.swift
-  - packages/apple/AgenticToolkit/Sync/Triggers/ManualTriggerSource.swift
-  - packages/apple/AgenticToolkit/Sync/SyncProtocols.swift
-  - packages/apple/AgenticToolkit/Sync/SyncEvents.swift
-  - packages/apple/AgenticToolkit/Tests/AgenticToolkitSyncTests/TriggerSourceTests.swift
+  - packages/apple/AgenticDeveloperHubSDK/Sync/Triggers/PeriodicTriggerSource.swift
+  - packages/apple/AgenticDeveloperHubSDK/Sync/Triggers/ConnectivityTriggerSource.swift
+  - packages/apple/AgenticDeveloperHubSDK/Sync/Triggers/ManualTriggerSource.swift
+  - packages/apple/AgenticDeveloperHubSDK/Sync/SyncProtocols.swift
+  - packages/apple/AgenticDeveloperHubSDK/Sync/SyncEvents.swift
+  - packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKSyncTests/TriggerSourceTests.swift
 approved-by: ""
 approved-date: ""
 ---
@@ -39,7 +39,7 @@ approved-date: ""
 
 ## Overview
 
-The trigger sources are the producers that tell the sync engine when to run a cycle. Each one conforms to the `SyncTriggerSource` protocol (declared in `SyncProtocols.swift`), whose only requirement is a `kicks: AsyncStream<SyncKickReason>` property. A host constructs one or more sources and hands each to `SyncEngine.attach(_:)`, which iterates the stream and calls `kick(reason:)` for every element (see [SyncEngine](adtoolkit://cookbook/data/sync/sync-engine)).
+The trigger sources are the producers that tell the sync engine when to run a cycle. Each one conforms to the `SyncTriggerSource` protocol (declared in `SyncProtocols.swift`), whose only requirement is a `kicks: AsyncStream<SyncKickReason>` property. A host constructs one or more sources and hands each to `SyncEngine.attach(_:)`, which iterates the stream and calls `kick(reason:)` for every element (see [SyncEngine](adhsdk://cookbook/data/sync/sync-engine)).
 
 Three concrete sources ship:
 
@@ -211,7 +211,7 @@ Not applicable: no source writes log output; the only observable signal is the `
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/Sync/Triggers/` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Sync/Triggers/` |
 
 ## Design Decisions
 

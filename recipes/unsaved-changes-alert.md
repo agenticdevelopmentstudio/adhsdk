@@ -1,7 +1,7 @@
 ---
 id: 9e36a0ef-67ef-485d-8ace-68886add841c
 title: Unsaved Changes Alert
-domain: agenticdevelopertoolkit://recipes/unsaved-changes-alert
+domain: adhsdk://recipes/unsaved-changes-alert
 type: ingredient
 version: 1.1.1
 status: review
@@ -22,7 +22,7 @@ tags:
 - destructive-action
 - form-management
 depends-on:
-- agenticdevelopertoolkit://recipes/alert-modal
+- adhsdk://recipes/alert-modal
 related: []
 references: []
 approved-by: ''
@@ -133,9 +133,9 @@ Appearance is delegated entirely to AlertModal (see Appearance), so these behavi
 
 | Option | Behavior |
 |--------|----------|
-| Reduce Motion | Not owned by this component; see [AlertModal Accessibility Options](agenticdevelopertoolkit://recipes/alert-modal#accessibility-options) for its reduced-motion behavior. |
-| Increase Contrast | Not owned by this component; see [AlertModal Accessibility Options](agenticdevelopertoolkit://recipes/alert-modal#accessibility-options) for its contrast behavior. |
-| Differentiate Without Color | Not owned by this component; the destructive styling comes from AlertModal's `destructive` prop — see [AlertModal Accessibility Options](agenticdevelopertoolkit://recipes/alert-modal#accessibility-options). |
+| Reduce Motion | Not owned by this component; see [AlertModal Accessibility Options](adhsdk://recipes/alert-modal#accessibility-options) for its reduced-motion behavior. |
+| Increase Contrast | Not owned by this component; see [AlertModal Accessibility Options](adhsdk://recipes/alert-modal#accessibility-options) for its contrast behavior. |
+| Differentiate Without Color | Not owned by this component; the destructive styling comes from AlertModal's `destructive` prop — see [AlertModal Accessibility Options](adhsdk://recipes/alert-modal#accessibility-options). |
 
 ## Feature Flags
 

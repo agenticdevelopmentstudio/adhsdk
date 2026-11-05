@@ -23,7 +23,7 @@ CARVE_OUT = (
     "NotesAndHistory", "TransferOwnershipSection", "DeleteEntitySection", "InvitationPanes",
 )
 
-SCOPE_RE = re.compile(r"@agentic-toolkit/([a-z0-9-]+)")
+SCOPE_RE = re.compile(r"@adh-sdk/([a-z0-9-]+)")
 
 
 def classify(path: Path) -> tuple[str, list[str]]:
@@ -31,9 +31,9 @@ def classify(path: Path) -> tuple[str, list[str]]:
     carve_hits = sorted({c for c in CARVE_OUT if c in text})
     unmoved = sorted(set(SCOPE_RE.findall(text)) - MOVED)
     if carve_hits:
-        return "carve-out", carve_hits + [f"@agentic-toolkit/{u}" for u in unmoved]
+        return "carve-out", carve_hits + [f"@adh-sdk/{u}" for u in unmoved]
     if unmoved:
-        return "unmoved", [f"@agentic-toolkit/{u}" for u in unmoved]
+        return "unmoved", [f"@adh-sdk/{u}" for u in unmoved]
     return "clean", []
 
 

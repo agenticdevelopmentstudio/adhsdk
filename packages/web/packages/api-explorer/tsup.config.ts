@@ -9,10 +9,10 @@ const external = [
   'next/link',
   'next/navigation',
   'next/dynamic',
-  '@agentic-toolkit/auth',
-  '@agentic-toolkit/auth/client',
-  '@agenticdevelopertoolkit/ui',
-  '@agenticdevelopertoolkit/ui/*',
+  '@adh-sdk/auth',
+  '@adh-sdk/auth/client',
+  '@adh-sdk/ui',
+  '@adh-sdk/ui/*',
   'lucide-react',
   // Externalized so the consuming Next app bundles it (and code-splits the
   // dynamic import); keeps a heavy wasm/langs payload out of dist and lazy.
@@ -23,12 +23,12 @@ const external = [
   // (ApiReferenceShell.tsx / server.ts). This package deliberately builds those
   // two as SEPARATE, non-shared chunk graphs (see the comment on the two-build
   // array below), so without this, each graph would inline its own private copy
-  // of that state — same shape as @agentic-toolkit/adh's flags/telemetry/
+  // of that state — same shape as @adh-sdk/adh's flags/telemetry/
   // DbThemeApplier preserved imports. Preserved import ⇒ one copy per resolving
   // bundler (the consumer's, for the client half; Node's module cache, for the
   // server half), never a silent per-entry fork.
-  '@agentic-toolkit/api-explorer/lib/getEndpoint',
-  '@agentic-toolkit/api-explorer/lib/highlight',
+  '@adh-sdk/api-explorer/lib/getEndpoint',
+  '@adh-sdk/api-explorer/lib/highlight',
 ]
 
 const shared = {

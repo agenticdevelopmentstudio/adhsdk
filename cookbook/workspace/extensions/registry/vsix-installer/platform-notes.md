@@ -1,6 +1,6 @@
 
 - **SwiftUI**: Source:
-  `packages/apple/AgenticToolkit/Core/Extensions/VSIXInstaller.swift`, its
+  `packages/apple/AgenticDeveloperHubSDK/Core/Extensions/VSIXInstaller.swift`, its
   verification and expansion in `Core/Extensions/VSIXArchive.swift`, its
   identity and containment guards in `Core/Extensions/
   ExtensionIdentityComponent.swift` and `Core/Extensions/
@@ -41,9 +41,9 @@
   extracted or joined path is used.
 - **AppKit / UIKit**: No divergence from the SwiftUI bullet above — the
   source is framework-agnostic `Foundation` code, callable identically from an
-  AppKit-hosted (macOS) or UIKit-hosted (iOS) caller. `AgenticToolkitCore`, the
+  AppKit-hosted (macOS) or UIKit-hosted (iOS) caller. `AgenticDeveloperHubSDKCore`, the
   framework target that builds this file, is configured `platform: macOS` in
-  `packages/apple/AgenticToolkit/project.yml` today, so an iOS caller would
+  `packages/apple/AgenticDeveloperHubSDK/project.yml` today, so an iOS caller would
   first need the type made available to an iOS target; `VSIXInstaller` itself
   needs no AppKit/UIKit-specific change to run there.
 - **WinUI 3**: Port to a class exposing `async Task<VsixInstallation>

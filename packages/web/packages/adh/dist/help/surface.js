@@ -1,5 +1,5 @@
 // src/help/HelpSurface.tsx
-import { EmptyState } from "@agenticdevelopertoolkit/ui/components/empty-state";
+import { EmptyState } from "@adh-sdk/ui/components/empty-state";
 
 // src/docs/MarkdownHtml.tsx
 import { jsx } from "react/jsx-runtime";
@@ -523,7 +523,7 @@ function buildTopicLevels(path) {
 }
 
 // src/help/HelpSurface.tsx
-import { HelpMasterDetail } from "@agentic-toolkit/adh/help/HelpMasterDetail";
+import { HelpMasterDetail } from "@adh-sdk/adh/help/HelpMasterDetail";
 import { jsx as jsx2 } from "react/jsx-runtime";
 function helpHref(basePath, slug) {
   const base = basePath === "/" ? "" : basePath;

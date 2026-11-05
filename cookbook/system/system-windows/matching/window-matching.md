@@ -1,7 +1,7 @@
 ---
 id: 840dc813-b4a3-483c-be87-2959ac551ea7
 title: "Window Matching"
-domain: adtoolkit://cookbook/system/system-windows/matching/window-matching
+domain: adhsdk://cookbook/system/system-windows/matching/window-matching
 type: ingredient
 version: 1.1.0
 status: review
@@ -22,10 +22,10 @@ tags:
   - fingerprinting
   - persistence
 depends-on:
-  - adtoolkit://cookbook/system/system-windows/window-context-model
+  - adhsdk://cookbook/system/system-windows/window-context-model
 related:
-  - adtoolkit://cookbook/system/system-windows/matching/title-heuristics
-  - adtoolkit://cookbook/system/system-windows/system-windows-engine
+  - adhsdk://cookbook/system/system-windows/matching/title-heuristics
+  - adhsdk://cookbook/system/system-windows/system-windows-engine
 references:
   - https://developer.apple.com/documentation/foundation/nsregularexpression
   - https://developer.apple.com/documentation/coregraphics/1455137-cgwindowlistcopywindowinfo
@@ -61,10 +61,10 @@ Use it whenever a window must be persisted by identity rather than by a
 volatile OS handle. The data types it consumes (a match strategy, a window
 fingerprint, a live window record, a dormant window snapshot, a window
 context) are specified in
-[Window Matching Core System Windows](adtoolkit://cookbook/system/system-windows/window-context-model).
+[Window Matching Core System Windows](adhsdk://cookbook/system/system-windows/window-context-model).
 The per-app built-in heuristics (Xcode, Warp, Brave, VS Code, Terminal) are
 specified in
-[Window Matching Heuristics](adtoolkit://cookbook/system/system-windows/matching/title-heuristics);
+[Window Matching Heuristics](adhsdk://cookbook/system/system-windows/matching/title-heuristics);
 this recipe specifies only their registration, not their parsing rules.
 
 ## Behavioral Requirements
@@ -338,12 +338,12 @@ The rule store and the heuristic registry do not log; store errors are thrown to
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/Core/SystemWindows/Matching/AppHeuristic.swift` |
-| apple | `packages/apple/AgenticToolkit/Core/SystemWindows/Matching/CustomHeuristic.swift` |
-| apple | `packages/apple/AgenticToolkit/Core/SystemWindows/Matching/CustomHeuristicRule.swift` |
-| apple | `packages/apple/AgenticToolkit/Core/SystemWindows/Matching/CustomHeuristicStore.swift` |
-| apple | `packages/apple/AgenticToolkit/Core/SystemWindows/Matching/HeuristicRegistry.swift` |
-| apple | `packages/apple/AgenticToolkit/Core/SystemWindows/Matching/SystemWindowMatcher.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/SystemWindows/Matching/AppHeuristic.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/SystemWindows/Matching/CustomHeuristic.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/SystemWindows/Matching/CustomHeuristicRule.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/SystemWindows/Matching/CustomHeuristicStore.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/SystemWindows/Matching/HeuristicRegistry.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/SystemWindows/Matching/SystemWindowMatcher.swift` |
 
 ## Design Decisions
 
@@ -406,4 +406,4 @@ The rule store and the heuristic registry do not log; store errors are thrown to
 |---------|------|--------|---------|
 | 1.1.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to system/system-windows/matching/. |
 | 1.0.1 | 2026-09-25 | Mike Fullerton | Moved into the library cookbook; added Reference Implementations. |
-| 1.0.0 | 2026-09-24 | Mike Fullerton | Initial creation from the AgenticToolkit Core SystemWindows Matching sources |
+| 1.0.0 | 2026-09-24 | Mike Fullerton | Initial creation from the AgenticDeveloperHubSDK Core SystemWindows Matching sources |

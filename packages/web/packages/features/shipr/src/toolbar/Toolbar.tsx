@@ -3,8 +3,8 @@
 import * as React from 'react';
 import { Plug, RefreshCw, Rocket, SlidersHorizontal, Square, Wrench } from 'lucide-react';
 
-import { Button } from '@agenticdevelopertoolkit/ui/components/button';
-import { Spinner } from '@agenticdevelopertoolkit/ui/components/spinner';
+import { Button } from '@adh-sdk/ui/components/button';
+import { Spinner } from '@adh-sdk/ui/components/spinner';
 
 import type { ActionId, ToolbarState } from './actions';
 

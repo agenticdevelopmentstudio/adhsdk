@@ -1,7 +1,7 @@
 ---
 id: A1563AD8-D4E4-44F0-9823-3D9229C9321D
 title: "Billing Rounding"
-domain: adtoolkit://cookbook/foundation/billing/billing-rounding
+domain: adhsdk://cookbook/foundation/billing/billing-rounding
 type: ingredient
 version: 1.0.0
 status: review
@@ -21,8 +21,8 @@ tags:
   - rounding
 depends-on: []
 related:
-  - adtoolkit://cookbook/foundation/billing/billing-clock
-  - adtoolkit://cookbook/foundation/billing/billing-rollup
+  - adhsdk://cookbook/foundation/billing/billing-clock
+  - adhsdk://cookbook/foundation/billing/billing-rollup
 references: []
 approved-by: ""
 approved-date: ""
@@ -121,7 +121,7 @@ Not applicable: this code makes no log calls.
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/Core/Billing/BillingRounding.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Billing/BillingRounding.swift` |
 
 ## Design Decisions
 

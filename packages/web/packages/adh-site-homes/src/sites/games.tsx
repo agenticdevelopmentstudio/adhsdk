@@ -1,9 +1,9 @@
 "use client";
 
-import { defineSiteHome } from "@agentic-toolkit/adh/home";
-import { ToolkitQueryProvider } from "@agentic-toolkit/data/query";
-import { GamesFeature } from "@agentic-toolkit/games";
-import { parseEcosystemsPath } from "@agentic-toolkit/ecosystems/parse";
+import { defineSiteHome } from "@adh-sdk/adh/home";
+import { ToolkitQueryProvider } from "@adh-sdk/data/query";
+import { GamesFeature } from "@adh-sdk/games";
+import { parseEcosystemsPath } from "@adh-sdk/ecosystems/parse";
 
 /**
  * This site's workspace route — `/<workspace>` and everything below it.
@@ -26,14 +26,14 @@ export const gamesHome = defineSiteHome({
   // No games-owned grammar any more (§1 of the product-gaming-modes design): a game has no
   // address of its own, it is reached through its product's ecosystem id. This rail IS an
   // ecosystems rail under the Product noun with a games topic set, so this parses with
-  // `@agentic-toolkit/ecosystems`'s own SERVER-SAFE `./parse` subpath directly rather than
-  // through a games-side wrapper — mirrors `@agentic-toolkit/gamification`'s site, which
+  // `@adh-sdk/ecosystems`'s own SERVER-SAFE `./parse` subpath directly rather than
+  // through a games-side wrapper — mirrors `@adh-sdk/gamification`'s site, which
   // wraps that same parser in its own `parseGamificationPath` only because it also re-uses
   // this exact grammar for a different feature; games has no such wrapper left to keep.
   parse: parseEcosystemsPath,
   render: ({ scopedBase, workspaceSlug, view }) => (
     // The toolkit's OWN react-query runtime, mounted once by the SITE — the same arrangement
-    // @agentic-toolkit/gamification's site uses, and the reason the feature doesn't mount one
+    // @adh-sdk/gamification's site uses, and the reason the feature doesn't mount one
     // for itself. A host-constructed QueryClientProvider cannot serve toolkit hooks: `link:`
     // gives the package its own physical copy of react-query, so the client has to come from
     // the toolkit.

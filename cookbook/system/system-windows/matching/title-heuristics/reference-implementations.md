@@ -1,5 +1,5 @@
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/Core/SystemWindows/Matching/Heuristics/` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/SystemWindows/Matching/Heuristics/` |
 

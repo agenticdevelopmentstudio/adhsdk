@@ -3,11 +3,11 @@
 import { useCallback, useRef, useState } from 'react';
 import {
   revalidateResourceItems, revalidateResources, useResourceItemQuery,
-} from '@agentic-toolkit/data';
-import type { FieldDefDraft } from '@agentic-toolkit/registry/editors';
+} from '@adh-sdk/data';
+import type { FieldDefDraft } from '@adh-sdk/registry/editors';
 import {
   type FieldDefRow, type RegistryClient, type RegistryRow, type SectionRow,
-} from '@agentic-toolkit/registry/client';
+} from '@adh-sdk/registry/client';
 import { MY_ENTRY_CACHE_KEY, registryEntriesKey } from './entriesCache';
 import { keyProblem, slugify } from './slug';
 import { useRegistryClient } from './useRegistryClient';

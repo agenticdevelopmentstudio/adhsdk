@@ -7,11 +7,11 @@ import {
   Settings, Table2, Users, KeyRound, Network, Boxes, Plus, Inbox, Send, Database,
   MailPlus,
 } from "lucide-react";
-import { Button } from "@agenticdevelopertoolkit/ui/components/button";
-import { Checkbox } from "@agenticdevelopertoolkit/ui/components/checkbox";
-import { EmptyState } from "@agenticdevelopertoolkit/ui/components/empty-state";
-import { TopicSelectHint } from "@agenticdevelopertoolkit/ui/blocks";
-import { isRdid } from "@agentic-toolkit/adh-ui/rdid";
+import { Button } from "@adh-sdk/ui/components/button";
+import { Checkbox } from "@adh-sdk/ui/components/checkbox";
+import { EmptyState } from "@adh-sdk/ui/components/empty-state";
+import { TopicSelectHint } from "@adh-sdk/ui/blocks";
+import { isRdid } from "@adh-sdk/adh-ui/rdid";
 import {
   ResourceExplorer,
   ResourceLanding,
@@ -22,8 +22,8 @@ import {
   type ResourceTopic,
   type TopicLeaf,
   type GroupTopicItem,
-} from "@agentic-toolkit/resource";
-import { useResourceList, makeEntityDeleteHandler, writeLastId } from "@agentic-toolkit/data";
+} from "@adh-sdk/resource";
+import { useResourceList, makeEntityDeleteHandler, writeLastId } from "@adh-sdk/data";
 import {
   ecosystemsApi,
   featureRowLabel,
@@ -31,7 +31,7 @@ import {
   useProvisionedFeatures,
   useWorkspaceDefaultEcosystemId,
   type Ecosystem,
-} from "@agentic-toolkit/data/ecosystems";
+} from "@adh-sdk/data/ecosystems";
 import { heldTopics } from "./heldTopics";
 import { EcosystemSettingsPane } from "./EcosystemSettingsPane";
 import { ManageFeaturesButton } from "./ManageFeaturesButton";

@@ -1,7 +1,7 @@
 ---
 id: 9f87b4cd-f3a0-482b-830d-c1482ed51bbe
 title: Create Resource Dialog
-domain: agenticdevelopertoolkit://recipes/create-resource-dialog
+domain: adhsdk://recipes/create-resource-dialog
 type: ingredient
 version: 1.2.2
 status: review

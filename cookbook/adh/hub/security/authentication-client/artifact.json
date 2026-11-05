@@ -3,7 +3,7 @@
   "meta": {
     "id": "65fbb2b1-ca41-499f-ac03-7ecc0e206dcc",
     "title": "Authentication Client",
-    "domain": "adtoolkit://cookbook/adh/hub/security/authentication-client",
+    "domain": "adhsdk://cookbook/adh/hub/security/authentication-client",
     "type": "ingredient",
     "version": "1.2.0",
     "status": "review",
@@ -29,12 +29,12 @@
     "depends-on": [],
     "related": [],
     "references": [
-      "packages/apple/AgenticToolkit/Hub/Features/Authentication/AccessListsTopic.swift",
-      "packages/apple/AgenticToolkit/Hub/Features/Authentication/ApiTokensRail.swift",
-      "packages/apple/AgenticToolkit/Hub/Features/Authentication/AuthenticationModels.swift",
-      "packages/apple/AgenticToolkit/Hub/Features/Authentication/AuthenticationModule.swift",
-      "packages/apple/AgenticToolkit/Hub/Features/EcosystemConfig/StorageTokensRail.swift",
-      "packages/apple/AgenticToolkit/Hub/Features/EcosystemConfig/EcosystemConfigModels.swift"
+      "packages/apple/AgenticDeveloperHubSDK/Hub/Features/Authentication/AccessListsTopic.swift",
+      "packages/apple/AgenticDeveloperHubSDK/Hub/Features/Authentication/ApiTokensRail.swift",
+      "packages/apple/AgenticDeveloperHubSDK/Hub/Features/Authentication/AuthenticationModels.swift",
+      "packages/apple/AgenticDeveloperHubSDK/Hub/Features/Authentication/AuthenticationModule.swift",
+      "packages/apple/AgenticDeveloperHubSDK/Hub/Features/EcosystemConfig/StorageTokensRail.swift",
+      "packages/apple/AgenticDeveloperHubSDK/Hub/Features/EcosystemConfig/EcosystemConfigModels.swift"
     ],
     "approved-by": "",
     "approved-date": ""

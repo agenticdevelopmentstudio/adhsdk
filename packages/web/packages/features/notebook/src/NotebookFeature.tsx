@@ -1,6 +1,6 @@
 "use client";
 
-import { RailHostBoundary, useBasePathRoute } from "@agentic-toolkit/resource";
+import { RailHostBoundary, useBasePathRoute } from "@adh-sdk/resource";
 import { NotebookPane } from "./NotebookPane";
 import { notebookSegments } from "./parse-path";
 import { NOTES_CORPUS, type NotebookCorpus } from "./corpus";

@@ -1,7 +1,7 @@
 ---
 id: 1794948f-2bb2-4f25-b9b5-72b1e6306ea1
 title: Inline Chat
-domain: agenticdevelopertoolkit://recipes/inline-chat
+domain: adhsdk://recipes/inline-chat
 type: ingredient
 version: 1.1.1
 status: review
@@ -23,10 +23,10 @@ tags:
 - messaging
 - transcript
 depends-on:
-- agenticdevelopertoolkit://recipes/message-bubble
-- agenticdevelopertoolkit://recipes/transcript
-- agenticdevelopertoolkit://recipes/typing-indicator
-- agenticdevelopertoolkit://recipes/tool-call-pill-view
+- adhsdk://recipes/message-bubble
+- adhsdk://recipes/transcript
+- adhsdk://recipes/typing-indicator
+- adhsdk://recipes/tool-call-pill-view
 related: []
 references: []
 approved-by: ''
@@ -37,7 +37,7 @@ approved-date: ''
 
 ## Overview
 
-An inline chat surface that displays a transcript of committed and in-flight messages, a typing/thinking indicator, and a single-line text input with send affordance. The component sits in a fixed or resizable container, supports engagement-driven sizing (expanding on focus, collapsing when idle), and renders participants' messages on opposite sides (local user on the right, remote on the left). Web source: `packages/web/packages/chat/src/modes/InlineChat.tsx`. Apple source: `packages/apple/AgenticDeveloperToolkit/SourcesUI/macOS/Chat/InlineChatView.swift`.
+An inline chat surface that displays a transcript of committed and in-flight messages, a typing/thinking indicator, and a single-line text input with send affordance. The component sits in a fixed or resizable container, supports engagement-driven sizing (expanding on focus, collapsing when idle), and renders participants' messages on opposite sides (local user on the right, remote on the left). Web source: `packages/web/packages/chat/src/modes/InlineChat.tsx`. Apple source: `packages/apple/AgenticDeveloperHubSDK/SDK/SourcesUI/macOS/Chat/InlineChatView.swift`.
 
 ## Behavioral Requirements
 
@@ -200,7 +200,7 @@ An inline chat surface that displays a transcript of committed and in-flight mes
 | `onTextScaleNudge` | (Int) → Void | none | Callback for ⌘+/−/0 text scale adjustments (Apple) |
 | `localParticipantID` | string | required | Participant ID for local user to determine bubble side (Apple) |
 | `viewModel.commandActivity` | [CommandActivity] | (view-model state) | Tool invocations rendered as `ToolCallPillView` rows below the transcript (Apple) |
-| Bubble side (web) | — | — | Not exposed as a prop on `InlineChat`/`InlineChatView`; which side a message renders on is delegated to the `Transcript` component (agenticdevelopertoolkit://recipes/transcript), which this recipe does not define |
+| Bubble side (web) | — | — | Not exposed as a prop on `InlineChat`/`InlineChatView`; which side a message renders on is delegated to the `Transcript` component (adhsdk://recipes/transcript), which this recipe does not define |
 
 ## Deep Linking
 

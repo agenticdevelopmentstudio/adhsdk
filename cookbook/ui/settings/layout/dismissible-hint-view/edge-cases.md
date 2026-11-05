@@ -36,7 +36,7 @@
   following turn. This is a MUST-level consequence of the mechanism this
   component observes through — the same underlying mechanism the sibling
   conditional view recipe
-  (`adtoolkit://cookbook/ui/settings/layout/conditional-view`)
+  (`adhsdk://cookbook/ui/settings/layout/conditional-view`)
   documents for its own observed setting.
 - Repeated taps on the dismiss button: each tap unconditionally sets the
   setting's value to `true` again, with no read-back of the setting's

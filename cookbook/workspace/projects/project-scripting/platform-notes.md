@@ -1,8 +1,8 @@
 
-- **SwiftUI**: The source is `packages/apple/AgenticToolkit/macOS/Features/Projects/Scripting/ProjectWindowManager+Scripting.swift`,
+- **SwiftUI**: The source is `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/Scripting/ProjectWindowManager+Scripting.swift`,
   plus the three wrapper types under `macOS/UI/ViewControllers/ComposableTabs/Scripting/`,
   all built on `AppKit` (`NSObject`, `NSScriptObjectSpecifier`) and
-  `AgenticToolkitCore`/`AgenticToolkitMacOS` (`ProjectWindowManager`,
+  `AgenticDeveloperHubSDKCore`/`AgenticDeveloperHubSDKMacOS` (`ProjectWindowManager`,
   `ComposableTabsWindowController`, `ProjectController`, `BranchController`).
   `ProjectWindowManager` is declared `@MainActor` with no `Sendable`
   conformance, and each of the three wrapper classes independently repeats
@@ -50,7 +50,7 @@
   the pane view model a `ScriptablePane`-equivalent holds. Resolve the git
   branch through the same `GitClient`/`BranchController` port this family's
   siblings already define (see
-  `adtoolkit://cookbook/workspace/projects/branch-controller`), folding
+  `adhsdk://cookbook/workspace/projects/branch-controller`), folding
   a `null` result to `string.Empty` at the same point `ComposableTabsWindowController.scriptingTabs(branch:)`
   does, and enforce main-thread confinement with `DispatcherQueue` in place
   of `@MainActor`.

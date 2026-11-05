@@ -1,7 +1,7 @@
 ---
 id: 2B552BDE-D0BD-425A-9E79-FC624B52F516
 title: "Claude OAuth Credential"
-domain: adtoolkit://cookbook/foundation/claude-accounts/claude-o-auth-credential
+domain: adhsdk://cookbook/foundation/claude-accounts/claude-o-auth-credential
 type: ingredient
 version: 1.0.0
 status: review
@@ -22,7 +22,7 @@ tags:
   - credentials
 depends-on: []
 related:
-  - adtoolkit://cookbook/foundation/claude-accounts/claude-credential-kind
+  - adhsdk://cookbook/foundation/claude-accounts/claude-credential-kind
 references: []
 approved-by: ""
 approved-date: ""
@@ -124,7 +124,7 @@ Not applicable: The credential type calls no logging API.
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/Core/ClaudeAccounts/ClaudeOAuthCredential.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/ClaudeAccounts/ClaudeOAuthCredential.swift` |
 
 ## Design Decisions
 
@@ -144,7 +144,7 @@ Not applicable: The credential type calls no logging API.
 | [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | partial | Best Practices |
 | [data-integrity](agenticdevelopercookbook://compliance/reliability#data-integrity) | passed | Reliability |
 
-`separation-of-concerns` passes because the type only describes the credential shape and the milliseconds-to-seconds view; custody (keychain) and evaluation (expiry policy) live in other layers. `unit-test-coverage` is partial: no test file targets `ClaudeOAuthCredential` directly. `AgenticToolkitMacOSTests/ClaudeAccounts/ClaudeLiveLoginRecordTests.swift` builds credentials and compares live to saved ones, so equality is exercised indirectly, but the seconds conversion and the optional-field defaults have no assertion.
+`separation-of-concerns` passes because the type only describes the credential shape and the milliseconds-to-seconds view; custody (keychain) and evaluation (expiry policy) live in other layers. `unit-test-coverage` is partial: no test file targets `ClaudeOAuthCredential` directly. `AgenticDeveloperHubSDKMacOSTests/ClaudeAccounts/ClaudeLiveLoginRecordTests.swift` builds credentials and compares live to saved ones, so equality is exercised indirectly, but the seconds conversion and the optional-field defaults have no assertion.
 
 ## Change History
 

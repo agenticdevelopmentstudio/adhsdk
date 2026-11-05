@@ -1,7 +1,7 @@
 ---
 id: 17398d3a-df67-44c6-89c5-0edfc09bff7c
 title: Dismissible Hint
-domain: agenticdevelopertoolkit://recipes/dismissible-hint
+domain: adhsdk://recipes/dismissible-hint
 type: ingredient
 version: 1.2.1
 status: review

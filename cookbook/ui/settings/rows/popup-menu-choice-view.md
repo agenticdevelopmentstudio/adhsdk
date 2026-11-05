@@ -1,7 +1,7 @@
 ---
 id: 3a3e4da0-e900-4281-a19c-e29cbd34cbab
 title: "Popup Menu Choice View"
-domain: adtoolkit://cookbook/ui/settings/rows/popup-menu-choice-view
+domain: adhsdk://cookbook/ui/settings/rows/popup-menu-choice-view
 type: ingredient
 version: 1.3.1
 status: review
@@ -21,8 +21,8 @@ tags:
   - choice
 depends-on: []
 related:
-  - adtoolkit://cookbook/ui/settings/rows/choice-slider-view
-  - adtoolkit://cookbook/ui/settings/rows/checkbox-view
+  - adhsdk://cookbook/ui/settings/rows/choice-slider-view
+  - adhsdk://cookbook/ui/settings/rows/checkbox-view
 references: []
 approved-by: ""
 approved-date: ""
@@ -342,7 +342,7 @@ or logger reference anywhere in source).
   value that doesn't map to a known option to mirror
   ignores-unresolvable-selection.
 - **AppKit/UIKit** (source platform): Source file
-  `packages/apple/AgenticToolkit/macOS/SystemIntegration/ComposableSettingsWindow/Views/PopupMenuChoiceView.swift`.
+  `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/Views/PopupMenuChoiceView.swift`.
   A macOS-only (`import AppKit`) `NSView` subclass, `@MainActor`, generic
   over `Value: Codable & Sendable & Equatable`, inside the
   `ComposableSettings` namespace, conforming to `SettingsViewProtocol`. It
@@ -404,7 +404,7 @@ or logger reference anywhere in source).
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/macOS/SystemIntegration/ComposableSettingsWindow/Views/PopupMenuChoiceView.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/Views/PopupMenuChoiceView.swift` |
 
 ## Design Decisions
 

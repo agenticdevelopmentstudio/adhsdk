@@ -1,7 +1,7 @@
 ---
 id: 7233995D-9B7E-4760-AC44-AB4B668B5CC1
 title: "Money"
-domain: adtoolkit://cookbook/foundation/money
+domain: adhsdk://cookbook/foundation/money
 type: ingredient
 version: 1.0.0
 status: review
@@ -22,10 +22,10 @@ tags:
   - arithmetic
 depends-on: []
 related:
-  - adtoolkit://cookbook/foundation/money/money-formatter
-  - adtoolkit://cookbook/foundation/money/money-totals
-  - adtoolkit://cookbook/foundation/money/currency-code
-  - adtoolkit://cookbook/foundation/money/increment-rounding
+  - adhsdk://cookbook/foundation/money/money-formatter
+  - adhsdk://cookbook/foundation/money/money-totals
+  - adhsdk://cookbook/foundation/money/currency-code
+  - adhsdk://cookbook/foundation/money/increment-rounding
 references: []
 approved-by: ""
 approved-date: ""
@@ -134,7 +134,7 @@ Not applicable: The money type calls no logging API.
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/Core/Money/Money.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Money/Money.swift` |
 
 ## Design Decisions
 
@@ -158,7 +158,7 @@ Not applicable: The money type calls no logging API.
 | [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
 | [explicit-error-handling](agenticdevelopercookbook://compliance/best-practices#explicit-error-handling) | partial | Best Practices |
 
-`separation-of-concerns` passes because the type only represents and combines amounts; formatting, parsing, rounding to increments and per-currency bucketing live in the sibling money specs. `unit-test-coverage` passes because `AgenticToolkitCoreTests/MoneyTests.swift` covers the seconds-to-amount arithmetic including rounding, sign and zero guards, summing, subtraction, ordering and the same-currency test.
+`separation-of-concerns` passes because the type only represents and combines amounts; formatting, parsing, rounding to increments and per-currency bucketing live in the sibling money specs. `unit-test-coverage` passes because `AgenticDeveloperHubSDKCoreTests/MoneyTests.swift` covers the seconds-to-amount arithmetic including rounding, sign and zero guards, summing, subtraction, ordering and the same-currency test.
 
 ## Change History
 

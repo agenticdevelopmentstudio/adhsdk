@@ -5,7 +5,7 @@
   catch-all Next.js App Router Route Handler,
   `app/<prefix>/[...path]/route.ts`:
   ```
-  import { makeProxyHandlers } from '@agentic-toolkit/auth/server'
+  import { makeProxyHandlers } from '@adh-sdk/auth/server'
   export const dynamic = 'force-dynamic'
   export const { GET, POST, PUT, PATCH, DELETE } = makeProxyHandlers('api')
   ```

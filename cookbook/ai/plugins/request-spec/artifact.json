@@ -3,7 +3,7 @@
   "meta": {
     "id": "72829b3b-ce4a-4730-877f-da7b48e7b3dd",
     "title": "Request Specification",
-    "domain": "adtoolkit://cookbook/ai/plugins/request-spec",
+    "domain": "adhsdk://cookbook/ai/plugins/request-spec",
     "type": "ingredient",
     "version": "1.1.1",
     "status": "review",
@@ -25,7 +25,7 @@
     ],
     "depends-on": [],
     "related": [
-      "adtoolkit://cookbook/ai/plugins/ai-plugin"
+      "adhsdk://cookbook/ai/plugins/ai-plugin"
     ],
     "references": [],
     "approved-by": "",

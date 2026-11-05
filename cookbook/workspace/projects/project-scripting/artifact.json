@@ -3,7 +3,7 @@
   "meta": {
     "id": "ccb08e0d-f505-4195-adf8-d8ac9208b24c",
     "title": "Project Scripting",
-    "domain": "adtoolkit://cookbook/workspace/projects/project-scripting",
+    "domain": "adhsdk://cookbook/workspace/projects/project-scripting",
     "type": "ingredient",
     "version": "1.1.1",
     "status": "review",
@@ -27,25 +27,25 @@
       "composable-tabs"
     ],
     "depends-on": [
-      "adtoolkit://cookbook/system/scripting",
-      "adtoolkit://cookbook/ui/layout/composable-tabs/tabs-window",
-      "adtoolkit://cookbook/workspace/projects/project-controller",
-      "adtoolkit://cookbook/workspace/projects/branch-controller"
+      "adhsdk://cookbook/system/scripting",
+      "adhsdk://cookbook/ui/layout/composable-tabs/tabs-window",
+      "adhsdk://cookbook/workspace/projects/project-controller",
+      "adhsdk://cookbook/workspace/projects/branch-controller"
     ],
     "related": [
-      "adtoolkit://cookbook/ui/layout/composable-tabs/leaf-pane-view"
+      "adhsdk://cookbook/ui/layout/composable-tabs/leaf-pane-view"
     ],
     "references": [
-      "packages/apple/AgenticToolkit/macOS/Features/Projects/Scripting/ProjectWindowManager+Scripting.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/macOS/UI/ViewControllers/ComposableTabs/Scripting/ScriptableProjectWindow.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/macOS/UI/ViewControllers/ComposableTabs/Scripting/ScriptableProjectTab.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/macOS/UI/ViewControllers/ComposableTabs/Scripting/ScriptablePane.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/macOS/Features/Projects/ProjectWindowManager.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/macOS/UI/ViewControllers/ComposableTabs/ComposableTabsWindowController.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/macOS/Features/Projects/ProjectController.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/macOS/Features/Projects/BranchController.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/macOS/Scripting/MainActorScriptCommand.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/Tests/AgenticToolkitMacOSTests/ComposableTabs/ProjectScriptingTests.swift (agenticdevelopertoolkit)"
+      "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/Scripting/ProjectWindowManager+Scripting.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/ComposableTabs/Scripting/ScriptableProjectWindow.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/ComposableTabs/Scripting/ScriptableProjectTab.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/ComposableTabs/Scripting/ScriptablePane.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectWindowManager.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/ComposableTabs/ComposableTabsWindowController.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectController.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/BranchController.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/macOS/Scripting/MainActorScriptCommand.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKMacOSTests/ComposableTabs/ProjectScriptingTests.swift (adhsdk)"
     ],
     "approved-by": "",
     "approved-date": ""

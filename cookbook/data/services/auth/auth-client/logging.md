@@ -1,5 +1,5 @@
 
-Subsystem: `agentictoolkit` | Category: `auth-client`
+Subsystem: `adhsdk` | Category: `auth-client`
 
 | Event | Level | Message |
 |-------|-------|---------|

@@ -19,7 +19,7 @@
   wrapper types, is confined to the UI's main execution context (MUST, see
   **main-thread-confinement**); the AppleScript scripting layer itself dispatches command
   handlers on the main thread (see
-  `adtoolkit://cookbook/system/scripting`), so no two enumerations or
+  `adhsdk://cookbook/system/scripting`), so no two enumerations or
   lookups from this surface can interleave with each other or with a
   window opening or closing. There is no lock, queue, or independent
   concurrency state defined here — main-thread confinement is the entire
@@ -32,7 +32,7 @@
   (MUST, see **tab-branch-empty-when-unresolved**). Any error a git
   subprocess could raise is fully absorbed inside the branch controller's
   own refresh operation before its current branch is ever read by this
-  surface (see `adtoolkit://cookbook/workspace/projects/branch-controller`);
+  surface (see `adhsdk://cookbook/workspace/projects/branch-controller`);
   none of it is observable through the scriptable tab's `branch`.
 - **Offline or disconnected state**: Not applicable in the network sense —
   nothing here makes a network call. Git itself is local-only, and even

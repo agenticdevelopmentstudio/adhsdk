@@ -1,5 +1,5 @@
 {
-  "name": "@agenticdevelopertoolkit/editing",
+  "name": "@adh-sdk/editing",
   "version": "0.1.0",
   "description": "The editing container: one owner of the draft, the Save button and the unsaved-changes guard for every editable surface.",
   "license": "Apache-2.0",
@@ -35,7 +35,7 @@
     "react-dom": "^19.0.0"
   },
   "dependencies": {
-    "@agenticdevelopertoolkit/ui": "workspace:*"
+    "@adh-sdk/ui": "workspace:*"
   },
   "devDependencies": {
     "@testing-library/jest-dom": "^6.9.1",

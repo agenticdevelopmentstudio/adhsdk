@@ -3,7 +3,7 @@
   "meta": {
     "id": "18ea2506-0cbc-4c6a-880b-e94abcdc55b2",
     "title": "Hub Domain: Buckets",
-    "domain": "adtoolkit://cookbook/adh/hub/buckets",
+    "domain": "adhsdk://cookbook/adh/hub/buckets",
     "type": "ingredient",
     "version": "1.1.0",
     "status": "review",
@@ -28,13 +28,13 @@
     ],
     "depends-on": [],
     "related": [
-      "adtoolkit://cookbook/ui/navigation/htdv"
+      "adhsdk://cookbook/ui/navigation/htdv"
     ],
     "references": [
-      "packages/apple/AgenticToolkit/Hub/Features/Buckets/BucketsDataSource.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/Hub/Features/Buckets/BucketsModels.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/Hub/Features/Buckets/BucketsTopic.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/Tests/AgenticToolkitHubTests/BucketsTopicTests.swift (agenticdevelopertoolkit)"
+      "packages/apple/AgenticDeveloperHubSDK/Hub/Features/Buckets/BucketsDataSource.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/Hub/Features/Buckets/BucketsModels.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/Hub/Features/Buckets/BucketsTopic.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKHubTests/BucketsTopicTests.swift (adhsdk)"
     ],
     "approved-by": "",
     "approved-date": ""

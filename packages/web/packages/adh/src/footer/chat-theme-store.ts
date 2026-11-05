@@ -1,13 +1,13 @@
 'use client'
 
 import { useCallback, useSyncExternalStore } from 'react'
-// Via bitbag, not `@agenticdevelopertoolkit/themes` directly: that package is part of
-// the persona toolkit, which this package keeps out of its shipped graph (see the
+// Via bitbag, not `@adh-sdk/themes` directly: that package is part of
+// the persona layer, which this package keeps out of its shipped graph (see the
 // `//devDependencies` note in package.json). bitbag owns the `theme` prop these values
 // feed, already peer-depends on the vocabulary, and re-exports it for exactly this.
 // Same reason `persona-chat/chat-types.ts` keeps a local copy of the chat types.
-import { themeIds, type ThemeKey } from '@agentic-toolkit/bitbag'
-import { DEV_BUILD } from '@agentic-toolkit/adh-registry/deployment-env'
+import { themeIds, type ThemeKey } from '@adh-sdk/bitbag'
+import { DEV_BUILD } from '@adh-sdk/adh-registry/deployment-env'
 
 /**
  * Which toolkit theme the footer chat wears. Written by the hub's Debug console

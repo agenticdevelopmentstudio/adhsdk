@@ -120,7 +120,7 @@ vi.mock("./ProjectActivityPane", () => ({
     <div data-testid="activity" data-project={projectId} data-title={title} />
   ),
 }));
-vi.mock("@agentic-toolkit/teams", () => ({
+vi.mock("@adh-sdk/teams", () => ({
   workspaceSubjectsDirectory: {},
   ItemAccessPanel: ({
     workspaceSlug,

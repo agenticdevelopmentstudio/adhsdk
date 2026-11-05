@@ -1,6 +1,6 @@
 import type { MetadataRoute } from 'next'
 import type { ComponentType } from 'react'
-import type { BandTone } from '@agenticdevelopertoolkit/landing'
+import type { BandTone } from '@adh-sdk/landing'
 
 /**
  * One piece of a site's copy. A plain string is text; `{ html }` is words that carry emphasis

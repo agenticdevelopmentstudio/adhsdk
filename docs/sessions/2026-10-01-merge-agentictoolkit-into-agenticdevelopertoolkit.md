@@ -32,7 +32,7 @@ Parts 1 and 2 are both done.
   `main` (see Open threads).
 
 The plan and its status are in
-[`docs/planning/merge-agentictoolkit.md`](../planning/merge-agentictoolkit.md).
+[`docs/planning/merge-adhsdk.md` (then `merge-agentictoolkit.md`)](../planning/merge-adhsdk.md).
 
 ## Decisions
 
@@ -215,7 +215,7 @@ The plan and its status are in
 ## Pointers
 
 - **Plan and status:**
-  [`docs/planning/merge-agentictoolkit.md`](../planning/merge-agentictoolkit.md)
+  [`docs/planning/merge-adhsdk.md` (then `merge-agentictoolkit.md`)](../planning/merge-adhsdk.md)
 - **Combined-repo overview:**
   [`docs/project/project-overview.md`](../project/project-overview.md)
 - **Migration tooling (session scratchpad, not committed):**

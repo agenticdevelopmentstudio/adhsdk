@@ -3,7 +3,7 @@
 // Component test for ProjectsFeature — the Projects workspace feature built on the shared
 // ResourceExplorer recipe. This package's vitest config is jsdom (see vitest.config.ts) and
 // drives React with @testing-library/react. Only the data domain boundary
-// (@agentic-toolkit/data/projects) plus the Next navigation/link hooks are mocked, so the
+// (@adh-sdk/data/projects) plus the Next navigation/link hooks are mocked, so the
 // rail → create → topic wiring is exercised, not the transport.
 //
 // ResourceExplorer PUBLISHES its resource + topic rail levels into a rail HOST (via
@@ -23,10 +23,10 @@ import {
   RailHostContext,
   type RailHostRegistry,
   type RegisteredLevels,
-} from "@agentic-toolkit/resource";
+} from "@adh-sdk/resource";
 // The shared rail/toolbar stand-in (G68, Mike, 2026-09-25) — see its own doc comment for why a
 // single copy replaced five near-identical ones and what it draws.
-import { RailStandIn } from "@agentic-toolkit/resource/testing";
+import { RailStandIn } from "@adh-sdk/resource/testing";
 
 // ResourceExplorer uses next/navigation's useRouter internally. `push` is a shared spy, not a
 // throwaway: with the "All" card landing gone (adh/docs/ui/fleet-ui-audit.md §1.5) the rail row IS
@@ -45,7 +45,7 @@ vi.mock("next/link", () => ({
   ),
 }));
 
-vi.mock("@agentic-toolkit/data/projects", () => ({
+vi.mock("@adh-sdk/data/projects", () => ({
   projectsApi: {
     list: vi.fn(),
     get: vi.fn(),
@@ -68,12 +68,12 @@ vi.mock("@agentic-toolkit/data/projects", () => ({
   DEFAULT_ITEM_NOUN_PLURAL: "work items",
   // The board's live wake (useBoardLive). Stubbed to a no-op: it opens an EventSource, which jsdom
   // does not have, and what it does when it fires is `revalidateResources`' contract, tested in
-  // @agentic-toolkit/data. Here it would only add a connection to every render.
+  // @adh-sdk/data. Here it would only add a connection to every render.
   useProjectLive: vi.fn(),
 }));
 
 import { ProjectsFeature } from "./ProjectsFeature";
-import { projectsApi, type Project } from "@agentic-toolkit/data/projects";
+import { projectsApi, type Project } from "@adh-sdk/data/projects";
 
 const list = vi.mocked(projectsApi.list);
 const get = vi.mocked(projectsApi.get);

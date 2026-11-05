@@ -15,7 +15,7 @@ beforeEach(() => {
   captureMock.mockClear()
   delete process.env.NEXT_PUBLIC_POSTHOG_KEY
   delete process.env.NEXT_PUBLIC_POSTHOG_HOST
-  delete (window as unknown as Record<string, unknown>).__agenticdevelopertoolkitPostHog
+  delete (window as unknown as Record<string, unknown>).__adhsdkPostHog
 })
 
 describe('startPostHog', () => {

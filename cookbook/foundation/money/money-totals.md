@@ -1,7 +1,7 @@
 ---
 id: 9D3A57D7-C9BB-4AFC-BDAB-4C42278FD8C8
 title: "Money Totals"
-domain: adtoolkit://cookbook/foundation/money/money-totals
+domain: adhsdk://cookbook/foundation/money/money-totals
 type: ingredient
 version: 1.0.0
 status: review
@@ -22,8 +22,8 @@ tags:
   - currency
 depends-on: []
 related:
-  - adtoolkit://cookbook/foundation/money
-  - adtoolkit://cookbook/foundation/money/money-formatter
+  - adhsdk://cookbook/foundation/money
+  - adhsdk://cookbook/foundation/money/money-formatter
 references: []
 approved-by: ""
 approved-date: ""
@@ -126,7 +126,7 @@ Not applicable: The totals type calls no logging API.
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/Core/Money/MoneyTotals.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Money/MoneyTotals.swift` |
 
 ## Design Decisions
 
@@ -145,7 +145,7 @@ Not applicable: The totals type calls no logging API.
 | [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
 | [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
 
-`separation-of-concerns` passes because the type only buckets hundredths by currency and delegates formatting to the money formatter. `unit-test-coverage` passes because `AgenticToolkitCoreTests/MoneyTotalsTests.swift` covers keeping currencies apart, merging totals, and the code-ordered description.
+`separation-of-concerns` passes because the type only buckets hundredths by currency and delegates formatting to the money formatter. `unit-test-coverage` passes because `AgenticDeveloperHubSDKCoreTests/MoneyTotalsTests.swift` covers keeping currencies apart, merging totals, and the code-ordered description.
 
 ## Change History
 

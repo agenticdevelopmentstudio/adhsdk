@@ -205,7 +205,7 @@ describe('themes.json', () => {
       string,
       { css: string; fonts: { variable: string; files: { path: string }[] }[] }
     >
-    expect(themes.fishlamp.css).toBe('@agenticdevelopertoolkit/themes/styles/fishlamp.css')
+    expect(themes.fishlamp.css).toBe('@adh-sdk/themes/styles/fishlamp.css')
     const web = resolve(pkg, '../..')
     for (const font of themes.fishlamp.fonts) {
       for (const f of font.files) expect(existsSync(join(web, f.path)), f.path).toBe(true)
@@ -232,7 +232,7 @@ describe('themes.json mikefullerton', () => {
   const themes = (): Record<string, Theme> => JSON.parse(read(join(pkg, 'themes.json'))) as Record<string, Theme>
   const stylesDir = resolve(pkg, '../themes/src/styles')
   const sheetPath = (theme: Theme): string =>
-    join(stylesDir, theme.css.replace('@agenticdevelopertoolkit/themes/styles/', ''))
+    join(stylesDir, theme.css.replace('@adh-sdk/themes/styles/', ''))
   const mikefullerton = (): string => sheetPath(themes().mikefullerton)
   const fishlamp = (): string => sheetPath(themes().fishlamp)
 
@@ -264,7 +264,7 @@ describe('themes.json mikefullerton', () => {
 
   it("points at the landing palette sheet, not the manifest's mikefullerton.css", () => {
     const theme = themes().mikefullerton
-    expect(theme.css).toBe('@agenticdevelopertoolkit/themes/styles/mikefullerton-landing.css')
+    expect(theme.css).toBe('@adh-sdk/themes/styles/mikefullerton-landing.css')
     expect(existsSync(sheetPath(theme))).toBe(true)
     const web = resolve(pkg, '../..')
     for (const font of theme.fonts) {
@@ -321,11 +321,11 @@ describe('themes.json charcoal', () => {
   const themes = (): Record<string, Theme> => JSON.parse(read(join(pkg, 'themes.json'))) as Record<string, Theme>
   const stylesDir = resolve(pkg, '../themes/src/styles')
   const sheet = (): string =>
-    read(join(stylesDir, themes().charcoal.css.replace('@agenticdevelopertoolkit/themes/styles/', '')))
+    read(join(stylesDir, themes().charcoal.css.replace('@adh-sdk/themes/styles/', '')))
 
   it("points at the family's own charcoal palette and real Iosevka files", () => {
     const theme = themes().charcoal
-    expect(theme.css).toBe('@agenticdevelopertoolkit/themes/styles/charcoal.css')
+    expect(theme.css).toBe('@adh-sdk/themes/styles/charcoal.css')
     const web = resolve(pkg, '../..')
     for (const font of theme.fonts) {
       for (const f of font.files) expect(existsSync(join(web, f.path)), f.path).toBe(true)

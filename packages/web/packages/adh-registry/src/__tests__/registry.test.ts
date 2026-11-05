@@ -3,7 +3,7 @@ import { readdirSync, statSync, existsSync, readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { dirname, resolve } from 'node:path'
 // isHubWorkspacePath / hubWorkspaceSlug are NOT here any more — they moved to
-// @agentic-toolkit/adh/site, whose reserved-slug list is what now answers them, and their cases
+// @adh-sdk/adh/site, whose reserved-slug list is what now answers them, and their cases
 // went with them (`adh/src/site/__tests__/hubWorkspacePath.test.ts`).
 // `hubFeatureSegment` rather than `HUB_FEATURE_SEGMENT[id]`: the map is `as const`, so it
 // carries only the sites it names and indexing it with an arbitrary SiteId is a type error
@@ -526,14 +526,14 @@ describe('MAIN_SITE_IDS / MARKETING_SITE_IDS (the site-app roster)', () => {
   // is pinned by the no-dupes/no-overlap test below.
   //
   // Finding frontend/src is not a counted hop, and the previous `../../../..` is why:
-  // this package moved into the agentictoolkit submodule, and four levels up from its
+  // this package moved into the adhsdk submodule, and four levels up from its
   // new home is `<toolkit>/packages/web`, which holds none of adh's site folders.
   // It did not fail loudly at first glance either — the sibling siteRoutes.test.ts hit
   // the identical anchor and passed VACUOUSLY over an empty scan (349d1db); these two
   // only went red because readdirSync throws where that one's walk shrugged.
   //
   // Walking up to the marker, and skipping when it is absent, is the same shape
-  // landingTypeScale.test.ts uses in @agentic-toolkit/adh — deliberately re-stated here
+  // landingTypeScale.test.ts uses in @adh-sdk/adh — deliberately re-stated here
   // rather than shared, because a test-only helper is not worth adding to either
   // package's public surface to reach across the boundary between them.
   //
@@ -543,7 +543,7 @@ describe('MAIN_SITE_IDS / MARKETING_SITE_IDS (the site-app roster)', () => {
   // the guard still fires in the repository whose folders it is about.
   //
   // The marker is frontend/src's OWN manifest, identified by name. It was
-  // `next-config-base.mjs` until that file was split into `@agentic-toolkit/adh-next-config`
+  // `next-config-base.mjs` until that file was split into `@adh-sdk/adh-next-config`
   // and deleted — at which point this walk returned null in an adh checkout too, and the
   // whole assertion self-skipped GREEN in the one repository it is about. That is the
   // failure this marker has to be chosen against: a sentinel that is deleted takes the
@@ -1128,7 +1128,7 @@ describe('HUB_FEATURE_SEGMENT (in-hub workspace switching)', () => {
     //   hub — it IS the host; its own workspace is `/<slug>`, not a segment under it.
     //   myagenticteams — a full family member with a workspace route, built from its OWN repo
     //     since 2026-08-15 (see MAIN_SITE_IDS' note). Its model is not in
-    //     @agentic-toolkit/adh-site-homes, so there is nothing here for the hub to import. Named
+    //     @adh-sdk/adh-site-homes, so there is nothing here for the hub to import. Named
     //     rather than derived for the same reason that list names it: where a site's source sits
     //     is a fact about one checkout, and this file is shared by all of them.
     const NOT_MOUNTED: string[] = ['hub', 'myagenticteams']
@@ -1157,7 +1157,7 @@ describe('HUB_FEATURE_SEGMENT (in-hub workspace switching)', () => {
     const segs: string[] = Object.values(HUB_FEATURE_SEGMENT)
     expect(segs.length).toBeGreaterThan(0) // non-vacuity
     // Asserted against the SET, not `isHubWorkspacePath`: that predicate answers from
-    // @agentic-toolkit/adh/site now, which this package cannot import (adh depends on
+    // @adh-sdk/adh/site now, which this package cannot import (adh depends on
     // adh-registry, not the other way round). The set is what it reads anyway.
     for (const seg of segs) expect(HUB_WORKSPACE_SEGMENTS.has(seg), seg).toBe(true)
   })

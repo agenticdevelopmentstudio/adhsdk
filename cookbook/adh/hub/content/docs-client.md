@@ -1,7 +1,7 @@
 ---
 id: 48ddd102-b78c-4198-b71d-25801082a5b2
 title: "Docs Client"
-domain: adtoolkit://cookbook/adh/hub/content/docs-client
+domain: adhsdk://cookbook/adh/hub/content/docs-client
 type: ingredient
 version: 1.0.3
 status: review
@@ -24,15 +24,15 @@ tags:
 depends-on: []
 related: []
 references:
-  - packages/web/packages/data/src/docs/docs.ts (agenticdevelopertoolkit)
-  - packages/web/packages/data/src/docs/index.ts (agenticdevelopertoolkit)
-  - packages/web/packages/data/src/markdown/markdown.ts (agenticdevelopertoolkit)
-  - packages/web/packages/data/src/markdown/wire.ts (agenticdevelopertoolkit)
-  - packages/web/packages/data/src/markdown/taxonomy.ts (agenticdevelopertoolkit)
-  - packages/web/packages/data/src/notes/notes.ts (agenticdevelopertoolkit)
-  - packages/web/packages/data/src/http.ts (agenticdevelopertoolkit)
-  - packages/web/packages/data/src/client-helpers.ts (agenticdevelopertoolkit)
-  - packages/web/packages/data/src/markdown/__tests__/markdown.test.ts (agenticdevelopertoolkit)
+  - packages/web/packages/data/src/docs/docs.ts (adhsdk)
+  - packages/web/packages/data/src/docs/index.ts (adhsdk)
+  - packages/web/packages/data/src/markdown/markdown.ts (adhsdk)
+  - packages/web/packages/data/src/markdown/wire.ts (adhsdk)
+  - packages/web/packages/data/src/markdown/taxonomy.ts (adhsdk)
+  - packages/web/packages/data/src/notes/notes.ts (adhsdk)
+  - packages/web/packages/data/src/http.ts (adhsdk)
+  - packages/web/packages/data/src/client-helpers.ts (adhsdk)
+  - packages/web/packages/data/src/markdown/__tests__/markdown.test.ts (adhsdk)
 approved-by: ""
 approved-date: ""
 ---
@@ -311,7 +311,7 @@ emit no analytics or telemetry event of any kind, on success or failure.
   persistence is the backend's.
 - **Transmission**: Every request travels through `authedJson`/
   `authedRequest` (`packages/web/packages/data/src/http.ts`, itself
-  re-exporting `@agentic-toolkit/auth/client`), the same bearer-token
+  re-exporting `@adh-sdk/auth/client`), the same bearer-token
   authenticated channel every other data client in this package uses;
   `docs.ts` adds no transmission of its own and performs no additional
   encryption, redaction, or inspection of the document content it sends.
@@ -357,7 +357,7 @@ logged.
   category/tag-tree degrade helpers (`withTags`, `categoryNodes`,
   `tagNodes`), and re-exports `taxonomy.ts` unchanged. Transport
   (`authedJson`/`authedRequest`) comes from `http.ts`, itself re-exporting
-  `@agentic-toolkit/auth/client`; `enc`/`workspaceQuery` come from
+  `@adh-sdk/auth/client`; `enc`/`workspaceQuery` come from
   `client-helpers.ts`. Wire types live in `markdown/wire.ts`. Tests for the
   delegated helpers live in `markdown/__tests__/markdown.test.ts`; `docs.ts`
   has no test file of its own.

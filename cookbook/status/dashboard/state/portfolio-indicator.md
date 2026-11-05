@@ -1,7 +1,7 @@
 ---
 id: 43d93a67-c469-40d1-8465-076cd782e1b2
 title: "Portfolio Indicator"
-domain: adtoolkit://cookbook/status/dashboard/state/portfolio-indicator
+domain: adhsdk://cookbook/status/dashboard/state/portfolio-indicator
 type: ingredient
 version: 1.1.0
 status: review
@@ -17,9 +17,9 @@ platforms:
   - web
 tags: []
 depends-on:
-  - adtoolkit://cookbook/status/dashboard/state/board
+  - adhsdk://cookbook/status/dashboard/state/board
 related:
-  - adtoolkit://cookbook/status/dashboard/state/board
+  - adhsdk://cookbook/status/dashboard/state/board
 references: []
 approved-by: ""
 approved-date: ""

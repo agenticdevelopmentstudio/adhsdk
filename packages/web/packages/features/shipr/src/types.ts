@@ -9,7 +9,7 @@
  * in a `<button>` block is how a UI ends up offering four environments to a backend that
  * accepts three, with no type error anywhere.
  *
- * These are deliberately hand-written rather than pulled from `@agentic-toolkit/adh-api-types`.
+ * These are deliberately hand-written rather than pulled from `@adh-sdk/adh-api-types`.
  * That package is generated from the OpenAPI document, and the generated names for a
  * hand-written route module are long paths into `components.schemas` that read as noise at
  * every call site. The document is still the contract — `src/openapi/paths/shipr.ts`

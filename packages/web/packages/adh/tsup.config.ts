@@ -26,7 +26,7 @@ export default defineConfig({
     // `HeaderAuthSource` contract plus the anonymous and smart-SSO sources. Its own
     // entry, published as the `./header-auth` subpath, rather than a member of
     // `header/index`: this is the only module in the header directory that value-imports
-    // `@agentic-toolkit/auth`, and folding it into the always-loaded header barrel would
+    // `@adh-sdk/auth`, and folding it into the always-loaded header barrel would
     // put the auth package in front of every consumer of a nav link. Reaches
     // AdhHeader/AvatarMenu by TYPE only, so no relative-inlining hazard (see the file).
     'header/header-auth': 'src/header/header-auth.ts',
@@ -90,7 +90,7 @@ export default defineConfig({
     // The Help modal. `help/index` is the always-loaded barrel (HelpProvider context + useHelp +
     // topic data); the heavy window (the ~87K pre-rendered markdown corpus + shiki + the API
     // browser) is its OWN entry so HelpProvider's `next/dynamic(() =>
-    // import('@agentic-toolkit/adh/help/HelpWindow'))` has a real subpath to resolve, and the
+    // import('@adh-sdk/adh/help/HelpWindow'))` has a real subpath to resolve, and the
     // matching `external` keeps that specifier a dynamic import in the built help/index.js rather
     // than inlining the window and evaluating it eagerly on every page.
     //
@@ -116,8 +116,8 @@ export default defineConfig({
     // load the help window's client graph to get it.
     'help/store': 'src/help/store.ts',
     // The shared /home shell (SiteHomeShell + WorkspacePicker). Its OWN entry so only a page
-    // that imports `@agentic-toolkit/adh/home` pulls it — and with it this package's new
-    // @agentic-toolkit/data dependency. That edge is legal (data depends on auth + ui only, so
+    // that imports `@adh-sdk/adh/home` pulls it — and with it this package's new
+    // @adh-sdk/data dependency. That edge is legal (data depends on auth + ui only, so
     // no cycle) and it is confined to this entry: the header, which ships on every public page,
     // has no STATIC edge to data or to any workspace vocabulary. Its one reach across is the
     // notification bell (SiteHeader's `accountActions`), and it is a `next/dynamic` specifier
@@ -130,7 +130,7 @@ export default defineConfig({
     // sites mounts it, and any entry that inlined it would take its 'use client' banner on
     // the whole chunk (preserve-directives hoists it). Deliberately NOT a member of
     // `home/index`, even though that barrel is already 'use client': the barrel drags
-    // SiteHomeShell and with it @agentic-toolkit/data, and the escape's whole job is to be
+    // SiteHomeShell and with it @adh-sdk/data, and the escape's whole job is to be
     // the piece the layout can reach without the gated app behind it.
     'home/PublicProfileEscape': 'src/home/PublicProfileEscape.tsx',
     // The ADH docs shell (server component: sidebar + article). No context/state, so it needs no
@@ -145,12 +145,12 @@ export default defineConfig({
     // other subpath. The queries/mutation are INJECTED by the consumer and the wire shapes
     // are structural local minimums — the same arrangement, for the same reason, as
     // persona-chat below: it keeps this package free of @tanstack/react-query and
-    // @agentic-toolkit/adh-api-types, which both of its two consumers already carry.
+    // @adh-sdk/adh-api-types, which both of its two consumers already carry.
     'messaging/index': 'src/messaging/index.ts',
     // The shared persona-chat backend (SSE parser + status/retry state machine +
     // PersonaChatBackend class). Pure TS, no React. The auth-aware fetchers are
     // INJECTED by the consumer; the chat contract types are a traceable local copy
-    // (src/persona-chat/chat-types.ts) rather than a dependency on the persona toolkit.
+    // (src/persona-chat/chat-types.ts) rather than a dependency on the persona layer.
     'persona-chat/index': 'src/persona-chat/index.ts',
     // The VISITOR chat backend (anonymous, token-minting) — same shape, no auth.
     'visitor-chat/index': 'src/visitor-chat/index.ts',
@@ -269,7 +269,7 @@ export default defineConfig({
     // be emitted into each site as markup. Its own entry rather than a member of
     // marketing/index: that barrel is what a site's layout imports on every route, and the
     // deck plus its twenty-odd blocks belongs to two of them. It reaches NavChrome by
-    // package path (`@agenticdevelopertoolkit/landing/client`) for the directive reason the
+    // package path (`@adh-sdk/landing/client`) for the directive reason the
     // `external` list below spells out.
     'landing/index': 'src/landing/index.ts',
     'marketing/index': 'src/marketing/index.ts',
@@ -305,29 +305,29 @@ export default defineConfig({
     // sidebar. Inlined, esbuild would try to bundle Next itself into this dist.
     'next/dynamic',
     'next/link',
-    '@agenticdevelopertoolkit/themes',
-    '@agenticdevelopertoolkit/themes/manifest',
+    '@adh-sdk/themes',
+    '@adh-sdk/themes/manifest',
     // The auth package's token store, refresh timer, and AuthContext all live at module
     // scope. Nothing under src/ imported it before Task 6.1's auth/index entry; inlined,
     // that entry would get its own private auth instance — a user logged in through the
     // site's own toolkit-auth import would read as signed out from AppearanceSync /
     // wired-provider, in production only (dev/vitest/tsc all resolve the `development`/src
     // condition and stay green). Preserved import ⇒ one copy, resolved by the consumer.
-    // Subpath listed separately, same as `@agenticdevelopertoolkit/ui/*` below: tsup's `external`
+    // Subpath listed separately, same as `@adh-sdk/ui/*` below: tsup's `external`
     // matches specifiers, not packages, so the bare entry does nothing for
-    // '@agentic-toolkit/auth/client'.
-    '@agentic-toolkit/auth',
-    '@agentic-toolkit/auth/client',
+    // '@adh-sdk/auth/client'.
+    '@adh-sdk/auth',
+    '@adh-sdk/auth/client',
     // '/ui' and '/server' aren't reached by anything under src/ yet — pre-listed the same
-    // way '@agentic-toolkit/adh/flags' is above, so the day a future entry in this package
+    // way '@adh-sdk/adh/flags' is above, so the day a future entry in this package
     // imports one of them it's already covered and doesn't silently get its own inlined copy.
-    '@agentic-toolkit/auth/ui',
-    '@agentic-toolkit/auth/server',
-    '@agenticdevelopertoolkit/ui',
+    '@adh-sdk/auth/ui',
+    '@adh-sdk/auth/server',
+    '@adh-sdk/ui',
     // Subpath form: tsup's `external` matches SPECIFIERS, not packages, so the bare
-    // entry above does nothing for '@agenticdevelopertoolkit/ui/components/badge' and friends
+    // entry above does nothing for '@adh-sdk/ui/components/badge' and friends
     // (introduced by the header modules in Task 5.6).
-    '@agenticdevelopertoolkit/ui/*',
+    '@adh-sdk/ui/*',
     // recents.ts holds module-level mutable state (`snapshot`, and the `listeners`
     // Set). With bundle:true/splitting:false, every entry that reaches it by a
     // RELATIVE specifier inlines its own private copy of that state — a visit
@@ -337,9 +337,9 @@ export default defineConfig({
     // Inlining it would also hoist its 'use client' directive over the whole entry.
     // Preserved import ⇒ one copy, resolved by the consumer. BOTH halves are load
     // bearing: this entry, AND every reaching specifier written as the full package
-    // path '@agentic-toolkit/adh/header/recents'. One surviving './recents' defeats
+    // path '@adh-sdk/adh/header/recents'. One surviving './recents' defeats
     // it. Enforced by <adh-tools>/sites/scripts/verify-bundle-boundaries.py.
-    '@agentic-toolkit/adh/header/recents',
+    '@adh-sdk/adh/header/recents',
     // hub-preferences.ts is recents.ts's twin: module-level mutable state ('snapshot',
     // 'listeners') plus a 'use client' directive. Two entries reach it from opposite ends
     // — the settings panel WRITES the chord, the header READS it — which is the exact
@@ -348,17 +348,17 @@ export default defineConfig({
     // for the old one, with no type or build error and nothing wrong in dev (which
     // resolves the `development` condition to src/). One surviving relative
     // './hub-preferences' defeats it, exactly as one surviving './recents' would.
-    '@agentic-toolkit/adh/header/hub-preferences',
+    '@adh-sdk/adh/header/hub-preferences',
     // The hub workspace-path leaf (entry above). Two entries reach it — the `site` barrel
     // re-exports both predicates, and the header calls them from useSiteMenu and
     // activeMenuGroups — so without this it is inlined twice. Preserved import ⇒ one copy,
     // resolved by the consumer. One surviving '../site/hubWorkspacePath' defeats it, exactly
     // as one surviving './recents' would above.
-    '@agentic-toolkit/adh/site/hubWorkspacePath',
+    '@adh-sdk/adh/site/hubWorkspacePath',
     // The site-id context leaf (entry above). Preserved import ⇒ ONE context object, resolved by
     // the consumer. One surviving '../site/site-id' relative import defeats it and forks the
     // context — see the flags note below for what a forked context looks like in production.
-    '@agentic-toolkit/adh/site/site-id',
+    '@adh-sdk/adh/site/site-id',
     // The flags module holds the React context (FeatureFlagsProvider / FeatureFlagsContext).
     // With splitting:false, every entry that inlines it gets its OWN context instance — a consumer
     // entry in THIS package (`footer/AdhFooter`, which landed here in Task 5.7, is the nearest
@@ -369,7 +369,7 @@ export default defineConfig({
     // candidate, HierarchicalDetailViewFlag, has its flag read commented out while HMDV is parked)
     // — but load-bearing the moment one does. The same stateful-module rule, with its own
     // rationale, governs the telemetry leaves and `themes/index` in the entries immediately below.
-    '@agentic-toolkit/adh/flags',
+    '@adh-sdk/adh/flags',
     // The telemetry leaves hold module-level mutable state (`reporter` in report-error.ts,
     // `retriedInits` in retry.ts). With splitting:false, every entry that inlines a leaf gets its
     // OWN copy of that state — TelemetryProvider's setErrorReporter (in the `telemetry` entry)
@@ -377,14 +377,14 @@ export default defineConfig({
     // another, whose `reporter` stays null, silently no-oping every captureException/
     // reportUnexpectedError in production builds while dev/vitest (which resolve the
     // `development`/src condition) stayed green. Preserved import ⇒ one copy, resolved by the
-    // consumer. Same trick as `@agentic-toolkit/adh/flags` above.
+    // consumer. Same trick as `@adh-sdk/adh/flags` above.
     // NOT hypothetical since Task 5.8: `layout/RouteError.tsx` and `layout/GlobalError.tsx` —
     // whose entire job is reporting the error they render a fallback for — reach this leaf from
     // the `layout` entry, and a null `reporter` would make them fail at exactly that while still
     // rendering a correct-looking fallback. Both write the full package path; a relative
     // '../telemetry/report-error' in either one silently defeats this entry.
-    '@agentic-toolkit/adh/telemetry/report-error',
-    '@agentic-toolkit/adh/telemetry/retry',
+    '@adh-sdk/adh/telemetry/report-error',
+    '@adh-sdk/adh/telemetry/retry',
     // AdhThemeStyle.tsx (server) renders DbThemeApplier ('use client'). With
     // bundle:true/splitting:false, inlining a 'use client' leaf hoists its directive to
     // the top of the WHOLE entry file — server.ts's bundle would then open with 'use
@@ -394,7 +394,7 @@ export default defineConfig({
     // the two directive boundaries the app tier already had, graph/ConceptGraphClient and
     // footer/FooterChatInner — both listed in the vocabulary-tier `external` block below,
     // carried over verbatim from that tier's own tsup config when it merged in.
-    '@agentic-toolkit/adh/themes/DbThemeApplier',
+    '@adh-sdk/adh/themes/DbThemeApplier',
     // The themes barrel, reached by PACKAGE PATH from the debug console (Task 5.2's
     // `debug-env/DebugConsole.tsx` calls `useThemeEditor`, and SiteThemeBranch.tsx takes
     // its `ThemeEditorApi` type). That specifier arrived here as a genuine cross-package
@@ -404,44 +404,44 @@ export default defineConfig({
     // its own themes-client module: a theme saved from the console would not be visible
     // to the applier that paints the page. Preserved import ⇒ one copy, resolved by the
     // consumer. BOTH halves required — this entry, AND the package-path specifier.
-    '@agentic-toolkit/adh/themes',
+    '@adh-sdk/adh/themes',
     // ── Task 5.5: the help surface's three preserved imports, all SELF-references ────────
     // The light Help barrel holds the React HelpContext. With splitting:false, any entry
     // that reaches it RELATIVELY inlines its own context instance — MarkdownTopic's
     // `useHelp()` (inside the help/HelpWindow entry) would then read a DIFFERENT, empty
     // context than the provider in help/index created, so clicking a cross-link in a help
     // topic would silently no-op. Same class as ./flags and ./header/recents above.
-    '@agentic-toolkit/adh/help',
+    '@adh-sdk/adh/help',
     // The heavy window (pre-rendered help HTML + shiki + the API browser). External so
-    // HelpProvider's `next/dynamic(() => import('@agentic-toolkit/adh/help/HelpWindow'))` survives
+    // HelpProvider's `next/dynamic(() => import('@adh-sdk/adh/help/HelpWindow'))` survives
     // into dist/help/index.js as a dynamic import the consumer's bundler code-splits, instead of
     // esbuild resolving it to the local file and evaluating the window on every page.
-    '@agentic-toolkit/adh/help/HelpWindow',
+    '@adh-sdk/adh/help/HelpWindow',
     // The SSR surface's interactive rail ('use client'), reached by package path from the
     // SERVER module help/HelpSurface. Inlined, preserve-directives would hoist its 'use
     // client' over the whole help/surface entry and the help site's server component would
     // stop being one. Same shape as themes/DbThemeApplier above.
-    '@agentic-toolkit/adh/help/HelpMasterDetail',
+    '@adh-sdk/adh/help/HelpMasterDetail',
     // help/HelpWindow borrows the debug console's draggable FloatingWindow shell. That was a
     // genuine cross-package import in @adh-shared/adh and became a SELF-reference on the way
     // in — the shape that silently forks state. FloatingWindow's module-level drag geometry
     // must be ONE copy shared with the console, so preserve it rather than let the help
     // entry inline a second.
-    '@agentic-toolkit/adh/debug-env',
+    '@adh-sdk/adh/debug-env',
     // help/views/ApiTopic renders the api-explorer's ApiBrowser; adh-help.css also @imports
     // that package's stylesheet + `sources.css`. A real dependency, resolved by the consuming
     // site so there is one copy of the shiki highlighter singleton and one endpoint-metadata
     // module. tsup auto-externalizes bare `dependencies`, but not reliably their subpaths, so
-    // list both forms as `@agenticdevelopertoolkit/ui` does.
-    '@agentic-toolkit/api-explorer',
-    '@agentic-toolkit/api-explorer/*',
-    // Declared as a dependency for adh-help.css's `@import "@agenticdevelopertoolkit/markdown/styles"`
+    // list both forms as `@adh-sdk/ui` does.
+    '@adh-sdk/api-explorer',
+    '@adh-sdk/api-explorer/*',
+    // Declared as a dependency for adh-help.css's `@import "@adh-sdk/markdown/styles"`
     // (bare specifiers in that stylesheet resolve from THIS package) and for
     // tools/gen-help-content.py's `processMarkdown` render step. No `src/` module imports it —
     // the help corpus is PRE-rendered — but list it so a future runtime import can never be
     // inlined by accident.
-    '@agenticdevelopertoolkit/markdown',
-    '@agenticdevelopertoolkit/markdown/*',
+    '@adh-sdk/markdown',
+    '@adh-sdk/markdown/*',
     // ── Task 6: the shared /home shell's data dependency + self-reference ───────────
     // The data layer holds module state: `dataConfig` (the API base URL every authed call
     // resolves against, set once by the host's configureData) and useResourceList's `caches`
@@ -449,19 +449,19 @@ export default defineConfig({
     // config — a second copy the site's configureData never touched — and its list cache would
     // be invisible to the feature's. Subpath form listed too: tsup's `external` matches
     // specifiers, not packages.
-    '@agentic-toolkit/data',
-    '@agentic-toolkit/data/*',
-    // The `home` barrel, pre-listed the same way '@agentic-toolkit/auth/ui' is: nothing under
+    '@adh-sdk/data',
+    '@adh-sdk/data/*',
+    // The `home` barrel, pre-listed the same way '@adh-sdk/auth/ui' is: nothing under
     // src/ imports it today, but the day an entry here does it is already a boundary rather
     // than a silently inlined second copy of the shell's state.
-    '@agentic-toolkit/adh/home',
+    '@adh-sdk/adh/home',
     // The `[workspace]` gate's escape leaf (entry above). Pre-listed for the same reason as the
     // barrel on the line above — nothing under src/ imports it today; the 40 site layouts do —
     // and it is a DIRECTIVE boundary the day one does, exactly like
-    // '@agentic-toolkit/adh/graph/ConceptGraphClient' below. It is also what
+    // '@adh-sdk/adh/graph/ConceptGraphClient' below. It is also what
     // verify-bundle-boundaries.py's Check C reads to hold this line, the entry above and the
     // `./home/PublicProfileEscape` exports subpath together.
-    '@agentic-toolkit/adh/home/PublicProfileEscape',
+    '@adh-sdk/adh/home/PublicProfileEscape',
     // ── Self-references from the merged adh vocabulary tier ─────────────────────────
     // Same rule as every entry above, and it applies to ALL of these without exception:
     // a package-path specifier that is NOT listed here is not a boundary — esbuild
@@ -474,29 +474,29 @@ export default defineConfig({
     // STATE: the taxonomy assembled at module load, plus the inlined site-config JSON.
     // Reached from graph, details, marketing — four entries that would otherwise each
     // carry their own tree and their own copy of the JSON.
-    '@agentic-toolkit/adh/concepts',
-    '@agentic-toolkit/adh/concepts/participating',
+    '@adh-sdk/adh/concepts',
+    '@adh-sdk/adh/concepts/participating',
     // DIRECTIVE boundaries: a 'use client' leaf imported from a server module. Inlined,
     // preserve-directives hoists the leaf's banner over the whole entry and the server
     // module stops being one — the consuming site's build fails, or worse, doesn't.
-    '@agentic-toolkit/adh/graph/ConceptGraphClient',
-    '@agentic-toolkit/adh/details/DetailsRail',
-    '@agentic-toolkit/adh/marketing/LandingHeroGate',
-    '@agentic-toolkit/adh/marketing/MarketingSiteHeader',
+    '@adh-sdk/adh/graph/ConceptGraphClient',
+    '@adh-sdk/adh/details/DetailsRail',
+    '@adh-sdk/adh/marketing/LandingHeroGate',
+    '@adh-sdk/adh/marketing/MarketingSiteHeader',
     // LAZY boundaries: a `next/dynamic(() => import(...))` specifier. External keeps it
     // a real dynamic import in the emitted JS for the consumer's bundler to code-split;
     // inlined, esbuild resolves it to the local file and it is evaluated eagerly on
     // every page — exactly the cost the split was for.
-    '@agentic-toolkit/adh/footer/FooterChatInner',
-    '@agentic-toolkit/adh/debug-console',
+    '@adh-sdk/adh/footer/FooterChatInner',
+    '@adh-sdk/adh/debug-console',
     // STATE (again, not a LAZY boundary like the two lines just above — nothing here is
     // a next/dynamic specifier): SettingsOverlayContext, held at module scope by
     // settings-overlay.tsx. It is the light settings barrel itself (Task 8: AppShell.tsx
     // mounts one SettingsOverlayProvider for the whole shell, and SiteHeader.tsx's
     // useSettingsOverlay() reads it back). Both reach it by package path from OTHER
     // entries — layout/index and header/index respectively — making it a self-reference
-    // of exactly the class '@agentic-toolkit/adh/flags' and '@agentic-toolkit/adh/help'
-    // are above, and the same STATE reason `@agentic-toolkit/adh/concepts` is. With
+    // of exactly the class '@adh-sdk/adh/flags' and '@adh-sdk/adh/help'
+    // are above, and the same STATE reason `@adh-sdk/adh/concepts` is. With
     // bundle:true/splitting:false, a relative '../settings/settings-overlay' from either
     // entry would inline its own PRIVATE context object, so AppShell's provider would
     // write into one instance while SiteHeader's useSettingsOverlay() read from a
@@ -505,37 +505,37 @@ export default defineConfig({
     // condition straight to src, where there is exactly one module either way).
     // Preserved import ⇒ one copy, resolved by the consumer. BOTH halves required: this
     // entry, and every reaching module writing the full package path
-    // '@agentic-toolkit/adh/settings' rather than a relative one.
-    '@agentic-toolkit/adh/settings',
+    // '@adh-sdk/adh/settings' rather than a relative one.
+    '@adh-sdk/adh/settings',
     // The User Settings overlay body (Task 7). settings-overlay.tsx's SettingsOverlayProvider
     // `lazy()`-imports this by package path so the panel graph — registry.tsx and everything
     // it assembles — survives into dist/settings/index.js as a real dynamic import for the
     // consumer's bundler to code-split, instead of esbuild inlining it and evaluating every
     // panel eagerly on every page that mounts the provider (i.e. every site). Same trick as
-    // `@agentic-toolkit/adh/help/HelpWindow` above — but NOT the same barrel shape, and the
+    // `@adh-sdk/adh/help/HelpWindow` above — but NOT the same barrel shape, and the
     // difference is the whole point: help/index.ts ALSO re-exports HelpWindow statically, and
     // a static re-export in an always-loaded barrel is exactly what pulls the lazy chunk back
     // into a consumer's eager graph. settings/index.ts therefore names this entry once, in
     // the dynamic import and nowhere else, and check-settings-boundary.py fails the build if
     // that stops being true. hub's /settings route — the one host that renders the panels as
     // a page — imports this specifier itself instead.
-    '@agentic-toolkit/adh/settings/UserSettingsOverlay',
+    '@adh-sdk/adh/settings/UserSettingsOverlay',
     // ThemePickerRow, split a level further below UserSettingsOverlay. AppearancePanel's
     // NEXT_PUBLIC_DEPLOYMENT_ENV-folded gate `next/dynamic`-imports it by package path so
     // there is a real chunk boundary for that gate to fold OUT of a production build — the
     // same shape as the dev-only theme trio directly below, just one entry up the chain
     // (settings/UserSettingsOverlay itself is already behind the lazy() split above, so this
     // is the gate INSIDE that already-lazy panel, not a second top-level split).
-    '@agentic-toolkit/adh/settings/ThemePickerRow',
+    '@adh-sdk/adh/settings/ThemePickerRow',
     // topics.ts (entry above). Reached internally only from settings/UserSettingsOverlay
     // (UserSettingsOverlay.tsx + registry.tsx) — preserved as a package-path import there
     // anyway, not because a relative one would duplicate it (both modules share that one
     // entry, so esbuild would dedupe them for free), but so the internal route matches the
-    // external one exactly: `@agentic-toolkit/adh/settings/topics` is also the ONLY route a
+    // external one exactly: `@adh-sdk/adh/settings/topics` is also the ONLY route a
     // consumer outside this package may use to reach SETTINGS_TOPICS/DEFAULT_SETTINGS_TOPIC/
     // resolveSettingsTopic without going through the "use client"-tainted settings/index
     // barrel — see settings/topics.ts's and settings/index.ts's own header comments.
-    '@agentic-toolkit/adh/settings/topics',
+    '@adh-sdk/adh/settings/topics',
     // The dev-only theme trio, and these three are LOAD-BEARING in a way the rest of this
     // list is not: they are what keeps the site-theme editor (Monaco included) out of every
     // production bundle. With splitting:false a relative `import('./SiteThemeConsole')` is
@@ -545,63 +545,63 @@ export default defineConfig({
     // import, the header bundle can drop it once the folded gate leaves it unreferenced. See
     // the chunk-gate contract in adh-registry's src/deployment-env.ts, and productionBundleGates.test.ts,
     // which checks this line against the entry, the tsconfig path and the exports map.
-    '@agentic-toolkit/adh/debug-env/SiteThemeConsole',
-    '@agentic-toolkit/adh/themes/theme-preview',
+    '@adh-sdk/adh/debug-env/SiteThemeConsole',
+    '@adh-sdk/adh/themes/theme-preview',
     // BARRELS reached across entries. `header` is also reached from WITHIN its own entry
     // (SiteHeader/SiteMenu/SiteMenuSwitcher/WorkspaceMenu/useSiteMenu/useDebugOptions import
     // their own barrel); that emits a self-import in dist/header/index.js, which resolves back to the module
     // already being evaluated — ESM live bindings handle it, and it is what the app tier
     // shipped before the merge. `theme-editor` and `header` both carry module state the console must share.
-    '@agentic-toolkit/adh/header',
-    '@agentic-toolkit/adh/header-auth',
-    '@agentic-toolkit/adh/footer',
-    '@agentic-toolkit/adh/layout',
+    '@adh-sdk/adh/header',
+    '@adh-sdk/adh/header-auth',
+    '@adh-sdk/adh/footer',
+    '@adh-sdk/adh/layout',
     // The slide navigation's module state (entry above), shared by the `layout` entry's
     // SlideTransitions and the `header` entry's AvatarMenu. Preserved import ⇒ one copy,
     // resolved by the consumer. BOTH halves required: this line, and every reaching module
-    // writing '@agentic-toolkit/adh/layout/SlideNavigation' — one surviving
+    // writing '@adh-sdk/adh/layout/SlideNavigation' — one surviving
     // './SlideNavigation' or '../layout/SlideNavigation' forks it, exactly as one surviving
     // './recents' would.
-    '@agentic-toolkit/adh/layout/SlideNavigation',
-    '@agentic-toolkit/adh/legal',
-    '@agentic-toolkit/adh/graph',
-    '@agentic-toolkit/adh/theme-editor',
-    '@agentic-toolkit/adh/auth',
-    '@agentic-toolkit/adh/server',
-    // AppShell reaches the build identity by THIS path, not through '@agentic-toolkit/adh/server'
+    '@adh-sdk/adh/layout/SlideNavigation',
+    '@adh-sdk/adh/legal',
+    '@adh-sdk/adh/graph',
+    '@adh-sdk/adh/theme-editor',
+    '@adh-sdk/adh/auth',
+    '@adh-sdk/adh/server',
+    // AppShell reaches the build identity by THIS path, not through '@adh-sdk/adh/server'
     // any more. Externalising it is what keeps the specifier bare in dist/layout/index.js, so the
     // consumer's resolver — not esbuild — decides the target, and can therefore apply the `browser`
     // condition. Inlined, the real module's `node:fs`/`node:child_process` would land INSIDE the
     // layout barrel, which is strictly worse than the bug this replaced.
-    '@agentic-toolkit/adh/live-build-identity',
+    '@adh-sdk/adh/live-build-identity',
     // The telemetry BARREL (not just the two leaves above): layout/AppShell imports
     // SiteTelemetryProvider from it, and the provider's `setErrorReporter` writes the
     // same module-level `reporter` the leaves read. Inlined, AppShell would install the
     // reporter on a private copy and every captureException elsewhere would no-op.
-    '@agentic-toolkit/adh/telemetry',
+    '@adh-sdk/adh/telemetry',
     // ── The two remaining adh-owned packages, now siblings in this workspace ─────────
     // The 45-site REGISTRY (ids, urls, env detection, route table). One copy, resolved
     // by the consuming site: `detectEnv`'s result and the route table must agree across
     // every entry, and the site the host builds for is the host's fact, not ours.
     // Subpaths listed separately — tsup's `external` matches specifiers, not packages.
-    '@agentic-toolkit/adh-registry',
-    '@agentic-toolkit/adh-registry/*',
+    '@adh-sdk/adh-registry',
+    '@adh-sdk/adh-registry/*',
     // bitbag: the footer chat's avatar + dock, and the theme vocabulary its `theme` prop
-    // takes (re-exported by bitbag from the persona toolkit — see footer/chat-theme-store).
+    // takes (re-exported by bitbag from the persona layer — see footer/chat-theme-store).
     // Its CSS subpath rides with the lazy FooterChatInner chunk.
-    '@agentic-toolkit/bitbag',
-    '@agentic-toolkit/bitbag/css/bitbag-dock.css',
+    '@adh-sdk/bitbag',
+    '@adh-sdk/bitbag/css/bitbag-dock.css',
     // The framework-agnostic landing KIT the deck is built from. The subpath form is the
-    // load-bearing half: `@agenticdevelopertoolkit/landing/client` is that package's `'use client'`
+    // load-bearing half: `@adh-sdk/landing/client` is that package's `'use client'`
     // entry, and tsup's `external` matches specifiers rather than packages, so the bare
     // name above does nothing for it. Inlined, preserve-directives would hoist NavChrome's
     // banner over the whole `landing` entry and every screen of every site's landing copy
     // would ship as a Client Component — legal, silent, and three copies of the words.
-    '@agenticdevelopertoolkit/landing',
-    '@agenticdevelopertoolkit/landing/*',
+    '@adh-sdk/landing',
+    '@adh-sdk/landing/*',
     // Only `react-slot` is left of Radix: it backs components/ui/button's `asChild`.
     // The avatar and dropdown-menu primitives went with the components that used
-    // them (both now come from @agenticdevelopertoolkit/ui, on Base UI).
+    // them (both now come from @adh-sdk/ui, on Base UI).
     '@radix-ui/react-slot',
     'class-variance-authority',
     'clsx',
@@ -622,12 +622,12 @@ export default defineConfig({
   ],
   // The ONE dependency deliberately inlined. `concepts/structure.ts` and
   // `concepts/content.ts` import the authored taxonomy JSON from
-  // `@agentic-toolkit/adh-site-config`; esbuild's json loader turns it into a module in
+  // `@adh-sdk/adh-site-config`; esbuild's json loader turns it into a module in
   // THIS bundle. Left external, the emitted JS would carry a bare `import ... from
-  // '@agentic-toolkit/adh-site-config/structure.json'` — an import ATTRIBUTE-less JSON
+  // '@adh-sdk/adh-site-config/structure.json'` — an import ATTRIBUTE-less JSON
   // import that Next/Turbopack resolves inconsistently across dev and prod. Inlining is
   // also why `concepts/index` must be a boundary: the JSON lands once, in that entry.
-  noExternal: ['@agentic-toolkit/adh-site-config'],
+  noExternal: ['@adh-sdk/adh-site-config'],
   esbuildPlugins: [
     preserveDirectivesPlugin({
       directives: ['use client', 'use server'],

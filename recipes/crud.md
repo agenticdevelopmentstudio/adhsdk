@@ -1,7 +1,7 @@
 ---
 id: a7cbe25c-53d1-4aec-b76e-59b1c0876728
 title: CRUD Permissions
-domain: agenticdevelopertoolkit://recipes/crud
+domain: adhsdk://recipes/crud
 type: ingredient
 version: 1.1.1
 status: review

@@ -9,5 +9,5 @@ export declare function UserSettingsOverlay({ open, onOpenChange, }: {
     onOpenChange: (open: boolean) => void;
 }): import("react").JSX.Element;
 export { buildSettingsTopics, SettingsTab } from "./registry";
-export type { Topic } from "@agentic-toolkit/account";
+export type { Topic } from "@adh-sdk/account";
 //# sourceMappingURL=UserSettingsOverlay.d.ts.map

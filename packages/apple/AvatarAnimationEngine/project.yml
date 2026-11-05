@@ -1,6 +1,6 @@
 name: AvatarAnimationEngine
 options:
-  bundleIdPrefix: dev.agenticdevelopertoolkit.AvatarAnimationEngine
+  bundleIdPrefix: com.mikefullerton.agenticdeveloperhubsdk.AvatarAnimationEngine
   createIntermediateGroups: true
   deploymentTarget:
     macOS: "26.0"
@@ -24,7 +24,7 @@ targets:
       - path: Sources
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: dev.agenticdevelopertoolkit.AvatarAnimationEngine.lib.macos
+        PRODUCT_BUNDLE_IDENTIFIER: com.mikefullerton.agenticdeveloperhubsdk.AvatarAnimationEngine.lib.macos
         PRODUCT_NAME: AvatarAnimationEngine
 
   AvatarAnimationEngine-iOS:
@@ -34,7 +34,7 @@ targets:
       - path: Sources
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: dev.agenticdevelopertoolkit.AvatarAnimationEngine.lib.ios
+        PRODUCT_BUNDLE_IDENTIFIER: com.mikefullerton.agenticdeveloperhubsdk.AvatarAnimationEngine.lib.ios
         PRODUCT_NAME: AvatarAnimationEngine
         TARGETED_DEVICE_FAMILY: "1,2"
 
@@ -47,7 +47,7 @@ targets:
       - target: AvatarAnimationEngine-macOS
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: dev.agenticdevelopertoolkit.AvatarAnimationEngine.tests.macos
+        PRODUCT_BUNDLE_IDENTIFIER: com.mikefullerton.agenticdeveloperhubsdk.AvatarAnimationEngine.tests.macos
         GENERATE_INFOPLIST_FILE: YES
 
 schemes:

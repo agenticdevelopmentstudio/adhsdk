@@ -1,5 +1,5 @@
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/HTDV/` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/HTDV/` |
 

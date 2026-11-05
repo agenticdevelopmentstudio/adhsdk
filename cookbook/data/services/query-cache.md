@@ -1,7 +1,7 @@
 ---
 id: 0fcd16c1-a8da-4184-b63f-97b68ed6378d
 title: "Query Cache"
-domain: adtoolkit://cookbook/data/services/query-cache
+domain: adhsdk://cookbook/data/services/query-cache
 type: ingredient
 version: 1.2.1
 status: review
@@ -19,14 +19,14 @@ tags:
   - cache
   - session
 depends-on:
-  - adtoolkit://cookbook/data/services/auth/auth-client
+  - adhsdk://cookbook/data/services/auth/auth-client
 related:
-  - adtoolkit://cookbook/data/services/resource-data
+  - adhsdk://cookbook/data/services/resource-data
 references:
-  - packages/web/packages/data/src/query/index.tsx (agenticdevelopertoolkit)
-  - packages/web/packages/data/src/query/__tests__/toolkit-query-provider.test.tsx (agenticdevelopertoolkit)
-  - packages/web/packages/data/src/__tests__/query-client.test.tsx (agenticdevelopertoolkit)
-  - packages/web/packages/auth/src/tokens.ts (agenticdevelopertoolkit)
+  - packages/web/packages/data/src/query/index.tsx (adhsdk)
+  - packages/web/packages/data/src/query/__tests__/toolkit-query-provider.test.tsx (adhsdk)
+  - packages/web/packages/data/src/__tests__/query-client.test.tsx (adhsdk)
+  - packages/web/packages/auth/src/tokens.ts (adhsdk)
 approved-by: ""
 approved-date: ""
 ---
@@ -273,7 +273,7 @@ Not applicable: this component contains no logging call of any kind.
   `useQueryClient` back the cache and its React binding; a module-scope
   `let` binding backs the one-per-tab singleton; `window.addEventListener
   ('storage', ...)` backs the cross-tab session watch;
-  `@agentic-toolkit/auth/client`'s `onSessionChange`/`readTokenSubject`
+  `@adh-sdk/auth/client`'s `onSessionChange`/`readTokenSubject`
   supply the same-tab session signal and the principal comparison value.
 - **SwiftUI / AppKit / UIKit**: A `final class` or `actor`-isolated cache
   object (an `NSCache`- or `Dictionary`-backed store keyed the same way the
@@ -343,7 +343,7 @@ process.
 **Decision**: `useToolkitQueryClient()` passes the toolkit singleton
 explicitly to react-query's `useQueryClient(client)` rather than relying on
 `useContext`/`QueryClientContext` alone.
-**Rationale**: Dozens of call sites across `@agentic-toolkit/*` packages use
+**Rationale**: Dozens of call sites across `@adh-sdk/*` packages use
 this hook, and requiring every one of them to be wrapped in a
 `ToolkitQueryProvider` — or trusting that a host's own `QueryClientProvider`
 resolves to the toolkit's physical copy of `@tanstack/react-query` rather

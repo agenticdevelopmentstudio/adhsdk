@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
-import { RailHostBoundary } from "@agentic-toolkit/resource";
+import { RailHostBoundary } from "@adh-sdk/resource";
 
 const listAccounts = vi.fn();
 const listOffers = vi.fn();

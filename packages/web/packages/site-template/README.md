@@ -1,14 +1,14 @@
-# @agenticdevelopertoolkit/site-template
+# @adh-sdk/site-template
 
 The content-site frame. Every content site renders the same page: a window-tall hero, a run of
 scrolling bands, the burger drawer and bitbag docked at the foot of the window. This package owns
 all of that. A site supplies its copy, its config and any custom slots, and nothing of the frame.
 
-It is built on the landing kit (`@agenticdevelopertoolkit/landing`) and never imports adh.
+It is built on the landing kit (`@adh-sdk/landing`) and never imports adh.
 
 ## Exports
 
-From `@agenticdevelopertoolkit/site-template` (server-safe, no `'use client'`):
+From `@adh-sdk/site-template` (server-safe, no `'use client'`):
 
 | Export | What it is |
 | --- | --- |
@@ -26,14 +26,14 @@ From `@agenticdevelopertoolkit/site-template` (server-safe, no `'use client'`):
 | `frameSiteUrl(fallbackPort, configured?)` | `SITE_URL`, else `configured` (`site.json`'s `siteUrl`, which the assembler passes), else the Vercel production URL, else `http://localhost:<port>`. |
 | types `BandLook`, `CopyText`, `FrameCopy`, `FrameConfig`, `SlotMap` | The shapes a site fills in. |
 
-From `@agenticdevelopertoolkit/site-template/client` (`'use client'`):
+From `@adh-sdk/site-template/client` (`'use client'`):
 
 | Export | What it is |
 | --- | --- |
 | `SiteChrome({ copy, page, extra })` | The burger drawer: a Home row labelled `copy.nav.home`, one link per section, then `extra` (`site.json`'s `drawer` rows, `{ href, nav }`, each labelled by the copy's `nav.extra[nav]` — site.md's `# nav` / `## extra` list; a `nav` the copy does not word throws), then — when the copy has `nav.contact` — a row with that label mailing `copy.contact.email`. Every label is the site's copy; the frame words nothing. The foot carries the drawer hello, the contact email and, when the copy words one, the byline. When the copy has `nav.action` (`{ label, href }`, a paragraph that is only a link), it is a ghost button at the bar's right end on a wide viewport. |
 | `SiteBitbag(props?)` | bitbag, client-only via `next/dynamic`, with his dock stylesheet; his `BitbagStandalone` props pass through (`voice`, `rest`, `theme`). Mount once beside `<main>`. |
 
-From `@agenticdevelopertoolkit/site-template/next` (node, for `next.config.ts` only; never a page):
+From `@adh-sdk/site-template/next` (node, for `next.config.ts` only; never a page):
 
 | Export | What it is |
 | --- | --- |
@@ -202,7 +202,7 @@ One exemption: under `next typegen`, which the workspace typecheck runs before `
 variable in a rewrite's destination resolves to `http://typegen-only.invalid` instead of
 throwing. Typegen types each rewrite's source and never serves a destination, but it loads the
 config under the same phase as `next build`, so the typecheck says which it is with
-`TYPEGEN_ONLY=1` (read by `@agentic-toolkit/next-env`'s `isTypegenOnly`). `next build` and
+`TYPEGEN_ONLY=1` (read by `@adh-sdk/next-env`'s `isTypegenOnly`). `next build` and
 `next dev` never set it and still fail by name. `publicEnv` is not exempt.
 
 `publicEnv` names go to Next's `env` (inlined into client code). One with no value anywhere fails
@@ -258,7 +258,7 @@ Three switches for a site whose pages are the fleet's app rather than the frame:
 - `"buildIdentity": true` — `frameBuildIdentity` adds `NEXT_PUBLIC_ADH_SITE_VERSION` (the app's
   `VERSION` file, from `site/app-root/VERSION`) and `NEXT_PUBLIC_ADH_RELEASE` (Vercel's or
   Railway's commit, else `git rev-parse HEAD`) to the client env: what the fleet footer shows.
-  It reads them through `@agentic-toolkit/next-env`, bundled into `./next`.
+  It reads them through `@adh-sdk/next-env`, bundled into `./next`.
 - `"staleTimes": { "dynamic": 30 }` — Next's `experimental.staleTimes`, in whole seconds.
 
 Each is left out of `src/site/next.ts` when the site leaves it out of `site.json`.
@@ -328,7 +328,7 @@ JSON cannot hold; one every site needs belongs in the skeleton's config.
 `"analytics": true` writes `src/site/analytics.tsx` mounting `@vercel/analytics` and
 `@vercel/speed-insights` (added to the app's dependencies at the template's pinned ranges) when
 `DEPLOYMENT_ENV` is `production`, and the toolkit's `PostHogAnalytics` (linked from
-`@agenticdevelopertoolkit/analytics`) on every deploy; PostHog stays off wherever the project has
+`@adh-sdk/analytics`) on every deploy; PostHog stays off wherever the project has
 no `NEXT_PUBLIC_POSTHOG_KEY`. The root layout renders the file on every route. Absent or false, it
 renders nothing and none of the three packages is added.
 
@@ -455,7 +455,7 @@ built for node as `dist/next.js`: only `next.config.ts` imports it.
 ## Scripts
 
 ```
-pnpm --filter @agenticdevelopertoolkit/site-template run build
-pnpm --filter @agenticdevelopertoolkit/site-template run test
-pnpm --filter @agenticdevelopertoolkit/site-template run lint
+pnpm --filter @adh-sdk/site-template run build
+pnpm --filter @adh-sdk/site-template run test
+pnpm --filter @adh-sdk/site-template run lint
 ```

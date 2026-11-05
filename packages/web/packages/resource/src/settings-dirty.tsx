@@ -11,7 +11,7 @@ import {
   type ReactNode,
 } from "react";
 import { useRouter } from "next/navigation";
-import { UnsavedChangesGuard } from "@agenticdevelopertoolkit/ui/components/unsaved-changes-guard";
+import { UnsavedChangesGuard } from "@adh-sdk/ui/components/unsaved-changes-guard";
 import { useRailExitGuard, useRailHost } from "./rail-host";
 
 type SettingsDirtyContextValue = {

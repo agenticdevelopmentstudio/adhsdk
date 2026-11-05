@@ -20,5 +20,5 @@
   the fixed field width (52pt default here, per **default-field-width**),
   constrained onto the wrapped field's own width by the wrapped view's own
   fixed-width requirement (see
-  `adtoolkit://cookbook/ui/settings/rows/number-field-view#requirements/fixes-field-width`).
+  `adhsdk://cookbook/ui/settings/rows/number-field-view#requirements/fixes-field-width`).
 

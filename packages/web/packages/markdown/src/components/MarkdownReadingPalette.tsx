@@ -1,10 +1,10 @@
 // NO "use client" — a plain server-safe wrapper (no hooks, no client-only APIs) so an async
 // RSC (e.g. the research site's PaperRenderer) can render it without becoming a Client
-// Component. See @agenticdevelopertoolkit/markdown's own note on the "use client" propagation trap:
+// Component. See @adh-sdk/markdown's own note on the "use client" propagation trap:
 // one client export in this barrel puts the directive on the WHOLE bundle.
 
 import type { CSSProperties, ReactNode } from 'react'
-import { cn } from '@agenticdevelopertoolkit/ui/lib/utils'
+import { cn } from '@adh-sdk/ui/lib/utils'
 import { DEFAULT_THEME_ID, getThemeById } from '../themes/registry'
 
 export interface MarkdownReadingPaletteProps {
@@ -46,7 +46,7 @@ export interface MarkdownReadingPaletteProps {
  *
  * This is the same boilerplate the research site's `PaperRenderer` and the search package's
  * `MarkdownPreview` each hand-roll around `getThemeById(DEFAULT_THEME_ID)` —
- * `@agenticdevelopertoolkit/markdown`'s own knowledge about its own palette, so it lives here rather
+ * `@adh-sdk/markdown`'s own knowledge about its own palette, so it lives here rather
  * than being copied a third time by `MarkdownDocumentEditor`'s preview pane. Those two
  * existing call sites are NOT migrated to this — that is separate work, out of scope here.
  *

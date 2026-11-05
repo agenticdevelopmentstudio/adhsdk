@@ -1,7 +1,7 @@
 ---
 id: f361ebe1-69b9-4089-8079-94f4b26a37d3
 title: Conditional
-domain: agenticdevelopertoolkit://recipes/conditional
+domain: adhsdk://recipes/conditional
 type: ingredient
 version: 1.1.1
 status: review

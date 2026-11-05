@@ -1,7 +1,7 @@
 ---
 id: a8f66760-7db0-4a10-927e-856c2170dd4f
 title: "ListHeader"
-domain: agenticdevelopertoolkit://recipes/list-header
+domain: adhsdk://recipes/list-header
 type: ingredient
 version: 1.2.1
 status: review
@@ -22,12 +22,12 @@ tags:
   - toolbar
   - ui
 depends-on:
-  - agenticdevelopertoolkit://recipes/button-bar
-  - agenticdevelopertoolkit://recipes/input
+  - adhsdk://recipes/button-bar
+  - adhsdk://recipes/input
 related:
-  - agenticdevelopertoolkit://recipes/list-with-details-pane
-  - agenticdevelopertoolkit://recipes/search-filter-bar
-  - agenticdevelopertoolkit://recipes/hierarchical-topic-detail
+  - adhsdk://recipes/list-with-details-pane
+  - adhsdk://recipes/search-filter-bar
+  - adhsdk://recipes/hierarchical-topic-detail
 references: []
 approved-by: ''
 approved-date: ''
@@ -37,7 +37,7 @@ approved-date: ''
 
 ## Overview
 
-The one home for the "header above a list" pattern in `@agenticdevelopertoolkit/ui`
+The one home for the "header above a list" pattern in `@adh-sdk/ui`
 (`blocks/list-header.tsx`): a single row hosting an optional left-aligned title,
 a filter text field (search icon, controlled value), a flexible space, and
 right-aligned actions (e.g. a `+ New` button, Delete) — all inside the same
@@ -230,7 +230,7 @@ performance SHOULD add their own logging at the consumer level.
 ## Platform Notes
 
 - **React/Web**: Implemented in `packages/web/packages/ui/src/blocks/list-header.tsx`,
-  exported from `@agenticdevelopertoolkit/ui/blocks`. Built on `ButtonBar` (toolbar
+  exported from `@adh-sdk/ui/blocks`. Built on `ButtonBar` (toolbar
   container, `role="toolbar"`) and the shared `Input` (native `<input type="search">`);
   uses Lucide's `Search` icon (`aria-hidden`). Behavior (see **autofocus-remount**):
   the filter field is focused whenever the header is newly attached to the DOM,

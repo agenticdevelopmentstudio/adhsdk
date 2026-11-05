@@ -1,8 +1,8 @@
-// WRITTEN by @agenticdevelopertoolkit/site-template's assembler — do not edit. Change the
+// WRITTEN by @adh-sdk/site-template's assembler — do not edit. Change the
 // skeleton in the toolkit and re-assemble.
 import { fileURLToPath } from 'node:url'
 import type { NextConfig } from 'next'
-import { frameBuildIdentity, frameNext, frameThemeFonts, frameWorkspaceRoot } from '@agenticdevelopertoolkit/site-template/next'
+import { frameBuildIdentity, frameNext, frameThemeFonts, frameWorkspaceRoot } from '@adh-sdk/site-template/next'
 import { nextSite, transpilePackages } from './src/site/next'
 
 /** The app's own directory, which holds its `public/` and its `VERSION` file. */

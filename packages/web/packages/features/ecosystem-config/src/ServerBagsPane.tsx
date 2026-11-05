@@ -15,7 +15,7 @@ import {
   type EcosystemServerBag,
   type EcosystemServerBagCreate,
   type EcosystemServerBagUpdate,
-} from "@agentic-toolkit/data/ecosystem-config";
+} from "@adh-sdk/data/ecosystem-config";
 import {
   bagFormBlockedReason,
   duplicateBagKeyMessage,
@@ -23,26 +23,26 @@ import {
   BAG_KEY_REQUIRED_MESSAGE,
   INVALID_JSON_MESSAGE,
 } from "./dialog-state";
-import { errorMessage } from "@agenticdevelopertoolkit/ui/lib/errors";
-import { useAction } from "@agenticdevelopertoolkit/ui/hooks/useAction";
-import { DataTable, type DataTableColumn } from "@agenticdevelopertoolkit/ui/components/data-table";
-import { Input } from "@agenticdevelopertoolkit/ui/components/input";
-import { Textarea } from "@agenticdevelopertoolkit/ui/components/textarea";
-import { Button } from "@agenticdevelopertoolkit/ui/components/button";
-import { Alert, AlertTitle, AlertDescription } from "@agenticdevelopertoolkit/ui/components/alert";
+import { errorMessage } from "@adh-sdk/ui/lib/errors";
+import { useAction } from "@adh-sdk/ui/hooks/useAction";
+import { DataTable, type DataTableColumn } from "@adh-sdk/ui/components/data-table";
+import { Input } from "@adh-sdk/ui/components/input";
+import { Textarea } from "@adh-sdk/ui/components/textarea";
+import { Button } from "@adh-sdk/ui/components/button";
+import { Alert, AlertTitle, AlertDescription } from "@adh-sdk/ui/components/alert";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogDescription,
-} from "@agenticdevelopertoolkit/ui/components/dialog";
-import { DialogActions } from "@agenticdevelopertoolkit/ui/components/dialog-actions";
-import { AlertModal } from "@agenticdevelopertoolkit/ui/components/alert-modal";
-import { UnsavedChangesAlert } from "@agenticdevelopertoolkit/ui/components/unsaved-changes-alert";
-import { Field } from "@agenticdevelopertoolkit/ui/blocks/field";
-import { DialogErrorText, ErrorText } from "@agenticdevelopertoolkit/ui/components/error-text";
-import { DetailsPane, useReportBusy, useReportSettingsDirty } from "@agentic-toolkit/resource";
+} from "@adh-sdk/ui/components/dialog";
+import { DialogActions } from "@adh-sdk/ui/components/dialog-actions";
+import { AlertModal } from "@adh-sdk/ui/components/alert-modal";
+import { UnsavedChangesAlert } from "@adh-sdk/ui/components/unsaved-changes-alert";
+import { Field } from "@adh-sdk/ui/blocks/field";
+import { DialogErrorText, ErrorText } from "@adh-sdk/ui/components/error-text";
+import { DetailsPane, useReportBusy, useReportSettingsDirty } from "@adh-sdk/resource";
 
 /**
  * The empty list, hoisted to module scope: `bagsQuery.data ?? []` would otherwise mint a
@@ -354,7 +354,7 @@ export function BagDialog({
   const formRef = useRef<HTMLFormElement>(null);
 
   // The gate — dirty check, blocking reason and every message string — lives in
-  // @agentic-toolkit/adh/settings-dialogs, shared with admin's server-bags page, which renders the same
+  // @adh-sdk/adh/settings-dialogs, shared with admin's server-bags page, which renders the same
   // dialog against the same endpoint. It used to be an inline copy here, byte-equivalent and kept
   // that way by hand: measured over there, unmeasured here.
   const form = { key, valueText, description };

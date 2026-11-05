@@ -1,5 +1,5 @@
 import type { ReactElement, ReactNode } from 'react';
-import { type SiteId } from '@agentic-toolkit/adh-registry';
+import { type SiteId } from '@adh-sdk/adh-registry';
 export type SiteWordmarkProps = {
     /** The marketing site whose brand this wordmark renders. */
     siteId: SiteId;

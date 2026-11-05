@@ -1,7 +1,7 @@
 ---
 id: b0ce8cbb-31ac-425a-889c-68e699d24578
 title: Table
-domain: agenticdevelopertoolkit://recipes/table
+domain: adhsdk://recipes/table
 type: ingredient
 version: 1.1.1
 status: review
@@ -22,7 +22,7 @@ tags:
 - accessibility
 depends-on: []
 related:
-- agenticdevelopertoolkit://recipes/data-table
+- adhsdk://recipes/data-table
 references:
 - https://www.w3.org/WAI/tutorials/tables/
 - https://html.spec.whatwg.org/multipage/tables.html#the-caption-element

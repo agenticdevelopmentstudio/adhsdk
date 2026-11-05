@@ -1,7 +1,7 @@
 ---
 id: e36ff99d-0ebd-42ca-87f0-2881a8bfedea
 title: "Hierarchical Category Browser"
-domain: adtoolkit://cookbook/ui/navigation/hierarchical-category-browser
+domain: adhsdk://cookbook/ui/navigation/hierarchical-category-browser
 type: recipe
 version: 1.3.5
 status: review
@@ -22,18 +22,18 @@ tags:
   - navigation
   - master-detail
 ingredients:
-  - agenticdevelopertoolkit://recipes/category-picker-dialog
+  - adhsdk://recipes/category-picker-dialog
 depends-on:
-  - agenticdevelopertoolkit://recipes/hierarchical-topic-detail
+  - adhsdk://recipes/hierarchical-topic-detail
 related:
-  - agenticdevelopertoolkit://recipes/hierarchical-topic-detail
-  - agenticdevelopertoolkit://recipes/topic-detail
-  - agenticdevelopertoolkit://recipes/category-picker-dialog
-  - agenticdevelopertoolkit://recipes/list-chooser
-  - agenticdevelopertoolkit://recipes/entity-chooser
-  - agenticdevelopertoolkit://recipes/dialog
-  - agenticdevelopertoolkit://recipes/dialog-actions
-  - agenticdevelopertoolkit://recipes/alert-and-dialog
+  - adhsdk://recipes/hierarchical-topic-detail
+  - adhsdk://recipes/topic-detail
+  - adhsdk://recipes/category-picker-dialog
+  - adhsdk://recipes/list-chooser
+  - adhsdk://recipes/entity-chooser
+  - adhsdk://recipes/dialog
+  - adhsdk://recipes/dialog-actions
+  - adhsdk://recipes/alert-and-dialog
 references: []
 approved-by: ""
 approved-date: ""
@@ -46,11 +46,11 @@ approved-date: ""
 The **Hierarchical Category Browser** is the shared rail every markdown surface
 that classifies its documents into a category hierarchy — the notebook today, and
 research — mounts as the leading levels of a
-[Hierarchical Topic Detail](agenticdevelopertoolkit://recipes/hierarchical-topic-detail)
+[Hierarchical Topic Detail](adhsdk://recipes/hierarchical-topic-detail)
 stack. It is a thin, category-specific layer over that substrate: HTDV owns the stack's
 chrome, deep linking, breadcrumb, disclosure and narrow-mode behavior (see
-[Hierarchical Topic Detail](agenticdevelopertoolkit://recipes/hierarchical-topic-detail)
-and [Topic Detail](agenticdevelopertoolkit://recipes/topic-detail) for that contract,
+[Hierarchical Topic Detail](adhsdk://recipes/hierarchical-topic-detail)
+and [Topic Detail](adhsdk://recipes/topic-detail) for that contract,
 which this recipe does not restate). What this recipe adds is everything that is TRUE OF
 **CATEGORIES** on top of it:
 
@@ -69,7 +69,7 @@ which this recipe does not restate). What this recipe adds is everything that is
   ADDS one and rewrites nothing. Without the second, the DAG is unreachable from the
   rail and the hierarchy reads as a tree.
 
-It is built as a single hook, `useCategoryLevels` (`@agentic-toolkit/categories`),
+It is built as a single hook, `useCategoryLevels` (`@adh-sdk/categories`),
 that a host calls once with its raw category rows and the URL's resolved chain,
 and gets back `levels: TopicLevel[]` (feed straight into
 `HierarchicalDetailView`/`HierarchicalTopicDetail`), `scope: CategoryScope` (what
@@ -83,14 +83,14 @@ about the rail itself differs between them (see Design Decisions).
 
 | Name | Domain | Role | Required | Configuration |
 |---|---|---|---|---|
-| Category Picker | agenticdevelopertoolkit://recipes/category-picker-dialog | The dialog behind BOTH place-picking gear actions — browses the folded forest and returns a place to file the selected category under. | yes | Move: `confirmLabel="Move"`, `allowRoot`, `rootLabel` = "Top level" or "Remove from “<parent>”" (see #integration-requirements/not-call-an-unfiling-a-rooting), `disabledIds` = the moved category + its own descendants. Also file: `confirmLabel="File"`, `initialSelectedId={null}`, NO `allowRoot` (a root is a category with no parents, so there is nothing to add), `disabledIds` = the category + its descendants + every parent it is ALREADY filed under. |
+| Category Picker | adhsdk://recipes/category-picker-dialog | The dialog behind BOTH place-picking gear actions — browses the folded forest and returns a place to file the selected category under. | yes | Move: `confirmLabel="Move"`, `allowRoot`, `rootLabel` = "Top level" or "Remove from “<parent>”" (see #integration-requirements/not-call-an-unfiling-a-rooting), `disabledIds` = the moved category + its own descendants. Also file: `confirmLabel="File"`, `initialSelectedId={null}`, NO `allowRoot` (a root is a category with no parents, so there is nothing to add), `disabledIds` = the category + its descendants + every parent it is ALREADY filed under. |
 
 The other three gear dialogs (Rename, Delete, and the one-field Add) are plain
 compositions of the shared `Dialog`/`Input`/`DialogActions`/`AlertModal`
 primitives with no dedicated recipe of their own — see
-[Dialog](agenticdevelopertoolkit://recipes/dialog),
-[Dialog Actions](agenticdevelopertoolkit://recipes/dialog-actions) and
-[Alert and Dialog](agenticdevelopertoolkit://recipes/alert-and-dialog) for those.
+[Dialog](adhsdk://recipes/dialog),
+[Dialog Actions](adhsdk://recipes/dialog-actions) and
+[Alert and Dialog](adhsdk://recipes/alert-and-dialog) for those.
 `useCategoryLevels` wires all four; this recipe documents the whole.
 
 ## Integration Requirements
@@ -116,7 +116,7 @@ primitives with no dedicated recipe of their own — see
   own `sortOrder`, then name — and MUST NOT re-sort. The root is the one exception
   (above) because it is the one level with no context to read an order from; deeper,
   the arriving order is the owner's, `buildCategoryTree` documents that it preserves
-  it, and the [Category Picker](agenticdevelopertoolkit://recipes/category-picker-dialog)
+  it, and the [Category Picker](adhsdk://recipes/category-picker-dialog)
   browsing the same forest does not sort — so a rail
   that re-sorted would discard a deliberate ordering and disagree with the picker
   about the same subtree in the same session.
@@ -254,7 +254,7 @@ primitives with no dedicated recipe of their own — see
 
 The browser contributes N rail levels (N = the walked depth + 1) into an
 existing
-[Hierarchical Topic Detail](agenticdevelopertoolkit://recipes/hierarchical-topic-detail)
+[Hierarchical Topic Detail](adhsdk://recipes/hierarchical-topic-detail)
 stack; it draws no chrome of its own:
 
 ```
@@ -275,7 +275,7 @@ stack; it draws no chrome of its own:
 ```
 
 Narrow-mode drill-down, disclosure, and the breadcrumb are entirely HTDV's — see
-[Hierarchical Topic Detail](agenticdevelopertoolkit://recipes/hierarchical-topic-detail)'s
+[Hierarchical Topic Detail](adhsdk://recipes/hierarchical-topic-detail)'s
 own Layout section.
 
 ## Shared State
@@ -287,7 +287,7 @@ own Layout section.
 | List scope | the resolved chain, via `scopeFor` | the host's item-list fetch | hook → host | `scope: CategoryScope` result field (`all` / `uncategorized` / `named`) — an EXACT-match name, not a descendant-inclusive filter |
 | Rail levels | the walk over `tree` + `chain` | the enclosing `HierarchicalDetailView`/`HierarchicalTopicDetail` | hook → HTDV | `levels: TopicLevel[]` result field, appended before the host's own (e.g. note/document) levels |
 | Gear target | the level closure at render time (`selectedNode`, `levelParent`) | the four dialogs | hook (internal) | `pending: { action, target }` state, captured fresh each render so a stale target can never survive a rename (HTDV's `levelsKey` ignores `ReactNode` props) |
-| Write result | `taxonomyApi`/`markdownApi` (`@agentic-toolkit/data/markdown`) | the host's list refetch | hook → host | `onChanged: () => void \| Promise<void>` option, called after every successful write |
+| Write result | `taxonomyApi`/`markdownApi` (`@adh-sdk/data/markdown`) | the host's list refetch | hook → host | `onChanged: () => void \| Promise<void>` option, called after every successful write |
 
 ## Integration Test Vectors
 
@@ -387,8 +387,8 @@ own Layout section.
 
 ## Platform Notes
 
-- **React / Web (TypeScript):** `packages/web/packages/features/categories/src/useCategoryLevels.tsx`, exported from `@agentic-toolkit/categories`. `"use client"`.
-- Built on `buildCategoryTree`/`resolveCategoryChain`/`categoryKey`/`chainAfterRename`/`chainAfterMove`/`chainAfterDelete` (which returns `null` for an unfiling that leaves the category filed elsewhere) (`packages/web/packages/ui/src/blocks/category-tree.ts`) and `CategoryGearMenu`/`CategoryPickerDialog`/`CategoryRenameDialog`/`CategoryDeleteDialog` (`packages/web/packages/ui/src/blocks/*`), all re-exported from `@agenticdevelopertoolkit/ui/blocks`.
+- **React / Web (TypeScript):** `packages/web/packages/features/categories/src/useCategoryLevels.tsx`, exported from `@adh-sdk/categories`. `"use client"`.
+- Built on `buildCategoryTree`/`resolveCategoryChain`/`categoryKey`/`chainAfterRename`/`chainAfterMove`/`chainAfterDelete` (which returns `null` for an unfiling that leaves the category filed elsewhere) (`packages/web/packages/ui/src/blocks/category-tree.ts`) and `CategoryGearMenu`/`CategoryPickerDialog`/`CategoryRenameDialog`/`CategoryDeleteDialog` (`packages/web/packages/ui/src/blocks/*`), all re-exported from `@adh-sdk/ui/blocks`.
 - The three route-following functions, `chainAfterRename`, `chainAfterMove` and
   `chainAfterDelete`, sit in
   `packages/web/packages/ui/src/blocks/category-tree.ts`
@@ -396,7 +396,7 @@ own Layout section.
   forest and a slug chain, with no notion of a notebook, a list query, or a network.
   `packages/web/packages/features/categories/src/category-scope.ts` re-exports them, so the
   import site every consumer already names still works, and anything that links only
-  `@agenticdevelopertoolkit/ui` (the showcase demo among them) calls the SAME function the hub does
+  `@adh-sdk/ui` (the showcase demo among them) calls the SAME function the hub does
   rather than mirroring it.
 - `CategoryScope` and the `-all`/`-none` synthetic-row slugs live in
   `packages/web/packages/features/categories/src/category-scope.ts`, imported by both hosts —
@@ -405,7 +405,7 @@ own Layout section.
 - Consumers: `packages/web/packages/features/notebook/src/NotebookPane.tsx` (rail + note list, `itemNoun="notes"`) and `packages/web/packages/features/research/src/ResearchPane.tsx` (rail + document list, `itemNoun="documents"`), each supplying its own `rows` fetch, `idPrefix`, and `workspaceSlug`.
 - Demo: `local/ui-showcase/app/page.tsx` (Topic id `hierarchical-category-browser`) + the showcase source registry. The demo assembles the same `packages/web/packages/ui/src/blocks` primitives this hook composes — `buildCategoryTree`, `chainAfterRename`, `chainAfterMove`, `CategoryGearMenu`, `CategoryPickerDialog`, `CategoryRenameDialog`, `CategoryDeleteDialog` — against an in-memory `CategoryTreeNode[]` fixture, since `useCategoryLevels` itself reaches a real `taxonomyApi`/`markdownApi` the showcase has no backend for.
 - Responsive: verify via the ui-showcase demo at 375 / 768 / 1440 — the rail levels inherit
-  [Hierarchical Topic Detail](agenticdevelopertoolkit://recipes/hierarchical-topic-detail)'s
+  [Hierarchical Topic Detail](adhsdk://recipes/hierarchical-topic-detail)'s
   own disclosure/narrow-mode behavior; this recipe adds no layout of its own to verify beyond
   the gear menu and its dialogs at each width.
 - **SwiftUI**: Not applicable — web-only (platforms: typescript, web).
@@ -457,7 +457,7 @@ own Layout section.
   **Approved**: pending
 - **Decision**: The gear reads its target from a plain prop, every render.
   **Rationale**: `CategoryGearMenu` is deliberately dumb (see
-  [Category Picker](agenticdevelopertoolkit://recipes/category-picker-dialog)'s
+  [Category Picker](adhsdk://recipes/category-picker-dialog)'s
   sibling components) and the hook feeds it `selectedNode`/`levelParent`
   recomputed in the SAME render that builds `selectedId` — because HTDV's
   `levelsKey` cache ignores `ReactNode` props, a gear that closed over a stale
@@ -480,7 +480,7 @@ own Layout section.
   is the owner's own arrangement, and `buildCategoryTree` promises to
   preserve it. Sorting everywhere was one line shorter and made the rail
   contradict both that promise and the
-  [Category Picker](agenticdevelopertoolkit://recipes/category-picker-dialog)
+  [Category Picker](adhsdk://recipes/category-picker-dialog)
   rendering the same subtree unsorted beside it.
   **Approved**: pending
 - **Decision**: A move writes the new parent edge before removing the old one
@@ -529,9 +529,9 @@ Separation-of-concerns is passed: tree shaping lives in `category-tree.ts`, the 
 | 1.0.0 | 2026-08-23 | Mike Fullerton | Initial recipe, documenting `useCategoryLevels` and the notebook/research rail it drives. |
 | 1.1.0 | 2026-08-24 | Mike Fullerton | Added the fifth gear verb, Also file (`file-a-category-in-a-second-place`), so the DAG is reachable from the rail; made the Move picker's no-parent row say whether it roots or merely unfiles (`not-call-an-unfiling-a-rooting`); added slug de-collision (`select-by-slug-not-id`) and the route-following rules for a rename, a move, and a delete (`follow-a-rename-to-the-new-slug`, `follow-a-move-to-its-new-place`, `follow-a-delete-to-the-surviving-level`), the contested-slug guard (`not-guess-a-contested-slug`), and the half-move failure-handling rules (`add-before-remove-on-move`, `refresh-before-surfacing-a-half-move`, `skip-an-existing-edge-on-retry`). |
 | 1.2.0 | 2026-09-23 | Mike Fullerton | Renamed every requirement to subject-only kebab-case, dropping the old prefix everywhere it is cited. |
-| 1.3.0 | 2026-09-23 | Mike Fullerton | Lint pass: replaced wiki-links with full `adtoolkit://` recipe links and converted backtick requirement citations to `#integration-requirements/<name>` fragments; split `file-a-category-in-a-second-place` and `follow-a-move-to-its-new-place` into separately named requirements (`disable-not-hide-an-invalid-file-target`, `not-navigate-on-file`, `rederive-the-moved-segment-not-carry-it-over`, `not-navigate-on-a-move-off-chain-or-failed`); promoted three MUST rules out of Design Decisions into named Integration Requirements (`add-before-remove-on-move`, `refresh-before-surfacing-a-half-move`, `skip-an-existing-edge-on-retry`); reformatted every Design Decision into Decision/Rationale/Approved form and removed a dangling reference to an outside plan document; rebuilt the Compliance table against real catalog checks (Accessibility, Internationalization) in place of invented categories; added the missing rename-follow test vector and Also file to the disabled-action vectors, then renumbered every vector ID in order; corrected the `clear-to-the-parent-level` wording and the "Renaming the currently-open category" edge case to state the current (immediate) behavior, and moved two edge cases' historical narrative out of Edge Cases; corrected `ui/src/blocks/*` paths to their repo-rooted `external/adhsdk/...` form and the route-following function count from two to three; shortened the frontmatter summary and dropped a tag past the five-tag limit; added SwiftUI/Compose/AppKit-UIKit/WinUI 3 Platform Notes bullets; added `dialog`, `dialog-actions`, and `alert-and-dialog` to `related`. |
+| 1.3.0 | 2026-09-23 | Mike Fullerton | Lint pass: replaced wiki-links with full `adhsdk://` recipe links and converted backtick requirement citations to `#integration-requirements/<name>` fragments; split `file-a-category-in-a-second-place` and `follow-a-move-to-its-new-place` into separately named requirements (`disable-not-hide-an-invalid-file-target`, `not-navigate-on-file`, `rederive-the-moved-segment-not-carry-it-over`, `not-navigate-on-a-move-off-chain-or-failed`); promoted three MUST rules out of Design Decisions into named Integration Requirements (`add-before-remove-on-move`, `refresh-before-surfacing-a-half-move`, `skip-an-existing-edge-on-retry`); reformatted every Design Decision into Decision/Rationale/Approved form and removed a dangling reference to an outside plan document; rebuilt the Compliance table against real catalog checks (Accessibility, Internationalization) in place of invented categories; added the missing rename-follow test vector and Also file to the disabled-action vectors, then renumbered every vector ID in order; corrected the `clear-to-the-parent-level` wording and the "Renaming the currently-open category" edge case to state the current (immediate) behavior, and moved two edge cases' historical narrative out of Edge Cases; corrected `ui/src/blocks/*` paths to their repo-rooted `external/adhsdk/...` form and the route-following function count from two to three; shortened the frontmatter summary and dropped a tag past the five-tag limit; added SwiftUI/Compose/AppKit-UIKit/WinUI 3 Platform Notes bullets; added `dialog`, `dialog-actions`, and `alert-and-dialog` to `related`. |
 | 1.3.1 | 2026-09-25 | Mike Fullerton | Moved into the library cookbook; added Reference Implementations. |
 | 1.3.2 | 2026-09-27 | Mike Fullerton | Moved into the concept grouping. |
 | 1.3.3 | 2026-10-04 | Mike Fullerton | Filled Reference Implementations, WinUI 3 translation guidance and Compliance rows |
-| 1.3.4 | 2026-10-04 | Mike Fullerton | Legacy recipe citations restored to the legacy recipes' own agenticdevelopertoolkit://recipes/ domains; the adtoolkit://recipes/ form named nothing. |
+| 1.3.4 | 2026-10-04 | Mike Fullerton | Legacy recipe citations restored to the legacy recipes' own adhsdk://recipes/ domains; the adhsdk://recipes/ form named nothing. |
 | 1.3.5 | 2026-10-04 | Mike Fullerton | Matches its type's shape: required fields, title heading, and only the type's own sections. |

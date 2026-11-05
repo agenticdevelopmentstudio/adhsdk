@@ -1,7 +1,7 @@
 ---
 id: 45c318d7-dd3e-491c-8811-eb2a3d79bca9
 title: "Integrations"
-domain: adtoolkit://cookbook/adh/hub/integrations
+domain: adhsdk://cookbook/adh/hub/integrations
 type: ingredient
 version: 1.1.0
 status: review
@@ -24,16 +24,16 @@ tags:
   - webhooks
 depends-on: []
 related:
-  - adtoolkit://cookbook/adh/hub/access
-  - adtoolkit://cookbook/adh/hub/ecosystems/ecosystem-config
+  - adhsdk://cookbook/adh/hub/access
+  - adhsdk://cookbook/adh/hub/ecosystems/ecosystem-config
 references:
-  - packages/web/packages/data/src/integrations/integrations.ts (agenticdevelopertoolkit)
-  - packages/web/packages/data/src/integrations/wire.ts (agenticdevelopertoolkit)
-  - packages/web/packages/data/src/integrations/index.ts (agenticdevelopertoolkit)
-  - packages/web/packages/data/src/http.ts (agenticdevelopertoolkit)
-  - packages/web/packages/data/src/client-helpers.ts (agenticdevelopertoolkit)
-  - packages/web/packages/auth/src/client.ts (agenticdevelopertoolkit)
-  - packages/web/packages/auth/src/tokens.ts (agenticdevelopertoolkit)
+  - packages/web/packages/data/src/integrations/integrations.ts (adhsdk)
+  - packages/web/packages/data/src/integrations/wire.ts (adhsdk)
+  - packages/web/packages/data/src/integrations/index.ts (adhsdk)
+  - packages/web/packages/data/src/http.ts (adhsdk)
+  - packages/web/packages/data/src/client-helpers.ts (adhsdk)
+  - packages/web/packages/auth/src/client.ts (adhsdk)
+  - packages/web/packages/auth/src/tokens.ts (adhsdk)
 approved-by: ""
 approved-date: ""
 ---
@@ -467,7 +467,7 @@ Not applicable: this component contains no logging call of any kind.
 
 - **React/Web** (source platform): `packages/web/packages/data/src/integrations/integrations.ts` and
   `wire.ts` hold the client; `integrationsApi` and the standalone OAuth-state helpers are built entirely on
-  `authedJson`/`authedRequest` from `@agentic-toolkit/auth/client` (re-exported through `./http`) and `enc`
+  `authedJson`/`authedRequest` from `@adh-sdk/auth/client` (re-exported through `./http`) and `enc`
   (`encodeURIComponent`) from `./client-helpers`; `index.ts` re-exports both files as the package's public
   surface. Requirement/operation names in this recipe map onto the module's own exports as follows:
   listing providers → `listProviders`; listing/getting/saving/deleting a provider config by provider id →

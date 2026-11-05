@@ -1,7 +1,7 @@
 ---
 id: a7c91832-4059-4e06-b8c6-e8c727567c66
 title: Avatar Engine Anim
-domain: agenticdevelopertoolkit://recipes/avatar-engine-anim
+domain: adhsdk://recipes/avatar-engine-anim
 type: ingredient
 version: 1.0.2
 status: review

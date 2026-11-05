@@ -3,15 +3,15 @@
 import { useMemo, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { RotateCcw } from "lucide-react";
-import { Badge } from "@agenticdevelopertoolkit/ui/components/badge";
-import { Button } from "@agenticdevelopertoolkit/ui/components/button";
+import { Badge } from "@adh-sdk/ui/components/badge";
+import { Button } from "@adh-sdk/ui/components/button";
 import {
   EditableList,
   useEditableList,
   type EditableListColumn,
-} from "@agenticdevelopertoolkit/ui/blocks";
-import { ErrorText } from "@agentic-toolkit/crud";
-import { ListBarActions, SettingsBody } from "@agentic-toolkit/resource";
+} from "@adh-sdk/ui/blocks";
+import { ErrorText } from "@adh-sdk/crud";
+import { ListBarActions, SettingsBody } from "@adh-sdk/resource";
 
 import {
   useArchivedWorkspaces,
@@ -20,8 +20,8 @@ import {
 } from "../api/archived-workspaces";
 import { WORKSPACES_QUERY_KEY } from "../api/workspaces";
 import { organizationsApi } from "../api/organizations";
-import { ORGANIZATIONS_QUERY_KEY } from "@agentic-toolkit/data/organizations";
-import { errMsg } from "@agentic-toolkit/data";
+import { ORGANIZATIONS_QUERY_KEY } from "@adh-sdk/data/organizations";
+import { errMsg } from "@adh-sdk/data";
 
 /** A row the caller can actually bring back: its handle is still free AND they may restore it. */
 function isRestorable(row: ArchivedWorkspace): boolean {

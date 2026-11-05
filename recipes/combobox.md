@@ -1,7 +1,7 @@
 ---
 id: 43c55f5e-d9b3-430b-9026-d0af510fda15
 title: Combobox
-domain: agenticdevelopertoolkit://recipes/combobox
+domain: adhsdk://recipes/combobox
 type: ingredient
 version: 1.2.1
 status: review
@@ -23,8 +23,8 @@ tags:
 - ui
 depends-on: []
 related:
-- agenticdevelopertoolkit://recipes/list-chooser
-- agenticdevelopertoolkit://recipes/option-menu
+- adhsdk://recipes/list-chooser
+- adhsdk://recipes/option-menu
 references:
 - https://base-ui.com/react/components/autocomplete
 approved-by: ''
@@ -175,7 +175,7 @@ No logging. Combobox is a presentational form control; it emits no structured lo
 
 ## Platform Notes
 
-- **Web (React)**: New file `packages/web/packages/ui/src/components/combobox.tsx`. Wraps Base UI's headless `Autocomplete` primitive. Export covered by the existing `./components/*` wildcard in `packages/web/packages/ui/package.json`. Dependency on `@base-ui/react/autocomplete` already present in `@agenticdevelopertoolkit/ui`. The popup is sized to Base UI's `--anchor-width` and capped by `--available-height` CSS custom properties, so it always matches the input's width and stays within the viewport at any breakpoint without component-specific responsive code.
+- **Web (React)**: New file `packages/web/packages/ui/src/components/combobox.tsx`. Wraps Base UI's headless `Autocomplete` primitive. Export covered by the existing `./components/*` wildcard in `packages/web/packages/ui/package.json`. Dependency on `@base-ui/react/autocomplete` already present in `@adh-sdk/ui`. The popup is sized to Base UI's `--anchor-width` and capped by `--available-height` CSS custom properties, so it always matches the input's width and stays within the viewport at any breakpoint without component-specific responsive code.
 - **SwiftUI**: Use a `TextField` with the `.textInputSuggestions` modifier (or `.searchSuggestions` when composed with `.searchable`) to present suggestions without handing focus to a `Menu`; bind the text to the input value and drive the suggestion list from a locally filtered `[String]`. Track the highlighted suggestion with local state and mirror Base UI's `aria-activedescendant` pattern by moving `.accessibilityFocused` to the highlighted suggestion view.
 - **Compose**: Use `ExposedDropdownMenuBox` with an editable `TextField` as its anchor and its `ExposedDropdownMenu` for the suggestion list; filter suggestions on text change, dismiss on pick or Escape via `onDismissRequest`, and expose the active item through `Modifier.semantics` so assistive tech has an equivalent to `aria-activedescendant`.
 - **AppKit / UIKit**: On AppKit, use `NSComboBox` (or an `NSTextField` with its built-in completion API) rather than hand-rolling a popover — both already provide native filtering, keyboard navigation, and `NSAccessibilityComboBoxRole`. UIKit has no native combobox equivalent, so pair a `UITextField` with an anchored `UITableView`/`UICollectionView` popover, and mirror the combobox semantics explicitly by exposing the field with `UIAccessibilityTraits` (e.g. `.adjustable`) and an `accessibilityValue` that announces the active suggestion, rather than an unnamed "ARIA equivalent."
@@ -184,7 +184,7 @@ No logging. Combobox is a presentational form control; it emits no structured lo
 ## Design Decisions
 
 **Decision**: Wrap the headless primitive, don't hand-roll. Combobox ARIA (`role`, `aria-expanded`, `aria-controls`, `aria-activedescendant`), roving activation, filtering, and floating-popup positioning are handled by Base UI's `Autocomplete`.
-**Rationale**: Reimplementing these would be error-prone and inconsistent with the rest of `@agenticdevelopertoolkit/ui`, which already composes Base UI primitives.
+**Rationale**: Reimplementing these would be error-prone and inconsistent with the rest of `@adh-sdk/ui`, which already composes Base UI primitives.
 **Approved**: pending
 
 **Decision**: Replace the native `<datalist>` pattern rather than use it directly.

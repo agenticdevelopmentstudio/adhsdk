@@ -2,7 +2,7 @@
 // The browser's side of "Auto Configure": an ADAPTER onto the shared engine, plus the
 // two detail blocks only this UI renders.
 //
-// The matching itself is @agentic-toolkit/deploy-platform/engine's — the SAME code the
+// The matching itself is @adh-sdk/deploy-platform/engine's — the SAME code the
 // Hono server runs behind POST /auto-configure. This app used to carry a hand-written
 // copy of the planner, the classifier and the runner, which is one piece of knowledge in
 // two places with nothing checking they agree: the browser and the server could
@@ -28,7 +28,7 @@ import {
   type ProjectLite,
   type SkippedAdd,
   type StatusAddApi,
-} from "@agentic-toolkit/deploy-platform/engine";
+} from "@adh-sdk/deploy-platform/engine";
 
 /** The monitored-sites client, as the engine's I/O port. The engine is pure
  *  I/O-injection: it names the calls it makes and the caller supplies them, so this is the

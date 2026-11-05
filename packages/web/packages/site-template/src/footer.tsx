@@ -1,6 +1,6 @@
 import { Fragment } from 'react'
 import type { ComponentType, ReactElement } from 'react'
-import { SiteFooter } from '@agenticdevelopertoolkit/landing'
+import { SiteFooter } from '@adh-sdk/landing'
 import type { FrameCopy } from './types'
 import { Words } from './words'
 

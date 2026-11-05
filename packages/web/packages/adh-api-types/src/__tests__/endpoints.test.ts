@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { API_ENDPOINTS, API_SCHEMAS } from '@agentic-toolkit/api-explorer/generated/endpoints.generated'
+import { API_ENDPOINTS, API_SCHEMAS } from '@adh-sdk/api-explorer/generated/endpoints.generated'
 import { ADH_SPEC_PATH, loadAdhSpec, skipNotice } from './adh-spec'
 
 // Drift gate: the committed generated module must agree with the committed

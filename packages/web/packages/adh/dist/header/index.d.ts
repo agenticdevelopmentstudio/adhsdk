@@ -37,6 +37,6 @@ export { menuIcon } from './menu-icons';
 export { PrefetchSiblingSites } from './PrefetchSiblingSites';
 export { useSiteMenu } from './useSiteMenu';
 export { getEnvOverride, parseEnvOverride, resolveEffectiveEnv, setEnvOverride, useEffectiveEnv, useEnvOverride, } from './envOverride';
-export { RECENTS_CAP, clearRecents, readRecents, recordRecent, useRecents, } from '@agentic-toolkit/adh/header/recents';
-export type { RecentPlace } from '@agentic-toolkit/adh/header/recents';
+export { RECENTS_CAP, clearRecents, readRecents, recordRecent, useRecents, } from '@adh-sdk/adh/header/recents';
+export type { RecentPlace } from '@adh-sdk/adh/header/recents';
 //# sourceMappingURL=index.d.ts.map

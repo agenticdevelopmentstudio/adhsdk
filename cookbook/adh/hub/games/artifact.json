@@ -3,7 +3,7 @@
   "meta": {
     "id": "5d44b127-7701-4d3f-8d34-fe50084e52b7",
     "title": "Hub Domain: Games",
-    "domain": "adtoolkit://cookbook/adh/hub/games",
+    "domain": "adhsdk://cookbook/adh/hub/games",
     "type": "ingredient",
     "version": "1.0.3",
     "status": "review",
@@ -26,18 +26,18 @@
       "web"
     ],
     "depends-on": [
-      "adtoolkit://cookbook/data/services/auth/auth-client"
+      "adhsdk://cookbook/data/services/auth/auth-client"
     ],
     "related": [
-      "adtoolkit://cookbook/adh/hub/ecosystems/ecosystems"
+      "adhsdk://cookbook/adh/hub/ecosystems/ecosystems"
     ],
     "references": [
-      "packages/web/packages/data/src/games/games.ts (agenticdevelopertoolkit)",
-      "packages/web/packages/data/src/games/index.ts (agenticdevelopertoolkit)",
-      "packages/web/packages/data/src/games/__tests__/games.test.ts (agenticdevelopertoolkit)",
-      "packages/web/packages/data/src/http.ts (agenticdevelopertoolkit)",
-      "packages/web/packages/data/src/client-helpers.ts (agenticdevelopertoolkit)",
-      "packages/web/packages/auth/src/client.ts (agenticdevelopertoolkit)"
+      "packages/web/packages/data/src/games/games.ts (adhsdk)",
+      "packages/web/packages/data/src/games/index.ts (adhsdk)",
+      "packages/web/packages/data/src/games/__tests__/games.test.ts (adhsdk)",
+      "packages/web/packages/data/src/http.ts (adhsdk)",
+      "packages/web/packages/data/src/client-helpers.ts (adhsdk)",
+      "packages/web/packages/auth/src/client.ts (adhsdk)"
     ],
     "approved-by": "",
     "approved-date": ""

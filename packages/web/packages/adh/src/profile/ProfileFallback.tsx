@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useState, type ReactElement, type ReactNode } from 'react'
-import type { SiteId } from '@agentic-toolkit/adh-registry'
+import type { SiteId } from '@adh-sdk/adh-registry'
 import { principalFromOrgCard, principalFromUserCard, type OrgCardBody, type UserCardBody } from './normalize'
 import { ProfileNotFound } from './ProfileNotFound'
 import { PROFILE_FRAME_CLASS } from './frame'

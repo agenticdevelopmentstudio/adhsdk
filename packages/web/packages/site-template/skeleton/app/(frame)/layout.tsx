@@ -1,9 +1,9 @@
-// WRITTEN by @agenticdevelopertoolkit/site-template's assembler — do not edit. Change the
+// WRITTEN by @adh-sdk/site-template's assembler — do not edit. Change the
 // skeleton in the toolkit and re-assemble.
 import type { ReactElement, ReactNode } from 'react'
-import { FrameFooter } from '@agenticdevelopertoolkit/site-template'
-import type { FrameCopy } from '@agenticdevelopertoolkit/site-template'
-import { SiteBitbag, SiteChrome } from '@agenticdevelopertoolkit/site-template/client'
+import { FrameFooter } from '@adh-sdk/site-template'
+import type { FrameCopy } from '@adh-sdk/site-template'
+import { SiteBitbag, SiteChrome } from '@adh-sdk/site-template/client'
 import landing from '../../src/landing'
 import siteCopy from '../../src/content/site/site.json'
 import { config } from '../../src/site/config'

@@ -3,7 +3,7 @@
   "meta": {
     "id": "b3e2495c-5478-411c-80d7-9eefc2f2e297",
     "title": "Status Server Monitor Fetch Cloudflare",
-    "domain": "adtoolkit://cookbook/status/service/monitor/fetch-cloudflare",
+    "domain": "adhsdk://cookbook/status/service/monitor/fetch-cloudflare",
     "type": "ingredient",
     "version": "1.0.2",
     "status": "review",
@@ -31,12 +31,12 @@
       "agenticdevelopercookbook://guidelines/implementing/networking/rate-limiting"
     ],
     "related": [
-      "adtoolkit://cookbook/status/service/monitor/alerts"
+      "adhsdk://cookbook/status/service/monitor/alerts"
     ],
     "references": [
-      "packages/web/packages/status-server/src/monitor/fetch-cloudflare.ts (agenticdevelopertoolkit)",
-      "packages/web/packages/status-server/test/cloudflare-deployments.test.ts (agenticdevelopertoolkit)",
-      "packages/web/packages/status-server/test/provider-cooldown.test.ts (agenticdevelopertoolkit)"
+      "packages/web/packages/status-server/src/monitor/fetch-cloudflare.ts (adhsdk)",
+      "packages/web/packages/status-server/test/cloudflare-deployments.test.ts (adhsdk)",
+      "packages/web/packages/status-server/test/provider-cooldown.test.ts (adhsdk)"
     ],
     "approved-by": "",
     "approved-date": ""

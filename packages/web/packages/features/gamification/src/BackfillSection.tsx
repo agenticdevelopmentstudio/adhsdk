@@ -3,11 +3,11 @@
 import { useState } from "react";
 import { RotateCcw } from "lucide-react";
 
-import { reportUnexpectedAuthError } from "@agentic-toolkit/auth";
-import { isForbidden } from "@agentic-toolkit/data";
-import { gamificationApi } from "@agentic-toolkit/data/gamification";
-import { Button } from "@agenticdevelopertoolkit/ui/components/button";
-import { ErrorText } from "@agenticdevelopertoolkit/ui/components/error-text";
+import { reportUnexpectedAuthError } from "@adh-sdk/auth";
+import { isForbidden } from "@adh-sdk/data";
+import { gamificationApi } from "@adh-sdk/data/gamification";
+import { Button } from "@adh-sdk/ui/components/button";
+import { ErrorText } from "@adh-sdk/ui/components/error-text";
 
 import { useRealmCatalog } from "./realm-catalog";
 import { forbiddenAware } from "./err-text";

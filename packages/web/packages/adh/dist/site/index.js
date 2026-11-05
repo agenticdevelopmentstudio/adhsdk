@@ -1,7 +1,7 @@
 // src/site/SiteConfig.ts
-import { siteIdentity } from "@agentic-toolkit/adh-registry/seo";
-import { withWebSite } from "@agenticdevelopertoolkit/landing";
-import { SITE_TITLE_HELP_ID } from "@agentic-toolkit/adh-ui/help-ids";
+import { siteIdentity } from "@adh-sdk/adh-registry/seo";
+import { withWebSite } from "@adh-sdk/landing";
+import { SITE_TITLE_HELP_ID } from "@adh-sdk/adh-ui/help-ids";
 var FAMILY_ROBOTS_DISALLOW = [
   "/login",
   "/signup",
@@ -46,8 +46,8 @@ async function siteSitemapRoutes(site) {
 }
 
 // src/site/site-agent.ts
-import { siteIdentity as siteIdentity2 } from "@agentic-toolkit/adh-registry/seo";
-import { landingLlmsTxt, landingMarkdown } from "@agenticdevelopertoolkit/landing";
+import { siteIdentity as siteIdentity2 } from "@adh-sdk/adh-registry/seo";
+import { landingLlmsTxt, landingMarkdown } from "@adh-sdk/landing";
 async function siteLlmsTxt(site, landing) {
   const routes = await siteSitemapRoutes(site);
   return landingLlmsTxt(
@@ -272,7 +272,7 @@ function reservedWorkspaceSlugs() {
 }
 
 // src/site/index.ts
-import { isHubWorkspacePath, hubWorkspaceSlug } from "@agentic-toolkit/adh/site/hubWorkspacePath";
+import { isHubWorkspacePath, hubWorkspaceSlug } from "@adh-sdk/adh/site/hubWorkspacePath";
 export {
   FAMILY_ROBOTS_DISALLOW,
   FAMILY_ROUTE_SEGMENTS,

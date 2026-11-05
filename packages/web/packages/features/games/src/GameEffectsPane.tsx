@@ -2,8 +2,8 @@
 
 import type { ReactNode } from "react";
 import { Zap } from "lucide-react";
-import { gameEffectsApi, type GameEffect, type GameEffectInput } from "@agentic-toolkit/data/games";
-import type { TopicLeaf } from "@agentic-toolkit/resource";
+import { gameEffectsApi, type GameEffect, type GameEffectInput } from "@adh-sdk/data/games";
+import type { TopicLeaf } from "@adh-sdk/resource";
 import { GameChildPane, type GameChildPaneConfig } from "./GameChildPane";
 import { GameNotEnabledPane } from "./GameNotEnabledPane";
 import { useGameForEcosystem } from "./useGameForEcosystem";

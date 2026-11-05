@@ -1,7 +1,7 @@
 ---
 id: ef7191ff-63a9-442a-b6d0-f8452a0aa1d6
 title: Document Navigation Tree
-domain: agenticdevelopertoolkit://recipes/doc-nav
+domain: adhsdk://recipes/doc-nav
 type: ingredient
 version: 1.1.2
 status: review

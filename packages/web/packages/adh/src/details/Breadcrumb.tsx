@@ -1,6 +1,6 @@
-import { ancestorsOf, getConcept, hasDetailPage, type ConceptNode } from '@agentic-toolkit/adh/concepts'
-import { siteProdUrl, type SiteId } from '@agentic-toolkit/adh-registry'
-import { JsonLd } from '@agenticdevelopertoolkit/landing'
+import { ancestorsOf, getConcept, hasDetailPage, type ConceptNode } from '@adh-sdk/adh/concepts'
+import { siteProdUrl, type SiteId } from '@adh-sdk/adh-registry'
+import { JsonLd } from '@adh-sdk/landing'
 
 // Same-site breadcrumb path for a node. Detail-bearing nodes (sites + leaves)
 // link to their /details page; concepts + the root live in the graph, so they

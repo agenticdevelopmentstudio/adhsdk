@@ -1,7 +1,7 @@
 ---
 id: ef4d83d7-ce2c-4868-9763-62a4513ad7c6
 title: "File System Detection"
-domain: adtoolkit://cookbook/workspace/files/project-detection
+domain: adhsdk://cookbook/workspace/files/project-detection
 type: ingredient
 version: 1.2.0
 status: review
@@ -21,13 +21,13 @@ tags:
 depends-on: []
 related: []
 references:
-  - packages/apple/AgenticToolkit/macOS/UI/ViewControllers/FileBrowser/Model/Detection/IDEDetector.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/macOS/UI/ViewControllers/FileBrowser/Model/Detection/LanguageDetection.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Tests/AgenticToolkitMacOSTests/FileBrowser/LanguageDetectionTests.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/macOS/UI/ViewControllers/FileBrowser/Views/FileTypesSettingsView.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Core/Loggable.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/macOS/UI/ViewControllers/FileBrowser/Model/FileTreeManager.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Language/LSP/LanguageServerConfiguration.swift (agenticdevelopertoolkit)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/FileBrowser/Model/Detection/IDEDetector.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/FileBrowser/Model/Detection/LanguageDetection.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKMacOSTests/FileBrowser/LanguageDetectionTests.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/FileBrowser/Views/FileTypesSettingsView.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Core/Loggable.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/FileBrowser/Model/FileTreeManager.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Language/LSP/LanguageServerConfiguration.swift (adhsdk)
 approved-by: ""
 approved-date: ""
 ---
@@ -410,7 +410,7 @@ The language-detection component contains no logging call of any kind.
 ## Platform Notes
 
 - **SwiftUI**: Both types (`IDEDetector.swift`, `LanguageDetection.swift`,
-  test `Tests/AgenticToolkitMacOSTests/FileBrowser/LanguageDetectionTests.swift`)
+  test `Tests/AgenticDeveloperHubSDKMacOSTests/FileBrowser/LanguageDetectionTests.swift`)
   are consumed by SwiftUI-adjacent AppKit code today (`FileTreeManager`,
   `FileEditorState`) but have no SwiftUI import of their own. A SwiftUI
   consumer would drive `IDEDetector` as an `@ObservedObject`/
@@ -495,7 +495,7 @@ The language-detection component contains no logging call of any kind.
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/macOS/UI/ViewControllers/FileBrowser/Model/Detection/` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/FileBrowser/Model/Detection/` |
 
 ## Design Decisions
 

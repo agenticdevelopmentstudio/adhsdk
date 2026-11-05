@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import type { FieldDefRow, RegistryClient } from '@agentic-toolkit/registry/client';
+import type { FieldDefRow, RegistryClient } from '@adh-sdk/registry/client';
 import { registryTopics } from '../registryTopics';
 import { useRegistryDraft } from '../useRegistryDraft';
 
@@ -520,7 +520,7 @@ describe('the signup form at a desktop width', () => {
   // there was enough. No such shim exists under `packages/web`, so a `window.innerWidth = 1440`
   // here moved a number nothing reads and both tests failed looking for a control the narrow
   // branch never renders. A per-file stub is also the convention the control's OWN test follows
-  // (`@agenticdevelopertoolkit/ui`'s splitViewControl.test.tsx), which is what makes it portable:
+  // (`@adh-sdk/ui`'s splitViewControl.test.tsx), which is what makes it portable:
   // it asks nothing of the host that mounts the suite.
   const original = window.matchMedia;
   afterEach(() => {

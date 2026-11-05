@@ -11,7 +11,7 @@
   the literal string `"Help"` (**fixed-help-heading**). Per-topic labeling
   is a Group View's and an Explanation View's responsibility, not this
   file's; the Explanation View's own recipe
-  (`adtoolkit://cookbook/ui/settings/layout/explanation-view`) covers
+  (`adhsdk://cookbook/ui/settings/layout/explanation-view`) covers
   its label behavior.
 - **Announce state changes (e.g., loading, disabled)**: The content-setting
   operation tears down and rebuilds the entire scrolled panel with no

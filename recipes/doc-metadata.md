@@ -1,7 +1,7 @@
 ---
 id: 26c4eb3c-9af9-4092-9546-bb5c5532b59c
 title: DocMetadata
-domain: agenticdevelopertoolkit://recipes/doc-metadata
+domain: adhsdk://recipes/doc-metadata
 type: ingredient
 version: 1.1.1
 status: review

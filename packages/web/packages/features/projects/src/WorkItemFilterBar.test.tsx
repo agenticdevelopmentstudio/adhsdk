@@ -16,7 +16,7 @@ import type {
   Milestone,
   ProjectParticipant,
   ProjectStatus,
-} from "@agentic-toolkit/data/projects";
+} from "@adh-sdk/data/projects";
 import { WorkItemFilterBar } from "./WorkItemFilterBar";
 import { itemWordsOf } from "./vocabulary";
 import { EMPTY_FILTER, type WorkItemFilter } from "./filters";

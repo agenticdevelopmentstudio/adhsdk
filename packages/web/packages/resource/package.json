@@ -1,5 +1,5 @@
 {
-  "name": "@agentic-toolkit/resource",
+  "name": "@adh-sdk/resource",
   "version": "0.1.0",
   "description": "Generic resource-browsing UI: ResourceExplorer, landing/dialog/master-detail, and the rail-host & record-affordance host seams.",
   "license": "UNLICENSED",
@@ -36,11 +36,11 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@agentic-toolkit/auth": "workspace:*",
-    "@agentic-toolkit/data": "workspace:*",
+    "@adh-sdk/auth": "workspace:*",
+    "@adh-sdk/data": "workspace:*",
     "@base-ui/react": "1.5.0",
     "lucide-react": "^1.16.0",
-    "@agenticdevelopertoolkit/ui": "workspace:*"
+    "@adh-sdk/ui": "workspace:*"
   },
   "peerDependencies": {
     "next": ">=15",

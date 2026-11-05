@@ -1,7 +1,7 @@
 ---
 id: 9e06ce25-a124-473e-9cf6-ea11a7c40b2d
 title: KeyWindowBorderView
-domain: agenticdevelopertoolkit://recipes/key-window-border-view
+domain: adhsdk://recipes/key-window-border-view
 type: ingredient
 version: 1.1.1
 status: review

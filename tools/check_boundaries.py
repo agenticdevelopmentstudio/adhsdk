@@ -7,9 +7,9 @@ may import a consumer app's aliases (`@/...`).
 
 Two tiers, one direction:
 
-  * MECHANISM — every package whose npm name is `@agentic-toolkit/<x>` for some
+  * MECHANISM — every package whose npm name is `@adh-sdk/<x>` for some
     `<x>` that is not `adh`/`adh-*`. Portable verbatim to another product.
-  * VOCABULARY — `@agentic-toolkit/adh` and its `@agentic-toolkit/adh-*`
+  * VOCABULARY — `@adh-sdk/adh` and its `@adh-sdk/adh-*`
     siblings: adh's site registry, concept taxonomy, brand and legal copy.
 
 Vocabulary may import mechanism. Mechanism may NEVER import vocabulary — that
@@ -19,14 +19,14 @@ vocabulary, in any other consumer.
 ## Why the banned set is DISCOVERED, not listed
 
 The predecessors of this guard hardcoded `@adh-shared/` and `@adh/`. Both
-namespaces were folded into `@agentic-toolkit/adh*` on 2026-07-30, three days
+namespaces were folded into `@adh-sdk/adh*` on 2026-07-30, three days
 after the guards were written. From that moment the guards walked the whole
 tree, matched nothing that could exist, and printed "clean" unconditionally —
 for months, while the drift they existed to catch accumulated. A guard that
 cannot fail is worse than no guard, because it reads as coverage.
 
 So the banned set is derived from the tree: any package whose `package.json`
-name starts with `@agentic-toolkit/adh` IS the vocabulary tier, and is thereby
+name starts with `@adh-sdk/adh` IS the vocabulary tier, and is thereby
 also what mechanism packages may not import. Add `adh-foo` tomorrow and it is
 banned the same day, with no edit here. `check_boundaries_test.py` plants a
 violation and asserts this script reports it — the property that a "clean"
@@ -62,9 +62,9 @@ from boundary_exemptions import EXEMPT_FILES
 DEFAULT_ROOT = Path(__file__).resolve().parent.parent / "packages"
 
 #  The vocabulary tier's name prefix. `_is_vocabulary` compares on a name
-#  BOUNDARY, never a bare prefix, so a future `@agentic-toolkit/adhesive` would
+#  BOUNDARY, never a bare prefix, so a future `@adh-sdk/adhesive` would
 #  be mechanism — as it should be — rather than silently banned.
-VOCAB_PREFIX = "@agentic-toolkit/adh"
+VOCAB_PREFIX = "@adh-sdk/adh"
 
 # Any import/require form immediately followed by a quoted specifier. Group 1 is
 # the specifier itself, so each match can be judged against the discovered
@@ -132,8 +132,8 @@ def package_prefix(repo_rel_path: str) -> "str | None":
 
 
 def _is_vocabulary(name: str) -> bool:
-    """True for `@agentic-toolkit/adh` and `@agentic-toolkit/adh-*`, false for
-    `@agentic-toolkit/adhesive`. Matching on a boundary rather than a bare
+    """True for `@adh-sdk/adh` and `@adh-sdk/adh-*`, false for
+    `@adh-sdk/adhesive`. Matching on a boundary rather than a bare
     prefix is what keeps the derived ban from over-reaching."""
     return name == VOCAB_PREFIX or name.startswith(VOCAB_PREFIX + "-")
 
@@ -161,8 +161,8 @@ def imports_vocabulary(specifier: str, vocab: "dict[str, Path] | set" ) -> str |
     """The vocabulary package `specifier` reaches, or None.
 
     Compares on a package boundary — exact name, or name followed by `/` for a
-    subpath export — so `@agentic-toolkit/adh-registry` is not matched by the
-    `@agentic-toolkit/adh` entry, and neither is a same-prefix stranger."""
+    subpath export — so `@adh-sdk/adh-registry` is not matched by the
+    `@adh-sdk/adh` entry, and neither is a same-prefix stranger."""
     for name in vocab:
         if specifier == name or specifier.startswith(name + "/"):
             return name
@@ -365,7 +365,7 @@ def main(argv: "list[str] | None" = None) -> int:
     if reported:
         print(
             f"\n{len(reported)} boundary violation(s). A portable "
-            "@agentic-toolkit package must not import the adh vocabulary tier "
+            "@adh-sdk package must not import the adh vocabulary tier "
             f"({', '.join(sorted(vocab))}); inject the value through a seam instead.",
             file=sys.stderr,
         )

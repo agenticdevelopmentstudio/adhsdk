@@ -22,10 +22,10 @@ import {
   WorkspacesMenuProvider,
   useWorkspacesMenu,
   type WorkspacesMenu,
-} from '@agentic-toolkit/adh/header'
-import type { HeaderAuthSource } from '@agentic-toolkit/adh/header-auth'
-import { SiteFooter } from '@agentic-toolkit/adh/footer'
-import { Button } from '@agenticdevelopertoolkit/ui/components/button'
+} from '@adh-sdk/adh/header'
+import type { HeaderAuthSource } from '@adh-sdk/adh/header-auth'
+import { SiteFooter } from '@adh-sdk/adh/footer'
+import { Button } from '@adh-sdk/ui/components/button'
 import {
   Card,
   CardHeader,
@@ -33,8 +33,8 @@ import {
   CardDescription,
   CardContent,
   CardFooter,
-} from '@agenticdevelopertoolkit/ui/components/card'
-import { Input } from '@agenticdevelopertoolkit/ui/components/input'
+} from '@adh-sdk/ui/components/card'
+import { Input } from '@adh-sdk/ui/components/input'
 
 // The editor TAXONOMY: areas (level 2) → items (level 3). "Global" is the one
 // comprehensive section for everything site-wide (the chrome, base styles, colors,

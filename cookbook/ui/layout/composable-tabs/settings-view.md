@@ -1,7 +1,7 @@
 ---
 id: 92d66361-a16d-4c35-a0d3-4c1c8bbd5f52
 title: "Composable Tabs Settings View"
-domain: adtoolkit://cookbook/ui/layout/composable-tabs/settings-view
+domain: adhsdk://cookbook/ui/layout/composable-tabs/settings-view
 type: ingredient
 version: 1.2.1
 status: review
@@ -21,9 +21,9 @@ tags:
   - split-view
   - sheet
 depends-on:
-  - adtoolkit://cookbook/ui/settings/settings-split-view
-  - adtoolkit://cookbook/ui/settings/layout/group-view
-  - adtoolkit://cookbook/ui/controls/spacing-control
+  - adhsdk://cookbook/ui/settings/settings-split-view
+  - adhsdk://cookbook/ui/settings/layout/group-view
+  - adhsdk://cookbook/ui/controls/spacing-control
 related: []
 references: []
 approved-by: ""
@@ -143,7 +143,7 @@ staged state, no commit, and no cancel.
 
 - **Corner radius**: The shared settings layout's card-corner-radius token,
   inherited by composing the group component's themed card — see
-  adtoolkit://cookbook/ui/settings/layout/group-view#appearance for the
+  adhsdk://cookbook/ui/settings/layout/group-view#appearance for the
   current value. This file sets no corner radius of its own.
 - **Padding**: The sheet itself contributes 0pt of padding around the topic
   list (pinned flush to the root view's top/leading/trailing) and fixed
@@ -159,7 +159,7 @@ staged state, no commit, and no cancel.
   card-horizontal-inset and card-vertical-inset tokens pad each row's
   content, and its caption-spacing token separates each group's caption
   from its card — see
-  adtoolkit://cookbook/ui/settings/layout/group-view#appearance for the
+  adhsdk://cookbook/ui/settings/layout/group-view#appearance for the
   current values, since the group component is what consumes them.
 - **Font**: Each group's caption ("Tab Bars", "Frame Spacing", "Pane Divider
   Spacing") renders with a caption text role (the group component's own
@@ -169,7 +169,7 @@ staged state, no commit, and no cancel.
   implementation, not to this component.
 - **Background**: The sheet's root view paints the `.windowBackground`
   theme role. Each group's card paints the theme's `.elevatedSurface` role
-  — see adtoolkit://cookbook/ui/settings/layout/group-view#appearance
+  — see adhsdk://cookbook/ui/settings/layout/group-view#appearance
   for its exact construction. The topic list's own panel body additionally
   paints the window-background color behind the cards (composed by the
   panel component, not set directly by this component).
@@ -181,7 +181,7 @@ staged state, no commit, and no cancel.
 - **Border**: Each card has no border stroke of its own, and a hairline
   divider separates a card row from the row above it — both are the group
   component's construction, not this component's; see
-  adtoolkit://cookbook/ui/settings/layout/group-view#appearance for the
+  adhsdk://cookbook/ui/settings/layout/group-view#appearance for the
   current values (the shared layout's divider-thickness token, drawn as a
   themed divider).
 - **Shadow**: Not applicable — no shadow property is set anywhere in this
@@ -423,7 +423,7 @@ Not applicable: this component contains no logging call.
   between the last field of one spacing group and the first field of the
   other.
 - **AppKit / UIKit** (source platform): Source file
-  `packages/apple/AgenticToolkit/macOS/UI/ViewControllers/ComposableTabs/ComposableTabsSettingsViewController.swift`.
+  `packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/ComposableTabs/ComposableTabsSettingsViewController.swift`.
   A macOS-only (`import AppKit`), `@MainActor` composition of one public
   `NSViewController` (`ComposableTabsSettingsViewController`) and three
   private classes: the topic list is the private
@@ -442,7 +442,7 @@ Not applicable: this component contains no logging call.
   `keyEquivalent = "\r"`. This component composes
   `ComposableSettings.SplitViewController`, `SettingsPanelViewController`,
   `GroupView`, `HelpPopoverController`, and `SpacingControl` — all defined
-  elsewhere in `AgenticToolkit` — rather than reimplementing any of their
+  elsewhere in `AgenticDeveloperHubSDK` — rather than reimplementing any of their
   layout or persistence logic. The Tabs panel's icon is the SF Symbol
   `rectangle.3.group`; the Spacing panel's icon is `squareshape.split.2x2`.
   The frame-spacing control is constructed via
@@ -503,7 +503,7 @@ Not applicable: this component contains no logging call.
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/macOS/UI/ViewControllers/ComposableTabs/ComposableTabsSettingsViewController.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/ComposableTabs/ComposableTabsSettingsViewController.swift` |
 
 ## Design Decisions
 

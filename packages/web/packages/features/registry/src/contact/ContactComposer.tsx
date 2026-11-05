@@ -12,7 +12,7 @@ export interface ContactComposerProps {
   signInHref: string;
   /**
    * The authed `fetch` the host supplies — in practice `authedFetch` from
-   * `@agentic-toolkit/auth/client`, the same seam `createRegistryClient` takes.
+   * `@adh-sdk/auth/client`, the same seam `createRegistryClient` takes.
    *
    * Required, not defaulted to `fetch`, on purpose. This fleet authenticates with an
    * `Authorization: Bearer` header read from localStorage, NOT with cookies, so a bare
@@ -37,7 +37,7 @@ interface Failure {
   message: string;
 }
 
-/** A thrown AuthHttpError, structurally — the package does not depend on @agentic-toolkit/auth. */
+/** A thrown AuthHttpError, structurally — the package does not depend on @adh-sdk/auth. */
 function thrownFailure(e: unknown): Failure | null {
   if (e && typeof e === 'object' && typeof (e as { status?: unknown }).status === 'number') {
     const err = e as { status: number; message?: unknown };

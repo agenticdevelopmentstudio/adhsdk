@@ -1,13 +1,13 @@
 // .../features/personas/src/InkScriptEditor.test.tsx
 import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { ToolkitQueryProvider } from "@agentic-toolkit/data/query";
+import { ToolkitQueryProvider } from "@adh-sdk/data/query";
 import {
   MAX_PREVIEW_HISTORY_ENTRIES,
   MAX_PREVIEW_TURNS,
   demoPreviewApi,
   type DemoPreviewTurn,
-} from "@agentic-toolkit/data/personas";
+} from "@adh-sdk/data/personas";
 import { InkScriptEditor } from "./InkScriptEditor";
 
 // The editor holds no ink engine of its own — every answer on the screen came from
@@ -15,8 +15,8 @@ import { InkScriptEditor } from "./InkScriptEditor";
 // SHAPES of call the one endpoint serves: the lint (source, no message) and a played turn
 // (message + the transcript before it), and that the turn's `text: null` is rendered as the
 // demo declining rather than as an empty reply.
-vi.mock("@agentic-toolkit/data/personas", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("@agentic-toolkit/data/personas")>();
+vi.mock("@adh-sdk/data/personas", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@adh-sdk/data/personas")>();
   return { ...actual, demoPreviewApi: { play: vi.fn() } };
 });
 

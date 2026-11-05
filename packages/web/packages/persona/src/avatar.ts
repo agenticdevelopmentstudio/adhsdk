@@ -1,6 +1,6 @@
-// The persona toolkit's avatar behavior + animation engine, re-published from
+// The persona layer's avatar behavior + animation engine, re-published from
 // its owner. See ./chat.ts for why consumers must not name
-// `@agenticdevelopertoolkit/*` directly.
+// `@adh-sdk/*` directly.
 //
 // This one matters more than the others, not less. The engine hands out live
 // refs and drives them with GSAP on a shared ticker; a second copy of it in a
@@ -18,7 +18,7 @@ export {
   useSpeechBubble,
   applyPose,
   DEFAULT_TUNING,
-} from '@agenticdevelopertoolkit/avatar'
+} from '@adh-sdk/avatar'
 
 export type {
   AvatarEngine,
@@ -44,4 +44,4 @@ export type {
   FaceChannel,
   Tuning,
   Ladder,
-} from '@agenticdevelopertoolkit/avatar'
+} from '@adh-sdk/avatar'

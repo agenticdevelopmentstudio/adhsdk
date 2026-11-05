@@ -1,6 +1,6 @@
 // src/marketing/SiteWordmark.tsx
-import { HubMark } from "@agentic-toolkit/adh/header";
-import { getSite, splitSiteTitle } from "@agentic-toolkit/adh-registry";
+import { HubMark } from "@adh-sdk/adh/header";
+import { getSite, splitSiteTitle } from "@adh-sdk/adh-registry";
 import { jsx, jsxs } from "react/jsx-runtime";
 function SiteWordmark({ siteId, tagline, className }) {
   const site = getSite(siteId);

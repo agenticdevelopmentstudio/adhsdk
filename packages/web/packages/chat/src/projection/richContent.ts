@@ -25,7 +25,7 @@ import type { ContentItem, PopoverData, ToolCallInfo } from '../types'
  * form until something supplies a base. Lossless beats semantically tidy for a
  * payload whose only reader is the bubble it came from.
  */
-export const RICH_DISPLAY_MEDIA_TYPE = 'application/vnd.agenticdevelopertoolkit.rich-display+json'
+export const RICH_DISPLAY_MEDIA_TYPE = 'application/vnd.adhsdk.rich-display+json'
 
 export interface RichDisplay {
   readonly content?: ContentItem[]

@@ -1,7 +1,7 @@
 ---
 id: 054522c7-53c8-45e4-9003-8c317a93b674
 title: Document Identity Field
-domain: agenticdevelopertoolkit://recipes/document-identity-field
+domain: adhsdk://recipes/document-identity-field
 type: ingredient
 version: 1.1.1
 status: review
@@ -20,8 +20,8 @@ tags:
 - input
 - document-metadata
 depends-on:
-- agenticdevelopertoolkit://recipes/field
-- agenticdevelopertoolkit://recipes/input
+- adhsdk://recipes/field
+- adhsdk://recipes/input
 related: []
 references: []
 approved-by: ''

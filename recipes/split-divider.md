@@ -1,7 +1,7 @@
 ---
 id: 240f8d48-45af-49ea-aebf-95d756d74707
 title: SplitDivider
-domain: agenticdevelopertoolkit://recipes/split-divider
+domain: adhsdk://recipes/split-divider
 type: ingredient
 version: 1.1.1
 status: review

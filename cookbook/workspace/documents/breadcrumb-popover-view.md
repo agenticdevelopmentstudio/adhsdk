@@ -1,7 +1,7 @@
 ---
 id: c79094d2-1f4b-4c3f-8005-8fb095fb1b40
 title: "Breadcrumb Popover"
-domain: adtoolkit://cookbook/workspace/documents/breadcrumb-popover-view
+domain: adhsdk://cookbook/workspace/documents/breadcrumb-popover-view
 type: ingredient
 version: 1.2.2
 status: review
@@ -21,7 +21,7 @@ tags:
   - popover
 depends-on: []
 related:
-  - adtoolkit://cookbook/workspace/documents/breadcrumb-view
+  - adhsdk://cookbook/workspace/documents/breadcrumb-view
 references: []
 approved-by: ""
 approved-date: ""
@@ -360,7 +360,7 @@ Not applicable: source contains no logging call anywhere in this file.
   mirroring `attributedTitle(for:)`. A directory row should ignore both click
   and Enter-to-choose, mirroring `guard !node.isDirectory`.
 - **AppKit/UIKit** (source platform): Implemented in
-  `packages/apple/AgenticToolkit/macOS/UI/ViewControllers/DocumentPane/BreadcrumbPopoverViewController.swift`.
+  `packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/DocumentPane/BreadcrumbPopoverViewController.swift`.
   A `@MainActor`, `final` `NSViewController` presented as the content view
   controller of an `NSPopover` opened by a `BreadcrumbView` crumb. It loads
   the directory's immediate children via `FileTreeNode.loadChildren(for:)`
@@ -455,7 +455,7 @@ Not applicable: source contains no logging call anywhere in this file.
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/macOS/UI/ViewControllers/DocumentPane/BreadcrumbPopoverViewController.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/DocumentPane/BreadcrumbPopoverViewController.swift` |
 
 ## Design Decisions
 

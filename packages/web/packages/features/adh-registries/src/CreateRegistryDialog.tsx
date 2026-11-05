@@ -1,11 +1,11 @@
 'use client';
 
-import type { RegistryRow } from '@agentic-toolkit/registry/client';
-import { isReservedSlugAnywhere } from '@agentic-toolkit/adh-registry';
-import { CreateResourceDialog } from '@agentic-toolkit/resource';
-import { Field } from '@agenticdevelopertoolkit/ui/blocks';
-import { ErrorText } from '@agenticdevelopertoolkit/ui/components/error-text';
-import { Input } from '@agenticdevelopertoolkit/ui/components/input';
+import type { RegistryRow } from '@adh-sdk/registry/client';
+import { isReservedSlugAnywhere } from '@adh-sdk/adh-registry';
+import { CreateResourceDialog } from '@adh-sdk/resource';
+import { Field } from '@adh-sdk/ui/blocks';
+import { ErrorText } from '@adh-sdk/ui/components/error-text';
+import { Input } from '@adh-sdk/ui/components/input';
 import { registryPublicAddress } from './publicAddress';
 import { SLUG_MAX, normalizeSlugInput, slugProblem, slugify } from './slug';
 import { useRegistryClient } from './useRegistryClient';
@@ -47,11 +47,11 @@ function slugTrouble(draft: RegistryDraft): string | null {
   // A new registry is not bound to a site yet (`boundSiteId: null`) and its slug is permanent,
   // so a slug that collides only on the OTHER site would strand it there forever. That is a hub
   // product fact and belongs here; the fold over the per-site lists is a property of the lists
-  // and lives beside them, in `@agentic-toolkit/adh-registry`.
+  // and lives beside them, in `@adh-sdk/adh-registry`.
   //
   // The message states the RULE, not a host. `isReservedSlugAnywhere` ORs every site's list, so
   // naming one site states a reason that is only true while the lists happen to be equal — and
-  // `@agentic-toolkit/adh-registry`'s own docblock says they are kept per-site "precisely so
+  // `@adh-sdk/adh-registry`'s own docblock says they are kept per-site "precisely so
   // they can diverge". On the day one does, a registrant would be refused a PERMANENT slug for a
   // stated reason they could check and find false, with no way to appeal it.
   if (slug !== '' && isReservedSlugAnywhere(slug)) {

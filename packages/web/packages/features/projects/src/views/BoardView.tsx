@@ -1,24 +1,24 @@
 "use client";
 
 import { useCallback, useMemo, type ReactElement } from "react";
-import { Badge } from "@agenticdevelopertoolkit/ui/components/badge";
-import { EmptyState } from "@agenticdevelopertoolkit/ui/components/empty-state";
-import { Select } from "@agenticdevelopertoolkit/ui/components/select";
-import { Card, CardContent } from "@agenticdevelopertoolkit/ui/components/card";
+import { Badge } from "@adh-sdk/ui/components/badge";
+import { EmptyState } from "@adh-sdk/ui/components/empty-state";
+import { Select } from "@adh-sdk/ui/components/select";
+import { Card, CardContent } from "@adh-sdk/ui/components/card";
 import {
   SortableItem,
   SortableSurface,
   SortableZone,
   type SortableDrop,
-} from "@agenticdevelopertoolkit/ui/components/dnd";
-import { cn } from "@agenticdevelopertoolkit/ui/lib/utils";
-import { compareRank, type WorkItem } from "@agentic-toolkit/data/projects";
+} from "@adh-sdk/ui/components/dnd";
+import { cn } from "@adh-sdk/ui/lib/utils";
+import { compareRank, type WorkItem } from "@adh-sdk/data/projects";
 import {
   type EstimateScale,
   type PriorityScale,
   type ProjectStatus,
   type ProjectParticipant,
-} from "@agentic-toolkit/data/projects";
+} from "@adh-sdk/data/projects";
 import { priorityMeta } from "../WorkItemEditor";
 import { ItemKey } from "../ItemKey";
 import { assigneeLabel, categoryVariant, estimateLabel, type BadgeVariant } from "../helpers";

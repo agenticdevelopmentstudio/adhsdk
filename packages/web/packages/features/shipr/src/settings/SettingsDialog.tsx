@@ -2,13 +2,13 @@
 
 import * as React from 'react';
 
-import { Button } from '@agenticdevelopertoolkit/ui/components/button';
+import { Button } from '@adh-sdk/ui/components/button';
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from '@agenticdevelopertoolkit/ui/components/dialog';
+} from '@adh-sdk/ui/components/dialog';
 
 import {
   SettingsForm,

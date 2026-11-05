@@ -1,7 +1,7 @@
 ---
 id: 5bfadad5-c93b-432a-807e-04be57ff16b4
 title: "Project Management"
-domain: adtoolkit://cookbook/workspace/projects/project-controller
+domain: adhsdk://cookbook/workspace/projects/project-controller
 type: ingredient
 version: 1.1.1
 status: review
@@ -24,24 +24,24 @@ tags:
   - command-palette
 depends-on: []
 related:
-  - adtoolkit://cookbook/workspace/projects/branch-controller
-  - adtoolkit://cookbook/ui/layout/composable-tabs/tabs-window
-  - adtoolkit://cookbook/ui/layout/tabbed-view/tab-pane
-  - adtoolkit://cookbook/workspace/files/git-status-provider
+  - adhsdk://cookbook/workspace/projects/branch-controller
+  - adhsdk://cookbook/ui/layout/composable-tabs/tabs-window
+  - adhsdk://cookbook/ui/layout/tabbed-view/tab-pane
+  - adhsdk://cookbook/workspace/files/git-status-provider
 references:
-  - packages/apple/AgenticToolkit/macOS/Features/Projects/ProjectController.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/macOS/Features/Projects/ProjectWorkspace.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/macOS/Features/Projects/ProjectCheckout.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/macOS/Features/Projects/ProjectTabReconciler.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/macOS/Features/Projects/BranchController.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Core/Git/GitClient.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/macOS/UI/ViewControllers/ComposableTabs/ComposableTabsTabItemDataSource.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/macOS/UI/ViewControllers/MultiTabbedViewController/TabItem.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/macOS/UI/ViewControllers/MultiTabbedViewController/Edge.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/macOS/UI/ViewControllers/ComposableTabs/LayoutNode.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/macOS/UI/AppShell/AppCommand.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Core/Loggable.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Tests/AgenticToolkitMacOSTests/Projects/ProjectControllerTests.swift (agenticdevelopertoolkit)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectController.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectWorkspace.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectCheckout.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectTabReconciler.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/BranchController.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Core/Git/GitClient.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/ComposableTabs/ComposableTabsTabItemDataSource.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/MultiTabbedViewController/TabItem.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/MultiTabbedViewController/Edge.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/ComposableTabs/LayoutNode.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/UI/AppShell/AppCommand.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Core/Loggable.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKMacOSTests/Projects/ProjectControllerTests.swift (adhsdk)
 approved-by: ""
 approved-date: ""
 ---
@@ -371,9 +371,9 @@ project controller's own name.
 ## Platform Notes
 
 - **SwiftUI**: The source is
-  `packages/apple/AgenticToolkit/macOS/Features/Projects/ProjectController.swift`,
+  `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectController.swift`,
   built on `AppKit` (indirectly, through `ComposableTabsTabItemDataSource`'s
-  `NSViewController`-hosting `TabItem`) and `AgenticToolkitCore`
+  `NSViewController`-hosting `TabItem`) and `AgenticDeveloperHubSDKCore`
   (`ProjectWorkspace`, `ProjectCheckout`, `ProjectTabReconciler`, `GitClient`,
   `CommandRegistry`, `Edge`, `TabRecord`, `Loggable`). It uses no SwiftUI API
   of its own; a SwiftUI-hosted window would still need this controller as a
@@ -425,7 +425,7 @@ project controller's own name.
   interface requiring thread-affinity of its own — mirror `@MainActor`
   confinement by only ever touching this object from the UI thread
   (`DispatcherQueue`), the same discipline `BranchController`'s WinUI port
-  already assumes (see `adtoolkit://cookbook/workspace/projects/branch-controller`).
+  already assumes (see `adhsdk://cookbook/workspace/projects/branch-controller`).
   Reproduce **reconcile-calls-chain-in-order** with a stored `Task`
   (previous reconcile) that the next call `await`s before starting its own
   work — the same continuation-chaining pattern, not a `SemaphoreSlim`, so
@@ -436,7 +436,7 @@ project controller's own name.
   rather than .NET's multicast-delegate convention). Read worktrees with
   `System.Diagnostics.Process` running `git worktree list --porcelain`
   through the same single-door `GitClient` WinUI port
-  `adtoolkit://cookbook/workspace/projects/branch-controller` describes,
+  `adhsdk://cookbook/workspace/projects/branch-controller` describes,
   and reproduce the main-first-then-git-order partition
   (**checkouts-ordered-main-first-then-git-order**) with `Where`/`Concat`
   rather than `OrderBy`, since LINQ's `OrderBy` is stable but a hand-rolled
@@ -446,7 +446,7 @@ project controller's own name.
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/macOS/Features/Projects/ProjectController.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectController.swift` |
 
 ## Design Decisions
 

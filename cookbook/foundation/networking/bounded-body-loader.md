@@ -1,7 +1,7 @@
 ---
 id: 14abf162-be65-4a58-9ffd-31f2145a50d3
 title: "Bounded Body Loader"
-domain: adtoolkit://cookbook/foundation/networking/bounded-body-loader
+domain: adhsdk://cookbook/foundation/networking/bounded-body-loader
 type: ingredient
 version: 1.1.0
 status: review
@@ -24,9 +24,9 @@ tags:
 depends-on: []
 related: []
 references:
-  - packages/apple/AgenticToolkit/Core/Networking/BoundedBodyLoader.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Core/Extensions/OpenVSXClient.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Tests/AgenticToolkitCoreTests/Extensions/OpenVSXClientLimitsTests.swift (agenticdevelopertoolkit)
+  - packages/apple/AgenticDeveloperHubSDK/Core/Networking/BoundedBodyLoader.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Core/Extensions/OpenVSXClient.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKCoreTests/Extensions/OpenVSXClientLimitsTests.swift (adhsdk)
 approved-by: ""
 approved-date: ""
 ---
@@ -254,7 +254,7 @@ line.
   surface of its own.
 - **AppKit / UIKit**: This is in fact the source's own platform:
   `BoundedBodyLoader` (`Core/Networking/BoundedBodyLoader.swift`) is a
-  `final class`, not `public`, visible only inside `AgenticToolkitCore`,
+  `final class`, not `public`, visible only inside `AgenticDeveloperHubSDKCore`,
   which builds for macOS but uses only the plain
   `URLSession`/`URLSessionDataDelegate` API available identically on
   iOS — nothing in it is AppKit-specific. Its one method,
@@ -317,7 +317,7 @@ line.
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/Core/Networking/BoundedBodyLoader.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Networking/BoundedBodyLoader.swift` |
 
 ## Design Decisions
 

@@ -3,7 +3,7 @@
   "meta": {
     "id": "fa6a7094-40c2-4302-8cf3-742a072f5bb3",
     "title": "File System File Browser",
-    "domain": "adtoolkit://cookbook/workspace/files/file-browser-model",
+    "domain": "adhsdk://cookbook/workspace/files/file-browser-model",
     "type": "ingredient",
     "version": "1.2.2",
     "status": "review",
@@ -25,8 +25,8 @@
     ],
     "depends-on": [],
     "related": [
-      "adtoolkit://cookbook/workspace/files/file-browser-view",
-      "adtoolkit://cookbook/workspace/files/file-tree-view"
+      "adhsdk://cookbook/workspace/files/file-browser-view",
+      "adhsdk://cookbook/workspace/files/file-tree-view"
     ],
     "references": [
       "https://developer.apple.com/documentation/combine/observableobject",

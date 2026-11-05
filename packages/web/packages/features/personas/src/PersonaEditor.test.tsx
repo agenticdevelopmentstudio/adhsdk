@@ -41,7 +41,7 @@ vi.mock("./InterestsEditor", () => ({
 }));
 // The Memory facet renders a CrudDataView over persona-memory/memories; stub the crud module so the
 // stub echoes the meta/filter/scope the editor passes (and MEMORIES_TABLE resolves at module load).
-vi.mock("@agentic-toolkit/crud", () => ({
+vi.mock("@adh-sdk/crud", () => ({
   CRUD_TABLES: { "persona-memory/memories": { key: "persona-memory/memories", table: "memories" } },
   CrudDataView: (props: {
     meta: { key: string };
@@ -61,9 +61,9 @@ vi.mock("@agentic-toolkit/crud", () => ({
 // them); everything else — including the real toPersonaDraft, which PersonaEditor calls to seed its
 // draft on every render — passes through via importActual so the rest of this file's tests (which
 // never touch the network) are unaffected.
-vi.mock("@agentic-toolkit/data/personas", async () => {
-  const actual = await vi.importActual<typeof import("@agentic-toolkit/data/personas")>(
-    "@agentic-toolkit/data/personas",
+vi.mock("@adh-sdk/data/personas", async () => {
+  const actual = await vi.importActual<typeof import("@adh-sdk/data/personas")>(
+    "@adh-sdk/data/personas",
   );
   return {
     ...actual,
@@ -82,14 +82,14 @@ import {
   type PaneExitGuard,
   type RailHostRegistry,
   type RecordAffordanceProps,
-} from "@agentic-toolkit/resource";
-import { DetailHeaderProvider, DetailHeaderRow } from "@agenticdevelopertoolkit/ui/blocks";
+} from "@adh-sdk/resource";
+import { DetailHeaderProvider, DetailHeaderRow } from "@adh-sdk/ui/blocks";
 import {
   api,
   type Persona,
   type PersonaDraft,
   type UserService,
-} from "@agentic-toolkit/data/personas";
+} from "@adh-sdk/data/personas";
 
 const updatePersona = vi.mocked(api.personas.update);
 const createPersona = vi.mocked(api.personas.create);

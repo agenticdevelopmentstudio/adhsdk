@@ -3,7 +3,7 @@
   "meta": {
     "id": "589babce-b66e-447f-8049-f81af380bbef",
     "title": "Admin Notes Modal",
-    "domain": "adtoolkit://cookbook/adh/hub/admin/admin-notes-modal",
+    "domain": "adhsdk://cookbook/adh/hub/admin/admin-notes-modal",
     "type": "ingredient",
     "version": "1.2.2",
     "status": "review",
@@ -25,10 +25,10 @@
       "list-detail"
     ],
     "depends-on": [
-      "agenticdevelopertoolkit://recipes/dialog",
-      "agenticdevelopertoolkit://recipes/list-with-details-pane",
-      "agenticdevelopertoolkit://recipes/button",
-      "agenticdevelopertoolkit://recipes/textarea"
+      "adhsdk://recipes/dialog",
+      "adhsdk://recipes/list-with-details-pane",
+      "adhsdk://recipes/button",
+      "adhsdk://recipes/textarea"
     ],
     "related": [],
     "references": [],

@@ -1,5 +1,5 @@
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/Hub/Features/Messaging/` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Hub/Features/Messaging/` |
 

@@ -1,7 +1,7 @@
 ---
 id: df9b416b-ba3d-430a-a82d-e39b11a55f2d
 title: "Status Web Stores"
-domain: adtoolkit://cookbook/status/dashboard/telemetry/local-cache
+domain: adhsdk://cookbook/status/dashboard/telemetry/local-cache
 type: ingredient
 version: 1.0.2
 status: review
@@ -18,8 +18,8 @@ platforms:
 tags: []
 depends-on: []
 related:
-  - adtoolkit://cookbook/status/dashboard/state/telemetry
-  - adtoolkit://cookbook/status/service/telemetry
+  - adhsdk://cookbook/status/dashboard/state/telemetry
+  - adhsdk://cookbook/status/service/telemetry
 references: []
 approved-by: ""
 approved-date: ""
@@ -36,7 +36,7 @@ The module exports two things:
 - `parseSnapshot(raw: string | null): TelemetrySnapshot | null` — a pure, browser-free parse that turns a stored string back into a snapshot, or `null` when anything about it is off.
 - `localCache: SnapshotCache` — an object with `load()` and `save(snapshot)` that adds only the `window.localStorage` I/O around `parseSnapshot` and `JSON.stringify`.
 
-The composition root `telemetry/client.ts` wires it as `export const cache: SnapshotCache = localCache;`, and the `useTelemetry` hook calls `cache.load()` once after mount and `cache.save(query.data)` whenever fresh data arrives (see [Status Web Hooks Use Telemetry](adtoolkit://cookbook/status/dashboard/state/telemetry)). Swapping the adapter is a one-line change at that root; nothing above the port moves.
+The composition root `telemetry/client.ts` wires it as `export const cache: SnapshotCache = localCache;`, and the `useTelemetry` hook calls `cache.load()` once after mount and `cache.save(query.data)` whenever fresh data arrives (see [Status Web Hooks Use Telemetry](adhsdk://cookbook/status/dashboard/state/telemetry)). Swapping the adapter is a one-line change at that root; nothing above the port moves.
 
 Use it when a browser client needs a last-known copy of a small JSON snapshot that survives reload, where losing the copy is harmless because the live query is the source of truth.
 

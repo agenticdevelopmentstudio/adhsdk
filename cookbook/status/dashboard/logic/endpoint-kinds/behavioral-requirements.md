@@ -22,7 +22,7 @@
 
 ### NON_DEPLOY_KINDS
 
-- **non-deploy-reexport**: The module MUST re-export `NON_DEPLOY_KINDS` from `@agentic-toolkit/deploy-platform/engine` as the same object. It MUST NOT declare its own set. The authoring comment says it is "Re-exported (never restated)" so the warning badge and the engine's classification cannot disagree about `dns`.
+- **non-deploy-reexport**: The module MUST re-export `NON_DEPLOY_KINDS` from `@adh-sdk/deploy-platform/engine` as the same object. It MUST NOT declare its own set. The authoring comment says it is "Re-exported (never restated)" so the warning badge and the engine's classification cannot disagree about `dns`.
 - **non-deploy-members**: Through that re-export, `NON_DEPLOY_KINDS` MUST be a `ReadonlySet<string>` containing exactly `"health"`, `"custom"` and `"dns"`, as the engine declares it.
 - **non-deploy-subset**: Every member of `NON_DEPLOY_KINDS` MUST also be a member of `ENDPOINT_KINDS`. The deploy-backed kinds are therefore `http`, `frontend` and `admin`, which the engine's `endpointNeedsWiring` returns `true` for.
 - **non-deploy-ownership**: Which kinds are deploy-backed MUST be decided by the engine, not by this module. The authoring comment says this is "the CLASSIFIER's knowledge, not this list's". This module's consumers that need the classification (for example `config-status.ts`) call the engine's classifier directly.

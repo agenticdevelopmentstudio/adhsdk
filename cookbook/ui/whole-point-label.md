@@ -1,7 +1,7 @@
 ---
 id: 29AB3757-55FC-488F-85F1-4F804E17040B
 title: "Whole Point Label"
-domain: adtoolkit://cookbook/ui/whole-point-label
+domain: adhsdk://cookbook/ui/whole-point-label
 type: ingredient
 version: 1.0.0
 status: review
@@ -21,7 +21,7 @@ tags:
   - layout
 depends-on: []
 related:
-  - adtoolkit://cookbook/ui/settings/views/value-row-view
+  - adhsdk://cookbook/ui/settings/views/value-row-view
 references: []
 approved-by: ""
 approved-date: ""
@@ -131,7 +131,7 @@ Not applicable: the component performs no logging of its own.
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/CoreUI/WholePointLabel.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/CoreUI/WholePointLabel.swift` |
 
 ## Design Decisions
 

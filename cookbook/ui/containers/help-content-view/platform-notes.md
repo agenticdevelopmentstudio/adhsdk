@@ -28,7 +28,7 @@
   `scrollTop = 0` on the scrollable container whenever the topic list
   changes, mirroring **scroll-reset**.
 - **AppKit / UIKit** (source platform): Source at
-  `packages/apple/AgenticToolkit/macOS/UI/Help/HelpContentView.swift` (this
+  `packages/apple/AgenticDeveloperHubSDK/macOS/UI/Help/HelpContentView.swift` (this
   recipe's source): a macOS-only (`import AppKit`) `NSView` subclass,
   `@MainActor`, composing one `NSTextField` heading with a
   `ComposableSettings.PanelScrollView` hosting a `ComposableSettings.PanelView`

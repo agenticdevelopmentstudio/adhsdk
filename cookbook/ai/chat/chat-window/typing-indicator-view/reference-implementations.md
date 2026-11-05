@@ -1,5 +1,5 @@
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/macOS/Features/AIChatWindow/TypingIndicatorView.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/AIChatWindow/TypingIndicatorView.swift` |
 

@@ -20,7 +20,7 @@
   input's `onChange` handler, comparing against the previous value before
   calling the parent's setter to mirror skips-redundant-commits.
 - **AppKit/UIKit** (source platform): Source file
-  `packages/apple/AgenticToolkit/macOS/SystemIntegration/ComposableSettingsWindow/Views/CheckboxView.swift`.
+  `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/Views/CheckboxView.swift`.
   A macOS-only (`import AppKit`) `NSView` subclass, `@MainActor`-isolated
   (the mechanism behind confines-to-ui-thread), inside the
   `ComposableSettings` namespace, conforming to `SettingsViewProtocol`. It

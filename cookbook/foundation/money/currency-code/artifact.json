@@ -3,7 +3,7 @@
   "meta": {
     "id": "B8C3DBF6-F3EE-4346-AC87-542A4FBF7917",
     "title": "Currency Code",
-    "domain": "adtoolkit://cookbook/foundation/money/currency-code",
+    "domain": "adhsdk://cookbook/foundation/money/currency-code",
     "type": "ingredient",
     "version": "1.0.0",
     "status": "review",
@@ -26,7 +26,7 @@
     ],
     "depends-on": [],
     "related": [
-      "adtoolkit://cookbook/foundation/money"
+      "adhsdk://cookbook/foundation/money"
     ],
     "references": [],
     "approved-by": "",

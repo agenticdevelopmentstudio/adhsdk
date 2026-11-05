@@ -1,7 +1,7 @@
 ---
 id: 98444e89-1044-43a7-9ec5-75da579c528a
 title: Versus
-domain: agenticdevelopertoolkit://recipes/versus
+domain: adhsdk://recipes/versus
 type: ingredient
 version: 1.1.1
 status: review

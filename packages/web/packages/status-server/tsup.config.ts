@@ -3,7 +3,7 @@ import { defineConfig } from "tsup";
 // Every subpath in package.json `exports` is an entry here. `test/` is shipped as
 // source for the host's vitest run but is never part of dist. Dependencies and
 // peer dependencies are external by tsup's default, so dist imports hono,
-// drizzle-orm, @libsql/client and @agentic-toolkit/deploy-platform from the host.
+// drizzle-orm, @libsql/client and @adh-sdk/deploy-platform from the host.
 export default defineConfig({
   entry: [
     "src/index.ts",

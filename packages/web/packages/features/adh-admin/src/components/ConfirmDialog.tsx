@@ -2,8 +2,8 @@
 
 import { useState, type ReactNode, type ReactElement } from "react";
 import { Trash2 } from "lucide-react";
-import { Button } from "@agenticdevelopertoolkit/ui/components/button";
-import { AlertModal } from "@agenticdevelopertoolkit/ui/components/alert-modal";
+import { Button } from "@adh-sdk/ui/components/button";
+import { AlertModal } from "@adh-sdk/ui/components/alert-modal";
 
 export function ConfirmDialog({
   title,

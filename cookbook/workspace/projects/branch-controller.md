@@ -1,7 +1,7 @@
 ---
 id: 92f11498-2cb2-4b04-92b9-560d9f2de6ee
 title: "Branch Management"
-domain: adtoolkit://cookbook/workspace/projects/branch-controller
+domain: adhsdk://cookbook/workspace/projects/branch-controller
 type: ingredient
 version: 1.2.2
 status: review
@@ -23,20 +23,20 @@ tags:
   - command-palette
 depends-on: []
 related:
-  - adtoolkit://cookbook/workspace/files/git-status-provider
-  - adtoolkit://cookbook/ui/layout/tabbed-view/tab-pane
+  - adhsdk://cookbook/workspace/files/git-status-provider
+  - adhsdk://cookbook/ui/layout/tabbed-view/tab-pane
 references:
-  - packages/apple/AgenticToolkit/macOS/Features/Projects/BranchController.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/macOS/Features/Projects/ProjectCheckout.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/macOS/Features/Projects/ProjectController.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Core/Git/GitClient.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/macOS/UI/ViewControllers/MultiTabbedViewController/TabPane/TabPaneDataSource.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/macOS/UI/ViewControllers/MultiTabbedViewController/TabPane/TabPaneDelegate.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/macOS/UI/ViewControllers/MultiTabbedViewController/Edge.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/macOS/UI/ViewControllers/MultiTabbedViewController/TabPane/TabPaneStatusSymbol.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/macOS/UI/AppShell/AppCommand.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/macOS/UI/AppShell/ClosureMenuItemTarget.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Tests/AgenticToolkitMacOSTests/Projects/BranchControllerTests.swift (agenticdevelopertoolkit)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/BranchController.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectCheckout.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectController.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Core/Git/GitClient.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/MultiTabbedViewController/TabPane/TabPaneDataSource.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/MultiTabbedViewController/TabPane/TabPaneDelegate.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/MultiTabbedViewController/Edge.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/MultiTabbedViewController/TabPane/TabPaneStatusSymbol.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/UI/AppShell/AppCommand.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/UI/AppShell/ClosureMenuItemTarget.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKMacOSTests/Projects/BranchControllerTests.swift (adhsdk)
 approved-by: ""
 approved-date: ""
 ---
@@ -234,7 +234,7 @@ system, neither of which this component renders itself.
   Notes), so no interleaving can observe a torn write. Refresh itself has
   no coalescing, generation counter, or in-flight guard of any kind —
   unlike its sibling git status provider (see
-  `adtoolkit://cookbook/workspace/files/git-status-provider`), which
+  `adhsdk://cookbook/workspace/files/git-status-provider`), which
   explicitly coalesces overlapping calls into at most one queued follow-up
   and discards a stale response with a generation check. Two overlapping
   refresh calls (for example, two rapid Refresh Status invocations) each
@@ -252,7 +252,7 @@ system, neither of which this component renders itself.
   branch read specifically failed, as distinct from succeeding with an
   unchanged value; the failure's only record is the git command log kept
   by the injected git client (a collaborator, not this component — see
-  `adtoolkit://cookbook/workspace/files/git-status-provider`'s sibling
+  `adhsdk://cookbook/workspace/files/git-status-provider`'s sibling
   git client entry).
 - **Offline or disconnected state**: Not applicable in the network sense —
   reading the current branch runs a local git command against the local
@@ -340,7 +340,7 @@ reads, stores, or transmits no credential, token, or personal data.
 This component makes no logging call of its own. The one error it
 swallows (refresh's failure path) is recorded by a different component,
 the git command log kept by the injected git client's unconditional
-recording (see `adtoolkit://cookbook/workspace/files/git-status-provider`'s
+recording (see `adhsdk://cookbook/workspace/files/git-status-provider`'s
 sibling git client entry), not logged a second time here.
 
 | Event | Level | Message |
@@ -350,9 +350,9 @@ sibling git client entry), not logged a second time here.
 ## Platform Notes
 
 - **SwiftUI**: The source is
-  `packages/apple/AgenticToolkit/macOS/Features/Projects/BranchController.swift`,
+  `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/BranchController.swift`,
   built on `AppKit` (`NSHashTable`, `NSMenu`, `NSMenuItem`, `NSWorkspace`,
-  `NSPasteboard`) and `AgenticToolkitCore` (`ProjectCheckout`, `GitClient`,
+  `NSPasteboard`) and `AgenticDeveloperHubSDKCore` (`ProjectCheckout`, `GitClient`,
   `GitStatusProvider`, `AppCommand`, `TabPaneDataSource`/`TabPaneDelegate`,
   `Edge`, `TabPaneStatusSymbol`, `ClosureMenuItemTarget`). It uses no
   SwiftUI API; a SwiftUI-hosted pane would still need an `NSViewController`
@@ -394,7 +394,7 @@ sibling git client entry), not logged a second time here.
   thread-affinity of its own — mirror the main-thread confinement by only
   ever touching this object from the UI thread (`DispatcherQueue`), the
   same discipline the git status provider's WinUI port already assumes
-  (see `adtoolkit://cookbook/workspace/files/git-status-provider`).
+  (see `adhsdk://cookbook/workspace/files/git-status-provider`).
   Replace `NSHashTable<TabPaneViewController>.weakObjects()` with a
   `List<WeakReference<TabPaneViewController>>` (or a
   `ConditionalWeakTable`), pruning dead entries on each scan since .NET has
@@ -418,7 +418,7 @@ sibling git client entry), not logged a second time here.
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/macOS/Features/Projects/BranchController.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/BranchController.swift` |
 
 ## Design Decisions
 

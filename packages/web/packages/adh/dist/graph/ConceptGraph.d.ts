@@ -1,5 +1,5 @@
 import type { ReactElement } from 'react';
-import { type SiteId } from '@agentic-toolkit/adh-registry';
+import { type SiteId } from '@adh-sdk/adh-registry';
 export interface ConceptGraphProps {
     /** Node id to open focused on. Unknown ids fall back to the root. */
     focusId: string;

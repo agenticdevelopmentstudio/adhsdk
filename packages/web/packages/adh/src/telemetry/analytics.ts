@@ -1,6 +1,6 @@
 'use client'
 
-import { captureAnalyticsEvent, type AnalyticsProps } from '@agenticdevelopertoolkit/analytics'
+import { captureAnalyticsEvent, type AnalyticsProps } from '@adh-sdk/analytics'
 
 // Custom analytics capture, paired with the privacy-first PostHog init in
 // TelemetryProvider. Everything here is fail-safe: these run on the fetch hot path
@@ -46,4 +46,4 @@ export function captureEvent(name: string, props: EventProps): void {
 // specifier, not relative: './retry' is `external` in this package's own tsup.config.ts so
 // every entry that reaches the leaf's module-level `retriedInits` WeakSet shares one instance
 // instead of each getting its own inlined copy.
-export { markRetriedRequest, consumeRetriedFlag } from '@agentic-toolkit/adh/telemetry/retry'
+export { markRetriedRequest, consumeRetriedFlag } from '@adh-sdk/adh/telemetry/retry'

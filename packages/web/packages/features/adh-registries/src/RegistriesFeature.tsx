@@ -3,14 +3,14 @@
 import { useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { LibraryBig } from 'lucide-react';
-import { useResourceList } from '@agentic-toolkit/data';
-import { ResourceExplorer } from '@agentic-toolkit/resource';
-import { GearMenuTrigger } from '@agenticdevelopertoolkit/ui/blocks';
+import { useResourceList } from '@adh-sdk/data';
+import { ResourceExplorer } from '@adh-sdk/resource';
+import { GearMenuTrigger } from '@adh-sdk/ui/blocks';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-} from '@agenticdevelopertoolkit/ui/components/dropdown-menu';
+} from '@adh-sdk/ui/components/dropdown-menu';
 import { CreateRegistryDialog } from './CreateRegistryDialog';
 import { EntryEditorRoute } from './EntryEditorRoute';
 import { registryTopics } from './registryTopics';

@@ -1,7 +1,7 @@
 ---
 id: 51BF262A-9C94-4533-A34D-1AEADF63037B
 title: "Billing Clock"
-domain: adtoolkit://cookbook/foundation/billing/billing-clock
+domain: adhsdk://cookbook/foundation/billing/billing-clock
 type: ingredient
 version: 1.0.0
 status: review
@@ -21,7 +21,7 @@ tags:
   - time
 depends-on: []
 related:
-  - adtoolkit://cookbook/foundation/billing/billing-rounding
+  - adhsdk://cookbook/foundation/billing/billing-rounding
 references: []
 approved-by: ""
 approved-date: ""
@@ -112,7 +112,7 @@ Not applicable: this code makes no log calls.
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/Core/Billing/BillingClock.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Billing/BillingClock.swift` |
 
 ## Design Decisions
 

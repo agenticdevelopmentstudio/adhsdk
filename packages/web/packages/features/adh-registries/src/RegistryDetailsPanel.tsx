@@ -1,11 +1,11 @@
 'use client';
 
-import { DeleteEntitySection } from '@agentic-toolkit/adh-ui/blocks';
-import { Field, FieldGroup, TagSetField } from '@agenticdevelopertoolkit/ui/blocks';
-import { Checkbox } from '@agenticdevelopertoolkit/ui/components/checkbox';
-import { Input } from '@agenticdevelopertoolkit/ui/components/input';
-import { Label } from '@agenticdevelopertoolkit/ui/components/label';
-import { Textarea } from '@agenticdevelopertoolkit/ui/components/textarea';
+import { DeleteEntitySection } from '@adh-sdk/adh-ui/blocks';
+import { Field, FieldGroup, TagSetField } from '@adh-sdk/ui/blocks';
+import { Checkbox } from '@adh-sdk/ui/components/checkbox';
+import { Input } from '@adh-sdk/ui/components/input';
+import { Label } from '@adh-sdk/ui/components/label';
+import { Textarea } from '@adh-sdk/ui/components/textarea';
 import type { RegistryDraftState, UseRegistryDraft } from './useRegistryDraft';
 
 export interface RegistryDetailsPanelProps {

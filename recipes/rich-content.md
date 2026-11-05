@@ -1,7 +1,7 @@
 ---
 id: e6c9f895-888f-4984-8fe1-ba86cc855613
 title: Rich Content
-domain: agenticdevelopertoolkit://recipes/rich-content
+domain: adhsdk://recipes/rich-content
 type: ingredient
 version: 1.1.1
 status: review
@@ -22,7 +22,7 @@ tags:
 - links
 depends-on: []
 related:
-- agenticdevelopertoolkit://recipes/message-bubble
+- adhsdk://recipes/message-bubble
 references:
 - https://owasp.org/www-community/attacks/xss/
 - https://www.w3.org/WAI/WCAG21/Understanding/focus-visible.html

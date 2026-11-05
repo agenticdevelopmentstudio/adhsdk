@@ -2,7 +2,7 @@
 // component so the (edge-case-laden) relative-time formatting is unit-testable
 // without a DOM — mirrors connection-spec-draft.ts's pure-conversion split.
 //
-// Near-copies of `formatRelativeTime` live in `@agentic-toolkit/messaging`
+// Near-copies of `formatRelativeTime` live in `@adh-sdk/messaging`
 // (src/components/util.ts, also in the toolkit's ActivityFeed) and in the
 // community app (app/discussions/discussion-api.ts, alongside its own naive-date
 // coercion). Neither is importable here: messaging isn't a dependency of this app

@@ -1,4 +1,4 @@
-// `@agentic-toolkit/status-web` — the operator dashboard's host-facing surface.
+// `@adh-sdk/status-web` — the operator dashboard's host-facing surface.
 // A Next host mounts these in its own pages and layouts; everything else in this
 // package is reached through the `./components/*`, `./lib/*` and `./header-auth`
 // subpaths. Every component here is a Client Component (the panels are

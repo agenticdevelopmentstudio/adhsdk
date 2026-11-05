@@ -4,22 +4,22 @@ import { useCallback, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
 
 import { KeyRound } from "lucide-react";
-import { useResourceList } from "@agentic-toolkit/data";
-import { EmptyState } from "@agenticdevelopertoolkit/ui/components/empty-state";
-import { bucketAccessApi, type AccessGroup } from "@agentic-toolkit/data/security";
-import { schemasApi, type SchemaDefinition } from "@agentic-toolkit/data/markdown";
-import { ErrorText } from "@agenticdevelopertoolkit/ui/components/error-text";
-import { Field, TopicSelectHint } from "@agenticdevelopertoolkit/ui/blocks";
-import { Input } from "@agenticdevelopertoolkit/ui/components/input";
-import { Select } from "@agenticdevelopertoolkit/ui/components/select";
-import { Textarea } from "@agenticdevelopertoolkit/ui/components/textarea";
+import { useResourceList } from "@adh-sdk/data";
+import { EmptyState } from "@adh-sdk/ui/components/empty-state";
+import { bucketAccessApi, type AccessGroup } from "@adh-sdk/data/security";
+import { schemasApi, type SchemaDefinition } from "@adh-sdk/data/markdown";
+import { ErrorText } from "@adh-sdk/ui/components/error-text";
+import { Field, TopicSelectHint } from "@adh-sdk/ui/blocks";
+import { Input } from "@adh-sdk/ui/components/input";
+import { Select } from "@adh-sdk/ui/components/select";
+import { Textarea } from "@adh-sdk/ui/components/textarea";
 import {
   ButtonBar,
   CreateResourceDialog,
   useMasterDetailForm,
   useMasterDetailLevel,
   type TopicLeaf,
-} from "@agentic-toolkit/resource";
+} from "@adh-sdk/resource";
 import { AccessGroupDetail } from "./AccessGroupDetail";
 import {
   isEveryone,

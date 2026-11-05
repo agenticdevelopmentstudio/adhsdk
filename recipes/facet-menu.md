@@ -1,7 +1,7 @@
 ---
 id: 60a907a2-2cc8-4c0c-bb54-3b0516d280b6
 title: Facet Menu
-domain: agenticdevelopertoolkit://recipes/facet-menu
+domain: adhsdk://recipes/facet-menu
 type: ingredient
 version: 1.1.1
 status: review

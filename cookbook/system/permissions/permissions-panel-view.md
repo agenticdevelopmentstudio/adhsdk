@@ -1,7 +1,7 @@
 ---
 id: 07388a5c-901d-4cf3-b818-bf52c180be08
 title: "Permissions Panel View"
-domain: adtoolkit://cookbook/system/permissions/permissions-panel-view
+domain: adhsdk://cookbook/system/permissions/permissions-panel-view
 type: ingredient
 version: 1.2.2
 status: review
@@ -19,7 +19,7 @@ tags:
   - permissions
   - settings
 depends-on:
-  - adtoolkit://cookbook/system/permissions/permission-row-view
+  - adhsdk://cookbook/system/permissions/permission-row-view
 related:
   - agenticdevelopercookbook://guidelines/cookbook/ui/platform-design-languages
 references: []
@@ -306,9 +306,9 @@ Not applicable: the component contains no logging call of any kind.
   cancelling and reassigning the private `refreshTask` field; and its
   private `isObserving` flag guards `startObservingActivation()` against
   registering the activation observer more than once. Because
-  `AgenticDeveloperToolkit` also exports a type named `Permission`, a
+  `AgenticDeveloperHubSDK` also exports a type named `Permission`, a
   caller whose target imports both modules must spell this component's
-  permission type `AgenticToolkitPermissions.Permission` to resolve the
+  permission type `AgenticDeveloperHubSDKPermissions.Permission` to resolve the
   ambiguity. `PermissionsPanelView.init(coder:)` is marked
   `@available(*, unavailable)` at compile time and calls `fatalError` if
   invoked at runtime, since this component is never instantiated from a
@@ -348,7 +348,7 @@ Not applicable: the component contains no logging call of any kind.
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/PermissionsUI/PermissionsPanelView.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/PermissionsUI/PermissionsPanelView.swift` |
 
 ## Design Decisions
 
@@ -422,7 +422,7 @@ automatic tab order across the arranged rows intact.
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
 | 1.0.0 | 2026-09-23 | Mike Fullerton | Initial creation |
-| 1.1.0 | 2026-09-23 | Mike Fullerton | Lint pass: reworded file-centric phrasing ("this file", `PermissionsPanelView.swift`, "source comments state") to describe the component's observable behavior and moved private identifiers (`buildLayout()`, `scheduleRefresh()`, `refreshTask`, `isObserving`) into the AppKit/UIKit Platform Notes bullet; noted the `AgenticToolkitPermissions.Permission` module-qualification needed alongside ADT; added `permission-row-view` to `depends-on`; moved the platform-design-languages guideline from `references` to `related`; renamed the `checker-injected-with-system-default`, `starts-observing-activation-on-window-attach`, and `presents-then-refreshes-after-action` requirements to subject-only names (`checker-default`, `activation-observer`, `action-refresh`) and updated their citations; reworded the duplicate-permissions edge case to drop its "Not applicable" lead-in; rewrote vectors 011 and 012 to assert observable outcomes through a fake checker and a call-order log, and moved vector 014 (a compile-time check) to a note; corrected the Reduce Motion note that contradicted `layout-built-once`; flagged the panel's missing VoiceOver grouping role as an open question; bolded the Design Decisions labels and named the exact `NotificationCenter` observer API; and filled in the Compliance table. |
+| 1.1.0 | 2026-09-23 | Mike Fullerton | Lint pass: reworded file-centric phrasing ("this file", `PermissionsPanelView.swift`, "source comments state") to describe the component's observable behavior and moved private identifiers (`buildLayout()`, `scheduleRefresh()`, `refreshTask`, `isObserving`) into the AppKit/UIKit Platform Notes bullet; noted the `AgenticDeveloperHubSDKPermissions.Permission` module-qualification needed alongside ADT; added `permission-row-view` to `depends-on`; moved the platform-design-languages guideline from `references` to `related`; renamed the `checker-injected-with-system-default`, `starts-observing-activation-on-window-attach`, and `presents-then-refreshes-after-action` requirements to subject-only names (`checker-default`, `activation-observer`, `action-refresh`) and updated their citations; reworded the duplicate-permissions edge case to drop its "Not applicable" lead-in; rewrote vectors 011 and 012 to assert observable outcomes through a fake checker and a call-order log, and moved vector 014 (a compile-time check) to a note; corrected the Reduce Motion note that contradicted `layout-built-once`; flagged the panel's missing VoiceOver grouping role as an open question; bolded the Design Decisions labels and named the exact `NotificationCenter` observer API; and filled in the Compliance table. |
 | 1.1.1 | 2026-09-24 | Mike Fullerton | Phase 6 lint: re-audited open-question markers against the marker rules; kept markers are one-line named bullets. |
 | 1.1.2 | 2026-09-25 | Mike Fullerton | Moved into the library cookbook; added Reference Implementations. |
 | 1.2.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to system/permissions/. |

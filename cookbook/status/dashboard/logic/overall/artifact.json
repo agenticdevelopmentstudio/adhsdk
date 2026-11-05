@@ -3,7 +3,7 @@
   "meta": {
     "id": "ef8570df-111e-484f-aad7-20ad49bd34dc",
     "title": "Overall Status Rollup",
-    "domain": "adtoolkit://cookbook/status/dashboard/logic/overall",
+    "domain": "adhsdk://cookbook/status/dashboard/logic/overall",
     "type": "ingredient",
     "version": "1.0.2",
     "status": "review",
@@ -21,8 +21,8 @@
     "tags": [],
     "depends-on": [],
     "related": [
-      "adtoolkit://cookbook/status/service/monitor/overall",
-      "adtoolkit://cookbook/status/dashboard/session-client"
+      "adhsdk://cookbook/status/service/monitor/overall",
+      "adhsdk://cookbook/status/dashboard/session-client"
     ],
     "references": [],
     "approved-by": "",

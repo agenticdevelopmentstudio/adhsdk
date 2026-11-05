@@ -1,7 +1,7 @@
 ---
 id: 9191eade-c18a-4899-b802-f000a1905c80
 title: RemovableChip
-domain: agenticdevelopertoolkit://recipes/removable-chip
+domain: adhsdk://recipes/removable-chip
 type: ingredient
 version: 1.3.1
 status: review
@@ -22,7 +22,7 @@ tags:
 - removable
 - ui
 depends-on:
-- agenticdevelopertoolkit://recipes/badge
+- adhsdk://recipes/badge
 related: []
 references: []
 approved-by: ''
@@ -33,7 +33,7 @@ approved-date: ''
 
 ## Overview
 
-The shared `RemovableChip` in `@agenticdevelopertoolkit/ui` — a `Badge` with a trailing ✕ remove
+The shared `RemovableChip` in `@adh-sdk/ui` — a `Badge` with a trailing ✕ remove
 affordance. It is the one home for the "removable chip" treatment (recipient chips,
 tag/category chips): rather than each caller re-inventing a badge-plus-✕, they render
 this element.
@@ -45,7 +45,7 @@ as its accessible name, so a chip reads to assistive technology as
 `onRemove` callback — the component is stateless, so the consumer owns the list and
 decides what removal does (typically filtering the value out of its state).
 
-A single export ships from `@agenticdevelopertoolkit/ui/components/removable-chip`: the
+A single export ships from `@adh-sdk/ui/components/removable-chip`: the
 `RemovableChip` component.
 
 ## Behavioral Requirements

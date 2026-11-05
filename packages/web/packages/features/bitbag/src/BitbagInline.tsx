@@ -14,8 +14,8 @@ import {
   submitChatInput,
   type ChatBackend,
   type GazeVector,
-} from '@agenticdevelopertoolkit/chat'
-import type { ThemeKey } from '@agenticdevelopertoolkit/themes'
+} from '@adh-sdk/chat'
+import type { ThemeKey } from '@adh-sdk/themes'
 import { BitbagChat } from './BitbagChat'
 import { BitbagInfo } from './BitbagInfo'
 import { Bitbag, type BitbagExpression, type BitbagHandle } from './avatar'

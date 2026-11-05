@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
-import { chatStatusBlank, type ChatStatusConfig } from "@agentic-toolkit/data/personas";
+import { chatStatusBlank, type ChatStatusConfig } from "@adh-sdk/data/personas";
 // `./`, not `../` — this test sits BESIDE its source. Every test in this package is
 // colocated (see the note at the top of `RowsField.test.tsx`); only `packages/data` uses a
 // `__tests__/` subdirectory.
@@ -13,15 +13,15 @@ import { ChatStatusFacet } from "./ChatStatusFacet";
 // A hoisted factory can only reach variables created by `vi.hoisted`, which is why
 // `seenLabels` is declared that way rather than as a plain `const`.
 //
-// Mock the specifier THE FACET IMPORTS (`@agentic-toolkit/persona/chat`). Do not reach past it
-// to `@agenticdevelopertoolkit/chat`: `persona/chat` re-exports that module and the built `dist`
+// Mock the specifier THE FACET IMPORTS (`@adh-sdk/persona/chat`). Do not reach past it
+// to `@adh-sdk/chat`: `persona/chat` re-exports that module and the built `dist`
 // may not preserve a live binding through the re-export, so the stub might never reach the
-// facet — and `features/personas` must not name `@agenticdevelopertoolkit/*` at all (Step 1).
+// facet — and `features/personas` must not name `@adh-sdk/*` at all (Step 1).
 //
 // The stub applies to the whole file. That is fine: no other test here asserts on anything
 // `TypingIndicator` renders, they all drive buttons and selects.
 const seenLabels = vi.hoisted(() => [] as unknown[]);
-vi.mock("@agentic-toolkit/persona/chat", async (importOriginal) => ({
+vi.mock("@adh-sdk/persona/chat", async (importOriginal) => ({
   ...(await importOriginal<Record<string, unknown>>()),
   TypingIndicator: (props: { labels: unknown }) => {
     seenLabels.push(props.labels);
@@ -75,7 +75,7 @@ describe("ChatStatusFacet", () => {
   // caller performs: the parent stores what `onChange` gave it and feeds it back in as the
   // next `value`, and `cfg` (`ChatStatusFacet.tsx`, the `useMemo` a few lines above the JSX)
   // re-parses that value on every render. Before this fix that memo called `parseChatStatus`
-  // (`@agentic-toolkit/data/personas`'s STORAGE validator), which drops a word missing a
+  // (`@adh-sdk/data/personas`'s STORAGE validator), which drops a word missing a
   // half (`chat-status.ts`'s `parseWords`, "A pair with one half is not a pair"), drops a
   // glyph set with no frames (`parseIcons`, "if (frames.length === 0) continue"), and trims
   // every string through `textOf`'s `v.trim()`. Each of the three round trips below re-lands

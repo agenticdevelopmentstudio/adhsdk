@@ -1,7 +1,7 @@
 ---
 id: fae23662-e69b-4472-9c7d-049feadf1211
 title: Hero
-domain: agenticdevelopertoolkit://recipes/hero
+domain: adhsdk://recipes/hero
 type: ingredient
 version: 1.1.1
 status: review
@@ -20,11 +20,11 @@ tags:
 - landing
 - hero
 depends-on:
-- agenticdevelopertoolkit://recipes/screen
+- adhsdk://recipes/screen
 related:
-- agenticdevelopertoolkit://recipes/cta
-- agenticdevelopertoolkit://recipes/trust
-- agenticdevelopertoolkit://recipes/status-pill
+- adhsdk://recipes/cta
+- adhsdk://recipes/trust
+- adhsdk://recipes/status-pill
 references: []
 approved-by: ''
 approved-date: ''

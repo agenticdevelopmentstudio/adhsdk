@@ -3,7 +3,7 @@
   "meta": {
     "id": "82065ef6-9f0a-424f-aa32-3814d9cb843f",
     "title": "Language Services",
-    "domain": "adtoolkit://cookbook/workspace/language/language-services",
+    "domain": "adhsdk://cookbook/workspace/language/language-services",
     "type": "ingredient",
     "version": "1.1.0",
     "status": "review",
@@ -29,18 +29,18 @@
     ],
     "depends-on": [],
     "related": [
-      "adtoolkit://cookbook/workspace/files/file-editor-view",
-      "adtoolkit://cookbook/workspace/documents/document-editor-view"
+      "adhsdk://cookbook/workspace/files/file-editor-view",
+      "adhsdk://cookbook/workspace/documents/document-editor-view"
     ],
     "references": [
-      "packages/apple/AgenticToolkit/Language/TextDocument.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/Language/TextDocumentSaveScheduler.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/Language/TextDocumentStore.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/Language/URL+DocumentUri.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/Core/Concurrency/KeyedDebouncer.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/Tests/AgenticToolkitLanguageTests/TextDocumentTests.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/Tests/AgenticToolkitLanguageTests/TextDocumentSaveSchedulerTests.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/Tests/AgenticToolkitLanguageTests/TextDocumentStoreTests.swift (agenticdevelopertoolkit)"
+      "packages/apple/AgenticDeveloperHubSDK/Language/TextDocument.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/Language/TextDocumentSaveScheduler.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/Language/TextDocumentStore.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/Language/URL+DocumentUri.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/Core/Concurrency/KeyedDebouncer.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKLanguageTests/TextDocumentTests.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKLanguageTests/TextDocumentSaveSchedulerTests.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKLanguageTests/TextDocumentStoreTests.swift (adhsdk)"
     ],
     "approved-by": "",
     "approved-date": ""

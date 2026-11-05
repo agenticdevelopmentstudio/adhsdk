@@ -1,7 +1,7 @@
 ---
 id: c044fa91-11c6-46e9-b64a-bd890535acae
 title: Focused Topic Detail
-domain: agenticdevelopertoolkit://recipes/focused-topic-detail
+domain: adhsdk://recipes/focused-topic-detail
 type: ingredient
 version: 1.1.1
 status: review
@@ -20,10 +20,10 @@ tags:
 - layout
 - composition
 depends-on:
-- agenticdevelopertoolkit://recipes/popup-menu
-- agenticdevelopertoolkit://recipes/resource-card
-- agenticdevelopertoolkit://recipes/section-header
-- agenticdevelopertoolkit://recipes/topic-detail
+- adhsdk://recipes/popup-menu
+- adhsdk://recipes/resource-card
+- adhsdk://recipes/section-header
+- adhsdk://recipes/topic-detail
 related: []
 references: []
 approved-by: ''

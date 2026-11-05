@@ -1,7 +1,7 @@
 ---
 id: 7d2b41f0-63aa-47d1-94f8-19a06caedc6a
 title: Typing Indicator
-domain: agenticdevelopertoolkit://recipes/typing-indicator
+domain: adhsdk://recipes/typing-indicator
 type: ingredient
 version: 1.1.1
 status: review
@@ -26,9 +26,9 @@ tags:
 - status
 depends-on: []
 related:
-- agenticdevelopertoolkit://recipes/inline-chat
-- agenticdevelopertoolkit://recipes/mobile-chat
-- agenticdevelopertoolkit://recipes/transcript
+- adhsdk://recipes/inline-chat
+- adhsdk://recipes/mobile-chat
+- adhsdk://recipes/transcript
 references:
 - https://www.w3.org/TR/WCAG21/
 approved-by: ''

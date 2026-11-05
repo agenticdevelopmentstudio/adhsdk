@@ -1,7 +1,7 @@
 ---
 id: a41760b2-4ffd-413b-970f-c0373c9bd3b6
 title: "Settings Panel List"
-domain: adtoolkit://cookbook/ui/settings/settings-panel-list
+domain: adhsdk://cookbook/ui/settings/settings-panel-list
 type: ingredient
 version: 1.2.2
 status: review
@@ -21,10 +21,10 @@ tags:
   - search
   - split-view
 depends-on:
-  - adtoolkit://cookbook/ui/navigation/topic-list
-  - adtoolkit://cookbook/ui/settings/settings-panel
+  - adhsdk://cookbook/ui/navigation/topic-list
+  - adhsdk://cookbook/ui/settings/settings-panel
 related:
-  - adtoolkit://cookbook/ui/layout/composable-tabs/settings-view
+  - adhsdk://cookbook/ui/layout/composable-tabs/settings-view
 references:
   - https://developer.apple.com/design/human-interface-guidelines/lists-and-tables
 approved-by: ""
@@ -114,18 +114,18 @@ panels by index no matter what the search field currently hides.
   cell factories, and this component overrides none of that layout.
 - **Padding**: Not set by this component; inherited unmodified from the
   ancestor's own layout metrics — see
-  `adtoolkit://cookbook/ui/navigation/topic-list#appearance`
+  `adhsdk://cookbook/ui/navigation/topic-list#appearance`
   for the insets this component renders with.
 - **Font**: Not set by this component; inherited unmodified from the same
   layout metrics — see
-  `adtoolkit://cookbook/ui/navigation/topic-list#appearance`.
+  `adhsdk://cookbook/ui/navigation/topic-list#appearance`.
 - **Background**: Not set by this component; inherited unmodified — the
   ancestor's theme-application step paints the view, content stack,
   header, footer, and list/scroll background. See
-  `adtoolkit://cookbook/ui/navigation/topic-list#appearance`.
+  `adhsdk://cookbook/ui/navigation/topic-list#appearance`.
 - **Foreground/Text**: Not set by this component; inherited unmodified
   from the ancestor's row-rendering step. See
-  `adtoolkit://cookbook/ui/navigation/topic-list#appearance`
+  `adhsdk://cookbook/ui/navigation/topic-list#appearance`
   for the exact color/state mapping this component's rows use.
 - **Border**: Not set by this component. The ancestor draws a 1pt hairline
   divider above every row in a card except the first, but a plain sidebar
@@ -329,15 +329,15 @@ Not applicable: this component contains no logging call.
   only the highlighted-row state (`aria-selected`/`aria-current`) without
   invoking that prop, mirroring **callback-free-selection**.
 - **AppKit** (source platform): Source file
-  `packages/apple/AgenticToolkit/macOS/SystemIntegration/ComposableSettingsWindow/SplitViewController/SettingsPanelListViewController.swift`,
+  `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/SplitViewController/SettingsPanelListViewController.swift`,
   declaring `ComposableSettings.PanelListViewController`. A macOS-only,
   `@MainActor`, `open` subclass of `ComposableSettings.TopicListViewController`
-  (`packages/apple/AgenticToolkit/macOS/UI/ViewControllers/TopicListViewController.swift`).
+  (`packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/TopicListViewController.swift`).
   It composes `ComposableSettings.SettingsSearchIndex`
-  (`packages/apple/AgenticToolkit/macOS/SystemIntegration/ComposableSettingsWindow/SplitViewController/SettingsSearchIndex.swift`)
+  (`packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/SplitViewController/SettingsSearchIndex.swift`)
   for filtering and reads `any ComposableSettingsPanel`'s `descriptor`
   (`ComposableSettings.SettingsPanelDescriptor`,
-  `packages/apple/AgenticToolkit/macOS/SystemIntegration/ComposableSettingsWindow/SettingsPanel/SettingsPanelDescriptor.swift`)
+  `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/SettingsPanel/SettingsPanelDescriptor.swift`)
   to build each row, rather than reimplementing outline-view layout,
   theming, or row accessibility — all of that stays in the ancestor. The
   selection-callback bridge (**selection-callback-bridge**) is wired only
@@ -380,7 +380,7 @@ Not applicable: this component contains no logging call.
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/macOS/SystemIntegration/ComposableSettingsWindow/SplitViewController/SettingsPanelListViewController.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/SplitViewController/SettingsPanelListViewController.swift` |
 
 ## Design Decisions
 

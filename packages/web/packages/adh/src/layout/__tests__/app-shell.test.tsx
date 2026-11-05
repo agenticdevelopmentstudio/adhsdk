@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { setHtdvLayoutLog, setSlowAnimations, slowAnimationVars } from '@agenticdevelopertoolkit/ui/blocks'
+import { setHtdvLayoutLog, setSlowAnimations, slowAnimationVars } from '@adh-sdk/ui/blocks'
 import { AdhAppShell } from '../AdhAppShell'
 
 // AdhAppShell mounts SlideTransitions, which takes the app router's push; there is no app

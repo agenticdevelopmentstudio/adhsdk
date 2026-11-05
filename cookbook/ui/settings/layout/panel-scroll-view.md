@@ -1,7 +1,7 @@
 ---
 id: 45b6d470-4e58-4035-b1c7-e65dbe7716b9
 title: "Panel Scroll View"
-domain: adtoolkit://cookbook/ui/settings/layout/panel-scroll-view
+domain: adhsdk://cookbook/ui/settings/layout/panel-scroll-view
 type: ingredient
 version: 1.2.2
 status: review
@@ -320,7 +320,7 @@ Not applicable: the source contains no logging call.
   with `scrollTop = 0` in the same effect that swaps the content, mirroring
   content-replacement-resets-scroll-position.
 - **AppKit/UIKit** (source platform): Source file
-  `packages/apple/AgenticToolkit/macOS/SystemIntegration/ComposableSettingsWindow/Views/PanelScrollView.swift`.
+  `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/Views/PanelScrollView.swift`.
   A macOS-only (`import AppKit`) `NSScrollView` subclass, `@MainActor`,
   nested in the `ComposableSettings` namespace, wrapping a private
   `FlippedDocumentView` (satisfying `document-view-flipped` via
@@ -373,7 +373,7 @@ Not applicable: the source contains no logging call.
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/macOS/SystemIntegration/ComposableSettingsWindow/Views/PanelScrollView.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/Views/PanelScrollView.swift` |
 
 ## Design Decisions
 

@@ -13,9 +13,9 @@
 // resolves by LOOKUP rather than by shape — see `destinations.ts` for why that matters and for the
 // reserved `workspace` literal.
 //
-// SERVER-SAFE, and its own entry (`@agentic-toolkit/integrations/parse`) for that reason: the
+// SERVER-SAFE, and its own entry (`@adh-sdk/integrations/parse`) for that reason: the
 // package barrel's dist carries "use client", so an RSC importing the parser from there would
-// throw on a render-only client reference. Mirrors @agentic-toolkit/notebook/parse.
+// throw on a render-only client reference. Mirrors @adh-sdk/notebook/parse.
 
 /** The selection IntegrationsFeature renders, parsed from a route's path segments.
  *  Maps 1:1 onto its props (the host supplies `basePath` and the workspace). */

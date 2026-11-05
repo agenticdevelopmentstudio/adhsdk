@@ -2,11 +2,11 @@
  * adh's own site registry or legal copy (SiteHeader, SiteFooter, the marketing shell),
  * as opposed to the registry-free primitives styled by adh-components.css.
  *
- * THIS is what `@agentic-toolkit/adh/styles.css` resolves to, and it leads with the
+ * THIS is what `@adh-sdk/adh/styles.css` resolves to, and it leads with the
  * component sheet so a site still needs ONE import: the primitives' base rules always
  * precede the overrides below, several of which beat a primitive rule at EQUAL
  * specificity and therefore depend on source order, not weight. Relative, not the
- * `@agentic-toolkit/adh/styles.css` package path this line used to carry — that
+ * `@adh-sdk/adh/styles.css` package path this line used to carry — that
  * specifier now names this very file, so it would be a self-import loop.
  *
  * Was `adh-chrome.css` in the adh-owned `@adh/chrome` package until that whole tier
@@ -24,10 +24,10 @@
  * them — only admin and hub import the auth stylesheet directly, but ~28 marketing
  * sites render the skeleton through HomeGate and reach these rules only here. Moved to
  * their owning package in Task 6.4 (they sat inline at the foot of this file, parked by
- * 5.9c); kept reachable here for the same reason @agentic-toolkit/adh/styles.css
+ * 5.9c); kept reachable here for the same reason @adh-sdk/adh/styles.css
  * re-imports themes and ui. Placed with the other @imports rather than where the block
  * stood: @import is only honored before the first style rule. */
-@import "@agentic-toolkit/auth/styles.css";
+@import "@adh-sdk/auth/styles.css";
 
 /* The notification bell's utilities. SiteHeader mounts the bell for every signed-in
  * visitor of every site (see its `accountActions`), so the classes it and the inbox
@@ -39,7 +39,7 @@
  * the one that missed it would render the bell UNSTYLED, with no error anywhere to say
  * so. One line here is what makes the bell a property of the header rather than of
  * whoever remembered. */
-@import "@agentic-toolkit/messaging/sources.css";
+@import "@adh-sdk/messaging/sources.css";
 
 /* The landing footer and the sites overview it opens, kept in their own sheet so a site off the
  * adh theme can import them alone (see that file). Imported here, before every rule below, so
@@ -47,7 +47,7 @@
  * rest of this sheet changes no cascade. */
 @import "./adh-landing-footer.css";
 
-/* NOTE: @agentic-toolkit/account no longer ships a stylesheet, so there is no line for it
+/* NOTE: @adh-sdk/account no longer ships a stylesheet, so there is no line for it
  * here. Its settings.css described a hand-rolled nav/content grid; SettingsLayout renders
  * HierarchicalDetailView now, which is Tailwind utilities the account package's own
  * sources.css already registers (adh/sources.css chains it). If that package ever grows a
@@ -585,9 +585,9 @@ a.adh-footer__brand-link:focus-visible {
    `.adh-dropdown-menu__item` is on every top-level row because the SubTrigger
    wrapper applies it to a topic just as the leaf branch does to a link.
    `margin-left: auto` pushes the tagline to the row's right edge: the switcher
-   loads @agenticdevelopertoolkit/ui's components.css, which carries the flex
+   loads @adh-sdk/ui's components.css, which carries the flex
    .adh-dropdown-menu__item base but NOT a .adh-dropdown-menu__shortcut rule (that
-   right-align lives only in @agentic-toolkit/adh, which this chain doesn't import),
+   right-align lives only in @adh-sdk/adh, which this chain doesn't import),
    so the switcher owns its own right-align here rather than inheriting one. */
 .adh-nav-popover__list .adh-dropdown-menu__item .adh-dropdown-menu__shortcut,
 .adh-nav-popover__submenu a.adh-dropdown-menu__item .adh-dropdown-menu__shortcut {
@@ -610,7 +610,7 @@ a.adh-footer__brand-link:focus-visible {
    reads compact (covers topic triggers, leaves, search results, and flyouts).
    Set as ui's touch-row PARAMETERS, not as `padding`: ui's base item reads its block
    padding from them, and ui's one coarse-pointer rule adds the 30% touch growth to
-   them ("Touch rows" in @agenticdevelopertoolkit/ui's components.css). A `padding`
+   them ("Touch rows" in @adh-sdk/ui's components.css). A `padding`
    here out-specified that rule, which is why this sheet once carried its own copy. */
 .adh-nav-popover__list .adh-dropdown-menu__item,
 .adh-nav-popover__submenu .adh-dropdown-menu__item {

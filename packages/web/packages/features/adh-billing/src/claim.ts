@@ -1,6 +1,6 @@
 "use client";
 
-// `@agentic-toolkit/adh-billing/claim` — the buyer's side of billing, and nothing else.
+// `@adh-sdk/adh-billing/claim` — the buyer's side of billing, and nothing else.
 //
 // Its consumer is a PUBLIC page: `/claim?token=…`, which a person opens straight out of a
 // purchase email, usually before they have ever seen the operator surfaces. Reaching

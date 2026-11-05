@@ -5,15 +5,15 @@ import { Fragment, type ComponentType, type ReactNode } from 'react'
 // would be INLINED, giving this entry a private copy of that state that the rest of the app
 // never sees. The other half of the remedy is the matching entry in the `external` array of
 // this package's tsup.config.ts (and, for the toolkit specifiers, of the toolkit's).
-import { FooterChat, FooterForRoute, SiteFooter, type SiteContact, type SiteLink } from '@agentic-toolkit/adh/footer'
-import { SiteTelemetryProvider as TelemetryProvider } from '@agentic-toolkit/adh/telemetry'
-import { FeatureFlagsProvider } from '@agentic-toolkit/adh/flags'
-import { HelpProvider } from '@agentic-toolkit/adh/help'
+import { FooterChat, FooterForRoute, SiteFooter, type SiteContact, type SiteLink } from '@adh-sdk/adh/footer'
+import { SiteTelemetryProvider as TelemetryProvider } from '@adh-sdk/adh/telemetry'
+import { FeatureFlagsProvider } from '@adh-sdk/adh/flags'
+import { HelpProvider } from '@adh-sdk/adh/help'
 // The shared User Settings overlay (Task 8). Package path, not './settings/settings-overlay'
 // — see the matching `external` entry in tsup.config.ts for why a relative one here would
 // fork SettingsOverlayContext from the copy SiteHeader.tsx's useSettingsOverlay() reads.
-import { SettingsOverlayProvider } from '@agentic-toolkit/adh/settings'
-import { AdhAppShell } from '@agentic-toolkit/adh/layout'
+import { SettingsOverlayProvider } from '@adh-sdk/adh/settings'
+import { AdhAppShell } from '@adh-sdk/adh/layout'
 // Its OWN subpath — not `./server`, and not a relative import. The module behind it imports
 // `node:fs` and `node:child_process`, and this file lives in the `./layout` barrel, which
 // `'use client'` code imports (every site's app/global-error.tsx pulls `GlobalError` from
@@ -28,13 +28,13 @@ import { AdhAppShell } from '@agentic-toolkit/adh/layout'
 // one seam that can resolve a per-render value and hand it to the client footer as a prop,
 // giving all 45 sites an honest dev-mode footer with no per-site plumbing. Returns
 // `undefined` outside development.
-import { liveBuildIdentity } from '@agentic-toolkit/adh/live-build-identity'
+import { liveBuildIdentity } from '@adh-sdk/adh/live-build-identity'
 // Same rule, different package: deployment-env lives in adh-registry (the leaf this package
 // depends on) so that the registry's own seo/metadata.ts can read the identical allowlist
-// without a cycle. `@agentic-toolkit/adh-registry/*` is in tsup's `external` too, so the
+// without a cycle. `@adh-sdk/adh-registry/*` is in tsup's `external` too, so the
 // specifier stays bare in this dist — see the const below, and the chunk-gate contract at the
 // top of that module.
-import { DEV_BUILD } from '@agentic-toolkit/adh-registry/deployment-env'
+import { DEV_BUILD } from '@adh-sdk/adh-registry/deployment-env'
 // Relative, and the one exception to the rule above: LandingFooter is a server component with
 // no state and no directive (its one client piece, the sites panel, it reaches by package path
 // itself), so the copy inlined into this entry forks nothing. By package path it would be the
@@ -63,7 +63,7 @@ import { LandingFooter } from '../marketing/LandingFooter'
 //
 // That measurement is about a MOUNT, not a chunk: it is why a shared const is fine here, and
 // NOT a licence to gate a dynamic import on one — see the chunk-gate contract in
-// `@agentic-toolkit/adh-registry/deployment-env` for the case where the identifier does defeat
+// `@adh-sdk/adh-registry/deployment-env` for the case where the identifier does defeat
 // the fold.
 //
 // The read stays on THIS side of the AdhAppShell boundary: `NEXT_PUBLIC_DEPLOYMENT_ENV` is adh's
@@ -112,7 +112,7 @@ export type AppShellProps = {
  * shared footer, with adh's cross-cutting providers mounted around it. Call-site signature is
  * unchanged from the pre-split husk's AppShell.
  *
- * The layout MECHANISM is `AdhAppShell` in `@agentic-toolkit/adh/layout`; this component is the
+ * The layout MECHANISM is `AdhAppShell` in `@adh-sdk/adh/layout`; this component is the
  * adh-specific composition root — which providers wrap the shell, and what goes in its footer
  * slot. Stays hook-free itself (server-renderable); the providers are client children.
  */

@@ -3,15 +3,15 @@
 import { useCallback, useState } from "react";
 import { Plus, Trash2 } from "lucide-react";
 
-import { useResourceList } from "@agentic-toolkit/data";
-import { Button } from "@agenticdevelopertoolkit/ui/components/button";
-import { Disclosure } from "@agenticdevelopertoolkit/ui/components/disclosure";
-import { Input } from "@agenticdevelopertoolkit/ui/components/input";
-import { Label } from "@agenticdevelopertoolkit/ui/components/label";
-import { List, ListItem } from "@agenticdevelopertoolkit/ui/components/list";
-import { ErrorText } from "@agenticdevelopertoolkit/ui/components/error-text";
+import { useResourceList } from "@adh-sdk/data";
+import { Button } from "@adh-sdk/ui/components/button";
+import { Disclosure } from "@adh-sdk/ui/components/disclosure";
+import { Input } from "@adh-sdk/ui/components/input";
+import { Label } from "@adh-sdk/ui/components/label";
+import { List, ListItem } from "@adh-sdk/ui/components/list";
+import { ErrorText } from "@adh-sdk/ui/components/error-text";
 import { applicationsPrototypeApi, type AccessToken } from "../api/applications-prototype";
-import { reportUnexpectedAuthError } from "@agentic-toolkit/auth";
+import { reportUnexpectedAuthError } from "@adh-sdk/auth";
 
 /**
  * Access tokens for an application — backed by the real

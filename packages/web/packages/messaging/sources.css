@@ -1,15 +1,15 @@
-/* Tailwind source self-registration for @agentic-toolkit/messaging.
+/* Tailwind source self-registration for @adh-sdk/messaging.
  *
  * Tailwind v4 does not scan node_modules, so a consumer app must be told to scan this
  * package's className-bearing modules. Rather than every host copying @source globs into
  * its own globals.css — drift-prone, and a missed line renders unstyled with NO error —
  * the package owns them here and a host adds one line:
  *
- *   @import "@agentic-toolkit/messaging/sources.css";
+ *   @import "@adh-sdk/messaging/sources.css";
  *
- * Mirrors @agentic-toolkit/{adh,crud,resource,api-explorer}/sources.css. Unlike those,
+ * Mirrors @adh-sdk/{adh,crud,resource,api-explorer}/sources.css. Unlike those,
  * this package exports no stylesheet of its own to hang the import off, so it cannot
- * carry itself into a host the way they do. @agentic-toolkit/adh's own `adh-site.css`
+ * carry itself into a host the way they do. @adh-sdk/adh's own `adh-site.css`
  * imports it on their behalf, because SiteHeader mounts the notification bell for every
  * signed-in visitor of every site in the family — so any host of that stylesheet gets
  * these globs transitively. A host that mounts a DM surface (or any other component here)

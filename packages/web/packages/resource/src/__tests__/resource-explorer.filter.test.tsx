@@ -10,7 +10,7 @@
 import type { ReactNode } from "react";
 import { describe, it, expect, afterEach, vi } from "vitest";
 import { render, screen, cleanup, act, within, fireEvent } from "@testing-library/react";
-import type { TopicLevel } from "@agenticdevelopertoolkit/ui/blocks";
+import type { TopicLevel } from "@adh-sdk/ui/blocks";
 import { ResourceExplorer, type ResourceRailConfig, type ResourceTopic } from "../resource-explorer";
 import { RailHostContext, type RailHostRegistry, type RegisteredLevels } from "../rail-host";
 

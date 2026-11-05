@@ -1,7 +1,7 @@
 ---
 id: 15e66a2e-9ee1-4f5f-aeb0-c804078b4f78
 title: "Theme Preview View"
-domain: adtoolkit://cookbook/ui/settings/rows/theme-preview-view
+domain: adhsdk://cookbook/ui/settings/rows/theme-preview-view
 type: ingredient
 version: 1.2.2
 status: review
@@ -20,9 +20,9 @@ tags:
   - theme
   - preview
 depends-on:
-  - adtoolkit://cookbook/ui/settings/rows/swatch-grid-view
+  - adhsdk://cookbook/ui/settings/rows/swatch-grid-view
 related:
-  - adtoolkit://cookbook/ui/controls/badge
+  - adhsdk://cookbook/ui/controls/badge
   - agenticdevelopercookbook://guidelines/cookbook/ui/platform-design-languages
 references: []
 approved-by: ""
@@ -250,7 +250,7 @@ Decisions).
   composition with no interactive element anywhere in source (see
   States/Pressed), so there is no touch target to size. The embedded
   swatch grid's own accessibility posture is documented in its own recipe
-  (`adtoolkit://cookbook/ui/settings/rows/swatch-grid-view`), not
+  (`adhsdk://cookbook/ui/settings/rows/swatch-grid-view`), not
   repeated here.
 
 ## Conformance Test Vectors
@@ -463,7 +463,7 @@ source.
   `theme` repaints only the preview, exactly as the show operation does
   imperatively here.
 - **AppKit/UIKit** (source platform): Source file
-  `packages/apple/AgenticToolkit/macOS/SystemIntegration/ComposableSettingsWindow/Views/ThemePreviewView.swift`.
+  `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/Views/ThemePreviewView.swift`.
   A macOS-only (`import AppKit`), `@MainActor` `NSView` subclass in the
   `ComposableSettings` namespace, conforming to `SettingsViewProtocol`. The
   component is constructed only via `init(theme:)`; the fatal-erroring
@@ -512,7 +512,7 @@ source.
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/macOS/SystemIntegration/ComposableSettingsWindow/Views/ThemePreviewView.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/Views/ThemePreviewView.swift` |
 
 ## Design Decisions
 
@@ -531,7 +531,7 @@ structurally similar re-implementation of the shared `Badge` ingredient — a
 known DRY gap, recorded as built rather than corrected. (AppKit source.)
 **Rationale**: `ThemePreviewView.swift` defines its own `private static func
 badge(_:_:_:)` building a tinted capsule inline; it never references
-`AgenticToolkit`'s `Badge` type. The two happen to look alike, which is
+`AgenticDeveloperHubSDK`'s `Badge` type. The two happen to look alike, which is
 exactly the duplication a shared-components policy exists to prevent; this
 recipe records that duplication as source built it rather than assuming an
 unmade refactor, since composing `Badge` here is a source change this recipe

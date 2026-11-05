@@ -1,4 +1,4 @@
-// @agentic-toolkit/ecosystems — the Ecosystems feature.
+// @adh-sdk/ecosystems — the Ecosystems feature.
 //
 // Host-composed: the entry takes the host's ecosystem-scoped topic rail config, its
 // non-ecosystems feature-panel renderer, and its config-pane renderer for the topics
@@ -24,7 +24,7 @@ export { ManageFeaturesButton } from "./ManageFeaturesButton";
 export { FeatureSwitch } from "./FeatureSwitch";
 
 // How every features list closes — Settings last, alone under a rule — is `settingsLast` in
-// @agentic-toolkit/resource, the tier below both this list and the group sub-rails that share it.
+// @adh-sdk/resource, the tier below both this list and the group sub-rails that share it.
 
 // The URL grammar lives at the SERVER-SAFE ./parse subpath ONLY — deliberately NOT
 // re-exported here: this barrel's dist is a "use client" module, so an RSC page that

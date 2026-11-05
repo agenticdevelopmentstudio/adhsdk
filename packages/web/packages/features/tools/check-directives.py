@@ -9,13 +9,13 @@ It reads that package's own `directives` map out of its `package.json`:
 
     "directives": {
       "index": "client",                                 # must carry the directive
-      "parse-path": ["@agentic-toolkit/categories/chain"]  # must not, and may import only these
+      "parse-path": ["@adh-sdk/categories/chain"]  # must not, and may import only these
     }
 
 `"client"` means `dist/<entry>.js` must open with `'use client'`. A LIST means
 the opposite — the entry is SERVER-SAFE: neither it nor anything reachable from
 it may carry the directive, and the only bare specifiers it may import are the
-ones listed. Sibling `@agentic-toolkit/*` specifiers are RESOLVED (through the
+ones listed. Sibling `@adh-sdk/*` specifiers are RESOLVED (through the
 package's own `node_modules` symlink and the target's `exports` map, `import`
 condition) and walked, so the check crosses package boundaries the same way the
 runtime does.
@@ -31,7 +31,7 @@ compares a string against a reference object, never matches, and returns -1.
 
 That is how research deep links shipped broken. `features/research`'s
 `parse-path` entry was correctly built as its own directive-free chunk, but it
-imported `CHAIN_SEPARATOR` from the `@agentic-toolkit/categories` BARREL — a
+imported `CHAIN_SEPARATOR` from the `@adh-sdk/categories` BARREL — a
 whole-file `'use client'` module — and the toolkit packages are `external` in
 this build, so that import survived verbatim into the shipped server chunk and
 was resolved inside the caller's RSC. `/<ws>/research/work/-/doc-1` parsed as
@@ -58,7 +58,7 @@ from pathlib import Path
 PKG = Path.cwd()
 DIST = PKG / "dist"
 DIRECTIVE = "use client"
-SCOPE = "@agentic-toolkit/"
+SCOPE = "@adh-sdk/"
 
 IMPORT_RE = re.compile(
     r"""^\s*(?:import\s[^;]*?from\s*|import\s*|export\s[^;]*?from\s*)["']([^"']+)["']""",
@@ -87,7 +87,7 @@ def imports_of(path: Path) -> list[str]:
 
 
 def resolve_sibling(spec: str, frm: Path) -> tuple[Path, Path] | None:
-    """Resolve `@agentic-toolkit/<pkg>[/<sub>]` to (built file, that package's root).
+    """Resolve `@adh-sdk/<pkg>[/<sub>]` to (built file, that package's root).
 
     Deliberately the `import` condition, never `development`: `development`
     points at `src/`, and the question this script asks is about what actually

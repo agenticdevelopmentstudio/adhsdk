@@ -1,7 +1,7 @@
 ---
 id: a9222936-8474-4073-8581-d314a258bf0a
 title: "Invitation Panes"
-domain: adtoolkit://cookbook/adh/hub/invitations/invitation-panes
+domain: adhsdk://cookbook/adh/hub/invitations/invitation-panes
 type: ingredient
 version: 1.2.2
 status: review
@@ -21,9 +21,9 @@ tags:
   - invitations
   - users
 depends-on:
-  - agenticdevelopertoolkit://recipes/list-with-details-pane
-  - adtoolkit://cookbook/adh/hub/invitations/send-invitation-modal
-  - agenticdevelopertoolkit://recipes/add-users-modal
+  - adhsdk://recipes/list-with-details-pane
+  - adhsdk://cookbook/adh/hub/invitations/send-invitation-modal
+  - adhsdk://recipes/add-users-modal
 related: []
 references: []
 approved-by: ""
@@ -38,12 +38,12 @@ This is the group of three sibling panes covering one stage each of the Invitati
 workflow: incoming requests, pending users awaiting an invite, and sent invites (the
 Requests pane, the Pending Users pane, and the Invites pane, respectively). Each is
 built on a shared master-detail list-with-details layout
-(agenticdevelopertoolkit://recipes/list-with-details-pane) configured with pane-specific
+(adhsdk://recipes/list-with-details-pane) configured with pane-specific
 columns, an empty label, a storage key, and a shared "Admin notes" toolbar action. The
 Pending Users pane additionally offers "Send invitation" and "Add users" actions that
 open the send-invitation modal
-(adtoolkit://cookbook/adh/hub/invitations/send-invitation-modal) and the add-users
-modal (agenticdevelopertoolkit://recipes/add-users-modal).
+(adhsdk://cookbook/adh/hub/invitations/send-invitation-modal) and the add-users
+modal (adhsdk://recipes/add-users-modal).
 
 None of the three panes fetch data, persist anything, or own the notes/history UI:
 rows, the delete/send/add callbacks, and the notes render-prop slots (a
@@ -459,10 +459,10 @@ logged (see Design Decisions).
   gets from React's `key`.
 - **React/Web (TypeScript)**: This is the source platform.
   `packages/web/packages/adh-ui/src/blocks/invitation-panes.tsx` in
-  `@agentic-toolkit/adh-ui`, exported through the package's `./blocks` barrel
+  `@adh-sdk/adh-ui`, exported through the package's `./blocks` barrel
   (`src/blocks/index.ts`) alongside `SendInvitationModal`. It is a `"use
   client"` Next.js client component that composes `ListWithDetailsPane` and
-  `AddUsersModal` from `@agenticdevelopertoolkit/ui/blocks/*`, the
+  `AddUsersModal` from `@adh-sdk/ui/blocks/*`, the
   package-local `SendInvitationModal`, and the row types and table-name
   constants from `../lib/invitations-types.ts`.
 - **AppKit/UIKit**: Build each pane on `NSTableView`/`UITableView` inside an
@@ -477,7 +477,7 @@ logged (see Design Decisions).
   (or the Community Toolkit's `DataGrid`) bound to an
   `ObservableCollection<Row>`, with the master/detail split via `TwoPaneView`
   (mirroring the peer layout of `ResizableSplit`,
-  agenticdevelopertoolkit://recipes/resizable-split) or the `ListDetailsView`
+  adhsdk://recipes/resizable-split) or the `ListDetailsView`
   control's built-in adaptive behavior. Reproduce the toolbar with a
   `CommandBar`'s
   `AppBarButton`s for "Admin notes" / "Send invitation" / "Add users", each
@@ -574,4 +574,4 @@ rejection reason is discarded via `() => undefined` with no log or rethrow
 | 1.1.1 | 2026-09-25 | Mike Fullerton | Moved into the library cookbook; added Reference Implementations. |
 | 1.2.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to adh/hub/invitations/. |
 | 1.2.1 | 2026-10-04 | Mike Fullerton | Add separation-of-concerns and unit-test-coverage compliance. |
-| 1.2.2 | 2026-10-04 | Mike Fullerton | Legacy recipe citations restored to the legacy recipes' own agenticdevelopertoolkit://recipes/ domains; the adtoolkit://recipes/ form named nothing. |
+| 1.2.2 | 2026-10-04 | Mike Fullerton | Legacy recipe citations restored to the legacy recipes' own adhsdk://recipes/ domains; the adhsdk://recipes/ form named nothing. |

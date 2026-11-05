@@ -1,5 +1,5 @@
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/Core/Extensions/OpenVSXCatalog.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Extensions/OpenVSXCatalog.swift` |
 

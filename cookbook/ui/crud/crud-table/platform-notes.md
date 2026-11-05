@@ -1,9 +1,9 @@
 
 - **React / Web (TypeScript, source):** `packages/web/packages/crud/src/CrudTable.tsx`,
-  exported from `@agentic-toolkit/crud`. Built from the shared `Button`, `Spinner`, and
-  the package-local `ErrorText`; typography from `@agenticdevelopertoolkit/ui/lib/typography`
-  (`fieldCaptionClass`). Note it lives in `@agentic-toolkit/crud`, not
-  `@agenticdevelopertoolkit/ui`. Metadata comes from `src/generated/table-metadata.ts`,
+  exported from `@adh-sdk/crud`. Built from the shared `Button`, `Spinner`, and
+  the package-local `ErrorText`; typography from `@adh-sdk/ui/lib/typography`
+  (`fieldCaptionClass`). Note it lives in `@adh-sdk/crud`, not
+  `@adh-sdk/ui`. Metadata comes from `src/generated/table-metadata.ts`,
   emitted by `packages/web/packages/adh-api-types/tools/gen_table_metadata.py` from the
   backend OpenAPI spec; `rows`/`loading`/`error` are typically supplied by
   `useCrudResource(meta)`. Demo: `ui-showcase` Topic `crud-table` (feeds a static `meta` +

@@ -1,18 +1,18 @@
 "use client";
 
 import { useMemo, useRef, useState, type FormEvent } from "react";
-import { errorMessage } from "@agenticdevelopertoolkit/ui/lib/errors";
-import { Input } from "@agenticdevelopertoolkit/ui/components/input";
-import { Select } from "@agenticdevelopertoolkit/ui/components/select";
+import { errorMessage } from "@adh-sdk/ui/lib/errors";
+import { Input } from "@adh-sdk/ui/components/input";
+import { Select } from "@adh-sdk/ui/components/select";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogDescription,
-} from "@agenticdevelopertoolkit/ui/components/dialog";
-import { DialogActions } from "@agenticdevelopertoolkit/ui/components/dialog-actions";
-import { Field } from "@agenticdevelopertoolkit/ui/blocks";
+} from "@adh-sdk/ui/components/dialog";
+import { DialogActions } from "@adh-sdk/ui/components/dialog-actions";
+import { Field } from "@adh-sdk/ui/blocks";
 import {
   useCreateRate,
   useRates,

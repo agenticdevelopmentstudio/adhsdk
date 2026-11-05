@@ -1,7 +1,7 @@
 ---
 id: 39a7192e-7e1e-4e93-b615-312a5ddf69b0
 title: "Hub Domain Access Client"
-domain: adtoolkit://cookbook/adh/hub/access
+domain: adhsdk://cookbook/adh/hub/access
 type: ingredient
 version: 1.2.1
 status: review
@@ -24,13 +24,13 @@ tags:
 depends-on: []
 related: []
 references:
-  - packages/web/packages/data/src/access/access.ts (agenticdevelopertoolkit)
-  - packages/web/packages/data/src/access/wire.ts (agenticdevelopertoolkit)
-  - packages/web/packages/data/src/access/index.ts (agenticdevelopertoolkit)
-  - packages/web/packages/data/src/access/__tests__/access.test.ts (agenticdevelopertoolkit)
-  - packages/web/packages/data/src/http.ts (agenticdevelopertoolkit)
-  - packages/web/packages/data/src/client-helpers.ts (agenticdevelopertoolkit)
-  - packages/web/packages/auth/src/client.ts (agenticdevelopertoolkit)
+  - packages/web/packages/data/src/access/access.ts (adhsdk)
+  - packages/web/packages/data/src/access/wire.ts (adhsdk)
+  - packages/web/packages/data/src/access/index.ts (adhsdk)
+  - packages/web/packages/data/src/access/__tests__/access.test.ts (adhsdk)
+  - packages/web/packages/data/src/http.ts (adhsdk)
+  - packages/web/packages/data/src/client-helpers.ts (adhsdk)
+  - packages/web/packages/auth/src/client.ts (adhsdk)
 approved-by: ""
 approved-date: ""
 ---
@@ -347,7 +347,7 @@ Not applicable: this client contains no logging call of any kind.
 
 - **React/Web** (source platform): `packages/web/packages/data/src/access/access.ts` and
   `wire.ts` hold the client; `accessApi` is built entirely on `authedJson`/`authedRequest`
-  from `@agentic-toolkit/auth/client` (re-exported through `./http`) and `enc`
+  from `@adh-sdk/auth/client` (re-exported through `./http`) and `enc`
   (`encodeURIComponent`) from `./client-helpers`; `index.ts` re-exports both files as the
   package's public surface for the rest of the web app. The wire row types are
   `AccessFeatureRow`, `AccessGrantRow`, `AccessRoleRow`, `AccessAssignmentRow`,

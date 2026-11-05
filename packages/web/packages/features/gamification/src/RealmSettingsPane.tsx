@@ -3,23 +3,23 @@
 import { useCallback, useState } from "react";
 import type { ReactNode } from "react";
 
-import { reportUnexpectedAuthError } from "@agentic-toolkit/auth";
-import { isForbidden, useResourceItemQuery, useResourceItemWriter } from "@agentic-toolkit/data";
-import { gamificationApi, type RealmConfig, type RealmConfigInput } from "@agentic-toolkit/data/gamification";
+import { reportUnexpectedAuthError } from "@adh-sdk/auth";
+import { isForbidden, useResourceItemQuery, useResourceItemWriter } from "@adh-sdk/data";
+import { gamificationApi, type RealmConfig, type RealmConfigInput } from "@adh-sdk/data/gamification";
 import {
   DetailsPane,
   SettingsDirtyProvider,
   useDetailsSection,
   useInDetailsPane,
   useSettingsDraft,
-} from "@agentic-toolkit/resource";
-import { FeatureSwitch } from "@agentic-toolkit/ecosystems";
-import { Field } from "@agenticdevelopertoolkit/ui/blocks";
-import { Input } from "@agenticdevelopertoolkit/ui/components/input";
-import { Label } from "@agenticdevelopertoolkit/ui/components/label";
-import { Select } from "@agenticdevelopertoolkit/ui/components/select";
-import { Switch } from "@agenticdevelopertoolkit/ui/components/switch";
-import { ErrorText } from "@agenticdevelopertoolkit/ui/components/error-text";
+} from "@adh-sdk/resource";
+import { FeatureSwitch } from "@adh-sdk/ecosystems";
+import { Field } from "@adh-sdk/ui/blocks";
+import { Input } from "@adh-sdk/ui/components/input";
+import { Label } from "@adh-sdk/ui/components/label";
+import { Select } from "@adh-sdk/ui/components/select";
+import { Switch } from "@adh-sdk/ui/components/switch";
+import { ErrorText } from "@adh-sdk/ui/components/error-text";
 
 /**
  * The product's GAMIFICATION REALM config (each product IS an ecosystem = a "realm"). A

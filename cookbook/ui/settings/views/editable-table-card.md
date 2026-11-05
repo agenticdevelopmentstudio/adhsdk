@@ -1,7 +1,7 @@
 ---
 id: 9016CB03-9682-404F-B787-C271039F25B3
 title: "Editable Table Card"
-domain: adtoolkit://cookbook/ui/settings/views/editable-table-card
+domain: adhsdk://cookbook/ui/settings/views/editable-table-card
 type: ingredient
 version: 1.0.1
 status: review
@@ -22,8 +22,8 @@ tags:
   - editing
 depends-on: []
 related:
-  - adtoolkit://cookbook/ui/settings/views/add-remove-footer-view
-  - adtoolkit://cookbook/ui/settings/views/money-field-view
+  - adhsdk://cookbook/ui/settings/views/add-remove-footer-view
+  - adhsdk://cookbook/ui/settings/views/money-field-view
 references: []
 approved-by: ""
 approved-date: ""
@@ -183,7 +183,7 @@ Not applicable: the component performs no logging of its own.
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/macOS/SystemIntegration/ComposableSettingsWindow/Views/EditableTableCard.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/Views/EditableTableCard.swift` |
 
 ## Design Decisions
 

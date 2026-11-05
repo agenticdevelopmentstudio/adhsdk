@@ -1,7 +1,7 @@
 ---
 id: bd17a89e-aac9-475d-adcd-98b61d24f941
 title: Content Overlay
-domain: agenticdevelopertoolkit://recipes/content-overlay
+domain: adhsdk://recipes/content-overlay
 type: ingredient
 version: 1.2.1
 status: review
@@ -23,7 +23,7 @@ tags:
 - dismissible
 depends-on: []
 related:
-- agenticdevelopertoolkit://recipes/persona-chat
+- adhsdk://recipes/persona-chat
 references: []
 approved-by: ''
 approved-date: ''

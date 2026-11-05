@@ -1,12 +1,12 @@
 'use client'
 
 import type { ReactNode } from 'react'
-import { RecordApiButton } from '@agentic-toolkit/api-explorer'
+import { RecordApiButton } from '@adh-sdk/api-explorer'
 import {
   RecordAffordanceContext,
   useRecordAffordance,
   type RecordAffordanceProps,
-} from '@agentic-toolkit/resource'
+} from '@adh-sdk/resource'
 
 const renderRecordApi = (props: RecordAffordanceProps) => <RecordApiButton {...props} />
 

@@ -1,7 +1,7 @@
 ---
 id: dc548100-af44-4d93-9cb9-93c35546e08c
 title: Text Field
-domain: agenticdevelopertoolkit://recipes/text-field
+domain: adhsdk://recipes/text-field
 type: ingredient
 version: 1.1.1
 status: review
@@ -21,8 +21,8 @@ tags:
 - input
 depends-on: []
 related:
-- agenticdevelopertoolkit://recipes/checkbox
-- agenticdevelopertoolkit://recipes/combobox
+- adhsdk://recipes/checkbox
+- adhsdk://recipes/combobox
 references: []
 approved-by: ''
 approved-date: ''

@@ -1,7 +1,7 @@
 ---
 id: 7f84a93a-013e-452f-a963-7ffb4808dd5c
 title: TextBubble
-domain: agenticdevelopertoolkit://recipes/text-bubble
+domain: adhsdk://recipes/text-bubble
 type: ingredient
 version: 1.2.1
 status: review
@@ -36,7 +36,7 @@ approved-date: ''
 
 ## Overview
 
-`TextBubble` (`@agenticdevelopertoolkit/ui`) renders a string and runs a purely **cosmetic**
+`TextBubble` (`@adh-sdk/ui`) renders a string and runs a purely **cosmetic**
 traveling-"distortion lens" over it: a soft lens glides along the text in reading
 order, and each glyph under the lens is magnified, faintly blurred, and
 colour-shifted from `colorFrom` toward `colorTo`. When the lens reaches the end
@@ -52,7 +52,7 @@ The effect is decoration only — the real text content stays intact and legible
   tech, and the visible per-glyph copy is marked `aria-hidden`.
 - On cleanup (or `active === false`) the original plain text is restored.
 
-Two symbols ship from `@agenticdevelopertoolkit/ui/components/text-bubble`:
+Two symbols ship from `@adh-sdk/ui/components/text-bubble`:
 
 - `TextBubble` — the component: `<TextBubble text as className style {...options} />`.
 - `useTextBubble(options)` — the underlying hook, returning a ref to attach to any

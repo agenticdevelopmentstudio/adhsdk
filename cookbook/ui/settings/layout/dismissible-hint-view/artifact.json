@@ -3,7 +3,7 @@
   "meta": {
     "id": "f3d7adbb-ece4-4b00-97af-f7e3db9d5999",
     "title": "Dismissible Hint View",
-    "domain": "adtoolkit://cookbook/ui/settings/layout/dismissible-hint-view",
+    "domain": "adhsdk://cookbook/ui/settings/layout/dismissible-hint-view",
     "type": "ingredient",
     "version": "1.2.2",
     "status": "review",
@@ -24,7 +24,7 @@
     ],
     "depends-on": [],
     "related": [
-      "adtoolkit://cookbook/ui/settings/layout/conditional-view"
+      "adhsdk://cookbook/ui/settings/layout/conditional-view"
     ],
     "references": [
       "agenticdevelopercookbook://guidelines/cookbook/ui/platform-design-languages"

@@ -1,7 +1,7 @@
 // The Features list draws what the ecosystem holds, and nothing else — the child "Agentic Developer
 // Hub" listed nineteen rows while its Manage features dialog ticked none (Mike, 2026-09-24).
 import { describe, it, expect } from "vitest";
-import type { ProvisionedFeature } from "@agentic-toolkit/data/ecosystems";
+import type { ProvisionedFeature } from "@adh-sdk/data/ecosystems";
 import { heldTopics } from "./heldTopics";
 
 const TOPICS = [

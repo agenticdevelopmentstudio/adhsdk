@@ -1,7 +1,7 @@
 import type { Storage } from "../storage/ports";
-import { withTimeout } from "@agentic-toolkit/deploy-platform/util";
+import { withTimeout } from "@adh-sdk/deploy-platform/util";
 import { timeAgo } from "./time-ago";
-import { resolveCfAccountId, listWorkerScripts } from "@agentic-toolkit/deploy-platform/providers";
+import { resolveCfAccountId, listWorkerScripts } from "@adh-sdk/deploy-platform/providers";
 import { createSelfCheckStabilizer } from "./self-check-stability";
 import type { CheckState, IntegrationCheck, IntegrationsResponse } from "./types";
 import type { StatusConfig } from "../config/port";

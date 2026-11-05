@@ -1,7 +1,7 @@
 ---
 id: 29b3f716-ad00-4aff-9dd4-fc7c2e5cf17d
 title: "Log Viewer"
-domain: adtoolkit://cookbook/workspace/logs/log-viewer
+domain: adhsdk://cookbook/workspace/logs/log-viewer
 type: ingredient
 version: 1.3.1
 status: review
@@ -21,7 +21,7 @@ tags:
   - status-indicator
   - streaming
 depends-on:
-  - adtoolkit://cookbook/workspace/logs/log-view
+  - adhsdk://cookbook/workspace/logs/log-view
 related:
   - agenticdevelopercookbook://guidelines/cookbook/ui/platform-design-languages
 references: []
@@ -432,7 +432,7 @@ Not applicable: the component contains no logging calls of any kind.
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/macOS/Features/LoggingWindow/LogViewController.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/LoggingWindow/LogViewController.swift` |
 
 ## Design Decisions
 

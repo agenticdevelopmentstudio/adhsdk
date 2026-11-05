@@ -1,7 +1,7 @@
 ---
 id: a3645ff4-19c2-4b30-a828-93a56191f656
 title: TagSetField
-domain: agenticdevelopertoolkit://recipes/tag-set-field
+domain: adhsdk://recipes/tag-set-field
 type: ingredient
 version: 1.1.1
 status: review
@@ -21,11 +21,11 @@ tags:
 - tag-editing
 - vocabulary-management
 depends-on:
-- agenticdevelopertoolkit://recipes/field
-- agenticdevelopertoolkit://recipes/combobox
-- agenticdevelopertoolkit://recipes/entity-chooser
+- adhsdk://recipes/field
+- adhsdk://recipes/combobox
+- adhsdk://recipes/entity-chooser
 related:
-- agenticdevelopertoolkit://recipes/category-field
+- adhsdk://recipes/category-field
 references: []
 approved-by: ''
 approved-date: ''
@@ -88,7 +88,7 @@ This component extracts a pattern used consistently across features that manage 
 - **Combobox label**: Set via `ariaLabel={`Add a ${noun}`}` (see **noun-in-placeholders**).
 - **EntityChooser label**: Set via `ariaLabel={label}` (the field-level label) to associate it with the field.
 - **Chips group label**: Set via `ariaLabel={label}` on `EntitySelectionChips` to announce the group.
-- **Keyboard navigation**: Combobox, EntityChooser, and the chips' remove controls are each individually keyboard-accessible; TagSetField adds no keyboard handling of its own. Chip removal's specific keyboard behavior is `EntitySelectionChips`'s own — see `agenticdevelopertoolkit://recipes/entity-chooser`.
+- **Keyboard navigation**: Combobox, EntityChooser, and the chips' remove controls are each individually keyboard-accessible; TagSetField adds no keyboard handling of its own. Chip removal's specific keyboard behavior is `EntitySelectionChips`'s own — see `adhsdk://recipes/entity-chooser`.
 - **Item addition is not announced**: The component does not emit an ARIA live-region announcement when an item is added. Screen-reader users only perceive the change through the Combobox's own text clearing and the new chip entering the DOM — neither of which is an explicit announcement. This is a real gap in the source, not a documented feature.
 - **Item removal is not announced**: Likewise, removing a chip only updates `value` and re-renders the chip list; no live-region announcement accompanies it.
 - **Minimum tap target**: Combobox input and EntityChooser trigger button SHOULD meet platform minimum touch target size (44×44pt on iOS, 48×48dp on Android, typically 44px on web).
@@ -129,7 +129,7 @@ This component extracts a pattern used consistently across features that manage 
 - **Typing a prefix of a longer option**: If `options=["bar", "barn"]`, typing toward "barn" passes through the exact match "bar" on the way — and that match is accepted immediately (see **accept-exact-match-in-combobox**, **case-sensitive-exact-match**, tag-set-016). The component has no notion of "still typing"; any exact match is taken the instant it occurs.
 - **Rapid add/remove cycles**: The component responds to each `onChange` callback; no debouncing or batching is applied. If the parent re-renders with a new `options` list before a Combobox `onValueChange` event fires, the suggestion list is recalculated immediately.
 - **Very long label text**: The component delegates text truncation and overflow behavior to the Combobox and `EntitySelectionChips` sub-components; no truncation is applied at the TagSetField level.
-- **Chip removal while disabled**: `disabled` propagates to `EntitySelectionChips` as well as to the Combobox and EntityChooser (see **pass-disabled-to-controls**). Whether the remove affordance is actually inert when disabled is `EntitySelectionChips`'s own behavior — see `agenticdevelopertoolkit://recipes/entity-chooser`.
+- **Chip removal while disabled**: `disabled` propagates to `EntitySelectionChips` as well as to the Combobox and EntityChooser (see **pass-disabled-to-controls**). Whether the remove affordance is actually inert when disabled is `EntitySelectionChips`'s own behavior — see `adhsdk://recipes/entity-chooser`.
 - **Disabled while EntityChooser dialog open**: If `disabled` changes to true while dialog is open, component propagates the change to EntityChooser, which handles state (likely closes or disables the dialog).
 - **Combobox partial text + blur**: If user enters partial text "fo" in Combobox and blurs the field without selecting a match, text remains; no auto-acceptance occurs.
 - **Concurrency**: Not applicable — this is a single-threaded UI component controlled by React's render loop and event handler serialization.

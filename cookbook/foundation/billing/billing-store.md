@@ -1,7 +1,7 @@
 ---
 id: 4DF278A3-4897-4A87-A506-BD3F58DB3121
 title: "Billing Store"
-domain: adtoolkit://cookbook/foundation/billing/billing-store
+domain: adhsdk://cookbook/foundation/billing/billing-store
 type: ingredient
 version: 1.0.0
 status: review
@@ -21,11 +21,11 @@ tags:
   - rules
 depends-on: []
 related:
-  - adtoolkit://cookbook/foundation/billing/billing-persistence
-  - adtoolkit://cookbook/foundation/billing/billing-rate
-  - adtoolkit://cookbook/foundation/billing/billing-derivation
-  - adtoolkit://cookbook/foundation/billing/billing-activity-cache
-  - adtoolkit://cookbook/foundation/billing/billing-timer
+  - adhsdk://cookbook/foundation/billing/billing-persistence
+  - adhsdk://cookbook/foundation/billing/billing-rate
+  - adhsdk://cookbook/foundation/billing/billing-derivation
+  - adhsdk://cookbook/foundation/billing/billing-activity-cache
+  - adhsdk://cookbook/foundation/billing/billing-timer
 references: []
 approved-by: ""
 approved-date: ""
@@ -141,7 +141,7 @@ Not applicable: this code makes no log calls.
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/Core/Billing/BillingStore.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Billing/BillingStore.swift` |
 
 ## Design Decisions
 
@@ -156,7 +156,7 @@ Not applicable: this code makes no log calls.
 | [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
 | [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | failed | Best Practices |
 
-separation-of-concerns passes: validation and derivation orchestration live here while storage is the persistence contract and rate resolution, rounding and derivation are their own types. unit-test-coverage fails: only `BillingRate` (via `BillingRateResolutionTests`) is tested directly; no test in `AgenticToolkitCoreTests/Billing` calls `BillingStore` save, delete or `deriveSegments`.
+separation-of-concerns passes: validation and derivation orchestration live here while storage is the persistence contract and rate resolution, rounding and derivation are their own types. unit-test-coverage fails: only `BillingRate` (via `BillingRateResolutionTests`) is tested directly; no test in `AgenticDeveloperHubSDKCoreTests/Billing` calls `BillingStore` save, delete or `deriveSegments`.
 
 ## Change History
 

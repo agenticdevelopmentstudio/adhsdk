@@ -1,7 +1,7 @@
 ---
 id: 16e99364-8af3-40cb-beaf-d5a66a2fa2c0
 title: View Source Disclosure
-domain: agenticdevelopertoolkit://recipes/view-source-disclosure
+domain: adhsdk://recipes/view-source-disclosure
 type: ingredient
 version: 1.1.1
 status: review

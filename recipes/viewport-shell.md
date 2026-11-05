@@ -1,7 +1,7 @@
 ---
 id: 960a1577-bf48-4d56-a93f-aa690853f64f
 title: ViewportShell
-domain: agenticdevelopertoolkit://recipes/viewport-shell
+domain: adhsdk://recipes/viewport-shell
 type: ingredient
 version: 1.1.1
 status: review
@@ -20,8 +20,8 @@ tags:
 - layout
 depends-on: []
 related:
-- agenticdevelopertoolkit://recipes/viewport-composer
-- agenticdevelopertoolkit://recipes/viewport-spacer
+- adhsdk://recipes/viewport-composer
+- adhsdk://recipes/viewport-spacer
 references: []
 approved-by: ''
 approved-date: ''

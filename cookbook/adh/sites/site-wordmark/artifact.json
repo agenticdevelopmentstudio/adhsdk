@@ -3,7 +3,7 @@
   "meta": {
     "id": "21cbbc1c-38a0-4e7a-8ca0-06e2f29429f5",
     "title": "Site Wordmark",
-    "domain": "adtoolkit://cookbook/adh/sites/site-wordmark",
+    "domain": "adhsdk://cookbook/adh/sites/site-wordmark",
     "type": "ingredient",
     "version": "1.4.1",
     "status": "review",

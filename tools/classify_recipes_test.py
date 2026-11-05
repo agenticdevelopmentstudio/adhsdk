@@ -30,9 +30,9 @@ def test_same_basename_in_two_topics_is_two_entries() -> None:
 def test_unmoved_package_is_flagged() -> None:
     with tempfile.TemporaryDirectory() as tmp:
         root = Path(tmp)
-        (root / "button.md").write_text("Use `@agentic-toolkit/billing`.", encoding="utf-8")
+        (root / "button.md").write_text("Use `@adh-sdk/billing`.", encoding="utf-8")
         buckets = json.loads(run(root).stdout)
-        assert buckets["unmoved"] == {"button.md": ["@agentic-toolkit/billing"]}
+        assert buckets["unmoved"] == {"button.md": ["@adh-sdk/billing"]}
 
 
 def test_empty_dir_is_an_error() -> None:

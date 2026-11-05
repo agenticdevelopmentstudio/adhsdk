@@ -1,7 +1,7 @@
 ---
 id: 0640ca96-95c5-4234-925e-386425cc4435
 title: "Composable Tabs"
-domain: adtoolkit://cookbook/ui/layout/composable-tabs
+domain: adhsdk://cookbook/ui/layout/composable-tabs
 type: ingredient
 version: 1.3.0
 status: review
@@ -22,8 +22,8 @@ tags:
   - tabs
 depends-on: []
 related:
-  - adtoolkit://cookbook/ui/layout/composable-tabs/leaf-pane-view
-  - adtoolkit://cookbook/ui/layout/composable-tabs/pane-spacing
+  - adhsdk://cookbook/ui/layout/composable-tabs/leaf-pane-view
+  - adhsdk://cookbook/ui/layout/composable-tabs/pane-spacing
 references: []
 approved-by: ""
 approved-date: ""
@@ -681,7 +681,7 @@ Not applicable: source contains no logging call anywhere in this component.
   Implement zoom by conditionally rendering `display: none` on every sibling
   not on the path to the zoomed leaf, the DOM analog of `isCollapsed`.
 - **AppKit/UIKit** (source platform): Implemented across
-  `packages/apple/AgenticToolkit/macOS/UI/ViewControllers/ComposableTabs/ComposableTabsViewController.swift`
+  `packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/ComposableTabs/ComposableTabsViewController.swift`
   (the tree itself: init, layout, arrangement, thickness capture/persist,
   split/remove/move/rebuild, spec-gated mutation, and `LayoutNode`
   construction) and `ComposableTabsPaneHost.swift` (the `PaneHost` conformance
@@ -748,7 +748,7 @@ Not applicable: source contains no logging call anywhere in this component.
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/macOS/UI/ViewControllers/ComposableTabs/ComposableTabsViewController.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/ComposableTabs/ComposableTabsViewController.swift` |
 
 ## Design Decisions
 

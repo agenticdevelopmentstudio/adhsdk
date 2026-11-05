@@ -2,14 +2,14 @@
 
 import { useCallback } from "react";
 
-import { Field, FieldGroup } from "@agenticdevelopertoolkit/ui/blocks";
-import { bucketAccessApi } from "@agentic-toolkit/data/security";
-import { Card, CardContent } from "@agenticdevelopertoolkit/ui/components/card";
-import { Input } from "@agenticdevelopertoolkit/ui/components/input";
-import { Select } from "@agenticdevelopertoolkit/ui/components/select";
-import { Textarea } from "@agenticdevelopertoolkit/ui/components/textarea";
-import { DetailSection, useResourceItem } from "@agentic-toolkit/resource";
-import { ErrorText } from "@agenticdevelopertoolkit/ui/components/error-text";
+import { Field, FieldGroup } from "@adh-sdk/ui/blocks";
+import { bucketAccessApi } from "@adh-sdk/data/security";
+import { Card, CardContent } from "@adh-sdk/ui/components/card";
+import { Input } from "@adh-sdk/ui/components/input";
+import { Select } from "@adh-sdk/ui/components/select";
+import { Textarea } from "@adh-sdk/ui/components/textarea";
+import { DetailSection, useResourceItem } from "@adh-sdk/resource";
+import { ErrorText } from "@adh-sdk/ui/components/error-text";
 import { GroupGrantsEditor } from "./GroupGrantsEditor";
 import { GroupMembersEditor } from "./GroupMembersEditor";
 import {

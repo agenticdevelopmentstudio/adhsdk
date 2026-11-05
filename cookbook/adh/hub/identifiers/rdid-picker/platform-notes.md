@@ -1,8 +1,8 @@
 
 - **React/Web (source)**: `packages/web/packages/adh-ui/src/blocks/rdid-picker.tsx`
-  (`@agentic-toolkit/adh-ui`, `"use client"`). Composes `CommandPalette`
+  (`@adh-sdk/adh-ui`, `"use client"`). Composes `CommandPalette`
   and `CommandGroup` from
-  `@agenticdevelopertoolkit/ui/blocks/command-palette`; `RdidPicker`
+  `@adh-sdk/ui/blocks/command-palette`; `RdidPicker`
   itself owns only the debounce/abort/reset state machine (held in
   `React.useState`) and the group/label/placeholder derivation — no
   dialog, listbox, or keyboard logic of its own. `CommandPalette`

@@ -4,7 +4,7 @@ import Foundation
 ///
 /// Lives here, in the client, because this is the one module both sides of the
 /// seam already depend on. The concrete daemon (`LocalDaemon`, adh-daemon's
-/// `ADHDPipeline`) depends on agentictoolkit, so agentictoolkit's hub modules
+/// `ADHDPipeline`) depends on adhsdk, so adhsdk's hub modules
 /// cannot name it without a cycle; they hold `any EmbeddedDaemon` and the host,
 /// which links both, passes the concrete one in.
 ///

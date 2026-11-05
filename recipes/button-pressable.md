@@ -1,7 +1,7 @@
 ---
 id: f483dfb7-d60e-4b12-8b17-2eb150b550db
 title: PressableButton
-domain: agenticdevelopertoolkit://recipes/button-pressable
+domain: adhsdk://recipes/button-pressable
 type: ingredient
 version: 1.1.1
 status: review
@@ -25,7 +25,7 @@ tags:
 - ui
 depends-on: []
 related:
-- agenticdevelopertoolkit://recipes/button
+- adhsdk://recipes/button
 references: []
 approved-by: ''
 approved-date: ''
@@ -45,7 +45,7 @@ composes with any pointer handlers the caller supplies rather than replacing
 them. It lives in its own module, separate from the plain `button.tsx` module
 that computes the visual variant classes, so that module can stay free of a
 `"use client"` directive and remain callable from server components. See
-[Button](agenticdevelopertoolkit://recipes/button) for the composed component,
+[Button](adhsdk://recipes/button) for the composed component,
 its visual variants, and its accessibility surface.
 
 ## Behavioral Requirements
@@ -229,12 +229,12 @@ forwarded pointer handler, not in this file.
 **Rationale**: `compose()` in `button-pressable.tsx` always calls the caller's handler before the component's own tracking logic, so passing e.g. `onPointerUp` does not silently disable this component's press tracking, and the component does not silently disable a caller's handler.
 **Approved**: pending
 
-**Decision**: This recipe is the single owner of the press-tracking behavioral contract for `button-pressable.tsx`; its atomic, independently-testable requirement decomposition (14 requirements after this pass) is more granular than the sibling [Button](agenticdevelopertoolkit://recipes/button) recipe's compound description of the same source (12 requirements), and `button.md` SHOULD cite this file's `#requirements/...` fragments for press-tracking behavior instead of restating them in its own words.
+**Decision**: This recipe is the single owner of the press-tracking behavioral contract for `button-pressable.tsx`; its atomic, independently-testable requirement decomposition (14 requirements after this pass) is more granular than the sibling [Button](adhsdk://recipes/button) recipe's compound description of the same source (12 requirements), and `button.md` SHOULD cite this file's `#requirements/...` fragments for press-tracking behavior instead of restating them in its own words.
 **Rationale**: Both recipes describe the same underlying source file's pointer-tracking logic independently; the higher count here reflects the behavioral-requirements guideline's prohibition on compound statements, not a completeness gap. Two independent decompositions of the same source drift as the source changes — designating this file as the single owner and having `button.md` reference these fragments removes that duplicate source of truth. (This file cannot edit `button.md` directly; that citation change is `button.md`'s to make.)
 **Approved**: pending
 
 **Decision**: `platforms: [web]`, not `[typescript, web]` like sibling recipes.
-**Rationale**: [Button](agenticdevelopertoolkit://recipes/button) and `copy-button` list both `typescript` and `web`. This recipe was generated from a single specified source-platform set of `web` only, so `platforms` reflects exactly that input rather than inferring `typescript` from the source file's extension.
+**Rationale**: [Button](adhsdk://recipes/button) and `copy-button` list both `typescript` and `web`. This recipe was generated from a single specified source-platform set of `web` only, so `platforms` reflects exactly that input rather than inferring `typescript` from the source file's extension.
 **Approved**: pending
 
 **Decision**: Add the new tags `pointer-events` and `pressable`.

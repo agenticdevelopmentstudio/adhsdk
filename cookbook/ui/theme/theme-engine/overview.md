@@ -2,7 +2,7 @@
 This recipe covers this toolkit's own half of the theme engine, layered on
 top of a shared model — a theme, its color roles, and the semantic palette
 that derives colors from it — specified separately by
-[Theme Engine (shared model)](agenticdevelopertoolkit://recipes/theme-engine).
+[Theme Engine (shared model)](adhsdk://recipes/theme-engine).
 This layer adds four things on top of that model, each in its own concern:
 
 - a syntax-role vocabulary (the ten syntax attributes a source editor

@@ -8,7 +8,7 @@ import type {
   PopoverItem,
   PopoverListEntry,
   PopoverNotice,
-} from '@agentic-toolkit/adh/header'
+} from '@adh-sdk/adh/header'
 
 // The signed-in header's switcher. What it owes is data-shaped — which rows, which one is current,
 // what the trigger says, and WHERE a pick goes — so the popover engine is replaced by a spy that
@@ -22,8 +22,8 @@ vi.mock('next/navigation', () => ({
 }))
 
 const seen: { current: Record<string, unknown> | null } = { current: null }
-vi.mock('@agentic-toolkit/adh/header', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('@agentic-toolkit/adh/header')>()),
+vi.mock('@adh-sdk/adh/header', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@adh-sdk/adh/header')>()),
   NavigationPopover: (props: Record<string, unknown>) => {
     seen.current = props
     return null

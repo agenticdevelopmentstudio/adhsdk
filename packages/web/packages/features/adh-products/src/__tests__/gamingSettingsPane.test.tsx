@@ -9,14 +9,14 @@ import { cleanup, render, screen } from "@testing-library/react";
 
 const { push } = vi.hoisted(() => ({ push: vi.fn() }));
 vi.mock("next/navigation", () => ({ useRouter: () => ({ push }) }));
-vi.mock("@agentic-toolkit/auth", () => ({ reportUnexpectedAuthError: vi.fn() }));
+vi.mock("@adh-sdk/auth", () => ({ reportUnexpectedAuthError: vi.fn() }));
 
 const { getRealmConfig } = vi.hoisted(() => ({ getRealmConfig: vi.fn() }));
-vi.mock("@agentic-toolkit/data/gamification", () => ({ gamificationApi: { getRealmConfig } }));
-vi.mock("@agentic-toolkit/data/games", () => ({ gamesApi: { update: vi.fn() } }));
+vi.mock("@adh-sdk/data/gamification", () => ({ gamificationApi: { getRealmConfig } }));
+vi.mock("@adh-sdk/data/games", () => ({ gamesApi: { update: vi.fn() } }));
 
 // The two sections stand in as markers: what this pane decides is WHICH show and in what order.
-vi.mock("@agentic-toolkit/gamification", () => ({
+vi.mock("@adh-sdk/gamification", () => ({
   RealmSettingsPane: () => <div data-testid="realm-switches" />,
   realmConfigApi: (ecosystemId: string | undefined) => ({
     method: "PUT",
@@ -24,7 +24,7 @@ vi.mock("@agentic-toolkit/gamification", () => ({
     pathValues: { ecosystemId },
   }),
 }));
-vi.mock("@agentic-toolkit/games", () => ({
+vi.mock("@adh-sdk/games", () => ({
   GAME_FOR_ECOSYSTEM_CACHE_KEY: "game-for-ecosystem",
   REALM_CONFIG_CACHE_KEY: "realm-config",
   GameOperationalFields: () => <div data-testid="game-status" />,
@@ -37,7 +37,7 @@ vi.mock("@agentic-toolkit/games", () => ({
 
 // The on/off switch is the shared FeatureSwitch (its own test covers the feature write); here it
 // stands in as a marker, so what these tests pin is that it is there, and where.
-vi.mock("@agentic-toolkit/ecosystems", () => ({
+vi.mock("@adh-sdk/ecosystems", () => ({
   FeatureSwitch: ({ featureKey, lockedBy }: { featureKey: string; lockedBy?: string }) => (
     <div data-testid={`feature-switch-${featureKey}`} data-locked-by={lockedBy ?? ""} />
   ),

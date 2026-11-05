@@ -1,7 +1,7 @@
 ---
 id: 4d0e04ff-39eb-472c-93a0-8070f1b64a6a
 title: "OptionMenu"
-domain: agenticdevelopertoolkit://recipes/option-menu
+domain: adhsdk://recipes/option-menu
 type: ingredient
 version: 1.1.1
 status: review
@@ -21,12 +21,12 @@ tags:
   - menu
   - ui
 depends-on:
-  - agenticdevelopertoolkit://recipes/popover
-  - agenticdevelopertoolkit://recipes/input
-  - agenticdevelopertoolkit://recipes/button
+  - adhsdk://recipes/popover
+  - adhsdk://recipes/input
+  - adhsdk://recipes/button
 related:
-  - agenticdevelopertoolkit://recipes/select
-  - agenticdevelopertoolkit://recipes/popup-menu
+  - adhsdk://recipes/select
+  - adhsdk://recipes/popup-menu
 references: []
 approved-by: ''
 approved-date: ''
@@ -45,7 +45,7 @@ Other field), `Button` (the OK affordance) — with a hand-managed roving
 **selection** so the keyboard model below is exact. It deliberately does **not**
 build on `DropdownMenu` / Base-UI menu: menu roles hijack typeahead and focus and
 fight an embedded text input. It is distinct from the rail filter `PopupMenu`
-block (`@agenticdevelopertoolkit/ui/blocks/popup-menu`), which keeps its own `allLabel`/`onNew`
+block (`@adh-sdk/ui/blocks/popup-menu`), which keeps its own `allLabel`/`onNew`
 filter semantics and is unchanged.
 
 ## Behavioral Requirements

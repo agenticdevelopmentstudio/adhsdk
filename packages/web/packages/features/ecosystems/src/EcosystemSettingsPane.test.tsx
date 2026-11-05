@@ -6,12 +6,12 @@
 //
 // `./EcosystemForm` is module-mocked because `useRdidAvailability` calls react-query's `useQuery`,
 // which throws without a QueryClientProvider. Same prop-echoing-stub idiom as personas'
-// PersonaEditor.test.tsx. Nothing else in the pane's tree touches react-query (@agentic-toolkit/
+// PersonaEditor.test.tsx. Nothing else in the pane's tree touches react-query (@adh-sdk/
 // resource has no react-query dependency at all), so this one mock is the whole harness.
 import { describe, it, expect, vi, afterEach } from "vitest";
 import { render, screen, cleanup, act } from "@testing-library/react";
 import type { ComponentProps } from "react";
-import { ecosystemsApi, type Ecosystem } from "@agentic-toolkit/data/ecosystems";
+import { ecosystemsApi, type Ecosystem } from "@adh-sdk/data/ecosystems";
 
 // The stub ECHOES the props that carry the pane's answer to "what is this row's slug?" and "what
 // does the availability probe say about it", so the tests below assert what the field was handed
@@ -41,8 +41,8 @@ vi.mock("./EcosystemForm", () => ({
 }));
 
 // Only the transport is replaced; the mappers and types stay real.
-vi.mock("@agentic-toolkit/data/ecosystems", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("@agentic-toolkit/data/ecosystems")>()),
+vi.mock("@adh-sdk/data/ecosystems", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@adh-sdk/data/ecosystems")>()),
   ecosystemsApi: { update: vi.fn() },
 }));
 

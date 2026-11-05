@@ -1,7 +1,7 @@
 ---
 id: abd8ebe3-468d-4dda-8da2-cb00a97ae84c
 title: Markdown Result Row
-domain: agenticdevelopertoolkit://recipes/markdown-result-row
+domain: adhsdk://recipes/markdown-result-row
 type: ingredient
 version: 1.1.1
 status: review
@@ -21,7 +21,7 @@ tags:
 - markdown-documents
 depends-on: []
 related:
-- agenticdevelopertoolkit://recipes/badge
+- adhsdk://recipes/badge
 references:
 - https://www.w3.org/WAI/WCAG22/Understanding/target-size-minimum.html
 approved-by: ''
@@ -57,7 +57,7 @@ The Markdown Result Row is a specialized search result component designed to dis
 - **enlarge-link-touch-target**: Component MUST ensure the "View paper" link's clickable/tappable target is at least 24 CSS px tall across the link's full width, meeting WCAG 2.2 SC 2.5.8 (Target Size, Minimum), independent of the visible link text's size.
 - **set-link-href**: Component MUST render the "View paper" link with `href` set to the prop value, allowing navigation to the public paper page.
 - **escape-content**: Component MUST render title and snippet content as React nodes (never `dangerouslySetInnerHTML`), ensuring user-controlled text is escaped by React's default behavior.
-- **render-rounded-corners**: Component MUST apply the `--radius-lg` design token (8px) to the root article and the `--radius-md` design token (~6px) to interactive focus rings; the per-kind Badge applies its own corner radius (see agenticdevelopertoolkit://recipes/badge).
+- **render-rounded-corners**: Component MUST apply the `--radius-lg` design token (8px) to the root article and the `--radius-md` design token (~6px) to interactive focus rings; the per-kind Badge applies its own corner radius (see adhsdk://recipes/badge).
 
 ## Appearance
 

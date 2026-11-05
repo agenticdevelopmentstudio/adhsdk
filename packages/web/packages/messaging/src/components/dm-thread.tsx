@@ -18,12 +18,12 @@ import {
 } from 'react'
 import { ArrowLeft, SendHorizontal } from 'lucide-react'
 
-import { Avatar, AvatarFallback } from '@agenticdevelopertoolkit/ui/components/avatar'
-import { Button } from '@agenticdevelopertoolkit/ui/components/button'
-import { Spinner } from '@agenticdevelopertoolkit/ui/components/spinner'
-import { Textarea } from '@agenticdevelopertoolkit/ui/components/textarea'
-import { TooltipProvider } from '@agenticdevelopertoolkit/ui/components/tooltip'
-import { ErrorText } from '@agenticdevelopertoolkit/ui/components/error-text'
+import { Avatar, AvatarFallback } from '@adh-sdk/ui/components/avatar'
+import { Button } from '@adh-sdk/ui/components/button'
+import { Spinner } from '@adh-sdk/ui/components/spinner'
+import { Textarea } from '@adh-sdk/ui/components/textarea'
+import { TooltipProvider } from '@adh-sdk/ui/components/tooltip'
+import { ErrorText } from '@adh-sdk/ui/components/error-text'
 
 import { useDmThread, type DmMessage } from '../hooks/use-dms'
 import { PresenceDot } from './presence-dot'

@@ -1,7 +1,7 @@
 'use client'
 
 import { Fragment, type ReactElement, type ReactNode, type Ref } from 'react'
-import { Badge } from '@agenticdevelopertoolkit/ui/components/badge'
+import { Badge } from '@adh-sdk/ui/components/badge'
 import type { DocumentResultProps } from '../../types'
 import type { PaperSearchHit } from '../../registry/markdown'
 import { kindRendererFor } from '../../registry/kinds'
@@ -42,7 +42,7 @@ function Highlighted({ text, query }: { text: string; query: string }): ReactNod
  *
  * Styled with the shared `apt-*` design tokens only, so it themes with every variant
  * and renders correctly in the marketing app (whose Tailwind never scans
- * @agenticdevelopertoolkit/ui) via this package's own compiled stylesheet.
+ * @adh-sdk/ui) via this package's own compiled stylesheet.
  */
 export function MarkdownResultRow({
   hit,

@@ -10,7 +10,7 @@ import type { ActivityRow, Indicator as BoardIndicator, Problem } from "./board-
 // The client does not derive a row's ENVIRONMENT at all: the tier is the server's, decided
 // branch-first by `src/monitor/deploy-view.ts`'s `deployEnv` and stamped on the row before
 // it ships. The project-name convention this file used to also carry is the deploy
-// engine's (`envFromProject`, @agentic-toolkit/deploy-platform/canon), where the planner
+// engine's (`envFromProject`, @adh-sdk/deploy-platform/canon), where the planner
 // that reads it lives.
 // ---------------------------------------------------------------------------
 

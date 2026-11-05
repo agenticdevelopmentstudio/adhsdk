@@ -2,13 +2,13 @@
 //
 // Component test for WorkItemRelations — how a card says it is linked to others.
 //
-// Only the api-client boundary (@agentic-toolkit/data/projects) is mocked, so load → pick →
+// Only the api-client boundary (@adh-sdk/data/projects) is mocked, so load → pick →
 // link → reload and the unlink wiring are exercised rather than the transport. The property
 // worth the most attention is the one a screenshot cannot check: a relation is stored ONCE and
 // read from both ends, so the SAME kind must read differently depending on which card you are
 // standing on. Every "Blocked by"/"Blocks" assertion below is really that one claim.
 //
-// @agentic-toolkit/data is deliberately NOT mocked: the list runs through the REAL
+// @adh-sdk/data is deliberately NOT mocked: the list runs through the REAL
 // useResourceList, whose module-scope cache is keyed `work-item:<id>:relations` and OUTLIVES
 // cleanup() — what empties it between tests is the package's `vitest-setup` teardown. Each test
 // also takes its own item id, so a row seeded here cannot reach a test that never stubbed it
@@ -16,7 +16,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, fireEvent, waitFor, cleanup, within } from "@testing-library/react";
 
-vi.mock("@agentic-toolkit/data/projects", () => ({
+vi.mock("@adh-sdk/data/projects", () => ({
   projectWorkItemsApi: {
     relations: { list: vi.fn(), add: vi.fn(), remove: vi.fn() },
   },
@@ -32,7 +32,7 @@ import {
   type ProjectStatus,
   type WorkItem,
   type WorkItemRelation,
-} from "@agentic-toolkit/data/projects";
+} from "@adh-sdk/data/projects";
 
 const list = vi.mocked(projectWorkItemsApi.relations.list);
 const add = vi.mocked(projectWorkItemsApi.relations.add);

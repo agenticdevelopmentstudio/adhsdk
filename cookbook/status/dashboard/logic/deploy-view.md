@@ -1,7 +1,7 @@
 ---
 id: 66cf24b9-04bf-4767-8af9-f82d7e2b5268
 title: "Deploy View"
-domain: adtoolkit://cookbook/status/dashboard/logic/deploy-view
+domain: adhsdk://cookbook/status/dashboard/logic/deploy-view
 type: ingredient
 version: 1.1.0
 status: review
@@ -18,8 +18,8 @@ platforms:
 tags: []
 depends-on: []
 related:
-  - adtoolkit://cookbook/status/dashboard/logic/board-staleness
-  - adtoolkit://cookbook/status/dashboard/session-client
+  - adhsdk://cookbook/status/dashboard/logic/board-staleness
+  - adhsdk://cookbook/status/dashboard/session-client
 references: []
 approved-by: ""
 approved-date: ""
@@ -38,7 +38,7 @@ This module is the status dashboard's view-side logic over raw deploy records. I
 - the endpoint-deploys, latest-terminal-for-endpoint and failures-for-endpoint operations: correlate an endpoint to its deploys by the EXPLICIT (platform, project) wired on the endpoint in config, with "No host guessing." The detail panel and the status matrix call them.
 - the deploy-target-key and platform-canonicalization operations: re-exported unchanged from a shared canon module. The source comment says they are "Re-exported (never restated) so the two sides can't key the same deploy differently" — the backend keys deploys with the same function.
 
-The stale-in-flight test is a helper shared with the row model. The [Board Staleness](adtoolkit://cookbook/status/dashboard/logic/board-staleness) recipe shares its fail-closed clock rule.
+The stale-in-flight test is a helper shared with the row model. The [Board Staleness](adhsdk://cookbook/status/dashboard/logic/board-staleness) recipe shares its fail-closed clock rule.
 
 ## Behavioral Requirements
 

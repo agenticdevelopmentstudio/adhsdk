@@ -1,16 +1,16 @@
 "use client";
 
 import { useCallback, useMemo, useState, type ReactElement } from "react";
-import { ErrorText } from "@agenticdevelopertoolkit/ui/components/error-text";
-import { Field } from "@agenticdevelopertoolkit/ui/blocks/field";
-import { Select } from "@agenticdevelopertoolkit/ui/components/select";
-import { Input } from "@agenticdevelopertoolkit/ui/components/input";
-import { Textarea } from "@agenticdevelopertoolkit/ui/components/textarea";
-import { Button } from "@agenticdevelopertoolkit/ui/components/button";
-import { TagSetField } from "@agenticdevelopertoolkit/ui/blocks/tag-set-field";
-import { useDirtyDraft } from "@agenticdevelopertoolkit/ui/hooks/useDirtyDraft";
-import { projectWorkItemsApi, type WorkItem } from "@agentic-toolkit/data/projects";
-import { projectActivityApi } from "@agentic-toolkit/data/projects";
+import { ErrorText } from "@adh-sdk/ui/components/error-text";
+import { Field } from "@adh-sdk/ui/blocks/field";
+import { Select } from "@adh-sdk/ui/components/select";
+import { Input } from "@adh-sdk/ui/components/input";
+import { Textarea } from "@adh-sdk/ui/components/textarea";
+import { Button } from "@adh-sdk/ui/components/button";
+import { TagSetField } from "@adh-sdk/ui/blocks/tag-set-field";
+import { useDirtyDraft } from "@adh-sdk/ui/hooks/useDirtyDraft";
+import { projectWorkItemsApi, type WorkItem } from "@adh-sdk/data/projects";
+import { projectActivityApi } from "@adh-sdk/data/projects";
 import type {
   EstimateScale,
   Iteration,
@@ -18,7 +18,7 @@ import type {
   PriorityScale,
   ProjectStatus,
   ProjectParticipant,
-} from "@agentic-toolkit/data/projects";
+} from "@adh-sdk/data/projects";
 import { DEFAULT_ITEM_WORDS, type ItemWords } from "./vocabulary";
 import { AssigneePicker, toOptionValue, fromOptionValue, type AssigneeValue } from "./AssigneePicker";
 import { IterationPicker, NO_ITERATION } from "./IterationPicker";

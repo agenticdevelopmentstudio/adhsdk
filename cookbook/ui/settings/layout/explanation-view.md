@@ -1,7 +1,7 @@
 ---
 id: 25046f90-559d-4e32-8516-b5dae5f09c43
 title: "Explanation View"
-domain: adtoolkit://cookbook/ui/settings/layout/explanation-view
+domain: adhsdk://cookbook/ui/settings/layout/explanation-view
 type: ingredient
 version: 1.3.1
 status: review
@@ -20,7 +20,7 @@ tags:
   - static-text
 depends-on: []
 related:
-  - adtoolkit://cookbook/ui/settings/layout/panel-heading-view
+  - adhsdk://cookbook/ui/settings/layout/panel-heading-view
 references:
   - https://www.w3.org/TR/WCAG21/#contrast-minimum
 approved-by: ""
@@ -266,7 +266,7 @@ Not applicable: the view contains no logging call.
   edge-to-edge like `fills-view-edge-to-edge`, and no `max-height`/
   `-webkit-line-clamp` so it grows to fit like `resists-vertical-compression`.
 - **AppKit / UIKit** (source platform): Source at
-  `packages/apple/AgenticToolkit/macOS/SystemIntegration/ComposableSettingsWindow/Views/ExplanationView.swift`
+  `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/Views/ExplanationView.swift`
   (this recipe's source): a macOS-only (`import AppKit`) `NSView` subclass,
   `@MainActor`-isolated, conforming to `SettingsViewProtocol` (an empty
   marker protocol every `ComposableSettings` row view conforms to, with no
@@ -331,7 +331,7 @@ Not applicable: the view contains no logging call.
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/macOS/SystemIntegration/ComposableSettingsWindow/Views/ExplanationView.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/Views/ExplanationView.swift` |
 
 ## Design Decisions
 

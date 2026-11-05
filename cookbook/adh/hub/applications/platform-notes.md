@@ -5,10 +5,10 @@
   `ApplicationsTopic.swift` imports no SwiftUI and performs no rendering itself.
 - **AppKit / UIKit**: this is the source. `ApplicationsDataSource.swift`,
   `ApplicationsModels.swift`, and `ApplicationsTopic.swift` live in the `Hub` module
-  shared between the `AgenticToolkitHub-macOS` and `AgenticToolkitHub-iOS` targets
+  shared between the `AgenticDeveloperHubSDKHub-macOS` and `AgenticDeveloperHubSDKHub-iOS` targets
   (both declared in `project.yml`, one source set). None of the three files imports
   `AppKit` or `UIKit` directly — each is plain `Foundation` (`ApplicationsTopic.swift`
-  also imports `AgenticToolkitHTDV`), with the platform-specific
+  also imports `AgenticDeveloperHubSDKHTDV`), with the platform-specific
   `NSViewController`/`UIViewController` split handled entirely inside
   `FormViewController`, one layer below where these types operate.
 

@@ -3,7 +3,7 @@
   "meta": {
     "id": "63f8a602-58f8-4fdc-9461-b959be427a4d",
     "title": "Status Web Colors",
-    "domain": "adtoolkit://cookbook/status/dashboard/logic/colors",
+    "domain": "adhsdk://cookbook/status/dashboard/logic/colors",
     "type": "ingredient",
     "version": "1.0.2",
     "status": "review",
@@ -21,7 +21,7 @@
     "tags": [],
     "depends-on": [],
     "related": [
-      "adtoolkit://cookbook/status/dashboard/session-client"
+      "adhsdk://cookbook/status/dashboard/session-client"
     ],
     "references": [],
     "approved-by": "",

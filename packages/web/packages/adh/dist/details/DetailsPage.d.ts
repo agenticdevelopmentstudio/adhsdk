@@ -1,4 +1,4 @@
-import { type SiteId } from '@agentic-toolkit/adh-registry';
+import { type SiteId } from '@adh-sdk/adh-registry';
 export interface DetailsPageProps {
     /** The site this details page belongs to (scopes the left rail + routes). */
     siteId: SiteId;

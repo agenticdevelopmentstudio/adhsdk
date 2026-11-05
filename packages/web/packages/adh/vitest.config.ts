@@ -1,7 +1,7 @@
 import { fileURLToPath } from 'node:url'
 import { defineConfig } from 'vitest/config'
 
-// Self-contained config so `pnpm --filter @agentic-toolkit/adh run test`
+// Self-contained config so `pnpm --filter @adh-sdk/adh run test`
 // (cwd = this package) discovers src/__tests__/*. The workspace-root
 // config excludes every package that owns a config, so this is the only one that runs
 // these tests.
@@ -12,7 +12,7 @@ export default defineConfig({
     alias: [
       // ONE `next` in the test process, forced by
       // Task 7 (the User Settings overlay): its render tree now crosses into
-      // @agentic-toolkit/account and @agentic-toolkit/resource, both pinned to next ^15.1.0,
+      // @adh-sdk/account and @adh-sdk/resource, both pinned to next ^15.1.0,
       // while this package's own devDependency is next ^16.4.3 — two genuinely different
       // installed copies (confirmed: 15.5.18 vs 16.2.10, resolving to different files under
       // node_modules/.pnpm). Unlike react, that mismatch is silent up to this task: nothing

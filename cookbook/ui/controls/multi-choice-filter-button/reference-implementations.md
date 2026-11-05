@@ -1,5 +1,5 @@
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/macOS/UI/Controls/MultiChoiceFilterButton.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/Controls/MultiChoiceFilterButton.swift` |
 

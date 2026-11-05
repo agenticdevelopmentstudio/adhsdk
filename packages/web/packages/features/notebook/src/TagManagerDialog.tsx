@@ -3,19 +3,19 @@
 import { useState } from "react";
 import { Trash2 } from "lucide-react";
 
-import { reportUnexpectedAuthError } from "@agentic-toolkit/auth";
-import { AlertModal } from "@agenticdevelopertoolkit/ui/components/alert-modal";
-import { Button } from "@agenticdevelopertoolkit/ui/components/button";
+import { reportUnexpectedAuthError } from "@adh-sdk/auth";
+import { AlertModal } from "@adh-sdk/ui/components/alert-modal";
+import { Button } from "@adh-sdk/ui/components/button";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "@agenticdevelopertoolkit/ui/components/dialog";
-import { ErrorText } from "@agenticdevelopertoolkit/ui/components/error-text";
-import { Input } from "@agenticdevelopertoolkit/ui/components/input";
-import { taxonomyApi, type NoteTag } from "@agentic-toolkit/data/notes";
+} from "@adh-sdk/ui/components/dialog";
+import { ErrorText } from "@adh-sdk/ui/components/error-text";
+import { Input } from "@adh-sdk/ui/components/input";
+import { taxonomyApi, type NoteTag } from "@adh-sdk/data/notes";
 
 function errorText(err: unknown, fallback: string): string {
   return err instanceof Error ? err.message : fallback;

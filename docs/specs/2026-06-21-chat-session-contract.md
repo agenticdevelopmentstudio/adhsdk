@@ -3,7 +3,7 @@
 - **Date:** 2026-06-21
 - **Status:** Approved design, pre-implementation
 - **Scope of this spec:** Phase 1 (the contract + Local + Mock + streaming UI) in detail; Phases 2–4 sketched.
-- **Home:** AgenticToolkit (the contract is consumed by BitBag, AgenticToolkitApp, Whippet, Stenographer).
+- **Home:** AgenticDeveloperHubSDK (the contract is consumed by BitBag, AgenticDeveloperHubSDKApp, Whippet, Stenographer).
 
 ## 1. Problem & goals
 
@@ -40,7 +40,7 @@ A single protocol, `ChatSession`, is the wire between the UI and any chat
 engine. It is a **headless engine** (no AppKit/SwiftUI, off the main actor); the
 UI's observable state is built by folding its event stream (§4). The only shared
 surface is this protocol plus a handful of Foundation-only value types, all in
-**`AgenticToolkitCore`**.
+**`AgenticDeveloperHubSDKCore`**.
 
 ```swift
 public protocol ChatSession: Sendable {
@@ -92,7 +92,7 @@ public struct ChatError: Error, Sendable, Equatable {
 ```
 
 The transcript element type is the existing `ChatMessage`, **moved to
-`AgenticToolkitCore`** and extended so deltas can mutate text in place and the
+`AgenticDeveloperHubSDKCore`** and extended so deltas can mutate text in place and the
 view can show a streaming caret:
 
 ```swift
@@ -134,9 +134,9 @@ public struct ChatMessage: Identifiable, Equatable, Sendable {
 
 | Piece | Module | Notes |
 |---|---|---|
-| `ChatSession`, `ChatEvent`, `ChatMessage`, `ChatSessionState`, `ChatError`, `ToolPhase` | `AgenticToolkitCore` (Foundation-only) | The durable contract. No UI, plugins, or network. |
-| `MockChatSession` | `AgenticToolkitCore` | Pure; powers unit tests *and* SwiftUI/AppKit previews. (Splittable into `AgenticToolkitCoreTestSupport` later if shipping a mock in Core becomes undesirable.) |
-| `LocalChatSession` | `AgenticToolkitMacOS` / Features/AIPlugins | Replaces `AIPluginChatBackend` in place. Reuses `plugin.buildRequest` + `PluginTransport.run`, mapping `AIStreamEvent` → `ChatEvent`. Reads `PluginConfigStore` directly. |
+| `ChatSession`, `ChatEvent`, `ChatMessage`, `ChatSessionState`, `ChatError`, `ToolPhase` | `AgenticDeveloperHubSDKCore` (Foundation-only) | The durable contract. No UI, plugins, or network. |
+| `MockChatSession` | `AgenticDeveloperHubSDKCore` | Pure; powers unit tests *and* SwiftUI/AppKit previews. (Splittable into `AgenticDeveloperHubSDKCoreTestSupport` later if shipping a mock in Core becomes undesirable.) |
+| `LocalChatSession` | `AgenticDeveloperHubSDKMacOS` / Features/AIPlugins | Replaces `AIPluginChatBackend` in place. Reuses `plugin.buildRequest` + `PluginTransport.run`, mapping `AIStreamEvent` → `ChatEvent`. Reads `PluginConfigStore` directly. |
 | `RemoteChatSession` (stub now) | near `AgenticDeveloperHubClient` (the existing backend-client layer that owns `DaemonContract`) | Phase 1 ships a stub that conforms and emits `stateChanged(.failed(ChatError(message: "Remote chat coming soon", isRetryable: false)))`, so the coordinator can select it and everything compiles. Real impl is Phase 2. |
 
 **Opener seam:** `AIChatCoordinator(makeSession: () -> any ChatSession)` (evolved
@@ -245,7 +245,7 @@ Converge to one contract; delete the duplicates (design-for-deletion).
   indirection collapses. `PluginConfigStore` itself stays.
 - `AIChatCoordinator.makeBackend` → `makeSession`.
 
-**Blast radius:** shared-toolkit surgery. AgenticToolkitApp, Whippet,
+**Blast radius:** shared-toolkit surgery. AgenticDeveloperHubSDKApp, Whippet,
 Stenographer, and BitBag all consume it, but nearly all touch chat only through
 `AIChatCoordinator(makeSession:)`, so per-app changes are confined to the
 factory closure each passes. Each consumer is migrated as part of the work, not

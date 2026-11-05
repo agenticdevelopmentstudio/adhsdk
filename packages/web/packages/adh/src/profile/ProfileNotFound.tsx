@@ -3,10 +3,10 @@
 import { useState, useCallback, useRef, type FormEvent, type ReactElement } from "react";
 import Link from "next/link";
 import { Search } from "lucide-react";
-import { Avatar, AvatarImage, AvatarFallback } from "@agenticdevelopertoolkit/ui/components/avatar";
-import { Input } from "@agenticdevelopertoolkit/ui/components/input";
-import { Button } from "@agenticdevelopertoolkit/ui/components/button";
-import { ErrorText } from "@agenticdevelopertoolkit/ui/components/error-text";
+import { Avatar, AvatarImage, AvatarFallback } from "@adh-sdk/ui/components/avatar";
+import { Input } from "@adh-sdk/ui/components/input";
+import { Button } from "@adh-sdk/ui/components/button";
+import { ErrorText } from "@adh-sdk/ui/components/error-text";
 import { PROFILE_FRAME_CLASS } from "./frame";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -14,7 +14,7 @@ import { PROFILE_FRAME_CLASS } from "./frame";
 /** One hit from `GET /public/users/search`. Structurally the backend's
  *  `PrincipalSearchHit` (routes/principal-search.ts) — declared here rather than imported so
  *  this package stays free of the generated API types, the same arrangement `UserCardDto`
- *  has in @agenticdevelopertoolkit/ui. `kind` is what makes the merged namespace legible; see the
+ *  has in @adh-sdk/ui. `kind` is what makes the merged namespace legible; see the
  *  React key on the result row for why it is not decoration. */
 type SearchHit = {
   slug: string;
@@ -51,7 +51,7 @@ function initials(name: string): string {
  * Includes a search box that calls `GET /api/public/users/search?q=<query>` — one endpoint over
  * both namespaces, which is why each hit carries its `kind`.
  *
- * Lives in @agentic-toolkit/adh rather than in the hub: every site in the fleet renders a
+ * Lives in @adh-sdk/adh rather than in the hub: every site in the fleet renders a
  * profile now, so every site can miss one.
  */
 export function ProfileNotFound(): ReactElement {

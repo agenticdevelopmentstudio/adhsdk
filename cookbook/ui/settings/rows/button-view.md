@@ -1,7 +1,7 @@
 ---
 id: f8e734aa-f401-4218-9f1e-56ed98c28d3d
 title: "Button View"
-domain: adtoolkit://cookbook/ui/settings/rows/button-view
+domain: adhsdk://cookbook/ui/settings/rows/button-view
 type: ingredient
 version: 1.2.4
 status: review
@@ -256,7 +256,7 @@ Not applicable: the source contains no logging calls.
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/macOS/SystemIntegration/ComposableSettingsWindow/Views/ButtonView.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/Views/ButtonView.swift` |
 
 ## Design Decisions
 
@@ -273,11 +273,11 @@ Not applicable: the source contains no logging calls.
 **Approved**: pending
 
 **Decision**: This recipe calls the component's container a "row" throughout, even though the source's own comments use both "row" (in the `Placement` doc comment: "where the button sits in the row it is given") and "card" (in the `.fill` and `.leading` case comments: "stretched across the whole card"; "the row is as wide as the card").
-**Rationale**: The two words refer to the same concept in this file; "row" is kept as the single term for consistency with how a settings-row view's container is described elsewhere in the cookbook — `adtoolkit://cookbook/ui/settings/layout/header-view` and `adtoolkit://cookbook/ui/settings/layout/horizontal-stack-view` both describe the settings-row-view contract as "the marker protocol every settings-row view in this system adopts" — and the source's own inconsistency is recorded here rather than silently smoothed over.
+**Rationale**: The two words refer to the same concept in this file; "row" is kept as the single term for consistency with how a settings-row view's container is described elsewhere in the cookbook — `adhsdk://cookbook/ui/settings/layout/header-view` and `adhsdk://cookbook/ui/settings/layout/horizontal-stack-view` both describe the settings-row-view contract as "the marker protocol every settings-row view in this system adopts" — and the source's own inconsistency is recorded here rather than silently smoothed over.
 **Approved**: pending
 
 **Decision**: (AppKit) This recipe describes `Self.pinToEdges(button, of: self)` (used in **fills-view-in-fill-placement**) as pinning all four edges of the button to the corresponding edges of the component.
-**Rationale**: `pinToEdges` is not defined in `ButtonView.swift`, but its implementation was read directly: `static func pinToEdges(_ view: NSView, of container: NSView)` in `packages/apple/AgenticToolkit/macOS/SystemIntegration/ComposableSettingsWindow/ViewLayout.swift` activates exactly four equal constraints — `view`'s top, leading, trailing, and bottom anchors to `container`'s corresponding anchors — confirming the `.fill` case comment ("Stretched across the whole card") describes the same behavior this recipe asserts.
+**Rationale**: `pinToEdges` is not defined in `ButtonView.swift`, but its implementation was read directly: `static func pinToEdges(_ view: NSView, of container: NSView)` in `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/ViewLayout.swift` activates exactly four equal constraints — `view`'s top, leading, trailing, and bottom anchors to `container`'s corresponding anchors — confirming the `.fill` case comment ("Stretched across the whole card") describes the same behavior this recipe asserts.
 **Approved**: pending
 
 ## Compliance
@@ -295,7 +295,7 @@ Not applicable: the source contains no logging calls.
 
 The `passed` statuses rest on `ButtonView` using an unmodified `NSButton` for its role, label, keyboard handling, and system-chrome contrast, and on `ButtonView` defining no string literals of its own. `dynamic-type-support` is `failed` because `button.font` is never set to a text-style-based font (e.g. `NSFont.preferredFont(forTextStyle:)`), so its title does not scale with the system text-size setting. `touch-target-size` is `passed` on macOS: the button keeps the system control metrics (see **Minimum tap target** under Accessibility).
 
-`separation-of-concerns` passes because `ButtonView` only places an `NSButton` in a row according to its `Placement` and forwards the press to the view model's `wasPressedCallback`; what the press does belongs entirely to the caller's `ButtonViewModel`. No test in the repository's test targets constructs `ButtonView`, so `unit-test-coverage` is `failed`: a search of `AgenticToolkitMacOSTests` and the other test targets for the type name finds nothing.
+`separation-of-concerns` passes because `ButtonView` only places an `NSButton` in a row according to its `Placement` and forwards the press to the view model's `wasPressedCallback`; what the press does belongs entirely to the caller's `ButtonViewModel`. No test in the repository's test targets constructs `ButtonView`, so `unit-test-coverage` is `failed`: a search of `AgenticDeveloperHubSDKMacOSTests` and the other test targets for the type name finds nothing.
 
 ## Change History
 

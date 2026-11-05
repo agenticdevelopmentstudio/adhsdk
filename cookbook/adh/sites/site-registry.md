@@ -1,7 +1,7 @@
 ---
 id: 9069ccf9-0357-4311-9671-91ee2793adae
 title: "Site Registry"
-domain: adtoolkit://cookbook/adh/sites/site-registry
+domain: adhsdk://cookbook/adh/sites/site-registry
 type: ingredient
 version: 1.1.1
 status: review

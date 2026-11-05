@@ -1,7 +1,7 @@
 ---
 id: f1167221-f233-4b5d-822c-ae26de4634db
 title: "Endpoint Kinds"
-domain: adtoolkit://cookbook/status/dashboard/logic/endpoint-kinds
+domain: adhsdk://cookbook/status/dashboard/logic/endpoint-kinds
 type: ingredient
 version: 1.0.2
 status: review
@@ -18,8 +18,8 @@ platforms:
 tags: []
 depends-on: []
 related:
-  - adtoolkit://cookbook/status/dashboard/api
-  - adtoolkit://cookbook/status/dashboard/state/config-status
+  - adhsdk://cookbook/status/dashboard/api
+  - adhsdk://cookbook/status/dashboard/state/config-status
 references: []
 approved-by: ""
 approved-date: ""
@@ -36,9 +36,9 @@ It exports four things:
 - `ENDPOINT_KINDS`, a readonly tuple of the six kind strings, in display order.
 - `EndpointKind`, the string-literal union derived from that tuple.
 - `isEndpointKind(k)`, a type guard that narrows an arbitrary string to `EndpointKind`.
-- `NON_DEPLOY_KINDS`, re-exported unchanged from `@agentic-toolkit/deploy-platform/engine` (`classify.ts`). The module does not restate its members.
+- `NON_DEPLOY_KINDS`, re-exported unchanged from `@adh-sdk/deploy-platform/engine` (`classify.ts`). The module does not restate its members.
 
-The module has no state, no I/O and no side effects. Inside status-web, `src/api/monitored-sites.ts` re-exports `ENDPOINT_KINDS` so existing imports from `./monitored-sites` keep working ([Status Web API](adtoolkit://cookbook/status/dashboard/api)). The status server keeps its own copy of the same vocabulary in `status-server/src/monitor/endpoint-kinds.ts`, which it says is "kept in step" with this file.
+The module has no state, no I/O and no side effects. Inside status-web, `src/api/monitored-sites.ts` re-exports `ENDPOINT_KINDS` so existing imports from `./monitored-sites` keep working ([Status Web API](adhsdk://cookbook/status/dashboard/api)). The status server keeps its own copy of the same vocabulary in `status-server/src/monitor/endpoint-kinds.ts`, which it says is "kept in step" with this file.
 
 ## Behavioral Requirements
 
@@ -65,7 +65,7 @@ The module has no state, no I/O and no side effects. Inside status-web, `src/api
 
 ### NON_DEPLOY_KINDS
 
-- **non-deploy-reexport**: The module MUST re-export `NON_DEPLOY_KINDS` from `@agentic-toolkit/deploy-platform/engine` as the same object. It MUST NOT declare its own set. The authoring comment says it is "Re-exported (never restated)" so the warning badge and the engine's classification cannot disagree about `dns`.
+- **non-deploy-reexport**: The module MUST re-export `NON_DEPLOY_KINDS` from `@adh-sdk/deploy-platform/engine` as the same object. It MUST NOT declare its own set. The authoring comment says it is "Re-exported (never restated)" so the warning badge and the engine's classification cannot disagree about `dns`.
 - **non-deploy-members**: Through that re-export, `NON_DEPLOY_KINDS` MUST be a `ReadonlySet<string>` containing exactly `"health"`, `"custom"` and `"dns"`, as the engine declares it.
 - **non-deploy-subset**: Every member of `NON_DEPLOY_KINDS` MUST also be a member of `ENDPOINT_KINDS`. The deploy-backed kinds are therefore `http`, `frontend` and `admin`, which the engine's `endpointNeedsWiring` returns `true` for.
 - **non-deploy-ownership**: Which kinds are deploy-backed MUST be decided by the engine, not by this module. The authoring comment says this is "the CLASSIFIER's knowledge, not this list's". This module's consumers that need the classification (for example `config-status.ts`) call the engine's classifier directly.
@@ -104,13 +104,13 @@ No test file sits next to `endpoint-kinds.ts`. Vectors 001 to 009 are traced to 
 | endpoint-kinds-009 | kind-type-derived | Type-check `const e: EndpointKind = "tcp"` | Type error; `"tcp"` is not assignable to `EndpointKind` |
 | endpoint-kinds-010 | non-deploy-members, non-deploy-subset | `[...NON_DEPLOY_KINDS]` and `ENDPOINT_KINDS.includes(k)` for each member | `["health", "custom", "dns"]`; every member is in `ENDPOINT_KINDS` |
 | endpoint-kinds-011 | non-deploy-ownership | Engine `endpointNeedsWiring(k)` for each k in `ENDPOINT_KINDS` | `true` for `http`, `frontend`, `admin`; `false` for `health`, `custom`, `dns` |
-| endpoint-kinds-012 | non-deploy-reexport | Compare the `NON_DEPLOY_KINDS` imported from this module with the one imported from `@agentic-toolkit/deploy-platform/engine` | Same object (`Object.is` returns `true`) |
+| endpoint-kinds-012 | non-deploy-reexport | Compare the `NON_DEPLOY_KINDS` imported from this module with the one imported from `@adh-sdk/deploy-platform/engine` | Same object (`Object.is` returns `true`) |
 
 ## Edge Cases
 
 - **Empty string**: `isEndpointKind("")` MUST return `false`. The list has no empty member.
 - **Case and whitespace variants**: `"Http"`, `"HTTP"` and `" http"` MUST return `false`. The guard does no normalization, so a caller that accepts user-typed kinds has to normalize first.
-- **Kinds from another vocabulary**: The shared data package (`@agentic-toolkit/data/monitored-sites`) declares a different `ENDPOINT_KINDS` of `["http", "tcp", "icmp"]`, which the dashboards feature's `EndpointsEditor` uses. `isEndpointKind("tcp")` and `isEndpointKind("icmp")` MUST return `false` here. Only `"http"` is shared between the two vocabularies.
+- **Kinds from another vocabulary**: The shared data package (`@adh-sdk/data/monitored-sites`) declares a different `ENDPOINT_KINDS` of `["http", "tcp", "icmp"]`, which the dashboards feature's `EndpointsEditor` uses. `isEndpointKind("tcp")` and `isEndpointKind("icmp")` MUST return `false` here. Only `"http"` is shared between the two vocabularies.
 - **A kind added to the engine but not to this list**: If the engine's `NON_DEPLOY_KINDS` gains a member that `ENDPOINT_KINDS` lacks, the `non-deploy-subset` invariant breaks silently. No type or test ties the two lists together; the engine's comment assigns ownership of the set to the classifier.
 - **Drift from the status server's copy**: `status-server/src/monitor/endpoint-kinds.ts` restates the same six members rather than importing them. Its comment says it is "kept in step" with this file. No parity test enforces this, so an edit to one file alone would let the editor offer a kind the server's validator rejects, or the reverse. Validation of kinds on write belongs to the status server's endpoints routes, not to this module.
 - **Non-string input at runtime**: The signature takes `string`. A JavaScript caller that passes `undefined`, `null` or a number MUST get `false`, because `Array.prototype.includes` does not throw and no member is equal to a non-string.
@@ -123,10 +123,10 @@ No test file sits next to `endpoint-kinds.ts`. Vectors 001 to 009 are traced to 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
 | `ENDPOINT_KINDS` | `readonly ["http", "frontend", "admin", "health", "custom", "dns"]` | compiled in | The vocabulary itself. Changing it means editing the source. |
-| `NON_DEPLOY_KINDS` | `ReadonlySet<string>` | `{"health", "custom", "dns"}`, from the engine | Supplied by `@agentic-toolkit/deploy-platform/engine`. |
+| `NON_DEPLOY_KINDS` | `ReadonlySet<string>` | `{"health", "custom", "dns"}`, from the engine | Supplied by `@adh-sdk/deploy-platform/engine`. |
 | `k` (argument to `isEndpointKind`) | `string` | none (required) | The candidate kind string to test. |
 
-The module reads no environment variables and no settings keys, and takes no injected dependencies. Its one import is the re-export from `@agentic-toolkit/deploy-platform/engine`.
+The module reads no environment variables and no settings keys, and takes no injected dependencies. Its one import is the re-export from `@adh-sdk/deploy-platform/engine`.
 
 ## Deep Linking
 

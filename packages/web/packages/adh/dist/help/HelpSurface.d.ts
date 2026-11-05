@@ -1,5 +1,5 @@
 import { type HelpTopicId } from './topics';
-import { type HelpRouteLevel } from '@agentic-toolkit/adh/help/HelpMasterDetail';
+import { type HelpRouteLevel } from '@adh-sdk/adh/help/HelpMasterDetail';
 /** Join a site `basePath` (no trailing slash; `''` or `/` = apex) with a base-relative slug. */
 export declare function helpHref(basePath: string, slug: string): string;
 /** The stable key of the root level — the help topics — in every stack that starts with it. */

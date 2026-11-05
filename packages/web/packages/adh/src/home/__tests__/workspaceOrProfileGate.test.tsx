@@ -8,7 +8,7 @@ import { describe, it, expect, afterEach, beforeEach, vi } from 'vitest'
  */
 
 const { auth } = vi.hoisted(() => ({ auth: { isAuthenticated: false, isLoading: false } }))
-vi.mock('@agentic-toolkit/auth', () => ({
+vi.mock('@adh-sdk/auth', () => ({
   useAuth: () => auth,
 }))
 

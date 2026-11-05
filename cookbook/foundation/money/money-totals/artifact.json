@@ -3,7 +3,7 @@
   "meta": {
     "id": "9D3A57D7-C9BB-4AFC-BDAB-4C42278FD8C8",
     "title": "Money Totals",
-    "domain": "adtoolkit://cookbook/foundation/money/money-totals",
+    "domain": "adhsdk://cookbook/foundation/money/money-totals",
     "type": "ingredient",
     "version": "1.0.0",
     "status": "review",
@@ -26,8 +26,8 @@
     ],
     "depends-on": [],
     "related": [
-      "adtoolkit://cookbook/foundation/money",
-      "adtoolkit://cookbook/foundation/money/money-formatter"
+      "adhsdk://cookbook/foundation/money",
+      "adhsdk://cookbook/foundation/money/money-formatter"
     ],
     "references": [],
     "approved-by": "",

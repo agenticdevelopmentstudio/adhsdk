@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it } from "vitest";
 import { cleanup, render } from "@testing-library/react";
-import { siteProdUrl } from "@agentic-toolkit/adh-registry";
+import { siteProdUrl } from "@adh-sdk/adh-registry";
 import { LandingFooter } from "../marketing/LandingFooter";
 
 afterEach(cleanup);

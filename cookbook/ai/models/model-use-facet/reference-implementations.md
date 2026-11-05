@@ -1,5 +1,5 @@
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/AIPluginKit/ModelUseFacet.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/AIPluginKit/ModelUseFacet.swift` |
 

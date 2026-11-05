@@ -1,5 +1,5 @@
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/Permissions/` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Permissions/` |
 

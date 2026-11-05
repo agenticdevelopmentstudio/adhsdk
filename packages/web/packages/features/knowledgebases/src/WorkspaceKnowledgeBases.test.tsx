@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { cleanup, render, screen } from "@testing-library/react";
 
 const resolution = vi.fn();
-vi.mock("@agentic-toolkit/data/ecosystems", () => ({
+vi.mock("@adh-sdk/data/ecosystems", () => ({
   useWorkspaceDefaultEcosystemId: (slug: string | undefined) => resolution(slug),
 }));
 

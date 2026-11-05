@@ -1,8 +1,8 @@
 "use client";
 
 import { useCallback } from "react";
-import { revalidateResourceItems, revalidateResources } from "@agentic-toolkit/data";
-import { useProjectLive } from "@agentic-toolkit/data/projects";
+import { revalidateResourceItems, revalidateResources } from "@adh-sdk/data";
+import { useProjectLive } from "@adh-sdk/data/projects";
 
 /**
  * Keep every mounted pane of ONE board honest while it is open: subscribe to the board's wake

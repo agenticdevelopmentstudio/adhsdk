@@ -3,7 +3,7 @@
   "meta": {
     "id": "E3A194DC-3ACC-4206-AE6E-105A15FB9F55",
     "title": "Duration Formatter",
-    "domain": "adtoolkit://cookbook/foundation/time/duration-formatter",
+    "domain": "adhsdk://cookbook/foundation/time/duration-formatter",
     "type": "ingredient",
     "version": "1.0.0",
     "status": "review",
@@ -26,8 +26,8 @@
     ],
     "depends-on": [],
     "related": [
-      "adtoolkit://cookbook/foundation/money",
-      "adtoolkit://cookbook/foundation/money/increment-rounding"
+      "adhsdk://cookbook/foundation/money",
+      "adhsdk://cookbook/foundation/money/increment-rounding"
     ],
     "references": [],
     "approved-by": "",

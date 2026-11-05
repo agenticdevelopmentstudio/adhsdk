@@ -15,7 +15,7 @@ import {
   type ExpressionEffect,
   type MoodMap,
   type Tuning,
-} from "@agenticdevelopertoolkit/avatar";
+} from "@adh-sdk/avatar";
 import { EXPRESSIONS, POSES, type BitbagExpression } from "./expressions";
 import {
   BROW_LEFT,

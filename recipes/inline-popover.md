@@ -1,7 +1,7 @@
 ---
 id: a7e2f9d1-4c8a-4b9e-8f3d-2c5b7e1a9d4f
 title: "Inline Disclosure"
-domain: agenticdevelopertoolkit://recipes/inline-popover
+domain: adhsdk://recipes/inline-popover
 type: ingredient
 version: 1.1.1
 status: review
@@ -21,7 +21,7 @@ tags:
   - collapsible
 depends-on: []
 related:
-  - agenticdevelopertoolkit://recipes/popover
+  - adhsdk://recipes/popover
 references:
   - https://www.w3.org/WAI/ARIA/apg/patterns/disclosure/
   - https://developer.mozilla.org/en-US/docs/Web/HTML/Attributes/rel/noopener
@@ -33,7 +33,7 @@ approved-date: ''
 
 ## Overview
 
-Inline Disclosure is a collapsible control that toggles the visibility of supplemental content in place, without floating or overlaying other content — unlike the separate `@agenticdevelopertoolkit/popover` package (see Related), which positions an overlay relative to a trigger. It renders a toggle button with an optional arrow indicator and title, followed by a body section containing optional description text and a collection of links. The component maintains open/closed state internally and allows users to toggle visibility by clicking the toggle button.
+Inline Disclosure is a collapsible control that toggles the visibility of supplemental content in place, without floating or overlaying other content — unlike the separate `@adh-sdk/popover` package (see Related), which positions an overlay relative to a trigger. It renders a toggle button with an optional arrow indicator and title, followed by a body section containing optional description text and a collection of links. The component maintains open/closed state internally and allows users to toggle visibility by clicking the toggle button.
 
 ## Behavioral Requirements
 

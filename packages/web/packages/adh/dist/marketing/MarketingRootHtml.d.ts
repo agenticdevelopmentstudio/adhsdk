@@ -1,5 +1,5 @@
 import type { ReactElement } from 'react';
-import { type JsonLdValue } from '@agenticdevelopertoolkit/landing';
+import { type JsonLdValue } from '@adh-sdk/landing';
 import { type MarketingShellProps } from './MarketingShell';
 /** The document's props are the shell's, plus the one thing only a document can hold: the
  *  site's structured data. Each shell seam is documented on the shell's type, in
@@ -54,7 +54,7 @@ export type MarketingRootHtmlProps = MarketingShellProps & {
  * site layout would. Per-site `metadata` (the one genuinely per-site, SEO-bearing
  * part) and the site's `globals.css` import stay in each `app/layout.tsx`.
  *
- * Home: `@agentic-toolkit/adh/marketing` — adh VOCABULARY end to end (the ADH marketing
+ * Home: `@adh-sdk/adh/marketing` — adh VOCABULARY end to end (the ADH marketing
  * family's root document, its siteId, its clientId). It lived in the @adh-shared auth shim only
  * because that package owned the header/auth chrome it composes; Task 6.2 folded `SiteHeader`
  * into the app tier's header barrel and the toolkit took the generic halves, so the

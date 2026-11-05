@@ -1,5 +1,5 @@
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/AIPluginKit/AIPluginManager.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/AIPluginKit/AIPluginManager.swift` |
 

@@ -15,34 +15,34 @@ import {
   type EcosystemFeatureFlag,
   type EcosystemFeatureFlagCreate,
   type EcosystemFeatureFlagUpdate,
-} from "@agentic-toolkit/data/ecosystem-config";
+} from "@adh-sdk/data/ecosystem-config";
 import {
   duplicateFlagKeyMessage,
   flagFormBlockedReason,
   isFlagFormDirty,
   FLAG_KEY_REQUIRED_MESSAGE,
 } from "./dialog-state";
-import { errorMessage } from "@agenticdevelopertoolkit/ui/lib/errors";
-import { useAction } from "@agenticdevelopertoolkit/ui/hooks/useAction";
-import { DataTable, type DataTableColumn } from "@agenticdevelopertoolkit/ui/components/data-table";
-import { Input } from "@agenticdevelopertoolkit/ui/components/input";
-import { Button } from "@agenticdevelopertoolkit/ui/components/button";
-import { Checkbox } from "@agenticdevelopertoolkit/ui/components/checkbox";
-import { Label } from "@agenticdevelopertoolkit/ui/components/label";
-import { Alert, AlertTitle, AlertDescription } from "@agenticdevelopertoolkit/ui/components/alert";
+import { errorMessage } from "@adh-sdk/ui/lib/errors";
+import { useAction } from "@adh-sdk/ui/hooks/useAction";
+import { DataTable, type DataTableColumn } from "@adh-sdk/ui/components/data-table";
+import { Input } from "@adh-sdk/ui/components/input";
+import { Button } from "@adh-sdk/ui/components/button";
+import { Checkbox } from "@adh-sdk/ui/components/checkbox";
+import { Label } from "@adh-sdk/ui/components/label";
+import { Alert, AlertTitle, AlertDescription } from "@adh-sdk/ui/components/alert";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogDescription,
-} from "@agenticdevelopertoolkit/ui/components/dialog";
-import { DialogActions } from "@agenticdevelopertoolkit/ui/components/dialog-actions";
-import { AlertModal } from "@agenticdevelopertoolkit/ui/components/alert-modal";
-import { UnsavedChangesAlert } from "@agenticdevelopertoolkit/ui/components/unsaved-changes-alert";
-import { Field } from "@agenticdevelopertoolkit/ui/blocks/field";
-import { DialogErrorText, ErrorText } from "@agenticdevelopertoolkit/ui/components/error-text";
-import { DetailsPane, useReportBusy, useReportSettingsDirty } from "@agentic-toolkit/resource";
+} from "@adh-sdk/ui/components/dialog";
+import { DialogActions } from "@adh-sdk/ui/components/dialog-actions";
+import { AlertModal } from "@adh-sdk/ui/components/alert-modal";
+import { UnsavedChangesAlert } from "@adh-sdk/ui/components/unsaved-changes-alert";
+import { Field } from "@adh-sdk/ui/blocks/field";
+import { DialogErrorText, ErrorText } from "@adh-sdk/ui/components/error-text";
+import { DetailsPane, useReportBusy, useReportSettingsDirty } from "@adh-sdk/resource";
 
 /**
  * The empty list, hoisted to module scope: `flagsQuery.data ?? []` would otherwise mint a
@@ -357,7 +357,7 @@ export function FlagDialog({
   const formRef = useRef<HTMLFormElement>(null);
 
   // The gate — dirty check, blocking reason and every message string — lives in
-  // @agentic-toolkit/adh/settings-dialogs, shared with admin's feature-flags page, which renders the
+  // @adh-sdk/adh/settings-dialogs, shared with admin's feature-flags page, which renders the
   // same create dialog against the same endpoint. It used to be an inline copy here, and the
   // copies had already diverged: admin's had no collision check at all.
   const form = { key, description, enabled };

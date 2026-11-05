@@ -1,5 +1,5 @@
-import { SITE_ROUTES } from '@agentic-toolkit/adh-registry/routes'
-import type { SiteId } from '@agentic-toolkit/adh-registry'
+import { SITE_ROUTES } from '@adh-sdk/adh-registry/routes'
+import type { SiteId } from '@adh-sdk/adh-registry'
 
 /** The generated route every site that carries `app/[workspace]/profile/page.tsx` lists. */
 const PROFILE_ROUTE = '/[workspace]/profile'

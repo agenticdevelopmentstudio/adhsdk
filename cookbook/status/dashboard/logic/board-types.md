@@ -1,7 +1,7 @@
 ---
 id: 15c61cfc-543c-493d-b686-c605b773be83
 title: "Board Wire Types"
-domain: adtoolkit://cookbook/status/dashboard/logic/board-types
+domain: adhsdk://cookbook/status/dashboard/logic/board-types
 type: ingredient
 version: 1.0.2
 status: review
@@ -18,9 +18,9 @@ platforms:
 tags: []
 depends-on: []
 related:
-  - adtoolkit://cookbook/status/dashboard/state/board
-  - adtoolkit://cookbook/status/dashboard/state/activity-history
-  - adtoolkit://cookbook/status/dashboard/api
+  - adhsdk://cookbook/status/dashboard/state/board
+  - adhsdk://cookbook/status/dashboard/state/activity-history
+  - adhsdk://cookbook/status/dashboard/api
 references: []
 approved-by: ""
 approved-date: ""
@@ -139,7 +139,7 @@ Not applicable — this is a type-only wire contract, not a visual component.
 - **Corrected deploy metadata**: When `deployments.created_at`, `project_name` or `branch` is corrected after first render, the row `id` MUST NOT change. MUST.
 - **Exhausted history**: `nextCursor: null` MUST mean no older page exists. MUST.
 - **Drift under test runs**: `pnpm test` transpiles without typechecking, so drift is caught only by `pnpm typecheck` in this package and by the dashboard host's `web` typecheck, which names the parity test under `files`. SHOULD run both in CI; a test-only run cannot detect drift.
-- **Malformed payload**: A response that does not match `Board` is not detected by this module; behavior is owned by the consumer that parses it (see [useBoard](adtoolkit://cookbook/status/dashboard/state/board)). MUST (fact of the contract).
+- **Malformed payload**: A response that does not match `Board` is not detected by this module; behavior is owned by the consumer that parses it (see [useBoard](adhsdk://cookbook/status/dashboard/state/board)). MUST (fact of the contract).
 - **Concurrency, network, offline, cancellation, timeouts**: Not applicable; the module has no runtime behavior.
 
 ## Configuration
@@ -180,7 +180,7 @@ Not applicable: the module has no runtime code and logs nothing.
 
 - **SwiftUI**: Model each interface as a `struct` conforming to `Codable, Sendable, Hashable`; each union as a `String`-raw-value `enum` conforming to `Codable`. Nullable fields become optionals, decoded with `JSONDecoder` (keys already camelCase). Unlike TypeScript, decoding validates at runtime: an unknown `IssueSource` or `state` member fails decode, so decide per field whether to add an `unknown` fallback case. `ActivityRow.id` is the natural `Identifiable.id`.
 - **Compose**: Kotlin `@Serializable data class` per interface with `kotlinx.serialization`; unions as `enum class` with `@SerialName` for hyphenated members (`"cloudflare-pages"`). Set `Json { ignoreUnknownKeys = true }` if the server may add fields; an unknown enum value throws unless `coerceInputValues` or a custom serializer handles it.
-- **React/Web**: Source platform. `src/lib/board-types.ts` is the type-only mirror; `src/lib/board-types-parity.test.ts` holds the `Exact<A, B>` mutual-assignability guard against `@agentic-toolkit/status-server/board` plus the `indicatorFromProblems` versus `indicatorFor` agreement tests. Types are erased, so a port that wants runtime safety adds a schema (for example zod) at the fetch site.
+- **React/Web**: Source platform. `src/lib/board-types.ts` is the type-only mirror; `src/lib/board-types-parity.test.ts` holds the `Exact<A, B>` mutual-assignability guard against `@adh-sdk/status-server/board` plus the `indicatorFromProblems` versus `indicatorFor` agreement tests. Types are erased, so a port that wants runtime safety adds a schema (for example zod) at the fetch site.
 - **AppKit / UIKit**: Same `Codable` structs as the SwiftUI note, in a UI-free module shared by both; no framework types are involved.
 - **WinUI 3**: Declare C# `record` types (`public sealed record Problem(...)`) with `string?`/`int?`/`long?` for nullable fields and `IReadOnlyList<T>` for arrays, deserialized with `System.Text.Json` (`JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase }`). Map unions to C# `enum`s with `JsonStringEnumConverter` plus `[JsonStringEnumMemberName("cloudflare-pages")]` (.NET 9) for hyphenated members, or keep them `string` to mirror TypeScript's lenient behavior. Epoch-ms fields (`dataAsOfMs`, `atMs`, `probeIntervalMs`, `activityFromMs`) are `long`; ISO fields may be `DateTimeOffset`, but keep `ActivityRow.id` a `string`. For binding, project `Board.problems` and `Board.activity` into an `ObservableCollection<T>` keyed by `target` / `id` in a view model that implements `INotifyPropertyChanged`. There is no compile-time parity check against the server; a shared contract assembly or a JSON-schema test replaces `board-types-parity.test.ts`.
 

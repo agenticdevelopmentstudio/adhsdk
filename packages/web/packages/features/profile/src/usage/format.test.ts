@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import type { UsageRow } from "@agentic-toolkit/data/profile";
+import type { UsageRow } from "@adh-sdk/data/profile";
 
 import { capsFor, capPercent, formatCost, groupUsage } from "./format";
 

@@ -10,10 +10,10 @@ vi.mock("next/navigation", () => ({ useRouter: () => ({ push: vi.fn() }) }));
 // Mocked at the organizationsApi boundary so the real useAction wiring — busy, error, the
 // onCreated hand-off — runs; only the network call is stubbed.
 const { create } = vi.hoisted(() => ({ create: vi.fn() }));
-vi.mock("@agentic-toolkit/data/organizations", () => ({ organizationsApi: { create } }));
+vi.mock("@adh-sdk/data/organizations", () => ({ organizationsApi: { create } }));
 
 import { NewOrganizationModal } from "./NewOrganizationModal";
-import { SettingsDirtyProvider, useSettingsDirty } from "@agentic-toolkit/resource";
+import { SettingsDirtyProvider, useSettingsDirty } from "@adh-sdk/resource";
 
 // This vitest config has no auto-cleanup setup file, so each render must be torn down explicitly
 // or the next test's queries see BOTH mounted trees.

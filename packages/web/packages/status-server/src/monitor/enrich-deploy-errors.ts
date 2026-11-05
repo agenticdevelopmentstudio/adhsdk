@@ -1,9 +1,9 @@
 import type { Storage, DeployIdPlatformRow } from "../storage/ports";
-import { mapLimit } from "@agentic-toolkit/deploy-platform/util";
+import { mapLimit } from "@adh-sdk/deploy-platform/util";
 import { fetchVercelDeployError } from "./fetch-vercel";
 import { fetchRailwayBuildLogTail } from "./fetch-railway";
-import { pollableByIdPlatforms, type ProviderConn } from "@agentic-toolkit/deploy-platform/conn";
-import { rateLimitedUntil } from "@agentic-toolkit/deploy-platform/cooldown";
+import { pollableByIdPlatforms, type ProviderConn } from "@adh-sdk/deploy-platform/conn";
+import { rateLimitedUntil } from "@adh-sdk/deploy-platform/cooldown";
 
 // Only RECENT failures are worth explaining (bounds the scan), and only a few are
 // enriched per cycle. Enrichment is idempotent — error_text is written once and

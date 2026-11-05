@@ -1,15 +1,15 @@
 'use client';
 
 import { useState } from 'react';
-import { Field, FieldGroup } from '@agenticdevelopertoolkit/ui/blocks';
-import { Button } from '@agenticdevelopertoolkit/ui/components/button';
-import { Checkbox } from '@agenticdevelopertoolkit/ui/components/checkbox';
-import { ErrorText } from '@agenticdevelopertoolkit/ui/components/error-text';
-import { Input } from '@agenticdevelopertoolkit/ui/components/input';
-import { Label } from '@agenticdevelopertoolkit/ui/components/label';
-import { ReorderControl } from '@agenticdevelopertoolkit/ui/components/reorder-control';
-import { Select } from '@agenticdevelopertoolkit/ui/components/select';
-import { Textarea } from '@agenticdevelopertoolkit/ui/components/textarea';
+import { Field, FieldGroup } from '@adh-sdk/ui/blocks';
+import { Button } from '@adh-sdk/ui/components/button';
+import { Checkbox } from '@adh-sdk/ui/components/checkbox';
+import { ErrorText } from '@adh-sdk/ui/components/error-text';
+import { Input } from '@adh-sdk/ui/components/input';
+import { Label } from '@adh-sdk/ui/components/label';
+import { ReorderControl } from '@adh-sdk/ui/components/reorder-control';
+import { Select } from '@adh-sdk/ui/components/select';
+import { Textarea } from '@adh-sdk/ui/components/textarea';
 import {
   FIELD_TYPES,
   FIELD_VISIBILITIES,
@@ -19,10 +19,10 @@ import {
   VISIBILITY_LABEL,
   coerceRuleValue,
   opsFor,
-} from '@agentic-toolkit/registry/editors';
-import type { FieldDefDraft, ShowIfOp } from '@agentic-toolkit/registry/editors';
-import type { FieldVisibility } from '@agentic-toolkit/registry/client';
-import type { FieldType } from '@agentic-toolkit/registry/types';
+} from '@adh-sdk/registry/editors';
+import type { FieldDefDraft, ShowIfOp } from '@adh-sdk/registry/editors';
+import type { FieldVisibility } from '@adh-sdk/registry/client';
+import type { FieldType } from '@adh-sdk/registry/types';
 import { keyProblem, slugify } from './slug';
 
 /** One option per line, trimmed, blanks dropped, de-duplicated — see the Options field below. */

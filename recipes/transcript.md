@@ -1,7 +1,7 @@
 ---
 id: 98e78d31-2c3a-47dc-a156-435a5732a29f
 title: Transcript
-domain: agenticdevelopertoolkit://recipes/transcript
+domain: adhsdk://recipes/transcript
 type: ingredient
 version: 1.1.1
 status: review
@@ -22,8 +22,8 @@ tags:
 - transcript
 - scroll
 depends-on:
-- agenticdevelopertoolkit://recipes/message-bubble
-- agenticdevelopertoolkit://recipes/typing-indicator
+- adhsdk://recipes/message-bubble
+- adhsdk://recipes/typing-indicator
 related: []
 references:
 - https://www.w3.org/TR/wai-aria-1.2/#log
@@ -51,7 +51,7 @@ Transcript is a scrollable message container component that displays a linear se
 - **click-callback-passthrough**: Component MUST pass the `onMessageClick` callback to `MessageBubble` if provided; if not provided, `MessageBubble` MUST receive no click callback.
 - **popover-rendering**: Component MUST render the result of `renderPopover(message)` immediately after the corresponding `MessageBubble` if both `renderPopover` and `message.popover` are truthy.
 - **detail-arrows**: When `showDetailArrows` is `true`, component MUST show the detail arrow on a `MessageBubble` only when that message's `popover` is truthy (no arrow otherwise, and never when `showDetailArrows` is `false`). If `onDetailArrowClick` is provided, it MUST be passed through to every `MessageBubble` regardless of whether that message has a `popover`.
-- **thinking-props-passthrough**: Component MUST forward `thinkingLabels`, `thinkingFrames`, `thinkingDoneGlyph`, `thinkingColorful`, and `thinkingTint` to the `TypingIndicator` child unchanged. `TypingIndicator` owns the resulting behavior (default dot pattern, default animation, default settled glyph, colorful flashing, tint targeting) — see `agenticdevelopertoolkit://recipes/typing-indicator`.
+- **thinking-props-passthrough**: Component MUST forward `thinkingLabels`, `thinkingFrames`, `thinkingDoneGlyph`, `thinkingColorful`, and `thinkingTint` to the `TypingIndicator` child unchanged. `TypingIndicator` owns the resulting behavior (default dot pattern, default animation, default settled glyph, colorful flashing, tint targeting) — see `adhsdk://recipes/typing-indicator`.
 - **fade-older**: Component SHOULD apply a fade gradient/mask via the `pc-transcript--fade` class when `fadeOlder` is `true`.
 - **fade-anchor-viewport**: When the fade is applied, it MUST anchor to the viewport bottom: the newest (lowest) message stays fully opaque while older messages become increasingly transparent as they rise toward the top of the visible area.
 - **fade-restores-on-scroll**: Scrolling any message back into the readable (bottom) zone MUST restore that message to full opacity.

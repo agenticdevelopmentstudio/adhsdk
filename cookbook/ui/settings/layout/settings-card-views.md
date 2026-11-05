@@ -1,7 +1,7 @@
 ---
 id: afa90dd0-0ee6-435b-8cac-f5c6065e7496
 title: "Settings Card Views"
-domain: adtoolkit://cookbook/ui/settings/layout/settings-card-views
+domain: adhsdk://cookbook/ui/settings/layout/settings-card-views
 type: ingredient
 version: 1.3.1
 status: review
@@ -21,7 +21,7 @@ tags:
   - group
 depends-on: []
 related:
-  - adtoolkit://cookbook/ui/settings/layout/header-view
+  - adhsdk://cookbook/ui/settings/layout/header-view
   - agenticdevelopercookbook://guidelines/cookbook/ui/platform-design-languages
 references: []
 approved-by: ""
@@ -392,7 +392,7 @@ Not applicable: this vocabulary contains no logging calls anywhere.
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/macOS/SystemIntegration/ComposableSettingsWindow/Views/SettingsCardViews.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/Views/SettingsCardViews.swift` |
 
 ## Design Decisions
 

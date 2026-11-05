@@ -5,7 +5,7 @@ import type { HelpRouteLevel } from '../help/HelpMasterDetail'
 // The rail itself is the toolkit HMDV's; what this file asserts is which levels the server
 // surface hands it, so the client half is a stand-in that records them.
 const rail = vi.hoisted(() => ({ levels: [] as HelpRouteLevel[], rootLabel: '' }))
-vi.mock('@agentic-toolkit/adh/help/HelpMasterDetail', () => ({
+vi.mock('@adh-sdk/adh/help/HelpMasterDetail', () => ({
   HelpMasterDetail: ({ levels, rootLabel }: { levels: HelpRouteLevel[]; rootLabel: string }) => {
     rail.levels = levels
     rail.rootLabel = rootLabel

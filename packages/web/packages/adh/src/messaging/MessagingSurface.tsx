@@ -1,17 +1,17 @@
 "use client";
 
 import { useEffect, useMemo, useState, type FormEvent, type ReactElement, type ReactNode } from "react";
-import { Button } from "@agenticdevelopertoolkit/ui/components/button";
-import { Input } from "@agenticdevelopertoolkit/ui/components/input";
-import { Select } from "@agenticdevelopertoolkit/ui/components/select";
-import { Textarea } from "@agenticdevelopertoolkit/ui/components/textarea";
-import { Badge } from "@agenticdevelopertoolkit/ui/components/badge";
-import { ErrorText } from "@agenticdevelopertoolkit/ui/components/error-text";
-import { Alert, AlertDescription } from "@agenticdevelopertoolkit/ui/components/alert";
-import { Card, CardContent } from "@agenticdevelopertoolkit/ui/components/card";
-import { Field } from "@agenticdevelopertoolkit/ui/blocks/field";
-import { DataTable, type DataTableColumn } from "@agenticdevelopertoolkit/ui/components/data-table";
-import { Pagination } from "@agenticdevelopertoolkit/ui/components/pagination";
+import { Button } from "@adh-sdk/ui/components/button";
+import { Input } from "@adh-sdk/ui/components/input";
+import { Select } from "@adh-sdk/ui/components/select";
+import { Textarea } from "@adh-sdk/ui/components/textarea";
+import { Badge } from "@adh-sdk/ui/components/badge";
+import { ErrorText } from "@adh-sdk/ui/components/error-text";
+import { Alert, AlertDescription } from "@adh-sdk/ui/components/alert";
+import { Card, CardContent } from "@adh-sdk/ui/components/card";
+import { Field } from "@adh-sdk/ui/blocks/field";
+import { DataTable, type DataTableColumn } from "@adh-sdk/ui/components/data-table";
+import { Pagination } from "@adh-sdk/ui/components/pagination";
 
 /**
  * The Messaging compose form + log, once, for both scopes that have one.
@@ -28,7 +28,7 @@ import { Pagination } from "@agenticdevelopertoolkit/ui/components/pagination";
  * keys, the enabled-conditions and the invalidation are the host's — and because a hook prop
  * would make the number of hooks this component runs depend on which host mounted it.
  *
- * Unrelated to `@agentic-toolkit/messaging`, which is in-app messaging between users
+ * Unrelated to `@adh-sdk/messaging`, which is in-app messaging between users
  * (notifications, DMs, presence). This is the OUTBOUND tool: email/SMS to a person, through
  * a Postmark/Twilio account, with a log of what was sent.
  */

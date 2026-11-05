@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { describe, it, expect } from 'vitest'
-import { CRUD_TABLES, CRUD_SCHEMAS } from '@agentic-toolkit/crud'
+import { CRUD_TABLES, CRUD_SCHEMAS } from '@adh-sdk/crud'
 import { ADH_SPEC_PATH, loadAdhSpec, skipNotice } from './adh-spec'
 
 // Drift gate: the committed generated module must agree with the committed

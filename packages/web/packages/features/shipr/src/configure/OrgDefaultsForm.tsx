@@ -2,11 +2,11 @@
 
 import * as React from 'react';
 
-import { Checkbox } from '@agenticdevelopertoolkit/ui/components/checkbox';
-import { ErrorText } from '@agenticdevelopertoolkit/ui/components/error-text';
-import { Input } from '@agenticdevelopertoolkit/ui/components/input';
-import { Label } from '@agenticdevelopertoolkit/ui/components/label';
-import { Select } from '@agenticdevelopertoolkit/ui/components/select';
+import { Checkbox } from '@adh-sdk/ui/components/checkbox';
+import { ErrorText } from '@adh-sdk/ui/components/error-text';
+import { Input } from '@adh-sdk/ui/components/input';
+import { Label } from '@adh-sdk/ui/components/label';
+import { Select } from '@adh-sdk/ui/components/select';
 
 import { nameOf } from '../forge/existence';
 import type { ForgeCatalogue } from '../forge/useForgeCatalogue';

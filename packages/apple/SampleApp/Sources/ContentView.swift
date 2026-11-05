@@ -24,7 +24,7 @@ private struct HelloView: View {
                 .foregroundStyle(.tint)
             Text("Hello, World!")
                 .font(.largeTitle)
-            Text("Agentic Developer Toolkit")
+            Text("Agentic Developer Hub SDK")
                 .font(.title3)
                 .foregroundStyle(.secondary)
         }

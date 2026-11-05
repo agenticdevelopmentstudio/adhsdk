@@ -294,7 +294,7 @@ export const monitoredEndpoints = sqliteTable(
 );
 
 // Deploy-platform tables (deployIntegrations, deployProjectMeta,
-// ignoredDeployProjects) now live in the shared @agentic-toolkit/deploy-platform
+// ignoredDeployProjects) now live in the shared @adh-sdk/deploy-platform
 // core. Re-exported here so drizzle-kit + the relational query builder still see
 // them via db/schema, and every existing importer keeps its `../db/schema` path.
 export {
@@ -304,7 +304,7 @@ export {
   type DeployIntegrationRow,
   type DeployProjectMetaRow,
   type IgnoredDeployProjectRow,
-} from "@agentic-toolkit/deploy-platform/schema";
+} from "@adh-sdk/deploy-platform/schema";
 
 // Per-platform poll health — the persisted streak that DEBOUNCES the
 // `platform-health|<source>` issue. A single transient failed poll (a one-off

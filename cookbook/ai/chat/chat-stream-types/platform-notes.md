@@ -1,8 +1,8 @@
 
 - **SwiftUI**: The sources are
-  `packages/apple/AgenticToolkit/Core/AIPlugins/ChatStreamEvent.swift`,
+  `packages/apple/AgenticDeveloperHubSDK/Core/AIPlugins/ChatStreamEvent.swift`,
   `ToolDefinition.swift`, and `ToolResult.swift`, part of the
-  `AgenticToolkitCore` framework target, which `project.yml` declares as
+  `AgenticDeveloperHubSDKCore` framework target, which `project.yml` declares as
   `platform: macOS` only (no iOS target exists for it today). Nothing in
   the three files is SwiftUI-specific — each imports only `Foundation` —
   so a SwiftUI or AppKit host consumes them identically.
@@ -27,8 +27,8 @@
   deep-equality helper (or a library) rather than a free `==`.
 - **AppKit / UIKit**: this is the source. `ChatStreamEvent.swift`,
   `ToolDefinition.swift`, and `ToolResult.swift` live in
-  `packages/apple/AgenticToolkit/Core/AIPlugins/`, part of the
-  `AgenticToolkitCore` framework target, which `project.yml` declares as
+  `packages/apple/AgenticDeveloperHubSDK/Core/AIPlugins/`, part of the
+  `AgenticDeveloperHubSDKCore` framework target, which `project.yml` declares as
   `platform: macOS` only (no iOS target exists for it today).
   `ChatStreamEvent` is a `Sendable` enum with cases `textDelta(String)`,
   `toolUse(id: String, name: String, argumentsJSON: Data)`, and

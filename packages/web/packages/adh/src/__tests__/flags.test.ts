@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { FLAG, type FlagKey } from '../flags'
 
-describe('@agentic-toolkit/adh/flags', () => {
+describe('@adh-sdk/adh/flags', () => {
   it('keeps every shipped flag key byte-identical to the pre-split vocabulary', () => {
     expect(FLAG).toEqual({
       newUserSignups: 'new_user_signups',

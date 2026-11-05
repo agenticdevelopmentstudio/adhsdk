@@ -2,19 +2,19 @@
 
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { CalendarX, Pencil, Plus, Trash2 } from "lucide-react";
-import { useAction } from "@agenticdevelopertoolkit/ui/hooks/useAction";
-import { Button } from "@agenticdevelopertoolkit/ui/components/button";
-import { Input } from "@agenticdevelopertoolkit/ui/components/input";
+import { useAction } from "@adh-sdk/ui/hooks/useAction";
+import { Button } from "@adh-sdk/ui/components/button";
+import { Input } from "@adh-sdk/ui/components/input";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogDescription,
-} from "@agenticdevelopertoolkit/ui/components/dialog";
-import { DialogActions } from "@agenticdevelopertoolkit/ui/components/dialog-actions";
-import { Field } from "@agenticdevelopertoolkit/ui/blocks";
-import { formatMicros } from "@agenticdevelopertoolkit/ui/lib/money";
+} from "@adh-sdk/ui/components/dialog";
+import { DialogActions } from "@adh-sdk/ui/components/dialog-actions";
+import { Field } from "@adh-sdk/ui/blocks";
+import { formatMicros } from "@adh-sdk/ui/lib/money";
 import {
   EditableList,
   useEditableList,

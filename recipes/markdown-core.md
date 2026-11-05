@@ -1,7 +1,7 @@
 ---
 id: 9f938c20-ea6e-42d7-9ddf-9531a96e3ad0
 title: Markdown Core
-domain: agenticdevelopertoolkit://recipes/markdown-core
+domain: adhsdk://recipes/markdown-core
 type: ingredient
 version: 1.0.3
 status: review
@@ -28,10 +28,10 @@ tags:
 - content-model
 depends-on: []
 related:
-- agenticdevelopertoolkit://recipes/markdown-content
-- agenticdevelopertoolkit://recipes/markdown-renderer
-- agenticdevelopertoolkit://recipes/markdown-viewer
-- agenticdevelopertoolkit://recipes/markdown-reading-palette
+- adhsdk://recipes/markdown-content
+- adhsdk://recipes/markdown-renderer
+- adhsdk://recipes/markdown-viewer
+- adhsdk://recipes/markdown-reading-palette
 references: []
 approved-by: ''
 approved-date: ''

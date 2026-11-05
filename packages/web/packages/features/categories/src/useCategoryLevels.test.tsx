@@ -19,9 +19,9 @@ import {
 import {
   buildCategoryTree,
   type CategoryTreeNode,
-} from "@agenticdevelopertoolkit/ui/blocks";
+} from "@adh-sdk/ui/blocks";
 
-vi.mock("@agentic-toolkit/data/markdown", () => ({
+vi.mock("@adh-sdk/data/markdown", () => ({
   taxonomyApi: {
     renameCategory: vi.fn(),
     addCategoryParent: vi.fn(),
@@ -31,7 +31,7 @@ vi.mock("@agentic-toolkit/data/markdown", () => ({
   markdownApi: { createCategory: vi.fn() },
 }));
 
-import { taxonomyApi, markdownApi } from "@agentic-toolkit/data/markdown";
+import { taxonomyApi, markdownApi } from "@adh-sdk/data/markdown";
 
 const ROWS: CategoryTreeNode[] = [
   { id: "work", name: "Work", parentIds: [] },

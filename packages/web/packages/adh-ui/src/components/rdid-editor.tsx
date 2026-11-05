@@ -2,9 +2,9 @@
 
 import * as React from "react"
 
-import { Input } from "@agenticdevelopertoolkit/ui/components/input"
-import { FieldFootnote } from "@agenticdevelopertoolkit/ui/components/field-footnote"
-import { fieldCaptionClass } from "@agenticdevelopertoolkit/ui/lib/typography"
+import { Input } from "@adh-sdk/ui/components/input"
+import { FieldFootnote } from "@adh-sdk/ui/components/field-footnote"
+import { fieldCaptionClass } from "@adh-sdk/ui/lib/typography"
 
 export interface RdidEditorProps {
   /** Uppercase-mono caption above the control. */
@@ -30,7 +30,7 @@ export interface RdidEditorProps {
  * The one control for editing a type-prefixed rdid: the fixed `<prefix>` (type + inherited
  * scope, never user-edited) as static text, plus an input for the leaf — mirroring how the
  * backend rejects any type/scope change. Backend-agnostic: the caller derives `prefix` (e.g. via
- * @agentic-toolkit/adh/rdid `prefixFor`) and `error` (via `validateLeaf`). Input is lowercased.
+ * @adh-sdk/adh/rdid `prefixFor`) and `error` (via `validateLeaf`). Input is lowercased.
  */
 export function RdidEditor({
   label, prefix, value, onChange, placeholder, hint, error, disabled, id,

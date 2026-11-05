@@ -8,9 +8,9 @@ import {
   heroSlots,
   joinMeta,
   renderBlock,
-} from '@agenticdevelopertoolkit/landing'
-import type { BandTone, LandingPage, LandingSection } from '@agenticdevelopertoolkit/landing'
-import { DocumentLoadScript } from '@agenticdevelopertoolkit/themes/DocumentLoadScript'
+} from '@adh-sdk/landing'
+import type { BandTone, LandingPage, LandingSection } from '@adh-sdk/landing'
+import { DocumentLoadScript } from '@adh-sdk/themes/DocumentLoadScript'
 import { FAMILY_ID, FamilyBand } from './family-band'
 import { FrameBand } from './frame-band'
 import { HeroThumb } from './hero-thumb'

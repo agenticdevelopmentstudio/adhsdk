@@ -1,7 +1,7 @@
 ---
 id: 79c8f46f-e934-46d1-8d0e-4bbee625e163
 title: "Local Model Catalog"
-domain: adtoolkit://cookbook/ai/models/local/local-model-catalog
+domain: adhsdk://cookbook/ai/models/local/local-model-catalog
 type: ingredient
 version: 1.2.0
 status: review
@@ -23,11 +23,11 @@ tags:
 depends-on: []
 related: []
 references:
-  - packages/apple/AgenticToolkit/AIPluginKit/LocalModelCatalog.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/AIPluginKit/LocalModelServer.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/AIPluginKit/LocalInferenceGuard.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Tests/AIPluginKitTests/LocalModelCatalogTests.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Tests/AIPluginKitTests/LocalModelServerTests.swift (agenticdevelopertoolkit)
+  - packages/apple/AgenticDeveloperHubSDK/AIPluginKit/LocalModelCatalog.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/AIPluginKit/LocalModelServer.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/AIPluginKit/LocalInferenceGuard.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Tests/AIPluginKitTests/LocalModelCatalogTests.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Tests/AIPluginKitTests/LocalModelServerTests.swift (adhsdk)
 approved-by: ""
 approved-date: ""
 ---
@@ -283,7 +283,7 @@ fetch-error-is-fully-swallowed in Behavioral Requirements.
 ## Platform Notes
 
 - **SwiftUI**: The source
-  (`packages/apple/AgenticToolkit/AIPluginKit/LocalModelCatalog.swift`, its
+  (`packages/apple/AgenticDeveloperHubSDK/AIPluginKit/LocalModelCatalog.swift`, its
   sibling `LocalModelServer.swift`, and tests
   `Tests/AIPluginKitTests/LocalModelCatalogTests.swift` /
   `LocalModelServerTests.swift`) has no SwiftUI (or any UI framework)
@@ -358,7 +358,7 @@ fetch-error-is-fully-swallowed in Behavioral Requirements.
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/AIPluginKit/LocalModelCatalog.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/AIPluginKit/LocalModelCatalog.swift` |
 
 ## Design Decisions
 

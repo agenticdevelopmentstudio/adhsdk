@@ -10,7 +10,7 @@ vi.mock('next/navigation', () => ({
   useRouter: () => ({ push: vi.fn() }),
 }))
 
-import type { SiteId } from '@agentic-toolkit/adh-registry'
+import type { SiteId } from '@adh-sdk/adh-registry'
 import { MarketingSiteMenu } from '../MarketingSiteMenu'
 
 afterEach(cleanup)

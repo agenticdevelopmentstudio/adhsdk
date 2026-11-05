@@ -3,7 +3,7 @@
   "meta": {
     "id": "01f6f7b6-4bc5-4f35-a46a-1e80fe470097",
     "title": "Board Staleness",
-    "domain": "adtoolkit://cookbook/status/dashboard/logic/board-staleness",
+    "domain": "adhsdk://cookbook/status/dashboard/logic/board-staleness",
     "type": "ingredient",
     "version": "1.0.2",
     "status": "review",
@@ -21,7 +21,7 @@
     "tags": [],
     "depends-on": [],
     "related": [
-      "adtoolkit://cookbook/status/dashboard/state/board"
+      "adhsdk://cookbook/status/dashboard/state/board"
     ],
     "references": [],
     "approved-by": "",

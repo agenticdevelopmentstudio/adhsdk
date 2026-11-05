@@ -19,7 +19,7 @@ function deferred<T>() {
   return { promise, resolve };
 }
 
-vi.mock("@agentic-toolkit/data/personas", () => ({
+vi.mock("@adh-sdk/data/personas", () => ({
   specialInterestsApi: {
     list: (...a: unknown[]) => list(...a),
     create: (...a: unknown[]) => create(...a),

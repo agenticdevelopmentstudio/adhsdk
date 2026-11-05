@@ -27,7 +27,7 @@
   (or a theme context) supply the accent/secondary colors that swap with a
   `visible` boolean class or data attribute.
 - **AppKit / UIKit** (source platform): Source at
-  `packages/apple/AgenticToolkit/macOS/SystemIntegration/ComposableSettingsWindow/Views/PanelHostView.swift`
+  `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/Views/PanelHostView.swift`
   (this recipe's source): a macOS-only (`import AppKit`), `@MainActor`
   `NSView` subclass. Specific to it: the manual subview teardown in
   `setContent(_:)` (`contentContainer.subviews.forEach { $0.removeFromSuperview() }`);

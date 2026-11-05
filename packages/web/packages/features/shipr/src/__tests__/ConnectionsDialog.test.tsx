@@ -3,7 +3,7 @@ import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import * as React from 'react';
 
-import { useStackLevel } from '@agentic-toolkit/resource';
+import { useStackLevel } from '@adh-sdk/resource';
 
 import { SHIPR_DIALOG_SURFACE } from '../dialogSurface';
 
@@ -44,7 +44,7 @@ beforeEach(() => {
   resolution.current = { ...RESOLVED };
 });
 
-vi.mock('@agentic-toolkit/data/ecosystems', () => ({
+vi.mock('@adh-sdk/data/ecosystems', () => ({
   useWorkspaceDefaultEcosystemId: () => resolution.current,
 }));
 
@@ -57,9 +57,9 @@ const paneProps: { providerIds?: readonly string[]; workspaceSlug?: string } & {
   [k: string]: unknown;
 } = {};
 
-vi.mock('@agentic-toolkit/integrations', async (importOriginal) => ({
+vi.mock('@adh-sdk/integrations', async (importOriginal) => ({
   CONNECTIONS_HASH: (
-    await importOriginal<typeof import('@agentic-toolkit/integrations')>()
+    await importOriginal<typeof import('@adh-sdk/integrations')>()
   ).CONNECTIONS_HASH,
   IntegrationsPane: (props: {
     levelTitle?: string;

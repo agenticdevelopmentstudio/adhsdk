@@ -4,11 +4,11 @@
   `drizzle-orm/sqlite-core` and `drizzle-orm/libsql` (including its
   `migrator` submodule), Node's built-in `node:module`
   (`createRequire`) and `node:path`/`node:crypto`, and the
-  `@agentic-toolkit/deploy-platform/schema` and `../monitor/deploy-status`
+  `@adh-sdk/deploy-platform/schema` and `../monitor/deploy-status`
   siblings the schema re-exports from and builds its partial index against
   (the partial index's predicate calls `inFlightSql('')` from
   `../monitor/deploy-status`). The package's own root directory is
-  resolved via `createRequire(import.meta.url).resolve('@agentic-toolkit/status-server/package.json')`,
+  resolved via `createRequire(import.meta.url).resolve('@adh-sdk/status-server/package.json')`,
   so `MIGRATIONS_FOLDER` is correct whether the caller runs from `src/`,
   from a built `dist/` chunk, or from a host's vendored `node_modules`
   copy; migrations apply through `drizzle-orm/libsql/migrator`'s

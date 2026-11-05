@@ -27,7 +27,7 @@ import { readFileSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { describe, it, expect } from 'vitest'
-import { DEV_DEPLOYMENT_ENVS } from '@agentic-toolkit/adh-registry/deployment-env'
+import { DEV_DEPLOYMENT_ENVS } from '@adh-sdk/adh-registry/deployment-env'
 
 const here = dirname(fileURLToPath(import.meta.url))
 const PKG_ROOT = resolve(here, '../..')
@@ -173,7 +173,7 @@ describe('production bundle gates', () => {
   })
 
   describe.each(GATES)('$subpath — $what', ({ gate, subpath, entry, source }) => {
-    const specifier = `@agentic-toolkit/adh/${subpath}`
+    const specifier = `@adh-sdk/adh/${subpath}`
 
     it('gates it on a folded comparison, never on an identifier', () => {
       const src = flat(quotes(code(read(gate))))
@@ -237,7 +237,7 @@ describe('production bundle gates', () => {
       //
       // Asserted as "wherever tsc lands" rather than as one exact key, because both
       // spellings are correct and which one a subpath needs is not this test's business:
-      // most are served by the `@agentic-toolkit/adh/*` wildcard, and only the handful whose
+      // most are served by the `@adh-sdk/adh/*` wildcard, and only the handful whose
       // default-export type must be known at a `next/dynamic` call site carry an override.
       const resolved = tsResolves(specifier)
       expect(strip(resolved), `${specifier} resolves to ${resolved ?? 'nothing'}`).toBe(

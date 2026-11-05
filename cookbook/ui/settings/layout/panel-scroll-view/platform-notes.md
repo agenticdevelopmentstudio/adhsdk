@@ -41,7 +41,7 @@
   with `scrollTop = 0` in the same effect that swaps the content, mirroring
   content-replacement-resets-scroll-position.
 - **AppKit/UIKit** (source platform): Source file
-  `packages/apple/AgenticToolkit/macOS/SystemIntegration/ComposableSettingsWindow/Views/PanelScrollView.swift`.
+  `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/Views/PanelScrollView.swift`.
   A macOS-only (`import AppKit`) `NSScrollView` subclass, `@MainActor`,
   nested in the `ComposableSettings` namespace, wrapping a private
   `FlippedDocumentView` (satisfying `document-view-flipped` via

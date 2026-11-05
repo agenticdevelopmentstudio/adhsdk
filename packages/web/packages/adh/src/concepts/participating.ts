@@ -1,4 +1,4 @@
-import type { SiteId } from '@agentic-toolkit/adh-registry'
+import type { SiteId } from '@adh-sdk/adh-registry'
 
 // The sites the concept tree focuses a node for — the 31 marketing landings that
 // render the shared concept-graph, plus `devteam`, which the tree names but which

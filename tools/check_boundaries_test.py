@@ -59,9 +59,9 @@ def make_tree(tmp: str, files: dict[str, str], packages: dict[str, str],
 
 
 PKGS = {
-    "mechanism-fixture": "@agentic-toolkit/mechanism-fixture",
-    "adh": "@agentic-toolkit/adh",
-    "adh-registry": "@agentic-toolkit/adh-registry",
+    "mechanism-fixture": "@adh-sdk/mechanism-fixture",
+    "adh": "@adh-sdk/adh",
+    "adh-registry": "@adh-sdk/adh-registry",
 }
 
 # ---------------------------------------------------------------- the point
@@ -70,18 +70,18 @@ PKGS = {
 #     reported. If this ever passes silently the guard is blind again.
 with tempfile.TemporaryDirectory() as tmp:
     root = make_tree(tmp, {
-        "mechanism-fixture/src/x.ts": "import { SITES } from '@agentic-toolkit/adh-registry'\n",
+        "mechanism-fixture/src/x.ts": "import { SITES } from '@adh-sdk/adh-registry'\n",
     }, PKGS)
     v = guard.find_violations(root)
     check("mechanism -> vocabulary is a violation", [(p.name, s) for p, _, s, _ in v],
-          [("x.ts", "@agentic-toolkit/adh-registry")])
+          [("x.ts", "@adh-sdk/adh-registry")])
 
 # (2) The banned set is DISCOVERED from the tree, not listed in the source.
 #     A newly added `adh-*` package is banned with no edit to the guard.
 with tempfile.TemporaryDirectory() as tmp:
     root = make_tree(tmp, {
-        "mechanism-fixture/src/x.ts": "import x from '@agentic-toolkit/adh-brandnew'\n",
-    }, {**PKGS, "adh-brandnew": "@agentic-toolkit/adh-brandnew"})
+        "mechanism-fixture/src/x.ts": "import x from '@adh-sdk/adh-brandnew'\n",
+    }, {**PKGS, "adh-brandnew": "@adh-sdk/adh-brandnew"})
     check("a brand-new adh-* package is banned automatically",
           len(guard.find_violations(root)), 1)
 
@@ -89,7 +89,7 @@ with tempfile.TemporaryDirectory() as tmp:
 #     REFUSE to report clean rather than exit 0 over a tree it cannot judge.
 with tempfile.TemporaryDirectory() as tmp:
     root = make_tree(tmp, {"mechanism-fixture/src/x.ts": "export const x = 1\n"},
-                     {"mechanism-fixture": "@agentic-toolkit/mechanism-fixture"})
+                     {"mechanism-fixture": "@adh-sdk/mechanism-fixture"})
     check("no vocabulary packages -> refuses to pass", guard.main(["--root", str(root)]), 2)
 
 # ---------------------------------------------------------------- direction
@@ -97,14 +97,14 @@ with tempfile.TemporaryDirectory() as tmp:
 # (4) The legal direction. Vocabulary importing mechanism is the whole design.
 with tempfile.TemporaryDirectory() as tmp:
     root = make_tree(tmp, {
-        "adh/src/Header.tsx": "import { Button } from '@agentic-toolkit/mechanism-fixture'\n",
+        "adh/src/Header.tsx": "import { Button } from '@adh-sdk/mechanism-fixture'\n",
     }, PKGS)
     check("vocabulary -> mechanism is fine", guard.find_violations(root), [])
 
 # (5) …and a vocabulary package importing its own tier is not a violation.
 with tempfile.TemporaryDirectory() as tmp:
     root = make_tree(tmp, {
-        "adh/src/Header.tsx": "import { SITES } from '@agentic-toolkit/adh-registry'\n",
+        "adh/src/Header.tsx": "import { SITES } from '@adh-sdk/adh-registry'\n",
     }, PKGS)
     check("vocabulary -> vocabulary is fine", guard.find_violations(root), [])
 
@@ -112,25 +112,25 @@ with tempfile.TemporaryDirectory() as tmp:
 
 # (6) Boundary matching, not prefix matching. `adh` must not swallow
 #     `adh-registry`'s specifier, and no `adh*` string may be banned by accident.
-check("adh does not prefix-match adhesive", guard._is_vocabulary("@agentic-toolkit/adhesive"), False)
-check("adh-registry is vocabulary", guard._is_vocabulary("@agentic-toolkit/adh-registry"), True)
-check("adh itself is vocabulary", guard._is_vocabulary("@agentic-toolkit/adh"), True)
-check("a mechanism-tier name is not vocabulary", guard._is_vocabulary("@agentic-toolkit/mechanism-fixture"), False)
+check("adh does not prefix-match adhesive", guard._is_vocabulary("@adh-sdk/adhesive"), False)
+check("adh-registry is vocabulary", guard._is_vocabulary("@adh-sdk/adh-registry"), True)
+check("adh itself is vocabulary", guard._is_vocabulary("@adh-sdk/adh"), True)
+check("a mechanism-tier name is not vocabulary", guard._is_vocabulary("@adh-sdk/mechanism-fixture"), False)
 check("subpath of adh matches adh, not adh-registry",
-      guard.imports_vocabulary("@agentic-toolkit/adh/header",
-                               {"@agentic-toolkit/adh": None, "@agentic-toolkit/adh-registry": None}),
-      "@agentic-toolkit/adh")
+      guard.imports_vocabulary("@adh-sdk/adh/header",
+                               {"@adh-sdk/adh": None, "@adh-sdk/adh-registry": None}),
+      "@adh-sdk/adh")
 check("a same-prefix stranger matches nothing",
-      guard.imports_vocabulary("@agentic-toolkit/adhesive", {"@agentic-toolkit/adh": None}), None)
+      guard.imports_vocabulary("@adh-sdk/adhesive", {"@adh-sdk/adh": None}), None)
 
 # (7) Every import form, since a guard that catches only `from` is a guard with
 #     three holes in it.
 FORMS = {
-    "from": "import { a } from '@agentic-toolkit/adh'\n",
-    "re-export": "export { a } from '@agentic-toolkit/adh'\n",
-    "side-effect": "import '@agentic-toolkit/adh/styles.css'\n",
-    "dynamic": "const m = await import('@agentic-toolkit/adh')\n",
-    "require": "const m = require('@agentic-toolkit/adh')\n",
+    "from": "import { a } from '@adh-sdk/adh'\n",
+    "re-export": "export { a } from '@adh-sdk/adh'\n",
+    "side-effect": "import '@adh-sdk/adh/styles.css'\n",
+    "dynamic": "const m = await import('@adh-sdk/adh')\n",
+    "require": "const m = require('@adh-sdk/adh')\n",
 }
 for form, body in FORMS.items():
     with tempfile.TemporaryDirectory() as tmp:
@@ -142,10 +142,10 @@ for form, body in FORMS.items():
 #     never go green. But a TRAILING comment after real code must still count.
 with tempfile.TemporaryDirectory() as tmp:
     root = make_tree(tmp, {
-        "mechanism-fixture/src/doc.ts": "// import { A } from '@agentic-toolkit/adh'\n"
-                         " * import { B } from '@agentic-toolkit/adh'\n"
-                         "/* import { C } from '@agentic-toolkit/adh' */\n",
-        "mechanism-fixture/src/real.ts": "import { D } from '@agentic-toolkit/adh' // still a real import\n",
+        "mechanism-fixture/src/doc.ts": "// import { A } from '@adh-sdk/adh'\n"
+                         " * import { B } from '@adh-sdk/adh'\n"
+                         "/* import { C } from '@adh-sdk/adh' */\n",
+        "mechanism-fixture/src/real.ts": "import { D } from '@adh-sdk/adh' // still a real import\n",
     }, PKGS)
     v = guard.find_violations(root)
     check("comment lines are skipped, trailing comments are not",
@@ -160,7 +160,7 @@ with tempfile.TemporaryDirectory() as tmp:
 #     this script forgives.
 with tempfile.TemporaryDirectory() as tmp:
     root = make_tree(tmp, {
-        "adh/src/uses-own-tier.ts": "import { SITES } from '@agentic-toolkit/adh-registry'\n",
+        "adh/src/uses-own-tier.ts": "import { SITES } from '@adh-sdk/adh-registry'\n",
         "adh/src/aliased.tsx": "import { Nav } from '@/components/nav'\n",
         "mechanism-fixture/src/x.ts": "import { Nav } from '@/components/nav'\n",
     }, PKGS)
@@ -173,7 +173,7 @@ with tempfile.TemporaryDirectory() as tmp:
 #      the committed dist is what consumers actually resolve.
 with tempfile.TemporaryDirectory() as tmp:
     root = make_tree(tmp, {
-        "mechanism-fixture/dist/x.js": "import { a } from '@agentic-toolkit/adh'\n",
+        "mechanism-fixture/dist/x.js": "import { a } from '@adh-sdk/adh'\n",
     }, PKGS)
     check("dist skipped by default", guard.find_violations(root), [])
     check("dist scanned with --include-dist",
@@ -183,13 +183,13 @@ with tempfile.TemporaryDirectory() as tmp:
 #      not register as a vocabulary package nor as a source file.
 with tempfile.TemporaryDirectory() as tmp:
     root = make_tree(tmp, {
-        "mechanism-fixture/node_modules/@agentic-toolkit/adh-fake/package.json":
-            '{"name": "@agentic-toolkit/adh-fake"}',
-        "mechanism-fixture/node_modules/junk/src/x.ts": "import a from '@agentic-toolkit/adh'\n",
+        "mechanism-fixture/node_modules/@adh-sdk/adh-fake/package.json":
+            '{"name": "@adh-sdk/adh-fake"}',
+        "mechanism-fixture/node_modules/junk/src/x.ts": "import a from '@adh-sdk/adh'\n",
         "mechanism-fixture/src/ok.ts": "export const ok = 1\n",
     }, PKGS)
     check("node_modules contributes no packages",
-          "@agentic-toolkit/adh-fake" in guard.vocabulary_packages(root), False)
+          "@adh-sdk/adh-fake" in guard.vocabulary_packages(root), False)
     check("node_modules contributes no sources", guard.find_violations(root), [])
 
 def test_a_stale_exemption_fails_the_guard():
@@ -204,12 +204,12 @@ def test_a_stale_exemption_fails_the_guard():
         root = Path(tmp) / "packages"
         (root / "adh-thing" / "src").mkdir(parents=True)
         (root / "adh-thing" / "package.json").write_text(
-            '{"name": "@agentic-toolkit/adh-thing"}', encoding="utf-8"
+            '{"name": "@adh-sdk/adh-thing"}', encoding="utf-8"
         )
         (root / "adh-thing" / "src" / "index.ts").write_text("export const a = 1\n", encoding="utf-8")
         (root / "clean" / "src").mkdir(parents=True)
         (root / "clean" / "package.json").write_text(
-            '{"name": "@agentic-toolkit/clean"}', encoding="utf-8"
+            '{"name": "@adh-sdk/clean"}', encoding="utf-8"
         )
         (root / "clean" / "src" / "index.ts").write_text("export const b = 2\n", encoding="utf-8")
 
@@ -248,7 +248,7 @@ def test_no_exempt_reports_what_the_exemption_list_hides():
         root = Path(tmp) / "packages"
         (root / "adh-thing" / "src").mkdir(parents=True)
         (root / "adh-thing" / "package.json").write_text(
-            '{"name": "@agentic-toolkit/adh-thing"}', encoding="utf-8"
+            '{"name": "@adh-sdk/adh-thing"}', encoding="utf-8"
         )
         (root / "adh-thing" / "src" / "index.ts").write_text(
             "export const a = 1\n", encoding="utf-8"
@@ -257,10 +257,10 @@ def test_no_exempt_reports_what_the_exemption_list_hides():
         #  of exactly the shape the fifteen exempted files have.
         (root / "mech" / "src").mkdir(parents=True)
         (root / "mech" / "package.json").write_text(
-            '{"name": "@agentic-toolkit/mech"}', encoding="utf-8"
+            '{"name": "@adh-sdk/mech"}', encoding="utf-8"
         )
         (root / "mech" / "src" / "index.ts").write_text(
-            "import { a } from '@agentic-toolkit/adh-thing'\nexport const b = a\n",
+            "import { a } from '@adh-sdk/adh-thing'\nexport const b = a\n",
             encoding="utf-8",
         )
 
@@ -312,12 +312,12 @@ def _wrapper_shaped_tree(tmp: str, dist: "dict[str, str] | None" = None) -> Path
         tmp,
         {
             "adh-thing/src/index.ts": "export const a = 1\n",
-            "mech/src/index.ts": "import { a } from '@agentic-toolkit/adh-thing'\n",
+            "mech/src/index.ts": "import { a } from '@adh-sdk/adh-thing'\n",
         },
         {
-            "adh-thing": "@agentic-toolkit/adh-thing",
-            "mech": "@agentic-toolkit/mech",
-            "other": "@agentic-toolkit/other",
+            "adh-thing": "@adh-sdk/adh-thing",
+            "mech": "@adh-sdk/mech",
+            "other": "@adh-sdk/other",
         },
         prefix="web/packages",
     )
@@ -373,7 +373,7 @@ def test_an_exemption_covers_the_dist_echo_of_the_module_it_names():
     dist coverage, --include-dist re-reports every accepted violation."""
     with tempfile.TemporaryDirectory() as tmp:
         root = _wrapper_shaped_tree(tmp, dist={
-            "mech/dist/index.js": "import { a } from '@agentic-toolkit/adh-thing'\n",
+            "mech/dist/index.js": "import { a } from '@adh-sdk/adh-thing'\n",
         })
         bare = _run(root, "--exempt", EXEMPT_MECH)
         assert bare.returncode == 0, "src-only scan regressed"
@@ -394,9 +394,9 @@ def test_dist_coverage_is_per_package_and_per_specifier():
     with tempfile.TemporaryDirectory() as tmp:
         root = _wrapper_shaped_tree(tmp, dist={
             "mech/dist/index.js":
-                "import { a } from '@agentic-toolkit/adh-thing'\n"
-                "import { b } from '@agentic-toolkit/adh-thing/brand-new'\n",
-            "other/dist/index.js": "import { a } from '@agentic-toolkit/adh-thing'\n",
+                "import { a } from '@adh-sdk/adh-thing'\n"
+                "import { b } from '@adh-sdk/adh-thing/brand-new'\n",
+            "other/dist/index.js": "import { a } from '@adh-sdk/adh-thing'\n",
         })
         run = _run(root, "--exempt", EXEMPT_MECH, "--include-dist")
         assert run.returncode == 1, (

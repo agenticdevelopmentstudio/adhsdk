@@ -26,8 +26,8 @@
   only a literal comparison visible while parsing that exact call site, and
   does not follow an imported identifier back to its definition.
   **Approved**: pending
-- **Decision**: Place this module in `@agentic-toolkit/adh-registry` rather
-  than in `@agentic-toolkit/adh`, where most of its consumers live.
+- **Decision**: Place this module in `@adh-sdk/adh-registry` rather
+  than in `@adh-sdk/adh`, where most of its consumers live.
   **Rationale**: `adh` depends on `adh-registry`, so a home in `adh-registry`
   is readable from both sides of that dependency edge — including
   `adh-registry`'s own `seo/metadata.ts`, which needs the same fact — while a

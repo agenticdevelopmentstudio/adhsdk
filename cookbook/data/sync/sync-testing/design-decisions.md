@@ -1,7 +1,7 @@
 
 ### Fakes ship in the framework
 
-**Decision**: The fakes live in the production `AgenticToolkitSync` target under `Sync/Testing/`, not in a test target.
+**Decision**: The fakes live in the production `AgenticDeveloperHubSDKSync` target under `Sync/Testing/`, not in a test target.
 
 **Rationale**: The source comment names this the toolkit convention (see `Core/Chat/MockChatSession.swift`), so host apps' tests and previews can use the same fakes as the toolkit's own tests.
 

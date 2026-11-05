@@ -7,7 +7,7 @@ import {
   StackGroupDetail,
   useBasePathRoute,
   type TopicLeaf,
-} from "@agentic-toolkit/resource";
+} from "@adh-sdk/resource";
 
 import { ApiTokensSection } from "./ApiTokensSection";
 import { StorageTokensSection } from "./StorageTokensSection";

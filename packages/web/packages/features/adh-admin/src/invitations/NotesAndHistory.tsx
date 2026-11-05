@@ -1,5 +1,5 @@
 import type { ReactElement } from "react";
-import { NotesAndHistory as SharedNotesAndHistory } from "@agentic-toolkit/adh-ui/blocks";
+import { NotesAndHistory as SharedNotesAndHistory } from "@adh-sdk/adh-ui/blocks";
 import { useRowNotes, useRowHistory } from "../api/invitations";
 
 /**

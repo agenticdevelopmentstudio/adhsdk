@@ -1,5 +1,5 @@
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/Core/RPC/` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/RPC/` |
 

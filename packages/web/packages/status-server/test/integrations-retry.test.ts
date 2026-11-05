@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { runIntegrationsCheck, _resetSelfCheckStability } from "../src/monitor/integrations";
 import { CONFIRM_WINDOW_MS } from "../src/monitor/self-check-stability";
-import { _resetCfAccountCache } from "@agentic-toolkit/deploy-platform/providers";
+import { _resetCfAccountCache } from "@adh-sdk/deploy-platform/providers";
 import { freshDb as bootDb } from "./helpers/db";
 import { testConfig } from "./helpers/config";
 import { createLibsqlStorage } from "../src/libsql";

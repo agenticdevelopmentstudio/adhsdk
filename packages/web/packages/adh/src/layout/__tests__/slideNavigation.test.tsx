@@ -11,7 +11,7 @@ vi.mock('next/navigation', () => ({
 
 // By package path, as every importer must: the module's state is shared across the package's
 // entries only through this one specifier (see the `layout/SlideNavigation` tsup entry).
-import { SLIDE_ATTR, SlideTransitions, canSlide, slideNavigate } from '@agentic-toolkit/adh/layout/SlideNavigation'
+import { SLIDE_ATTR, SlideTransitions, canSlide, slideNavigate } from '@adh-sdk/adh/layout/SlideNavigation'
 
 type Update = () => Promise<void> | void
 

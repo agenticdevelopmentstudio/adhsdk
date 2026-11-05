@@ -1,7 +1,7 @@
 ---
 id: 5b0fea72-dbb8-4299-a54f-dc16486df1ae
 title: "Extension Identity Component"
-domain: adtoolkit://cookbook/workspace/extensions/manifest/extension-identity-component
+domain: adhsdk://cookbook/workspace/extensions/manifest/extension-identity-component
 type: ingredient
 version: 1.1.0
 status: review
@@ -210,7 +210,7 @@ true/false result.
 ## Platform Notes
 
 - **SwiftUI**: Source:
-  `packages/apple/AgenticToolkit/Core/Extensions/ExtensionIdentityComponent.swift`.
+  `packages/apple/AgenticDeveloperHubSDK/Core/Extensions/ExtensionIdentityComponent.swift`.
   The predicate is plain `Foundation` — `String.isEmpty`,
   `String.hasPrefix(_:)`, `String.contains(_:)`, and `String.unicodeScalars`
   — with no SwiftUI dependency; a SwiftUI-hosted caller (for example a
@@ -237,7 +237,7 @@ true/false result.
   surrogate pair) against the same `< 0x20 || === 0x7F` range.
 - **AppKit / UIKit**: No divergence from the SwiftUI bullet above — the
   source is framework-agnostic `Foundation` code called identically from an
-  AppKit-hosted (macOS) or UIKit-hosted (iOS) caller. `AgenticToolkitCore`
+  AppKit-hosted (macOS) or UIKit-hosted (iOS) caller. `AgenticDeveloperHubSDKCore`
   itself targets only macOS today, so an iOS caller would first need the
   type made available to an iOS target, but `isSafe` itself needs no
   AppKit/UIKit-specific change.
@@ -262,7 +262,7 @@ true/false result.
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/Core/Extensions/ExtensionIdentityComponent.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Extensions/ExtensionIdentityComponent.swift` |
 
 ## Design Decisions
 

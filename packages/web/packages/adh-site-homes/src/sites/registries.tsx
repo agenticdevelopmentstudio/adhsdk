@@ -1,18 +1,18 @@
 "use client";
 
-import { defineSiteHome } from "@agentic-toolkit/adh/home";
-import { RegistriesFeature } from "@agentic-toolkit/adh-registries";
+import { defineSiteHome } from "@adh-sdk/adh/home";
+import { RegistriesFeature } from "@adh-sdk/adh-registries";
 // The grammar comes from the server-safe ./parse subpath (the barrel dist is a "use client"
 // module), and keeping it in one place is what stops this host and the hub drifting into
 // parsing the same URL differently.
-import { parseRegistriesPath } from "@agentic-toolkit/adh-registries/parse";
+import { parseRegistriesPath } from "@adh-sdk/adh-registries/parse";
 
 /**
  * This site's workspace route — `/<workspace>` and everything under it.
  *
  * The Registries feature: the owner's explorer over the registries this workspace built (their
  * details, sections, signup form, permissions and review queue), and the registrant's editor for
- * their own listing in someone else's. The SAME @agentic-toolkit/adh-registries surface the hub's
+ * their own listing in someone else's. The SAME @adh-sdk/adh-registries surface the hub's
  * `/<slug>/registries` route renders — which is the point, because until 2026-08-31 it was NOT:
  * the whole implementation lived in `websites/agenticdeveloperhub/src/registries/`, and the site
  * the feature is named after shipped a `SiteHomePlaceholder`. Anyone who followed a cross-site

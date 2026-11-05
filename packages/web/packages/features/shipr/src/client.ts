@@ -24,7 +24,7 @@ import type {
  *
  * A fetcher may signal failure either way, and both are handled: return a non-ok
  * `Response` (a bare `fetch`, and what the tests use) or throw (`authedFetch` from
- * `@agentic-toolkit/auth/client`, which is what the site supplies — it throws
+ * `@adh-sdk/auth/client`, which is what the site supplies — it throws
  * `AuthHttpError` after its one refresh-and-retry on a 401).
  */
 export type Fetcher = (path: string, init?: RequestInit) => Promise<Response>;

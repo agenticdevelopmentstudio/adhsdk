@@ -1,8 +1,8 @@
 "use client";
 
-import { defineSiteHome } from "@agentic-toolkit/adh/home";
-import { DocsFeature } from "@agentic-toolkit/notebook";
-import { parseNotebookPath } from "@agentic-toolkit/notebook/parse";
+import { defineSiteHome } from "@adh-sdk/adh/home";
+import { DocsFeature } from "@adh-sdk/notebook";
+import { parseNotebookPath } from "@adh-sdk/notebook/parse";
 
 /**
  * The Docs feature — this site's gated product surface: the workspace owner's DOCS, browsed

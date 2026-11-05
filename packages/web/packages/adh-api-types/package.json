@@ -1,5 +1,5 @@
 {
-  "name": "@agentic-toolkit/adh-api-types",
+  "name": "@adh-sdk/adh-api-types",
   "version": "0.1.0",
   "description": "Everything adh derives from the backend's OpenAPI spec (frontend/src/sites/api/openapi.json): the generated TypeScript response types, the two generators that project the spec into the toolkit's crud + api-explorer packages, and the drift gates that keep those committed artifacts honest.",
   "license": "UNLICENSED",
@@ -21,9 +21,9 @@
     "test": "python3 tools/test_stable_output.py && tsc --noEmit && vitest run"
   },
   "devDependencies": {
-    "@agentic-toolkit/api-explorer": "workspace:*",
-    "@agentic-toolkit/crud": "workspace:*",
-    "@agentic-toolkit/data": "workspace:*",
+    "@adh-sdk/api-explorer": "workspace:*",
+    "@adh-sdk/crud": "workspace:*",
+    "@adh-sdk/data": "workspace:*",
     "@types/node": "^24.0.0",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",

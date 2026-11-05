@@ -1,7 +1,7 @@
 ---
 id: 1cdd9485-95e5-47dd-9346-224b43ce8ab9
 title: DevBanner
-domain: agenticdevelopertoolkit://recipes/dev-banner
+domain: adhsdk://recipes/dev-banner
 type: ingredient
 version: 1.1.1
 status: review

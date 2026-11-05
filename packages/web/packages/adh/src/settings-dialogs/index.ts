@@ -1,4 +1,4 @@
-// MOVED to @agentic-toolkit/ecosystem-config/dialog-state, next to the dialogs these gates
+// MOVED to @adh-sdk/ecosystem-config/dialog-state, next to the dialogs these gates
 // actually gate. This entry stays so the admin site's import path keeps compiling; new code
 // imports the feature package directly.
 //
@@ -20,4 +20,4 @@ export {
   duplicateFlagKeyMessage,
   flagFormBlockedReason,
   isFlagFormDirty,
-} from "@agentic-toolkit/ecosystem-config/dialog-state";
+} from "@adh-sdk/ecosystem-config/dialog-state";

@@ -1,13 +1,13 @@
 #if os(iOS)
 import SwiftUI
 import UIKit
-import AgenticDeveloperToolkit
-import AgenticDeveloperToolkitUI
+import AgenticDeveloperHubSDK
+import AgenticDeveloperHubSDKUI
 
 /// The sample app's markdown screen: a list, an editor, and a viewer.
 ///
 /// Backed by an array rather than a database on purpose. The real store lives
-/// in AgenticToolkit, and this package depends on nothing there — the
+/// in AgenticDeveloperHubSDK, and this package depends on nothing there — the
 /// dependency points downward only. What this screen exists to show is that
 /// `MarkdownEditorController` and `MarkdownViewerController` work on UIKit, and
 /// an array shows that as well as SQLite would.

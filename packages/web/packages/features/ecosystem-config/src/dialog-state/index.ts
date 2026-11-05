@@ -9,7 +9,7 @@
  * even where the text currently coincides: two dialogs happening to say the same words is not the
  * same fact, and collapsing them would make either one impossible to reword on its own.
  *
- * These live BESIDE the panes they gate rather than in `@agentic-toolkit/adh`, because a third
+ * These live BESIDE the panes they gate rather than in `@adh-sdk/adh`, because a third
  * host now renders those panes. `adh/settings-dialogs` re-exports this module unchanged, so the
  * admin site's import path is untouched — and the dependency points adh → ecosystem-config, the
  * direction adh's other feature dependencies already run.

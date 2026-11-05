@@ -2,7 +2,7 @@
  * Opts credentialed pages in to cross-origin, SAME-SITE prerendering, so the header
  * site-switcher can prerender a sibling site on hover and activate it INSTANTLY on
  * click — no full-page reload, no white "ugly refresh". Paired with
- * `PrefetchSiblingSites` in `@agentic-toolkit/adh`, which emits the matching
+ * `PrefetchSiblingSites` in `@adh-sdk/adh`, which emits the matching
  * speculation rules.
  *
  * Ported from `frontend/src/sites/marketing.next-config.mjs:82-89`, where it was a
@@ -45,7 +45,7 @@ export const PRERENDER_HEADERS: Array<{ key: string; value: string }> = [
  *
  * `process.env.VERCEL` is set in every Vercel build environment and nowhere else —
  * `next dev`, `deployment/build`, the e2e dev servers and the local suite all leave it
- * unset — which is the same signal `@agentic-toolkit/adh-next-config` already uses to
+ * unset — which is the same signal `@adh-sdk/adh-next-config` already uses to
  * decide whether to pin the Turbopack workspace root.
  */
 export function prerenderHeaderRules(): Array<{ source: string; headers: Array<{ key: string; value: string }> }> {

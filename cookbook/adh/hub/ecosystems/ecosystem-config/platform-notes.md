@@ -3,12 +3,12 @@
   imports SwiftUI; they build form/level/detail value objects that a SwiftUI (or
   AppKit) rendering layer elsewhere consumes unchanged.
 - **AppKit / UIKit**: this is one of the two source platforms. The files live under
-  `packages/apple/AgenticToolkit/Hub/Features/EcosystemConfig/`
+  `packages/apple/AgenticDeveloperHubSDK/Hub/Features/EcosystemConfig/`
   (`AuthSettingsTopic.swift`, `EcosystemConfigModels.swift`,
   `FeatureFlagsTopic.swift`, `ServerBagsTopic.swift`, `SigninAppsTopic.swift`,
   `StorageTokensRail.swift`, `StorageTokensTopic.swift`), part of the
-  `AgenticToolkitHub` sources directory that `project.yml` builds into both
-  `AgenticToolkitHub-macOS` and `AgenticToolkitHub-iOS` targets from the same
+  `AgenticDeveloperHubSDKHub` sources directory that `project.yml` builds into both
+  `AgenticDeveloperHubSDKHub-macOS` and `AgenticDeveloperHubSDKHub-iOS` targets from the same
   source tree — there is no platform-specific branch anywhere in these files. Each
   topic conforms to `EcosystemTopicProvider` and implements
   `child(for:path:rail:)`; every data-source call not covered by the exception

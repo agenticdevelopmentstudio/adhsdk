@@ -1,7 +1,7 @@
 // UI model + helpers for bucket ACCESS LISTS (the backend calls them access
 // groups). An access list belongs to a bucket and is a named set of principals
 // (members) plus CRUD grants on the bucket / a bucket type / a row. Persisted via
-// @agentic-toolkit/data/security's bucketAccessApi. This feature is decoupled from
+// @adh-sdk/data/security's bucketAccessApi. This feature is decoupled from
 // the bucket editor — it has its own Ecosystems "Access" topic (AccessPane).
 
 import type {
@@ -9,8 +9,8 @@ import type {
   AccessGroup,
   AccessGroupDetail,
   AccessGroupMember,
-} from "@agentic-toolkit/data/security";
-import { CRUD_KEYS, CRUD_LETTER, type Crud } from "@agenticdevelopertoolkit/ui/components/crud";
+} from "@adh-sdk/data/security";
+import { CRUD_KEYS, CRUD_LETTER, type Crud } from "@adh-sdk/ui/components/crud";
 
 export type { AccessGrant, AccessGroup, AccessGroupDetail, AccessGroupMember };
 

@@ -3,7 +3,7 @@
   "meta": {
     "id": "df9b416b-ba3d-430a-a82d-e39b11a55f2d",
     "title": "Status Web Stores",
-    "domain": "adtoolkit://cookbook/status/dashboard/telemetry/local-cache",
+    "domain": "adhsdk://cookbook/status/dashboard/telemetry/local-cache",
     "type": "ingredient",
     "version": "1.0.2",
     "status": "review",
@@ -21,8 +21,8 @@
     "tags": [],
     "depends-on": [],
     "related": [
-      "adtoolkit://cookbook/status/dashboard/state/telemetry",
-      "adtoolkit://cookbook/status/service/telemetry"
+      "adhsdk://cookbook/status/dashboard/state/telemetry",
+      "adhsdk://cookbook/status/service/telemetry"
     ],
     "references": [],
     "approved-by": "",

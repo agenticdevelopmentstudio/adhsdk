@@ -2,26 +2,26 @@
 
 import { useCallback, useState } from "react";
 import { TriangleAlert } from "lucide-react";
-import { useAction } from "@agentic-toolkit/crud";
-import { useResourceList } from "@agentic-toolkit/data";
-import { SettingsBody } from "@agentic-toolkit/resource";
-import { ErrorText } from "@agenticdevelopertoolkit/ui/components/error-text";
-import { Checkbox } from "@agenticdevelopertoolkit/ui/components/checkbox";
-import { Alert, AlertDescription, AlertTitle } from "@agenticdevelopertoolkit/ui/components/alert";
-import { errorMessage } from "@agenticdevelopertoolkit/ui/lib/errors";
-import { Select } from "@agenticdevelopertoolkit/ui/components/select";
-import { Button } from "@agenticdevelopertoolkit/ui/components/button";
-import { Field } from "@agenticdevelopertoolkit/ui/blocks/field";
+import { useAction } from "@adh-sdk/crud";
+import { useResourceList } from "@adh-sdk/data";
+import { SettingsBody } from "@adh-sdk/resource";
+import { ErrorText } from "@adh-sdk/ui/components/error-text";
+import { Checkbox } from "@adh-sdk/ui/components/checkbox";
+import { Alert, AlertDescription, AlertTitle } from "@adh-sdk/ui/components/alert";
+import { errorMessage } from "@adh-sdk/ui/lib/errors";
+import { Select } from "@adh-sdk/ui/components/select";
+import { Button } from "@adh-sdk/ui/components/button";
+import { Field } from "@adh-sdk/ui/blocks/field";
 import {
   EditableList,
   useEditableList,
   type EditableListColumn,
-} from "@agenticdevelopertoolkit/ui/blocks";
+} from "@adh-sdk/ui/blocks";
 import {
   personaUserToolsApi,
   type UserActablePersona,
   type UserTool,
-} from "@agentic-toolkit/data/personas";
+} from "@adh-sdk/data/personas";
 import { sourceLabel } from "./agent-tool-source";
 
 /** The names of the tools currently allowed, in catalog order (the PUT payload shape). */

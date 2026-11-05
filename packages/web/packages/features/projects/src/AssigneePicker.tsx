@@ -1,9 +1,9 @@
 "use client";
 
 import { useMemo, type ReactElement } from "react";
-import { Field } from "@agenticdevelopertoolkit/ui/blocks/field";
-import { ListChooser } from "@agenticdevelopertoolkit/ui/components/list-chooser";
-import type { ProjectParticipant } from "@agentic-toolkit/data/projects";
+import { Field } from "@adh-sdk/ui/blocks/field";
+import { ListChooser } from "@adh-sdk/ui/components/list-chooser";
+import type { ProjectParticipant } from "@adh-sdk/data/projects";
 
 /**
  * The work-item assignment UI: a Field + the shared {@link ListChooser} typeahead over the

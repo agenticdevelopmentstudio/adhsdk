@@ -1,7 +1,7 @@
 ---
 id: 81f8c0bd-ce00-43b3-816e-b63e96baeacc
 title: Avatar Engine Path
-domain: agenticdevelopertoolkit://recipes/avatar-engine-path
+domain: adhsdk://recipes/avatar-engine-path
 type: ingredient
 version: 1.0.2
 status: review

@@ -12,7 +12,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 // compile vitest.setup.ts, so the jest-dom Assertion augmentation must load HERE.
 import '@testing-library/jest-dom/vitest'
 import { render, screen, waitFor } from '@testing-library/react'
-import { FeatureFlagsProvider } from '@agentic-toolkit/adh/flags'
+import { FeatureFlagsProvider } from '@adh-sdk/adh/flags'
 import { SiteFooter } from '../footer/SiteFooter'
 
 // bitbag is a next/dynamic chunk (his avatar rig + gsap + his chat); stub it to a marker so these

@@ -1,7 +1,7 @@
 ---
 id: f86178c6-4255-4d66-86e7-0b3b5a2e00c0
 title: Source Code Panel
-domain: agenticdevelopertoolkit://recipes/source-code-panel
+domain: adhsdk://recipes/source-code-panel
 type: ingredient
 version: 1.1.1
 status: review
@@ -43,7 +43,7 @@ The Source Code Panel displays syntax-highlighted source code with optional head
 - **theme-from-prop**: Component MUST use the `theme` prop if provided; theme prop takes precedence over CSS-derived theme.
 - **theme-from-css**: Component MUST read `--scp-shiki-theme` CSS custom property from the panel root element; property value is treated as a quoted string and quotes are stripped.
 - **theme-fallback**: Component MUST use `'github-dark'` as the fallback theme when `theme` prop is not provided and `--scp-shiki-theme` is not set or empty.
-- **watch-theme-changes**: Component MUST observe mutations to the `agentic-toolkit-theme` style element and re-read the theme CSS property when it changes, provided `theme` prop is not set.
+- **watch-theme-changes**: Component MUST observe mutations to the `adh-sdk-theme` style element and re-read the theme CSS property when it changes, provided `theme` prop is not set.
 - **header-when-content**: Component MUST display a header when filename is provided OR showCopy is true.
 - **display-filename**: Component MUST display the filename in the header if provided; if filename is not provided, display the language code instead.
 - **show-copy-button**: Component MUST display a "Copy" button when `showCopy` is true.
@@ -101,7 +101,7 @@ The Source Code Panel displays syntax-highlighted source code with optional head
 | scp-003 | theme-from-prop | theme="nord" | Component uses "nord" theme, ignoring CSS property |
 | scp-004 | theme-from-css | theme not provided, --scp-shiki-theme set to 'github-light' | Component uses "github-light" theme (quotes stripped) |
 | scp-005 | theme-fallback | theme not provided, --scp-shiki-theme not set | Component uses "github-dark" as fallback |
-| scp-006 | watch-theme-changes | theme not provided, the `#agentic-toolkit-theme` `<style>` element's content mutates (e.g. toolkit switches theme), changing the computed `--scp-shiki-theme` value | Component re-reads `--scp-shiki-theme` and updates highlighted output |
+| scp-006 | watch-theme-changes | theme not provided, the `#adh-sdk-theme` `<style>` element's content mutates (e.g. toolkit switches theme), changing the computed `--scp-shiki-theme` value | Component re-reads `--scp-shiki-theme` and updates highlighted output |
 | scp-007 | header-when-content | filename provided | Header renders with filename |
 | scp-008 | header-when-content | filename not provided, showCopy=true | Header renders with copy button |
 | scp-009 | display-filename | filename="App.tsx" | Header displays "App.tsx" |
@@ -128,7 +128,7 @@ The Source Code Panel displays syntax-highlighted source code with optional head
 - **Null or undefined lang**: `lang` defaults to `'tsx'` only when the prop is `undefined` — JS default parameters do not apply to an explicit `null`. A `null` (or any other invalid identifier) reaches Shiki, which throws; the component catches it and falls back to `<pre><code>` (see **fallback-to-preformatted**, scp-022).
 - **Invalid language identifier**: An identifier Shiki doesn't recognize causes `ensureLanguage`/`codeToHtml` to throw. The component catches it the same as any other highlight failure and falls back to `<pre><code>` (see **fallback-to-preformatted**, scp-023).
 - **Clipboard API unavailable**: Copy button click is silently no-op; no error state, no console message.
-- **Missing agentic-toolkit-theme element**: Theme observer skips setup; component uses fallback or prop theme without mutation watching.
+- **Missing adh-sdk-theme element**: Theme observer skips setup; component uses fallback or prop theme without mutation watching.
 - **Very long code string**: Component renders full string; maxHeight prop constrains visual container with overflow scroll if needed.
 - **Rapid theme changes**: MutationObserver triggers on each mutation; rapid CSS updates result in rapid re-reads and re-renders. Each theme update starts a new highlight call, and any call still pending from a previous theme is discarded per **discard-stale-highlight-results**.
 - **showCopy=false and no filename**: Header element does not render; code is displayed without header.
@@ -213,7 +213,7 @@ Not applicable: Component performs no logging; errors in Shiki highlighting or c
 **Rationale**: Preserves readability of the code even when highlighting is unavailable, while keeping the failure silent and non-disruptive to the surrounding UI.
 **Approved**: pending
 
-**Decision**: Use a `MutationObserver` on the `#agentic-toolkit-theme` `<style>` element to detect toolkit theme switches and re-read `--scp-shiki-theme`.
+**Decision**: Use a `MutationObserver` on the `#adh-sdk-theme` `<style>` element to detect toolkit theme switches and re-read `--scp-shiki-theme`.
 **Rationale**: The toolkit already changes themes by mutating this style element; observing it directly avoids adding a separate theme-change event system. Other platforms should use their own theme-change callback/observer equivalent (system theme callbacks, CSS-in-JS observer, etc.).
 **Approved**: pending
 

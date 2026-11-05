@@ -1,7 +1,7 @@
 ---
 id: 3785363d-118e-4d7e-98e6-afaca8bf0838
 title: List
-domain: agenticdevelopertoolkit://recipes/list
+domain: adhsdk://recipes/list
 type: ingredient
 version: 1.1.1
 status: review

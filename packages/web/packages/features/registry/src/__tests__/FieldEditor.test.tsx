@@ -2,8 +2,8 @@ import { describe, expect, it, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { FieldEditor } from '../editors/FieldEditor';
-import { FIELD_TYPES } from '@agenticdevelopertoolkit/registry-types';
-import type { FieldType } from '@agenticdevelopertoolkit/registry-types';
+import { FIELD_TYPES } from '@adh-sdk/registry-types';
+import type { FieldType } from '@adh-sdk/registry-types';
 
 const def = (type: FieldType, config: Record<string, unknown> = {}) => ({
   key: 'f', type, required: false, config, label: 'A field',

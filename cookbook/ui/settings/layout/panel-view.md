@@ -1,7 +1,7 @@
 ---
 id: 4b1a3eb0-0a8a-4059-b2ac-824013072bd5
 title: "Panel View"
-domain: adtoolkit://cookbook/ui/settings/layout/panel-view
+domain: adhsdk://cookbook/ui/settings/layout/panel-view
 type: ingredient
 version: 1.2.2
 status: review
@@ -19,8 +19,8 @@ tags:
   - settings
   - layout
 depends-on:
-  - adtoolkit://cookbook/ui/settings/layout/group-view
-  - adtoolkit://cookbook/ui/settings/layout/panel-heading-view
+  - adhsdk://cookbook/ui/settings/layout/group-view
+  - adhsdk://cookbook/ui/settings/layout/panel-heading-view
 related:
   - agenticdevelopercookbook://guidelines/cookbook/ui/platform-design-languages
 references: []
@@ -341,7 +341,7 @@ Not applicable: the source contains no logging call.
   updating on a theme class/attribute change for
   **theme-change-background-repaint**.
 - **AppKit / UIKit** (source platform): `ComposableSettings.PanelView`, at
-  `packages/apple/AgenticToolkit/macOS/SystemIntegration/ComposableSettingsWindow/Views/PanelView.swift`,
+  `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/Views/PanelView.swift`,
   is a macOS-only (`import AppKit`), `open`, `@MainActor` `NSView` subclass
   conforming to `SettingsViewProtocol` (a marker protocol with no
   requirements of its own). Internally, the private stored properties
@@ -398,7 +398,7 @@ Not applicable: the source contains no logging call.
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/macOS/SystemIntegration/ComposableSettingsWindow/Views/PanelView.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/Views/PanelView.swift` |
 
 ## Design Decisions
 

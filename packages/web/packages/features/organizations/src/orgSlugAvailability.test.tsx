@@ -4,13 +4,13 @@ import { onlineManager, QueryClient, QueryClientProvider } from '@tanstack/react
 import { describe, it, expect, afterEach, beforeEach, vi } from 'vitest'
 
 vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn() }) }))
-vi.mock('@agentic-toolkit/auth', () => ({ reportUnexpectedAuthError: vi.fn() }))
+vi.mock('@adh-sdk/auth', () => ({ reportUnexpectedAuthError: vi.fn() }))
 
 const { checkWorkspaceSlugAvailable } = vi.hoisted(() => ({ checkWorkspaceSlugAvailable: vi.fn() }))
 // Only the probe is stubbed: `WORKSPACES_QUERY_KEY` is a real export of this module and the
 // form invalidates it, so a whole-module factory would replace the key the assertion checks.
-vi.mock('@agentic-toolkit/data', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('@agentic-toolkit/data')>()),
+vi.mock('@adh-sdk/data', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@adh-sdk/data')>()),
   checkWorkspaceSlugAvailable,
 }))
 

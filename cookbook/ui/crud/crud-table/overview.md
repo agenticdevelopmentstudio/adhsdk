@@ -1,5 +1,5 @@
 
-`CrudTable` in `@agentic-toolkit/crud` is a **metadata-driven** row list for one
+`CrudTable` in `@adh-sdk/crud` is a **metadata-driven** row list for one
 generic-CRUD table. Given a `CrudTableMeta` (generated from the backend OpenAPI
 spec) plus the current `rows`, it renders a plain table whose columns are chosen
 from the metadata: the primary-key column(s) first, then the remaining **scalar**

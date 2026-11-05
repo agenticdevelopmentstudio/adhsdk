@@ -1,7 +1,7 @@
 ---
 id: dcf1a793-0a47-466b-8b09-0bcf091fd55a
 title: Topics Pane
-domain: agenticdevelopertoolkit://recipes/topics-pane
+domain: adhsdk://recipes/topics-pane
 type: ingredient
 version: 1.1.1
 status: review
@@ -21,7 +21,7 @@ tags:
 - list
 - navigation
 depends-on:
-- agenticdevelopertoolkit://recipes/connector-anchor
+- adhsdk://recipes/connector-anchor
 related: []
 references: []
 approved-by: ''

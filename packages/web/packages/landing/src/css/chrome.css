@@ -94,7 +94,7 @@
  * bars on a 5.5px pitch, the middle bar sat half a pixel out of phase with the
  * other two and rendered visibly thinner. With 1px bars on a 5px pitch, all
  * three round the same way wherever the button lands. This is the same rule
- * @agenticdevelopertoolkit/chrome's MenuButton states, at the same weight.
+ * @adh-sdk/chrome's MenuButton states, at the same weight.
  * The weight is a light 1px so the mark reads as a line drawing beside the
  * chip's own hairline border rather than as a heavier glyph sitting on it. */
 .lp-burger span {

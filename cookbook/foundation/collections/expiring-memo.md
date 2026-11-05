@@ -1,7 +1,7 @@
 ---
 id: 55878D7D-97F1-420A-A732-680AC39C8FF4
 title: "Expiring Memo"
-domain: adtoolkit://cookbook/foundation/collections/expiring-memo
+domain: adhsdk://cookbook/foundation/collections/expiring-memo
 type: ingredient
 version: 1.0.0
 status: review
@@ -22,7 +22,7 @@ tags:
   - memoization
 depends-on: []
 related:
-  - adtoolkit://cookbook/foundation/collections/lru-cache
+  - adhsdk://cookbook/foundation/collections/lru-cache
 references: []
 approved-by: ""
 approved-date: ""
@@ -133,7 +133,7 @@ Not applicable: The memo calls no logging API.
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/Core/Collections/ExpiringMemo.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Collections/ExpiringMemo.swift` |
 
 ## Design Decisions
 
@@ -153,7 +153,7 @@ Not applicable: The memo calls no logging API.
 | [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
 | [caching-strategy](agenticdevelopercookbook://compliance/performance#caching-strategy) | passed | Performance |
 
-`separation-of-concerns` passes because the type only memoizes by key with expiry; what is computed and when to ask are the caller's. `unit-test-coverage` passes because `AgenticToolkitCoreTests/Collections/ExpiringMemoTests.swift` covers freshness at and past the time-to-live, a backwards clock, a throwing compute, capacity eviction and removal.
+`separation-of-concerns` passes because the type only memoizes by key with expiry; what is computed and when to ask are the caller's. `unit-test-coverage` passes because `AgenticDeveloperHubSDKCoreTests/Collections/ExpiringMemoTests.swift` covers freshness at and past the time-to-live, a backwards clock, a throwing compute, capacity eviction and removal.
 
 ## Change History
 

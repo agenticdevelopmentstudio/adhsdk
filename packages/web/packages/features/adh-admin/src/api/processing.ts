@@ -1,6 +1,6 @@
 "use client";
 
-import type { RequestBody, SuccessBody, components } from "@agentic-toolkit/adh-api-types";
+import type { RequestBody, SuccessBody, components } from "@adh-sdk/adh-api-types";
 import {
   useInfiniteQuery,
   useMutation,

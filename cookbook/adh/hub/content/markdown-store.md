@@ -1,7 +1,7 @@
 ---
 id: 11f7a665-60e9-42df-853c-fe4de3af0fd8
 title: "Markdown Store"
-domain: adtoolkit://cookbook/adh/hub/content/markdown-store
+domain: adhsdk://cookbook/adh/hub/content/markdown-store
 type: ingredient
 version: 1.1.0
 status: review
@@ -24,15 +24,15 @@ tags:
   - taxonomy
   - persistence
 depends-on:
-  - adtoolkit://cookbook/data/sync/offline-sync-client
+  - adhsdk://cookbook/data/sync/offline-sync-client
 related: []
 references:
-  - packages/apple/AgenticToolkit/Markdown/MarkdownSchema.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Markdown/MarkdownProjection.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Markdown/MarkdownStore.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Markdown/MarkdownTaxonomy.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Markdown/MarkdownTimestamp.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Markdown/MarkdownRemoteWriter.swift (agenticdevelopertoolkit)
+  - packages/apple/AgenticDeveloperHubSDK/Markdown/MarkdownSchema.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Markdown/MarkdownProjection.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Markdown/MarkdownStore.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Markdown/MarkdownTaxonomy.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Markdown/MarkdownTimestamp.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Markdown/MarkdownRemoteWriter.swift (adhsdk)
 approved-by: ""
 approved-date: ""
 ---
@@ -476,7 +476,7 @@ framework that protocol lives in.
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/Markdown/` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Markdown/` |
 
 ## Design Decisions
 

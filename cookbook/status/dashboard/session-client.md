@@ -1,7 +1,7 @@
 ---
 id: 5935b39d-9451-48c1-8b99-bd510d66d1a0
 title: "Session Client"
-domain: adtoolkit://cookbook/status/dashboard/session-client
+domain: adhsdk://cookbook/status/dashboard/session-client
 type: ingredient
 version: 1.2.0
 status: review
@@ -24,14 +24,14 @@ depends-on:
   - agenticdevelopercookbook://guidelines/implementing/networking/retry-and-resilience
   - agenticdevelopercookbook://guidelines/implementing/security/token-handling
 related:
-  - adtoolkit://cookbook/status/dashboard/api
-  - adtoolkit://cookbook/status/service/auth
-  - adtoolkit://cookbook/status/service/monitor/types
+  - adhsdk://cookbook/status/dashboard/api
+  - adhsdk://cookbook/status/service/auth
+  - adhsdk://cookbook/status/service/monitor/types
 references:
-  - packages/web/packages/status-web/src/header-auth.ts (agenticdevelopertoolkit)
-  - packages/web/packages/status-web/src/header-auth.test.ts (agenticdevelopertoolkit)
-  - packages/web/packages/status-web/src/types.ts (agenticdevelopertoolkit)
-  - packages/web/packages/status-web/src/api/client.ts (agenticdevelopertoolkit)
+  - packages/web/packages/status-web/src/header-auth.ts (adhsdk)
+  - packages/web/packages/status-web/src/header-auth.test.ts (adhsdk)
+  - packages/web/packages/status-web/src/types.ts (adhsdk)
+  - packages/web/packages/status-web/src/api/client.ts (adhsdk)
 approved-by: ""
 approved-date: ""
 ---

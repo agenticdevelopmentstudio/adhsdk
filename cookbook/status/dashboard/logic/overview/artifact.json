@@ -3,7 +3,7 @@
   "meta": {
     "id": "ba5855cd-bd4c-49be-b7d3-4c3f7f35434e",
     "title": "Overview Projections",
-    "domain": "adtoolkit://cookbook/status/dashboard/logic/overview",
+    "domain": "adhsdk://cookbook/status/dashboard/logic/overview",
     "type": "ingredient",
     "version": "1.1.0",
     "status": "review",
@@ -20,11 +20,11 @@
     ],
     "tags": [],
     "depends-on": [
-      "adtoolkit://cookbook/status/dashboard/logic/board-types"
+      "adhsdk://cookbook/status/dashboard/logic/board-types"
     ],
     "related": [
-      "adtoolkit://cookbook/status/dashboard/logic/deploy-view",
-      "adtoolkit://cookbook/status/dashboard/state/portfolio-indicator"
+      "adhsdk://cookbook/status/dashboard/logic/deploy-view",
+      "adhsdk://cookbook/status/dashboard/state/portfolio-indicator"
     ],
     "references": [],
     "approved-by": "",

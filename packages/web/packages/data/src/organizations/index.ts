@@ -1,4 +1,4 @@
-// @agentic-toolkit/data/organizations — the organization record (resolve / create /
+// @adh-sdk/data/organizations — the organization record (resolve / create /
 // rename / archive / restore) and an organization workspace's people roster.
 //
 // One sub-entry: the roster is only ever read for an organization workspace, so it

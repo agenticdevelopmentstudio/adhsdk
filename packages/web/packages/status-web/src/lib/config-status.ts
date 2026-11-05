@@ -2,7 +2,7 @@
 // This board's ONE addition to the shared configuration-status model.
 //
 // The model itself — `endpointConfigStatus`, `projectStatus`, `partitionPending`,
-// `ConfigStatus` — lives in @agentic-toolkit/deploy-platform/engine, the same
+// `ConfigStatus` — lives in @adh-sdk/deploy-platform/engine, the same
 // classifier the Hono server runs behind POST /auto-configure. Import it from there;
 // a second copy here is how the front page's banner and the Config badges came to
 // count different things in the first place.
@@ -23,7 +23,7 @@ import {
   endpointConfigStatus as classifyEndpoint,
   type EndpointConfigStatus,
   type EndpointLike as EngineEndpointLike,
-} from "@agentic-toolkit/deploy-platform/engine";
+} from "@adh-sdk/deploy-platform/engine";
 
 /** The endpoint fields this app's wiring logic reads (EndpointView is assignable to this). */
 export interface EndpointLike extends EngineEndpointLike {

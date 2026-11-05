@@ -1,6 +1,6 @@
-// @agentic-toolkit/account — the portable half of a user's settings surface.
+// @adh-sdk/account — the portable half of a user's settings surface.
 //
-// MECHANISM tier: this package must never import @agentic-toolkit/adh* (see
+// MECHANISM tier: this package must never import @adh-sdk/adh* (see
 // tools/check_boundaries.py and the tier comment in package.json). Populated by
 // the following tasks.
 export { SettingsLayout, type Topic } from "./layout/SettingsLayout";
@@ -17,11 +17,11 @@ export {
 
 // The typed HTTP wrappers the settings panels call — moved from adh's hub
 // (frontend/src/sites/hub/src/api/*). `http.ts` and `profile.ts` were pure
-// re-export shims over `@agentic-toolkit/auth/client` and
-// `@agentic-toolkit/data/profile` respectively and are deliberately NOT copied
+// re-export shims over `@adh-sdk/auth/client` and
+// `@adh-sdk/data/profile` respectively and are deliberately NOT copied
 // here — a consumer imports those two straight from the upstream package instead
 // of through this one. See `./api/auth.ts`'s header for why the request/response
-// types below are transcribed rather than imported from `@agentic-toolkit/adh-api-types`.
+// types below are transcribed rather than imported from `@adh-sdk/adh-api-types`.
 export {
   ME_QUERY_KEY,
   checkSlugAvailable,

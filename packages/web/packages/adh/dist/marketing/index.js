@@ -1,6 +1,6 @@
 // src/marketing/MarketingLanding.tsx
-import { siteConcept as siteConcept2 } from "@agentic-toolkit/adh/concepts";
-import { getSite as getSite2, splitSiteTitle } from "@agentic-toolkit/adh-registry";
+import { siteConcept as siteConcept2 } from "@adh-sdk/adh/concepts";
+import { getSite as getSite2, splitSiteTitle } from "@adh-sdk/adh-registry";
 
 // src/layout/SiteLanding.tsx
 import { jsx, jsxs } from "react/jsx-runtime";
@@ -95,13 +95,13 @@ function SiteLanding({
 }
 
 // src/marketing/MarketingLanding.tsx
-import { LandingGraph } from "@agentic-toolkit/adh/graph";
-import { LandingHeroGate } from "@agentic-toolkit/adh/marketing/LandingHeroGate";
+import { LandingGraph } from "@adh-sdk/adh/graph";
+import { LandingHeroGate } from "@adh-sdk/adh/marketing/LandingHeroGate";
 
 // src/marketing/StorySections.tsx
-import { getSite, siteHeaderTitle, siteProdUrl } from "@agentic-toolkit/adh-registry";
-import { getSiteStory } from "@agentic-toolkit/adh-registry";
-import { siteConcept } from "@agentic-toolkit/adh/concepts";
+import { getSite, siteHeaderTitle, siteProdUrl } from "@adh-sdk/adh-registry";
+import { getSiteStory } from "@adh-sdk/adh-registry";
+import { siteConcept } from "@adh-sdk/adh/concepts";
 
 // src/marketing/story-copy.ts
 var BRAND_PROMISE = "Everything your AI agents need to become real software.";
@@ -202,23 +202,23 @@ function MarketingLanding({ siteId, focusId }) {
 }
 
 // src/marketing/index.ts
-import { MarketingSiteHeader as MarketingSiteHeader3 } from "@agentic-toolkit/adh/marketing/MarketingSiteHeader";
+import { MarketingSiteHeader as MarketingSiteHeader3 } from "@adh-sdk/adh/marketing/MarketingSiteHeader";
 
 // src/marketing/MarketingRootHtml.tsx
-import { AdhThemeStyle } from "@agentic-toolkit/adh/server";
-import { getLocale, htmlLang, localeDir } from "@agentic-toolkit/adh/concepts";
-import { JsonLd } from "@agenticdevelopertoolkit/landing";
+import { AdhThemeStyle } from "@adh-sdk/adh/server";
+import { getLocale, htmlLang, localeDir } from "@adh-sdk/adh/concepts";
+import { JsonLd } from "@adh-sdk/landing";
 
 // src/marketing/MarketingShell.tsx
 import {
   Fragment as Fragment3
 } from "react";
-import { AppShell } from "@agentic-toolkit/adh/layout";
-import { AuthProvider } from "@agentic-toolkit/adh/auth";
-import { MarketingSiteHeader } from "@agentic-toolkit/adh/marketing/MarketingSiteHeader";
+import { AppShell } from "@adh-sdk/adh/layout";
+import { AuthProvider } from "@adh-sdk/adh/auth";
+import { MarketingSiteHeader } from "@adh-sdk/adh/marketing/MarketingSiteHeader";
 import {
   HelpContentProvider
-} from "@agenticdevelopertoolkit/ui/components/help-content";
+} from "@adh-sdk/ui/components/help-content";
 import { jsx as jsx4 } from "react/jsx-runtime";
 var FAMILY_ROOT_CLASS = "adh-family";
 var FAMILY_ROOT_STYLE = { display: "contents" };
@@ -283,10 +283,10 @@ function MarketingRootHtml({ jsonLd, ...props }) {
 
 // src/marketing/MarketingFrameHeader.tsx
 import { Fragment as Fragment4 } from "react";
-import { AppShellProviders } from "@agentic-toolkit/adh/layout";
-import { AuthProvider as AuthProvider2 } from "@agentic-toolkit/adh/auth";
-import { MarketingSiteHeader as MarketingSiteHeader2 } from "@agentic-toolkit/adh/marketing/MarketingSiteHeader";
-import { HelpContentProvider as HelpContentProvider2 } from "@agenticdevelopertoolkit/ui/components/help-content";
+import { AppShellProviders } from "@adh-sdk/adh/layout";
+import { AuthProvider as AuthProvider2 } from "@adh-sdk/adh/auth";
+import { MarketingSiteHeader as MarketingSiteHeader2 } from "@adh-sdk/adh/marketing/MarketingSiteHeader";
+import { HelpContentProvider as HelpContentProvider2 } from "@adh-sdk/ui/components/help-content";
 import { jsx as jsx6 } from "react/jsx-runtime";
 var FRAME_HEADER_CLASS = "adh-frame-header";
 function MarketingFrameHeader({
@@ -317,7 +317,7 @@ import {
   PrivacyModal,
   SitesPopover,
   TermsModal
-} from "@agentic-toolkit/adh/footer";
+} from "@adh-sdk/adh/footer";
 
 // src/footer/identity.tsx
 import {
@@ -326,7 +326,7 @@ import {
   getSite as getSite3,
   groupSitesByCategory,
   siteProdUrl as siteProdUrl2
-} from "@agentic-toolkit/adh-registry";
+} from "@adh-sdk/adh-registry";
 import { jsx as jsx7 } from "react/jsx-runtime";
 var LANDING_FOOTER_CLASS = "adh-landing-footer";
 var FAMILY_OMITTED = /* @__PURE__ */ new Set(["shipr", "registry", "fishlamp", "fishlampdesign"]);

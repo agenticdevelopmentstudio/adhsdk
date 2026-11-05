@@ -11,6 +11,6 @@ to label and enumerate the buckets/tables a grant can target. Every thrown error
 normalized to the shared error type before it reaches a caller, and every token
 secret this component ever holds is a transient, reveal-once-then-drop entry in an
 in-memory dictionary — the same pattern the sibling Authentication feature
-(`adtoolkit://cookbook/adh/hub/security/authentication-client`) uses for its own
+(`adhsdk://cookbook/adh/hub/security/authentication-client`) uses for its own
 API and storage tokens.
 

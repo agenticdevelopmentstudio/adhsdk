@@ -2,15 +2,15 @@
 
 import { useState } from "react";
 import { Globe } from "lucide-react";
-import type { SiteGroupView, SiteView } from "@agentic-toolkit/data/monitored-sites";
-import { createSite, deleteSite, updateSite } from "@agentic-toolkit/data/monitored-sites";
+import type { SiteGroupView, SiteView } from "@adh-sdk/data/monitored-sites";
+import { createSite, deleteSite, updateSite } from "@adh-sdk/data/monitored-sites";
 import {
   CreateResourceDialog,
   MasterDetailLeaf,
   useMasterDetailForm,
   useMasterDetailLevel,
   type TopicLeaf,
-} from "@agentic-toolkit/resource";
+} from "@adh-sdk/resource";
 import {
   SiteDetail,
   SiteFields,

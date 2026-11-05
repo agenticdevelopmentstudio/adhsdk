@@ -1,4 +1,4 @@
-import { type SiteEnv } from '@agentic-toolkit/adh-registry';
+import { type SiteEnv } from '@adh-sdk/adh-registry';
 /**
  * Whether this BUILD offers the dev tooling to everyone: true in the three dev
  * envs, false in production. See {@link DEV_BUILD} for the folding rules — this is

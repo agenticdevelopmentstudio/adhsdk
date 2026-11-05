@@ -1,15 +1,15 @@
 'use client';
 
 import { Compass, IdCard, ListChecks, Rows3, Tag } from 'lucide-react';
-import type { GroupTopicItem } from '@agentic-toolkit/resource';
-import type { PublishBlocker } from '@agentic-toolkit/registry/types';
+import type { GroupTopicItem } from '@adh-sdk/resource';
+import type { PublishBlocker } from '@adh-sdk/registry/types';
 import type {
   EntryRow,
   FieldDefRow,
   FieldVisibility,
   RegistryClient,
   SectionRow,
-} from '@agentic-toolkit/registry/client';
+} from '@adh-sdk/registry/client';
 import { EntryIdentityPanel } from './EntryIdentityPanel';
 import { EntryPublishPanel } from './EntryPublishPanel';
 import { EntryReachPanel } from './EntryReachPanel';

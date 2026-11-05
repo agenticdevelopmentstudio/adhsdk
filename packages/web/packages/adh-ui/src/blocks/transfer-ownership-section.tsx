@@ -2,11 +2,11 @@
 
 import * as React from "react";
 import { ArrowRightLeft, TriangleAlert } from "lucide-react";
-import { Button } from "@agenticdevelopertoolkit/ui/components/button";
-import { Disclosure } from "@agenticdevelopertoolkit/ui/components/disclosure";
-import { ErrorText } from "@agenticdevelopertoolkit/ui/components/error-text";
-import { Input } from "@agenticdevelopertoolkit/ui/components/input";
-import { Label } from "@agenticdevelopertoolkit/ui/components/label";
+import { Button } from "@adh-sdk/ui/components/button";
+import { Disclosure } from "@adh-sdk/ui/components/disclosure";
+import { ErrorText } from "@adh-sdk/ui/components/error-text";
+import { Input } from "@adh-sdk/ui/components/input";
+import { Label } from "@adh-sdk/ui/components/label";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -15,7 +15,7 @@ import {
   DropdownMenuSub,
   DropdownMenuSubTrigger,
   DropdownMenuSubContent,
-} from "@agenticdevelopertoolkit/ui/components/dropdown-menu";
+} from "@adh-sdk/ui/components/dropdown-menu";
 import {
   Dialog,
   DialogContent,
@@ -23,7 +23,7 @@ import {
   DialogFooter,
   DialogTitle,
   DialogDescription,
-} from "@agenticdevelopertoolkit/ui/components/dialog";
+} from "@adh-sdk/ui/components/dialog";
 
 /**
  * Which NAMESPACE a workspace slug is drawn from.
@@ -83,7 +83,7 @@ function isCurrentTarget(target: TransferTarget, current?: TransferTargetRef): b
  */
 export interface TransferPreviewResult {
   tokens: number;
-  // `via` mirrors the server's `RevokedSubject['via']` (@agentic-toolkit/data ownership) — a
+  // `via` mirrors the server's `RevokedSubject['via']` (@adh-sdk/data ownership) — a
   // participant seat is its own provenance, not a flavour of "direct", and neither is a bucket
   // access-group seat ("group"). `kind` likewise spans both layers: "organization", "app" and
   // "token" reach this list only through a bucket access group, whose member list admits them.
@@ -154,7 +154,7 @@ export function TransferOwnershipSection({
    * `confirmValue` is always a machine identifier, where a trailing space cannot occur; this
    * component's `entityLabel` is the object's rdid for the four addressed entity types and a
    * user-editable display NAME for the two that have none (`project`, `site-group` — see
-   * `TransferEntityType` in @agentic-toolkit/data). A name ending in a space renders identically to
+   * `TransferEntityType` in @adh-sdk/data). A name ending in a space renders identically to
    * one that does not, so a strict compare would leave the button dead with nothing on screen
    * explaining why. Trimming costs no safety: it can only accept input that is visually identical
    * to the label already shown.

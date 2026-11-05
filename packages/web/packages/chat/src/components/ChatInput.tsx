@@ -93,7 +93,7 @@ export function ChatInput({
           both this field and its container); 1Password/LastPass/Bitwarden/Proton
           Pass read their own ignore attrs, and none of them reads another's.
           autoComplete="off" alone is not enough — it speaks only to the browser.
-          The list of record is `@agenticdevelopertoolkit/ui/lib/autofill`; it is spelled
+          The list of record is `@adh-sdk/ui/lib/autofill`; it is spelled
           out here because this package ships zero runtime dependencies. */}
       {/* `name` and `aria-label` are kept for their own sake, not as an autofill
           hint — the measurement above showed they do nothing for that. A

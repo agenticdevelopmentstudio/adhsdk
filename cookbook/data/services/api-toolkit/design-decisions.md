@@ -14,7 +14,7 @@ create a second source of truth that could drift from the real one.
 ### Deliberate duplication of the shiki singleton
 
 **Decision**: `highlight.ts` maintains its own module-level `highlighterPromise`
-cache rather than sharing `@agenticdevelopertoolkit/markdown`'s existing shiki
+cache rather than sharing `@adh-sdk/markdown`'s existing shiki
 singleton.
 
 **Rationale**: The source's own doc comment states this is a deliberate,
@@ -41,7 +41,7 @@ metadata.
 
 **Decision**: `server.ts` imports `allTags`, `endpointsForTag`, `getEndpoint`,
 and `endpointKey` via the package path
-(`@agentic-toolkit/api-explorer/lib/getEndpoint`) rather than a relative
+(`@adh-sdk/api-explorer/lib/getEndpoint`) rather than a relative
 import.
 
 **Rationale**: The server entry and the client barrel are two separate build

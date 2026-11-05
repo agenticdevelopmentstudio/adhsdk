@@ -3,7 +3,7 @@
   "meta": {
     "id": "8ed694b4-e238-48c5-9589-81ce6aaebb32",
     "title": "Typed Window Content",
-    "domain": "adtoolkit://cookbook/ui/windows/window-controller",
+    "domain": "adhsdk://cookbook/ui/windows/window-controller",
     "type": "ingredient",
     "version": "1.2.1",
     "status": "review",
@@ -23,7 +23,7 @@
       "view-controller"
     ],
     "depends-on": [
-      "adtoolkit://cookbook/ui/windows/single-window-controller"
+      "adhsdk://cookbook/ui/windows/single-window-controller"
     ],
     "related": [],
     "references": [],

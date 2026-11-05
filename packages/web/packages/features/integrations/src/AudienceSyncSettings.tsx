@@ -2,14 +2,14 @@
 
 import { useEffect, useRef, useState } from "react";
 
-import { reportUnexpectedAuthError } from "@agentic-toolkit/auth";
-import { Button } from "@agenticdevelopertoolkit/ui/components/button";
-import { Input } from "@agenticdevelopertoolkit/ui/components/input";
-import { Label } from "@agenticdevelopertoolkit/ui/components/label";
-import { ErrorText } from "@agenticdevelopertoolkit/ui/components/error-text";
-import { integrationsApi } from "@agentic-toolkit/data/integrations";
-import { errMsg } from "@agentic-toolkit/data";
-import { useReportSettingsDirty } from "@agentic-toolkit/resource";
+import { reportUnexpectedAuthError } from "@adh-sdk/auth";
+import { Button } from "@adh-sdk/ui/components/button";
+import { Input } from "@adh-sdk/ui/components/input";
+import { Label } from "@adh-sdk/ui/components/label";
+import { ErrorText } from "@adh-sdk/ui/components/error-text";
+import { integrationsApi } from "@adh-sdk/data/integrations";
+import { errMsg } from "@adh-sdk/data";
+import { useReportSettingsDirty } from "@adh-sdk/resource";
 
 /** Props for a per-provider sync-settings form: the connection + its STORED settings,
  *  so the form prefills instead of blind-overwriting (the backend PATCH replaces the

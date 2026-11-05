@@ -2,21 +2,21 @@
 
 import { useCallback, useEffect, useRef, useState, type ReactElement } from "react";
 import { Trash2 } from "lucide-react";
-import { Badge } from "@agenticdevelopertoolkit/ui/components/badge";
-import { Button } from "@agenticdevelopertoolkit/ui/components/button";
-import { ErrorText } from "@agenticdevelopertoolkit/ui/components/error-text";
-import { Field } from "@agenticdevelopertoolkit/ui/blocks/field";
-import { List, ListItem } from "@agenticdevelopertoolkit/ui/components/list";
-import { ListChooser, type ListChooserItem } from "@agenticdevelopertoolkit/ui/components/list-chooser";
-import { Select } from "@agenticdevelopertoolkit/ui/components/select";
-import { useResourceList } from "@agentic-toolkit/data";
+import { Badge } from "@adh-sdk/ui/components/badge";
+import { Button } from "@adh-sdk/ui/components/button";
+import { ErrorText } from "@adh-sdk/ui/components/error-text";
+import { Field } from "@adh-sdk/ui/blocks/field";
+import { List, ListItem } from "@adh-sdk/ui/components/list";
+import { ListChooser, type ListChooserItem } from "@adh-sdk/ui/components/list-chooser";
+import { Select } from "@adh-sdk/ui/components/select";
+import { useResourceList } from "@adh-sdk/data";
 import {
   projectWorkItemsApi,
   type ProjectStatus,
   type RelationKind,
   type WorkItem,
   type WorkItemRelation,
-} from "@agentic-toolkit/data/projects";
+} from "@adh-sdk/data/projects";
 import { ItemKey } from "./ItemKey";
 import { RELATION_CHOICES, itemLabel, relationLabel, statusMeta } from "./helpers";
 import { DEFAULT_ITEM_WORDS, type ItemWords } from "./vocabulary";

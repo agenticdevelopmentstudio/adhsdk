@@ -1,6 +1,6 @@
 import { parentPort, workerData } from "node:worker_threads";
 import { openLibsql, tuneDbForConcurrency, type LibsqlConnection } from "../libsql/client";
-import { attachCooldownState } from "@agentic-toolkit/deploy-platform/cooldown";
+import { attachCooldownState } from "@adh-sdk/deploy-platform/cooldown";
 import { createLibsqlStorage } from "../libsql";
 import { connectStorage } from "../storage/remote";
 import { runMonitorCycle } from "./cycle-runner";

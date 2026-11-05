@@ -1,7 +1,7 @@
 
 - **SwiftUI**: The source is
-  `packages/apple/AgenticToolkit/AIPluginKit/LocalProviderModelStore.swift`,
-  which `import AgenticToolkitCore`s its collaborators
+  `packages/apple/AgenticDeveloperHubSDK/AIPluginKit/LocalProviderModelStore.swift`,
+  which `import AgenticDeveloperHubSDKCore`s its collaborators
   `LocalModelServer.swift` (same target) and, from Core,
   `ModelCatalogStore.swift`, `ArtificialAnalysisStore.swift`,
   `OllamaModelPageStore.swift`, `OllamaModelMetadata.swift` (which also

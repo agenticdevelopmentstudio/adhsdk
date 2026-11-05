@@ -1,7 +1,7 @@
 ---
 id: 1a044d34-d585-46b4-b703-dea3fb9b9642
 title: StatusDot
-domain: agenticdevelopertoolkit://recipes/status-dot
+domain: adhsdk://recipes/status-dot
 type: ingredient
 version: 1.2.1
 status: review
@@ -22,7 +22,7 @@ tags:
 - ui
 depends-on: []
 related:
-- agenticdevelopertoolkit://recipes/stat-card
+- adhsdk://recipes/stat-card
 references:
 - https://developer.mozilla.org/en-US/docs/Web/CSS/color_value/color-mix
 approved-by: ''
@@ -33,7 +33,7 @@ approved-date: ''
 
 ## Overview
 
-The shared `StatusDot` in `@agenticdevelopertoolkit/ui` — the family's "live light": a small
+The shared `StatusDot` in `@adh-sdk/ui` — the family's "live light": a small
 round dot whose **fill and soft glow both derive from one tone class**. The tone
 class sets `currentColor` (`text-apt-green`, `text-apt-red`, …); the fill is
 `background: currentColor` and the glow is a `box-shadow` whose color is a
@@ -50,7 +50,7 @@ Accessibility is driven by `label`: pass the status word and the dot becomes an
 accessible image (`role="img"` + `aria-label`); omit it — the common case, where
 visible text already carries the meaning — and the dot is `aria-hidden`
 decoration. A single export ships from
-`@agenticdevelopertoolkit/ui/components/status-dot`: the `StatusDot` component. It is a pure
+`@adh-sdk/ui/components/status-dot`: the `StatusDot` component. It is a pure
 presentational span with no internal state and no `"use client"` directive.
 
 ## Behavioral Requirements

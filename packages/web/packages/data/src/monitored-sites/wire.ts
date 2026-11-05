@@ -1,7 +1,7 @@
 // Local wire types for the Monitored-Sites clients — the backend row + request-
 // body shapes the clients read/send (see projects/wire.ts for the pattern: these
 // replace the hub's generated `SuccessBody<...>` / `RequestBody<...>` from
-// `@agentic-toolkit/adh-api-types`, adh product vocabulary a
+// `@adh-sdk/adh-api-types`, adh product vocabulary a
 // generic data client must not take on). Each
 // interface carries exactly the fields the mappers/call sites touch.
 // Type-only file.

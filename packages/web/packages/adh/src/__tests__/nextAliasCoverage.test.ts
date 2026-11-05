@@ -33,7 +33,7 @@ import { beforeAll, describe, expect, it } from "vitest";
 
 const ROOT = fileURLToPath(new URL("../..", import.meta.url)); // src/__tests__/x -> package root
 const OWN_NEXT = join(ROOT, "node_modules/next");
-const SCOPE = join(ROOT, "node_modules/@agentic-toolkit");
+const SCOPE = join(ROOT, "node_modules/@adh-sdk");
 const SPECIFIER = /["']next\/([^"'\s]+)["']/g;
 
 /** Workspace siblings whose `next` is a DIFFERENT install from this package's. */

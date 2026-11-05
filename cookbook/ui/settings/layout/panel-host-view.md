@@ -1,7 +1,7 @@
 ---
 id: faf4ec69-7b5c-44c2-a8c2-d7e81dc94ea8
 title: "Panel Host View"
-domain: adtoolkit://cookbook/ui/settings/layout/panel-host-view
+domain: adhsdk://cookbook/ui/settings/layout/panel-host-view
 type: ingredient
 version: 1.3.1
 status: review
@@ -20,8 +20,8 @@ tags:
   - help
 depends-on: []
 related:
-  - adtoolkit://cookbook/ui/settings/settings-split-view
-  - adtoolkit://cookbook/ui/settings/settings-window
+  - adhsdk://cookbook/ui/settings/settings-split-view
+  - adhsdk://cookbook/ui/settings/settings-window
 references: []
 approved-by: ""
 approved-date: ""
@@ -423,7 +423,7 @@ Not applicable: the source contains no logging call.
   (or a theme context) supply the accent/secondary colors that swap with a
   `visible` boolean class or data attribute.
 - **AppKit / UIKit** (source platform): Source at
-  `packages/apple/AgenticToolkit/macOS/SystemIntegration/ComposableSettingsWindow/Views/PanelHostView.swift`
+  `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/Views/PanelHostView.swift`
   (this recipe's source): a macOS-only (`import AppKit`), `@MainActor`
   `NSView` subclass. Specific to it: the manual subview teardown in
   `setContent(_:)` (`contentContainer.subviews.forEach { $0.removeFromSuperview() }`);
@@ -496,7 +496,7 @@ Not applicable: the source contains no logging call.
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/macOS/SystemIntegration/ComposableSettingsWindow/Views/PanelHostView.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/Views/PanelHostView.swift` |
 
 ## Design Decisions
 

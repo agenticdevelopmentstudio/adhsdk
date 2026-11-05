@@ -8,23 +8,23 @@ import {
   useUpdateFeedback,
   type FeedbackSubmission,
 } from "../api/admin";
-import { Badge } from "@agenticdevelopertoolkit/ui/components/badge";
-import { Select } from "@agenticdevelopertoolkit/ui/components/select";
-import { Textarea } from "@agenticdevelopertoolkit/ui/components/textarea";
-import { Button } from "@agenticdevelopertoolkit/ui/components/button";
-import { OptionMenu } from "@agenticdevelopertoolkit/ui/components/option-menu";
+import { Badge } from "@adh-sdk/ui/components/badge";
+import { Select } from "@adh-sdk/ui/components/select";
+import { Textarea } from "@adh-sdk/ui/components/textarea";
+import { Button } from "@adh-sdk/ui/components/button";
+import { OptionMenu } from "@adh-sdk/ui/components/option-menu";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogDescription,
-} from "@agenticdevelopertoolkit/ui/components/dialog";
-import { DialogActions } from "@agenticdevelopertoolkit/ui/components/dialog-actions";
-import { UnsavedChangesGuard } from "@agenticdevelopertoolkit/ui/components/unsaved-changes-guard";
-import { useAction } from "@agenticdevelopertoolkit/ui/hooks/useAction";
-import { Field, ProgressModal } from "@agenticdevelopertoolkit/ui/blocks";
-import { FeatureTitle } from "@agentic-toolkit/resource";
+} from "@adh-sdk/ui/components/dialog";
+import { DialogActions } from "@adh-sdk/ui/components/dialog-actions";
+import { UnsavedChangesGuard } from "@adh-sdk/ui/components/unsaved-changes-guard";
+import { useAction } from "@adh-sdk/ui/hooks/useAction";
+import { Field, ProgressModal } from "@adh-sdk/ui/blocks";
+import { FeatureTitle } from "@adh-sdk/resource";
 import {
   EditableList,
   useBatchRun,

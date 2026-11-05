@@ -18,7 +18,7 @@ the detail-form `HubError.conflict` fallback (`detail-save-conflict-fallback`)
 is exercised only by inspection of the source's `catch` block, not by a
 dedicated test, per Conformance Test Vector 020. separation-of-concerns
 passes because all three given sources import only `Foundation` (plus
-`AgenticToolkitHTDV` for the HTDV/Forms types) and hold no AppKit/UIKit
+`AgenticDeveloperHubSDKHTDV` for the HTDV/Forms types) and hold no AppKit/UIKit
 dependency of their own. explicit-error-handling passes because every
 `throws` boundary in these three sources is caught and converted into an
 explicit `HubError` — via a specific re-mapping (`notFound`, `conflict`)

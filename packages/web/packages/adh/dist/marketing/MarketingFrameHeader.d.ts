@@ -5,7 +5,7 @@ export type MarketingFrameHeaderProps = Omit<MarketingShellProps, "children" | "
  *  stylesheet to (`/*! @confine .adh-frame-header *\/`). */
 export declare const FRAME_HEADER_CLASS = "adh-frame-header";
 /**
- * The family's header alone, for the `/` of a site built on `@agenticdevelopertoolkit/site-template`
+ * The family's header alone, for the `/` of a site built on `@adh-sdk/site-template`
  * — the template's `header` slot. Every other route of such a site mounts `MarketingShell`, whose
  * header carries the visitor's session; `/` is the template's frame, and without this it carried
  * the frame's bar instead, so a signed-in visitor landed on a page that did not know them.

@@ -8,7 +8,7 @@
 // `state` (not a fixed key) keeps two in-flight connects from clobbering each other and
 // ties the stash to the exact CSRF token the provider echoes back.
 
-import { currentReturnTo as addressNow, safeReturnTo } from "@agentic-toolkit/auth";
+import { currentReturnTo as addressNow, safeReturnTo } from "@adh-sdk/auth";
 
 /** The auth methods that use the browser-redirect round-trip. */
 export type RedirectAuthMethod = "oauth" | "oauth_instance" | "github_app";
@@ -51,7 +51,7 @@ const keyFor = (state: string) => `int-oauth-connect:${state}`;
  * It lives in THIS package rather than in the console that writes it, because both ends of the
  * round-trip need the same string: the console puts it in the address so `currentReturnTo`
  * captures it, and the callback appends it to the fallback it has to invent when the return
- * arrives on an origin that stashed nothing. `@agentic-toolkit/shipr` re-exports it — the
+ * arrives on an origin that stashed nothing. `@adh-sdk/shipr` re-exports it — the
  * dependency points down, and a second spelling of it would fail silently in exactly one
  * direction.
  */
@@ -77,7 +77,7 @@ export const FALLBACK_RETURN_TO = `/home${CONNECTIONS_HASH}`;
  * the connect had succeeded. What a host does not encode in its URL is still unrecoverable —
  * that is the host's to fix — but nothing is lost here on the way past.
  *
- * The address read itself is `@agentic-toolkit/auth`'s, which is the tier the SSO round-trip
+ * The address read itself is `@adh-sdk/auth`'s, which is the tier the SSO round-trip
  * asks the same question from; this wrapper only supplies the one thing that is local — what
  * a connect should do when there is no address to name (server render, or a stash written
  * from somewhere without a `window`), which is to come back to the family's own entry point
@@ -138,7 +138,7 @@ export function readPendingConnect(state: string): PendingOAuthConnect | null {
     // authorizes it; this one is handed to `router.replace`, so an absolute URL in it is an
     // open redirect at the end of a flow the visitor already trusts.
     //
-    // `safeReturnTo` is `@agentic-toolkit/auth`'s, the same choke point the SSO round-trip
+    // `safeReturnTo` is `@adh-sdk/auth`'s, the same choke point the SSO round-trip
     // sends its `returnTo` through: it resolves against this origin and returns only the part
     // below it, so a foreign origin, a protocol-relative `//evil.example`, and a `javascript:`
     // URL all come back null. A stash that fails it is corrupt in exactly the way one with a

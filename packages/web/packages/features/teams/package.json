@@ -1,5 +1,5 @@
 {
-  "name": "@agentic-toolkit/teams",
+  "name": "@adh-sdk/teams",
   "version": "0.1.0",
   "description": "The Teams feature: team list/settings/members/permissions over the resource substrate.",
   "license": "UNLICENSED",
@@ -36,12 +36,12 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@agentic-toolkit/adh-ui": "workspace:*",
-    "@agentic-toolkit/auth": "workspace:*",
-    "@agentic-toolkit/data": "workspace:*",
-    "@agentic-toolkit/resource": "workspace:*",
+    "@adh-sdk/adh-ui": "workspace:*",
+    "@adh-sdk/auth": "workspace:*",
+    "@adh-sdk/data": "workspace:*",
+    "@adh-sdk/resource": "workspace:*",
     "lucide-react": "^1.16.0",
-    "@agenticdevelopertoolkit/ui": "workspace:*"
+    "@adh-sdk/ui": "workspace:*"
   },
   "peerDependencies": {
     "next": ">=15",

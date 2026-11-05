@@ -5,10 +5,10 @@ import {
   InvitationRequestsPane,
   InvitationPendingUsersPane,
   InvitationInvitesPane,
-} from "@agentic-toolkit/adh-ui/blocks";
-import { ErrorText } from "@agenticdevelopertoolkit/ui/components/error-text";
-import { useAuth } from "@agentic-toolkit/auth";
-import { FeatureTitle } from "@agentic-toolkit/resource";
+} from "@adh-sdk/adh-ui/blocks";
+import { ErrorText } from "@adh-sdk/ui/components/error-text";
+import { useAuth } from "@adh-sdk/auth";
+import { FeatureTitle } from "@adh-sdk/resource";
 import { NotesAndHistory } from "./NotesAndHistory";
 import { AdminNotesModal } from "./AdminNotesModal";
 import {
@@ -18,7 +18,7 @@ import {
   useEcoDeleteRow,
   useEcoSendInvitations,
   useEcoAddPendingUsers,
-} from "@agentic-toolkit/data/ecosystems";
+} from "@adh-sdk/data/ecosystems";
 
 // The notes author for staged admin notes: the signed-in owner's email (the handle
 // the backend records against each note). Empty until auth resolves — harmless, the

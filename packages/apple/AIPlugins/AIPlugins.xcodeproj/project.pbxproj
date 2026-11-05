@@ -27,46 +27,46 @@
 /* End PBXAggregateTarget section */
 
 /* Begin PBXBuildFile section */
-		1339A42FE1E9DEC27CC621A4 /* AIPluginKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 23B536D26A9E9F1FF75EF851 /* AIPluginKit.framework */; };
 		1F60DED76900A0C0CC6C0BCE /* DescriptorCatalogTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8AA1099BF41B48A15831765 /* DescriptorCatalogTests.swift */; };
 		27C753F2AC1AE55808FCA62E /* OpenAICompatiblePlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = B571AAC015A36CF7AC1CB2AF /* OpenAICompatiblePlugin.swift */; };
-		2C143887F7DCC6DF93CB7954 /* AIPluginKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 23B536D26A9E9F1FF75EF851 /* AIPluginKit.framework */; };
+		2F3F2BCA90EABC91CCB944AA /* AIPluginKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 744041CE188E74AEF712D56D /* AIPluginKit.framework */; };
 		2FCD35BD2AF65928D2853B08 /* descriptor.json in Resources */ = {isa = PBXBuildFile; fileRef = 01AFC2D039B840CE140AF9AB /* descriptor.json */; };
+		312501CA6E44215E5D41BC59 /* AIPluginKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 744041CE188E74AEF712D56D /* AIPluginKit.framework */; };
 		38272E4A8383A25809FCAA2F /* GooglePlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8E7F00486CCEB3CFB46EB96 /* GooglePlugin.swift */; };
 		3DBAA19627ACFD5165E1AADD /* descriptor.json in Resources */ = {isa = PBXBuildFile; fileRef = D8FDDE4F8160D84E641D3F01 /* descriptor.json */; };
 		4032C08C69EF2791523A7154 /* ClaudeAPIPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = FCF0E2C70955B3DCFD52F42E /* ClaudeAPIPlugin.swift */; };
 		4055E75B95ABB98D4EBDA069 /* OpenAICompatiblePlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = B571AAC015A36CF7AC1CB2AF /* OpenAICompatiblePlugin.swift */; };
+		46116090E5791375323B720B /* AIPluginKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 744041CE188E74AEF712D56D /* AIPluginKit.framework */; };
+		48F0E91AEF2833863A0EC1C2 /* AIPluginKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 744041CE188E74AEF712D56D /* AIPluginKit.framework */; };
 		511A9EC6FA1F2EC6B97A1DB1 /* OpenAIPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8CE5EC26A0AB7F543D9FE01E /* OpenAIPlugin.swift */; };
-		66FA220B50D2F7703ED1706C /* AIPluginKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 23B536D26A9E9F1FF75EF851 /* AIPluginKit.framework */; };
+		60BB8A5FCA0EF93595043144 /* AIPluginKit.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 744041CE188E74AEF712D56D /* AIPluginKit.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		65003D749DF97E2E80AA257A /* AIPluginKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 744041CE188E74AEF712D56D /* AIPluginKit.framework */; };
 		6CECE5D45CEA51315CE3980C /* GooglePlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8E7F00486CCEB3CFB46EB96 /* GooglePlugin.swift */; };
 		893C303BE350EA5A2F1BE0EE /* ClaudeLocalPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8CE3B7CA4B2495D6C42AF319 /* ClaudeLocalPlugin.swift */; };
-		8DB12AE86FD10EFFF02AFE9E /* AIPluginKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 23B536D26A9E9F1FF75EF851 /* AIPluginKit.framework */; };
 		8EF26FE8DB45DCBDA8542325 /* ClaudeLocalPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8CE3B7CA4B2495D6C42AF319 /* ClaudeLocalPlugin.swift */; };
 		9099943A0E91DF336EF78D5B /* descriptor.json in Resources */ = {isa = PBXBuildFile; fileRef = 58CF6810B000D92EDF5D3A84 /* descriptor.json */; };
 		9BA2C6A8DA5B0B8B9E097FAE /* descriptor.json in Resources */ = {isa = PBXBuildFile; fileRef = 00B4FC78444596592AD95074 /* descriptor.json */; };
 		A4C79FED4C5E26CE247C2305 /* ClaudeAPIPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = FCF0E2C70955B3DCFD52F42E /* ClaudeAPIPlugin.swift */; };
 		A9FC14B3250E4A7510095AE9 /* OpenAIPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8CE5EC26A0AB7F543D9FE01E /* OpenAIPlugin.swift */; };
-		ACAF73FF162386FE0466A7CA /* AIPluginKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 23B536D26A9E9F1FF75EF851 /* AIPluginKit.framework */; };
 		C337ABC8390ED4F4784946AC /* PluginDecoderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9885A563B070C0B3B9723366 /* PluginDecoderTests.swift */; };
-		CD23C78DE42F30E9CD22067E /* AIPluginKit.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 23B536D26A9E9F1FF75EF851 /* AIPluginKit.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		C93B6D2B5877D96C0CC934D2 /* AIPluginKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 744041CE188E74AEF712D56D /* AIPluginKit.framework */; };
 		D846F9071F9339135BBBCE9E /* PluginRequestTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C0B2564A8AAEE7E7080F2FC /* PluginRequestTests.swift */; };
 		DE29B3565BABDE764F8BAE93 /* descriptor.json in Resources */ = {isa = PBXBuildFile; fileRef = 915248E9589DCCCD38E05A42 /* descriptor.json */; };
-		F97159B952D401A44C25B4D3 /* AIPluginKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 23B536D26A9E9F1FF75EF851 /* AIPluginKit.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
-		03299953B0A57E5FFCE7A0DF /* PBXContainerItemProxy */ = {
+		2132DE0A60F059C4C432629E /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
-			containerPortal = AB6EE58E62C50776B8A0372B /* AgenticToolkit */;
+			containerPortal = 1D29E356D14F087FB23405D4 /* AgenticDeveloperHubSDK */;
 			proxyType = 1;
-			remoteGlobalIDString = 75B33B7BC0E7B443EFB94243;
+			remoteGlobalIDString = 9BA325FD0BB5842EE22D0346;
 			remoteInfo = AIPluginKit;
 		};
-		0FD95DFE5EFFE5F9F2C6D406 /* PBXContainerItemProxy */ = {
+		231AEF0C444ED024355C45AB /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
-			containerPortal = AB6EE58E62C50776B8A0372B /* AgenticToolkit */;
-			proxyType = 2;
-			remoteGlobalIDString = FD467D736FA5B431DD30B091;
+			containerPortal = 1D29E356D14F087FB23405D4 /* AgenticDeveloperHubSDK */;
+			proxyType = 1;
+			remoteGlobalIDString = 9BA325FD0BB5842EE22D0346;
 			remoteInfo = AIPluginKit;
 		};
 		48282FFF22F82D40BBFB9E95 /* PBXContainerItemProxy */ = {
@@ -76,11 +76,18 @@
 			remoteGlobalIDString = 78D0E6AA9542822FD01209E4;
 			remoteInfo = ClaudeAPI;
 		};
-		5AB27CE80D96D1260DE773B1 /* PBXContainerItemProxy */ = {
+		6C8772DF354C471B7EADCCFF /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
-			containerPortal = AB6EE58E62C50776B8A0372B /* AgenticToolkit */;
+			containerPortal = 1D29E356D14F087FB23405D4 /* AgenticDeveloperHubSDK */;
 			proxyType = 1;
-			remoteGlobalIDString = 75B33B7BC0E7B443EFB94243;
+			remoteGlobalIDString = 9BA325FD0BB5842EE22D0346;
+			remoteInfo = AIPluginKit;
+		};
+		7DD3AD58B93CC1E07ABD0CC6 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 1D29E356D14F087FB23405D4 /* AgenticDeveloperHubSDK */;
+			proxyType = 1;
+			remoteGlobalIDString = 9BA325FD0BB5842EE22D0346;
 			remoteInfo = AIPluginKit;
 		};
 		840D9D7C9DECD44B35C1B072 /* PBXContainerItemProxy */ = {
@@ -90,20 +97,6 @@
 			remoteGlobalIDString = 69B12492E5D241F6EF3DAC75;
 			remoteInfo = ClaudeLocal;
 		};
-		9BEB4C4DC137407F724363C4 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = AB6EE58E62C50776B8A0372B /* AgenticToolkit */;
-			proxyType = 1;
-			remoteGlobalIDString = 75B33B7BC0E7B443EFB94243;
-			remoteInfo = AIPluginKit;
-		};
-		9CF450E8EBA264C1A1F857E3 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = AB6EE58E62C50776B8A0372B /* AgenticToolkit */;
-			proxyType = 1;
-			remoteGlobalIDString = 75B33B7BC0E7B443EFB94243;
-			remoteInfo = AIPluginKit;
-		};
 		B0E3594C8FAA077B86CB91D1 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = DD383D4A13970DC0F38EC011 /* Project object */;
@@ -111,11 +104,18 @@
 			remoteGlobalIDString = BA37AF4B2F16BE7AB23931CA;
 			remoteInfo = Google;
 		};
-		D3E204CBC6AC56DE0F7BEA53 /* PBXContainerItemProxy */ = {
+		C72D803CF047B99A2A816B49 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
-			containerPortal = AB6EE58E62C50776B8A0372B /* AgenticToolkit */;
+			containerPortal = 1D29E356D14F087FB23405D4 /* AgenticDeveloperHubSDK */;
 			proxyType = 1;
-			remoteGlobalIDString = 75B33B7BC0E7B443EFB94243;
+			remoteGlobalIDString = 9BA325FD0BB5842EE22D0346;
+			remoteInfo = AIPluginKit;
+		};
+		D69E683272A6D969B3D32C11 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 1D29E356D14F087FB23405D4 /* AgenticDeveloperHubSDK */;
+			proxyType = 2;
+			remoteGlobalIDString = 1CB5D9EF0940BC9BAD22EB0F;
 			remoteInfo = AIPluginKit;
 		};
 		DD678D36375EC41B9A63D71F /* PBXContainerItemProxy */ = {
@@ -125,11 +125,11 @@
 			remoteGlobalIDString = 4902207C4C9CDF009D44C9FA;
 			remoteInfo = OpenAICompatible;
 		};
-		EF313B1E0F9EC0DC2BB3EAED /* PBXContainerItemProxy */ = {
+		F80F2747824E69459356BDE1 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
-			containerPortal = AB6EE58E62C50776B8A0372B /* AgenticToolkit */;
+			containerPortal = 1D29E356D14F087FB23405D4 /* AgenticDeveloperHubSDK */;
 			proxyType = 1;
-			remoteGlobalIDString = 75B33B7BC0E7B443EFB94243;
+			remoteGlobalIDString = 9BA325FD0BB5842EE22D0346;
 			remoteInfo = AIPluginKit;
 		};
 		F91AAC41B8E56FF85764CCD9 /* PBXContainerItemProxy */ = {
@@ -148,7 +148,7 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
-				CD23C78DE42F30E9CD22067E /* AIPluginKit.framework in Embed Frameworks */,
+				60BB8A5FCA0EF93595043144 /* AIPluginKit.framework in Embed Frameworks */,
 			);
 			name = "Embed Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -160,6 +160,7 @@
 		01AFC2D039B840CE140AF9AB /* descriptor.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = descriptor.json; sourceTree = "<group>"; };
 		128DE2EF37380B2620427ABB /* AIPluginsTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = AIPluginsTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		1C0B2564A8AAEE7E7080F2FC /* PluginRequestTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PluginRequestTests.swift; sourceTree = "<group>"; };
+		1D29E356D14F087FB23405D4 /* AgenticDeveloperHubSDK */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = AgenticDeveloperHubSDK; path = ../AgenticDeveloperHubSDK/AgenticDeveloperHubSDK.xcodeproj; sourceTree = "<group>"; };
 		58CF6810B000D92EDF5D3A84 /* descriptor.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = descriptor.json; sourceTree = "<group>"; };
 		79563BD36327321665696A42 /* ClaudeLocal.bundle */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ClaudeLocal.bundle; sourceTree = BUILT_PRODUCTS_DIR; };
 		7F7CEFDBC7B0E9FF507E8015 /* OpenAI.bundle */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = OpenAI.bundle; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -168,7 +169,6 @@
 		8CE5EC26A0AB7F543D9FE01E /* OpenAIPlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenAIPlugin.swift; sourceTree = "<group>"; };
 		915248E9589DCCCD38E05A42 /* descriptor.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = descriptor.json; sourceTree = "<group>"; };
 		9885A563B070C0B3B9723366 /* PluginDecoderTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PluginDecoderTests.swift; sourceTree = "<group>"; };
-		AB6EE58E62C50776B8A0372B /* AgenticToolkit */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = AgenticToolkit; path = ../AgenticToolkit/AgenticToolkit.xcodeproj; sourceTree = "<group>"; };
 		AE0AF1BEA1B1871B876D693A /* Google.bundle */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = Google.bundle; sourceTree = BUILT_PRODUCTS_DIR; };
 		B571AAC015A36CF7AC1CB2AF /* OpenAICompatiblePlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenAICompatiblePlugin.swift; sourceTree = "<group>"; };
 		D19C0E456C2DCC53E589A20F /* OpenAICompatible.bundle */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = OpenAICompatible.bundle; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -183,7 +183,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				8DB12AE86FD10EFFF02AFE9E /* AIPluginKit.framework in Frameworks */,
+				48F0E91AEF2833863A0EC1C2 /* AIPluginKit.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -191,7 +191,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				1339A42FE1E9DEC27CC621A4 /* AIPluginKit.framework in Frameworks */,
+				65003D749DF97E2E80AA257A /* AIPluginKit.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -199,7 +199,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				ACAF73FF162386FE0466A7CA /* AIPluginKit.framework in Frameworks */,
+				C93B6D2B5877D96C0CC934D2 /* AIPluginKit.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -207,7 +207,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				66FA220B50D2F7703ED1706C /* AIPluginKit.framework in Frameworks */,
+				2F3F2BCA90EABC91CCB944AA /* AIPluginKit.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -215,7 +215,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				2C143887F7DCC6DF93CB7954 /* AIPluginKit.framework in Frameworks */,
+				312501CA6E44215E5D41BC59 /* AIPluginKit.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -223,7 +223,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				F97159B952D401A44C25B4D3 /* AIPluginKit.framework in Frameworks */,
+				46116090E5791375323B720B /* AIPluginKit.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -270,17 +270,9 @@
 		8F29C301737460E330F4AAEA /* Projects */ = {
 			isa = PBXGroup;
 			children = (
-				AB6EE58E62C50776B8A0372B /* AgenticToolkit */,
+				1D29E356D14F087FB23405D4 /* AgenticDeveloperHubSDK */,
 			);
 			name = Projects;
-			sourceTree = "<group>";
-		};
-		9B9DA31E23A4D50698E514B5 /* Products */ = {
-			isa = PBXGroup;
-			children = (
-				23B536D26A9E9F1FF75EF851 /* AIPluginKit.framework */,
-			);
-			name = Products;
 			sourceTree = "<group>";
 		};
 		9E67D7008AE28148248B689F /* Google */ = {
@@ -290,6 +282,14 @@
 				E8E7F00486CCEB3CFB46EB96 /* GooglePlugin.swift */,
 			);
 			path = Google;
+			sourceTree = "<group>";
+		};
+		BEFA7EA9F0F92201A37BB92A /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				744041CE188E74AEF712D56D /* AIPluginKit.framework */,
+			);
+			name = Products;
 			sourceTree = "<group>";
 		};
 		D2138CB62BB44E61B98DD24C /* OpenAI */ = {
@@ -343,7 +343,7 @@
 			buildRules = (
 			);
 			dependencies = (
-				A28ADE575824CB6189BBC6F6 /* PBXTargetDependency */,
+				74074C86570BA493A3305F65 /* PBXTargetDependency */,
 			);
 			name = AIPluginsTests;
 			packageProductDependencies = (
@@ -365,7 +365,7 @@
 			buildRules = (
 			);
 			dependencies = (
-				DC23821EE0388CECD0EA7931 /* PBXTargetDependency */,
+				11BB58D0D683353BC6A2E9B3 /* PBXTargetDependency */,
 			);
 			name = OpenAI;
 			packageProductDependencies = (
@@ -387,7 +387,7 @@
 			buildRules = (
 			);
 			dependencies = (
-				D8BAF6BC685AD2C9B01926E1 /* PBXTargetDependency */,
+				DBC3AFE6A5F410069CCCB020 /* PBXTargetDependency */,
 			);
 			name = OpenAICompatible;
 			packageProductDependencies = (
@@ -409,7 +409,7 @@
 			buildRules = (
 			);
 			dependencies = (
-				D457464FBAD3A29284392BE4 /* PBXTargetDependency */,
+				700B197BF1A06115520C4E02 /* PBXTargetDependency */,
 			);
 			name = ClaudeLocal;
 			packageProductDependencies = (
@@ -431,7 +431,7 @@
 			buildRules = (
 			);
 			dependencies = (
-				6C954E54F1B6731BC9250834 /* PBXTargetDependency */,
+				E255450B26ACD3D580ACED5C /* PBXTargetDependency */,
 			);
 			name = ClaudeAPI;
 			packageProductDependencies = (
@@ -453,7 +453,7 @@
 			buildRules = (
 			);
 			dependencies = (
-				7121BBE8D7D0B3BF116570C7 /* PBXTargetDependency */,
+				D0D8A7009C65993E0BFF02FC /* PBXTargetDependency */,
 			);
 			name = Google;
 			packageProductDependencies = (
@@ -487,8 +487,8 @@
 			projectDirPath = "";
 			projectReferences = (
 				{
-					ProductGroup = 9B9DA31E23A4D50698E514B5 /* Products */;
-					ProjectRef = AB6EE58E62C50776B8A0372B /* AgenticToolkit */;
+					ProductGroup = BEFA7EA9F0F92201A37BB92A /* Products */;
+					ProjectRef = 1D29E356D14F087FB23405D4 /* AgenticDeveloperHubSDK */;
 				},
 			);
 			projectRoot = "";
@@ -505,11 +505,11 @@
 /* End PBXProject section */
 
 /* Begin PBXReferenceProxy section */
-		23B536D26A9E9F1FF75EF851 /* AIPluginKit.framework */ = {
+		744041CE188E74AEF712D56D /* AIPluginKit.framework */ = {
 			isa = PBXReferenceProxy;
 			fileType = wrapper.framework;
 			path = AIPluginKit.framework;
-			remoteRef = 0FD95DFE5EFFE5F9F2C6D406 /* PBXContainerItemProxy */;
+			remoteRef = D69E683272A6D969B3D32C11 /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
 /* End PBXReferenceProxy section */
@@ -833,6 +833,11 @@
 			target = 4902207C4C9CDF009D44C9FA /* OpenAICompatible */;
 			targetProxy = DD678D36375EC41B9A63D71F /* PBXContainerItemProxy */;
 		};
+		11BB58D0D683353BC6A2E9B3 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = AIPluginKit;
+			targetProxy = F80F2747824E69459356BDE1 /* PBXContainerItemProxy */;
+		};
 		1A5681112944FCD9FC9F4803 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = BA37AF4B2F16BE7AB23931CA /* Google */;
@@ -843,40 +848,35 @@
 			target = 69B12492E5D241F6EF3DAC75 /* ClaudeLocal */;
 			targetProxy = 840D9D7C9DECD44B35C1B072 /* PBXContainerItemProxy */;
 		};
-		6C954E54F1B6731BC9250834 /* PBXTargetDependency */ = {
+		700B197BF1A06115520C4E02 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			name = AIPluginKit;
-			targetProxy = 03299953B0A57E5FFCE7A0DF /* PBXContainerItemProxy */;
+			targetProxy = 6C8772DF354C471B7EADCCFF /* PBXContainerItemProxy */;
 		};
-		7121BBE8D7D0B3BF116570C7 /* PBXTargetDependency */ = {
+		74074C86570BA493A3305F65 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			name = AIPluginKit;
-			targetProxy = 5AB27CE80D96D1260DE773B1 /* PBXContainerItemProxy */;
-		};
-		A28ADE575824CB6189BBC6F6 /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			name = AIPluginKit;
-			targetProxy = EF313B1E0F9EC0DC2BB3EAED /* PBXContainerItemProxy */;
+			targetProxy = 231AEF0C444ED024355C45AB /* PBXContainerItemProxy */;
 		};
 		BC846C53425711A4BF06F2AF /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = 40E8B4B9D4D13B107306FAD1 /* OpenAI */;
 			targetProxy = F91AAC41B8E56FF85764CCD9 /* PBXContainerItemProxy */;
 		};
-		D457464FBAD3A29284392BE4 /* PBXTargetDependency */ = {
+		D0D8A7009C65993E0BFF02FC /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			name = AIPluginKit;
-			targetProxy = 9CF450E8EBA264C1A1F857E3 /* PBXContainerItemProxy */;
+			targetProxy = 2132DE0A60F059C4C432629E /* PBXContainerItemProxy */;
 		};
-		D8BAF6BC685AD2C9B01926E1 /* PBXTargetDependency */ = {
+		DBC3AFE6A5F410069CCCB020 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			name = AIPluginKit;
-			targetProxy = D3E204CBC6AC56DE0F7BEA53 /* PBXContainerItemProxy */;
+			targetProxy = 7DD3AD58B93CC1E07ABD0CC6 /* PBXContainerItemProxy */;
 		};
-		DC23821EE0388CECD0EA7931 /* PBXTargetDependency */ = {
+		E255450B26ACD3D580ACED5C /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			name = AIPluginKit;
-			targetProxy = 9BEB4C4DC137407F724363C4 /* PBXContainerItemProxy */;
+			targetProxy = C72D803CF047B99A2A816B49 /* PBXContainerItemProxy */;
 		};
 		EACCC7FB25E65C81775FB12B /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
@@ -895,7 +895,7 @@
 					"$(inherited)",
 					"@loader_path/../../../../Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = "com.agentictoolkit.plugin.claude-api";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.mikefullerton.agenticdeveloperhubsdk.plugin.claude-api";
 				SDKROOT = macosx;
 				WRAPPER_EXTENSION = aiplugin;
 			};
@@ -988,7 +988,7 @@
 					"@executable_path/../Frameworks",
 					"@loader_path/../Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.agentictoolkit.AIPluginsTests;
+				PRODUCT_BUNDLE_IDENTIFIER = com.mikefullerton.agenticdeveloperhubsdk.AIPluginsTests;
 				SDKROOT = macosx;
 			};
 			name = Debug;
@@ -1002,7 +1002,7 @@
 					"$(inherited)",
 					"@loader_path/../../../../Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.agentictoolkit.plugin.google;
+				PRODUCT_BUNDLE_IDENTIFIER = com.mikefullerton.agenticdeveloperhubsdk.plugin.google;
 				SDKROOT = macosx;
 				WRAPPER_EXTENSION = aiplugin;
 			};
@@ -1017,7 +1017,7 @@
 					"$(inherited)",
 					"@loader_path/../../../../Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = "com.agentictoolkit.plugin.claude-api";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.mikefullerton.agenticdeveloperhubsdk.plugin.claude-api";
 				SDKROOT = macosx;
 				WRAPPER_EXTENSION = aiplugin;
 			};
@@ -1032,7 +1032,7 @@
 					"$(inherited)",
 					"@loader_path/../../../../Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = "com.agentictoolkit.plugin.claude-local";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.mikefullerton.agenticdeveloperhubsdk.plugin.claude-local";
 				SDKROOT = macosx;
 				WRAPPER_EXTENSION = aiplugin;
 			};
@@ -1047,7 +1047,7 @@
 					"$(inherited)",
 					"@loader_path/../../../../Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = "com.agentictoolkit.plugin.claude-local";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.mikefullerton.agenticdeveloperhubsdk.plugin.claude-local";
 				SDKROOT = macosx;
 				WRAPPER_EXTENSION = aiplugin;
 			};
@@ -1062,7 +1062,7 @@
 					"$(inherited)",
 					"@loader_path/../../../../Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.agentictoolkit.plugin.openai;
+				PRODUCT_BUNDLE_IDENTIFIER = com.mikefullerton.agenticdeveloperhubsdk.plugin.openai;
 				SDKROOT = macosx;
 				WRAPPER_EXTENSION = aiplugin;
 			};
@@ -1077,7 +1077,7 @@
 					"$(inherited)",
 					"@loader_path/../../../../Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = "com.agentictoolkit.plugin.openai-compatible";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.mikefullerton.agenticdeveloperhubsdk.plugin.openai-compatible";
 				SDKROOT = macosx;
 				WRAPPER_EXTENSION = aiplugin;
 			};
@@ -1098,7 +1098,7 @@
 					"$(inherited)",
 					"@loader_path/../../../../Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = "com.agentictoolkit.plugin.openai-compatible";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.mikefullerton.agenticdeveloperhubsdk.plugin.openai-compatible";
 				SDKROOT = macosx;
 				WRAPPER_EXTENSION = aiplugin;
 			};
@@ -1114,7 +1114,7 @@
 					"@executable_path/../Frameworks",
 					"@loader_path/../Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.agentictoolkit.AIPluginsTests;
+				PRODUCT_BUNDLE_IDENTIFIER = com.mikefullerton.agenticdeveloperhubsdk.AIPluginsTests;
 				SDKROOT = macosx;
 			};
 			name = Release;
@@ -1199,7 +1199,7 @@
 					"$(inherited)",
 					"@loader_path/../../../../Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.agentictoolkit.plugin.google;
+				PRODUCT_BUNDLE_IDENTIFIER = com.mikefullerton.agenticdeveloperhubsdk.plugin.google;
 				SDKROOT = macosx;
 				WRAPPER_EXTENSION = aiplugin;
 			};
@@ -1214,7 +1214,7 @@
 					"$(inherited)",
 					"@loader_path/../../../../Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.agentictoolkit.plugin.openai;
+				PRODUCT_BUNDLE_IDENTIFIER = com.mikefullerton.agenticdeveloperhubsdk.plugin.openai;
 				SDKROOT = macosx;
 				WRAPPER_EXTENSION = aiplugin;
 			};

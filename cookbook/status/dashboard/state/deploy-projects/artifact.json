@@ -3,7 +3,7 @@
   "meta": {
     "id": "b14c03d8-1b93-41e0-9f92-76a81171cee9",
     "title": "Deploy Projects State",
-    "domain": "adtoolkit://cookbook/status/dashboard/state/deploy-projects",
+    "domain": "adhsdk://cookbook/status/dashboard/state/deploy-projects",
     "type": "ingredient",
     "version": "1.2.1",
     "status": "review",
@@ -20,10 +20,10 @@
     ],
     "tags": [],
     "depends-on": [
-      "adtoolkit://cookbook/status/dashboard/api"
+      "adhsdk://cookbook/status/dashboard/api"
     ],
     "related": [
-      "adtoolkit://cookbook/status/dashboard/api"
+      "adhsdk://cookbook/status/dashboard/api"
     ],
     "references": [],
     "approved-by": "",

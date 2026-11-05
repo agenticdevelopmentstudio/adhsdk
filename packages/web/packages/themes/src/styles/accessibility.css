@@ -1,7 +1,7 @@
 /* Accessibility / appearance preferences — the runtime side of the user's
  * Appearance settings (hub User Settings → Appearance). The settings UI sets
  * data-* attributes (and the `dark` class) on <html>; these rules turn those
- * into real token / behaviour overrides. See @agenticdevelopertoolkit/themes/src/appearance.ts.
+ * into real token / behaviour overrides. See @adh-sdk/themes/src/appearance.ts.
  *
  * Design notes:
  *  - These rules are UNLAYERED. Tailwind's utilities live in `@layer utilities`,

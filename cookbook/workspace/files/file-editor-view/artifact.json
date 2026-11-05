@@ -3,7 +3,7 @@
   "meta": {
     "id": "9b1b54d5-e514-479f-b9f9-0a03cf4ebbc9",
     "title": "File Editor View",
-    "domain": "adtoolkit://cookbook/workspace/files/file-editor-view",
+    "domain": "adhsdk://cookbook/workspace/files/file-editor-view",
     "type": "ingredient",
     "version": "1.2.2",
     "status": "review",
@@ -25,7 +25,7 @@
     ],
     "depends-on": [],
     "related": [
-      "adtoolkit://cookbook/workspace/documents/document-editor-view",
+      "adhsdk://cookbook/workspace/documents/document-editor-view",
       "agenticdevelopercookbook://guidelines/cookbook/ui/platform-design-languages"
     ],
     "references": [],

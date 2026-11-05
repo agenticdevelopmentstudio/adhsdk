@@ -1,7 +1,7 @@
 ---
 id: 355a8f54-aee5-45cd-a28d-12c3b7a3085c
 title: "Sync Engine"
-domain: adtoolkit://cookbook/data/sync/sync-engine
+domain: adhsdk://cookbook/data/sync/sync-engine
 type: ingredient
 version: 1.2.0
 status: review
@@ -22,16 +22,16 @@ tags:
   - engine
 depends-on: []
 related:
-  - adtoolkit://cookbook/data/sync/offline-sync-client
+  - adhsdk://cookbook/data/sync/offline-sync-client
 references:
-  - packages/apple/AgenticToolkit/Sync/SyncEngine.swift
-  - packages/apple/AgenticToolkit/Sync/SyncEvents.swift
-  - packages/apple/AgenticToolkit/Sync/SyncProtocols.swift
-  - packages/apple/AgenticToolkit/Sync/SyncWire.swift
-  - packages/apple/AgenticToolkit/Sync/JSONValue.swift
-  - packages/apple/AgenticToolkit/Sync/SyncID.swift
-  - packages/apple/AgenticToolkit/Sync/ADHSyncCatalog.swift
-  - packages/apple/AgenticToolkit/Tests/AgenticToolkitSyncTests/SyncEngineTests.swift
+  - packages/apple/AgenticDeveloperHubSDK/Sync/SyncEngine.swift
+  - packages/apple/AgenticDeveloperHubSDK/Sync/SyncEvents.swift
+  - packages/apple/AgenticDeveloperHubSDK/Sync/SyncProtocols.swift
+  - packages/apple/AgenticDeveloperHubSDK/Sync/SyncWire.swift
+  - packages/apple/AgenticDeveloperHubSDK/Sync/JSONValue.swift
+  - packages/apple/AgenticDeveloperHubSDK/Sync/SyncID.swift
+  - packages/apple/AgenticDeveloperHubSDK/Sync/ADHSyncCatalog.swift
+  - packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKSyncTests/SyncEngineTests.swift
 approved-by: ""
 approved-date: ""
 ---
@@ -55,7 +55,7 @@ push op, a push request, a push result, a push response), a schema-flexible
 JSON payload type, a UUIDv7 id generator, and a generated resource catalog.
 The product-specific enrollment and backend rules the engine serves are
 specified in
-[Offline Sync Client](adtoolkit://cookbook/data/sync/offline-sync-client).
+[Offline Sync Client](adhsdk://cookbook/data/sync/offline-sync-client).
 
 Use it when a host (an app or a daemon) keeps a local mirror of server rows,
 lets the user edit offline, and needs those edits pushed later without ever
@@ -319,13 +319,13 @@ Not applicable: the sources make no log call; every outcome is reported as an ev
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/Sync/ADHSyncCatalog.swift` |
-| apple | `packages/apple/AgenticToolkit/Sync/JSONValue.swift` |
-| apple | `packages/apple/AgenticToolkit/Sync/SyncEngine.swift` |
-| apple | `packages/apple/AgenticToolkit/Sync/SyncEvents.swift` |
-| apple | `packages/apple/AgenticToolkit/Sync/SyncID.swift` |
-| apple | `packages/apple/AgenticToolkit/Sync/SyncProtocols.swift` |
-| apple | `packages/apple/AgenticToolkit/Sync/SyncWire.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Sync/ADHSyncCatalog.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Sync/JSONValue.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Sync/SyncEngine.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Sync/SyncEvents.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Sync/SyncID.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Sync/SyncProtocols.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Sync/SyncWire.swift` |
 
 ## Design Decisions
 

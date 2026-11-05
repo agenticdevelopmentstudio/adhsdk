@@ -10,7 +10,7 @@ const route = { pathname: '/' }
 vi.mock('next/navigation', () => ({ usePathname: () => route.pathname }))
 
 const workspaces = { current: null as object | null }
-vi.mock('@agentic-toolkit/adh/header', () => ({ useWorkspacesMenu: () => workspaces.current }))
+vi.mock('@adh-sdk/adh/header', () => ({ useWorkspacesMenu: () => workspaces.current }))
 vi.mock('../WorkspaceMenu', () => ({ WorkspaceMenu: () => <div>workspace menu</div> }))
 vi.mock('../WorkspaceSiteMenu', () => ({ WorkspaceSiteMenu: () => <div>workspace site menu</div> }))
 vi.mock('../MarketingSiteMenu', () => ({ MarketingSiteMenu: () => <div>marketing site menu</div> }))

@@ -1,7 +1,7 @@
 ---
 id: 91db9191-1ab2-4d09-a9a8-b0dc23669066
 title: Points
-domain: agenticdevelopertoolkit://recipes/points
+domain: adhsdk://recipes/points
 type: ingredient
 version: 1.1.2
 status: review
@@ -23,8 +23,8 @@ tags:
 - landing-page
 depends-on: []
 related:
-- agenticdevelopertoolkit://recipes/trust
-- agenticdevelopertoolkit://recipes/cards
+- adhsdk://recipes/trust
+- adhsdk://recipes/cards
 references: []
 approved-by: ''
 approved-date: ''

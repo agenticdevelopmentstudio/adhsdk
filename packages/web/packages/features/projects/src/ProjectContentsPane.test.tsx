@@ -2,7 +2,7 @@
 //
 // Component test for ProjectContentsPane — what a project HOLDS.
 //
-// Only the api-client boundary (@agentic-toolkit/data/projects) is mocked, so the load →
+// Only the api-client boundary (@adh-sdk/data/projects) is mocked, so the load →
 // pick → attach → reload and the detach wiring are exercised, not the transport. Two
 // properties get the most attention here because they are the ones a screenshot cannot check:
 //
@@ -13,7 +13,7 @@
 //      for a deleted or unreachable target, and the row must survive it — dropping the row
 //      would quietly shrink a project's history.
 //
-// @agentic-toolkit/data is deliberately NOT mocked: both lists the pane reads — the attached
+// @adh-sdk/data is deliberately NOT mocked: both lists the pane reads — the attached
 // artifacts (`project:<id>:artifacts`) and the picker's candidates (`project:<id>:attachable`) —
 // run through the REAL useResourceList, including its module-scope cache. That cache is emptied
 // between tests by the package's `vitest-setup` teardown, so each test below starts from an empty
@@ -22,7 +22,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, fireEvent, waitFor, cleanup } from "@testing-library/react";
 
-vi.mock("@agentic-toolkit/data/projects", () => ({
+vi.mock("@adh-sdk/data/projects", () => ({
   projectArtifactsApi: {
     list: vi.fn(),
     attachable: vi.fn(),
@@ -36,7 +36,7 @@ import {
   projectArtifactsApi,
   type ProjectArtifact,
   type TargetDescriptor,
-} from "@agentic-toolkit/data/projects";
+} from "@adh-sdk/data/projects";
 
 const list = vi.mocked(projectArtifactsApi.list);
 const attachable = vi.mocked(projectArtifactsApi.attachable);

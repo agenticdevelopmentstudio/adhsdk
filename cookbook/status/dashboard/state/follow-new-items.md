@@ -1,7 +1,7 @@
 ---
 id: b0a16326-b88d-426d-a879-080284e541b4
 title: "Follow New Items"
-domain: adtoolkit://cookbook/status/dashboard/state/follow-new-items
+domain: adhsdk://cookbook/status/dashboard/state/follow-new-items
 type: ingredient
 version: 1.1.1
 status: review

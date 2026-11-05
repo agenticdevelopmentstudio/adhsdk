@@ -1,6 +1,6 @@
 
 - **SwiftUI**: The source is
-  `packages/apple/AgenticToolkit/AIPluginKit/ModelFitPolicy.swift`, alongside
+  `packages/apple/AgenticDeveloperHubSDK/AIPluginKit/ModelFitPolicy.swift`, alongside
   its test target `ModelFitPolicyTests.swift` and its consumers
   `LocalInferenceGuard.swift` and the macOS `ModelChooserContent`/
   `ModelChooserViewController`. It uses only `Foundation`'s `Double`,

@@ -1,10 +1,10 @@
 "use client";
 
 import { useCallback, useMemo, useRef, type ReactElement } from "react";
-import { Badge } from "@agenticdevelopertoolkit/ui/components/badge";
-import { EmptyState } from "@agenticdevelopertoolkit/ui/components/empty-state";
-import { DragItem, DragSurface, type DragDropEvent } from "@agenticdevelopertoolkit/ui/components/dnd";
-import { type PriorityScale, type WorkItem } from "@agentic-toolkit/data/projects";
+import { Badge } from "@adh-sdk/ui/components/badge";
+import { EmptyState } from "@adh-sdk/ui/components/empty-state";
+import { DragItem, DragSurface, type DragDropEvent } from "@adh-sdk/ui/components/dnd";
+import { type PriorityScale, type WorkItem } from "@adh-sdk/data/projects";
 import { priorityMeta } from "../WorkItemEditor";
 import { MS_PER_DAY, dayDate, dayIndex, itemLabel, type BadgeVariant } from "../helpers";
 import { DEFAULT_ITEM_WORDS, type ItemWords } from "../vocabulary";

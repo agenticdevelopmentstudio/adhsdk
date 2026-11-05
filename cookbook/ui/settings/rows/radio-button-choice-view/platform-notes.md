@@ -29,7 +29,7 @@
   new value on each input's `onChange`, comparing against the previous
   value first to mirror skips-redundant-commits.
 - **AppKit/UIKit** (source platform): Source file
-  `packages/apple/AgenticToolkit/macOS/SystemIntegration/ComposableSettingsWindow/Views/RadioButtonChoiceView.swift`.
+  `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/Views/RadioButtonChoiceView.swift`.
   A macOS-only (`import AppKit`), generic-over-`Value` `NSView` subclass,
   isolated to the main actor via Swift's `@MainActor`, inside the
   `ComposableSettings` namespace, conforming to `SettingsViewProtocol`. It

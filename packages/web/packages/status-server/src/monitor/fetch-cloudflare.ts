@@ -1,8 +1,8 @@
 import { shortSha, commitFullMessage } from "./format";
-import { mapLimit } from "@agentic-toolkit/deploy-platform/util";
+import { mapLimit } from "@adh-sdk/deploy-platform/util";
 import { toValidDate, type ProviderDeploy } from "./provider-deploy";
-import { noteRateLimited, rateLimitedUntil } from "@agentic-toolkit/deploy-platform/cooldown";
-import { listWorkerScripts } from "@agentic-toolkit/deploy-platform/providers";
+import { noteRateLimited, rateLimitedUntil } from "@adh-sdk/deploy-platform/cooldown";
+import { listWorkerScripts } from "@adh-sdk/deploy-platform/providers";
 
 interface WorkerDeploymentMetadata {
   branch?: string | null;

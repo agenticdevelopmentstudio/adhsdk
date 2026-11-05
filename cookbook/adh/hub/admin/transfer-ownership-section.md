@@ -1,7 +1,7 @@
 ---
 id: da441eaa-795d-4447-99b1-356186855921
 title: "Transfer Ownership Section"
-domain: adtoolkit://cookbook/adh/hub/admin/transfer-ownership-section
+domain: adhsdk://cookbook/adh/hub/admin/transfer-ownership-section
 type: ingredient
 version: 1.2.3
 status: review
@@ -21,11 +21,11 @@ tags:
   - settings
   - transfer
 depends-on:
-  - agenticdevelopertoolkit://recipes/disclosure
-  - agenticdevelopertoolkit://recipes/button
-  - agenticdevelopertoolkit://recipes/dialog
+  - adhsdk://recipes/disclosure
+  - adhsdk://recipes/button
+  - adhsdk://recipes/dialog
 related:
-  - adtoolkit://cookbook/adh/hub/admin/delete-entity-section
+  - adhsdk://cookbook/adh/hub/admin/delete-entity-section
 references: []
 approved-by: ""
 approved-date: ""
@@ -362,7 +362,7 @@ Not applicable: no logging call or logger reference appears anywhere in this com
   `Job` (from a `CoroutineScope`) when a new target is chosen, mirroring the sequence guard here.
 - **React/Web**: This is the source. See
   `packages/web/packages/adh-ui/src/blocks/transfer-ownership-section.tsx`, which composes
-  `@agenticdevelopertoolkit/ui`'s `Disclosure`, `Button`, `Input`, `Label`, `ErrorText`, the
+  `@adh-sdk/ui`'s `Disclosure`, `Button`, `Input`, `Label`, `ErrorText`, the
   `DropdownMenu` family (including `DropdownMenuSub`/`DropdownMenuSubContent`/`DropdownMenuItem`),
   and the `Dialog`/`DialogContent` family. The component's own doc comment names it a sibling of
   `DeleteEntitySection`, whose confirm vocabulary and type-to-confirm gate it follows. State is
@@ -391,7 +391,7 @@ Not applicable: no logging call or logger reference appears anywhere in this com
   `Button`/`DropdownMenuItem`/`Input` components (all `size="sm"` or their defaults).
   Contrast/color is governed by the `apt-*` semantic color tokens (`apt-text`, `apt-text-muted`,
   `apt-gold`); no raw hex value appears in source. The dialog's `DialogContent`
-  (`@agenticdevelopertoolkit/ui/components/dialog`, whose `DialogContent` renders a plain
+  (`@adh-sdk/ui/components/dialog`, whose `DialogContent` renders a plain
   `DialogPrimitive.Popup` with no live-region wrapper) carries no `aria-live`/`role="status"`
   region. Layout: the disclosed body is `flex flex-col gap-3`; the dialog's status/preview area is
   `flex flex-col gap-2 text-sm`; the confirm-gate group is `flex flex-col gap-2`; body/dialog copy
@@ -480,7 +480,7 @@ Platform scope: React/Web.
 | Version | Date | Author | Summary |
 |---|---|---|---|
 | 1.2.3 | 2026-10-04 | Mike Fullerton | Design Decisions keep the Decision / Rationale / Approved triple; each decision's platform line is folded into its rationale. |
-| 1.2.2 | 2026-10-04 | Mike Fullerton | Legacy recipe citations restored to the legacy recipes' own agenticdevelopertoolkit://recipes/ domains; the adtoolkit://recipes/ form named nothing. |
+| 1.2.2 | 2026-10-04 | Mike Fullerton | Legacy recipe citations restored to the legacy recipes' own adhsdk://recipes/ domains; the adhsdk://recipes/ form named nothing. |
 | 1.2.1 | 2026-10-04 | Mike Fullerton | Add separation-of-concerns and unit-test-coverage compliance. |
 | 1.2.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to adh/hub/admin/. |
 | 1.1.2 | 2026-09-25 | Mike Fullerton | Moved into the library cookbook; added Reference Implementations. |

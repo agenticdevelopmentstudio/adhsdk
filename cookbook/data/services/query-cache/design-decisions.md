@@ -23,7 +23,7 @@ process.
 **Decision**: `useToolkitQueryClient()` passes the toolkit singleton
 explicitly to react-query's `useQueryClient(client)` rather than relying on
 `useContext`/`QueryClientContext` alone.
-**Rationale**: Dozens of call sites across `@agentic-toolkit/*` packages use
+**Rationale**: Dozens of call sites across `@adh-sdk/*` packages use
 this hook, and requiring every one of them to be wrapped in a
 `ToolkitQueryProvider` — or trusting that a host's own `QueryClientProvider`
 resolves to the toolkit's physical copy of `@tanstack/react-query` rather

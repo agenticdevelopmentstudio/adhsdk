@@ -39,7 +39,7 @@ packages/apple/**/build/
 # Python bytecode from tools/
 __pycache__/
 
-# From agentictoolkit's ignore list. Its `packages/web/packages/themes/` entry is
+# From adhsdk's ignore list. Its `packages/web/packages/themes/` entry is
 # deliberately not here: it hid a package that had left ATK for this repo, and
 # `themes` lives here again. Its blanket `Package.resolved` / xcworkspace
 # xcshareddata ignores are not here either: this repo commits the workspace's

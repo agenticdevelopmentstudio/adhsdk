@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { CrudDataBrowser, type CrudShell } from "@agentic-toolkit/crud";
-import { EmptyState } from "@agenticdevelopertoolkit/ui/components/empty-state";
+import { CrudDataBrowser, type CrudShell } from "@adh-sdk/crud";
+import { EmptyState } from "@adh-sdk/ui/components/empty-state";
 
 /**
  * All Data as a member of an ecosystem's Storage rail: the cross-schema CRUD browser.

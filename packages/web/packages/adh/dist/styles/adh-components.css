@@ -1,6 +1,6 @@
-/* Component styles for @agentic-toolkit/adh.
+/* Component styles for @adh-sdk/adh.
  * Consumes the --adh-* tokens defined by the active theme
- * (see @agenticdevelopertoolkit/themes/styles/adh*.css). Import this once
+ * (see @adh-sdk/themes/styles/adh*.css). Import this once
  * globally in the consumer app (e.g. app/globals.css).
  *
  * The rules below are semantic classes, but the premise this header used to state —
@@ -15,18 +15,18 @@
 
 /* The family's Tailwind @theme (apt-* color utilities → M3 role vars) lives in the
  * themes package — the token owner. Re-imported here so every site gets it through
- * the one stylesheet import it already has: a site imports @agentic-toolkit/adh/styles.css,
+ * the one stylesheet import it already has: a site imports @adh-sdk/adh/styles.css,
  * which resolves to adh-site.css, whose first line is this file. (Until Task 5.10
  * that one import was @adh-shared/adh/styles.css; that package no longer exists.) */
-@import "@agenticdevelopertoolkit/themes/tailwind.css";
+@import "@adh-sdk/themes/tailwind.css";
 
 /* Skins for the ui primitives that style via semantic classes (a public
- * theming surface — see that file's header). Owned by @agenticdevelopertoolkit/ui;
+ * theming surface — see that file's header). Owned by @adh-sdk/ui;
  * re-imported here so every site gets it through this one import. */
-@import "@agenticdevelopertoolkit/ui/styles/components.css";
+@import "@adh-sdk/ui/styles/components.css";
 
 /* The debug trigger's positioning AND — the load-bearing half — the Tailwind @source
- * registration for @agentic-toolkit/adh's debug-env sources, which own FloatingWindow:
+ * registration for @adh-sdk/adh's debug-env sources, which own FloatingWindow:
  * the shell BOTH the debug console and the Help modal render inside. Task 5.2 moved
  * that subtree out of this package, so the `@source "../../../adh/src/**"` below stopped
  * covering it and `shadow-2xl`/`cursor-move` silently stopped being emitted fleet-wide
@@ -398,7 +398,7 @@
 }
 
 /* The colour-mode toggle's own rules are NOT here. It is `ColorModeToggle` in
-   @agenticdevelopertoolkit/ui, a control that takes `mode` + `onChange` and nothing else, so its
+   @adh-sdk/ui, a control that takes `mode` + `onChange` and nothing else, so its
    CSS travels with it in ui's components.css — which this file @imports at the top, so
    every site still receives it through the one import it already has. Wearing
    `.adh-header__icon-button` in this row is the HOST's choice, made at the call site;
@@ -965,7 +965,7 @@
      DropdownMenuItem or DropdownMenuLinkItem, so it also carries ui's
      `.adh-dropdown-menu__item`, whose base rule reads these for its block padding and
      supplies the 0.75rem inline padding, and ui's one coarse-pointer rule adds the 30%
-     touch growth ("Touch rows" in @agenticdevelopertoolkit/ui's components.css). A
+     touch growth ("Touch rows" in @adh-sdk/ui's components.css). A
      `padding` here overrode that rule (equal specificity, later in the cascade), which
      is why this sheet once carried its own copy. */
   --adh-touch-row-pt: 0.55rem;
@@ -1015,7 +1015,7 @@
 }
 
 /* Avatar primitive (.adh-avatar / __image / __fallback) is owned by
- * @agenticdevelopertoolkit/ui/styles/components.css, @import'ed at the top of this file — a
+ * @adh-sdk/ui/styles/components.css, @import'ed at the top of this file — a
  * drifted duplicate used to live here. Because it landed BELOW this file's own
  * .adh-avatar-menu* block, and both @import order plus these two rule families share
  * (0,1,0) specificity with no @layer, the duplicate silently demoted the header avatar
@@ -1113,7 +1113,7 @@
 }
 
 /* Dropdown menu primitive (.adh-dropdown-menu__content/__item/__label/__separator/etc,
- * plus the 13 other selectors that duplicated @agenticdevelopertoolkit/ui/styles/components.css,
+ * plus the 13 other selectors that duplicated @adh-sdk/ui/styles/components.css,
  * @import'ed at the top of this file) is owned by ui — a drifted duplicate used to live
  * here, including a stale Radix-era `[data-state='open']` sub-trigger variant that
  * matched nothing (ui's own base-ui-powered `[data-popup-open]` rule is the live one).

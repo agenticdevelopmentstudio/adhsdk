@@ -5,7 +5,7 @@ import {
   DEFAULT_COOLDOWN_MS,
   MAX_COOLDOWN_MS,
   _resetProviderCooldowns,
-} from '@agentic-toolkit/deploy-platform/cooldown';
+} from '@adh-sdk/deploy-platform/cooldown';
 import { fetchVercelDeployments } from '../src/monitor/fetch-vercel';
 import { fetchRailwayDeployments } from '../src/monitor/fetch-railway';
 import { fetchCloudflareDeployments } from '../src/monitor/fetch-cloudflare';

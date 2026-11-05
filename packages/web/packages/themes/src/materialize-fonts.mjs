@@ -2,7 +2,7 @@
 //
 // Plain `.mjs`, deliberately: every consumer is a `next.config` — the sites' shared
 // factory and the two self-enclosed backends' own configs — and a next.config cannot
-// resolve `@agenticdevelopertoolkit/themes` as a bare specifier from where it sits (the sites'
+// resolve `@adh-sdk/themes` as a bare specifier from where it sits (the sites'
 // factory lives at the pnpm-workspace ROOT, which has no such dependency). What all
 // three CAN do is import a real file by relative path, and this file is inside the
 // package's `src/`, which is copied wholesale into each backend's `web/vendor/`. So one
@@ -62,7 +62,7 @@ export function materializeThemeFonts(appRoot = process.cwd()) {
     manifest = JSON.parse(fs.readFileSync(manifestPath, "utf8"));
   } catch (err) {
     throw new Error(
-      `[@agenticdevelopertoolkit/themes] cannot read the theme font manifest at ${manifestPath}. ` +
+      `[@adh-sdk/themes] cannot read the theme font manifest at ${manifestPath}. ` +
         "Every app inlines an @font-face block pointing into it, so a build without it ships " +
         "a 404 for every face. The manifest and the faces it names ship inside this package, " +
         "at 'src/fonts/' — a missing one means an incomplete install or a truncated vendored " +
@@ -80,7 +80,7 @@ export function materializeThemeFonts(appRoot = process.cwd()) {
     fs.mkdirSync(dest, { recursive: true });
   } catch (err) {
     throw new Error(
-      `[@agenticdevelopertoolkit/themes] cannot create ${dest}. The app's inlined ` +
+      `[@adh-sdk/themes] cannot create ${dest}. The app's inlined ` +
         "@font-face block names this path, so the build would ship a face that 404s.",
       { cause: err },
     );
@@ -108,7 +108,7 @@ export function materializeThemeFonts(appRoot = process.cwd()) {
       }
     } catch (err) {
       throw new Error(
-        `[@agenticdevelopertoolkit/themes] cannot materialize theme font ${face.file} ` +
+        `[@adh-sdk/themes] cannot materialize theme font ${face.file} ` +
           `into ${dest}. The app's inlined @font-face block names this path, so the ` +
           "build would ship a face that 404s.",
         { cause: err },

@@ -3,7 +3,7 @@
   "meta": {
     "id": "1cacbe17-bca6-458c-bf1f-df9efa3652be",
     "title": "VS Code Workspace Bridge",
-    "domain": "adtoolkit://cookbook/workspace/extensions/vscode-api/workspace/main-thread-workspace",
+    "domain": "adhsdk://cookbook/workspace/extensions/vscode-api/workspace/main-thread-workspace",
     "type": "ingredient",
     "version": "1.1.1",
     "status": "review",
@@ -26,19 +26,19 @@
     ],
     "depends-on": [],
     "related": [
-      "adtoolkit://cookbook/workspace/extensions/host/extension-host",
-      "adtoolkit://cookbook/workspace/extensions/vscode-api/commands/main-thread-commands"
+      "adhsdk://cookbook/workspace/extensions/host/extension-host",
+      "adhsdk://cookbook/workspace/extensions/vscode-api/commands/main-thread-commands"
     ],
     "references": [
-      "packages/apple/AgenticToolkit/macOS/Features/Extensions/VSCodeAPI/MainThreadWorkspace.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/macOS/Features/Extensions/VSCodeAPI/VSCodeAPI.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/macOS/Features/Extensions/VSCodeAPI/JSValueBridge.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/macOS/Features/Extensions/Host/ExtensionHost.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/Core/FileSystem/FileSystemService.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/Core/FileSystem/FileSystemServicing.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/Core/Loggable.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/Tests/AgenticToolkitMacOSTests/Extensions/MainThreadWorkspaceTests.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/project.yml (agenticdevelopertoolkit)"
+      "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/MainThreadWorkspace.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/VSCodeAPI.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/JSValueBridge.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/Host/ExtensionHost.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/Core/FileSystem/FileSystemService.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/Core/FileSystem/FileSystemServicing.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/Core/Loggable.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKMacOSTests/Extensions/MainThreadWorkspaceTests.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/project.yml (adhsdk)"
     ],
     "approved-by": "",
     "approved-date": ""

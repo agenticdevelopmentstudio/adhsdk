@@ -1,7 +1,7 @@
 'use client'
 
-import { defineSiteHome, noSubPath } from '@agentic-toolkit/adh/home'
-import { SiteHomePlaceholder } from '@agentic-toolkit/adh/layout'
+import { defineSiteHome, noSubPath } from '@adh-sdk/adh/home'
+import { SiteHomePlaceholder } from '@adh-sdk/adh/layout'
 
 /**
  * This site's workspace route — `/<workspace>`.

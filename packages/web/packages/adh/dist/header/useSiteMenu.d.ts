@@ -1,5 +1,5 @@
-import { type SiteId } from '@agentic-toolkit/adh-registry';
-import { type PopoverEntry, type PopoverItem } from '@agentic-toolkit/adh/header';
+import { type SiteId } from '@adh-sdk/adh-registry';
+import { type PopoverEntry, type PopoverItem } from '@adh-sdk/adh/header';
 import { type MenuGroup } from './SiteMenu';
 /** What every consumer of the declarative menu needs to resolve it. */
 export type UseSiteMenuOpts = {

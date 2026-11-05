@@ -8,7 +8,7 @@ const h = vi.hoisted(() => ({
   onSelect: undefined as ((id: string | null) => void) | undefined,
 }));
 
-vi.mock("@agentic-toolkit/resource", () => ({
+vi.mock("@adh-sdk/resource", () => ({
   RailHostBoundary: ({ children }: { children: ReactNode }) => <>{children}</>,
   StackGroupDetail: (props: { urlSelection: { onSelect: (id: string | null) => void } }) => {
     h.onSelect = props.urlSelection.onSelect;
@@ -16,8 +16,8 @@ vi.mock("@agentic-toolkit/resource", () => ({
   },
   useBasePathRoute: () => ({ pushSegment: h.pushSegment }),
 }));
-vi.mock("@agenticdevelopertoolkit/ui/lib/navigation-guard", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("@agenticdevelopertoolkit/ui/lib/navigation-guard")>()),
+vi.mock("@adh-sdk/ui/lib/navigation-guard", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@adh-sdk/ui/lib/navigation-guard")>()),
   confirmNavigation: h.confirm,
 }));
 

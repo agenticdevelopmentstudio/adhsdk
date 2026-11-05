@@ -1,7 +1,7 @@
 // Type from the barrel (type-only imports are erased — no runtime client-module edge);
 // the VALUE import must stay on the directive-free generated subpath (see below).
-import type { CrudTableMeta } from "@agentic-toolkit/crud";
-import { CRUD_TABLES } from "@agentic-toolkit/crud/generated/table-metadata";
+import type { CrudTableMeta } from "@adh-sdk/crud";
+import { CRUD_TABLES } from "@adh-sdk/crud/generated/table-metadata";
 
 /**
  * The persona-memory CRUD tables from the toolkit's generated catalog — the same rule the

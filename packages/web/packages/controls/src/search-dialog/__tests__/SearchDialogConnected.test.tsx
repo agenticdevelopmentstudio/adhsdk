@@ -1,10 +1,10 @@
 import { describe, it, expect, vi } from 'vitest'
 import { render, fireEvent } from '@testing-library/react'
 import { SearchDialogConnected } from '../SearchDialogConnected'
-import { SiteConfigProvider } from '@agenticdevelopertoolkit/model'
-import { ContentProvider } from '@agenticdevelopertoolkit/model'
-import { RouteProvider } from '@agenticdevelopertoolkit/model'
-import type { SiteConfig, SiteEntry } from '@agenticdevelopertoolkit/model'
+import { SiteConfigProvider } from '@adh-sdk/model'
+import { ContentProvider } from '@adh-sdk/model'
+import { RouteProvider } from '@adh-sdk/model'
+import type { SiteConfig, SiteEntry } from '@adh-sdk/model'
 
 const config: SiteConfig = {
   branding: { title: 'T', titleEmphasis: 'E' },

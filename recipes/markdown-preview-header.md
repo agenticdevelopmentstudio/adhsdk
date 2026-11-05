@@ -1,7 +1,7 @@
 ---
 id: afb50b48-af7a-4bc1-a13c-ae36759268c8
 title: Markdown Preview Header
-domain: agenticdevelopertoolkit://recipes/markdown-preview-header
+domain: adhsdk://recipes/markdown-preview-header
 type: ingredient
 version: 1.1.1
 status: review
@@ -21,9 +21,9 @@ tags:
 - preview
 - metadata
 depends-on:
-- agenticdevelopertoolkit://recipes/badge
+- adhsdk://recipes/badge
 related:
-- agenticdevelopertoolkit://recipes/markdown-preview
+- adhsdk://recipes/markdown-preview
 references: []
 approved-by: ''
 approved-date: ''
@@ -167,7 +167,7 @@ Not applicable: This component performs no async operations, external calls, or 
 
 ## Platform Notes
 
-- **Source (TypeScript/Web)**: Implemented in `packages/web/packages/search/src/components/markdown/MarkdownPreviewHeader.tsx` as a React functional component using inline Tailwind CSS classes (`flex flex-col gap-2` root, `flex items-start justify-between gap-3` title row, `flex flex-wrap items-center gap-x-2 gap-y-1` metadata row, `min-h-6 shrink-0 rounded-sm` on the link hit target). Styled with `apt-*` design tokens (`apt-text`, `apt-gold`, `apt-text-dim`, `apt-text-muted`). Integrates Badge from `@agenticdevelopertoolkit/ui/components/badge` and uses `kindRendererFor` from the search package's per-kind registry for per-kind customization.
+- **Source (TypeScript/Web)**: Implemented in `packages/web/packages/search/src/components/markdown/MarkdownPreviewHeader.tsx` as a React functional component using inline Tailwind CSS classes (`flex flex-col gap-2` root, `flex items-start justify-between gap-3` title row, `flex flex-wrap items-center gap-x-2 gap-y-1` metadata row, `min-h-6 shrink-0 rounded-sm` on the link hit target). Styled with `apt-*` design tokens (`apt-text`, `apt-gold`, `apt-text-dim`, `apt-text-muted`). Integrates Badge from `@adh-sdk/ui/components/badge` and uses `kindRendererFor` from the search package's per-kind registry for per-kind customization.
 - **SwiftUI**: Implement as a view composition using a VStack for vertical layout and HStack for the title row. Author and date-formatted text are computed properties (derived from `hit`, e.g. a computed `var` or a value derived at `init`), not `@State` — they hold no independent mutable state. The per-kind badge becomes a SwiftUI view parameter. Conditional rendering with `if` statements for optional date, summary, and public link. Text styling via `.font`, `.foregroundColor` modifiers.
 - **Compose**: Implement as a Composable function using Column for vertical layout and Row for the title section. Author and date-formatted text are plain computed values derived from `hit` (no `remember`/mutable state needed). Use `Modifier` for layout constraints, letting the title `Text` wrap onto additional lines like the web source (no `Modifier.width` clamp or `overflow = TextOverflow.Ellipsis`), unless a port deliberately chooses to diverge and truncate instead. Conditional composition with `if` statements for optional content. Badge is an imported Composable. Text styling via `Text()` and `Modifier`.
 - **AppKit / UIKit**: Implement with `NSStackView` (AppKit) or `UIStackView` (UIKit) for vertical layout. Title uses `NSTextField` (AppKit) or `UILabel` (UIKit) configured to wrap across multiple lines, matching the web source's unclamped `min-w-0` heading, unless a port deliberately chooses to diverge and truncate instead. The public link should be a real link, not a generic button: an `NSAttributedString` run carrying a `.link` attribute inside a clickable `NSTextField`/`NSTextView` (AppKit), or a `UIButton` configured with a `.plain()` `UIButton.Configuration` and an underlined attributed title (UIKit) — underline-on-hover only exists as a concept on AppKit (via link cursor tracking); UIKit has no hover state, so omit it there and rely on system link semantics instead. Author and summary-label formatting via `NSAttributedString`, which is a Foundation type available identically on both AppKit and UIKit, not a UIKit-only type.

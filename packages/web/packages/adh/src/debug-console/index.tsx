@@ -4,7 +4,7 @@ import {
   DebugConsoleWindow as ToolkitDebugConsoleWindow,
   type EnvOverrideSurface,
   type ThemeAreasLoader,
-} from '@agentic-toolkit/adh/debug-env'
+} from '@adh-sdk/adh/debug-env'
 
 // PRESERVED IMPORT — the package path, never a relative one. This package's tsup is a
 // bundling build with `splitting: false`, so a relative specifier would inline a PRIVATE
@@ -21,12 +21,12 @@ import {
   useEnvOverride,
   setEnvOverride,
   parseEnvOverride,
-} from '@agentic-toolkit/adh/header'
+} from '@adh-sdk/adh/header'
 
 /**
- * adh's theme taxonomy, behind the chunk gate in `@agentic-toolkit/adh-registry/deployment-env`.
+ * adh's theme taxonomy, behind the chunk gate in `@adh-sdk/adh-registry/deployment-env`.
  *
- * A STATIC `import { themeAreasSurface } from '@agentic-toolkit/adh/theme-editor'` is what
+ * A STATIC `import { themeAreasSurface } from '@adh-sdk/adh/theme-editor'` is what
  * this used to be, and it silently undid the gate one level up. THIS module's chunk is
  * unconditional — a signed-in adh admin opens the console in production too (see the
  * `next/dynamic` in header/SiteMenu.tsx, which deliberately has no build gate) — so
@@ -49,7 +49,7 @@ const themeAreas: ThemeAreasLoader =
   process.env.NEXT_PUBLIC_DEPLOYMENT_ENV === 'local' ||
   process.env.NEXT_PUBLIC_DEPLOYMENT_ENV === 'testing' ||
   process.env.NEXT_PUBLIC_DEPLOYMENT_ENV === 'staging'
-    ? () => import('@agentic-toolkit/adh/theme-editor').then((m) => m.themeAreasSurface)
+    ? () => import('@adh-sdk/adh/theme-editor').then((m) => m.themeAreasSurface)
     : () =>
         Promise.reject(new Error('The site-theme editor is not built into production bundles.'))
 

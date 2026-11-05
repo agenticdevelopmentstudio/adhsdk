@@ -1,6 +1,6 @@
 {
   "schemaVersion": 3,
-  "identifier": "com.agentictoolkit.plugin.claude-local",
+  "identifier": "com.mikefullerton.agenticdeveloperhubsdk.plugin.claude-local",
   "displayName": "Claude (Local)",
   "version": "1.0",
   "models": ["sonnet", "haiku", "opus"],

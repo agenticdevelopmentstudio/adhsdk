@@ -1,7 +1,7 @@
-// WRITTEN by @agenticdevelopertoolkit/site-template's assembler — do not edit. Change the
+// WRITTEN by @adh-sdk/site-template's assembler — do not edit. Change the
 // skeleton in the toolkit and re-assemble.
-import { frameLlmsTxt } from '@agenticdevelopertoolkit/site-template'
-import type { FrameCopy } from '@agenticdevelopertoolkit/site-template'
+import { frameLlmsTxt } from '@adh-sdk/site-template'
+import type { FrameCopy } from '@adh-sdk/site-template'
 import siteCopy from '../../src/content/site/site.json'
 import landing from '../../src/landing.json'
 import { config } from '../../src/site/config'

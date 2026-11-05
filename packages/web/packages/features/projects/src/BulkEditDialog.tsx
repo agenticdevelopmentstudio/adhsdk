@@ -7,19 +7,19 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
-} from "@agenticdevelopertoolkit/ui/components/dialog";
-import { DialogActions } from "@agenticdevelopertoolkit/ui/components/dialog-actions";
-import { Field } from "@agenticdevelopertoolkit/ui/blocks/field";
-import { Select } from "@agenticdevelopertoolkit/ui/components/select";
-import { ErrorText } from "@agenticdevelopertoolkit/ui/components/error-text";
-import { errorMessage } from "@agenticdevelopertoolkit/ui/lib/errors";
-import { projectWorkItemsApi } from "@agentic-toolkit/data/projects";
+} from "@adh-sdk/ui/components/dialog";
+import { DialogActions } from "@adh-sdk/ui/components/dialog-actions";
+import { Field } from "@adh-sdk/ui/blocks/field";
+import { Select } from "@adh-sdk/ui/components/select";
+import { ErrorText } from "@adh-sdk/ui/components/error-text";
+import { errorMessage } from "@adh-sdk/ui/lib/errors";
+import { projectWorkItemsApi } from "@adh-sdk/data/projects";
 import type {
   PriorityScale,
   ProjectStatus,
   ProjectParticipant,
   WorkItem,
-} from "@agentic-toolkit/data/projects";
+} from "@adh-sdk/data/projects";
 import { PRIORITIES } from "./WorkItemEditor";
 import { participantLabel, fromOptionValue } from "./AssigneePicker";
 

@@ -3,7 +3,7 @@
   "meta": {
     "id": "c85f8913-1112-4ba2-b78f-2b97ea2f8fba",
     "title": "Status Web Telemetry",
-    "domain": "adtoolkit://cookbook/status/dashboard/telemetry",
+    "domain": "adhsdk://cookbook/status/dashboard/telemetry",
     "type": "ingredient",
     "version": "1.0.2",
     "status": "review",
@@ -21,9 +21,9 @@
     "tags": [],
     "depends-on": [],
     "related": [
-      "adtoolkit://cookbook/status/dashboard/state/telemetry",
-      "adtoolkit://cookbook/status/service/telemetry",
-      "adtoolkit://cookbook/status/dashboard/api"
+      "adhsdk://cookbook/status/dashboard/state/telemetry",
+      "adhsdk://cookbook/status/service/telemetry",
+      "adhsdk://cookbook/status/dashboard/api"
     ],
     "references": [],
     "approved-by": "",

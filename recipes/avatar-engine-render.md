@@ -1,7 +1,7 @@
 ---
 id: 39f26055-c002-40fe-81e2-74c0f9c9311d
 title: Avatar Engine Render
-domain: agenticdevelopertoolkit://recipes/avatar-engine-render
+domain: adhsdk://recipes/avatar-engine-render
 type: ingredient
 version: 1.0.2
 status: review

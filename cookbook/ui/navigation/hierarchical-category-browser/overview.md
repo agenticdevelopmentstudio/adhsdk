@@ -2,11 +2,11 @@
 The **Hierarchical Category Browser** is the shared rail every markdown surface
 that classifies its documents into a category hierarchy — the notebook today, and
 research — mounts as the leading levels of a
-[Hierarchical Topic Detail](agenticdevelopertoolkit://recipes/hierarchical-topic-detail)
+[Hierarchical Topic Detail](adhsdk://recipes/hierarchical-topic-detail)
 stack. It is a thin, category-specific layer over that substrate: HTDV owns the stack's
 chrome, deep linking, breadcrumb, disclosure and narrow-mode behavior (see
-[Hierarchical Topic Detail](agenticdevelopertoolkit://recipes/hierarchical-topic-detail)
-and [Topic Detail](agenticdevelopertoolkit://recipes/topic-detail) for that contract,
+[Hierarchical Topic Detail](adhsdk://recipes/hierarchical-topic-detail)
+and [Topic Detail](adhsdk://recipes/topic-detail) for that contract,
 which this recipe does not restate). What this recipe adds is everything that is TRUE OF
 **CATEGORIES** on top of it:
 
@@ -25,7 +25,7 @@ which this recipe does not restate). What this recipe adds is everything that is
   ADDS one and rewrites nothing. Without the second, the DAG is unreachable from the
   rail and the hierarchy reads as a tree.
 
-It is built as a single hook, `useCategoryLevels` (`@agentic-toolkit/categories`),
+It is built as a single hook, `useCategoryLevels` (`@adh-sdk/categories`),
 that a host calls once with its raw category rows and the URL's resolved chain,
 and gets back `levels: TopicLevel[]` (feed straight into
 `HierarchicalDetailView`/`HierarchicalTopicDetail`), `scope: CategoryScope` (what

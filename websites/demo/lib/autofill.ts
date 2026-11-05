@@ -1,5 +1,5 @@
 /**
- * "This field is not a credential" — a copy of `@agenticdevelopertoolkit/ui/lib/autofill`,
+ * "This field is not a credential" — a copy of `@adh-sdk/ui/lib/autofill`,
  * which is the list of record. A parity guard in the consuming application pins
  * these two copies together and catches them drifting apart.
  *

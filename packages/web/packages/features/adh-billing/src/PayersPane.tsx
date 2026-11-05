@@ -3,14 +3,14 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { ReactElement } from "react";
 import { Users } from "lucide-react";
-import { useResourceList } from "@agentic-toolkit/data";
-import { useStackLevel, type TopicLeaf } from "@agentic-toolkit/resource";
-import { useDualModeSelection } from "@agenticdevelopertoolkit/ui/hooks/useDualModeSelection";
-import { Button } from "@agenticdevelopertoolkit/ui/components/button";
-import { ErrorText } from "@agenticdevelopertoolkit/ui/components/error-text";
-import { Field, FieldGroup, TopicSelectHint } from "@agenticdevelopertoolkit/ui/blocks";
-import { FieldFootnote } from "@agenticdevelopertoolkit/ui/blocks/field";
-import { fieldCaptionClass } from "@agenticdevelopertoolkit/ui/lib/typography";
+import { useResourceList } from "@adh-sdk/data";
+import { useStackLevel, type TopicLeaf } from "@adh-sdk/resource";
+import { useDualModeSelection } from "@adh-sdk/ui/hooks/useDualModeSelection";
+import { Button } from "@adh-sdk/ui/components/button";
+import { ErrorText } from "@adh-sdk/ui/components/error-text";
+import { Field, FieldGroup, TopicSelectHint } from "@adh-sdk/ui/blocks";
+import { FieldFootnote } from "@adh-sdk/ui/blocks/field";
+import { fieldCaptionClass } from "@adh-sdk/ui/lib/typography";
 import {
   listAccounts,
   listOffers,

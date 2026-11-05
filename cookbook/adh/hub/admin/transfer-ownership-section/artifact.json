@@ -3,7 +3,7 @@
   "meta": {
     "id": "da441eaa-795d-4447-99b1-356186855921",
     "title": "Transfer Ownership Section",
-    "domain": "adtoolkit://cookbook/adh/hub/admin/transfer-ownership-section",
+    "domain": "adhsdk://cookbook/adh/hub/admin/transfer-ownership-section",
     "type": "ingredient",
     "version": "1.2.3",
     "status": "review",
@@ -25,12 +25,12 @@
       "transfer"
     ],
     "depends-on": [
-      "agenticdevelopertoolkit://recipes/disclosure",
-      "agenticdevelopertoolkit://recipes/button",
-      "agenticdevelopertoolkit://recipes/dialog"
+      "adhsdk://recipes/disclosure",
+      "adhsdk://recipes/button",
+      "adhsdk://recipes/dialog"
     ],
     "related": [
-      "adtoolkit://cookbook/adh/hub/admin/delete-entity-section"
+      "adhsdk://cookbook/adh/hub/admin/delete-entity-section"
     ],
     "references": [],
     "approved-by": "",

@@ -3,7 +3,7 @@
   "meta": {
     "id": "95e26bae-21cb-4f99-8d28-724beca8ae1d",
     "title": "Extension Tree Data Source",
-    "domain": "adtoolkit://cookbook/workspace/extensions/vscode-api/tree-views/extension-tree-data-source",
+    "domain": "adhsdk://cookbook/workspace/extensions/vscode-api/tree-views/extension-tree-data-source",
     "type": "ingredient",
     "version": "1.1.2",
     "status": "review",
@@ -26,13 +26,13 @@
     ],
     "depends-on": [],
     "related": [
-      "adtoolkit://cookbook/workspace/extensions/vscode-api/tree-views/extension-tree-view"
+      "adhsdk://cookbook/workspace/extensions/vscode-api/tree-views/extension-tree-view"
     ],
     "references": [
-      "packages/apple/AgenticToolkit/macOS/Features/Extensions/VSCodeAPI/ExtensionTreeDataSource.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/macOS/Features/Extensions/Tree/ContributedTreeItem.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/macOS/Features/Extensions/VSCodeAPI/MainThreadTreeViews.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/Tests/AgenticToolkitMacOSTests/Extensions/MainThreadTreeViewsTests.swift (agenticdevelopertoolkit)"
+      "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/ExtensionTreeDataSource.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/Tree/ContributedTreeItem.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/MainThreadTreeViews.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKMacOSTests/Extensions/MainThreadTreeViewsTests.swift (adhsdk)"
     ],
     "approved-by": "",
     "approved-date": ""

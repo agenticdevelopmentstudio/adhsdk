@@ -1,5 +1,5 @@
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/Tests/AgenticToolkitSyncGRDBTests/SyncEngineGRDBIntegrationTests.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKSyncGRDBTests/SyncEngineGRDBIntegrationTests.swift` |
 

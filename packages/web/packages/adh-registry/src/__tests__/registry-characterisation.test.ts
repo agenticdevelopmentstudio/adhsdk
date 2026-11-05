@@ -13,7 +13,7 @@ import {
 } from '../index'
 import { canonicalOnly, ogImageSize, siteIdentity, siteMetadata } from '../seo'
 
-describe('registry URL helpers (pins behaviour across the @agentic-toolkit/adh-registry extraction)', () => {
+describe('registry URL helpers (pins behaviour across the @adh-sdk/adh-registry extraction)', () => {
   it('siteProdUrl is host-independent and always https', () => {
     expect(siteProdUrl('hub', '/')).toBe('https://agenticdeveloperhub.com/')
   })

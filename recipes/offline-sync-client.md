@@ -1,7 +1,7 @@
 ---
 id: d55f560e-63cf-4656-8c5d-43b93964c3bc
 title: Offline Sync Client
-domain: agenticdevelopertoolkit://recipes/offline-sync-client
+domain: adhsdk://recipes/offline-sync-client
 type: ingredient
 category: engine
 version: 1.0.2
@@ -38,12 +38,12 @@ Accessibility.
 
 The reference implementation ships as two Swift library targets:
 
-- **`AgenticToolkitSync`** — the platform-neutral core: `SyncEngine` (the
+- **`AgenticDeveloperHubSDKSync`** — the platform-neutral core: `SyncEngine` (the
   pull → reconcile → push cycle), the wire types (`SyncWire.swift`), the
   `SyncStore`/`SyncTransport`/`SyncTriggerSource` protocols
   (`SyncProtocols.swift`), the observability events (`SyncEvents.swift`), and
   `ADHSyncCatalog` (the adh resource catalog mirrored client-side).
-- **`AgenticToolkitSyncGRDB`** — `GRDBSyncStore`, the on-disk `SyncStore`
+- **`AgenticDeveloperHubSDKSyncGRDB`** — `GRDBSyncStore`, the on-disk `SyncStore`
   (JSON-payload mirror tables, an outbox, a conflicts audit) on a WAL-mode
   SQLite pool.
 
@@ -133,7 +133,7 @@ phases of a single cycle, not concurrent states.
 ## Conformance Test Vectors
 
 One row per Behavioral Requirement. Tests live in the two XCTest bundles
-(`AgenticToolkitSyncTests`, `AgenticToolkitSyncGRDBTests`); wire-shape rows also
+(`AgenticDeveloperHubSDKSyncTests`, `AgenticDeveloperHubSDKSyncGRDBTests`); wire-shape rows also
 cite `SyncWireTests` and the vendored fixtures under `Tests/…/Fixtures`.
 
 | ID | Requirements | Input | Expected |
@@ -199,7 +199,7 @@ cite `SyncWireTests` and the vendored fixtures under `Tests/…/Fixtures`.
 
 ## Configuration
 
-**`SyncEngineConfiguration`** (`AgenticToolkitSync`) — the engine's one config surface:
+**`SyncEngineConfiguration`** (`AgenticDeveloperHubSDKSync`) — the engine's one config surface:
 
 | Field | Type | Default | Description |
 |---|---|---|---|
@@ -223,7 +223,7 @@ The store's `pullOnlyResources` is what actually enforces
 `pull-only-refused-at-stage`: `stage(_:)` throws
 `SyncStoreFailure.pullOnlyResource` before any DB work.
 
-**`ADHSyncCatalog`** (`AgenticToolkitSync`) — the adh values hosts wire in,
+**`ADHSyncCatalog`** (`AgenticDeveloperHubSDKSync`) — the adh values hosts wire in,
 generated from adh's own backend sync registry at a pinned revision:
 
 - `ADHSyncCatalog.all` — every catalog resource (**79**, all `schemaVersion 1`),
@@ -322,7 +322,7 @@ at this call site.
 | [error-response-handling](agenticdevelopercookbook://compliance/access-patterns#error-response-handling) | partial | Access Patterns |
 | [timeout-configuration](agenticdevelopercookbook://compliance/access-patterns#timeout-configuration) | failed | Access Patterns |
 
-`separation-of-concerns` is passed: the contract splits a platform-neutral core (`SyncEngine`, the wire types, the `SyncStore`/`SyncTransport`/`SyncTriggerSource` protocols, the event stream, `ADHSyncCatalog`) from a swappable on-disk implementation (`GRDBSyncStore`), so a store backend can change without touching engine logic. `unit-test-coverage` is failed: this recipe's own Platform Notes state that no Swift sync module ships in this repo, and none of the cited test classes or bundles (`SyncEngineTests`, `InMemorySyncStoreTests`, `GRDBSyncStoreTests`, `SyncWireTests`, `ADHSyncCatalogTests`, `AgenticToolkitSyncTests`, `AgenticToolkitSyncGRDBTests`) exist anywhere in this repo — the only similarly-named sync code that does exist, `ADHSyncAPI.swift`/`ADHSyncAPITests.swift` under `AgenticDeveloperHubClient`, is a different package this recipe never names. `error-recovery`, `graceful-degradation`, `fault-tolerance`, `idempotent-operations`, `data-integrity`, `offline-behavior`, `pagination-support`, and `error-response-handling` are each partial for the same underlying reason: the contract specifies the behavior in detail — exponential backoff on a transport/5xx failure, an `AuthRequired` pause on 401, the `maxReconcileResyncsPerCycle` manifest-flapping bound, per-opId terminal quarantine on `rejected`, atomic batch-apply-with-cursor plus `recovery-never-deletes-database`, outbox queuing while offline, draining a paginated `/sync/pull` via `hasMore`, and 401/410/rejected-reason handling — but with no implementation in this repo, none of it is verifiable, only specified. `retry-with-backoff` is failed independent of that gap: the spec's own backoff formula, `min(baseBackoff · 2^(n−1), maxBackoff)`, has no jitter term at all, so it does not meet the catalog check even at the design level. `timeout-configuration` is failed for a similar reason: `SyncEngineConfiguration`'s full field list (`deviceId`, `pullLimit`, `pushBatchSize`, `baseBackoff`, `maxBackoff`, `hostResources`) defines no timeout for a `/sync/pull` or `/sync/push` request, a gap in the written contract itself rather than merely an unimplemented one.
+`separation-of-concerns` is passed: the contract splits a platform-neutral core (`SyncEngine`, the wire types, the `SyncStore`/`SyncTransport`/`SyncTriggerSource` protocols, the event stream, `ADHSyncCatalog`) from a swappable on-disk implementation (`GRDBSyncStore`), so a store backend can change without touching engine logic. `unit-test-coverage` is failed: this recipe's own Platform Notes state that no Swift sync module ships in this repo, and none of the cited test classes or bundles (`SyncEngineTests`, `InMemorySyncStoreTests`, `GRDBSyncStoreTests`, `SyncWireTests`, `ADHSyncCatalogTests`, `AgenticDeveloperHubSDKSyncTests`, `AgenticDeveloperHubSDKSyncGRDBTests`) exist anywhere in this repo — the only similarly-named sync code that does exist, `ADHSyncAPI.swift`/`ADHSyncAPITests.swift` under `AgenticDeveloperHubClient`, is a different package this recipe never names. `error-recovery`, `graceful-degradation`, `fault-tolerance`, `idempotent-operations`, `data-integrity`, `offline-behavior`, `pagination-support`, and `error-response-handling` are each partial for the same underlying reason: the contract specifies the behavior in detail — exponential backoff on a transport/5xx failure, an `AuthRequired` pause on 401, the `maxReconcileResyncsPerCycle` manifest-flapping bound, per-opId terminal quarantine on `rejected`, atomic batch-apply-with-cursor plus `recovery-never-deletes-database`, outbox queuing while offline, draining a paginated `/sync/pull` via `hasMore`, and 401/410/rejected-reason handling — but with no implementation in this repo, none of it is verifiable, only specified. `retry-with-backoff` is failed independent of that gap: the spec's own backoff formula, `min(baseBackoff · 2^(n−1), maxBackoff)`, has no jitter term at all, so it does not meet the catalog check even at the design level. `timeout-configuration` is failed for a similar reason: `SyncEngineConfiguration`'s full field list (`deviceId`, `pullLimit`, `pushBatchSize`, `baseBackoff`, `maxBackoff`, `hostResources`) defines no timeout for a `/sync/pull` or `/sync/push` request, a gap in the written contract itself rather than merely an unimplemented one.
 
 ## Change History
 

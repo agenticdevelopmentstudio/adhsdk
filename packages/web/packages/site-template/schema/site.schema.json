@@ -187,7 +187,7 @@
     "analytics": {
       "type": "boolean",
       "default": false,
-      "description": "Mount Vercel Web Analytics and Speed Insights in the root layout, on production deploys only (`DEPLOYMENT_ENV=production`). Also mounts the toolkit's PostHog (`@agenticdevelopertoolkit/analytics`) on every deploy, which stays off without `NEXT_PUBLIC_POSTHOG_KEY`. The assembler adds `@vercel/analytics`, `@vercel/speed-insights` and the analytics package to the app's dependencies."
+      "description": "Mount Vercel Web Analytics and Speed Insights in the root layout, on production deploys only (`DEPLOYMENT_ENV=production`). Also mounts the toolkit's PostHog (`@adh-sdk/analytics`) on every deploy, which stays off without `NEXT_PUBLIC_POSTHOG_KEY`. The assembler adds `@vercel/analytics`, `@vercel/speed-insights` and the analytics package to the app's dependencies."
     },
     "rewrites": {
       "type": "array",

@@ -4,7 +4,7 @@
   themes were empty, the theme-choice view model's choices would be empty
   and the composed choice control would construct with zero items and no
   selection (its own documented empty-choices behavior, per
-  `adtoolkit://cookbook/ui/settings/rows/popup-menu-choice-view`) —
+  `adhsdk://cookbook/ui/settings/rows/popup-menu-choice-view`) —
   this component adds no additional guard of its own around that case.
 - **Boundary values**: Not applicable — the component owns no numeric or
   length-bounded input of its own.

@@ -1,4 +1,4 @@
-import { SITES, siteProdUrl } from '@agentic-toolkit/adh-registry'
+import { SITES, siteProdUrl } from '@adh-sdk/adh-registry'
 import { describe, expect, it } from 'vitest'
 import { BRAND_HREF, sitesPanelGroups } from '../identity'
 

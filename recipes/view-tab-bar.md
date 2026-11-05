@@ -1,7 +1,7 @@
 ---
 id: 826184eb-23f0-4ff7-b5f3-dc583fbc8496
 title: View Tab Bar
-domain: agenticdevelopertoolkit://recipes/view-tab-bar
+domain: adhsdk://recipes/view-tab-bar
 type: ingredient
 version: 1.1.1
 status: review
@@ -22,7 +22,7 @@ tags:
 - client-state
 depends-on: []
 related:
-- agenticdevelopertoolkit://recipes/tabs
+- adhsdk://recipes/tabs
 references: []
 approved-by: ''
 approved-date: ''

@@ -1,7 +1,7 @@
 ---
 id: 779ac6ea-9ef5-4fb0-8ed9-dc6b9d617344
 title: "Git Client"
-domain: adtoolkit://cookbook/foundation/git/git-client
+domain: adhsdk://cookbook/foundation/git/git-client
 type: ingredient
 version: 1.1.0
 status: review
@@ -25,24 +25,24 @@ tags:
 depends-on: []
 related: []
 references:
-  - packages/apple/AgenticToolkit/Core/Git/GitBranch.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Core/Git/GitCaller.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Core/Git/GitClient.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Core/Git/GitClientConfiguration.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Core/Git/GitClientError.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Core/Git/GitCommandLog.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Core/Git/GitConfigEntry.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Core/Git/GitFileStatus.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Core/Git/GitStatus.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Core/Git/GitWorktree.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Core/SettingStorage/UserSettings+Git.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Tests/AgenticToolkitCoreTests/Git/GitClientTests.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Tests/AgenticToolkitCoreTests/Git/GitCommandLogTests.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Tests/AgenticToolkitCoreTests/Git/GitStatusParserTests.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Tests/AgenticToolkitCoreTests/Git/GitBranchParserTests.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Tests/AgenticToolkitCoreTests/Git/GitWorktreeParserTests.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Tests/AgenticToolkitCoreTests/Git/GitConfigEntryParserTests.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Tests/AgenticToolkitCoreTests/Git/GitClientConfigurationTests.swift (agenticdevelopertoolkit)
+  - packages/apple/AgenticDeveloperHubSDK/Core/Git/GitBranch.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Core/Git/GitCaller.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Core/Git/GitClient.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Core/Git/GitClientConfiguration.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Core/Git/GitClientError.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Core/Git/GitCommandLog.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Core/Git/GitConfigEntry.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Core/Git/GitFileStatus.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Core/Git/GitStatus.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Core/Git/GitWorktree.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Core/SettingStorage/UserSettings+Git.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKCoreTests/Git/GitClientTests.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKCoreTests/Git/GitCommandLogTests.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKCoreTests/Git/GitStatusParserTests.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKCoreTests/Git/GitBranchParserTests.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKCoreTests/Git/GitWorktreeParserTests.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKCoreTests/Git/GitConfigEntryParserTests.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKCoreTests/Git/GitClientConfigurationTests.swift (adhsdk)
 approved-by: ""
 approved-date: ""
 ---
@@ -459,7 +459,7 @@ once those verbs exist.
   `GitCaller.swift`, `GitClient.swift`, `GitClientConfiguration.swift`,
   `GitClientError.swift`, `GitCommandLog.swift`, `GitConfigEntry.swift`,
   `GitFileStatus.swift`, `GitStatus.swift`, `GitWorktree.swift`) live in
-  the shared `AgenticToolkitCore` framework (`Core/Git/`) and import only
+  the shared `AgenticDeveloperHubSDKCore` framework (`Core/Git/`) and import only
   `Foundation` and `OSLog` — no `AppKit`/`UIKit` dependency at all.
   `GitClient` is declared as a Swift `actor`, whose verbs each suspend at
   the `await SubprocessChannel.run` point, releasing the actor for the
@@ -526,7 +526,7 @@ once those verbs exist.
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/Core/Git/` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Git/` |
 
 ## Design Decisions
 

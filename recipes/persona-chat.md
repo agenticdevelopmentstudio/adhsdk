@@ -1,7 +1,7 @@
 ---
 id: 447d0e33-c66e-4bf9-8511-e7823bdbcf9b
 title: Persona Chat
-domain: agenticdevelopertoolkit://recipes/persona-chat
+domain: adhsdk://recipes/persona-chat
 type: ingredient
 version: 1.1.1
 status: review
@@ -21,11 +21,11 @@ tags:
 - messaging
 - persona
 depends-on:
-- agenticdevelopertoolkit://recipes/inline-chat
-- agenticdevelopertoolkit://recipes/three-pane-chat
-- agenticdevelopertoolkit://recipes/mobile-chat
+- adhsdk://recipes/inline-chat
+- adhsdk://recipes/three-pane-chat
+- adhsdk://recipes/mobile-chat
 related:
-- agenticdevelopertoolkit://ingredients/chat/persona-chat-coordinator
+- adhsdk://ingredients/chat/persona-chat-coordinator
 references: []
 approved-by: ''
 approved-date: ''

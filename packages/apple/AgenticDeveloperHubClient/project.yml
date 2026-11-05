@@ -109,7 +109,7 @@ targets:
       # AuthenticationMiddleware.swift) import HTTPTypes directly. This was never
       # declared: it worked only by accident, riding along as a transitive/static
       # merge of OpenAPIRuntime's own HTTPTypes dependency. That broke once a
-      # sibling project in the same workspace (agentictoolkit's AgenticToolkitHubService)
+      # sibling project in the same workspace (adhsdk's AgenticDeveloperHubSDKHubService)
       # also declared swift-http-types explicitly, which flips the shared SPM
       # package graph's resolution for OpenAPIRuntime/OpenAPIURLSession to dynamic
       # PackageProduct frameworks that no longer carry HTTPTypes along for free —

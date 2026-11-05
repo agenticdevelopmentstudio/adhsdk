@@ -1,4 +1,4 @@
-// @agentic-toolkit/data/profile — a PRINCIPAL's profile record: its social links, addresses,
+// @adh-sdk/data/profile — a PRINCIPAL's profile record: its social links, addresses,
 // the per-row privacy grants that decide who sees them, and its metered usage.
 //
 // One entry for four endpoints because they answer about one subject and are read together:

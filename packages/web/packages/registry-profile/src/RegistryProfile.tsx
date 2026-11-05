@@ -1,4 +1,4 @@
-import type { FieldVisibility } from '@agenticdevelopertoolkit/registry-types';
+import type { FieldVisibility } from '@adh-sdk/registry-types';
 import type { ReactNode } from 'react';
 import { FieldValue } from './FieldValue';
 import { ServiceList } from './ServiceList';

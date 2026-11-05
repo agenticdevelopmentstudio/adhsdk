@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { reportUnexpectedAuthError } from "@agentic-toolkit/auth";
-import type { PaneExitGuard } from "@agenticdevelopertoolkit/ui/blocks";
-import { useDualModeSelection } from "@agenticdevelopertoolkit/ui/hooks/useDualModeSelection";
+import { reportUnexpectedAuthError } from "@adh-sdk/auth";
+import type { PaneExitGuard } from "@adh-sdk/ui/blocks";
+import { useDualModeSelection } from "@adh-sdk/ui/hooks/useDualModeSelection";
 
 import type { MasterDetailActions } from "./MasterDetailLayout";
 

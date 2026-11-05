@@ -1,7 +1,7 @@
 ---
 id: 4d75a371-181e-4d80-a16b-022d37dc0d48
 title: "Composable Tabs Leaf Pane"
-domain: adtoolkit://cookbook/ui/layout/composable-tabs/leaf-pane-view
+domain: adhsdk://cookbook/ui/layout/composable-tabs/leaf-pane-view
 type: ingredient
 version: 1.2.1
 status: review
@@ -21,10 +21,10 @@ tags:
   - view-controller
   - accessibility
 depends-on:
-  - adtoolkit://cookbook/ui/layout/pane-view
+  - adhsdk://cookbook/ui/layout/pane-view
 related:
-  - adtoolkit://cookbook/ui/layout/composable-tabs/arrange-overlay-view
-  - adtoolkit://cookbook/ui/layout/composable-tabs/active-pane
+  - adhsdk://cookbook/ui/layout/composable-tabs/arrange-overlay-view
+  - adhsdk://cookbook/ui/layout/composable-tabs/active-pane
   - agenticdevelopercookbook://guidelines/cookbook/ui/platform-design-languages
 references: []
 approved-by: ""
@@ -515,7 +515,7 @@ or its immediate collaborators (the move menu, the arrange overlay).
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/macOS/UI/ViewControllers/ComposableTabs/ComposableTabsPaneViewController.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/ComposableTabs/ComposableTabsPaneViewController.swift` |
 
 ## Design Decisions
 

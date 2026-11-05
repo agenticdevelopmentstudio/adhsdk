@@ -1,7 +1,7 @@
 'use client';
 
 import { useId } from 'react';
-import type { FieldDefLike } from '@agenticdevelopertoolkit/registry-types';
+import type { FieldDefLike } from '@adh-sdk/registry-types';
 import type { FieldVisibility } from '../client';
 import { noAutofillProps } from '../autofill';
 // The labels, the type mapping and the clamping rules — see `fieldEntryModel`. What is left

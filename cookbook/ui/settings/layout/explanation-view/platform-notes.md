@@ -23,7 +23,7 @@
   edge-to-edge like `fills-view-edge-to-edge`, and no `max-height`/
   `-webkit-line-clamp` so it grows to fit like `resists-vertical-compression`.
 - **AppKit / UIKit** (source platform): Source at
-  `packages/apple/AgenticToolkit/macOS/SystemIntegration/ComposableSettingsWindow/Views/ExplanationView.swift`
+  `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/Views/ExplanationView.swift`
   (this recipe's source): a macOS-only (`import AppKit`) `NSView` subclass,
   `@MainActor`-isolated, conforming to `SettingsViewProtocol` (an empty
   marker protocol every `ComposableSettings` row view conforms to, with no

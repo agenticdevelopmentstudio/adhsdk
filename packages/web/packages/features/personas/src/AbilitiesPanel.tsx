@@ -1,12 +1,12 @@
 "use client";
 
 import { useId, useMemo } from "react";
-import { useAction } from "@agentic-toolkit/crud";
-import { ErrorText } from "@agenticdevelopertoolkit/ui/components/error-text";
-import { Checkbox } from "@agenticdevelopertoolkit/ui/components/checkbox";
-import { Switch } from "@agenticdevelopertoolkit/ui/components/switch";
-import { FieldGroup } from "@agenticdevelopertoolkit/ui/blocks/field-group";
-import { personaToolsApi, type ToolCatalogItem } from "@agentic-toolkit/data/personas";
+import { useAction } from "@adh-sdk/crud";
+import { ErrorText } from "@adh-sdk/ui/components/error-text";
+import { Checkbox } from "@adh-sdk/ui/components/checkbox";
+import { Switch } from "@adh-sdk/ui/components/switch";
+import { FieldGroup } from "@adh-sdk/ui/blocks/field-group";
+import { personaToolsApi, type ToolCatalogItem } from "@adh-sdk/data/personas";
 import { groupBySource } from "./agent-tool-source";
 import { useOptimisticRowActions } from "./useOptimisticRowActions";
 

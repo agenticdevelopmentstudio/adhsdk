@@ -1,7 +1,7 @@
 ---
 id: 5069f11f-e0c6-40c3-92ca-6152b8df3bc2
 title: "Model Fit Policy"
-domain: adtoolkit://cookbook/ai/models/local/model-fit-policy
+domain: adhsdk://cookbook/ai/models/local/model-fit-policy
 type: ingredient
 version: 1.1.0
 status: review
@@ -23,11 +23,11 @@ tags:
 depends-on: []
 related: []
 references:
-  - packages/apple/AgenticToolkit/AIPluginKit/ModelFitPolicy.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Tests/AIPluginKitTests/ModelFitPolicyTests.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/AIPluginKit/LocalInferenceGuard.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/macOS/Features/AIPlugins/Settings/ModelChooserContent.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/macOS/Features/AIPlugins/Settings/ModelChooserViewController.swift (agenticdevelopertoolkit)
+  - packages/apple/AgenticDeveloperHubSDK/AIPluginKit/ModelFitPolicy.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Tests/AIPluginKitTests/ModelFitPolicyTests.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/AIPluginKit/LocalInferenceGuard.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/Features/AIPlugins/Settings/ModelChooserContent.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/Features/AIPlugins/Settings/ModelChooserViewController.swift (adhsdk)
 approved-by: ""
 approved-date: ""
 ---
@@ -301,7 +301,7 @@ documented in that component's own recipe, not by this one.
 ## Platform Notes
 
 - **SwiftUI**: The source is
-  `packages/apple/AgenticToolkit/AIPluginKit/ModelFitPolicy.swift`, alongside
+  `packages/apple/AgenticDeveloperHubSDK/AIPluginKit/ModelFitPolicy.swift`, alongside
   its test target `ModelFitPolicyTests.swift` and its consumers
   `LocalInferenceGuard.swift` and the macOS `ModelChooserContent`/
   `ModelChooserViewController`. It uses only `Foundation`'s `Double`,
@@ -360,7 +360,7 @@ documented in that component's own recipe, not by this one.
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/AIPluginKit/ModelFitPolicy.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/AIPluginKit/ModelFitPolicy.swift` |
 
 ## Design Decisions
 

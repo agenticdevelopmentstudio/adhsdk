@@ -5,8 +5,8 @@ import { describe, it, expect, vi } from 'vitest'
 // lets each test set their states directly. The dialog reads them through the feature manager
 // (`useEcosystemFeatures`), which calls them inside its own module where a barrel mock cannot
 // reach — so the manager is rebuilt here over the mocked reads, with its real pure rules.
-vi.mock('@agentic-toolkit/data/ecosystems', async (importOriginal) => {
-  const real = await importOriginal<typeof import('@agentic-toolkit/data/ecosystems')>()
+vi.mock('@adh-sdk/data/ecosystems', async (importOriginal) => {
+  const real = await importOriginal<typeof import('@adh-sdk/data/ecosystems')>()
   const useFeatureCatalog = vi.fn()
   const useProvisionedFeatures = vi.fn()
   const useApplyFeatureChange = vi.fn()
@@ -41,7 +41,7 @@ import {
   useFeatureCatalog,
   useProvisionedFeatures,
   FeatureRequiredError,
-} from '@agentic-toolkit/data/ecosystems'
+} from '@adh-sdk/data/ecosystems'
 import { ManageFeaturesDialog } from './ManageFeaturesDialog'
 
 /** A read with no answer yet — react-query's `pending`, which a hung or offline request never leaves. */

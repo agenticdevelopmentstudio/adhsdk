@@ -1,6 +1,6 @@
 import type { DeploymentDTO } from "../types";
 import { deployDtoUnconfirmed } from "./row-model";
-import { deployTargetKey, platformCanon } from "@agentic-toolkit/deploy-platform/canon";
+import { deployTargetKey, platformCanon } from "@adh-sdk/deploy-platform/canon";
 
 export interface PlatformSummary {
   platform: string;

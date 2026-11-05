@@ -1,14 +1,14 @@
 "use client";
 import { type ReactElement, useRef, useState } from "react";
-import { Button } from "@agenticdevelopertoolkit/ui/components/button";
-import { cn } from "@agenticdevelopertoolkit/ui/lib/utils";
+import { Button } from "@adh-sdk/ui/components/button";
+import { cn } from "@adh-sdk/ui/lib/utils";
 import { useStatusApi } from "../../api/client";
 import * as api from "../../api/monitored-sites";
 import { useDeployProjects, type DeployProject } from "../../hooks/use-deploy-projects";
 import { platformCanon } from "../../lib/deploy-view";
 import { platformLabel } from "../../lib/deploy-display";
 import { runMatch, type NotedAdd } from "../../lib/auto-configure";
-import { indexLiveProjects, partitionPending, projectStatus, type ProjectStatus } from "@agentic-toolkit/deploy-platform/engine";
+import { indexLiveProjects, partitionPending, projectStatus, type ProjectStatus } from "@adh-sdk/deploy-platform/engine";
 import { uniqueByProject } from "../../lib/project-key";
 import { msg } from "../../lib/err";
 import { MultiSelectFilter } from "../MultiSelectFilter";

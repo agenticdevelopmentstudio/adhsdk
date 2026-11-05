@@ -1,7 +1,7 @@
 ---
 id: 5182f5ec-186b-4605-8c40-ea70a49262c2
 title: Checklist
-domain: agenticdevelopertoolkit://recipes/checklist
+domain: adhsdk://recipes/checklist
 type: ingredient
 version: 1.1.2
 status: review

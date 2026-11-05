@@ -10,7 +10,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, cleanup } from "@testing-library/react";
 
-vi.mock("@agentic-toolkit/auth", () => ({
+vi.mock("@adh-sdk/auth", () => ({
   useAuth: () => ({ user: { email: "owner@example.com" } }),
 }));
 
@@ -36,7 +36,7 @@ const {
   useEcoSaveNotes: vi.fn(),
 }));
 
-vi.mock("@agentic-toolkit/data/ecosystems", () => ({
+vi.mock("@adh-sdk/data/ecosystems", () => ({
   useEcoInvitationRequests,
   useEcoPendingUsers,
   useEcoInvites,

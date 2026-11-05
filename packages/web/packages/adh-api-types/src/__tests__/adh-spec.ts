@@ -5,7 +5,7 @@ import { resolve } from 'node:path'
 // them can derive.
 //
 // The spec belongs to adh (`frontend/src/sites/api/openapi.json`) and this
-// package now lives inside agentictoolkit, which is consumed standalone by
+// package now lives inside adhsdk, which is consumed standalone by
 // repos that have no openapi.json at all. Both gates used to read
 // `resolve(process.cwd(), '../../main/api/openapi.json')`, a path that was only
 // ever correct while the package sat at `frontend/src/app/api-types`; after the

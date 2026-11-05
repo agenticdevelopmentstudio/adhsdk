@@ -1,9 +1,9 @@
 'use client';
 
 import { Plus } from 'lucide-react';
-import type { SectionRow } from '@agentic-toolkit/registry/client';
-import { FieldGroup } from '@agenticdevelopertoolkit/ui/blocks';
-import { Button } from '@agenticdevelopertoolkit/ui/components/button';
+import type { SectionRow } from '@adh-sdk/registry/client';
+import { FieldGroup } from '@adh-sdk/ui/blocks';
+import { Button } from '@adh-sdk/ui/components/button';
 import { RegistryFieldPanel } from './RegistryFieldPanel';
 import type { RegistryDraftState, UseRegistryDraft } from './useRegistryDraft';
 

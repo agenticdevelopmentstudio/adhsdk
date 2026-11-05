@@ -14,7 +14,7 @@ structurally similar re-implementation of the shared `Badge` ingredient — a
 known DRY gap, recorded as built rather than corrected. (AppKit source.)
 **Rationale**: `ThemePreviewView.swift` defines its own `private static func
 badge(_:_:_:)` building a tinted capsule inline; it never references
-`AgenticToolkit`'s `Badge` type. The two happen to look alike, which is
+`AgenticDeveloperHubSDK`'s `Badge` type. The two happen to look alike, which is
 exactly the duplication a shared-components policy exists to prevent; this
 recipe records that duplication as source built it rather than assuming an
 unmade refactor, since composing `Badge` here is a source change this recipe

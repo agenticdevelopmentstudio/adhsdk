@@ -7,7 +7,7 @@ import { preserveDirectivesPlugin } from 'esbuild-plugin-preserve-directives'
 // re-export-only and carry no directive, but `editors/index.ts`, `contact/index.ts` and
 // `viewer/index.ts` all re-export 'use client' components — bitbag's config is the template
 // (see its comment) rather than the shared `featureTsup` preset, because that preset's
-// external list does not cover `@agenticdevelopertoolkit/*`.
+// external list does not cover `@adh-sdk/*`.
 //
 // `viewer` is separate from `profile` for the reason its barrel states: one entry importing
 // another's client chunk would put `'use client'` on both, and `profile` is the one that has
@@ -39,8 +39,8 @@ export default defineConfig({
     'react',
     'react-dom',
     'react/jsx-runtime',
-    '@agenticdevelopertoolkit/registry-profile',
-    '@agenticdevelopertoolkit/registry-types',
+    '@adh-sdk/registry-profile',
+    '@adh-sdk/registry-types',
   ],
   esbuildPlugins: [
     preserveDirectivesPlugin({

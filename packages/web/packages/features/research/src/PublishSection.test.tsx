@@ -9,10 +9,10 @@
 import { describe, it, expect, vi, afterEach } from "vitest";
 import { render, screen, cleanup, fireEvent } from "@testing-library/react";
 import { PublishSection } from "./PublishSection";
-import type { ResearchDocument } from "@agentic-toolkit/data/markdown";
+import type { ResearchDocument } from "@adh-sdk/data/markdown";
 
 const { publish: publishMock } = vi.hoisted(() => ({ publish: vi.fn() }));
-vi.mock("@agentic-toolkit/data/markdown", async (orig) => ({
+vi.mock("@adh-sdk/data/markdown", async (orig) => ({
   ...(await orig<Record<string, unknown>>()),
   markdownApi: { publish: publishMock, unpublish: vi.fn() },
 }));

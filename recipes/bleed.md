@@ -1,7 +1,7 @@
 ---
 id: feee183a-6488-489e-8e20-c7150bb3e914
 title: Bleed
-domain: agenticdevelopertoolkit://recipes/bleed
+domain: adhsdk://recipes/bleed
 type: ingredient
 version: 1.1.1
 status: review
@@ -21,7 +21,7 @@ tags:
 - positioning
 depends-on: []
 related:
-- agenticdevelopertoolkit://recipes/band
+- adhsdk://recipes/band
 references: []
 approved-by: ''
 approved-date: ''
@@ -48,7 +48,7 @@ Bleed extends a child element past the content column boundary toward one page e
 
 - **Layout mechanism**: The component applies no inline styling itself; the crop's margin, direction, and distance are entirely defined by the `lp-bleed` and `lp-bleed--{side}` CSS classes (declared in the landing package's stylesheet, not in `Bleed.tsx`).
 - **Mechanism, not magnitude**: Per the **Margin over transform** design decision, the crop is achieved with `margin`, not `transform`, so the neighboring column surrenders space. The component's own contract stops at applying the class names; the exact margin distance and any narrow-width behavior belong to those CSS classes, not to this component.
-- **Clipping dependency**: The overhang only reads as "cropped" rather than "widening the page" when rendered inside an ancestor with `overflow-x: clip` — see the **Missing clipping parent** edge case and the `Band` ingredient (`agenticdevelopertoolkit://recipes/band`).
+- **Clipping dependency**: The overhang only reads as "cropped" rather than "widening the page" when rendered inside an ancestor with `overflow-x: clip` — see the **Missing clipping parent** edge case and the `Band` ingredient (`adhsdk://recipes/band`).
 
 ## States
 
@@ -84,7 +84,7 @@ Bleed itself renders a generic, role-less `div` and makes no accessibility-tree 
 - **Side values outside the typed union**: the component renders whatever string is passed with no validation; see **side-passthrough** (bleed-010).
 - **Multiple class names in `className`**: a space-separated value (e.g. `"custom-one custom-two"`) is appended as-is, unmodified; see **accept-class-name-prop** (bleed-011).
 - **React.Fragment as child**: `<Bleed><>Content</></Bleed>` is valid; the fragment's children render inside the `div`; see **accept-children** (bleed-012).
-- **Missing clipping parent**: if Bleed is not rendered inside an ancestor with `overflow-x: clip` (e.g. `.lp-band`; see the `Band` ingredient, `agenticdevelopertoolkit://recipes/band`), the overhang widens the document instead of appearing cropped. This is an environmental prerequisite that Bleed cannot detect or enforce on its own.
+- **Missing clipping parent**: if Bleed is not rendered inside an ancestor with `overflow-x: clip` (e.g. `.lp-band`; see the `Band` ingredient, `adhsdk://recipes/band`), the overhang widens the document instead of appearing cropped. This is an environmental prerequisite that Bleed cannot detect or enforce on its own.
 
 ## Configuration
 

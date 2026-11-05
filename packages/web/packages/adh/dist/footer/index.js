@@ -130,7 +130,7 @@ function AdhModalPopover({ id, title, children, bodyClassName, className }) {
 }
 
 // src/footer/FamilyFooter.tsx
-import { getSite as getSite2, groupSitesByCategory as groupSitesByCategory2, siteProdUrl as siteProdUrl2 } from "@agentic-toolkit/adh-registry";
+import { getSite as getSite2, groupSitesByCategory as groupSitesByCategory2, siteProdUrl as siteProdUrl2 } from "@adh-sdk/adh-registry";
 
 // src/header/PreviewNotice.tsx
 import { useEffect, useId, useRef, useState } from "react";
@@ -191,7 +191,7 @@ import {
   getSite,
   groupSitesByCategory,
   siteProdUrl
-} from "@agentic-toolkit/adh-registry";
+} from "@adh-sdk/adh-registry";
 import { jsx as jsx4 } from "react/jsx-runtime";
 var LANDING_FOOTER_CLASS = "adh-landing-footer";
 var FAMILY_OMITTED = /* @__PURE__ */ new Set(["shipr", "registry", "fishlamp", "fishlampdesign"]);
@@ -246,8 +246,8 @@ function buildVersionLabel(live) {
 
 // src/footer/LegalModals.tsx
 import { useEffect as useEffect2, useState as useState2 } from "react";
-import { isModifiedClick } from "@agenticdevelopertoolkit/ui/lib/navigation-guard";
-import { LEGAL_EFFECTIVE_DATE, TermsBody, PrivacyBody } from "@agentic-toolkit/adh/legal";
+import { isModifiedClick } from "@adh-sdk/ui/lib/navigation-guard";
+import { LEGAL_EFFECTIVE_DATE, TermsBody, PrivacyBody } from "@adh-sdk/adh/legal";
 import { jsx as jsx5, jsxs as jsxs4 } from "react/jsx-runtime";
 var TERMS_DIALOG_ID = "adh-terms-dialog";
 var PRIVACY_DIALOG_ID = "adh-privacy-dialog";
@@ -379,7 +379,7 @@ function FamilyFooter({
 // src/footer/FooterChat.tsx
 import dynamic from "next/dynamic";
 import { jsx as jsx7 } from "react/jsx-runtime";
-var FooterChatInner = dynamic(() => import("@agentic-toolkit/adh/footer/FooterChatInner"), {
+var FooterChatInner = dynamic(() => import("@adh-sdk/adh/footer/FooterChatInner"), {
   ssr: false
 });
 function FooterChat() {
@@ -488,8 +488,8 @@ function createSeededBackend(opts) {
 
 // src/footer/chat-theme-store.ts
 import { useCallback, useSyncExternalStore } from "react";
-import { themeIds } from "@agentic-toolkit/bitbag";
-import { DEV_BUILD } from "@agentic-toolkit/adh-registry/deployment-env";
+import { themeIds } from "@adh-sdk/bitbag";
+import { DEV_BUILD } from "@adh-sdk/adh-registry/deployment-env";
 var STORAGE_KEY = "adh-chat-theme";
 var THEME_SWITCH_ENABLED = DEV_BUILD;
 function readStored() {

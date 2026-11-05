@@ -1,7 +1,7 @@
 ---
 id: 96e5e0cf-79a9-4873-9745-03442849b2fd
 title: Orb Row
-domain: agenticdevelopertoolkit://recipes/orb-row
+domain: adhsdk://recipes/orb-row
 type: ingredient
 version: 1.2.1
 status: review

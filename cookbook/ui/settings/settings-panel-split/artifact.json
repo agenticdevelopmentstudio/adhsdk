@@ -3,7 +3,7 @@
   "meta": {
     "id": "ba8d9517-2528-4ae9-bc52-16046d68b126",
     "title": "Settings Panel Split",
-    "domain": "adtoolkit://cookbook/ui/settings/settings-panel-split",
+    "domain": "adhsdk://cookbook/ui/settings/settings-panel-split",
     "type": "ingredient",
     "version": "1.2.2",
     "status": "review",
@@ -25,11 +25,11 @@
       "nesting"
     ],
     "depends-on": [
-      "adtoolkit://cookbook/ui/settings/settings-split-view"
+      "adhsdk://cookbook/ui/settings/settings-split-view"
     ],
     "related": [
-      "adtoolkit://cookbook/ui/settings/settings-panel",
-      "adtoolkit://cookbook/ui/settings/settings-panel-list"
+      "adhsdk://cookbook/ui/settings/settings-panel",
+      "adhsdk://cookbook/ui/settings/settings-panel-list"
     ],
     "references": [],
     "approved-by": "",

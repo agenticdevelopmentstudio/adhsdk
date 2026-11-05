@@ -1,7 +1,7 @@
 ---
 id: aaebd90e-991f-4133-a12d-0783586eae5a
 title: Hierarchical Menu Detail
-domain: agenticdevelopertoolkit://recipes/hierarchical-menu-detail
+domain: adhsdk://recipes/hierarchical-menu-detail
 type: ingredient
 version: 1.1.1
 status: review
@@ -21,9 +21,9 @@ tags:
 - navigation
 - hierarchy
 depends-on:
-- agenticdevelopertoolkit://recipes/topic-detail
+- adhsdk://recipes/topic-detail
 related:
-- agenticdevelopertoolkit://recipes/topic-detail
+- adhsdk://recipes/topic-detail
 references: []
 approved-by: ''
 approved-date: ''
@@ -62,7 +62,7 @@ HierarchicalMenuDetail is a container for rendering cascading hierarchies of top
 
 - **Rail layout**: Each list column is a vertical stack with a header (level title + toggles) and a scrollable item list below.
 - **Header height**: 2.15rem (approximately 34px at 16px base font).
-- **List item styling**: Rows inherit from the TopicRail ingredient (see agenticdevelopertoolkit://recipes/topic-detail); no fixed height specified in this component.
+- **List item styling**: Rows inherit from the TopicRail ingredient (see adhsdk://recipes/topic-detail); no fixed height specified in this component.
 - **Text styling**: List headers use monospace, 0.8rem (12.8px), muted color. Breadcrumb uses the same monospace + 0.75rem.
 - **Border**: 1px solid, using the theme's border colour token.
 - **Background**: Lists use the navigation-surface background colour; the detail pane uses the content-surface background colour.
@@ -93,14 +93,14 @@ HierarchicalMenuDetail is a container for rendering cascading hierarchies of top
 
 - **Role**: The root is a flex container wrapping a `nav` (breadcrumb) and multiple aside-like sections (rail columns). The `nav` element carries `aria-label="Breadcrumb"`.
 - **Breadcrumb navigation**: Semantic nav + ol/li structure. Current crumb marked with `aria-current="page"`. Crumb buttons use `aria-label` or visible text; chevron separators marked `aria-hidden`.
-- **Column identification**: Each list column carries an internal index marker used to locate the selected row's endpoint for connector paths; selection within each column is marked with `aria-current="true"` on the selected row element. Rail-internal roles, accessible names, and row-level keyboard navigation (arrow keys) are the TopicRail ingredient's concern — see agenticdevelopertoolkit://recipes/topic-detail.
+- **Column identification**: Each list column carries an internal index marker used to locate the selected row's endpoint for connector paths; selection within each column is marked with `aria-current="true"` on the selected row element. Rail-internal roles, accessible names, and row-level keyboard navigation (arrow keys) are the TopicRail ingredient's concern — see adhsdk://recipes/topic-detail.
 - **Header toggles**: AutoHide toggle has `aria-label`, `aria-pressed` showing toggle state. Pin toggles have descriptive `aria-label` ("Auto-hide parent lists: on/off", "Expand/collapse this list").
 - **Offscreen columns**: Hidden columns marked `aria-hidden="true"` and `pointer-events-none`.
 - **Back button (narrow mode)**: Labeled `aria-label="Back"`, showing a chevron-left icon + text.
 - **Decorative elements**: Icons used as decoration (chevron-right in breadcrumb, icon-only toggles) marked `aria-hidden`.
 - **Selection connectors**: SVG path overlay marked `aria-hidden` and `pointer-events-none`.
 - **Minimum touch target**: Header toggles measure roughly 2.15rem (~34px) tall with small icon padding; breadcrumb crumbs are text-sized click targets. Neither meets the 44×44px touch-target guideline (see Compliance).
-- **Keyboard navigation**: Breadcrumb crumbs, header toggles, and the Back button are native `<button>` elements, focusable and activatable via standard keyboard controls (Tab, Enter/Space). Row-level keyboard navigation is the TopicRail ingredient's concern — see agenticdevelopertoolkit://recipes/topic-detail. Escape MAY close a revealed branch (not implemented in source; no explicit MUST).
+- **Keyboard navigation**: Breadcrumb crumbs, header toggles, and the Back button are native `<button>` elements, focusable and activatable via standard keyboard controls (Tab, Enter/Space). Row-level keyboard navigation is the TopicRail ingredient's concern — see adhsdk://recipes/topic-detail. Escape MAY close a revealed branch (not implemented in source; no explicit MUST).
 - **Label clarity**: Breadcrumb uses visible text; toggles use `aria-label` + visible icon. Lists inherit labels from TopicRail.
 
 ## Conformance Test Vectors
@@ -166,7 +166,7 @@ HierarchicalMenuDetail is a container for rendering cascading hierarchies of top
 |-------|------|---------|-------------|
 | `id` | `string` | — (required) | Stable key for the level. |
 | `title` | `string` | — | Heading shown above the rows. |
-| `items` | `TopicDetailItem[]` | — (required) | The rows for this level (rendered by the TopicRail ingredient — see agenticdevelopertoolkit://recipes/topic-detail). |
+| `items` | `TopicDetailItem[]` | — (required) | The rows for this level (rendered by the TopicRail ingredient — see adhsdk://recipes/topic-detail). |
 | `selectedId` | `string \| null` | — (required) | This level's current selection. |
 | `defaultSelectedId` | `string` | — | Item to select the moment this level appears with nothing chosen (see **default-select**). |
 | `onSelect` | `(id: string, opts?: { replace?: boolean }) => void` | — (required) | Make `id` the selection at this level. |

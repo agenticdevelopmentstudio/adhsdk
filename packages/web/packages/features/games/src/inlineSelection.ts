@@ -1,4 +1,4 @@
-import type { TopicLeaf } from "@agentic-toolkit/resource";
+import type { TopicLeaf } from "@adh-sdk/resource";
 
 /**
  * Who owns the fifth URL segment.

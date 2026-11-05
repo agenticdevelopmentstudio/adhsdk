@@ -4,14 +4,14 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Loader2, Plug } from "lucide-react";
 
-import { reportUnexpectedAuthError, useAuth } from "@agentic-toolkit/auth";
-import { Button } from "@agenticdevelopertoolkit/ui/components/button";
-import { httpStatus } from "@agentic-toolkit/data";
+import { reportUnexpectedAuthError, useAuth } from "@adh-sdk/auth";
+import { Button } from "@adh-sdk/ui/components/button";
+import { httpStatus } from "@adh-sdk/data";
 import {
   decodeOAuthStateClaims,
   integrationsApi,
   isOAuthStateFresh,
-} from "@agentic-toolkit/data/integrations";
+} from "@adh-sdk/data/integrations";
 import {
   FALLBACK_RETURN_TO,
   clearPendingConnect,

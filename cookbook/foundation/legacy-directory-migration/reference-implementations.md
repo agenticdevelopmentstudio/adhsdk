@@ -1,5 +1,5 @@
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/Core/LegacyDirectoryMigration.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/LegacyDirectoryMigration.swift` |
 

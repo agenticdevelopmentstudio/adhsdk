@@ -1,10 +1,10 @@
 import dynamic from 'next/dynamic'
 import { preload } from 'react-dom'
-import { themes } from '@agenticdevelopertoolkit/themes/manifest'
-import { splitImports, parseRootProps } from '@agenticdevelopertoolkit/themes/tokens'
-import { APPEARANCE_PREPAINT_SCRIPT } from '@agenticdevelopertoolkit/themes/appearance'
-import { DocumentLoadScript } from '@agenticdevelopertoolkit/themes/DocumentLoadScript'
-import { THEME_FONT_PRELOADS } from '@agenticdevelopertoolkit/themes/fonts'
+import { themes } from '@adh-sdk/themes/manifest'
+import { splitImports, parseRootProps } from '@adh-sdk/themes/tokens'
+import { APPEARANCE_PREPAINT_SCRIPT } from '@adh-sdk/themes/appearance'
+import { DocumentLoadScript } from '@adh-sdk/themes/DocumentLoadScript'
+import { THEME_FONT_PRELOADS } from '@adh-sdk/themes/fonts'
 import {
   DEFAULT_ADH_THEME,
   DEFAULT_SITE_THEME,
@@ -14,7 +14,7 @@ import {
 } from './adh-themes'
 import { switcherThemeKeys } from './theme-keys'
 import { themePrePaintScript } from './theme-preview'
-import { isDevDeploymentEnv } from '@agentic-toolkit/adh-registry/deployment-env'
+import { isDevDeploymentEnv } from '@adh-sdk/adh-registry/deployment-env'
 
 // Theme switching is gated to non-production (local/testing/staging) so production
 // routes stay exactly as they are (one static theme, no extra payload, no client
@@ -50,7 +50,7 @@ const DbThemeApplier =
   process.env.NEXT_PUBLIC_DEPLOYMENT_ENV === 'testing' ||
   process.env.NEXT_PUBLIC_DEPLOYMENT_ENV === 'staging'
     ? dynamic(() =>
-        import('@agentic-toolkit/adh/themes/DbThemeApplier').then((m) => m.DbThemeApplier),
+        import('@adh-sdk/adh/themes/DbThemeApplier').then((m) => m.DbThemeApplier),
       )
     : null
 
@@ -268,7 +268,7 @@ export function AdhThemeStyle() {
       />
       {/* Applies the user's colour mode + a11y prefs to <html> BEFORE first paint, so a
           signed-in user's theme doesn't flash. Reads this browser's cached copy; the server
-          is the truth and AppearanceSync (@agentic-toolkit/adh/auth) reconciles a moment
+          is the truth and AppearanceSync (@adh-sdk/adh/auth) reconciles a moment
           later. With no cache — a first visit, or a signed-out visitor — colour mode is
           `auto`, i.e. the OS setting. Static, self-authored script (no user input). Only in
           the server's HTML: a client navigation in leaves the job to AppearanceScope. */}

@@ -2,7 +2,7 @@
 //
 // Component + helper tests for TeamPermissionsPane — the workspace roles editor. Mirrors the
 // TeamMembersPane test style: jsdom + @testing-library/react, mocking only the data boundary
-// (@agentic-toolkit/data/access). The roles LIST is published to a rail HOST via
+// (@adh-sdk/data/access). The roles LIST is published to a rail HOST via
 // useMasterDetailLevel (not rendered by the pane itself), so a tiny <Rail> harness backed by the
 // toolkit's RailHostContext renders the published rows + the "New role" affordance — the same path
 // the hub's workspace shell uses. The editor's ButtonBar portals into the (null) toolbar slot,
@@ -17,24 +17,24 @@ import {
   within,
 } from "@testing-library/react";
 import { useMemo, useState, type ReactNode } from "react";
-import type { TopicLevel } from "@agenticdevelopertoolkit/ui/blocks";
+import type { TopicLevel } from "@adh-sdk/ui/blocks";
 import {
   RailHostContext,
   type RailHostRegistry,
   type RegisteredLevels,
   type PaneExitGuard,
-} from "@agentic-toolkit/resource";
+} from "@adh-sdk/resource";
 
 // Only `reportUnexpectedAuthError` is stubbed — the pane's telemetry seam, which two tests below
-// assert on. Spread the real module rather than replacing it: `@agenticdevelopertoolkit/ui`'s
+// assert on. Spread the real module rather than replacing it: `@adh-sdk/ui`'s
 // create-resource-dialog (the pane's "New role" modal) imports from here too, and a bare factory
 // would silently strip whatever it needs.
-vi.mock("@agentic-toolkit/auth", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("@agentic-toolkit/auth")>()),
+vi.mock("@adh-sdk/auth", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@adh-sdk/auth")>()),
   reportUnexpectedAuthError: vi.fn(),
 }));
 
-vi.mock("@agentic-toolkit/data/access", () => ({
+vi.mock("@adh-sdk/data/access", () => ({
   ACCESS_FEATURES: [
     { key: "projects", label: "Projects" },
     { key: "personas", label: "Personas" },
@@ -53,8 +53,8 @@ import {
   parseVerbs,
   formatVerbs,
 } from "./TeamPermissionsPane";
-import { accessApi, type AccessRoleRow } from "@agentic-toolkit/data/access";
-import { reportUnexpectedAuthError } from "@agentic-toolkit/auth";
+import { accessApi, type AccessRoleRow } from "@adh-sdk/data/access";
+import { reportUnexpectedAuthError } from "@adh-sdk/auth";
 
 const reported = vi.mocked(reportUnexpectedAuthError);
 const listFeatures = vi.mocked(accessApi.listFeatures);

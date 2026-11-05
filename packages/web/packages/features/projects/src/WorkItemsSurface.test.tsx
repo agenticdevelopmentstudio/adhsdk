@@ -13,13 +13,13 @@ import { useState } from "react";
 import { render, screen, fireEvent, waitFor, cleanup, within, act } from "@testing-library/react";
 
 // The three former hub modules (@/api/{projects,project-work-items,project-activity}) now ship in
-// ONE domain barrel (@agentic-toolkit/data/projects), so their stubs merge into a single mock: the
+// ONE domain barrel (@adh-sdk/data/projects), so their stubs merge into a single mock: the
 // work-items + projects clients the surface reads, plus the two clients the edit-mode editor's
 // lower sections load on mount — comments and the activity trail (empty replies keep them quiet
 // without touching the network). The mock is PARTIAL (importOriginal-spread) because those panes
 // also use pure folds from the same barrel — `threadOf` — which have nothing to stub.
-vi.mock("@agentic-toolkit/data/projects", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("@agentic-toolkit/data/projects")>()),
+vi.mock("@adh-sdk/data/projects", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@adh-sdk/data/projects")>()),
   projectWorkItemsApi: {
     listForProject: vi.fn(),
     create: vi.fn(),
@@ -54,14 +54,14 @@ vi.mock("@agentic-toolkit/data/projects", async (importOriginal) => ({
 }));
 
 // The comments pane batches its thread's reactions on the same mount.
-vi.mock("@agentic-toolkit/data/reactions", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("@agentic-toolkit/data/reactions")>()),
+vi.mock("@adh-sdk/data/reactions", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@adh-sdk/data/reactions")>()),
   reactionsApi: { list: vi.fn().mockResolvedValue([]), add: vi.fn(), remove: vi.fn() },
 }));
 
 import { WorkItemsSurface } from "./WorkItemsSurface";
 import { resetViewMemory } from "./view-memory";
-import { projectWorkItemsApi, type WorkItem } from "@agentic-toolkit/data/projects";
+import { projectWorkItemsApi, type WorkItem } from "@adh-sdk/data/projects";
 import {
   projectIterationsApi,
   projectMilestonesApi,
@@ -73,8 +73,8 @@ import {
   type ProjectStatus,
   type ProjectParticipant,
   type SavedView,
-} from "@agentic-toolkit/data/projects";
-import { RailHostBoundary, RecordAffordanceContext, type TopicLeaf } from "@agentic-toolkit/resource";
+} from "@adh-sdk/data/projects";
+import { RailHostBoundary, RecordAffordanceContext, type TopicLeaf } from "@adh-sdk/resource";
 
 const listForProject = vi.mocked(projectWorkItemsApi.listForProject);
 const create = vi.mocked(projectWorkItemsApi.create);

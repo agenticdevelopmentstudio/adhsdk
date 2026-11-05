@@ -1,7 +1,7 @@
 ---
 id: 40827b84-406e-4091-951b-9498b2f78253
 title: ListChooser
-domain: agenticdevelopertoolkit://recipes/list-chooser
+domain: adhsdk://recipes/list-chooser
 type: ingredient
 version: 1.2.1
 status: review
@@ -22,10 +22,10 @@ tags:
   - ui
   - form-control
 depends-on:
-  - agenticdevelopertoolkit://recipes/option-menu
+  - adhsdk://recipes/option-menu
 related:
-  - agenticdevelopertoolkit://recipes/combobox
-  - agenticdevelopertoolkit://recipes/option-menu
+  - adhsdk://recipes/combobox
+  - adhsdk://recipes/option-menu
 references:
   - https://www.w3.org/WAI/ARIA/apg/patterns/combobox/
   - https://www.w3.org/WAI/WCAG21/Understanding/focus-visible.html
@@ -40,7 +40,7 @@ approved-date: ''
 
 `ListChooser` is a single-select "pick from a list, or add a new one" control. A trigger button discloses a popover containing one text field plus a filtered list and an OK / Cancel button bar. The field does double duty: typing narrows the list to case-insensitive substring matches, and text that matches no item can be accepted as a brand-new entry (when `allowCreate`). Arrow keys move a roving highlight through the filtered list and preview the highlighted label in the field; Enter / OK accept the current selection or entry; Esc / Cancel close without committing.
 
-It is the keyboard-and-mouse foundation for "choose or create" pickers (first use: the research category/tag UI). It is built by composing the same primitives as `OptionMenu` — `Popover` (surface), `Input` (the field), `Button` (OK / Cancel) — with a hand-managed roving selection, rather than forking `OptionMenu`: that control has a fixed list with a separate editable "Other" row at the bottom, while this control's single field _is_ both the filter and the add-new field. It differs from `Combobox` (`@agenticdevelopertoolkit/ui/components/combobox`), an inline free-text input with a typeahead dropdown and no trigger, list, or OK/Cancel commit step.
+It is the keyboard-and-mouse foundation for "choose or create" pickers (first use: the research category/tag UI). It is built by composing the same primitives as `OptionMenu` — `Popover` (surface), `Input` (the field), `Button` (OK / Cancel) — with a hand-managed roving selection, rather than forking `OptionMenu`: that control has a fixed list with a separate editable "Other" row at the bottom, while this control's single field _is_ both the filter and the add-new field. It differs from `Combobox` (`@adh-sdk/ui/components/combobox`), an inline free-text input with a typeahead dropdown and no trigger, list, or OK/Cancel commit step.
 
 ## Behavioral Requirements
 

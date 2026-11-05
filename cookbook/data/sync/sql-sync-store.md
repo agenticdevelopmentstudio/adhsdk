@@ -1,7 +1,7 @@
 ---
 id: 14ca2162-b5ec-48bb-95a0-90577e7c9810
 title: "SQL Sync Store"
-domain: adtoolkit://cookbook/data/sync/sql-sync-store
+domain: adhsdk://cookbook/data/sync/sql-sync-store
 type: ingredient
 version: 1.2.0
 status: review
@@ -22,15 +22,15 @@ tags:
   - persistence
   - sqlite
 depends-on:
-  - adtoolkit://cookbook/data/sync/sync-engine
+  - adhsdk://cookbook/data/sync/sync-engine
 related:
-  - adtoolkit://cookbook/data/sync/sync-engine
-  - adtoolkit://cookbook/data/sync/offline-sync-client
+  - adhsdk://cookbook/data/sync/sync-engine
+  - adhsdk://cookbook/data/sync/offline-sync-client
 references:
-  - packages/apple/AgenticToolkit/SyncGRDB/GRDBSyncStore.swift
-  - packages/apple/AgenticToolkit/SyncGRDB/SyncMirrorProjection.swift
-  - packages/apple/AgenticToolkit/Tests/AgenticToolkitSyncGRDBTests/GRDBSyncStoreTests.swift
-  - packages/apple/AgenticToolkit/Tests/AgenticToolkitSyncGRDBTests/SyncMirrorProjectionTests.swift
+  - packages/apple/AgenticDeveloperHubSDK/SyncGRDB/GRDBSyncStore.swift
+  - packages/apple/AgenticDeveloperHubSDK/SyncGRDB/SyncMirrorProjection.swift
+  - packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKSyncGRDBTests/GRDBSyncStoreTests.swift
+  - packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKSyncGRDBTests/SyncMirrorProjectionTests.swift
 approved-by: ""
 approved-date: ""
 ---
@@ -40,7 +40,7 @@ approved-date: ""
 ## Overview
 
 This store is a SQLite-backed implementation of the store contract driven by
-the sync engine (see [Sync Engine](adtoolkit://cookbook/data/sync/sync-engine)).
+the sync engine (see [Sync Engine](adhsdk://cookbook/data/sync/sync-engine)).
 It sits on a bounded, deadline-guarded write-ahead-logged connection pool and
 keeps four bookkeeping tables plus one mirror table per registered resource:
 
@@ -318,7 +318,7 @@ Not applicable: the sources make no log call; every failure is raised to the cal
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/SyncGRDB/` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/SyncGRDB/` |
 
 ## Design Decisions
 

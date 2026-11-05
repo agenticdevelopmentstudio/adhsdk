@@ -16,8 +16,8 @@ import {
   type TopicDetailItem,
   type TopicLevel,
   type TopicSelectOptions,
-} from "@agenticdevelopertoolkit/ui/blocks";
-import { EmptyState } from "@agenticdevelopertoolkit/ui/components/empty-state";
+} from "@adh-sdk/ui/blocks";
+import { EmptyState } from "@adh-sdk/ui/components/empty-state";
 import { StackLevels } from "./rail-host";
 import { settingsLast } from "./settings-last";
 import { RailHostBoundary } from "./standalone-rail-host";

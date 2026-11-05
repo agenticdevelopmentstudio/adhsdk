@@ -1,5 +1,5 @@
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/Hub/Features/Customers/` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Hub/Features/Customers/` |
 

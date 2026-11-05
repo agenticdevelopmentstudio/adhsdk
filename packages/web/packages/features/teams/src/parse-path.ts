@@ -2,7 +2,7 @@
 // segments into TeamsFeature's selection props. The hub's /<slug>/teams/[[...path]]
 // route calls this instead of re-deriving the same `[first, second, third]`
 // destructure, so a grammar change can't drift a host's parsing away from the
-// feature's own expectations (mirrors @agentic-toolkit/projects's parse-path).
+// feature's own expectations (mirrors @adh-sdk/projects's parse-path).
 
 /** The selection TeamsFeature renders, parsed from a route's path segments.
  *  Maps 1:1 onto TeamsFeature's props (the host supplies `basePath`). */

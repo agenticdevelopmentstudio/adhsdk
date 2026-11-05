@@ -1,13 +1,13 @@
 "use client";
 
 import { useCallback, useMemo, useState, type ReactNode } from "react";
-import type { ListAction } from "@agenticdevelopertoolkit/ui/blocks/selection-actions";
-import { projectWorkItemsApi } from "@agentic-toolkit/data/projects";
+import type { ListAction } from "@adh-sdk/ui/blocks/selection-actions";
+import { projectWorkItemsApi } from "@adh-sdk/data/projects";
 import type {
   PriorityScale,
   ProjectStatus,
   ProjectParticipant,
-} from "@agentic-toolkit/data/projects";
+} from "@adh-sdk/data/projects";
 import { BulkEditDialog } from "./BulkEditDialog";
 import { DEFAULT_ITEM_WORDS, type ItemWords } from "./vocabulary";
 

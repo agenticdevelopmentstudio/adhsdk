@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest'
 import { renderHook } from '@testing-library/react'
-import { ADMIN_SITE_IDS, getSite, SITES } from '@agentic-toolkit/adh-registry'
+import { ADMIN_SITE_IDS, getSite, SITES } from '@adh-sdk/adh-registry'
 
 // The fleet tree — the family as ten top-level rows. Its contract is mostly about what
 // a reader SEES, so most of this resolves the config through the engine rather than
@@ -25,7 +25,7 @@ import {
 } from '../fleetMenuGroups'
 import { useSiteMenu, type UseSiteMenuOpts } from '../useSiteMenu'
 import { type MenuGroup, type MenuLink } from '../SiteMenu'
-import { type PopoverEntry } from '@agentic-toolkit/adh/header'
+import { type PopoverEntry } from '@adh-sdk/adh/header'
 
 /** Resolve a tree as the hub's header would. Defaults to the fleet tree seen by a
  *  signed-out visitor on the marketing landing; pass a `pathname` and the session bits

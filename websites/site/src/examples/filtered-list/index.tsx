@@ -2,13 +2,13 @@
 
 import { useMemo, useState } from 'react'
 import { ExamplePanel } from '../../ExamplePanel'
-import { FilteredList } from '@agenticdevelopertoolkit/controls/filtered-list'
-import '@agenticdevelopertoolkit/controls/filtered-list/styles.css'
-import { LogPanel } from '@agenticdevelopertoolkit/controls/logging-panel'
-import type { LogColumn, LogLevel, LogLine } from '@agenticdevelopertoolkit/controls/logging-panel'
-import '@agenticdevelopertoolkit/controls/logging-panel/styles.css'
-import { SourceCodePanel } from '@agenticdevelopertoolkit/controls/source-code-panel'
-import '@agenticdevelopertoolkit/controls/source-code-panel/styles.css'
+import { FilteredList } from '@adh-sdk/controls/filtered-list'
+import '@adh-sdk/controls/filtered-list/styles.css'
+import { LogPanel } from '@adh-sdk/controls/logging-panel'
+import type { LogColumn, LogLevel, LogLine } from '@adh-sdk/controls/logging-panel'
+import '@adh-sdk/controls/logging-panel/styles.css'
+import { SourceCodePanel } from '@adh-sdk/controls/source-code-panel'
+import '@adh-sdk/controls/source-code-panel/styles.css'
 
 export const meta = { id: 'filtered-list', label: 'Filtered List' }
 

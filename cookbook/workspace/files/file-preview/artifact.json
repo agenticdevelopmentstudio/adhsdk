@@ -3,7 +3,7 @@
   "meta": {
     "id": "1727e605-6f83-42d7-960f-45fbdf714d94",
     "title": "File Preview",
-    "domain": "adtoolkit://cookbook/workspace/files/file-preview",
+    "domain": "adhsdk://cookbook/workspace/files/file-preview",
     "type": "ingredient",
     "version": "1.2.1",
     "status": "review",
@@ -24,7 +24,7 @@
     ],
     "depends-on": [],
     "related": [
-      "adtoolkit://cookbook/workspace/files/file-editor-view"
+      "adhsdk://cookbook/workspace/files/file-editor-view"
     ],
     "references": [],
     "approved-by": "",

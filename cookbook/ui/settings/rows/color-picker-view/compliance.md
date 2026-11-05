@@ -19,5 +19,5 @@ own — it relies entirely on `NSColorWell`/`NSTextField`'s built-in AppKit
 accessibility and focus behavior, unconfirmed by any recorded keyboard or
 VoiceOver pass.
 
-No test in the repository's test targets constructs `ColorPickerView`, so `unit-test-coverage` is `failed`: a search of `AgenticToolkitMacOSTests` and the other test targets for the type name finds nothing.
+No test in the repository's test targets constructs `ColorPickerView`, so `unit-test-coverage` is `failed`: a search of `AgenticDeveloperHubSDKMacOSTests` and the other test targets for the type name finds nothing.
 

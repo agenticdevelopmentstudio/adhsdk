@@ -49,8 +49,8 @@ vi.mock('../EntryEditorRoute', () => ({
 // create dialog is open) while still calling every render prop the route supplies — the route's
 // half of the contract is what it hands over, and a stub that renders none of it would leave
 // the rail's wording, the create affordance and the created-id handoff untested.
-vi.mock('@agentic-toolkit/resource', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('@agentic-toolkit/resource')>();
+vi.mock('@adh-sdk/resource', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@adh-sdk/resource')>();
   const { useState } = await import('react');
   return {
     ...actual,
@@ -92,7 +92,7 @@ vi.mock('../useRegistryClient', () => ({
     createRegistry: h.createRegistry,
   }),
 }));
-vi.mock('@agentic-toolkit/data', () => ({ useResourceList: () => h.list }));
+vi.mock('@adh-sdk/data', () => ({ useResourceList: () => h.list }));
 
 import { RegistriesFeature } from '../RegistriesFeature';
 

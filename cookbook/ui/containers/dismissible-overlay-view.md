@@ -1,7 +1,7 @@
 ---
 id: 0bc93127-4078-4bc6-a250-04dde181788b
 title: "Dismissible Overlay View"
-domain: adtoolkit://cookbook/ui/containers/dismissible-overlay-view
+domain: adhsdk://cookbook/ui/containers/dismissible-overlay-view
 type: ingredient
 version: 1.3.0
 status: review
@@ -382,7 +382,7 @@ Not applicable: the source contains no logging call.
   when nothing else claimed the key (mirroring
   `key-equivalent-subview-priority`).
 - **AppKit/UIKit** (source platform): Implemented in
-  `packages/apple/AgenticToolkit/CoreUI/DismissibleOverlayView.swift` as an
+  `packages/apple/AgenticDeveloperHubSDK/CoreUI/DismissibleOverlayView.swift` as an
   `open`, `@MainActor`, `NSView` subclass; the only import is `AppKit`, and
   every API it uses (`NSVisualEffectView`, `NSAnimationContext`, `NSEvent`,
   `performKeyEquivalent`) is macOS-only, so there is no UIKit code path in
@@ -458,7 +458,7 @@ Not applicable: the source contains no logging call.
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/CoreUI/DismissibleOverlayView.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/CoreUI/DismissibleOverlayView.swift` |
 
 ## Design Decisions
 

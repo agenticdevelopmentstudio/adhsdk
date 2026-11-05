@@ -1,4 +1,4 @@
-# @agenticdevelopertoolkit/analytics
+# @adh-sdk/analytics
 
 Privacy-first product analytics for any site, adh or not. It holds the one PostHog
 configuration every site sends with: no autocapture, no session replay, in-memory
@@ -6,7 +6,7 @@ persistence (so no cookie and no consent banner), no person profiles, and URLs s
 of their query, hash and id-shaped path segments before an event leaves the page.
 
 ```tsx
-import { PostHogAnalytics } from '@agenticdevelopertoolkit/analytics'
+import { PostHogAnalytics } from '@adh-sdk/analytics'
 
 // in the root layout's <body>
 <PostHogAnalytics />

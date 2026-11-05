@@ -3,7 +3,7 @@
   "meta": {
     "id": "41f840c1-ea34-489d-9b9f-a61dec2a9402",
     "title": "Live Snapshot Wire Types",
-    "domain": "adtoolkit://cookbook/status/dashboard/logic/live-types",
+    "domain": "adhsdk://cookbook/status/dashboard/logic/live-types",
     "type": "ingredient",
     "version": "1.0.2",
     "status": "review",
@@ -21,9 +21,9 @@
     "tags": [],
     "depends-on": [],
     "related": [
-      "adtoolkit://cookbook/status/dashboard/state/live-snapshot",
-      "adtoolkit://cookbook/status/dashboard/logic/board-types",
-      "adtoolkit://cookbook/status/dashboard/api"
+      "adhsdk://cookbook/status/dashboard/state/live-snapshot",
+      "adhsdk://cookbook/status/dashboard/logic/board-types",
+      "adhsdk://cookbook/status/dashboard/api"
     ],
     "references": [],
     "approved-by": "",

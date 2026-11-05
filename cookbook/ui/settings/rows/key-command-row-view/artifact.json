@@ -3,7 +3,7 @@
   "meta": {
     "id": "1d2f69b6-1156-4dfa-a390-a240925ba1bd",
     "title": "Key Command Row View",
-    "domain": "adtoolkit://cookbook/ui/settings/rows/key-command-row-view",
+    "domain": "adhsdk://cookbook/ui/settings/rows/key-command-row-view",
     "type": "ingredient",
     "version": "1.2.3",
     "status": "review",
@@ -24,7 +24,7 @@
     ],
     "depends-on": [],
     "related": [
-      "adtoolkit://cookbook/ui/controls/key-command-capture-field"
+      "adhsdk://cookbook/ui/controls/key-command-capture-field"
     ],
     "references": [],
     "approved-by": "",

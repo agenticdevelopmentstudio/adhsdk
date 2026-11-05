@@ -7,7 +7,7 @@
 // stored record, its "" matched a new user's empty email, and "Email is required." was waived.
 import { act, renderHook } from "@testing-library/react";
 import { describe, it, expect } from "vitest";
-import { useMasterDetailForm } from "@agentic-toolkit/resource";
+import { useMasterDetailForm } from "@adh-sdk/resource";
 import type { EcosystemUser, EcosystemUserInput } from "../api/customers";
 import { userBlank, userToInput, userValidate } from "./UserDetail";
 

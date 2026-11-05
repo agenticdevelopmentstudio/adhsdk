@@ -1,7 +1,7 @@
 ---
 id: 53a37583-e86d-41ca-8dd2-8394ba530091
 title: Shot
-domain: agenticdevelopertoolkit://recipes/shot
+domain: adhsdk://recipes/shot
 type: ingredient
 version: 1.1.1
 status: review
@@ -22,7 +22,7 @@ tags:
 - frame
 depends-on: []
 related:
-- agenticdevelopertoolkit://recipes/clip
+- adhsdk://recipes/clip
 references: []
 approved-by: ''
 approved-date: ''
@@ -135,7 +135,7 @@ Not applicable: Shot performs no operations requiring diagnostic logging.
 
 ## Platform Notes
 
-- **TypeScript/Web**: Component defined in `packages/web/packages/landing/src/blocks/Shot.tsx`. Renders a `<div class="lp-shot">` containing a title bar (`.lp-shot__bar`) with three dots (`.lp-shot__dot`) and title text (`.lp-shot__name`), followed by either the placeholder (`.lp-shot__placeholder`, containing `pendingLabel` then a `<b>` caption) or `media`. When `media` is provided it is rendered directly as `.lp-shot`'s only remaining child — not wrapped in any additional element, and never a sibling of the placeholder, which is not rendered in that case. Styles are external CSS; Shot applies no inline styles. For autoplaying video or motion-sensitive content, host should use the `Clip` component (from `@agenticdevelopertoolkit/landing/client`) or the `usePrefersReducedMotion` hook to respect `prefers-reduced-motion`.
+- **TypeScript/Web**: Component defined in `packages/web/packages/landing/src/blocks/Shot.tsx`. Renders a `<div class="lp-shot">` containing a title bar (`.lp-shot__bar`) with three dots (`.lp-shot__dot`) and title text (`.lp-shot__name`), followed by either the placeholder (`.lp-shot__placeholder`, containing `pendingLabel` then a `<b>` caption) or `media`. When `media` is provided it is rendered directly as `.lp-shot`'s only remaining child — not wrapped in any additional element, and never a sibling of the placeholder, which is not rendered in that case. Styles are external CSS; Shot applies no inline styles. For autoplaying video or motion-sensitive content, host should use the `Clip` component (from `@adh-sdk/landing/client`) or the `usePrefersReducedMotion` hook to respect `prefers-reduced-motion`.
 - **SwiftUI**: Use a `VStack` or `ZStack` wrapping a custom overlay view that draws the macOS window chrome (title bar with traffic light dots, title text). Place the content view (or a placeholder image with a hatching pattern) in the main body. Bind the optional `media` property to conditional rendering of content vs. placeholder. Title and caption are `String` properties; optional label is a generic `View`. Apply system fonts and colors for macOS chrome appearance.
 - **Compose**: Build with `Column` or `Box` containing a header composable that renders the title bar (horizontal row of three colored `Surface` circles and `Text` for the title) and a content area. Compose has no built-in hatch drawable; render the placeholder's diagonal hatch with `Modifier.drawBehind { }` drawing repeating diagonal lines on the `DrawScope`, or by tiling a small hatch `ImageBitmap` as the background brush. Media is a nullable slot. Caption and pendingLabel are optional `@Composable` parameters. Use Material 3 color tokens for macOS-like chrome (dark surface, text on surface).
 - **AppKit / UIKit**: On macOS, wrap the content in a custom `NSView` that draws the window chrome (frame border, title bar with traffic lights, title text) using `NSBezierPath` and `CAShapeLayer`. On iOS, Shot would be less applicable (iOS does not feature window frames), but if adapted, use a rounded `UIView` with a `UIImageView` showing a window-mockup image, or a `CAShapeLayer`-drawn chrome, as the outer frame. Placeholder is a `UIView` with a pattern or cross-hatched texture (Core Graphics or a pattern image). Media is a `UIView` or `UIImageView`.

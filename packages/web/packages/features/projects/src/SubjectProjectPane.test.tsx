@@ -19,8 +19,8 @@ vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: vi.fn(), replace: vi.fn(), prefetch: vi.fn() }),
 }));
 
-vi.mock("@agentic-toolkit/data/projects", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("@agentic-toolkit/data/projects")>();
+vi.mock("@adh-sdk/data/projects", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@adh-sdk/data/projects")>();
   return {
     ...actual,
     projectsApi: { ...actual.projectsApi, subjectProject: vi.fn() },
@@ -30,9 +30,9 @@ vi.mock("@agentic-toolkit/data/projects", async (importOriginal) => {
 });
 
 import { SubjectProjectPane } from "./SubjectProjectPane";
-import { projectsApi, type Project } from "@agentic-toolkit/data/projects";
-import { getToolkitQueryClient } from "@agentic-toolkit/data/query";
-import { RailHostBoundary } from "@agentic-toolkit/resource";
+import { projectsApi, type Project } from "@adh-sdk/data/projects";
+import { getToolkitQueryClient } from "@adh-sdk/data/query";
+import { RailHostBoundary } from "@adh-sdk/resource";
 
 const subjectProject = vi.mocked(projectsApi.subjectProject);
 

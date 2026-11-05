@@ -20,11 +20,11 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, fireEvent, cleanup, within, waitFor } from "@testing-library/react";
 import type { ReactNode } from "react";
 
-vi.mock("@agentic-toolkit/auth", () => ({
+vi.mock("@adh-sdk/auth", () => ({
   reportUnexpectedAuthError: vi.fn(),
 }));
 
-vi.mock("@agentic-toolkit/data/personas", () => ({
+vi.mock("@adh-sdk/data/personas", () => ({
   api: {
     personas: {
       list: vi.fn(),
@@ -46,10 +46,10 @@ vi.mock("./useUserServices", () => ({
   useUserServices: () => ({ items: [], error: null, reload: vi.fn() }),
 }));
 
-import { RailHostBoundary } from "@agentic-toolkit/resource";
-import { ToolkitQueryProvider } from "@agentic-toolkit/data/query";
+import { RailHostBoundary } from "@adh-sdk/resource";
+import { ToolkitQueryProvider } from "@adh-sdk/data/query";
 import { PersonasSection } from "./PersonasSection";
-import { api, type Persona } from "@agentic-toolkit/data/personas";
+import { api, type Persona } from "@adh-sdk/data/personas";
 
 const listPersonas = vi.mocked(api.personas.list);
 

@@ -5,7 +5,7 @@ export type AdhAppShellProps = {
     header: ReactNode;
     children: ReactNode;
     /** Already-rendered footer. A ReactNode, not a `{ links }` bag: this package cannot know
-     *  what a host's footer link looks like. `@agentic-toolkit/adh/layout` keeps the object form its
+     *  what a host's footer link looks like. `@adh-sdk/adh/layout` keeps the object form its
      *  call sites use and renders <AdhFooter/> into this slot. */
     footer?: ReactNode;
     /** Mount the dev-only switches (the 10x animation scale and the HTDV layout log).
@@ -18,7 +18,7 @@ export type AdhAppShellProps = {
      *  imports them unconditionally, and the value the host folds to `false` at build time is a
      *  runtime prop by the time it crosses the package boundary — no bundler can propagate it
      *  back through the import. So `DevAnimScale` and `HtdvLayoutLogSwitch` (and the
-     *  `@agenticdevelopertoolkit/ui/blocks` code they pull in) now SHIP IN EVERY PRODUCTION CLIENT
+     *  `@adh-sdk/ui/blocks` code they pull in) now SHIP IN EVERY PRODUCTION CLIENT
      *  BUNDLE and are gated at RUNTIME instead. That is the accepted price of the
      *  mechanism/vocabulary seam; re-reading a host env var here to win the bytes back would
      *  put one host's deployment vocabulary inside a generic package, which is the exact thing
@@ -33,7 +33,7 @@ export type AdhAppShellProps = {
  * slot. Keeps the basic layout identical across sites.
  *
  * MECHANISM ONLY. Which providers wrap this (feature flags, help, telemetry) and which footer
- * goes in the slot are the host's business — see `@agentic-toolkit/adh/layout`'s `AppShell`, which is
+ * goes in the slot are the host's business — see `@adh-sdk/adh/layout`'s `AppShell`, which is
  * the pre-split component's exact call-site signature.
  *
  * Hook-free itself, so it is server-renderable in principle; in a built bundle the `layout`

@@ -1,7 +1,7 @@
 ---
 id: A0D31E57-2B64-4C0E-8F1B-5E7C9D4A3B22
 title: "Record Detail Window Controller"
-domain: adtoolkit://cookbook/ui/settings/record-detail-window-controller
+domain: adhsdk://cookbook/ui/settings/record-detail-window-controller
 type: ingredient
 version: 1.0.1
 status: review
@@ -22,7 +22,7 @@ tags:
   - windows
 depends-on: []
 related:
-  - adtoolkit://cookbook/ui/settings/record-detail-panel
+  - adhsdk://cookbook/ui/settings/record-detail-panel
 references: []
 approved-by: ""
 approved-date: ""
@@ -211,7 +211,7 @@ Not applicable: the window performs no logging.
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/macOS/SystemIntegration/ComposableSettingsWindow/RecordDetailWindowController.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/RecordDetailWindowController.swift` |
 
 ## Design Decisions
 

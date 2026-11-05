@@ -1,7 +1,7 @@
 ---
 id: 4a2dcdee-4d2a-4f3f-a3a5-d243ec2b799b
 title: SendIcon
-domain: agenticdevelopertoolkit://recipes/send-icon
+domain: adhsdk://recipes/send-icon
 type: ingredient
 version: 1.1.1
 status: review
@@ -21,7 +21,7 @@ tags:
 - ui
 depends-on: []
 related:
-- agenticdevelopertoolkit://recipes/chat-input
+- adhsdk://recipes/chat-input
 references: []
 approved-by: ''
 approved-date: ''

@@ -9,8 +9,8 @@ import {
   type ReactElement,
   type ReactNode,
 } from "react";
-import { HierarchicalDetailView } from "@agenticdevelopertoolkit/ui/blocks";
-import { UnsavedChangesGuard } from "@agenticdevelopertoolkit/ui/components/unsaved-changes-guard";
+import { HierarchicalDetailView } from "@adh-sdk/ui/blocks";
+import { UnsavedChangesGuard } from "@adh-sdk/ui/components/unsaved-changes-guard";
 import {
   RailHostContext,
   useRailHost,

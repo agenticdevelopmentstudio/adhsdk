@@ -1,7 +1,7 @@
 
 | Name | Domain | Role | Required | Configuration |
 |---|---|---|---|---|
-| Field | agenticdevelopertoolkit://recipes/field | Label + optional hint wrapper around each non-boolean control | yes | `label` = `name` (+ ` *` when required); `hint="JSON"` for object/array/unknown columns |
+| Field | adhsdk://recipes/field | Label + optional hint wrapper around each non-boolean control | yes | `label` = `name` (+ ` *` when required); `hint="JSON"` for object/array/unknown columns |
 
 Composed shared primitives without their own recipe domains: the per-type
 control picker (rendering a select, checkbox, textarea, or text input

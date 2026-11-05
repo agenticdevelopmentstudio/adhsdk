@@ -3,7 +3,7 @@
   "meta": {
     "id": "7774cbd3-4883-43f0-aef0-f49a29389b98",
     "title": "Radio Button Choice View",
-    "domain": "adtoolkit://cookbook/ui/settings/rows/radio-button-choice-view",
+    "domain": "adhsdk://cookbook/ui/settings/rows/radio-button-choice-view",
     "type": "ingredient",
     "version": "1.3.1",
     "status": "review",
@@ -25,7 +25,7 @@
     ],
     "depends-on": [],
     "related": [
-      "adtoolkit://cookbook/ui/settings/rows/choice-slider-view"
+      "adhsdk://cookbook/ui/settings/rows/choice-slider-view"
     ],
     "references": [],
     "approved-by": "",

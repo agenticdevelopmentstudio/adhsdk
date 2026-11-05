@@ -1,7 +1,7 @@
 ---
 id: 72243a76-93f2-412b-985d-719511fcd19c
 title: Content Editing
-domain: agenticdevelopertoolkit://recipes/content-editing
+domain: adhsdk://recipes/content-editing
 type: ingredient
 version: 1.0.1
 status: review
@@ -33,15 +33,15 @@ approved-date: ''
 
 ## Overview
 
-`EditingContainer` (`@agenticdevelopertoolkit/editing`) is the one way this platform edits a
+`EditingContainer` (`@adh-sdk/editing`) is the one way this platform edits a
 record. It is a `"use client"` React container with no visual identity of its
 own: it owns a draft copy of a caller-supplied `TRecord`, computes whether the
 draft differs from what was loaded, validates it field by field against
 caller-declared `FieldDescriptor`s, checks that the caller's `sections` lay
 out every declared field exactly once, and renders the shared `FieldGroup`
 and `BoundField` controls plus a `ButtonBar` Save/Cancel row from
-`@agenticdevelopertoolkit/ui`. Draft and dirty bookkeeping is delegated to
-`useDirtyDraft` (`@agenticdevelopertoolkit/ui/hooks/useDirtyDraft`); an
+`@adh-sdk/ui`. Draft and dirty bookkeeping is delegated to
+`useDirtyDraft` (`@adh-sdk/ui/hooks/useDirtyDraft`); an
 injected `EditingHost` supplies the platform's `UnsavedChangesGuard` and a
 one-button `AlertModal`. Containers nest — a row editor inside a page editor
 — with each descendant's dirtiness rolling up through `EditingScope` to a
@@ -188,7 +188,7 @@ control outside one.
   `layoutFaults`; `container.test.tsx` "reports a section naming a field
   that does not exist").
 - **layout-faults-logged-and-rendered**: Each layout fault MUST be logged via
-  `console.error` prefixed `[@agenticdevelopertoolkit/editing]` and rendered
+  `console.error` prefixed `[@adh-sdk/editing]` and rendered
   in a `role="alert"` block above the sections; rendering MUST continue
   rather than throwing (`container.tsx` `layoutFaults` effect + JSX;
   `container.test.tsx` "says nothing about a layout that covers every field
@@ -311,7 +311,7 @@ control outside one.
 - **unrepairable-value-blocks-write-entirely**: If any repaired field still
   fails its own `validate` after `repair` runs, the container MUST NOT call
   `onSave`/`onRepair` at all, MUST log
-  `[@agenticdevelopertoolkit/editing] repair() left a value still invalid —
+  `[@adh-sdk/editing] repair() left a value still invalid —
   <key>: <message>` via `console.error`, and MUST show a "Repair failed"
   acknowledgement naming every such field (`container.tsx` repair effect
   `plan.unrepaired.length > 0` branch; `repair.ts`
@@ -482,7 +482,7 @@ control outside one.
 Not applicable — this is a data-editing container with no visual identity of
 its own; every visible element it produces (`FieldGroup`, `BoundField`,
 `ButtonBar`, `AlertModal`) is a shared component from
-`@agenticdevelopertoolkit/ui` with its own recipe.
+`@adh-sdk/ui` with its own recipe.
 
 ## States
 
@@ -705,12 +705,12 @@ event; the package has no dependency on an analytics client.
 
 ## Logging
 
-Subsystem: `@agenticdevelopertoolkit` | Category: `editing`
+Subsystem: `@adh-sdk` | Category: `editing`
 
 | Event | Level | Message |
 |-------|-------|---------|
-| Layout fault detected | error | `[@agenticdevelopertoolkit/editing] <fault text>` — once per fault, on every render where `layoutFaults` is non-empty (`container.tsx`). |
-| Repair produced a still-invalid value | error | `[@agenticdevelopertoolkit/editing] repair() left a value still invalid — <key>: <message>[; <key>: <message> ...]` (`container.tsx`). |
+| Layout fault detected | error | `[@adh-sdk/editing] <fault text>` — once per fault, on every render where `layoutFaults` is non-empty (`container.tsx`). |
+| Repair produced a still-invalid value | error | `[@adh-sdk/editing] repair() left a value still invalid — <key>: <message>[; <key>: <message> ...]` (`container.tsx`). |
 
 ## Platform Notes
 
@@ -871,7 +871,7 @@ rendered `role="alert"` message or as a logged-and-shown repair failure;
 nothing given in the sources swallows an error silently. `separation-of-
 concerns` passes: the container owns draft state, validation, layout
 coverage and the repair decision, but delegates persistence to the caller's
-`onSave`/`onRepair`, control rendering to `@agenticdevelopertoolkit/ui`, and
+`onSave`/`onRepair`, control rendering to `@adh-sdk/ui`, and
 the navigation guard/alert chrome to an injected `EditingHost`.
 `unit-test-coverage` is partial: the package's own nine test files exercise
 validation, sections, the repair plan, the container's save/cancel/re-

@@ -2,8 +2,8 @@
 
 import * as React from 'react';
 
-import { ErrorText } from '@agenticdevelopertoolkit/ui/components/error-text';
-import { Spinner } from '@agenticdevelopertoolkit/ui/components/spinner';
+import { ErrorText } from '@adh-sdk/ui/components/error-text';
+import { Spinner } from '@adh-sdk/ui/components/spinner';
 
 import type { ShiprClient } from './client';
 import { stampMs } from './freshness';

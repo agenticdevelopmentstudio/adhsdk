@@ -18,16 +18,16 @@ const CHECKED_FIELDS = ["dependencies", "peerDependencies"] as const;
  * a tree pnpm never re-linked, and nothing on that path says so.
  *
  * What that looked like when `fc1ca51c` (the User Settings overlay) added five deps to
- * `@agentic-toolkit/adh` — account, authentication, personas, profile, resource:
+ * `@adh-sdk/adh` — account, authentication, personas, profile, resource:
  *
- *     Error: Can't resolve '@agentic-toolkit/account/sources.css' in
- *       .../external/agentictoolkit/packages/web/packages/adh
+ *     Error: Can't resolve '@adh-sdk/account/sources.css' in
+ *       .../external/adhsdk/packages/web/packages/adh
  *
  * which names a package that is checked out, declared, and in the lockfile, and reads
  * as a broken toolkit rather than an un-run install — so the fix it suggests is to add
  * the toolkit's own private dependency to every site's package.json. It is not: the
  * failure is uniform across the fleet, `sites/hub` included, even though hub is the one
- * site that declares `@agentic-toolkit/account` itself. Declaring it at the site does
+ * site that declares `@adh-sdk/account` itself. Declaring it at the site does
  * not help, because the unresolved import is the toolkit package's own — `packages/adh`
  * resolving from ITS directory, which never walks into a consumer's node_modules.
  *

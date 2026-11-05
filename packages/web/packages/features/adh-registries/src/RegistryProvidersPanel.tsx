@@ -2,25 +2,25 @@
 
 import { useCallback, useState } from 'react';
 import { Pencil, UserMinus } from 'lucide-react';
-import { revalidateResourceItems, useResourceList } from '@agentic-toolkit/data';
+import { revalidateResourceItems, useResourceList } from '@adh-sdk/data';
 import {
   type EntryRow,
   type EntryStatus,
   type ProviderType,
   type RegistryClient,
-} from '@agentic-toolkit/registry/client';
+} from '@adh-sdk/registry/client';
 import {
   EditableList,
   SectionHeader,
   useEditableList,
   type EditableListColumn,
   type EditableListFacet,
-} from '@agenticdevelopertoolkit/ui/blocks';
-import { AlertModal } from '@agenticdevelopertoolkit/ui/components/alert-modal';
-import { Badge, type badgeVariants } from '@agenticdevelopertoolkit/ui/components/badge';
-import { Button } from '@agenticdevelopertoolkit/ui/components/button';
-import { ErrorText } from '@agenticdevelopertoolkit/ui/components/error-text';
-import { formatDate } from '@agenticdevelopertoolkit/ui/lib/timestamps';
+} from '@adh-sdk/ui/blocks';
+import { AlertModal } from '@adh-sdk/ui/components/alert-modal';
+import { Badge, type badgeVariants } from '@adh-sdk/ui/components/badge';
+import { Button } from '@adh-sdk/ui/components/button';
+import { ErrorText } from '@adh-sdk/ui/components/error-text';
+import { formatDate } from '@adh-sdk/ui/lib/timestamps';
 import type { VariantProps } from 'class-variance-authority';
 import { EntryEditor } from './EntryEditor';
 import {

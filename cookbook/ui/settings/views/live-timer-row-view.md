@@ -1,7 +1,7 @@
 ---
 id: 4BB40927-776A-41D6-86C9-962CCC1E43BC
 title: "Live Timer Row View"
-domain: adtoolkit://cookbook/ui/settings/views/live-timer-row-view
+domain: adhsdk://cookbook/ui/settings/views/live-timer-row-view
 type: ingredient
 version: 1.0.1
 status: review
@@ -21,7 +21,7 @@ tags:
   - timer
 depends-on: []
 related:
-  - adtoolkit://cookbook/ui/settings/views/live-timer-list-view
+  - adhsdk://cookbook/ui/settings/views/live-timer-list-view
 references: []
 approved-by: ""
 approved-date: ""
@@ -151,7 +151,7 @@ Not applicable: the component performs no logging of its own.
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/macOS/SystemIntegration/ComposableSettingsWindow/Views/LiveTimerRowView.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/Views/LiveTimerRowView.swift` |
 
 ## Design Decisions
 

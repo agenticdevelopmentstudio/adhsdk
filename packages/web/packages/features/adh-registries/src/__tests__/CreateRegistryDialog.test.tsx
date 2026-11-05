@@ -2,7 +2,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import type { RegistryClient } from '@agentic-toolkit/registry/client';
+import type { RegistryClient } from '@adh-sdk/registry/client';
 
 // A box rather than a closure over `let`: `vi.mock` is hoisted above every declaration in the
 // file, so the factory cannot read a binding that is initialised further down.
@@ -76,7 +76,7 @@ describe('CreateRegistryDialog', () => {
     // after create when the slug is immutable. The message matched is the RULE — the check is
     // `isReservedSlugAnywhere`, an OR over every site's list, so a message naming one site
     // would be a reason that stops being true the day the lists diverge, which
-    // `@agentic-toolkit/adh-registry` keeps them separate precisely to allow.
+    // `@adh-sdk/adh-registry` keeps them separate precisely to allow.
     expect(screen.getByText(/reserved page name/)).not.toBeNull();
     await userEvent.click(screen.getByRole('button', { name: 'Save' }));
     expect(createRegistry).not.toHaveBeenCalled();

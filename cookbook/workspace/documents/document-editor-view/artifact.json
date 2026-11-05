@@ -3,7 +3,7 @@
   "meta": {
     "id": "4205c688-865a-4d74-890d-f803ee66fdcb",
     "title": "Document Editor",
-    "domain": "adtoolkit://cookbook/workspace/documents/document-editor-view",
+    "domain": "adhsdk://cookbook/workspace/documents/document-editor-view",
     "type": "ingredient",
     "version": "1.2.2",
     "status": "review",
@@ -24,12 +24,12 @@
       "pane"
     ],
     "depends-on": [
-      "adtoolkit://cookbook/workspace/documents/breadcrumb-view",
-      "adtoolkit://cookbook/workspace/files/file-editor-view"
+      "adhsdk://cookbook/workspace/documents/breadcrumb-view",
+      "adhsdk://cookbook/workspace/files/file-editor-view"
     ],
     "related": [
-      "adtoolkit://cookbook/workspace/documents/breadcrumb-view",
-      "adtoolkit://cookbook/workspace/files/file-editor-view",
+      "adhsdk://cookbook/workspace/documents/breadcrumb-view",
+      "adhsdk://cookbook/workspace/files/file-editor-view",
       "agenticdevelopercookbook://guidelines/cookbook/ui/platform-design-languages"
     ],
     "references": [],

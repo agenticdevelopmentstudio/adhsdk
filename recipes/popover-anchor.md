@@ -1,7 +1,7 @@
 ---
 id: c130d5d5-2ac4-4a15-a13a-9127ddad6ca1
 title: Popover Anchor
-domain: agenticdevelopertoolkit://recipes/popover-anchor
+domain: adhsdk://recipes/popover-anchor
 type: ingredient
 version: 1.1.1
 status: review
@@ -22,7 +22,7 @@ tags:
 - layout
 depends-on: []
 related:
-- agenticdevelopertoolkit://recipes/popover
+- adhsdk://recipes/popover
 references:
 - packages/web/packages/popover/src/PopoverAnchor.tsx
 approved-by: ''
@@ -58,7 +58,7 @@ Not applicable: PopoverAnchor is a layout utility and does not define visual app
 
 ## Accessibility
 
-Not applicable: PopoverAnchor is a positioning wrapper with no interactive element of its own. Accessibility concerns belong to the trigger and panel components it contains — see `agenticdevelopertoolkit://recipes/popover` for how keyboard operability is (and is not) handled there, and **Compliance** below for how that gap is scored against this recipe.
+Not applicable: PopoverAnchor is a positioning wrapper with no interactive element of its own. Accessibility concerns belong to the trigger and panel components it contains — see `adhsdk://recipes/popover` for how keyboard operability is (and is not) handled there, and **Compliance** below for how that gap is scored against this recipe.
 
 ## Conformance Test Vectors
 
@@ -156,7 +156,7 @@ Not applicable: PopoverAnchor is an internal layout component with no user-visib
 | [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
 | [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | failed | Best Practices |
 
-The anchor closes only via `onMouseLeave`; nothing in `PopoverAnchor.tsx` offers a keyboard-equivalent way to dismiss the group, so keyboard operability depends entirely on whatever the composed trigger and panel add on top of it (see `agenticdevelopertoolkit://recipes/popover`). `PopoverAnchor.tsx` is nothing but a positioning `<div>` with no business logic (separation-of-concerns passed), but no test file exercises it at all (unit-test-coverage failed).
+The anchor closes only via `onMouseLeave`; nothing in `PopoverAnchor.tsx` offers a keyboard-equivalent way to dismiss the group, so keyboard operability depends entirely on whatever the composed trigger and panel add on top of it (see `adhsdk://recipes/popover`). `PopoverAnchor.tsx` is nothing but a positioning `<div>` with no business logic (separation-of-concerns passed), but no test file exercises it at all (unit-test-coverage failed).
 
 ## Change History
 

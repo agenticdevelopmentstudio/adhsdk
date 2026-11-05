@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import * as web from "./deploy-status";
 // The SERVER's vocabulary module, imported by relative path (the two packages share no
 // build). This is the whole point of the test — pin the hand-mirror against the original.
-import * as server from "@agentic-toolkit/status-server/deploy-status";
+import * as server from "@adh-sdk/status-server/deploy-status";
 
 // DRIFT GUARD. web/src/lib/deploy-status.ts is a HAND COPY of src/monitor/deploy-status.ts
 // (there is no shared package between the backend and its embedded web app). If the two

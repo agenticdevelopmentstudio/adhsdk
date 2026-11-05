@@ -3,7 +3,7 @@ import * as React from "react"
 import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react"
 import { afterEach, describe, expect, it, vi } from "vitest"
 
-import { confirmNavigation } from "@agenticdevelopertoolkit/ui/lib/navigation-guard"
+import { confirmNavigation } from "@adh-sdk/ui/lib/navigation-guard"
 
 import { EditingContainer } from "../container"
 import { EditingHostProvider, createEditingHost, defaultEditingHost } from "../host"

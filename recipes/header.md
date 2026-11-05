@@ -1,7 +1,7 @@
 ---
 id: c2f89e6b-6e86-449b-9955-5bb0da929de3
 title: Header
-domain: agenticdevelopertoolkit://recipes/header
+domain: adhsdk://recipes/header
 type: ingredient
 version: 1.1.1
 status: review
@@ -21,7 +21,7 @@ tags:
 - typography
 depends-on: []
 related:
-- agenticdevelopertoolkit://recipes/settings-panel
+- adhsdk://recipes/settings-panel
 references:
 - https://developer.mozilla.org/en-US/docs/Web/HTML/Element/h2
 - https://www.w3.org/TR/html-aria/
@@ -132,7 +132,7 @@ Not applicable: The Header component does not perform logging or diagnostic oper
 ## Design Decisions
 
 1. **Decision**: The component renders `<h2>` rather than a generic `<div>`, with the heading level fixed rather than configurable.
-**Rationale**: A fixed level-2 heading ensures proper document outline and accessibility for the component's intended use inside `user-settings` sections, which sit at a single, known depth in the page outline (see agenticdevelopertoolkit://recipes/settings-panel). Consumers who need a different heading level should wrap the content or use a different component rather than parameterize this one.
+**Rationale**: A fixed level-2 heading ensures proper document outline and accessibility for the component's intended use inside `user-settings` sections, which sit at a single, known depth in the page outline (see adhsdk://recipes/settings-panel). Consumers who need a different heading level should wrap the content or use a different component rather than parameterize this one.
 **Approved**: pending
 
 2. **Decision**: The component always includes the `aws-header` class as a fixed, non-removable default identity class.

@@ -1,8 +1,8 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { useMasterDetailForm, RecordSettingsPane } from "@agentic-toolkit/resource";
-import { gamesApi, type Game, type GameInput } from "@agentic-toolkit/data/games";
+import { useMasterDetailForm, RecordSettingsPane } from "@adh-sdk/resource";
+import { gamesApi, type Game, type GameInput } from "@adh-sdk/data/games";
 import { useGameForEcosystem } from "./useGameForEcosystem";
 import {
   GameEngineFields,

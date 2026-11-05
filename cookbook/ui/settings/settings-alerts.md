@@ -1,7 +1,7 @@
 ---
 id: 0FC99299-F3BA-4883-AB08-9BD614DA7900
 title: "Settings Alerts"
-domain: adtoolkit://cookbook/ui/settings/settings-alerts
+domain: adhsdk://cookbook/ui/settings/settings-alerts
 type: ingredient
 version: 1.0.1
 status: review
@@ -21,7 +21,7 @@ tags:
   - alerts
 depends-on: []
 related:
-  - adtoolkit://cookbook/ui/settings/settings-window
+  - adhsdk://cookbook/ui/settings/settings-window
 references: []
 approved-by: ""
 approved-date: ""
@@ -114,21 +114,21 @@ Not applicable: the component stores and transmits nothing; error messages it lo
 
 ## Logging
 
-Declined confirmations, window-less folder requests and window-less error reports are logged at warning level under the AgenticToolkit subsystem with a settings-alerts category. Messages the caller supplies are logged as given.
+Declined confirmations, window-less folder requests and window-less error reports are logged at warning level under the AgenticDeveloperHubSDK subsystem with a settings-alerts category. Messages the caller supplies are logged as given.
 
 ## Platform Notes
 
 - **SwiftUI**: Use `.confirmationDialog` or `.alert` with a destructive `Button(role: .destructive)` and a cancel-role button; use `.fileImporter` with directory content types for the folder choice.
 - **Compose**: Use an `AlertDialog` with a destructive-styled confirm button and a dismiss button; use the Storage Access Framework `OpenDocumentTree` for the folder choice.
 - **React/Web**: Use a modal `<dialog>` or an `alertdialog` role element, focus Cancel on open and close it on Escape; folder choice is `showDirectoryPicker()` where supported.
-- **AppKit / UIKit (source)**: `ComposableSettings.Alerts` is a `@MainActor` enum with typealiases `Confirm`, `Report` and `ChooseFolder`. `confirmDestructive(_:detail:actionTitle:on:_:)` builds its alert in `makeDestructiveAlert`: the destructive button has an empty key equivalent, Cancel has Return, and an invisible zero-size button with the Escape key equivalent performs a click on Cancel. `ask(_:_:detail:)` awaits an injected `Confirm`. `chooseFolder(on:prompt:message:_:)` shows an `NSOpenPanel` sheet configured in `makeFolderPanel` (directories only, single selection). `report(_:on:)` shows an `NSAlert` warning sheet. Logging uses a `Logger` with subsystem AgenticToolkit and category ComposableSettings.Alerts.
+- **AppKit / UIKit (source)**: `ComposableSettings.Alerts` is a `@MainActor` enum with typealiases `Confirm`, `Report` and `ChooseFolder`. `confirmDestructive(_:detail:actionTitle:on:_:)` builds its alert in `makeDestructiveAlert`: the destructive button has an empty key equivalent, Cancel has Return, and an invisible zero-size button with the Escape key equivalent performs a click on Cancel. `ask(_:_:detail:)` awaits an injected `Confirm`. `chooseFolder(on:prompt:message:_:)` shows an `NSOpenPanel` sheet configured in `makeFolderPanel` (directories only, single selection). `report(_:on:)` shows an `NSAlert` warning sheet. Logging uses a `Logger` with subsystem AgenticDeveloperHubSDK and category ComposableSettings.Alerts.
 - **WinUI 3**: Use a `ContentDialog` with `DefaultButton` set to Close (Cancel) and a styled primary button; use `FolderPicker` initialized with the window handle for the folder choice.
 
 ## Reference Implementations
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/macOS/SystemIntegration/ComposableSettingsWindow/SettingsAlerts.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/SettingsAlerts.swift` |
 
 ## Design Decisions
 

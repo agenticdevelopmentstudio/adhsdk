@@ -3,8 +3,8 @@
 import type { ReactNode } from "react";
 import { CircleHelp } from "lucide-react";
 import { Popover } from "@base-ui/react/popover";
-import { cn } from "@agenticdevelopertoolkit/ui/lib/utils";
-import { quietControlClass } from "@agenticdevelopertoolkit/ui/lib/quiet-control";
+import { cn } from "@adh-sdk/ui/lib/utils";
+import { quietControlClass } from "@adh-sdk/ui/lib/quiet-control";
 
 /**
  * A "?" trigger that opens a small popover with contextual help. Shared by the

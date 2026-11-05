@@ -1,10 +1,10 @@
 "use client";
 
-import { defineSiteHome } from "@agentic-toolkit/adh/home";
-import { TeamsFeature } from "@agentic-toolkit/teams";
+import { defineSiteHome } from "@adh-sdk/adh/home";
+import { TeamsFeature } from "@adh-sdk/teams";
 // The parse helper comes from the server-safe ./parse subpath, and keeping the grammar in one
 // module is what stops this host and the hub drifting into parsing the same URL differently.
-import { parseTeamsPath } from "@agentic-toolkit/teams/parse";
+import { parseTeamsPath } from "@adh-sdk/teams/parse";
 
 /**
  * The Teams feature — this site's gated product surface (adh/docs/platform/feature-platform-phase2.md).

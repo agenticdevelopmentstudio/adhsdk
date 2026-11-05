@@ -1,7 +1,7 @@
 "use client";
 import { type ReactElement, useCallback, useMemo, useState } from "react";
 import { Activity, AlertTriangle, BarChart3 } from "lucide-react";
-import { InfoPanel } from "@agenticdevelopertoolkit/ui/blocks";
+import { InfoPanel } from "@adh-sdk/ui/blocks";
 import { useLiveSnapshot } from "../hooks/use-live-snapshot";
 import { useBoard } from "../hooks/use-board";
 import { useActivityHistory } from "../hooks/use-activity-history";

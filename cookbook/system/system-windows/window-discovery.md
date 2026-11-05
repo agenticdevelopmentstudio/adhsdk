@@ -1,7 +1,7 @@
 ---
 id: 0ab38622-b4a9-424c-89e2-5d27073680c7
 title: "Window Discovery"
-domain: adtoolkit://cookbook/system/system-windows/window-discovery
+domain: adhsdk://cookbook/system/system-windows/window-discovery
 type: ingredient
 version: 1.2.0
 status: review
@@ -20,7 +20,7 @@ tags:
   - window-matching
 depends-on: []
 related:
-  - adtoolkit://cookbook/system/system-windows/window-explorer-view
+  - adhsdk://cookbook/system/system-windows/window-explorer-view
 references: []
 approved-by: ""
 approved-date: ""
@@ -233,7 +233,7 @@ Discovery itself logs nothing, including the permission-denied path, which is si
 
 ## Platform Notes
 
-- **SwiftUI**: Source is Swift/AppKit: the view model lives under `AgenticToolkit/macOS/Features/WindowDiscovery`, driven by an AppKit host view through Combine subscriptions to `$isLoading`, `$accessibilityDenied` and `$apps`. A SwiftUI host can bind the same observable model with `@ObservedObject`; a port to Swift 6 style would make it `@MainActor @Observable` and run enumeration in a `Task.detached`, replacing `DispatchQueue` hops and the unchecked thread-safety escape.
+- **SwiftUI**: Source is Swift/AppKit: the view model lives under `AgenticDeveloperHubSDK/macOS/Features/WindowDiscovery`, driven by an AppKit host view through Combine subscriptions to `$isLoading`, `$accessibilityDenied` and `$apps`. A SwiftUI host can bind the same observable model with `@ObservedObject`; a port to Swift 6 style would make it `@MainActor @Observable` and run enumeration in a `Task.detached`, replacing `DispatchQueue` hops and the unchecked thread-safety escape.
 - **Compose**: Android has no cross-app window enumeration or focus API; a Kotlin port keeps only the pure parts — matching as a plain function and the grouping/sort over a `List` with `sortedWith(compareByDescending { it.hasMatch }.thenBy(String.CASE_INSENSITIVE_ORDER) { it.name })` — exposed from a `ViewModel` via `StateFlow`, with enumeration running in `viewModelScope.launch(Dispatchers.Default)`.
 - **React/Web**: Browsers cannot see other applications' windows; a web port applies only to an Electron-style host (`desktopCapturer.getSources({ types: ['window'] })` gives titles and ids). Matching becomes `title.toLocaleLowerCase().includes(project.toLocaleLowerCase())` and sorting uses `localeCompare` with `sensitivity: 'base'`; state lives in a store or `useState`.
 - **AppKit / UIKit**: This is the AppKit source. Enumeration relies on `CGWindowListCopyWindowInfo` with the all-windows option, `NSWorkspace.shared.runningApplications` filtered on `activationPolicy == .regular`, Accessibility (`AXIsProcessTrusted`, AX raise action) for backfill and focus, and `NSRunningApplication.activate()`. UIKit has no equivalent; iOS apps cannot enumerate or focus other apps' windows. The model is a `final class` declared `@unchecked Sendable` with no actor isolation, so the compiler does not check its thread use — callers must call it from the main thread as documented. The discovered-window and discovered-app value types are public structs with no `Sendable` conformance (the discovered-app type holds an `NSImage?`), so the compiler keeps them confined to the isolation domain that creates them. The logging category is the type's own name, `WindowDiscoveryViewModel`.
@@ -243,7 +243,7 @@ Discovery itself logs nothing, including the permission-denied path, which is si
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/macOS/Features/WindowDiscovery/WindowDiscoveryViewModel.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/WindowDiscovery/WindowDiscoveryViewModel.swift` |
 
 ## Design Decisions
 

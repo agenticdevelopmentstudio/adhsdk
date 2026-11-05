@@ -38,14 +38,14 @@
   — every operation this file performs is local: the database, the
   filesystem check the restore plan's exists-on-disk predicate performs,
   and git through the project controller (documented in
-  `adtoolkit://cookbook/workspace/projects/project-controller`).
+  `adhsdk://cookbook/workspace/projects/project-controller`).
   None of it reaches a remote host.
 - **Cancellation and timeouts**: Opening a project's own opening work is
   not cancelled by a subsequent close of that project; the in-flight work
   keeps running to completion, and it is the project controller's own
   closed-state guard — not anything in this file — that stops it from
   persisting stale data or reloading a dead window (see
-  `adtoolkit://cookbook/workspace/projects/project-controller`'s
+  `adhsdk://cookbook/workspace/projects/project-controller`'s
   reconcile-aborts-after-a-late-close requirement, and vector -007
   above). Shutting down all language services waits for its group of
   concurrent operations and then for the pending-teardowns registry to

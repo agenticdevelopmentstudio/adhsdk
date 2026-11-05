@@ -2,7 +2,7 @@
 
 import { useState, type ReactElement } from "react";
 import { Puzzle } from "lucide-react";
-import { ListToolButton } from "@agenticdevelopertoolkit/ui/blocks";
+import { ListToolButton } from "@adh-sdk/ui/blocks";
 import { ManageFeaturesDialog } from "./ManageFeaturesDialog";
 
 /**

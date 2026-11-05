@@ -1,6 +1,6 @@
 
 This component is the one production implementation of the message-presenting
-role documented in [Extension Message Presenting](adtoolkit://cookbook/workspace/extensions/vscode-api/window/extension-message-presenting)
+role documented in [Extension Message Presenting](adhsdk://cookbook/workspace/extensions/vscode-api/window/extension-message-presenting)
 given among the sources: it turns a `vscode.window.show*Message` request into
 a native alert attached to a window. Where the protocol recipe documents the
 contract every implementation must satisfy, this recipe documents this

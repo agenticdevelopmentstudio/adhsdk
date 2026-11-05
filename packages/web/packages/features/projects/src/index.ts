@@ -1,4 +1,4 @@
-// @agentic-toolkit/projects — the Projects feature.
+// @adh-sdk/projects — the Projects feature.
 //
 // A single ProjectsFeature<basePath> orchestrates the project rail ▸ its topics
 // (declared once in ./projectTopics) over the resource substrate. It runs inside

@@ -3,33 +3,33 @@
 import { useMemo, useState } from "react";
 import { Pencil, Plus, Trash2 } from "lucide-react";
 
-import { reportUnexpectedAuthError } from "@agentic-toolkit/auth";
-import { isForbidden } from "@agentic-toolkit/data";
+import { reportUnexpectedAuthError } from "@adh-sdk/auth";
+import { isForbidden } from "@adh-sdk/data";
 import {
   gamificationApi,
   type CatalogBadge,
   type RealmBadgeInput,
-} from "@agentic-toolkit/data/gamification";
-import { useReportSettingsDirty } from "@agentic-toolkit/resource";
-import { Badge } from "@agenticdevelopertoolkit/ui/components/badge";
-import { Button } from "@agenticdevelopertoolkit/ui/components/button";
-import { Checkbox } from "@agenticdevelopertoolkit/ui/components/checkbox";
+} from "@adh-sdk/data/gamification";
+import { useReportSettingsDirty } from "@adh-sdk/resource";
+import { Badge } from "@adh-sdk/ui/components/badge";
+import { Button } from "@adh-sdk/ui/components/button";
+import { Checkbox } from "@adh-sdk/ui/components/checkbox";
 import {
   Dialog,
   DialogContent,
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@agenticdevelopertoolkit/ui/components/dialog";
-import { AlertModal } from "@agenticdevelopertoolkit/ui/components/alert-modal";
-import { UnsavedChangesAlert } from "@agenticdevelopertoolkit/ui/components/unsaved-changes-alert";
-import { Field } from "@agenticdevelopertoolkit/ui/blocks";
-import { Input } from "@agenticdevelopertoolkit/ui/components/input";
-import { Label } from "@agenticdevelopertoolkit/ui/components/label";
-import { List, ListItem } from "@agenticdevelopertoolkit/ui/components/list";
-import { Select } from "@agenticdevelopertoolkit/ui/components/select";
-import { Textarea } from "@agenticdevelopertoolkit/ui/components/textarea";
-import { DialogErrorText, ErrorText } from "@agenticdevelopertoolkit/ui/components/error-text";
+} from "@adh-sdk/ui/components/dialog";
+import { AlertModal } from "@adh-sdk/ui/components/alert-modal";
+import { UnsavedChangesAlert } from "@adh-sdk/ui/components/unsaved-changes-alert";
+import { Field } from "@adh-sdk/ui/blocks";
+import { Input } from "@adh-sdk/ui/components/input";
+import { Label } from "@adh-sdk/ui/components/label";
+import { List, ListItem } from "@adh-sdk/ui/components/list";
+import { Select } from "@adh-sdk/ui/components/select";
+import { Textarea } from "@adh-sdk/ui/components/textarea";
+import { DialogErrorText, ErrorText } from "@adh-sdk/ui/components/error-text";
 
 import { useRealmCatalog } from "./realm-catalog";
 import { forbiddenAware } from "./err-text";

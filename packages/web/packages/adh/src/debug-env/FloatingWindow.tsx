@@ -12,9 +12,9 @@ import {
 import { createPortal } from 'react-dom'
 import { X } from 'lucide-react'
 
-import { Button } from '@agenticdevelopertoolkit/ui/components/button'
-import { PHONE_SHEET_CLASSES } from '@agenticdevelopertoolkit/ui/components/dialog'
-import { PHONE_MAX_WIDTH, useMediaQuery } from '@agenticdevelopertoolkit/ui/hooks/useMediaQuery'
+import { Button } from '@adh-sdk/ui/components/button'
+import { PHONE_SHEET_CLASSES } from '@adh-sdk/ui/components/dialog'
+import { PHONE_MAX_WIDTH, useMediaQuery } from '@adh-sdk/ui/hooks/useMediaQuery'
 import { useIsMounted } from '../hooks/useIsMounted'
 
 // A macOS-style floating window: NO backdrop, so the live page stays visible behind

@@ -36,7 +36,7 @@ export default defineConfig({
   bundle: true,
   splitting: true,
   outExtension: () => ({ js: '.js' }),
-  external: [/^react/, /^@agentic-toolkit\//],
+  external: [/^react/, /^@adh-sdk\//],
   esbuildPlugins: [
     preserveDirectivesPlugin({
       directives: ['use client', 'use server'],

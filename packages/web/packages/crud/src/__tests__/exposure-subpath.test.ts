@@ -3,7 +3,7 @@ import { resolve } from 'node:path'
 import { describe, it, expect } from 'vitest'
 import * as exposureSubpath from '../exposure'
 
-// The RSC door. `@agentic-toolkit/crud/exposure` exists so a server component can call the exposure
+// The RSC door. `@adh-sdk/crud/exposure` exists so a server component can call the exposure
 // predicates: everything on the package's `'use client'` barrel arrives in an RSC as an
 // un-dereferenceable client reference, which fails only in a production build (dev's inlined
 // client boundary hides it). These gates fail in CI instead.
@@ -12,7 +12,7 @@ const pkg = JSON.parse(
   readFileSync(resolve(process.cwd(), 'package.json'), 'utf8'),
 ) as { exports: Record<string, unknown> }
 
-describe('@agentic-toolkit/crud/exposure', () => {
+describe('@adh-sdk/crud/exposure', () => {
   it('is declared as its own subpath export', () => {
     expect(pkg.exports['./exposure'], 'package.json exports is missing "./exposure"').toEqual({
       types: './dist/exposure.d.ts',

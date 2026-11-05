@@ -1,6 +1,6 @@
 # Content catalogs (the copy layer)
 
-This is the *copy* half of the `@agentic-toolkit/adh-site-config` data package (the
+This is the *copy* half of the `@adh-sdk/adh-site-config` data package (the
 *shape* is `../structure.json`). See the package [`../README.md`](../README.md) for
 the overview.
 
@@ -14,7 +14,7 @@ the overview.
   every tool here discriminates on the dot, so these files are never mistaken for
   locales.
 
-`@agentic-toolkit/adh` imports both halves, applies the TypeScript types, and
+`@adh-sdk/adh` imports both halves, applies the TypeScript types, and
 `assembleTree(...)` (in `packages/adh/src/concepts/assemble.ts`) merges them into the
 `ConceptNode` tree every consumer reads (graph, `/details`, menu). Edit them by hand,
 or visually in the **Content Studio** — an app in the adh repo
@@ -33,7 +33,7 @@ data change. Run the tooling from the workspace root (`packages/web/`):
 2. **Translate** `content/<locale>.json` in place (or in the studio's locale view).
    Track progress with `extract-content.py coverage`; hand off to a TMS with
    `extract-content.py flatten <locale>`.
-3. **Register** the locale in code (in `@agentic-toolkit/adh`) — one edit each:
+3. **Register** the locale in code (in `@adh-sdk/adh`) — one edit each:
    - add the literal to `Locale` in `packages/adh/src/concepts/types.ts`;
    - import + add it to `catalogs` in `packages/adh/src/concepts/content/index.ts`.
    Assembly falls back to the default locale for anything a locale omits, and

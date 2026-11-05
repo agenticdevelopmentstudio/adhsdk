@@ -24,8 +24,8 @@ import {
   type BackendInvite,
   type BackendAdminNote,
   type BackendHistoryEntry,
-} from "@agentic-toolkit/adh-ui/invitations-types";
-import { ecosystemInvitationEndpoints } from "@agentic-toolkit/adh-ui/invitations-endpoints";
+} from "@adh-sdk/adh-ui/invitations-types";
+import { ecosystemInvitationEndpoints } from "@adh-sdk/adh-ui/invitations-endpoints";
 
 // ── Query keys (namespaced by ecosystem rdid) ───────────────────────────────────
 

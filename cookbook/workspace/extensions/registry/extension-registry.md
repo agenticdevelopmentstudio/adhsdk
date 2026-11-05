@@ -1,7 +1,7 @@
 ---
 id: 4b6f3e1a-9c2d-4e7a-8b3f-1d5a6c9e2f70
 title: "Extension Registry"
-domain: adtoolkit://cookbook/workspace/extensions/registry/extension-registry
+domain: adhsdk://cookbook/workspace/extensions/registry/extension-registry
 type: ingredient
 version: 1.1.2
 status: review
@@ -22,15 +22,15 @@ tags:
   - mainactor
   - contribution-point
 depends-on:
-  - adtoolkit://cookbook/workspace/extensions/manifest/contribution-point
-  - adtoolkit://cookbook/workspace/extensions/manifest/extension-manifest
+  - adhsdk://cookbook/workspace/extensions/manifest/contribution-point
+  - adhsdk://cookbook/workspace/extensions/manifest/extension-manifest
 related:
-  - adtoolkit://cookbook/workspace/extensions/manifest/contribution-point
-  - adtoolkit://cookbook/workspace/extensions/manifest/extension-manifest
-  - adtoolkit://cookbook/workspace/extensions/manifest/contributed-views
-  - adtoolkit://cookbook/workspace/extensions/manifest/contributed-settings
-  - adtoolkit://cookbook/workspace/extensions/manifest/activation-event-matcher
-  - adtoolkit://cookbook/ai/plugins/plugin-manager
+  - adhsdk://cookbook/workspace/extensions/manifest/contribution-point
+  - adhsdk://cookbook/workspace/extensions/manifest/extension-manifest
+  - adhsdk://cookbook/workspace/extensions/manifest/contributed-views
+  - adhsdk://cookbook/workspace/extensions/manifest/contributed-settings
+  - adhsdk://cookbook/workspace/extensions/manifest/activation-event-matcher
+  - adhsdk://cookbook/ai/plugins/plugin-manager
 references: []
 approved-by: ""
 approved-date: ""
@@ -40,7 +40,7 @@ approved-date: ""
 
 ## Overview
 
-`ExtensionRegistry.swift` (`packages/apple/AgenticToolkit/Core/Extensions/ExtensionRegistry.swift`) defines `ExtensionRegistry`, the class, confined to the UI thread, that discovers VS Code extensions from disk, gates each one by its declared `engines.vscode` compatibility against the host's `declaredVSCodeVersion`, and drives their `contributes.*` blocks through whatever `ContributionPoint`s the host has registered. Discovery reads only each extension's `package.json` manifest; it never opens the extension's `main`/`browser` JavaScript entry point and never `dlopen`s anything, because a VS Code extension's JavaScript is not something this host runs — a bad or malicious manifest can therefore only ever produce a load failure, never code execution. The file is modeled on `AIPluginManager` (`AIPluginKit/AIPluginManager.swift`), and search paths are injected by the caller rather than derived internally, exactly as `AIPluginManager`'s test-only initializer takes them. `ExtensionRegistry` also owns enablement (`isEnabled`/`setEnabled`, backed by `UserSettings.disabledExtensionIdentifiers`) and uninstall (`uninstall(_:)`), and it publishes `establishedIdentifiers`, a tri-state answer — the set of every identifier this scan can vouch for, or `nil` when the scan is not whole — that a caller uses to decide whether it is safe to prune orphaned, persisted state (for example, deleted themes) for extensions no longer found on disk.
+`ExtensionRegistry.swift` (`packages/apple/AgenticDeveloperHubSDK/Core/Extensions/ExtensionRegistry.swift`) defines `ExtensionRegistry`, the class, confined to the UI thread, that discovers VS Code extensions from disk, gates each one by its declared `engines.vscode` compatibility against the host's `declaredVSCodeVersion`, and drives their `contributes.*` blocks through whatever `ContributionPoint`s the host has registered. Discovery reads only each extension's `package.json` manifest; it never opens the extension's `main`/`browser` JavaScript entry point and never `dlopen`s anything, because a VS Code extension's JavaScript is not something this host runs — a bad or malicious manifest can therefore only ever produce a load failure, never code execution. The file is modeled on `AIPluginManager` (`AIPluginKit/AIPluginManager.swift`), and search paths are injected by the caller rather than derived internally, exactly as `AIPluginManager`'s test-only initializer takes them. `ExtensionRegistry` also owns enablement (`isEnabled`/`setEnabled`, backed by `UserSettings.disabledExtensionIdentifiers`) and uninstall (`uninstall(_:)`), and it publishes `establishedIdentifiers`, a tri-state answer — the set of every identifier this scan can vouch for, or `nil` when the scan is not whole — that a caller uses to decide whether it is safe to prune orphaned, persisted state (for example, deleted themes) for extensions no longer found on disk.
 
 ## Behavioral Requirements
 
@@ -199,7 +199,7 @@ Subsystem: `Bundle.main.bundleIdentifier` (falls back to `"nil"` if unset, via t
 
 ## Platform Notes
 
-- **AppKit / UIKit**: This is the source. Swift specifics behind the platform-neutral requirements: the registry is a `@MainActor` class and `declaredVSCodeVersion` is `nonisolated static let` holding `SemanticVersion(major: 1, minor: 138, patch: 0)`; construction is `init(searchPaths: [URL], hostVersion: SemanticVersion)`; `register(_:)` takes a `ContributionPoint` and `apply` is `apply(_:from:at:)`; scan outcomes are `Scan.Outcome.failed(.manifestUnreadable(_) / .manifestMalformed(_) / .engineRangeUnparsable(_) / .engineIncompatible(required:host:) / .duplicateIdentifier(existing:), identifier:)`; manifests decode with `JSONDecoder().decode(ExtensionManifest.self, from:)`, the identifier is recovered by `ExtensionRegistry.identifier(inRawManifest:)` via `JSONSerialization`, the range type is `VSCodeEngineRange.accepts(_:)`, and the preprocessing steps are `JSONCPreprocessor.jsonData(from:)` and `ExtensionManifestLocalization.localize(_:forManifestIn:)`; the contributions value is `ExtensionManifest.Contributions.empty`; failures are `ExtensionLoadFailure` with `.contributionPointFailed(key:message:)` built from `String(describing: error)` and cleared by `removeContributionFailures(at:)`; the off-main scan runs through `BlockingWork.run(qos: .userInitiated)` inside `Scan.scan(searchPaths:hostVersion:)` (`nonisolated static`, `Sendable`-safe), guarded by `reloadGeneration`; deletion is `FileManager.default.removeItem(at:)` and the persisted set is `UserSettings.disabledExtensionIdentifiers`; `establishedIdentifiers` is a `Set<String>?`; the bookkeeping value it does not hold is `ContributionRegistrations`. The file is `packages/apple/AgenticToolkit/Core/Extensions/ExtensionRegistry.swift`, part of the `AgenticToolkitCore` framework target, which builds for macOS. It has no AppKit or UIKit import; the only Apple-framework dependencies are `Foundation` and `OSLog`. Its sibling `ContributionPoint.swift` (same directory) defines the protocol this file drives, and every conformer today lives under `macOS/Features/Extensions/`.
+- **AppKit / UIKit**: This is the source. Swift specifics behind the platform-neutral requirements: the registry is a `@MainActor` class and `declaredVSCodeVersion` is `nonisolated static let` holding `SemanticVersion(major: 1, minor: 138, patch: 0)`; construction is `init(searchPaths: [URL], hostVersion: SemanticVersion)`; `register(_:)` takes a `ContributionPoint` and `apply` is `apply(_:from:at:)`; scan outcomes are `Scan.Outcome.failed(.manifestUnreadable(_) / .manifestMalformed(_) / .engineRangeUnparsable(_) / .engineIncompatible(required:host:) / .duplicateIdentifier(existing:), identifier:)`; manifests decode with `JSONDecoder().decode(ExtensionManifest.self, from:)`, the identifier is recovered by `ExtensionRegistry.identifier(inRawManifest:)` via `JSONSerialization`, the range type is `VSCodeEngineRange.accepts(_:)`, and the preprocessing steps are `JSONCPreprocessor.jsonData(from:)` and `ExtensionManifestLocalization.localize(_:forManifestIn:)`; the contributions value is `ExtensionManifest.Contributions.empty`; failures are `ExtensionLoadFailure` with `.contributionPointFailed(key:message:)` built from `String(describing: error)` and cleared by `removeContributionFailures(at:)`; the off-main scan runs through `BlockingWork.run(qos: .userInitiated)` inside `Scan.scan(searchPaths:hostVersion:)` (`nonisolated static`, `Sendable`-safe), guarded by `reloadGeneration`; deletion is `FileManager.default.removeItem(at:)` and the persisted set is `UserSettings.disabledExtensionIdentifiers`; `establishedIdentifiers` is a `Set<String>?`; the bookkeeping value it does not hold is `ContributionRegistrations`. The file is `packages/apple/AgenticDeveloperHubSDK/Core/Extensions/ExtensionRegistry.swift`, part of the `AgenticDeveloperHubSDKCore` framework target, which builds for macOS. It has no AppKit or UIKit import; the only Apple-framework dependencies are `Foundation` and `OSLog`. Its sibling `ContributionPoint.swift` (same directory) defines the protocol this file drives, and every conformer today lives under `macOS/Features/Extensions/`.
 - **SwiftUI**: No SwiftUI dependency exists in this file. A SwiftUI host would typically wrap `ExtensionRegistry` in an `@Observable`/`ObservableObject` adapter that calls `loadAll()` once at startup and re-publishes `extensions`/`failures` from inside a contributions-observer handler (`addContributionsObserver`), since the registry itself exposes no `@Published`/`@Observable` state directly.
 - **Compose**: A Kotlin port would model the `@MainActor` confinement as a single-threaded `CoroutineDispatcher` (e.g. `Dispatchers.Main`) every call is confined to, mirroring main-actor-confinement. `Scan.scan` maps to a plain synchronous function over `java.io.File.listFiles()` (sorted explicitly, per scan-sorted-directory-order); the off-thread `reload()` path (reload-off-main-actor-scan) maps to `withContext(Dispatchers.IO) { scan(...) }` followed by resuming on `Dispatchers.Main` to apply. `JSONCPreprocessor` and `ExtensionManifestLocalization` have no framework-provided Kotlin equivalent and would need a direct port (a JSONC comment/BOM/trailing-comma stripper, and an `.nls.json`-keyed string substitution pass) ahead of `kotlinx.serialization` decoding.
 - **React/Web**: A TypeScript port has no actor isolation to enforce, so main-actor-confinement has no direct analogue; a port would instead document that every mutating call into a shared registry instance must run on the same JS event-loop turn, with any asynchronous rescan (the `reload()` analogue) queued rather than interleaved. Directory enumeration maps to Node's `fs.readdir`/`fs.promises.readdir` (sorted explicitly), JSONC parsing to a library implementing the same comment/trailing-comma/BOM tolerance, and `VSCodeEngineRange`/`SemanticVersion` need a direct port since neither is `semver`-compatible by design (see the `extension-host-core-extensions-extension-manifest` recipe for the shared manifest-decoding contract).
@@ -209,7 +209,7 @@ Subsystem: `Bundle.main.bundleIdentifier` (falls back to `"nil"` if unset, via t
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/Core/Extensions/ExtensionRegistry.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Extensions/ExtensionRegistry.swift` |
 
 ## Design Decisions
 

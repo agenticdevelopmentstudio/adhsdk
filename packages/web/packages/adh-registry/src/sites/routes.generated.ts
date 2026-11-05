@@ -1,7 +1,7 @@
 // Every page route of every deployed site, keyed by site id.
 //
 // HAND-WRITTEN — the shares it merges are the generated files. Lazy-loaded
-// by the site menu (as the package subpath `@agentic-toolkit/adh-registry/routes`)
+// by the site menu (as the package subpath `@adh-sdk/adh-registry/routes`)
 // to fill the dev "Routes" flyout for sites that pass no curated `routes` prop.
 //
 // There are several shares because this package is a submodule of every repo that

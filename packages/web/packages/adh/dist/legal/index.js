@@ -25,7 +25,7 @@ function LegalPageShell({
 }
 
 // src/legal/Terms.tsx
-import { LegalPageShell as LegalPageShell2 } from "@agentic-toolkit/adh/legal";
+import { LegalPageShell as LegalPageShell2 } from "@adh-sdk/adh/legal";
 
 // src/legal/constants.ts
 var LEGAL_EFFECTIVE_DATE = "June 23, 2026";
@@ -116,7 +116,7 @@ function Terms() {
 }
 
 // src/legal/Privacy.tsx
-import { LegalPageShell as LegalPageShell3 } from "@agentic-toolkit/adh/legal";
+import { LegalPageShell as LegalPageShell3 } from "@adh-sdk/adh/legal";
 import { Fragment as Fragment2, jsx as jsx3, jsxs as jsxs3 } from "react/jsx-runtime";
 function PrivacyBody() {
   return /* @__PURE__ */ jsxs3(Fragment2, { children: [

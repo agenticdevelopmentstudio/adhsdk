@@ -7,7 +7,7 @@ import type { Storage } from './storage/ports';
 import { buildOpenApiSpec } from './openapi/build';
 import { requireAuth, type AuthVars } from './middleware/auth';
 import type { AuthGate } from './auth/port';
-import { cachedSingleFlight } from '@agentic-toolkit/deploy-platform/util';
+import { cachedSingleFlight } from '@adh-sdk/deploy-platform/util';
 import { authRoutes } from './routes/auth';
 import { usersRoutes } from './routes/users';
 import { readsRoutes, buildSnapshot } from './routes/reads';

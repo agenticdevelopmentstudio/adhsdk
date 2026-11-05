@@ -3,8 +3,8 @@ import '@testing-library/jest-dom/vitest'
 import { render, screen } from '@testing-library/react'
 import { StorySections } from '../marketing/StorySections'
 import { BRAND_PROMISE, PILLAR_COPY } from '../marketing/story-copy'
-import { SITE_STORIES } from '@agentic-toolkit/adh-registry'
-import { SITES, getSite, siteHeaderTitle } from '@agentic-toolkit/adh-registry'
+import { SITE_STORIES } from '@adh-sdk/adh-registry'
+import { SITES, getSite, siteHeaderTitle } from '@adh-sdk/adh-registry'
 
 describe('StorySections', () => {
   it('renders the promise, the site pillar, and the next-step link', () => {

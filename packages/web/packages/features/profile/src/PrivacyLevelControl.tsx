@@ -1,14 +1,14 @@
 "use client";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { PrivacyLevelSelect } from "@agenticdevelopertoolkit/ui/components/privacy-level-select";
+import { PrivacyLevelSelect } from "@adh-sdk/ui/components/privacy-level-select";
 
 import {
   setPrivacyGrant,
   PRIVACY_KEY,
   type PrivacyLevel,
   type PrivacyTargetTable,
-} from "@agentic-toolkit/data/profile";
+} from "@adh-sdk/data/profile";
 
 /**
  * One profile row's audience control, with its grant mutation.

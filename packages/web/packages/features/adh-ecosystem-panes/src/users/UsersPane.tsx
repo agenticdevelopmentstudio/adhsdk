@@ -8,16 +8,16 @@ import {
   type EcosystemUser,
   type EcosystemUserInput,
 } from "../api/customers";
-import { useResourceList } from "@agentic-toolkit/data";
-import { Field } from "@agenticdevelopertoolkit/ui/blocks";
-import { Input } from "@agenticdevelopertoolkit/ui/components/input";
-import { ErrorText } from "@agenticdevelopertoolkit/ui/components/error-text";
-import { CreateResourceDialog } from "@agentic-toolkit/resource";
-import { ButtonBar } from "@agentic-toolkit/resource";
-import { ApiAffordanceScope } from "@agentic-toolkit/crud";
-import { useMasterDetailForm } from "@agentic-toolkit/resource";
-import { useMasterDetailLevel } from "@agentic-toolkit/resource";
-import type { TopicLeaf } from "@agentic-toolkit/resource";
+import { useResourceList } from "@adh-sdk/data";
+import { Field } from "@adh-sdk/ui/blocks";
+import { Input } from "@adh-sdk/ui/components/input";
+import { ErrorText } from "@adh-sdk/ui/components/error-text";
+import { CreateResourceDialog } from "@adh-sdk/resource";
+import { ButtonBar } from "@adh-sdk/resource";
+import { ApiAffordanceScope } from "@adh-sdk/crud";
+import { useMasterDetailForm } from "@adh-sdk/resource";
+import { useMasterDetailLevel } from "@adh-sdk/resource";
+import type { TopicLeaf } from "@adh-sdk/resource";
 import { UserDetail, userBlank, userToInput, userValidate } from "./UserDetail";
 import { UsersTable } from "./UsersTable";
 

@@ -1,4 +1,4 @@
-import { type AppearancePrefs } from '@agenticdevelopertoolkit/themes';
+import { type AppearancePrefs } from '@adh-sdk/themes';
 export interface UseAppearanceSettings {
     prefs: AppearancePrefs;
     /** Apply a change: live on this document immediately, and saved to the user's account. */

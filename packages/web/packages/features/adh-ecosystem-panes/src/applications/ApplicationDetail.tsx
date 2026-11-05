@@ -1,17 +1,17 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { Card, CardContent } from "@agenticdevelopertoolkit/ui/components/card";
-import { Input } from "@agenticdevelopertoolkit/ui/components/input";
-import { Label } from "@agenticdevelopertoolkit/ui/components/label";
-import { EmptyState } from "@agenticdevelopertoolkit/ui/components/empty-state";
-import { RdidEditor } from "@agentic-toolkit/adh-ui/components/rdid-editor";
-import { DeleteEntitySection } from "@agentic-toolkit/adh-ui/blocks";
-import { isRdid } from "@agentic-toolkit/adh-ui/rdid";
-import { ErrorText } from "@agenticdevelopertoolkit/ui/components/error-text";
-import type { ApplicationPlatform } from "@agentic-toolkit/data/ecosystem-config";
+import { Card, CardContent } from "@adh-sdk/ui/components/card";
+import { Input } from "@adh-sdk/ui/components/input";
+import { Label } from "@adh-sdk/ui/components/label";
+import { EmptyState } from "@adh-sdk/ui/components/empty-state";
+import { RdidEditor } from "@adh-sdk/adh-ui/components/rdid-editor";
+import { DeleteEntitySection } from "@adh-sdk/adh-ui/blocks";
+import { isRdid } from "@adh-sdk/adh-ui/rdid";
+import { ErrorText } from "@adh-sdk/ui/components/error-text";
+import type { ApplicationPlatform } from "@adh-sdk/data/ecosystem-config";
 import type { ApplicationInput, PrototypeApplication } from "../api/applications-prototype";
-import { DetailSection, unchangedFromStored } from "@agentic-toolkit/resource";
+import { DetailSection, unchangedFromStored } from "@adh-sdk/resource";
 import { SchemaPermissionsSection } from "./SchemaPermissionsSection";
 import { AccessTokensSection } from "./AccessTokensSection";
 import type { RenderTransferSection } from "../transfer-seam";
@@ -65,7 +65,7 @@ export function appToInput(a: PrototypeApplication): ApplicationInput {
 /** Returns an error message, or null when the draft is valid. `storedIdentifier` is the id already
  *  on the record being edited (absent on a create). It exempts the id from the type-prefix/rdid
  *  FORMAT rule only — same reasoning as `teamValidate`'s stored-identifier exemption
- *  (`@agentic-toolkit/teams`): a row the backend wrote need not satisfy a client-side format rule
+ *  (`@adh-sdk/teams`): a row the backend wrote need not satisfy a client-side format rule
  *  added later, and holding every other field's Save hostage to it is the bug this grandfathers.
  *  Required-ness and uniqueness are never exempt: an empty or duplicate id is still refused even
  *  when untouched (Mike, 2026-09-25). */

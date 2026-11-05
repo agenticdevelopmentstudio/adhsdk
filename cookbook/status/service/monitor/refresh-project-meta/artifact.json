@@ -3,7 +3,7 @@
   "meta": {
     "id": "1c3d8661-12f2-4a84-bef4-7ccd4e3841e7",
     "title": "Status Server Monitor Refresh Project Meta",
-    "domain": "adtoolkit://cookbook/status/service/monitor/refresh-project-meta",
+    "domain": "adhsdk://cookbook/status/service/monitor/refresh-project-meta",
     "type": "ingredient",
     "version": "1.1.1",
     "status": "review",
@@ -30,21 +30,21 @@
       "agenticdevelopercookbook://guidelines/implementing/data/transactions-and-concurrency"
     ],
     "related": [
-      "adtoolkit://cookbook/status/service/monitor/fetch-vercel-projects",
-      "adtoolkit://cookbook/status/service/monitor/provider-conn",
-      "adtoolkit://cookbook/status/service/config",
-      "adtoolkit://cookbook/status/service/storage/libsql"
+      "adhsdk://cookbook/status/service/monitor/fetch-vercel-projects",
+      "adhsdk://cookbook/status/service/monitor/provider-conn",
+      "adhsdk://cookbook/status/service/config",
+      "adhsdk://cookbook/status/service/storage/libsql"
     ],
     "references": [
-      "packages/web/packages/status-server/src/monitor/refresh-project-meta.ts (agenticdevelopertoolkit)",
-      "packages/web/packages/status-server/test/refresh-project-meta.int.test.ts (agenticdevelopertoolkit)",
-      "packages/web/packages/status-server/src/monitor/fetch-vercel-projects.ts (agenticdevelopertoolkit)",
-      "packages/web/packages/status-server/src/monitor/provider-conn.ts (agenticdevelopertoolkit)",
-      "packages/web/packages/status-server/src/storage/ports.ts (agenticdevelopertoolkit)",
-      "packages/web/packages/status-server/src/config/port.ts (agenticdevelopertoolkit)",
-      "packages/web/packages/status-server/src/libsql/stores/deploy-store.ts (agenticdevelopertoolkit)",
-      "packages/web/packages/status-server/src/monitor/sync.ts (agenticdevelopertoolkit)",
-      "packages/web/packages/status-server/src/routes/reads.ts (agenticdevelopertoolkit)"
+      "packages/web/packages/status-server/src/monitor/refresh-project-meta.ts (adhsdk)",
+      "packages/web/packages/status-server/test/refresh-project-meta.int.test.ts (adhsdk)",
+      "packages/web/packages/status-server/src/monitor/fetch-vercel-projects.ts (adhsdk)",
+      "packages/web/packages/status-server/src/monitor/provider-conn.ts (adhsdk)",
+      "packages/web/packages/status-server/src/storage/ports.ts (adhsdk)",
+      "packages/web/packages/status-server/src/config/port.ts (adhsdk)",
+      "packages/web/packages/status-server/src/libsql/stores/deploy-store.ts (adhsdk)",
+      "packages/web/packages/status-server/src/monitor/sync.ts (adhsdk)",
+      "packages/web/packages/status-server/src/routes/reads.ts (adhsdk)"
     ],
     "approved-by": "",
     "approved-date": ""

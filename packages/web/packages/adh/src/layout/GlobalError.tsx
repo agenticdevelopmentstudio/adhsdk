@@ -7,9 +7,9 @@ import { useEffect, type ReactElement } from 'react'
 // TelemetryProvider, in the `telemetry` entry) would stay null forever — every error these
 // two components report would silently never reach GlitchTip in a production build, while
 // next dev / vitest / tsc all stayed green on the `development` (src) condition. The leaf,
-// not the `@agentic-toolkit/adh/telemetry` barrel: the barrel is 'use client' and drags
+// not the `@adh-sdk/adh/telemetry` barrel: the barrel is 'use client' and drags
 // TelemetryProvider + the analytics surface along. Matching `external` entry required.
-import { captureException } from '@agentic-toolkit/adh/telemetry/report-error'
+import { captureException } from '@adh-sdk/adh/telemetry/report-error'
 import { CHUNK_UPDATE_COPY, isChunkLoadError, recoverFromChunkError } from './chunk-recovery'
 
 /**

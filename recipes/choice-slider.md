@@ -1,7 +1,7 @@
 ---
 id: 6f7c9bb6-b6fe-479a-9dbc-3ff174f7fed2
 title: Choice Slider
-domain: agenticdevelopertoolkit://recipes/choice-slider
+domain: adhsdk://recipes/choice-slider
 type: ingredient
 version: 1.3.2
 status: review

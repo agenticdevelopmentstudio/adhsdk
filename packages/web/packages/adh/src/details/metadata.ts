@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
-import { getConcept, siteConcept } from '@agentic-toolkit/adh/concepts'
-import { getSite, siteProdUrl, type SiteId } from '@agentic-toolkit/adh-registry'
-import { siteMetadata } from '@agentic-toolkit/adh-registry/seo'
+import { getConcept, siteConcept } from '@adh-sdk/adh/concepts'
+import { getSite, siteProdUrl, type SiteId } from '@adh-sdk/adh-registry'
+import { siteMetadata } from '@adh-sdk/adh-registry/seo'
 
 /** Next `Metadata` for a site's details page — a specific `topic`, or the site's
  *  details overview when omitted. Canonical points at the site's own host so each

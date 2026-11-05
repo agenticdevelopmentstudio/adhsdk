@@ -1,7 +1,7 @@
 ---
 id: f4740433-221c-4c89-b888-ee8da7aa4b3c
 title: "Swatch Grid View"
-domain: adtoolkit://cookbook/ui/settings/rows/swatch-grid-view
+domain: adhsdk://cookbook/ui/settings/rows/swatch-grid-view
 type: ingredient
 version: 1.3.1
 status: review
@@ -21,7 +21,7 @@ tags:
   - grid
 depends-on: []
 related:
-  - adtoolkit://cookbook/ui/settings/rows/color-picker-view
+  - adhsdk://cookbook/ui/settings/rows/color-picker-view
 references: []
 approved-by: ""
 approved-date: ""
@@ -37,7 +37,7 @@ colors as a grid of fixed-size color swatches, wrapped into rows of a
 fixed column count. Per its doc comment, it generalizes the ad-hoc
 swatch/ANSI grid the terminal profiles view used to build inline. Unlike
 sibling rows such as the color picker row
-(adtoolkit://cookbook/ui/settings/rows/color-picker-view), it is
+(adhsdk://cookbook/ui/settings/rows/color-picker-view), it is
 purely a display component: it exposes one mutator, a color-replacement
 operation, and contains no interactive-control code of any kind.
 
@@ -303,7 +303,7 @@ logger reference anywhere in source).
   updates, keeping the border reactive while the fill stays fixed to the
   color passed in, mirroring `renders-swatch-style`.
 - **AppKit / UIKit** (source platform): Source file
-  `packages/apple/AgenticToolkit/macOS/SystemIntegration/ComposableSettingsWindow/Views/SwatchGridView.swift`.
+  `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/Views/SwatchGridView.swift`.
   A macOS-only (`import AppKit`) `NSView` subclass, `@MainActor`, inside
   the `ComposableSettings` namespace, conforming to `SettingsViewProtocol`.
   It composes a vertical `NSStackView` of horizontal `NSStackView` rows,
@@ -355,7 +355,7 @@ logger reference anywhere in source).
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/macOS/SystemIntegration/ComposableSettingsWindow/Views/SwatchGridView.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/Views/SwatchGridView.swift` |
 
 ## Design Decisions
 

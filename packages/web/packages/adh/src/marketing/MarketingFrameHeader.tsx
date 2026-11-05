@@ -2,10 +2,10 @@ import { Fragment, type ReactElement } from "react";
 // Package paths, for the reason MarketingShell.tsx gives: each of these holds module-level
 // state (contexts, a one-shot SDK init) or a `'use client'` directive, and a relative
 // specifier would inline a private copy of it into this entry.
-import { AppShellProviders } from "@agentic-toolkit/adh/layout";
-import { AuthProvider } from "@agentic-toolkit/adh/auth";
-import { MarketingSiteHeader } from "@agentic-toolkit/adh/marketing/MarketingSiteHeader";
-import { HelpContentProvider } from "@agenticdevelopertoolkit/ui/components/help-content";
+import { AppShellProviders } from "@adh-sdk/adh/layout";
+import { AuthProvider } from "@adh-sdk/adh/auth";
+import { MarketingSiteHeader } from "@adh-sdk/adh/marketing/MarketingSiteHeader";
+import { HelpContentProvider } from "@adh-sdk/ui/components/help-content";
 import type { MarketingShellProps } from "./MarketingShell";
 
 export type MarketingFrameHeaderProps = Omit<MarketingShellProps, "children" | "footerLinks">;
@@ -15,7 +15,7 @@ export type MarketingFrameHeaderProps = Omit<MarketingShellProps, "children" | "
 export const FRAME_HEADER_CLASS = "adh-frame-header";
 
 /**
- * The family's header alone, for the `/` of a site built on `@agenticdevelopertoolkit/site-template`
+ * The family's header alone, for the `/` of a site built on `@adh-sdk/site-template`
  * — the template's `header` slot. Every other route of such a site mounts `MarketingShell`, whose
  * header carries the visitor's session; `/` is the template's frame, and without this it carried
  * the frame's bar instead, so a signed-in visitor landed on a page that did not know them.

@@ -6,7 +6,7 @@
 // LandingFooter (marketing/) reaches it by package path, and the floating SiteFooter opens
 // it in a dialog. It renders none of the dialogs its entries open — see FamilyFooter's doc.
 import type { MouseEvent, ReactElement, ReactNode } from 'react'
-import { getSite, groupSitesByCategory, siteProdUrl, type SiteDef } from '@agentic-toolkit/adh-registry'
+import { getSite, groupSitesByCategory, siteProdUrl, type SiteDef } from '@adh-sdk/adh-registry'
 // Relative on purpose: PreviewNotice holds only per-instance state, so the copy this inlines
 // into the footer entry forks nothing, and the header barrel is not this entry's to load.
 import { PreviewNotice } from '../header/PreviewNotice'

@@ -8,7 +8,7 @@ import {
   DropdownMenuSub,
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
-} from "@agenticdevelopertoolkit/ui/components/dropdown-menu"
+} from "@adh-sdk/ui/components/dropdown-menu"
 
 /**
  * The two axes a markdown list's gear narrows on, each an exact name or `""` for no narrowing.

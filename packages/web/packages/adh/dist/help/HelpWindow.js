@@ -4,9 +4,9 @@
 
 // src/help/HelpWindow.tsx
 import { useMemo } from "react";
-import { HierarchicalDetailView } from "@agenticdevelopertoolkit/ui/blocks";
-import { EmptyState } from "@agenticdevelopertoolkit/ui/components/empty-state";
-import { FloatingWindow } from "@agentic-toolkit/adh/debug-env";
+import { HierarchicalDetailView } from "@adh-sdk/ui/blocks";
+import { EmptyState } from "@adh-sdk/ui/components/empty-state";
+import { FloatingWindow } from "@adh-sdk/adh/debug-env";
 
 // src/help/topics.ts
 var HELP_TOPICS = [
@@ -105,8 +105,8 @@ function topicIcon(id) {
 }
 
 // src/help/views/MarkdownTopic.tsx
-import { isModifiedClick } from "@agenticdevelopertoolkit/ui/lib/navigation-guard";
-import { useHelp } from "@agentic-toolkit/adh/help";
+import { isModifiedClick } from "@adh-sdk/ui/lib/navigation-guard";
+import { useHelp } from "@adh-sdk/adh/help";
 
 // src/docs/MarkdownHtml.tsx
 import { jsx as jsx2 } from "react/jsx-runtime";
@@ -529,14 +529,14 @@ function MarkdownTopic({ contentKey }) {
 }
 
 // src/help/views/ApiTopic.tsx
-import { ApiBrowser } from "@agentic-toolkit/api-explorer";
+import { ApiBrowser } from "@adh-sdk/api-explorer";
 import { jsx as jsx4 } from "react/jsx-runtime";
 function ApiTopic() {
   return /* @__PURE__ */ jsx4("div", { className: "adh-help-topic adh-help-topic--api", children: /* @__PURE__ */ jsx4(ApiBrowser, {}) });
 }
 
 // src/help/views/HubTopic.tsx
-import { siteProdUrl, siteUrl } from "@agentic-toolkit/adh-registry";
+import { siteProdUrl, siteUrl } from "@adh-sdk/adh-registry";
 
 // src/header/useClientHost.ts
 import { useEffect, useState } from "react";

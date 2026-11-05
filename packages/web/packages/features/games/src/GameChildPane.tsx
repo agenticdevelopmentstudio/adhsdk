@@ -2,10 +2,10 @@
 
 import { useCallback, useState, type ReactNode } from "react";
 import { Trash2 } from "lucide-react";
-import { clientRefusal, useResourceList } from "@agentic-toolkit/data";
-import { ErrorText } from "@agenticdevelopertoolkit/ui/components/error-text";
-import { Button } from "@agenticdevelopertoolkit/ui/components/button";
-import { TopicSelectHint, type TopicDetailItem, type TopicLevel } from "@agenticdevelopertoolkit/ui/blocks";
+import { clientRefusal, useResourceList } from "@adh-sdk/data";
+import { ErrorText } from "@adh-sdk/ui/components/error-text";
+import { Button } from "@adh-sdk/ui/components/button";
+import { TopicSelectHint, type TopicDetailItem, type TopicLevel } from "@adh-sdk/ui/blocks";
 import {
   useStackLevel,
   useRailExitGuard,
@@ -13,7 +13,7 @@ import {
   RecordSettingsPane,
   CreateResourceDialog,
   type TopicLeaf,
-} from "@agentic-toolkit/resource";
+} from "@adh-sdk/resource";
 import { sortByGroup } from "./group";
 
 /** Everything one of the three per-game child collections needs to become a pane. */

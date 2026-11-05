@@ -1,5 +1,5 @@
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/macOS/Features/LoggingWindow/LogView.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/LoggingWindow/LogView.swift` |
 

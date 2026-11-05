@@ -1,11 +1,11 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState, type ReactElement } from "react";
-import { ErrorText } from "@agenticdevelopertoolkit/ui/components/error-text";
-import { EmptyState } from "@agenticdevelopertoolkit/ui/components/empty-state";
-import { List, ListItem } from "@agenticdevelopertoolkit/ui/components/list";
-import { Button } from "@agenticdevelopertoolkit/ui/components/button";
-import type { ActivityPage, ProjectActivity } from "@agentic-toolkit/data/projects";
+import { ErrorText } from "@adh-sdk/ui/components/error-text";
+import { EmptyState } from "@adh-sdk/ui/components/empty-state";
+import { List, ListItem } from "@adh-sdk/ui/components/list";
+import { Button } from "@adh-sdk/ui/components/button";
+import type { ActivityPage, ProjectActivity } from "@adh-sdk/data/projects";
 import { actorText, actionPhrase, commentBody, relativeTime } from "./helpers";
 import { DEFAULT_ITEM_WORDS, type ItemWords } from "./vocabulary";
 

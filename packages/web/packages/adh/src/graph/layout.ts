@@ -1,4 +1,4 @@
-import type { GraphNode } from '@agentic-toolkit/adh/concepts'
+import type { GraphNode } from '@adh-sdk/adh/concepts'
 
 // Unified chart geometry. The WHOLE chart — the breadcrumb row plus the radial
 // graph — lives in ONE square coordinate space (0..100 on both axes). Because the

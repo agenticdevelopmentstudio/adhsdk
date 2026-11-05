@@ -25,7 +25,7 @@
   `theme` repaints only the preview, exactly as the show operation does
   imperatively here.
 - **AppKit/UIKit** (source platform): Source file
-  `packages/apple/AgenticToolkit/macOS/SystemIntegration/ComposableSettingsWindow/Views/ThemePreviewView.swift`.
+  `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/Views/ThemePreviewView.swift`.
   A macOS-only (`import AppKit`), `@MainActor` `NSView` subclass in the
   `ComposableSettings` namespace, conforming to `SettingsViewProtocol`. The
   component is constructed only via `init(theme:)`; the fatal-erroring

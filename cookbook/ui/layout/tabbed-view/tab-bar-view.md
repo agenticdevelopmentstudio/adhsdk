@@ -1,7 +1,7 @@
 ---
 id: 5c0cc9f5-bc89-4e06-8d24-3db6424ff075
 title: "Tab Bar View"
-domain: adtoolkit://cookbook/ui/layout/tabbed-view/tab-bar-view
+domain: adhsdk://cookbook/ui/layout/tabbed-view/tab-bar-view
 type: ingredient
 version: 1.3.1
 status: review
@@ -20,7 +20,7 @@ tags:
   - tab-bar
 depends-on: []
 related:
-  - adtoolkit://cookbook/ui/layout/tabbed-view
+  - adhsdk://cookbook/ui/layout/tabbed-view
 references: []
 approved-by: ""
 approved-date: ""
@@ -499,7 +499,7 @@ Not applicable: this concept contains no logging call of any kind.
   (mirroring `-16pt`) and a `z-index` computed from each item's index
   distance from the selected tab.
 - **AppKit/UIKit** (source platform): Implemented entirely in
-  `packages/apple/AgenticToolkit/macOS/UI/ViewControllers/MultiTabbedViewController/TabBarView.swift`
+  `packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/MultiTabbedViewController/TabBarView.swift`
   as three types: `TabBarView` (an `NSView` hosting an `NSStackView`), the
   private `TabItemHostView` (click-to-select wrapper for a `.viewController`
   item's view), and the private `TabButton` (the `.title` item's pill,
@@ -553,7 +553,7 @@ Not applicable: this concept contains no logging call of any kind.
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/macOS/UI/ViewControllers/MultiTabbedViewController/TabBarView.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/MultiTabbedViewController/TabBarView.swift` |
 
 ## Design Decisions
 

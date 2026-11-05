@@ -1,7 +1,7 @@
 ---
 id: 8bdba644-d7ad-45e4-a2f5-0156bfd40e15
 title: "Local Provider Model Store"
-domain: adtoolkit://cookbook/ai/models/local/local-provider-model-store
+domain: adhsdk://cookbook/ai/models/local/local-provider-model-store
 type: ingredient
 version: 1.2.2
 status: review
@@ -21,19 +21,19 @@ tags:
   - ollama
 depends-on: []
 related:
-  - adtoolkit://cookbook/ai/models/local/local-model-catalog
-  - adtoolkit://cookbook/ai/models/local/local-inference-guard
+  - adhsdk://cookbook/ai/models/local/local-model-catalog
+  - adhsdk://cookbook/ai/models/local/local-inference-guard
 references:
-  - packages/apple/AgenticToolkit/AIPluginKit/LocalProviderModelStore.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/AIPluginKit/LocalModelServer.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Core/SettingStorage/UserSetting.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Core/SettingStorage/UserSettings.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Core/SettingStorage/StorableSetting.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Core/SettingStorage/SettingsStore.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Core/AI/ModelCatalogStore.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Core/AI/ArtificialAnalysisStore.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Core/AI/OllamaModelPageStore.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Core/AI/OllamaModelMetadata.swift (agenticdevelopertoolkit)
+  - packages/apple/AgenticDeveloperHubSDK/AIPluginKit/LocalProviderModelStore.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/AIPluginKit/LocalModelServer.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Core/SettingStorage/UserSetting.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Core/SettingStorage/UserSettings.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Core/SettingStorage/StorableSetting.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Core/SettingStorage/SettingsStore.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Core/AI/ModelCatalogStore.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Core/AI/ArtificialAnalysisStore.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Core/AI/OllamaModelPageStore.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Core/AI/OllamaModelMetadata.swift (adhsdk)
 approved-by: ""
 approved-date: ""
 ---
@@ -383,8 +383,8 @@ Behavioral Requirements.
 ## Platform Notes
 
 - **SwiftUI**: The source is
-  `packages/apple/AgenticToolkit/AIPluginKit/LocalProviderModelStore.swift`,
-  which `import AgenticToolkitCore`s its collaborators
+  `packages/apple/AgenticDeveloperHubSDK/AIPluginKit/LocalProviderModelStore.swift`,
+  which `import AgenticDeveloperHubSDKCore`s its collaborators
   `LocalModelServer.swift` (same target) and, from Core,
   `ModelCatalogStore.swift`, `ArtificialAnalysisStore.swift`,
   `OllamaModelPageStore.swift`, `OllamaModelMetadata.swift` (which also
@@ -438,7 +438,7 @@ Behavioral Requirements.
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/AIPluginKit/LocalProviderModelStore.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/AIPluginKit/LocalProviderModelStore.swift` |
 
 ## Design Decisions
 

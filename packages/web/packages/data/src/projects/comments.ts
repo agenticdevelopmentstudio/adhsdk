@@ -20,7 +20,7 @@ const ITEMS = "/api/project/work-items";
 const COMMENTS = "/api/project/comments";
 
 /**
- * How a comment names itself to the polymorphic reaction store (`@agentic-toolkit/data/reactions`):
+ * How a comment names itself to the polymorphic reaction store (`@adh-sdk/data/reactions`):
  * its TABLE, `project.comments`.
  *
  * Reactions are deliberately not a comment endpoint — a `(targetKind, targetId)` store already

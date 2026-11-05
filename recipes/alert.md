@@ -1,7 +1,7 @@
 ---
 id: a56695f3-0205-4c9b-b724-53be608de2f0
 title: Alert
-domain: agenticdevelopertoolkit://recipes/alert
+domain: adhsdk://recipes/alert
 type: ingredient
 version: 1.1.1
 status: review
@@ -22,7 +22,7 @@ tags:
 - feedback
 depends-on: []
 related:
-- agenticdevelopertoolkit://recipes/alert-and-dialog
+- adhsdk://recipes/alert-and-dialog
 references: []
 approved-by: ''
 approved-date: ''

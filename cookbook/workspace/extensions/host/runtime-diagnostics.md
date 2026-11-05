@@ -1,7 +1,7 @@
 ---
 id: 639bf7b5-011e-4dc0-9c4e-bc704957cf97
 title: "Extension Runtime Diagnostics"
-domain: adtoolkit://cookbook/workspace/extensions/host/runtime-diagnostics
+domain: adhsdk://cookbook/workspace/extensions/host/runtime-diagnostics
 type: ingredient
 version: 1.1.0
 status: review
@@ -25,14 +25,14 @@ depends-on:
   - agenticdevelopercookbook://guidelines/implementing/observability/logging
   - agenticdevelopercookbook://guidelines/implementing/security/sensitive-data
 related:
-  - adtoolkit://cookbook/workspace/extensions/host/extension-host
+  - adhsdk://cookbook/workspace/extensions/host/extension-host
 references:
-  - packages/apple/AgenticToolkit/Core/Diagnostics/JITAvailability.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Core/Diagnostics/UpstreamDivergence.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Core/Diagnostics/UpstreamDivergenceLedger.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Core/Loggable.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Tests/AgenticToolkitCoreTests/Diagnostics/JITAvailabilityTests.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Tests/AgenticToolkitCoreTests/Diagnostics/UpstreamDivergenceLedgerTests.swift (agenticdevelopertoolkit)
+  - packages/apple/AgenticDeveloperHubSDK/Core/Diagnostics/JITAvailability.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Core/Diagnostics/UpstreamDivergence.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Core/Diagnostics/UpstreamDivergenceLedger.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Core/Loggable.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKCoreTests/Diagnostics/JITAvailabilityTests.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKCoreTests/Diagnostics/UpstreamDivergenceLedgerTests.swift (adhsdk)
 approved-by: ""
 approved-date: ""
 ---
@@ -376,8 +376,8 @@ respectively.
 - **SwiftUI**: The three pieces are implemented as `JITAvailability`,
   `UpstreamDivergence` (with its nested `Detection` enum and companion
   `UpstreamDivergenceHit`), and `UpstreamDivergenceLedger`, in
-  `packages/apple/AgenticToolkit/Core/Diagnostics/`, part of the
-  `AgenticToolkitCore` framework target. `JITAvailability` is a `Sendable,
+  `packages/apple/AgenticDeveloperHubSDK/Core/Diagnostics/`, part of the
+  `AgenticDeveloperHubSDKCore` framework target. `JITAvailability` is a `Sendable,
   Hashable` struct with a public initializer that assigns its two `Bool`
   properties (`isHardenedRuntime`, `hasJITEntitlement`) directly; its
   `current` is a `static let`, memoized once by Swift's own thread-safe
@@ -434,7 +434,7 @@ respectively.
   single-threaded event loop needs no `NSLock` equivalent at all.
 - **AppKit / UIKit**: Identical to the SwiftUI note — none of the three
   types is UI-framework-specific; only the host application embedding
-  `AgenticToolkitCore` differs, never this contract. (`JITAvailability`'s
+  `AgenticDeveloperHubSDKCore` differs, never this contract. (`JITAvailability`'s
   own consumer, `ExtensionHost.swift`, happens to be an AppKit-hosted,
   macOS-only feature, but that is a fact about the caller, not this
   component.)
@@ -462,7 +462,7 @@ respectively.
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/Core/Diagnostics/` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Diagnostics/` |
 
 ## Design Decisions
 

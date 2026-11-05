@@ -3,7 +3,7 @@
   "meta": {
     "id": "91bd3986-da9d-418e-a969-c878efa88d50",
     "title": "Mock Chat Session",
-    "domain": "adtoolkit://cookbook/ai/chat/mock-chat-session",
+    "domain": "adhsdk://cookbook/ai/chat/mock-chat-session",
     "type": "ingredient",
     "version": "1.2.0",
     "status": "review",
@@ -25,7 +25,7 @@
     ],
     "depends-on": [],
     "related": [
-      "adtoolkit://cookbook/ai/chat/chat-window/chat-view"
+      "adhsdk://cookbook/ai/chat/chat-window/chat-view"
     ],
     "references": [],
     "approved-by": "",

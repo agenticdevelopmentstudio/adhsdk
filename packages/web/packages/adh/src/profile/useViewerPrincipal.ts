@@ -1,8 +1,8 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useOptionalAuth } from '@agentic-toolkit/auth'
-import { authedJson } from '@agentic-toolkit/auth/client'
+import { useOptionalAuth } from '@adh-sdk/auth'
+import { authedJson } from '@adh-sdk/auth/client'
 import { principalFromOrgCard, principalFromUserCard, type OrgCardBody, type UserCardBody } from './normalize'
 import type { ProfilePrincipal } from './types'
 

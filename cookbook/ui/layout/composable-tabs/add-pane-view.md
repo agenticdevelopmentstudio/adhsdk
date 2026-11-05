@@ -1,7 +1,7 @@
 ---
 id: aea5e7b2-00d2-4f23-bfc5-8dc64e8d0d2a
 title: "Composable Tabs Add Pane Sheet"
-domain: adtoolkit://cookbook/ui/layout/composable-tabs/add-pane-view
+domain: adhsdk://cookbook/ui/layout/composable-tabs/add-pane-view
 type: ingredient
 version: 1.2.1
 status: review
@@ -20,7 +20,7 @@ tags:
   - sheet
   - form-control
 depends-on:
-  - adtoolkit://cookbook/ui/layout/composable-tabs
+  - adhsdk://cookbook/ui/layout/composable-tabs
 related: []
 references: []
 approved-by: ""
@@ -354,7 +354,7 @@ this file.
   time, from `choices.length === 0`, mirroring the source's fixed-at-load
   enablement rather than a reactive binding.
 - **AppKit / UIKit** (source platform): Implemented in
-  `packages/apple/AgenticToolkit/macOS/UI/ViewControllers/ComposableTabs/ComposableTabsAddPaneViewController.swift`
+  `packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/ComposableTabs/ComposableTabsAddPaneViewController.swift`
   as a `@MainActor`, `final` `NSViewController` with no nib/XIB —
   `loadView()` builds an `NSGridView` of two `NSPopUpButton`s and their
   `ThemedLabel` captions, plus an `NSStackView` of Cancel/OK `NSButton`s,
@@ -394,7 +394,7 @@ this file.
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/macOS/UI/ViewControllers/ComposableTabs/ComposableTabsAddPaneViewController.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/ComposableTabs/ComposableTabsAddPaneViewController.swift` |
 
 ## Design Decisions
 

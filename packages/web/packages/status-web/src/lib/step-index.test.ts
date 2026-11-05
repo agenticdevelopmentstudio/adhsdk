@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { stepIndex } from "@agenticdevelopertoolkit/ui/lib/step-index";
+import { stepIndex } from "@adh-sdk/ui/lib/step-index";
 
 describe("stepIndex", () => {
   it("moves down and clamps at the last item", () => {

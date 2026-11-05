@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""No recipe in the public toolkit may name the private scope.
+"""No recipe may name a retired package scope.
 
-A recipe that still says @agentic-toolkit/ points a reader at a package this repo
+A recipe that still says @agentic-toolkit/ or @agenticdevelopertoolkit/ points a reader at a package this repo
 does not have, in a repo whose whole purpose is being readable by strangers.
 """
 import argparse
@@ -9,7 +9,7 @@ import re
 import sys
 from pathlib import Path
 
-STALE = re.compile(r"@agentic-toolkit/[a-z0-9-]+")
+STALE = re.compile(r"@(?:agentic-toolkit|agenticdevelopertoolkit)/[a-z0-9-]+")
 
 
 def main() -> int:

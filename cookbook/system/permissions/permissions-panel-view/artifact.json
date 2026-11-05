@@ -3,7 +3,7 @@
   "meta": {
     "id": "07388a5c-901d-4cf3-b818-bf52c180be08",
     "title": "Permissions Panel View",
-    "domain": "adtoolkit://cookbook/system/permissions/permissions-panel-view",
+    "domain": "adhsdk://cookbook/system/permissions/permissions-panel-view",
     "type": "ingredient",
     "version": "1.2.2",
     "status": "review",
@@ -23,7 +23,7 @@
       "settings"
     ],
     "depends-on": [
-      "adtoolkit://cookbook/system/permissions/permission-row-view"
+      "adhsdk://cookbook/system/permissions/permission-row-view"
     ],
     "related": [
       "agenticdevelopercookbook://guidelines/cookbook/ui/platform-design-languages"

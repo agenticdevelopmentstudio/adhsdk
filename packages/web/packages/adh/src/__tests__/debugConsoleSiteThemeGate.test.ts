@@ -78,7 +78,7 @@ describe('the site-theme editor module', () => {
     // whole four-legged mechanism. Here we only pin that the console reaches the editor
     // through a dynamic import and never through a value import.
     expect(src).toMatch(
-      /const SiteThemeConsole =[\s\S]*?\?\s*dynamic\(\(\) =>\s*import\('@agentic-toolkit\/adh\/debug-env\/SiteThemeConsole'\)/,
+      /const SiteThemeConsole =[\s\S]*?\?\s*dynamic\(\(\) =>\s*import\('@adh-sdk\/adh\/debug-env\/SiteThemeConsole'\)/,
     )
     // Only the type may be imported statically — types are erased, so they cost no bundle.
     const STATIC_IMPORT = /^import\s+(type\s+)?.*?'[^']*\/SiteThemeConsole'/gm

@@ -1,18 +1,18 @@
 'use client'
 
 import type { ReactElement } from 'react'
-import type { ProfilePrincipal } from '@agentic-toolkit/adh/profile'
-import { registryUserPersonaPath, siteProdUrl, siteUrl } from '@agentic-toolkit/adh-registry'
-import { useClientHost } from '@agentic-toolkit/adh/header'
+import type { ProfilePrincipal } from '@adh-sdk/adh/profile'
+import { registryUserPersonaPath, siteProdUrl, siteUrl } from '@adh-sdk/adh-registry'
+import { useClientHost } from '@adh-sdk/adh/header'
 
 /**
  * This site's section of a principal's profile at `/<slug>/profile` — declared as
  * `profileSection` on `home-model.tsx` (the `SiteHomeModel` field documented in
- * `@agentic-toolkit/adh/home`).
+ * `@adh-sdk/adh/home`).
  *
- * Lives here, in the site, rather than in `@agentic-toolkit/personas`: it imports the adh
- * vocabulary tier (`@agentic-toolkit/adh/profile`, `@agentic-toolkit/adh-registry`,
- * `@agentic-toolkit/adh/header`) directly, which a portable feature package may not do
+ * Lives here, in the site, rather than in `@adh-sdk/personas`: it imports the adh
+ * vocabulary tier (`@adh-sdk/adh/profile`, `@adh-sdk/adh-registry`,
+ * `@adh-sdk/adh/header`) directly, which a portable feature package may not do
  * (`tools/check_boundaries.py`) — a site is a consumer of that vocabulary, not a package other
  * products reuse, and this component's whole job is rendering one site's `profileSection`.
  *
@@ -40,7 +40,7 @@ import { useClientHost } from '@agentic-toolkit/adh/header'
  * `siteUrl` resolves the right host for the current environment (local suite / testing / staging /
  * prod).
  *
- * The host comes from `useClientHost` (`@agentic-toolkit/adh/header`) — `null` on the server AND
+ * The host comes from `useClientHost` (`@adh-sdk/adh/header`) — `null` on the server AND
  * on the first client render, the real host once mounted — rather than a direct
  * `globalThis.location` read. This component carries `'use client'`, but a client component still
  * renders on the SERVER first, where `location` is undefined: a direct read would make the server

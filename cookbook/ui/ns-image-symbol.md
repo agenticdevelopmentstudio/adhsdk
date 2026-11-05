@@ -1,7 +1,7 @@
 ---
 id: 5CACE721-E5EB-4D7A-AD2B-3EB67775CB88
 title: "Symbol Image"
-domain: adtoolkit://cookbook/ui/ns-image-symbol
+domain: adhsdk://cookbook/ui/ns-image-symbol
 type: ingredient
 version: 1.0.0
 status: review
@@ -181,7 +181,7 @@ Not applicable: the component performs no logging; a fallback is deliberately si
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/CoreUI/NSImage+Symbol.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/CoreUI/NSImage+Symbol.swift` |
 
 ## Design Decisions
 
@@ -202,7 +202,7 @@ Not applicable: the component performs no logging; a fallback is deliberately si
 | [explicit-error-handling](agenticdevelopercookbook://compliance/best-practices#explicit-error-handling) | partial | Best Practices |
 | [fault-tolerance](agenticdevelopercookbook://compliance/reliability#fault-tolerance) | passed | Reliability |
 
-Separation-of-concerns is passed: the extension has one job, converting a name to an image that always exists, and holds no state or view code. Unit-test-coverage is passed: `NSImageSymbolTests.swift` in `AgenticToolkitCoreUITests` has two tests, one for a known symbol keeping its description and one for an unknown symbol yielding a 16 by 16 template image that keeps its description. Explicit-error-handling is partial because the one failure path is handled deliberately but silently, with no diagnostic (see Design Decisions). Fault-tolerance is passed because no input name, including an empty or misspelled one, can crash the lookup.
+Separation-of-concerns is passed: the extension has one job, converting a name to an image that always exists, and holds no state or view code. Unit-test-coverage is passed: `NSImageSymbolTests.swift` in `AgenticDeveloperHubSDKCoreUITests` has two tests, one for a known symbol keeping its description and one for an unknown symbol yielding a 16 by 16 template image that keeps its description. Explicit-error-handling is partial because the one failure path is handled deliberately but silently, with no diagnostic (see Design Decisions). Fault-tolerance is passed because no input name, including an empty or misspelled one, can crash the lookup.
 
 ## Change History
 

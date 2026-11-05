@@ -1,7 +1,7 @@
 ---
 id: ae0932d6-572f-4173-ba49-df68f4039ba4
 title: "Project Chooser Window"
-domain: adtoolkit://cookbook/workspace/projects/project-chooser-window
+domain: adhsdk://cookbook/workspace/projects/project-chooser-window
 type: ingredient
 version: 1.1.1
 status: review
@@ -23,11 +23,11 @@ tags:
 depends-on: []
 related: []
 references:
-  - packages/apple/AgenticToolkit/macOS/Features/Projects/ProjectChooserWindow.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/macOS/Features/Projects/ProjectBrowserViewController.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/macOS/Features/Projects/ProjectsCoordinator.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/macOS/Features/Projects/GitRepo.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/CoreMacOS/DebugAutomation/NSApplication+QuietActivation.swift (agenticdevelopertoolkit)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectChooserWindow.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectBrowserViewController.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectsCoordinator.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/GitRepo.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/CoreMacOS/DebugAutomation/NSApplication+QuietActivation.swift (adhsdk)
 approved-by: ""
 approved-date: ""
 ---
@@ -276,7 +276,7 @@ This dialog makes no logging call of its own.
 ## Platform Notes
 
 - **SwiftUI**: The source is entirely AppKit
-  (`packages/apple/AgenticToolkit/macOS/Features/Projects/ProjectChooserWindow.swift`):
+  (`packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectChooserWindow.swift`):
   `NSWindowController`, `NSWindowDelegate`, `NSWindow`, and a private
   `NSViewController`. A SwiftUI port has no built-in app-modal API on
   macOS — `.sheet` requires a presenting window this app cannot guarantee
@@ -348,7 +348,7 @@ This dialog makes no logging call of its own.
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/macOS/Features/Projects/ProjectChooserWindow.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectChooserWindow.swift` |
 
 ## Design Decisions
 
@@ -417,7 +417,7 @@ filtering, and its selection model belong entirely to
 `ProjectBrowserViewController`, and the registry data belongs to
 `ProjectsCoordinator`; neither is duplicated here. unit-test-coverage fails
 because no test file exercises `ProjectChooserWindow` or
-`ProjectChooserContentViewController` at all — `packages/apple/AgenticToolkit/Tests`
+`ProjectChooserContentViewController` at all — `packages/apple/AgenticDeveloperHubSDK/Tests`
 has no `ProjectChooserWindowTests.swift` or equivalent, so none of this
 recipe's requirements (the onFinish wiring, the modal-identity guard on
 close, the button enablement synchronization) has automated coverage.

@@ -2,11 +2,11 @@
 
 import { Check } from "lucide-react";
 
-import { Badge } from "@agenticdevelopertoolkit/ui/components/badge";
-import { List, ListItem } from "@agenticdevelopertoolkit/ui/components/list";
-import { Button } from "@agenticdevelopertoolkit/ui/components/button";
-import { Card, CardContent } from "@agenticdevelopertoolkit/ui/components/card";
-import { SettingsBody } from "@agentic-toolkit/resource";
+import { Badge } from "@adh-sdk/ui/components/badge";
+import { List, ListItem } from "@adh-sdk/ui/components/list";
+import { Button } from "@adh-sdk/ui/components/button";
+import { Card, CardContent } from "@adh-sdk/ui/components/card";
+import { SettingsBody } from "@adh-sdk/resource";
 
 interface Plan {
   level: string;

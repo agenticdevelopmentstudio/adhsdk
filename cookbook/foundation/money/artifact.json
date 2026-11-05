@@ -3,7 +3,7 @@
   "meta": {
     "id": "7233995D-9B7E-4760-AC44-AB4B668B5CC1",
     "title": "Money",
-    "domain": "adtoolkit://cookbook/foundation/money",
+    "domain": "adhsdk://cookbook/foundation/money",
     "type": "ingredient",
     "version": "1.0.0",
     "status": "review",
@@ -26,10 +26,10 @@
     ],
     "depends-on": [],
     "related": [
-      "adtoolkit://cookbook/foundation/money/money-formatter",
-      "adtoolkit://cookbook/foundation/money/money-totals",
-      "adtoolkit://cookbook/foundation/money/currency-code",
-      "adtoolkit://cookbook/foundation/money/increment-rounding"
+      "adhsdk://cookbook/foundation/money/money-formatter",
+      "adhsdk://cookbook/foundation/money/money-totals",
+      "adhsdk://cookbook/foundation/money/currency-code",
+      "adhsdk://cookbook/foundation/money/increment-rounding"
     ],
     "references": [],
     "approved-by": "",

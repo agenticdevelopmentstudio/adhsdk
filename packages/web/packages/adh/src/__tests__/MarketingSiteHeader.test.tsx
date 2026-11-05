@@ -24,7 +24,7 @@ const mocks = vi.hoisted(() => ({
 // the TOOLKIT workspace's own node_modules — so a bare-specifier mock registered under an
 // id nothing resolved to and silently did not apply (the real useAuth then threw "useAuth
 // must be used within an AuthProvider"). Inside the toolkit that boundary is gone: this
-// file and `@agentic-toolkit/adh/header-auth` resolve `@agentic-toolkit/auth` to the same
+// file and `@adh-sdk/adh/header-auth` resolve `@adh-sdk/auth` to the same
 // workspace package, so the mock binds. Do not reintroduce a path form — it would pin the
 // mock to one submodule layout and break the moment the package is consumed standalone.
 // PARTIAL, and `currentReturnTo` in particular is the REAL one. What these specs assert is
@@ -32,8 +32,8 @@ const mocks = vi.hoisted(() => ({
 // auth's own `currentReturnTo` rather than re-spelling `pathname + search` locally — so a stub
 // would have this file assert the return address against itself. It reads `window.location`
 // directly, which each spec below sets.
-vi.mock('@agentic-toolkit/auth', async (importOriginal) => ({
-  currentReturnTo: (await importOriginal<typeof import('@agentic-toolkit/auth')>()).currentReturnTo,
+vi.mock('@adh-sdk/auth', async (importOriginal) => ({
+  currentReturnTo: (await importOriginal<typeof import('@adh-sdk/auth')>()).currentReturnTo,
   useAuth: () => mocks.auth,
   beginLogin: mocks.beginLogin,
   ssoSwitchUrl: mocks.ssoSwitchUrl,
@@ -52,7 +52,7 @@ vi.mock('@agentic-toolkit/auth', async (importOriginal) => ({
 // and handed over as resolved props — MarketingSiteHeader now passes the hook down and
 // SiteHeader calls it. Calling it here (in a component body, unconditionally) is what
 // keeps this file testing the SOURCE rather than the mock.
-vi.mock('@agentic-toolkit/adh/header', () => ({
+vi.mock('@adh-sdk/adh/header', () => ({
   SiteHeader: ({
     useAuthSource,
     ...rest

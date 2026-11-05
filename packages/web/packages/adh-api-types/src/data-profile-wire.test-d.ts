@@ -1,4 +1,4 @@
-// The drift gate for `@agentic-toolkit/data`'s profile wire shapes — the thing that package's
+// The drift gate for `@adh-sdk/data`'s profile wire shapes — the thing that package's
 // header could not do on its own. It transcribes the backend's rows by hand and CITES its
 // sources in a comment, and a citation is not a check: a backend column rename regenerates
 // ./schema.ts, every consumer still compiles against the hand-written interface, and the field
@@ -32,7 +32,7 @@ import type {
   PrivacyGrant,
   PrivacyTargetTable,
   UsageRow,
-} from "@agentic-toolkit/data/profile";
+} from "@adh-sdk/data/profile";
 
 // ── assertion utilities (same set as ./index.test-d.ts) ──────────────────────────────────
 type Expect<T extends true> = T;

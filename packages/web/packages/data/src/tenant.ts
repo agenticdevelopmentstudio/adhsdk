@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import { decodeBase64UrlJson, readAccessToken } from "@agentic-toolkit/auth/client";
+import { decodeBase64UrlJson, readAccessToken } from "@adh-sdk/auth/client";
 
 interface JwtClaims {
   /** The adh backend mints `ecosystem_id` — the real tenant claim; `tenant_id`

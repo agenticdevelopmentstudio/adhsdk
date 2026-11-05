@@ -8,8 +8,8 @@ export { BRAND_PROMISE, PILLAR_COPY, STAGE_LABEL } from './story-copy'
 // 'use client' and every other module in this entry is a server component, so inlining it
 // would hoist its directive over the whole `marketing/index` bundle (see its own header
 // comment, and marketing/LandingHeroGate for the identical treatment).
-export { MarketingSiteHeader } from '@agentic-toolkit/adh/marketing/MarketingSiteHeader'
-export type { MarketingSiteHeaderProps } from '@agentic-toolkit/adh/marketing/MarketingSiteHeader'
+export { MarketingSiteHeader } from '@adh-sdk/adh/marketing/MarketingSiteHeader'
+export type { MarketingSiteHeaderProps } from '@adh-sdk/adh/marketing/MarketingSiteHeader'
 // Relative, deliberately: MarketingRootHtml is a server module in this same entry and holds
 // no module-level state, so inlining it forks nothing and hoists nothing.
 export { MarketingRootHtml } from './MarketingRootHtml'

@@ -7,19 +7,19 @@ import {
   Avatar,
   AvatarImage,
   AvatarFallback,
-} from "@agenticdevelopertoolkit/ui/components/avatar";
-import { PrivacyLevelSelect } from "@agenticdevelopertoolkit/ui/components/privacy-level-select";
-import { Button } from "@agenticdevelopertoolkit/ui/components/button";
-import { Card, CardContent } from "@agenticdevelopertoolkit/ui/components/card";
+} from "@adh-sdk/ui/components/avatar";
+import { PrivacyLevelSelect } from "@adh-sdk/ui/components/privacy-level-select";
+import { Button } from "@adh-sdk/ui/components/button";
+import { Card, CardContent } from "@adh-sdk/ui/components/card";
 import {
   setPrivacyGrant,
   resolvePrivacyLevel,
   PRIVACY_KEY,
   type PrivacyGrant,
   type PrivacyLevel,
-} from "@agentic-toolkit/data/profile";
+} from "@adh-sdk/data/profile";
 import type { Me } from "../../api/auth";
-import { DetailSection } from "@agentic-toolkit/resource";
+import { DetailSection } from "@adh-sdk/resource";
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 

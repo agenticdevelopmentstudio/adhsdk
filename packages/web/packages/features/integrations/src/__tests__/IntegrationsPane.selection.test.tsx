@@ -1,12 +1,12 @@
 import { describe, expect, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { RailHostBoundary } from "@agentic-toolkit/resource";
+import { RailHostBoundary } from "@adh-sdk/resource";
 
 const listProviderConfigs = vi.fn();
 const listProviders = vi.fn();
 const getProviderConfigById = vi.fn(async () => null as unknown);
-vi.mock("@agentic-toolkit/data/integrations", () => ({
+vi.mock("@adh-sdk/data/integrations", () => ({
   integrationsApi: {
     listProviderConfigs: (...a: unknown[]) => listProviderConfigs(...a),
     listProviders: (...a: unknown[]) => listProviders(...a),

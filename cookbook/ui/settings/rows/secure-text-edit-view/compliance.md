@@ -22,7 +22,7 @@ linking it to `label`'s title text — see Label requirements in
 Accessibility above; `contrast-ratio` is
 `partial` because the inherited placeholder-text color clears only a 1.6:1
 floor against WCAG's 4.5:1 threshold (see
-`adtoolkit://cookbook/ui/settings/rows/text-edit-view#design-decisions`).
+`adhsdk://cookbook/ui/settings/rows/text-edit-view#design-decisions`).
 
-No test in the repository's test targets constructs `SecureTextEditView`, so `unit-test-coverage` is `failed`: a search of `AgenticToolkitMacOSTests` and the other test targets for the type name finds nothing. Its only behavior, masking, is not asserted; the inherited text-row paths are covered by `RecordFieldRefreshTests.swift` for `TextEditView` only.
+No test in the repository's test targets constructs `SecureTextEditView`, so `unit-test-coverage` is `failed`: a search of `AgenticDeveloperHubSDKMacOSTests` and the other test targets for the type name finds nothing. Its only behavior, masking, is not asserted; the inherited text-row paths are covered by `RecordFieldRefreshTests.swift` for `TextEditView` only.
 

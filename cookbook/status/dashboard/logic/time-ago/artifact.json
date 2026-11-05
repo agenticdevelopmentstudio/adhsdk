@@ -3,7 +3,7 @@
   "meta": {
     "id": "66b7f642-d41d-4d84-aea7-624a5f47eef3",
     "title": "Status Web Time Ago",
-    "domain": "adtoolkit://cookbook/status/dashboard/logic/time-ago",
+    "domain": "adhsdk://cookbook/status/dashboard/logic/time-ago",
     "type": "ingredient",
     "version": "1.0.2",
     "status": "review",
@@ -24,13 +24,13 @@
     ],
     "depends-on": [],
     "related": [
-      "adtoolkit://cookbook/status/service/monitor/time-ago",
-      "adtoolkit://cookbook/status/dashboard/state/now",
-      "adtoolkit://cookbook/status/dashboard/session-client"
+      "adhsdk://cookbook/status/service/monitor/time-ago",
+      "adhsdk://cookbook/status/dashboard/state/now",
+      "adhsdk://cookbook/status/dashboard/session-client"
     ],
     "references": [
-      "packages/web/packages/status-web/src/lib/time-ago.ts (agenticdevelopertoolkit)",
-      "packages/web/packages/status-web/src/lib/time-ago.test.ts (agenticdevelopertoolkit)"
+      "packages/web/packages/status-web/src/lib/time-ago.ts (adhsdk)",
+      "packages/web/packages/status-web/src/lib/time-ago.test.ts (adhsdk)"
     ],
     "approved-by": "",
     "approved-date": ""

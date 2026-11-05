@@ -22,7 +22,7 @@ export {
 // until a host wires it; untagged telemetry is the only cost.
 let retryMarker: ((init: object) => void) | null = null
 
-/** Wire the host's retried-request marker (e.g. @agentic-toolkit/adh's
+/** Wire the host's retried-request marker (e.g. @adh-sdk/adh's
  *  `markRetriedRequest`). Pass null to unregister. */
 export function setAuthRetryMarker(fn: ((init: object) => void) | null): void {
   retryMarker = fn
@@ -194,7 +194,7 @@ async function rawFetch(
  * caller that wants a bare GET with no extra headers/body should not have to write `{}` at
  * every call site. This also makes the function assignable where a *lesser*-required
  * `(path: string, init?: RequestInit) => Promise<Response>` fetcher type is expected — e.g.
- * `@agentic-toolkit/registry`'s `Fetcher` — without a call-site adapter: widening a required
+ * `@adh-sdk/registry`'s `Fetcher` — without a call-site adapter: widening a required
  * parameter to optional is TypeScript-safe everywhere this was already being called with a
  * defined `init`, and unlocks the sites that were not.
  */

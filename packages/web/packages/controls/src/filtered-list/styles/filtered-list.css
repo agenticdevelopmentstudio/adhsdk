@@ -1,6 +1,6 @@
 /*
  * FilteredList styles. Token-driven so the component restyles when the
- * surrounding theme (`@agenticdevelopertoolkit/themes`) changes.
+ * surrounding theme (`@adh-sdk/themes`) changes.
  *
  * Override any class to customize. The component does not own layout
  * (width / max-height / position) — wrap it in your own container.

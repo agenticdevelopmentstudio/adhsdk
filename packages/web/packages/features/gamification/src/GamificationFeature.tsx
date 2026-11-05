@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, type ReactNode } from "react";
-import { EcosystemsFeature, type RenderTopicPaneCtx } from "@agentic-toolkit/ecosystems";
+import { EcosystemsFeature, type RenderTopicPaneCtx } from "@adh-sdk/ecosystems";
 
 import { GamificationSettingsTopicPane } from "./RealmSettingsPane";
 import { CatalogTopicPane, EventTypesTopicPane, LevelsTopicPane } from "./topic-panes";
@@ -12,7 +12,7 @@ import type { GamificationPathSelection } from "./parse-path";
  * The Gamification feature: the workspace's products as the root list, and each product's realm
  * config split across four topics.
  *
- * It is @agentic-toolkit/ecosystems in `listFirst` mode with a different topic set — NOT a second
+ * It is @adh-sdk/ecosystems in `listFirst` mode with a different topic set — NOT a second
  * navigator. A product IS an ecosystem: the list, its create flow, the rdid resume key, the
  * breadcrumb, the not-manageable gate and the whole rail stack already exist there and already
  * mean the right things. What is gamification-specific is exactly the four panes below, which is

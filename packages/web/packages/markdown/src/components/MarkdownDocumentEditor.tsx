@@ -5,21 +5,21 @@ import { useEffect, useState, type ReactNode } from 'react'
 import {
   MarkdownEditor,
   type MarkdownEditorProps,
-} from '@agenticdevelopertoolkit/ui/blocks/markdown-editor'
+} from '@adh-sdk/ui/blocks/markdown-editor'
 import {
   SplitViewControl,
   useSplitView,
   SPLIT_VIEW_MIN_WIDTH,
   type SplitViewLayout,
   type SplitViewPane,
-} from '@agenticdevelopertoolkit/ui/blocks/split-view-control'
-import { cn } from '@agenticdevelopertoolkit/ui/lib/utils'
+} from '@adh-sdk/ui/blocks/split-view-control'
+import { cn } from '@adh-sdk/ui/lib/utils'
 
 import { MarkdownRenderer } from './MarkdownRenderer'
 import { MarkdownReadingPalette } from './MarkdownReadingPalette'
 
 // The layout/pane vocabulary and the control that drives it now live in
-// `@agenticdevelopertoolkit/ui/blocks/split-view-control`, because a second surface — the registry
+// `@adh-sdk/ui/blocks/split-view-control`, because a second surface — the registry
 // signup-form builder — needed the same control and had written its own copy. These three
 // names stay exported under their old spellings: they are this package's public API, and
 // nothing about a consumer changes just because the definition moved.
@@ -83,7 +83,7 @@ export interface MarkdownDocumentEditorProps extends MarkdownEditorProps {
  * pipeline and reading palette the published page uses, and a control strip for choosing
  * between them.
  *
- * Consumers must import `@agenticdevelopertoolkit/markdown/styles` once at their seam — this package
+ * Consumers must import `@adh-sdk/markdown/styles` once at their seam — this package
  * follows the repo's seam-owns-its-CSS convention (see the research site's PaperRenderer),
  * so the stylesheet is never pulled in by a component. Every ADH family site already has it
  * via adh-family.css -> adh-help.css; that same sheet is what registers this file's Tailwind

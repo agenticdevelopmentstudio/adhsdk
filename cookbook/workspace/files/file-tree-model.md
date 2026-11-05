@@ -1,7 +1,7 @@
 ---
 id: 1b64553a-ab58-4154-b9d5-30f34eb33caf
 title: "File Tree Model"
-domain: adtoolkit://cookbook/workspace/files/file-tree-model
+domain: adhsdk://cookbook/workspace/files/file-tree-model
 type: ingredient
 version: 1.2.0
 status: review
@@ -23,15 +23,15 @@ tags:
 depends-on:
   - agenticdevelopercookbook://guidelines/implementing/concurrency/concurrency
 related:
-  - adtoolkit://cookbook/workspace/files/file-tree-view
-  - adtoolkit://cookbook/workspace/files/file-browser-view
+  - adhsdk://cookbook/workspace/files/file-tree-view
+  - adhsdk://cookbook/workspace/files/file-browser-view
 references:
-  - packages/apple/AgenticToolkit/macOS/UI/ViewControllers/FileBrowser/Model/FileSystem/DirectoryWatchCoordinator.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/macOS/UI/ViewControllers/FileBrowser/Model/FileSystem/FileSystemWatcher.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/macOS/UI/ViewControllers/FileBrowser/Model/FileSystem/FileTreeConfig.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/macOS/UI/ViewControllers/FileBrowser/Model/FileSystem/FileTreeNode.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Tests/AgenticToolkitMacOSTests/FileBrowser/DirectoryWatchCoordinatorTests.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Tests/AgenticToolkitMacOSTests/FileBrowser/FileTreeNodeTests.swift (agenticdevelopertoolkit)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/FileBrowser/Model/FileSystem/DirectoryWatchCoordinator.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/FileBrowser/Model/FileSystem/FileSystemWatcher.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/FileBrowser/Model/FileSystem/FileTreeConfig.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/FileBrowser/Model/FileSystem/FileTreeNode.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKMacOSTests/FileBrowser/DirectoryWatchCoordinatorTests.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKMacOSTests/FileBrowser/FileTreeNodeTests.swift (adhsdk)
 approved-by: ""
 approved-date: ""
 ---
@@ -63,9 +63,9 @@ reference to) alive across a re-sync rather than being silently replaced by
 structurally-equal-but-distinct objects. The direct consumer of this model
 is a file tree manager (out of scope for this recipe), which in turn feeds
 the file tree view — see
-[File Tree View](adtoolkit://cookbook/workspace/files/file-tree-view)
+[File Tree View](adhsdk://cookbook/workspace/files/file-tree-view)
 and
-[File Browser](adtoolkit://cookbook/workspace/files/file-browser-view)
+[File Browser](adhsdk://cookbook/workspace/files/file-browser-view)
 for how this model's `nil`-vs-empty-array `children` distinction and its
 swallowed directory-read failures are consumed one layer up.
 
@@ -559,7 +559,7 @@ type's own name.
   to `rootNode`'s `children`, calling `loadChildrenIfNeeded()` from
   `.onAppear` or the row's disclosure action, in place of the AppKit
   `NSOutlineView` consumer described in
-  [File Tree View](adtoolkit://cookbook/workspace/files/file-tree-view).
+  [File Tree View](adhsdk://cookbook/workspace/files/file-tree-view).
 - **Compose**: Model `@Published var children`/`isSyncing` as
   `mutableStateOf`/`StateFlow` fields observed from a `ViewModel`; run
   `fullSync()`/`handleChanges`'s background reads on
@@ -577,13 +577,13 @@ type's own name.
   (Zustand/Redux), and render the tree with a virtualized list component
   that calls the lazy-load function on row expansion.
 - **AppKit / UIKit**: The source
-  (`packages/apple/AgenticToolkit/macOS/UI/ViewControllers/FileBrowser/Model/FileSystem/`,
-  tested by `Tests/AgenticToolkitMacOSTests/FileBrowser/DirectoryWatchCoordinatorTests.swift`
+  (`packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/FileBrowser/Model/FileSystem/`,
+  tested by `Tests/AgenticDeveloperHubSDKMacOSTests/FileBrowser/DirectoryWatchCoordinatorTests.swift`
   and `FileTreeNodeTests.swift`) is macOS-only — it imports `CoreServices`
   for `FSEvents`, which has no iOS counterpart, and lives under a
   `macOS`-specific source directory with no `#if os(iOS)` branch. The direct
   AppKit consumer is `FileTreeOutlineViewController`
-  (see [File Tree View](adtoolkit://cookbook/workspace/files/file-tree-view)).
+  (see [File Tree View](adhsdk://cookbook/workspace/files/file-tree-view)).
   An iOS port needs a different watch mechanism entirely — a
   `DispatchSource` file-descriptor watch or a polling timer — since
   `FSEventStreamCreate` is unavailable there.
@@ -651,7 +651,7 @@ type's own name.
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/macOS/UI/ViewControllers/FileBrowser/Model/FileSystem/` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/FileBrowser/Model/FileSystem/` |
 
 ## Design Decisions
 

@@ -1,6 +1,6 @@
 name: AIPlugins
 options:
-  bundleIdPrefix: com.agentictoolkit
+  bundleIdPrefix: com.mikefullerton.agenticdeveloperhubsdk
   developmentLanguage: en
   deploymentTarget:
     macOS: "26.0"
@@ -31,8 +31,8 @@ settings:
     PRODUCT_NAME: $(TARGET_NAME)
 
 projectReferences:
-  AgenticToolkit:
-    path: ../AgenticToolkit/AgenticToolkit.xcodeproj
+  AgenticDeveloperHubSDK:
+    path: ../AgenticDeveloperHubSDK/AgenticDeveloperHubSDK.xcodeproj
 
 targetTemplates:
   SwiftLint:
@@ -61,7 +61,7 @@ targets:
           - "Info.plist"
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.agentictoolkit.plugin.claude-api
+        PRODUCT_BUNDLE_IDENTIFIER: com.mikefullerton.agenticdeveloperhubsdk.plugin.claude-api
         WRAPPER_EXTENSION: aiplugin
         INFOPLIST_FILE: ClaudeAPI/Info.plist
         COMBINE_HIDPI_IMAGES: YES
@@ -69,7 +69,7 @@ targets:
           - $(inherited)
           - "@loader_path/../../../../Frameworks"
     dependencies:
-      - target: AgenticToolkit/AIPluginKit
+      - target: AgenticDeveloperHubSDK/AIPluginKit
         embed: false
     postBuildScripts:
       - name: Install to ~/.agenticplugins
@@ -88,7 +88,7 @@ targets:
           - "Info.plist"
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.agentictoolkit.plugin.claude-local
+        PRODUCT_BUNDLE_IDENTIFIER: com.mikefullerton.agenticdeveloperhubsdk.plugin.claude-local
         WRAPPER_EXTENSION: aiplugin
         INFOPLIST_FILE: ClaudeLocal/Info.plist
         COMBINE_HIDPI_IMAGES: YES
@@ -96,7 +96,7 @@ targets:
           - $(inherited)
           - "@loader_path/../../../../Frameworks"
     dependencies:
-      - target: AgenticToolkit/AIPluginKit
+      - target: AgenticDeveloperHubSDK/AIPluginKit
         embed: false
     postBuildScripts:
       - name: Install to ~/.agenticplugins
@@ -115,7 +115,7 @@ targets:
           - "Info.plist"
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.agentictoolkit.plugin.google
+        PRODUCT_BUNDLE_IDENTIFIER: com.mikefullerton.agenticdeveloperhubsdk.plugin.google
         WRAPPER_EXTENSION: aiplugin
         INFOPLIST_FILE: Google/Info.plist
         COMBINE_HIDPI_IMAGES: YES
@@ -123,7 +123,7 @@ targets:
           - $(inherited)
           - "@loader_path/../../../../Frameworks"
     dependencies:
-      - target: AgenticToolkit/AIPluginKit
+      - target: AgenticDeveloperHubSDK/AIPluginKit
         embed: false
     postBuildScripts:
       - name: Install to ~/.agenticplugins
@@ -142,7 +142,7 @@ targets:
           - "Info.plist"
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.agentictoolkit.plugin.openai
+        PRODUCT_BUNDLE_IDENTIFIER: com.mikefullerton.agenticdeveloperhubsdk.plugin.openai
         WRAPPER_EXTENSION: aiplugin
         INFOPLIST_FILE: OpenAI/Info.plist
         COMBINE_HIDPI_IMAGES: YES
@@ -150,7 +150,7 @@ targets:
           - $(inherited)
           - "@loader_path/../../../../Frameworks"
     dependencies:
-      - target: AgenticToolkit/AIPluginKit
+      - target: AgenticDeveloperHubSDK/AIPluginKit
         embed: false
     postBuildScripts:
       - name: Install to ~/.agenticplugins
@@ -169,7 +169,7 @@ targets:
           - "Info.plist"
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.agentictoolkit.plugin.openai-compatible
+        PRODUCT_BUNDLE_IDENTIFIER: com.mikefullerton.agenticdeveloperhubsdk.plugin.openai-compatible
         WRAPPER_EXTENSION: aiplugin
         INFOPLIST_FILE: OpenAICompatible/Info.plist
         COMBINE_HIDPI_IMAGES: YES
@@ -177,7 +177,7 @@ targets:
           - $(inherited)
           - "@loader_path/../../../../Frameworks"
     dependencies:
-      - target: AgenticToolkit/AIPluginKit
+      - target: AgenticDeveloperHubSDK/AIPluginKit
         embed: false
     postBuildScripts:
       - name: Install to ~/.agenticplugins
@@ -203,7 +203,7 @@ targets:
       - path: OpenAICompatible/OpenAICompatiblePlugin.swift
       - path: Tests
     dependencies:
-      - target: AgenticToolkit/AIPluginKit
+      - target: AgenticDeveloperHubSDK/AIPluginKit
         embed: true
         codeSign: true
 

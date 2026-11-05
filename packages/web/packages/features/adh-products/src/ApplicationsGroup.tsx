@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, type ReactNode } from "react";
-import type { TopicLeaf } from "@agentic-toolkit/resource";
-import { ApplicationsPane, type RenderTransferSection } from "@agentic-toolkit/adh-ecosystem-panes";
+import type { TopicLeaf } from "@adh-sdk/resource";
+import { ApplicationsPane, type RenderTransferSection } from "@adh-sdk/adh-ecosystem-panes";
 
 /** Old ids in the Applications segment that named no application: `settings` (the list's
  *  Settings row, the ecosystem's client auth — Users ▸ Authentication now), `signin-apps`
@@ -25,7 +25,7 @@ const OLD_APP_SETTINGS = "settings";
  * `…/applications/<appId>`; nothing sits below it. The ecosystem's sign-in settings are not here:
  * they are Users ▸ Authentication (Mike, 2026-09-30).
  *
- * Host-owned like GamingGroup, because `@agentic-toolkit/ecosystems`'s in-package groups compose
+ * Host-owned like GamingGroup, because `@adh-sdk/ecosystems`'s in-package groups compose
  * only panes that package can name, and Applications is adh's.
  *
  * An application is `…/applications/<appId>`. The old addresses are sent on (replace, not

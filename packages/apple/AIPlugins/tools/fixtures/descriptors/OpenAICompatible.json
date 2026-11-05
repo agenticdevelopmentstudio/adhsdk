@@ -1,6 +1,6 @@
 {
   "schemaVersion": 3,
-  "identifier": "com.agentictoolkit.plugin.openai-compatible",
+  "identifier": "com.mikefullerton.agenticdeveloperhubsdk.plugin.openai-compatible",
   "displayName": "OpenAI-compatible",
   "version": "1.0",
   "models": [],

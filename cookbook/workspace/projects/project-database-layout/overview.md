@@ -17,7 +17,7 @@ Every row this extension touches is scoped to one `repo_id`, matching a
 here reads or writes a row for any repository id other than the one a
 caller passes in. The project database carries no concurrency-safety
 guarantee of its own (see the sibling
-`adtoolkit://cookbook/workspace/projects/project-database` recipe),
+`adhsdk://cookbook/workspace/projects/project-database` recipe),
 so this extension's operations carry no concurrency guarantee of their own
 either — they run wherever the caller runs, synchronously, against one
 shared SQLite connection.

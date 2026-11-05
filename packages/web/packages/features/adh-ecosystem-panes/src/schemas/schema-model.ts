@@ -8,11 +8,11 @@
 // overlay.
 //
 // Persisted via the backend `bucket.buckets` + `bucket.bucket_types` tables,
-// by the data client's `schemasApi` (`@agentic-toolkit/data/markdown`), which
+// by the data client's `schemasApi` (`@adh-sdk/data/markdown`), which
 // also declares the model types re-exported below. Each table's `type` is one
 // of the `content`/`personal` table types the DB exposes (see available-types.ts).
 
-import type { SchemaTable } from "@agentic-toolkit/data/markdown";
+import type { SchemaTable } from "@adh-sdk/data/markdown";
 
 /**
  * The cache key the ecosystem's bucket catalog lives under — ONE entry, shared by the Buckets pane
@@ -44,7 +44,7 @@ export type {
   SchemaDefinition,
   SchemaDefinitionInput,
   SchemaTable,
-} from "@agentic-toolkit/data/markdown";
+} from "@adh-sdk/data/markdown";
 
 /** Slugify a table name to the allowed shape (lowercase, underscores, no spaces, no leading or
  *  trailing underscore). The FINAL shape — run on submit and validation, never per keystroke (see

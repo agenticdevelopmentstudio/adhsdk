@@ -3,15 +3,15 @@
 import { useState } from "react";
 import { Trash2 } from "lucide-react";
 
-import { reportUnexpectedAuthError } from "@agentic-toolkit/auth";
-import { Field, FieldGroup } from "@agenticdevelopertoolkit/ui/blocks";
-import { Badge } from "@agenticdevelopertoolkit/ui/components/badge";
-import { EmptyState } from "@agenticdevelopertoolkit/ui/components/empty-state";
-import { List, ListItem } from "@agenticdevelopertoolkit/ui/components/list";
-import { bucketAccessApi } from "@agentic-toolkit/data/security";
-import { Button } from "@agenticdevelopertoolkit/ui/components/button";
-import { Input } from "@agenticdevelopertoolkit/ui/components/input";
-import { Select } from "@agenticdevelopertoolkit/ui/components/select";
+import { reportUnexpectedAuthError } from "@adh-sdk/auth";
+import { Field, FieldGroup } from "@adh-sdk/ui/blocks";
+import { Badge } from "@adh-sdk/ui/components/badge";
+import { EmptyState } from "@adh-sdk/ui/components/empty-state";
+import { List, ListItem } from "@adh-sdk/ui/components/list";
+import { bucketAccessApi } from "@adh-sdk/data/security";
+import { Button } from "@adh-sdk/ui/components/button";
+import { Input } from "@adh-sdk/ui/components/input";
+import { Select } from "@adh-sdk/ui/components/select";
 import {
   MEMBER_TYPES,
   MEMBER_TYPE_LABEL,

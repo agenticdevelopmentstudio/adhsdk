@@ -2,7 +2,7 @@ import '@testing-library/jest-dom/vitest'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import type { AuthUser } from '@agentic-toolkit/auth'
+import type { AuthUser } from '@adh-sdk/auth'
 import type { CrudColumn, CrudExposure, CrudTableMeta } from '../types'
 
 /** RowDetails' empty state — the signal that no row is open yet. */
@@ -17,19 +17,19 @@ const viewerUser = (admin: boolean): AuthUser =>
   ({ id: 'u1', email: 'u@example.com', capabilities: admin ? ['admin'] : [] }) as AuthUser
 
 // The view reaches the network through these two only.
-vi.mock('@agentic-toolkit/auth/client', () => ({
+vi.mock('@adh-sdk/auth/client', () => ({
   authedJson: vi.fn(),
   authedRequest: vi.fn(),
 }))
 // Who the viewer is comes from the auth context; only THAT is faked. `isAdmin` and everything
 // else stays real, so a call that passed the wrong thing (or no argument) fails here.
-vi.mock('@agentic-toolkit/auth', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('@agentic-toolkit/auth')>()),
+vi.mock('@adh-sdk/auth', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@adh-sdk/auth')>()),
   useOptionalAuth: () => auth,
   useAuth: () => auth,
 }))
 
-const { authedJson } = vi.mocked(await import('@agentic-toolkit/auth/client'))
+const { authedJson } = vi.mocked(await import('@adh-sdk/auth/client'))
 const { CrudDataView } = await import('../CrudDataView')
 
 const col = (name: string, overrides: Partial<CrudColumn> = {}): CrudColumn => ({

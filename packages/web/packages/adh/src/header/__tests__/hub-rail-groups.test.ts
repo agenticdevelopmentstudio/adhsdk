@@ -4,7 +4,7 @@ import {
   SITE_FOR_HUB_SEGMENT,
   hubFeatureSegment,
   type HubFeatureSegment,
-} from '@agentic-toolkit/adh-registry'
+} from '@adh-sdk/adh-registry'
 import { FLEET_MENU_GROUPS } from '../fleetMenuGroups'
 import { HUB_RAIL_GROUPS, HUB_RAIL_GROUP_FOR_SEGMENT } from '../hub-rail-groups'
 

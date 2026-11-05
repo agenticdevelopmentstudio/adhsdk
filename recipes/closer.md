@@ -1,7 +1,7 @@
 ---
 id: 688cd8dc-2927-4a8a-9931-807fe283ed01
 title: Closer
-domain: agenticdevelopertoolkit://recipes/closer
+domain: adhsdk://recipes/closer
 type: ingredient
 version: 1.1.1
 status: review

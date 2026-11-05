@@ -2,13 +2,13 @@
 
 import { useCallback, useState, type ReactElement } from "react";
 import { FileStack } from "lucide-react";
-import { Badge } from "@agenticdevelopertoolkit/ui/components/badge";
-import { useResourceList } from "@agentic-toolkit/data";
+import { Badge } from "@adh-sdk/ui/components/badge";
+import { useResourceList } from "@adh-sdk/data";
 import {
   cardCountOf,
   projectTemplatesApi,
   type Template,
-} from "@agentic-toolkit/data/projects";
+} from "@adh-sdk/data/projects";
 import {
   CreateResourceDialog,
   FeatureTitle,
@@ -16,7 +16,7 @@ import {
   useMasterDetailForm,
   useMasterDetailLevel,
   type TopicLeaf,
-} from "@agentic-toolkit/resource";
+} from "@adh-sdk/resource";
 import {
   TemplateDetail,
   templateBlank,

@@ -4,24 +4,24 @@
 
 // src/auth/wired-provider.tsx
 import { useState } from "react";
-import { captureException as captureException2 } from "@agentic-toolkit/adh/telemetry/report-error";
-import { markRetriedRequest } from "@agentic-toolkit/adh/telemetry/retry";
+import { captureException as captureException2 } from "@adh-sdk/adh/telemetry/report-error";
+import { markRetriedRequest } from "@adh-sdk/adh/telemetry/retry";
 import {
   AuthProvider as ToolkitAuthProvider,
   setAuthErrorReporter,
   setAuthRetryMarker
-} from "@agentic-toolkit/auth";
+} from "@adh-sdk/auth";
 
 // src/auth/AppearanceSync.tsx
 import { useEffect, useRef } from "react";
-import { useAuth } from "@agentic-toolkit/auth";
-import { authedJson } from "@agentic-toolkit/auth/client";
+import { useAuth } from "@adh-sdk/auth";
+import { authedJson } from "@adh-sdk/auth/client";
 import {
   adoptAppearance,
   normalizeAppearance,
   resetAppearance
-} from "@agenticdevelopertoolkit/themes";
-import { captureException } from "@agentic-toolkit/adh/telemetry/report-error";
+} from "@adh-sdk/themes";
+import { captureException } from "@adh-sdk/adh/telemetry/report-error";
 function AppearanceSync() {
   const { isAuthenticated, isLoading, user } = useAuth();
   const themedFor = useRef(void 0);
@@ -70,10 +70,10 @@ function AuthProvider(props) {
 
 // src/auth/useAppearanceSettings.ts
 import { useCallback } from "react";
-import { useAuth as useAuth2 } from "@agentic-toolkit/auth";
-import { authedRequest } from "@agentic-toolkit/auth/client";
-import { useAppearancePreferences } from "@agenticdevelopertoolkit/themes";
-import { captureException as captureException3 } from "@agentic-toolkit/adh/telemetry/report-error";
+import { useAuth as useAuth2 } from "@adh-sdk/auth";
+import { authedRequest } from "@adh-sdk/auth/client";
+import { useAppearancePreferences } from "@adh-sdk/themes";
+import { captureException as captureException3 } from "@adh-sdk/adh/telemetry/report-error";
 function useAppearanceSettings() {
   const { prefs, set: setLocal } = useAppearancePreferences();
   const { isAuthenticated } = useAuth2();

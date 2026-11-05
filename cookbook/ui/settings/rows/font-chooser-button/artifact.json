@@ -3,7 +3,7 @@
   "meta": {
     "id": "3e548aa3-1103-4b3f-96ff-d2e7ff564810",
     "title": "Font Chooser Button",
-    "domain": "adtoolkit://cookbook/ui/settings/rows/font-chooser-button",
+    "domain": "adhsdk://cookbook/ui/settings/rows/font-chooser-button",
     "type": "ingredient",
     "version": "1.2.3",
     "status": "review",
@@ -25,8 +25,8 @@
     ],
     "depends-on": [],
     "related": [
-      "adtoolkit://cookbook/ui/settings/rows/color-picker-view",
-      "adtoolkit://cookbook/ui/settings/rows/button-view"
+      "adhsdk://cookbook/ui/settings/rows/color-picker-view",
+      "adhsdk://cookbook/ui/settings/rows/button-view"
     ],
     "references": [],
     "approved-by": "",

@@ -33,7 +33,7 @@
   updating on a theme class/attribute change for
   **theme-change-background-repaint**.
 - **AppKit / UIKit** (source platform): `ComposableSettings.PanelView`, at
-  `packages/apple/AgenticToolkit/macOS/SystemIntegration/ComposableSettingsWindow/Views/PanelView.swift`,
+  `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/Views/PanelView.swift`,
   is a macOS-only (`import AppKit`), `open`, `@MainActor` `NSView` subclass
   conforming to `SettingsViewProtocol` (a marker protocol with no
   requirements of its own). Internally, the private stored properties

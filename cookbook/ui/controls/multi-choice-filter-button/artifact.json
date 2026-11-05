@@ -3,7 +3,7 @@
   "meta": {
     "id": "bc43002d-faf6-4ffa-bc12-95f1a07f27e8",
     "title": "Multi-Choice Filter Button",
-    "domain": "adtoolkit://cookbook/ui/controls/multi-choice-filter-button",
+    "domain": "adhsdk://cookbook/ui/controls/multi-choice-filter-button",
     "type": "ingredient",
     "version": "1.3.0",
     "status": "review",

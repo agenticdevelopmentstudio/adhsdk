@@ -1,25 +1,25 @@
 "use client";
 
 import { useCallback, useMemo, useState, type ReactElement } from "react";
-import { ListWithDetailsPane } from "@agenticdevelopertoolkit/ui/blocks/list-with-details-pane";
-import type { DataTableColumn } from "@agenticdevelopertoolkit/ui/components/data-table";
-import { TreeRowLabel, flattenTree, type TreeRow } from "@agenticdevelopertoolkit/ui/components/tree-rows";
+import { ListWithDetailsPane } from "@adh-sdk/ui/blocks/list-with-details-pane";
+import type { DataTableColumn } from "@adh-sdk/ui/components/data-table";
+import { TreeRowLabel, flattenTree, type TreeRow } from "@adh-sdk/ui/components/tree-rows";
 import {
   InlineCommitControl,
   InlineEditableText,
   inlineCommitDeletingClass,
-} from "@agenticdevelopertoolkit/ui/components/inline-commit-control";
-import { ReorderControl } from "@agenticdevelopertoolkit/ui/components/reorder-control";
-import { DragGrip, type SortableDrop } from "@agenticdevelopertoolkit/ui/components/dnd";
-import { UnsavedChangesGuard } from "@agenticdevelopertoolkit/ui/components/unsaved-changes-guard";
-import { useInlineDrafts } from "@agenticdevelopertoolkit/ui/hooks/useInlineDrafts";
-import { Select } from "@agenticdevelopertoolkit/ui/components/select";
-import { Input } from "@agenticdevelopertoolkit/ui/components/input";
-import { Badge } from "@agenticdevelopertoolkit/ui/components/badge";
-import { ErrorText } from "@agenticdevelopertoolkit/ui/components/error-text";
-import { errorMessage } from "@agenticdevelopertoolkit/ui/lib/errors";
-import { cn } from "@agenticdevelopertoolkit/ui/lib/utils";
-import { compareRank, projectWorkItemsApi, type WorkItem } from "@agentic-toolkit/data/projects";
+} from "@adh-sdk/ui/components/inline-commit-control";
+import { ReorderControl } from "@adh-sdk/ui/components/reorder-control";
+import { DragGrip, type SortableDrop } from "@adh-sdk/ui/components/dnd";
+import { UnsavedChangesGuard } from "@adh-sdk/ui/components/unsaved-changes-guard";
+import { useInlineDrafts } from "@adh-sdk/ui/hooks/useInlineDrafts";
+import { Select } from "@adh-sdk/ui/components/select";
+import { Input } from "@adh-sdk/ui/components/input";
+import { Badge } from "@adh-sdk/ui/components/badge";
+import { ErrorText } from "@adh-sdk/ui/components/error-text";
+import { errorMessage } from "@adh-sdk/ui/lib/errors";
+import { cn } from "@adh-sdk/ui/lib/utils";
+import { compareRank, projectWorkItemsApi, type WorkItem } from "@adh-sdk/data/projects";
 import {
   type EstimateScale,
   type Iteration,
@@ -27,7 +27,7 @@ import {
   type PriorityScale,
   type ProjectStatus,
   type ProjectParticipant,
-} from "@agentic-toolkit/data/projects";
+} from "@adh-sdk/data/projects";
 import { PRIORITIES } from "../WorkItemEditor";
 import { DEFAULT_ITEM_WORDS, type ItemWords } from "../vocabulary";
 import { participantLabel, toOptionValue, fromOptionValue } from "../AssigneePicker";

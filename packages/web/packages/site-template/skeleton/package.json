@@ -14,9 +14,9 @@
     "test": "node --experimental-strip-types --test 'src/**/*.test.ts'"
   },
   "dependencies": {
-    "@agenticdevelopertoolkit/landing": "link:landing",
-    "@agenticdevelopertoolkit/site-template": "link:site-template",
-    "@agenticdevelopertoolkit/themes": "link:themes",
+    "@adh-sdk/landing": "link:landing",
+    "@adh-sdk/site-template": "link:site-template",
+    "@adh-sdk/themes": "link:themes",
     "next": "16.4.3",
     "react": "^19.2.0",
     "react-dom": "^19.2.0"

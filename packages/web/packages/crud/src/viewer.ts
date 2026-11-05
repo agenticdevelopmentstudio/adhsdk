@@ -4,7 +4,7 @@
 // refined (a finer capability than the global admin bit, a host-supplied override) without
 // hunting down every component that asks.
 
-import { isAdmin, useOptionalAuth } from '@agentic-toolkit/auth'
+import { isAdmin, useOptionalAuth } from '@adh-sdk/auth'
 
 export interface CrudViewer {
   /** Whether the viewer holds the platform `admin` capability. */

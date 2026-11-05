@@ -3,7 +3,7 @@
   "meta": {
     "id": "2B552BDE-D0BD-425A-9E79-FC624B52F516",
     "title": "Claude OAuth Credential",
-    "domain": "adtoolkit://cookbook/foundation/claude-accounts/claude-o-auth-credential",
+    "domain": "adhsdk://cookbook/foundation/claude-accounts/claude-o-auth-credential",
     "type": "ingredient",
     "version": "1.0.0",
     "status": "review",
@@ -26,7 +26,7 @@
     ],
     "depends-on": [],
     "related": [
-      "adtoolkit://cookbook/foundation/claude-accounts/claude-credential-kind"
+      "adhsdk://cookbook/foundation/claude-accounts/claude-credential-kind"
     ],
     "references": [],
     "approved-by": "",

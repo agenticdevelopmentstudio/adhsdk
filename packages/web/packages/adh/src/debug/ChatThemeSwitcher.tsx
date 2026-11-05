@@ -7,7 +7,7 @@ import {
   DropdownMenuSubContent,
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
-} from '@agenticdevelopertoolkit/ui/components/dropdown-menu'
+} from '@adh-sdk/ui/components/dropdown-menu'
 
 export type ChatThemeOption = { key: string; label: string }
 

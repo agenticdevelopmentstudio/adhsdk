@@ -1,7 +1,7 @@
 import { mkdirSync, mkdtempSync, readdirSync, realpathSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
-import { TYPEGEN_ONLY_FLAG, TYPEGEN_ONLY_ORIGIN } from '@agentic-toolkit/next-env'
+import { TYPEGEN_ONLY_FLAG, TYPEGEN_ONLY_ORIGIN } from '@adh-sdk/next-env'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { frameBuildIdentity, frameNext, frameThemeFonts, frameWorkspaceRoot } from '../frame-next'
 import type { FrameNextSite } from '../frame-next'

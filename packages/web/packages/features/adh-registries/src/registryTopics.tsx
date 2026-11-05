@@ -2,10 +2,10 @@
 
 import type { ReactNode } from 'react';
 import { ClipboardList, KeyRound, ListChecks, SlidersHorizontal, Users } from 'lucide-react';
-import { type ResourceTopic, useRailExitGuard } from '@agentic-toolkit/resource';
-import { ButtonBar } from '@agenticdevelopertoolkit/ui/blocks';
-import { ErrorText } from '@agenticdevelopertoolkit/ui/components/error-text';
-import { Spinner } from '@agenticdevelopertoolkit/ui/components/spinner';
+import { type ResourceTopic, useRailExitGuard } from '@adh-sdk/resource';
+import { ButtonBar } from '@adh-sdk/ui/blocks';
+import { ErrorText } from '@adh-sdk/ui/components/error-text';
+import { Spinner } from '@adh-sdk/ui/components/spinner';
 import { PendingEntriesPanel } from './PendingEntriesPanel';
 import { RegistryDetailsPanel } from './RegistryDetailsPanel';
 import { RegistryPermissionsPanel } from './RegistryPermissionsPanel';

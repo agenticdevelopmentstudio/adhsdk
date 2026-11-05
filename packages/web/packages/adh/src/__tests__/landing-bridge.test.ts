@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest'
 const CSS = readFileSync(join(__dirname, '../styles/adh-landing-bridge.css'), 'utf8')
 
 /**
- * Every `--lp-*` token `@agenticdevelopertoolkit/landing`'s stylesheets READ, derived
+ * Every `--lp-*` token `@adh-sdk/landing`'s stylesheets READ, derived
  * from those stylesheets on every run.
  *
  * This list used to be kept by hand here, "measured from those files", and it
@@ -27,7 +27,7 @@ const CSS = readFileSync(join(__dirname, '../styles/adh-landing-bridge.css'), 'u
  */
 const LANDING_CSS = join(
   __dirname,
-  '../../node_modules/@agenticdevelopertoolkit/landing/src/css',
+  '../../node_modules/@adh-sdk/landing/src/css',
 )
 
 /**

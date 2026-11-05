@@ -15,7 +15,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { useEffect } from "react";
 import { render, screen, cleanup, within, waitFor, act } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import type { Organization } from "@agentic-toolkit/data/organizations";
+import type { Organization } from "@adh-sdk/data/organizations";
 
 // OrgSettingsGroup renders inside a rail host, and StandaloneRailHost's exit guard reaches for the
 // App Router. Nothing here navigates; this is the context those hooks need to exist at all.
@@ -26,18 +26,18 @@ vi.mock("next/navigation", () => ({
 // Only the transport is replaced — `Organization` and every other export of the module stay real,
 // so the fixtures below are genuine records rather than stand-ins for the shape the pane reads.
 const { resolve } = vi.hoisted(() => ({ resolve: vi.fn() }));
-vi.mock("@agentic-toolkit/data/organizations", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("@agentic-toolkit/data/organizations")>()),
+vi.mock("@adh-sdk/data/organizations", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@adh-sdk/data/organizations")>()),
   organizationsApi: { resolve, rename: vi.fn(), archive: vi.fn() },
 }));
 
 // The module-scope client itself — the one the record under test lives in. Reached through the
 // `/query` subpath because that is where it is published; the package's main barrel does not
 // re-export it, deliberately, since application code is meant to reach it through the hooks.
-import { getToolkitQueryClient } from "@agentic-toolkit/data/query";
-import { useResourceItemPrefetch } from "@agentic-toolkit/data";
-import { organizationsApi } from "@agentic-toolkit/data/organizations";
-import { RailHostBoundary } from "@agentic-toolkit/resource";
+import { getToolkitQueryClient } from "@adh-sdk/data/query";
+import { useResourceItemPrefetch } from "@adh-sdk/data";
+import { organizationsApi } from "@adh-sdk/data/organizations";
+import { RailHostBoundary } from "@adh-sdk/resource";
 import {
   OrgSettingsGroup,
   ORG_RECORD_CACHE_KEY,

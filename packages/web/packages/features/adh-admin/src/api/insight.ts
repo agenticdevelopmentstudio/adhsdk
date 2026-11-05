@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import type { RequestBody, SuccessBody, paths } from "@agentic-toolkit/adh-api-types";
+import type { RequestBody, SuccessBody, paths } from "@adh-sdk/adh-api-types";
 import { authedJson } from "./http";
 
 // ── Usage cost insight: what the platform costs, and who drives it ─────────
@@ -15,7 +15,7 @@ import { authedJson } from "./http";
 // reports it touched.
 //
 // Every money field is an integer µUSD count, or `null` when unpriced; format it with
-// `formatMicros` from `@agenticdevelopertoolkit/ui/lib/money`.
+// `formatMicros` from `@adh-sdk/ui/lib/money`.
 
 /** An inclusive calendar-day range, both ends `YYYY-MM-DD` (UTC days). */
 export interface InsightRange {

@@ -3,7 +3,7 @@
   "meta": {
     "id": "1b64553a-ab58-4154-b9d5-30f34eb33caf",
     "title": "File Tree Model",
-    "domain": "adtoolkit://cookbook/workspace/files/file-tree-model",
+    "domain": "adhsdk://cookbook/workspace/files/file-tree-model",
     "type": "ingredient",
     "version": "1.2.0",
     "status": "review",
@@ -28,16 +28,16 @@
       "agenticdevelopercookbook://guidelines/implementing/concurrency/concurrency"
     ],
     "related": [
-      "adtoolkit://cookbook/workspace/files/file-tree-view",
-      "adtoolkit://cookbook/workspace/files/file-browser-view"
+      "adhsdk://cookbook/workspace/files/file-tree-view",
+      "adhsdk://cookbook/workspace/files/file-browser-view"
     ],
     "references": [
-      "packages/apple/AgenticToolkit/macOS/UI/ViewControllers/FileBrowser/Model/FileSystem/DirectoryWatchCoordinator.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/macOS/UI/ViewControllers/FileBrowser/Model/FileSystem/FileSystemWatcher.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/macOS/UI/ViewControllers/FileBrowser/Model/FileSystem/FileTreeConfig.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/macOS/UI/ViewControllers/FileBrowser/Model/FileSystem/FileTreeNode.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/Tests/AgenticToolkitMacOSTests/FileBrowser/DirectoryWatchCoordinatorTests.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/Tests/AgenticToolkitMacOSTests/FileBrowser/FileTreeNodeTests.swift (agenticdevelopertoolkit)"
+      "packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/FileBrowser/Model/FileSystem/DirectoryWatchCoordinator.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/FileBrowser/Model/FileSystem/FileSystemWatcher.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/FileBrowser/Model/FileSystem/FileTreeConfig.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/FileBrowser/Model/FileSystem/FileTreeNode.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKMacOSTests/FileBrowser/DirectoryWatchCoordinatorTests.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKMacOSTests/FileBrowser/FileTreeNodeTests.swift (adhsdk)"
     ],
     "approved-by": "",
     "approved-date": ""

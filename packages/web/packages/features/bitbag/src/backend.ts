@@ -5,7 +5,7 @@ import {
   type ChatMessage,
   type ChatResponse,
   type ChatStreamEvent,
-} from '@agenticdevelopertoolkit/chat'
+} from '@adh-sdk/chat'
 import { DEFAULT_VOICE, type BitbagVoice } from './voice'
 
 const delay = (ms: number): Promise<void> => new Promise((r) => setTimeout(r, ms))

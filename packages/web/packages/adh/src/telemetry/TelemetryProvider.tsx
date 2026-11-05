@@ -2,21 +2,21 @@
 
 import { useEffect, type ReactNode } from 'react'
 import * as Sentry from '@sentry/react'
-import { scrubUrl, startPostHog } from '@agenticdevelopertoolkit/analytics'
+import { scrubUrl, startPostHog } from '@adh-sdk/analytics'
 import { setPosthogReady, captureEvent } from './analytics'
 import { instrumentFetch } from './fetch-instrumentation'
 // Package-path specifier, not relative: this leaf is `external` in this package's own
 // tsup.config.ts (module-level `reporter` state must stay a single instance across every
-// entry that reaches it — see the comment beside '@agentic-toolkit/adh/telemetry/report-error'
+// entry that reaches it — see the comment beside '@adh-sdk/adh/telemetry/report-error'
 // in that file). A relative './report-error' would get inlined and silently duplicated instead.
-import { setErrorReporter } from '@agentic-toolkit/adh/telemetry/report-error'
+import { setErrorReporter } from '@adh-sdk/adh/telemetry/report-error'
 
 // Telemetry, wired ONCE here so every site that renders the shared chrome gets it
 // from a single place (the way the header/footer already work). Two engines, both
 // privacy-first by construction:
 //   • Errors    → Sentry SDK pointed at self-hosted GlitchTip (errors only).
 //   • Analytics → PostHog, anonymous + cookieless + allowlist-only, configured in
-//     @agenticdevelopertoolkit/analytics.
+//     @adh-sdk/analytics.
 //
 // Privacy principle: default-deny / fail-toward-privacy. A mistake must EXCLUDE
 // data, never accidentally include something private — so autocapture and session
@@ -70,7 +70,7 @@ function startTelemetry(resolveEnvironment: (hostname: string) => string): void 
   }
 
   // ── Analytics → PostHog (anonymous, cookieless, allowlist-only) ───────────
-  // The config is @agenticdevelopertoolkit/analytics', shared with every site outside the
+  // The config is @adh-sdk/analytics', shared with every site outside the
   // family; it no-ops without NEXT_PUBLIC_POSTHOG_KEY. Gate captureEvent on it: custom
   // events only reach PostHog once init has actually run.
   if (startPostHog()) setPosthogReady(true)

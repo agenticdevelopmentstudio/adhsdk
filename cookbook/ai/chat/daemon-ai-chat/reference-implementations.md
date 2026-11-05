@@ -1,5 +1,5 @@
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/AIPluginKit/DaemonAIChat.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/AIPluginKit/DaemonAIChat.swift` |
 

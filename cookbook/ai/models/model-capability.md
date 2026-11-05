@@ -1,7 +1,7 @@
 ---
 id: 4ebd01d4-1326-42fa-83ba-58b0aebb31c7
 title: "Model Capability"
-domain: adtoolkit://cookbook/ai/models/model-capability
+domain: adhsdk://cookbook/ai/models/model-capability
 type: ingredient
 version: 1.1.1
 status: review
@@ -19,14 +19,14 @@ tags:
   - ai-plugin
   - capability
 depends-on:
-  - adtoolkit://cookbook/ai/models/model-catalog
+  - adhsdk://cookbook/ai/models/model-catalog
 related: []
 references:
-  - packages/apple/AgenticToolkit/AIPluginKit/ModelCapability.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/AIPluginKit/ModelUseFacet.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/AIPluginKit/AIModelCatalog.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Tests/AIPluginKitTests/ModelCapabilityTests.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Tests/AIPluginKitTests/ModelUseFacetTests.swift (agenticdevelopertoolkit)
+  - packages/apple/AgenticDeveloperHubSDK/AIPluginKit/ModelCapability.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/AIPluginKit/ModelUseFacet.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/AIPluginKit/AIModelCatalog.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Tests/AIPluginKitTests/ModelCapabilityTests.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Tests/AIPluginKitTests/ModelUseFacetTests.swift (adhsdk)
 approved-by: ""
 approved-date: ""
 ---
@@ -244,7 +244,7 @@ Not applicable: this component contains no logging call of any kind.
 
 ## Platform Notes
 
-- **SwiftUI**: The source (`packages/apple/AgenticToolkit/AIPluginKit/ModelCapability.swift`,
+- **SwiftUI**: The source (`packages/apple/AgenticDeveloperHubSDK/AIPluginKit/ModelCapability.swift`,
   tests `Tests/AIPluginKitTests/ModelCapabilityTests.swift`) has no
   SwiftUI dependency of its own — it is plain Swift, framework-agnostic.
   A SwiftUI consumer would render `ForEach(ModelCapability.allCases)` as a
@@ -304,7 +304,7 @@ Not applicable: this component contains no logging call of any kind.
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/AIPluginKit/ModelCapability.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/AIPluginKit/ModelCapability.swift` |
 
 ## Design Decisions
 

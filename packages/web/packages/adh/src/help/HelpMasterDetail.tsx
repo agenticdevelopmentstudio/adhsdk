@@ -2,8 +2,8 @@
 
 import { useMemo, type ReactNode } from 'react'
 import { useRouter } from 'next/navigation'
-import type { TopicLevel, TopicSelectOptions } from '@agenticdevelopertoolkit/ui/blocks'
-import { HierarchicalDetailView } from '@agenticdevelopertoolkit/ui/blocks'
+import type { TopicLevel, TopicSelectOptions } from '@adh-sdk/ui/blocks'
+import { HierarchicalDetailView } from '@adh-sdk/ui/blocks'
 import { topicIcon } from './topic-icons'
 
 /** One row of a {@link HelpRouteLevel}, already mapped to its route by the server. */

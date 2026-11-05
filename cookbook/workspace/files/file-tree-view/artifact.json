@@ -3,7 +3,7 @@
   "meta": {
     "id": "b307116d-3ab8-422a-b031-885710e11e70",
     "title": "File Tree View",
-    "domain": "adtoolkit://cookbook/workspace/files/file-tree-view",
+    "domain": "adhsdk://cookbook/workspace/files/file-tree-view",
     "type": "ingredient",
     "version": "1.2.3",
     "status": "review",
@@ -24,7 +24,7 @@
     ],
     "depends-on": [],
     "related": [
-      "adtoolkit://cookbook/workspace/files/file-browser-view",
+      "adhsdk://cookbook/workspace/files/file-browser-view",
       "agenticdevelopercookbook://guidelines/cookbook/ui/platform-design-languages"
     ],
     "references": [

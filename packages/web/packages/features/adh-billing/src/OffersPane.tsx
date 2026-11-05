@@ -3,20 +3,20 @@
 import { useCallback } from "react";
 import type { ReactElement } from "react";
 import { Tag, Trash2 } from "lucide-react";
-import { useResourceList } from "@agentic-toolkit/data";
+import { useResourceList } from "@adh-sdk/data";
 import {
   RecordSettingsPane,
   useMasterDetailForm,
   useMasterDetailLevel,
   type TopicLeaf,
-} from "@agentic-toolkit/resource";
-import { Button } from "@agenticdevelopertoolkit/ui/components/button";
-import { ErrorText } from "@agenticdevelopertoolkit/ui/components/error-text";
-import { Field, FieldGroup } from "@agenticdevelopertoolkit/ui/blocks";
-import { Input } from "@agenticdevelopertoolkit/ui/components/input";
-import { Select } from "@agenticdevelopertoolkit/ui/components/select";
-import { Switch } from "@agenticdevelopertoolkit/ui/components/switch";
-import { Textarea } from "@agenticdevelopertoolkit/ui/components/textarea";
+} from "@adh-sdk/resource";
+import { Button } from "@adh-sdk/ui/components/button";
+import { ErrorText } from "@adh-sdk/ui/components/error-text";
+import { Field, FieldGroup } from "@adh-sdk/ui/blocks";
+import { Input } from "@adh-sdk/ui/components/input";
+import { Select } from "@adh-sdk/ui/components/select";
+import { Switch } from "@adh-sdk/ui/components/switch";
+import { Textarea } from "@adh-sdk/ui/components/textarea";
 import {
   createOffer,
   deleteOffer,

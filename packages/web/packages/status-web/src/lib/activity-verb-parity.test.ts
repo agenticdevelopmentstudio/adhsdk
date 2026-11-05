@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { QUEUED_VERB } from "./overview";
-import { BUILD_VERB } from "@agentic-toolkit/status-server/board";
+import { BUILD_VERB } from "@adh-sdk/status-server/board";
 
 // DRIFT GUARD. Queued and building rows both arrive with tone "progress"; the client tells
 // them apart by the server's verb alone (`isActiveBuild`). If the server renamed the queued

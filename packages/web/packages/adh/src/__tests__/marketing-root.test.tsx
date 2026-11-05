@@ -6,10 +6,10 @@ import {
   MarketingSiteHeader,
   type MarketingRootHtmlProps,
 } from "../marketing";
-import { AuthProvider } from "@agentic-toolkit/adh/auth";
-import { HelpContentProvider } from "@agenticdevelopertoolkit/ui/components/help-content";
+import { AuthProvider } from "@adh-sdk/adh/auth";
+import { HelpContentProvider } from "@adh-sdk/ui/components/help-content";
 import { FAMILY_ROOT_CLASS } from "../marketing/MarketingShell";
-import { JsonLd } from "@agenticdevelopertoolkit/landing";
+import { JsonLd } from "@adh-sdk/landing";
 
 /**
  * Open the document without rendering it.
@@ -92,7 +92,7 @@ function openDocument(props: Partial<MarketingRootHtmlProps> = {}) {
 }
 /* eslint-enable @typescript-eslint/no-explicit-any */
 
-describe("@agentic-toolkit/adh/marketing", () => {
+describe("@adh-sdk/adh/marketing", () => {
   it("exports the root document shell and the session-aware header", () => {
     expect(typeof MarketingRootHtml).toBe("function");
     expect(typeof MarketingSiteHeader).toBe("function");

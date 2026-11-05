@@ -1,12 +1,12 @@
 'use client';
 
 import { useCallback, useState } from 'react';
-import { useResourceList } from '@agentic-toolkit/data';
-import { FieldGroup, SectionHeader } from '@agenticdevelopertoolkit/ui/blocks';
-import { Button } from '@agenticdevelopertoolkit/ui/components/button';
-import { ErrorText } from '@agenticdevelopertoolkit/ui/components/error-text';
-import { Spinner } from '@agenticdevelopertoolkit/ui/components/spinner';
-import type { EntryRow, EntryStatus, RegistryClient } from '@agentic-toolkit/registry/client';
+import { useResourceList } from '@adh-sdk/data';
+import { FieldGroup, SectionHeader } from '@adh-sdk/ui/blocks';
+import { Button } from '@adh-sdk/ui/components/button';
+import { ErrorText } from '@adh-sdk/ui/components/error-text';
+import { Spinner } from '@adh-sdk/ui/components/spinner';
+import type { EntryRow, EntryStatus, RegistryClient } from '@adh-sdk/registry/client';
 import { registryEntriesKey, revalidateRegistryEntries } from './entriesCache';
 
 export interface PendingEntriesPanelProps {

@@ -18,32 +18,32 @@ import {
   StickyNote,
   UserRound,
 } from "lucide-react";
-import { EmptyState } from "@agenticdevelopertoolkit/ui/components/empty-state";
-import { BatchSelectButton, ButtonBar, TopicSelectHint, useBatchSelect } from "@agenticdevelopertoolkit/ui/blocks";
-import { Button } from "@agenticdevelopertoolkit/ui/components/button";
-import { Select } from "@agenticdevelopertoolkit/ui/components/select";
-import { Label } from "@agenticdevelopertoolkit/ui/components/label";
+import { EmptyState } from "@adh-sdk/ui/components/empty-state";
+import { BatchSelectButton, ButtonBar, TopicSelectHint, useBatchSelect } from "@adh-sdk/ui/blocks";
+import { Button } from "@adh-sdk/ui/components/button";
+import { Select } from "@adh-sdk/ui/components/select";
+import { Label } from "@adh-sdk/ui/components/label";
 import {
   Dialog,
   DialogContent,
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@agenticdevelopertoolkit/ui/components/dialog";
-import { AlertModal } from "@agenticdevelopertoolkit/ui/components/alert-modal";
-import { useDualModeSelection } from "@agenticdevelopertoolkit/ui/hooks/useDualModeSelection";
-import { ErrorText } from "@agenticdevelopertoolkit/ui/components/error-text";
+} from "@adh-sdk/ui/components/dialog";
+import { AlertModal } from "@adh-sdk/ui/components/alert-modal";
+import { useDualModeSelection } from "@adh-sdk/ui/hooks/useDualModeSelection";
+import { ErrorText } from "@adh-sdk/ui/components/error-text";
 import {
   integrationsApi,
   type MaskedProviderConfig,
   type ProviderCatalogEntry,
-} from "@agentic-toolkit/data/integrations";
-import { isForbidden, useResourceItemQuery, useResourceList } from "@agentic-toolkit/data";
-import { DetailHeaderActions } from "@agentic-toolkit/resource";
-import { useMasterDetailForm } from "@agentic-toolkit/resource";
-import { useMasterDetailLevel } from "@agentic-toolkit/resource";
-import { ToolbarPortal } from "@agentic-toolkit/resource";
-import type { TopicLeaf } from "@agentic-toolkit/resource";
+} from "@adh-sdk/data/integrations";
+import { isForbidden, useResourceItemQuery, useResourceList } from "@adh-sdk/data";
+import { DetailHeaderActions } from "@adh-sdk/resource";
+import { useMasterDetailForm } from "@adh-sdk/resource";
+import { useMasterDetailLevel } from "@adh-sdk/resource";
+import { ToolbarPortal } from "@adh-sdk/resource";
+import type { TopicLeaf } from "@adh-sdk/resource";
 import {
   intBlank,
   intDiffers,

@@ -1,7 +1,7 @@
 ---
 id: 0c8a7db3-9948-466c-8c97-20de2ae53a17
 title: Pane Minimize Picker
-domain: agenticdevelopertoolkit://recipes/pane-minimize-picker
+domain: adhsdk://recipes/pane-minimize-picker
 type: ingredient
 version: 1.1.1
 status: review
@@ -148,7 +148,7 @@ Not applicable: The component does not emit log messages in the source code.
 
 ## Platform Notes
 
-- **Apple (AppKit)**: Implemented in `packages/apple/AgenticDeveloperToolkit/SourcesUI/macOS/Chrome/PaneMinimizePicker.swift`. The `PaneMinimizeCrossView` constructs a 3×3 `NSGridView` with four `NSButton` instances positioned at cardinal points, stored in a `[PaneEdge: NSButton]` dictionary. Button state is managed via `isEnabled` and `contentTintColor` properties; `button(for:)` looks buttons up in that dictionary and raises `fatalError` rather than returning `nil` (see Edge Cases). Tint color is kept current via a reactive `observeTheme` binding. The `PaneMinimizePicker` wraps the cross in an `NSPopover` with transient behavior and shows it relative to an anchor view at the minY edge.
+- **Apple (AppKit)**: Implemented in `packages/apple/AgenticDeveloperHubSDK/SDK/SourcesUI/macOS/Chrome/PaneMinimizePicker.swift`. The `PaneMinimizeCrossView` constructs a 3×3 `NSGridView` with four `NSButton` instances positioned at cardinal points, stored in a `[PaneEdge: NSButton]` dictionary. Button state is managed via `isEnabled` and `contentTintColor` properties; `button(for:)` looks buttons up in that dictionary and raises `fatalError` rather than returning `nil` (see Edge Cases). Tint color is kept current via a reactive `observeTheme` binding. The `PaneMinimizePicker` wraps the cross in an `NSPopover` with transient behavior and shows it relative to an anchor view at the minY edge.
 - **SwiftUI**: Start from a grid-based container (e.g., `Grid` with custom layout or nested stacks in a 3×3 arrangement). Use `Button` views with SF Symbols for arrow images. Bind button disabled state to the availableEdges set. Use an `@State` popover presentation modifier to show/hide the picker. Apply theme-aware foreground colors using `.foregroundStyle()` based on enabled/disabled state (`.foregroundColor()` is deprecated). Call the onPick closure and dismiss the popover on button tap.
 - **Compose (Android)**: Arrange four `IconButton` instances in a cross pattern using a `Box` with custom layout, or nested `Column`/`Row` (Compose has no `GridLayout`). Supply Material icons — `Icons.Filled.KeyboardArrowUp`/`KeyboardArrowDown` for the vertical arrows, and `Icons.AutoMirrored.Filled.KeyboardArrowLeft`/`KeyboardArrowRight` for the horizontal arrows so they mirror correctly in RTL locales. Disable buttons by setting `enabled = false` on the `IconButton`. Present the cross in a `Popup` composable (Compose has no `PopupMenu` that hosts arbitrary content). Invoke the callback and dismiss the popup on button click.
 - **AppKit / UIKit (iOS)**: Construct a 3×3 grid using `UIStackView` with arranged subviews. Use `UIButton` with system arrow images. Toggle button enabled state via `isEnabled`. Present the picker in a `UIPopoverPresentationController` (iPad) or a sheet/modal (iPhone). Invoke the callback and dismiss after selection.

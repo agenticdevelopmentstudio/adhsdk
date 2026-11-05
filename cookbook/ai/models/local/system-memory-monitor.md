@@ -1,7 +1,7 @@
 ---
 id: d766c910-c7ec-4163-94a6-599cf103e85a
 title: "System Memory Monitor"
-domain: adtoolkit://cookbook/ai/models/local/system-memory-monitor
+domain: adhsdk://cookbook/ai/models/local/system-memory-monitor
 type: ingredient
 version: 1.1.0
 status: review
@@ -22,13 +22,13 @@ tags:
   - singleton
 depends-on: []
 related:
-  - adtoolkit://cookbook/ai/models/local/local-inference-guard
-  - adtoolkit://cookbook/ai/models/local/model-fit-policy
+  - adhsdk://cookbook/ai/models/local/local-inference-guard
+  - adhsdk://cookbook/ai/models/local/model-fit-policy
 references:
-  - packages/apple/AgenticToolkit/AIPluginKit/SystemMemoryMonitor.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/AIPluginKit/ModelFitPolicy.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/AIPluginKit/LocalInferenceGuard.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Tests/AIPluginKitTests/SystemMemoryMonitorTests.swift (agenticdevelopertoolkit)
+  - packages/apple/AgenticDeveloperHubSDK/AIPluginKit/SystemMemoryMonitor.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/AIPluginKit/ModelFitPolicy.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/AIPluginKit/LocalInferenceGuard.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Tests/AIPluginKitTests/SystemMemoryMonitorTests.swift (adhsdk)
 approved-by: ""
 approved-date: ""
 ---
@@ -232,7 +232,7 @@ Not applicable: this component contains no logging call of its own.
 ## Platform Notes
 
 - **SwiftUI**: The source is
-  `packages/apple/AgenticToolkit/AIPluginKit/SystemMemoryMonitor.swift`,
+  `packages/apple/AgenticDeveloperHubSDK/AIPluginKit/SystemMemoryMonitor.swift`,
   alongside the `MemoryPressureLevel` enum it depends on
   (`ModelFitPolicy.swift`) and its consumer `LocalInferenceGuard.swift`. It
   uses `ProcessInfo.processInfo.physicalMemory` for RAM,
@@ -286,7 +286,7 @@ Not applicable: this component contains no logging call of its own.
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/AIPluginKit/SystemMemoryMonitor.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/AIPluginKit/SystemMemoryMonitor.swift` |
 
 ## Design Decisions
 

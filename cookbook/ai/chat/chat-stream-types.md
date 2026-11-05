@@ -1,7 +1,7 @@
 ---
 id: f305da79-fa03-493e-9c08-7186530943c6
 title: "Chat Stream Types"
-domain: adtoolkit://cookbook/ai/chat/chat-stream-types
+domain: adhsdk://cookbook/ai/chat/chat-stream-types
 type: ingredient
 version: 1.1.1
 status: review
@@ -23,8 +23,8 @@ tags:
   - value-type
 depends-on: []
 related:
-  - adtoolkit://cookbook/ai/plugins/stream-event
-  - adtoolkit://cookbook/ai/chat/chat-context
+  - adhsdk://cookbook/ai/plugins/stream-event
+  - adhsdk://cookbook/ai/chat/chat-context
 references: []
 approved-by: ""
 approved-date: ""
@@ -308,9 +308,9 @@ kind; each is a pure data declaration with no side effects of its own.
 ## Platform Notes
 
 - **SwiftUI**: The sources are
-  `packages/apple/AgenticToolkit/Core/AIPlugins/ChatStreamEvent.swift`,
+  `packages/apple/AgenticDeveloperHubSDK/Core/AIPlugins/ChatStreamEvent.swift`,
   `ToolDefinition.swift`, and `ToolResult.swift`, part of the
-  `AgenticToolkitCore` framework target, which `project.yml` declares as
+  `AgenticDeveloperHubSDKCore` framework target, which `project.yml` declares as
   `platform: macOS` only (no iOS target exists for it today). Nothing in
   the three files is SwiftUI-specific — each imports only `Foundation` —
   so a SwiftUI or AppKit host consumes them identically.
@@ -335,8 +335,8 @@ kind; each is a pure data declaration with no side effects of its own.
   deep-equality helper (or a library) rather than a free `==`.
 - **AppKit / UIKit**: this is the source. `ChatStreamEvent.swift`,
   `ToolDefinition.swift`, and `ToolResult.swift` live in
-  `packages/apple/AgenticToolkit/Core/AIPlugins/`, part of the
-  `AgenticToolkitCore` framework target, which `project.yml` declares as
+  `packages/apple/AgenticDeveloperHubSDK/Core/AIPlugins/`, part of the
+  `AgenticDeveloperHubSDKCore` framework target, which `project.yml` declares as
   `platform: macOS` only (no iOS target exists for it today).
   `ChatStreamEvent` is a `Sendable` enum with cases `textDelta(String)`,
   `toolUse(id: String, name: String, argumentsJSON: Data)`, and
@@ -390,7 +390,7 @@ kind; each is a pure data declaration with no side effects of its own.
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/Core/AIPlugins/` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/AIPlugins/` |
 
 ## Design Decisions
 

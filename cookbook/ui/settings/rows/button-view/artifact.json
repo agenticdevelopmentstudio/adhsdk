@@ -3,7 +3,7 @@
   "meta": {
     "id": "f8e734aa-f401-4218-9f1e-56ed98c28d3d",
     "title": "Button View",
-    "domain": "adtoolkit://cookbook/ui/settings/rows/button-view",
+    "domain": "adhsdk://cookbook/ui/settings/rows/button-view",
     "type": "ingredient",
     "version": "1.2.4",
     "status": "review",

@@ -1,7 +1,7 @@
 import '@testing-library/jest-dom/vitest'
 import { afterEach, beforeEach, describe, it, expect, vi } from 'vitest'
 import { act, render, screen, waitFor, within } from '@testing-library/react'
-import type { AuthUser } from '@agentic-toolkit/auth'
+import type { AuthUser } from '@adh-sdk/auth'
 import type { CrudColumn, CrudTableMeta } from '../types'
 import type { CrudShellProps } from '../CrudDataBrowser'
 
@@ -13,8 +13,8 @@ const admin = { id: 'u1', email: 'u@example.com', capabilities: ['admin'] } as A
 // Who is signed in; a test swaps it to sign someone else in.
 let viewer: AuthUser = admin
 vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn() }) }))
-vi.mock('@agentic-toolkit/auth', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('@agentic-toolkit/auth')>()),
+vi.mock('@adh-sdk/auth', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@adh-sdk/auth')>()),
   useOptionalAuth: () => ({ user: viewer, isLoading: false }),
   useAuth: () => ({ user: viewer, isLoading: false }),
 }))
@@ -26,10 +26,10 @@ const FAIL = new Map<string, unknown>()
 const HOLD = new Set<string>()
 const probes: string[] = []
 const signals: AbortSignal[] = []
-vi.mock('@agentic-toolkit/auth/client', async (importOriginal) => ({
+vi.mock('@adh-sdk/auth/client', async (importOriginal) => ({
   // The real module underneath, for its AuthHttpError (the probe tells a refusal from a failure
   // by it) and for the session watch that forgets remembered answers.
-  ...(await importOriginal<typeof import('@agentic-toolkit/auth/client')>()),
+  ...(await importOriginal<typeof import('@adh-sdk/auth/client')>()),
   authedJson: async (url: string, init?: RequestInit) => {
     probes.push(url)
     if (init?.signal) signals.push(init.signal)
@@ -70,7 +70,7 @@ vi.mock('../CrudDataView', () => ({
 }))
 
 const { CrudDataBrowser } = await import('../CrudDataBrowser')
-const { AuthHttpError } = await import('@agentic-toolkit/auth/client')
+const { AuthHttpError } = await import('@adh-sdk/auth/client')
 const { resetTablesWithRows, TABLES_WITH_ROWS_TTL_MS } = await import('../useTablesWithRows')
 // Answers are remembered at module scope, which outlives a render(), and most tests here share one
 // filter and one set of tables: without this they would read each other's answer.

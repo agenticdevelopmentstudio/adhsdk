@@ -1,7 +1,7 @@
 import { render } from '@testing-library/react'
 import type { ComponentType } from 'react'
 import { describe, expect, it, vi } from 'vitest'
-import { DEFAULT_VOICE } from '@agentic-toolkit/bitbag'
+import { DEFAULT_VOICE } from '@adh-sdk/bitbag'
 
 // `next/dynamic` stood in for by a component that records what it is handed: jsdom can run
 // neither the client-only loader nor bitbag's gsap, and what `SiteBitbag` owes a site is only
@@ -14,7 +14,7 @@ vi.mock('next/dynamic', () => ({
       return null
     },
 }))
-vi.mock('@agentic-toolkit/bitbag/css/bitbag-dock.css', () => ({}))
+vi.mock('@adh-sdk/bitbag/css/bitbag-dock.css', () => ({}))
 
 import { SiteBitbag } from '../bitbag'
 

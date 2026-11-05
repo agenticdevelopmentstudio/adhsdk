@@ -1,8 +1,8 @@
 "use client";
 
 import type { ReactElement, ReactNode } from "react";
-import { Badge } from "@agenticdevelopertoolkit/ui/components/badge";
-import { CopyButton } from "@agenticdevelopertoolkit/ui/components/copy-button";
+import { Badge } from "@adh-sdk/ui/components/badge";
+import { CopyButton } from "@adh-sdk/ui/components/copy-button";
 import {
   milestoneProgress,
   type EstimateScale,
@@ -12,7 +12,7 @@ import {
   type ProjectParticipant,
   type ProjectStatus,
   type WorkItem,
-} from "@agentic-toolkit/data/projects";
+} from "@adh-sdk/data/projects";
 import { priorityMeta } from "./WorkItemEditor";
 import { DEFAULT_ITEM_WORDS, type ItemWords } from "./vocabulary";
 import { ItemKey } from "./ItemKey";

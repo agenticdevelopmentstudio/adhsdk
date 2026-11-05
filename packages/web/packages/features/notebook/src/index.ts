@@ -1,6 +1,6 @@
-// @agentic-toolkit/notebook — the Notebook feature: a master/detail surface over the
+// @adh-sdk/notebook — the Notebook feature: a master/detail surface over the
 // owner's notes, browsed through a hierarchical category rail. A note IS a markdown
-// document (see @agentic-toolkit/data/notes), so the editor is the research surface's
+// document (see @adh-sdk/data/notes), so the editor is the research surface's
 // minus everything about publishing; the category TREE is what makes it its own feature.
 // The entry mounts the deep-linked route (the host passes `basePath`).
 export { NotebookFeature } from "./NotebookFeature";

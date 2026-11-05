@@ -11,7 +11,7 @@ daemon's chat-completion path). The production implementation is a
 stateless conformance that delegates get/set/delete verbatim to the
 platform's secure-storage helper, plus a fifth capability, delete-legacy,
 that removes an entry written by a pre-pin build under the secure-storage
-helper's own default fallback service identifier ("com.agentictoolkit") by
+helper's own default fallback service identifier ("com.mikefullerton.agenticdeveloperhubsdk") by
 briefly retargeting the helper's active service identifier and restoring it
 afterward. A test-only implementation backs the same interface with a
 lock-guarded in-memory dictionary so the daemon's chat-completion tests

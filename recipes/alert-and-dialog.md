@@ -1,7 +1,7 @@
 ---
 id: 550f00f7-bfb2-415e-9b15-bd5dce015500
 title: "Alert & Dialog System"
-domain: agenticdevelopertoolkit://recipes/alert-and-dialog
+domain: adhsdk://recipes/alert-and-dialog
 type: recipe
 version: 1.2.3
 status: review
@@ -21,8 +21,8 @@ tags:
   - confirm
   - overlay
 ingredients:
-  - agenticdevelopertoolkit://recipes/dialog
-  - agenticdevelopertoolkit://recipes/button
+  - adhsdk://recipes/dialog
+  - adhsdk://recipes/button
 depends-on: []
 related: []
 references: []
@@ -35,7 +35,7 @@ approved-date: ''
 ## Overview
 
 The canonical styled alert / confirm / modal-dialog treatment for ADH. It is
-realized by evolving `@agenticdevelopertoolkit/ui`'s existing `AlertModal`
+realized by evolving `@adh-sdk/ui`'s existing `AlertModal`
 (`packages/web/packages/ui/src/components/alert-modal.tsx`) **backward-compatibly** —
 current call-sites (`LoginCard`, `ProviderLinkHandler`, `SsoCallback`, admin
 `authentication/page.tsx`, tests) keep working. Larger modal dialogs (e.g. the hub
@@ -52,8 +52,8 @@ rules are exposed for composed dialogs so everything looks uniform.
 
 | Name | Domain | Role | Required | Configuration |
 |---|---|---|---|---|
-| Dialog | agenticdevelopertoolkit://recipes/dialog | Base overlay / focus-trap / portal that the system is built on | yes | reused unchanged |
-| Button | agenticdevelopertoolkit://recipes/button | Footer action + cancel buttons | yes | `variant="default"` (gold action), `variant="ghost"`/`outline` (cancel), red for destructive |
+| Dialog | adhsdk://recipes/dialog | Base overlay / focus-trap / portal that the system is built on | yes | reused unchanged |
+| Button | adhsdk://recipes/button | Footer action + cancel buttons | yes | `variant="default"` (gold action), `variant="ghost"`/`outline` (cancel), red for destructive |
 
 ## Integration Requirements
 

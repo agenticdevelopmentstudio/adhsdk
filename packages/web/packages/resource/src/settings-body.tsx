@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 
-import { cn } from "@agenticdevelopertoolkit/ui/lib/utils";
+import { cn } from "@adh-sdk/ui/lib/utils";
 
 /**
  * The scrolling body every User Settings section renders under its `FeatureTitle` — one padding,

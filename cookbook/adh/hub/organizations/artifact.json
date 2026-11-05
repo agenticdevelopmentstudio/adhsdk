@@ -3,7 +3,7 @@
   "meta": {
     "id": "98d7c94e-4db9-42c9-b36e-1a2a59409fda",
     "title": "Organizations",
-    "domain": "adtoolkit://cookbook/adh/hub/organizations",
+    "domain": "adhsdk://cookbook/adh/hub/organizations",
     "type": "ingredient",
     "version": "1.2.1",
     "status": "review",
@@ -27,16 +27,16 @@
     ],
     "depends-on": [],
     "related": [
-      "adtoolkit://cookbook/data/services/auth/auth-client"
+      "adhsdk://cookbook/data/services/auth/auth-client"
     ],
     "references": [
-      "packages/web/packages/data/src/organizations/organizations.ts (agenticdevelopertoolkit)",
-      "packages/web/packages/data/src/organizations/members.ts (agenticdevelopertoolkit)",
-      "packages/web/packages/data/src/organizations/wire.ts (agenticdevelopertoolkit)",
-      "packages/web/packages/data/src/organizations/index.ts (agenticdevelopertoolkit)",
-      "packages/web/packages/data/src/http.ts (agenticdevelopertoolkit)",
-      "packages/web/packages/data/src/client-helpers.ts (agenticdevelopertoolkit)",
-      "packages/web/packages/auth/src/client.ts (agenticdevelopertoolkit)"
+      "packages/web/packages/data/src/organizations/organizations.ts (adhsdk)",
+      "packages/web/packages/data/src/organizations/members.ts (adhsdk)",
+      "packages/web/packages/data/src/organizations/wire.ts (adhsdk)",
+      "packages/web/packages/data/src/organizations/index.ts (adhsdk)",
+      "packages/web/packages/data/src/http.ts (adhsdk)",
+      "packages/web/packages/data/src/client-helpers.ts (adhsdk)",
+      "packages/web/packages/auth/src/client.ts (adhsdk)"
     ],
     "approved-by": "",
     "approved-date": ""

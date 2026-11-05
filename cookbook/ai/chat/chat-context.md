@@ -1,7 +1,7 @@
 ---
 id: 613d7a36-d0cd-4415-97be-d983b3d6c644
 title: "Chat Context"
-domain: adtoolkit://cookbook/ai/chat/chat-context
+domain: adhsdk://cookbook/ai/chat/chat-context
 type: ingredient
 version: 1.1.2
 status: review
@@ -308,7 +308,7 @@ Not applicable: this contract contains no logging call of any kind.
   plugin consumes these value types unchanged, since all four are
   `Sendable` and carry no UI state.
 - **AppKit / UIKit**: this is the source. The file is
-  `packages/apple/AgenticToolkit/AIPluginKit/AIChatContext.swift`, part of
+  `packages/apple/AgenticDeveloperHubSDK/AIPluginKit/AIChatContext.swift`, part of
   the `AIPluginKit` framework target, which `project.yml` declares as
   `platform: macOS` only (no iOS target exists for it today). It declares
   four Foundation-only, `Sendable` value types: `AIChatMessage` (with a
@@ -375,7 +375,7 @@ Not applicable: this contract contains no logging call of any kind.
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/AIPluginKit/AIChatContext.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/AIPluginKit/AIChatContext.swift` |
 
 ## Design Decisions
 

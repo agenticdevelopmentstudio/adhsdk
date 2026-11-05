@@ -2,9 +2,9 @@
 import { useState } from "react";
 import { describe, it, expect, afterEach, vi } from "vitest";
 import { render, screen, fireEvent, waitFor, cleanup } from "@testing-library/react";
-import { SettingsDirtyProvider, useSettingsDirty } from "@agentic-toolkit/resource";
+import { SettingsDirtyProvider, useSettingsDirty } from "@adh-sdk/resource";
 
-vi.mock("@agentic-toolkit/auth", () => ({
+vi.mock("@adh-sdk/auth", () => ({
   reportUnexpectedAuthError: vi.fn(),
 }));
 
@@ -18,7 +18,7 @@ const { getCatalog, putRealmLevels } = vi.hoisted(() => ({
   getCatalog: vi.fn(),
   putRealmLevels: vi.fn(),
 }));
-vi.mock("@agentic-toolkit/data/gamification", () => ({
+vi.mock("@adh-sdk/data/gamification", () => ({
   gamificationApi: {
     getCatalog,
     putRealmLevels,

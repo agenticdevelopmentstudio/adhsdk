@@ -4,12 +4,12 @@ export type SiteSwitchNotFoundProps = {
     children?: ReactNode;
 };
 /**
- * Shared `not-found` body — see `@agentic-toolkit/adh/layout`'s `SiteNotFound` for the up-walk
+ * Shared `not-found` body — see `@adh-sdk/adh/layout`'s `SiteNotFound` for the up-walk
  * behaviour.
  *
  * The adh seam: the toolkit component takes the marker fragment as a `siteSwitchHash` prop
  * (the toolkit cannot know adh's site-switch protocol); this wrapper supplies
- * `SITE_SWITCH_HASH` from `@agentic-toolkit/adh-registry` so the ~41 `app/not-found.tsx` call
+ * `SITE_SWITCH_HASH` from `@adh-sdk/adh-registry` so the ~41 `app/not-found.tsx` call
  * sites keep rendering this component with nothing but their optional 404 body.
  *
  * Named `SiteSwitchNotFound` rather than `SiteNotFound`: this barrel already publishes a

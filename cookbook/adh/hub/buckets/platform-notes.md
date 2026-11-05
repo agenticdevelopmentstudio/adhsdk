@@ -30,7 +30,7 @@
 - **AppKit / UIKit**: This is the source: `BucketsDataSource.swift`,
   `BucketsModels.swift`, and `BucketsTopic.swift` hold no AppKit/UIKit
   import of their own — `BucketsTopic` depends only on `Foundation` and the
-  `AgenticToolkitHTDV` module (`HTDVItem`, `HTDVLevel`, `HTDVChild`,
+  `AgenticDeveloperHubSDKHTDV` module (`HTDVItem`, `HTDVLevel`, `HTDVChild`,
   `HTDVCreateAction`, `FormSpec`/`FormSection`/`FormAction`/`FormDeleteAction`/
   `FormActions`), and presents its create sheets through the shared
   `FormSheet.present` rather than any AppKit/UIKit API of its own.

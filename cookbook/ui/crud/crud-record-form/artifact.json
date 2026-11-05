@@ -3,7 +3,7 @@
   "meta": {
     "id": "3dc693ab-28e4-4624-9b2d-8dc81f81e037",
     "title": "CRUD Record Form",
-    "domain": "adtoolkit://cookbook/ui/crud/crud-record-form",
+    "domain": "adhsdk://cookbook/ui/crud/crud-record-form",
     "type": "recipe",
     "version": "1.4.2",
     "status": "review",
@@ -25,11 +25,11 @@
       "validation"
     ],
     "ingredients": [
-      "agenticdevelopertoolkit://recipes/field"
+      "adhsdk://recipes/field"
     ],
     "depends-on": [],
     "related": [
-      "adtoolkit://cookbook/ui/crud/crud-table"
+      "adhsdk://cookbook/ui/crud/crud-table"
     ],
     "references": [],
     "approved-by": "",

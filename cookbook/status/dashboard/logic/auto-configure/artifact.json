@@ -3,7 +3,7 @@
   "meta": {
     "id": "cd71721b-e80e-4525-a7a1-fc1ac2158267",
     "title": "Auto Configure",
-    "domain": "adtoolkit://cookbook/status/dashboard/logic/auto-configure",
+    "domain": "adhsdk://cookbook/status/dashboard/logic/auto-configure",
     "type": "ingredient",
     "version": "1.1.0",
     "status": "review",
@@ -21,8 +21,8 @@
     "tags": [],
     "depends-on": [],
     "related": [
-      "adtoolkit://cookbook/status/dashboard/api",
-      "adtoolkit://cookbook/status/dashboard/state/config-status"
+      "adhsdk://cookbook/status/dashboard/api",
+      "adhsdk://cookbook/status/dashboard/state/config-status"
     ],
     "references": [],
     "approved-by": "",

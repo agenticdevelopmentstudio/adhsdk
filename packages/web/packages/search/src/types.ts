@@ -1,7 +1,7 @@
 import type { ComponentType, Ref } from 'react'
 
 /**
- * @agenticdevelopertoolkit/search — the three configurable seams.
+ * @adh-sdk/search — the three configurable seams.
  *
  * 1. SCOPE/SOURCE seam ({@link SearchSource}): WHERE to search — a base URL plus the
  *    endpoint paths and query-param names. The core view holds NO literal endpoint or

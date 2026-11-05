@@ -1,17 +1,17 @@
 "use client";
 
-import { useAction } from "@agentic-toolkit/crud";
-import { ErrorText } from "@agenticdevelopertoolkit/ui/components/error-text";
-import { Switch } from "@agenticdevelopertoolkit/ui/components/switch";
-import { Button } from "@agenticdevelopertoolkit/ui/components/button";
-import { Field } from "@agenticdevelopertoolkit/ui/blocks/field";
-import { FieldGroup } from "@agenticdevelopertoolkit/ui/blocks/field-group";
+import { useAction } from "@adh-sdk/crud";
+import { ErrorText } from "@adh-sdk/ui/components/error-text";
+import { Switch } from "@adh-sdk/ui/components/switch";
+import { Button } from "@adh-sdk/ui/components/button";
+import { Field } from "@adh-sdk/ui/blocks/field";
+import { FieldGroup } from "@adh-sdk/ui/blocks/field-group";
 import {
   personaApprovalsApi,
   personaMayActApi,
   type Approval,
   type MayActGrantableKind,
-} from "@agentic-toolkit/data/personas";
+} from "@adh-sdk/data/personas";
 import { useOptimisticRowActions } from "./useOptimisticRowActions";
 
 /** The two may-act context switches this panel renders, unified (#10) into one kind-parameterized

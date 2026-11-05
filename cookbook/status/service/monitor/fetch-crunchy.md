@@ -1,7 +1,7 @@
 ---
 id: f236e0ab-2623-4543-a3d9-9ffb4ba3f147
 title: "Status Server Monitor Fetch Crunchy"
-domain: adtoolkit://cookbook/status/service/monitor/fetch-crunchy
+domain: adhsdk://cookbook/status/service/monitor/fetch-crunchy
 type: ingredient
 version: 1.0.2
 status: review
@@ -26,11 +26,11 @@ depends-on:
   - agenticdevelopercookbook://guidelines/implementing/networking/rate-limiting
 related: []
 references:
-  - packages/web/packages/status-server/src/monitor/fetch-crunchy.ts (agenticdevelopertoolkit)
-  - packages/web/packages/status-server/src/monitor/deploy-status.ts (agenticdevelopertoolkit)
-  - packages/web/packages/status-server/src/monitor/provider-deploy.ts (agenticdevelopertoolkit)
-  - packages/web/packages/deploy-platform/src/cooldown/provider-cooldown.ts (agenticdevelopertoolkit)
-  - packages/web/packages/status-server/test/crunchy-deployments.test.ts (agenticdevelopertoolkit)
+  - packages/web/packages/status-server/src/monitor/fetch-crunchy.ts (adhsdk)
+  - packages/web/packages/status-server/src/monitor/deploy-status.ts (adhsdk)
+  - packages/web/packages/status-server/src/monitor/provider-deploy.ts (adhsdk)
+  - packages/web/packages/deploy-platform/src/cooldown/provider-cooldown.ts (adhsdk)
+  - packages/web/packages/status-server/test/crunchy-deployments.test.ts (adhsdk)
 approved-by: ""
 approved-date: ""
 ---
@@ -155,7 +155,7 @@ Subsystem: process `console` | Category: monitor
 
 ## Platform Notes
 
-- **React/Web** (source platform): `fetch-crunchy.ts` lives under `packages/web/packages/status-server/src/monitor/`, on Node's global `fetch`, `AbortController`, and `setTimeout`/`clearTimeout`. It imports `crunchyPhases` from the sibling local module `./deploy-status`, `toValidDate`/`ProviderDeploy` from the sibling local module `./provider-deploy`, and `noteRateLimited`/`rateLimitedUntil` from the separate workspace package `@agentic-toolkit/deploy-platform/cooldown`, whose registry is backed by a cross-thread `SharedArrayBuffer`.
+- **React/Web** (source platform): `fetch-crunchy.ts` lives under `packages/web/packages/status-server/src/monitor/`, on Node's global `fetch`, `AbortController`, and `setTimeout`/`clearTimeout`. It imports `crunchyPhases` from the sibling local module `./deploy-status`, `toValidDate`/`ProviderDeploy` from the sibling local module `./provider-deploy`, and `noteRateLimited`/`rateLimitedUntil` from the separate workspace package `@adh-sdk/deploy-platform/cooldown`, whose registry is backed by a cross-thread `SharedArrayBuffer`.
 - **SwiftUI**: model `ProviderDeploy` as a `Sendable` struct mirroring the TypeScript interface's fields (optional fields as `String?`/`Date?`); use `URLSession` with `URLRequest.timeoutInterval = 6` (or a `Task` racing `Task.sleep` for cancellation) in place of `AbortController`; port `crunchyPhases`/`toValidDate` as pure, `Sendable` free functions; the cross-thread cooldown registry maps to an `actor` (Swift's idiomatic serialized-access analogue of the source's `Atomics`-guarded `SharedArrayBuffer`) shared between the polling task and any concurrent caller.
 - **Compose**: the same structural mapping as SwiftUI — a Kotlin `data class ProviderDeploy`, a coroutine `withTimeout(6_000)` block in place of `AbortController`, `crunchyPhases`/`toValidDate` as pure Kotlin functions, and the shared cooldown registry as a `Mutex`-guarded singleton (or an `AtomicLong` array) shared across coroutine dispatchers.
 - **AppKit/UIKit**: identical mapping to SwiftUI's; `URLSession`'s `dataTask`/`data(for:)` with a 6-second `timeoutIntervalForRequest` is the direct analogue of this file's single bounded, non-retried attempt.

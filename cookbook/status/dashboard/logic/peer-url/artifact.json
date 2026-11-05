@@ -3,7 +3,7 @@
   "meta": {
     "id": "ad8ad3fe-e3ba-4c1c-a601-62b1a2c1a3b2",
     "title": "Peer URL",
-    "domain": "adtoolkit://cookbook/status/dashboard/logic/peer-url",
+    "domain": "adhsdk://cookbook/status/dashboard/logic/peer-url",
     "type": "ingredient",
     "version": "1.1.0",
     "status": "review",
@@ -27,7 +27,7 @@
       "agenticdevelopercookbook://guidelines/implementing/security/input-validation"
     ],
     "related": [
-      "adtoolkit://cookbook/status/service/peers"
+      "adhsdk://cookbook/status/service/peers"
     ],
     "references": [
       "https://url.spec.whatwg.org/"

@@ -1,4 +1,4 @@
-/* Skins for the @agenticdevelopertoolkit/ui primitives that style through SEMANTIC classes
+/* Skins for the @adh-sdk/ui primitives that style through SEMANTIC classes
  * rather than utilities: these class names are a public theming surface — the
  * theme editor (and user CSS themes) target them (e.g. `.adh-dropdown-menu__item`),
  * and chrome like NavigationPopover composes them — so they must stay stable

@@ -1,5 +1,5 @@
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/AIPluginKit/AIProviderConfigKeys.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/AIPluginKit/AIProviderConfigKeys.swift` |
 

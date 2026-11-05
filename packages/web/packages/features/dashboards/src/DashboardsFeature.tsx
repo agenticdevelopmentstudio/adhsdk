@@ -3,16 +3,16 @@
 import { useCallback, useMemo, type ReactNode } from "react";
 import { Layers, Globe } from "lucide-react";
 
-import { useResourceList } from "@agentic-toolkit/data";
-import type { SiteGroupView, SiteView } from "@agentic-toolkit/data/monitored-sites";
-import { listGroups, listSites } from "@agentic-toolkit/data/monitored-sites";
-import { ErrorText } from "@agenticdevelopertoolkit/ui/components/error-text";
+import { useResourceList } from "@adh-sdk/data";
+import type { SiteGroupView, SiteView } from "@adh-sdk/data/monitored-sites";
+import { listGroups, listSites } from "@adh-sdk/data/monitored-sites";
+import { ErrorText } from "@adh-sdk/ui/components/error-text";
 import {
   RailHostBoundary,
   StackGroupDetail,
   useBasePathRoute,
   type TopicLeaf,
-} from "@agentic-toolkit/resource";
+} from "@adh-sdk/resource";
 import { GroupsSection } from "./GroupsSection";
 import { SitesSection } from "./SitesSection";
 

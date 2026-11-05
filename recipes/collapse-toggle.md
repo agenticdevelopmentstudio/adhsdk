@@ -1,7 +1,7 @@
 ---
 id: f09feb7c-6778-445a-8a68-863c5d60b5cc
 title: CollapseToggle
-domain: agenticdevelopertoolkit://recipes/collapse-toggle
+domain: adhsdk://recipes/collapse-toggle
 type: ingredient
 version: 1.2.2
 status: review

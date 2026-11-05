@@ -8,15 +8,15 @@
 export { LandingDeck, LandingTour } from './LandingDeck'
 export type { LandingDeckProps } from './LandingDeck'
 // The same content as a continuous scroll of bands instead of a snap deck — the layout
-// `@agenticdevelopertoolkit/landing`'s `Flow` draws. A site picks one per route.
+// `@adh-sdk/landing`'s `Flow` draws. A site picks one per route.
 export { LandingFlow, LandingFlowTour } from './LandingFlow'
 export type { LandingFlowProps } from './LandingFlow'
-// The page content model is the landing kit's (`@agenticdevelopertoolkit/landing`, src/page/);
+// The page content model is the landing kit's (`@adh-sdk/landing`, src/page/);
 // it is re-exported here under the names adh's consumers already import, so none of them
 // changes. What stays adh's own is the tour, which needs the family's site registry.
 export {
   landingFromData,
-} from '@agenticdevelopertoolkit/landing'
+} from '@adh-sdk/landing'
 export type {
   InlineNode,
   LandingDataOptions,
@@ -26,5 +26,5 @@ export type {
   LandingCard,
   LandingFaqEntry,
   LandingButton,
-} from '@agenticdevelopertoolkit/landing'
+} from '@adh-sdk/landing'
 export type { LandingContent, LandingTourStop, LandingTourEdge } from './tour'

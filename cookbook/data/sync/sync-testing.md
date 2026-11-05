@@ -1,7 +1,7 @@
 ---
 id: fbb19775-20c8-4857-9945-53947a2078df
 title: "Sync Engine Testing"
-domain: adtoolkit://cookbook/data/sync/sync-testing
+domain: adhsdk://cookbook/data/sync/sync-testing
 type: ingredient
 version: 1.0.4
 status: review
@@ -21,17 +21,17 @@ tags:
   - offline
   - testing
 depends-on:
-  - adtoolkit://cookbook/data/sync/sync-engine
+  - adhsdk://cookbook/data/sync/sync-engine
 related:
-  - adtoolkit://cookbook/data/sync/sync-engine
-  - adtoolkit://cookbook/data/sync/offline-sync-client
+  - adhsdk://cookbook/data/sync/sync-engine
+  - adhsdk://cookbook/data/sync/offline-sync-client
 references:
-  - packages/apple/AgenticToolkit/Sync/Testing/InMemorySyncStore.swift
-  - packages/apple/AgenticToolkit/Sync/Testing/ScriptedSyncTransport.swift
-  - packages/apple/AgenticToolkit/Sync/SyncProtocols.swift
-  - packages/apple/AgenticToolkit/Sync/SyncWire.swift
-  - packages/apple/AgenticToolkit/Tests/AgenticToolkitSyncTests/InMemorySyncStoreTests.swift
-  - packages/apple/AgenticToolkit/Tests/AgenticToolkitSyncTests/SyncEngineTests.swift
+  - packages/apple/AgenticDeveloperHubSDK/Sync/Testing/InMemorySyncStore.swift
+  - packages/apple/AgenticDeveloperHubSDK/Sync/Testing/ScriptedSyncTransport.swift
+  - packages/apple/AgenticDeveloperHubSDK/Sync/SyncProtocols.swift
+  - packages/apple/AgenticDeveloperHubSDK/Sync/SyncWire.swift
+  - packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKSyncTests/InMemorySyncStoreTests.swift
+  - packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKSyncTests/SyncEngineTests.swift
 approved-by: ""
 approved-date: ""
 ---
@@ -41,7 +41,7 @@ approved-date: ""
 ## Overview
 
 Sync Engine Testing is the pair of reference fakes that ship inside the
-`AgenticToolkitSync` framework (the toolkit convention, per the source comment:
+`AgenticDeveloperHubSDKSync` framework (the toolkit convention, per the source comment:
 "fakes ship in the framework"), under `Sync/Testing/`:
 
 - `InMemorySyncStore` — a serialized component (every call runs one at a time) conforming to `SyncStore` that keeps
@@ -58,7 +58,7 @@ Sync Engine Testing is the pair of reference fakes that ship inside the
 - `SyncStoreFailure` — the error enum both stores throw
   (`unknownResource`, `invalidChange`, `pullOnlyResource`).
 
-Use them to drive [SyncEngine](adtoolkit://cookbook/data/sync/sync-engine) in unit
+Use them to drive [SyncEngine](adhsdk://cookbook/data/sync/sync-engine) in unit
 tests and previews without SQLite or a network, and as the executable
 specification a port's own store and transport fakes are checked against.
 
@@ -252,7 +252,7 @@ Not applicable: neither source makes a log call; outcomes are observed through r
 
 ## Platform Notes
 
-- **SwiftUI**: Source platform (`Sync/Testing/InMemorySyncStore.swift`, `Sync/Testing/ScriptedSyncTransport.swift`, compiled into the `AgenticToolkitSync` framework, not a test target). Both are `actor`s, so tests `await` even the synchronous conveniences. `SyncID.uuidV7()` supplies opIds; `Dictionary.merging(_:uniquingKeysWith:)` implements the coalescing merge. A SwiftUI preview can seed an `InMemorySyncStore` and a `ScriptedSyncTransport` to render sync UI with no backend.
+- **SwiftUI**: Source platform (`Sync/Testing/InMemorySyncStore.swift`, `Sync/Testing/ScriptedSyncTransport.swift`, compiled into the `AgenticDeveloperHubSDKSync` framework, not a test target). Both are `actor`s, so tests `await` even the synchronous conveniences. `SyncID.uuidV7()` supplies opIds; `Dictionary.merging(_:uniquingKeysWith:)` implements the coalescing merge. A SwiftUI preview can seed an `InMemorySyncStore` and a `ScriptedSyncTransport` to render sync UI with no backend.
 - **Compose**: Write the store as a class guarding its maps with a `kotlinx.coroutines.sync.Mutex` (or confine it to `Dispatchers.Default.limitedParallelism(1)`) so `suspend` methods serialize like the actor. Use `LinkedHashMap` for rows and a `MutableList` for the outbox to keep FIFO order; stage `apply` into a copy and swap it in for atomicity. The transport becomes an `ArrayDeque<Result<T>>` per script. Test with `kotlinx-coroutines-test` `runTest`; `java.util.UUID` has no v7 generator, so port `SyncID`.
 - **React/Web**: Single-threaded JS makes each synchronous method atomic without a lock, but async methods interleave across `await`, so keep method bodies free of `await` as the source does. Use `Map` (insertion-ordered) for rows and an array for the outbox; deep-copy the resource map with `structuredClone` before applying a batch. The transport is two arrays shifted per call. `Number.parseInt` accepts trailing garbage, so validate `syncVersion` with a digits-only check instead.
 - **AppKit / UIKit**: The same Swift sources apply unchanged; the framework is Foundation-only, so AppKit and UIKit hosts and XCTest bundles use the fakes directly.
@@ -267,14 +267,14 @@ Not applicable: neither source makes a log call; outcomes are observed through r
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/Sync/Testing/InMemorySyncStore.swift` |
-| apple | `packages/apple/AgenticToolkit/Sync/Testing/ScriptedSyncTransport.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Sync/Testing/InMemorySyncStore.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Sync/Testing/ScriptedSyncTransport.swift` |
 
 ## Design Decisions
 
 ### Fakes ship in the framework
 
-**Decision**: The fakes live in the production `AgenticToolkitSync` target under `Sync/Testing/`, not in a test target.
+**Decision**: The fakes live in the production `AgenticDeveloperHubSDKSync` target under `Sync/Testing/`, not in a test target.
 
 **Rationale**: The source comment names this the toolkit convention (see `Core/Chat/MockChatSession.swift`), so host apps' tests and previews can use the same fakes as the toolkit's own tests.
 

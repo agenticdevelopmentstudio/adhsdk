@@ -3,7 +3,7 @@
   "meta": {
     "id": "01942F60-6711-43E7-A7B2-A8E7CB4C2CDA",
     "title": "Billing Model",
-    "domain": "adtoolkit://cookbook/foundation/billing/billing-model",
+    "domain": "adhsdk://cookbook/foundation/billing/billing-model",
     "type": "ingredient",
     "version": "1.0.1",
     "status": "review",
@@ -25,9 +25,9 @@
     ],
     "depends-on": [],
     "related": [
-      "adtoolkit://cookbook/foundation/billing/billing-xpc-client",
-      "adtoolkit://cookbook/foundation/billing/billing-dt-os",
-      "adtoolkit://cookbook/foundation/billing/billing-editing"
+      "adhsdk://cookbook/foundation/billing/billing-xpc-client",
+      "adhsdk://cookbook/foundation/billing/billing-dt-os",
+      "adhsdk://cookbook/foundation/billing/billing-editing"
     ],
     "references": [],
     "approved-by": "",

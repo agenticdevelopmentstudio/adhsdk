@@ -9,7 +9,7 @@ import type { BitbagChatProps } from '../BitbagChat'
 const chat = vi.hoisted(() => ({ props: {} as Partial<BitbagChatProps> }))
 const sent = vi.hoisted(() => ({ roots: [] as (HTMLElement | null)[] }))
 const pokes = vi.hoisted(() => ({ count: 0 }))
-vi.mock('@agenticdevelopertoolkit/chat', async (importOriginal) => ({
+vi.mock('@adh-sdk/chat', async (importOriginal) => ({
   ...(await importOriginal<Record<string, unknown>>()),
   submitChatInput: (root: HTMLElement | null) => {
     sent.roots.push(root)

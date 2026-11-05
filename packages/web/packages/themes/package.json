@@ -1,7 +1,7 @@
 {
-  "name": "@agenticdevelopertoolkit/themes",
+  "name": "@adh-sdk/themes",
   "version": "0.1.4",
-  "description": "Theme manifest, ThemeStyle component, and ColorModeProvider for agenticdevelopertoolkit.",
+  "description": "Theme manifest, ThemeStyle component, and ColorModeProvider for adhsdk.",
   "license": "Apache-2.0",
   "type": "module",
   "main": "./dist/index.js",

@@ -22,7 +22,7 @@
   with its own tests in `src/__tests__/deploymentEnv.test.ts`; exposed
   outside the package through the `./deployment-env` subpath declared in
   `package.json`'s `exports`, and re-verified from outside the package by
-  `@agentic-toolkit/adh`'s `productionBundleGates.test.ts` and, across a repo
+  `@adh-sdk/adh`'s `productionBundleGates.test.ts` and, across a repo
   boundary, by `adhbackend`'s `src/adh/test/themeSurfaceEnv.test.ts`. What is
   specific to this platform: the entire build-time-flag-vs.-server-side-check
   split, and the whole chunk-gate contract, exist only because Next.js/webpack

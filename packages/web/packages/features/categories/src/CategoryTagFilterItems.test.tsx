@@ -10,8 +10,8 @@ import type { Dispatch, SetStateAction } from "react";
 import {
   DropdownMenu,
   DropdownMenuContent,
-} from "@agenticdevelopertoolkit/ui/components/dropdown-menu";
-import { GearMenuTrigger } from "@agenticdevelopertoolkit/ui/blocks";
+} from "@adh-sdk/ui/components/dropdown-menu";
+import { GearMenuTrigger } from "@adh-sdk/ui/blocks";
 
 import {
   CategoryTagFilterItems,

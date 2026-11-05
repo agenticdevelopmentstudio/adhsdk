@@ -1,4 +1,4 @@
-import { type SiteDef } from '@agentic-toolkit/adh-registry';
+import { type SiteDef } from '@adh-sdk/adh-registry';
 /** The class on the family footer's root element: the scope a site confines its stylesheet to
  *  (`/*! @confine .adh-landing-footer *\/`). Here rather than beside FamilyFooter, which is
  *  'use client': a server module importing it from there would get a client reference. */

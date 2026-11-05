@@ -1,7 +1,7 @@
 ---
 id: fcff7387-19aa-49ab-b75d-f0c7bfcdf27c
 title: "Project Reconciler"
-domain: adtoolkit://cookbook/workspace/projects/project-reconciler
+domain: adhsdk://cookbook/workspace/projects/project-reconciler
 type: ingredient
 version: 1.2.0
 status: review
@@ -23,9 +23,9 @@ tags:
 depends-on: []
 related: []
 references:
-  - packages/apple/AgenticToolkit/macOS/Features/Projects/ProjectReconciler.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/macOS/Features/Projects/GitRepo.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Tests/AgenticToolkitMacOSTests/Projects/ProjectReconcilerTests.swift (agenticdevelopertoolkit)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectReconciler.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/GitRepo.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKMacOSTests/Projects/ProjectReconcilerTests.swift (adhsdk)
 approved-by: ""
 approved-date: ""
 ---
@@ -323,7 +323,7 @@ failure after applying the plan this component produces.
 ## Platform Notes
 
 - **SwiftUI**: The source is
-  `packages/apple/AgenticToolkit/macOS/Features/Projects/ProjectReconciler.swift`,
+  `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectReconciler.swift`,
   a plain Foundation file (`import Foundation` only) with no dependency on
   SwiftUI, AppKit, or UIKit; it ports unchanged into any Swift target that
   also has `GitRepo.swift`. The `Plan` value conforms to `Sendable`, and the
@@ -376,7 +376,7 @@ failure after applying the plan this component produces.
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/macOS/Features/Projects/ProjectReconciler.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectReconciler.swift` |
 
 ## Design Decisions
 

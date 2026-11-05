@@ -3,7 +3,7 @@
   "meta": {
     "id": "4e06a00e-653a-4d29-81d8-ac6dccfedb6a",
     "title": "Concurrency",
-    "domain": "adtoolkit://cookbook/foundation/concurrency",
+    "domain": "adhsdk://cookbook/foundation/concurrency",
     "type": "ingredient",
     "version": "1.1.0",
     "status": "review",
@@ -27,8 +27,8 @@
     ],
     "depends-on": [],
     "related": [
-      "adtoolkit://cookbook/workspace/extensions/registry/extension-registry",
-      "adtoolkit://cookbook/workspace/extensions/registry/vsix-installer"
+      "adhsdk://cookbook/workspace/extensions/registry/extension-registry",
+      "adhsdk://cookbook/workspace/extensions/registry/vsix-installer"
     ],
     "references": [],
     "approved-by": "",

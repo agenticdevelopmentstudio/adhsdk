@@ -1,7 +1,7 @@
 ---
 id: 4c528e38-b70a-4ed3-bedc-9009292ad908
 title: "Pane Spacing"
-domain: adtoolkit://cookbook/ui/layout/composable-tabs/pane-spacing
+domain: adhsdk://cookbook/ui/layout/composable-tabs/pane-spacing
 type: ingredient
 version: 1.2.1
 status: review
@@ -22,9 +22,9 @@ tags:
   - settings
 depends-on: []
 related:
-  - adtoolkit://cookbook/ui/layout/composable-tabs
-  - adtoolkit://cookbook/ui/layout/composable-tabs/leaf-pane-view
-  - adtoolkit://cookbook/ui/layout/composable-tabs/settings-view
+  - adhsdk://cookbook/ui/layout/composable-tabs
+  - adhsdk://cookbook/ui/layout/composable-tabs/leaf-pane-view
+  - adhsdk://cookbook/ui/layout/composable-tabs/settings-view
   - agenticdevelopercookbook://guidelines/cookbook/ui/platform-design-languages
 references: []
 approved-by: ""
@@ -190,7 +190,7 @@ Not applicable: no logging call of any kind appears anywhere in this component.
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/macOS/UI/ViewControllers/ComposableTabs/PaneSpacing.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/ComposableTabs/PaneSpacing.swift` |
 
 ## Design Decisions
 

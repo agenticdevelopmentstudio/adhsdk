@@ -3,7 +3,7 @@
   "meta": {
     "id": "143b0352-49d4-46a9-a922-bb45c4cc0e7e",
     "title": "Conversations Key Commands",
-    "domain": "adtoolkit://cookbook/ai/chat/conversations/conversations-key-commands",
+    "domain": "adhsdk://cookbook/ai/chat/conversations/conversations-key-commands",
     "type": "ingredient",
     "version": "1.0.0",
     "status": "review",
@@ -25,8 +25,8 @@
     ],
     "depends-on": [],
     "related": [
-      "adtoolkit://cookbook/ui/controls/key-command-capture-field",
-      "adtoolkit://cookbook/ui/settings/rows/key-command-row-view"
+      "adhsdk://cookbook/ui/controls/key-command-capture-field",
+      "adhsdk://cookbook/ui/settings/rows/key-command-row-view"
     ],
     "references": [],
     "approved-by": "",

@@ -1,5 +1,5 @@
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/AIPluginKit/SystemMemoryMonitor.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/AIPluginKit/SystemMemoryMonitor.swift` |
 

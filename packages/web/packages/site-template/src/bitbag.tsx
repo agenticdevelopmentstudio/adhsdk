@@ -2,10 +2,10 @@
 
 import type { ReactElement } from 'react'
 import dynamic from 'next/dynamic'
-import type { BitbagStandaloneProps } from '@agentic-toolkit/bitbag'
+import type { BitbagStandaloneProps } from '@adh-sdk/bitbag'
 // ONE sheet: it parks the dock (fixed, bottom-centred, riding `--kb-inset`), paints the scrim
 // behind an engaged chat, and `@import`s the persona-chat sheets itself.
-import '@agentic-toolkit/bitbag/css/bitbag-dock.css'
+import '@adh-sdk/bitbag/css/bitbag-dock.css'
 
 // Client-only. The chat stamps each message with the time and mints ids at render, so a
 // server render bakes the BUILD time into the transcript and hydration throws on the mismatch;
@@ -13,7 +13,7 @@ import '@agentic-toolkit/bitbag/css/bitbag-dock.css'
 // is bitbag's mounting for a page with no adh footer, and `next/dynamic` is the loader his own
 // docs leave to the host — the template is that host for every content site.
 const BitbagStandalone = dynamic(
-  () => import('@agentic-toolkit/bitbag').then((m) => m.BitbagStandalone),
+  () => import('@adh-sdk/bitbag').then((m) => m.BitbagStandalone),
   { ssr: false },
 )
 

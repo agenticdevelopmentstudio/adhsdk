@@ -3,7 +3,7 @@
   "meta": {
     "id": "432e8d4b-43c3-49fd-b481-036a759e7c55",
     "title": "Settings Panel",
-    "domain": "adtoolkit://cookbook/ui/settings/settings-panel",
+    "domain": "adhsdk://cookbook/ui/settings/settings-panel",
     "type": "ingredient",
     "version": "1.2.3",
     "status": "review",
@@ -24,10 +24,10 @@
       "view-controller"
     ],
     "depends-on": [
-      "adtoolkit://cookbook/ui/settings/layout/panel-view"
+      "adhsdk://cookbook/ui/settings/layout/panel-view"
     ],
     "related": [
-      "adtoolkit://cookbook/ui/settings/layout/group-view",
+      "adhsdk://cookbook/ui/settings/layout/group-view",
       "agenticdevelopercookbook://guidelines/cookbook/ui/platform-design-languages"
     ],
     "references": [],

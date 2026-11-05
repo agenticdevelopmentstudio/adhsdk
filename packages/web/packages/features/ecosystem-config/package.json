@@ -1,5 +1,5 @@
 {
-  "name": "@agentic-toolkit/ecosystem-config",
+  "name": "@adh-sdk/ecosystem-config",
   "version": "0.1.0",
   "description": "An ecosystem's CONFIGURATION group: auth, sign-in apps, feature flags, server bags, storage tokens and billing — as one grouping pane or six topic panes.",
   "license": "UNLICENSED",
@@ -36,13 +36,13 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@agentic-toolkit/adh-ui": "workspace:*",
-    "@agentic-toolkit/auth": "workspace:*",
-    "@agentic-toolkit/data": "workspace:*",
-    "@agentic-toolkit/resource": "workspace:*",
+    "@adh-sdk/adh-ui": "workspace:*",
+    "@adh-sdk/auth": "workspace:*",
+    "@adh-sdk/data": "workspace:*",
+    "@adh-sdk/resource": "workspace:*",
     "@tanstack/react-query": "^5.62.0",
     "lucide-react": "^1.16.0",
-    "@agenticdevelopertoolkit/ui": "workspace:*"
+    "@adh-sdk/ui": "workspace:*"
   },
   "peerDependencies": {
     "next": ">=15",

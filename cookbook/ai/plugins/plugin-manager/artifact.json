@@ -3,7 +3,7 @@
   "meta": {
     "id": "0a729d47-fc2d-427c-b474-26072dc8b336",
     "title": "Plugin Manager",
-    "domain": "adtoolkit://cookbook/ai/plugins/plugin-manager",
+    "domain": "adhsdk://cookbook/ai/plugins/plugin-manager",
     "type": "ingredient",
     "version": "1.2.2",
     "status": "review",
@@ -27,7 +27,7 @@
     ],
     "depends-on": [],
     "related": [
-      "adtoolkit://cookbook/ai/chat/chat-context"
+      "adhsdk://cookbook/ai/chat/chat-context"
     ],
     "references": [],
     "approved-by": "",

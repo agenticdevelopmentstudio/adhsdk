@@ -3,7 +3,7 @@
   "meta": {
     "id": "2067e249-4f97-4575-b8ed-8f55f6dc96df",
     "title": "Stream Event",
-    "domain": "adtoolkit://cookbook/ai/plugins/stream-event",
+    "domain": "adhsdk://cookbook/ai/plugins/stream-event",
     "type": "ingredient",
     "version": "1.2.0",
     "status": "review",
@@ -25,7 +25,7 @@
     ],
     "depends-on": [],
     "related": [
-      "adtoolkit://cookbook/ai/plugins/ai-plugin"
+      "adhsdk://cookbook/ai/plugins/ai-plugin"
     ],
     "references": [],
     "approved-by": "",

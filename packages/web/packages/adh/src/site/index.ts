@@ -11,7 +11,7 @@ export type { SiteConfig, SiteDefinition, SiteGate, SiteSitemap } from './SiteCo
 export { siteLlmsTxt, siteLandingMarkdown } from './site-agent'
 // Which handles the shared `/<workspace>` route leaves claimable. Here rather than in `home`
 // because the two callers are settings FORMS, and `home` is the client entry that pulls in
-// @agentic-toolkit/data — a form that only needs a word list should not pay for the workspace
+// @adh-sdk/data — a form that only needs a word list should not pay for the workspace
 // runtime to get it.
 export {
   reservedWorkspaceSlugs,
@@ -21,14 +21,14 @@ export {
   RESERVED_HANDLE_WORDS,
 } from './reservedSlugs'
 // Which hub URLs are the signed-in workspace. Here, beside the list it reads, rather than in
-// `@agentic-toolkit/adh-registry` where it used to live: since the hub's root became
+// `@adh-sdk/adh-registry` where it used to live: since the hub's root became
 // `[workspace]` the answer is "the first segment is not one of the site's own routes", and that
 // list is this module's. The registry cannot import it without depending on this package.
 // Re-exported by PACKAGE PATH, not './hubWorkspacePath': the leaf has its own entry and is listed
 // `external`, so this barrel forwards a preserved import instead of inlining the module a second
 // time beside the header's copy. See tsup.config.ts's entry note.
-export { isHubWorkspacePath, hubWorkspaceSlug } from '@agentic-toolkit/adh/site/hubWorkspacePath'
+export { isHubWorkspacePath, hubWorkspaceSlug } from '@adh-sdk/adh/site/hubWorkspacePath'
 // `SiteIdProvider` / `useSiteId` are deliberately NOT re-exported here. This barrel is a server
 // entry — sitemap.ts and site.config.ts read it on 40 sites — and site-id is a 'use client' leaf,
 // so a re-export (even a preserved one by package path) puts a client reference in every one of
-// those server graphs for no gain. Import it from '@agentic-toolkit/adh/site/site-id'.
+// those server graphs for no gain. Import it from '@adh-sdk/adh/site/site-id'.

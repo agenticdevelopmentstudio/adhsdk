@@ -3,7 +3,7 @@
   "meta": {
     "id": "0cbe1932-5c7e-4546-829d-0294708d499c",
     "title": "Slider View",
-    "domain": "adtoolkit://cookbook/ui/settings/rows/slider-view",
+    "domain": "adhsdk://cookbook/ui/settings/rows/slider-view",
     "type": "ingredient",
     "version": "1.3.1",
     "status": "review",
@@ -25,7 +25,7 @@
     ],
     "depends-on": [],
     "related": [
-      "adtoolkit://cookbook/ui/settings/rows/captioned-slider-view"
+      "adhsdk://cookbook/ui/settings/rows/captioned-slider-view"
     ],
     "references": [],
     "approved-by": "",

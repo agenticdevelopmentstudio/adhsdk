@@ -1,7 +1,7 @@
 ---
 id: a14c4ed2-f380-486b-90da-84a68cbfafc2
 title: "Debug Automation"
-domain: adtoolkit://cookbook/foundation/debug-automation
+domain: adhsdk://cookbook/foundation/debug-automation
 type: ingredient
 version: 1.1.0
 status: review
@@ -22,16 +22,16 @@ tags:
   - test-host-detection
 depends-on: []
 related:
-  - adtoolkit://cookbook/ui/windows/single-window-controller
-  - adtoolkit://cookbook/ui/containers/floating-chooser-panel
-  - adtoolkit://cookbook/ui/settings/settings-window
+  - adhsdk://cookbook/ui/windows/single-window-controller
+  - adhsdk://cookbook/ui/containers/floating-chooser-panel
+  - adhsdk://cookbook/ui/settings/settings-window
 references:
-  - packages/apple/AgenticToolkit/CoreMacOS/DebugAutomation/DebugLaunchSwitch.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/CoreMacOS/DebugAutomation/NSApplication+QuietActivation.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/CoreMacOS/DebugAutomation/NSWindow+TestHostVisibility.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/CoreMacOS/DebugAutomation/QuietWindowPresentation.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Tests/AgenticToolkitMacOSTests/CoreUI/DebugLaunchSwitchTests.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Tests/AgenticToolkitMacOSTests/CoreUI/QuietWindowPresentationTests.swift (agenticdevelopertoolkit)
+  - packages/apple/AgenticDeveloperHubSDK/CoreMacOS/DebugAutomation/DebugLaunchSwitch.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/CoreMacOS/DebugAutomation/NSApplication+QuietActivation.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/CoreMacOS/DebugAutomation/NSWindow+TestHostVisibility.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/CoreMacOS/DebugAutomation/QuietWindowPresentation.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKMacOSTests/CoreUI/DebugLaunchSwitchTests.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKMacOSTests/CoreUI/QuietWindowPresentationTests.swift (adhsdk)
 approved-by: ""
 approved-date: ""
 ---
@@ -293,7 +293,7 @@ Not applicable: none of the four units contains a logging call.
 ## Platform Notes
 
 - **SwiftUI**: The source is
-  `packages/apple/AgenticToolkit/CoreMacOS/DebugAutomation/{DebugLaunchSwitch,NSApplication+QuietActivation,NSWindow+TestHostVisibility,QuietWindowPresentation}.swift`.
+  `packages/apple/AgenticDeveloperHubSDK/CoreMacOS/DebugAutomation/{DebugLaunchSwitch,NSApplication+QuietActivation,NSWindow+TestHostVisibility,QuietWindowPresentation}.swift`.
   Nothing here is SwiftUI-specific: `DebugLaunchSwitch` depends only on
   `Foundation`'s `UserDefaults`, and the other three files operate on plain
   `AppKit` `NSApplication`/`NSWindow` instances beneath any SwiftUI
@@ -374,7 +374,7 @@ Not applicable: none of the four units contains a logging call.
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/CoreMacOS/DebugAutomation/` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/CoreMacOS/DebugAutomation/` |
 
 ## Design Decisions
 

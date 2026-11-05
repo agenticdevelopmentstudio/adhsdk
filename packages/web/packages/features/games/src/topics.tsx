@@ -1,5 +1,5 @@
 import { Boxes, Cpu, Settings, Waypoints, Zap } from "lucide-react";
-import type { EcosystemsTopicConfig } from "@agentic-toolkit/ecosystems";
+import type { EcosystemsTopicConfig } from "@adh-sdk/ecosystems";
 
 /**
  * The games rail for a selected product: Engine, Content, Connections, Effects, then

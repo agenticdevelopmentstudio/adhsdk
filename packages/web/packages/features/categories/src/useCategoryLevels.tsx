@@ -15,17 +15,17 @@ import {
   type CategoryTreeNode,
   type TopicDetailItem,
   type TopicLevel,
-} from "@agenticdevelopertoolkit/ui/blocks"
+} from "@adh-sdk/ui/blocks"
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from "@agenticdevelopertoolkit/ui/components/dialog"
-import { DialogActions } from "@agenticdevelopertoolkit/ui/components/dialog-actions"
-import { ErrorText } from "@agenticdevelopertoolkit/ui/components/error-text"
-import { Input } from "@agenticdevelopertoolkit/ui/components/input"
-import { taxonomyApi, markdownApi } from "@agentic-toolkit/data/markdown"
+} from "@adh-sdk/ui/components/dialog"
+import { DialogActions } from "@adh-sdk/ui/components/dialog-actions"
+import { ErrorText } from "@adh-sdk/ui/components/error-text"
+import { Input } from "@adh-sdk/ui/components/input"
+import { taxonomyApi, markdownApi } from "@adh-sdk/data/markdown"
 
 import {
   ALL_CATEGORIES_ID,

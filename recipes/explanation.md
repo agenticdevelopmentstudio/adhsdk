@@ -1,7 +1,7 @@
 ---
 id: eeb45f5b-e482-4bea-8827-74f80a1fd21b
 title: Explanation
-domain: agenticdevelopertoolkit://recipes/explanation
+domain: adhsdk://recipes/explanation
 type: ingredient
 version: 1.1.1
 status: review
@@ -22,10 +22,10 @@ tags:
 - container
 depends-on: []
 related:
-- agenticdevelopertoolkit://recipes/settings-panel
-- agenticdevelopertoolkit://recipes/group
-- agenticdevelopertoolkit://recipes/field
-- agenticdevelopertoolkit://recipes/header
+- adhsdk://recipes/settings-panel
+- adhsdk://recipes/group
+- adhsdk://recipes/field
+- adhsdk://recipes/header
 references: []
 approved-by: ''
 approved-date: ''

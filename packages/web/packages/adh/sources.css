@@ -1,15 +1,15 @@
-/* Tailwind source self-registration for @agentic-toolkit/adh.
+/* Tailwind source self-registration for @adh-sdk/adh.
  *
  * Tailwind v4 does not scan node_modules, so a consumer app must be told to scan this
  * package's className-bearing modules. Rather than every host copying @source globs into
  * its own globals.css — drift-prone, and a missed line renders unstyled with NO error —
  * the package owns them here and a host adds one line:
  *
- *   @import "@agentic-toolkit/adh/sources.css";
+ *   @import "@adh-sdk/adh/sources.css";
  *
  * Every stylesheet this package exports imports it already, so importing any one of
  * them (styles.css, help.css, docs.css, legal.css, debug.css) is enough. Mirrors
- * @agentic-toolkit/api-explorer/sources.css and @agenticdevelopertoolkit/ui's components.css.
+ * @adh-sdk/api-explorer/sources.css and @adh-sdk/ui's components.css.
  *
  * PACKAGE-WIDE, not per subtree, and deliberately so. Registering subtree by subtree is
  * how this package came to have a gap: `help` and `debug-env` were registered when they
@@ -54,11 +54,11 @@
  *
  * Only DIRECT dependencies are listed, and deliberately: under pnpm's isolated
  * node_modules a specifier resolves only if the importing package declares it, so
- * `@agentic-toolkit/crud` — which `account` and `personas` pull in — cannot be named
+ * `@adh-sdk/crud` — which `account` and `personas` pull in — cannot be named
  * from here. It is chained from THEIR sources.css instead, and `teams` from `personas`.
  * The rule is uniform: each package registers what it itself depends on.
  *
- * `@agentic-toolkit/{auth,data,themes,ui}` are absent because they ship no sources.css
+ * `@adh-sdk/{auth,data,themes,ui}` are absent because they ship no sources.css
  * (`ui` self-registers through its own components.css, which adh-components.css already
  * imports). `api-explorer` is absent from THIS file because adh already registers it from
  * adh-help.css — where it belongs, since that is the surface that mounts it.
@@ -71,11 +71,11 @@
  * the dist as a lump; whole-package counting would demand a registration here and drag
  * the package into both backends' vendor set to keep the @import resolvable, for no CSS
  * whatsoever.) `tools/tailwind_registration.py` in adh applies exactly that measure. */
-@import "@agentic-toolkit/account/sources.css";
-@import "@agentic-toolkit/authentication/sources.css";
-@import "@agentic-toolkit/personas/sources.css";
-@import "@agentic-toolkit/profile/sources.css";
-@import "@agentic-toolkit/resource/sources.css";
+@import "@adh-sdk/account/sources.css";
+@import "@adh-sdk/authentication/sources.css";
+@import "@adh-sdk/personas/sources.css";
+@import "@adh-sdk/profile/sources.css";
+@import "@adh-sdk/resource/sources.css";
 
 /* adh-ui ships the rdid grammar, the invitation surfaces, admin notes and the
  * ownership-transfer block that this package mounts. Carved out of `ui` in 2026-08,
@@ -84,7 +84,7 @@
  * happened to use the same ones, which is luck rather than coverage. Chained HERE
  * because under pnpm's isolated node_modules only a declaring package can resolve the
  * specifier, and this package declares it. */
-@import "@agentic-toolkit/adh-ui/sources.css";
+@import "@adh-sdk/adh-ui/sources.css";
 
 @source "./src/**/*.{ts,tsx}";
 @source "./dist/**/*.js";

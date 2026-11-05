@@ -1,7 +1,7 @@
 ---
 id: d4be0c36-834c-41aa-af89-478eaf660e0f
 title: "Extension Update Check"
-domain: adtoolkit://cookbook/workspace/extensions/registry/extension-update-check
+domain: adhsdk://cookbook/workspace/extensions/registry/extension-update-check
 type: ingredient
 version: 1.1.0
 status: review
@@ -22,10 +22,10 @@ tags:
   - semantic-versioning
 depends-on: []
 related:
-  - adtoolkit://cookbook/workspace/extensions/manifest/extension-manifest
+  - adhsdk://cookbook/workspace/extensions/manifest/extension-manifest
 references:
-  - packages/apple/AgenticToolkit/Core/Extensions/ExtensionUpdateCheck.swift (apple)
-  - packages/apple/AgenticToolkit/Tests/AgenticToolkitCoreTests/Extensions/ExtensionUpdateCheckTests.swift (apple)
+  - packages/apple/AgenticDeveloperHubSDK/Core/Extensions/ExtensionUpdateCheck.swift (apple)
+  - packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKCoreTests/Extensions/ExtensionUpdateCheckTests.swift (apple)
 approved-by: ""
 approved-date: ""
 ---
@@ -231,8 +231,8 @@ Subsystem: the host's logging subsystem | Category: the update check's own categ
 ## Platform Notes
 
 - **SwiftUI**: The source itself:
-  `packages/apple/AgenticToolkit/Core/Extensions/ExtensionUpdateCheck.swift`,
-  part of the macOS-only `AgenticToolkitCore` framework target. It has no
+  `packages/apple/AgenticDeveloperHubSDK/Core/Extensions/ExtensionUpdateCheck.swift`,
+  part of the macOS-only `AgenticDeveloperHubSDKCore` framework target. It has no
   SwiftUI dependency — `ExtensionUpdateCheck` is plain `Foundation`/`OSLog`
   code. A SwiftUI settings screen listing available updates would call
   `check(_:)` from a `Task`, typically inside an `@Observable` view model
@@ -265,7 +265,7 @@ Subsystem: the host's logging subsystem | Category: the update check's own categ
   anything else) the same way `reason(for:)` does.
 - **AppKit / UIKit**: No divergence from the SwiftUI bullet above — the
   source is framework-agnostic `Foundation`/`OSLog` code called identically
-  from an AppKit-hosted caller. `AgenticToolkitCore` targets only macOS
+  from an AppKit-hosted caller. `AgenticDeveloperHubSDKCore` targets only macOS
   today; an iOS caller would first need the framework made available to an
   iOS target, but `ExtensionUpdateCheck` itself needs no AppKit/UIKit-specific
   change.
@@ -296,7 +296,7 @@ Subsystem: the host's logging subsystem | Category: the update check's own categ
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/Core/Extensions/ExtensionUpdateCheck.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Extensions/ExtensionUpdateCheck.swift` |
 
 ## Design Decisions
 

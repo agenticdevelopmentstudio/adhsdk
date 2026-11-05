@@ -1,7 +1,7 @@
 ---
 id: 24f42d31-dd5f-4e1e-a95c-3327e136ad46
 title: Settings Panel
-domain: agenticdevelopertoolkit://recipes/settings-panel
+domain: adhsdk://recipes/settings-panel
 type: ingredient
 version: 1.1.1
 status: review
@@ -22,9 +22,9 @@ tags:
 - tabbed-interface
 depends-on: []
 related:
-- agenticdevelopertoolkit://recipes/tabs
-- agenticdevelopertoolkit://recipes/split-view-control
-- agenticdevelopertoolkit://recipes/view-tab-bar
+- adhsdk://recipes/tabs
+- adhsdk://recipes/split-view-control
+- adhsdk://recipes/view-tab-bar
 references: []
 approved-by: ''
 approved-date: ''

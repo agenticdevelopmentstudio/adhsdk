@@ -1,6 +1,6 @@
 "use client";
 
-import { DisabledApiButton } from "@agenticdevelopertoolkit/ui/blocks";
+import { DisabledApiButton } from "@adh-sdk/ui/blocks";
 import { useRecordAffordance, type RecordAffordanceProps } from "./record-affordance";
 
 /**

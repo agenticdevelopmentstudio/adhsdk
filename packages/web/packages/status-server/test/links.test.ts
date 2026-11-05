@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { PLACEHOLDER_URL } from '@agentic-toolkit/deploy-platform/engine';
+import { PLACEHOLDER_URL } from '@adh-sdk/deploy-platform/engine';
 import { siteLinks } from '../src/lib/links';
 
 describe('siteLinks', () => {

@@ -1,5 +1,5 @@
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/AIPluginKit/AIStreamEvent.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/AIPluginKit/AIStreamEvent.swift` |
 

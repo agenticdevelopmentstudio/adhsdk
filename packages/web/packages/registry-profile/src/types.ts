@@ -1,4 +1,4 @@
-import type { FieldType, FieldVisibility } from '@agenticdevelopertoolkit/registry-types';
+import type { FieldType, FieldVisibility } from '@adh-sdk/registry-types';
 
 export interface PublicField {
   key: string;

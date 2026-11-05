@@ -1,7 +1,7 @@
 ---
 id: acd561ca-90a4-4303-a411-cfe23410b42a
 title: "Number Field View"
-domain: adtoolkit://cookbook/ui/settings/rows/number-field-view
+domain: adhsdk://cookbook/ui/settings/rows/number-field-view
 type: ingredient
 version: 1.3.1
 status: review
@@ -22,7 +22,7 @@ tags:
   - numeric
 depends-on: []
 related:
-  - adtoolkit://cookbook/ui/settings/rows/integer-field-view
+  - adhsdk://cookbook/ui/settings/rows/integer-field-view
 references: []
 approved-by: ""
 approved-date: ""
@@ -43,7 +43,7 @@ text box. The concept also defines the number value contract itself — the
 interface a number type implements so a field can display it, read it back,
 and compare it — with two built-in conformances, integer and floating-point,
 each supplying its own locale-aware parsing and canonical text form. The
-Integer Field View (`adtoolkit://cookbook/ui/settings/rows/integer-field-view`)
+Integer Field View (`adhsdk://cookbook/ui/settings/rows/integer-field-view`)
 is a thin, forwarding wrapper around this component specialized for
 integers; this recipe documents the field itself, including the parsing
 contract that wrapper delegates to.
@@ -420,7 +420,7 @@ logger reference anywhere in source).
   attribute) to police what each type accepts — the same generalization the
   number value contract gives the Swift source.
 - **AppKit/UIKit** (source platform): Source file
-  `packages/apple/AgenticToolkit/macOS/SystemIntegration/ComposableSettingsWindow/Views/NumberFieldView.swift`.
+  `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/Views/NumberFieldView.swift`.
   A macOS-only (`import AppKit`) `NSView` subclass, `@MainActor`, generic
   over `Value: SettingsNumberValue`, inside the `ComposableSettings`
   namespace, conforming to `SettingsViewProtocol` and
@@ -496,7 +496,7 @@ logger reference anywhere in source).
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/macOS/SystemIntegration/ComposableSettingsWindow/Views/NumberFieldView.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/Views/NumberFieldView.swift` |
 
 ## Design Decisions
 

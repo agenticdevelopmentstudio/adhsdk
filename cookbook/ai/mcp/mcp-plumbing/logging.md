@@ -1,5 +1,5 @@
 
-Subsystem: `com.mikefullerton.agentictoolkit` | Category: client, registry
+Subsystem: `com.mikefullerton.agenticdeveloperhubsdk` | Category: client, registry
 
 | Event | Level | Message |
 |-------|-------|---------|

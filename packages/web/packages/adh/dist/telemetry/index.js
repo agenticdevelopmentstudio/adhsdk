@@ -3,8 +3,8 @@
 "use client";
 
 // src/telemetry/analytics.ts
-import { captureAnalyticsEvent } from "@agenticdevelopertoolkit/analytics";
-import { markRetriedRequest, consumeRetriedFlag } from "@agentic-toolkit/adh/telemetry/retry";
+import { captureAnalyticsEvent } from "@adh-sdk/analytics";
+import { markRetriedRequest, consumeRetriedFlag } from "@adh-sdk/adh/telemetry/retry";
 var EVENT_HTTP_REQUEST = "http_request";
 var posthogReady = false;
 function setPosthogReady(ready) {
@@ -20,7 +20,7 @@ function captureEvent(name, props) {
 }
 
 // src/telemetry/fetch-instrumentation.ts
-import { scrubPath } from "@agenticdevelopertoolkit/analytics";
+import { scrubPath } from "@adh-sdk/analytics";
 var installed = false;
 var coldUsed = false;
 function safe(fn, fallback) {
@@ -155,8 +155,8 @@ function instrumentFetch() {
 // src/telemetry/TelemetryProvider.tsx
 import { useEffect } from "react";
 import * as Sentry from "@sentry/react";
-import { scrubUrl, startPostHog } from "@agenticdevelopertoolkit/analytics";
-import { setErrorReporter } from "@agentic-toolkit/adh/telemetry/report-error";
+import { scrubUrl, startPostHog } from "@adh-sdk/analytics";
+import { setErrorReporter } from "@adh-sdk/adh/telemetry/report-error";
 var started = false;
 function startTelemetry(resolveEnvironment) {
   if (started || typeof window === "undefined") return;
@@ -219,10 +219,10 @@ import {
   setErrorReporter as setErrorReporter2,
   captureException as captureException2,
   reportUnexpectedError
-} from "@agentic-toolkit/adh/telemetry/report-error";
+} from "@adh-sdk/adh/telemetry/report-error";
 
 // src/telemetry/SiteTelemetryProvider.tsx
-import { detectEnv } from "@agentic-toolkit/adh-registry";
+import { detectEnv } from "@adh-sdk/adh-registry";
 import { jsx } from "react/jsx-runtime";
 function SiteTelemetryProvider({ children }) {
   return /* @__PURE__ */ jsx(TelemetryProvider, { resolveEnvironment: detectEnv, children });

@@ -5,8 +5,8 @@ import {
   WorkspaceNotManageable,
   WorkspaceResolutionError,
   useReportBusy,
-} from "@agentic-toolkit/resource";
-import { useWorkspaceDefaultEcosystemId } from "@agentic-toolkit/data/ecosystems";
+} from "@adh-sdk/resource";
+import { useWorkspaceDefaultEcosystemId } from "@adh-sdk/data/ecosystems";
 
 /**
  * The resolve-or-explain gate a pane in this package sits behind when its host has a WORKSPACE

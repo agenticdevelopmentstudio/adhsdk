@@ -4,7 +4,7 @@
 // Two facts here are the expensive ones and both are asserted directly rather than implied:
 // a secret never reaches the file, and "already got it" is the provider AND the name.
 import { describe, expect, it } from 'vitest';
-import type { MaskedProviderConfig, ProviderCatalogEntry } from '@agentic-toolkit/data/integrations';
+import type { MaskedProviderConfig, ProviderCatalogEntry } from '@adh-sdk/data/integrations';
 
 import {
   EXPORT_KIND,

@@ -1,7 +1,7 @@
 'use client'
 
 import { useId } from 'react'
-import { Select } from '@agenticdevelopertoolkit/ui/components/select'
+import { Select } from '@adh-sdk/ui/components/select'
 import { VIEWER_THEMES } from '../themes/registry'
 
 export interface MarkdownThemeSwitcherProps {
@@ -14,7 +14,7 @@ export interface MarkdownThemeSwitcherProps {
 /**
  * Theme picker for the MarkdownViewer.
  *
- * Reuses the @agenticdevelopertoolkit/ui Select primitive (a styled native <select>).
+ * Reuses the @adh-sdk/ui Select primitive (a styled native <select>).
  * The <label> provides an accessible name; the Select element exposes the
  * native listbox role, so no additional ARIA is needed.
  */

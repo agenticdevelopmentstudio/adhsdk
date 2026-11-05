@@ -3,7 +3,7 @@ import { render, screen, fireEvent, cleanup, renderHook } from '@testing-library
 import { describe, it, expect, afterEach, vi } from 'vitest'
 import { UserSettingsOverlay } from '../UserSettingsOverlay'
 import { useSettingsOverlay } from '../settings-overlay'
-import { useSettingsDirty } from '@agentic-toolkit/resource'
+import { useSettingsDirty } from '@adh-sdk/resource'
 
 // This package's vitest config sets `globals: true` but has no auto-cleanup setup file, so
 // — same as workspaceChromeGuard.test.tsx — each test's render must be torn down explicitly
@@ -31,7 +31,7 @@ vi.mock('../registry', () => ({
     { id: 'b', label: 'Topic B', href: '/b', content: <div>Topic B content</div> },
   ],
 }))
-vi.mock('@agentic-toolkit/adh/settings/topics', () => ({ DEFAULT_SETTINGS_TOPIC: 'a' }))
+vi.mock('@adh-sdk/adh/settings/topics', () => ({ DEFAULT_SETTINGS_TOPIC: 'a' }))
 
 function PanelA() {
   const { reportDirty } = useSettingsDirty()

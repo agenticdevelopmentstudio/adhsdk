@@ -34,7 +34,7 @@
   tokens equivalent to `.body`/`.code`, `primaryText`, and
   `controlBackground`.
 - **AppKit/UIKit** (source platform): Source file
-  `packages/apple/AgenticToolkit/macOS/SystemIntegration/ComposableSettingsWindow/Views/TextAreaEditView.swift`
+  `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/Views/TextAreaEditView.swift`
   — a macOS-only (`import AppKit`), `@MainActor`, non-`final` `NSView`
   subclass inside the `ComposableSettings` namespace, conforming to
   `SettingsViewProtocol` and `NSTextViewDelegate` directly (not by

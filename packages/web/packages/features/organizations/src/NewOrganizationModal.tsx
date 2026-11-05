@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, type SubmitEvent } from "react";
-import { ErrorText, useAction } from "@agentic-toolkit/crud";
+import { ErrorText, useAction } from "@adh-sdk/crud";
 import {
   Dialog,
   DialogContent,
@@ -9,14 +9,14 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@agenticdevelopertoolkit/ui/components/dialog";
-import { Button } from "@agenticdevelopertoolkit/ui/components/button";
-import { Input } from "@agenticdevelopertoolkit/ui/components/input";
-import { Field } from "@agenticdevelopertoolkit/ui/blocks/field";
-import { RdidEditor } from "@agentic-toolkit/adh-ui/components/rdid-editor";
-import { validateLeaf } from "@agentic-toolkit/adh-ui/rdid";
-import { organizationsApi } from "@agentic-toolkit/data/organizations";
-import { useReportSettingsDirty } from "@agentic-toolkit/resource";
+} from "@adh-sdk/ui/components/dialog";
+import { Button } from "@adh-sdk/ui/components/button";
+import { Input } from "@adh-sdk/ui/components/input";
+import { Field } from "@adh-sdk/ui/blocks/field";
+import { RdidEditor } from "@adh-sdk/adh-ui/components/rdid-editor";
+import { validateLeaf } from "@adh-sdk/adh-ui/rdid";
+import { organizationsApi } from "@adh-sdk/data/organizations";
+import { useReportSettingsDirty } from "@adh-sdk/resource";
 
 /** Create + provision a new organization, then hand its slug back so the home
  *  view can invalidate the workspace list and navigate to the new org's home.

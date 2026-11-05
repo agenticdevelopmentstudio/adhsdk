@@ -25,14 +25,14 @@ has exactly two ways to go wrong, and this guard is the two of them:
       from "the right package is there".
 
   an import of a package the manifest does not declare
-      The mirror failure: source that imports `@agenticdevelopertoolkit/ui` while
+      The mirror failure: source that imports `@adh-sdk/ui` while
       the manifest declares only `chat` and `themes`. In a workspace with a
       hoisted node_modules this resolves anyway, from some other package's
       dependency, and keeps resolving right up until that package drops it.
 
 Only the scopes this repo publishes are checked for declaration. A bare `react`
 or `next` is somebody else's dependency graph and this guard has no opinion about
-it; `@agenticdevelopertoolkit/*` is the graph this repo is responsible for.
+it; `@adh-sdk/*` is the graph this repo is responsible for.
 
 Exit 0 clean, 1 on a finding, 2 if there was nothing to scan — no site manifests
 found means the layout moved out from under this guard, and a guard that scans
@@ -50,7 +50,7 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_ROOT = "websites"
 
 # The scopes this repo publishes, and therefore the imports it is answerable for.
-OWNED_SCOPE = "@agenticdevelopertoolkit/"
+OWNED_SCOPE = "@adh-sdk/"
 
 # A local specifier, either spelling. pnpm treats `link:` as a symlink and `file:`
 # as a copy-or-link depending on the target, but both name a path relative to the

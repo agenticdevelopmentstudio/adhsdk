@@ -1,4 +1,4 @@
-import type { EntryLink } from '@agentic-toolkit/registry/client';
+import type { EntryLink } from '@adh-sdk/registry/client';
 
 /**
  * Everything the two sides of a registry link agree on: what a registrant may type, what goes on

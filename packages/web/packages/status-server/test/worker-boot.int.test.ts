@@ -66,7 +66,7 @@ describe('worker-boot under bare node (no inherited loader)', () => {
     // runner's resolver honours the `development` export condition and would hand
     // back worker.ts — the one form that CANNOT run under bare node in prod.
     const require = createRequire(import.meta.url);
-    const pkgPath = require.resolve('@agentic-toolkit/status-server/package.json');
+    const pkgPath = require.resolve('@adh-sdk/status-server/package.json');
     const pkg = JSON.parse(readFileSync(pkgPath, 'utf8')) as { exports: Record<string, { default: string }> };
     const entry = resolve(dirname(pkgPath), pkg.exports['./worker']!.default);
     if (!existsSync(entry)) {

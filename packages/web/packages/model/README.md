@@ -1,4 +1,4 @@
-# @agenticdevelopertoolkit/model
+# @adh-sdk/model
 
 Pure data and view-model layer for documentation-style sites in the Agentic Cookbook family.
 
@@ -8,8 +8,8 @@ This package owns:
 - **Data operations** — pure functions (`buildNavTree`, `slugToBreadcrumbs`, lookups, search index construction) with no React dependency.
 - **View-model providers** — React contexts and hooks (`SiteConfigProvider`, `ContentProvider`, `LinkProvider`, `RouteProvider`, `useSearchState`) that expose the data to UI without binding it to any specific renderer.
 
-The UI layers that consume this package — `@agenticdevelopertoolkit/controls` today — never define their own copies of these types or operations.
+The UI layers that consume this package — `@adh-sdk/controls` today — never define their own copies of these types or operations.
 
 This package was extracted from a reference-site template, to make those abstractions usable across multiple sites without dragging the whole template along. It outlived the template, which was deleted in July 2026 once nothing imported it.
 
-Note that `@agenticdevelopertoolkit/ui`'s HDV blocks (`blocks/doc-types.ts`) deliberately **re-declare** their own `HeadingEntry` and nav-node shapes rather than importing them from here. That is not an oversight — `ui` must not depend on `model`, both to keep `ui` at the bottom of the dependency graph and because HDV's node shape carries `headings`, which `NavNode` does not.
+Note that `@adh-sdk/ui`'s HDV blocks (`blocks/doc-types.ts`) deliberately **re-declare** their own `HeadingEntry` and nav-node shapes rather than importing them from here. That is not an oversight — `ui` must not depend on `model`, both to keep `ui` at the bottom of the dependency graph and because HDV's node shape carries `headings`, which `NavNode` does not.

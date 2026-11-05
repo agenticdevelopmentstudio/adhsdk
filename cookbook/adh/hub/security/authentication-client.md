@@ -1,7 +1,7 @@
 ---
 id: 65fbb2b1-ca41-499f-ac03-7ecc0e206dcc
 title: "Authentication Client"
-domain: adtoolkit://cookbook/adh/hub/security/authentication-client
+domain: adhsdk://cookbook/adh/hub/security/authentication-client
 type: ingredient
 version: 1.2.0
 status: review
@@ -25,12 +25,12 @@ tags:
 depends-on: []
 related: []
 references:
-  - packages/apple/AgenticToolkit/Hub/Features/Authentication/AccessListsTopic.swift
-  - packages/apple/AgenticToolkit/Hub/Features/Authentication/ApiTokensRail.swift
-  - packages/apple/AgenticToolkit/Hub/Features/Authentication/AuthenticationModels.swift
-  - packages/apple/AgenticToolkit/Hub/Features/Authentication/AuthenticationModule.swift
-  - packages/apple/AgenticToolkit/Hub/Features/EcosystemConfig/StorageTokensRail.swift
-  - packages/apple/AgenticToolkit/Hub/Features/EcosystemConfig/EcosystemConfigModels.swift
+  - packages/apple/AgenticDeveloperHubSDK/Hub/Features/Authentication/AccessListsTopic.swift
+  - packages/apple/AgenticDeveloperHubSDK/Hub/Features/Authentication/ApiTokensRail.swift
+  - packages/apple/AgenticDeveloperHubSDK/Hub/Features/Authentication/AuthenticationModels.swift
+  - packages/apple/AgenticDeveloperHubSDK/Hub/Features/Authentication/AuthenticationModule.swift
+  - packages/apple/AgenticDeveloperHubSDK/Hub/Features/EcosystemConfig/StorageTokensRail.swift
+  - packages/apple/AgenticDeveloperHubSDK/Hub/Features/EcosystemConfig/EcosystemConfigModels.swift
 approved-by: ""
 approved-date: ""
 ---
@@ -469,10 +469,10 @@ Not applicable: the source contains no logging call of any kind.
   any rendering itself.
 - **AppKit / UIKit**: this is the source. `AuthenticationModule.swift`, `ApiTokensRail.swift`,
   `AuthenticationModels.swift`, and `AccessListsTopic.swift` live in the `Hub` module of the
-  `AgenticToolkitHub-macOS`/`AgenticToolkitHub-iOS` targets (both declared in `project.yml`, sharing one
+  `AgenticDeveloperHubSDKHub-macOS`/`AgenticDeveloperHubSDKHub-iOS` targets (both declared in `project.yml`, sharing one
   source set); `StorageTokensRail.swift` lives in the sibling `EcosystemConfig` feature folder of the
   same module. None of the five files imports `AppKit` or `UIKit` directly — each is plain
-  `AgenticToolkitHTDV` + `Foundation`, with the platform-specific `NSViewController`/`UIViewController`
+  `AgenticDeveloperHubSDKHTDV` + `Foundation`, with the platform-specific `NSViewController`/`UIViewController`
   split handled entirely inside `FormViewController` (a different file), one level below where these
   types operate. All four roles (`AuthenticationModule`, `ApiTokensRail`, `StorageTokensRail`,
   `AccessListsTopic`) are declared `@MainActor final class`: every stored property (`revealedSecrets`,
@@ -525,7 +525,7 @@ Not applicable: the source contains no logging call of any kind.
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/Hub/Features/Authentication/` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Hub/Features/Authentication/` |
 
 ## Design Decisions
 
@@ -611,7 +611,7 @@ Disclosure safeguard under Privacy). `idempotent-operations` passes for the one 
 source: `upsertGrant(groupID:_:)` — calling it twice with the same `target`/`crud` body produces the
 same end state each time, by design (`AccessGrantUpsert` is explicitly an upsert, not an append).
 
-`separation-of-concerns` passes: `ApiTokensRail`, `AccessListsTopic`, and `AuthenticationModule` build navigation levels and form specifications over injected data-source protocols and hold no networking or persistence of their own (`AuthenticationModels.swift` and the topic files import only `Foundation` and `AgenticToolkitHTDV`). `unit-test-coverage` passes: `AuthenticationModuleTests.swift` covers the root level, the about notice, the API-tokens level, create-spec scope building and reveal, scope-helper legacy handling, catalogue-unavailable disabling of create, token detail and revoke, the shared storage section, and unknown paths; `AccessListsTopicTests.swift` covers listing, create validation and conflict, group, settings, members, and grants levels, the protected everyone group, and unknown paths.
+`separation-of-concerns` passes: `ApiTokensRail`, `AccessListsTopic`, and `AuthenticationModule` build navigation levels and form specifications over injected data-source protocols and hold no networking or persistence of their own (`AuthenticationModels.swift` and the topic files import only `Foundation` and `AgenticDeveloperHubSDKHTDV`). `unit-test-coverage` passes: `AuthenticationModuleTests.swift` covers the root level, the about notice, the API-tokens level, create-spec scope building and reveal, scope-helper legacy handling, catalogue-unavailable disabling of create, token detail and revoke, the shared storage section, and unknown paths; `AccessListsTopicTests.swift` covers listing, create validation and conflict, group, settings, members, and grants levels, the protected everyone group, and unknown paths.
 
 ## Change History
 

@@ -1,7 +1,7 @@
 ---
 id: 526da033-2f0d-4bd7-b2c2-99faba4783a3
 title: Category Rename Dialog
-domain: agenticdevelopertoolkit://recipes/category-rename-dialog
+domain: adhsdk://recipes/category-rename-dialog
 type: ingredient
 version: 1.1.1
 status: review

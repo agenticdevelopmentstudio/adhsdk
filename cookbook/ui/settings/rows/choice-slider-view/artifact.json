@@ -3,7 +3,7 @@
   "meta": {
     "id": "aebda2fe-b953-4b3c-a65a-93d92c059fe1",
     "title": "Choice Slider View",
-    "domain": "adtoolkit://cookbook/ui/settings/rows/choice-slider-view",
+    "domain": "adhsdk://cookbook/ui/settings/rows/choice-slider-view",
     "type": "ingredient",
     "version": "1.2.3",
     "status": "review",
@@ -25,8 +25,8 @@
     ],
     "depends-on": [],
     "related": [
-      "adtoolkit://cookbook/ui/settings/rows/captioned-slider-view",
-      "adtoolkit://cookbook/ui/settings/rows/popup-menu-choice-view"
+      "adhsdk://cookbook/ui/settings/rows/captioned-slider-view",
+      "adhsdk://cookbook/ui/settings/rows/popup-menu-choice-view"
     ],
     "references": [],
     "approved-by": "",

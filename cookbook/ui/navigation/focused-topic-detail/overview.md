@@ -13,7 +13,7 @@ kind* (ecosystems, teams, persona-services, …). At any moment the user is eith
 
 The user moves between entities (and into "All") through a single **selector
 popup** at the top-left of the view. The canonical implementation is the shared
-`FocusedTopicDetail` block in `@agenticdevelopertoolkit/ui/blocks` (master/detail
+`FocusedTopicDetail` block in `@adh-sdk/ui/blocks` (master/detail
 layout) — all FTD routes compose it; none hand-roll the layout.
 
 **Terminology / parameters.** Every FTD route binds these parameters (Ecosystems

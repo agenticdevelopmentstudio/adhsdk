@@ -1,5 +1,5 @@
 {
-  "name": "@agentic-toolkit/dashboards",
+  "name": "@adh-sdk/dashboards",
   "version": "0.1.0",
   "description": "The Dashboards feature: site-monitoring groups/sites/endpoints over the resource substrate.",
   "license": "UNLICENSED",
@@ -36,11 +36,11 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@agentic-toolkit/auth": "workspace:*",
-    "@agentic-toolkit/data": "workspace:*",
-    "@agentic-toolkit/resource": "workspace:*",
+    "@adh-sdk/auth": "workspace:*",
+    "@adh-sdk/data": "workspace:*",
+    "@adh-sdk/resource": "workspace:*",
     "lucide-react": "^1.16.0",
-    "@agenticdevelopertoolkit/ui": "workspace:*"
+    "@adh-sdk/ui": "workspace:*"
   },
   "peerDependencies": {
     "next": ">=15",

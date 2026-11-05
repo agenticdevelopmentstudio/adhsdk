@@ -1,7 +1,7 @@
 ---
 id: e711e689-78e6-403f-8f3c-ed9f29053e8e
 title: "Host Language Vocabulary"
-domain: adtoolkit://cookbook/workspace/extensions/vscode-api/languages/host-language-vocabulary
+domain: adhsdk://cookbook/workspace/extensions/vscode-api/languages/host-language-vocabulary
 type: ingredient
 version: 1.1.2
 status: review
@@ -22,10 +22,10 @@ tags:
 depends-on: []
 related: []
 references:
-  - packages/apple/AgenticToolkit/macOS/Features/Extensions/VSCodeAPI/HostLanguageVocabulary.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/macOS/Features/Extensions/VSCodeAPI/MainThreadLanguages.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/macOS/Features/Extensions/LanguageContributionPoint.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Tests/AgenticToolkitMacOSTests/Extensions/MainThreadLanguagesVocabularyTests.swift (agenticdevelopertoolkit)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/HostLanguageVocabulary.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/MainThreadLanguages.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/LanguageContributionPoint.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKMacOSTests/Extensions/MainThreadLanguagesVocabularyTests.swift (adhsdk)
 approved-by: ""
 approved-date: ""
 ---
@@ -276,7 +276,7 @@ Not applicable: this component contains no logging call.
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/macOS/Features/Extensions/VSCodeAPI/HostLanguageVocabulary.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/HostLanguageVocabulary.swift` |
 
 ## Design Decisions
 

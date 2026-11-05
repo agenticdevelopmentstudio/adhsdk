@@ -1,5 +1,5 @@
 import type { ComponentProps, ReactNode } from 'react'
-import type { Badge } from '@agenticdevelopertoolkit/ui/components/badge'
+import type { Badge } from '@adh-sdk/ui/components/badge'
 import type { PaperKind, PaperSearchHit } from './markdown'
 
 /**

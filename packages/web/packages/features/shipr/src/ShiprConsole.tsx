@@ -2,8 +2,8 @@
 
 import * as React from 'react';
 
-import { HierarchicalTopicDetail } from '@agenticdevelopertoolkit/ui/blocks';
-import { AlertModal } from '@agenticdevelopertoolkit/ui/components/alert-modal';
+import { HierarchicalTopicDetail } from '@adh-sdk/ui/blocks';
+import { AlertModal } from '@adh-sdk/ui/components/alert-modal';
 
 import { useRunningRepos } from './activity/useRunningRepos';
 import { isFinished, useRuns, useSettle } from './activity/useRuns';

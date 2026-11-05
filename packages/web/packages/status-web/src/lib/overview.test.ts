@@ -25,7 +25,7 @@ function deploy(overrides: Partial<DeploymentDTO>): DeploymentDTO {
   };
 }
 
-// `envFromProject` moved to @agentic-toolkit/deploy-platform/canon and is tested there
+// `envFromProject` moved to @adh-sdk/deploy-platform/canon and is tested there
 // (src/canon/canon.test.ts) — both name shapes and the production default.
 
 describe("isRealEnvDeploy", () => {

@@ -1,5 +1,5 @@
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/AIPluginKit/ProviderTypeFacet.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/AIPluginKit/ProviderTypeFacet.swift` |
 

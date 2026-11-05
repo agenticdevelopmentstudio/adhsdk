@@ -2,7 +2,7 @@
 //
 // Component test for ResearchFeature — the /research workspace: a master/detail surface over
 // the signed-in user's markdown research documents. Only the data domain boundary
-// (@agentic-toolkit/data/markdown), the Next navigation hook, and @agentic-toolkit/auth's
+// (@adh-sdk/data/markdown), the Next navigation hook, and @adh-sdk/auth's
 // useAuth are mocked, so the list-publish → create → open-via-URL wiring is exercised, not the
 // transport.
 //
@@ -15,7 +15,7 @@
 // mock defaults to empty (see `categoryTree.mockResolvedValue([])` below), so the rail's own
 // depth-0 level publishes only its two synthetic rows ("All"/"Uncategorized") in every test here
 // — none of them exercise walking into a real category, which is covered by
-// `@agentic-toolkit/categories`' own suite and by NotebookPane.test.tsx.
+// `@adh-sdk/categories`' own suite and by NotebookPane.test.tsx.
 //
 // The pane's two page-level controls (search/category/tag filters and the "Create Document"
 // create) are no longer a page-wide strip: that HOME BAR was removed as clunky (Mike,
@@ -30,12 +30,12 @@ import {
   RailHostContext,
   type RailHostRegistry,
   type RegisteredLevels,
-} from "@agentic-toolkit/resource";
+} from "@adh-sdk/resource";
 import {
   DetailTitleProvider,
   detailStripTitle,
   useDetailTitleHost,
-} from "@agenticdevelopertoolkit/ui/blocks/detail-title";
+} from "@adh-sdk/ui/blocks/detail-title";
 // The rail stand-in itself (G68, Mike, 2026-09-25) — this suite used to hand-roll its own
 // near-copy of the four other feature packages' harnesses, and the copies had drifted (one of
 // them called `l.search.onQueryChange` unguarded, though `TopicListSearch.onQueryChange` is
@@ -43,7 +43,7 @@ import {
 // order (`+`, then search, then `titleActions` — `topic-detail.tsx`'s list toolbar), shows
 // `emptyLabel` on a zero-item level, and stands in for the same two signals this suite exercises:
 // the `busy` spinner and the `onPrefetch` hover dwell.
-import { RailStandIn } from "@agentic-toolkit/resource/testing";
+import { RailStandIn } from "@adh-sdk/resource/testing";
 
 // useBasePathRoute (ResearchFeature's URL wiring) reads next/navigation's useRouter; a stub is
 // enough for most tests, which assert on the API calls rather than the resulting route. The
@@ -57,18 +57,18 @@ vi.mock("next/navigation", () => ({
 
 // ResearchPane reads useAuth() directly (for the userSlug fallback) — stub a signed-in user so
 // it renders without an AuthProvider. reportUnexpectedAuthError is a no-op logger here.
-vi.mock("@agentic-toolkit/auth", () => ({
+vi.mock("@adh-sdk/auth", () => ({
   useAuth: () => ({ user: { name: "Ada Lovelace" } }),
   reportUnexpectedAuthError: vi.fn(),
 }));
 
 // `categoryTree` + `createCategory` (markdownApi) and the whole `taxonomyApi` sibling export are
-// what the shared rail (`@agentic-toolkit/categories`' `useCategoryLevels`) reads and writes —
+// what the shared rail (`@adh-sdk/categories`' `useCategoryLevels`) reads and writes —
 // see NotebookPane.test.tsx's identical pair of mocks, which this one mirrors now that
 // ResearchPane draws the same rail. Every write fn (`renameCategory`/`addCategoryParent`/etc.) is
 // exercised only if a test opens the gear menu; none here do yet, but a bare `vi.fn()` with no
 // default keeps a stray call loud (an unmocked resolution) rather than silently `undefined`.
-vi.mock("@agentic-toolkit/data/markdown", () => ({
+vi.mock("@adh-sdk/data/markdown", () => ({
   markdownApi: {
     list: vi.fn(),
     get: vi.fn(),
@@ -92,9 +92,9 @@ vi.mock("@agentic-toolkit/data/markdown", () => ({
   },
 }));
 
-import { getToolkitQueryClient } from "@agentic-toolkit/data/query";
+import { getToolkitQueryClient } from "@adh-sdk/data/query";
 import { ResearchFeature } from "./ResearchFeature";
-import { markdownApi, type ResearchDocument, type ResearchSummary } from "@agentic-toolkit/data/markdown";
+import { markdownApi, type ResearchDocument, type ResearchSummary } from "@adh-sdk/data/markdown";
 import { parseResearchPath, researchSegments } from "./parse-path";
 
 const list = vi.mocked(markdownApi.list);
@@ -185,7 +185,7 @@ afterEach(cleanup);
  *  drivable. No `HomeBarHost` any more: the controls ride the documents level's own
  *  `search`/`onNew`/`titleActions` now, so `RailStandIn` below is the whole story.
  *
- *  The detail title rides the REAL stack-side slot (`@agenticdevelopertoolkit/ui`'s
+ *  The detail title rides the REAL stack-side slot (`@adh-sdk/ui`'s
  *  detail-title: `useDetailTitleHost` + `DetailTitleProvider` + the `detailStripTitle` cell) —
  *  the same three pieces HTDV and HMDV use to draw a pane's title in their detail strip — rather
  *  than a hand-rolled stand-in, so what this test exercises is the actual portal and its

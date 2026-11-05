@@ -120,7 +120,7 @@ export interface SiteDef {
    *     from a page.
    *   - `'hub'`  — the hub, which serves top-level routes no other site has (`/login`,
    *     `/explore`, `/settings`, …). Those are {@link HUB_ROUTE_SEGMENTS}, a second set
-   *     for the second root; the parse that reads them sits in `@agentic-toolkit/adh`
+   *     for the second root; the parse that reads them sits in `@adh-sdk/adh`
    *     because it also answers for the two slug-less workspace routes.
    *  Absent ⇒ the site has NO workspace route, and a switch from a workspace falls back
    *  to its landing.
@@ -268,7 +268,7 @@ export const SITES: SiteDef[] = [
   // the hub, so the signed-in surface this site used to mount rendered a placeholder.
   { id: 'personaregistry', label: 'Persona Registry', fullLabel: 'Agentic Persona Registry', description: 'Browse agentic personas', prodHost: 'agenticpersonaregistry.com', hasStaging: true, hasTesting: true, hasHome: false },
   { id: 'devteam', label: 'Team', fullLabel: 'Agentic Developer Team', description: 'Your agentic dev team', prodHost: 'agenticdeveloperteam.com', hasStaging: true, hasTesting: true, hasHome: true, workspaceRoute: 'root' },
-  { id: 'toolkit', label: 'Toolkit', fullLabel: 'Agentic Developer Toolkit', description: 'The developer toolkit', prodHost: 'agenticdevelopertoolkit.com', hasStaging: true, hasTesting: true, hasHome: true, workspaceRoute: 'root' },
+  { id: 'toolkit', label: 'Toolkit', fullLabel: 'Agentic Developer Hub SDK', description: 'The developer toolkit', prodHost: 'agenticdevelopertoolkit.com', hasStaging: true, hasTesting: true, hasHome: true, workspaceRoute: 'root' },
   // myagenticteams: off-pattern consumer brand (not agenticdeveloper<x>.com), so
   // `fullLabel` is required — siteHeaderTitle can't derive the brand from the host.
   { id: 'myagenticteams', label: 'My Teams', fullLabel: 'My Agentic Teams', description: 'Build your own agentic teams', prodHost: 'myagenticteams.com', hasStaging: true, hasTesting: true, hasHome: true, workspaceRoute: 'root' },
@@ -373,7 +373,7 @@ export type SiteBuildConfig = {
 }
 
 /**
- * Per-site build data, read by `@agentic-toolkit/adh-next-config` so each site's
+ * Per-site build data, read by `@adh-sdk/adh-next-config` so each site's
  * `next.config.ts` can stay byte-exact: per-site DATA read by uniform CODE.
  *
  * DELIBERATELY NOT fields on `SiteDef`. Most `SITES` entries live inside the
@@ -845,7 +845,7 @@ export function buildSiteHref(target: SiteDef, currentHostname: string, pathname
 // Every fleet site's gated workspace ALSO exists inside the hub, under the active workspace slug
 // at `/<slug>/<segment>`, and this table says which segment. It is the whole roster now rather
 // than the eleven leftovers it held for a fortnight: the fleet's workspace implementations moved
-// into `@agentic-toolkit/adh-site-homes`, so the hub mounts the SAME model the site mounts on its
+// into `@adh-sdk/adh-site-homes`, so the hub mounts the SAME model the site mounts on its
 // own domain (see the hub's FleetSiteRoute), and a signed-in user never has to leave
 // agenticdeveloperhub.com to work. The sites keep their domains, their deployments and their
 // landing decks; what changed is that the hub has a route onto each of them again.
@@ -872,7 +872,7 @@ export function buildSiteHref(target: SiteDef, currentHostname: string, pathname
 export const HUB_FEATURE_SEGMENT = {
   // --- sites whose hub route predates them, under the hub's own name for it ---
   // The persona EDITOR, which is what agenticdeveloperpersonas.com renders — the same
-  // @agentic-toolkit/personas surface, so the site's row leads to the hub's own copy of it. This
+  // @adh-sdk/personas surface, so the site's row leads to the hub's own copy of it. This
   // used to point at `all-data`, the persona-DATA CRUD; that route is untouched and still reached
   // from the rail, it simply is not this site's implementation. `all-data` keeps its place in
   // HUB_EXTRA_FEATURE_SEGMENTS below.
@@ -1055,7 +1055,7 @@ export const HUB_WORKSPACE_SEGMENTS = new Set<string>([
 // segment — the hub's root was `[slug]`, a public profile, so a workspace URL was only
 // recognizable by the known feature that followed it. The root is `[workspace]` now, which makes
 // the FIRST segment the whole answer, and answering it means reading the reserved-slug list. That
-// list lives in `@agentic-toolkit/adh/site`, which depends on this package — so the pair moved
+// list lives in `@adh-sdk/adh/site`, which depends on this package — so the pair moved
 // there rather than inverting the dependency. `HUB_WORKSPACE_SEGMENTS` stays: it is data about
 // which features exist, which is this package's job, and `useSiteMenu` still needs it to decide
 // whether a hand-built row is an in-hub destination.
@@ -1100,7 +1100,7 @@ export function siteWorkspaceHref(target: SiteDef, slug: string): string | undef
  *  force a nested workspace now put it at the root beside them, so cookbook's nine corpus
  *  sections and community's board are in here too. Listing a segment one site owns costs
  *  the others nothing — every one of these is already reserved family-wide by
- *  `SITE_ROUTE_SEGMENTS` in `@agentic-toolkit/adh/site`, so no workspace can be named any
+ *  `SITE_ROUTE_SEGMENTS` in `@adh-sdk/adh/site`, so no workspace can be named any
  *  of them anywhere, and a segment that reads as "not a slug" on a site that does not serve
  *  it is a page that 404s either way.
  *
@@ -1148,7 +1148,7 @@ export const SITE_LANDING_SEGMENTS = new Set<string>([
   // personaregistry used to contribute `org`, `persona` and `user` here. It has no workspace
   // route at all now — its root segment IS the public handle — so it is outside this union,
   // and a word only it serves would make the lockstep case fail. The three stay reserved
-  // family-wide by `SITE_ROUTE_SEGMENTS` in `@agentic-toolkit/adh/site`, which is a different
+  // family-wide by `SITE_ROUTE_SEGMENTS` in `@adh-sdk/adh/site`, which is a different
   // question: this set says "not a slug", that one says "nobody may claim it".
   // research — the finder. A paper's own address is `/<author>/<paper-slug>`, whose first
   // segment IS the workspace slug, so `search` is the only word of research's that lands here.
@@ -1255,7 +1255,7 @@ export const HUB_ROUTE_SEGMENTS = new Set<string>([
  *  It refuses instead of switching on the set because a hub path needs MORE than a set:
  *  `/home` and `/settings` are workspace chrome carrying no slug, where the answer is the
  *  signed-in visitor's own — a fact this package has no notion of. `hubWorkspacePath.ts`
- *  in `@agentic-toolkit/adh` owns that whole answer and reads the set from here, and
+ *  in `@adh-sdk/adh` owns that whole answer and reads the set from here, and
  *  `useSiteMenu` — the only caller either has — asks it directly. (The set itself lived
  *  there too until it turned out to be answering from the mint-time reserved list; see
  *  HUB_ROUTE_SEGMENTS for what that cost.) */

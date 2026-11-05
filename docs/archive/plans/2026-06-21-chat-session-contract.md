@@ -9,20 +9,20 @@
 
 **Goal:** Introduce a durable `ChatSession` contract (a headless, streaming chat engine protocol) with two implementations — `LocalChatSession` (plugin-backed) and `MockChatSession` (test/preview) — make the chat UI render token-by-token by folding the session's event stream, and migrate BitBag onto it while keeping all other consumers compiling via a legacy bridge.
 
-**Architecture:** `ChatSession` (Foundation-only, in `AgenticToolkitCore`) exposes `events() -> AsyncStream<ChatEvent>` + `send`/`interrupt`/`close`. A pure `ChatTranscriptReducer` folds events into `[ChatMessage]`. `ChatViewModel` becomes a thin `@MainActor` adapter that pumps the stream through the reducer. `LocalChatSession` owns one turn end-to-end (build `AIChatContext` → drive an injected event-stream factory, default `PluginTransport.run` → emit `ChatEvent`s), preserving the existing MCP tool loop behind an injectable `ChatToolSource`. `AIChatCoordinator` gains a `makeSession` initializer; the existing `makeBackend` path is preserved by wrapping any legacy `ChatBackend` in a `ChatBackendSession` adapter, so AgenticToolkitApp / Whippet stay green untouched.
+**Architecture:** `ChatSession` (Foundation-only, in `AgenticDeveloperHubSDKCore`) exposes `events() -> AsyncStream<ChatEvent>` + `send`/`interrupt`/`close`. A pure `ChatTranscriptReducer` folds events into `[ChatMessage]`. `ChatViewModel` becomes a thin `@MainActor` adapter that pumps the stream through the reducer. `LocalChatSession` owns one turn end-to-end (build `AIChatContext` → drive an injected event-stream factory, default `PluginTransport.run` → emit `ChatEvent`s), preserving the existing MCP tool loop behind an injectable `ChatToolSource`. `AIChatCoordinator` gains a `makeSession` initializer; the existing `makeBackend` path is preserved by wrapping any legacy `ChatBackend` in a `ChatBackendSession` adapter, so AgenticDeveloperHubSDKApp / Whippet stay green untouched.
 
 **Tech Stack:** Swift 6 strict concurrency, AppKit, swift-testing (`import Testing`), XcodeGen (`cc-xcgen`), `AIPluginKit` + `PluginTransport`.
 
-**Scope note (what this plan is NOT):** No ADH remote session, no JWT auth, no warm persistent `claude` process, no daemon caching. `ChatBackend` / `AIPluginChatBackend` / `WhippetChatBackend` are **kept (deprecated), not deleted** — they ride the bridge until AgenticToolkitApp & Whippet are migrated in a follow-up plan. Those migrations + the deletions are explicitly out of scope here.
+**Scope note (what this plan is NOT):** No ADH remote session, no JWT auth, no warm persistent `claude` process, no daemon caching. `ChatBackend` / `AIPluginChatBackend` / `WhippetChatBackend` are **kept (deprecated), not deleted** — they ride the bridge until AgenticDeveloperHubSDKApp & Whippet are migrated in a follow-up plan. Those migrations + the deletions are explicitly out of scope here.
 
 **Standing conventions for every commit in this plan:**
 - Commit messages end with: `Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>`
 - Stage only files this plan touches — never `git add -A`/`.`/`-a`.
-- After adding/removing/moving any `.swift` file under a target's source glob, run `cc-xcgen packages/apple/AgenticToolkit` before building.
-- Build/test env (run from the toolkit repo root `external/agentictoolkit`):
+- After adding/removing/moving any `.swift` file under a target's source glob, run `cc-xcgen packages/apple/AgenticDeveloperHubSDK` before building.
+- Build/test env (run from the toolkit repo root `external/adhsdk`):
   ```bash
-  DD=~/Library/Developer/Xcode/DerivedData/AgenticToolkit-managed
-  WS=packages/apple/AgenticToolkit.xcworkspace
+  DD=~/Library/Developer/Xcode/DerivedData/AgenticDeveloperHubSDK-managed
+  WS=packages/apple/AgenticDeveloperHubSDK.xcworkspace
   DEST='platform=macOS,arch=arm64'
   ```
 
@@ -45,8 +45,8 @@
 | `macOS/Features/AIChatWindow/ChatViewModel.swift` | Rewrite | Thin `@MainActor` reducer-pump over a `ChatSession`. |
 | `macOS/Features/AIChatWindow/AIChatCoordinator.swift` | Modify | Add `init(makeSession:)`; keep `init(makeBackend:)` via the adapter. |
 | `macOS/Features/AIChatWindow/ChatView.swift` | Modify | In-place delta growth + coalesced rebuild; bind `state`. |
-| `Tests/AgenticToolkitCoreTests/Chat/*` | Create | Reducer + mock tests. |
-| `Tests/AgenticToolkitMacOSTests/Chat/*` | Create | `LocalChatSession` + `ChatViewModel` tests. |
+| `Tests/AgenticDeveloperHubSDKCoreTests/Chat/*` | Create | Reducer + mock tests. |
+| `Tests/AgenticDeveloperHubSDKMacOSTests/Chat/*` | Create | `LocalChatSession` + `ChatViewModel` tests. |
 | `apple/Bitbag/Bitbag/Sources/AppServices.swift` (BitBag repo) | Modify | `makeSession { LocalChatSession(...) }`. |
 | `macOS/Features/.../PluginConfigPanel.swift` | Modify | Preview chat uses `ChatViewModel(session:)`. |
 
@@ -55,8 +55,8 @@
 ## Task 1: Move & extend `ChatMessage` into Core
 
 **Files:**
-- Create: `packages/apple/AgenticToolkit/Core/Chat/ChatMessage.swift`
-- Delete: `packages/apple/AgenticToolkit/macOS/Features/AIChatWindow/ChatMessage.swift`
+- Create: `packages/apple/AgenticDeveloperHubSDK/Core/Chat/ChatMessage.swift`
+- Delete: `packages/apple/AgenticDeveloperHubSDK/macOS/Features/AIChatWindow/ChatMessage.swift`
 
 - [ ] **Step 1: Create the new file**
 
@@ -98,22 +98,22 @@ public struct ChatMessage: Identifiable, Equatable, Sendable {
 
 - [ ] **Step 2: Delete the old file**
 
-Run: `git rm packages/apple/AgenticToolkit/macOS/Features/AIChatWindow/ChatMessage.swift`
+Run: `git rm packages/apple/AgenticDeveloperHubSDK/macOS/Features/AIChatWindow/ChatMessage.swift`
 
 - [ ] **Step 3: Regenerate & build**
 
 ```bash
-cc-xcgen packages/apple/AgenticToolkit
-xcodebuild -workspace "$WS" -scheme AgenticToolkitMacOS -destination "$DEST" -derivedDataPath "$DD" build 2>&1 | tail -20
+cc-xcgen packages/apple/AgenticDeveloperHubSDK
+xcodebuild -workspace "$WS" -scheme AgenticDeveloperHubSDKMacOS -destination "$DEST" -derivedDataPath "$DD" build 2>&1 | tail -20
 ```
 Expected: BUILD SUCCEEDED. (`ChatMessage` is used by `ChatView`/`ChatViewModel` in the macOS module; it now resolves from Core, which the macOS target already depends on. The `id` default changed from `let id = UUID().uuidString` to a parameter — no call site passed `id`, so existing `ChatMessage(role:text:)` calls still compile.)
 
 - [ ] **Step 4: Commit**
 
 ```bash
-git add packages/apple/AgenticToolkit/Core/Chat/ChatMessage.swift \
-        packages/apple/AgenticToolkit/macOS/Features/AIChatWindow/ChatMessage.swift \
-        packages/apple/AgenticToolkit/AgenticToolkit.xcodeproj
+git add packages/apple/AgenticDeveloperHubSDK/Core/Chat/ChatMessage.swift \
+        packages/apple/AgenticDeveloperHubSDK/macOS/Features/AIChatWindow/ChatMessage.swift \
+        packages/apple/AgenticDeveloperHubSDK/AgenticDeveloperHubSDK.xcodeproj
 git commit -m "refactor: move ChatMessage to Core/Chat with mutable streaming fields
 
 Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
@@ -204,18 +204,18 @@ public protocol ChatSession: Sendable {
 - [ ] **Step 4: Regenerate & build**
 
 ```bash
-cc-xcgen packages/apple/AgenticToolkit
-xcodebuild -workspace "$WS" -scheme AgenticToolkitMacOS -destination "$DEST" -derivedDataPath "$DD" build 2>&1 | tail -20
+cc-xcgen packages/apple/AgenticDeveloperHubSDK
+xcodebuild -workspace "$WS" -scheme AgenticDeveloperHubSDKMacOS -destination "$DEST" -derivedDataPath "$DD" build 2>&1 | tail -20
 ```
 Expected: BUILD SUCCEEDED.
 
 - [ ] **Step 5: Commit**
 
 ```bash
-git add packages/apple/AgenticToolkit/Core/Chat/ChatSessionState.swift \
-        packages/apple/AgenticToolkit/Core/Chat/ChatEvent.swift \
-        packages/apple/AgenticToolkit/Core/Chat/ChatSession.swift \
-        packages/apple/AgenticToolkit/AgenticToolkit.xcodeproj
+git add packages/apple/AgenticDeveloperHubSDK/Core/Chat/ChatSessionState.swift \
+        packages/apple/AgenticDeveloperHubSDK/Core/Chat/ChatEvent.swift \
+        packages/apple/AgenticDeveloperHubSDK/Core/Chat/ChatSession.swift \
+        packages/apple/AgenticDeveloperHubSDK/AgenticDeveloperHubSDK.xcodeproj
 git commit -m "feat: add ChatSession contract (ChatSession, ChatEvent, ChatSessionState)
 
 Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
@@ -227,15 +227,15 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 
 **Files:**
 - Create: `Core/Chat/ChatTranscriptReducer.swift`
-- Test: `Tests/AgenticToolkitCoreTests/Chat/ChatTranscriptReducerTests.swift`
+- Test: `Tests/AgenticDeveloperHubSDKCoreTests/Chat/ChatTranscriptReducerTests.swift`
 
 - [ ] **Step 1: Write the failing test**
 
 ```swift
-// Tests/AgenticToolkitCoreTests/Chat/ChatTranscriptReducerTests.swift
+// Tests/AgenticDeveloperHubSDKCoreTests/Chat/ChatTranscriptReducerTests.swift
 import Testing
 import Foundation
-@testable import AgenticToolkitCore
+@testable import AgenticDeveloperHubSDKCore
 
 @Suite("ChatTranscriptReducer")
 struct ChatTranscriptReducerTests {
@@ -301,7 +301,7 @@ struct ChatTranscriptReducerTests {
 - [ ] **Step 2: Run it; verify it fails to compile (`ChatTranscriptReducer` undefined)**
 
 ```bash
-xcodebuild -workspace "$WS" -scheme AgenticToolkitMacOS -destination "$DEST" -derivedDataPath "$DD" -only-testing AgenticToolkitCoreTests test 2>&1 | tail -20
+xcodebuild -workspace "$WS" -scheme AgenticDeveloperHubSDKMacOS -destination "$DEST" -derivedDataPath "$DD" -only-testing AgenticDeveloperHubSDKCoreTests test 2>&1 | tail -20
 ```
 Expected: build failure — `cannot find 'ChatTranscriptReducer' in scope`.
 
@@ -363,16 +363,16 @@ public enum ChatTranscriptReducer {
 - [ ] **Step 4: Run tests; verify pass**
 
 ```bash
-xcodebuild -workspace "$WS" -scheme AgenticToolkitMacOS -destination "$DEST" -derivedDataPath "$DD" -only-testing AgenticToolkitCoreTests test 2>&1 | tail -20
+xcodebuild -workspace "$WS" -scheme AgenticDeveloperHubSDKMacOS -destination "$DEST" -derivedDataPath "$DD" -only-testing AgenticDeveloperHubSDKCoreTests test 2>&1 | tail -20
 ```
 Expected: all `ChatTranscriptReducer` tests pass.
 
 - [ ] **Step 5: Commit**
 
 ```bash
-git add packages/apple/AgenticToolkit/Core/Chat/ChatTranscriptReducer.swift \
-        packages/apple/AgenticToolkit/Tests/AgenticToolkitCoreTests/Chat/ChatTranscriptReducerTests.swift \
-        packages/apple/AgenticToolkit/AgenticToolkit.xcodeproj
+git add packages/apple/AgenticDeveloperHubSDK/Core/Chat/ChatTranscriptReducer.swift \
+        packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKCoreTests/Chat/ChatTranscriptReducerTests.swift \
+        packages/apple/AgenticDeveloperHubSDK/AgenticDeveloperHubSDK.xcodeproj
 git commit -m "feat: pure ChatTranscriptReducer + tests
 
 Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
@@ -384,15 +384,15 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 
 **Files:**
 - Create: `Core/Chat/MockChatSession.swift`
-- Test: `Tests/AgenticToolkitCoreTests/Chat/MockChatSessionTests.swift`
+- Test: `Tests/AgenticDeveloperHubSDKCoreTests/Chat/MockChatSessionTests.swift`
 
 - [ ] **Step 1: Write the failing test**
 
 ```swift
-// Tests/AgenticToolkitCoreTests/Chat/MockChatSessionTests.swift
+// Tests/AgenticDeveloperHubSDKCoreTests/Chat/MockChatSessionTests.swift
 import Testing
 import Foundation
-@testable import AgenticToolkitCore
+@testable import AgenticDeveloperHubSDKCore
 
 @Suite("MockChatSession")
 struct MockChatSessionTests {
@@ -429,7 +429,7 @@ struct MockChatSessionTests {
 - [ ] **Step 2: Run; verify fail (`MockChatSession` undefined)**
 
 ```bash
-xcodebuild -workspace "$WS" -scheme AgenticToolkitMacOS -destination "$DEST" -derivedDataPath "$DD" -only-testing AgenticToolkitCoreTests test 2>&1 | tail -20
+xcodebuild -workspace "$WS" -scheme AgenticDeveloperHubSDKMacOS -destination "$DEST" -derivedDataPath "$DD" -only-testing AgenticDeveloperHubSDKCoreTests test 2>&1 | tail -20
 ```
 Expected: `cannot find 'MockChatSession' in scope`.
 
@@ -515,16 +515,16 @@ public final class MockChatSession: ChatSession, @unchecked Sendable {
 - [ ] **Step 4: Run; verify pass**
 
 ```bash
-xcodebuild -workspace "$WS" -scheme AgenticToolkitMacOS -destination "$DEST" -derivedDataPath "$DD" -only-testing AgenticToolkitCoreTests test 2>&1 | tail -20
+xcodebuild -workspace "$WS" -scheme AgenticDeveloperHubSDKMacOS -destination "$DEST" -derivedDataPath "$DD" -only-testing AgenticDeveloperHubSDKCoreTests test 2>&1 | tail -20
 ```
 Expected: pass.
 
 - [ ] **Step 5: Commit**
 
 ```bash
-git add packages/apple/AgenticToolkit/Core/Chat/MockChatSession.swift \
-        packages/apple/AgenticToolkit/Tests/AgenticToolkitCoreTests/Chat/MockChatSessionTests.swift \
-        packages/apple/AgenticToolkit/AgenticToolkit.xcodeproj
+git add packages/apple/AgenticDeveloperHubSDK/Core/Chat/MockChatSession.swift \
+        packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKCoreTests/Chat/MockChatSessionTests.swift \
+        packages/apple/AgenticDeveloperHubSDK/AgenticDeveloperHubSDK.xcodeproj
 git commit -m "feat: MockChatSession + tests
 
 Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
@@ -558,16 +558,16 @@ public protocol ChatToolSource: Sendable {
 - [ ] **Step 2: Regenerate & build**
 
 ```bash
-cc-xcgen packages/apple/AgenticToolkit
-xcodebuild -workspace "$WS" -scheme AgenticToolkitMacOS -destination "$DEST" -derivedDataPath "$DD" build 2>&1 | tail -20
+cc-xcgen packages/apple/AgenticDeveloperHubSDK
+xcodebuild -workspace "$WS" -scheme AgenticDeveloperHubSDKMacOS -destination "$DEST" -derivedDataPath "$DD" build 2>&1 | tail -20
 ```
 Expected: BUILD SUCCEEDED.
 
 - [ ] **Step 3: Commit**
 
 ```bash
-git add packages/apple/AgenticToolkit/Core/Chat/ChatToolSource.swift \
-        packages/apple/AgenticToolkit/AgenticToolkit.xcodeproj
+git add packages/apple/AgenticDeveloperHubSDK/Core/Chat/ChatToolSource.swift \
+        packages/apple/AgenticDeveloperHubSDK/AgenticDeveloperHubSDK.xcodeproj
 git commit -m "feat: ChatToolSource seam for engine tool loops
 
 Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
@@ -584,17 +584,17 @@ spawning `claude`.
 
 **Files:**
 - Create: `macOS/Features/AIPlugins/LocalChatSession.swift`
-- Test: `Tests/AgenticToolkitMacOSTests/Chat/LocalChatSessionTests.swift`
+- Test: `Tests/AgenticDeveloperHubSDKMacOSTests/Chat/LocalChatSessionTests.swift`
 
 - [ ] **Step 1: Write the failing test** (uses a fake event-stream factory; no subprocess)
 
 ```swift
-// Tests/AgenticToolkitMacOSTests/Chat/LocalChatSessionTests.swift
+// Tests/AgenticDeveloperHubSDKMacOSTests/Chat/LocalChatSessionTests.swift
 import Testing
 import Foundation
 import AIPluginKit
-@testable import AgenticToolkitCore
-@testable import AgenticToolkitMacOS
+@testable import AgenticDeveloperHubSDKCore
+@testable import AgenticDeveloperHubSDKMacOS
 
 @Suite("LocalChatSession")
 struct LocalChatSessionTests {
@@ -652,7 +652,7 @@ private final class PassthroughDecoder: AIStreamDecoder {
 - [ ] **Step 2: Run; verify fail (`LocalChatSession` undefined)**
 
 ```bash
-xcodebuild -workspace "$WS" -scheme AgenticToolkitMacOS -destination "$DEST" -derivedDataPath "$DD" -only-testing AgenticToolkitMacOSTests test 2>&1 | tail -25
+xcodebuild -workspace "$WS" -scheme AgenticDeveloperHubSDKMacOS -destination "$DEST" -derivedDataPath "$DD" -only-testing AgenticDeveloperHubSDKMacOSTests test 2>&1 | tail -25
 ```
 Expected: `cannot find 'LocalChatSession' in scope`.
 
@@ -661,7 +661,7 @@ Expected: `cannot find 'LocalChatSession' in scope`.
 ```swift
 // macOS/Features/AIPlugins/LocalChatSession.swift
 import Foundation
-import AgenticToolkitCore
+import AgenticDeveloperHubSDKCore
 import AIPluginKit
 
 /// A `ChatSession` that runs turns through an `AIPlugin`. Owns conversation
@@ -804,16 +804,16 @@ private extension AIChatContext {
 - [ ] **Step 4: Run; verify pass**
 
 ```bash
-xcodebuild -workspace "$WS" -scheme AgenticToolkitMacOS -destination "$DEST" -derivedDataPath "$DD" -only-testing AgenticToolkitMacOSTests test 2>&1 | tail -25
+xcodebuild -workspace "$WS" -scheme AgenticDeveloperHubSDKMacOS -destination "$DEST" -derivedDataPath "$DD" -only-testing AgenticDeveloperHubSDKMacOSTests test 2>&1 | tail -25
 ```
 Expected: `LocalChatSession` test passes.
 
 - [ ] **Step 5: Commit**
 
 ```bash
-git add packages/apple/AgenticToolkit/macOS/Features/AIPlugins/LocalChatSession.swift \
-        packages/apple/AgenticToolkit/Tests/AgenticToolkitMacOSTests/Chat/LocalChatSessionTests.swift \
-        packages/apple/AgenticToolkit/AgenticToolkit.xcodeproj
+git add packages/apple/AgenticDeveloperHubSDK/macOS/Features/AIPlugins/LocalChatSession.swift \
+        packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKMacOSTests/Chat/LocalChatSessionTests.swift \
+        packages/apple/AgenticDeveloperHubSDK/AgenticDeveloperHubSDK.xcodeproj
 git commit -m "feat: LocalChatSession (plugin-backed streaming engine) + tests
 
 Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
@@ -837,7 +837,7 @@ registry); this keeps the code alive and testable for the remote/tool phase.
 // macOS/Features/AIPlugins/MCPChatToolSource.swift
 import Foundation
 import MCP
-import AgenticToolkitCore
+import AgenticDeveloperHubSDKCore
 
 /// `ChatToolSource` backed by an `MCPServerRegistry` and a fixed set of active
 /// server ids. Mirrors the dispatch the chat view model used to do inline:
@@ -894,16 +894,16 @@ public final class MCPChatToolSource: ChatToolSource, @unchecked Sendable {
 - [ ] **Step 2: Regenerate & build**
 
 ```bash
-cc-xcgen packages/apple/AgenticToolkit
-xcodebuild -workspace "$WS" -scheme AgenticToolkitMacOS -destination "$DEST" -derivedDataPath "$DD" build 2>&1 | tail -20
+cc-xcgen packages/apple/AgenticDeveloperHubSDK
+xcodebuild -workspace "$WS" -scheme AgenticDeveloperHubSDKMacOS -destination "$DEST" -derivedDataPath "$DD" build 2>&1 | tail -20
 ```
 Expected: BUILD SUCCEEDED.
 
 - [ ] **Step 3: Commit**
 
 ```bash
-git add packages/apple/AgenticToolkit/macOS/Features/AIPlugins/MCPChatToolSource.swift \
-        packages/apple/AgenticToolkit/AgenticToolkit.xcodeproj
+git add packages/apple/AgenticDeveloperHubSDK/macOS/Features/AIPlugins/MCPChatToolSource.swift \
+        packages/apple/AgenticDeveloperHubSDK/AgenticDeveloperHubSDK.xcodeproj
 git commit -m "feat: MCPChatToolSource (preserves MCP tool loop behind ChatToolSource)
 
 Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
@@ -915,16 +915,16 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 
 **Files:**
 - Rewrite: `macOS/Features/AIChatWindow/ChatViewModel.swift`
-- Test: `Tests/AgenticToolkitMacOSTests/Chat/ChatViewModelTests.swift`
+- Test: `Tests/AgenticDeveloperHubSDKMacOSTests/Chat/ChatViewModelTests.swift`
 
 - [ ] **Step 1: Write the failing test** (drives a real `MockChatSession`)
 
 ```swift
-// Tests/AgenticToolkitMacOSTests/Chat/ChatViewModelTests.swift
+// Tests/AgenticDeveloperHubSDKMacOSTests/Chat/ChatViewModelTests.swift
 import Testing
 import Foundation
-@testable import AgenticToolkitCore
-@testable import AgenticToolkitMacOS
+@testable import AgenticDeveloperHubSDKCore
+@testable import AgenticDeveloperHubSDKMacOS
 
 @Suite("ChatViewModel")
 @MainActor
@@ -955,7 +955,7 @@ struct ChatViewModelTests {
 - [ ] **Step 2: Run; verify fail (`ChatViewModel(session:)` undefined)**
 
 ```bash
-xcodebuild -workspace "$WS" -scheme AgenticToolkitMacOS -destination "$DEST" -derivedDataPath "$DD" -only-testing AgenticToolkitMacOSTests test 2>&1 | tail -25
+xcodebuild -workspace "$WS" -scheme AgenticDeveloperHubSDKMacOS -destination "$DEST" -derivedDataPath "$DD" -only-testing AgenticDeveloperHubSDKMacOSTests test 2>&1 | tail -25
 ```
 Expected: `incorrect argument label in call (have 'session:', expected 'backend:')` or similar.
 
@@ -966,7 +966,7 @@ Expected: `incorrect argument label in call (have 'session:', expected 'backend:
 import Foundation
 import Combine
 import os
-import AgenticToolkitCore
+import AgenticDeveloperHubSDKCore
 
 /// Drives the chat window by folding a `ChatSession`'s event stream into an
 /// observable transcript. All chat logic (turns, tools, transport) lives in the
@@ -1082,8 +1082,8 @@ private func scheduleRender() {
 - [ ] **Step 3: Build & stage (still part of the Task 8–11 compile unit)**
 
 ```bash
-cc-xcgen packages/apple/AgenticToolkit
-xcodebuild -workspace "$WS" -scheme AgenticToolkitMacOS -destination "$DEST" -derivedDataPath "$DD" build 2>&1 | tail -20
+cc-xcgen packages/apple/AgenticDeveloperHubSDK
+xcodebuild -workspace "$WS" -scheme AgenticDeveloperHubSDKMacOS -destination "$DEST" -derivedDataPath "$DD" build 2>&1 | tail -20
 ```
 Expected: errors remaining only in `AIChatCoordinator` (Task 10) — those are next. If `ChatView`/`ChatViewModel` errors remain, fix before proceeding.
 
@@ -1100,7 +1100,7 @@ Expected: errors remaining only in `AIChatCoordinator` (Task 10) — those are n
 ```swift
 // macOS/Features/AIChatWindow/ChatBackendSession.swift
 import Foundation
-import AgenticToolkitCore
+import AgenticDeveloperHubSDKCore
 
 /// Adapts a legacy `ChatBackend` to the `ChatSession` contract so consumers that
 /// still pass `makeBackend:` keep working during migration. Holds the transcript
@@ -1202,27 +1202,27 @@ public func ensureWindow() {
 - [ ] **Step 3: Build — toolkit should be fully green now**
 
 ```bash
-cc-xcgen packages/apple/AgenticToolkit
-xcodebuild -workspace "$WS" -scheme AgenticToolkitMacOS -destination "$DEST" -derivedDataPath "$DD" build 2>&1 | tail -20
+cc-xcgen packages/apple/AgenticDeveloperHubSDK
+xcodebuild -workspace "$WS" -scheme AgenticDeveloperHubSDKMacOS -destination "$DEST" -derivedDataPath "$DD" build 2>&1 | tail -20
 ```
 Expected: BUILD SUCCEEDED (PluginConfigPanel still uses `ChatViewModel(backend:)` → fix in Task 11; if it errors, do Task 11 Step 1 before building).
 
 - [ ] **Step 4: Run the full toolkit test suite**
 
 ```bash
-xcodebuild -workspace "$WS" -scheme AgenticToolkitMacOS -destination "$DEST" -derivedDataPath "$DD" test 2>&1 | tail -30
+xcodebuild -workspace "$WS" -scheme AgenticDeveloperHubSDKMacOS -destination "$DEST" -derivedDataPath "$DD" test 2>&1 | tail -30
 ```
 Expected: all suites pass (Core reducer/mock + macOS LocalChatSession/ChatViewModel).
 
 - [ ] **Step 5: Commit Tasks 8–10 together** (one compile unit)
 
 ```bash
-git add packages/apple/AgenticToolkit/macOS/Features/AIChatWindow/ChatViewModel.swift \
-        packages/apple/AgenticToolkit/macOS/Features/AIChatWindow/ChatView.swift \
-        packages/apple/AgenticToolkit/macOS/Features/AIChatWindow/ChatBackendSession.swift \
-        packages/apple/AgenticToolkit/macOS/Features/AIChatWindow/AIChatCoordinator.swift \
-        packages/apple/AgenticToolkit/Tests/AgenticToolkitMacOSTests/Chat/ChatViewModelTests.swift \
-        packages/apple/AgenticToolkit/AgenticToolkit.xcodeproj
+git add packages/apple/AgenticDeveloperHubSDK/macOS/Features/AIChatWindow/ChatViewModel.swift \
+        packages/apple/AgenticDeveloperHubSDK/macOS/Features/AIChatWindow/ChatView.swift \
+        packages/apple/AgenticDeveloperHubSDK/macOS/Features/AIChatWindow/ChatBackendSession.swift \
+        packages/apple/AgenticDeveloperHubSDK/macOS/Features/AIChatWindow/AIChatCoordinator.swift \
+        packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKMacOSTests/Chat/ChatViewModelTests.swift \
+        packages/apple/AgenticDeveloperHubSDK/AgenticDeveloperHubSDK.xcodeproj
 git commit -m "feat: ChatViewModel folds a ChatSession; streaming view; legacy bridge
 
 Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
@@ -1288,8 +1288,8 @@ aiChat = AIChatCoordinator(makeSession: {
 - [ ] **Step 3: Build the toolkit, then BitBag**
 
 ```bash
-cc-xcgen packages/apple/AgenticToolkit
-xcodebuild -workspace "$WS" -scheme AgenticToolkitMacOS -destination "$DEST" -derivedDataPath "$DD" build 2>&1 | tail -20
+cc-xcgen packages/apple/AgenticDeveloperHubSDK
+xcodebuild -workspace "$WS" -scheme AgenticDeveloperHubSDKMacOS -destination "$DEST" -derivedDataPath "$DD" build 2>&1 | tail -20
 # BitBag (separate project/workspace under the bitbag worktree):
 cd /Users/mfullerton/Development/projects/adh-daemon/.claude/worktrees/bitbag/apple/Bitbag
 cc-xcgen .  # if Bitbag uses XcodeGen; otherwise open the existing project
@@ -1307,9 +1307,9 @@ Use the `run` skill (or launch the built `.app`), open the **Bitbag** chat windo
 
 ```bash
 # toolkit
-cd /Users/mfullerton/Development/projects/adh-daemon/.claude/worktrees/bitbag/external/agentictoolkit
-git add packages/apple/AgenticToolkit/macOS/Features/AIPlugins/PluginConfigPanel.swift \
-        packages/apple/AgenticToolkit/AgenticToolkit.xcodeproj
+cd /Users/mfullerton/Development/projects/adh-daemon/.claude/worktrees/bitbag/external/adhsdk
+git add packages/apple/AgenticDeveloperHubSDK/macOS/Features/AIPlugins/PluginConfigPanel.swift \
+        packages/apple/AgenticDeveloperHubSDK/AgenticDeveloperHubSDK.xcodeproj
 git commit -m "refactor: settings preview chat uses LocalChatSession
 
 Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
@@ -1329,12 +1329,12 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 - Modify: `macOS/Features/AIChatWindow/ChatBackend.swift` (add deprecation note)
 - Modify: `macOS/Features/AIPlugins/AIPluginChatBackend.swift` (add deprecation note)
 
-- [ ] **Step 1: Mark the legacy types deprecated** (do NOT delete — AgenticToolkitApp/Whippet still use them via the bridge)
+- [ ] **Step 1: Mark the legacy types deprecated** (do NOT delete — AgenticDeveloperHubSDKApp/Whippet still use them via the bridge)
 
 Add a doc comment to `ChatBackend` and `AIPluginChatBackend`:
 ```swift
 /// - Important: Deprecated. New code conforms to `ChatSession` (e.g.
-///   `LocalChatSession`). This rides `ChatBackendSession` until AgenticToolkitApp
+///   `LocalChatSession`). This rides `ChatBackendSession` until AgenticDeveloperHubSDKApp
 ///   and Whippet migrate, then it (and `WhippetChatBackend`) are deleted.
 ```
 (Use a doc comment, not `@available(*, deprecated)`, to avoid warning-spam in the still-bridged consumers.)
@@ -1342,16 +1342,16 @@ Add a doc comment to `ChatBackend` and `AIPluginChatBackend`:
 - [ ] **Step 2: Full clean build + test**
 
 ```bash
-cd /Users/mfullerton/Development/projects/adh-daemon/.claude/worktrees/bitbag/external/agentictoolkit
-xcodebuild -workspace "$WS" -scheme AgenticToolkitMacOS -destination "$DEST" -derivedDataPath "$DD" clean build test 2>&1 | tail -30
+cd /Users/mfullerton/Development/projects/adh-daemon/.claude/worktrees/bitbag/external/adhsdk
+xcodebuild -workspace "$WS" -scheme AgenticDeveloperHubSDKMacOS -destination "$DEST" -derivedDataPath "$DD" clean build test 2>&1 | tail -30
 ```
 Expected: BUILD SUCCEEDED, all suites pass.
 
 - [ ] **Step 3: Commit**
 
 ```bash
-git add packages/apple/AgenticToolkit/macOS/Features/AIChatWindow/ChatBackend.swift \
-        packages/apple/AgenticToolkit/macOS/Features/AIPlugins/AIPluginChatBackend.swift
+git add packages/apple/AgenticDeveloperHubSDK/macOS/Features/AIChatWindow/ChatBackend.swift \
+        packages/apple/AgenticDeveloperHubSDK/macOS/Features/AIPlugins/AIPluginChatBackend.swift
 git commit -m "docs: deprecate ChatBackend/AIPluginChatBackend in favor of ChatSession
 
 Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
@@ -1360,7 +1360,7 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 ---
 
 ## Follow-up (NOT in this plan)
-- Migrate `AgenticToolkitApp` `Features.swift` and Whippet `Features.swift` to `makeSession`; delete `ChatBackend`, `AIPluginChatBackend`, `WhippetChatBackend`, `ChatBackendSession`, `ChatStreamEvent`, `ChatBackendMessage`.
+- Migrate `AgenticDeveloperHubSDKApp` `Features.swift` and Whippet `Features.swift` to `makeSession`; delete `ChatBackend`, `AIPluginChatBackend`, `WhippetChatBackend`, `ChatBackendSession`, `ChatStreamEvent`, `ChatBackendMessage`.
 - Phase 2: `RemoteChatSession` (ADH SSE) + JWT sign-in + conversation resume.
 - Phase 3: warm persistent `claude` process inside `LocalChatSession`.
 - Wire `MCPChatToolSource` into a consumer that surfaces the MCP chips bar.

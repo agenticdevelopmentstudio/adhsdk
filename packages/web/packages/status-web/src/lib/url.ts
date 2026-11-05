@@ -1,4 +1,4 @@
-import { endpointHasUrl } from "@agentic-toolkit/deploy-platform/engine";
+import { endpointHasUrl } from "@adh-sdk/deploy-platform/engine";
 
 export function hostOf(url: string): string {
   try {

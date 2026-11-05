@@ -1,8 +1,8 @@
 'use client';
 
-import { Field, FieldGroup } from '@agenticdevelopertoolkit/ui/blocks';
-import { Select } from '@agenticdevelopertoolkit/ui/components/select';
-import type { RegistryVisibility, SubmissionPolicy } from '@agentic-toolkit/registry/client';
+import { Field, FieldGroup } from '@adh-sdk/ui/blocks';
+import { Select } from '@adh-sdk/ui/components/select';
+import type { RegistryVisibility, SubmissionPolicy } from '@adh-sdk/registry/client';
 import type { RegistryDraftState, UseRegistryDraft } from './useRegistryDraft';
 
 // Order chosen for the copy below ("Only me" first, the default a brand-new registry starts

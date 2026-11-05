@@ -1,7 +1,7 @@
-# Consuming `@agentic-toolkit/*` from a Next.js App
+# Consuming `@adh-sdk/*` from a Next.js App
 
 The toolkit ships as a set of pre-built ESM packages under the
-`@agentic-toolkit/*` scope. Two integration patterns are supported:
+`@adh-sdk/*` scope. Two integration patterns are supported:
 
 1. **Submodule + pnpm workspace federation** (primary, used by Mike's own
    consumer repos).
@@ -47,11 +47,11 @@ In `app/package.json`:
 ```json
 {
   "dependencies": {
-    "@agenticdevelopertoolkit/chat": "workspace:*",
-    "@agenticdevelopertoolkit/controls": "workspace:*",
-    "@agenticdevelopertoolkit/model": "workspace:*",
-    "@agenticdevelopertoolkit/themes": "workspace:*",
-    "@agenticdevelopertoolkit/ui": "workspace:*"
+    "@adh-sdk/chat": "workspace:*",
+    "@adh-sdk/controls": "workspace:*",
+    "@adh-sdk/model": "workspace:*",
+    "@adh-sdk/themes": "workspace:*",
+    "@adh-sdk/ui": "workspace:*"
   }
 }
 ```
@@ -101,10 +101,10 @@ Commit the submodule SHA bump and `pnpm-lock.yaml` together.
 Once Phase 6 publishing is live:
 
 ```bash
-npm install @agenticdevelopertoolkit/chat @agenticdevelopertoolkit/themes ...
+npm install @adh-sdk/chat @adh-sdk/themes ...
 ```
 
-Configure `.npmrc` to point the `@agentic-toolkit` scope at GitHub
+Configure `.npmrc` to point the `@adh-sdk` scope at GitHub
 Packages with a token that has `read:packages` (and `write:packages` for
 publishing).
 
@@ -120,8 +120,8 @@ identical to Pattern A from `app/layout.tsx` down.
 ```tsx
 import type { Metadata } from 'next'
 import type { ReactNode } from 'react'
-import { ColorModeProvider } from '@agenticdevelopertoolkit/themes'
-import { ThemeStyle } from '@agenticdevelopertoolkit/themes'
+import { ColorModeProvider } from '@adh-sdk/themes'
+import { ThemeStyle } from '@adh-sdk/themes'
 import './globals.css'
 
 export const metadata: Metadata = {
@@ -151,14 +151,14 @@ mismatch.
 
 ```css
 @import 'tailwindcss';
-@import '@agenticdevelopertoolkit/ui/styles/globals.css';
-@import '@agenticdevelopertoolkit/themes/styles/agenticdevelopmentstudioweb.css';
+@import '@adh-sdk/ui/styles/globals.css';
+@import '@adh-sdk/themes/styles/agenticdevelopmentstudioweb.css';
 
 /* Pattern A (submodule) — scan toolkit's built dist for utility classes */
 @source "../../external/agentic-web-toolkit/packages/*/dist/**/*.{js,d.ts}";
 
 /* Pattern B (published) — scan node_modules instead */
-/* @source "../node_modules/@agentic-toolkit/*/dist/**/*.{js,d.ts}"; */
+/* @source "../node_modules/@adh-sdk/*/dist/**/*.{js,d.ts}"; */
 ```
 
 Pick one `@source` directive depending on which integration pattern you're
@@ -201,10 +201,10 @@ entries:
 
 ```tsx
 'use client'
-import { InlineChat, FetchBackend } from '@agenticdevelopertoolkit/chat'
-import { FilteredList } from '@agenticdevelopertoolkit/controls/filtered-list'
-import { useColorMode } from '@agenticdevelopertoolkit/themes'
-import { ContentProvider } from '@agenticdevelopertoolkit/model'
+import { InlineChat, FetchBackend } from '@adh-sdk/chat'
+import { FilteredList } from '@adh-sdk/controls/filtered-list'
+import { useColorMode } from '@adh-sdk/themes'
+import { ContentProvider } from '@adh-sdk/model'
 ```
 
 Most toolkit components carry their own `"use client"` directive — you don't
@@ -220,7 +220,7 @@ hooks or browser-only APIs.
   `cd … && npm install && cd … && npm run build` will leak orphan node
   processes if the build is killed mid-flight. Install once at the
   workspace root; let `pnpm -r` orchestrate the rest.
-- **Don't set `transpilePackages`** for `@agentic-toolkit/*`. The
+- **Don't set `transpilePackages`** for `@adh-sdk/*`. The
   packages already ship as Next-compatible ESM with directives preserved;
   re-transpiling them strips those directives and breaks SSR.
 - **CSS imports must hit the package's exported `styles/*.css` paths**, not

@@ -2,7 +2,7 @@
 
 // Owner-decoupled STORAGE-access token principals (the `adh_…` secrets), each with its own
 // isolated bucket. Distinct from the PERSONAL API tokens the user-settings panel mints
-// (`tmp_…`, @agentic-toolkit/authentication's TokensPanel) — same noun, different principal.
+// (`tmp_…`, @adh-sdk/authentication's TokensPanel) — same noun, different principal.
 //
 // Hand-written wire types in ./wire, for the reason feature-flags.ts states.
 

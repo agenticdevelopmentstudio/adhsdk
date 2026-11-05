@@ -3,7 +3,7 @@
   "meta": {
     "id": "d76fe59c-9633-4d9f-82c7-4091c5e7f54e",
     "title": "Row Detail",
-    "domain": "adtoolkit://cookbook/status/dashboard/logic/row-detail",
+    "domain": "adhsdk://cookbook/status/dashboard/logic/row-detail",
     "type": "ingredient",
     "version": "1.1.0",
     "status": "review",
@@ -21,7 +21,7 @@
     "tags": [],
     "depends-on": [],
     "related": [
-      "adtoolkit://cookbook/status/dashboard/logic/deploy-display"
+      "adhsdk://cookbook/status/dashboard/logic/deploy-display"
     ],
     "references": [],
     "approved-by": "",

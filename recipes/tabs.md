@@ -1,7 +1,7 @@
 ---
 id: fb3a0db4-691e-4025-a391-2853908248b5
 title: Tabs
-domain: agenticdevelopertoolkit://recipes/tabs
+domain: adhsdk://recipes/tabs
 type: ingredient
 version: 1.1.1
 status: review

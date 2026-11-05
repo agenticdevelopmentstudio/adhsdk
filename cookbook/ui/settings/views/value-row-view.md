@@ -1,7 +1,7 @@
 ---
 id: D0AA6237-E5D7-4CF8-A1CB-621033575421
 title: "Value Row View"
-domain: adtoolkit://cookbook/ui/settings/views/value-row-view
+domain: adhsdk://cookbook/ui/settings/views/value-row-view
 type: ingredient
 version: 1.0.1
 status: review
@@ -21,7 +21,7 @@ tags:
   - row
 depends-on: []
 related:
-  - adtoolkit://cookbook/ui/settings/views/money-field-view
+  - adhsdk://cookbook/ui/settings/views/money-field-view
 references: []
 approved-by: ""
 approved-date: ""
@@ -139,7 +139,7 @@ Not applicable: the component performs no logging of its own.
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/macOS/SystemIntegration/ComposableSettingsWindow/Views/ValueRowView.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/Views/ValueRowView.swift` |
 
 ## Design Decisions
 

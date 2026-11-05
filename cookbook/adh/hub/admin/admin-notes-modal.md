@@ -1,7 +1,7 @@
 ---
 id: 589babce-b66e-447f-8049-f81af380bbef
 title: "Admin Notes Modal"
-domain: adtoolkit://cookbook/adh/hub/admin/admin-notes-modal
+domain: adhsdk://cookbook/adh/hub/admin/admin-notes-modal
 type: ingredient
 version: 1.2.2
 status: review
@@ -21,10 +21,10 @@ tags:
   - admin
   - list-detail
 depends-on:
-  - agenticdevelopertoolkit://recipes/dialog
-  - agenticdevelopertoolkit://recipes/list-with-details-pane
-  - agenticdevelopertoolkit://recipes/button
-  - agenticdevelopertoolkit://recipes/textarea
+  - adhsdk://recipes/dialog
+  - adhsdk://recipes/list-with-details-pane
+  - adhsdk://recipes/button
+  - adhsdk://recipes/textarea
 related: []
 references: []
 approved-by: ""
@@ -42,7 +42,7 @@ against that staged copy through a list-with-details pane and a nested note edit
 reports the result to the caller when Save is activated. Fetching and the actual persistence
 write live in the caller, never in this component. The "New note" control is supplied to the
 list-with-details pane as one of its actions; the list-with-details pane renders it and owns
-its placement — see `agenticdevelopertoolkit://recipes/list-with-details-pane`.
+its placement — see `adhsdk://recipes/list-with-details-pane`.
 
 A note record is used here with exactly seven fields: `id`, `content`, `author`,
 `addedDate`, `modifiedDate`, `subjectTable`, and `subjectId`, all strings. `addedDate` and
@@ -156,15 +156,15 @@ A note record is used here with exactly seven fields: `id`, `content`, `author`,
 ## Accessibility
 
 - Role and keyboard/focus-trap behavior for both dialogs (outer and note editor) come
-  unmodified from the shared dialog ingredient; see `agenticdevelopertoolkit://recipes/dialog`
+  unmodified from the shared dialog ingredient; see `adhsdk://recipes/dialog`
   rather than restating it here.
 - The note list carries the accessible label "Admin notes" (supplied to the list-with-details
   pane); how that label is applied internally is the list-with-details pane's own concern —
-  see `agenticdevelopertoolkit://recipes/list-with-details-pane`.
+  see `adhsdk://recipes/list-with-details-pane`.
 - The note editor's text field carries an accessible label of "Note content".
 - Cancel/Save (outer) and Cancel/Save/Edit (editor and detail pane) are all instances of the
   shared button ingredient, with visible text labels and native keyboard activation; see
-  `agenticdevelopertoolkit://recipes/button`.
+  `adhsdk://recipes/button`.
 - Touch/click target sizing for every control in this component is the shared button
   ingredient's concern (all instances use its small size variant) and is not restated here.
 - The source defines no live-region announcement and no visual indicator tied to `busy`
@@ -300,13 +300,13 @@ Not applicable: the source contains no logging call.
 ## Platform Notes
 
 - **React/Web**: The component (`AdminNotesModal`) lives at
-  `packages/web/packages/adh-ui/src/blocks/admin-notes-modal.tsx` in `@agentic-toolkit/adh-ui`,
+  `packages/web/packages/adh-ui/src/blocks/admin-notes-modal.tsx` in `@adh-sdk/adh-ui`,
   and composes `Dialog`/`DialogContent`/`DialogHeader`/`DialogTitle`/`DialogFooter` and
-  `Textarea` from `@agenticdevelopertoolkit/ui/components/dialog` and
-  `@agenticdevelopertoolkit/ui/components/textarea`, `Button` from
-  `@agenticdevelopertoolkit/ui/components/button`, `ListWithDetailsPane` and
-  `DataTableColumn` from `@agenticdevelopertoolkit/ui/blocks/list-with-details-pane`
-  and `@agenticdevelopertoolkit/ui/components/data-table`, and the `AdminNote` type
+  `Textarea` from `@adh-sdk/ui/components/dialog` and
+  `@adh-sdk/ui/components/textarea`, `Button` from
+  `@adh-sdk/ui/components/button`, `ListWithDetailsPane` and
+  `DataTableColumn` from `@adh-sdk/ui/blocks/list-with-details-pane`
+  and `@adh-sdk/ui/components/data-table`, and the `AdminNote` type
   from `../lib/invitations-types`. Two independent `Dialog` roots are controlled by
   the `open` and `editorOpen` state values respectively; the staged working list is
   held in a `working` state value. The "New note" control is supplied to
@@ -436,4 +436,4 @@ own unmodified behavior.
 | 1.1.2 | 2026-09-25 | Mike Fullerton | Moved into the library cookbook; added Reference Implementations. |
 | 1.2.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to adh/hub/admin/. |
 | 1.2.1 | 2026-10-04 | Mike Fullerton | Add separation-of-concerns and unit-test-coverage compliance. |
-| 1.2.2 | 2026-10-04 | Mike Fullerton | Legacy recipe citations restored to the legacy recipes' own agenticdevelopertoolkit://recipes/ domains; the adtoolkit://recipes/ form named nothing. |
+| 1.2.2 | 2026-10-04 | Mike Fullerton | Legacy recipe citations restored to the legacy recipes' own adhsdk://recipes/ domains; the adhsdk://recipes/ form named nothing. |

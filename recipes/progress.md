@@ -1,7 +1,7 @@
 ---
 id: b3a92adc-a28e-4a33-8120-c33f8f0abdf6
 title: Progress
-domain: agenticdevelopertoolkit://recipes/progress
+domain: adhsdk://recipes/progress
 type: ingredient
 version: 1.2.1
 status: review
@@ -22,7 +22,7 @@ tags:
 - ui
 depends-on: []
 related:
-- agenticdevelopertoolkit://recipes/progress-modal
+- adhsdk://recipes/progress-modal
 references: []
 approved-by: ''
 approved-date: ''
@@ -36,11 +36,11 @@ This recipe covers two independent components that cookr's name-only grouping me
 under one "progress" row, because they share no source and no API:
 
 - **UI** (`Progress`, source: `packages/web/packages/ui/src/components/progress.tsx`):
-  a self-contained determinate progress bar exported from `@agenticdevelopertoolkit/ui`.
+  a self-contained determinate progress bar exported from `@adh-sdk/ui`.
 - **Controls** (`Progress`/`ProgressProps`, source:
   `packages/web/packages/controls/src/user-settings/components/Progress.tsx`): a labeled,
   indeterminate-capable form-field control exported from
-  `@agenticdevelopertoolkit/controls`'s `user-settings` module.
+  `@adh-sdk/controls`'s `user-settings` module.
 
 Every requirement, appearance note, configuration option, and test vector below is tagged
 with the component (UI or Controls) it describes.
@@ -57,7 +57,7 @@ hides it entirely (`translateX(-100%)`) and a `value` of 100 reveals it fully
 be re-tinted per context via `indicatorClassName` — e.g. amber while a job is
 building, green once it completes.
 
-A single export ships from `@agenticdevelopertoolkit/ui/components/progress`: the `Progress`
+A single export ships from `@adh-sdk/ui/components/progress`: the `Progress`
 component. It carries `"use client"` (it renders an inline `style` transform) but
 holds no internal state — `value` is fully controlled by the consumer.
 
@@ -66,7 +66,7 @@ around an optional `label`, the `role="progressbar"` track (`aws-progress`/
 `aws-progress__bar`), and an optional `hint`. Unlike the UI bar, it supports an
 `indeterminate` mode and a configurable `max`, but it does not clamp or round the value
 it reports, does not forward arbitrary props, and has no `indicatorClassName` equivalent.
-It ships from `@agenticdevelopertoolkit/controls`'s `user-settings` entry point alongside
+It ships from `@adh-sdk/controls`'s `user-settings` entry point alongside
 the package's other settings-panel form controls.
 
 ## Behavioral Requirements
@@ -284,7 +284,7 @@ telemetry around a job's progress belong to the consumer, not the bar.
 
 ## Platform Notes
 
-- **Web/TypeScript**: Two files. `packages/web/packages/ui/src/components/progress.tsx` (UI) carries `"use client"` because it renders an inline `style` transform, but holds no internal state — `value` is fully controlled by the consumer. Demo in `ui-showcase` Topic `progress` (regenerate `sources.generated.ts` after source changes via `gen-sources.py`). `packages/web/packages/controls/src/user-settings/components/Progress.tsx` (Controls) is a plain function component with no client directive; it ships from the `user-settings` entry point of `@agenticdevelopertoolkit/controls`.
+- **Web/TypeScript**: Two files. `packages/web/packages/ui/src/components/progress.tsx` (UI) carries `"use client"` because it renders an inline `style` transform, but holds no internal state — `value` is fully controlled by the consumer. Demo in `ui-showcase` Topic `progress` (regenerate `sources.generated.ts` after source changes via `gen-sources.py`). `packages/web/packages/controls/src/user-settings/components/Progress.tsx` (Controls) is a plain function component with no client directive; it ships from the `user-settings` entry point of `@adh-sdk/controls`.
 - **SwiftUI**: Start from `ProgressView(value: clampedValue, total: 100)` with the `.linear` `progressViewStyle` (or a custom `ProgressViewStyle` only if the track/fill need token colors the default style doesn't expose); clamp the incoming value to 0–100 before computing `clampedValue`, mirroring `#requirements/clamps-below-zero` and `#requirements/clamps-above-hundred`, and round it the same way as `#requirements/reflects-value-in-valuenow` before exposing it through `accessibilityValue`. `ProgressView` already draws and animates its own fill — no compositor translation modifier is needed; tint via `.tint(_:)` or the style's tint color. For the Controls variant's `indeterminate` prop, use `ProgressView()` with no `value`/`total` — SwiftUI's own indeterminate spinner — instead of computing a fraction; its `label`/`hint` map to `ProgressView(_:value:total:)`'s label and a `Text` caption below.
 - **Compose**: Clamp the incoming value to 0–100 first, mirroring `#requirements/clamps-below-zero` and `#requirements/clamps-above-hundred`, then use `LinearProgressIndicator` with `progress = clampedValue / 100f` (the composable takes a 0–1 `Float`, not 0–100); round that same clamped value the way `#requirements/reflects-value-in-valuenow` does before exposing it through `Modifier.semantics { progressBarRangeInfo = ... }`. Tint via the `color`/`trackColor` parameters. `LinearProgressIndicator` already draws and animates its own fill — no `Modifier.graphicsLayer()` translation is needed. For the Controls variant's `indeterminate` prop, use `LinearProgressIndicator()` with no `progress` argument — Compose's own indeterminate mode — instead of computing a fraction; `label`/`hint` map to a `Text` above/below the indicator.
 - **AppKit / UIKit**: `NSProgressIndicator` (AppKit) defaults to `isIndeterminate = true` — set it to `false` (and `style = .bar`) to get a determinate bar. `UIProgressView` (UIKit) is determinate-only by default, no flag needed. Clamp the incoming value to 0–100 before setting `doubleValue` (AppKit) or the 0–1 `progress` (UIKit), mirroring `#requirements/clamps-below-zero` and `#requirements/clamps-above-hundred`, and round it the same way as `#requirements/reflects-value-in-valuenow` before exposing it via `accessibilityValue`. Configure either with a custom tint and animate progress updates on the main thread. For the Controls variant's `indeterminate` prop, leave `NSProgressIndicator.isIndeterminate = true` (AppKit's native indeterminate mode) or substitute a `UIActivityIndicatorView` (UIKit, which has no built-in indeterminate progress bar); `label`/`hint` map to a caption `NSTextField`/`UILabel`.

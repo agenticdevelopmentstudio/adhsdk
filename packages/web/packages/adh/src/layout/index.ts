@@ -5,8 +5,8 @@ export type { AdhAppShellProps } from './AdhAppShell'
 export { HierarchicalDetailViewFlag } from './HierarchicalDetailViewFlag'
 // Also mounted by AdhAppShell; `slideNavigate` is the call a link makes to slide instead of cut.
 // By package path, like AdhAppShell's import: one copy of the slide state for every entry.
-export { SlideTransitions, slideNavigate, canSlide } from '@agentic-toolkit/adh/layout/SlideNavigation'
-export type { SlideDirection } from '@agentic-toolkit/adh/layout/SlideNavigation'
+export { SlideTransitions, slideNavigate, canSlide } from '@adh-sdk/adh/layout/SlideNavigation'
+export type { SlideDirection } from '@adh-sdk/adh/layout/SlideNavigation'
 export { AppErrorBoundary } from './AppErrorBoundary'
 export { ErrorFallback } from './ErrorFallback'
 export { RouteError } from './RouteError'

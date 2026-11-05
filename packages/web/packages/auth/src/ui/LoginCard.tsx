@@ -461,7 +461,7 @@ export function LoginCard({
             {/* The one field on this card that WANTS a password manager. It says so with
                 the standard token, which is also the fleet's single declaration of intent:
                 everything built on the shared Input opts managers OUT unless a real
-                autofill token is named (see @agenticdevelopertoolkit/ui lib/autofill). */}
+                autofill token is named (see @adh-sdk/ui lib/autofill). */}
             <input
               id="auth-password"
               type="password"

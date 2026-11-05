@@ -1,7 +1,7 @@
 ---
 id: ae44bde0-fcb3-49ff-9c8e-83ca6d3c5f69
 title: "Status Server"
-domain: adtoolkit://cookbook/status/service/status-server
+domain: adhsdk://cookbook/status/service/status-server
 type: ingredient
 version: 1.1.0
 status: review
@@ -161,7 +161,7 @@ All logging is plain `console.error`; there is no logger subsystem or category.
 
 ## Platform Notes
 
-- **TypeScript/Node.js**: Source uses OpenAPIHono (a type-safe HTTP framework) with Hono middleware. CORS, body-limit, and error handling are middleware layers. Single-flight caching uses a custom utility (`cachedSingleFlight` from `@agentic-toolkit/deploy-platform/util`). Scheduler uses `setInterval` and `setTimeout` for interval-based and watchdog timing. Storage is an abstract interface (`Storage` port), allowing pluggable implementations (e.g., Drizzle ORM).
+- **TypeScript/Node.js**: Source uses OpenAPIHono (a type-safe HTTP framework) with Hono middleware. CORS, body-limit, and error handling are middleware layers. Single-flight caching uses a custom utility (`cachedSingleFlight` from `@adh-sdk/deploy-platform/util`). Scheduler uses `setInterval` and `setTimeout` for interval-based and watchdog timing. Storage is an abstract interface (`Storage` port), allowing pluggable implementations (e.g., Drizzle ORM).
 - **Swift/Concurrency**: A port would use a server framework for HTTP (the source is a server, not a client), GCD or Swift Concurrency actors for scheduling, and a persistent store (CoreData or similar) for storage. Route registration would map to async/await handler functions. Single-flight would use an actor-protected boolean flag. Staleness tracking would use optional `Date` instead of `Date | null`.
 - **Kotlin/Coroutines**: A port would use a server framework such as Ktor server for HTTP, `CoroutineScope` with structured concurrency for scheduling, and Room or SQLite for storage. Watchdog would use `withTimeout` or `launch` with `cancel()`. Single-flight would use a Mutex or atomic boolean.
 - **C#/.NET**: A port would use ASP.NET Core for HTTP, `Timer` or `BackgroundService` for scheduling, and Entity Framework Core for storage. Single-flight would use `SemaphoreSlim` or a flag with lock. Staleness tracking would use `DateTime?`. CORS middleware is built into ASP.NET Core.

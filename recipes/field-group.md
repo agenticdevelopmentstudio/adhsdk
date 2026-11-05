@@ -1,7 +1,7 @@
 ---
 id: 781740e8-c83f-40a1-8215-43abfb8d8f56
 title: FieldGroup
-domain: agenticdevelopertoolkit://recipes/field-group
+domain: adhsdk://recipes/field-group
 type: recipe
 version: 1.3.1
 status: review
@@ -22,10 +22,10 @@ tags:
 - field
 - ui
 ingredients:
-- agenticdevelopertoolkit://recipes/field
+- adhsdk://recipes/field
 depends-on: []
 related:
-- agenticdevelopertoolkit://recipes/field
+- adhsdk://recipes/field
 references: []
 approved-by: ''
 approved-date: ''
@@ -35,7 +35,7 @@ approved-date: ''
 
 ## Overview
 
-The shared `FieldGroup` in `@agenticdevelopertoolkit/ui` — the standard sectioning wrapper for
+The shared `FieldGroup` in `@adh-sdk/ui` — the standard sectioning wrapper for
 settings and editor forms. It is a bordered card with an uppercase-mono title row
 across the top and its `Field` children stacked below, so a settings pane reads as a
 series of titled groups instead of a flat wall of inputs.
@@ -45,7 +45,7 @@ edge — a status line ("Saved"), a small action (a "Reset" button), or a badge 
 that belongs to the group as a whole rather than to any one field.
 
 `FieldGroup` is presentation-only: it owns no form state and imposes no field type.
-It composes the shared `Field` (`agenticdevelopertoolkit://recipes/field`) as its
+It composes the shared `Field` (`adhsdk://recipes/field`) as its
 expected children and reuses the same `fieldCaptionClass` caption treatment as the
 field caption, so the group title and the field captions share one visual language.
 
@@ -53,9 +53,9 @@ field caption, so the group title and the field captions share one visual langua
 
 | Name | Domain | Role | Required | Configuration |
 |---|---|---|---|---|
-| Field | agenticdevelopertoolkit://recipes/field | The grouped rows — each caption+control+hint/error that the group stacks | yes | Passed as `children`; the group applies `gap-3` between them |
+| Field | adhsdk://recipes/field | The grouped rows — each caption+control+hint/error that the group stacks | yes | Passed as `children`; the group applies `gap-3` between them |
 
-The group title reuses the shared `fieldCaptionClass` from `@agenticdevelopertoolkit/ui/lib/typography`
+The group title reuses the shared `fieldCaptionClass` from `@adh-sdk/ui/lib/typography`
 (the same uppercase-mono caption treatment `Field` uses), so titles and field
 captions stay visually identical. `trailing` is an arbitrary caller node
 (status text, a `Button`, a badge) — not a fixed ingredient.
@@ -140,11 +140,11 @@ group.
 
 - **SwiftUI**: Use `Form` with a `Section(header:)` as the native grouping container — `Section`'s header holds the uppercase-mono title `Text`, with an optional trailing view alongside it in an `HStack` (`.frame(maxWidth: .infinity, alignment: .trailing)` on the trailing side), and the section's content closure holds the grouped field rows in place of `children`. Outside a `Form` context, use a `GroupBox` with the same header/content split.
 - **Compose**: Use an `OutlinedCard` as the bordered container, with a `Row` header inside — an uppercase-mono `Text` title and an optional trailing composable, laid out via `Arrangement.SpaceBetween` — followed by a `Column` holding the grouped field rows in place of `children`.
-- **React/Web**: Implemented in `packages/web/packages/ui/src/blocks/field-group.tsx`, exported via `@agenticdevelopertoolkit/ui/blocks/field-group`. The component carries `"use client"` at the top of the file; nothing in its own render path (no hooks, no state, no event handlers) needs it, and the `Field` ingredient it composes ships without the directive at all. It composes `Field` (`agenticdevelopertoolkit://recipes/field`) as its children plus the shared `fieldCaptionClass` for the title. Used platform-wide as the sectioning wrapper in settings/editor panes; commonly the last group in such a pane is a destructive "danger zone" section. Verify responsive behavior via Playwright (ui-showcase) at 375 / 768 / 1440 — the title/trailing row and the stacked Fields stay usable on mobile.
+- **React/Web**: Implemented in `packages/web/packages/ui/src/blocks/field-group.tsx`, exported via `@adh-sdk/ui/blocks/field-group`. The component carries `"use client"` at the top of the file; nothing in its own render path (no hooks, no state, no event handlers) needs it, and the `Field` ingredient it composes ships without the directive at all. It composes `Field` (`adhsdk://recipes/field`) as its children plus the shared `fieldCaptionClass` for the title. Used platform-wide as the sectioning wrapper in settings/editor panes; commonly the last group in such a pane is a destructive "danger zone" section. Verify responsive behavior via Playwright (ui-showcase) at 375 / 768 / 1440 — the title/trailing row and the stacked Fields stay usable on mobile.
 - **AppKit / UIKit**: AppKit — use an `NSBox` (`.boxType = .custom`, `.borderType = .lineBorder`) as the bordered container, with its title view holding an uppercase-mono `NSTextField` and an optional trailing `NSView` laid out in a horizontal stack. UIKit — use a grouped `UITableView`/`UICollectionView` section: the section's header view carries the uppercase-mono title label and an optional trailing accessory view, and the section's rows hold the grouped fields.
 - **WinUI 3**: Use a vertical `StackPanel` with `Spacing="12"` as the root container (the web `gap-3` is 12px). Apply `Padding="12"`, `BorderBrush` bound to the border token with `BorderThickness="1"` as a literal, `CornerRadius="8"`, and `Background` bound to the surface token for the recessed card effect. Make the title row a `Grid` with `ColumnDefinitions="*,Auto"` and `ColumnSpacing="8"` (the web `gap-2`) — a `TextBlock` header (uppercase letter-spacing to match the web `fieldCaptionClass`) in column 0, and an optional trailing `UIElement` in column 1 — since a `Grid`'s columns give the trailing element real right-alignment where a horizontal `StackPanel` ignores `HorizontalAlignment` on its children. Below the title row, add a vertical `StackPanel` with its own `Spacing="12"` for the grouped field rows — `StackPanel` does not propagate `Spacing` to a nested panel, so each stack sets it explicitly. No interactive states required — the component is a stateless layout wrapper.
 
-API (`@agenticdevelopertoolkit/ui/blocks/field-group`):
+API (`@adh-sdk/ui/blocks/field-group`):
 
 ```ts
 interface FieldGroupProps {

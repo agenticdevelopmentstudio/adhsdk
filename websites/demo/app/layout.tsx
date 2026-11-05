@@ -3,9 +3,9 @@ import './globals.css'
 import './demo.css'
 import { Shell } from './Shell'
 
-const TITLE = 'Agentic Developer Toolkit — Demo'
+const TITLE = 'Agentic Developer Hub SDK — Demo'
 const DESCRIPTION =
-  'Local demo for the @agenticdevelopertoolkit chat and theme packages.'
+  'Local demo for the @adh-sdk chat and theme packages.'
 
 export const metadata: Metadata = {
   title: TITLE,

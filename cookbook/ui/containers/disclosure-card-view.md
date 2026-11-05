@@ -1,7 +1,7 @@
 ---
 id: d5aba939-471d-48cd-9a9c-888ac92adf38
 title: "Disclosure Card View"
-domain: adtoolkit://cookbook/ui/containers/disclosure-card-view
+domain: adhsdk://cookbook/ui/containers/disclosure-card-view
 type: ingredient
 version: 1.4.0
 status: review
@@ -619,7 +619,7 @@ Not applicable: the source contains no logging call.
   construct it from a storyboard/nib (`init?(coder:)`, declared
   `@available(*, unavailable)`) traps with a fatal error rather than
   returning a usable instance. Source at
-  `packages/apple/AgenticToolkit/macOS/UI/Cards/DisclosureCardView.swift`
+  `packages/apple/AgenticDeveloperHubSDK/macOS/UI/Cards/DisclosureCardView.swift`
   (this recipe's source), plus its directory-mates `PinnedEndsLine.swift`
   (the header row's pinned-ends layout), `NSStackView+FullWidth.swift`
   (`addFullWidthArrangedSubview`, used to make the body section's rows fill
@@ -655,14 +655,14 @@ Not applicable: the source contains no logging call.
   `NSFont.systemFontSize` is the literal source of this recipe's "base
   system font size" (`baseFontSize`). The status badge renders `status` via
   `NSImage.symbol(named: status.symbolName, accessibilityDescription:
-  status.accessibilityLabel)` (AgenticToolkitCoreUI's never-nil SF Symbol
+  status.accessibilityLabel)` (AgenticDeveloperHubSDKCoreUI's never-nil SF Symbol
   lookup, which substitutes a blank 16×16 template image for an unknown
   name) at a `.semibold` symbol configuration, and the title status symbol
   the same way at a point size of `scaledSize`; a placeholder is drawn at
   `alphaValue == 0`, never `isHidden`, since an `NSStackView` gives a
   hidden arranged view no room. The status badge's and title status
   symbol's accessibility role is set to `.image`. The whole-point title
-  width comes from `WholePointLabel`, AgenticToolkitCoreUI's `NSTextField`
+  width comes from `WholePointLabel`, AgenticDeveloperHubSDKCoreUI's `NSTextField`
   subclass (`CoreUI/WholePointLabel.swift`) that rounds its
   `intrinsicContentSize` width up with `ceil`.
   The card draws no shadow: it sets no `shadowColor`, `shadowRadius`, or
@@ -685,7 +685,7 @@ Not applicable: the source contains no logging call.
   width-floor constraint is `contentWidthFloor`. `color(named:)`'s
   name→role map (`"red"` → `dangerColor`, `"blue"` → `accentColor`, and so
   on) is defined outside this source, in
-  `packages/apple/AgenticDeveloperToolkit/SourcesUI/macOS/Theme/SemanticPalette+NSColor.swift`.
+  `packages/apple/AgenticDeveloperHubSDK/SDK/SourcesUI/macOS/Theme/SemanticPalette+NSColor.swift`.
 
   Public API surface (beyond construction):
   ```swift
@@ -730,7 +730,7 @@ Not applicable: the source contains no logging call.
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/macOS/UI/Cards/DisclosureCardView.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/Cards/DisclosureCardView.swift` |
 
 ## Design Decisions
 

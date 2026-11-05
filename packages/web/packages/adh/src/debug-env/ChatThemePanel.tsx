@@ -1,7 +1,7 @@
 'use client'
 
 import { Paintbrush, SwatchBook } from 'lucide-react'
-import type { TopicLevel, TopicDetailItem } from '@agenticdevelopertoolkit/ui/blocks'
+import type { TopicLevel, TopicDetailItem } from '@adh-sdk/ui/blocks'
 import type { DebugConsoleChatTheme } from './DebugConsoleProvider'
 
 const DEFAULT_ID = '__default'

@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { useState } from "react";
-import type { SiteId } from "@agentic-toolkit/adh-registry";
+import type { SiteId } from "@adh-sdk/adh-registry";
 import {
   render,
   screen,
@@ -133,7 +133,7 @@ const itemWrite = vi.fn();
 // ran before it. What the cache BUYS is asserted next door, in workspacePrefsCache.test.tsx,
 // against the real hook. (Async factory because vi.mock is hoisted above the imports, so React has
 // to be pulled in here rather than referenced from module scope.)
-vi.mock("@agentic-toolkit/data", async () => {
+vi.mock("@adh-sdk/data", async () => {
   const { useEffect, useState } = await import("react");
   return {
     useResourceList: (_cacheKey: string, load: () => Promise<unknown[]>) => {

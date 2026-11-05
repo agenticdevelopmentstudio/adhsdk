@@ -1,7 +1,7 @@
 ---
 id: ec64b22b-8a25-431d-8866-b7a01acd91fe
 title: "CrudTable"
-domain: adtoolkit://cookbook/ui/crud/crud-table
+domain: adhsdk://cookbook/ui/crud/crud-table
 type: ingredient
 version: 1.3.1
 status: review
@@ -11,7 +11,7 @@ modified: 2026-10-04
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
-summary: "Metadata-driven row list from @agentic-toolkit/crud: renders a table's PK + scalar columns from its CrudTableMeta, with per-row Edit/Delete and a New action."
+summary: "Metadata-driven row list from @adh-sdk/crud: renders a table's PK + scalar columns from its CrudTableMeta, with per-row Edit/Delete and a New action."
 platforms:
   - typescript
   - web
@@ -22,7 +22,7 @@ tags:
   - list
 depends-on: []
 related:
-  - adtoolkit://cookbook/ui/crud/crud-record-form
+  - adhsdk://cookbook/ui/crud/crud-record-form
 references: []
 approved-by: ""
 approved-date: ""
@@ -32,7 +32,7 @@ approved-date: ""
 
 ## Overview
 
-`CrudTable` in `@agentic-toolkit/crud` is a **metadata-driven** row list for one
+`CrudTable` in `@adh-sdk/crud` is a **metadata-driven** row list for one
 generic-CRUD table. Given a `CrudTableMeta` (generated from the backend OpenAPI
 spec) plus the current `rows`, it renders a plain table whose columns are chosen
 from the metadata: the primary-key column(s) first, then the remaining **scalar**
@@ -261,10 +261,10 @@ handlers (and `useCrudResource`) own any telemetry or error reporting.
 ## Platform Notes
 
 - **React / Web (TypeScript, source):** `packages/web/packages/crud/src/CrudTable.tsx`,
-  exported from `@agentic-toolkit/crud`. Built from the shared `Button`, `Spinner`, and
-  the package-local `ErrorText`; typography from `@agenticdevelopertoolkit/ui/lib/typography`
-  (`fieldCaptionClass`). Note it lives in `@agentic-toolkit/crud`, not
-  `@agenticdevelopertoolkit/ui`. Metadata comes from `src/generated/table-metadata.ts`,
+  exported from `@adh-sdk/crud`. Built from the shared `Button`, `Spinner`, and
+  the package-local `ErrorText`; typography from `@adh-sdk/ui/lib/typography`
+  (`fieldCaptionClass`). Note it lives in `@adh-sdk/crud`, not
+  `@adh-sdk/ui`. Metadata comes from `src/generated/table-metadata.ts`,
   emitted by `packages/web/packages/adh-api-types/tools/gen_table_metadata.py` from the
   backend OpenAPI spec; `rows`/`loading`/`error` are typically supplied by
   `useCrudResource(meta)`. Demo: `ui-showcase` Topic `crud-table` (feeds a static `meta` +

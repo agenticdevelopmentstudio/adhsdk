@@ -1,7 +1,7 @@
 ---
 id: bc43002d-faf6-4ffa-bc12-95f1a07f27e8
 title: "Multi-Choice Filter Button"
-domain: adtoolkit://cookbook/ui/controls/multi-choice-filter-button
+domain: adhsdk://cookbook/ui/controls/multi-choice-filter-button
 type: ingredient
 version: 1.3.0
 status: review
@@ -363,7 +363,7 @@ Not applicable: this component's own source contains no logging call.
   multiple picks, unlike the source's per-pick close, so matching the
   source exactly means closing the menu explicitly after each selection.
 - **AppKit / UIKit** (source platform): Source file
-  `packages/apple/AgenticToolkit/macOS/UI/Controls/MultiChoiceFilterButton.swift`.
+  `packages/apple/AgenticDeveloperHubSDK/macOS/UI/Controls/MultiChoiceFilterButton.swift`.
   A macOS-only (`import AppKit`) `NSPopUpButton` subclass, `@MainActor`,
   configured `pullsDown: true`. `confines-to-ui-thread` is enforced by
   the class being declared `@MainActor`, so construction or mutation from
@@ -425,7 +425,7 @@ Not applicable: this component's own source contains no logging call.
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/macOS/UI/Controls/MultiChoiceFilterButton.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/Controls/MultiChoiceFilterButton.swift` |
 
 ## Design Decisions
 

@@ -1,7 +1,7 @@
 ---
 id: 2df97a02-a680-45c4-8763-f07c7f470f84
 title: "Status Server Monitor Webhook Verify"
-domain: adtoolkit://cookbook/status/service/monitor/webhook-verify
+domain: adhsdk://cookbook/status/service/monitor/webhook-verify
 type: ingredient
 version: 1.0.3
 status: review
@@ -24,11 +24,11 @@ depends-on:
   - agenticdevelopercookbook://principles/separation-of-concerns
   - agenticdevelopercookbook://principles/fail-fast
 related:
-  - adtoolkit://cookbook/status/service/monitor/webhook-events
+  - adhsdk://cookbook/status/service/monitor/webhook-events
 references:
-  - packages/web/packages/status-server/src/monitor/webhook-verify.ts (agenticdevelopertoolkit)
-  - packages/web/packages/status-server/src/routes/hooks.ts (agenticdevelopertoolkit)
-  - packages/web/packages/status-server/test/webhook-verify.test.ts (agenticdevelopertoolkit)
+  - packages/web/packages/status-server/src/monitor/webhook-verify.ts (adhsdk)
+  - packages/web/packages/status-server/src/routes/hooks.ts (adhsdk)
+  - packages/web/packages/status-server/test/webhook-verify.test.ts (adhsdk)
 approved-by: ""
 approved-date: ""
 ---

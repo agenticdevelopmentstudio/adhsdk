@@ -10,7 +10,7 @@ import type { LiveBuildIdentity } from './live-build-identity'
  * The specifier half is true; the conclusion does not follow. An external specifier is
  * still an EDGE, and the consuming site's bundler follows it. Every site's
  * `app/global-error.tsx` is `'use client'` and imports `GlobalError` from
- * `@agentic-toolkit/adh/layout`; that barrel is one `bundle: true, splitting: false` file
+ * `@adh-sdk/adh/layout`; that barrel is one `bundle: true, splitting: false` file
  * that also holds AppShell, whose import of `./server` Turbopack duly resolved and walked,
  * straight into the two builtins:
  *

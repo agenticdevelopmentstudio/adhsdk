@@ -1,7 +1,7 @@
 ---
 id: 1e58add7-d85d-4e62-b857-c5e3203795be
 title: "Screen Manager"
-domain: adtoolkit://cookbook/ui/windows/screen-manager
+domain: adhsdk://cookbook/ui/windows/screen-manager
 type: ingredient
 version: 1.2.0
 status: review
@@ -20,7 +20,7 @@ tags:
   - screens
   - persistence
 depends-on:
-  - adtoolkit://cookbook/foundation/settings-storage
+  - adhsdk://cookbook/foundation/settings-storage
 related: []
 references: []
 approved-by: ""
@@ -268,7 +268,7 @@ Spurious notifications, touches, reconciles, loads and saves are not logged.
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/macOS/SystemIntegration/WindowManager/ScreenManager/` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/WindowManager/ScreenManager/` |
 
 ## Design Decisions
 

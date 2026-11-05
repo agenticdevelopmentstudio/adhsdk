@@ -1,7 +1,7 @@
 ---
 id: 85ce8c4b-5233-48af-9268-30cddd4747f9
 title: Accordion
-domain: agenticdevelopertoolkit://recipes/accordion
+domain: adhsdk://recipes/accordion
 type: ingredient
 version: 1.2.2
 status: review

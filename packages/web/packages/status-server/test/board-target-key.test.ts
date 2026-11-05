@@ -20,7 +20,7 @@ describe("boardTargetKey", () => {
   });
 
   it("agrees with the vendored deployTargetKey when the id is the project name", async () => {
-    const { deployTargetKey } = await import("@agentic-toolkit/deploy-platform");
+    const { deployTargetKey } = await import("@adh-sdk/deploy-platform");
     for (const [p, proj, env] of [
       ["vercel", "hub-help-testing", "production"],
       ["railway", "adh-backend", "scratch1"],

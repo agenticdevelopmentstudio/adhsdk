@@ -3,7 +3,7 @@
   "meta": {
     "id": "355a8f54-aee5-45cd-a28d-12c3b7a3085c",
     "title": "Sync Engine",
-    "domain": "adtoolkit://cookbook/data/sync/sync-engine",
+    "domain": "adhsdk://cookbook/data/sync/sync-engine",
     "type": "ingredient",
     "version": "1.2.0",
     "status": "review",
@@ -26,17 +26,17 @@
     ],
     "depends-on": [],
     "related": [
-      "adtoolkit://cookbook/data/sync/offline-sync-client"
+      "adhsdk://cookbook/data/sync/offline-sync-client"
     ],
     "references": [
-      "packages/apple/AgenticToolkit/Sync/SyncEngine.swift",
-      "packages/apple/AgenticToolkit/Sync/SyncEvents.swift",
-      "packages/apple/AgenticToolkit/Sync/SyncProtocols.swift",
-      "packages/apple/AgenticToolkit/Sync/SyncWire.swift",
-      "packages/apple/AgenticToolkit/Sync/JSONValue.swift",
-      "packages/apple/AgenticToolkit/Sync/SyncID.swift",
-      "packages/apple/AgenticToolkit/Sync/ADHSyncCatalog.swift",
-      "packages/apple/AgenticToolkit/Tests/AgenticToolkitSyncTests/SyncEngineTests.swift"
+      "packages/apple/AgenticDeveloperHubSDK/Sync/SyncEngine.swift",
+      "packages/apple/AgenticDeveloperHubSDK/Sync/SyncEvents.swift",
+      "packages/apple/AgenticDeveloperHubSDK/Sync/SyncProtocols.swift",
+      "packages/apple/AgenticDeveloperHubSDK/Sync/SyncWire.swift",
+      "packages/apple/AgenticDeveloperHubSDK/Sync/JSONValue.swift",
+      "packages/apple/AgenticDeveloperHubSDK/Sync/SyncID.swift",
+      "packages/apple/AgenticDeveloperHubSDK/Sync/ADHSyncCatalog.swift",
+      "packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKSyncTests/SyncEngineTests.swift"
     ],
     "approved-by": "",
     "approved-date": ""

@@ -3,7 +3,7 @@
   "meta": {
     "id": "c68fd42e-52e5-4129-9a13-2574d13a7a0e",
     "title": "Theme Picker View",
-    "domain": "adtoolkit://cookbook/ui/settings/rows/theme-picker-view",
+    "domain": "adhsdk://cookbook/ui/settings/rows/theme-picker-view",
     "type": "ingredient",
     "version": "1.2.2",
     "status": "review",
@@ -24,11 +24,11 @@
       "theme"
     ],
     "depends-on": [
-      "adtoolkit://cookbook/ui/settings/rows/popup-menu-choice-view",
-      "adtoolkit://cookbook/ui/settings/rows/theme-preview-view"
+      "adhsdk://cookbook/ui/settings/rows/popup-menu-choice-view",
+      "adhsdk://cookbook/ui/settings/rows/theme-preview-view"
     ],
     "related": [
-      "adtoolkit://cookbook/ui/settings/rows/font-picker-view"
+      "adhsdk://cookbook/ui/settings/rows/font-picker-view"
     ],
     "references": [],
     "approved-by": "",

@@ -1,7 +1,7 @@
 ---
 id: C1CAA827-F7F1-4E69-B4C6-ADBFEF22E636
 title: "Billing User Settings"
-domain: adtoolkit://cookbook/foundation/billing/billing-user-settings
+domain: adhsdk://cookbook/foundation/billing/billing-user-settings
 type: ingredient
 version: 1.0.1
 status: review
@@ -21,8 +21,8 @@ tags:
   - settings
 depends-on: []
 related:
-  - adtoolkit://cookbook/foundation/billing/billing-prefs
-  - adtoolkit://cookbook/foundation/billing/billing-dt-os
+  - adhsdk://cookbook/foundation/billing/billing-prefs
+  - adhsdk://cookbook/foundation/billing/billing-dt-os
 references: []
 approved-by: ""
 approved-date: ""
@@ -123,7 +123,7 @@ Not applicable: this code makes no log calls.
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/Core/Billing/BillingUserSettings.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Billing/BillingUserSettings.swift` |
 
 ## Design Decisions
 
@@ -138,7 +138,7 @@ Not applicable: this code makes no log calls.
 | [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
 | [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | partial | Best Practices |
 
-separation-of-concerns passes: the holder only binds keys to defaults; the key set, defaults and storage are injected or shared. unit-test-coverage is partial: `BillingSettingsPanelTests`, `ClientsWindowControllerTests` and `ProjectsWindowControllerTests` in `AgenticToolkitMacOSTests` build and use the holder, but no test asserts the defaults or key mapping directly.
+separation-of-concerns passes: the holder only binds keys to defaults; the key set, defaults and storage are injected or shared. unit-test-coverage is partial: `BillingSettingsPanelTests`, `ClientsWindowControllerTests` and `ProjectsWindowControllerTests` in `AgenticDeveloperHubSDKMacOSTests` build and use the holder, but no test asserts the defaults or key mapping directly.
 
 ## Change History
 

@@ -1,4 +1,4 @@
-// `@agentic-toolkit/status-server/libsql` — the libSQL/SQLite storage implementation:
+// `@adh-sdk/status-server/libsql` — the libSQL/SQLite storage implementation:
 // connection, tuning, checkpointing, migrations, the drizzle schema, and the
 // concrete `Storage` port adapters (the only place in this package permitted to
 // speak drizzle/@libsql — see ../storage/ports.ts for the interfaces themselves).

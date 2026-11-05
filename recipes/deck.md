@@ -1,7 +1,7 @@
 ---
 id: 05930e64-fa82-49ef-b50d-22d87fa7d182
 title: Deck
-domain: agenticdevelopertoolkit://recipes/deck
+domain: adhsdk://recipes/deck
 type: ingredient
 version: 1.1.1
 status: review
@@ -23,8 +23,8 @@ tags:
 - focus
 depends-on: []
 related:
-- agenticdevelopertoolkit://recipes/flow
-- agenticdevelopertoolkit://recipes/nav-chrome
+- adhsdk://recipes/flow
+- adhsdk://recipes/nav-chrome
 references: []
 approved-by: ''
 approved-date: ''

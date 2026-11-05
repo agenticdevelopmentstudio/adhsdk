@@ -12,7 +12,7 @@ import {
   indexLiveProjects,
   type StatusAddApi,
   type EndpointLite,
-} from '@agentic-toolkit/deploy-platform/engine';
+} from '@adh-sdk/deploy-platform/engine';
 import { buildDeployProjects, refreshAndEnumerateDeployProjects } from './reads';
 import { platformCanon } from '../monitor/overview';
 

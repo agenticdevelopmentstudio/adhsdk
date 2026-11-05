@@ -4,7 +4,7 @@ import {
   canonicalHostByWorker,
   resolveCfAccountId,
   _resetCfAccountCache,
-} from '@agentic-toolkit/deploy-platform/providers';
+} from '@adh-sdk/deploy-platform/providers';
 
 afterEach(() => {
   vi.unstubAllGlobals();

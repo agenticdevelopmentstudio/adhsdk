@@ -9,7 +9,7 @@ import {
   readCachedWorkspace,
   writeCachedWorkspace,
   type WorkspacePrefs,
-} from '@agentic-toolkit/data'
+} from '@adh-sdk/data'
 import type { WorkspaceOption } from './WorkspaceOption'
 
 /**

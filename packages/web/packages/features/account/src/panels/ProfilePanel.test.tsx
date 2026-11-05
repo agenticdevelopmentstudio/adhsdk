@@ -4,7 +4,7 @@ import { act, render, screen, fireEvent, cleanup, waitFor } from "@testing-libra
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ProfilePanel, type ProfilePanelProps } from "./ProfilePanel";
 import { listContacts } from "../api/account";
-import { listSocialLinks, listAddresses, getPrivacyGrants } from "@agentic-toolkit/data/profile";
+import { listSocialLinks, listAddresses, getPrivacyGrants } from "@adh-sdk/data/profile";
 import type { Me } from "../api/auth";
 
 // Unlike the admin dialogs (which call their mutation hooks internally behind a
@@ -65,8 +65,8 @@ vi.mock("../api/account", async (importOriginal) => {
 // resolvePrivacyLevel/setPrivacyGrant/socialLinksKey/addressesKey/PRIVACY_KEY stay real
 // (pure helpers / key builders — AvatarSection calls resolvePrivacyLevel and
 // setPrivacyGrant directly) — only the network-calling list functions are stubbed.
-vi.mock("@agentic-toolkit/data/profile", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("@agentic-toolkit/data/profile")>();
+vi.mock("@adh-sdk/data/profile", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@adh-sdk/data/profile")>();
   return {
     ...actual,
     listSocialLinks: vi.fn().mockResolvedValue([]),

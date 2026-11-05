@@ -5,7 +5,7 @@ import Testing
 @testable import AgenticDeveloperHubClient
 
 /// `EmbeddedDaemon` is the only view of the in-process daemon that the hub
-/// modules get: agentictoolkit cannot link `ADHDPipeline` without a cycle.
+/// modules get: adhsdk cannot link `ADHDPipeline` without a cycle.
 /// These pin the contract a conformer is held to — lifecycle calls reach it,
 /// and the transport it hands out is its own.
 @Suite("EmbeddedDaemon")

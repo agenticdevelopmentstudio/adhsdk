@@ -10,41 +10,41 @@ import {
   type HeaderBadge,
   type NavLink,
   type RouteSection,
-} from '@agentic-toolkit/adh/header'
+} from '@adh-sdk/adh/header'
 // The auth-source contract + the public-site default. Its own subpath, not the header
-// barrel: it is the only header module that value-imports @agentic-toolkit/auth, so a
+// barrel: it is the only header module that value-imports @adh-sdk/auth, so a
 // site that renders a nav link should not pull the auth package in behind it.
-import { useAnonymousHeaderAuth, type HeaderAuthSource } from '@agentic-toolkit/adh/header-auth'
-import { getSite, siteHeaderTitle, siteHomePath, siteProdUrl, siteUrl, type SiteId } from '@agentic-toolkit/adh-registry'
-// The participation leaf, not the '@agentic-toolkit/adh/concepts' barrel: this needs one
+import { useAnonymousHeaderAuth, type HeaderAuthSource } from '@adh-sdk/adh/header-auth'
+import { getSite, siteHeaderTitle, siteHomePath, siteProdUrl, siteUrl, type SiteId } from '@adh-sdk/adh-registry'
+// The participation leaf, not the '@adh-sdk/adh/concepts' barrel: this needs one
 // predicate, and the barrel would put the whole taxonomy (structure + content JSON)
 // behind the always-loaded header. PRESERVED IMPORT — the package path, never
 // '../concepts/participating': the concepts barrel reaches the same module, and a
 // relative specifier would give this entry its own copy of its module-level Set.
-import { isConceptSite } from '@agentic-toolkit/adh/concepts/participating'
+import { isConceptSite } from '@adh-sdk/adh/concepts/participating'
 // The shared User Settings overlay AppShell mounts around every site (Task 8). Package
 // path, not a relative one — same self-reference reason as `isConceptSite` above, and
 // see the matching `external` entry in tsup.config.ts: a relative specifier here would
 // fork SettingsOverlayContext from the copy AppShell.tsx's provider writes into, so this
 // hook would always read null even with a provider mounted.
-import { useSettingsOverlay } from '@agentic-toolkit/adh/settings'
+import { useSettingsOverlay } from '@adh-sdk/adh/settings'
 import { hasProfileRoute } from '../profile/profileRoute'
 import { SiteMenuSwitcher } from './SiteMenuSwitcher'
 import { useDebugOptions } from './useDebugOptions'
-import { SITE_TITLE_HELP_ID } from '@agentic-toolkit/adh-ui/help-ids'
+import { SITE_TITLE_HELP_ID } from '@adh-sdk/adh-ui/help-ids'
 
 import type { ReactNode } from 'react'
 
 // The notification inbox, mounted for every signed-in visitor of every site in the
 // family (see `accountActions` below). Code-split for the same reason useDebugOptions
 // splits the debug console, and here it is load-bearing rather than a nicety: this
-// header ships on every PUBLIC page, and `@agentic-toolkit/messaging` reaches
-// `@agentic-toolkit/data` for its SSE wake channel — the one dependency the header
+// header ships on every PUBLIC page, and `@adh-sdk/messaging` reaches
+// `@adh-sdk/data` for its SSE wake channel — the one dependency the header
 // entry has always kept out of its static graph (see the `home/index` note in
 // tsup.config.ts). A dynamic specifier keeps that true where it counts: an anonymous
 // visitor never fetches the chunk, because nothing renders it until `user != null`.
 const NotificationBell = dynamic(() =>
-  import('@agentic-toolkit/messaging/components/notification-bell').then((m) => m.NotificationBell),
+  import('@adh-sdk/messaging/components/notification-bell').then((m) => m.NotificationBell),
 )
 
 /**
@@ -144,7 +144,7 @@ export type SiteHeaderProps = Omit<
  * adh's header: the toolkit's registry-free {@link AdhHeader} plus everything that
  * needs the adh site registry.
  *
- * The split is the point. `@agentic-toolkit/adh`'s header knows about a bar, slots,
+ * The split is the point. `@adh-sdk/adh`'s header knows about a bar, slots,
  * badges and an auth cluster and nothing else — it resolves no site ids and holds no
  * site list, so a non-adh consumer can use it. Everything registry-shaped lives
  * HERE: the site's display name, the env-aware hub login/signup/settings hrefs, the

@@ -1,6 +1,6 @@
 import { render, screen, fireEvent, within } from '@testing-library/react'
 import { describe, it, expect, vi } from 'vitest'
-import type { CatalogFeature } from '@agentic-toolkit/data/ecosystems'
+import type { CatalogFeature } from '@adh-sdk/data/ecosystems'
 import { FeaturePickerDialog } from './FeaturePickerDialog'
 
 const feature = (key: string, label: string): CatalogFeature =>

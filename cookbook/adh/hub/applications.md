@@ -1,7 +1,7 @@
 ---
 id: 519d4419-8f80-478d-aa08-912b66bbe5cf
 title: "Hub Domain Applications"
-domain: adtoolkit://cookbook/adh/hub/applications
+domain: adhsdk://cookbook/adh/hub/applications
 type: ingredient
 version: 1.2.1
 status: review
@@ -23,12 +23,12 @@ tags:
   - api-tokens
 depends-on: []
 related:
-  - adtoolkit://cookbook/adh/hub/security/authentication-client
+  - adhsdk://cookbook/adh/hub/security/authentication-client
 references:
-  - packages/apple/AgenticToolkit/Hub/Features/Applications/ApplicationsDataSource.swift (apple)
-  - packages/apple/AgenticToolkit/Hub/Features/Applications/ApplicationsModels.swift (apple)
-  - packages/apple/AgenticToolkit/Hub/Features/Applications/ApplicationsTopic.swift (apple)
-  - packages/apple/AgenticToolkit/Tests/AgenticToolkitHubTests/ApplicationsTopicTests.swift (apple)
+  - packages/apple/AgenticDeveloperHubSDK/Hub/Features/Applications/ApplicationsDataSource.swift (apple)
+  - packages/apple/AgenticDeveloperHubSDK/Hub/Features/Applications/ApplicationsModels.swift (apple)
+  - packages/apple/AgenticDeveloperHubSDK/Hub/Features/Applications/ApplicationsTopic.swift (apple)
+  - packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKHubTests/ApplicationsTopicTests.swift (apple)
 approved-by: ""
 approved-date: ""
 ---
@@ -49,7 +49,7 @@ to label and enumerate the buckets/tables a grant can target. Every thrown error
 normalized to the shared error type before it reaches a caller, and every token
 secret this component ever holds is a transient, reveal-once-then-drop entry in an
 in-memory dictionary — the same pattern the sibling Authentication feature
-(`adtoolkit://cookbook/adh/hub/security/authentication-client`) uses for its own
+(`adhsdk://cookbook/adh/hub/security/authentication-client`) uses for its own
 API and storage tokens.
 
 ## Behavioral Requirements
@@ -482,10 +482,10 @@ Not applicable: this component contains no logging call of any kind.
   `ApplicationsTopic.swift` imports no SwiftUI and performs no rendering itself.
 - **AppKit / UIKit**: this is the source. `ApplicationsDataSource.swift`,
   `ApplicationsModels.swift`, and `ApplicationsTopic.swift` live in the `Hub` module
-  shared between the `AgenticToolkitHub-macOS` and `AgenticToolkitHub-iOS` targets
+  shared between the `AgenticDeveloperHubSDKHub-macOS` and `AgenticDeveloperHubSDKHub-iOS` targets
   (both declared in `project.yml`, one source set). None of the three files imports
   `AppKit` or `UIKit` directly — each is plain `Foundation` (`ApplicationsTopic.swift`
-  also imports `AgenticToolkitHTDV`), with the platform-specific
+  also imports `AgenticDeveloperHubSDKHTDV`), with the platform-specific
   `NSViewController`/`UIViewController` split handled entirely inside
   `FormViewController`, one layer below where these types operate.
 
@@ -596,7 +596,7 @@ Not applicable: this component contains no logging call of any kind.
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/Hub/Features/Applications/` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Hub/Features/Applications/` |
 
 ## Design Decisions
 

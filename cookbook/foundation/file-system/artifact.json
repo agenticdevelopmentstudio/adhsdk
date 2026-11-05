@@ -3,7 +3,7 @@
   "meta": {
     "id": "016f5ba0-f4ee-4b39-b1a2-83629768acdd",
     "title": "File System",
-    "domain": "adtoolkit://cookbook/foundation/file-system",
+    "domain": "adhsdk://cookbook/foundation/file-system",
     "type": "ingredient",
     "version": "1.1.1",
     "status": "review",
@@ -24,15 +24,15 @@
     ],
     "depends-on": [],
     "related": [
-      "adtoolkit://cookbook/workspace/extensions/host/extension-host",
-      "adtoolkit://cookbook/workspace/extensions/vscode-api/workspace/main-thread-workspace"
+      "adhsdk://cookbook/workspace/extensions/host/extension-host",
+      "adhsdk://cookbook/workspace/extensions/vscode-api/workspace/main-thread-workspace"
     ],
     "references": [
-      "packages/apple/AgenticToolkit/Core/FileSystem/FileSystemService.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/Core/FileSystem/FileSystemServicing.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/Core/FileSystem/FileSignature.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/Tests/AgenticToolkitCoreTests/FileSystem/FileSystemServiceTests.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/Tests/AgenticToolkitCoreTests/FileSystem/FileSignatureTests.swift (agenticdevelopertoolkit)"
+      "packages/apple/AgenticDeveloperHubSDK/Core/FileSystem/FileSystemService.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/Core/FileSystem/FileSystemServicing.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/Core/FileSystem/FileSignature.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKCoreTests/FileSystem/FileSystemServiceTests.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKCoreTests/FileSystem/FileSignatureTests.swift (adhsdk)"
     ],
     "approved-by": "",
     "approved-date": ""

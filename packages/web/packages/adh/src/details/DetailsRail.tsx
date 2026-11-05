@@ -1,9 +1,9 @@
 'use client'
 
 import { useRef, useState, type KeyboardEvent } from 'react'
-import { noAutofillProps } from '@agenticdevelopertoolkit/ui/lib/autofill'
-import { cn } from '@agenticdevelopertoolkit/ui/lib/utils'
-import { railLinkVariants } from '@agenticdevelopertoolkit/ui/lib/nav-rail'
+import { noAutofillProps } from '@adh-sdk/ui/lib/autofill'
+import { cn } from '@adh-sdk/ui/lib/utils'
+import { railLinkVariants } from '@adh-sdk/ui/lib/nav-rail'
 
 export interface RailTopic {
   id: string
@@ -76,7 +76,7 @@ export function DetailsRail({ topics, siteLabel }: { topics: RailTopic[]; siteLa
               linkRefs.current[i] = el
             }}
             href={t.href}
-            // Shared nav-rail grammar (the one home; @agenticdevelopertoolkit/ui/lib/nav-rail).
+            // Shared nav-rail grammar (the one home; @adh-sdk/ui/lib/nav-rail).
             // Still a real <a> — crawlable, keyboard-navigable, works with JS off.
             className={cn(railLinkVariants({ active: t.active, leaf: t.leaf }))}
             aria-current={t.active ? 'page' : undefined}

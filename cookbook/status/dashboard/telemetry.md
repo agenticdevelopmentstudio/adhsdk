@@ -1,7 +1,7 @@
 ---
 id: c85f8913-1112-4ba2-b78f-2b97ea2f8fba
 title: "Status Web Telemetry"
-domain: adtoolkit://cookbook/status/dashboard/telemetry
+domain: adhsdk://cookbook/status/dashboard/telemetry
 type: ingredient
 version: 1.0.2
 status: review
@@ -18,9 +18,9 @@ platforms:
 tags: []
 depends-on: []
 related:
-  - adtoolkit://cookbook/status/dashboard/state/telemetry
-  - adtoolkit://cookbook/status/service/telemetry
-  - adtoolkit://cookbook/status/dashboard/api
+  - adhsdk://cookbook/status/dashboard/state/telemetry
+  - adhsdk://cookbook/status/service/telemetry
+  - adhsdk://cookbook/status/dashboard/api
 references: []
 approved-by: ""
 approved-date: ""
@@ -36,7 +36,7 @@ The telemetry subsystem of the status dashboard's web client (`packages/web/pack
 - `ports.ts`: the ports. `FetchResult<T>`, `Fetcher<T>` and `Store<T>` describe the server-side poll-and-persist pipeline. `SnapshotCache` and `TelemetrySource` are the two client-side ports.
 - `client.ts`: "THE client composition root". It exports one `cache: SnapshotCache` (wired to the localStorage adapter `localCache`) and one `source: TelemetrySource` (wired to `liveSource`). `tursoSource` is also wired, but inactive.
 
-The [useTelemetry](adtoolkit://cookbook/status/dashboard/state/telemetry) hook uses only `cache` and `source`. Swapping the backend means changing one line in `client.ts`, and the hook, cache and panels stay the same. The server side that answers `/telemetry`, `/errors` and `/analytics` is covered by [Status Server Telemetry](adtoolkit://cookbook/status/service/telemetry). The `StatusApiClient` that every source reads through is covered by [Status Web API](adtoolkit://cookbook/status/dashboard/api).
+The [useTelemetry](adhsdk://cookbook/status/dashboard/state/telemetry) hook uses only `cache` and `source`. Swapping the backend means changing one line in `client.ts`, and the hook, cache and panels stay the same. The server side that answers `/telemetry`, `/errors` and `/analytics` is covered by [Status Server Telemetry](adhsdk://cookbook/status/service/telemetry). The `StatusApiClient` that every source reads through is covered by [Status Web API](adhsdk://cookbook/status/dashboard/api).
 
 ## Behavioral Requirements
 

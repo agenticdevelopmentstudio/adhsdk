@@ -5,8 +5,8 @@
 // second class — an `instanceof` check on this package's class would return false
 // for it, which is exactly what these tests pin.
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { AuthHttpError as ToolkitAuthHttpError } from "@agentic-toolkit/auth/client";
-import { reportUnexpectedAuthError, setAuthErrorReporter } from "@agentic-toolkit/auth";
+import { AuthHttpError as ToolkitAuthHttpError } from "@adh-sdk/auth/client";
+import { reportUnexpectedAuthError, setAuthErrorReporter } from "@adh-sdk/auth";
 import { clientRefusal, isNotFound, isConflict, isForbidden, isServiceUnavailable } from "../http";
 
 // A distinct constructor standing in for a host's own AuthHttpError (e.g.

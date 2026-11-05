@@ -1,7 +1,7 @@
 ---
 id: 8c5e2f9b-7d3a-4a1c-b8e4-9f2d1c5a7b3e
 title: Contact
-domain: agenticdevelopertoolkit://recipes/contact
+domain: adhsdk://recipes/contact
 type: ingredient
 version: 1.1.1
 status: review
@@ -21,7 +21,7 @@ tags:
 - footer
 - closing
 depends-on:
-- agenticdevelopertoolkit://recipes/closer
+- adhsdk://recipes/closer
 related: []
 references: []
 approved-by: ''
@@ -123,10 +123,10 @@ Not applicable: This component does not perform any logging.
 ## Platform Notes
 
 - **Web (TypeScript/React)**: Implemented in `packages/web/packages/landing/src/blocks/Contact.tsx`. Accepts props for title, children, mail object (with href and label), and optional colophon. Renders as a composition of the `Closer` component with an injected `<a class="lp-mail">` link and conditional `<p class="lp-colophon">` paragraph, appended after the caller's `children` in that order. CSS classes `lp-contact`, `lp-mail`, and `lp-colophon` are applied for styling via external stylesheet.
-- **SwiftUI**: Compose the SwiftUI `Closer` port (`agenticdevelopertoolkit://recipes/closer#platforms/swiftui`) rather than rebuilding its title/content layout; add a `Link` control pointing at the `mailto:` URL as an additional child after the caller's content, and conditionally append a `Text` view for the colophon.
-- **Compose**: Compose the Compose `Closer` port (`agenticdevelopertoolkit://recipes/closer#platforms/compose`) rather than rebuilding its `Column`/title/content layout; add the mailto action as `Text` with a `LinkAnnotation.Url` inside an `AnnotatedString` (`ClickableText` is deprecated) as an additional child after the caller's content, and conditionally append another `Text` for the colophon.
-- **AppKit / UIKit**: Compose the AppKit/UIKit `Closer` port (`agenticdevelopertoolkit://recipes/closer#platforms/appkit-uikit`) rather than rebuilding its stack-view/title/content layout; add a `UIButton` / `NSButton` (or link-styled control) configured to open the `mailto:` URL as an additional arranged subview after the caller's content, and conditionally append a `UILabel` / `NSTextField` for the colophon.
-- **WinUI 3**: Compose the WinUI 3 `Closer` port (`agenticdevelopertoolkit://recipes/closer#platforms/winui-3`) rather than rebuilding its `StackPanel`/title/content layout; add a `HyperlinkButton` with `NavigateUri` bound to the mail URL as an additional child after the caller's content, and conditionally append a `TextBlock` for the colophon.
+- **SwiftUI**: Compose the SwiftUI `Closer` port (`adhsdk://recipes/closer#platforms/swiftui`) rather than rebuilding its title/content layout; add a `Link` control pointing at the `mailto:` URL as an additional child after the caller's content, and conditionally append a `Text` view for the colophon.
+- **Compose**: Compose the Compose `Closer` port (`adhsdk://recipes/closer#platforms/compose`) rather than rebuilding its `Column`/title/content layout; add the mailto action as `Text` with a `LinkAnnotation.Url` inside an `AnnotatedString` (`ClickableText` is deprecated) as an additional child after the caller's content, and conditionally append another `Text` for the colophon.
+- **AppKit / UIKit**: Compose the AppKit/UIKit `Closer` port (`adhsdk://recipes/closer#platforms/appkit-uikit`) rather than rebuilding its stack-view/title/content layout; add a `UIButton` / `NSButton` (or link-styled control) configured to open the `mailto:` URL as an additional arranged subview after the caller's content, and conditionally append a `UILabel` / `NSTextField` for the colophon.
+- **WinUI 3**: Compose the WinUI 3 `Closer` port (`adhsdk://recipes/closer#platforms/winui-3`) rather than rebuilding its `StackPanel`/title/content layout; add a `HyperlinkButton` with `NavigateUri` bound to the mail URL as an additional child after the caller's content, and conditionally append a `TextBlock` for the colophon.
 
 ## Design Decisions
 

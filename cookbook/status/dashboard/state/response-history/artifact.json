@@ -3,7 +3,7 @@
   "meta": {
     "id": "f5f0f19f-065e-4484-8c81-e591eee6db3c",
     "title": "Response History",
-    "domain": "adtoolkit://cookbook/status/dashboard/state/response-history",
+    "domain": "adhsdk://cookbook/status/dashboard/state/response-history",
     "type": "ingredient",
     "version": "1.1.1",
     "status": "review",
@@ -20,10 +20,10 @@
     ],
     "tags": [],
     "depends-on": [
-      "adtoolkit://cookbook/status/dashboard/api"
+      "adhsdk://cookbook/status/dashboard/api"
     ],
     "related": [
-      "adtoolkit://cookbook/status/dashboard/state/history"
+      "adhsdk://cookbook/status/dashboard/state/history"
     ],
     "references": [],
     "approved-by": "",

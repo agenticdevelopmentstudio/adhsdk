@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
-import type { SiteId } from '@agentic-toolkit/adh-registry';
-import type { LandingPage, TourPillar, TourStep } from '@agenticdevelopertoolkit/landing';
+import type { SiteId } from '@adh-sdk/adh-registry';
+import type { LandingPage, TourPillar, TourStep } from '@adh-sdk/landing';
 /**
  * A family site's landing deck, as DATA: the kit's `LandingPage` plus the tour stop.
  *

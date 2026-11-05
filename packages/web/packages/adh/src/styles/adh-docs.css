@@ -1,9 +1,9 @@
-/* @agentic-toolkit/adh/docs — the ADH documentation shell (sidebar + article).
+/* @adh-sdk/adh/docs — the ADH documentation shell (sidebar + article).
  *
  * The CHROME (sidebar, links, layout) styles with the ADH theme tokens (--color-*), so it matches
  * the header/footer and the rest of ADH. The CONTENT prose inside the article is styled separately
- * by @agenticdevelopertoolkit/markdown's `adh-mv-*` palette (import '@agentic-toolkit/adh/help.css' or the
- * markdown styles). Import this once per app: `@import "@agentic-toolkit/adh/docs.css"`. */
+ * by @adh-sdk/markdown's `adh-mv-*` palette (import '@adh-sdk/adh/help.css' or the
+ * markdown styles). Import this once per app: `@import "@adh-sdk/adh/docs.css"`. */
 
 /* Tailwind @source registration for this package. docs/ itself styles semantically (the
  * rules below), but this stylesheet is one of the five entry points a host may import,

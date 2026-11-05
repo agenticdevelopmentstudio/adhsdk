@@ -2,10 +2,10 @@
 
 import { useRef, useState } from "react";
 
-import { useResourceItemQuery, useResourceItemWriter } from "@agentic-toolkit/data";
-import { clientAuthApi, type ApplicationClientAuth } from "@agentic-toolkit/data/ecosystem-config";
-import { ErrorText } from "@agenticdevelopertoolkit/ui/components/error-text";
-import { DetailSection, useSettingsDraft } from "@agentic-toolkit/resource";
+import { useResourceItemQuery, useResourceItemWriter } from "@adh-sdk/data";
+import { clientAuthApi, type ApplicationClientAuth } from "@adh-sdk/data/ecosystem-config";
+import { ErrorText } from "@adh-sdk/ui/components/error-text";
+import { DetailSection, useSettingsDraft } from "@adh-sdk/resource";
 import { LoginRegistrationFields } from "./ClientAuthFields";
 import {
   cleanRegistration,

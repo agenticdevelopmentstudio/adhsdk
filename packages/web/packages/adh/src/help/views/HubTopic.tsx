@@ -1,6 +1,6 @@
 'use client'
 
-import { siteProdUrl, siteUrl } from '@agentic-toolkit/adh-registry'
+import { siteProdUrl, siteUrl } from '@adh-sdk/adh-registry'
 
 import { useClientHost } from '../../header/useClientHost'
 

@@ -5,13 +5,13 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 
-vi.mock("@agentic-toolkit/data/teams", async (orig) => ({
-  ...(await orig<typeof import("@agentic-toolkit/data/teams")>()),
+vi.mock("@adh-sdk/data/teams", async (orig) => ({
+  ...(await orig<typeof import("@adh-sdk/data/teams")>()),
   teamsApi: { create: vi.fn(), update: vi.fn() },
 }));
 
 import { TeamSettingsPane } from "./TeamSettingsPane";
-import type { Team } from "@agentic-toolkit/data/teams";
+import type { Team } from "@adh-sdk/data/teams";
 
 const TEAM = {
   id: "t1",

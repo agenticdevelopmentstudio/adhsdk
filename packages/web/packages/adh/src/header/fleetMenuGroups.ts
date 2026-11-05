@@ -1,4 +1,4 @@
-import { ADMIN_SITE_IDS } from '@agentic-toolkit/adh-registry'
+import { ADMIN_SITE_IDS } from '@adh-sdk/adh-registry'
 // `import type` at the STATEMENT level, not per-specifier: `hub-rail-groups.ts` is published
 // as its own entry so the hub's data layer can read this tree without the header barrel, and
 // a per-specifier form is only guaranteed to erase the specifiers — leaving a bare

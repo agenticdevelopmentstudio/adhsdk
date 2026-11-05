@@ -4,7 +4,7 @@
 // still type-checks).
 //
 // Moved here from the hub with its subject. The sibling mapper tests (toTeam / toEcosystem /
-// monitored-sites) went to @agentic-toolkit/data earlier, each into its own domain's __tests__;
+// monitored-sites) went to @adh-sdk/data earlier, each into its own domain's __tests__;
 // toApp stayed behind only because applications-prototype was still hub glue, and it no longer is.
 import { describe, expect, it } from "vitest";
 import { toApp } from "../applications-prototype";

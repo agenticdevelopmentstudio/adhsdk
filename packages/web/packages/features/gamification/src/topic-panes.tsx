@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { SettingsDirtyProvider } from "@agentic-toolkit/resource";
+import { SettingsDirtyProvider } from "@adh-sdk/resource";
 
 import { BackfillSection } from "./BackfillSection";
 import { CatalogSection } from "./CatalogSection";

@@ -1,6 +1,6 @@
-import type { UsageRow } from "@agentic-toolkit/data/profile";
-import { formatMicros } from "@agenticdevelopertoolkit/ui/lib/money";
-import { formatBytes, formatCount } from "@agenticdevelopertoolkit/ui/lib/quantities";
+import type { UsageRow } from "@adh-sdk/data/profile";
+import { formatMicros } from "@adh-sdk/ui/lib/money";
+import { formatBytes, formatCount } from "@adh-sdk/ui/lib/quantities";
 
 /**
  * Shaping and formatting for the Usage panel — kept out of the component so the two things

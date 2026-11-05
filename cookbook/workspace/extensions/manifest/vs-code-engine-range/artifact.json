@@ -3,7 +3,7 @@
   "meta": {
     "id": "fea35fb1-9eeb-4647-b185-902c1d1cb988",
     "title": "VSCodeEngineRange",
-    "domain": "adtoolkit://cookbook/workspace/extensions/manifest/vs-code-engine-range",
+    "domain": "adhsdk://cookbook/workspace/extensions/manifest/vs-code-engine-range",
     "type": "ingredient",
     "version": "1.0.3",
     "status": "review",
@@ -26,16 +26,16 @@
     ],
     "depends-on": [],
     "related": [
-      "adtoolkit://cookbook/workspace/extensions/manifest/activation-event-matcher"
+      "adhsdk://cookbook/workspace/extensions/manifest/activation-event-matcher"
     ],
     "references": [
-      "packages/apple/AgenticToolkit/Core/Extensions/VSCodeEngineRange.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/Core/SemanticVersion.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/Tests/AgenticToolkitCoreTests/Extensions/VSCodeEngineRangeTests.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/Core/Extensions/ActivationEventMatcher.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/Core/Extensions/ExtensionRegistry.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/Core/Extensions/OpenVSXCatalog.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/Core/Extensions/VSIXInstaller.swift (agenticdevelopertoolkit)"
+      "packages/apple/AgenticDeveloperHubSDK/Core/Extensions/VSCodeEngineRange.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/Core/SemanticVersion.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKCoreTests/Extensions/VSCodeEngineRangeTests.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/Core/Extensions/ActivationEventMatcher.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/Core/Extensions/ExtensionRegistry.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/Core/Extensions/OpenVSXCatalog.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/Core/Extensions/VSIXInstaller.swift (adhsdk)"
     ],
     "approved-by": "",
     "approved-date": ""

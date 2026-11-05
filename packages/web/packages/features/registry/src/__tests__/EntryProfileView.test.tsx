@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
-import type { PublicEntry } from '@agenticdevelopertoolkit/registry-profile';
+import type { PublicEntry } from '@adh-sdk/registry-profile';
 import { EntryProfileView } from '../viewer/EntryProfileView';
 
 /** The anonymous body the server rendered — the shape `PublicEntry` insists on, nothing more. */

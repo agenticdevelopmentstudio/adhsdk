@@ -1,9 +1,9 @@
 "use client";
 
 import { Table2 } from "lucide-react";
-import { CrudDataView, CRUD_TABLES, useExitGuardChannel } from "@agentic-toolkit/crud";
-import { StackGroupDetail } from "@agentic-toolkit/resource";
-import { useRailExitGuard as useWorkspaceExitGuard } from "@agentic-toolkit/resource";
+import { CrudDataView, CRUD_TABLES, useExitGuardChannel } from "@adh-sdk/crud";
+import { StackGroupDetail } from "@adh-sdk/resource";
+import { useRailExitGuard as useWorkspaceExitGuard } from "@adh-sdk/resource";
 
 /**
  * The synced-data tables each provider's WORKER writes, in display order — drives the

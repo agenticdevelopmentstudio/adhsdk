@@ -1,4 +1,4 @@
-// @agentic-toolkit/personas — the Personas feature: a persona's identity, personality, purpose,
+// @adh-sdk/personas — the Personas feature: a persona's identity, personality, purpose,
 // knowledge, memory, and abilities, plus the persona-services (LLM provider connections) they run
 // on. The list/table/editor internals are internal; the barrel exposes the sections (for a host
 // that composes its own routing, e.g. the hub's PersonasGroupRoute/ServicesRoute), the site entry
@@ -8,7 +8,7 @@ export { ServicesSection } from "./ServicesSection";
 // PersonaEditor is exported for hosts that own their own persona LIST but want the
 // real editor — the persona registry mounts it beside its own flat table. It was
 // held back while "consumers that don't exist" was true; it no longer is. A host
-// mounting it directly MUST wrap it in `RailHostBoundary` (@agentic-toolkit/resource):
+// mounting it directly MUST wrap it in `RailHostBoundary` (@adh-sdk/resource):
 // the editor publishes its facet topics to a rail host and renders only the leaf, so
 // without one the facet tabs never appear. PersonasSection/PersonasFeature remain the
 // route for a host that wants list + editor together.

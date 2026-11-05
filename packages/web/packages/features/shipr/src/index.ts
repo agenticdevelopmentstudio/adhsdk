@@ -4,7 +4,7 @@
  * The barrel.
  *
  * This entry hoists `'use client'`, so the wire types and the API client are NOT re-exported
- * here — they live at `@agentic-toolkit/shipr/types` and `/client`, directive-free, so a
+ * here — they live at `@adh-sdk/shipr/types` and `/client`, directive-free, so a
  * server component or a route handler can use them without dragging React in. Importing
  * them from the barrel would quietly make that impossible.
  */

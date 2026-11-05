@@ -1,7 +1,7 @@
 ---
 id: fcd4bf3d-445d-4f01-99a2-ba6f71ce087b
 title: "System Windows Engine"
-domain: adtoolkit://cookbook/system/system-windows/system-windows-engine
+domain: adhsdk://cookbook/system/system-windows/system-windows-engine
 type: ingredient
 version: 1.2.0
 status: review
@@ -21,7 +21,7 @@ tags:
   - accessibility-api
 depends-on: []
 related:
-  - adtoolkit://cookbook/system/system-windows/window-explorer-view
+  - adhsdk://cookbook/system/system-windows/window-explorer-view
 references: []
 approved-by: ""
 approved-date: ""
@@ -331,12 +331,12 @@ Interpolated strings (app names, titles) use the system log's default private re
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/CoreMacOS/SystemWindows/SystemAccessibilityPermission.swift` |
-| apple | `packages/apple/AgenticToolkit/CoreMacOS/SystemWindows/SystemWindowAXHelper.swift` |
-| apple | `packages/apple/AgenticToolkit/CoreMacOS/SystemWindows/SystemWindowControlError.swift` |
-| apple | `packages/apple/AgenticToolkit/CoreMacOS/SystemWindows/SystemWindowControlling.swift` |
-| apple | `packages/apple/AgenticToolkit/CoreMacOS/SystemWindows/SystemWindowManager.swift` |
-| apple | `packages/apple/AgenticToolkit/CoreMacOS/SystemWindows/SystemWindowObserver.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/CoreMacOS/SystemWindows/SystemAccessibilityPermission.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/CoreMacOS/SystemWindows/SystemWindowAXHelper.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/CoreMacOS/SystemWindows/SystemWindowControlError.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/CoreMacOS/SystemWindows/SystemWindowControlling.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/CoreMacOS/SystemWindows/SystemWindowManager.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/CoreMacOS/SystemWindows/SystemWindowObserver.swift` |
 
 ## Design Decisions
 

@@ -9,28 +9,28 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@agenticdevelopertoolkit/ui/components/dialog";
-import { AlertModal } from "@agenticdevelopertoolkit/ui/components/alert-modal";
-import { UnsavedChangesAlert } from "@agenticdevelopertoolkit/ui/components/unsaved-changes-alert";
-import { DialogErrorText, ErrorText } from "@agenticdevelopertoolkit/ui/components/error-text";
+} from "@adh-sdk/ui/components/dialog";
+import { AlertModal } from "@adh-sdk/ui/components/alert-modal";
+import { UnsavedChangesAlert } from "@adh-sdk/ui/components/unsaved-changes-alert";
+import { DialogErrorText, ErrorText } from "@adh-sdk/ui/components/error-text";
 import {
   EditableList,
   Field,
   useEditableList,
   type EditableListColumn,
-} from "@agenticdevelopertoolkit/ui/blocks";
-import { Button } from "@agenticdevelopertoolkit/ui/components/button";
-import { Input } from "@agenticdevelopertoolkit/ui/components/input";
-import { Label } from "@agenticdevelopertoolkit/ui/components/label";
-import { Checkbox } from "@agenticdevelopertoolkit/ui/components/checkbox";
-import { tokensApi, type ApiToken } from "@agentic-toolkit/data/security";
+} from "@adh-sdk/ui/blocks";
+import { Button } from "@adh-sdk/ui/components/button";
+import { Input } from "@adh-sdk/ui/components/input";
+import { Label } from "@adh-sdk/ui/components/label";
+import { Checkbox } from "@adh-sdk/ui/components/checkbox";
+import { tokensApi, type ApiToken } from "@adh-sdk/data/security";
 import {
   ListBarActions,
   SettingsBody,
   useBulkRemove,
   useReportBusy,
   useReportSettingsDirty,
-} from "@agentic-toolkit/resource";
+} from "@adh-sdk/resource";
 import { RevealedSecret, whenOr } from "./token-detail";
 
 /**

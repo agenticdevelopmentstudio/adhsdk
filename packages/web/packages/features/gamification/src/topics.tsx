@@ -1,5 +1,5 @@
 import { Award, Settings, TrendingUp, Zap } from "lucide-react";
-import type { EcosystemsTopicConfig } from "@agentic-toolkit/ecosystems";
+import type { EcosystemsTopicConfig } from "@adh-sdk/ecosystems";
 
 /**
  * The gamification rail for a selected product: the four halves of what used to be one long
@@ -8,7 +8,7 @@ import type { EcosystemsTopicConfig } from "@agentic-toolkit/ecosystems";
  * This package is the SSoT for the ids as well as the labels, because the ids are URL segments:
  * `…/<productId>/levels` has to keep meaning the ladder after the site and the hub have drifted
  * apart. A host spreads this array rather than restating it — the same contract
- * `IN_PACKAGE_TOPICS` has in @agentic-toolkit/ecosystems.
+ * `IN_PACKAGE_TOPICS` has in @adh-sdk/ecosystems.
  *
  * `settings` is deliberately the same id the ecosystems package uses for the ecosystem RECORD
  * pane. It is not a collision to route around: on this site the product's record is not on the

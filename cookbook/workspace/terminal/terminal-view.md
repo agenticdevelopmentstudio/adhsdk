@@ -1,7 +1,7 @@
 ---
 id: 2cd6ffc0-e9db-425b-99ba-eb826ffff118
 title: "Themed Terminal View (Hollow Caret)"
-domain: adtoolkit://cookbook/workspace/terminal/terminal-view
+domain: adhsdk://cookbook/workspace/terminal/terminal-view
 type: ingredient
 version: 1.3.1
 status: review
@@ -20,7 +20,7 @@ tags:
   - caret
   - composable-tabs
 depends-on:
-  - adtoolkit://cookbook/ui/layout/composable-tabs/active-pane
+  - adhsdk://cookbook/ui/layout/composable-tabs/active-pane
 related: []
 references:
   - https://github.com/migueldeicaza/SwiftTerm/blob/8e7a1e154f470e19c709a00a8768df348ba5fc43/Sources/SwiftTerm/TerminalOptions.swift
@@ -241,7 +241,7 @@ runtime conformance vector (see Design Decisions).
   marks-active-pane flag is `true`**: the caret stays filled regardless
   of the marks-active-pane flag — only the always-hollow flag can force
   it hollow outside composable-tabs context — because
-  `adtoolkit://cookbook/ui/layout/composable-tabs/active-pane#requirements/view-outside-any-pane-counts-as-active`
+  `adhsdk://cookbook/ui/layout/composable-tabs/active-pane#requirements/view-outside-any-pane-counts-as-active`
   treats such a view as always "in the active pane."
 - **Multiple instances across different windows**: each instance ignores
   a change notification whose named window does not match its own
@@ -363,7 +363,7 @@ Not applicable: the source contains no logging calls.
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/macOS/Features/TerminalSession/ThemedTerminalView.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/TerminalSession/ThemedTerminalView.swift` |
 
 ## Design Decisions
 
@@ -383,7 +383,7 @@ Not applicable: the source contains no logging calls.
 **Rationale**: A MUST requirement enforced entirely by the type system needs no runtime test to demonstrate — violating it is a compile error, not an outcome a test vector could observe.
 **Approved**: pending
 
-**Decision**: `ThemedTerminalView` relies on `ComposableTabsActivePane.isInActivePane` treating a view with no `ComposableTabsPaneBackgroundView` ancestor as "in the active pane" (see `adtoolkit://cookbook/ui/layout/composable-tabs/active-pane#requirements/view-outside-any-pane-counts-as-active`), so `marksActivePane` never hollows such a caret.
+**Decision**: `ThemedTerminalView` relies on `ComposableTabsActivePane.isInActivePane` treating a view with no `ComposableTabsPaneBackgroundView` ancestor as "in the active pane" (see `adhsdk://cookbook/ui/layout/composable-tabs/active-pane#requirements/view-outside-any-pane-counts-as-active`), so `marksActivePane` never hollows such a caret.
 **Rationale**: The consequence for this file: a `ThemedTerminalView` used outside any composable-tabs pane with `marksActivePane == true` stays filled rather than hollow, because it is never "not in" an active pane by that dependency's own rule. The rule itself, and why it treats an unclaimed view as active, belongs to `composable-tabs-active-pane` and is not restated here.
 **Approved**: pending
 

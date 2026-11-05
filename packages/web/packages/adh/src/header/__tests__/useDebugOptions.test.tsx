@@ -18,7 +18,7 @@ vi.mock('next/navigation', () => ({
 
 // The console itself is a heavy lazy chunk, and nothing here renders it: the hook's
 // `window` is asserted as present-or-null, which is the whole contract a caller mounts.
-vi.mock('@agentic-toolkit/adh/debug-console', () => ({
+vi.mock('@adh-sdk/adh/debug-console', () => ({
   DebugConsoleWindow: () => null,
 }))
 

@@ -2,7 +2,7 @@
 //
 // Component test for ItemAccessPanel — the per-item share panel. This package's
 // vitest config is jsdom (see vitest.config.ts) and drives React with
-// @testing-library/react. Only the data boundary (@agentic-toolkit/data/access) and
+// @testing-library/react. Only the data boundary (@adh-sdk/data/access) and
 // the host-injected subjectsDirectory are mocked, so the mode row, assignment rows +
 // role selects, add flow, the M-gate quiet state, and the explainer are exercised —
 // not the transport. Unlike TeamMembersPane the panel publishes NO stack level (it
@@ -10,7 +10,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, fireEvent, waitFor, cleanup } from "@testing-library/react";
 
-vi.mock("@agentic-toolkit/data/access", () => ({
+vi.mock("@adh-sdk/data/access", () => ({
   accessApi: {
     listAssignments: vi.fn(),
     listRoles: vi.fn(),
@@ -28,7 +28,7 @@ import {
   type AccessAssignmentRow,
   type AccessRoleRow,
   type EffectiveAccessRow,
-} from "@agentic-toolkit/data/access";
+} from "@adh-sdk/data/access";
 
 const listAssignments = vi.mocked(accessApi.listAssignments);
 const listRoles = vi.mocked(accessApi.listRoles);

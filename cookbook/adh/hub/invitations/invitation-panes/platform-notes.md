@@ -18,10 +18,10 @@
   gets from React's `key`.
 - **React/Web (TypeScript)**: This is the source platform.
   `packages/web/packages/adh-ui/src/blocks/invitation-panes.tsx` in
-  `@agentic-toolkit/adh-ui`, exported through the package's `./blocks` barrel
+  `@adh-sdk/adh-ui`, exported through the package's `./blocks` barrel
   (`src/blocks/index.ts`) alongside `SendInvitationModal`. It is a `"use
   client"` Next.js client component that composes `ListWithDetailsPane` and
-  `AddUsersModal` from `@agenticdevelopertoolkit/ui/blocks/*`, the
+  `AddUsersModal` from `@adh-sdk/ui/blocks/*`, the
   package-local `SendInvitationModal`, and the row types and table-name
   constants from `../lib/invitations-types.ts`.
 - **AppKit/UIKit**: Build each pane on `NSTableView`/`UITableView` inside an
@@ -36,7 +36,7 @@
   (or the Community Toolkit's `DataGrid`) bound to an
   `ObservableCollection<Row>`, with the master/detail split via `TwoPaneView`
   (mirroring the peer layout of `ResizableSplit`,
-  agenticdevelopertoolkit://recipes/resizable-split) or the `ListDetailsView`
+  adhsdk://recipes/resizable-split) or the `ListDetailsView`
   control's built-in adaptive behavior. Reproduce the toolbar with a
   `CommandBar`'s
   `AppBarButton`s for "Admin notes" / "Send invitation" / "Add users", each

@@ -36,7 +36,7 @@ def check(name, got, want):
     cases.append((name, got, want))
 
 
-LAZY_IMPORT = '"@agentic-toolkit/adh/settings/UserSettingsOverlay"'  # quoted, as it appears in dist
+LAZY_IMPORT = '"@adh-sdk/adh/settings/UserSettingsOverlay"'  # quoted, as it appears in dist
 
 
 def panel_markers_text() -> str:
@@ -328,14 +328,14 @@ check("main(): a .d.ts republishing the type-only SettingsTopicId fails", _code,
 check("...naming the file", "dist/settings/leaky.d.ts re-exports" in _msg, True)
 
 _export_star_js = mutate({
-    "dist/settings/leaky.js": 'export * from "@agentic-toolkit/adh/settings/topics";\n',
+    "dist/settings/leaky.js": 'export * from "@adh-sdk/adh/settings/topics";\n',
 })
 _code, _msg = run(_export_star_js)
 check("main(): a blanket `export * from settings/topics` in a JS file fails", _code, 1)
 check("...naming the file", "dist/settings/leaky.js has" in _msg, True)
 
 _export_star_dts = mutate({
-    "dist/settings/leaky.d.ts": 'export * from "@agentic-toolkit/adh/settings/topics";\n',
+    "dist/settings/leaky.d.ts": 'export * from "@adh-sdk/adh/settings/topics";\n',
 })
 _code, _msg = run(_export_star_dts)
 check("main(): a blanket `export * from settings/topics` in a .d.ts fails", _code, 1)

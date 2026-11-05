@@ -2,7 +2,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { confirmNavigation } from "@agenticdevelopertoolkit/ui/lib/navigation-guard";
+import { confirmNavigation } from "@adh-sdk/ui/lib/navigation-guard";
 
 // The page's UnsavedChangesGuard mount passes onNavigate={(href) => router.push(href)} so a
 // Discard after a link click stays client-side instead of falling back to

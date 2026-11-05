@@ -1,7 +1,7 @@
 ---
 id: cfb09ec6-c38f-474a-bd79-be8f67ab523c
 title: Chat Coordinator Projection
-domain: agenticdevelopertoolkit://recipes/chat-coordinator-projection
+domain: adhsdk://recipes/chat-coordinator-projection
 type: ingredient
 version: 1.0.2
 status: review
@@ -41,7 +41,7 @@ Its only caller is `hooks/useChatSession.ts`, which supplies the `StampFor` cloc
 ## Behavioral Requirements
 
 - **empty-display-encoding**: `encodeRichDisplay` MUST return `null` when the given `RichDisplay` has no `content` items, no `popover`, and no `toolCalls` (an undefined or empty-array payload for each field).
-- **rich-display-attachment-shape**: `encodeRichDisplay` MUST, for a non-empty `RichDisplay`, return an `Attachment` whose `id` equals the caller-supplied `id`, whose `mediaType.identifier` equals `RICH_DISPLAY_MEDIA_TYPE` (value `application/vnd.agenticdevelopertoolkit.rich-display+json`), whose `source` is `{ kind: 'inline', data: <UTF-8 bytes of JSON.stringify(display)> }`, and whose `presentation` is `'inline'`.
+- **rich-display-attachment-shape**: `encodeRichDisplay` MUST, for a non-empty `RichDisplay`, return an `Attachment` whose `id` equals the caller-supplied `id`, whose `mediaType.identifier` equals `RICH_DISPLAY_MEDIA_TYPE` (value `application/vnd.adhsdk.rich-display+json`), whose `source` is `{ kind: 'inline', data: <UTF-8 bytes of JSON.stringify(display)> }`, and whose `presentation` is `'inline'`.
 - **rich-display-lookup-by-media-type**: `decodeRichDisplay` MUST scan the given attachments in array order and consider only an attachment whose `mediaType.identifier` equals `RICH_DISPLAY_MEDIA_TYPE` and whose `source.kind` equals `'inline'`.
 - **rich-display-decode-fallthrough**: `decodeRichDisplay` MUST skip a candidate attachment — continuing the scan rather than returning — whose inline payload fails `JSON.parse`, or whose parsed value is `null` or not of type `object`.
 - **rich-display-decode-default**: `decodeRichDisplay` MUST return `{}` when no attachment in the given list matches and decodes successfully, including when the given attachment array is empty.
@@ -127,7 +127,7 @@ Not applicable — this is a data projection module, not a visual component; it 
 | `id` (to `encodeRichDisplay`) | `string` | required | The identifier assigned to the produced `Attachment`; the function does not generate or validate it. |
 | `display` (to `encodeRichDisplay`) | `RichDisplay` (`{ content?, popover?, toolCalls? }`) | required | The payload to encode; an all-empty value encodes to `null` rather than an attachment. |
 | `attachments` (to `decodeRichDisplay`) | `ReadonlyArray<Attachment>` | required | The list scanned for a rich-display payload; an empty array decodes to `{}`. |
-| `RICH_DISPLAY_MEDIA_TYPE` | `string` constant | `application/vnd.agenticdevelopertoolkit.rich-display+json` | The vendor media type identifying a rich-display attachment; not caller-configurable, but consumers on either side of the wire rely on its exact value for interop. |
+| `RICH_DISPLAY_MEDIA_TYPE` | `string` constant | `application/vnd.adhsdk.rich-display+json` | The vendor media type identifying a rich-display attachment; not caller-configurable, but consumers on either side of the wire rely on its exact value for interop. |
 
 ## Deep Linking
 

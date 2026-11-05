@@ -1,7 +1,7 @@
 'use client'
 
 import { createContext, useContext, type ReactNode } from 'react'
-import type { SiteId } from '@agentic-toolkit/adh-registry'
+import type { SiteId } from '@adh-sdk/adh-registry'
 
 const SiteIdContext = createContext<SiteId | null>(null)
 

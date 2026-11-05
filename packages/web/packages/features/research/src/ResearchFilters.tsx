@@ -6,12 +6,12 @@ import {
   CategoryTagFilterItems,
   filteringGearLabel,
   isCategoryTagFiltering,
-} from "@agentic-toolkit/categories";
+} from "@adh-sdk/categories";
 import {
   DropdownMenu,
   DropdownMenuContent,
-} from "@agenticdevelopertoolkit/ui/components/dropdown-menu";
-import { GearMenuTrigger } from "@agenticdevelopertoolkit/ui/blocks";
+} from "@adh-sdk/ui/components/dropdown-menu";
+import { GearMenuTrigger } from "@adh-sdk/ui/blocks";
 
 /** Controlled list filters. Empty string means "no filter" for that axis. */
 export interface FilterState {

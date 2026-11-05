@@ -1,19 +1,19 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { Badge } from "@agenticdevelopertoolkit/ui/components/badge";
+import { Badge } from "@adh-sdk/ui/components/badge";
 import {
   EditableList,
   useEditableList,
   type EditableListColumn,
-} from "@agenticdevelopertoolkit/ui/blocks";
-import { Progress } from "@agenticdevelopertoolkit/ui/components/progress";
-import { Stat } from "@agenticdevelopertoolkit/ui/components/stat";
-import { formatBytes, formatCount } from "@agenticdevelopertoolkit/ui/lib/quantities";
+} from "@adh-sdk/ui/blocks";
+import { Progress } from "@adh-sdk/ui/components/progress";
+import { Stat } from "@adh-sdk/ui/components/stat";
+import { formatBytes, formatCount } from "@adh-sdk/ui/lib/quantities";
 
-import { getUsageSummary, usageSummaryKey, type UsageRow } from "@agentic-toolkit/data/profile";
-import { isForbidden } from "@agentic-toolkit/data";
-import { DetailSection, SettingsBody, useReportBusy } from "@agentic-toolkit/resource";
+import { getUsageSummary, usageSummaryKey, type UsageRow } from "@adh-sdk/data/profile";
+import { isForbidden } from "@adh-sdk/data";
+import { DetailSection, SettingsBody, useReportBusy } from "@adh-sdk/resource";
 import {
   capFor,
   capPercent,

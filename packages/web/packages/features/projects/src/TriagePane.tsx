@@ -2,14 +2,14 @@
 
 import { useCallback, useEffect, useMemo, useState, type ReactElement } from "react";
 import { Inbox } from "lucide-react";
-import { Badge } from "@agenticdevelopertoolkit/ui/components/badge";
-import { Button } from "@agenticdevelopertoolkit/ui/components/button";
-import { Card, CardContent } from "@agenticdevelopertoolkit/ui/components/card";
-import { ErrorText } from "@agenticdevelopertoolkit/ui/components/error-text";
-import { Field } from "@agenticdevelopertoolkit/ui/blocks/field";
-import { Select } from "@agenticdevelopertoolkit/ui/components/select";
-import { TopicSelectHint } from "@agenticdevelopertoolkit/ui/blocks";
-import { useResourceItemQuery, useResourceList } from "@agentic-toolkit/data";
+import { Badge } from "@adh-sdk/ui/components/badge";
+import { Button } from "@adh-sdk/ui/components/button";
+import { Card, CardContent } from "@adh-sdk/ui/components/card";
+import { ErrorText } from "@adh-sdk/ui/components/error-text";
+import { Field } from "@adh-sdk/ui/blocks/field";
+import { Select } from "@adh-sdk/ui/components/select";
+import { TopicSelectHint } from "@adh-sdk/ui/blocks";
+import { useResourceItemQuery, useResourceList } from "@adh-sdk/data";
 import {
   projectIterationsApi,
   projectMilestonesApi,
@@ -23,8 +23,8 @@ import {
   type ProjectStatus,
   type TriageAcceptBody,
   type WorkItem,
-} from "@agentic-toolkit/data/projects";
-import { DetailSection, FeatureTitle, useStackLevel, type TopicLeaf } from "@agentic-toolkit/resource";
+} from "@adh-sdk/data/projects";
+import { DetailSection, FeatureTitle, useStackLevel, type TopicLeaf } from "@adh-sdk/resource";
 import { AssigneePicker, type AssigneeValue } from "./AssigneePicker";
 import { EstimatePicker, NO_ESTIMATE, fromEstimateValue } from "./EstimatePicker";
 import { IterationPicker, NO_ITERATION } from "./IterationPicker";

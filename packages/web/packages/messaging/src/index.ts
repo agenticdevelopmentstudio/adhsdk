@@ -1,6 +1,6 @@
-// Public surface of @agentic-toolkit/messaging. Individual files are also reachable via
+// Public surface of @adh-sdk/messaging. Individual files are also reachable via
 // the ./hooks/* and ./components/* subpath exports; this barrel re-exports them so
-// consumers can `import { NotificationBell, useUnreadCount } from '@agentic-toolkit/messaging'`.
+// consumers can `import { NotificationBell, useUnreadCount } from '@adh-sdk/messaging'`.
 
 export {
   useUnreadCount,

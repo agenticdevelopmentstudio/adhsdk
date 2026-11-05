@@ -3,7 +3,7 @@
   "meta": {
     "id": "0ab38622-b4a9-424c-89e2-5d27073680c7",
     "title": "Window Discovery",
-    "domain": "adtoolkit://cookbook/system/system-windows/window-discovery",
+    "domain": "adhsdk://cookbook/system/system-windows/window-discovery",
     "type": "ingredient",
     "version": "1.2.0",
     "status": "review",
@@ -24,7 +24,7 @@
     ],
     "depends-on": [],
     "related": [
-      "adtoolkit://cookbook/system/system-windows/window-explorer-view"
+      "adhsdk://cookbook/system/system-windows/window-explorer-view"
     ],
     "references": [],
     "approved-by": "",

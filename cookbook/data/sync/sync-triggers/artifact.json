@@ -3,7 +3,7 @@
   "meta": {
     "id": "82d3214f-620d-4fab-b817-f194d93ac296",
     "title": "SyncEngineTriggers",
-    "domain": "adtoolkit://cookbook/data/sync/sync-triggers",
+    "domain": "adhsdk://cookbook/data/sync/sync-triggers",
     "type": "ingredient",
     "version": "1.0.3",
     "status": "review",
@@ -26,16 +26,16 @@
     ],
     "depends-on": [],
     "related": [
-      "adtoolkit://cookbook/data/sync/sync-engine",
-      "adtoolkit://cookbook/data/sync/offline-sync-client"
+      "adhsdk://cookbook/data/sync/sync-engine",
+      "adhsdk://cookbook/data/sync/offline-sync-client"
     ],
     "references": [
-      "packages/apple/AgenticToolkit/Sync/Triggers/PeriodicTriggerSource.swift",
-      "packages/apple/AgenticToolkit/Sync/Triggers/ConnectivityTriggerSource.swift",
-      "packages/apple/AgenticToolkit/Sync/Triggers/ManualTriggerSource.swift",
-      "packages/apple/AgenticToolkit/Sync/SyncProtocols.swift",
-      "packages/apple/AgenticToolkit/Sync/SyncEvents.swift",
-      "packages/apple/AgenticToolkit/Tests/AgenticToolkitSyncTests/TriggerSourceTests.swift"
+      "packages/apple/AgenticDeveloperHubSDK/Sync/Triggers/PeriodicTriggerSource.swift",
+      "packages/apple/AgenticDeveloperHubSDK/Sync/Triggers/ConnectivityTriggerSource.swift",
+      "packages/apple/AgenticDeveloperHubSDK/Sync/Triggers/ManualTriggerSource.swift",
+      "packages/apple/AgenticDeveloperHubSDK/Sync/SyncProtocols.swift",
+      "packages/apple/AgenticDeveloperHubSDK/Sync/SyncEvents.swift",
+      "packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKSyncTests/TriggerSourceTests.swift"
     ],
     "approved-by": "",
     "approved-date": ""

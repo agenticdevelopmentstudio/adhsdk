@@ -23,7 +23,7 @@ export interface ShotProps {
    *
    * The package renders `media` exactly as given and does nothing else to it:
    * no asset pipeline, no motion handling. For a clip, pass this package's
-   * `Clip` (from `@agenticdevelopertoolkit/landing/client`) rather than a bare
+   * `Clip` (from `@adh-sdk/landing/client`) rather than a bare
    * `<video>` — honouring `prefers-reduced-motion` on an autoplaying video
    * takes two cooperating halves, and `Clip` is where both live and where the
    * reasoning for them is written down. A host driving its own element can

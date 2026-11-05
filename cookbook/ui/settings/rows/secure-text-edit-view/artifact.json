@@ -3,7 +3,7 @@
   "meta": {
     "id": "2e0bf51e-905d-476d-9c0c-48465174ba59",
     "title": "Secure Text Edit View",
-    "domain": "adtoolkit://cookbook/ui/settings/rows/secure-text-edit-view",
+    "domain": "adhsdk://cookbook/ui/settings/rows/secure-text-edit-view",
     "type": "ingredient",
     "version": "1.3.2",
     "status": "review",
@@ -25,10 +25,10 @@
       "secure-input"
     ],
     "depends-on": [
-      "adtoolkit://cookbook/ui/settings/rows/text-edit-view"
+      "adhsdk://cookbook/ui/settings/rows/text-edit-view"
     ],
     "related": [
-      "adtoolkit://cookbook/ui/settings/rows/checkbox-view"
+      "adhsdk://cookbook/ui/settings/rows/checkbox-view"
     ],
     "references": [],
     "approved-by": "",

@@ -1,7 +1,7 @@
 ---
 id: 1f14e4d7-07ea-4f59-8365-5a15eb162def
 title: Chat Contract
-domain: agenticdevelopertoolkit://recipes/chat-contract
+domain: adhsdk://recipes/chat-contract
 type: ingredient
 version: 1.0.2
 status: review
@@ -27,9 +27,9 @@ tags:
 - messaging
 depends-on: []
 related:
-- agenticdevelopertoolkit://recipes/persona-chat
-- agenticdevelopertoolkit://recipes/chat-input
-- agenticdevelopertoolkit://recipes/chat-window-controller
+- adhsdk://recipes/persona-chat
+- adhsdk://recipes/chat-input
+- adhsdk://recipes/chat-window-controller
 references: []
 approved-by: ''
 approved-date: ''
@@ -45,7 +45,7 @@ against: attachments and media, a `Backend` a UI talks through, chat state
 (`ChatConfig`/`DisplayConfig`), gating and observing hooks, messages,
 conversations and participants, and permissions. It ships in two idiomatic
 forms — Swift protocols/enums/structs under
-`packages/apple/AgenticDeveloperToolkit/Sources/` and TypeScript
+`packages/apple/AgenticDeveloperHubSDK/SDK/Sources/` and TypeScript
 interfaces/discriminated unions under
 `packages/web/packages/chat/src/contract/` — that agree on shape wherever the
 languages allow, and diverge in a small, named set of places (see Cross-Platform
@@ -460,7 +460,7 @@ communicate failure to the caller directly rather than through a log.
 ## Platform Notes
 
 - **SwiftUI**: Sources live under
-  `packages/apple/AgenticDeveloperToolkit/Sources/{Attachments,Backend,Chat,Commands,Configuration,Hooks,Media,Messages,Orchestrator,Participants,Permissions}/`.
+  `packages/apple/AgenticDeveloperHubSDK/SDK/Sources/{Attachments,Backend,Chat,Commands,Configuration,Hooks,Media,Messages,Orchestrator,Participants,Permissions}/`.
   `ChatViewModel` is `@MainActor, AnyObject, Sendable`; the two given actor
   conformers (`ScriptedBackend`, and `PersonaChatCoordinator` referenced from
   its doc comments) hold `inboundEvents`/its continuation as `nonisolated

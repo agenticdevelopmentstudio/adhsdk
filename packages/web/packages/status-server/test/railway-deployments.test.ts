@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
-import { listRailwayProjects } from '@agentic-toolkit/deploy-platform/providers';
+import { listRailwayProjects } from '@adh-sdk/deploy-platform/providers';
 import { fetchRailwayDeployments } from '../src/monitor/fetch-railway';
 
 afterEach(() => vi.unstubAllGlobals());

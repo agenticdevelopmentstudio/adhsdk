@@ -4,14 +4,14 @@
 // and its Save adds or removes the FEATURE — the same write as Manage features (Mike, 2026-09-29).
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
-import { DetailsPane } from '@agentic-toolkit/resource'
+import { DetailsPane } from '@adh-sdk/resource'
 
 const { mutateAsync, state } = vi.hoisted(() => ({
   mutateAsync: vi.fn(),
   state: { held: [] as string[], unavailable: new Map<string, string>() },
 }))
-vi.mock('@agentic-toolkit/data/ecosystems', async (importOriginal) => {
-  const real = await importOriginal<typeof import('@agentic-toolkit/data/ecosystems')>()
+vi.mock('@adh-sdk/data/ecosystems', async (importOriginal) => {
+  const real = await importOriginal<typeof import('@adh-sdk/data/ecosystems')>()
   return {
     ...real,
     useEcosystemFeatures: () => ({

@@ -7,9 +7,9 @@
 // (catches render errors, renders the fallback prop) without touching the SDK.
 //
 // Strategy for captureException: the components import it from the LEAF module
-// `@agentic-toolkit/adh/telemetry/report-error` (by package path, not relatively — see
+// `@adh-sdk/adh/telemetry/report-error` (by package path, not relatively — see
 // layout/RouteError.tsx and the matching tsup `external`), so we vi.mock exactly that
-// specifier and stub the named export. Mocking the `@agentic-toolkit/adh/telemetry`
+// specifier and stub the named export. Mocking the `@adh-sdk/adh/telemetry`
 // BARREL instead leaves the real leaf in place and every captureException assertion
 // below fails — a barrel that re-exports the leaf is a different module. A relative
 // '../telemetry/report-error' happens to work today (vi.mock resolves its argument, and
@@ -69,7 +69,7 @@ vi.mock('@sentry/react', () => {
 // two-key factory here would have dropped.) Overriding exactly one export keeps the rest
 // real and keeps this mock correct as the leaf evolves.
 const captureExceptionSpy = vi.fn()
-vi.mock('@agentic-toolkit/adh/telemetry/report-error', async (importOriginal) => ({
+vi.mock('@adh-sdk/adh/telemetry/report-error', async (importOriginal) => ({
   ...(await importOriginal<typeof import('../telemetry/report-error')>()),
   captureException: (...args: unknown[]) => captureExceptionSpy(...args),
 }))

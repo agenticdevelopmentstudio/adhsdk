@@ -1,5 +1,5 @@
 import { type ReactElement, type ReactNode } from 'react';
-import type { SiteId } from '@agentic-toolkit/adh-registry';
+import type { SiteId } from '@adh-sdk/adh-registry';
 import type { ProfilePrincipal } from './types';
 export interface ProfileFallbackProps {
     slug: string;

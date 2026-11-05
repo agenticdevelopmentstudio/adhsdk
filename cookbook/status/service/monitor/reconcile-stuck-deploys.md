@@ -1,7 +1,7 @@
 ---
 id: da18e58b-c2d9-4798-8143-2dd30b5976fc
 title: "Status Server Monitor Reconcile Stuck Deploys"
-domain: adtoolkit://cookbook/status/service/monitor/reconcile-stuck-deploys
+domain: adhsdk://cookbook/status/service/monitor/reconcile-stuck-deploys
 type: ingredient
 version: 1.0.2
 status: review
@@ -27,21 +27,21 @@ depends-on:
   - agenticdevelopercookbook://guidelines/implementing/networking/retry-and-resilience
   - agenticdevelopercookbook://guidelines/implementing/networking/rate-limiting
 related:
-  - adtoolkit://cookbook/status/service/monitor/enrich-deploy-errors
-  - adtoolkit://cookbook/status/service/monitor/deploy-status
-  - adtoolkit://cookbook/status/service/monitor/provider-conn
+  - adhsdk://cookbook/status/service/monitor/enrich-deploy-errors
+  - adhsdk://cookbook/status/service/monitor/deploy-status
+  - adhsdk://cookbook/status/service/monitor/provider-conn
 references:
-  - packages/web/packages/status-server/src/monitor/reconcile-stuck-deploys.ts (agenticdevelopertoolkit)
-  - packages/web/packages/status-server/src/monitor/deploy-status.ts (agenticdevelopertoolkit)
-  - packages/web/packages/status-server/src/monitor/sync.ts (agenticdevelopertoolkit)
-  - packages/web/packages/status-server/src/monitor/cycle-runner.ts (agenticdevelopertoolkit)
-  - packages/web/packages/status-server/src/storage/ports.ts (agenticdevelopertoolkit)
-  - packages/web/packages/status-server/src/libsql/stores/deploy-store.ts (agenticdevelopertoolkit)
-  - packages/web/packages/deploy-platform/src/conn/index.ts (agenticdevelopertoolkit)
-  - packages/web/packages/deploy-platform/src/cooldown/provider-cooldown.ts (agenticdevelopertoolkit)
-  - packages/web/packages/deploy-platform/src/util/map-limit.ts (agenticdevelopertoolkit)
-  - packages/web/packages/deploy-platform/src/providers/railway.ts (agenticdevelopertoolkit)
-  - packages/web/packages/status-server/test/reconcile-stuck-deploys.test.ts (agenticdevelopertoolkit)
+  - packages/web/packages/status-server/src/monitor/reconcile-stuck-deploys.ts (adhsdk)
+  - packages/web/packages/status-server/src/monitor/deploy-status.ts (adhsdk)
+  - packages/web/packages/status-server/src/monitor/sync.ts (adhsdk)
+  - packages/web/packages/status-server/src/monitor/cycle-runner.ts (adhsdk)
+  - packages/web/packages/status-server/src/storage/ports.ts (adhsdk)
+  - packages/web/packages/status-server/src/libsql/stores/deploy-store.ts (adhsdk)
+  - packages/web/packages/deploy-platform/src/conn/index.ts (adhsdk)
+  - packages/web/packages/deploy-platform/src/cooldown/provider-cooldown.ts (adhsdk)
+  - packages/web/packages/deploy-platform/src/util/map-limit.ts (adhsdk)
+  - packages/web/packages/deploy-platform/src/providers/railway.ts (adhsdk)
+  - packages/web/packages/status-server/test/reconcile-stuck-deploys.test.ts (adhsdk)
 approved-by: ""
 approved-date: ""
 ---
@@ -50,7 +50,7 @@ approved-date: ""
 
 ## Overview
 
-`reconcile-stuck-deploys.ts` (`packages/web/packages/status-server/src/monitor/reconcile-stuck-deploys.ts`) is the status backend's by-id healer for Vercel/Railway deploy rows that the recent-deploys poll can no longer terminalize. Its own header comment states the problem: the poll reads only a provider's newest ~100 deployments, so a deployment that leaves that window while still in flight would otherwise freeze at `building` forever — observed in production, where a 45-project rebuild left rows reading `building` roughly 15 minutes after every build was green. The module exports two independent operations, both invoked from `sync.ts`'s `runCycle`: `reconcileVanishedDeploys(storage, conn)`, which re-fetches a bounded, cooldown-aware, per-row-backed-off batch of stale in-flight candidates by id and persists their real phases (or terminalizes them as `canceled` when the provider reports the deployment gone), and `expireUnconfirmedDeploys(storage)`, a terminal backstop that collapses any in-flight lifecycle unconfirmed for `EXPIRE_UNCONFIRMED_MS` (6 hours) to `unknown`. Both delegate the actual phase-mapping and in-flight vocabulary to `deploy-status.ts` (see `adtoolkit://cookbook/status/service/monitor/deploy-status`) and their provider connection resolution to `deploy-platform/conn` (see `adtoolkit://cookbook/status/service/monitor/provider-conn`); this file owns only the candidate selection, per-row dispatch, backoff bookkeeping, and persistence around those two operations.
+`reconcile-stuck-deploys.ts` (`packages/web/packages/status-server/src/monitor/reconcile-stuck-deploys.ts`) is the status backend's by-id healer for Vercel/Railway deploy rows that the recent-deploys poll can no longer terminalize. Its own header comment states the problem: the poll reads only a provider's newest ~100 deployments, so a deployment that leaves that window while still in flight would otherwise freeze at `building` forever — observed in production, where a 45-project rebuild left rows reading `building` roughly 15 minutes after every build was green. The module exports two independent operations, both invoked from `sync.ts`'s `runCycle`: `reconcileVanishedDeploys(storage, conn)`, which re-fetches a bounded, cooldown-aware, per-row-backed-off batch of stale in-flight candidates by id and persists their real phases (or terminalizes them as `canceled` when the provider reports the deployment gone), and `expireUnconfirmedDeploys(storage)`, a terminal backstop that collapses any in-flight lifecycle unconfirmed for `EXPIRE_UNCONFIRMED_MS` (6 hours) to `unknown`. Both delegate the actual phase-mapping and in-flight vocabulary to `deploy-status.ts` (see `adhsdk://cookbook/status/service/monitor/deploy-status`) and their provider connection resolution to `deploy-platform/conn` (see `adhsdk://cookbook/status/service/monitor/provider-conn`); this file owns only the candidate selection, per-row dispatch, backoff bookkeeping, and persistence around those two operations.
 
 ## Behavioral Requirements
 
@@ -84,7 +84,7 @@ approved-date: ""
 - **vercel-429-suppressed**: when `noteIfRateLimited("vercel", res)` returns true (a 429 response, already recorded into the shared cooldown by that call), `fetchVercelPhasesById` MUST return `null` without any further processing of the response.
 - **vercel-non-ok-logged-null**: for any other non-ok response, `fetchVercelPhasesById` MUST log `` `[reconcile] Vercel deployment ${uid} detail ${res.status}` `` via `console.error` and return `null`.
 - **vercel-missing-ready-state-null**: when the parsed JSON body has no `readyState`, `fetchVercelPhasesById` MUST return `null`.
-- **vercel-phases-delegated**: on a body with a `readyState`, `fetchVercelPhasesById` MUST return `vercelPhases(d.readyState, d.readySubstate, d.target)` unchanged — the phase-mapping contract owned by `adtoolkit://cookbook/status/service/monitor/deploy-status`, not reimplemented here.
+- **vercel-phases-delegated**: on a body with a `readyState`, `fetchVercelPhasesById` MUST return `vercelPhases(d.readyState, d.readySubstate, d.target)` unchanged — the phase-mapping contract owned by `adhsdk://cookbook/status/service/monitor/deploy-status`, not reimplemented here.
 - **railway-detail-request**: `fetchRailwayPhasesById` MUST call `gqlPost(token, "query($id: String!) { deployment(id: $id) { status } }", signal, { id })`, passing the deployment id as a GraphQL variable rather than interpolating it into the query string.
 - **railway-429-suppressed**: when the response status is 429, `fetchRailwayPhasesById` MUST return `null` without logging — `gqlPost` has already recorded the cooldown for that response.
 - **railway-non-ok-logged-null**: for any other non-ok response, `fetchRailwayPhasesById` MUST log `` `[reconcile] Railway deployment ${id} detail ${res.status}` `` via `console.error` and return `null`.
@@ -175,7 +175,7 @@ Not applicable — this is a server-side deploy reconciliation and expiry healer
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
 | `storage` (parameter) | `Storage` | required, caller-supplied | The storage port providing `storage.deploy.listInFlightCandidates`, `markDeployGone`, `markDeployPhases`, and `expireStaleInFlight`; this file never constructs or configures a storage implementation itself. |
-| `conn` (parameter, `reconcileVanishedDeploys` only) | `ProviderConn` | required, caller-supplied | Resolved provider connections (`@agentic-toolkit/deploy-platform/conn`), carrying `conn.vercel.token`/`conn.vercel.teamId` and `conn.railway.token`, used to gate and authenticate the per-provider by-id fetches. |
+| `conn` (parameter, `reconcileVanishedDeploys` only) | `ProviderConn` | required, caller-supplied | Resolved provider connections (`@adh-sdk/deploy-platform/conn`), carrying `conn.vercel.token`/`conn.vercel.teamId` and `conn.railway.token`, used to gate and authenticate the per-provider by-id fetches. |
 | `RECONCILE_WINDOW_DAYS` (module-internal constant, not exported) | `number` | `14` | Recency window in days; only in-flight rows created within this window are reconcile candidates. |
 | `RECONCILE_MAX_PER_CYCLE` (module-internal constant, not exported) | `number` | `10` | Maximum candidate rows queried and fetched per `reconcileVanishedDeploys` call. |
 | `RECONCILE_CONCURRENCY` (module-internal constant, not exported) | `number` | `4` | Maximum concurrent in-flight fetches passed to `mapLimit`. |
@@ -234,7 +234,7 @@ No log line is emitted on a successful phase heal, an empty candidate set, a no-
 
 - **SwiftUI**: not a SwiftUI concern (no view). An Apple-side status monitor port would model `reconcileVanishedDeploys` as an `async` function isolated to an actor that owns the monitor cycle, using `URLSession` for the Vercel detail GET and the Railway GraphQL POST (the Swift equivalents of `fetchVercelPhasesById`/`fetchRailwayPhasesById`), a `withThrowingTaskGroup` capped at 4 concurrently-running child tasks as the `mapLimit` analogue, each child task racing its fetch against a `Task.sleep(for: .seconds(8))` (or `URLRequest.timeoutInterval = 8`) as the `AbortController`/8,000ms deadline analogue, and the per-row backoff registry as a plain `[String: Backoff]` dictionary owned by that same actor (so it is naturally isolated the way `retryAfterFailure`'s worker-thread locality is here). `expireUnconfirmedDeploys` ports as a second `async` function on the same actor issuing one bulk update.
 - **Compose**: a Kotlin port models `reconcileVanishedDeploys` as a `suspend fun` using a `kotlinx.coroutines.sync.Semaphore(4)` (or a bounded dispatcher) as the direct substitute for `mapLimit`, `withTimeout(8_000)` for the per-row deadline, and the backoff registry as a `ConcurrentHashMap` (or a plain `HashMap` if confined to one coroutine dispatcher, mirroring this file's single-thread-per-call locality) guarded the same way `retryAfterFailure` is here — recreated fresh per process, never persisted.
-- **React/Web** (source platform): lives at `packages/web/packages/status-server/src/monitor/reconcile-stuck-deploys.ts` as two plain exported `async` functions on the Node status backend — not client-side React, and no framework dependency beyond the `Storage` port and the shared `@agentic-toolkit/deploy-platform` cooldown/util/conn modules it imports. `reconcileVanishedDeploys` is invoked both on the fast probe-only tick and, together with `expireUnconfirmedDeploys`, on every full sync cycle, all from `sync.ts`'s `runCycle`, itself invoked from `runMonitorCycle` in `cycle-runner.ts`.
+- **React/Web** (source platform): lives at `packages/web/packages/status-server/src/monitor/reconcile-stuck-deploys.ts` as two plain exported `async` functions on the Node status backend — not client-side React, and no framework dependency beyond the `Storage` port and the shared `@adh-sdk/deploy-platform` cooldown/util/conn modules it imports. `reconcileVanishedDeploys` is invoked both on the fast probe-only tick and, together with `expireUnconfirmedDeploys`, on every full sync cycle, all from `sync.ts`'s `runCycle`, itself invoked from `runMonitorCycle` in `cycle-runner.ts`.
 - **AppKit / UIKit**: same non-UI framing as SwiftUI; a macOS/iOS agent embedding this healer pattern has no UIKit/AppKit-specific concern, since this is a background sync task rather than a view-driven one — the actor + `URLSession` + `TaskGroup` shape described under SwiftUI applies unchanged.
 - **WinUI 3**: model the candidate row as a `readonly record struct(string Id, string Platform)` (the `DeployIdPlatformRow` analogue) and the per-row backoff entry as `readonly record struct(DateTimeOffset Until, int Fails)`, kept in a plain `Dictionary<string, Backoff>` field on whatever singleton/hosted service owns the monitor cycle (the direct analogue of module-scope `retryAfterFailure` — .NET has no bare module scope, so a hosted-service-owned field is the closest structural match). Implement the candidate query as `async Task<IReadOnlyList<DeployIdPlatformRow>> ListInFlightCandidatesAsync(...)` over EF Core or Dapper mirroring `listInFlightCandidates`'s predicate (in-flight `build_phase`/`deploy_phase`, `CreatedAt >` cutoff, `FetchedAt <` cutoff, id `NOT IN` the parked set, ordered newest-first, `Take(10)`), and the per-row dispatch as a `switch` expression on `row.Platform` calling `HttpClient.GetAsync` for the Vercel detail endpoint (deserializing with `System.Text.Json`) or a `HttpClient.PostAsJsonAsync` GraphQL call for Railway. Give each call a `CancellationTokenSource(TimeSpan.FromSeconds(8))` — composed with any caller-supplied token via `CancellationTokenSource.CreateLinkedTokenSource` — as the `AbortController`/`AbortSignal.timeout` analogue, and cap concurrency with `Parallel.ForEachAsync(candidates, new ParallelOptions { MaxDegreeOfParallelism = 4 }, ...)` in place of `mapLimit`. Compute the exponential backoff with `TimeSpan.FromMilliseconds(Math.Min(60_000 * Math.Pow(2, fails - 1), 300_000))`, and implement `ExpireUnconfirmedDeploysAsync` as a single `UPDATE`-equivalent EF Core `ExecuteUpdateAsync` call mirroring `expireStaleInFlight`'s per-lifecycle `CASE`. Log through `ILogger<T>` with the same `[reconcile]`-prefixed message shapes in place of `console.log`/`console.error`.
 

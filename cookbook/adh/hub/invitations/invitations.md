@@ -1,7 +1,7 @@
 ---
 id: 7e0508b5-cf96-42da-9902-51fbe31b432f
 title: "Hub Domain: Invitations"
-domain: adtoolkit://cookbook/adh/hub/invitations/invitations
+domain: adhsdk://cookbook/adh/hub/invitations/invitations
 type: ingredient
 version: 1.1.1
 status: review
@@ -27,19 +27,19 @@ tags:
   - notes
 depends-on: []
 related:
-  - adtoolkit://cookbook/ui/navigation/htdv
-  - adtoolkit://cookbook/adh/hub/ecosystems/ecosystems
-  - adtoolkit://cookbook/adh/hub/customers
-  - adtoolkit://cookbook/adh/hub/security/authentication-client
+  - adhsdk://cookbook/ui/navigation/htdv
+  - adhsdk://cookbook/adh/hub/ecosystems/ecosystems
+  - adhsdk://cookbook/adh/hub/customers
+  - adhsdk://cookbook/adh/hub/security/authentication-client
 references:
-  - packages/apple/AgenticToolkit/Hub/Features/Invitations/AdminNotesRail.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Hub/Features/Invitations/InvitationsModels.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Hub/Features/Invitations/InvitesTopic.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Hub/Features/Invitations/PendingUsersTopic.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Hub/Features/Invitations/RequestsTopic.swift (agenticdevelopertoolkit)
-  - packages/web/packages/data/src/invitations/invitations.ts (agenticdevelopertoolkit)
-  - packages/web/packages/data/src/invitations/wire.ts (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Tests/AgenticToolkitHubTests/InvitationsTopicsTests.swift (agenticdevelopertoolkit)
+  - packages/apple/AgenticDeveloperHubSDK/Hub/Features/Invitations/AdminNotesRail.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Hub/Features/Invitations/InvitationsModels.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Hub/Features/Invitations/InvitesTopic.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Hub/Features/Invitations/PendingUsersTopic.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Hub/Features/Invitations/RequestsTopic.swift (adhsdk)
+  - packages/web/packages/data/src/invitations/invitations.ts (adhsdk)
+  - packages/web/packages/data/src/invitations/wire.ts (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKHubTests/InvitationsTopicsTests.swift (adhsdk)
 approved-by: ""
 approved-date: ""
 ---
@@ -312,7 +312,7 @@ looking at the same domain, not two ports of one feature:
 - **accept-is-authenticated**: `accept` calls `authedJson` to POST `{
   token }` to an accept route as the signed-in caller, so its authentication,
   one-refresh-then-retry-on-401, and `AuthHttpError` behavior on failure are
-  entirely `authedJson`'s (documented in `adtoolkit://cookbook/adh/hub/security/authentication-client`),
+  entirely `authedJson`'s (documented in `adhsdk://cookbook/adh/hub/security/authentication-client`),
   not redefined here.
 - **register-with-invite-extracts-message**: `registerWithInvite` issues an
   unauthenticated `fetch` POSTing the full `RegisterWithInviteInput` (`email`,
@@ -453,7 +453,7 @@ a shared notes sub-rail, and a web HTTP client, not a visual component.
   `registerWithInvite` each make exactly one unauthenticated `fetch` call
   with no retry; `accept` inherits `authedJson`'s one-refresh-then-retry
   behavior on a `401` only (documented in
-  `adtoolkit://cookbook/adh/hub/security/authentication-client`), not a general
+  `adhsdk://cookbook/adh/hub/security/authentication-client`), not a general
   offline retry. `preview`'s specific gap for a raw network failure (as
   opposed to an HTTP-status failure) is recorded under
   **preview-network-failure-rejects**.
@@ -609,7 +609,7 @@ Not applicable: none of the seven given sources contains a logging,
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/Hub/Features/Invitations/` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Hub/Features/Invitations/` |
 | web | `packages/web/packages/data/src/invitations/` |
 
 ## Design Decisions

@@ -1,7 +1,7 @@
 ---
 id: b976c0d2-084c-4a47-928a-14e33983077f
 title: "Messaging Client"
-domain: adtoolkit://cookbook/adh/hub/messaging/messaging-client
+domain: adhsdk://cookbook/adh/hub/messaging/messaging-client
 type: ingredient
 version: 1.1.1
 status: review
@@ -24,11 +24,11 @@ tags:
   - templates
 depends-on: []
 related:
-  - adtoolkit://cookbook/ui/navigation/htdv
+  - adhsdk://cookbook/ui/navigation/htdv
 references:
-  - packages/apple/AgenticToolkit/Hub/Features/Messaging/MessagingModels.swift (apple)
-  - packages/apple/AgenticToolkit/Hub/Features/Messaging/MessagingTopic.swift (apple)
-  - packages/apple/AgenticToolkit/Tests/AgenticToolkitHubTests/MessagingTopicTests.swift (apple)
+  - packages/apple/AgenticDeveloperHubSDK/Hub/Features/Messaging/MessagingModels.swift (apple)
+  - packages/apple/AgenticDeveloperHubSDK/Hub/Features/Messaging/MessagingTopic.swift (apple)
+  - packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKHubTests/MessagingTopicTests.swift (apple)
 approved-by: ""
 approved-date: ""
 ---
@@ -371,10 +371,10 @@ Not applicable: this logic contains no logging call of any kind.
   presentation layer; a SwiftUI-based presenter would consume the same values unchanged, since
   `MessagingTopic.swift` imports no SwiftUI and performs no rendering itself.
 - **AppKit / UIKit**: this is the source. `MessagingModels.swift` and `MessagingTopic.swift` live
-  in the `Hub` module shared between the `AgenticToolkitHub-macOS` and `AgenticToolkitHub-iOS`
+  in the `Hub` module shared between the `AgenticDeveloperHubSDKHub-macOS` and `AgenticDeveloperHubSDKHub-iOS`
   targets (both declared in `project.yml`, one source set). Neither file imports `AppKit` or
   `UIKit` directly — `MessagingModels.swift` is plain `Foundation`, and `MessagingTopic.swift` adds
-  only `AgenticToolkitHTDV`, with the platform-specific `NSViewController`/`UIViewController` split
+  only `AgenticDeveloperHubSDKHTDV`, with the platform-specific `NSViewController`/`UIViewController` split
   handled entirely inside `FormViewController`, one layer below where these types operate.
   Concurrency: `MessagingTopic` is declared `@MainActor final class`, so `child(for:path:rail:)`
   and every private helper it calls run only on the main actor; `MessagingDataSource` is declared
@@ -430,7 +430,7 @@ Not applicable: this logic contains no logging call of any kind.
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/Hub/Features/Messaging/` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Hub/Features/Messaging/` |
 
 ## Design Decisions
 

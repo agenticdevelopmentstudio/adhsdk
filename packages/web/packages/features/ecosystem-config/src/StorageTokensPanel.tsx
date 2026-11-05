@@ -3,16 +3,16 @@
 import type { ReactElement } from "react";
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Card, CardContent } from "@agenticdevelopertoolkit/ui/components/card";
-import { Button } from "@agenticdevelopertoolkit/ui/components/button";
-import { Input } from "@agenticdevelopertoolkit/ui/components/input";
-import { Label } from "@agenticdevelopertoolkit/ui/components/label";
-import { ErrorText } from "@agenticdevelopertoolkit/ui/components/error-text";
-import { RdidEditor } from "@agentic-toolkit/adh-ui/components/rdid-editor";
-import { validateLeaf } from "@agentic-toolkit/adh-ui/rdid";
-import { tokenPrincipalsApi, type TokenPrincipal } from "@agentic-toolkit/data/ecosystem-config";
-import { isConflict } from "@agentic-toolkit/data";
-import { useReportBusy, useReportSettingsDirty } from "@agentic-toolkit/resource";
+import { Card, CardContent } from "@adh-sdk/ui/components/card";
+import { Button } from "@adh-sdk/ui/components/button";
+import { Input } from "@adh-sdk/ui/components/input";
+import { Label } from "@adh-sdk/ui/components/label";
+import { ErrorText } from "@adh-sdk/ui/components/error-text";
+import { RdidEditor } from "@adh-sdk/adh-ui/components/rdid-editor";
+import { validateLeaf } from "@adh-sdk/adh-ui/rdid";
+import { tokenPrincipalsApi, type TokenPrincipal } from "@adh-sdk/data/ecosystem-config";
+import { isConflict } from "@adh-sdk/data";
+import { useReportBusy, useReportSettingsDirty } from "@adh-sdk/resource";
 
 /**
  * Tokens feature: mint / list / revoke owner-decoupled STORAGE-access token
@@ -33,7 +33,7 @@ import { useReportBusy, useReportSettingsDirty } from "@agentic-toolkit/resource
  */
 // Named `StorageTokensPanel`, not `TokensPanel`: these are the owner-decoupled STORAGE-access
 // token principals (`adh_…`, each with its own isolated bucket). The personal API tokens the
-// user-settings panel mints (`tmp_…`, @agentic-toolkit/authentication's TokensPanel) are a
+// user-settings panel mints (`tmp_…`, @adh-sdk/authentication's TokensPanel) are a
 // different principal that happens to share the noun.
 export function StorageTokensPanel({
   ecosystemId,

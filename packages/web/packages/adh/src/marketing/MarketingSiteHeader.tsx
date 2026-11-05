@@ -1,20 +1,20 @@
 'use client'
 
 import type { ReactElement, ReactNode } from 'react'
-import type { SiteId } from '@agentic-toolkit/adh-registry'
-import { makeSmartHeaderAuth } from '@agentic-toolkit/adh/header-auth'
+import type { SiteId } from '@adh-sdk/adh-registry'
+import { makeSmartHeaderAuth } from '@adh-sdk/adh/header-auth'
 // The package path, never a relative one, even though SiteHeader is now a sibling
 // directory in this same package. `header/index` is its own tsup entry with a matching
 // `external`, because it holds module-level state (`envOverride`'s listener Set); a
 // relative specifier would inline a private copy of it into THIS entry. Both halves of
 // that remedy are required — see the note atop layout/AppShell.tsx and
 // <adh-tools>/sites/scripts/verify-bundle-boundaries.py.
-import { SiteHeader } from '@agentic-toolkit/adh/header'
+import { SiteHeader } from '@adh-sdk/adh/header'
 // `NavLink` is a GENERIC header type. It used to have two possible spellings — the
 // toolkit barrel and the app tier's `@adh/chrome/header`, which deliberately did not
 // re-export the generic pieces. The merge left ONE barrel publishing both halves, so
 // there is one spelling, and it is the same one SiteHeader above comes from.
-import type { NavLink } from '@agentic-toolkit/adh/header'
+import type { NavLink } from '@adh-sdk/adh/header'
 
 // Built ONCE at module scope: the source is a hook (it calls useAuth) and
 // SiteHeader invokes it unconditionally each render, so it must be a stable
@@ -51,7 +51,7 @@ export type MarketingSiteHeaderProps = {
  * server component: a hook prop (`useAuthSource`) can't cross the server→client
  * boundary, so the source is bound here, on the client side of it.
  *
- * Home: `@agentic-toolkit/adh/marketing` — adh VOCABULARY end to end (the ADH marketing family's
+ * Home: `@adh-sdk/adh/marketing` — adh VOCABULARY end to end (the ADH marketing family's
  * header, bound to adh's `clientId`). It is its OWN export subpath, not just a member of
  * the `marketing` barrel: this module is `'use client'` while its barrel-mates
  * (MarketingRootHtml, MarketingLanding, StorySections) are server components, and under

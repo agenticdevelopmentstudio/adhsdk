@@ -3,7 +3,7 @@
   "meta": {
     "id": "2dd6133a-1d6c-4ee5-9e37-308a11966433",
     "title": "RPC",
-    "domain": "adtoolkit://cookbook/foundation/networking/rpc",
+    "domain": "adhsdk://cookbook/foundation/networking/rpc",
     "type": "ingredient",
     "version": "1.2.0",
     "status": "review",
@@ -27,7 +27,7 @@
     ],
     "depends-on": [],
     "related": [
-      "adtoolkit://cookbook/ai/plugins/plugin-transport"
+      "adhsdk://cookbook/ai/plugins/plugin-transport"
     ],
     "references": [],
     "approved-by": "",

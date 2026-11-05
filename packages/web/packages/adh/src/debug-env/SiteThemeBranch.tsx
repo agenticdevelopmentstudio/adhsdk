@@ -3,9 +3,9 @@
 import { useRef, useState, type ReactNode } from 'react'
 import { Braces, Brush, Globe, Layers, Megaphone, Paintbrush, SwatchBook, Type } from 'lucide-react'
 
-import type { TopicLevel, TopicDetailItem } from '@agenticdevelopertoolkit/ui/blocks'
-import { Button } from '@agenticdevelopertoolkit/ui/components/button'
-import { Input } from '@agenticdevelopertoolkit/ui/components/input'
+import type { TopicLevel, TopicDetailItem } from '@adh-sdk/ui/blocks'
+import { Button } from '@adh-sdk/ui/components/button'
+import { Input } from '@adh-sdk/ui/components/input'
 import {
   Dialog,
   DialogContent,
@@ -13,11 +13,11 @@ import {
   DialogFooter,
   DialogTitle,
   DialogDescription,
-} from '@agenticdevelopertoolkit/ui/components/dialog'
-import { useClipboard } from '@agenticdevelopertoolkit/ui/hooks/useClipboard'
-import { useIsomorphicLayoutEffect } from '@agenticdevelopertoolkit/ui/hooks/useIsomorphicLayoutEffect'
+} from '@adh-sdk/ui/components/dialog'
+import { useClipboard } from '@adh-sdk/ui/hooks/useClipboard'
+import { useIsomorphicLayoutEffect } from '@adh-sdk/ui/hooks/useIsomorphicLayoutEffect'
 
-import type { ThemeEditorApi } from '@agentic-toolkit/adh/themes'
+import type { ThemeEditorApi } from '@adh-sdk/adh/themes'
 import type { DebugThemeArea, DebugThemeItem, ThemeAreasSurface } from './seams'
 import { usePersistedSelection } from './selection-store'
 

@@ -38,7 +38,7 @@
   "select this pane" handler is needed, unlike SwiftUI/Compose, where
   gesture modifiers consume the touch before it can propagate.
 - **AppKit/UIKit** (source platform): Implemented in
-  `packages/apple/AgenticToolkit/macOS/UI/ViewControllers/ComposableTabs/ComposableTabsArrangeOverlayView.swift`
+  `packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/ComposableTabs/ComposableTabsArrangeOverlayView.swift`
   as a `@MainActor`, `final` `NSView` built from `NSStackView`s and Auto
   Layout constraints, installed and removed as a subview by
   `ComposableTabsPaneViewController.installArrangeOverlay()`/
@@ -50,7 +50,7 @@
   `init(coder:)` — which this type overrides to trigger a fatal error
   immediately, since no code path in this app constructs this overlay from
   an archived storyboard/xib. There is no UIKit code path in source (the
-  imports — `AppKit`, `AgenticToolkitCore`, `AgenticToolkitCoreMacOS` — are
+  imports — `AppKit`, `AgenticDeveloperHubSDKCore`, `AgenticDeveloperHubSDKCoreMacOS` — are
   macOS-only); a UIKit port would replace `NSButton`/`NSPopUpButton` with
   `UIButton`/`UIMenu`, replace the responder-chain click-through with an
   explicit `UITapGestureRecognizer` on the scrim that calls the pane-select

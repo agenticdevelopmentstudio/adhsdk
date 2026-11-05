@@ -1,6 +1,6 @@
 import type { ReactElement, ReactNode } from 'react'
-import { Shot, renderBlock } from '@agenticdevelopertoolkit/landing'
-import type { ShotProps } from '@agenticdevelopertoolkit/landing'
+import { Shot, renderBlock } from '@adh-sdk/landing'
+import type { ShotProps } from '@adh-sdk/landing'
 
 /**
  * The kit's `Shot`, worded once for a whole site: `pendingLabel` is the site's word for a

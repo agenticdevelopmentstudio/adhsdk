@@ -1,5 +1,5 @@
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/Core/Time/LocalTimeText.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Time/LocalTimeText.swift` |
 

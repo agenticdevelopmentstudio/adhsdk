@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import type { RequestBody, SuccessBody } from "@agentic-toolkit/adh-api-types";
+import type { RequestBody, SuccessBody } from "@adh-sdk/adh-api-types";
 import { authedJson, authedRequest } from "./http";
 import { fetchMemberships, type UserEcosystem } from "./memberships";
 import { useWindowedList } from "./windowed";
@@ -49,7 +49,7 @@ export interface AdminUserSummary {
 }
 
 // The raw `customer.customers` row from `GET /api/customer/customers`, sourced
-// from the OpenAPI spec (@agentic-toolkit/adh-api-types) rather than hand-written —
+// from the OpenAPI spec (@adh-sdk/adh-api-types) rather than hand-written —
 // so a backend schema change surfaces here as a type error, not at runtime.
 type BackendUser = SuccessBody<"/customer/customers", "get">[number];
 
@@ -304,7 +304,7 @@ export function useDeleteUser() {
 // mutations address rows by id directly — `key` can't be the row identity
 // because the UI edits it in place.
 //
-// Types are spec-derived (@agentic-toolkit/adh-api-types) now that the route is documented
+// Types are spec-derived (@adh-sdk/adh-api-types) now that the route is documented
 // in the OpenAPI surface — a backend schema change surfaces here as a type error.
 
 /** A system.feature_flags row (id, key, description, enabled, createdAt, updatedAt). */

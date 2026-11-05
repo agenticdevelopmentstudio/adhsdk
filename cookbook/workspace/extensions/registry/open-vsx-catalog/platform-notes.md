@@ -1,6 +1,6 @@
 
 - **Swift (source)**: This file targets macOS today, via the
-  `AgenticToolkitCore` framework target (`project.yml`); nothing in it —
+  `AgenticDeveloperHubSDKCore` framework target (`project.yml`); nothing in it —
   plain `Codable`/`Sendable` structs and enums over Foundation's
   `JSONDecoder` and `URL` — depends on `AppKit`, `UIKit`, or any other
   platform framework, so the same source would decode identically if the

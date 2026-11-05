@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback } from "react";
-import { useResourceList } from "@agentic-toolkit/data";
+import { useResourceList } from "@adh-sdk/data";
 import { getBillingContext, type BillingContext } from "./api/billing";
 
 /** This module's own react-query key prefix for `GET /billing/context`, interpolated below into

@@ -1,5 +1,5 @@
 {
-  "name": "@agentic-toolkit/games",
+  "name": "@adh-sdk/games",
   "version": "0.1.0",
   "description": "The games authoring workspace: a game catalog, its engine, and the definitions, connections and effects it declares.",
   "license": "UNLICENSED",
@@ -13,7 +13,7 @@
   "sideEffects": [
     "**/*.css"
   ],
-  "comment:exports": "`development` → src for `next dev` (HMR); prod skips it → dist. No `./parse` entry: this package no longer owns a URL grammar (§1 of the product-gaming-modes design) — a game has no address of its own, so the host site parses with `@agentic-toolkit/ecosystems/parse`'s `parseEcosystemsPath` directly.",
+  "comment:exports": "`development` → src for `next dev` (HMR); prod skips it → dist. No `./parse` entry: this package no longer owns a URL grammar (§1 of the product-gaming-modes design) — a game has no address of its own, so the host site parses with `@adh-sdk/ecosystems/parse`'s `parseEcosystemsPath` directly.",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -31,12 +31,12 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@agentic-toolkit/auth": "workspace:*",
-    "@agentic-toolkit/data": "workspace:*",
-    "@agentic-toolkit/ecosystems": "workspace:*",
-    "@agentic-toolkit/resource": "workspace:*",
+    "@adh-sdk/auth": "workspace:*",
+    "@adh-sdk/data": "workspace:*",
+    "@adh-sdk/ecosystems": "workspace:*",
+    "@adh-sdk/resource": "workspace:*",
     "lucide-react": "^1.16.0",
-    "@agenticdevelopertoolkit/ui": "workspace:*"
+    "@adh-sdk/ui": "workspace:*"
   },
   "peerDependencies": {
     "next": ">=15",

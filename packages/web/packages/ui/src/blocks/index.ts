@@ -81,7 +81,7 @@ export {
 } from "./topic-detail";
 // How to name the detail pane the user is actually looking at, rather than HTDV's outgoing
 // crossfade snapshot of the previous one. Re-exported here for app code that already imports from
-// `blocks`; a Playwright spec should take the React-free `@agenticdevelopertoolkit/ui/lib/detail-pane`
+// `blocks`; a Playwright spec should take the React-free `@adh-sdk/ui/lib/detail-pane`
 // subpath instead (the snapshot is hidden from the accessibility tree, not from the DOM).
 export { DETAIL_PANE_ATTR, LIVE_DETAIL_PANE } from "../lib/detail-pane";
 // TopicSelectHint is THE "select something" placeholder card — every pane that waits on a

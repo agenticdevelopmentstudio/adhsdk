@@ -3,7 +3,7 @@
   "meta": {
     "id": "6a7598bd-afe0-4ae9-af93-237908b767f8",
     "title": "Host Diagnostic Sink",
-    "domain": "adtoolkit://cookbook/workspace/extensions/vscode-api/languages/host-diagnostic-sink",
+    "domain": "adhsdk://cookbook/workspace/extensions/vscode-api/languages/host-diagnostic-sink",
     "type": "ingredient",
     "version": "1.1.1",
     "status": "review",
@@ -25,16 +25,16 @@
       "event-emitter"
     ],
     "depends-on": [
-      "adtoolkit://cookbook/workspace/extensions/host/extension-event"
+      "adhsdk://cookbook/workspace/extensions/host/extension-event"
     ],
     "related": [],
     "references": [
-      "packages/apple/AgenticToolkit/macOS/Features/Extensions/VSCodeAPI/HostDiagnosticSink.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/macOS/Features/Extensions/VSCodeAPI/MainThreadDiagnostics.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/macOS/Features/Extensions/VSCodeAPI/ExtensionEvent.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/macOS/Features/Extensions/Host/ExtensionHostInstaller.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/Core/Loggable.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/Tests/AgenticToolkitMacOSTests/Extensions/MainThreadDiagnosticsTests.swift (agenticdevelopertoolkit)"
+      "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/HostDiagnosticSink.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/MainThreadDiagnostics.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/ExtensionEvent.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/Host/ExtensionHostInstaller.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/Core/Loggable.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKMacOSTests/Extensions/MainThreadDiagnosticsTests.swift (adhsdk)"
     ],
     "approved-by": "",
     "approved-date": ""

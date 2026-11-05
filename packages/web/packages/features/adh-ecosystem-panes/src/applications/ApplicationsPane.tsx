@@ -9,21 +9,21 @@ import {
   type ApplicationInput,
   type PrototypeApplication,
 } from "../api/applications-prototype";
-import { useResourceList } from "@agentic-toolkit/data";
-import type { ApplicationPlatform } from "@agentic-toolkit/data/ecosystem-config";
-import { ListToolButton } from "@agenticdevelopertoolkit/ui/blocks";
-import { EmptyState } from "@agenticdevelopertoolkit/ui/components/empty-state";
-import { ErrorText } from "@agenticdevelopertoolkit/ui/components/error-text";
+import { useResourceList } from "@adh-sdk/data";
+import type { ApplicationPlatform } from "@adh-sdk/data/ecosystem-config";
+import { ListToolButton } from "@adh-sdk/ui/blocks";
+import { EmptyState } from "@adh-sdk/ui/components/empty-state";
+import { ErrorText } from "@adh-sdk/ui/components/error-text";
 import {
   CreateResourceDialog,
   DetailsPane,
   StackLevels,
   type MasterDetailActions,
-} from "@agentic-toolkit/resource";
-import { ApplicationClientAuthSection, useApplicationClientAuth } from "@agentic-toolkit/ecosystem-config";
-import { useMasterDetailForm } from "@agentic-toolkit/resource";
-import { useMasterDetailLevel } from "@agentic-toolkit/resource";
-import type { TopicLeaf } from "@agentic-toolkit/resource";
+} from "@adh-sdk/resource";
+import { ApplicationClientAuthSection, useApplicationClientAuth } from "@adh-sdk/ecosystem-config";
+import { useMasterDetailForm } from "@adh-sdk/resource";
+import { useMasterDetailLevel } from "@adh-sdk/resource";
+import type { TopicLeaf } from "@adh-sdk/resource";
 import {
   ApplicationDetail,
   ApplicationPlacementFields,

@@ -2,7 +2,7 @@
 - **SwiftUI**: the source (`WebviewResourceURL.swift`) is plain Foundation —
   `URL`, `URLComponents`, and the `Error`/`LocalizedError` protocols — with
   zero dependency on SwiftUI or any view-layer framework. It sits in
-  `AgenticToolkitCore` specifically so the access decision is testable
+  `AgenticDeveloperHubSDKCore` specifically so the access decision is testable
   without `WebKit`, per the source's own closing comment; a port that keeps
   this component in Swift needs nothing beyond `Foundation` plus whatever
   Swift form `ExtensionResourcePath` takes on that platform. Concretely:
@@ -48,7 +48,7 @@
   Worker scoped per panel, is the nearest equivalent.
 - **AppKit / UIKit**: identical to the SwiftUI note — the component depends
   on neither AppKit nor UIKit, so a macOS or iOS host consumes the same
-  `AgenticToolkitCore` type directly with no translation needed; only the
+  `AgenticDeveloperHubSDKCore` type directly with no translation needed; only the
   `WKURLSchemeHandler` that calls it (outside this file) is UIKit/AppKit-
   adjacent WebKit code.
 - **WinUI 3**: there is no single .NET or Windows App SDK type that performs

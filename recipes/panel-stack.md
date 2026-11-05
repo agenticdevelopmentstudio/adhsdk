@@ -1,7 +1,7 @@
 ---
 id: 4c3c4287-95bd-47f5-9a07-2382e0db523b
 title: PanelStack
-domain: agenticdevelopertoolkit://recipes/panel-stack
+domain: adhsdk://recipes/panel-stack
 type: ingredient
 version: 1.1.1
 status: review
@@ -20,7 +20,7 @@ tags:
 - layout
 - container
 depends-on:
-- agenticdevelopertoolkit://recipes/detail-pane
+- adhsdk://recipes/detail-pane
 related: []
 references: []
 approved-by: ''
@@ -31,7 +31,7 @@ approved-date: ''
 
 ## Overview
 
-PanelStack is a container component that renders multiple DetailPane components based on a set of visible topic indexes. It serves as a layout wrapper for displaying detail views in a multi-pane interface. The component forwards a ref to its root div element to allow parent components to interact with the container directly. The `topics` array element type, `TopicData`, is the Topic data model defined by [detail-pane](agenticdevelopertoolkit://recipes/detail-pane) — see `depends-on`.
+PanelStack is a container component that renders multiple DetailPane components based on a set of visible topic indexes. It serves as a layout wrapper for displaying detail views in a multi-pane interface. The component forwards a ref to its root div element to allow parent components to interact with the container directly. The `topics` array element type, `TopicData`, is the Topic data model defined by [detail-pane](adhsdk://recipes/detail-pane) — see `depends-on`.
 
 ## Behavioral Requirements
 
@@ -39,7 +39,7 @@ PanelStack is a container component that renders multiple DetailPane components 
 - **pass-topic-data**: Component MUST pass the topic object from the `topics` array to each rendered DetailPane.
 - **pass-image-load-callback**: Component MUST pass the `onImageLoad` callback to each DetailPane instance.
 - **skip-missing-topics**: Component MUST skip rendering when a topic index does not exist in the topics array.
-- **mark-visible-state**: Component MUST pass `visible={true}` to each DetailPane it renders. Per DetailPane's `visibility-state` requirement (agenticdevelopertoolkit://recipes/detail-pane), `visible` controls whether the child applies `pc-pane-visible` or `pc-pane-hidden` while staying mounted either way. PanelStack has no model for a hidden-but-mounted pane: an index is either present in `visibleTopicIndexes` (its DetailPane renders with `visible={true}`) or absent (no DetailPane exists for it at all) — `visible={false}` never occurs here.
+- **mark-visible-state**: Component MUST pass `visible={true}` to each DetailPane it renders. Per DetailPane's `visibility-state` requirement (adhsdk://recipes/detail-pane), `visible` controls whether the child applies `pc-pane-visible` or `pc-pane-hidden` while staying mounted either way. PanelStack has no model for a hidden-but-mounted pane: an index is either present in `visibleTopicIndexes` (its DetailPane renders with `visible={true}`) or absent (no DetailPane exists for it at all) — `visible={false}` never occurs here.
 - **use-message-index-as-key**: Component MUST use the topic's `messageIndex` as the React key when rendering each DetailPane. This preserves each DetailPane's instance identity across reorders of `visibleTopicIndexes` as long as the indexes it lists resolve to distinct `messageIndex` values — see the **duplicate-indexes** edge case for what happens when they don't.
 - **forward-ref**: Component MUST forward a ref to the root div element.
 - **apply-class-name**: Component MUST apply the CSS class name `pc-panel-stack` to the root div.
@@ -88,7 +88,7 @@ The root `div` carries no ARIA role: PanelStack does not identify the stack as a
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `topics` | `TopicData[]` | Required | Array of topic objects to be rendered. Each topic is passed to a DetailPane component; the `TopicData` shape is the Topic data model defined by [detail-pane](agenticdevelopertoolkit://recipes/detail-pane). |
+| `topics` | `TopicData[]` | Required | Array of topic objects to be rendered. Each topic is passed to a DetailPane component; the `TopicData` shape is the Topic data model defined by [detail-pane](adhsdk://recipes/detail-pane). |
 | `visibleTopicIndexes` | `number[]` | Required | Array of indexes into the `topics` array indicating which topics should be rendered. |
 | `onImageLoad` | `() => void` | Required | Callback function invoked when images in DetailPane components complete loading. |
 | `ref` | `React.Ref<HTMLDivElement>` | Optional | Ref object forwarded to the root div element. |

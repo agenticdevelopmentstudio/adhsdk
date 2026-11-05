@@ -1,5 +1,5 @@
 {
-  "name": "@agentic-toolkit/account",
+  "name": "@adh-sdk/account",
   "version": "0.1.0",
   "description": "A user's ACCOUNT settings surface: the portable panels behind User Settings — account, profile, contact info, notifications, security, subscription and archived organizations — plus the master-detail settings layout they share.",
   "license": "UNLICENSED",
@@ -13,9 +13,9 @@
   "sideEffects": [
     "**/*.css"
   ],
-  "comment:tier": "MECHANISM, deliberately: this package must never import @agentic-toolkit/adh* (tools/check_boundaries.py). The two settings panels that DO need adh vocabulary — AppearancePanel and ThemePickerRow, which use useAppearanceSettings and theme-preview — live in @agentic-toolkit/adh instead. That is not a compromise: adh depends on THIS package to build the topic registry, so an adh import here would be a dependency cycle as well as a tier violation.",
+  "comment:tier": "MECHANISM, deliberately: this package must never import @adh-sdk/adh* (tools/check_boundaries.py). The two settings panels that DO need adh vocabulary — AppearancePanel and ThemePickerRow, which use useAppearanceSettings and theme-preview — live in @adh-sdk/adh instead. That is not a compromise: adh depends on THIS package to build the topic registry, so an adh import here would be a dependency cycle as well as a tier violation.",
   "comment:exports": "`development` → src for `next dev` (HMR); prod skips it → dist. One entry only: every module here renders.",
-  "comment:styles": "This package ships NO stylesheet: `settings.css` and the `./styles.css` export went with the hand-rolled settings grid SettingsLayout.tsx used to render (it renders HierarchicalDetailView now, whose styling is Tailwind utilities the `./sources.css` registration below already covers). If a `.css` is ever added back here, it needs BOTH a `./styles.css` export and a `build:css` step running copy-css.mjs, and adh's adh-site.css has to @import it — a side-effect `import \"./x.css\"` from a component is not enough: tsup extracts it into a sibling dist/index.css and DELETES the import from the emitted JS, so the sheet loads in `next dev`/vitest (the `development` condition resolves to src) and is silently absent from every production build, on all ~45 sites. @agentic-toolkit/auth still does it the right way if a worked example is wanted.",
+  "comment:styles": "This package ships NO stylesheet: `settings.css` and the `./styles.css` export went with the hand-rolled settings grid SettingsLayout.tsx used to render (it renders HierarchicalDetailView now, whose styling is Tailwind utilities the `./sources.css` registration below already covers). If a `.css` is ever added back here, it needs BOTH a `./styles.css` export and a `build:css` step running copy-css.mjs, and adh's adh-site.css has to @import it — a side-effect `import \"./x.css\"` from a component is not enough: tsup extracts it into a sibling dist/index.css and DELETES the import from the emitted JS, so the sheet loads in `next dev`/vitest (the `development` condition resolves to src) and is silently absent from every production build, on all ~45 sites. @adh-sdk/auth still does it the right way if a worked example is wanted.",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -33,17 +33,17 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@agentic-toolkit/api-explorer": "workspace:*",
-    "@agentic-toolkit/auth": "workspace:*",
-    "@agentic-toolkit/crud": "workspace:*",
-    "@agentic-toolkit/data": "workspace:*",
-    "@agentic-toolkit/personas": "workspace:*",
-    "@agentic-toolkit/profile": "workspace:*",
-    "@agentic-toolkit/authentication": "workspace:*",
-    "@agentic-toolkit/resource": "workspace:*",
+    "@adh-sdk/api-explorer": "workspace:*",
+    "@adh-sdk/auth": "workspace:*",
+    "@adh-sdk/crud": "workspace:*",
+    "@adh-sdk/data": "workspace:*",
+    "@adh-sdk/personas": "workspace:*",
+    "@adh-sdk/profile": "workspace:*",
+    "@adh-sdk/authentication": "workspace:*",
+    "@adh-sdk/resource": "workspace:*",
     "@tanstack/react-query": "^5.62.0",
     "lucide-react": "^1.16.0",
-    "@agenticdevelopertoolkit/ui": "workspace:*"
+    "@adh-sdk/ui": "workspace:*"
   },
   "peerDependencies": {
     "next": ">=15",

@@ -2,17 +2,17 @@
 
 import type { ReactElement, ReactNode } from "react";
 import { Table2, KeyRound, KeySquare, Database } from "lucide-react";
-import { AccessPane } from "@agentic-toolkit/authentication";
-import { StorageTokensPanel } from "@agentic-toolkit/ecosystem-config";
+import { AccessPane } from "@adh-sdk/authentication";
+import { StorageTokensPanel } from "@adh-sdk/ecosystem-config";
 import {
   RailHostBoundary,
   StackGroupDetail,
   WorkspaceNotManageable,
   WorkspaceResolutionError,
   type GroupTopicItem,
-} from "@agentic-toolkit/resource";
-import { helpFor } from "@agentic-toolkit/adh/help/store";
-import { EmptyState } from "@agenticdevelopertoolkit/ui/components/empty-state";
+} from "@adh-sdk/resource";
+import { helpFor } from "@adh-sdk/adh/help/store";
+import { EmptyState } from "@adh-sdk/ui/components/empty-state";
 import { SchemasPane } from "../schemas/SchemasPane";
 import { ecosystemUsersApi } from "../api/customers";
 import { applicationsPrototypeApi } from "../api/applications-prototype";

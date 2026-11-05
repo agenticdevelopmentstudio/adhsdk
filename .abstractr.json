@@ -4,14 +4,14 @@
     {
       "name": "apple-adt",
       "paths": [
-        "packages/apple/AgenticDeveloperToolkit/"
+        "packages/apple/AgenticDeveloperHubSDK/"
       ],
       "depends_on": [],
       "shared": true,
-      "holds": "AgenticDeveloperToolkit (Foundation-only, Sources/) and AgenticDeveloperToolkitUI (SourcesUI/), for macOS, iOS, watchOS, tvOS and visionOS. The bottom of the Apple stack: AgenticToolkitCore re-exports the Foundation framework, and the UI-bearing ATK frameworks link the UI one.",
+      "holds": "AgenticDeveloperHubSDK (Foundation-only, Sources/) and AgenticDeveloperHubSDKUI (SourcesUI/), for macOS, iOS, watchOS, tvOS and visionOS. The bottom of the Apple stack: AgenticDeveloperHubSDKCore re-exports the Foundation framework, and the UI-bearing ATK frameworks link the UI one.",
       "imported_as": [
-        "AgenticDeveloperToolkit",
-        "AgenticDeveloperToolkitUI"
+        "AgenticDeveloperHubSDK",
+        "AgenticDeveloperHubSDKUI"
       ]
     },
     {
@@ -48,34 +48,34 @@
         "apple-adt"
       ],
       "shared": false,
-      "holds": "AgenticDeveloperToolkitSampleApp. A demo app per Apple platform. Wiring only."
+      "holds": "AgenticDeveloperHubSDKSampleApp. A demo app per Apple platform. Wiring only."
     },
     {
       "name": "apple-core",
       "paths": [
-        "packages/apple/AgenticToolkit/Core/"
+        "packages/apple/AgenticDeveloperHubSDK/Core/"
       ],
       "depends_on": [
         "apple-adt"
       ],
       "shared": true,
-      "holds": "AgenticToolkitCore. Foundation only — no UI, no platform APIs."
+      "holds": "AgenticDeveloperHubSDKCore. Foundation only — no UI, no platform APIs."
     },
     {
       "name": "apple-language",
       "paths": [
-        "packages/apple/AgenticToolkit/Language/"
+        "packages/apple/AgenticDeveloperHubSDK/Language/"
       ],
       "depends_on": [
         "apple-core"
       ],
       "shared": true,
-      "holds": "AgenticToolkitLanguage. The text-document model and the LSP client — Foundation, AgenticToolkitCore and the ChimeHQ JSONRPC/LanguageServerProtocol/LanguageClient stack. No AppKit, so it is daemon-safe; the AppKit face of a TextDocument is TextDocumentStorage one tier up in apple-macos. LanguageServerProtocol's Position/Range/TextEdit/Diagnostic vocabulary is the document model's vocabulary, which is why the two live in one framework rather than two."
+      "holds": "AgenticDeveloperHubSDKLanguage. The text-document model and the LSP client — Foundation, AgenticDeveloperHubSDKCore and the ChimeHQ JSONRPC/LanguageServerProtocol/LanguageClient stack. No AppKit, so it is daemon-safe; the AppKit face of a TextDocument is TextDocumentStorage one tier up in apple-macos. LanguageServerProtocol's Position/Range/TextEdit/Diagnostic vocabulary is the document model's vocabulary, which is why the two live in one framework rather than two."
     },
     {
       "name": "apple-pluginkit",
       "paths": [
-        "packages/apple/AgenticToolkit/AIPluginKit/"
+        "packages/apple/AgenticDeveloperHubSDK/AIPluginKit/"
       ],
       "depends_on": [
         "apple-core"
@@ -86,59 +86,59 @@
     {
       "name": "apple-coreui",
       "paths": [
-        "packages/apple/AgenticToolkit/CoreUI/"
+        "packages/apple/AgenticDeveloperHubSDK/CoreUI/"
       ],
       "depends_on": [
         "apple-core"
       ],
       "shared": true,
-      "holds": "AgenticToolkitCoreUI. Cross-cutting AppKit utilities and primitive views."
+      "holds": "AgenticDeveloperHubSDKCoreUI. Cross-cutting AppKit utilities and primitive views."
     },
     {
       "name": "apple-coremacos",
       "paths": [
-        "packages/apple/AgenticToolkit/CoreMacOS/"
+        "packages/apple/AgenticDeveloperHubSDK/CoreMacOS/"
       ],
       "depends_on": [
         "apple-core",
         "apple-coreui"
       ],
       "shared": true,
-      "holds": "AgenticToolkitCoreMacOS. macOS-only foundations."
+      "holds": "AgenticDeveloperHubSDKCoreMacOS. macOS-only foundations."
     },
     {
       "name": "apple-permissions",
       "paths": [
-        "packages/apple/AgenticToolkit/Permissions/"
+        "packages/apple/AgenticDeveloperHubSDK/Permissions/"
       ],
       "depends_on": [],
       "shared": true,
-      "holds": "AgenticToolkitPermissions. TCC/entitlement state, no UI."
+      "holds": "AgenticDeveloperHubSDKPermissions. TCC/entitlement state, no UI."
     },
     {
       "name": "apple-displays",
       "paths": [
-        "packages/apple/AgenticToolkit/Displays/"
+        "packages/apple/AgenticDeveloperHubSDK/Displays/"
       ],
       "depends_on": [],
       "shared": true,
-      "holds": "AgenticToolkitDisplays. Display inventory, modes, anchor layouts, monitoring, thumbnails, Universal Control placement. System frameworks only - the displayr CLI links it alone."
+      "holds": "AgenticDeveloperHubSDKDisplays. Display inventory, modes, anchor layouts, monitoring, thumbnails, Universal Control placement. System frameworks only - the displayr CLI links it alone."
     },
     {
       "name": "apple-launch",
       "paths": [
-        "packages/apple/AgenticToolkit/Launch/"
+        "packages/apple/AgenticDeveloperHubSDK/Launch/"
       ],
       "depends_on": [
         "apple-core"
       ],
       "shared": true,
-      "holds": "AgenticToolkitLaunch. Startup-job protocols, StartupQueue and LaunchManager: first-run and install work done natively."
+      "holds": "AgenticDeveloperHubSDKLaunch. Startup-job protocols, StartupQueue and LaunchManager: first-run and install work done natively."
     },
     {
       "name": "apple-launchui",
       "paths": [
-        "packages/apple/AgenticToolkit/LaunchUI/"
+        "packages/apple/AgenticDeveloperHubSDK/LaunchUI/"
       ],
       "depends_on": [
         "apple-launch",
@@ -149,12 +149,12 @@
         "apple-permissionsui"
       ],
       "shared": true,
-      "holds": "AgenticToolkitLaunchUI. The AppKit presenter for LaunchManager: the undismissable progress panel and run-loop alerts."
+      "holds": "AgenticDeveloperHubSDKLaunchUI. The AppKit presenter for LaunchManager: the undismissable progress panel and run-loop alerts."
     },
     {
       "name": "apple-permissionsui",
       "paths": [
-        "packages/apple/AgenticToolkit/PermissionsUI/"
+        "packages/apple/AgenticDeveloperHubSDK/PermissionsUI/"
       ],
       "depends_on": [
         "apple-permissions",
@@ -163,45 +163,45 @@
         "apple-coremacos"
       ],
       "shared": true,
-      "holds": "AgenticToolkitPermissionsUI. The permission-request surfaces."
+      "holds": "AgenticDeveloperHubSDKPermissionsUI. The permission-request surfaces."
     },
     {
       "name": "apple-database",
       "paths": [
-        "packages/apple/AgenticToolkit/Database/"
+        "packages/apple/AgenticDeveloperHubSDK/Database/"
       ],
       "depends_on": [
         "apple-core",
         "apple-pluginkit"
       ],
       "shared": true,
-      "holds": "AgenticToolkitDatabase. Storage primitives."
+      "holds": "AgenticDeveloperHubSDKDatabase. Storage primitives."
     },
     {
       "name": "apple-sync",
       "paths": [
-        "packages/apple/AgenticToolkit/Sync/"
+        "packages/apple/AgenticDeveloperHubSDK/Sync/"
       ],
       "depends_on": [],
       "shared": true,
-      "holds": "AgenticToolkitSync. Backend-agnostic sync protocol."
+      "holds": "AgenticDeveloperHubSDKSync. Backend-agnostic sync protocol."
     },
     {
       "name": "apple-syncgrdb",
       "paths": [
-        "packages/apple/AgenticToolkit/SyncGRDB/"
+        "packages/apple/AgenticDeveloperHubSDK/SyncGRDB/"
       ],
       "depends_on": [
         "apple-sync",
         "apple-database"
       ],
       "shared": true,
-      "holds": "AgenticToolkitSyncGRDB. The GRDB-backed sync implementation."
+      "holds": "AgenticDeveloperHubSDKSyncGRDB. The GRDB-backed sync implementation."
     },
     {
       "name": "apple-markdown",
       "paths": [
-        "packages/apple/AgenticToolkit/Markdown/"
+        "packages/apple/AgenticDeveloperHubSDK/Markdown/"
       ],
       "depends_on": [
         "apple-database",
@@ -210,12 +210,12 @@
         "apple-adt"
       ],
       "shared": true,
-      "holds": "AgenticToolkitMarkdown. The GRDB-backed markdown note store, built for macOS and iOS, re-exporting AgenticDeveloperToolkit. Storage and sync only — no UI."
+      "holds": "AgenticDeveloperHubSDKMarkdown. The GRDB-backed markdown note store, built for macOS and iOS, re-exporting AgenticDeveloperHubSDK. Storage and sync only — no UI."
     },
     {
       "name": "apple-activity",
       "paths": [
-        "packages/apple/AgenticToolkit/Activity/"
+        "packages/apple/AgenticDeveloperHubSDK/Activity/"
       ],
       "depends_on": [
         "apple-database",
@@ -226,12 +226,12 @@
         "apple-permissionsui"
       ],
       "shared": true,
-      "holds": "AgenticToolkitActivity. Activity capture and tracking moved from Olylo: the usage-capture pipeline (FocusTracker, UsageCollector, UsageStore), context-event model, store and triggers, the capture permission gate, and usage sync. Built for macOS and iOS; macOS-only adapters and triggers are #if os(macOS)-gated."
+      "holds": "AgenticDeveloperHubSDKActivity. Activity capture and tracking moved from Olylo: the usage-capture pipeline (FocusTracker, UsageCollector, UsageStore), context-event model, store and triggers, the capture permission gate, and usage sync. Built for macOS and iOS; macOS-only adapters and triggers are #if os(macOS)-gated."
     },
     {
       "name": "apple-macos",
       "paths": [
-        "packages/apple/AgenticToolkit/macOS/"
+        "packages/apple/AgenticDeveloperHubSDK/macOS/"
       ],
       "depends_on": [
         "apple-core",
@@ -246,50 +246,50 @@
         "apple-displays"
       ],
       "shared": true,
-      "holds": "AgenticToolkitMacOS. The feature-rich framework the host app, plugins, Whippet and Stenographer all consume."
+      "holds": "AgenticDeveloperHubSDKMacOS. The feature-rich framework the host app, plugins, Whippet and Stenographer all consume."
     },
     {
       "name": "apple-htdv",
       "paths": [
-        "packages/apple/AgenticToolkit/HTDV/"
+        "packages/apple/AgenticDeveloperHubSDK/HTDV/"
       ],
       "depends_on": [
         "apple-adt"
       ],
       "shared": true,
-      "holds": "AgenticToolkitHTDV. Native Hierarchical Topic Detail View: HTDVDataSource/HTDVController/HTDVLayoutEngine, form spec + FormState + FormViewController, MarkdownEditing protocol. Foundation + AppKit/UIKit only."
+      "holds": "AgenticDeveloperHubSDKHTDV. Native Hierarchical Topic Detail View: HTDVDataSource/HTDVController/HTDVLayoutEngine, form spec + FormState + FormViewController, MarkdownEditing protocol. Foundation + AppKit/UIKit only."
     },
     {
       "name": "apple-hubauth",
       "paths": [
-        "packages/apple/AgenticToolkit/HubAuth/"
+        "packages/apple/AgenticDeveloperHubSDK/HubAuth/"
       ],
       "depends_on": [
         "apple-hubclient",
         "apple-adt"
       ],
       "shared": true,
-      "holds": "AgenticToolkitHubAuth. The hub login on its own: SessionController, HubEnvironment and the transport sources, HubError, HubUser, HubAccount, the sign-in view model, passkeys and web sign-in, HubLinks. Links only AgenticDeveloperHubAuth, never the full client, HTDV or the workspace layer. AgenticToolkitHub re-exports it.",
+      "holds": "AgenticDeveloperHubSDKHubAuth. The hub login on its own: SessionController, HubEnvironment and the transport sources, HubError, HubUser, HubAccount, the sign-in view model, passkeys and web sign-in, HubLinks. Links only AgenticDeveloperHubAuth, never the full client, HTDV or the workspace layer. AgenticDeveloperHubSDKHub re-exports it.",
       "imported_as": [
-        "AgenticToolkitHubAuth"
+        "AgenticDeveloperHubSDKHubAuth"
       ]
     },
     {
       "name": "apple-hub",
       "paths": [
-        "packages/apple/AgenticToolkit/Hub/"
+        "packages/apple/AgenticDeveloperHubSDK/Hub/"
       ],
       "depends_on": [
         "apple-htdv",
         "apple-hubauth"
       ],
       "shared": true,
-      "holds": "AgenticToolkitHub. Shared hub feature layer: HubModules registry hook (re-exports AgenticToolkitHubAuth, which holds HubError), and per-feature models/data sources/modules consumed by the native hub apps."
+      "holds": "AgenticDeveloperHubSDKHub. Shared hub feature layer: HubModules registry hook (re-exports AgenticDeveloperHubSDKHubAuth, which holds HubError), and per-feature models/data sources/modules consumed by the native hub apps."
     },
     {
       "name": "apple-hubservice",
       "paths": [
-        "packages/apple/AgenticToolkit/HubService/"
+        "packages/apple/AgenticDeveloperHubSDK/HubService/"
       ],
       "depends_on": [
         "apple-hub",
@@ -300,12 +300,12 @@
         "apple-hubauth"
       ],
       "shared": true,
-      "holds": "AgenticToolkitHubService. The hub's workspaces, API adapters and permissions — no UI. The session and transport live in AgenticToolkitHubAuth below it."
+      "holds": "AgenticDeveloperHubSDKHubService. The hub's workspaces, API adapters and permissions — no UI. The session and transport live in AgenticDeveloperHubSDKHubAuth below it."
     },
     {
       "name": "apple-hubui",
       "paths": [
-        "packages/apple/AgenticToolkit/HubUI/"
+        "packages/apple/AgenticDeveloperHubSDK/HubUI/"
       ],
       "depends_on": [
         "apple-hubservice",
@@ -320,23 +320,23 @@
         "apple-hubauth"
       ],
       "shared": true,
-      "holds": "AgenticToolkitHubUI. The hub's shells (AppKit and UIKit), sign-in, feature registry, and on macOS HubFeature and the hub script commands. Hosts assemble it; it builds no menu and no app delegate."
+      "holds": "AgenticDeveloperHubSDKHubUI. The hub's shells (AppKit and UIKit), sign-in, feature registry, and on macOS HubFeature and the hub script commands. Hosts assemble it; it builds no menu and no app delegate."
     },
     {
       "name": "apple-systemmonitor",
       "paths": [
-        "packages/apple/AgenticToolkit/SystemMonitor/"
+        "packages/apple/AgenticDeveloperHubSDK/SystemMonitor/"
       ],
       "depends_on": [
         "apple-core"
       ],
       "shared": true,
-      "holds": "AgenticToolkitSystemMonitor. Daemon-safe machine health: disk, memory, CPU and named process groups (Docker, Ollama), sampled on a timer. No AppKit."
+      "holds": "AgenticDeveloperHubSDKSystemMonitor. Daemon-safe machine health: disk, memory, CPU and named process groups (Docker, Ollama), sampled on a timer. No AppKit."
     },
     {
       "name": "apple-systemmonitorui",
       "paths": [
-        "packages/apple/AgenticToolkit/SystemMonitorUI/"
+        "packages/apple/AgenticDeveloperHubSDK/SystemMonitorUI/"
       ],
       "depends_on": [
         "apple-systemmonitor",
@@ -346,12 +346,12 @@
         "apple-macos"
       ],
       "shared": true,
-      "holds": "AgenticToolkitSystemMonitorUI. The themed System Status window and its reading cards and gauges."
+      "holds": "AgenticDeveloperHubSDKSystemMonitorUI. The themed System Status window and its reading cards and gauges."
     },
     {
       "name": "apple-tests",
       "paths": [
-        "packages/apple/AgenticToolkit/Tests/"
+        "packages/apple/AgenticDeveloperHubSDK/Tests/"
       ],
       "depends_on": [
         "apple-core",
@@ -386,7 +386,7 @@
     {
       "name": "apple-app",
       "paths": [
-        "packages/apple/AgenticToolkitApp/"
+        "packages/apple/AgenticDeveloperHubSDKApp/"
       ],
       "depends_on": [
         "apple-core",
@@ -451,7 +451,7 @@
         "web-ui"
       ],
       "shared": true,
-      "holds": "@agentic-toolkit/adh. Family site chrome — header, footer, legal, themes, debug."
+      "holds": "@adh-sdk/adh. Family site chrome — header, footer, legal, themes, debug."
     },
     {
       "name": "web-adh-api-types",
@@ -465,7 +465,7 @@
         "web-toolchain"
       ],
       "shared": true,
-      "holds": "@agentic-toolkit/adh-api-types. Generated vocabulary."
+      "holds": "@adh-sdk/adh-api-types. Generated vocabulary."
     },
     {
       "name": "web-adh-next-config",
@@ -481,7 +481,7 @@
         "web-toolchain"
       ],
       "shared": true,
-      "holds": "The `@agentic-toolkit/adh-next-config` package — a published sibling library other packages and every site build on. New code here is a change to the shared surface, so it stops for a decision."
+      "holds": "The `@adh-sdk/adh-next-config` package — a published sibling library other packages and every site build on. New code here is a change to the shared surface, so it stops for a decision."
     },
     {
       "name": "web-adh-registry",
@@ -492,7 +492,7 @@
         "web-toolchain"
       ],
       "shared": true,
-      "holds": "@agentic-toolkit/adh-registry."
+      "holds": "@adh-sdk/adh-registry."
     },
     {
       "name": "web-adh-site-config",
@@ -503,7 +503,7 @@
         "web-toolchain"
       ],
       "shared": true,
-      "holds": "@agentic-toolkit/adh-site-config."
+      "holds": "@adh-sdk/adh-site-config."
     },
     {
       "name": "web-adh-site-homes",
@@ -519,7 +519,7 @@
         "web-toolchain"
       ],
       "shared": true,
-      "holds": "The `@agentic-toolkit/adh-site-homes` package — a published sibling library other packages and every site build on. New code here is a change to the shared surface, so it stops for a decision."
+      "holds": "The `@adh-sdk/adh-site-homes` package — a published sibling library other packages and every site build on. New code here is a change to the shared surface, so it stops for a decision."
     },
     {
       "name": "web-adh-ui",
@@ -531,7 +531,7 @@
         "web-ui"
       ],
       "shared": true,
-      "holds": "The `@agentic-toolkit/adh-ui` package — a published sibling library other packages and every site build on. New code here is a change to the shared surface, so it stops for a decision."
+      "holds": "The `@adh-sdk/adh-ui` package — a published sibling library other packages and every site build on. New code here is a change to the shared surface, so it stops for a decision."
     },
     {
       "name": "web-api-explorer",
@@ -544,7 +544,7 @@
         "web-ui"
       ],
       "shared": true,
-      "holds": "@agentic-toolkit/api-explorer."
+      "holds": "@adh-sdk/api-explorer."
     },
     {
       "name": "web-auth",
@@ -556,7 +556,7 @@
         "web-ui"
       ],
       "shared": true,
-      "holds": "@agentic-toolkit/auth. Session, sign-in surfaces, auth context."
+      "holds": "@adh-sdk/auth. Session, sign-in surfaces, auth context."
     },
     {
       "name": "web-controls",
@@ -568,7 +568,7 @@
         "web-toolchain"
       ],
       "shared": true,
-      "holds": "@agenticdevelopertoolkit/controls. filtered-list, panels, toggles, orb-row."
+      "holds": "@adh-sdk/controls. filtered-list, panels, toggles, orb-row."
     },
     {
       "name": "web-crud",
@@ -583,7 +583,7 @@
         "web-ui"
       ],
       "shared": true,
-      "holds": "@agentic-toolkit/crud. Generated CRUD surfaces."
+      "holds": "@adh-sdk/crud. Generated CRUD surfaces."
     },
     {
       "name": "web-data",
@@ -597,7 +597,7 @@
         "web-ui"
       ],
       "shared": true,
-      "holds": "@agentic-toolkit/data. Typed access over the backend API."
+      "holds": "@adh-sdk/data. Typed access over the backend API."
     },
     {
       "name": "web-deploy-platform",
@@ -608,7 +608,7 @@
         "web-toolchain"
       ],
       "shared": true,
-      "holds": "@agentic-toolkit/deploy-platform."
+      "holds": "@adh-sdk/deploy-platform."
     },
     {
       "name": "web-features",
@@ -649,7 +649,7 @@
         "web-ui"
       ],
       "shared": true,
-      "holds": "@agenticdevelopertoolkit/markdown."
+      "holds": "@adh-sdk/markdown."
     },
     {
       "name": "web-messaging",
@@ -663,7 +663,7 @@
         "web-ui"
       ],
       "shared": true,
-      "holds": "@agentic-toolkit/messaging."
+      "holds": "@adh-sdk/messaging."
     },
     {
       "name": "web-model",
@@ -674,7 +674,7 @@
         "web-toolchain"
       ],
       "shared": true,
-      "holds": "@agenticdevelopertoolkit/model. Providers, hooks, search/breadcrumb/nav lib."
+      "holds": "@adh-sdk/model. Providers, hooks, search/breadcrumb/nav lib."
     },
     {
       "name": "web-next-env",
@@ -685,7 +685,7 @@
         "web-toolchain"
       ],
       "shared": true,
-      "holds": "The `@agentic-toolkit/next-env` package — a published sibling library other packages and every site build on. New code here is a change to the shared surface, so it stops for a decision."
+      "holds": "The `@adh-sdk/next-env` package — a published sibling library other packages and every site build on. New code here is a change to the shared surface, so it stops for a decision."
     },
     {
       "name": "web-next-headers",
@@ -696,7 +696,7 @@
         "web-toolchain"
       ],
       "shared": true,
-      "holds": "The `@agentic-toolkit/next-headers` package — a published sibling library other packages and every site build on. New code here is a change to the shared surface, so it stops for a decision."
+      "holds": "The `@adh-sdk/next-headers` package — a published sibling library other packages and every site build on. New code here is a change to the shared surface, so it stops for a decision."
     },
     {
       "name": "web-next-preflight",
@@ -707,7 +707,7 @@
         "web-toolchain"
       ],
       "shared": true,
-      "holds": "The `@agentic-toolkit/next-preflight` package — a published sibling library other packages and every site build on. New code here is a change to the shared surface, so it stops for a decision."
+      "holds": "The `@adh-sdk/next-preflight` package — a published sibling library other packages and every site build on. New code here is a change to the shared surface, so it stops for a decision."
     },
     {
       "name": "web-persona",
@@ -722,7 +722,7 @@
         "web-viewport"
       ],
       "shared": true,
-      "holds": "@agentic-toolkit/persona."
+      "holds": "@adh-sdk/persona."
     },
     {
       "name": "web-resource",
@@ -736,7 +736,7 @@
         "web-ui"
       ],
       "shared": true,
-      "holds": "@agentic-toolkit/resource. List/detail scaffolding."
+      "holds": "@adh-sdk/resource. List/detail scaffolding."
     },
     {
       "name": "web-search",
@@ -749,7 +749,7 @@
         "web-ui"
       ],
       "shared": true,
-      "holds": "@agenticdevelopertoolkit/search."
+      "holds": "@adh-sdk/search."
     },
     {
       "name": "web-themes",
@@ -760,7 +760,7 @@
         "web-toolchain"
       ],
       "shared": true,
-      "holds": "@agenticdevelopertoolkit/themes. ColorModeProvider, ThemeStyle, theme manifest."
+      "holds": "@adh-sdk/themes. ColorModeProvider, ThemeStyle, theme manifest."
     },
     {
       "name": "web-ui",
@@ -771,7 +771,7 @@
         "web-toolchain"
       ],
       "shared": true,
-      "holds": "@agenticdevelopertoolkit/ui. shadcn slot, cn, blocks, globals.css. The bottom of the web stack."
+      "holds": "@adh-sdk/ui. shadcn slot, cn, blocks, globals.css. The bottom of the web stack."
     },
     {
       "name": "web-analytics",
@@ -782,7 +782,7 @@
         "web-toolchain"
       ],
       "shared": true,
-      "holds": "@agenticdevelopertoolkit/analytics. Privacy-first product analytics any site can mount: the one PostHog config (anonymous, cookieless, allowlist-only), PostHogAnalytics to start it from a root layout, and the URL scrubbers every analytics and error pipeline shares. No adh imports, so a site outside the family drops it in."
+      "holds": "@adh-sdk/analytics. Privacy-first product analytics any site can mount: the one PostHog config (anonymous, cookieless, allowlist-only), PostHogAnalytics to start it from a root layout, and the URL scrubbers every analytics and error pipeline shares. No adh imports, so a site outside the family drops it in."
     },
     {
       "name": "web-avatar",
@@ -793,7 +793,7 @@
         "web-toolchain"
       ],
       "shared": true,
-      "holds": "@agenticdevelopertoolkit/avatar. Headless avatar behavior + animation engine. A persona-agnostic `useAvatarEngine` hook that gives any SVG face reflexes (blink, idle ladder, gaze, speech) and an expression-driven pose engine over optional channels (eyes, brows, antennae, mouth, body). Driven by an `expression` prop."
+      "holds": "@adh-sdk/avatar. Headless avatar behavior + animation engine. A persona-agnostic `useAvatarEngine` hook that gives any SVG face reflexes (blink, idle ladder, gaze, speech) and an expression-driven pose engine over optional channels (eyes, brows, antennae, mouth, body). Driven by an `expression` prop."
     },
     {
       "name": "web-avatar-engine",
@@ -804,7 +804,7 @@
         "web-toolchain"
       ],
       "shared": true,
-      "holds": "@agenticdevelopertoolkit/avatar-engine."
+      "holds": "@adh-sdk/avatar-engine."
     },
     {
       "name": "web-chat",
@@ -815,7 +815,7 @@
         "web-toolchain"
       ],
       "shared": true,
-      "holds": "@agenticdevelopertoolkit/chat. React chat component library — InlineChat, ThreePaneChat, MobileChat, PersonaChat with pluggable backends."
+      "holds": "@adh-sdk/chat. React chat component library — InlineChat, ThreePaneChat, MobileChat, PersonaChat with pluggable backends."
     },
     {
       "name": "web-chrome",
@@ -826,7 +826,7 @@
         "web-toolchain"
       ],
       "shared": true,
-      "holds": "@agenticdevelopertoolkit/chrome. Site-chrome primitives — the menu button and the close glyph derived from it, with the bar geometry in one place so every site rasterises them the same way."
+      "holds": "@adh-sdk/chrome. Site-chrome primitives — the menu button and the close glyph derived from it, with the bar geometry in one place so every site rasterises them the same way."
     },
     {
       "name": "web-editing",
@@ -838,7 +838,7 @@
         "web-ui"
       ],
       "shared": true,
-      "holds": "@agenticdevelopertoolkit/editing. The editing container: one owner of the draft, the Save button and the unsaved-changes guard for every editable surface."
+      "holds": "@adh-sdk/editing. The editing container: one owner of the draft, the Save button and the unsaved-changes guard for every editable surface."
     },
     {
       "name": "web-landing",
@@ -850,7 +850,7 @@
         "web-textlens"
       ],
       "shared": true,
-      "holds": "@agenticdevelopertoolkit/landing. Snap-scrolling long-form landing page kit — Deck, Screen, NavChrome and a block vocabulary, themed by CSS custom properties. HeroNav's sweep is web-textlens's lens."
+      "holds": "@adh-sdk/landing. Snap-scrolling long-form landing page kit — Deck, Screen, NavChrome and a block vocabulary, themed by CSS custom properties. HeroNav's sweep is web-textlens's lens."
     },
     {
       "name": "web-site-template",
@@ -866,7 +866,7 @@
         "web-toolchain"
       ],
       "shared": true,
-      "holds": "@agenticdevelopertoolkit/site-template. The content-site frame every content site renders — a window-tall hero, the scrolling bands, the burger drawer and bitbag — built on the landing kit. A site supplies its copy and its custom slots, and nothing of the frame."
+      "holds": "@adh-sdk/site-template. The content-site frame every content site renders — a window-tall hero, the scrolling bands, the burger drawer and bitbag — built on the landing kit. A site supplies its copy and its custom slots, and nothing of the frame."
     },
     {
       "name": "web-popover",
@@ -877,7 +877,7 @@
         "web-toolchain"
       ],
       "shared": true,
-      "holds": "@agenticdevelopertoolkit/popover. Hover popover with a pointing arrow — an anchored panel, the tail that points back at its trigger, the invisible bridge that lets the pointer cross the gap, and the one-open-at-a-time hover-intent state a row of them needs."
+      "holds": "@adh-sdk/popover. Hover popover with a pointing arrow — an anchored panel, the tail that points back at its trigger, the invisible bridge that lets the pointer cross the gap, and the one-open-at-a-time hover-intent state a row of them needs."
     },
     {
       "name": "web-registry-profile",
@@ -889,7 +889,7 @@
         "web-toolchain"
       ],
       "shared": true,
-      "holds": "@agenticdevelopertoolkit/registry-profile. The public registry-entry profile renderer. Takes a serialized entry and renders it — no fetching, no auth, no adh imports, so it drops into anyone's site."
+      "holds": "@adh-sdk/registry-profile. The public registry-entry profile renderer. Takes a serialized entry and renders it — no fetching, no auth, no adh imports, so it drops into anyone's site."
     },
     {
       "name": "web-registry-types",
@@ -900,7 +900,7 @@
         "web-toolchain"
       ],
       "shared": true,
-      "holds": "@agenticdevelopertoolkit/registry-types. Framework-free registry field-type catalog: type ids, config shapes, validators and value coercion. No React, no runtime dependencies — the backend vendors this file so both sides validate owner-defined values against the same rules."
+      "holds": "@adh-sdk/registry-types. Framework-free registry field-type catalog: type ids, config shapes, validators and value coercion. No React, no runtime dependencies — the backend vendors this file so both sides validate owner-defined values against the same rules."
     },
     {
       "name": "web-status-server",
@@ -912,7 +912,7 @@
         "web-toolchain"
       ],
       "shared": true,
-      "holds": "@agentic-toolkit/status-server. A status monitor's server: Hono app factory, monitor cycle, board, routes, OpenAPI, MCP, peers, telemetry, storage and the libSQL implementation. No React, no Next, no DOM — a backend host depends on this package alone."
+      "holds": "@adh-sdk/status-server. A status monitor's server: Hono app factory, monitor cycle, board, routes, OpenAPI, MCP, peers, telemetry, storage and the libSQL implementation. No React, no Next, no DOM — a backend host depends on this package alone."
     },
     {
       "name": "web-status-web",
@@ -926,7 +926,7 @@
         "web-ui"
       ],
       "shared": true,
-      "holds": "@agentic-toolkit/status-web. A status monitor's operator dashboard: React panels, hooks and the browser-side API client. A Next host mounts these in its own pages, providers and proxy."
+      "holds": "@adh-sdk/status-web. A status monitor's operator dashboard: React panels, hooks and the browser-side API client. A Next host mounts these in its own pages, providers and proxy."
     },
     {
       "name": "web-textlens",
@@ -937,7 +937,7 @@
         "web-toolchain"
       ],
       "shared": true,
-      "holds": "@agenticdevelopertoolkit/textlens. A travelling lens that sweeps along a line of text, magnifying, softening and tinting each glyph as it passes. Per-character DOM animation with the colour ramp read from CSS custom properties."
+      "holds": "@adh-sdk/textlens. A travelling lens that sweeps along a line of text, magnifying, softening and tinting each glyph as it passes. Per-character DOM animation with the colour ramp read from CSS custom properties."
     },
     {
       "name": "web-viewport",
@@ -948,7 +948,7 @@
         "web-toolchain"
       ],
       "shared": true,
-      "holds": "@agenticdevelopertoolkit/viewport. Page-shell primitives for iOS-correct viewport + keyboard handling — ViewportShell, ViewportSpacer, ViewportComposer, useKeyboardInset, usePageScrollLock."
+      "holds": "@adh-sdk/viewport. Page-shell primitives for iOS-correct viewport + keyboard handling — ViewportShell, ViewportSpacer, ViewportComposer, useKeyboardInset, usePageScrollLock."
     },
     {
       "name": "web-site",
@@ -1062,7 +1062,7 @@
       ],
       "depends_on": [],
       "shared": false,
-      "holds": "Repo-level guards and maintenance scripts, run by hand and in CI; nothing imports them. check_boundaries.py enforces this repo's OTHER layering rule, orthogonal to the tiers here: packages named @agentic-toolkit/adh* are the adh VOCABULARY tier and portable MECHANISM packages may never import them, with the banned set discovered from package.json names, never listed. Alongside it: the doc-link, doc-subpath, private-scope, recipe-scope and site-deps checks, the recipe classifier, and apple/ (release and framework-embedding helpers)."
+      "holds": "Repo-level guards and maintenance scripts, run by hand and in CI; nothing imports them. check_boundaries.py enforces this repo's OTHER layering rule, orthogonal to the tiers here: packages named @adh-sdk/adh* are the adh VOCABULARY tier and portable MECHANISM packages may never import them, with the banned set discovered from package.json names, never listed. Alongside it: the doc-link, doc-subpath, private-scope, recipe-scope and site-deps checks, the recipe classifier, and apple/ (release and framework-embedding helpers)."
     }
   ],
   "rules": {

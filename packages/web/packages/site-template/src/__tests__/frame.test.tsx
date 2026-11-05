@@ -1,7 +1,7 @@
 import { render } from '@testing-library/react'
 import type { ReactElement } from 'react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import type { LandingPage, LandingSection } from '@agenticdevelopertoolkit/landing'
+import type { LandingPage, LandingSection } from '@adh-sdk/landing'
 import { LandingFrame } from '../landing-frame'
 import { FrameFooter } from '../footer'
 import { SiteChrome } from '../chrome'

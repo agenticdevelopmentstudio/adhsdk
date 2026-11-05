@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { describe, it, expect, afterEach, beforeEach, vi } from "vitest";
 import { render, screen, fireEvent, waitFor, cleanup } from "@testing-library/react";
-import type { MaskedProviderConfig, ProviderCatalogEntry } from "@agentic-toolkit/data/integrations";
+import type { MaskedProviderConfig, ProviderCatalogEntry } from "@adh-sdk/data/integrations";
 
 /**
  * The GitHub App path through the integrations feature, end to end as the operator walks it:
@@ -42,8 +42,8 @@ import type { MaskedProviderConfig, ProviderCatalogEntry } from "@agentic-toolki
 // `currentReturnTo` and `safeReturnTo` from it too — both on the path this file exercises, since
 // stashing a pending connect captures the address to come back to. Stubbing the module flat left
 // those undefined, which surfaced as an empty stash rather than as a missing mock.
-vi.mock("@agentic-toolkit/auth", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("@agentic-toolkit/auth")>();
+vi.mock("@adh-sdk/auth", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@adh-sdk/auth")>();
   return { ...actual, reportUnexpectedAuthError: vi.fn() };
 });
 
@@ -64,7 +64,7 @@ const {
   testProviderConfig: vi.fn(),
   testProviderCredentials: vi.fn(),
 }));
-vi.mock("@agentic-toolkit/data/integrations", () => ({
+vi.mock("@adh-sdk/data/integrations", () => ({
   integrationsApi: {
     getInstallUrl,
     updateProviderConfig,

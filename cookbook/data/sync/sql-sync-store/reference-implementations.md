@@ -1,5 +1,5 @@
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/SyncGRDB/` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/SyncGRDB/` |
 

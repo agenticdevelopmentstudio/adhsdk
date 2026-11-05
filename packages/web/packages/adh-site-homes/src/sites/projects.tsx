@@ -1,12 +1,12 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { defineSiteHome } from "@agentic-toolkit/adh/home";
-import { ProjectsFeature } from "@agentic-toolkit/projects";
-import { parseProjectsPath } from "@agentic-toolkit/projects/parse";
+import { defineSiteHome } from "@adh-sdk/adh/home";
+import { ProjectsFeature } from "@adh-sdk/projects";
+import { parseProjectsPath } from "@adh-sdk/projects/parse";
 // Relative, not a package subpath: ProfileProjects lives IN this site now (it imports the adh
-// vocabulary tier, which a portable @agentic-toolkit package may not — see its own docblock), not
-// in @agentic-toolkit/projects.
+// vocabulary tier, which a portable @adh-sdk package may not — see its own docblock), not
+// in @adh-sdk/projects.
 import { ProfileProjects } from "./ProfileProjects";
 
 /**
@@ -32,7 +32,7 @@ import { ProfileProjects } from "./ProfileProjects";
  * Auth: both mounts sit under a HomeGate layout.
  */
 export const projectsHome = defineSiteHome({
-  // Same grammar as the hub's /<slug>/projects route — parsed by @agentic-toolkit/projects so the
+  // Same grammar as the hub's /<slug>/projects route — parsed by @adh-sdk/projects so the
   // two hosts can't drift into parsing the same URL differently.
   parse: parseProjectsPath,
   render: ({ scopedBase, workspaceSlug, view }, host: ProjectsHostSeams) => (

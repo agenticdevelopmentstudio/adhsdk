@@ -1,7 +1,7 @@
 import type { AdhHeaderAuthProps } from './AdhHeader';
 import type { AvatarMenuUser } from './AvatarMenu';
-import { type AuthUser } from '@agentic-toolkit/auth';
-import { type SiteId } from '@agentic-toolkit/adh-registry';
+import { type AuthUser } from '@adh-sdk/auth';
+import { type SiteId } from '@adh-sdk/adh-registry';
 /**
  * The resolved auth values the shared header needs — its only view of "who is
  * signed in and what do login / logout / cross-site switch do". An auth *source*

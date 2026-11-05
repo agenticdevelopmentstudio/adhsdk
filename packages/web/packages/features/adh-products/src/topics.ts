@@ -16,7 +16,7 @@
  *
  * `features` names the catalog feature behind each row, and every row but Settings MUST name
  * one — a feature the Manage features dialog lists, never one that comes with another: the
- * feature manager (`featureRowState` in @agentic-toolkit/data/ecosystems) draws a row only while
+ * feature manager (`featureRowState` in @adh-sdk/data/ecosystems) draws a row only while
  * the product holds it, so every row drawn is a ticked row in the dialog, and a new product —
  * which holds nothing — shows Settings alone. A row with one feature is drawn with the catalog's
  * label for it, never a copy of its own.
@@ -27,7 +27,7 @@
  * Tokens on the hub's own rail. Same pane, different scope; the split is deliberate and this
  * list is not the place to reconcile it.
  *
- * A plain data module, and its own package entry (`@agentic-toolkit/adh-products/topics`), so a
+ * A plain data module, and its own package entry (`@adh-sdk/adh-products/topics`), so a
  * Server Component that only needs an id or a label does not drag the feature onto the client.
  *
  * It lives here rather than in the hub because BOTH hosts of the Products feature render it, and

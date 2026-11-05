@@ -1,8 +1,8 @@
 "use client";
 
 import { useCallback, useMemo, useState, type ReactElement, type ReactNode } from "react";
-import { deepestSelectedLevel, type TopicLevel } from "@agenticdevelopertoolkit/ui/blocks";
-import { AlertModal } from "@agenticdevelopertoolkit/ui/components/alert-modal";
+import { deepestSelectedLevel, type TopicLevel } from "@adh-sdk/ui/blocks";
+import { AlertModal } from "@adh-sdk/ui/components/alert-modal";
 
 /**
  * The HOST side of the stack. Everything a rail host owes {@link RailHostRegistry} beyond plain

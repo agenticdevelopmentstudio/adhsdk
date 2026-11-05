@@ -2,12 +2,12 @@
 
 import type { ReactElement, ReactNode } from "react";
 
-import { teamsApi, type Team, type TeamInput } from "@agentic-toolkit/data/teams";
+import { teamsApi, type Team, type TeamInput } from "@adh-sdk/data/teams";
 import {
   useMasterDetailForm,
   RecordSettingsPane,
-} from "@agentic-toolkit/resource";
-import { DeleteEntitySection } from "@agentic-toolkit/adh-ui/blocks";
+} from "@adh-sdk/resource";
+import { DeleteEntitySection } from "@adh-sdk/adh-ui/blocks";
 import { TeamDetail, teamBlank, teamToInput, teamValidate } from "./TeamDetail";
 
 function differs(a: TeamInput, b: TeamInput): boolean {

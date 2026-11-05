@@ -1,5 +1,5 @@
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/Core/Extensions/VSIXInstaller.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Extensions/VSIXInstaller.swift` |
 

@@ -10,20 +10,20 @@ import {
   type ChatStatusConfig,
   type StatusIconSet,
   type StatusWordPair,
-} from "@agentic-toolkit/data/personas";
-import { TypingIndicator } from "@agentic-toolkit/persona/chat";
-// The persona toolkit's own chat stylesheet, loaded here rather than assumed present on the
+} from "@adh-sdk/data/personas";
+import { TypingIndicator } from "@adh-sdk/persona/chat";
+// The persona layer's own chat stylesheet, loaded here rather than assumed present on the
 // host page. `.pc-thinking--done`'s muted grey — the whole point of `usePreviewPulse`, which
 // exists to show the author BOTH the running line and the settled one — lives only in this
 // sheet. Without it, both halves of the pulse rendered with the same (unstyled) colour and
-// the preview proved nothing. This crosses to `@agenticdevelopertoolkit/*` through
-// `@agentic-toolkit/persona`, the one package that owns that crossing (see this repo's
+// the preview proved nothing. This crosses to `@adh-sdk/*` through
+// `@adh-sdk/persona`, the one package that owns that crossing (see this repo's
 // `.claude/CLAUDE.md`) — `features/personas` must never name that scope directly.
-import "@agentic-toolkit/persona/css/chat/base.css";
-import { Field, FieldGroup } from "@agenticdevelopertoolkit/ui/blocks";
-import { Checkbox } from "@agenticdevelopertoolkit/ui/components/checkbox";
-import { Input } from "@agenticdevelopertoolkit/ui/components/input";
-import { Select } from "@agenticdevelopertoolkit/ui/components/select";
+import "@adh-sdk/persona/css/chat/base.css";
+import { Field, FieldGroup } from "@adh-sdk/ui/blocks";
+import { Checkbox } from "@adh-sdk/ui/components/checkbox";
+import { Input } from "@adh-sdk/ui/components/input";
+import { Select } from "@adh-sdk/ui/components/select";
 import { useEffect, useMemo, useState } from "react";
 import { CommaListInput } from "./CommaListInput";
 import { RowsField } from "./RowsField";

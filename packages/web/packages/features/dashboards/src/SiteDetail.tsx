@@ -1,14 +1,14 @@
 "use client";
 
-import type { SiteGroupView, SiteView } from "@agentic-toolkit/data/monitored-sites";
-import { validateSlug } from "@agenticdevelopertoolkit/ui/lib/slug";
-import { Card, CardContent } from "@agenticdevelopertoolkit/ui/components/card";
-import { Input } from "@agenticdevelopertoolkit/ui/components/input";
-import { Label } from "@agenticdevelopertoolkit/ui/components/label";
-import { Select } from "@agenticdevelopertoolkit/ui/components/select";
-import { EmptyState } from "@agenticdevelopertoolkit/ui/components/empty-state";
-import { DetailSection, unchangedFromStored } from "@agentic-toolkit/resource";
-import { ErrorText } from "@agenticdevelopertoolkit/ui/components/error-text";
+import type { SiteGroupView, SiteView } from "@adh-sdk/data/monitored-sites";
+import { validateSlug } from "@adh-sdk/ui/lib/slug";
+import { Card, CardContent } from "@adh-sdk/ui/components/card";
+import { Input } from "@adh-sdk/ui/components/input";
+import { Label } from "@adh-sdk/ui/components/label";
+import { Select } from "@adh-sdk/ui/components/select";
+import { EmptyState } from "@adh-sdk/ui/components/empty-state";
+import { DetailSection, unchangedFromStored } from "@adh-sdk/resource";
+import { ErrorText } from "@adh-sdk/ui/components/error-text";
 import { EndpointsEditor } from "./EndpointsEditor";
 
 export interface SiteDraft {

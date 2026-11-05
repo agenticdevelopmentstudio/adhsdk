@@ -1,7 +1,7 @@
 ---
 id: 1bbc9593-4064-4e79-8bce-08b3cf00c13d
 title: "Open VSX Catalog"
-domain: adtoolkit://cookbook/workspace/extensions/registry/open-vsx-catalog
+domain: adhsdk://cookbook/workspace/extensions/registry/open-vsx-catalog
 type: ingredient
 version: 1.1.0
 status: review
@@ -24,10 +24,10 @@ tags:
 depends-on: []
 related: []
 references:
-  - packages/apple/AgenticToolkit/Core/Extensions/OpenVSXCatalog.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Tests/AgenticToolkitCoreTests/Extensions/OpenVSXCatalogTests.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Core/Extensions/VSCodeEngineRange.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Core/SemanticVersion.swift (agenticdevelopertoolkit)
+  - packages/apple/AgenticDeveloperHubSDK/Core/Extensions/OpenVSXCatalog.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKCoreTests/Extensions/OpenVSXCatalogTests.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Core/Extensions/VSCodeEngineRange.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Core/SemanticVersion.swift (adhsdk)
 approved-by: ""
 approved-date: ""
 ---
@@ -292,7 +292,7 @@ to its caller rather than a log line.
 ## Platform Notes
 
 - **Swift (source)**: This file targets macOS today, via the
-  `AgenticToolkitCore` framework target (`project.yml`); nothing in it —
+  `AgenticDeveloperHubSDKCore` framework target (`project.yml`); nothing in it —
   plain `Codable`/`Sendable` structs and enums over Foundation's
   `JSONDecoder` and `URL` — depends on `AppKit`, `UIKit`, or any other
   platform framework, so the same source would decode identically if the
@@ -337,7 +337,7 @@ to its caller rather than a log line.
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/Core/Extensions/OpenVSXCatalog.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Extensions/OpenVSXCatalog.swift` |
 
 ## Design Decisions
 

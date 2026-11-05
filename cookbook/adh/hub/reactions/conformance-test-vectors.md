@@ -1,7 +1,7 @@
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
-| reactions-001 | wire-types-own-transcription | Read the import statement at the top of `reactions.ts` | Imports `ReactionCreateBody`/`ReactionRow` only from `./wire`; no import from `@agentic-toolkit/adh-api-types` |
+| reactions-001 | wire-types-own-transcription | Read the import statement at the top of `reactions.ts` | Imports `ReactionCreateBody`/`ReactionRow` only from `./wire`; no import from `@adh-sdk/adh-api-types` |
 | reactions-002 | api-proxy-path-prefix, path-segment-encoding | `reactionsApi.list("project.comments", ["c1", "c2"])` | `authedJson` called once with `"/api/content/reactions?targetKind=project.comments&targetIds=c1%2Cc2"` (per `reactions.test.ts`, "reads MANY subjects in one request") |
 | reactions-003 | list-empty-input-short-circuits | `reactionsApi.list("project.comments", [])` | Resolves to `[]`; `authedJson` is never called (per `reactions.test.ts`, "issues NO request for an empty subject list") |
 | reactions-004 | list-deduplicates-target-ids | `reactionsApi.list("project.comments", ["c1", "c1", "c2"])` | `authedJson` called with `targetIds=c1%2Cc2` — `"c1"` appears once (per `reactions.test.ts`, "de-duplicates subjects before asking") |

@@ -1,7 +1,7 @@
 ---
 id: 88dc87c9-8058-446d-9513-acfa618c950f
 title: Search Dialog
-domain: agenticdevelopertoolkit://recipes/search-dialog
+domain: adhsdk://recipes/search-dialog
 type: ingredient
 version: 1.2.2
 status: review
@@ -23,8 +23,8 @@ tags:
 - form
 depends-on: []
 related:
-- agenticdevelopertoolkit://recipes/dialog
-- agenticdevelopertoolkit://recipes/search-dialog-connected
+- adhsdk://recipes/dialog
+- adhsdk://recipes/search-dialog-connected
 references:
 - https://www.w3.org/WAI/WCAG22/Understanding/target-size-minimum.html
 - https://www.w3.org/WAI/WCAG22/Understanding/target-size-enhanced.html

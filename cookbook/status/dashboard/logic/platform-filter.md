@@ -1,7 +1,7 @@
 ---
 id: 74380f06-a663-44c7-981d-191301a66b8e
 title: "Platform Filter Options"
-domain: adtoolkit://cookbook/status/dashboard/logic/platform-filter
+domain: adhsdk://cookbook/status/dashboard/logic/platform-filter
 type: ingredient
 version: 1.1.0
 status: review
@@ -18,7 +18,7 @@ platforms:
 tags: []
 depends-on: []
 related:
-  - adtoolkit://cookbook/status/dashboard/logic/filter
+  - adhsdk://cookbook/status/dashboard/logic/filter
 references: []
 approved-by: ""
 approved-date: ""

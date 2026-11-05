@@ -1,7 +1,7 @@
 ---
 id: 3b602118-9299-483b-bf4d-62c9d525833d
 title: "Window Frame Manager"
-domain: adtoolkit://cookbook/ui/windows/window-frame-manager
+domain: adhsdk://cookbook/ui/windows/window-frame-manager
 type: ingredient
 version: 1.2.0
 status: review
@@ -20,9 +20,9 @@ tags:
   - screens
   - persistence
 depends-on:
-  - adtoolkit://cookbook/ui/windows/screen-manager
+  - adhsdk://cookbook/ui/windows/screen-manager
 related:
-  - adtoolkit://cookbook/ui/windows/single-window-controller
+  - adhsdk://cookbook/ui/windows/single-window-controller
 references: []
 approved-by: ""
 approved-date: ""
@@ -643,7 +643,7 @@ calls and storage failures are not logged.
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/macOS/SystemIntegration/WindowManager/WindowFrameManager/` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/WindowManager/WindowFrameManager/` |
 
 ## Design Decisions
 

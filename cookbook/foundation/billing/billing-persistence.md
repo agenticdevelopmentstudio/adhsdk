@@ -1,7 +1,7 @@
 ---
 id: 5296D0B7-8416-4E76-8F45-47A726F230CF
 title: "Billing Persistence"
-domain: adtoolkit://cookbook/foundation/billing/billing-persistence
+domain: adhsdk://cookbook/foundation/billing/billing-persistence
 type: ingredient
 version: 1.0.0
 status: review
@@ -22,10 +22,10 @@ tags:
   - contract
 depends-on: []
 related:
-  - adtoolkit://cookbook/foundation/billing/billing-store
-  - adtoolkit://cookbook/foundation/billing/billing-rollup
-  - adtoolkit://cookbook/foundation/billing/billing-timer
-  - adtoolkit://cookbook/foundation/billing/billing-prefs
+  - adhsdk://cookbook/foundation/billing/billing-store
+  - adhsdk://cookbook/foundation/billing/billing-rollup
+  - adhsdk://cookbook/foundation/billing/billing-timer
+  - adhsdk://cookbook/foundation/billing/billing-prefs
 references: []
 approved-by: ""
 approved-date: ""
@@ -131,7 +131,7 @@ Not applicable: this code makes no log calls.
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/Core/Billing/BillingPersistence.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Billing/BillingPersistence.swift` |
 
 ## Design Decisions
 

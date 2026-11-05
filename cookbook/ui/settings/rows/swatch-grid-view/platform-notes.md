@@ -22,7 +22,7 @@
   updates, keeping the border reactive while the fill stays fixed to the
   color passed in, mirroring `renders-swatch-style`.
 - **AppKit / UIKit** (source platform): Source file
-  `packages/apple/AgenticToolkit/macOS/SystemIntegration/ComposableSettingsWindow/Views/SwatchGridView.swift`.
+  `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/Views/SwatchGridView.swift`.
   A macOS-only (`import AppKit`) `NSView` subclass, `@MainActor`, inside
   the `ComposableSettings` namespace, conforming to `SettingsViewProtocol`.
   It composes a vertical `NSStackView` of horizontal `NSStackView` rows,

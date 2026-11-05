@@ -1,4 +1,4 @@
-import { type SiteId } from '@agentic-toolkit/adh-registry';
+import { type SiteId } from '@adh-sdk/adh-registry';
 /**
  * The dispatch the header's {@link SiteMenuSwitcher} keys off: is this the signed-in
  * hub WORKSPACE context (`/home`, `/<workspace>`, `/<workspace>/products`, …) rather

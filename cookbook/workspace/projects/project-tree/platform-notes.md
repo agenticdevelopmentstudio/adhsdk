@@ -1,8 +1,8 @@
 
 - **SwiftUI**: The source is
-  `packages/apple/AgenticToolkit/macOS/Features/Projects/ProjectTree.swift`,
+  `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectTree.swift`,
   tested by
-  `Tests/AgenticToolkitMacOSTests/Projects/ProjectTreeTests.swift`; it
+  `Tests/AgenticDeveloperHubSDKMacOSTests/Projects/ProjectTreeTests.swift`; it
   imports only `Foundation` and depends on no AppKit, UIKit, or SwiftUI type,
   so it ports unchanged into a SwiftUI-hosted app. A SwiftUI `List` or
   `OutlineGroup` would bind directly to the returned `[ProjectTreeNode]`

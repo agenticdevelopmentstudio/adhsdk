@@ -33,11 +33,11 @@
   changes above) — `role="textbox"` would incorrectly tell assistive tech to
   expect editable text, which this control is not.
 - **AppKit / UIKit** (source platform): Source file
-  `packages/apple/AgenticToolkit/macOS/Features/KeyCommands/KeyCommandCaptureField.swift`.
+  `packages/apple/AgenticDeveloperHubSDK/macOS/Features/KeyCommands/KeyCommandCaptureField.swift`.
   A macOS-only (`import AppKit`) `NSView` subclass, `@MainActor`, depending
   on the third-party `KeyboardShortcuts` package (github.com/sindresorhus/
   KeyboardShortcuts) for its `Shortcut` type and key constants, and on
-  `AgenticToolkitCore`'s theming (`observeTheme`, `SemanticPalette`). The
+  `AgenticDeveloperHubSDKCore`'s theming (`observeTheme`, `SemanticPalette`). The
   primary modifier on this platform is Command: the "primary modifier plus
   K"/"primary modifier plus Shift plus K"/"Option plus primary modifier
   plus P" test-vector inputs above correspond to ⌘K, ⌘⇧K, and ⌥⌘P

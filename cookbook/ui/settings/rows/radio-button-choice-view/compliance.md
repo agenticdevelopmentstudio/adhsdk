@@ -21,5 +21,5 @@ and the radio buttons beneath it (see Label requirements);
 platform-neutral behavior, with the AppKit-specific mechanics confined to
 Platform Notes.
 
-No test in the repository's test targets constructs `RadioButtonChoiceView`, so `unit-test-coverage` is `failed`: a search of `AgenticToolkitMacOSTests` and the other test targets for the type name finds nothing.
+No test in the repository's test targets constructs `RadioButtonChoiceView`, so `unit-test-coverage` is `failed`: a search of `AgenticDeveloperHubSDKMacOSTests` and the other test targets for the type name finds nothing.
 

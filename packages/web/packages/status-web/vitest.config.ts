@@ -1,6 +1,6 @@
 import { defineConfig } from "vitest/config";
 
-// Self-contained config so `pnpm --filter @agentic-toolkit/status-web run test`
+// Self-contained config so `pnpm --filter @adh-sdk/status-web run test`
 // (cwd = this package) discovers src/**/*.test.ts(x). The default environment is
 // node; DOM tests opt in per file with `// @vitest-environment jsdom`, exactly as
 // they did in the host, and the workspace setup shim supplies jest-dom matchers,

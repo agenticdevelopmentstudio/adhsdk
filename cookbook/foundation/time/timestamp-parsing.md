@@ -1,7 +1,7 @@
 ---
 id: 29A3044C-F785-4FA3-A1B9-746D069AE198
 title: "Timestamp Parsing"
-domain: adtoolkit://cookbook/foundation/time/timestamp-parsing
+domain: adhsdk://cookbook/foundation/time/timestamp-parsing
 type: ingredient
 version: 1.0.0
 status: review
@@ -22,8 +22,8 @@ tags:
   - timestamps
 depends-on: []
 related:
-  - adtoolkit://cookbook/foundation/time/utc-timestamp
-  - adtoolkit://cookbook/foundation/time/local-time-text
+  - adhsdk://cookbook/foundation/time/utc-timestamp
+  - adhsdk://cookbook/foundation/time/local-time-text
 references: []
 approved-by: ""
 approved-date: ""
@@ -125,7 +125,7 @@ Not applicable: The parser calls no logging API.
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/Core/Time/TimestampParsing.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Time/TimestampParsing.swift` |
 
 ## Design Decisions
 
@@ -144,7 +144,7 @@ Not applicable: The parser calls no logging API.
 | [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
 | [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
 
-`separation-of-concerns` passes because the type only turns text into an instant; writing the wire form and fast-path parsing are in the UTC timestamp spec. `unit-test-coverage` passes because `AgenticToolkitCoreTests/Time/TimestampParsingTests.swift` covers fractional versus plain, the SQLite shape read as UTC, and empty and garbage text.
+`separation-of-concerns` passes because the type only turns text into an instant; writing the wire form and fast-path parsing are in the UTC timestamp spec. `unit-test-coverage` passes because `AgenticDeveloperHubSDKCoreTests/Time/TimestampParsingTests.swift` covers fractional versus plain, the SQLite shape read as UTC, and empty and garbage text.
 
 ## Change History
 

@@ -2,15 +2,15 @@
 
 import type { ReactElement } from "react";
 import { notFound } from "next/navigation";
-import { defineSiteHome } from "@agentic-toolkit/adh/home";
-import { BillingGroup } from "@agentic-toolkit/adh-billing";
-import { useBillingContext } from "@agentic-toolkit/adh-billing/context";
-import { parseBillingPath, type BillingPathSelection } from "@agentic-toolkit/adh-billing/parse";
+import { defineSiteHome } from "@adh-sdk/adh/home";
+import { BillingGroup } from "@adh-sdk/adh-billing";
+import { useBillingContext } from "@adh-sdk/adh-billing/context";
+import { parseBillingPath, type BillingPathSelection } from "@adh-sdk/adh-billing/parse";
 // The panes fetch through the toolkit's react-query cache, which reads the toolkit's OWN
 // QueryClient context — mount its provider here (same physical module as the hooks; a
 // host-provided QueryClientProvider would be a different copy and invisible to them).
-import { ToolkitQueryProvider } from "@agentic-toolkit/data/query";
-import { useBasePathRoute } from "@agentic-toolkit/resource";
+import { ToolkitQueryProvider } from "@adh-sdk/data/query";
+import { useBasePathRoute } from "@adh-sdk/resource";
 
 /**
  * The Billing feature — this site's gated product surface, and the SAME BillingGroup the hub's

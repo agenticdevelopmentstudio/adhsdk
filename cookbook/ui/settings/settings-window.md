@@ -1,7 +1,7 @@
 ---
 id: 7cac2263-94fe-47ec-ab1d-6cf5a12baf14
 title: "Settings Window"
-domain: adtoolkit://cookbook/ui/settings/settings-window
+domain: adhsdk://cookbook/ui/settings/settings-window
 type: ingredient
 version: 1.3.2
 status: review
@@ -21,11 +21,11 @@ tags:
   - settings
   - split-view
 depends-on:
-  - adtoolkit://cookbook/ui/settings/settings-split-view
-  - adtoolkit://cookbook/ui/windows/single-window-controller
+  - adhsdk://cookbook/ui/settings/settings-split-view
+  - adhsdk://cookbook/ui/windows/single-window-controller
 related:
-  - adtoolkit://cookbook/ui/settings/settings-panel
-  - adtoolkit://cookbook/ui/layout/composable-tabs/tabs-window
+  - adhsdk://cookbook/ui/settings/settings-panel
+  - adhsdk://cookbook/ui/layout/composable-tabs/tabs-window
 references: []
 approved-by: ""
 approved-date: ""
@@ -513,14 +513,14 @@ Not applicable: no logging call appears anywhere in this file.
   window's trailing edge as the WinUI substitute for the AppKit help
   drawer — WinUI has no drawer primitive of its own, so `SplitView` is the
   standard stand-in, matching the pattern
-  `adtoolkit://cookbook/ui/layout/composable-tabs/tabs-window` already uses
+  `adhsdk://cookbook/ui/layout/composable-tabs/tabs-window` already uses
   for its own drawer translation.
 
 ## Reference Implementations
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/macOS/SystemIntegration/ComposableSettingsWindow/SettingsWindow.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/SettingsWindow.swift` |
 
 ## Design Decisions
 

@@ -1,6 +1,6 @@
-import { FIELD_VISIBILITIES } from '@agenticdevelopertoolkit/registry-types';
-import type { FieldType, FieldVisibility } from '@agenticdevelopertoolkit/registry-types';
-import type { PublicEntry } from '@agenticdevelopertoolkit/registry-profile';
+import { FIELD_VISIBILITIES } from '@adh-sdk/registry-types';
+import type { FieldType, FieldVisibility } from '@adh-sdk/registry-types';
+import type { PublicEntry } from '@adh-sdk/registry-profile';
 
 /**
  * Runtime tuples, not just types, so an `<option>` list can be built by mapping over the
@@ -23,7 +23,7 @@ export type SubmissionPolicy = (typeof SUBMISSION_POLICIES)[number];
 
 /**
  * RE-EXPORTED, never redeclared. The set the server enforces lives in
- * `@agenticdevelopertoolkit/registry-types` (`visibility.ts`) alongside the comparisons
+ * `@adh-sdk/registry-types` (`visibility.ts`) alongside the comparisons
  * that give it meaning — `visibilitiesWithin` builds a picker's options from the same rank
  * `isWithinVisibility` rejects a write with. A second local tuple here is how this file
  * spent the previous revision offering two members while the server accepted three: the
@@ -148,7 +148,7 @@ export interface EntryRow {
    * read it. Naming it costs the subtraction below and nothing else.
    *
    * A Postgres `timestamp` carries no zone, so render it through
-   * `@agentic-toolkit/ui/lib/timestamps`, never a bare `new Date()` — which reads it as local.
+   * `@adh-sdk/ui/lib/timestamps`, never a bare `new Date()` — which reads it as local.
    */
   createdAt: string;
 }
@@ -195,7 +195,7 @@ export interface ServiceRow {
  *
  * A fetcher may signal failure either way, and both are handled: return a non-ok
  * `Response` (a bare `fetch`, and what the tests use) or throw (`authedFetch` from
- * `@agentic-toolkit/auth/client`, which is what the hub supplies — it throws
+ * `@adh-sdk/auth/client`, which is what the hub supplies — it throws
  * `AuthHttpError` after its one refresh-and-retry on a 401). The non-ok branch below is
  * therefore unreachable on the hub and load-bearing everywhere else; do not delete it.
  */
@@ -241,7 +241,7 @@ async function ok(res: Response): Promise<void> {
  * has an array's methods called on it. `json`'s `as T` is an assertion, not a check, so the
  * required type is exactly the thing that hides the absence.
  *
- * Same shape and the same reason as `@agentic-toolkit/data`'s `withTags` (markdown.ts):
+ * Same shape and the same reason as `@adh-sdk/data`'s `withTags` (markdown.ts):
  * normalize once here and every consumer stays free of `?? []`.
  */
 function withRegistryTags<T extends { tags: string[] }>(row: T): T {

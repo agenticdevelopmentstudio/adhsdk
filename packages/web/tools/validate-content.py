@@ -77,7 +77,7 @@ def validate() -> list[str]:
     # Concept locale catalogs are `<locale>.json` (en.json, fr.json, …). Other copy
     # co-located in this package — namespaced `<ns>.<locale>.json` files such as
     # auth.en.json (auth UI strings consumed via
-    # @agentic-toolkit/adh-site-config/content) — are NOT concept content and must be
+    # @adh-sdk/adh-site-config/content) — are NOT concept content and must be
     # skipped. Locale codes never contain a dot.
     locale_files = sorted(p for p in content_dir.glob("*.json") if "." not in p.stem)
     locales = [p.stem for p in locale_files]

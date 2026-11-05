@@ -3,7 +3,7 @@
   "meta": {
     "id": "15e66a2e-9ee1-4f5f-aeb0-c804078b4f78",
     "title": "Theme Preview View",
-    "domain": "adtoolkit://cookbook/ui/settings/rows/theme-preview-view",
+    "domain": "adhsdk://cookbook/ui/settings/rows/theme-preview-view",
     "type": "ingredient",
     "version": "1.2.2",
     "status": "review",
@@ -24,10 +24,10 @@
       "preview"
     ],
     "depends-on": [
-      "adtoolkit://cookbook/ui/settings/rows/swatch-grid-view"
+      "adhsdk://cookbook/ui/settings/rows/swatch-grid-view"
     ],
     "related": [
-      "adtoolkit://cookbook/ui/controls/badge",
+      "adhsdk://cookbook/ui/controls/badge",
       "agenticdevelopercookbook://guidelines/cookbook/ui/platform-design-languages"
     ],
     "references": [],

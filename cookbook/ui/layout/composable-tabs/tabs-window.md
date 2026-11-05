@@ -1,7 +1,7 @@
 ---
 id: 55a394e6-9934-404b-941d-25bebbf71378
 title: "Composable Tabs Window"
-domain: adtoolkit://cookbook/ui/layout/composable-tabs/tabs-window
+domain: adhsdk://cookbook/ui/layout/composable-tabs/tabs-window
 type: ingredient
 version: 1.2.1
 status: review
@@ -20,8 +20,8 @@ tags:
   - window-controller
   - multi-tab
 depends-on:
-  - adtoolkit://cookbook/ui/layout/tabbed-view
-  - adtoolkit://cookbook/ui/layout/composable-tabs
+  - adhsdk://cookbook/ui/layout/tabbed-view
+  - adhsdk://cookbook/ui/layout/composable-tabs
 related: []
 references: []
 approved-by: ""
@@ -471,7 +471,7 @@ Not applicable: no logging calls appear anywhere in this component.
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/macOS/UI/ViewControllers/ComposableTabs/ComposableTabsWindowController.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/ComposableTabs/ComposableTabsWindowController.swift` |
 
 ## Design Decisions
 

@@ -1,7 +1,7 @@
 ---
 id: e7060a14-3f66-429a-9ea5-288f1fe5a76f
 title: Roadmap
-domain: agenticdevelopertoolkit://recipes/roadmap
+domain: adhsdk://recipes/roadmap
 type: ingredient
 version: 1.1.1
 status: review

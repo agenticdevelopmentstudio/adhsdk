@@ -1,7 +1,7 @@
 ---
 id: 21455a0c-b7b3-4121-8726-c6918d7af5a8
 title: "Status Server Monitor Sync"
-domain: adtoolkit://cookbook/status/service/monitor/sync
+domain: adhsdk://cookbook/status/service/monitor/sync
 type: ingredient
 version: 1.0.2
 status: review
@@ -26,33 +26,33 @@ depends-on:
   - agenticdevelopercookbook://guidelines/implementing/observability/logging
   - agenticdevelopercookbook://guidelines/implementing/code-quality/dependency-injection
 related:
-  - adtoolkit://cookbook/status/service/monitor/cycle-runner
-  - adtoolkit://cookbook/status/service/monitor/alerts
-  - adtoolkit://cookbook/status/service/monitor/provider-conn
-  - adtoolkit://cookbook/status/service/monitor/enrich-deploy-errors
-  - adtoolkit://cookbook/status/service/monitor/reconcile-stuck-deploys
-  - adtoolkit://cookbook/status/service/board
-  - adtoolkit://cookbook/status/service/monitor/issues
+  - adhsdk://cookbook/status/service/monitor/cycle-runner
+  - adhsdk://cookbook/status/service/monitor/alerts
+  - adhsdk://cookbook/status/service/monitor/provider-conn
+  - adhsdk://cookbook/status/service/monitor/enrich-deploy-errors
+  - adhsdk://cookbook/status/service/monitor/reconcile-stuck-deploys
+  - adhsdk://cookbook/status/service/board
+  - adhsdk://cookbook/status/service/monitor/issues
 references:
-  - packages/web/packages/status-server/src/monitor/sync.ts (agenticdevelopertoolkit)
-  - packages/web/packages/status-server/src/monitor/probe.ts (agenticdevelopertoolkit)
-  - packages/web/packages/status-server/src/storage/ports.ts (agenticdevelopertoolkit)
-  - packages/web/packages/status-server/src/board/ownership.ts (agenticdevelopertoolkit)
-  - packages/web/packages/status-server/src/board/reconcile.ts (agenticdevelopertoolkit)
-  - packages/web/packages/status-server/src/board/types.ts (agenticdevelopertoolkit)
-  - packages/web/packages/status-server/src/monitor/provider-conn.ts (agenticdevelopertoolkit)
-  - packages/web/packages/status-server/src/monitor/url.ts (agenticdevelopertoolkit)
-  - packages/web/packages/status-server/src/monitor/alerts.ts (agenticdevelopertoolkit)
-  - packages/web/packages/status-server/src/monitor/refresh-project-meta.ts (agenticdevelopertoolkit)
-  - packages/web/packages/status-server/src/monitor/reconcile-stuck-deploys.ts (agenticdevelopertoolkit)
-  - packages/web/packages/status-server/src/monitor/enrich-deploy-errors.ts (agenticdevelopertoolkit)
-  - packages/web/packages/status-server/src/config/port.ts (agenticdevelopertoolkit)
-  - packages/web/packages/deploy-platform/src/engine/run.ts (agenticdevelopertoolkit)
-  - packages/web/packages/deploy-platform/src/canon/index.ts (agenticdevelopertoolkit)
-  - packages/web/packages/deploy-platform/src/cooldown/provider-cooldown.ts (agenticdevelopertoolkit)
-  - packages/web/packages/status-server/test/sync.int.test.ts (agenticdevelopertoolkit)
-  - packages/web/packages/status-server/test/sync-guard.test.ts (agenticdevelopertoolkit)
-  - packages/web/packages/status-server/test/retire-unclaimed-monitors.int.test.ts (agenticdevelopertoolkit)
+  - packages/web/packages/status-server/src/monitor/sync.ts (adhsdk)
+  - packages/web/packages/status-server/src/monitor/probe.ts (adhsdk)
+  - packages/web/packages/status-server/src/storage/ports.ts (adhsdk)
+  - packages/web/packages/status-server/src/board/ownership.ts (adhsdk)
+  - packages/web/packages/status-server/src/board/reconcile.ts (adhsdk)
+  - packages/web/packages/status-server/src/board/types.ts (adhsdk)
+  - packages/web/packages/status-server/src/monitor/provider-conn.ts (adhsdk)
+  - packages/web/packages/status-server/src/monitor/url.ts (adhsdk)
+  - packages/web/packages/status-server/src/monitor/alerts.ts (adhsdk)
+  - packages/web/packages/status-server/src/monitor/refresh-project-meta.ts (adhsdk)
+  - packages/web/packages/status-server/src/monitor/reconcile-stuck-deploys.ts (adhsdk)
+  - packages/web/packages/status-server/src/monitor/enrich-deploy-errors.ts (adhsdk)
+  - packages/web/packages/status-server/src/config/port.ts (adhsdk)
+  - packages/web/packages/deploy-platform/src/engine/run.ts (adhsdk)
+  - packages/web/packages/deploy-platform/src/canon/index.ts (adhsdk)
+  - packages/web/packages/deploy-platform/src/cooldown/provider-cooldown.ts (adhsdk)
+  - packages/web/packages/status-server/test/sync.int.test.ts (adhsdk)
+  - packages/web/packages/status-server/test/sync-guard.test.ts (adhsdk)
+  - packages/web/packages/status-server/test/retire-unclaimed-monitors.int.test.ts (adhsdk)
 approved-by: ""
 approved-date: ""
 ---
@@ -61,7 +61,7 @@ approved-date: ""
 
 ## Overview
 
-`sync.ts` (`packages/web/packages/status-server/src/monitor/sync.ts`) is the periodic monitoring cycle itself — the body the pre-redesign cron and the live route used to split between them, now one function. It exports `runCycle(storage: Storage, config: StatusConfig, opts?: { skipDeploys?: boolean }): Promise<void>`, the full sweep: probe every active endpoint, persist the checks, roll up hourly metrics, poll each configured deploy provider, upsert the fetched deploys, stamp their live hosts from the explicit endpoint wiring, delete any monitor the platform inventory no longer accounts for, and fold every fact into the board's ledger. It also exports `guard<T extends { ok: boolean }>(label, provider, fallback, fn): Promise<T>`, the wrapper every provider poll in this file crosses: a rate-limited, thrown, or overrunning poll degrades to `fallback` instead of aborting or wedging the cycle. Three helpers are private to the module: `retireMonitors` (deletes a doomed set of endpoints, alerting and logging each one, swallowing per-endpoint failures), `retireUnclaimedMonitors` (the ONE automatic-deletion rule's caller — delegates the verdict to `endpointsClaimedByNothing` from `@agentic-toolkit/deploy-platform`, then applies the healthy-probe veto this file alone knows about), and `stampLiveHosts` (reconciles each stored deploy row's `live_host` against the roster). `cfg(conn)` is a small private mapper from a `ProviderConn` to four booleans (which providers have a token). Two module-level constants define the fail-soft fallback shapes: `EMPTY_DEPLOYS = { ok: false, deploys: [] }` and `EMPTY_PROJECTS: VercelProjectsResult = { ok: false, states: [], meta: [], deploys: [] }`. `PROVIDER_POLL_TIMEOUT_MS = 20_000` is the hard cap `guard` races every poll against. The retention prune for `health_checks`/`metrics_hourly` lives outside this file, in the libSQL `MaintenanceStore` (`storage.maintenance.runMaintenance`); this file's own `pruneOlderThanDays(90)` call is scoped only to the `deployments` table.
+`sync.ts` (`packages/web/packages/status-server/src/monitor/sync.ts`) is the periodic monitoring cycle itself — the body the pre-redesign cron and the live route used to split between them, now one function. It exports `runCycle(storage: Storage, config: StatusConfig, opts?: { skipDeploys?: boolean }): Promise<void>`, the full sweep: probe every active endpoint, persist the checks, roll up hourly metrics, poll each configured deploy provider, upsert the fetched deploys, stamp their live hosts from the explicit endpoint wiring, delete any monitor the platform inventory no longer accounts for, and fold every fact into the board's ledger. It also exports `guard<T extends { ok: boolean }>(label, provider, fallback, fn): Promise<T>`, the wrapper every provider poll in this file crosses: a rate-limited, thrown, or overrunning poll degrades to `fallback` instead of aborting or wedging the cycle. Three helpers are private to the module: `retireMonitors` (deletes a doomed set of endpoints, alerting and logging each one, swallowing per-endpoint failures), `retireUnclaimedMonitors` (the ONE automatic-deletion rule's caller — delegates the verdict to `endpointsClaimedByNothing` from `@adh-sdk/deploy-platform`, then applies the healthy-probe veto this file alone knows about), and `stampLiveHosts` (reconciles each stored deploy row's `live_host` against the roster). `cfg(conn)` is a small private mapper from a `ProviderConn` to four booleans (which providers have a token). Two module-level constants define the fail-soft fallback shapes: `EMPTY_DEPLOYS = { ok: false, deploys: [] }` and `EMPTY_PROJECTS: VercelProjectsResult = { ok: false, states: [], meta: [], deploys: [] }`. `PROVIDER_POLL_TIMEOUT_MS = 20_000` is the hard cap `guard` races every poll against. The retention prune for `health_checks`/`metrics_hourly` lives outside this file, in the libSQL `MaintenanceStore` (`storage.maintenance.runMaintenance`); this file's own `pruneOlderThanDays(90)` call is scoped only to the `deployments` table.
 
 ## Behavioral Requirements
 
@@ -144,7 +144,7 @@ Not applicable — this is a server-side background sync function, not a visual 
 
 - **Null and empty input**: `opts` omitted entirely is equivalent to `opts?.skipDeploys` being falsy — the full cycle runs (MUST). An empty active-endpoint list (`listActiveEndpoints()` resolves `[]`) skips the whole probe/record/rollup block (probe-skipped-on-empty) and resolves `undefined` with zero `health_checks` rows written — MUST (`sync.int.test.ts` › "completes with no configured endpoints"). When no provider has a configured token, `has.*Token` is `false` for all four providers, so `runCycle` never calls `guard` at all for them — the fallback shapes (`EMPTY_DEPLOYS`/`EMPTY_PROJECTS`) are produced directly via `Promise.resolve`/ternary, bypassing even the rate-limit check inside `guard` — MUST (provider-poll-token-gated).
 - **Boundary values**: `PROVIDER_POLL_TIMEOUT_MS` is a fixed `20_000`, not read from `config` or an environment variable — every poll gets exactly the same cap regardless of provider or cycle — MUST. `pruneOlderThanDays(90)` is likewise a literal in this file, not a `StatusConfig` field — MUST. The healthy-probe veto (`healthy-probe-vetoes-removal`) is applied strictly AFTER `endpointsClaimedByNothing` has already decided the `doomed` set — it is a second, narrower filter this caller alone applies, never a change to the underlying rule's own preconditions — MUST NOT be read as the rule itself having a "still serving" clause.
-- **Concurrent access**: `runCycle` installs no lock or reentrancy guard of its own against a second concurrent call against the same `storage` — nothing in this file prevents two cycles from interleaving their reads and writes; serialization is delegated entirely to the caller (the cycle-runner/scheduler composition, external to this file — see the [Status Server Monitor Cycle Runner](adtoolkit://cookbook/status/service/monitor/cycle-runner) recipe) — MUST NOT be read as a promise of its own concurrency safety. Within one call, the four deploy-provider polls run concurrently via `Promise.all` (provider-polls-run-concurrently), and each `guard` call's own `setTimeout` is independent and cleared in its own `finally`, so concurrent polls never share or leak each other's timers — MUST.
+- **Concurrent access**: `runCycle` installs no lock or reentrancy guard of its own against a second concurrent call against the same `storage` — nothing in this file prevents two cycles from interleaving their reads and writes; serialization is delegated entirely to the caller (the cycle-runner/scheduler composition, external to this file — see the [Status Server Monitor Cycle Runner](adhsdk://cookbook/status/service/monitor/cycle-runner) recipe) — MUST NOT be read as a promise of its own concurrency safety. Within one call, the four deploy-provider polls run concurrently via `Promise.all` (provider-polls-run-concurrently), and each `guard` call's own `setTimeout` is independent and cleared in its own `finally`, so concurrent polls never share or leak each other's timers — MUST.
 - **Error states**: Steps that carry no `try`/`catch` of their own — `reconcileOrphanedEndpoints`, `resolveUnmonitoredTargets`, `listActiveEndpoints`, `probeEndpoints`, `recordChecks`, `rollupMetrics`, `upsertDeployments`, `learnProjectIds`, `readRoster`, `stampLiveHosts`, `recordVercelProdStates`, `recordObservations`, `reconcileBoardLedger` — reject the whole `runCycle` promise on failure, with no fallback of their own; this bare propagation is what lets the cycle-runner composition's own failure handling (documented in its recipe) apply — MUST. The specifically fail-soft pieces are limited to: each provider poll (via `guard`), `enrichDeployErrors`, `reconcileVanishedDeploys`, `expireUnconfirmedDeploys` (each documented never-throws by its own module), and the `enumerateDeployProjects` call in step 8 (caught locally via `.catch`, `enumerate-failure-yields-empty-inventory`) — MUST.
 - **Offline / disconnected state**: A provider whose network is entirely unreachable is absorbed by `guard`'s throw-catch (poll-throw-degrades) into the same `{ ok: false }` shape a documented API failure produces — the cycle records `reachable: false` for that source (platform-observations-always-recorded) rather than aborting — MUST. Two consecutive unreachable polls of the same provider are what the platform-health issue in the ledger (written downstream by `reconcileBoardLedger`, via `PLATFORM_UNREACHABLE_POLLS` in `issue-sources.ts`, external to this file) eventually pages on — this file only supplies the per-cycle `reachable` fact, never the debounce threshold itself — MUST NOT be read as this file owning that threshold.
 
@@ -166,7 +166,7 @@ Not applicable: this file defines no application URL scheme or HTTP route of its
 
 ## Localization
 
-This file's only literal strings are hardcoded English `console.log`/`console.error` messages (operator-facing, container stdout) and the two alert `detail` strings assembled in `retire-unclaimed-monitors`' `why` callback (`its <platform> project "<name>" no longer exists`, `no deploy project serves <host> any more`) — all routed through no localization mechanism, all consumed by an operator or by `notifyIssueAlert`'s own Slack/Discord-rendering (external, documented in the [Status Server Monitor Alerts](adtoolkit://cookbook/status/service/monitor/alerts) recipe), never by an end user.
+This file's only literal strings are hardcoded English `console.log`/`console.error` messages (operator-facing, container stdout) and the two alert `detail` strings assembled in `retire-unclaimed-monitors`' `why` callback (`its <platform> project "<name>" no longer exists`, `no deploy project serves <host> any more`) — all routed through no localization mechanism, all consumed by an operator or by `notifyIssueAlert`'s own Slack/Discord-rendering (external, documented in the [Status Server Monitor Alerts](adhsdk://cookbook/status/service/monitor/alerts) recipe), never by an end user.
 
 | String Key | Default (en) | Context |
 |-----------|-------------|---------|
@@ -219,7 +219,7 @@ This file uses plain `console.log`/`console.error` calls with a literal `[sync]`
 
 - **SwiftUI**: not a SwiftUI concern (no view). An Apple companion backend embedding this cycle models `runCycle` as an `async` function or `actor` method taking a `Storage`-equivalent protocol and a `Sendable` `StatusConfig`-equivalent struct; `guard` becomes a small generic helper built on `withThrowingTaskGroup` or `Task` + `Task.sleep` racing, cancelling the loser but — matching the source's own choice — never cancelling the abandoned real call, only abandoning its result.
 - **Compose**: same non-UI framing as SwiftUI. A Kotlin port models `runCycle` as a `suspend fun`; `guard` becomes `withTimeoutOrNull` composed with a `try`/`catch`, since Kotlin's `withTimeoutOrNull` alone cancels the racing coroutine (a deliberate divergence to note, since the source's `guard` does not cancel `fn()`); the four provider polls map to a `coroutineScope` running four `async` children joined together, matching `Promise.all`.
-- **React/Web** (source platform): lives at `packages/web/packages/status-server/src/monitor/sync.ts` as two exported `async function`s on the Node status backend (`runCycle`, `guard`), imported by the cycle-runner composition (`cycle-runner.ts`) and by the integration test suites that exercise it directly. Depends on plain `Promise.race`/`Promise.all`/`setTimeout`/`clearTimeout` — no framework of its own beyond the `Storage` port and the `@agentic-toolkit/deploy-platform` package for the deletion rule and cooldown state.
+- **React/Web** (source platform): lives at `packages/web/packages/status-server/src/monitor/sync.ts` as two exported `async function`s on the Node status backend (`runCycle`, `guard`), imported by the cycle-runner composition (`cycle-runner.ts`) and by the integration test suites that exercise it directly. Depends on plain `Promise.race`/`Promise.all`/`setTimeout`/`clearTimeout` — no framework of its own beyond the `Storage` port and the `@adh-sdk/deploy-platform` package for the deletion rule and cooldown state.
 - **AppKit / UIKit**: same non-UI framing as SwiftUI. A macOS/iOS agent embedding this cycle would typically run it from a background `Task` rather than Node's dedicated worker thread; there is no direct AppKit/UIKit view-layer analogue to any part of this file.
 - **WinUI 3**: a .NET port models `runCycle` as `async Task RunCycleAsync(IStorage storage, StatusConfig config, SyncOptions? opts = null)` using `HttpClient` inside each fetcher and `System.Text.Json` for its JSON bodies; `guard` becomes a small generic `async Task<T> GuardAsync<T>(string label, string? provider, T fallback, Func<Task<T>> fn)` built on `Task.WhenAny(fn(), Task.Delay(20_000))` with a `CancellationTokenSource` used only to stop the *timer*, never the abandoned real call — mirroring the source's no-cancel choice. The four provider polls map to `Task.WhenAll`. `Windows.Storage` has no role here (there is no local file persistence in this file); persistence is entirely behind `IStorage`. `ObservableCollection`/`INotifyPropertyChanged` do not apply: this file exposes no UI-bound state of its own — those types belong to a WinUI 3 host's dashboard view model consuming the board this cycle feeds, not to the cycle itself.
 

@@ -1,5 +1,5 @@
 {
-  "name": "@agentic-toolkit/integrations",
+  "name": "@adh-sdk/integrations",
   "version": "0.1.0",
   "description": "The Integrations feature: a destination (the workspace, a persona, a product) and the provider-config instances connected to it.",
   "license": "UNLICENSED",
@@ -41,14 +41,14 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@agentic-toolkit/auth": "workspace:*",
-    "@agentic-toolkit/crud": "workspace:*",
-    "@agentic-toolkit/data": "workspace:*",
-    "@agentic-toolkit/resource": "workspace:*",
+    "@adh-sdk/auth": "workspace:*",
+    "@adh-sdk/crud": "workspace:*",
+    "@adh-sdk/data": "workspace:*",
+    "@adh-sdk/resource": "workspace:*",
     "class-variance-authority": "^0.7.1",
     "lucide-react": "^1.16.0",
     "react-plaid-link": "4.1.1",
-    "@agenticdevelopertoolkit/ui": "workspace:*"
+    "@adh-sdk/ui": "workspace:*"
   },
   "peerDependencies": {
     "next": ">=15",

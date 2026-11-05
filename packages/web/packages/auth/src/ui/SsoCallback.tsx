@@ -2,8 +2,8 @@
 
 import { useCallback, useEffect, useRef, useState, type ReactElement } from 'react'
 import { useRouter } from 'next/navigation'
-import { AlertModal } from '@agenticdevelopertoolkit/ui/components/alert-modal'
-import { ErrorText } from '@agenticdevelopertoolkit/ui/components/error-text'
+import { AlertModal } from '@adh-sdk/ui/components/alert-modal'
+import { ErrorText } from '@adh-sdk/ui/components/error-text'
 import { exchangeSsoCode } from '../client'
 import { takeReturnTo, PENDING_LINK_KEY } from '../sso'
 import { oauthErrorMessage, accountExistsLinkBody, accountExistsTitle, loginDisabledTitle, loginDisabledBody } from '../labels'

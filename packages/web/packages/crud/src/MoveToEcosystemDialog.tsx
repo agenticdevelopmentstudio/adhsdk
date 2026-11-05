@@ -1,11 +1,11 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { AlertModal } from '@agenticdevelopertoolkit/ui/components/alert-modal'
-import { Select } from '@agenticdevelopertoolkit/ui/components/select'
-import { authedJson } from '@agentic-toolkit/auth/client'
-import { errorMessage } from '@agenticdevelopertoolkit/ui/lib/errors'
-import { ErrorText } from '@agenticdevelopertoolkit/ui/components/error-text'
+import { AlertModal } from '@adh-sdk/ui/components/alert-modal'
+import { Select } from '@adh-sdk/ui/components/select'
+import { authedJson } from '@adh-sdk/auth/client'
+import { errorMessage } from '@adh-sdk/ui/lib/errors'
+import { ErrorText } from '@adh-sdk/ui/components/error-text'
 import type { CrudTableMeta } from './types'
 
 /** Minimal shape of GET /api/ecosystem/ecosystems — the manageable set the admin can move into. */

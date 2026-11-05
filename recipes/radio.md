@@ -1,7 +1,7 @@
 ---
 id: 3b509297-83b2-4a5b-a331-56d0d4be548d
 title: Radio
-domain: agenticdevelopertoolkit://recipes/radio
+domain: adhsdk://recipes/radio
 type: ingredient
 version: 1.1.1
 status: review
@@ -22,9 +22,9 @@ tags:
 - radio-button
 depends-on: []
 related:
-- agenticdevelopertoolkit://recipes/radio-group
-- agenticdevelopertoolkit://recipes/checkbox
-- agenticdevelopertoolkit://recipes/field
+- adhsdk://recipes/radio-group
+- adhsdk://recipes/checkbox
+- adhsdk://recipes/field
 references: []
 approved-by: ''
 approved-date: ''
@@ -34,7 +34,7 @@ approved-date: ''
 
 ## Overview
 
-A radio button is a single-selection control used within a radio group to allow users to select exactly one option from a set of mutually exclusive choices. This recipe covers `RadioGroupItem`, the individual control; the `RadioGroup` container's layout, spacing, and cross-item keyboard navigation are documented in agenticdevelopertoolkit://recipes/radio-group. Built on Base UI radio primitives (`@base-ui/react/radio-group`, `@base-ui/react/radio`) with theme tokens for styling.
+A radio button is a single-selection control used within a radio group to allow users to select exactly one option from a set of mutually exclusive choices. This recipe covers `RadioGroupItem`, the individual control; the `RadioGroup` container's layout, spacing, and cross-item keyboard navigation are documented in adhsdk://recipes/radio-group. Built on Base UI radio primitives (`@base-ui/react/radio-group`, `@base-ui/react/radio`) with theme tokens for styling.
 
 ## Behavioral Requirements
 
@@ -77,7 +77,7 @@ A radio button is a single-selection control used within a radio group to allow 
 - **Label requirements**: Labels are external to the RadioGroupItem; the form must associate labels via standard form patterns (e.g., `<label htmlFor="radio-id">` or wrapping)
 - **Announce state changes**: Checked/unchecked state is automatically announced by assistive technology via the semantic radio role
 - **Minimum tap target**: The 16×16px control alone is below the WCAG 2.5.8 (AA) minimum target size of 24×24 CSS pixels. Base UI's radio role lets a click on the associated `<label>` select the item, so consumers MUST ensure the label (or an equivalent wrapping hit area) extends the clickable region to at least 24×24px.
-- **Keyboard navigation**: RadioGroupItem supports Space to select while focused (see **space-selects**) and shows a visible focus indicator (see **focus-visible**). Arrow-key navigation between items and the group's single Tab stop are managed by the RadioGroup container — see agenticdevelopertoolkit://recipes/radio-group.
+- **Keyboard navigation**: RadioGroupItem supports Space to select while focused (see **space-selects**) and shows a visible focus indicator (see **focus-visible**). Arrow-key navigation between items and the group's single Tab stop are managed by the RadioGroup container — see adhsdk://recipes/radio-group.
 - **Focus indicator**: Visible focus ring (gold border and ring) provides keyboard focus indication
 
 ## Conformance Test Vectors

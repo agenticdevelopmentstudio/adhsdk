@@ -11,9 +11,9 @@
 // `tokenVersion` (session-invalidation counter) and `deletedAt` (soft delete) are
 // internal auth bookkeeping and intentionally not surfaced on the form.
 
-import type { RequestBody, SuccessBody } from "@agentic-toolkit/adh-api-types";
-import { authedJson, authedRequest } from "@agentic-toolkit/auth/client";
-import { compact, enc, sortByText } from "@agentic-toolkit/data";
+import type { RequestBody, SuccessBody } from "@adh-sdk/adh-api-types";
+import { authedJson, authedRequest } from "@adh-sdk/auth/client";
+import { compact, enc, sortByText } from "@adh-sdk/data";
 
 export interface EcosystemUser {
   id: string;

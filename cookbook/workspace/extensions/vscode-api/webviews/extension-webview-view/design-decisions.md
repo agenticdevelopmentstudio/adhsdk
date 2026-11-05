@@ -8,7 +8,7 @@
 **Approved**: pending
 
 **Decision**: (AppKit/UIKit) The resolver this component depends on is a closure typealias (`ContributedWebviewResolving`) rather than a protocol.
-**Rationale**: It is one verb with one production implementation, so a protocol would exist for a single conformer; taking it as a closure parameter also lets it be supplied to this component after construction, without needing a stateful lookup type. See `adtoolkit://cookbook/workspace/extensions/vscode-api/webviews/webview-panel-view` for the panel this closure returns.
+**Rationale**: It is one verb with one production implementation, so a protocol would exist for a single conformer; taking it as a closure parameter also lets it be supplied to this component after construction, without needing a stateful lookup type. See `adhsdk://cookbook/workspace/extensions/vscode-api/webviews/webview-panel-view` for the panel this closure returns.
 **Approved**: pending
 
 **Decision**: This component wraps the panel rather than being the webview surface itself.

@@ -1,7 +1,7 @@
 ---
 id: f81157d7-766f-42c9-a98a-44df19698bea
 title: "Hub Domain: Customers"
-domain: adtoolkit://cookbook/adh/hub/customers
+domain: adhsdk://cookbook/adh/hub/customers
 type: ingredient
 version: 1.1.0
 status: review
@@ -24,12 +24,12 @@ tags:
   - crud
 depends-on: []
 related:
-  - adtoolkit://cookbook/ui/navigation/htdv
+  - adhsdk://cookbook/ui/navigation/htdv
 references:
-  - packages/apple/AgenticToolkit/Hub/Features/Customers/CustomersDataSource.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Hub/Features/Customers/CustomersModels.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Hub/Features/Customers/CustomersTopic.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Tests/AgenticToolkitHubTests/CustomersTopicTests.swift (agenticdevelopertoolkit)
+  - packages/apple/AgenticDeveloperHubSDK/Hub/Features/Customers/CustomersDataSource.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Hub/Features/Customers/CustomersModels.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Hub/Features/Customers/CustomersTopic.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKHubTests/CustomersTopicTests.swift (adhsdk)
 approved-by: ""
 approved-date: ""
 ---
@@ -237,7 +237,7 @@ Not applicable — this is the Customers domain's data-access protocol, data
 shapes, and navigation/forms logic, not a visual component.
 `CustomersDataSource`, `CustomersModels`, and `CustomersTopic` produce no
 view, role, trait, or label of their own; any accessibility surface
-belongs to the `FormViewController`/`AgenticToolkitHTDVViewController`
+belongs to the `FormViewController`/`AgenticDeveloperHubSDKHTDVViewController`
 presentation layer that renders the `HTDVLevel`/`HTDVDetail`/`FormSpec`
 values these sources build (out of this recipe's given sources; see the
 related HTDV Engine recipe).
@@ -462,7 +462,7 @@ happens outside these sources.
 - **AppKit / UIKit**: This is the source: `CustomersDataSource.swift`,
   `CustomersModels.swift`, and `CustomersTopic.swift` hold no AppKit/UIKit
   import of their own — `CustomersTopic` depends only on `Foundation` and
-  the `AgenticToolkitHTDV` module (`HTDVItem`, `HTDVLevel`, `HTDVChild`,
+  the `AgenticDeveloperHubSDKHTDV` module (`HTDVItem`, `HTDVLevel`, `HTDVChild`,
   `HTDVCreateAction`, `HTDVDetail`,
   `FormSpec`/`FormSection`/`FormAction`/`FormDeleteAction`/`FormActions`),
   and presents its create sheet through the shared `FormSheet.present`
@@ -499,7 +499,7 @@ happens outside these sources.
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/Hub/Features/Customers/` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Hub/Features/Customers/` |
 
 ## Design Decisions
 
@@ -576,7 +576,7 @@ the detail-form `HubError.conflict` fallback (`detail-save-conflict-fallback`)
 is exercised only by inspection of the source's `catch` block, not by a
 dedicated test, per Conformance Test Vector 020. separation-of-concerns
 passes because all three given sources import only `Foundation` (plus
-`AgenticToolkitHTDV` for the HTDV/Forms types) and hold no AppKit/UIKit
+`AgenticDeveloperHubSDKHTDV` for the HTDV/Forms types) and hold no AppKit/UIKit
 dependency of their own. explicit-error-handling passes because every
 `throws` boundary in these three sources is caught and converted into an
 explicit `HubError` — via a specific re-mapping (`notFound`, `conflict`)

@@ -3,7 +3,7 @@
   "meta": {
     "id": "937650ae-ac85-43f4-8aa4-708207e0d745",
     "title": "Status Server Monitor Webhook Events",
-    "domain": "adtoolkit://cookbook/status/service/monitor/webhook-events",
+    "domain": "adhsdk://cookbook/status/service/monitor/webhook-events",
     "type": "ingredient",
     "version": "1.0.3",
     "status": "review",
@@ -29,22 +29,22 @@
       "agenticdevelopercookbook://guidelines/implementing/security/input-validation"
     ],
     "related": [
-      "adtoolkit://cookbook/status/service/monitor/deploy-status",
-      "adtoolkit://cookbook/status/service/monitor/format",
-      "adtoolkit://cookbook/status/service/monitor/provider-deploy",
-      "adtoolkit://cookbook/status/service/monitor/live-buffer",
-      "adtoolkit://cookbook/status/service/monitor/fetch-vercel",
-      "adtoolkit://cookbook/status/service/monitor/fetch-railway"
+      "adhsdk://cookbook/status/service/monitor/deploy-status",
+      "adhsdk://cookbook/status/service/monitor/format",
+      "adhsdk://cookbook/status/service/monitor/provider-deploy",
+      "adhsdk://cookbook/status/service/monitor/live-buffer",
+      "adhsdk://cookbook/status/service/monitor/fetch-vercel",
+      "adhsdk://cookbook/status/service/monitor/fetch-railway"
     ],
     "references": [
-      "packages/web/packages/status-server/src/monitor/webhook-events.ts (agenticdevelopertoolkit)",
-      "packages/web/packages/status-server/src/monitor/deploy-status.ts (agenticdevelopertoolkit)",
-      "packages/web/packages/status-server/src/monitor/format.ts (agenticdevelopertoolkit)",
-      "packages/web/packages/status-server/src/monitor/provider-deploy.ts (agenticdevelopertoolkit)",
-      "packages/web/packages/status-server/src/routes/hooks.ts (agenticdevelopertoolkit)",
-      "packages/web/packages/status-server/test/deploy-mappers.test.ts (agenticdevelopertoolkit)",
-      "packages/web/packages/status-server/test/timestamp-validation.test.ts (agenticdevelopertoolkit)",
-      "packages/web/packages/status-server/test/hooks.int.test.ts (agenticdevelopertoolkit)"
+      "packages/web/packages/status-server/src/monitor/webhook-events.ts (adhsdk)",
+      "packages/web/packages/status-server/src/monitor/deploy-status.ts (adhsdk)",
+      "packages/web/packages/status-server/src/monitor/format.ts (adhsdk)",
+      "packages/web/packages/status-server/src/monitor/provider-deploy.ts (adhsdk)",
+      "packages/web/packages/status-server/src/routes/hooks.ts (adhsdk)",
+      "packages/web/packages/status-server/test/deploy-mappers.test.ts (adhsdk)",
+      "packages/web/packages/status-server/test/timestamp-validation.test.ts (adhsdk)",
+      "packages/web/packages/status-server/test/hooks.int.test.ts (adhsdk)"
     ],
     "approved-by": "",
     "approved-date": ""

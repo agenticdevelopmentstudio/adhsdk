@@ -2,7 +2,7 @@
 // segments into the group's selection, so the two hosts that mount StorageGroup under a
 // catch-all cannot drift apart: the hub's `/<slug>/storage/[[...path]]` and
 // agenticdeveloperstorage.com's `/[workspace]/[[...path]]` are the SAME four members at the
-// same two depths. Mirrors @agentic-toolkit/ecosystems/parse.
+// same two depths. Mirrors @adh-sdk/ecosystems/parse.
 //
 // Directive-free, and its own tsup entry (the `./parse` subpath) for the reason the preset
 // describes: the barrel's dist hoists 'use client' over everything in it, which would make this

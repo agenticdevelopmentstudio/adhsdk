@@ -1,5 +1,5 @@
 import { type ReactNode } from 'react';
-import type { SiteId } from '@agentic-toolkit/adh-registry';
+import type { SiteId } from '@adh-sdk/adh-registry';
 /**
  * Carries the site's own id from the SERVER layout, which reads `site.config`, down to the
  * client components under it that cannot.

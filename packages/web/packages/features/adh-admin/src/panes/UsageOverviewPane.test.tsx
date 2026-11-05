@@ -10,7 +10,7 @@ vi.mock("../api/insight", () => ({
   useInsightOverview: (...args: unknown[]) => useInsightOverview(...args),
 }));
 
-vi.mock("@agentic-toolkit/adh-ui/components/time-series-chart", () => ({
+vi.mock("@adh-sdk/adh-ui/components/time-series-chart", () => ({
   TimeSeriesChart: ({ series }: { series: { label: string }[] }) => (
     <div data-testid="chart">{series.map((s) => s.label).join(",")}</div>
   ),

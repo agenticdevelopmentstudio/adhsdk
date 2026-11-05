@@ -1,5 +1,5 @@
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/Core/Collections/LRUCache.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Collections/LRUCache.swift` |
 

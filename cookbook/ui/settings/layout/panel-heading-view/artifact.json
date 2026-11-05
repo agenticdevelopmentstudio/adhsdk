@@ -3,7 +3,7 @@
   "meta": {
     "id": "9e21151e-dc58-49a2-be1e-4984529f4396",
     "title": "Panel Heading View",
-    "domain": "adtoolkit://cookbook/ui/settings/layout/panel-heading-view",
+    "domain": "adhsdk://cookbook/ui/settings/layout/panel-heading-view",
     "type": "ingredient",
     "version": "1.2.2",
     "status": "review",
@@ -23,11 +23,11 @@
       "heading"
     ],
     "depends-on": [
-      "adtoolkit://cookbook/ui/settings/layout/explanation-view"
+      "adhsdk://cookbook/ui/settings/layout/explanation-view"
     ],
     "related": [
-      "adtoolkit://cookbook/ui/settings/layout/explanation-view",
-      "adtoolkit://cookbook/ui/settings/layout/header-view",
+      "adhsdk://cookbook/ui/settings/layout/explanation-view",
+      "adhsdk://cookbook/ui/settings/layout/header-view",
       "agenticdevelopercookbook://guidelines/cookbook/ui/platform-design-languages"
     ],
     "references": [],

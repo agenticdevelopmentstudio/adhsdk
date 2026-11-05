@@ -1,22 +1,22 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { defineSiteHome } from "@agentic-toolkit/adh/home";
-import { personaProfileUrl } from "@agentic-toolkit/adh-registry";
-import { personaMemoryTables } from "@agentic-toolkit/knowledgebases/tables";
-import { PersonasFeature } from "@agentic-toolkit/personas";
+import { defineSiteHome } from "@adh-sdk/adh/home";
+import { personaProfileUrl } from "@adh-sdk/adh-registry";
+import { personaMemoryTables } from "@adh-sdk/knowledgebases/tables";
+import { PersonasFeature } from "@adh-sdk/personas";
 // PersonasSection fetches through the toolkit's react-query cache, which reads the
 // toolkit's OWN QueryClient context — mount its provider here (same physical module
 // as the hooks; a host-provided QueryClientProvider would be a different copy and
 // invisible to them). Mirrors the sibling ecosystems site's mount.
-import { ToolkitQueryProvider } from "@agentic-toolkit/data/query";
+import { ToolkitQueryProvider } from "@adh-sdk/data/query";
 // Grammar from the server-safe ./parse subpath — the ONLY home for parse helpers now
 // (the barrels deliberately do not re-export them; see any feature barrel's note).
-import { parsePersonasPath } from "@agentic-toolkit/personas/parse";
+import { parsePersonasPath } from "@adh-sdk/personas/parse";
 
 const loading = () => <p className="p-4 text-sm text-apt-text-muted">Loading…</p>;
 const KnowledgeBasesPane = dynamic(
-  () => import("@agentic-toolkit/knowledgebases").then((m) => m.KnowledgeBasesPane),
+  () => import("@adh-sdk/knowledgebases").then((m) => m.KnowledgeBasesPane),
   { loading },
 );
 
@@ -26,19 +26,19 @@ const KB_TABLES = personaMemoryTables();
 /**
  * The Personas feature — this site's gated product surface
  * (adh/docs/platform/feature-platform-phase2.md): the persona table + editor, the SAME
- * @agentic-toolkit/personas surface the hub's /<slug>/personas group renders.
+ * @adh-sdk/personas surface the hub's /<slug>/personas group renders.
  *
  * URL grammar (parsePersonasPath), now rooted at the workspace rather than at /home:
  *   /<ws> | /<ws>/<personaId> | /<ws>/<personaId>/<subTab>
  *
  * Host seams supplied here:
  * - profileUrlFor: the persona's public registry profile — the shared
- *   @agentic-toolkit/adh-registry personaProfileUrl rule (one owner; the hub uses the same).
+ *   @adh-sdk/adh-registry personaProfileUrl rule (one owner; the hub uses the same).
  * - renderKnowledgeBases: the Knowledge facet embeds the knowledgebases pane with
  *   the persona-memory tables from the toolkit's generated catalog (the same
  *   schema rule the knowledgebases site's own mount applies).
  * - renderChatPane is NOT supplied: the live try-it chat is hub-only glue
- *   (@agentic-toolkit/persona/chat + the hub chat pane), so the editor shows its
+ *   (@adh-sdk/persona/chat + the hub chat pane), so the editor shows its
  *   "Chat isn't available in this view." fallback here. Bringing chat to this site
  *   is a flagged follow-up, not a refactor concern.
  *

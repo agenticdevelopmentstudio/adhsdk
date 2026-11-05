@@ -1,5 +1,5 @@
-import type { ThemeKey } from '@agenticdevelopertoolkit/themes'
-import type { StatusWordPair } from '@agenticdevelopertoolkit/chat'
+import type { ThemeKey } from '@adh-sdk/themes'
+import type { StatusWordPair } from '@adh-sdk/chat'
 
 /**
  * bitbag's nonsense vocabulary. Both forms are authored now, so a word no longer has to end

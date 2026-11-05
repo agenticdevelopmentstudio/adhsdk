@@ -11,9 +11,9 @@ import { describe, expect, it } from 'vitest'
  * `landing-bridge.test.ts`'s reason: `src/` is what a person edits, and `dist`
  * is a verbatim copy made by `build:css`, so resolving the dependency would only
  * put a build step between the edit and the failing test. `registry-profile`
- * lives in the `agenticdevelopertoolkit` submodule and adh does not depend on it
- * — but `@agentic-toolkit/registry`'s own `profile.css` is a bare passthrough
- * (`@import '@agenticdevelopertoolkit/registry-profile/css/profile.css'`), so
+ * lives in the `adhsdk` submodule and adh does not depend on it
+ * — but `@adh-sdk/registry`'s own `profile.css` is a bare passthrough
+ * (`@import '@adh-sdk/registry-profile/css/profile.css'`), so
  * the tokens exist in exactly one file and this is it. Nothing here imports it;
  * it is read as text.
  */

@@ -17,7 +17,7 @@ import { scrubPath, scrubUrl } from './scrub'
 // package twice (a site's own copy beside the one adh's dist reaches) must still start
 // PostHog once and send every event through that one instance, or each copy counts its own
 // pageviews.
-const RUNNING = '__agenticdevelopertoolkitPostHog'
+const RUNNING = '__adhsdkPostHog'
 type Host = Window & { [RUNNING]?: PostHog }
 
 function running(): PostHog | undefined {

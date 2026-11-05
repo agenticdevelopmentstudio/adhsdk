@@ -1,5 +1,5 @@
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/macOS/Features/ConversationsWindow/ConversationsKeyCommands.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/ConversationsWindow/ConversationsKeyCommands.swift` |
 

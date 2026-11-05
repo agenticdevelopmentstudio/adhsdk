@@ -1,7 +1,7 @@
 ---
 id: 2469d716-84aa-4984-9e71-4cfe49d05854
 title: "Projects Coordinator"
-domain: adtoolkit://cookbook/workspace/projects/projects-coordinator
+domain: adhsdk://cookbook/workspace/projects/projects-coordinator
 type: ingredient
 version: 1.2.1
 status: review
@@ -23,29 +23,29 @@ tags:
   - command-palette
 depends-on: []
 related:
-  - adtoolkit://cookbook/workspace/projects/git-repo
-  - adtoolkit://cookbook/workspace/projects/project-database
-  - adtoolkit://cookbook/workspace/projects/project-reconciler
-  - adtoolkit://cookbook/workspace/projects/git-repo-scanner
-  - adtoolkit://cookbook/workspace/projects/project-chooser-window
-  - adtoolkit://cookbook/workspace/projects/project-scan-progress-window
-  - adtoolkit://cookbook/ui/layout/composable-tabs/tabs-window
+  - adhsdk://cookbook/workspace/projects/git-repo
+  - adhsdk://cookbook/workspace/projects/project-database
+  - adhsdk://cookbook/workspace/projects/project-reconciler
+  - adhsdk://cookbook/workspace/projects/git-repo-scanner
+  - adhsdk://cookbook/workspace/projects/project-chooser-window
+  - adhsdk://cookbook/workspace/projects/project-scan-progress-window
+  - adhsdk://cookbook/ui/layout/composable-tabs/tabs-window
 references:
-  - packages/apple/AgenticToolkit/macOS/Features/Projects/ProjectsCoordinator.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/macOS/Features/Projects/GitRepo.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/macOS/Features/Projects/ProjectDatabase.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/macOS/Features/Projects/ProjectReconciler.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/macOS/Features/Projects/GitRepoScanner.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/macOS/Features/Projects/ProjectChooserWindow.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/macOS/Features/Projects/ProjectScanProgressWindow.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/macOS/Features/Projects/ProjectWindowManager.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/macOS/Features/Projects/UserSettings+Projects.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/macOS/UI/AppShell/AppFeature.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/macOS/UI/AppShell/AppCommand.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/macOS/UI/AppShell/MenuContribution.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/macOS/SystemIntegration/WindowManager/WindowManager.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/macOS/UI/ViewControllers/ComposableTabs/ComposableTabsWindowController.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Core/Loggable.swift (agenticdevelopertoolkit)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectsCoordinator.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/GitRepo.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectDatabase.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectReconciler.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/GitRepoScanner.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectChooserWindow.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectScanProgressWindow.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectWindowManager.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/UserSettings+Projects.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/UI/AppShell/AppFeature.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/UI/AppShell/AppCommand.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/UI/AppShell/MenuContribution.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/WindowManager/WindowManager.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/ComposableTabs/ComposableTabsWindowController.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Core/Loggable.swift (adhsdk)
 approved-by: ""
 approved-date: ""
 ---
@@ -378,10 +378,10 @@ stopping's failed checkpoint, make no log call at all — see
 ## Platform Notes
 
 - **SwiftUI**: The source is
-  `packages/apple/AgenticToolkit/macOS/Features/Projects/ProjectsCoordinator.swift`,
+  `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectsCoordinator.swift`,
   built on `AppKit` (indirectly, through the `ProjectOpening`/
   `ProjectWindowManager` seam and the `ComposableTabsWindowController`/
-  `WindowManager` frame cleanup) and `AgenticToolkitCore` (`GitRepo`,
+  `WindowManager` frame cleanup) and `AgenticDeveloperHubSDKCore` (`GitRepo`,
   `ProjectDatabase`, `ProjectReconciler`, `GitRepoScanner`, `AppFeature`,
   `AppCommand`, `MenuContribution`, `CommandRegistry`, `Loggable`). It uses
   no SwiftUI API of its own; a SwiftUI host would still construct this same
@@ -427,7 +427,7 @@ stopping's failed checkpoint, make no log call at all — see
   layout (`Ctrl+Alt+P` for Open Project, mirroring the macOS
   `[.command, .option]` combination). Back `database` with the same
   SQLite file through `Microsoft.Data.Sqlite` (see
-  `adtoolkit://cookbook/workspace/projects/project-database`'s WinUI
+  `adhsdk://cookbook/workspace/projects/project-database`'s WinUI
   bullet for the schema/migration port) and call its `Checkpoint()`
   equivalent from `Stop()`, logging any exception there explicitly to
   close **stop-checkpoint-failure-unsignaled** rather than reproducing the
@@ -450,7 +450,7 @@ stopping's failed checkpoint, make no log call at all — see
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/macOS/Features/Projects/ProjectsCoordinator.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectsCoordinator.swift` |
 
 ## Design Decisions
 

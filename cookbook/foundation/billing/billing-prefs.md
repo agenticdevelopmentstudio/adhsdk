@@ -1,7 +1,7 @@
 ---
 id: 0175F0BB-F4BD-4F72-94C2-57B087AD9DF9
 title: "Billing Preferences"
-domain: adtoolkit://cookbook/foundation/billing/billing-prefs
+domain: adhsdk://cookbook/foundation/billing/billing-prefs
 type: ingredient
 version: 1.0.0
 status: review
@@ -21,9 +21,9 @@ tags:
   - settings
 depends-on: []
 related:
-  - adtoolkit://cookbook/foundation/billing/billing-user-settings
-  - adtoolkit://cookbook/foundation/billing/billing-persistence
-  - adtoolkit://cookbook/foundation/billing/billing-dt-os
+  - adhsdk://cookbook/foundation/billing/billing-user-settings
+  - adhsdk://cookbook/foundation/billing/billing-persistence
+  - adhsdk://cookbook/foundation/billing/billing-dt-os
 references: []
 approved-by: ""
 approved-date: ""
@@ -127,7 +127,7 @@ Not applicable: this code makes no log calls.
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/Core/Billing/BillingPrefs.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Billing/BillingPrefs.swift` |
 
 ## Design Decisions
 

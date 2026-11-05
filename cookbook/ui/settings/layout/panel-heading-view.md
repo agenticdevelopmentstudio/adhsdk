@@ -1,7 +1,7 @@
 ---
 id: 9e21151e-dc58-49a2-be1e-4984529f4396
 title: "Panel Heading View"
-domain: adtoolkit://cookbook/ui/settings/layout/panel-heading-view
+domain: adhsdk://cookbook/ui/settings/layout/panel-heading-view
 type: ingredient
 version: 1.2.2
 status: review
@@ -19,10 +19,10 @@ tags:
   - settings
   - heading
 depends-on:
-  - adtoolkit://cookbook/ui/settings/layout/explanation-view
+  - adhsdk://cookbook/ui/settings/layout/explanation-view
 related:
-  - adtoolkit://cookbook/ui/settings/layout/explanation-view
-  - adtoolkit://cookbook/ui/settings/layout/header-view
+  - adhsdk://cookbook/ui/settings/layout/explanation-view
+  - adhsdk://cookbook/ui/settings/layout/header-view
   - agenticdevelopercookbook://guidelines/cookbook/ui/platform-design-languages
 references: []
 approved-by: ""
@@ -216,7 +216,7 @@ the static or trap check it is.
   component itself defines. This mirrors the pattern the Explanation View
   recipe's own `updates-text-via-label-property` requirement documents
   for that view (see
-  `adtoolkit://cookbook/ui/settings/layout/explanation-view#exposes-label-property`;
+  `adhsdk://cookbook/ui/settings/layout/explanation-view#exposes-label-property`;
   also Design Decisions).
 - **Constructed with no caption and later needing one**: The caption view
   is constructed once at construction time and never reassigned; the
@@ -313,7 +313,7 @@ Not applicable: the source contains no logging call.
   `matches-caption-width-to-stack`; use `gap: 6px` (flex or grid column) for
   the title-to-caption spacing, matching `spaces-title-from-caption`.
 - **AppKit / UIKit** (source platform): Source at
-  `packages/apple/AgenticToolkit/macOS/SystemIntegration/ComposableSettingsWindow/Views/PanelHeadingView.swift`
+  `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/Views/PanelHeadingView.swift`
   (this recipe's source): a macOS-only (`import AppKit`) `NSView` subclass,
   `@MainActor`, `final`, inside the `ComposableSettings` namespace,
   conforming to `SettingsViewProtocol` (a marker protocol with no
@@ -367,7 +367,7 @@ Not applicable: the source contains no logging call.
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/macOS/SystemIntegration/ComposableSettingsWindow/Views/PanelHeadingView.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/Views/PanelHeadingView.swift` |
 
 ## Design Decisions
 

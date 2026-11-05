@@ -1,7 +1,7 @@
 ---
 id: c0e95399-ddab-4445-a22a-566d07339f9b
 title: "Color Picker View"
-domain: adtoolkit://cookbook/ui/settings/rows/color-picker-view
+domain: adhsdk://cookbook/ui/settings/rows/color-picker-view
 type: ingredient
 version: 1.2.2
 status: review
@@ -21,10 +21,10 @@ tags:
   - color
 depends-on: []
 related:
-  - adtoolkit://cookbook/ui/settings/rows/captioned-slider-view
-  - adtoolkit://cookbook/ui/settings/rows/checkbox-view
-  - adtoolkit://cookbook/ui/settings/rows/number-field-view
-  - adtoolkit://cookbook/ui/settings/rows/popup-menu-choice-view
+  - adhsdk://cookbook/ui/settings/rows/captioned-slider-view
+  - adhsdk://cookbook/ui/settings/rows/checkbox-view
+  - adhsdk://cookbook/ui/settings/rows/number-field-view
+  - adhsdk://cookbook/ui/settings/rows/popup-menu-choice-view
 references: []
 approved-by: ""
 approved-date: ""
@@ -270,7 +270,7 @@ Not applicable: the source contains no logging call.
   value on the input's `onInput`/`onChange` handler unconditionally,
   mirroring `commits-color-value`.
 - **AppKit / UIKit** (source platform): Source file
-  `packages/apple/AgenticToolkit/macOS/SystemIntegration/ComposableSettingsWindow/Views/ColorPickerView.swift`.
+  `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/Views/ColorPickerView.swift`.
   A macOS-only (`import AppKit`) `NSView` subclass, `@MainActor`, inside
   the `ComposableSettings` namespace, conforming to `SettingsViewProtocol`.
   It composes two subviews — a `ThemedLabel` from
@@ -311,7 +311,7 @@ Not applicable: the source contains no logging call.
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/macOS/SystemIntegration/ComposableSettingsWindow/Views/ColorPickerView.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/Views/ColorPickerView.swift` |
 
 ## Design Decisions
 
@@ -357,7 +357,7 @@ own — it relies entirely on `NSColorWell`/`NSTextField`'s built-in AppKit
 accessibility and focus behavior, unconfirmed by any recorded keyboard or
 VoiceOver pass.
 
-No test in the repository's test targets constructs `ColorPickerView`, so `unit-test-coverage` is `failed`: a search of `AgenticToolkitMacOSTests` and the other test targets for the type name finds nothing.
+No test in the repository's test targets constructs `ColorPickerView`, so `unit-test-coverage` is `failed`: a search of `AgenticDeveloperHubSDKMacOSTests` and the other test targets for the type name finds nothing.
 
 ## Change History
 

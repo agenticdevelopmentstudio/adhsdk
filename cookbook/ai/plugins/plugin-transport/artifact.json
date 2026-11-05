@@ -3,7 +3,7 @@
   "meta": {
     "id": "7d5c5a1f-30df-460e-b6c4-7cfe9ab42784",
     "title": "Plugin Transport",
-    "domain": "adtoolkit://cookbook/ai/plugins/plugin-transport",
+    "domain": "adhsdk://cookbook/ai/plugins/plugin-transport",
     "type": "ingredient",
     "version": "1.1.1",
     "status": "review",
@@ -26,12 +26,12 @@
       "concurrency"
     ],
     "depends-on": [
-      "adtoolkit://cookbook/ai/plugins/ai-plugin",
-      "adtoolkit://cookbook/ai/plugins/request-spec",
-      "adtoolkit://cookbook/ai/plugins/stream-event"
+      "adhsdk://cookbook/ai/plugins/ai-plugin",
+      "adhsdk://cookbook/ai/plugins/request-spec",
+      "adhsdk://cookbook/ai/plugins/stream-event"
     ],
     "related": [
-      "adtoolkit://cookbook/ai/chat/daemon-ai-chat"
+      "adhsdk://cookbook/ai/chat/daemon-ai-chat"
     ],
     "references": [],
     "approved-by": "",

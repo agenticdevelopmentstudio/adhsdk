@@ -12,7 +12,7 @@
  *
  * What belongs HERE: the stylesheets every site imports, and the handful of rules that
  * address `html`, `body` and the shared chrome. What belongs in a site's `src/site.css`:
- * the feature packages that site mounts (`@import "@agentic-toolkit/<pkg>/sources.css"`),
+ * the feature packages that site mounts (`@import "@adh-sdk/<pkg>/sources.css"`),
  * and rules for its own components. It is imported after this file, so it wins.
  *
  * Tailwind itself is NOT imported here. `@import "tailwindcss"` belongs to the app —
@@ -41,14 +41,14 @@
  * fallbacks. It is written last for readability, not for the cascade: landing's own
  * sheets never assign `:root` (every token is read as `var(--lp-x, fallback)`), so this
  * override wins at any import position. */
-@import "@agenticdevelopertoolkit/landing/css/base.css";
-@import "@agenticdevelopertoolkit/landing/css/chrome.css";
-@import "@agenticdevelopertoolkit/landing/css/blocks.css";
+@import "@adh-sdk/landing/css/base.css";
+@import "@adh-sdk/landing/css/chrome.css";
+@import "@adh-sdk/landing/css/blocks.css";
 /* The flow layout — bands instead of screens — for a route that mounts `LandingFlow`.
  * Safe site-wide for base.css's reason: every selector in it is a class only `Flow`'s own
  * components put on the page (`.lp-band`, `.lp-hero-flow`, …), and it touches neither
  * <html> nor <body>. */
-@import "@agenticdevelopertoolkit/landing/css/flow.css";
+@import "@adh-sdk/landing/css/flow.css";
 @import "./adh-landing-bridge.css";
 
 /* EVERY RULE BELOW IS SCOPED TO THE SHELL — `.adh-family` is the class MarketingShell puts

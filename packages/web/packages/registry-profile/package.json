@@ -1,5 +1,5 @@
 {
-  "name": "@agenticdevelopertoolkit/registry-profile",
+  "name": "@adh-sdk/registry-profile",
   "version": "0.1.0",
   "description": "The public registry-entry profile renderer. Takes a serialized entry and renders it — no fetching, no auth, no adh imports, so it drops into anyone's site.",
   "license": "Apache-2.0",
@@ -28,12 +28,12 @@
   },
   "//peerDependencies": "React and registry-types are peers, not dependencies: the consumer supplies the copy, so a bundle holds one instance rather than one per package that re-exports it.",
   "peerDependencies": {
-    "@agenticdevelopertoolkit/registry-types": "*",
+    "@adh-sdk/registry-types": "*",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   },
   "devDependencies": {
-    "@agenticdevelopertoolkit/registry-types": "workspace:*",
+    "@adh-sdk/registry-types": "workspace:*",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
     "@types/react": "^19.2.14",

@@ -1,7 +1,7 @@
 import { type ReactElement } from 'react';
-import { type AdhHeaderAuthProps, type HeaderBadge, type NavLink, type RouteSection } from '@agentic-toolkit/adh/header';
-import { type HeaderAuthSource } from '@agentic-toolkit/adh/header-auth';
-import { type SiteId } from '@agentic-toolkit/adh-registry';
+import { type AdhHeaderAuthProps, type HeaderBadge, type NavLink, type RouteSection } from '@adh-sdk/adh/header';
+import { type HeaderAuthSource } from '@adh-sdk/adh/header-auth';
+import { type SiteId } from '@adh-sdk/adh-registry';
 import type { ReactNode } from 'react';
 /**
  * Everything the auth SOURCE owns is Omitted from the public props, so a caller can
@@ -96,7 +96,7 @@ export type SiteHeaderProps = Omit<AdhHeaderAuthProps, 'user' | 'onLogin' | 'onL
  * adh's header: the toolkit's registry-free {@link AdhHeader} plus everything that
  * needs the adh site registry.
  *
- * The split is the point. `@agentic-toolkit/adh`'s header knows about a bar, slots,
+ * The split is the point. `@adh-sdk/adh`'s header knows about a bar, slots,
  * badges and an auth cluster and nothing else — it resolves no site ids and holds no
  * site list, so a non-adh consumer can use it. Everything registry-shaped lives
  * HERE: the site's display name, the env-aware hub login/signup/settings hrefs, the

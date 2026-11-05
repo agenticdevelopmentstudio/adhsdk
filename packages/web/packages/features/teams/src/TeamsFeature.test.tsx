@@ -15,16 +15,16 @@ import {
   RailHostContext,
   type RailHostRegistry,
   type RegisteredLevels,
-} from "@agentic-toolkit/resource";
+} from "@adh-sdk/resource";
 // The shared rail/toolbar stand-in (G68, Mike, 2026-09-25) — see its own doc comment for why a
 // single copy replaced five near-identical ones and what it draws.
-import { RailStandIn } from "@agentic-toolkit/resource/testing";
+import { RailStandIn } from "@adh-sdk/resource/testing";
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: vi.fn(), replace: vi.fn(), prefetch: vi.fn() }),
 }));
 
-vi.mock("@agentic-toolkit/data/teams", () => ({
+vi.mock("@adh-sdk/data/teams", () => ({
   teamsApi: {
     list: vi.fn(),
     create: vi.fn(),
@@ -35,15 +35,15 @@ vi.mock("@agentic-toolkit/data/teams", () => ({
   },
 }));
 
-vi.mock("@agentic-toolkit/data/ecosystems", () => ({
+vi.mock("@adh-sdk/data/ecosystems", () => ({
   ecosystemsApi: {
     ecosystemIdForSlug: vi.fn(),
   },
 }));
 
 import { TeamsFeature } from "./TeamsFeature";
-import { teamsApi, teamMembersApi, type Team } from "@agentic-toolkit/data/teams";
-import { ecosystemsApi } from "@agentic-toolkit/data/ecosystems";
+import { teamsApi, teamMembersApi, type Team } from "@adh-sdk/data/teams";
+import { ecosystemsApi } from "@adh-sdk/data/ecosystems";
 
 const listMock = vi.mocked(teamsApi.list);
 const countsMock = vi.mocked(teamMembersApi.counts);

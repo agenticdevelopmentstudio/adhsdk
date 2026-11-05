@@ -1,7 +1,7 @@
 ---
 id: c3269cfa-a8ec-4ba9-bc68-9cdf98e7e1fc
 title: "Permission Row View"
-domain: adtoolkit://cookbook/system/permissions/permission-row-view
+domain: adhsdk://cookbook/system/permissions/permission-row-view
 type: ingredient
 version: 1.3.1
 status: review
@@ -362,7 +362,7 @@ Not applicable: this component contains no logging call at any level.
   dot's `background-color` and the text, matching the source's non-color-only
   behavior.
 - **AppKit / UIKit**: this is the source platform —
-  `packages/apple/AgenticToolkit/PermissionsUI/PermissionRowView.swift`
+  `packages/apple/AgenticDeveloperHubSDK/PermissionsUI/PermissionRowView.swift`
   builds the whole row from `NSImageView`, `NSTextField` (label and
   wrapping-label variants), a plain `NSView` for the status dot, an
   `NSStackView` for the status row, and an `NSButton`, laid out with
@@ -421,7 +421,7 @@ Not applicable: this component contains no logging call at any level.
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/PermissionsUI/PermissionRowView.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/PermissionsUI/PermissionRowView.swift` |
 
 ## Design Decisions
 
@@ -494,7 +494,7 @@ background; `keyboard-navigable` is `passed` because the action button is an
 unmodified `NSButton`, which keeps AppKit's native keyboard focus and
 activation (see **keyboard-activates-action**).
 
-`separation-of-concerns` is `passed` because `PermissionRowView` only renders one card and reports the action; the status read goes through the injected `PermissionChecking` and the grant flow through the `onAction` callback, so neither is decided inside the view. `unit-test-coverage` is `passed` because `Tests/AgenticToolkitPermissionsUITests/PermissionRowViewTests.swift` exercises the row with a stub checker: the Granted, Not Granted and Unknown labels, the action offered for granted and non-granted rows, the status the action reports, and a refresh cancelled mid-read.
+`separation-of-concerns` is `passed` because `PermissionRowView` only renders one card and reports the action; the status read goes through the injected `PermissionChecking` and the grant flow through the `onAction` callback, so neither is decided inside the view. `unit-test-coverage` is `passed` because `Tests/AgenticDeveloperHubSDKPermissionsUITests/PermissionRowViewTests.swift` exercises the row with a stub checker: the Granted, Not Granted and Unknown labels, the action offered for granted and non-granted rows, the status the action reports, and a refresh cancelled mid-read.
 
 ## Change History
 

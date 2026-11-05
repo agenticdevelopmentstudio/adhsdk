@@ -14,7 +14,7 @@
  * screen, and neither file is wrong on its own.
  *
  * A PURE function rather than the `if`-chain of components it replaces, matching
- * `@agentic-toolkit/projects`' `parse-path.ts`: the grammar is then assertable without
+ * `@adh-sdk/projects`' `parse-path.ts`: the grammar is then assertable without
  * rendering anything, and the RSC page can call it before it reaches a client component.
  */
 

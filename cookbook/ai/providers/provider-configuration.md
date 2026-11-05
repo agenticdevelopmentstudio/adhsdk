@@ -1,7 +1,7 @@
 ---
 id: a8054368-9885-4b83-90cf-5029728ab397
 title: "Provider Configuration"
-domain: adtoolkit://cookbook/ai/providers/provider-configuration
+domain: adhsdk://cookbook/ai/providers/provider-configuration
 type: ingredient
 version: 1.1.1
 status: review
@@ -21,16 +21,16 @@ tags:
   - provider-config
 depends-on: []
 related:
-  - adtoolkit://cookbook/ai/providers/provider-config-keys
-  - adtoolkit://cookbook/ai/plugins/plugin-descriptor
+  - adhsdk://cookbook/ai/providers/provider-config-keys
+  - adhsdk://cookbook/ai/plugins/plugin-descriptor
 references:
-  - packages/apple/AgenticToolkit/AIPluginKit/AIProviderConfiguration.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Tests/AgenticToolkitMacOSTests/AIPlugins/AIProviderConfigurationTests.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Tests/AIPluginKitTests/AIProviderConfigKeysTests.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/AIPluginKit/AIProviderConfigKeys.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/macOS/Features/AIPlugins/AIProviderConfigStore.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/macOS/Features/AIPlugins/Settings/LLMProvidersListViewModel.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/project.yml (agenticdevelopertoolkit)
+  - packages/apple/AgenticDeveloperHubSDK/AIPluginKit/AIProviderConfiguration.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKMacOSTests/AIPlugins/AIProviderConfigurationTests.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Tests/AIPluginKitTests/AIProviderConfigKeysTests.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/AIPluginKit/AIProviderConfigKeys.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/Features/AIPlugins/AIProviderConfigStore.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/Features/AIPlugins/Settings/LLMProvidersListViewModel.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/project.yml (adhsdk)
 approved-by: ""
 approved-date: ""
 ---
@@ -161,7 +161,7 @@ Not applicable: the record contains no logging call of any kind.
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/AIPluginKit/AIProviderConfiguration.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/AIPluginKit/AIProviderConfiguration.swift` |
 
 ## Design Decisions
 

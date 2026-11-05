@@ -1,6 +1,6 @@
 # Shared PostHog analytics
 
-`@agenticdevelopertoolkit/analytics` (`packages/web/packages/analytics/`) holds the one
+`@adh-sdk/analytics` (`packages/web/packages/analytics/`) holds the one
 PostHog configuration every site sends with. Its README is the API reference; this doc
 records why it exists, how each kind of site wires it, and what was decided along the way.
 

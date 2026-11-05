@@ -34,7 +34,7 @@
   input's font/color and any placeholder from theme tokens equivalent to
   `.body`/`primaryText`/`placeholderText`, mirroring applies-theme-styling.
 - **AppKit/UIKit** (source platform): Source file
-  `packages/apple/AgenticToolkit/macOS/SystemIntegration/ComposableSettingsWindow/Views/TextEditView.swift`:
+  `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/Views/TextEditView.swift`:
   a macOS-only, `@MainActor` `NSView` subclass inside the
   `ComposableSettings` namespace, `open` to subclassing through its
   `makeTextField(initialValue:)` factory — the mechanism

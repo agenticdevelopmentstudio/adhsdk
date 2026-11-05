@@ -1,4 +1,4 @@
-// @agentic-toolkit/data/ecosystem-config — the clients behind an ecosystem's CONFIGURATION
+// @adh-sdk/data/ecosystem-config — the clients behind an ecosystem's CONFIGURATION
 // group: its client auth, its feature flags, its server bags, and the storage token principals
 // scoped to it.
 //

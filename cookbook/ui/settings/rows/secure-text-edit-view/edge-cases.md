@@ -6,7 +6,7 @@ networking, and the change-notification-callback overwrite when a second
 observer is constructed against the same view model — is inherited
 unmodified from the text edit row, whose initializer this component
 reuses without change; see
-`adtoolkit://cookbook/ui/settings/rows/text-edit-view#edge-cases`.
+`adhsdk://cookbook/ui/settings/rows/text-edit-view#edge-cases`.
 This component's own source contributes no code beyond constructing its
 field as a secure field, so it introduces no edge case of its own.
 

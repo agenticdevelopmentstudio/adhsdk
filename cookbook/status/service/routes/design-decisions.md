@@ -1,6 +1,6 @@
 
 - **Decision**: keep the auto-configure matching/creation engine
-  (`@agentic-toolkit/deploy-platform/engine`) HTTP-agnostic; the route
+  (`@adh-sdk/deploy-platform/engine`) HTTP-agnostic; the route
   talks to it only through the in-process `statusAdapter`.
   **Rationale**: the engine is reused outside the HTTP layer and stays
   independently testable against a fake `StatusAddApi` without spinning up

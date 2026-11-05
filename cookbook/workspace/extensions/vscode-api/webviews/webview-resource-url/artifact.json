@@ -3,7 +3,7 @@
   "meta": {
     "id": "0cb9069f-57c6-4ac2-a952-6b331c4b6889",
     "title": "Webview Resource URL",
-    "domain": "adtoolkit://cookbook/workspace/extensions/vscode-api/webviews/webview-resource-url",
+    "domain": "adhsdk://cookbook/workspace/extensions/vscode-api/webviews/webview-resource-url",
     "type": "ingredient",
     "version": "1.1.0",
     "status": "review",
@@ -26,12 +26,12 @@
     ],
     "depends-on": [],
     "related": [
-      "adtoolkit://cookbook/workspace/extensions/manifest/extension-resource-path"
+      "adhsdk://cookbook/workspace/extensions/manifest/extension-resource-path"
     ],
     "references": [
-      "packages/apple/AgenticToolkit/Core/Extensions/WebviewResourceURL.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/Tests/AgenticToolkitCoreTests/Extensions/WebviewResourceURLTests.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/macOS/Features/Extensions/Webview/WebviewSchemeHandler.swift (agenticdevelopertoolkit)"
+      "packages/apple/AgenticDeveloperHubSDK/Core/Extensions/WebviewResourceURL.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKCoreTests/Extensions/WebviewResourceURLTests.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/Webview/WebviewSchemeHandler.swift (adhsdk)"
     ],
     "approved-by": "",
     "approved-date": ""

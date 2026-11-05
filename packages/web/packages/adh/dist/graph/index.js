@@ -1,8 +1,8 @@
 // src/graph/ConceptGraph.tsx
 import { headers } from "next/headers";
-import { conceptIds, graphTree } from "@agentic-toolkit/adh/concepts";
-import { detectEnv } from "@agentic-toolkit/adh-registry";
-import { ConceptGraphClient } from "@agentic-toolkit/adh/graph/ConceptGraphClient";
+import { conceptIds, graphTree } from "@adh-sdk/adh/concepts";
+import { detectEnv } from "@adh-sdk/adh-registry";
+import { ConceptGraphClient } from "@adh-sdk/adh/graph/ConceptGraphClient";
 import { jsx } from "react/jsx-runtime";
 async function ConceptGraph({
   focusId,
@@ -29,8 +29,8 @@ async function ConceptGraph({
 }
 
 // src/graph/LandingGraph.tsx
-import { getSite, splitSiteTitle } from "@agentic-toolkit/adh-registry";
-import { siteConcept } from "@agentic-toolkit/adh/concepts";
+import { getSite, splitSiteTitle } from "@adh-sdk/adh-registry";
+import { siteConcept } from "@adh-sdk/adh/concepts";
 import { jsx as jsx2 } from "react/jsx-runtime";
 function LandingGraph({ siteId, focusId }) {
   const node = siteConcept(siteId);

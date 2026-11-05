@@ -3,7 +3,7 @@
   "meta": {
     "id": "635cbbe4-a8e1-4ae1-a8a5-437f5bba27a6",
     "title": "Status Server Live",
-    "domain": "adtoolkit://cookbook/status/service/live-events",
+    "domain": "adhsdk://cookbook/status/service/live-events",
     "type": "ingredient",
     "version": "1.1.0",
     "status": "review",
@@ -31,14 +31,14 @@
     ],
     "related": [],
     "references": [
-      "packages/web/packages/status-server/src/live/live-events.ts (agenticdevelopertoolkit)",
-      "packages/web/packages/status-server/test/live-events.test.ts (agenticdevelopertoolkit)",
-      "packages/web/packages/status-server/src/monitor/live-types.ts (agenticdevelopertoolkit)",
-      "packages/web/packages/status-server/src/routes/reads.ts (agenticdevelopertoolkit)",
-      "packages/web/packages/status-server/src/routes/stream.ts (agenticdevelopertoolkit)",
-      "packages/web/packages/status-server/src/routes/hooks.ts (agenticdevelopertoolkit)",
-      "packages/web/packages/status-server/src/config/port.ts (agenticdevelopertoolkit)",
-      "packages/web/packages/status-server/src/storage/ports.ts (agenticdevelopertoolkit)"
+      "packages/web/packages/status-server/src/live/live-events.ts (adhsdk)",
+      "packages/web/packages/status-server/test/live-events.test.ts (adhsdk)",
+      "packages/web/packages/status-server/src/monitor/live-types.ts (adhsdk)",
+      "packages/web/packages/status-server/src/routes/reads.ts (adhsdk)",
+      "packages/web/packages/status-server/src/routes/stream.ts (adhsdk)",
+      "packages/web/packages/status-server/src/routes/hooks.ts (adhsdk)",
+      "packages/web/packages/status-server/src/config/port.ts (adhsdk)",
+      "packages/web/packages/status-server/src/storage/ports.ts (adhsdk)"
     ],
     "approved-by": "",
     "approved-date": ""

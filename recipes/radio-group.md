@@ -1,7 +1,7 @@
 ---
 id: d431934e-d64c-4dcf-bdab-b7c3465ee71b
 title: Radio Group
-domain: agenticdevelopertoolkit://recipes/radio-group
+domain: adhsdk://recipes/radio-group
 type: ingredient
 version: 1.1.1
 status: review
@@ -21,10 +21,10 @@ tags:
 - radio-button
 depends-on: []
 related:
-- agenticdevelopertoolkit://recipes/radio
-- agenticdevelopertoolkit://recipes/checkbox
-- agenticdevelopertoolkit://recipes/choice-slider
-- agenticdevelopertoolkit://recipes/field
+- adhsdk://recipes/radio
+- adhsdk://recipes/checkbox
+- adhsdk://recipes/choice-slider
+- adhsdk://recipes/field
 references:
 - https://developer.mozilla.org/en-US/docs/Web/HTML/Element/fieldset
 - https://developer.mozilla.org/en-US/docs/Web/HTML/Element/legend

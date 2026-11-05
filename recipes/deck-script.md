@@ -1,7 +1,7 @@
 ---
 id: e16d896e-9318-48ac-bf1e-b48ef648d73c
 title: DeckScript
-domain: agenticdevelopertoolkit://recipes/deck-script
+domain: adhsdk://recipes/deck-script
 type: ingredient
 version: 1.1.1
 status: review

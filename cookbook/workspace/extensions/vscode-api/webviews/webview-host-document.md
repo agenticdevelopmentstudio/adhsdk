@@ -1,7 +1,7 @@
 ---
 id: a380ec4a-df3f-42ee-8b07-3a8838d753e9
 title: "Webview Host Document"
-domain: adtoolkit://cookbook/workspace/extensions/vscode-api/webviews/webview-host-document
+domain: adhsdk://cookbook/workspace/extensions/vscode-api/webviews/webview-host-document
 type: ingredient
 version: 1.2.1
 status: review
@@ -23,8 +23,8 @@ tags:
 depends-on: []
 related: []
 references:
-  - packages/apple/AgenticToolkit/Core/Extensions/WebviewHostDocument.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Tests/AgenticToolkitCoreTests/Extensions/WebviewHostDocumentTests.swift (agenticdevelopertoolkit)
+  - packages/apple/AgenticDeveloperHubSDK/Core/Extensions/WebviewHostDocument.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKCoreTests/Extensions/WebviewHostDocumentTests.swift (adhsdk)
 approved-by: ""
 approved-date: ""
 ---
@@ -326,7 +326,7 @@ component (whole file) — this component emits no log line of any kind.
   `WebviewHostDocument.html(wrapping:initialState:)` ("building the host
   document" above) and `messageHandlerName` ("the message channel name"
   above) live in
-  `packages/apple/AgenticToolkit/macOS/Features/Extensions/Webview/WebviewPanelViewController.swift`,
+  `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/Webview/WebviewPanelViewController.swift`,
   which is macOS/AppKit-only in this repository today; there is no
   iOS/UIKit counterpart under this package. "The head-location search"
   above is `headStartTagEnd(in:)`; "escaping a value for script-element
@@ -363,7 +363,7 @@ component (whole file) — this component emits no log line of any kind.
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/Core/Extensions/WebviewHostDocument.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Extensions/WebviewHostDocument.swift` |
 
 ## Design Decisions
 

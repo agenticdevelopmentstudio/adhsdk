@@ -1,7 +1,7 @@
 ---
 id: 89a912f3-f0a0-4896-ba06-a386407ecb15
 title: Divider
-domain: agenticdevelopertoolkit://recipes/divider
+domain: adhsdk://recipes/divider
 type: ingredient
 version: 1.1.1
 status: review

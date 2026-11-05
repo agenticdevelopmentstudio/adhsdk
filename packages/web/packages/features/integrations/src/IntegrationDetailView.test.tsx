@@ -2,14 +2,14 @@
 import { useState } from "react";
 import { describe, it, expect, afterEach, vi } from "vitest";
 import { render, screen, fireEvent, waitFor, cleanup } from "@testing-library/react";
-import type { MaskedProviderConfig, ProviderCatalogEntry } from "@agentic-toolkit/data/integrations";
+import type { MaskedProviderConfig, ProviderCatalogEntry } from "@adh-sdk/data/integrations";
 
 // Stub the integrations client so no real network happens.
 const { updateProviderConfig, createProviderConfig } = vi.hoisted(() => ({
   updateProviderConfig: vi.fn(),
   createProviderConfig: vi.fn(),
 }));
-vi.mock("@agentic-toolkit/data/integrations", () => ({
+vi.mock("@adh-sdk/data/integrations", () => ({
   integrationsApi: { updateProviderConfig, createProviderConfig },
 }));
 

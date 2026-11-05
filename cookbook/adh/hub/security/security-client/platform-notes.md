@@ -2,11 +2,11 @@
 - **React/Web** (source platform): `packages/web/packages/data/src/security/tokens.ts` and
   `bucket-access.ts` hold the two clients; `wire.ts` holds their shared wire shapes; `index.ts`
   re-exports all three as the package's public surface. Both clients are built entirely on
-  `authedJson`/`authedRequest` from `@agentic-toolkit/auth/client` (re-exported through `./http`) and
+  `authedJson`/`authedRequest` from `@adh-sdk/auth/client` (re-exported through `./http`) and
   `enc` (`encodeURIComponent`) from `./client-helpers`; `tokens.ts` alone calls the global
   `encodeURIComponent` directly rather than the `enc` alias, per `token-revoke-request-shape`.
 - **SwiftUI**: a Swift port already exists for this exact backend surface —
-  `packages/apple/AgenticToolkit/Hub/Features/Authentication/ApiTokensRail.swift` and
+  `packages/apple/AgenticDeveloperHubSDK/Hub/Features/Authentication/ApiTokensRail.swift` and
   `AccessListsTopic.swift` (documented in the sibling `auth-client-authentication` recipe) — and models
   the wire rows as `Codable, Sendable` structs and each client as an `@MainActor final class` exposing
   `async throws` methods over an injected data-source protocol, with a `HubError` in place of

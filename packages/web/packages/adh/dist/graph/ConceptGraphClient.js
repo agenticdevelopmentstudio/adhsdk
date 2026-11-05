@@ -59,11 +59,11 @@ import {
   Waypoints,
   Wrench
 } from "lucide-react";
-import { InfoPanel } from "@agenticdevelopertoolkit/ui/blocks/info-panel";
-import { Checkbox } from "@agenticdevelopertoolkit/ui/components/checkbox";
-import { TextBubble } from "@agenticdevelopertoolkit/ui/components/text-bubble";
-import { detectEnv, getSite, siteHeaderTitle } from "@agentic-toolkit/adh-registry";
-import { useClientHost } from "@agentic-toolkit/adh/header";
+import { InfoPanel } from "@adh-sdk/ui/blocks/info-panel";
+import { Checkbox } from "@adh-sdk/ui/components/checkbox";
+import { TextBubble } from "@adh-sdk/ui/components/text-bubble";
+import { detectEnv, getSite, siteHeaderTitle } from "@adh-sdk/adh-registry";
+import { useClientHost } from "@adh-sdk/adh/header";
 
 // src/graph/layout.ts
 var FOCUS_X = 50;

@@ -1,7 +1,7 @@
 ---
 id: 7ae3de90-35f2-415c-93c7-cf579689e438
 title: "Project Checkout"
-domain: adtoolkit://cookbook/workspace/projects/project-checkout
+domain: adhsdk://cookbook/workspace/projects/project-checkout
 type: ingredient
 version: 1.1.0
 status: review
@@ -23,11 +23,11 @@ tags:
   - value-type
 depends-on: []
 related:
-  - adtoolkit://cookbook/workspace/projects/branch-controller
+  - adhsdk://cookbook/workspace/projects/branch-controller
 references:
-  - packages/apple/AgenticToolkit/macOS/Features/Projects/ProjectCheckout.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Tests/AgenticToolkitMacOSTests/Projects/ProjectCheckoutTests.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Core/Git/GitWorktree.swift (agenticdevelopertoolkit)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectCheckout.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKMacOSTests/Projects/ProjectCheckoutTests.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Core/Git/GitWorktree.swift (adhsdk)
 approved-by: ""
 approved-date: ""
 ---
@@ -210,10 +210,10 @@ Not applicable: a checkout makes no logging call of any kind.
 ## Platform Notes
 
 - **SwiftUI**: The source is
-  `packages/apple/AgenticToolkit/macOS/Features/Projects/ProjectCheckout.swift`,
+  `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectCheckout.swift`,
   using only Foundation's `URL` (`resolvingSymlinksInPath()`,
   `lastPathComponent`, `path`) and the sibling type `GitWorktree` from
-  `packages/apple/AgenticToolkit/Core/Git/GitWorktree.swift`; nothing here is
+  `packages/apple/AgenticDeveloperHubSDK/Core/Git/GitWorktree.swift`; nothing here is
   SwiftUI-specific — the type has no view and no observable state, and is
   used elsewhere purely as a `Hashable`/`Sendable` identity for tab groups.
   The `Sendable` conformance, together with every stored property being
@@ -268,7 +268,7 @@ Not applicable: a checkout makes no logging call of any kind.
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/macOS/Features/Projects/ProjectCheckout.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectCheckout.swift` |
 
 ## Design Decisions
 

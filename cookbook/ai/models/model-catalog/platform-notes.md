@@ -1,5 +1,5 @@
 
-- **SwiftUI**: The source (`packages/apple/AgenticToolkit/AIPluginKit/AIModelCatalog.swift`,
+- **SwiftUI**: The source (`packages/apple/AgenticDeveloperHubSDK/AIPluginKit/AIModelCatalog.swift`,
   bundled resource `model-catalog.json`, generator
   `packages/apple/AIPlugins/tools/generate_model_catalog.py`, tests
   `Tests/AIPluginKitTests/AIModelCatalogTests.swift`) has no SwiftUI

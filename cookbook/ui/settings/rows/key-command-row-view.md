@@ -1,7 +1,7 @@
 ---
 id: 1d2f69b6-1156-4dfa-a390-a240925ba1bd
 title: "Key Command Row View"
-domain: adtoolkit://cookbook/ui/settings/rows/key-command-row-view
+domain: adhsdk://cookbook/ui/settings/rows/key-command-row-view
 type: ingredient
 version: 1.2.3
 status: review
@@ -20,7 +20,7 @@ tags:
   - keyboard-shortcuts
 depends-on: []
 related:
-  - adtoolkit://cookbook/ui/controls/key-command-capture-field
+  - adhsdk://cookbook/ui/controls/key-command-capture-field
 references: []
 approved-by: ""
 approved-date: ""
@@ -232,7 +232,7 @@ live in the view that loses focus — it lives in the row.
 - **Role/trait**: This component sets no accessibility role on itself.
   The toggle keeps the platform's native switch role via
   **links-toggle-accessibility-title**. The capture field's own role belongs
-  to its component; see `adtoolkit://cookbook/ui/controls/key-command-capture-field`,
+  to its component; see `adhsdk://cookbook/ui/controls/key-command-capture-field`,
   which records the open question.
 - **Label requirements**: The toggle's accessible name comes from the title
   label via **links-toggle-accessibility-title**. The capture field is given
@@ -468,7 +468,7 @@ Not applicable: source contains no logging call anywhere in source.
   Keep `isEditing`/`pendingShortcut`/`refusal` in the row component's own
   state, not the recorder's.
 - **AppKit/UIKit** (source platform): Source file
-  `packages/apple/AgenticToolkit/macOS/Features/KeyCommands/KeyCommandRowView.swift`.
+  `packages/apple/AgenticDeveloperHubSDK/macOS/Features/KeyCommands/KeyCommandRowView.swift`.
   A macOS-only (`import AppKit`) `NSView` subclass, `@MainActor`, composing
   a `ThemedLabel`, a `KeyCommandCaptureField`, a `ConfirmCancelControl`, and
   an `NSSwitch` into a two-row vertical `NSStackView` via
@@ -515,7 +515,7 @@ Not applicable: source contains no logging call anywhere in source.
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/macOS/Features/KeyCommands/KeyCommandRowView.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/KeyCommands/KeyCommandRowView.swift` |
 
 ## Design Decisions
 

@@ -7,12 +7,12 @@
 //
 // Harness as in ChildEcosystemsLevel.test.tsx: only the transport and the hooks that would reach it
 // through the data module's OWN relative imports are replaced (vi.mock rewrites the
-// "@agentic-toolkit/data/ecosystems" specifier, not those), so the mappers and types stay real.
+// "@adh-sdk/data/ecosystems" specifier, not those), so the mappers and types stay real.
 import type { ReactNode } from "react";
 import { describe, it, expect, vi, afterEach, beforeEach } from "vitest";
 import { render, screen, cleanup, fireEvent, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import type { Ecosystem } from "@agentic-toolkit/data/ecosystems";
+import type { Ecosystem } from "@adh-sdk/data/ecosystems";
 
 // Hoisted with the mock below, so the test can assert on the one `replace` every render's router
 // hands out.
@@ -22,8 +22,8 @@ vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: vi.fn(), replace, prefetch: vi.fn() }),
 }));
 
-vi.mock("@agentic-toolkit/data/ecosystems", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("@agentic-toolkit/data/ecosystems")>()),
+vi.mock("@adh-sdk/data/ecosystems", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@adh-sdk/data/ecosystems")>()),
   ecosystemsApi: {
     list: vi.fn(),
     listChildren: vi.fn(),
@@ -54,7 +54,7 @@ vi.mock("./EcosystemSettingsPane", async (importOriginal) => ({
 }));
 
 import { EcosystemsFeature, IN_PACKAGE_TOPICS, type EcosystemsFeatureProps } from "./EcosystemsFeature";
-import { ecosystemsApi, useProvisionedFeatures } from "@agentic-toolkit/data/ecosystems";
+import { ecosystemsApi, useProvisionedFeatures } from "@adh-sdk/data/ecosystems";
 
 const ACME: Ecosystem = {
   id: "ecosystem.acme",

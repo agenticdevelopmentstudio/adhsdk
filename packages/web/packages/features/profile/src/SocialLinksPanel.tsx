@@ -7,8 +7,8 @@ import {
   getPrivacyGrants,
   socialLinksKey,
   PRIVACY_KEY,
-} from "@agentic-toolkit/data/profile";
-import { SettingsBody, useReportBusy } from "@agentic-toolkit/resource";
+} from "@adh-sdk/data/profile";
+import { SettingsBody, useReportBusy } from "@adh-sdk/resource";
 import { SocialLinksSection } from "./SocialLinksSection";
 
 // ── Component ──────────────────────────────────────────────────────────────────

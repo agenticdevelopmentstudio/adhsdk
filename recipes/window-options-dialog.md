@@ -1,7 +1,7 @@
 ---
 id: 9c1e6915-44ec-435e-a159-57b80b455698
 title: Window Options Dialog
-domain: agenticdevelopertoolkit://recipes/window-options-dialog
+domain: adhsdk://recipes/window-options-dialog
 type: ingredient
 version: 1.1.1
 status: review
@@ -20,12 +20,12 @@ tags:
 - modal
 - window-chrome
 depends-on:
-- agenticdevelopertoolkit://recipes/options-dialog-view-controller
+- adhsdk://recipes/options-dialog-view-controller
 related:
-- agenticdevelopertoolkit://recipes/dialog
-- agenticdevelopertoolkit://recipes/button
-- agenticdevelopertoolkit://recipes/checkbox
-- agenticdevelopertoolkit://recipes/slider
+- adhsdk://recipes/dialog
+- adhsdk://recipes/button
+- adhsdk://recipes/checkbox
+- adhsdk://recipes/slider
 references: []
 approved-by: ''
 approved-date: ''
@@ -275,7 +275,7 @@ Not applicable: The component does not perform its own logging. A host may add i
 
 ## Platform Notes
 
-- **Source Platform (Apple)**: Implemented in `packages/apple/AgenticDeveloperToolkit/SourcesUI/macOS/Chrome/WindowOptionsDialog.swift`. The component is AppKit-only (`@MainActor`, `NSObject`, `NSWindow`, `NSButton`, etc.) and targets macOS. `WindowOptionsSlider`, `WindowOptionsToggle`, and `WindowOptionsResetButton` are companion views for composing common dialog rows. The source relies on `OptionsDialogViewController` for the dialog body layout and `ThemePaletteObserver` for theme-aware colors (`palette.nsColor(.secondaryText)` for the gear button tint, `palette.windowBackgroundColor` for the dialog background). The default `width` falls back to `OptionsDialogViewController.defaultWidth`. Internally, `present()` delegates to a `beginDialog()`/`endDialog(_:)` seam so the open and close halves can be asserted without entering `NSApp.runModal`; `close()` calls `NSApp.stopModal()` only when `NSApp.modalWindow` is this dialog's own window; the host level is tracked live via `NSWindow.didUpdateNotification` observed on the dialog's own window (not the host window) — AppKit posts it on every pass of the event loop that touches that window, which during the modal session is every event, so the dialog catches the host's level change on the very next one.
+- **Source Platform (Apple)**: Implemented in `packages/apple/AgenticDeveloperHubSDK/SDK/SourcesUI/macOS/Chrome/WindowOptionsDialog.swift`. The component is AppKit-only (`@MainActor`, `NSObject`, `NSWindow`, `NSButton`, etc.) and targets macOS. `WindowOptionsSlider`, `WindowOptionsToggle`, and `WindowOptionsResetButton` are companion views for composing common dialog rows. The source relies on `OptionsDialogViewController` for the dialog body layout and `ThemePaletteObserver` for theme-aware colors (`palette.nsColor(.secondaryText)` for the gear button tint, `palette.windowBackgroundColor` for the dialog background). The default `width` falls back to `OptionsDialogViewController.defaultWidth`. Internally, `present()` delegates to a `beginDialog()`/`endDialog(_:)` seam so the open and close halves can be asserted without entering `NSApp.runModal`; `close()` calls `NSApp.stopModal()` only when `NSApp.modalWindow` is this dialog's own window; the host level is tracked live via `NSWindow.didUpdateNotification` observed on the dialog's own window (not the host window) — AppKit posts it on every pass of the event loop that touches that window, which during the modal session is every event, so the dialog catches the host's level change on the very next one.
 
 - **SwiftUI**: `WindowOptionsDialog` is an `NSObject`, not a view or view controller, so wrapping it in `NSViewControllerRepresentable` is not applicable — there is no view controller to represent. Instead, hold a `WindowOptionsDialog` instance in a coordinator or `@State`-held object owned by the SwiftUI scene, and call `present()` / `close()` / `toggle()` from a `Button`'s action in response to SwiftUI state (e.g., a toolbar gear `Button` with system image `"gearshape"` calling `dialog.toggle()`). For the rows passed to `makeControls`, build `NSHostingView`-wrapped `SwiftUI.Slider`, `SwiftUI.Toggle`, and a plain `Button` for reset, binding them to the host's own state and driving the same `onChange`/`onReset` closures the AppKit rows use.
 

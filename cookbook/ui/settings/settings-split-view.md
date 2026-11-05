@@ -1,7 +1,7 @@
 ---
 id: a11f34ff-116c-47d6-bffa-edd0799cbcb2
 title: "Settings Split View"
-domain: adtoolkit://cookbook/ui/settings/settings-split-view
+domain: adhsdk://cookbook/ui/settings/settings-split-view
 type: ingredient
 version: 1.2.2
 status: review
@@ -22,12 +22,12 @@ tags:
   - navigation
   - search
 depends-on:
-  - adtoolkit://cookbook/ui/settings/settings-panel-list
-  - adtoolkit://cookbook/ui/settings/layout/panel-host-view
-  - adtoolkit://cookbook/ui/settings/layout/panel-scroll-view
+  - adhsdk://cookbook/ui/settings/settings-panel-list
+  - adhsdk://cookbook/ui/settings/layout/panel-host-view
+  - adhsdk://cookbook/ui/settings/layout/panel-scroll-view
 related:
-  - adtoolkit://cookbook/ui/settings/settings-panel-split
-  - adtoolkit://cookbook/ui/settings/settings-window
+  - adhsdk://cookbook/ui/settings/settings-panel-split
+  - adhsdk://cookbook/ui/settings/settings-window
   - agenticdevelopercookbook://guidelines/cookbook/ui/platform-design-languages
 references:
   - https://developer.apple.com/design/human-interface-guidelines/split-views
@@ -608,7 +608,7 @@ Not applicable: no logging call appears anywhere in this component.
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/macOS/SystemIntegration/ComposableSettingsWindow/SplitViewController/SplitViewController.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/SplitViewController/SplitViewController.swift` |
 
 ## Design Decisions
 

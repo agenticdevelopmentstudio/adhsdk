@@ -1,8 +1,8 @@
 "use client";
 
-import { defineSiteHome } from "@agentic-toolkit/adh/home";
-import { ToolkitQueryProvider } from "@agentic-toolkit/data/query";
-import { parseTokensPath, TokensFeature } from "@agentic-toolkit/authentication";
+import { defineSiteHome } from "@adh-sdk/adh/home";
+import { ToolkitQueryProvider } from "@adh-sdk/data/query";
+import { parseTokensPath, TokensFeature } from "@adh-sdk/authentication";
 
 /**
  * The Authentication feature — this site's gated product surface
@@ -31,7 +31,7 @@ import { parseTokensPath, TokensFeature } from "@agentic-toolkit/authentication"
  *
  * A client module for two reasons at once: a model carries functions, which cannot cross from a
  * Server Component into the client shell; and the feature's react-query hooks read the toolkit's
- * OWN query runtime — ToolkitQueryProvider from @agentic-toolkit/data/query (the same physical
+ * OWN query runtime — ToolkitQueryProvider from @adh-sdk/data/query (the same physical
  * react-query module as the hooks; a host-constructed QueryClientProvider can never be, see that
  * module's doc) — mounted here since this site has no other react-query consumer.
  *

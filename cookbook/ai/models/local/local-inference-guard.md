@@ -1,7 +1,7 @@
 ---
 id: 8d827e9d-3638-4eaf-b04b-223b29b53389
 title: "Local Inference Guard"
-domain: adtoolkit://cookbook/ai/models/local/local-inference-guard
+domain: adhsdk://cookbook/ai/models/local/local-inference-guard
 type: ingredient
 version: 1.1.1
 status: review
@@ -23,13 +23,13 @@ tags:
 depends-on: []
 related: []
 references:
-  - packages/apple/AgenticToolkit/AIPluginKit/LocalInferenceGuard.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/AIPluginKit/ModelFitPolicy.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/AIPluginKit/LocalModelCatalog.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/AIPluginKit/SystemMemoryMonitor.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/AIPluginKit/DaemonAIChat.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/AIPluginKit/DaemonProviderResolver.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Tests/AIPluginKitTests/LocalInferenceGuardTests.swift (agenticdevelopertoolkit)
+  - packages/apple/AgenticDeveloperHubSDK/AIPluginKit/LocalInferenceGuard.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/AIPluginKit/ModelFitPolicy.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/AIPluginKit/LocalModelCatalog.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/AIPluginKit/SystemMemoryMonitor.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/AIPluginKit/DaemonAIChat.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/AIPluginKit/DaemonProviderResolver.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Tests/AIPluginKitTests/LocalInferenceGuardTests.swift (adhsdk)
 approved-by: ""
 approved-date: ""
 ---
@@ -349,7 +349,7 @@ Subsystem: `com.agenticdevelopmentstudio.AIPluginKit` | Category: `LocalInferenc
 ## Platform Notes
 
 - **SwiftUI**: The source is
-  `packages/apple/AgenticToolkit/AIPluginKit/LocalInferenceGuard.swift`,
+  `packages/apple/AgenticDeveloperHubSDK/AIPluginKit/LocalInferenceGuard.swift`,
   alongside its collaborators `ModelFitPolicy.swift`,
   `LocalModelCatalog.swift`, and `SystemMemoryMonitor.swift`, and its
   consumer `DaemonAIChat.swift`/`DaemonProviderResolver.swift` (the source of
@@ -413,7 +413,7 @@ Subsystem: `com.agenticdevelopmentstudio.AIPluginKit` | Category: `LocalInferenc
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/AIPluginKit/LocalInferenceGuard.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/AIPluginKit/LocalInferenceGuard.swift` |
 
 ## Design Decisions
 

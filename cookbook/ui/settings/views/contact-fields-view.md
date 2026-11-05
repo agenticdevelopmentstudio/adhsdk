@@ -1,7 +1,7 @@
 ---
 id: 6F98F569-B8C7-4FD9-BCDD-EA9768666A16
 title: "Contact Fields View"
-domain: adtoolkit://cookbook/ui/settings/views/contact-fields-view
+domain: adhsdk://cookbook/ui/settings/views/contact-fields-view
 type: ingredient
 version: 1.0.1
 status: review
@@ -22,7 +22,7 @@ tags:
   - form
 depends-on: []
 related:
-  - adtoolkit://cookbook/ui/settings/setting-observing
+  - adhsdk://cookbook/ui/settings/setting-observing
 references: []
 approved-by: ""
 approved-date: ""
@@ -144,7 +144,7 @@ Not applicable: the component performs no logging of its own.
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/macOS/SystemIntegration/ComposableSettingsWindow/Views/ContactFieldsView.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/Views/ContactFieldsView.swift` |
 
 ## Design Decisions
 

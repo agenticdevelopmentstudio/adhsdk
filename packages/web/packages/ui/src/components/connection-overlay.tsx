@@ -44,7 +44,7 @@ export interface ConnectionOverlayProps {
  * normal deploy), a countdown to the next automatic retry, and a "Try again now"
  * button. It obscures — never rearranges — what's underneath.
  *
- * Shared by the status and builder dashboards (vendored via @agenticdevelopertoolkit/ui).
+ * Shared by the status and builder dashboards (vendored via @adh-sdk/ui).
  */
 export function ConnectionOverlay({ active, onRetry, detail }: ConnectionOverlayProps) {
   const [shown, setShown] = useState(false)

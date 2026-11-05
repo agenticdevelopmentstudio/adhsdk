@@ -13,8 +13,8 @@ import {
   ListTodo,
   Shapes,
 } from "lucide-react";
-import { ItemAccessPanel, workspaceSubjectsDirectory } from "@agentic-toolkit/teams";
-import type { TopicLeaf } from "@agentic-toolkit/resource";
+import { ItemAccessPanel, workspaceSubjectsDirectory } from "@adh-sdk/teams";
+import type { TopicLeaf } from "@adh-sdk/resource";
 import { ProjectOverviewPane } from "./ProjectOverviewPane";
 import { WorkItemsSurface } from "./WorkItemsSurface";
 import { TriagePane } from "./TriagePane";

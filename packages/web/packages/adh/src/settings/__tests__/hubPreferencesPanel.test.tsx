@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { render, screen, fireEvent, cleanup } from '@testing-library/react'
 import { describe, it, expect, afterEach, vi } from 'vitest'
-import { registerShortcut } from '@agenticdevelopertoolkit/ui/hooks/useShortcut'
+import { registerShortcut } from '@adh-sdk/ui/hooks/useShortcut'
 
 import { HubPreferencesPanel } from '../HubPreferencesPanel'
 // The PACKAGE PATH, exactly as the panel imports it — a relative import here would be the
@@ -11,7 +11,7 @@ import {
   DEFAULT_SITE_MENU_SHORTCUT,
   readHubPreferences,
   setSiteMenuShortcut,
-} from '@agentic-toolkit/adh/header/hub-preferences'
+} from '@adh-sdk/adh/header/hub-preferences'
 
 // This package's vitest config has no auto-cleanup setup file, so each render must be torn
 // down explicitly or the next test's queries see both mounted trees.

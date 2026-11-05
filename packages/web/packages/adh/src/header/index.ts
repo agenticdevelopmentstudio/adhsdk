@@ -82,7 +82,7 @@ export {
 // condition to `src/`. Inlining it would also hoist its `'use client'` directive
 // over this whole entry file.
 //
-// The remedy has TWO halves and both must hold: `@agentic-toolkit/adh/header/recents`
+// The remedy has TWO halves and both must hold: `@adh-sdk/adh/header/recents`
 // is listed in tsup's `external`, AND every specifier that reaches this module is
 // written as the full package path. tsup's `external` matches SPECIFIERS, not
 // packages — one surviving './recents' silently defeats it.
@@ -93,5 +93,5 @@ export {
   readRecents,
   recordRecent,
   useRecents,
-} from '@agentic-toolkit/adh/header/recents'
-export type { RecentPlace } from '@agentic-toolkit/adh/header/recents'
+} from '@adh-sdk/adh/header/recents'
+export type { RecentPlace } from '@adh-sdk/adh/header/recents'

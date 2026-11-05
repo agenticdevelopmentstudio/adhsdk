@@ -1,5 +1,5 @@
 {
-  "name": "@agenticdevelopertoolkit/popover",
+  "name": "@adh-sdk/popover",
   "version": "0.1.0",
   "description": "Hover popover with a pointing arrow — an anchored panel, the tail that points back at its trigger, the invisible bridge that lets the pointer cross the gap, and the one-open-at-a-time hover-intent state a row of them needs.",
   "license": "Apache-2.0",

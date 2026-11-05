@@ -1,9 +1,9 @@
 
 - **React/Web** (source platform): `packages/web/packages/data/src/organizations/organizations.ts`,
   `members.ts`, and `wire.ts` hold the client; every method is a plain async function over
-  `authedJson`/`authedRequest` (`@agentic-toolkit/auth/client`, re-exported through `./http`) and
+  `authedJson`/`authedRequest` (`@adh-sdk/auth/client`, re-exported through `./http`) and
   `enc`/`compact` from `./client-helpers`; `index.ts` re-exports both files as the package's public
-  surface (`@agentic-toolkit/data/organizations`). The organizations cache-key prefix is exported
+  surface (`@adh-sdk/data/organizations`). The organizations cache-key prefix is exported
   as `ORGANIZATIONS_QUERY_KEY`, the one-element tuple `["organizations"]`, in the react-query
   key-array convention; a caller appends the workspace slug (`[...ORGANIZATIONS_QUERY_KEY, slug]`)
   to form a complete key. `wire.ts` also exports `OrganizationRenamed`, a type alias of

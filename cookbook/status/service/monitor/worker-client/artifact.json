@@ -3,7 +3,7 @@
   "meta": {
     "id": "bd58dfa4-13f8-4e92-adbe-45f8a020168d",
     "title": "Monitor Worker Client",
-    "domain": "adtoolkit://cookbook/status/service/monitor/worker-client",
+    "domain": "adhsdk://cookbook/status/service/monitor/worker-client",
     "type": "ingredient",
     "version": "1.1.0",
     "status": "review",
@@ -30,19 +30,19 @@
       "agenticdevelopercookbook://guidelines/implementing/code-quality/dependency-injection"
     ],
     "related": [
-      "adtoolkit://cookbook/status/service/config",
-      "adtoolkit://cookbook/status/service/monitor/cycle-runner"
+      "adhsdk://cookbook/status/service/config",
+      "adhsdk://cookbook/status/service/monitor/cycle-runner"
     ],
     "references": [
-      "packages/web/packages/status-server/src/monitor/worker-client.ts (agenticdevelopertoolkit)",
-      "packages/web/packages/status-server/src/monitor/worker.ts (agenticdevelopertoolkit)",
-      "packages/web/packages/status-server/src/monitor/cycle-runner.ts (agenticdevelopertoolkit)",
-      "packages/web/packages/status-server/src/config/port.ts (agenticdevelopertoolkit)",
-      "packages/web/packages/deploy-platform/src/cooldown/provider-cooldown.ts (agenticdevelopertoolkit)",
-      "packages/web/packages/deploy-platform/src/cooldown/index.ts (agenticdevelopertoolkit)",
-      "packages/web/packages/status-server/package.json (agenticdevelopertoolkit)",
-      "packages/web/packages/status-server/test/worker-boot.int.test.ts (agenticdevelopertoolkit)",
-      "packages/web/packages/status-server/test/helpers/worker-boot-driver.mjs (agenticdevelopertoolkit)"
+      "packages/web/packages/status-server/src/monitor/worker-client.ts (adhsdk)",
+      "packages/web/packages/status-server/src/monitor/worker.ts (adhsdk)",
+      "packages/web/packages/status-server/src/monitor/cycle-runner.ts (adhsdk)",
+      "packages/web/packages/status-server/src/config/port.ts (adhsdk)",
+      "packages/web/packages/deploy-platform/src/cooldown/provider-cooldown.ts (adhsdk)",
+      "packages/web/packages/deploy-platform/src/cooldown/index.ts (adhsdk)",
+      "packages/web/packages/status-server/package.json (adhsdk)",
+      "packages/web/packages/status-server/test/worker-boot.int.test.ts (adhsdk)",
+      "packages/web/packages/status-server/test/helpers/worker-boot-driver.mjs (adhsdk)"
     ],
     "approved-by": "",
     "approved-date": ""

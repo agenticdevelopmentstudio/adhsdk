@@ -1,5 +1,5 @@
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/Core/JSON/JSONCPreprocessor.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/JSON/JSONCPreprocessor.swift` |
 

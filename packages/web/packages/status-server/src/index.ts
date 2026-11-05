@@ -1,4 +1,4 @@
-// `@agentic-toolkit/status-server` — everything a backend host needs to boot the
+// `@adh-sdk/status-server` — everything a backend host needs to boot the
 // status monitor: the Hono app factory, the scheduler and monitor cadence, the
 // worker-thread client, live-update fan-out, the OpenAPI builder and the
 // configuration port. Storage comes from `./libsql` (or, later, another

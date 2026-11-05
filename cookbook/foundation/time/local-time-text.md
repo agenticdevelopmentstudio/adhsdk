@@ -1,7 +1,7 @@
 ---
 id: A98DFCA4-B6B0-4565-91B3-0657981D1AC8
 title: "Local Time Text"
-domain: adtoolkit://cookbook/foundation/time/local-time-text
+domain: adhsdk://cookbook/foundation/time/local-time-text
 type: ingredient
 version: 1.0.0
 status: review
@@ -22,8 +22,8 @@ tags:
   - locale
 depends-on: []
 related:
-  - adtoolkit://cookbook/foundation/time/utc-timestamp
-  - adtoolkit://cookbook/foundation/time/timestamp-parsing
+  - adhsdk://cookbook/foundation/time/utc-timestamp
+  - adhsdk://cookbook/foundation/time/timestamp-parsing
 references: []
 approved-by: ""
 approved-date: ""
@@ -129,7 +129,7 @@ Not applicable: The text helper calls no logging API.
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/Core/Time/LocalTimeText.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Time/LocalTimeText.swift` |
 
 ## Design Decisions
 
@@ -148,7 +148,7 @@ Not applicable: The text helper calls no logging API.
 | [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
 | [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
 
-`separation-of-concerns` passes because the type only formats and parses times of day for people and keeps the wire form in the UTC timestamp spec. `unit-test-coverage` passes because `AgenticToolkitCoreTests/Time/LocalTimeTextTests.swift` covers locale-following clocks, either clock accepted when typed, the ambiguous bare time, a next-day nearest instant and start-of-day with seconds arithmetic.
+`separation-of-concerns` passes because the type only formats and parses times of day for people and keeps the wire form in the UTC timestamp spec. `unit-test-coverage` passes because `AgenticDeveloperHubSDKCoreTests/Time/LocalTimeTextTests.swift` covers locale-following clocks, either clock accepted when typed, the ambiguous bare time, a next-day nearest instant and start-of-day with seconds arithmetic.
 
 ## Change History
 

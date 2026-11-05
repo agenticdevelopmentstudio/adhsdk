@@ -1,7 +1,7 @@
 ---
 id: d1257c76-fb28-47a5-bc2b-d4fb1ef87b53
 title: "Multi-Edge Tabbed View"
-domain: adtoolkit://cookbook/ui/layout/tabbed-view
+domain: adhsdk://cookbook/ui/layout/tabbed-view
 type: ingredient
 version: 1.2.1
 status: review
@@ -462,7 +462,7 @@ Not applicable: this concept contains no logging call of any kind.
   (`grid-template-areas` for top/left/center/right/bottom), toggling a bar's
   `display: none` to mirror `isHidden`.
 - **AppKit / UIKit** (source platform): Implemented in
-  `packages/apple/AgenticToolkit/macOS/UI/ViewControllers/MultiTabbedViewController/`
+  `packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/MultiTabbedViewController/`
   across `MultiTabbedViewController.swift` (edge/tab/selection state, layout,
   center mounting), `TabBarView.swift` (bar rendering, `TabButton`,
   `TabItemHostView`, card stacking), `TabItem.swift` (`TabItem`,
@@ -537,7 +537,7 @@ Not applicable: this concept contains no logging call of any kind.
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/macOS/UI/ViewControllers/MultiTabbedViewController/MultiTabbedViewController.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/MultiTabbedViewController/MultiTabbedViewController.swift` |
 
 ## Design Decisions
 

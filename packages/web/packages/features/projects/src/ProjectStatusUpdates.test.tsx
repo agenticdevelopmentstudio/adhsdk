@@ -19,7 +19,7 @@
 //      while Retract is offered on every row (reach for it is computed server-side from roles the
 //      client never sees).
 //
-// @agentic-toolkit/data is NOT wholesale-mocked: the section runs through the REAL useResourceList,
+// @adh-sdk/data is NOT wholesale-mocked: the section runs through the REAL useResourceList,
 // whose module-scope cache is keyed `project:<id>:status-updates` and OUTLIVES cleanup(), so every
 // test uses its own project id. The one thing overridden there is `readTokenSubject`, which decides
 // who the viewer is — the fact the author-only Revise control turns on.
@@ -28,13 +28,13 @@ import { render, screen, fireEvent, waitFor, cleanup, within } from "@testing-li
 
 const VIEWER = "cust-1";
 
-vi.mock("@agentic-toolkit/data", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("@agentic-toolkit/data")>()),
+vi.mock("@adh-sdk/data", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@adh-sdk/data")>()),
   readTokenSubject: () => VIEWER,
 }));
 
-vi.mock("@agentic-toolkit/data/projects", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("@agentic-toolkit/data/projects")>()),
+vi.mock("@adh-sdk/data/projects", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@adh-sdk/data/projects")>()),
   projectStatusUpdatesApi: {
     list: vi.fn(),
     create: vi.fn(),
@@ -48,7 +48,7 @@ import {
   projectStatusUpdatesApi,
   type ProjectParticipant,
   type ProjectStatusUpdate,
-} from "@agentic-toolkit/data/projects";
+} from "@adh-sdk/data/projects";
 
 const list = vi.mocked(projectStatusUpdatesApi.list);
 const create = vi.mocked(projectStatusUpdatesApi.create);

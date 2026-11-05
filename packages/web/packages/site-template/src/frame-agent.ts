@@ -1,5 +1,5 @@
-import { landingLlmsTxt, landingMarkdown, withWebSite } from '@agenticdevelopertoolkit/landing'
-import type { JsonLdValue } from '@agenticdevelopertoolkit/landing'
+import { landingLlmsTxt, landingMarkdown, withWebSite } from '@adh-sdk/landing'
+import type { JsonLdValue } from '@adh-sdk/landing'
 import type { FrameConfig, FrameCopy, FrameSitemapRoute } from './types'
 
 // What a content site tells agents and answer engines, written once from the same copy, config

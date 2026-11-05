@@ -1,4 +1,4 @@
-import { authedJson } from "@agentic-toolkit/auth/client";
+import { authedJson } from "@adh-sdk/auth/client";
 
 /** The per-ecosystem feature-flag router — a DIFFERENT backend router from billing's, hence a
  *  different module. See src/api/billing.ts:4-14 on why every path carries `/api`. */

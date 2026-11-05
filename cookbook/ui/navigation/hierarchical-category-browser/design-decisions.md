@@ -32,7 +32,7 @@
   **Approved**: pending
 - **Decision**: The gear reads its target from a plain prop, every render.
   **Rationale**: `CategoryGearMenu` is deliberately dumb (see
-  [Category Picker](agenticdevelopertoolkit://recipes/category-picker-dialog)'s
+  [Category Picker](adhsdk://recipes/category-picker-dialog)'s
   sibling components) and the hook feeds it `selectedNode`/`levelParent`
   recomputed in the SAME render that builds `selectedId` — because HTDV's
   `levelsKey` cache ignores `ReactNode` props, a gear that closed over a stale
@@ -55,7 +55,7 @@
   is the owner's own arrangement, and `buildCategoryTree` promises to
   preserve it. Sorting everywhere was one line shorter and made the rail
   contradict both that promise and the
-  [Category Picker](agenticdevelopertoolkit://recipes/category-picker-dialog)
+  [Category Picker](adhsdk://recipes/category-picker-dialog)
   rendering the same subtree unsorted beside it.
   **Approved**: pending
 - **Decision**: A move writes the new parent edge before removing the old one

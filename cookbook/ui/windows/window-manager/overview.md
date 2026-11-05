@@ -4,10 +4,10 @@ infrastructure. It owns:
 
 - a frame manager that persists window frames and visibility and reacts to
   screen changes (specified by the frame-manager and
-  [the screen manager](adtoolkit://cookbook/ui/windows/screen-manager)
+  [the screen manager](adhsdk://cookbook/ui/windows/screen-manager)
   recipes);
 - a window registry that looks up live instances of
-  [the single-instance window base](adtoolkit://cookbook/ui/windows/single-window-controller)
+  [the single-instance window base](adhsdk://cookbook/ui/windows/single-window-controller)
   by window id through weak references;
 - the launch-restore pass (registering a restorable id and factory, running
   the launch-restore pass, reopening recents on launch);

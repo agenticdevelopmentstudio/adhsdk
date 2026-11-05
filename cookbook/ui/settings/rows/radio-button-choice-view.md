@@ -1,7 +1,7 @@
 ---
 id: 7774cbd3-4883-43f0-aef0-f49a29389b98
 title: "Radio Button Choice View"
-domain: adtoolkit://cookbook/ui/settings/rows/radio-button-choice-view
+domain: adhsdk://cookbook/ui/settings/rows/radio-button-choice-view
 type: ingredient
 version: 1.3.1
 status: review
@@ -21,7 +21,7 @@ tags:
   - choice
 depends-on: []
 related:
-  - adtoolkit://cookbook/ui/settings/rows/choice-slider-view
+  - adhsdk://cookbook/ui/settings/rows/choice-slider-view
 references: []
 approved-by: ""
 approved-date: ""
@@ -337,7 +337,7 @@ or logger reference anywhere in source).
   new value on each input's `onChange`, comparing against the previous
   value first to mirror skips-redundant-commits.
 - **AppKit/UIKit** (source platform): Source file
-  `packages/apple/AgenticToolkit/macOS/SystemIntegration/ComposableSettingsWindow/Views/RadioButtonChoiceView.swift`.
+  `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/Views/RadioButtonChoiceView.swift`.
   A macOS-only (`import AppKit`), generic-over-`Value` `NSView` subclass,
   isolated to the main actor via Swift's `@MainActor`, inside the
   `ComposableSettings` namespace, conforming to `SettingsViewProtocol`. It
@@ -382,7 +382,7 @@ or logger reference anywhere in source).
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/macOS/SystemIntegration/ComposableSettingsWindow/Views/RadioButtonChoiceView.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/Views/RadioButtonChoiceView.swift` |
 
 ## Design Decisions
 
@@ -481,7 +481,7 @@ and the radio buttons beneath it (see Label requirements);
 platform-neutral behavior, with the AppKit-specific mechanics confined to
 Platform Notes.
 
-No test in the repository's test targets constructs `RadioButtonChoiceView`, so `unit-test-coverage` is `failed`: a search of `AgenticToolkitMacOSTests` and the other test targets for the type name finds nothing.
+No test in the repository's test targets constructs `RadioButtonChoiceView`, so `unit-test-coverage` is `failed`: a search of `AgenticDeveloperHubSDKMacOSTests` and the other test targets for the type name finds nothing.
 
 ## Change History
 

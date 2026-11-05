@@ -1,13 +1,13 @@
 "use client";
 
 import { useCallback, useMemo } from "react";
-import { useResourceList, workspacesApi, type Workspace } from "@agentic-toolkit/data";
-import { api as personasApi, type Persona } from "@agentic-toolkit/data/personas";
+import { useResourceList, workspacesApi, type Workspace } from "@adh-sdk/data";
+import { api as personasApi, type Persona } from "@adh-sdk/data/personas";
 import {
   ecosystemsApi,
   useWorkspaceDefaultEcosystemId,
   type Ecosystem,
-} from "@agentic-toolkit/data/ecosystems";
+} from "@adh-sdk/data/ecosystems";
 
 /**
  * The URL segment for the workspace's own destination — a RESERVED LITERAL, not an id.
@@ -31,7 +31,7 @@ export type DestinationKind = "workspace" | "persona" | "product";
 /**
  * One row of the integrations root list: a place integrations can be connected TO.
  *
- * Every integration binds to an `ecosystemId` (see `@agentic-toolkit/data/integrations` —
+ * Every integration binds to an `ecosystemId` (see `@adh-sdk/data/integrations` —
  * every connect body requires one), so a "destination" is ultimately an ecosystem. The three
  * kinds differ only in how that ecosystem is reached: the workspace's own infrastructure
  * ecosystem, a persona's owned realm, or a product, which IS an ecosystem.

@@ -2,14 +2,14 @@
 
 import * as React from "react"
 
-import { AlertModal } from "@agenticdevelopertoolkit/ui/components/alert-modal"
-import { UnsavedChangesGuard } from "@agenticdevelopertoolkit/ui/components/unsaved-changes-guard"
+import { AlertModal } from "@adh-sdk/ui/components/alert-modal"
+import { UnsavedChangesGuard } from "@adh-sdk/ui/components/unsaved-changes-guard"
 
 /**
  * THE HOST — the two pieces of the platform an editing container reaches out to,
  * injected rather than imported at the point of use.
  *
- * Both are real, shared components in `@agenticdevelopertoolkit/ui`, and the default host
+ * Both are real, shared components in `@adh-sdk/ui`, and the default host
  * is exactly those. The indirection buys two things:
  *
  * - The container's contract with the navigation guard ("publish `when`, once, from

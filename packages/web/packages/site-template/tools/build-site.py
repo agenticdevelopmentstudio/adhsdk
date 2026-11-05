@@ -10,7 +10,7 @@ its `site.json` `toolkitPackages` names) with `link:` dependencies into its
      production build, and `dist/` is gitignored for all of them but `adh`, which commits its
      dist for consumers that never build (and whose CI holds that copy equal to a fresh build,
      so rebuilding it here leaves it unchanged). It MUST exist before `next build`, or Vercel
-     reports `Module not found: Can't resolve '@agenticdevelopertoolkit/landing'`, which does
+     reports `Module not found: Can't resolve '@adh-sdk/landing'`, which does
      not obviously mean "the submodule was never built".
   2. The websites-root `pnpm install` (the vercel.json `installCommand`) does not build them —
      a separate workspace with its own lockfile is not something the outer install walks into.

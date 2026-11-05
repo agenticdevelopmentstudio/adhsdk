@@ -9,7 +9,7 @@
 import { useState } from 'react'
 import { render, screen, fireEvent, cleanup } from '@testing-library/react'
 import { describe, it, expect, afterEach, vi } from 'vitest'
-import { SettingsDirtyProvider, useSettingsDirty } from '@agentic-toolkit/resource'
+import { SettingsDirtyProvider, useSettingsDirty } from '@adh-sdk/resource'
 
 // The provider mounts its own UnsavedChangesGuard when there is no rail host above it, and that
 // guard passes onNavigate={(href) => router.push(href)}. There is no app-router context under
@@ -17,10 +17,10 @@ import { SettingsDirtyProvider, useSettingsDirty } from '@agentic-toolkit/resour
 const { push } = vi.hoisted(() => ({ push: vi.fn() }))
 vi.mock('next/navigation', () => ({ useRouter: () => ({ push }) }))
 
-vi.mock('@agentic-toolkit/auth', () => ({ reportUnexpectedAuthError: vi.fn() }))
+vi.mock('@adh-sdk/auth', () => ({ reportUnexpectedAuthError: vi.fn() }))
 
 const { patchSettings } = vi.hoisted(() => ({ patchSettings: vi.fn() }))
-vi.mock('@agentic-toolkit/data/integrations', () => ({
+vi.mock('@adh-sdk/data/integrations', () => ({
   integrationsApi: {
     listConnections: vi.fn(),
     sync: vi.fn(),

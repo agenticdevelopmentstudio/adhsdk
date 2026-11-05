@@ -3,7 +3,7 @@ Decisions governing the text edit row's inherited behavior — the
 content-hugging priority, the factory-method pattern, theme-observation
 placement, placeholder-restyle timing, and the placeholder contrast floor
 — are recorded at
-`adtoolkit://cookbook/ui/settings/rows/text-edit-view#design-decisions`
+`adhsdk://cookbook/ui/settings/rows/text-edit-view#design-decisions`
 and are not repeated here.
 
 - **Decision**: Implement this component as a specialization of the text

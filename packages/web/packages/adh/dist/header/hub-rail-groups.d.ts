@@ -1,4 +1,4 @@
-import { type HubFeatureSegment } from '@agentic-toolkit/adh-registry';
+import { type HubFeatureSegment } from '@adh-sdk/adh-registry';
 /** One group row on the hub's workspace rail, and the feature segments it discloses. */
 export interface HubRailGroup {
     /** Stable rail id. Namespaced with `group:` so the group space and the SEGMENT space are

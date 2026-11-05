@@ -1,14 +1,14 @@
 "use client";
 
-import { Card, CardContent } from "@agenticdevelopertoolkit/ui/components/card";
+import { Card, CardContent } from "@adh-sdk/ui/components/card";
 import {
   CategoryField,
   type CategoryTreeNode,
-} from "@agenticdevelopertoolkit/ui/blocks/category-field";
-import { TagSetField } from "@agenticdevelopertoolkit/ui/blocks/tag-set-field";
-import { MarkdownDocumentEditor } from "@agenticdevelopertoolkit/markdown";
-import { MarkdownSpellCheck } from "@agenticdevelopertoolkit/ui/components/markdown-spellcheck";
-import { ErrorText } from "@agenticdevelopertoolkit/ui/components/error-text";
+} from "@adh-sdk/ui/blocks/category-field";
+import { TagSetField } from "@adh-sdk/ui/blocks/tag-set-field";
+import { MarkdownDocumentEditor } from "@adh-sdk/markdown";
+import { MarkdownSpellCheck } from "@adh-sdk/ui/components/markdown-spellcheck";
+import { ErrorText } from "@adh-sdk/ui/components/error-text";
 import type { NoteInput } from "./note-model";
 import { NOTES_CORPUS, type CorpusNoun } from "./corpus";
 

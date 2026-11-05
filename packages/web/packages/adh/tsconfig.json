@@ -9,14 +9,14 @@
     // adh-registry's src/deployment-env.ts). Mapped to source so typecheck never depends on a built dist.
     "paths": {
       "@/*": ["./src/*"],
-      "@agentic-toolkit/adh": ["./src/index.ts"],
-      "@agentic-toolkit/adh/*": ["./src/*"],
-      "@agentic-toolkit/adh/header-auth": ["./src/header/header-auth.ts"],
-      "@agentic-toolkit/adh/footer/FooterChatInner": ["./src/footer/FooterChatInner.tsx"],
-      "@agentic-toolkit/adh/marketing/LandingHeroGate": ["./src/marketing/LandingHeroGate.tsx"],
-      "@agentic-toolkit/adh/debug-env/SiteThemeConsole": ["./src/debug-env/SiteThemeConsole.tsx"],
-      "@agentic-toolkit/adh/themes/DbThemeApplier": ["./src/themes/DbThemeApplier.tsx"],
-      "@agentic-toolkit/adh/themes/theme-preview": ["./src/themes/theme-preview.ts"]
+      "@adh-sdk/adh": ["./src/index.ts"],
+      "@adh-sdk/adh/*": ["./src/*"],
+      "@adh-sdk/adh/header-auth": ["./src/header/header-auth.ts"],
+      "@adh-sdk/adh/footer/FooterChatInner": ["./src/footer/FooterChatInner.tsx"],
+      "@adh-sdk/adh/marketing/LandingHeroGate": ["./src/marketing/LandingHeroGate.tsx"],
+      "@adh-sdk/adh/debug-env/SiteThemeConsole": ["./src/debug-env/SiteThemeConsole.tsx"],
+      "@adh-sdk/adh/themes/DbThemeApplier": ["./src/themes/DbThemeApplier.tsx"],
+      "@adh-sdk/adh/themes/theme-preview": ["./src/themes/theme-preview.ts"]
     }
   },
   "include": ["src"]

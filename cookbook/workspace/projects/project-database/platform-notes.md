@@ -1,9 +1,9 @@
 
 - **SwiftUI**: The source is
-  `packages/apple/AgenticToolkit/macOS/Features/Projects/ProjectDatabase.swift`,
+  `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectDatabase.swift`,
   importing only `Foundation`, `SQLite3` (the C SQLite library linked
-  directly, not `Core Data` or `SwiftData`), `AgenticToolkitCore`, and
-  `AgenticToolkitDatabase` (for `AppStorageLocation`); it depends on no UI
+  directly, not `Core Data` or `SwiftData`), `AgenticDeveloperHubSDKCore`, and
+  `AgenticDeveloperHubSDKDatabase` (for `AppStorageLocation`); it depends on no UI
   framework, and a caller anywhere in a SwiftUI app — an `@Observable` view
   model, an `App`'s startup code — constructs and owns one instance
   directly. `ProjectDatabase` is declared as a plain `final class` with no

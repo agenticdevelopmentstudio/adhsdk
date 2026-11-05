@@ -2,19 +2,19 @@
 
 import type { ReactNode } from "react";
 
-import { useResourceItemQuery, useResourceItemWriter } from "@agentic-toolkit/data";
+import { useResourceItemQuery, useResourceItemWriter } from "@adh-sdk/data";
 import {
   clientAuthApi,
   type ClientAuthPolicy,
   type EcosystemClientAuth,
-} from "@agentic-toolkit/data/ecosystem-config";
-import { ErrorText } from "@agenticdevelopertoolkit/ui/components/error-text";
+} from "@adh-sdk/data/ecosystem-config";
+import { ErrorText } from "@adh-sdk/ui/components/error-text";
 import {
   DetailsPane,
   useReportBusy,
   useSettingsDraft,
   type DetailsSection,
-} from "@agentic-toolkit/resource";
+} from "@adh-sdk/resource";
 import { ClientAuthPolicyFields } from "./ClientAuthFields";
 import { policyPatch, samePolicy } from "./client-auth-model";
 

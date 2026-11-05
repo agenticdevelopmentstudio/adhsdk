@@ -4,7 +4,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { render } from '@testing-library/react'
 
 const lens = vi.hoisted(() => ({ calls: [] as { selector: string; fromColor?: string; toColor?: string }[] }))
-vi.mock('@agenticdevelopertoolkit/textlens', () => ({
+vi.mock('@adh-sdk/textlens', () => ({
   useTextLens: (_ref: unknown, options: { selector: string; fromColor?: string; toColor?: string }): void => {
     lens.calls.push(options)
   },

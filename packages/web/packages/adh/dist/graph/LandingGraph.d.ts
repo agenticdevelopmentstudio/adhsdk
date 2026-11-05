@@ -1,4 +1,4 @@
-import { type SiteId } from '@agentic-toolkit/adh-registry';
+import { type SiteId } from '@adh-sdk/adh-registry';
 export interface LandingGraphProps {
     /** The marketing site whose node the landing graph opens focused on. */
     siteId: SiteId;

@@ -15,8 +15,8 @@ import {
   CONCEPT_SITE_IDS,
   type ConceptNode,
 } from '../concepts'
-import { getSite, type SiteId } from '@agentic-toolkit/adh-registry'
-import { helpSlugs } from '@agentic-toolkit/adh/help/surface'
+import { getSite, type SiteId } from '@adh-sdk/adh-registry'
+import { helpSlugs } from '@adh-sdk/adh/help/surface'
 
 // The sites the tree focuses a node for. Keep in sync with the rollout list; the
 // tree must focus a node for each. All but `devteam` adopt the shared

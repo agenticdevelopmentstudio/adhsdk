@@ -1,9 +1,9 @@
 import { describe, it, expect, vi, afterEach } from 'vitest'
 import { render, screen } from '@testing-library/react'
-import { siteUrl } from '@agentic-toolkit/adh-registry'
+import { siteUrl } from '@adh-sdk/adh-registry'
 
 // The equivalence test for Task 5.6's split. `AdhHeader` (now
-// `@agentic-toolkit/adh/header`) resolves NOTHING about adh — it takes a site name,
+// `@adh-sdk/adh/header`) resolves NOTHING about adh — it takes a site name,
 // a switcher and a pre-auth slot as props. Everything that reads the adh site
 // registry stayed on this side, in `SiteHeader`. So what needs pinning is not the
 // bar's markup (the toolkit's own header-contract.test.tsx covers that) but that the
@@ -19,8 +19,8 @@ vi.mock('next/navigation', () => ({
 // replacing) the toolkit header means the assertions below still run against the
 // real bar — this only tees off the props.
 const headerProps = vi.hoisted(() => ({ current: null as Record<string, unknown> | null }))
-vi.mock('@agentic-toolkit/adh/header', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('@agentic-toolkit/adh/header')>()
+vi.mock('@adh-sdk/adh/header', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@adh-sdk/adh/header')>()
   return {
     ...actual,
     AdhHeader: (props: Record<string, unknown>) => {
@@ -52,9 +52,9 @@ vi.mock('../header/SiteMenuSwitcher', () => ({
 // the auth source's assertions below need — its whole job is producing `user`. Stubbing
 // it means those assertions read the source's output rather than Base UI's markup.
 //
-// Mocked at its own module path rather than through the `@agentic-toolkit/adh/header`
+// Mocked at its own module path rather than through the `@adh-sdk/adh/header`
 // barrel above: `AdhHeader.tsx` imports `./AvatarMenu` relatively, so a barrel mock never
-// reaches it. A sibling relative path now, not the long `external/agentictoolkit/.../src/`
+// reaches it. A sibling relative path now, not the long `external/adhsdk/.../src/`
 // form this file carried in the former `@adh/chrome` — that spelling existed only to name a
 // file on
 // the far side of a workspace boundary, and had to end at `src/` because vitest resolves
@@ -72,14 +72,14 @@ vi.mock('../header/AvatarMenu', () => ({
 // site, from one definition. Stubbing it makes the gate observable in the DOM without a
 // single request. It is reached through a `next/dynamic` specifier, so every assertion on
 // it has to await the lazy resolve (`findBy…`).
-vi.mock('@agentic-toolkit/messaging/components/notification-bell', () => ({
+vi.mock('@adh-sdk/messaging/components/notification-bell', () => ({
   NotificationBell: () => <div data-testid="adh-notification-bell" />,
 }))
 
 import { SiteHeader } from '../header/SiteHeader'
-import { getSite, siteHeaderTitle, SITES } from '@agentic-toolkit/adh-registry'
-import type { HeaderAuthSourceOptions, HeaderAuthState } from '@agentic-toolkit/adh/header-auth'
-import { SettingsOverlayProvider } from '@agentic-toolkit/adh/settings'
+import { getSite, siteHeaderTitle, SITES } from '@adh-sdk/adh-registry'
+import type { HeaderAuthSourceOptions, HeaderAuthState } from '@adh-sdk/adh/header-auth'
+import { SettingsOverlayProvider } from '@adh-sdk/adh/settings'
 
 /** The centred label as it reaches the DOM. */
 const centreTitle = (): string | null =>

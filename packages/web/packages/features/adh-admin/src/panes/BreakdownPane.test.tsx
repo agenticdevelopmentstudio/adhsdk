@@ -14,7 +14,7 @@ vi.mock("../api/insight", () => ({
 }));
 
 // jsdom lays nothing out; the chart's own rendering is adh-ui's to test.
-vi.mock("@agentic-toolkit/adh-ui/components/time-series-chart", () => ({
+vi.mock("@adh-sdk/adh-ui/components/time-series-chart", () => ({
   TimeSeriesChart: ({ series }: { series: { label: string }[] }) => (
     <div data-testid="chart">{series.map((s) => s.label).join(",")}</div>
   ),

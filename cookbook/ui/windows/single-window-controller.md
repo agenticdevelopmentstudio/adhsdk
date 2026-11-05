@@ -1,7 +1,7 @@
 ---
 id: 3f6268b8-410d-4d3c-979c-2a9f9f1534f3
 title: "Single-Instance Window"
-domain: adtoolkit://cookbook/ui/windows/single-window-controller
+domain: adhsdk://cookbook/ui/windows/single-window-controller
 type: ingredient
 version: 1.2.2
 status: review
@@ -23,8 +23,8 @@ tags:
 depends-on: []
 related:
   - agenticdevelopercookbook://guidelines/cookbook/ui/platform-design-languages
-  - adtoolkit://cookbook/ui/windows/window-controller
-  - adtoolkit://cookbook/ui/layout/composable-tabs/tabs-window
+  - adhsdk://cookbook/ui/windows/window-controller
+  - adhsdk://cookbook/ui/layout/composable-tabs/tabs-window
 references: []
 approved-by: ""
 approved-date: ""
@@ -554,7 +554,7 @@ Not applicable — this class contains no logging calls of its own.
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/macOS/SystemIntegration/WindowManager/Windows/SingleWindowController.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/WindowManager/Windows/SingleWindowController.swift` |
 
 ## Design Decisions
 

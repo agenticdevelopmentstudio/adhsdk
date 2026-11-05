@@ -3,7 +3,7 @@
   "meta": {
     "id": "D0AA6237-E5D7-4CF8-A1CB-621033575421",
     "title": "Value Row View",
-    "domain": "adtoolkit://cookbook/ui/settings/views/value-row-view",
+    "domain": "adhsdk://cookbook/ui/settings/views/value-row-view",
     "type": "ingredient",
     "version": "1.0.1",
     "status": "review",
@@ -25,7 +25,7 @@
     ],
     "depends-on": [],
     "related": [
-      "adtoolkit://cookbook/ui/settings/views/money-field-view"
+      "adhsdk://cookbook/ui/settings/views/money-field-view"
     ],
     "references": [],
     "approved-by": "",

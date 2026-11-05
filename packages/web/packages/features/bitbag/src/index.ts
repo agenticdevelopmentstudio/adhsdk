@@ -22,11 +22,11 @@ export { DEFAULT_THEME, DEFAULT_VOICE, TERMINAL_THEME } from './voice'
 export type { BitbagVoice } from './voice'
 // The theme vocabulary of the `theme` prop above, re-exported from its owner.
 // A consumer that stores a user's dock theme has to validate it against the SAME
-// allowlist bitbag types the prop with — and `@agenticdevelopertoolkit/themes`
-// belongs to the persona toolkit, which packages like @agentic-toolkit/adh
+// allowlist bitbag types the prop with — and `@adh-sdk/themes`
+// belongs to the persona layer, which packages like @adh-sdk/adh
 // deliberately keep out of their shipped graph. bitbag already declares it as a peerDependency
 // because it renders that vocabulary, so it is the honest place to publish it.
-// Do NOT substitute `@agenticdevelopertoolkit/themes`: the two id sets are disjoint
+// Do NOT substitute `@adh-sdk/themes`: the two id sets are disjoint
 // (`old-school-terminal` — TERMINAL_THEME above — exists only here), so swapping
 // them would break the prop's type contract.
-export { themeIds, type ThemeKey } from '@agenticdevelopertoolkit/themes'
+export { themeIds, type ThemeKey } from '@adh-sdk/themes'

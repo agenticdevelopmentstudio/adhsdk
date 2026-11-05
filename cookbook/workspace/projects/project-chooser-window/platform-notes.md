@@ -1,6 +1,6 @@
 
 - **SwiftUI**: The source is entirely AppKit
-  (`packages/apple/AgenticToolkit/macOS/Features/Projects/ProjectChooserWindow.swift`):
+  (`packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectChooserWindow.swift`):
   `NSWindowController`, `NSWindowDelegate`, `NSWindow`, and a private
   `NSViewController`. A SwiftUI port has no built-in app-modal API on
   macOS — `.sheet` requires a presenting window this app cannot guarantee

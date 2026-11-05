@@ -1,7 +1,7 @@
 ---
 id: 9c5e7d75-e253-4dce-b12c-7eaede9ee405
 title: Pane Title Bar View
-domain: agenticdevelopertoolkit://recipes/pane-title-bar-view
+domain: adhsdk://recipes/pane-title-bar-view
 type: ingredient
 version: 1.1.1
 status: review
@@ -21,7 +21,7 @@ tags:
 - chrome
 - title-bar
 depends-on:
-- agenticdevelopertoolkit://recipes/pane-control-cluster
+- adhsdk://recipes/pane-control-cluster
 related: []
 references: []
 approved-by: ''

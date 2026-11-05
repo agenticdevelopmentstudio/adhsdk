@@ -2,18 +2,18 @@
 
 import * as React from 'react';
 
-import { useWorkspaceDefaultEcosystemId } from '@agentic-toolkit/data/ecosystems';
-import { CONNECTIONS_HASH, IntegrationsPane } from '@agentic-toolkit/integrations';
-import { StandaloneRailHost } from '@agentic-toolkit/resource';
-import { Button } from '@agenticdevelopertoolkit/ui/components/button';
+import { useWorkspaceDefaultEcosystemId } from '@adh-sdk/data/ecosystems';
+import { CONNECTIONS_HASH, IntegrationsPane } from '@adh-sdk/integrations';
+import { StandaloneRailHost } from '@adh-sdk/resource';
+import { Button } from '@adh-sdk/ui/components/button';
 import {
   Dialog,
   DialogContent,
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@agenticdevelopertoolkit/ui/components/dialog';
-import { EmptyState } from '@agenticdevelopertoolkit/ui/components/empty-state';
+} from '@adh-sdk/ui/components/dialog';
+import { EmptyState } from '@adh-sdk/ui/components/empty-state';
 
 import type { ShiprClient } from '../client';
 import { SHIPR_DIALOG_SURFACE } from '../dialogSurface';
@@ -92,7 +92,7 @@ const PROVIDERS = ['github-app', 'vercel'] as const;
  * Back button that closed a dialog instead of leaving the console would be a worse lie than
  * a URL that is one step behind.
  *
- * The STRING itself is `@agentic-toolkit/integrations`', IMPORTED rather than spelled again
+ * The STRING itself is `@adh-sdk/integrations`', IMPORTED rather than spelled again
  * here. Both ends of the round-trip need the same fragment — this file puts it in the address,
  * and the callback appends it to the return it has to invent when nothing was stashed on the
  * origin it landed on — and a second spelling would be wrong in exactly one direction, with

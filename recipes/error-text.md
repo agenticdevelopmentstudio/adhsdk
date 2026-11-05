@@ -1,7 +1,7 @@
 ---
 id: c9e70ad4-89c9-4c44-a2d6-a64da32a64af
 title: Error Text
-domain: agenticdevelopertoolkit://recipes/error-text
+domain: adhsdk://recipes/error-text
 type: ingredient
 version: 1.1.1
 status: review

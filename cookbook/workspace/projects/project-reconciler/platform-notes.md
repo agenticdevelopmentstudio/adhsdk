@@ -1,6 +1,6 @@
 
 - **SwiftUI**: The source is
-  `packages/apple/AgenticToolkit/macOS/Features/Projects/ProjectReconciler.swift`,
+  `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectReconciler.swift`,
   a plain Foundation file (`import Foundation` only) with no dependency on
   SwiftUI, AppKit, or UIKit; it ports unchanged into any Swift target that
   also has `GitRepo.swift`. The `Plan` value conforms to `Sendable`, and the

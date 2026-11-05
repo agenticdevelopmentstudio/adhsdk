@@ -25,7 +25,7 @@
   commits-on-field-action), reverting the displayed text on a parse
   failure rather than accepting it.
 - **AppKit/UIKit** (source platform): Source files
-  `packages/apple/AgenticToolkit/macOS/SystemIntegration/ComposableSettingsWindow/Views/IntegerFieldView.swift`
+  `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/Views/IntegerFieldView.swift`
   and `.../Views/NumberFieldView.swift`. Both are macOS-only (`import
   AppKit`) `NSView` subclasses, `@MainActor`, inside the
   `ComposableSettings` namespace. `IntegerFieldView` composes and forwards
@@ -65,13 +65,13 @@
   its own locale-aware `NumberFormatter`-equivalent parsing has no fallback
   ordering to reproduce this source's
   parses-locale-aware-integer-text/POSIX-first behavior (see
-  `adtoolkit://cookbook/ui/settings/rows/number-field-view#requirements/parses-posix-integer-first`),
+  `adhsdk://cookbook/ui/settings/rows/number-field-view#requirements/parses-posix-integer-first`),
   so a value written by this source's POSIX `settingsFieldString` can read
   differently under a non-en-US Windows locale; and `NumberBox.Minimum`/
   `Maximum`, when both set with `Minimum > Maximum`, has no documented
   skip-the-clamp behavior matching
   skips-clamp-on-contradictory-bounds (see
-  `adtoolkit://cookbook/ui/settings/rows/number-field-view#requirements/skips-clamp-on-contradictory-bounds`)
+  `adhsdk://cookbook/ui/settings/rows/number-field-view#requirements/skips-clamp-on-contradictory-bounds`)
   — a WinUI port needs an explicit `Minimum > Maximum` check before relying
   on `NumberBox`'s own clamping.
 

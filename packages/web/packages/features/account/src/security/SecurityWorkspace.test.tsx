@@ -2,22 +2,22 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
-vi.mock("@agentic-toolkit/auth", async (orig) => ({
+vi.mock("@adh-sdk/auth", async (orig) => ({
   ...(await orig<Record<string, unknown>>()),
   useAuth: () => ({ user: { email: "mike@example.com" }, isAuthenticated: true }),
 }));
 
 // SecurityWorkspace queries MFA status via useQuery, which throws "No QueryClient set" without a
 // real QueryClientProvider ancestor. Stub the transport boundary the account-security calls go
-// through (`authedJson` / `authedRequest`, imported straight from `@agentic-toolkit/auth/client`)
+// through (`authedJson` / `authedRequest`, imported straight from `@adh-sdk/auth/client`)
 // and wrap in a real `QueryClientProvider`, the same seam `ArchivedPanel.test.tsx` in this
 // package already established for the identical reason.
 const { authedJson, authedRequest } = vi.hoisted(() => ({
   authedJson: vi.fn(),
   authedRequest: vi.fn(),
 }));
-vi.mock("@agentic-toolkit/auth/client", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("@agentic-toolkit/auth/client")>()),
+vi.mock("@adh-sdk/auth/client", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@adh-sdk/auth/client")>()),
   authedJson,
   authedRequest,
 }));

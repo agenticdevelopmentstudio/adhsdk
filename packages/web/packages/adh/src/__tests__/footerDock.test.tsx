@@ -28,8 +28,8 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 // Type-side too, not just the runtime setup — see footerBitbag.test.tsx.
 import '@testing-library/jest-dom/vitest'
 import { render, cleanup } from '@testing-library/react'
-import { ThemeStyle, type ThemeKey } from '@agenticdevelopertoolkit/themes'
-import { DEFAULT_THEME } from '@agentic-toolkit/bitbag'
+import { ThemeStyle, type ThemeKey } from '@adh-sdk/themes'
+import { DEFAULT_THEME } from '@adh-sdk/bitbag'
 import { adhStylesheet, bitbagStylesheet, styleRules } from './stylesheetRules'
 
 /** The selector adh-site.css styles the footer's dock by. */

@@ -32,7 +32,7 @@
   between the last field of one spacing group and the first field of the
   other.
 - **AppKit / UIKit** (source platform): Source file
-  `packages/apple/AgenticToolkit/macOS/UI/ViewControllers/ComposableTabs/ComposableTabsSettingsViewController.swift`.
+  `packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/ComposableTabs/ComposableTabsSettingsViewController.swift`.
   A macOS-only (`import AppKit`), `@MainActor` composition of one public
   `NSViewController` (`ComposableTabsSettingsViewController`) and three
   private classes: the topic list is the private
@@ -51,7 +51,7 @@
   `keyEquivalent = "\r"`. This component composes
   `ComposableSettings.SplitViewController`, `SettingsPanelViewController`,
   `GroupView`, `HelpPopoverController`, and `SpacingControl` — all defined
-  elsewhere in `AgenticToolkit` — rather than reimplementing any of their
+  elsewhere in `AgenticDeveloperHubSDK` — rather than reimplementing any of their
   layout or persistence logic. The Tabs panel's icon is the SF Symbol
   `rectangle.3.group`; the Spacing panel's icon is `squareshape.split.2x2`.
   The frame-spacing control is constructed via

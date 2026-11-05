@@ -1,4 +1,4 @@
-import { HUB_ROUTE_SEGMENTS } from '@agentic-toolkit/adh-registry'
+import { HUB_ROUTE_SEGMENTS } from '@adh-sdk/adh-registry'
 
 /**
  * The hub's workspace routes that carry NO slug.

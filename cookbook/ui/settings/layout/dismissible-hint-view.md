@@ -1,7 +1,7 @@
 ---
 id: f3d7adbb-ece4-4b00-97af-f7e3db9d5999
 title: "Dismissible Hint View"
-domain: adtoolkit://cookbook/ui/settings/layout/dismissible-hint-view
+domain: adhsdk://cookbook/ui/settings/layout/dismissible-hint-view
 type: ingredient
 version: 1.2.2
 status: review
@@ -20,7 +20,7 @@ tags:
   - onboarding
 depends-on: []
 related:
-  - adtoolkit://cookbook/ui/settings/layout/conditional-view
+  - adhsdk://cookbook/ui/settings/layout/conditional-view
 references:
   - agenticdevelopercookbook://guidelines/cookbook/ui/platform-design-languages
 approved-by: ""
@@ -39,7 +39,7 @@ session." It self-reports visibility changes so a hosting group view can
 collapse the padding and hairline around a card row whose content has
 hidden itself, rather than leaving an empty band behind — the same
 mechanism the sibling conditional view recipe
-(`adtoolkit://cookbook/ui/settings/layout/conditional-view`) uses for
+(`adhsdk://cookbook/ui/settings/layout/conditional-view`) uses for
 the same reason.
 
 ## Behavioral Requirements
@@ -226,7 +226,7 @@ a runtime behavior assertion.
   following turn. This is a MUST-level consequence of the mechanism this
   component observes through — the same underlying mechanism the sibling
   conditional view recipe
-  (`adtoolkit://cookbook/ui/settings/layout/conditional-view`)
+  (`adhsdk://cookbook/ui/settings/layout/conditional-view`)
   documents for its own observed setting.
 - Repeated taps on the dismiss button: each tap unconditionally sets the
   setting's value to `true` again, with no read-back of the setting's
@@ -258,7 +258,7 @@ applies.
 `buttonTitle`'s default value, the English literal `"Got It"`, carries no
 localization key or lookup — `text` and any explicit `buttonTitle`
 argument are the caller's responsibility to localize (the same treatment
-as the sibling Badge recipe (`adtoolkit://cookbook/ui/controls/badge`)
+as the sibling Badge recipe (`adhsdk://cookbook/ui/controls/badge`)
 gives fully caller-supplied text), but this one default value ships baked
 directly into the component itself; a call site that never overrides
 `buttonTitle` ships this English literal regardless of the app's locale.
@@ -347,7 +347,7 @@ Not applicable: the component performs no logging of its own.
   `onVisibilityChange`-equivalent callback is required the way the AppKit
   source's fixed-layout hosting `GroupView` needs one.
 - **AppKit/UIKit** (source platform): Source file
-  `packages/apple/AgenticToolkit/macOS/SystemIntegration/ComposableSettingsWindow/Views/DismissibleHintView.swift`,
+  `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/Views/DismissibleHintView.swift`,
   with layout constants from `ViewLayout.swift`, the `SelfHidingSettingsView`
   contract from `GroupView.swift`/`SettingsViewProtocol.swift`, the
   persisted-setting plumbing from `UserSetting.swift`, and the theme
@@ -403,7 +403,7 @@ Not applicable: the component performs no logging of its own.
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/macOS/SystemIntegration/ComposableSettingsWindow/Views/DismissibleHintView.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/Views/DismissibleHintView.swift` |
 
 ## Design Decisions
 
@@ -416,7 +416,7 @@ Not applicable: the component performs no logging of its own.
   asynchronously-delivered change notification arrives, and avoids firing
   `onVisibilityChange` for a hosting `GroupView` before that view has even
   finished adding this row — the same reasoning the sibling `ConditionalView`
-  recipe (`adtoolkit://cookbook/ui/settings/layout/conditional-view`) documents for its own
+  recipe (`adhsdk://cookbook/ui/settings/layout/conditional-view`) documents for its own
   initial-visibility evaluation.
   **Approved**: pending
 - **Decision**: Guard the `onChange` handler with `dismissed != self.isHidden`
@@ -477,7 +477,7 @@ Separation-of-concerns is passed: `DismissibleHintView` renders a hint with a di
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
 | 1.0.0 | 2026-09-23 | Mike Fullerton | Initial recipe — extracted from the Apple `DismissibleHintView` (AppKit, macOS) source. |
-| 1.1.0 | 2026-09-23 | Mike Fullerton | Lint pass: moved AppKit-only mechanics (property exposure, Auto Layout pinning/autoresizing, coder/frame traps) from Behavioral Requirements to Platform Notes; renamed every requirement to subject-noun form and updated all citations; added the self-hiding-conformance requirement and test vector; rewrote the WinUI 3 bullet from TeachingTip to a binding-driven InfoBar/StackPanel with a bound (not hardcoded) button title; fixed the spacing test vector to compare against the layout token, the redundant-write vector to use an observable KVO signal, and marked the main-actor and conformance vectors as static checks; dropped the uncited HIG claim and the malformed-trap-message edge case; reformatted Design Decisions to the bolded three-line form; rebuilt Compliance with real catalog checks in Title Case categories; added full agentictoolkit:// URLs to sibling-recipe cross-references. |
+| 1.1.0 | 2026-09-23 | Mike Fullerton | Lint pass: moved AppKit-only mechanics (property exposure, Auto Layout pinning/autoresizing, coder/frame traps) from Behavioral Requirements to Platform Notes; renamed every requirement to subject-noun form and updated all citations; added the self-hiding-conformance requirement and test vector; rewrote the WinUI 3 bullet from TeachingTip to a binding-driven InfoBar/StackPanel with a bound (not hardcoded) button title; fixed the spacing test vector to compare against the layout token, the redundant-write vector to use an observable KVO signal, and marked the main-actor and conformance vectors as static checks; dropped the uncited HIG claim and the malformed-trap-message edge case; reformatted Design Decisions to the bolded three-line form; rebuilt Compliance with real catalog checks in Title Case categories; added full adhsdk:// URLs to sibling-recipe cross-references. |
 | 1.1.1 | 2026-09-24 | Mike Fullerton | Phase 6 lint: re-audited open-question markers against the marker rules; kept markers are one-line named bullets. |
 | 1.1.2 | 2026-09-25 | Mike Fullerton | Moved into the library cookbook; added Reference Implementations. |
 | 1.2.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to ui/settings/layout/. |

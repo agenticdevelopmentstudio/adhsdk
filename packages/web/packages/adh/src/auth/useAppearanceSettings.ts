@@ -1,14 +1,14 @@
 'use client'
 
 import { useCallback } from 'react'
-import { useAuth } from '@agentic-toolkit/auth'
-import { authedRequest } from '@agentic-toolkit/auth/client'
-import { useAppearancePreferences, type AppearancePrefs } from '@agenticdevelopertoolkit/themes'
+import { useAuth } from '@adh-sdk/auth'
+import { authedRequest } from '@adh-sdk/auth/client'
+import { useAppearancePreferences, type AppearancePrefs } from '@adh-sdk/themes'
 // Package path, not relative: see wired-provider.tsx's telemetry import comment — this
 // package bundles with tsup `bundle: true, splitting: false`, and `src/auth/index.ts` is
 // its own tsup entry, so a relative '../telemetry/report-error' would inline a private,
 // permanently-null copy of the `reporter` state instead of the one TelemetryProvider wires.
-import { captureException } from '@agentic-toolkit/adh/telemetry/report-error'
+import { captureException } from '@adh-sdk/adh/telemetry/report-error'
 
 export interface UseAppearanceSettings {
   prefs: AppearancePrefs

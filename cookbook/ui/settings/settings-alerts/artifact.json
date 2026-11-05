@@ -3,7 +3,7 @@
   "meta": {
     "id": "0FC99299-F3BA-4883-AB08-9BD614DA7900",
     "title": "Settings Alerts",
-    "domain": "adtoolkit://cookbook/ui/settings/settings-alerts",
+    "domain": "adhsdk://cookbook/ui/settings/settings-alerts",
     "type": "ingredient",
     "version": "1.0.1",
     "status": "review",
@@ -25,7 +25,7 @@
     ],
     "depends-on": [],
     "related": [
-      "adtoolkit://cookbook/ui/settings/settings-window"
+      "adhsdk://cookbook/ui/settings/settings-window"
     ],
     "references": [],
     "approved-by": "",

@@ -1,7 +1,7 @@
 ---
 id: f5d2eb1c-fb0e-48e3-b124-7e730ac8231c
 title: Markdown Quick Reference
-domain: agenticdevelopertoolkit://recipes/markdown-quick-reference
+domain: adhsdk://recipes/markdown-quick-reference
 type: ingredient
 version: 1.3.1
 status: review
@@ -22,9 +22,9 @@ tags:
   - reference
   - toolbar
 depends-on:
-  - agenticdevelopertoolkit://recipes/button
+  - adhsdk://recipes/button
 related:
-  - agenticdevelopertoolkit://recipes/markdown-editor
+  - adhsdk://recipes/markdown-editor
 references: []
 approved-by: ''
 approved-date: ''
@@ -34,7 +34,7 @@ approved-date: ''
 
 ## Overview
 
-A standalone toolbar control in `@agenticdevelopertoolkit/ui`
+A standalone toolbar control in `@adh-sdk/ui`
 (`components/markdown-quick-reference`). It is a thin wrapper that passes a
 fixed `MARKDOWN_SYNTAX` list into the shared `SyntaxQuickReference` shell
 (`components/quick-reference`) — the same shell the ink editor's quick
@@ -149,7 +149,7 @@ its own and takes no value.
 
 ## Configuration
 
-`@agenticdevelopertoolkit/ui/components/markdown-quick-reference`
+`@adh-sdk/ui/components/markdown-quick-reference`
 
 | Option | Type | Default | Description |
 |---|---|---|---|

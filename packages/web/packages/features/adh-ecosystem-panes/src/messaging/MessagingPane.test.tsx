@@ -13,15 +13,15 @@ vi.mock("next/navigation", () => ({ useRouter: () => ({ push }) }));
 // `useSendMessage` — their cache keys, their `enabled` gating, the reset-on-success — all run
 // for real, which is what makes "the fields cleared, so the report withdrew" a real assertion.
 const { authedJson } = vi.hoisted(() => ({ authedJson: vi.fn() }));
-// The transport is `@agentic-toolkit/auth/client` directly now that this pane and its
+// The transport is `@adh-sdk/auth/client` directly now that this pane and its
 // client live in a package: the hub's `@/api/http` was only ever a re-export of it, so
 // mocking that barrel and mocking this module were always the same interception.
-vi.mock("@agentic-toolkit/auth/client", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("@agentic-toolkit/auth/client")>()),
+vi.mock("@adh-sdk/auth/client", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@adh-sdk/auth/client")>()),
   authedJson,
 }));
 
-import { SettingsDirtyProvider, useSettingsDirty } from "@agentic-toolkit/resource";
+import { SettingsDirtyProvider, useSettingsDirty } from "@adh-sdk/resource";
 import { MessagingPane } from "./MessagingPane";
 
 afterEach(() => {

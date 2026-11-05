@@ -1,7 +1,7 @@
 ---
 id: a63de97e-d75c-4733-a875-bad20e001fcb
 title: Stats
-domain: agenticdevelopertoolkit://recipes/stats
+domain: adhsdk://recipes/stats
 type: ingredient
 version: 1.1.1
 status: review
@@ -23,8 +23,8 @@ tags:
 depends-on: []
 related:
 - agenticdevelopercookbook://guidelines/implementing/ui/touch-click-targets
-- agenticdevelopertoolkit://recipes/rule
-- agenticdevelopertoolkit://recipes/cards
+- adhsdk://recipes/rule
+- adhsdk://recipes/cards
 references: []
 approved-by: ''
 approved-date: ''

@@ -1,5 +1,5 @@
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/Core/Money/MoneyTotals.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Money/MoneyTotals.swift` |
 

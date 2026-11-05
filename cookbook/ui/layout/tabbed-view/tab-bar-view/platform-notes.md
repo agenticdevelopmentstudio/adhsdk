@@ -37,7 +37,7 @@
   (mirroring `-16pt`) and a `z-index` computed from each item's index
   distance from the selected tab.
 - **AppKit/UIKit** (source platform): Implemented entirely in
-  `packages/apple/AgenticToolkit/macOS/UI/ViewControllers/MultiTabbedViewController/TabBarView.swift`
+  `packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/MultiTabbedViewController/TabBarView.swift`
   as three types: `TabBarView` (an `NSView` hosting an `NSStackView`), the
   private `TabItemHostView` (click-to-select wrapper for a `.viewController`
   item's view), and the private `TabButton` (the `.title` item's pill,

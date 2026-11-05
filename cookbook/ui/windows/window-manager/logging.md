@@ -1,5 +1,5 @@
 
-Subsystem: `com.agenticdevelopmentstudio.agentictoolkit` | Category: `WindowManager`
+Subsystem: `com.mikefullerton.agenticdeveloperhubsdk` | Category: `WindowManager`
 
 | Event | Level | Message |
 |-------|-------|---------|

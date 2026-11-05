@@ -1,14 +1,14 @@
 'use client';
 
 import { useId } from 'react';
-import { Field } from '@agenticdevelopertoolkit/ui/blocks';
-import { Checkbox } from '@agenticdevelopertoolkit/ui/components/checkbox';
-import { FieldFootnote } from '@agenticdevelopertoolkit/ui/components/field-footnote';
-import { Input } from '@agenticdevelopertoolkit/ui/components/input';
-import { Label } from '@agenticdevelopertoolkit/ui/components/label';
-import { Select } from '@agenticdevelopertoolkit/ui/components/select';
-import { Textarea } from '@agenticdevelopertoolkit/ui/components/textarea';
-import { fieldCaptionClass } from '@agenticdevelopertoolkit/ui/lib/typography';
+import { Field } from '@adh-sdk/ui/blocks';
+import { Checkbox } from '@adh-sdk/ui/components/checkbox';
+import { FieldFootnote } from '@adh-sdk/ui/components/field-footnote';
+import { Input } from '@adh-sdk/ui/components/input';
+import { Label } from '@adh-sdk/ui/components/label';
+import { Select } from '@adh-sdk/ui/components/select';
+import { Textarea } from '@adh-sdk/ui/components/textarea';
+import { fieldCaptionClass } from '@adh-sdk/ui/lib/typography';
 import {
   ADDRESS_PARTS,
   AUDIENCE_NOTE,
@@ -18,8 +18,8 @@ import {
   optionsOf,
   tightestVisibility,
   visibilitiesWithin,
-} from '@agentic-toolkit/registry/editors';
-import type { FieldDefRow, FieldVisibility } from '@agentic-toolkit/registry/client';
+} from '@adh-sdk/registry/editors';
+import type { FieldDefRow, FieldVisibility } from '@adh-sdk/registry/client';
 
 export interface RegistryEntryFieldProps {
   /** The owner's definition, whose `visibility` is the CEILING for this field — the widest
@@ -40,7 +40,7 @@ export interface RegistryEntryFieldProps {
  * One registrant-facing field, in the hub's own vocabulary.
  *
  * The sibling of `RegistryFieldPanel` on the other side of the same split, and it exists for
- * the same reason: `@agentic-toolkit/registry` ships `FieldEditor`, which renders this row as
+ * the same reason: `@adh-sdk/registry` ships `FieldEditor`, which renders this row as
  * bare `<label><input>` pairs because that package declares zero runtime dependencies — right
  * for a site outside this fleet with no design system, wrong for the hub, which has one and
  * builds every neighbouring pane from it. So the hub renders the row from `Field`/`Input`/

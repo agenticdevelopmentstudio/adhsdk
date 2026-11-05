@@ -1,7 +1,7 @@
 ---
 id: 1675b18e-34d5-4d8e-987f-92697539a5e6
 title: Btn
-domain: agenticdevelopertoolkit://recipes/btn
+domain: adhsdk://recipes/btn
 type: ingredient
 version: 1.1.1
 status: review

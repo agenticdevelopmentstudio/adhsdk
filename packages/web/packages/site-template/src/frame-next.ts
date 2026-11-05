@@ -1,14 +1,14 @@
 // The build-time half of `site.json`: its `rewrites`, `headers`, `redirects`, `publicEnv` and `envDefaults`,
 // resolved against the environment `next build` runs in, and what the build does besides Next's
-// config (the theme's font files, the build's identity). Published as `@agenticdevelopertoolkit/site-template/next`
+// config (the theme's font files, the build's identity). Published as `@adh-sdk/site-template/next`
 // and imported by the skeleton's `next.config.ts` — never by a page, so nothing here reaches a
 // bundle. The assembler has already checked every `${…}` is well formed; what it cannot know is
 // the environment, so an unset variable with no default fails the build here, by name.
 
 import { existsSync } from 'node:fs'
 import path from 'node:path'
-import { TYPEGEN_ONLY_ORIGIN, commitSha, isTypegenOnly, readSiteVersion } from '@agentic-toolkit/next-env'
-import { materializeThemeFonts } from '@agenticdevelopertoolkit/themes/materialize-fonts'
+import { TYPEGEN_ONLY_ORIGIN, commitSha, isTypegenOnly, readSiteVersion } from '@adh-sdk/next-env'
+import { materializeThemeFonts } from '@adh-sdk/themes/materialize-fonts'
 
 /** One `site.json` rewrite: Next's `{ source, destination }`, the destination substituted. */
 export interface FrameRewrite {

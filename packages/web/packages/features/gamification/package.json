@@ -1,5 +1,5 @@
 {
-  "name": "@agentic-toolkit/gamification",
+  "name": "@adh-sdk/gamification",
   "version": "0.1.0",
   "description": "The Gamification feature: a product's realm config, badge catalog, level ladder, and custom event types — as one composite pane or four topic panes.",
   "license": "UNLICENSED",
@@ -36,12 +36,12 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@agentic-toolkit/auth": "workspace:*",
-    "@agentic-toolkit/data": "workspace:*",
-    "@agentic-toolkit/ecosystems": "workspace:*",
-    "@agentic-toolkit/resource": "workspace:*",
+    "@adh-sdk/auth": "workspace:*",
+    "@adh-sdk/data": "workspace:*",
+    "@adh-sdk/ecosystems": "workspace:*",
+    "@adh-sdk/resource": "workspace:*",
     "lucide-react": "^1.16.0",
-    "@agenticdevelopertoolkit/ui": "workspace:*"
+    "@adh-sdk/ui": "workspace:*"
   },
   "peerDependencies": {
     "next": ">=15",

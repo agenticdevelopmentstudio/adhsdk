@@ -1,4 +1,4 @@
-# `@agenticdevelopertoolkit/ui`
+# `@adh-sdk/ui`
 
 shadcn/ui primitives, framework-agnostic. The package ships these as source — your
 bundler compiles them.
@@ -35,13 +35,13 @@ shadcn writes is required by Next.js App Router and is a no-op under Vite.
    consumer).
 2. Import the CSS once in your entry (e.g. `src/main.tsx`):
    ```ts
-   import '@agenticdevelopertoolkit/ui/styles/globals.css'
-   import '@agenticdevelopertoolkit/themes/styles/agenticdevelopmentstudioweb.css'
+   import '@adh-sdk/ui/styles/globals.css'
+   import '@adh-sdk/themes/styles/agenticdevelopmentstudioweb.css'
    ```
 3. `vite.config.ts` should already include `@tailwindcss/vite` — no change.
 4. Use:
    ```tsx
-   import { Button } from '@agenticdevelopertoolkit/ui/components/button'
+   import { Button } from '@adh-sdk/ui/components/button'
    ```
 
 ### Next.js consumer (App Router)
@@ -49,17 +49,17 @@ shadcn writes is required by Next.js App Router and is a no-op under Vite.
 1. Add the dependency the same way.
 2. Import the CSS once in `app/layout.tsx`:
    ```ts
-   import '@agenticdevelopertoolkit/ui/styles/globals.css'
-   import '@agenticdevelopertoolkit/themes/styles/agenticdevelopmentstudioweb.css'
+   import '@adh-sdk/ui/styles/globals.css'
+   import '@adh-sdk/themes/styles/agenticdevelopmentstudioweb.css'
    ```
 3. Ensure your Tailwind v4 setup is wired (`@tailwindcss/postcss` in `postcss.config.mjs`).
 4. Use:
    ```tsx
-   import { Button } from '@agenticdevelopertoolkit/ui/components/button'
+   import { Button } from '@adh-sdk/ui/components/button'
    ```
 
 ## Theming
 
 `globals.css` defines shadcn's neutral defaults on `:root` and `.dark`. The
-`@agenticdevelopertoolkit/themes` stylesheets override those CSS variables — pick a theme,
+`@adh-sdk/themes` stylesheets override those CSS variables — pick a theme,
 import it after `globals.css`, and the primitives retheme without forking shadcn output.

@@ -1,4 +1,4 @@
-import { getSite } from '@agentic-toolkit/adh-registry';
+import { getSite } from '@adh-sdk/adh-registry';
 
 /**
  * Where a registry actually lives on the public web.

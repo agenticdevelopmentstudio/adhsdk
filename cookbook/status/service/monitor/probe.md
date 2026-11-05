@@ -1,7 +1,7 @@
 ---
 id: 1094926a-e89e-416d-aa62-8bfd42afa1b4
 title: "Status Server Monitor Probe"
-domain: adtoolkit://cookbook/status/service/monitor/probe
+domain: adhsdk://cookbook/status/service/monitor/probe
 type: ingredient
 version: 1.0.2
 status: review
@@ -26,15 +26,15 @@ depends-on:
   - agenticdevelopercookbook://guidelines/implementing/concurrency/concurrency
   - agenticdevelopercookbook://guidelines/implementing/networking/retry-and-resilience
 related:
-  - adtoolkit://cookbook/status/service/monitor/health
-  - adtoolkit://cookbook/status/service/monitor/endpoint-kinds
+  - adhsdk://cookbook/status/service/monitor/health
+  - adhsdk://cookbook/status/service/monitor/endpoint-kinds
 references:
-  - packages/web/packages/status-server/src/monitor/probe.ts (agenticdevelopertoolkit)
-  - packages/web/packages/status-server/test/probe.test.ts (agenticdevelopertoolkit)
-  - packages/web/packages/status-server/src/monitor/health.ts (agenticdevelopertoolkit)
-  - packages/web/packages/status-server/src/monitor/endpoint-kinds.ts (agenticdevelopertoolkit)
-  - packages/web/packages/status-server/src/storage/ports.ts (agenticdevelopertoolkit)
-  - packages/web/packages/deploy-platform/src/util/map-limit.ts (agenticdevelopertoolkit)
+  - packages/web/packages/status-server/src/monitor/probe.ts (adhsdk)
+  - packages/web/packages/status-server/test/probe.test.ts (adhsdk)
+  - packages/web/packages/status-server/src/monitor/health.ts (adhsdk)
+  - packages/web/packages/status-server/src/monitor/endpoint-kinds.ts (adhsdk)
+  - packages/web/packages/status-server/src/storage/ports.ts (adhsdk)
+  - packages/web/packages/deploy-platform/src/util/map-limit.ts (adhsdk)
 approved-by: ""
 approved-date: ""
 ---
@@ -43,7 +43,7 @@ approved-date: ""
 
 ## Overview
 
-`probe.ts` (`packages/web/packages/status-server/src/monitor/probe.ts`) is, per its own header comment, "the live HTTP/DNS probe — the single source of truth for 'is this endpoint up right now'." It exports `HEALTH_PROBE_CONCURRENCY` (`24`), `PROBE_BODY_MAX_BYTES` (`256 * 1024`), the `ProbeOptions` and `Probe` interfaces, and the two functions `probe` and `probeEndpoints`. For one `ConfiguredEndpoint` (`storage/ports.ts`, imported type-only so this file pulls in no database code), `probe` first resolves the endpoint's hostname over DNS, then issues one `GET` request under a single whole-leg deadline, optionally reads a capped slice of the body, and hands the outcome to `classify` (`health.ts`) for the `healthy` / `degraded` / `down` verdict. `probeEndpoints` fans this out across many endpoints through `mapLimit` (`@agentic-toolkit/deploy-platform/util`) at a bounded concurrency. The header comment states why the type-only import matters: this file stays "free of any DB import so the status route can fall back to a live probe without pulling in the writer graph" — used both by the health sync (which persists results, in `sync.ts`, external to this file) and by the `/api/status` route's no-DB fallback (which returns probe results straight to the wallboard when the database is unreadable).
+`probe.ts` (`packages/web/packages/status-server/src/monitor/probe.ts`) is, per its own header comment, "the live HTTP/DNS probe — the single source of truth for 'is this endpoint up right now'." It exports `HEALTH_PROBE_CONCURRENCY` (`24`), `PROBE_BODY_MAX_BYTES` (`256 * 1024`), the `ProbeOptions` and `Probe` interfaces, and the two functions `probe` and `probeEndpoints`. For one `ConfiguredEndpoint` (`storage/ports.ts`, imported type-only so this file pulls in no database code), `probe` first resolves the endpoint's hostname over DNS, then issues one `GET` request under a single whole-leg deadline, optionally reads a capped slice of the body, and hands the outcome to `classify` (`health.ts`) for the `healthy` / `degraded` / `down` verdict. `probeEndpoints` fans this out across many endpoints through `mapLimit` (`@adh-sdk/deploy-platform/util`) at a bounded concurrency. The header comment states why the type-only import matters: this file stays "free of any DB import so the status route can fall back to a live probe without pulling in the writer graph" — used both by the health sync (which persists results, in `sync.ts`, external to this file) and by the `/api/status` route's no-DB fallback (which returns probe results straight to the wallboard when the database is unreadable).
 
 ## Behavioral Requirements
 

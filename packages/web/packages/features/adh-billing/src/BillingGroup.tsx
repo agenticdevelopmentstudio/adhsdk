@@ -2,14 +2,14 @@
 
 import type { ReactElement } from "react";
 import { CreditCard, Radio, Settings, Tag, Users } from "lucide-react";
-import { IntegrationsPane } from "@agentic-toolkit/integrations";
+import { IntegrationsPane } from "@adh-sdk/integrations";
 import {
   RailHostBoundary,
   StackGroupDetail,
   WorkspaceNotManageable,
   WorkspaceResolutionError,
   type GroupTopicItem,
-} from "@agentic-toolkit/resource";
+} from "@adh-sdk/resource";
 import { BILLING_MEMBER_IDS, type BillingMemberId } from "./parse-path";
 import { SetupPane } from "./SetupPane";
 import { OffersPane } from "./OffersPane";

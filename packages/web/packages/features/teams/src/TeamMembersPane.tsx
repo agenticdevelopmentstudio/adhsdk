@@ -4,21 +4,21 @@ import { useCallback, useState } from "react";
 import type { ReactNode } from "react";
 import { Bot, Trash2, UserRound } from "lucide-react";
 
-import { useResourceList } from "@agentic-toolkit/data";
-import { teamMembersApi, type TeamMember } from "@agentic-toolkit/data/teams";
-import { ErrorText } from "@agenticdevelopertoolkit/ui/components/error-text";
-import { api as personaApi, type Persona } from "@agentic-toolkit/data/personas";
-import { TopicSelectHint, type TopicDetailItem, type TopicLevel } from "@agenticdevelopertoolkit/ui/blocks";
-import { Field } from "@agenticdevelopertoolkit/ui/blocks/field";
-import { Select } from "@agenticdevelopertoolkit/ui/components/select";
-import { Input } from "@agenticdevelopertoolkit/ui/components/input";
-import { Button } from "@agenticdevelopertoolkit/ui/components/button";
+import { useResourceList } from "@adh-sdk/data";
+import { teamMembersApi, type TeamMember } from "@adh-sdk/data/teams";
+import { ErrorText } from "@adh-sdk/ui/components/error-text";
+import { api as personaApi, type Persona } from "@adh-sdk/data/personas";
+import { TopicSelectHint, type TopicDetailItem, type TopicLevel } from "@adh-sdk/ui/blocks";
+import { Field } from "@adh-sdk/ui/blocks/field";
+import { Select } from "@adh-sdk/ui/components/select";
+import { Input } from "@adh-sdk/ui/components/input";
+import { Button } from "@adh-sdk/ui/components/button";
 import {
   useStackLevel,
   FeatureTitle,
   CreateResourceDialog,
   type TopicLeaf,
-} from "@agentic-toolkit/resource";
+} from "@adh-sdk/resource";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 

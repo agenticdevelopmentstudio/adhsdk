@@ -18,7 +18,7 @@
   no manual spacer elements needed; children are ordinary DOM children in
   document order, corresponding to the order arranged subviews are added.
 - **AppKit / UIKit (source)**: `VerticalStackView.swift`
-  (`packages/apple/AgenticToolkit/macOS/SystemIntegration/ComposableSettingsWindow/Views/VerticalStackView.swift`)
+  (`packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/Views/VerticalStackView.swift`)
   is a macOS-only (`import AppKit`), `@MainActor` `NSView` subclass
   conforming to `SettingsViewProtocol` (a marker protocol with no
   requirements of its own, so the conformance is recorded here rather than

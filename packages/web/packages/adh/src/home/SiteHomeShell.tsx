@@ -2,10 +2,10 @@
 
 import { useCallback, type ReactElement } from 'react'
 import { usePathname } from 'next/navigation'
-import { TopicSelectHint } from '@agenticdevelopertoolkit/ui/blocks'
-import { useResourceList, workspacesApi, type Workspace } from '@agentic-toolkit/data'
+import { TopicSelectHint } from '@adh-sdk/ui/blocks'
+import { useResourceList, workspacesApi, type Workspace } from '@adh-sdk/data'
 import { ProfileFallback } from '../profile/ProfileFallback'
-import { useSiteIdOrNull } from '@agentic-toolkit/adh/site/site-id'
+import { useSiteIdOrNull } from '@adh-sdk/adh/site/site-id'
 import { WorkspaceBar } from './WorkspaceBar'
 import { useWorkspaceRoute } from './useWorkspaceRoute'
 import { workspacePathTail } from './workspacePathTail'

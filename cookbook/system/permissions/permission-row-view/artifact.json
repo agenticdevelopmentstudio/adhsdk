@@ -3,7 +3,7 @@
   "meta": {
     "id": "c3269cfa-a8ec-4ba9-bc68-9cdf98e7e1fc",
     "title": "Permission Row View",
-    "domain": "adtoolkit://cookbook/system/permissions/permission-row-view",
+    "domain": "adhsdk://cookbook/system/permissions/permission-row-view",
     "type": "ingredient",
     "version": "1.3.1",
     "status": "review",

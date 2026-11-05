@@ -1,12 +1,12 @@
 /**
- * @agenticdevelopertoolkit/search — public API barrel.
+ * @adh-sdk/search — public API barrel.
  *
  * A reusable, configurable document-search view. Two seams: the SCOPE/source
  * ({@link SearchSource}, injected) and the DOCUMENT-TYPE config
  * ({@link DocumentTypeConfig} / {@link DOCUMENT_SEARCH_REGISTRY}, markdown today).
  *
  * Import the compiled, self-contained stylesheet once per host app:
- *   import '@agenticdevelopertoolkit/search/styles'
+ *   import '@adh-sdk/search/styles'
  */
 
 // Core view

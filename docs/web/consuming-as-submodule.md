@@ -33,9 +33,9 @@ In the consumer's `package.json` (e.g. `sites/main/package.json`), add a
 ```json
 {
   "dependencies": {
-    "@agenticdevelopertoolkit/chat":     "file:./vendor/adt/packages/web/packages/chat",
-    "@agenticdevelopertoolkit/themes":   "file:./vendor/adt/packages/web/packages/themes",
-    "@agenticdevelopertoolkit/viewport": "file:./vendor/adt/packages/web/packages/viewport"
+    "@adh-sdk/chat":     "file:./vendor/adt/packages/web/packages/chat",
+    "@adh-sdk/themes":   "file:./vendor/adt/packages/web/packages/themes",
+    "@adh-sdk/viewport": "file:./vendor/adt/packages/web/packages/viewport"
   }
 }
 ```
@@ -50,9 +50,9 @@ In the consumer's `next.config.ts`, list the same package names under
 ```ts
 const nextConfig: NextConfig = {
   transpilePackages: [
-    "@agenticdevelopertoolkit/chat",
-    "@agenticdevelopertoolkit/themes",
-    "@agenticdevelopertoolkit/viewport",
+    "@adh-sdk/chat",
+    "@adh-sdk/themes",
+    "@adh-sdk/viewport",
   ],
 };
 ```
@@ -130,7 +130,7 @@ source-to-bundle step. No `pnpm build` of the toolkit is required.
 ## Future: npm-installed consumers
 
 External consumers (outside this org) won't use the submodule — they'll
-`npm install @agenticdevelopertoolkit/chat` once the packages are published.
+`npm install @adh-sdk/chat` once the packages are published.
 Each package's `publishConfig` rewrites `main`/`types`/`exports` to point at
 `./dist/...` at publish time, so external consumers get a prebuilt tarball
 and don't need `transpilePackages`. Until publish, `publishConfig` sits
@@ -140,7 +140,7 @@ To publish, from inside the toolkit repo:
 
 ```bash
 cd packages/web && pnpm build         # populates dist/
-pnpm --filter @agenticdevelopertoolkit/chat publish
+pnpm --filter @adh-sdk/chat publish
 ```
 
 ## Apple consumers
@@ -157,22 +157,22 @@ In Xcode, add the toolkit workspace (or one of its projects) to your own
 workspace:
 
 - **File → Add Files to "<YourWorkspace>"…**
-- Pick `vendor/adt/packages/apple/agenticdevelopertoolkit.xcworkspace` for the
+- Pick `vendor/adt/packages/apple/AgenticDeveloperHubSDK.xcworkspace` for the
   full workspace, or one of:
-  - `packages/apple/AgenticDeveloperToolkit/AgenticDeveloperToolkit.xcodeproj`
+  - `packages/apple/AgenticDeveloperHubSDK/AgenticDeveloperHubSDK.xcodeproj`
   - `packages/apple/AgenticDeveloperHubClient/AgenticDeveloperHubClient.xcodeproj`
-  - `packages/apple/AgenticToolkit/AgenticToolkit.xcodeproj`
+  - `packages/apple/AgenticDeveloperHubSDK/AgenticDeveloperHubSDK.xcodeproj`
   - `packages/apple/AIPlugins/AIPlugins.xcodeproj`
-  - `packages/apple/AgenticToolkitApp/AgenticToolkitApp.xcodeproj`
+  - `packages/apple/AgenticDeveloperHubSDKApp/AgenticDeveloperHubSDKApp.xcodeproj`
 
-Add each project once. `AgenticToolkit.xcodeproj` already references
-`AgenticDeveloperToolkit` and `AgenticDeveloperHubClient` by their in-repo
+Add each project once. `AgenticDeveloperHubSDK.xcodeproj` already references
+`AgenticDeveloperHubSDK` and `AgenticDeveloperHubClient` by their in-repo
 paths, and a second reference to either from another path makes Xcode fail with
 "Multiple commands produce".
 
 Then, in your app target's **Frameworks, Libraries, and Embedded Content**
 section, add the toolkit framework(s) you link against (e.g.
-`AgenticToolkitMacOS.framework`).
+`AgenticDeveloperHubSDKMacOS.framework`).
 
 Day to day:
 

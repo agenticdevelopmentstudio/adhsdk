@@ -1,7 +1,7 @@
 ---
 id: 6bf27f64-59d0-4b2a-8715-92dba2856814
 title: "SQL Storage Layer"
-domain: adtoolkit://cookbook/status/service/storage/libsql
+domain: adhsdk://cookbook/status/service/storage/libsql
 type: ingredient
 version: 1.1.0
 status: review
@@ -28,14 +28,14 @@ depends-on:
   - agenticdevelopercookbook://guidelines/implementing/data/schema-evolution
   - agenticdevelopercookbook://guidelines/implementing/security/sensitive-data
 related:
-  - adtoolkit://cookbook/status/service/auth
+  - adhsdk://cookbook/status/service/auth
 references:
-  - packages/web/packages/status-server/src/libsql/client.ts (agenticdevelopertoolkit)
-  - packages/web/packages/status-server/src/libsql/schema.ts (agenticdevelopertoolkit)
-  - packages/web/packages/status-server/src/monitor/deploy-status.ts (agenticdevelopertoolkit)
-  - packages/web/packages/deploy-platform/src/schema/index.ts (agenticdevelopertoolkit)
-  - packages/web/packages/status-server/test/migrate-idempotent.int.test.ts (agenticdevelopertoolkit)
-  - packages/web/packages/status-server/test/migrations-immutable.test.ts (agenticdevelopertoolkit)
+  - packages/web/packages/status-server/src/libsql/client.ts (adhsdk)
+  - packages/web/packages/status-server/src/libsql/schema.ts (adhsdk)
+  - packages/web/packages/status-server/src/monitor/deploy-status.ts (adhsdk)
+  - packages/web/packages/deploy-platform/src/schema/index.ts (adhsdk)
+  - packages/web/packages/status-server/test/migrate-idempotent.int.test.ts (adhsdk)
+  - packages/web/packages/status-server/test/migrations-immutable.test.ts (adhsdk)
 approved-by: ""
 approved-date: ""
 ---
@@ -478,11 +478,11 @@ Not applicable: this storage layer contains no logging call at any level.
   `drizzle-orm/sqlite-core` and `drizzle-orm/libsql` (including its
   `migrator` submodule), Node's built-in `node:module`
   (`createRequire`) and `node:path`/`node:crypto`, and the
-  `@agentic-toolkit/deploy-platform/schema` and `../monitor/deploy-status`
+  `@adh-sdk/deploy-platform/schema` and `../monitor/deploy-status`
   siblings the schema re-exports from and builds its partial index against
   (the partial index's predicate calls `inFlightSql('')` from
   `../monitor/deploy-status`). The package's own root directory is
-  resolved via `createRequire(import.meta.url).resolve('@agentic-toolkit/status-server/package.json')`,
+  resolved via `createRequire(import.meta.url).resolve('@adh-sdk/status-server/package.json')`,
   so `MIGRATIONS_FOLDER` is correct whether the caller runs from `src/`,
   from a built `dist/` chunk, or from a host's vendored `node_modules`
   copy; migrations apply through `drizzle-orm/libsql/migrator`'s

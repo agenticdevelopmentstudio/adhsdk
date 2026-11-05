@@ -3,7 +3,7 @@
   "meta": {
     "id": "b1a34260-3966-4309-ac58-6249752c95fb",
     "title": "Webview Panel State",
-    "domain": "adtoolkit://cookbook/workspace/extensions/vscode-api/webviews/webview-panel-state",
+    "domain": "adhsdk://cookbook/workspace/extensions/vscode-api/webviews/webview-panel-state",
     "type": "ingredient",
     "version": "1.2.0",
     "status": "review",
@@ -26,14 +26,14 @@
     ],
     "depends-on": [],
     "related": [
-      "adtoolkit://cookbook/workspace/extensions/vscode-api/webviews/webview-panel-view"
+      "adhsdk://cookbook/workspace/extensions/vscode-api/webviews/webview-panel-view"
     ],
     "references": [
-      "packages/apple/AgenticToolkit/Core/Extensions/WebviewPanelState.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/Tests/AgenticToolkitCoreTests/Extensions/WebviewPanelStateTests.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/Core/Extensions/WebviewPanelOptions.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/macOS/Features/Extensions/Webview/WebviewPanelViewController.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/macOS/Features/Extensions/Webview/WebviewPanelSerializer.swift (agenticdevelopertoolkit)"
+      "packages/apple/AgenticDeveloperHubSDK/Core/Extensions/WebviewPanelState.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKCoreTests/Extensions/WebviewPanelStateTests.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/Core/Extensions/WebviewPanelOptions.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/Webview/WebviewPanelViewController.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/Webview/WebviewPanelSerializer.swift (adhsdk)"
     ],
     "approved-by": "",
     "approved-date": ""

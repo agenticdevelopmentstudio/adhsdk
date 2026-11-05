@@ -1,7 +1,7 @@
 ---
 id: ae8d4137-e2fc-495f-9592-46ad4b1ac60f
 title: "Retired Storage"
-domain: adtoolkit://cookbook/status/dashboard/logic/retired-storage
+domain: adhsdk://cookbook/status/dashboard/logic/retired-storage
 type: ingredient
 version: 1.0.2
 status: review
@@ -18,7 +18,7 @@ platforms:
 tags: []
 depends-on: []
 related:
-  - adtoolkit://cookbook/status/dashboard/state/live-snapshot
+  - adhsdk://cookbook/status/dashboard/state/live-snapshot
 references: []
 approved-by: ""
 approved-date: ""

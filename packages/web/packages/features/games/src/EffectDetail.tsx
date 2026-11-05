@@ -1,17 +1,17 @@
 "use client";
 
 import { useId } from "react";
-import { Card, CardContent } from "@agenticdevelopertoolkit/ui/components/card";
-import { Input } from "@agenticdevelopertoolkit/ui/components/input";
-import { Label } from "@agenticdevelopertoolkit/ui/components/label";
-import { Select } from "@agenticdevelopertoolkit/ui/components/select";
-import { ErrorText } from "@agenticdevelopertoolkit/ui/components/error-text";
+import { Card, CardContent } from "@adh-sdk/ui/components/card";
+import { Input } from "@adh-sdk/ui/components/input";
+import { Label } from "@adh-sdk/ui/components/label";
+import { Select } from "@adh-sdk/ui/components/select";
+import { ErrorText } from "@adh-sdk/ui/components/error-text";
 import type {
   GameEffect,
   GameEffectInput,
   GameEffectOperation,
   GameEffectTrigger,
-} from "@agentic-toolkit/data/games";
+} from "@adh-sdk/data/games";
 import { optionalWholeNumberProblem, wholeNumberProblem } from "./fields";
 import { IntegerInput, OptionalIntegerInput } from "./IntegerInput";
 

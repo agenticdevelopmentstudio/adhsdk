@@ -2,7 +2,7 @@
 
 /**
  * Legacy color-mode context for the customer-facing toolkit. Provider-based,
- * stores `agentic-toolkit:color-mode`, and writes `data-appearance-mode`.
+ * stores `adh-sdk:color-mode`, and writes `data-appearance-mode`.
  *
  * The ADH chrome/sites use the newer, Provider-free appearance system instead
  * (see appearance.ts / appearance-store.tsx): storage key `adh:appearance`,
@@ -26,7 +26,9 @@ export type ColorMode = 'auto' | 'light' | 'dark'
 export type ResolvedColorMode = 'light' | 'dark'
 
 const CYCLE: ColorMode[] = ['auto', 'dark', 'light']
-const DEFAULT_STORAGE_KEY = 'agentic-toolkit:color-mode'
+const DEFAULT_STORAGE_KEY = 'adh-sdk:color-mode'
+// Where builds from before the SDK rename stored the same choice.
+const LEGACY_STORAGE_KEY = 'agentic-toolkit:color-mode'
 const APPEARANCE_CYCLE_EVENT = 'awt:appearance-cycle'
 const APPEARANCE_CHANGED_EVENT = 'awt:appearance-changed'
 
@@ -61,7 +63,12 @@ export function ColorModeProvider({
   storageKey = DEFAULT_STORAGE_KEY,
   defaultMode = 'auto',
 }: ColorModeProviderProps) {
-  const [mode, setMode] = useState<ColorMode>(() => readStoredMode(storageKey) ?? defaultMode)
+  const [mode, setMode] = useState<ColorMode>(
+    () =>
+      readStoredMode(storageKey) ??
+      (storageKey === DEFAULT_STORAGE_KEY ? readStoredMode(LEGACY_STORAGE_KEY) : null) ??
+      defaultMode,
+  )
   const [systemDark, setSystemDark] = useState<boolean>(() =>
     typeof window === 'undefined' ? false : window.matchMedia('(prefers-color-scheme: dark)').matches,
   )

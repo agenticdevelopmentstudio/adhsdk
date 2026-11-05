@@ -1,7 +1,7 @@
 ---
 id: f628f7f9-9c7b-4820-a4bf-231312a74839
 title: "Model Use Facet"
-domain: adtoolkit://cookbook/ai/models/model-use-facet
+domain: adhsdk://cookbook/ai/models/model-use-facet
 type: ingredient
 version: 1.1.2
 status: review
@@ -22,15 +22,15 @@ tags:
   - engine
 depends-on: []
 related:
-  - adtoolkit://cookbook/ai/models/model-catalog
+  - adhsdk://cookbook/ai/models/model-catalog
 references:
-  - packages/apple/AgenticToolkit/AIPluginKit/ModelUseFacet.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/AIPluginKit/ModelCapability.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/AIPluginKit/AIModelCatalog.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Tests/AIPluginKitTests/ModelUseFacetTests.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/macOS/Features/AIPlugins/Settings/ModelChooserViewController.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/macOS/Features/AIPlugins/Settings/ModelChooserContent.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/macOS/Features/AIPlugins/Settings/ProviderPickerViewController.swift (agenticdevelopertoolkit)
+  - packages/apple/AgenticDeveloperHubSDK/AIPluginKit/ModelUseFacet.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/AIPluginKit/ModelCapability.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/AIPluginKit/AIModelCatalog.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Tests/AIPluginKitTests/ModelUseFacetTests.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/Features/AIPlugins/Settings/ModelChooserViewController.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/Features/AIPlugins/Settings/ModelChooserContent.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/Features/AIPlugins/Settings/ProviderPickerViewController.swift (adhsdk)
 approved-by: ""
 approved-date: ""
 ---
@@ -310,7 +310,7 @@ Not applicable: facet derivation contains no logging call of any kind.
 
 ## Platform Notes
 
-- **SwiftUI**: The source (`packages/apple/AgenticToolkit/AIPluginKit/ModelUseFacet.swift`,
+- **SwiftUI**: The source (`packages/apple/AgenticDeveloperHubSDK/AIPluginKit/ModelUseFacet.swift`,
   companion `ModelCapability.swift`, tests
   `Tests/AIPluginKitTests/ModelUseFacetTests.swift`) has no SwiftUI or AppKit
   dependency of its own — it is plain Swift, framework-agnostic. It is
@@ -372,7 +372,7 @@ Not applicable: facet derivation contains no logging call of any kind.
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/AIPluginKit/ModelUseFacet.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/AIPluginKit/ModelUseFacet.swift` |
 
 ## Design Decisions
 

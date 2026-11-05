@@ -163,7 +163,7 @@ class AssembleTest(unittest.TestCase):
         self.assertNotIn("//", pkg)
         self.assertEqual(pkg["scripts"]["dev"], "next dev -p 5210")
         self.assertEqual(
-            pkg["dependencies"]["@agenticdevelopertoolkit/site-template"],
+            pkg["dependencies"]["@adh-sdk/site-template"],
             "link:../external/adhsdk/packages/web/packages/site-template",
         )
         config = (self.app / "src/site/config.ts").read_text()
@@ -263,7 +263,7 @@ class AssembleTest(unittest.TestCase):
         self.config["theme"] = "mikefullerton"
         self.assert_ok(self.assemble())
         css = (self.app / "app/theme.css").read_text()
-        self.assertIn('@import "@agenticdevelopertoolkit/themes/styles/mikefullerton-landing.css";', css)
+        self.assertIn('@import "@adh-sdk/themes/styles/mikefullerton-landing.css";', css)
         self.assertNotIn("themes/styles/fishlamp.css", css)
         self.assertNotIn("themes/styles/mikefullerton.css", css)
         self.assertLess(css.index("mikefullerton-landing.css"), css.index("landing/css/base.css"))
@@ -277,7 +277,7 @@ class AssembleTest(unittest.TestCase):
         self.config["theme"] = "charcoal"
         self.assert_ok(self.assemble())
         css = (self.app / "app/theme.css").read_text()
-        self.assertIn('@import "@agenticdevelopertoolkit/themes/styles/charcoal.css";', css)
+        self.assertIn('@import "@adh-sdk/themes/styles/charcoal.css";', css)
         self.assertNotIn("themes/styles/fishlamp.css", css)
         self.assertLess(css.index("charcoal.css"), css.index("landing/css/base.css"))
         self.assertIn("--font-mono: var(--font-iosevka), 'Iosevka Fallback Menlo'", css)
@@ -503,7 +503,7 @@ class AssembleTest(unittest.TestCase):
         pkg = json.loads((self.app / "package.json").read_text())
         self.assertEqual(pkg["dependencies"]["zod"], "^3.0.0")
         self.assertEqual(
-            pkg["dependencies"]["@agenticdevelopertoolkit/releases"],
+            pkg["dependencies"]["@adh-sdk/releases"],
             "link:../external/adhsdk/packages/web/packages/releases",
         )
         self.assert_ok(run(self.site, "--check"))
@@ -1412,14 +1412,14 @@ class AssembleTest(unittest.TestCase):
     def test_no_rewrites_or_public_env_writes_an_empty_next_site(self) -> None:
         self.assert_ok(self.assemble())
         text = (self.app / "src/site/next.ts").read_text()
-        self.assertIn("import type { FrameNextSite } from '@agenticdevelopertoolkit/site-template/next'", text)
+        self.assertIn("import type { FrameNextSite } from '@adh-sdk/site-template/next'", text)
         self.assertIn("export const nextSite: FrameNextSite = {", text)
         self.assertIn("rewrites: [],", text)
         self.assertIn("publicEnv: [],", text)
         self.assertIn("envDefaults: {},", text)
         config = (self.app / "next.config.ts").read_text()
         self.assertIn(
-            "import { frameBuildIdentity, frameNext, frameThemeFonts, frameWorkspaceRoot } from '@agenticdevelopertoolkit/site-template/next'",
+            "import { frameBuildIdentity, frameNext, frameThemeFonts, frameWorkspaceRoot } from '@adh-sdk/site-template/next'",
             config,
         )
         self.assertIn("const WORKSPACE_ROOT = frameWorkspaceRoot(APP_DIR)", config)
@@ -1452,9 +1452,9 @@ class AssembleTest(unittest.TestCase):
         # without naming it, so it is compiled like every other toolkit package it reaches.
         self.assert_ok(self.assemble())
         block = (self.app / "src/site/next.ts").read_text().split("export const transpilePackages", 1)[1]
-        self.assertIn('"@agenticdevelopertoolkit/textlens"', block)
+        self.assertIn('"@adh-sdk/textlens"', block)
         package = json.loads((self.app / "package.json").read_text())
-        self.assertNotIn("@agenticdevelopertoolkit/textlens", package["dependencies"])
+        self.assertNotIn("@adh-sdk/textlens", package["dependencies"])
 
     def test_transpile_packages_list_every_toolkit_package(self) -> None:
         # The template's link deps, the toolkit packages the template itself depends on, and the
@@ -1465,12 +1465,12 @@ class AssembleTest(unittest.TestCase):
         self.assertIn("export const transpilePackages: readonly string[] = [", text)
         block = text.split("export const transpilePackages", 1)[1]
         for name in (
-            "@agenticdevelopertoolkit/landing",
-            "@agenticdevelopertoolkit/site-template",
-            "@agenticdevelopertoolkit/themes",
-            "@agenticdevelopertoolkit/chrome",
-            "@agentic-toolkit/bitbag",
-            "@agenticdevelopertoolkit/releases",
+            "@adh-sdk/landing",
+            "@adh-sdk/site-template",
+            "@adh-sdk/themes",
+            "@adh-sdk/chrome",
+            "@adh-sdk/bitbag",
+            "@adh-sdk/releases",
         ):
             self.assertIn(f'"{name}"', block)
         for name in ("zod", "next", "react", "gsap"):
@@ -1663,7 +1663,7 @@ class AssembleTest(unittest.TestCase):
         deps = json.loads((self.app / "package.json").read_text())["dependencies"]
         self.assertNotIn("@vercel/analytics", deps)
         self.assertNotIn("@vercel/speed-insights", deps)
-        self.assertNotIn("@agenticdevelopertoolkit/analytics", deps)
+        self.assertNotIn("@adh-sdk/analytics", deps)
 
     def test_analytics_mounts_vercels_two_in_production(self) -> None:
         self.config["analytics"] = True
@@ -1680,12 +1680,12 @@ class AssembleTest(unittest.TestCase):
         self.config["analytics"] = True
         self.assert_ok(self.assemble())
         text = (self.app / "src/site/analytics.tsx").read_text()
-        self.assertIn("import { PostHogAnalytics } from '@agenticdevelopertoolkit/analytics'", text)
+        self.assertIn("import { PostHogAnalytics } from '@adh-sdk/analytics'", text)
         # Outside the production gate: the key, set per Vercel environment, is PostHog's only switch.
         self.assertLess(text.index("<PostHogAnalytics />"), text.index("process.env.DEPLOYMENT_ENV"))
         deps = json.loads((self.app / "package.json").read_text())["dependencies"]
-        self.assertTrue(deps["@agenticdevelopertoolkit/analytics"].startswith("link:"))
-        self.assertTrue(deps["@agenticdevelopertoolkit/analytics"].endswith("/analytics"))
+        self.assertTrue(deps["@adh-sdk/analytics"].startswith("link:"))
+        self.assertTrue(deps["@adh-sdk/analytics"].endswith("/analytics"))
 
     def test_analytics_toolkit_package_is_not_listed_twice(self) -> None:
         self.config.update({"analytics": True, "toolkitPackages": ["analytics"]})

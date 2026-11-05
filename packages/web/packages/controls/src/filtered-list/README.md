@@ -1,4 +1,4 @@
-# `@agenticdevelopertoolkit/controls/filtered-list`
+# `@adh-sdk/controls/filtered-list`
 
 A reusable filtered list. Configuration is generic over your item type —
 you tell the package how to read a title / subtitle / details out of each
@@ -24,8 +24,8 @@ Two entry points:
 ## Usage
 
 ```tsx
-import { FilteredList } from '@agenticdevelopertoolkit/controls/filtered-list'
-import '@agenticdevelopertoolkit/controls/filtered-list/styles.css'
+import { FilteredList } from '@adh-sdk/controls/filtered-list'
+import '@adh-sdk/controls/filtered-list/styles.css'
 
 type Service = { id: string; name: string; providerKind: string; baseUrl: string }
 

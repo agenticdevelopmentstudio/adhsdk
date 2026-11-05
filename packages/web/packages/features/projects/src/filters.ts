@@ -18,7 +18,7 @@
 // Search ACROSS projects is a different question with a different answer (a backend route) —
 // see `workItemSearch`.
 
-import type { WorkItem } from "@agentic-toolkit/data/projects";
+import type { WorkItem } from "@adh-sdk/data/projects";
 import { dayIndex } from "./helpers";
 
 /** The unassigned sentinel for the assignee axis — a real answer ("nobody owns this"), distinct

@@ -1,7 +1,7 @@
 ---
 id: 01f6f7b6-4bc5-4f35-a46a-1e80fe470097
 title: "Board Staleness"
-domain: adtoolkit://cookbook/status/dashboard/logic/board-staleness
+domain: adhsdk://cookbook/status/dashboard/logic/board-staleness
 type: ingredient
 version: 1.0.2
 status: review
@@ -18,7 +18,7 @@ platforms:
 tags: []
 depends-on: []
 related:
-  - adtoolkit://cookbook/status/dashboard/state/board
+  - adhsdk://cookbook/status/dashboard/state/board
 references: []
 approved-by: ""
 approved-date: ""
@@ -33,7 +33,7 @@ approved-date: ""
 - `isBoardStale(generatedAt, nowMs)` catches a board read that has stopped ARRIVING. It compares the board's `generatedAt` against the client clock.
 - `boardDataFreshness(dataAsOfMs, generatedAt, probeIntervalMs?)` catches a board that keeps arriving over frozen FACTS. It compares two server clocks: `generatedAt` minus `dataAsOfMs`.
 
-Per the module's doc comment, the two rules compose and "neither can substitute for the other". The module has no state, no I/O and no side effects. Its one call site is the `useBoard` hook ([useBoard](adtoolkit://cookbook/status/dashboard/state/board)), which folds both verdicts into `board === null` with a reason. The data-clock window is derived from `snapshotStaleMs` in the sibling `snapshot-staleness.ts`, so board and snapshot freshness share one "how old is too old" rule.
+Per the module's doc comment, the two rules compose and "neither can substitute for the other". The module has no state, no I/O and no side effects. Its one call site is the `useBoard` hook ([useBoard](adhsdk://cookbook/status/dashboard/state/board)), which folds both verdicts into `board === null` with a reason. The data-clock window is derived from `snapshotStaleMs` in the sibling `snapshot-staleness.ts`, so board and snapshot freshness share one "how old is too old" rule.
 
 ## Behavioral Requirements
 

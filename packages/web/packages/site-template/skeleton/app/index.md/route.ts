@@ -1,6 +1,6 @@
-// WRITTEN by @agenticdevelopertoolkit/site-template's assembler — do not edit. Change the
+// WRITTEN by @adh-sdk/site-template's assembler — do not edit. Change the
 // skeleton in the toolkit and re-assemble.
-import { frameLandingMarkdown } from '@agenticdevelopertoolkit/site-template'
+import { frameLandingMarkdown } from '@adh-sdk/site-template'
 import landing from '../../src/landing.json'
 import { config } from '../../src/site/config'
 import { slotMarkdown } from '../../src/site/markdown'

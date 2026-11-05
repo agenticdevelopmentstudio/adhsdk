@@ -35,7 +35,7 @@ subprocess hop.
 We use the official Swift SDK:
 
 ```yaml
-# packages/apple/AgenticToolkit/project.yml
+# packages/apple/AgenticDeveloperHubSDK/project.yml
 packages:
   ModelContextProtocol:
     url: https://github.com/modelcontextprotocol/swift-sdk
@@ -43,8 +43,8 @@ packages:
 ```
 
 The resolved version at integration time was **0.12.0**. We link the
-`MCP` product into `AgenticToolkitCore` — the lowest module that needs
-it — so every higher module (`AgenticToolkitMacOS`, plugins, the app)
+`MCP` product into `AgenticDeveloperHubSDKCore` — the lowest module that needs
+it — so every higher module (`AgenticDeveloperHubSDKMacOS`, plugins, the app)
 inherits transitively.
 
 The SDK gives us:
@@ -64,7 +64,7 @@ typed surface.
 
 The integration has four layers:
 
-1. **Configuration / persistence** (`AgenticToolkitCore/MCP/`).
+1. **Configuration / persistence** (`AgenticDeveloperHubSDKCore/MCP/`).
    - `MCPServerConfiguration` — Codable struct with a `Transport` enum
      (`.stdio(command:args:env:)` / `.http(endpoint:streaming:)`) and an
      `isEnabled` flag.
@@ -74,7 +74,7 @@ The integration has four layers:
      Splitting them lets the user inspect/edit non-secret config without
      ever touching keychain, and keeps env-var values like
      `GITHUB_TOKEN` out of UserDefaults / the SQLite store.
-2. **Live connections** (`AgenticToolkitCore/MCP/`).
+2. **Live connections** (`AgenticDeveloperHubSDKCore/MCP/`).
    - `MCPClient` — actor wrapping `MCP.Client` for one server.
      Owns the transport, exposes `connect()` / `disconnect()` /
      `cachedTools` / `callTool(name:arguments:)`. Re-fetches tools on
@@ -85,7 +85,7 @@ The integration has four layers:
      `(client, tool)` pairs for the dispatch loop. Tests inject a
      `clientFactory` to avoid spawning real subprocesses.
 3. **Plugin / backend surface**
-   (`AgenticToolkitCore/AIPlugins/` + `packages/apple/AgenticToolkit/macOS/`).
+   (`AgenticDeveloperHubSDKCore/AIPlugins/` + `packages/apple/AgenticDeveloperHubSDK/macOS/`).
    - New DTOs in `Core`: `ToolDefinition`, `ChatStreamEvent`
      (`.textDelta` / `.toolUse` / `.end`), `ToolResult`. Lives in `Core`
      so MCP code can produce them directly.
@@ -102,7 +102,7 @@ The integration has four layers:
      method, translate `[ToolDefinition]` into the provider's tool
      format (Anthropic `tools` array, OpenAI `functions`, etc.), and
      emit `.toolUse` events from provider responses.
-4. **Dispatch loop and UI** (`packages/apple/AgenticToolkit/macOS/`).
+4. **Dispatch loop and UI** (`packages/apple/AgenticDeveloperHubSDK/macOS/`).
    - `ChatViewModel` accepts an `MCPServerRegistry?` and a
      `Set<UUID>` of `activeServerIds`. The drain loop is now an
      event loop: collect text deltas, collect pending tool uses, run
@@ -190,7 +190,7 @@ overkill for tools that *only* exist to expose host-app behavior:
 Those tools have no meaning outside the running host process — there's
 nothing to spawn.
 
-`HostMCPServer` (`packages/apple/AgenticToolkit/macOS/Features/MCP/HostMCPServer.swift`)
+`HostMCPServer` (`packages/apple/AgenticDeveloperHubSDK/macOS/Features/MCP/HostMCPServer.swift`)
 is the in-process answer. It wraps the SDK's `MCP.Server` actor with
 an in-memory transport pair so the same process can act as both the
 MCP server (publishing tools) and an MCP client (consuming them via
@@ -214,7 +214,7 @@ The init is `async` because the SDK's transport-pair creation is
 async. `openChatWindow` is the only side-effecting handler — it's
 passed in as a closure rather than reaching into the host directly so
 `HostMCPServer` itself stays free of AppKit imports and is testable
-from `AgenticToolkitCore` consumers.
+from `AgenticDeveloperHubSDKCore` consumers.
 
 ### The two demo tools
 
@@ -328,7 +328,7 @@ constructed `MCP.Client` (host-managed) both expose the same
 
 ## Verification
 
-End-to-end smoke-tested by running the sample `AgenticToolkitApp`:
+End-to-end smoke-tested by running the sample `AgenticDeveloperHubSDKApp`:
 
 - Settings → MCP Servers shows the new panel with the empty state.
 - The chat window's chip bar reads "No MCP servers" when none are
@@ -339,7 +339,7 @@ End-to-end smoke-tested by running the sample `AgenticToolkitApp`:
 - A `github` server with a token round-trips through Keychain (visible
   in Keychain Access, not in UserDefaults plist).
 
-Unit tests in `packages/apple/AgenticToolkit/Tests/AgenticToolkitCoreTests/MCP/`
+Unit tests in `packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKCoreTests/MCP/`
 cover the Codable round-trip for `MCPServerConfiguration`, the
 secrets-routing in `MCPSettings`, and the registry's reconciliation
 behavior using an injected fake `MCPClient` factory.
@@ -348,29 +348,29 @@ behavior using an injected fake `MCPClient` factory.
 
 Added:
 
-- `packages/apple/AgenticToolkit/Core/MCP/MCPServerConfiguration.swift`
-- `packages/apple/AgenticToolkit/Core/MCP/MCPSettings.swift`
-- `packages/apple/AgenticToolkit/Core/MCP/MCPClient.swift`
-- `packages/apple/AgenticToolkit/Core/MCP/MCPServerRegistry.swift`
-- `packages/apple/AgenticToolkit/Core/AIPlugins/ToolDefinition.swift`
-- `packages/apple/AgenticToolkit/Core/AIPlugins/ChatStreamEvent.swift`
-- `packages/apple/AgenticToolkit/Core/AIPlugins/ToolResult.swift`
-- `packages/apple/AgenticToolkit/macOS/Features/MCP/Settings/MCPServersPanelViewController.swift`
-- `packages/apple/AgenticToolkit/macOS/Features/MCP/HostMCPServer.swift`
-- `packages/apple/AgenticToolkit/macOS/Features/AIChatWindow/MCPChipsBarView.swift`
+- `packages/apple/AgenticDeveloperHubSDK/Core/MCP/MCPServerConfiguration.swift`
+- `packages/apple/AgenticDeveloperHubSDK/Core/MCP/MCPSettings.swift`
+- `packages/apple/AgenticDeveloperHubSDK/Core/MCP/MCPClient.swift`
+- `packages/apple/AgenticDeveloperHubSDK/Core/MCP/MCPServerRegistry.swift`
+- `packages/apple/AgenticDeveloperHubSDK/Core/AIPlugins/ToolDefinition.swift`
+- `packages/apple/AgenticDeveloperHubSDK/Core/AIPlugins/ChatStreamEvent.swift`
+- `packages/apple/AgenticDeveloperHubSDK/Core/AIPlugins/ToolResult.swift`
+- `packages/apple/AgenticDeveloperHubSDK/macOS/Features/MCP/Settings/MCPServersPanelViewController.swift`
+- `packages/apple/AgenticDeveloperHubSDK/macOS/Features/MCP/HostMCPServer.swift`
+- `packages/apple/AgenticDeveloperHubSDK/macOS/Features/AIChatWindow/MCPChipsBarView.swift`
 
 Modified:
 
-- `packages/apple/AgenticToolkit/project.yml` — added the SDK package.
-- `packages/apple/AgenticToolkit/macOS/Features/AIPlugins/AIPlugin.swift`
-- `packages/apple/AgenticToolkit/macOS/Features/AIPlugins/AIPluginMessage.swift`
-- `packages/apple/AgenticToolkit/macOS/Features/AIPlugins/AIPluginChatBackend.swift`
-- `packages/apple/AgenticToolkit/macOS/Features/AIChatWindow/ChatBackend.swift`
-- `packages/apple/AgenticToolkit/macOS/Features/AIChatWindow/ChatView.swift`
-- `packages/apple/AgenticToolkit/macOS/Features/AIChatWindow/ChatViewModel.swift`
-- `packages/apple/AgenticToolkit/macOS/Features/AIChatWindow/WhippetChatBackend.swift`
-- `packages/packages/apple/AgenticToolkitApp/AgenticToolkitApp/AppDelegate.swift`
-- `packages/packages/apple/AgenticToolkitApp/AgenticToolkitApp/Settings/AppSettingsWindowController.swift`
+- `packages/apple/AgenticDeveloperHubSDK/project.yml` — added the SDK package.
+- `packages/apple/AgenticDeveloperHubSDK/macOS/Features/AIPlugins/AIPlugin.swift`
+- `packages/apple/AgenticDeveloperHubSDK/macOS/Features/AIPlugins/AIPluginMessage.swift`
+- `packages/apple/AgenticDeveloperHubSDK/macOS/Features/AIPlugins/AIPluginChatBackend.swift`
+- `packages/apple/AgenticDeveloperHubSDK/macOS/Features/AIChatWindow/ChatBackend.swift`
+- `packages/apple/AgenticDeveloperHubSDK/macOS/Features/AIChatWindow/ChatView.swift`
+- `packages/apple/AgenticDeveloperHubSDK/macOS/Features/AIChatWindow/ChatViewModel.swift`
+- `packages/apple/AgenticDeveloperHubSDK/macOS/Features/AIChatWindow/WhippetChatBackend.swift`
+- `packages/packages/apple/AgenticDeveloperHubSDKApp/AgenticDeveloperHubSDKApp/AppDelegate.swift`
+- `packages/packages/apple/AgenticDeveloperHubSDKApp/AgenticDeveloperHubSDKApp/Settings/AppSettingsWindowController.swift`
 
 `StubChatBackend` did not need changes — it inherits the default
 delegating implementation of the new tool-aware method.

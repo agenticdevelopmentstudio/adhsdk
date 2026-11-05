@@ -1,27 +1,27 @@
 'use client';
 
 import { useCallback, useMemo, useState } from 'react';
-import { StackGroupDetail, useRailExitGuard } from '@agentic-toolkit/resource';
-import { ButtonBar } from '@agenticdevelopertoolkit/ui/blocks';
-import { ErrorText } from '@agenticdevelopertoolkit/ui/components/error-text';
-import { UnsavedChangesAlert } from '@agenticdevelopertoolkit/ui/components/unsaved-changes-alert';
-import { useDirtyDraft } from '@agenticdevelopertoolkit/ui/hooks/useDirtyDraft';
-import { useExitGate, type PaneExitGuard } from '@agenticdevelopertoolkit/ui/hooks/useExitGate';
-import { SITES, isReservedSlug, type SiteId } from '@agentic-toolkit/adh-registry';
+import { StackGroupDetail, useRailExitGuard } from '@adh-sdk/resource';
+import { ButtonBar } from '@adh-sdk/ui/blocks';
+import { ErrorText } from '@adh-sdk/ui/components/error-text';
+import { UnsavedChangesAlert } from '@adh-sdk/ui/components/unsaved-changes-alert';
+import { useDirtyDraft } from '@adh-sdk/ui/hooks/useDirtyDraft';
+import { useExitGate, type PaneExitGuard } from '@adh-sdk/ui/hooks/useExitGate';
+import { SITES, isReservedSlug, type SiteId } from '@adh-sdk/adh-registry';
 import {
   coerceFieldValue,
   evaluateShowIf,
   publishBlockers,
   validateFieldValue,
   type PublishBlocker,
-} from '@agentic-toolkit/registry/types';
+} from '@adh-sdk/registry/types';
 import type {
   EntryRow,
   FieldDefRow,
   FieldVisibility,
   RegistryClient,
   SectionRow,
-} from '@agentic-toolkit/registry/client';
+} from '@adh-sdk/registry/client';
 import { entryTopics } from './entryTopics';
 import { linkProblem, normalizeLinks } from './links';
 import { ENTRY_LIMITS, slugProblem } from './slug';

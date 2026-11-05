@@ -54,7 +54,7 @@ in its PR #22 (`2ca36d63`) to keep the vendored `openapi.json` identical.
 
 - The Zorks: PostHog deferred by the owner.
 - The non-adh sites that adopted PostHog have no privacy page. The planning repo's
-  `docs/planning/agent-seo.md` records this.
+  agent-seo plan (`fishlampplanning/docs/planning/agent-seo.md`) records this.
 - AI referrals become measurable only after each site's next production deploy.
 - deepmerge 4.3.1: one low alert left, waiting on a fixed release.
 

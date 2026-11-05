@@ -1,7 +1,7 @@
 ---
 id: 2cfe57f0-cdd4-4723-a6e0-2ce4f136ce7f
 title: "Badge"
-domain: adtoolkit://cookbook/ui/controls/badge
+domain: adhsdk://cookbook/ui/controls/badge
 type: ingredient
 version: 1.3.0
 status: review
@@ -21,7 +21,7 @@ tags:
   - status-indicator
 depends-on: []
 related:
-  - adtoolkit://cookbook/ui/controls/badge
+  - adhsdk://cookbook/ui/controls/badge
   - agenticdevelopercookbook://guidelines/cookbook/ui/platform-design-languages
 references:
   - https://www.w3.org/WAI/WCAG21/Understanding/contrast-minimum.html
@@ -309,11 +309,11 @@ Not applicable: the source contains no logging calls.
   `padding: 2px 6px`, background/border/color driven by the equivalent style
   prop, and a `getContrastingTextColor` helper reimplementing the same
   0.299/0.587/0.114 luminance weights and 0.6 threshold. The sibling web
-  Badge recipe (`adtoolkit://cookbook/ui/controls/badge`) already implements
+  Badge recipe (`adhsdk://cookbook/ui/controls/badge`) already implements
   this on the web; reuse its formula so filled-style contrast decisions agree
   across platforms rather than re-deriving a possibly different threshold.
 - **AppKit / UIKit** (source platform): Source at
-  `packages/apple/AgenticToolkit/macOS/UI/Badge/Badge.swift` (this recipe's
+  `packages/apple/AgenticDeveloperHubSDK/macOS/UI/Badge/Badge.swift` (this recipe's
   source): a macOS-only, `@MainActor`-isolated `NSView` subclass owning an
   `NSTextField(labelWithString:)`, styled via `CALayer`
   (`layer?.cornerRadius = 5`, `backgroundColor`, `borderWidth`,
@@ -345,7 +345,7 @@ Not applicable: the source contains no logging calls.
   `UIView`/`UILabel`/`UIColor`, uses `layer.cornerRadius` the same way, and
   must re-derive the `.caption`-equivalent font from whatever theme
   abstraction the iOS app uses, since this source's `observeTheme`
-  extension is macOS-only (`AgenticToolkitCoreMacOS`). The
+  extension is macOS-only (`AgenticDeveloperHubSDKCoreMacOS`). The
   Interface-Builder-rejecting `init?(coder:)` pattern carries over
   unchanged. Public API surface:
   ```swift
@@ -379,7 +379,7 @@ Not applicable: the source contains no logging calls.
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/macOS/UI/Badge/Badge.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/Badge/Badge.swift` |
 
 ## Design Decisions
 

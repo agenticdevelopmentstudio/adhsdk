@@ -3,7 +3,7 @@
   "meta": {
     "id": "51BF262A-9C94-4533-A34D-1AEADF63037B",
     "title": "Billing Clock",
-    "domain": "adtoolkit://cookbook/foundation/billing/billing-clock",
+    "domain": "adhsdk://cookbook/foundation/billing/billing-clock",
     "type": "ingredient",
     "version": "1.0.0",
     "status": "review",
@@ -25,7 +25,7 @@
     ],
     "depends-on": [],
     "related": [
-      "adtoolkit://cookbook/foundation/billing/billing-rounding"
+      "adhsdk://cookbook/foundation/billing/billing-rounding"
     ],
     "references": [],
     "approved-by": "",

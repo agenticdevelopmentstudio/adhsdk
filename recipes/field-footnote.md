@@ -1,7 +1,7 @@
 ---
 id: e9504a52-046c-4777-9704-20f611cf76f7
 title: FieldFootnote
-domain: agenticdevelopertoolkit://recipes/field-footnote
+domain: adhsdk://recipes/field-footnote
 type: ingredient
 version: 1.1.1
 status: review
@@ -23,10 +23,10 @@ tags:
 - accessibility
 depends-on: []
 related:
-- agenticdevelopertoolkit://recipes/field
-- agenticdevelopertoolkit://recipes/error-text
-- agenticdevelopertoolkit://recipes/checkbox
-- agenticdevelopertoolkit://recipes/label
+- adhsdk://recipes/field
+- adhsdk://recipes/error-text
+- adhsdk://recipes/checkbox
+- adhsdk://recipes/label
 references: []
 approved-by: ''
 approved-date: ''

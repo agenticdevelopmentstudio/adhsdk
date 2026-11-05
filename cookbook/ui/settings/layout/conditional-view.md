@@ -1,7 +1,7 @@
 ---
 id: 537cf2a7-6be6-4a09-9a6c-8f8ecc6012da
 title: "Conditional View"
-domain: adtoolkit://cookbook/ui/settings/layout/conditional-view
+domain: adhsdk://cookbook/ui/settings/layout/conditional-view
 type: ingredient
 version: 1.2.2
 status: review
@@ -20,7 +20,7 @@ tags:
   - layout
 depends-on: []
 related:
-  - adtoolkit://cookbook/ui/settings/layout/group-view
+  - adhsdk://cookbook/ui/settings/layout/group-view
 references: []
 approved-by: ""
 approved-date: ""
@@ -247,7 +247,7 @@ Not applicable: the component performs no logging of its own.
   `onVisibilityChange` prop from a `useEffect` keyed on that computed
   boolean, mirroring notifies-visibility-change-once.
 - **AppKit/UIKit** (source platform): Source file
-  `packages/apple/AgenticToolkit/macOS/SystemIntegration/ComposableSettingsWindow/Views/ConditionalView.swift`.
+  `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/Views/ConditionalView.swift`.
   A macOS-only (`import AppKit`) `NSView` subclass, `@MainActor`, generic
   over `Value: Codable & Sendable`, inside the `ComposableSettings`
   namespace, conforming to `SettingsViewProtocol` and
@@ -294,7 +294,7 @@ Not applicable: the component performs no logging of its own.
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/macOS/SystemIntegration/ComposableSettingsWindow/Views/ConditionalView.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/Views/ConditionalView.swift` |
 
 ## Design Decisions
 

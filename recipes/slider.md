@@ -1,7 +1,7 @@
 ---
 id: 25816370-14ff-454a-83d4-ebd588a2ff01
 title: Slider
-domain: agenticdevelopertoolkit://recipes/slider
+domain: adhsdk://recipes/slider
 type: ingredient
 version: 1.2.1
 status: review
@@ -22,12 +22,12 @@ tags:
 - range
 depends-on: []
 related:
-- agenticdevelopertoolkit://recipes/text-field
-- agenticdevelopertoolkit://recipes/checkbox
-- agenticdevelopertoolkit://recipes/select
-- agenticdevelopertoolkit://recipes/radio-group
-- agenticdevelopertoolkit://recipes/choice-slider
-- agenticdevelopertoolkit://recipes/stepper
+- adhsdk://recipes/text-field
+- adhsdk://recipes/checkbox
+- adhsdk://recipes/select
+- adhsdk://recipes/radio-group
+- adhsdk://recipes/choice-slider
+- adhsdk://recipes/stepper
 references:
 - https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input/range
 - https://www.w3.org/TR/WCAG21/

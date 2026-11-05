@@ -1,7 +1,7 @@
 ---
 id: b1fa768d-a088-4507-92f6-6296f93bee2c
 title: "Hub Domain Markdown Client"
-domain: adtoolkit://cookbook/adh/hub/content/markdown-client
+domain: adhsdk://cookbook/adh/hub/content/markdown-client
 type: ingredient
 version: 1.1.0
 status: review
@@ -24,17 +24,17 @@ tags:
   - web
 depends-on: []
 related:
-  - adtoolkit://cookbook/adh/hub/content/docs-client
-  - adtoolkit://cookbook/adh/hub/buckets
+  - adhsdk://cookbook/adh/hub/content/docs-client
+  - adhsdk://cookbook/adh/hub/buckets
 references:
-  - packages/web/packages/data/src/markdown/markdown.ts (agenticdevelopertoolkit)
-  - packages/web/packages/data/src/markdown/schemas.ts (agenticdevelopertoolkit)
-  - packages/web/packages/data/src/markdown/taxonomy.ts (agenticdevelopertoolkit)
-  - packages/web/packages/data/src/markdown/wire.ts (agenticdevelopertoolkit)
-  - packages/web/packages/data/src/markdown/index.ts (agenticdevelopertoolkit)
-  - packages/web/packages/data/src/markdown/__tests__/markdown.test.ts (agenticdevelopertoolkit)
-  - packages/web/packages/data/src/http.ts (agenticdevelopertoolkit)
-  - packages/web/packages/data/src/client-helpers.ts (agenticdevelopertoolkit)
+  - packages/web/packages/data/src/markdown/markdown.ts (adhsdk)
+  - packages/web/packages/data/src/markdown/schemas.ts (adhsdk)
+  - packages/web/packages/data/src/markdown/taxonomy.ts (adhsdk)
+  - packages/web/packages/data/src/markdown/wire.ts (adhsdk)
+  - packages/web/packages/data/src/markdown/index.ts (adhsdk)
+  - packages/web/packages/data/src/markdown/__tests__/markdown.test.ts (adhsdk)
+  - packages/web/packages/data/src/http.ts (adhsdk)
+  - packages/web/packages/data/src/client-helpers.ts (adhsdk)
 approved-by: ""
 approved-date: ""
 ---
@@ -467,7 +467,7 @@ question on schemas-get-swallows-errors.
 - **SwiftUI / Swift**: a Swift port of markdown.ts/taxonomy.ts has no
   existing Apple counterpart among this repo's sources; the closest
   relative is `MarkdownStore`/`MarkdownRemoteWriter`
-  (`packages/apple/AgenticToolkit/Markdown/`), which is a local notes store,
+  (`packages/apple/AgenticDeveloperHubSDK/Markdown/`), which is a local notes store,
   not a client for this backend surface. A port of `schemasApi` already
   exists as the Apple Hub's `BucketsDataSource`/`BucketsModels`
   (`hub-domain-buckets`) under different model names for the same rows —
@@ -482,7 +482,7 @@ question on schemas-get-swallows-errors.
   shared options object, to keep the divergence visible in the port's own
   type signatures.
 - **React / Web (source platform)**: this is the source implementation;
-  `authedJson`/`authedRequest` (from `@agentic-toolkit/auth/client` via
+  `authedJson`/`authedRequest` (from `@adh-sdk/auth/client` via
   `../http`) and the helpers in `../client-helpers` (`enc`, `compact`,
   `scopeByOwner`, `sortByText`, `workspaceQuery`) are shared with every
   other client in this data package and MUST be reused, not reimplemented.

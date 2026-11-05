@@ -1,7 +1,7 @@
 ---
 id: ca0fb28f-7f22-4fde-a291-ecfde846f5c3
 title: Pagination
-domain: agenticdevelopertoolkit://recipes/pagination
+domain: adhsdk://recipes/pagination
 type: ingredient
 version: 1.2.1
 status: review
@@ -22,7 +22,7 @@ tags:
 - navigation
 - ui
 depends-on:
-- agenticdevelopertoolkit://recipes/button
+- adhsdk://recipes/button
 related: []
 references: []
 approved-by: ''
@@ -33,7 +33,7 @@ approved-date: ''
 
 ## Overview
 
-The shared `Pagination` in `@agenticdevelopertoolkit/ui` — the list pager used above and below
+The shared `Pagination` in `@adh-sdk/ui` — the list pager used above and below
 paged surfaces in the host application. It is a compact `Prev` / "Page X of Y" / `Next` control: a
 centered `nav` landmark holding two shared `Button`s (`variant="outline"`,
 `size="sm"`) around a mono caption.
@@ -45,7 +45,7 @@ and requests a change rather than keeping its own counter. When there is only on
 `{totalPages > 1 && …}` conditional. The `Prev` button is disabled on the first page
 and `Next` on the last, so an out-of-range request can never be issued from the edges.
 
-A single export ships from `@agenticdevelopertoolkit/ui/components/pagination`: the `Pagination`
+A single export ships from `@adh-sdk/ui/components/pagination`: the `Pagination`
 component. It carries `"use client"` (it composes the client `Button`) but holds no
 internal state — the displayed page is always the `page` prop.
 

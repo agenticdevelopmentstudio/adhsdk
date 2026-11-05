@@ -1,7 +1,7 @@
 ---
 id: 0ae70642-28e7-436a-b934-0b445652ac09
 title: Chat Input
-domain: agenticdevelopertoolkit://recipes/chat-input
+domain: adhsdk://recipes/chat-input
 type: ingredient
 version: 1.1.1
 status: review
@@ -23,8 +23,8 @@ tags:
 - form
 depends-on: []
 related:
-- agenticdevelopertoolkit://recipes/chat-window-controller
-- agenticdevelopertoolkit://recipes/button
+- adhsdk://recipes/chat-window-controller
+- adhsdk://recipes/button
 references: []
 approved-by: ''
 approved-date: ''

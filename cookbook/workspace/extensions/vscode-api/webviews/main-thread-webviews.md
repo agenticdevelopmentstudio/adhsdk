@@ -1,7 +1,7 @@
 ---
 id: aa828b9b-925a-4f73-9073-12aab359aba6
 title: "VS Code Webviews Bridge"
-domain: adtoolkit://cookbook/workspace/extensions/vscode-api/webviews/main-thread-webviews
+domain: adhsdk://cookbook/workspace/extensions/vscode-api/webviews/main-thread-webviews
 type: ingredient
 version: 1.2.1
 status: review
@@ -22,22 +22,22 @@ tags:
   - disposable
 depends-on: []
 related:
-  - adtoolkit://cookbook/workspace/extensions/vscode-api/webviews/extension-webview-presenting
-  - adtoolkit://cookbook/workspace/extensions/host/extension-event
-  - adtoolkit://cookbook/workspace/extensions/vscode-api/webviews/webview-panel-options
-  - adtoolkit://cookbook/workspace/extensions/vscode-api/webviews/webview-resource-url
-  - adtoolkit://cookbook/workspace/extensions/vscode-api/commands/main-thread-commands
+  - adhsdk://cookbook/workspace/extensions/vscode-api/webviews/extension-webview-presenting
+  - adhsdk://cookbook/workspace/extensions/host/extension-event
+  - adhsdk://cookbook/workspace/extensions/vscode-api/webviews/webview-panel-options
+  - adhsdk://cookbook/workspace/extensions/vscode-api/webviews/webview-resource-url
+  - adhsdk://cookbook/workspace/extensions/vscode-api/commands/main-thread-commands
 references:
-  - packages/apple/AgenticToolkit/macOS/Features/Extensions/VSCodeAPI/MainThreadWebviews.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/macOS/Features/Extensions/VSCodeAPI/ExtensionWebviewPresenting.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Core/Extensions/WebviewPanelOptions.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Core/Extensions/WebviewResourceURL.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/macOS/Features/Extensions/VSCodeAPI/ExtensionEvent.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/macOS/Features/Extensions/VSCodeAPI/VSCodeAPI.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/macOS/Features/Extensions/Host/NotImplementedLedger.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Core/Loggable.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Tests/AgenticToolkitMacOSTests/Extensions/MainThreadWebviewsTests.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/project.yml (agenticdevelopertoolkit)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/MainThreadWebviews.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/ExtensionWebviewPresenting.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Core/Extensions/WebviewPanelOptions.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Core/Extensions/WebviewResourceURL.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/ExtensionEvent.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/VSCodeAPI.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/Host/NotImplementedLedger.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Core/Loggable.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKMacOSTests/Extensions/MainThreadWebviewsTests.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/project.yml (adhsdk)
 approved-by: ""
 approved-date: ""
 ---
@@ -596,8 +596,8 @@ No other event in this file is logged: every `createWebviewPanel`, `registerWebv
 
 ## Platform Notes
 
-- **SwiftUI**: not applicable to this file — `MainThreadWebviews.swift` imports `Foundation`, `JavaScriptCore`, `OSLog`, and `AgenticToolkitCore`, with no SwiftUI dependency; nothing in this component renders a view.
-- **AppKit / UIKit**: this is the source. `packages/apple/AgenticToolkit/macOS/Features/Extensions/VSCodeAPI/MainThreadWebviews.swift` is part of the `AgenticToolkitMacOS` framework target, which `project.yml` declares `platform: macOS` only — no iOS target packages this file. It is `@MainActor`-isolated per its class declaration (satisfying "thread-confined access" above because `JSValue` is not `Sendable` and JavaScriptCore always calls an installed block on the thread that made the call), matching every other `MainThread*` adaptor and `ExtensionHost` itself. The panel record is the stored property `panels: [String: ExtensionWebviewPanelModel]`; the serializer and view-provider registries are `serializers`/`viewProviders`, each entry a `SerializerRegistration`/`ViewProviderRegistration` struct pairing a `token: UUID` with a `registration: JSValue`. The workspace roots provider is the `workspaceRoots: (any ExtensionWorkspaceRoots)?` parameter. The shared not-implemented ledger is `NotImplementedLedger`. The presenter is `ExtensionWebviewPresenting`; the options resolver is `WebviewPanelOptions`; the resource URL builder is `WebviewResourceURL`; the coalescing event emitter is `ExtensionEventEmitter<Payload>`, built with `ExtensionEventImmediateWindow(delay: 0)` for the same-turn delivery every panel-model event requires. `adopt`/`abandon`/`wire`/`forget` are this type's four lifecycle methods. Handling the create-webview-panel/register-webview-panel-serializer/register-webview-view-provider calls are, respectively, `handleCreateWebviewPanel`, `handleRegisterWebviewPanelSerializer`, and `handleRegisterWebviewViewProvider`; the panel/webview/webview-view objects are built by `makePanelObject`, `makeWebviewObject`, and `makeWebviewViewObject`. Installing a property accessor or getter delegates to `MainThreadWindow`'s own static `installAccessor`/`installReadonlyGetter`. `NSNull()` is the null placeholder substituted for an absent `postMessage` payload. The concrete `ExtensionWebviewPanel` this adaptor addresses is an `NSViewController`-backed WebKit host outside this file's own scope.
+- **SwiftUI**: not applicable to this file — `MainThreadWebviews.swift` imports `Foundation`, `JavaScriptCore`, `OSLog`, and `AgenticDeveloperHubSDKCore`, with no SwiftUI dependency; nothing in this component renders a view.
+- **AppKit / UIKit**: this is the source. `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/MainThreadWebviews.swift` is part of the `AgenticDeveloperHubSDKMacOS` framework target, which `project.yml` declares `platform: macOS` only — no iOS target packages this file. It is `@MainActor`-isolated per its class declaration (satisfying "thread-confined access" above because `JSValue` is not `Sendable` and JavaScriptCore always calls an installed block on the thread that made the call), matching every other `MainThread*` adaptor and `ExtensionHost` itself. The panel record is the stored property `panels: [String: ExtensionWebviewPanelModel]`; the serializer and view-provider registries are `serializers`/`viewProviders`, each entry a `SerializerRegistration`/`ViewProviderRegistration` struct pairing a `token: UUID` with a `registration: JSValue`. The workspace roots provider is the `workspaceRoots: (any ExtensionWorkspaceRoots)?` parameter. The shared not-implemented ledger is `NotImplementedLedger`. The presenter is `ExtensionWebviewPresenting`; the options resolver is `WebviewPanelOptions`; the resource URL builder is `WebviewResourceURL`; the coalescing event emitter is `ExtensionEventEmitter<Payload>`, built with `ExtensionEventImmediateWindow(delay: 0)` for the same-turn delivery every panel-model event requires. `adopt`/`abandon`/`wire`/`forget` are this type's four lifecycle methods. Handling the create-webview-panel/register-webview-panel-serializer/register-webview-view-provider calls are, respectively, `handleCreateWebviewPanel`, `handleRegisterWebviewPanelSerializer`, and `handleRegisterWebviewViewProvider`; the panel/webview/webview-view objects are built by `makePanelObject`, `makeWebviewObject`, and `makeWebviewViewObject`. Installing a property accessor or getter delegates to `MainThreadWindow`'s own static `installAccessor`/`installReadonlyGetter`. `NSNull()` is the null placeholder substituted for an absent `postMessage` payload. The concrete `ExtensionWebviewPanel` this adaptor addresses is an `NSViewController`-backed WebKit host outside this file's own scope.
 - **Compose**: model this adaptor as a Kotlin `class MainThreadWebviews(...)` confined to the main dispatcher, with the panel record, the serializer registry, and the view-provider registry as plain `MutableMap`s guarded by that confinement (no `Mutex` needed, matching the source's own single-actor argument). The webview surface itself becomes a `WebView` (or an Android `WebView`)-backed handle conforming to a `ExtensionWebviewPanel`-equivalent interface, and the extension callback's `JSValue` becomes whatever function-reference type the host's own JavaScript engine binding exposes.
 - **React/Web**: this component's own upstream is VS Code's real `MainThreadWebviews` (`mainThreadWebviewViews.ts`/`mainThreadWebviewPanels.ts`), already TypeScript, so a web port is closer to restoring the original than translating it — including its own `Disposable`-returning registration and native `Promise`-returning `postMessage`, rather than the settled-synchronously `Thenable` this host constructs by hand.
 - **WinUI 3**: model this adaptor as a class whose every member runs on a captured `DispatcherQueue` (the `@MainActor` equivalent — WinUI 3 has no compiler-enforced actor isolation, so every entry point MUST assert `DispatcherQueue.HasThreadAccess` or marshal via `DispatcherQueue.TryEnqueue`). The webview surface is a `WebView2`-backed control; `asWebviewUri`'s custom scheme becomes a `WebView2.AddWebResourceRequestedFilter` handler keyed the same way (panel id as authority), and the extension callback becomes whatever the chosen JavaScript engine binding uses (ClearScript's `ScriptObject`/`dynamic`, or Jint's `JsValue`) standing in for `JavaScriptCore.JSValue`.
@@ -606,7 +606,7 @@ No other event in this file is logged: every `createWebviewPanel`, `registerWebv
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/macOS/Features/Extensions/VSCodeAPI/MainThreadWebviews.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/MainThreadWebviews.swift` |
 
 ## Design Decisions
 

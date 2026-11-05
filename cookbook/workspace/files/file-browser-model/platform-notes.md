@@ -25,7 +25,7 @@
   "only report when it actually changed" callback this recipe requires;
   `FileTreeManager`'s two debounces map directly onto `setTimeout`/
   `clearTimeout` with the same 500ms/2000ms delays.
-- **AppKit / UIKit**: This is the source platform (the `AgenticToolkitMacOS`
+- **AppKit / UIKit**: This is the source platform (the `AgenticDeveloperHubSDKMacOS`
   module), but that placement is a module-organization fact, not a technical
   one: none of `FileBrowserDirectories.swift`, `FileBrowserRestorationState.swift`,
   or `FileTreeManager.swift` imports AppKit. Porting these three types to

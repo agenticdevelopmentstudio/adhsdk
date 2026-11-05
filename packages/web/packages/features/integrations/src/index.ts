@@ -1,4 +1,4 @@
-// @agentic-toolkit/integrations — the Integrations feature: a DESTINATION (the workspace, a
+// @adh-sdk/integrations — the Integrations feature: a DESTINATION (the workspace, a
 // persona it owns, a product it owns) and the provider-config instances connected to it.
 //
 // Every integration binds to an ecosystem, so a destination is ultimately a way of NAMING one;

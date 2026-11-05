@@ -3,7 +3,7 @@
   "meta": {
     "id": "5161980d-20b6-4779-867f-16ed45278a33",
     "title": "Extension Input Box Presenting",
-    "domain": "adtoolkit://cookbook/workspace/extensions/vscode-api/window/extension-input-box-presenting",
+    "domain": "adhsdk://cookbook/workspace/extensions/vscode-api/window/extension-input-box-presenting",
     "type": "ingredient",
     "version": "1.1.1",
     "status": "review",
@@ -26,10 +26,10 @@
     ],
     "depends-on": [],
     "related": [
-      "adtoolkit://cookbook/workspace/extensions/vscode-api/window/extension-input-box-view"
+      "adhsdk://cookbook/workspace/extensions/vscode-api/window/extension-input-box-view"
     ],
     "references": [
-      "packages/apple/AgenticToolkit/macOS/Features/Extensions/VSCodeAPI/ExtensionInputBoxPresenting.swift (agenticdevelopertoolkit)"
+      "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/ExtensionInputBoxPresenting.swift (adhsdk)"
     ],
     "approved-by": "",
     "approved-date": ""

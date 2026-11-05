@@ -3,7 +3,7 @@
   "meta": {
     "id": "bfc2dcde-d905-4923-bff2-577c85f17d5f",
     "title": "Composable Tabs Arrange Overlay",
-    "domain": "adtoolkit://cookbook/ui/layout/composable-tabs/arrange-overlay-view",
+    "domain": "adhsdk://cookbook/ui/layout/composable-tabs/arrange-overlay-view",
     "type": "ingredient",
     "version": "1.2.1",
     "status": "review",
@@ -26,7 +26,7 @@
     ],
     "depends-on": [],
     "related": [
-      "adtoolkit://cookbook/ui/layout/composable-tabs/leaf-pane-view"
+      "adhsdk://cookbook/ui/layout/composable-tabs/leaf-pane-view"
     ],
     "references": [],
     "approved-by": "",

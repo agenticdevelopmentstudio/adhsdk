@@ -1,5 +1,5 @@
 import type { ReactElement } from 'react'
-import { DeckScript } from '@agenticdevelopertoolkit/landing'
+import { DeckScript } from '@adh-sdk/landing'
 
 /**
  * Pinch-zoom back off iOS, on every route. `frameViewport` ships `maximum-scale=1` in every

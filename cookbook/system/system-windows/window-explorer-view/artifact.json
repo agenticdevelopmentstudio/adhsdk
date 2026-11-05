@@ -3,7 +3,7 @@
   "meta": {
     "id": "8aee173a-25e4-443e-a9ab-d629b58817e1",
     "title": "Window Explorer View",
-    "domain": "adtoolkit://cookbook/system/system-windows/window-explorer-view",
+    "domain": "adhsdk://cookbook/system/system-windows/window-explorer-view",
     "type": "ingredient",
     "version": "1.2.1",
     "status": "review",
@@ -25,7 +25,7 @@
     ],
     "depends-on": [],
     "related": [
-      "adtoolkit://cookbook/ui/controls/badge"
+      "adhsdk://cookbook/ui/controls/badge"
     ],
     "references": [],
     "approved-by": "",

@@ -2,10 +2,10 @@
 
 import { useMemo, useState } from "react";
 import { Tag } from "lucide-react";
-import { Badge } from "@agenticdevelopertoolkit/ui/components/badge";
-import { Button } from "@agenticdevelopertoolkit/ui/components/button";
-import { formatMicrosFloor } from "@agenticdevelopertoolkit/ui/lib/money";
-import { formatCompact } from "@agenticdevelopertoolkit/ui/lib/quantities";
+import { Badge } from "@adh-sdk/ui/components/badge";
+import { Button } from "@adh-sdk/ui/components/button";
+import { formatMicrosFloor } from "@adh-sdk/ui/lib/money";
+import { formatCompact } from "@adh-sdk/ui/lib/quantities";
 import {
   EditableList,
   useEditableList,

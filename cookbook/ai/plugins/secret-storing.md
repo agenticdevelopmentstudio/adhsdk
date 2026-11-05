@@ -1,7 +1,7 @@
 ---
 id: d274abfa-3696-4fd0-b3e8-cff6fdffb825
 title: "Secret Storing"
-domain: adtoolkit://cookbook/ai/plugins/secret-storing
+domain: adhsdk://cookbook/ai/plugins/secret-storing
 type: ingredient
 version: 1.2.0
 status: review
@@ -22,16 +22,16 @@ tags:
   - protocol
 depends-on: []
 related:
-  - adtoolkit://cookbook/ai/chat/daemon-ai-chat
-  - adtoolkit://cookbook/ai/providers/provider-config-keys
+  - adhsdk://cookbook/ai/chat/daemon-ai-chat
+  - adhsdk://cookbook/ai/providers/provider-config-keys
 references:
-  - packages/apple/AgenticToolkit/AIPluginKit/SecretStoring.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Core/KeychainHelper.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Tests/AgenticToolkitCoreTests/KeychainHelperTests.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Tests/AIPluginKitTests/AIPluginKitTestSupport.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/AIPluginKit/DaemonAIChat.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Tests/AIPluginKitTests/DaemonAIChatTests.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/AIPluginKit/AIProviderConfigKeys.swift (agenticdevelopertoolkit)
+  - packages/apple/AgenticDeveloperHubSDK/AIPluginKit/SecretStoring.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Core/KeychainHelper.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKCoreTests/KeychainHelperTests.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Tests/AIPluginKitTests/AIPluginKitTestSupport.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/AIPluginKit/DaemonAIChat.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Tests/AIPluginKitTests/DaemonAIChatTests.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/AIPluginKit/AIProviderConfigKeys.swift (adhsdk)
 approved-by: ""
 approved-date: ""
 ---
@@ -52,7 +52,7 @@ daemon's chat-completion path). The production implementation is a
 stateless conformance that delegates get/set/delete verbatim to the
 platform's secure-storage helper, plus a fifth capability, delete-legacy,
 that removes an entry written by a pre-pin build under the secure-storage
-helper's own default fallback service identifier ("com.agentictoolkit") by
+helper's own default fallback service identifier ("com.mikefullerton.agenticdeveloperhubsdk") by
 briefly retargeting the helper's active service identifier and restoring it
 afterward. A test-only implementation backs the same interface with a
 lock-guarded in-memory dictionary so the daemon's chat-completion tests
@@ -99,7 +99,7 @@ never touch the real secure store.
   instance.
 - **legacy-service-constant**: the production implementation's
   legacy-service identifier MUST equal the fixed literal
-  "com.agentictoolkit", mirroring the secure-storage helper's own default
+  "com.mikefullerton.agenticdeveloperhubsdk", mirroring the secure-storage helper's own default
   fallback service identifier.
 - **deletelegacy-targets-legacy-service**: delete-legacy MUST remove the
   entry stored under the legacy-service identifier for key, and MUST NOT
@@ -159,7 +159,7 @@ and its production implementation, not a visual component.
 | secret-storing-007 | key-value-opacity | Call set with an empty string for key, then call get for the same key | Returns an empty string, not none — an empty string is a legitimate stored value distinct from "absent" |
 | secret-storing-008 | production-store-delegation | Inspect the production implementation's get, set, and delete operations | Each is a single-expression call to the corresponding secure-storage-helper operation with no other statement |
 | secret-storing-009 | production-store-stateless, production-store-init | Construct two separate instances of the production implementation and call get for the same key from each | Both instances return the identical result, since neither holds instance state |
-| secret-storing-010 | legacy-service-constant | Read the production implementation's legacy-service identifier | Equals "com.agentictoolkit", matching the secure-storage helper's own default-fallback identifier |
+| secret-storing-010 | legacy-service-constant | Read the production implementation's legacy-service identifier | Equals "com.mikefullerton.agenticdeveloperhubsdk", matching the secure-storage helper's own default-fallback identifier |
 | secret-storing-011 | deletelegacy-targets-legacy-service | Pin the active service identifier to "com.example.host"; store "legacy-value" for key while temporarily retargeting the active service identifier to the legacy-service identifier; restore the pin; store "current-value" for key under "com.example.host"; then call delete-legacy for key | The legacy-service entry for key is gone (a direct read under the legacy-service identifier returns none); a get for key under the pinned service still returns "current-value" |
 | secret-storing-012 | deletelegacy-restores-pinned-service | Pin the active service identifier to "com.example.host"; call delete-legacy for key; read the active service identifier immediately after the call returns | Equals "com.example.host" — the value held immediately before the call |
 | secret-storing-013 | deletelegacy-idempotent | Call delete-legacy for a key never stored under the legacy service | Returns success |
@@ -212,9 +212,9 @@ and its production implementation, not a visual component.
 |--------|------|---------|-------------|
 | key | text | none (required) | Opaque per-secret identifier passed to get/set/delete/delete-legacy; naming convention is entirely the caller's, e.g. a provider configuration's field-key operation. |
 | value | text | none (required, set only) | The secret to store under key; treated as opaque and never validated, transformed, or interpreted. |
-| Active service identifier | text (mutable, process-wide) | the host application's own bundle identifier, or "com.agentictoolkit" if unavailable | The secure-storage scope every production-implementation call is implicitly scoped to; a host pins this once at startup outside this component. |
+| Active service identifier | text (mutable, process-wide) | the host application's own bundle identifier, or "com.mikefullerton.agenticdeveloperhubsdk" if unavailable | The secure-storage scope every production-implementation call is implicitly scoped to; a host pins this once at startup outside this component. |
 | Shared-storage access group | optional text (mutable, process-wide) | none | Optional shared-storage access group production-implementation calls are implicitly scoped to; referenced, not set, by this component. |
-| Legacy service identifier | text (constant) | "com.agentictoolkit" | Fixed pre-pin fallback service delete-legacy retargets the active service identifier to for the duration of one call. |
+| Legacy service identifier | text (constant) | "com.mikefullerton.agenticdeveloperhubsdk" | Fixed pre-pin fallback service delete-legacy retargets the active service identifier to for the duration of one call. |
 | Injected secret store | abstract secret-store interface (injected dependency) | the production implementation | The secret-store implementation a caller such as the daemon's chat-completion operation injects; substituted with the in-memory test double in tests. |
 
 ## Deep Linking
@@ -226,7 +226,7 @@ own.
 ## Localization
 
 Not applicable: the source contains no user-facing string literal; the only
-string literal it defines ("com.agentictoolkit", the legacy service
+string literal it defines ("com.mikefullerton.agenticdeveloperhubsdk", the legacy service
 identifier) is an internal secure-storage service identifier, never text
 displayed to a user.
 
@@ -283,7 +283,7 @@ this component makes itself.
 ## Platform Notes
 
 - **SwiftUI**: not a dependency of this file — `SecretStoring.swift` imports only `Foundation`; a SwiftUI settings screen calls `get`/`set`/`delete` through an injected `any SecretStoring` the same as any other consumer, with no `@State`/`@Observable` wiring needed since these calls are one-shot, not observed.
-- **AppKit / UIKit**: this is the source. The file is `packages/apple/AgenticToolkit/AIPluginKit/SecretStoring.swift`, part of the macOS-only `AIPluginKit` framework target (`project.yml` declares `platform: macOS`, no iOS target today), depending on `AgenticToolkitCore`'s `KeychainHelper` and `Loggable`. Apple-specific: `Security` framework Keychain calls (`SecItemAdd`, `SecItemCopyMatching`, `SecItemDelete`) wrapped by `KeychainHelper`, and `Bundle.main.bundleIdentifier` as the default service; neither AppKit nor UIKit is imported, so the type is equally usable from the headless daemon process, an AppKit host, or a UIKit host. Concretely, the interface is `public protocol SecretStoring: Sendable` declaring `get(forKey:) -> String?`, `set(_:forKey:) -> Bool`, `delete(forKey:) -> Bool`, and `deleteLegacy(forKey:) -> Bool` — the latter three each `@discardableResult`, which is the return-value-optional requirement above. `KeychainSecretStore` is the production conformance (a stateless `struct` with `public init() {}` and `static let legacyService = "com.agentictoolkit"`); `InMemorySecretStore` (`Tests/AIPluginKitTests/AIPluginKitTestSupport.swift`) is the lock-guarded in-memory test double referenced throughout this recipe. `deleteLegacy(forKey:)` captures `KeychainHelper.service` into a local `pinned` constant, swaps in `legacyService`, and restores `pinned` via `defer` regardless of the delete's outcome. The unspecified same-key-concurrent-mutation behavior traces to `KeychainHelper.set`'s implementation issuing a plain `delete(forKey:)` followed by `SecItemAdd`, whose query is built with `kSecAttrAccount` set to `key`; a losing concurrent writer's `SecItemAdd` call can return `errSecDuplicateItem`, which `KeychainSecretStore.set` (and hence `SecretStoring.set`) reports simply as `false`.
+- **AppKit / UIKit**: this is the source. The file is `packages/apple/AgenticDeveloperHubSDK/AIPluginKit/SecretStoring.swift`, part of the macOS-only `AIPluginKit` framework target (`project.yml` declares `platform: macOS`, no iOS target today), depending on `AgenticDeveloperHubSDKCore`'s `KeychainHelper` and `Loggable`. Apple-specific: `Security` framework Keychain calls (`SecItemAdd`, `SecItemCopyMatching`, `SecItemDelete`) wrapped by `KeychainHelper`, and `Bundle.main.bundleIdentifier` as the default service; neither AppKit nor UIKit is imported, so the type is equally usable from the headless daemon process, an AppKit host, or a UIKit host. Concretely, the interface is `public protocol SecretStoring: Sendable` declaring `get(forKey:) -> String?`, `set(_:forKey:) -> Bool`, `delete(forKey:) -> Bool`, and `deleteLegacy(forKey:) -> Bool` — the latter three each `@discardableResult`, which is the return-value-optional requirement above. `KeychainSecretStore` is the production conformance (a stateless `struct` with `public init() {}` and `static let legacyService = "com.agentictoolkit"`); `InMemorySecretStore` (`Tests/AIPluginKitTests/AIPluginKitTestSupport.swift`) is the lock-guarded in-memory test double referenced throughout this recipe. `deleteLegacy(forKey:)` captures `KeychainHelper.service` into a local `pinned` constant, swaps in `legacyService`, and restores `pinned` via `defer` regardless of the delete's outcome. The unspecified same-key-concurrent-mutation behavior traces to `KeychainHelper.set`'s implementation issuing a plain `delete(forKey:)` followed by `SecItemAdd`, whose query is built with `kSecAttrAccount` set to `key`; a losing concurrent writer's `SecItemAdd` call can return `errSecDuplicateItem`, which `KeychainSecretStore.set` (and hence `SecretStoring.set`) reports simply as `false`.
 - **Compose**: model `SecretStoring` as a Kotlin `interface` (`fun get(key: String): String?`, `fun set(value: String, key: String): Boolean`, `fun delete(key: String): Boolean`, `fun deleteLegacy(key: String): Boolean`) backed by Android's Keystore-backed `EncryptedSharedPreferences` (Jetpack Security) in place of the macOS Keychain; Android has no single-item "service" concept to retarget the way `KeychainHelper.service` does, so a `deleteLegacy` port would instead open the pre-migration `SharedPreferences` file or Keystore alias directly rather than mutating a shared global.
 - **React/Web**: model as an async interface, e.g. `interface SecretStoring { get(key: string): Promise<string | null>; set(value: string, key: string): Promise<boolean>; delete(key: string): Promise<boolean>; deleteLegacy(key: string): Promise<boolean>; }`, since the browser has no OS Keychain equivalent; back it with an Electron `safeStorage`/native-keychain bridge or a server-side secrets API, and expect every method to be `Promise`-based rather than the Swift original's synchronous calls.
 - **WinUI 3**: the reason this recipe exists. Model `SecretStoring` as a C# interface — `string? Get(string key); bool Set(string value, string key); bool Delete(string key); bool DeleteLegacy(string key);` — backed by `Windows.Security.Credentials.PasswordVault`, the Windows App SDK's closest Keychain analog. `Set` MUST first remove any existing credential for the same resource/key (mirroring `KeychainHelper.set`'s internal delete-then-add) before calling `vault.Add(new PasswordCredential(resource, key, value))`; `Get` MUST wrap `vault.Retrieve(resource, key)` in a `try`/`catch`, because `PasswordVault.Retrieve` throws rather than returning `null` when the credential is absent; `Delete`/`DeleteLegacy` MUST similarly catch-and-succeed on a missing-credential exception to preserve the idempotent contract this recipe requires (`delete-idempotent`, `deletelegacy-idempotent`). `PasswordVault`'s `resource` string is the WinUI analog of `KeychainHelper.service`; a `DeleteLegacy` port that retargets a shared `resource` field for the duration of one call carries the same un-synchronized-global-swap caveat this recipe documents for `KeychainHelper.service` (`deletelegacy-caller-serialization`) — threading the legacy resource string explicitly through the call instead, rather than mutating shared state, avoids reproducing that caveat in C#. Because `SecretStoring` requires `Sendable` in Swift, a WinUI 3 `ISecretStoring` implementation SHOULD be safe to call concurrently from any `Task`, and MUST serialize any global-resource-swap the same way the Swift original requires of `DeleteLegacy`.
@@ -292,7 +292,7 @@ this component makes itself.
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/AIPluginKit/SecretStoring.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/AIPluginKit/SecretStoring.swift` |
 
 ## Design Decisions
 

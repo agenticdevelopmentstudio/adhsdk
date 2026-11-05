@@ -1,7 +1,7 @@
 ---
 id: 6ea605aa-9248-46d4-9532-82185388749b
 title: Markdown Preview
-domain: agenticdevelopertoolkit://recipes/markdown-preview
+domain: adhsdk://recipes/markdown-preview
 type: ingredient
 version: 1.1.1
 status: review
@@ -22,12 +22,12 @@ tags:
 - fetch
 - search
 depends-on:
-- agenticdevelopertoolkit://recipes/markdown-renderer
-- agenticdevelopertoolkit://recipes/button
-- agenticdevelopertoolkit://recipes/markdown-reading-palette
+- adhsdk://recipes/markdown-renderer
+- adhsdk://recipes/button
+- adhsdk://recipes/markdown-reading-palette
 related:
-- agenticdevelopertoolkit://recipes/markdown-preview-header
-- agenticdevelopertoolkit://recipes/markdown-viewer
+- adhsdk://recipes/markdown-preview-header
+- adhsdk://recipes/markdown-viewer
 references: []
 approved-by: ''
 approved-date: ''
@@ -42,7 +42,7 @@ Markdown Preview is a presentational component that fetches full markdown conten
 ## Behavioral Requirements
 
 - **content-url**: Component MUST construct a full-content URL from the injected `SearchSource` configuration and the provided `PaperSearchHit`, following the template pattern `endpoints.content` (defaulting to `DEFAULT_CONTENT_ENDPOINT`, `/public/users/:slug/papers/:route`, when `endpoints.content` is not supplied) with URL-encoded slug and route placeholders.
-- **render-markdown-content**: Component MUST render fetched markdown content using `MarkdownRenderer` from `@agenticdevelopertoolkit/markdown` — the same GitHub-flavored, Shiki-highlighted, rehype-sanitized pipeline documented at agenticdevelopertoolkit://recipes/markdown-renderer.
+- **render-markdown-content**: Component MUST render fetched markdown content using `MarkdownRenderer` from `@adh-sdk/markdown` — the same GitHub-flavored, Shiki-highlighted, rehype-sanitized pipeline documented at adhsdk://recipes/markdown-renderer.
 - **apply-reading-theme**: Component MUST apply the reading theme palette to the rendered content by setting `data-mdv-theme`, `data-mdv-shiki-variant`, and CSS custom properties on the root container.
 - **show-loading-state**: Component MUST display a loading state with the text "Loading paper…" and MUST mark the state container with `aria-live="polite"` and `aria-busy="true"`.
 - **show-empty-state**: Component MUST display a distinct empty state (title: "Empty paper", detail: "This paper has no content yet.") when the fetch succeeds but the content body is empty or whitespace-only.
@@ -78,8 +78,8 @@ Markdown Preview is a presentational component that fetches full markdown conten
 - **Role**: The root container carries no explicit ARIA role; the error state container is marked with `role="alert"` to announce failures to screen readers.
 - **Live region**: The loading state container is marked with `aria-live="polite"` and `aria-busy="true"` to announce the loading phase. The empty state has no live-region marking — its arrival is not announced.
 - **Label**: The error detail text serves as the accessible error message; the Retry button's accessible name comes from its visible text content, "Retry".
-- **Markdown rendering**: Content is rendered by `MarkdownRenderer` (agenticdevelopertoolkit://recipes/markdown-renderer), which applies semantic HTML (headings, lists, code blocks) and ensures proper color contrast via the theme palette.
-- **Keyboard interaction**: The Retry button is keyboard-accessible (Tab, Enter/Space to activate), per `Button`'s own recipe (agenticdevelopertoolkit://recipes/button).
+- **Markdown rendering**: Content is rendered by `MarkdownRenderer` (adhsdk://recipes/markdown-renderer), which applies semantic HTML (headings, lists, code blocks) and ensures proper color contrast via the theme palette.
+- **Keyboard interaction**: The Retry button is keyboard-accessible (Tab, Enter/Space to activate), per `Button`'s own recipe (adhsdk://recipes/button).
 - **Minimum tap target**: The Retry button is a `Button` with `size="sm"` (28px tall) and no ancestor `--adh-button-min-height` override. Per Button's own recipe, `sm` clears the WCAG 2.2 SC 2.5.8 (Target Size Minimum, AA) 24×24 CSS px floor but falls below the Apple HIG 44×44pt / Material 48×48dp guidance unless a surface sets that override; this component sets none.
 
 ## Conformance Test Vectors
@@ -167,8 +167,8 @@ Not applicable: No logging or console output is performed by this component. Deb
 
 ## Platform Notes
 
-- **TypeScript/Web (source)**: Implemented in `MarkdownPreview.tsx` using React hooks (`useState`, `useEffect`, `useCallback`, `useRef`). Fetch is performed via the native `fetch` API, combining an owned `AbortController` with `AbortSignal.timeout()` via `AbortSignal.any()` (requires modern browsers) so `handle-timeout` and `abort-on-change` share one signal; the caught `DOMException`'s `name === 'TimeoutError'` distinguishes a timeout from the controller's own abort. `stable-refetch-dependencies` is implemented by reading `source` through a ref (`sourceRef`), updated every render, while the fetch effect's dependency list holds only `slug`, `route`, `baseUrl`, `endpoints.content`, and `timeoutMs` — so `fetchInit` changes are visible to the next fetch without forcing one. An `active` flag set to `false` in the effect cleanup silently drops a `.then()`/`.catch()` result that resolves after unmount or after a new fetch has started. `READING_THEME` (`apply-reading-theme`) is computed once at module scope from `getThemeById(DEFAULT_THEME_ID)`, since the reading theme does not vary per instance or per render. Content rendering is delegated to `MarkdownRenderer` from `@agenticdevelopertoolkit/markdown` (rehype-sanitized GitHub-flavored markdown with Shiki syntax highlighting). State machine (loading → ready/empty/error) is managed via `useState`. Retry is implemented by incrementing a `reloadToken` state value to force the fetch effect to re-run for the same document.
-- **SwiftUI**: Implement as an async view that fetches content via `URLSession`, catching `URLError` and checking `.code == .timedOut` to distinguish a timeout from other failures (mirrors `distinguish-timeout-from-other-errors`). Use `@State` to manage the four-phase state machine (loading, ready, empty, error). Render markdown via the Apple-platform `MarkdownRenderer` (agenticdevelopertoolkit://recipes/markdown-renderer), which produces `NSAttributedString` with semantic palette styling and injected syntax highlighting. Apply theme colors via SwiftUI environment values (`.preferredColorScheme`, custom `EnvironmentKey`). Implement retry via a button that re-triggers the async fetch task.
+- **TypeScript/Web (source)**: Implemented in `MarkdownPreview.tsx` using React hooks (`useState`, `useEffect`, `useCallback`, `useRef`). Fetch is performed via the native `fetch` API, combining an owned `AbortController` with `AbortSignal.timeout()` via `AbortSignal.any()` (requires modern browsers) so `handle-timeout` and `abort-on-change` share one signal; the caught `DOMException`'s `name === 'TimeoutError'` distinguishes a timeout from the controller's own abort. `stable-refetch-dependencies` is implemented by reading `source` through a ref (`sourceRef`), updated every render, while the fetch effect's dependency list holds only `slug`, `route`, `baseUrl`, `endpoints.content`, and `timeoutMs` — so `fetchInit` changes are visible to the next fetch without forcing one. An `active` flag set to `false` in the effect cleanup silently drops a `.then()`/`.catch()` result that resolves after unmount or after a new fetch has started. `READING_THEME` (`apply-reading-theme`) is computed once at module scope from `getThemeById(DEFAULT_THEME_ID)`, since the reading theme does not vary per instance or per render. Content rendering is delegated to `MarkdownRenderer` from `@adh-sdk/markdown` (rehype-sanitized GitHub-flavored markdown with Shiki syntax highlighting). State machine (loading → ready/empty/error) is managed via `useState`. Retry is implemented by incrementing a `reloadToken` state value to force the fetch effect to re-run for the same document.
+- **SwiftUI**: Implement as an async view that fetches content via `URLSession`, catching `URLError` and checking `.code == .timedOut` to distinguish a timeout from other failures (mirrors `distinguish-timeout-from-other-errors`). Use `@State` to manage the four-phase state machine (loading, ready, empty, error). Render markdown via the Apple-platform `MarkdownRenderer` (adhsdk://recipes/markdown-renderer), which produces `NSAttributedString` with semantic palette styling and injected syntax highlighting. Apply theme colors via SwiftUI environment values (`.preferredColorScheme`, custom `EnvironmentKey`). Implement retry via a button that re-triggers the async fetch task.
 - **Compose**: Implement as a Composable that manages state via `remember` and collects content via `LaunchedEffect` with `URLConnection` or OkHttp client. Define a timeout via `withTimeoutOrNull()` or HTTP client configuration. Render markdown via a custom Composable using an Android markdown rendering library (e.g., Markwon). Apply Material 3 theme colors via `MaterialTheme.colorScheme`. State transitions (loading ↔ ready/empty/error) via `when` expression.
 - **AppKit / UIKit**: Implement as a `UIViewController` (iOS) or `NSViewController` (macOS) that fetches via `URLSession` with `URLSessionConfiguration.default.timeoutIntervalForRequest`. Manage state via `@Published` properties (if using Combine) or properties with KVO. Render markdown via `WKWebView` loaded with an HTML wrapper or a native markdown library. Apply theme colors by assigning the palette's `UIColor`/`NSColor` values directly to view properties (`backgroundColor`, `textColor`) — not `UIAppearance`, which sets type-wide proxy defaults rather than a single instance's colors. Implement retry via a UIButton/NSButton target-action or Combine button publisher.
 - **WinUI 3**: Implement as a User Control (`<UserControl>` XAML) with code-behind or `ViewModel` (MVVM). Fetch via `HttpClient` from `System.Net.Http`, setting its `Timeout` property (a `TimeSpan`, not a `TimeoutInMilliseconds` member — `HttpClient` has none). Manage state via `INotifyPropertyChanged` properties (loading, content, empty, error). Render markdown via a `RichTextBlock` built from `Run`/`Span` elements with formatting applied through their own properties (`FontWeight`, `FontStyle`, `Foreground`) — there is no `TextFormatting` type. Apply theme colors via `ThemeResource` references to the default Windows theme palette (light/dark mode automatic). Implement retry via a `Button` with `Click` event handler that re-runs the fetch logic.
@@ -192,7 +192,7 @@ Not applicable: No logging or console output is performed by this component. Deb
 **Approved**: pending
 
 **Decision**: Make `timeoutMs` a prop with a 15s default rather than a fixed constant.
-**Rationale**: The 15s default mirrors agenticdevelopertoolkit://recipes/markdown-viewer's own default timeout. Allowing `timeoutMs` as a prop enables callers to adjust based on network conditions or use-case SLAs without modifying the component.
+**Rationale**: The 15s default mirrors adhsdk://recipes/markdown-viewer's own default timeout. Allowing `timeoutMs` as a prop enables callers to adjust based on network conditions or use-case SLAs without modifying the component.
 **Approved**: pending
 
 ## Compliance
@@ -209,7 +209,7 @@ Not applicable: No logging or console output is performed by this component. Deb
 | [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best-practices |
 | [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | failed | Best-practices |
 
-Statuses rest on the source as documented above: the theme palette is applied as CSS custom properties whose actual color values live in `markdown-reading-palette` (agenticdevelopertoolkit://recipes/markdown-reading-palette), outside this component, grounding `contrast-ratio` as partial; the Accessibility section's aria-live/aria-busy loading announcement and role="alert" error announcement ground `screen-reader-support` as partial, since the empty-state transition has no live-region marking; the Retry button's delegation to `Button`'s own recipe (agenticdevelopertoolkit://recipes/button) grounds `keyboard-navigable` as passed and `touch-target-size` as failed (size="sm" with no `--adh-button-min-height` override, per that recipe's own default); `MarkdownRenderer`'s semantic HTML output and this component's own `role="alert"`/`aria-live`/`aria-busy` attributes ground `semantic-markup` as passed; and the Localization section's six hardcoded strings with no i18n framework integrated ground both internationalization checks as failed. `separation-of-concerns` passes: this component owns only fetch/state-machine logic, delegating URL construction inputs to the injected `SearchSource`, content rendering to `MarkdownRenderer`, and error/retry chrome to `Button`, each an independent module. `unit-test-coverage` fails: no test file anywhere in the repository references `MarkdownPreview` (the fetch/state-machine logic has no dedicated suite). Security, Privacy and Data, and User Safety are omitted: the component collects no user data, performs no logging, and does not itself render links (see Privacy and Logging above).
+Statuses rest on the source as documented above: the theme palette is applied as CSS custom properties whose actual color values live in `markdown-reading-palette` (adhsdk://recipes/markdown-reading-palette), outside this component, grounding `contrast-ratio` as partial; the Accessibility section's aria-live/aria-busy loading announcement and role="alert" error announcement ground `screen-reader-support` as partial, since the empty-state transition has no live-region marking; the Retry button's delegation to `Button`'s own recipe (adhsdk://recipes/button) grounds `keyboard-navigable` as passed and `touch-target-size` as failed (size="sm" with no `--adh-button-min-height` override, per that recipe's own default); `MarkdownRenderer`'s semantic HTML output and this component's own `role="alert"`/`aria-live`/`aria-busy` attributes ground `semantic-markup` as passed; and the Localization section's six hardcoded strings with no i18n framework integrated ground both internationalization checks as failed. `separation-of-concerns` passes: this component owns only fetch/state-machine logic, delegating URL construction inputs to the injected `SearchSource`, content rendering to `MarkdownRenderer`, and error/retry chrome to `Button`, each an independent module. `unit-test-coverage` fails: no test file anywhere in the repository references `MarkdownPreview` (the fetch/state-machine logic has no dedicated suite). Security, Privacy and Data, and User Safety are omitted: the component collects no user data, performs no logging, and does not itself render links (see Privacy and Logging above).
 
 ## Change History
 

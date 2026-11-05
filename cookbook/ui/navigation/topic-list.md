@@ -1,7 +1,7 @@
 ---
 id: ce223be3-818a-4310-b136-9e1e84e9af54
 title: "Topic List"
-domain: adtoolkit://cookbook/ui/navigation/topic-list
+domain: adhsdk://cookbook/ui/navigation/topic-list
 type: ingredient
 version: 1.2.2
 status: review
@@ -22,7 +22,7 @@ tags:
   - view-controller
 depends-on: []
 related:
-  - adtoolkit://cookbook/ui/settings/settings-panel-list
+  - adhsdk://cookbook/ui/settings/settings-panel-list
 references:
   - https://developer.apple.com/design/human-interface-guidelines/lists-and-tables
 approved-by: ""
@@ -460,7 +460,7 @@ component.
   AppKit's `isHidden` on a stack view's arranged subview) rather than
   `visibility: hidden`.
 - **AppKit/UIKit** (source platform): Implemented in
-  `packages/apple/AgenticToolkit/macOS/UI/ViewControllers/TopicListViewController.swift`
+  `packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/TopicListViewController.swift`
   as a `@MainActor`, `open` `NSViewController` that builds its entire view
   hierarchy by hand in `loadView()` - a single-column `NSOutlineView`
   (`ColumnFillingOutlineView`) inside an `NSScrollView`, stacked with an
@@ -468,7 +468,7 @@ component.
   vertical `NSStackView`. It is its own `NSOutlineViewDataSource`/
   `NSOutlineViewDelegate`, with row appearance and theming driven by
   `SemanticPalette` via `ThemePaletteObserver` and `ThemedTableRowView`
-  (both defined in the vendored `AgenticDeveloperToolkitUI` framework this
+  (both defined in the vendored `AgenticDeveloperHubSDKUI` framework this
   target re-exports). There is no UIKit code path in source; a UIKit port
   would replace `NSOutlineView`/`NSScrollView` with a `UITableView` (a flat
   list needs no `UICollectionView` compositional layout), use
@@ -518,7 +518,7 @@ component.
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/macOS/UI/ViewControllers/TopicListViewController.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/TopicListViewController.swift` |
 
 ## Design Decisions
 

@@ -1,12 +1,12 @@
 "use client";
 
 import type { ReactElement } from "react";
-import { Field } from "@agenticdevelopertoolkit/ui/blocks/field";
-import { Input } from "@agenticdevelopertoolkit/ui/components/input";
-import { Textarea } from "@agenticdevelopertoolkit/ui/components/textarea";
-import { Select } from "@agenticdevelopertoolkit/ui/components/select";
-import { ErrorText } from "@agenticdevelopertoolkit/ui/components/error-text";
-import { CreateResourceDialog } from "@agentic-toolkit/resource";
+import { Field } from "@adh-sdk/ui/blocks/field";
+import { Input } from "@adh-sdk/ui/components/input";
+import { Textarea } from "@adh-sdk/ui/components/textarea";
+import { Select } from "@adh-sdk/ui/components/select";
+import { ErrorText } from "@adh-sdk/ui/components/error-text";
+import { CreateResourceDialog } from "@adh-sdk/resource";
 import {
   projectTemplatesApi,
   projectWorkItemsApi,
@@ -14,7 +14,7 @@ import {
   type ProjectStatus,
   type Template,
   type WorkItem,
-} from "@agentic-toolkit/data/projects";
+} from "@adh-sdk/data/projects";
 import { templateSublabel } from "./TemplatesPane";
 import { DEFAULT_ITEM_WORDS, type ItemWords } from "./vocabulary";
 

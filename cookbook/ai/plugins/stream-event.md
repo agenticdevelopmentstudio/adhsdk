@@ -1,7 +1,7 @@
 ---
 id: 2067e249-4f97-4575-b8ed-8f55f6dc96df
 title: "Stream Event"
-domain: adtoolkit://cookbook/ai/plugins/stream-event
+domain: adhsdk://cookbook/ai/plugins/stream-event
 type: ingredient
 version: 1.2.0
 status: review
@@ -21,7 +21,7 @@ tags:
   - decoder
 depends-on: []
 related:
-  - adtoolkit://cookbook/ai/plugins/ai-plugin
+  - adhsdk://cookbook/ai/plugins/ai-plugin
 references: []
 approved-by: ""
 approved-date: ""
@@ -254,7 +254,7 @@ data-and-role declaration with no side effects of its own.
 
 ## Platform Notes
 
-- **SwiftUI**: The source is `packages/apple/AgenticToolkit/AIPluginKit/AIStreamEvent.swift`. Nothing here is SwiftUI-specific — `AIStreamEvent` and `AIStreamDecoder` are Foundation-only and consumed identically by a SwiftUI or AppKit host through `PluginTransport`'s `AsyncThrowingStream<AIStreamEvent, Error>`. Concretely, `AIStreamEvent` is a `Sendable` enum (`public enum AIStreamEvent: Sendable`) with cases `textDelta(String)`, `toolUse(id: String, name: String, argumentsJSON: Data)`, and `end(stopReason: String?)` — the event-concurrent-share-safety requirement above is this `Sendable` conformance. `AIStreamDecoder` is declared `public protocol AIStreamDecoder: AnyObject` with no `Sendable` conformance: the `AnyObject` bound is the decoder-reference-semantics requirement (only a `class` may conform), and the absent `Sendable` is the decoder-single-context-state requirement, enforced by Swift's strict concurrency checking (`SWIFT_STRICT_CONCURRENCY: complete`) rejecting a non-`Sendable` value crossing an `await` boundary.
+- **SwiftUI**: The source is `packages/apple/AgenticDeveloperHubSDK/AIPluginKit/AIStreamEvent.swift`. Nothing here is SwiftUI-specific — `AIStreamEvent` and `AIStreamDecoder` are Foundation-only and consumed identically by a SwiftUI or AppKit host through `PluginTransport`'s `AsyncThrowingStream<AIStreamEvent, Error>`. Concretely, `AIStreamEvent` is a `Sendable` enum (`public enum AIStreamEvent: Sendable`) with cases `textDelta(String)`, `toolUse(id: String, name: String, argumentsJSON: Data)`, and `end(stopReason: String?)` — the event-concurrent-share-safety requirement above is this `Sendable` conformance. `AIStreamDecoder` is declared `public protocol AIStreamDecoder: AnyObject` with no `Sendable` conformance: the `AnyObject` bound is the decoder-reference-semantics requirement (only a `class` may conform), and the absent `Sendable` is the decoder-single-context-state requirement, enforced by Swift's strict concurrency checking (`SWIFT_STRICT_CONCURRENCY: complete`) rejecting a non-`Sendable` value crossing an `await` boundary.
 - **Compose**: Model `AiStreamEvent` as a Kotlin `sealed interface` with data classes `TextDelta(val text: String)`, `ToolUse(val id: String, val name: String, val argumentsJson: ByteArray)`, and `End(val stopReason: String?)`; enumerate over it with a `when` expression, which the compiler treats as exhaustive the way Swift's `switch` does. `AiStreamDecoder` becomes an interface with `fun consume(data: ByteArray): List<AiStreamEvent>` and a default `fun finish(): List<AiStreamEvent> = emptyList()`, mirroring the Swift protocol extension's default.
 - **React/Web**: Represent `AIStreamEvent` as a discriminated union — `{ kind: 'textDelta', text: string } | { kind: 'toolUse', id: string, name: string, argumentsJSON: Uint8Array } | { kind: 'end', stopReason?: string }` — and `AIStreamDecoder` as an interface with `consume(data: Uint8Array): AIStreamEvent[]` and an optional `finish?(): AIStreamEvent[]`. A web port could instead lean on the platform's native streaming primitive, a `TransformStream<Uint8Array, AIStreamEvent>`, rather than the manual `consume`/`finish` pair, since the browser's `ReadableStream` already models incremental delivery plus an explicit close.
 - **AppKit / UIKit**: Identical to the SwiftUI note — this component is UI-framework-agnostic; only the application embedding `AIPluginKit` differs, never this contract.
@@ -264,7 +264,7 @@ data-and-role declaration with no side effects of its own.
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/AIPluginKit/AIStreamEvent.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/AIPluginKit/AIStreamEvent.swift` |
 
 ## Design Decisions
 

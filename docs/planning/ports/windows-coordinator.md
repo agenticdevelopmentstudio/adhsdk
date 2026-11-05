@@ -12,10 +12,10 @@ marked so it can be argued with before code exists.
 
 ```
 packages/windows/
-  AgenticDeveloperToolkit.sln
-  src/AgenticDeveloperToolkit/
-    AgenticDeveloperToolkit.csproj              # net8.0, C# 12, <Nullable>enable</Nullable>
-    Contract/                          # mirrors packages/apple/AgenticDeveloperToolkit/Sources one-to-one
+  AgenticDeveloperHubSDK.sln
+  src/AgenticDeveloperHubSDK/
+    AgenticDeveloperHubSDK.csproj              # net8.0, C# 12, <Nullable>enable</Nullable>
+    Contract/                          # mirrors packages/apple/AgenticDeveloperHubSDK/SDK/Sources one-to-one
       Backend/IBackend.cs
       Backend/InboundEvent.cs
       Messages/IMessage.cs
@@ -23,7 +23,7 @@ packages/windows/
       ...
     Coordinator/PersonaChatCoordinator.cs
     Coordinator/SseParser.cs
-  tests/AgenticDeveloperToolkit.Tests/
+  tests/AgenticDeveloperHubSDK.Tests/
     PersonaChatCoordinatorTests.cs
 ```
 
@@ -148,7 +148,7 @@ that the vector claiming it fails. Write the .NET equivalent.
 ## Open questions
 
 1. **Is the contract assembly published separately from the coordinator?** Web
-   splits them (`@agenticdevelopertoolkit/chat/contract`); Apple does not. A
+   splits them (`@adh-sdk/chat/contract`); Apple does not. A
    consumer writing its own `IBackend` wants the contract without `HttpClient`.
 2. **Naming convention.** .NET convention wants `SendAsync` / `InboundEvents`
    where the contract says `send` / `inboundEvents`. Following .NET convention

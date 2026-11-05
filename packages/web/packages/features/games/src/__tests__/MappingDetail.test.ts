@@ -8,7 +8,7 @@ import {
   mappingValidate,
 } from "../MappingDetail";
 import { wholeNumberProblem } from "../fields";
-import type { GameMapping } from "@agentic-toolkit/data/games";
+import type { GameMapping } from "@adh-sdk/data/games";
 
 function row(over: Partial<GameMapping> = {}): GameMapping {
   return {

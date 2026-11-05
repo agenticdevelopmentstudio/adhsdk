@@ -524,7 +524,7 @@
 					"@executable_path/../Frameworks",
 					"@loader_path/../Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = dev.agenticdevelopertoolkit.AvatarAnimationEngine.tests.macos;
+				PRODUCT_BUNDLE_IDENTIFIER = com.mikefullerton.agenticdeveloperhubsdk.AvatarAnimationEngine.tests.macos;
 				SDKROOT = macosx;
 			};
 			name = Release;
@@ -612,7 +612,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = dev.agenticdevelopertoolkit.AvatarAnimationEngine.lib.ios;
+				PRODUCT_BUNDLE_IDENTIFIER = com.mikefullerton.agenticdeveloperhubsdk.AvatarAnimationEngine.lib.ios;
 				PRODUCT_NAME = AvatarAnimationEngine;
 				SDKROOT = iphoneos;
 				SKIP_INSTALL = YES;
@@ -635,7 +635,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = dev.agenticdevelopertoolkit.AvatarAnimationEngine.lib.ios;
+				PRODUCT_BUNDLE_IDENTIFIER = com.mikefullerton.agenticdeveloperhubsdk.AvatarAnimationEngine.lib.ios;
 				PRODUCT_NAME = AvatarAnimationEngine;
 				SDKROOT = iphoneos;
 				SKIP_INSTALL = YES;
@@ -659,7 +659,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = dev.agenticdevelopertoolkit.AvatarAnimationEngine.lib.macos;
+				PRODUCT_BUNDLE_IDENTIFIER = com.mikefullerton.agenticdeveloperhubsdk.AvatarAnimationEngine.lib.macos;
 				PRODUCT_NAME = AvatarAnimationEngine;
 				SDKROOT = macosx;
 				SKIP_INSTALL = YES;
@@ -682,7 +682,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = dev.agenticdevelopertoolkit.AvatarAnimationEngine.lib.macos;
+				PRODUCT_BUNDLE_IDENTIFIER = com.mikefullerton.agenticdeveloperhubsdk.AvatarAnimationEngine.lib.macos;
 				PRODUCT_NAME = AvatarAnimationEngine;
 				SDKROOT = macosx;
 				SKIP_INSTALL = YES;
@@ -763,7 +763,7 @@
 					"@executable_path/../Frameworks",
 					"@loader_path/../Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = dev.agenticdevelopertoolkit.AvatarAnimationEngine.tests.macos;
+				PRODUCT_BUNDLE_IDENTIFIER = com.mikefullerton.agenticdeveloperhubsdk.AvatarAnimationEngine.tests.macos;
 				SDKROOT = macosx;
 			};
 			name = Debug;

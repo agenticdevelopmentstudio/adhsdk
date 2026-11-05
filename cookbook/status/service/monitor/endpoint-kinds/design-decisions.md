@@ -1,5 +1,5 @@
 
-- **Decision**: re-export `NON_DEPLOY_KINDS` from `@agentic-toolkit/deploy-platform/engine` rather than declaring a separate literal set in this file.
+- **Decision**: re-export `NON_DEPLOY_KINDS` from `@adh-sdk/deploy-platform/engine` rather than declaring a separate literal set in this file.
   **Rationale**: stated directly in the source comment — "they used to be three separate literal Sets, here, in the browser, and in the engine" and could "come to disagree" over which kinds are non-deploy-backed, most concretely `dns`. Re-exporting one shared object removes the possibility of the three call sites drifting apart on that specific question.
   **Approved**: pending
 - **Decision**: derive `EndpointKind` from `ENDPOINT_KINDS` via `(typeof ENDPOINT_KINDS)[number]` instead of a hand-written union type declared independently of the array.

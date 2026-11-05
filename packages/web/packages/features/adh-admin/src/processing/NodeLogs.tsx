@@ -1,11 +1,11 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Badge } from "@agenticdevelopertoolkit/ui/components/badge";
-import { Button } from "@agenticdevelopertoolkit/ui/components/button";
-import { ErrorText } from "@agenticdevelopertoolkit/ui/components/error-text";
-import { Select } from "@agenticdevelopertoolkit/ui/components/select";
-import { errorMessage } from "@agenticdevelopertoolkit/ui/lib/errors";
+import { Badge } from "@adh-sdk/ui/components/badge";
+import { Button } from "@adh-sdk/ui/components/button";
+import { ErrorText } from "@adh-sdk/ui/components/error-text";
+import { Select } from "@adh-sdk/ui/components/select";
+import { errorMessage } from "@adh-sdk/ui/lib/errors";
 import { useNodeLogs, type LogLevel } from "../api/processing";
 import { formatDateTime } from "../lib/timestamps";
 
@@ -22,7 +22,7 @@ const LEVEL_VARIANT: Record<LogLevel, "neutral" | "blue" | "orange" | "error"> =
  * One node's log, newest first, filtered by MINIMUM level server-side (the chosen level and
  * everything more severe) and paged with Load more.
  *
- * Hand-rolled rather than the shared `LogPanel` (`@agenticdevelopertoolkit/controls/logging-panel`):
+ * Hand-rolled rather than the shared `LogPanel` (`@adh-sdk/controls/logging-panel`):
  * that panel is a tail-following console for a live stream, and this is a newest-first list paged
  * backwards through `nextBefore` with per-row level badges, which its follow model does not fit.
  */

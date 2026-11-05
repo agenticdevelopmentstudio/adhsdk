@@ -1,6 +1,6 @@
 
 - **Swift (source)**: This component targets macOS today, via the
-  `AgenticToolkitCore` framework target (`project.yml`); nothing in it —
+  `AgenticDeveloperHubSDKCore` framework target (`project.yml`); nothing in it —
   plain `Codable`/`Sendable` structs and enums over Foundation's
   `JSONDecoder`/`JSONEncoder` — depends on `AppKit`, `UIKit`, or any other
   platform framework, so the same source would decode identically if the
@@ -14,7 +14,7 @@
   `ExtensionManifest.JSONValue` rather than as a bare top-level type,
   because a bare top-level `public enum JSONValue` in this module is
   flagged `duplicate_name` by `abstractr check --content-file` against the
-  sibling foundation tier `AgenticToolkitSync`'s own top-level `JSONValue`.
+  sibling foundation tier `AgenticDeveloperHubSDKSync`'s own top-level `JSONValue`.
   `describe(_:)` switches on the four `DecodingError` cases (`.keyNotFound`,
   `.typeMismatch`, `.valueNotFound`, `.dataCorrupted`) plus a catch-all for
   `DecodingError.@unknown default` and any non-`DecodingError` `Error`,

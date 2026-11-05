@@ -1,8 +1,8 @@
 "use client";
 
 import type { ReactElement } from "react";
-import { Input } from "@agenticdevelopertoolkit/ui/components/input";
-import { Select } from "@agenticdevelopertoolkit/ui/components/select";
+import { Input } from "@adh-sdk/ui/components/input";
+import { Select } from "@adh-sdk/ui/components/select";
 import { formatPrice } from "./format-price";
 import type { PriceRow } from "./api/billing";
 

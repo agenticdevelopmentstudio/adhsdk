@@ -1,7 +1,7 @@
 ---
 id: 60b5767d-3cf5-4373-b2fc-074aa6b62fec
 title: "Webview Panel"
-domain: adtoolkit://cookbook/workspace/extensions/vscode-api/webviews/webview-panel-view
+domain: adhsdk://cookbook/workspace/extensions/vscode-api/webviews/webview-panel-view
 type: ingredient
 version: 1.2.2
 status: review
@@ -21,7 +21,7 @@ tags:
   - webview
 depends-on: []
 related:
-  - adtoolkit://cookbook/workspace/extensions/vscode-api/webviews/extension-webview-view
+  - adhsdk://cookbook/workspace/extensions/vscode-api/webviews/extension-webview-view
   - agenticdevelopercookbook://guidelines/cookbook/ui/platform-design-languages
 references: []
 approved-by: ""
@@ -273,7 +273,7 @@ Subsystem: `{{bundle_id}}` | Category: `WebviewPanel`
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/macOS/Features/Extensions/Webview/WebviewPanelViewController.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/Webview/WebviewPanelViewController.swift` |
 
 ## Design Decisions
 

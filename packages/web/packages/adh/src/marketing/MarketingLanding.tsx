@@ -4,20 +4,20 @@ import type { ReactElement } from 'react'
 // `byId` map) — concepts/index is already its own preserved tsup entry, reached
 // from several others; see the matching `external` entry and
 // verify-bundle-boundaries.py's Check B.
-import { siteConcept } from '@agentic-toolkit/adh/concepts'
-import { getSite, splitSiteTitle, type SiteId } from '@agentic-toolkit/adh-registry'
+import { siteConcept } from '@adh-sdk/adh/concepts'
+import { getSite, splitSiteTitle, type SiteId } from '@adh-sdk/adh-registry'
 // SiteLanding is the ADH family's placeholder hero (brand copy + gold accent), so Task 5.8 put
 // it in the adh VOCABULARY tier rather than the generic layout subpath. Both tiers live in this
 // package now, but it is still not a `layout` export — hence the sibling relative import.
 import { SiteLanding } from '../layout/SiteLanding'
-import { LandingGraph } from '@agentic-toolkit/adh/graph'
+import { LandingGraph } from '@adh-sdk/adh/graph'
 // Imported via the package path (not relative) so the 'use client' module stays
 // its own chunk — the same boundary trick as footer/FooterChatInner and
 // graph/ConceptGraphClient. A relative import inlines it into this entry, and
 // tsup then hoists its 'use client' over the whole bundle — including
 // LandingGraph → ConceptGraph's server-only next/headers, which makes every
 // site importing this barrel fail to build.
-import { LandingHeroGate } from '@agentic-toolkit/adh/marketing/LandingHeroGate'
+import { LandingHeroGate } from '@adh-sdk/adh/marketing/LandingHeroGate'
 import { StorySections } from './StorySections'
 
 // The graph explorer can only ever appear in the pre-launch envs; production

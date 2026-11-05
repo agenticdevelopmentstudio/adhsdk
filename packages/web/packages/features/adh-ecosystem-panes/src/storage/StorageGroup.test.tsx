@@ -18,8 +18,8 @@ vi.mock("./AllDataPane", () => ({
   ),
 }));
 
-import { RailHostContext } from "@agentic-toolkit/resource";
-import type { RailHostRegistry } from "@agentic-toolkit/resource";
+import { RailHostContext } from "@adh-sdk/resource";
+import type { RailHostRegistry } from "@adh-sdk/resource";
 import { StorageGroup } from "./StorageGroup";
 import type { EcosystemScopeResolution } from "./StorageGroup";
 

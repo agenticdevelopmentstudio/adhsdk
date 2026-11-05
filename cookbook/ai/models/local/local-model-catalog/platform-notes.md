@@ -1,6 +1,6 @@
 
 - **SwiftUI**: The source
-  (`packages/apple/AgenticToolkit/AIPluginKit/LocalModelCatalog.swift`, its
+  (`packages/apple/AgenticDeveloperHubSDK/AIPluginKit/LocalModelCatalog.swift`, its
   sibling `LocalModelServer.swift`, and tests
   `Tests/AIPluginKitTests/LocalModelCatalogTests.swift` /
   `LocalModelServerTests.swift`) has no SwiftUI (or any UI framework)

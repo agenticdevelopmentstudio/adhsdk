@@ -5,9 +5,9 @@
 // /messaging/ecosystems/:id/{status,log,send} routes. Templates are shared + static.
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { enc } from "@agentic-toolkit/data";
-import type { RequestBody, SuccessBody } from "@agentic-toolkit/adh-api-types";
-import { authedJson } from "@agentic-toolkit/auth/client";
+import { enc } from "@adh-sdk/data";
+import type { RequestBody, SuccessBody } from "@adh-sdk/adh-api-types";
+import { authedJson } from "@adh-sdk/auth/client";
 
 export type MessagingStatus = SuccessBody<"/messaging/ecosystems/{id}/status", "get">;
 export type MessageLogPage = SuccessBody<"/messaging/ecosystems/{id}/log", "get">;

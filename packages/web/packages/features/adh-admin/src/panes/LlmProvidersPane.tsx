@@ -8,11 +8,11 @@ import {
   useDeleteProviderTemplate,
   type ProviderTemplate,
 } from "../api/llm-providers";
-import { Button } from "@agenticdevelopertoolkit/ui/components/button";
-import { Badge } from "@agenticdevelopertoolkit/ui/components/badge";
-import { UnsavedChangesGuard } from "@agenticdevelopertoolkit/ui/components/unsaved-changes-guard";
-import { ProgressModal } from "@agenticdevelopertoolkit/ui/blocks";
-import { FeatureTitle } from "@agentic-toolkit/resource";
+import { Button } from "@adh-sdk/ui/components/button";
+import { Badge } from "@adh-sdk/ui/components/badge";
+import { UnsavedChangesGuard } from "@adh-sdk/ui/components/unsaved-changes-guard";
+import { ProgressModal } from "@adh-sdk/ui/blocks";
+import { FeatureTitle } from "@adh-sdk/resource";
 import {
   EditableList,
   TypeToConfirmDialog,

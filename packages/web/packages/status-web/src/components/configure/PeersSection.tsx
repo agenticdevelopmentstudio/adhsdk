@@ -3,11 +3,11 @@
 import { useMemo, useState, type ReactElement } from "react";
 import { Network } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Badge } from "@agenticdevelopertoolkit/ui/components/badge";
-import { Input } from "@agenticdevelopertoolkit/ui/components/input";
-import { Label } from "@agenticdevelopertoolkit/ui/components/label";
-import { Switch } from "@agenticdevelopertoolkit/ui/components/switch";
-import { Field, type TopicLevel } from "@agenticdevelopertoolkit/ui/blocks";
+import { Badge } from "@adh-sdk/ui/components/badge";
+import { Input } from "@adh-sdk/ui/components/input";
+import { Label } from "@adh-sdk/ui/components/label";
+import { Switch } from "@adh-sdk/ui/components/switch";
+import { Field, type TopicLevel } from "@adh-sdk/ui/blocks";
 import * as api from "../../api/peers";
 import type { PeerView, PeerWrite } from "../../api/peers";
 import { useStatusApi } from "../../api/client";

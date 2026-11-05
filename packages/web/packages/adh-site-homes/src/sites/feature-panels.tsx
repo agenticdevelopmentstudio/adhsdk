@@ -2,17 +2,17 @@
 
 import type { ReactNode } from "react";
 import dynamic from "next/dynamic";
-import { HOST_RENDERED_TOPIC_IDS } from "@agentic-toolkit/adh-products/topics";
+import { HOST_RENDERED_TOPIC_IDS } from "@adh-sdk/adh-products/topics";
 // A hook cannot be reached through `next/dynamic`, so this is a static import beside the file's
 // other statics — and it has to come from the `/context` subpath, not the barrel. The barrel is one
 // bundled module holding all five billing panes plus the integrations pane the Stripe topic
 // renders, so a static import of the hook FROM IT would load every one of them on this page,
 // leaving the `dynamic()` below deferring nothing.
-import { useBillingContext } from "@agentic-toolkit/adh-billing/context";
+import { useBillingContext } from "@adh-sdk/adh-billing/context";
 
 /**
  * This site's answer to the Products feature's one REQUIRED seam: the panes for the topics
- * @agentic-toolkit/adh-products does not own — {@link HOST_RENDERED_TOPIC_IDS}.
+ * @adh-sdk/adh-products does not own — {@link HOST_RENDERED_TOPIC_IDS}.
  *
  * The hub answers the same seam with its whole workspace feature-panel registry, because on the
  * hub every one of these ids is ALSO a rail feature with a route of its own. Here there is no
@@ -26,15 +26,15 @@ import { useBillingContext } from "@agentic-toolkit/adh-billing/context";
 const loading = () => <p className="p-4 text-sm text-apt-text-muted">Loading…</p>;
 
 const DashboardsFeature = dynamic(
-  () => import("@agentic-toolkit/dashboards").then((m) => m.DashboardsFeature),
+  () => import("@adh-sdk/dashboards").then((m) => m.DashboardsFeature),
   { loading },
 );
 const AllDataPane = dynamic(
-  () => import("@agentic-toolkit/adh-ecosystem-panes").then((m) => m.AllDataPane),
+  () => import("@adh-sdk/adh-ecosystem-panes").then((m) => m.AllDataPane),
   { loading },
 );
 const BillingGroup = dynamic(
-  () => import("@agentic-toolkit/adh-billing").then((m) => m.BillingGroup),
+  () => import("@adh-sdk/adh-billing").then((m) => m.BillingGroup),
   { loading },
 );
 

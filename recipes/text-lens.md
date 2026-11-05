@@ -1,7 +1,7 @@
 ---
 id: 441dd61d-3e76-499b-b45c-92869015eced
 title: Text Lens
-domain: agenticdevelopertoolkit://recipes/text-lens
+domain: adhsdk://recipes/text-lens
 type: ingredient
 version: 1.0.0
 status: review
@@ -30,7 +30,7 @@ approved-date: ''
 
 ## Overview
 
-Text Lens (`@agenticdevelopertoolkit/textlens`) is a headless, framework-light
+Text Lens (`@adh-sdk/textlens`) is a headless, framework-light
 effect that sweeps a soft focal point back and forth along a line of text.
 Each character the lens passes over swells, blurs and tints toward an accent
 colour, then settles back as the lens moves on. It has three cooperating

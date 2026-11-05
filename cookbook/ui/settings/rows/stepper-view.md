@@ -1,7 +1,7 @@
 ---
 id: b02bf1ad-408a-4ebc-9e62-2ad5ae5220d2
 title: "Stepper View"
-domain: adtoolkit://cookbook/ui/settings/rows/stepper-view
+domain: adhsdk://cookbook/ui/settings/rows/stepper-view
 type: ingredient
 version: 1.3.1
 status: review
@@ -22,9 +22,9 @@ tags:
   - numeric
 depends-on: []
 related:
-  - adtoolkit://cookbook/ui/settings/rows/checkbox-view
-  - adtoolkit://cookbook/ui/settings/rows/integer-field-view
-  - adtoolkit://cookbook/ui/settings/rows/number-field-view
+  - adhsdk://cookbook/ui/settings/rows/checkbox-view
+  - adhsdk://cookbook/ui/settings/rows/integer-field-view
+  - adhsdk://cookbook/ui/settings/rows/number-field-view
 references: []
 approved-by: ""
 approved-date: ""
@@ -328,7 +328,7 @@ logger reference anywhere in source).
   this source omits. Clamp at the bounds with no wraparound, mirroring
   disables-stepper-wraparound.
 - **AppKit/UIKit** (source platform): Source file
-  `packages/apple/AgenticToolkit/macOS/SystemIntegration/ComposableSettingsWindow/Views/StepperView.swift`.
+  `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/Views/StepperView.swift`.
   A macOS-only (`import AppKit`) `NSView` subclass, `@MainActor`, inside
   the `ComposableSettings` namespace, conforming to
   `SettingsViewProtocol`. It composes a label, a monospaced value label,
@@ -378,7 +378,7 @@ logger reference anywhere in source).
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/macOS/SystemIntegration/ComposableSettingsWindow/Views/StepperView.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/Views/StepperView.swift` |
 
 ## Design Decisions
 
@@ -456,7 +456,7 @@ same trade-off the checkbox row and the integer field row make.
 | [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | best-practices |
 | [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | failed | Best Practices |
 
-No test in the repository's test targets constructs `StepperView`, so `unit-test-coverage` is `failed`: a search of `AgenticToolkitMacOSTests` and the other test targets for the type name finds nothing.
+No test in the repository's test targets constructs `StepperView`, so `unit-test-coverage` is `failed`: a search of `AgenticDeveloperHubSDKMacOSTests` and the other test targets for the type name finds nothing.
 
 ## Change History
 

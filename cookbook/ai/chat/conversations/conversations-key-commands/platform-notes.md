@@ -1,6 +1,6 @@
 
 - **AppKit** (source platform): Implemented in
-  `packages/apple/AgenticToolkit/macOS/Features/ConversationsWindow/ConversationsKeyCommands.swift`
+  `packages/apple/AgenticDeveloperHubSDK/macOS/Features/ConversationsWindow/ConversationsKeyCommands.swift`
   as a `public enum ConversationsKeyCommands` with static constants
   `moveSelectionUpID`, `moveSelectionDownID`, `toggleShelfID`,
   `sectionTitle` and `singleModeFeatureTitle`. `section(resolve:)` takes a

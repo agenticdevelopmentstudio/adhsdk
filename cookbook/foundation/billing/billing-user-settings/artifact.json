@@ -3,7 +3,7 @@
   "meta": {
     "id": "C1CAA827-F7F1-4E69-B4C6-ADBFEF22E636",
     "title": "Billing User Settings",
-    "domain": "adtoolkit://cookbook/foundation/billing/billing-user-settings",
+    "domain": "adhsdk://cookbook/foundation/billing/billing-user-settings",
     "type": "ingredient",
     "version": "1.0.1",
     "status": "review",
@@ -25,8 +25,8 @@
     ],
     "depends-on": [],
     "related": [
-      "adtoolkit://cookbook/foundation/billing/billing-prefs",
-      "adtoolkit://cookbook/foundation/billing/billing-dt-os"
+      "adhsdk://cookbook/foundation/billing/billing-prefs",
+      "adhsdk://cookbook/foundation/billing/billing-dt-os"
     ],
     "references": [],
     "approved-by": "",

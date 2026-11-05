@@ -1,7 +1,7 @@
 'use client'
 
 import type { ReactNode } from 'react'
-import { detectEnv } from '@agentic-toolkit/adh-registry'
+import { detectEnv } from '@adh-sdk/adh-registry'
 import { TelemetryProvider } from './TelemetryProvider'
 
 /**
@@ -15,7 +15,7 @@ import { TelemetryProvider } from './TelemetryProvider'
  * mechanism this component wraps). The two are unrelated components that happened to share a
  * name.
  *
- * `./TelemetryProvider` is a RELATIVE import, not `@agentic-toolkit/adh/telemetry` — this file
+ * `./TelemetryProvider` is a RELATIVE import, not `@adh-sdk/adh/telemetry` — this file
  * lives in the same `telemetry/index` tsup entry as its target, and that bare specifier is not
  * in this package's own `external` array (only the `report-error`/`retry` leaves are), so a
  * self-referencing package-path import here would not resolve the way the cross-entry ones do

@@ -1,5 +1,5 @@
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/AIPluginKit/AIModelCatalog.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/AIPluginKit/AIModelCatalog.swift` |
 

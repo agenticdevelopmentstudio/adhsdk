@@ -68,10 +68,10 @@ tools/apple/
 with `tools/apple` on `sys.path`, as `macos_release_test.py` already does.
 
 The skill lives in mydevsetup: `source/agents/skills/release-macos-app/`. It
-finds the CLI at `<app repo>/external/agenticdevelopertoolkit/tools/apple/release_macos_app.py`,
+finds the CLI at `<app repo>/external/adhsdk/tools/apple/release_macos_app.py`,
 so each app runs the toolkit version it pins. A repo whose toolkit lives
 elsewhere names it in `release.json` (`toolkit`, default
-`external/agenticdevelopertoolkit`).
+`external/adhsdk`).
 
 ## `release.json`
 
@@ -148,7 +148,7 @@ Defaults, so a key may be left out:
 | `pkg.scripts` | none (payload-only pkg) |
 | `install.apps_dir` | `/Applications` |
 | `hooks.health` | none (the generic `installed` check is the whole health check) |
-| `toolkit` | `external/agenticdevelopertoolkit` |
+| `toolkit` | `external/adhsdk` |
 
 Required: `app.name`, `app.bundle_id`, `version.project_yml`,
 `build.command`, `build.resolve`, `signing.notary_profile`,

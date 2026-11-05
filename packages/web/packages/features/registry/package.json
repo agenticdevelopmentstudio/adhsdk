@@ -1,7 +1,7 @@
 {
-  "name": "@agentic-toolkit/registry",
+  "name": "@adh-sdk/registry",
   "version": "0.1.0",
-  "description": "The crossing point to @agenticdevelopertoolkit/registry-*. Re-publishes the profile renderer and the field-type catalog so adh sites never name that scope themselves — which is what keeps exactly one copy of it in a bundle — and adds the API client, the editing widgets and the contact composer sites need.",
+  "description": "The crossing point to @adh-sdk/registry-*. Re-publishes the profile renderer and the field-type catalog so adh sites never name that scope themselves — which is what keeps exactly one copy of it in a bundle — and adds the API client, the editing widgets and the contact composer sites need.",
   "license": "UNLICENSED",
   "type": "module",
   "sideEffects": ["**/*.css"],
@@ -60,18 +60,18 @@
     "lint": "tsc --noEmit",
     "test": "vitest run"
   },
-  "//peerDependencies": "The two @agenticdevelopertoolkit/* entries are peers for the reason persona's are: the consumer supplies the copy, so a bundle holds one instance rather than one per re-exporting package.",
+  "//peerDependencies": "The two @adh-sdk/* entries are peers for the reason persona's are: the consumer supplies the copy, so a bundle holds one instance rather than one per re-exporting package.",
   "peerDependencies": {
-    "@agenticdevelopertoolkit/registry-profile": "*",
-    "@agenticdevelopertoolkit/registry-types": "*",
+    "@adh-sdk/registry-profile": "*",
+    "@adh-sdk/registry-types": "*",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   },
-  "//devDependencies": "The two @agenticdevelopertoolkit/* entries are peer deps above — consumers supply them; these workspace:* devDependencies exist only so this package can build and test itself. @agentic-toolkit/auth is a devDependency, not a runtime one: only the ContactComposer test imports AuthHttpError from it, and the component itself reads a thrown failure structurally so the shipped code carries no auth dependency at all.",
+  "//devDependencies": "The two @adh-sdk/* entries are peer deps above — consumers supply them; these workspace:* devDependencies exist only so this package can build and test itself. @adh-sdk/auth is a devDependency, not a runtime one: only the ContactComposer test imports AuthHttpError from it, and the component itself reads a thrown failure structurally so the shipped code carries no auth dependency at all.",
   "devDependencies": {
-    "@agentic-toolkit/auth": "workspace:*",
-    "@agenticdevelopertoolkit/registry-profile": "workspace:*",
-    "@agenticdevelopertoolkit/registry-types": "workspace:*",
+    "@adh-sdk/auth": "workspace:*",
+    "@adh-sdk/registry-profile": "workspace:*",
+    "@adh-sdk/registry-types": "workspace:*",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
     "@testing-library/user-event": "^14.6.1",

@@ -1,7 +1,7 @@
 ---
 id: 8d944856-8dbe-4af8-8141-e44381500dc7
 title: "Text Area Edit View"
-domain: adtoolkit://cookbook/ui/settings/rows/text-area-edit-view
+domain: adhsdk://cookbook/ui/settings/rows/text-area-edit-view
 type: ingredient
 version: 1.3.1
 status: review
@@ -22,8 +22,8 @@ tags:
   - scroll-view
 depends-on: []
 related:
-  - adtoolkit://cookbook/ui/settings/rows/text-edit-view
-  - adtoolkit://cookbook/ui/settings/rows/secure-text-edit-view
+  - adhsdk://cookbook/ui/settings/rows/text-edit-view
+  - adhsdk://cookbook/ui/settings/rows/secure-text-edit-view
 references:
   - https://www.w3.org/WAI/WCAG21/Understanding/contrast-minimum.html
 approved-by: ""
@@ -406,7 +406,7 @@ Not applicable: the component performs no logging.
   tokens equivalent to `.body`/`.code`, `primaryText`, and
   `controlBackground`.
 - **AppKit/UIKit** (source platform): Source file
-  `packages/apple/AgenticToolkit/macOS/SystemIntegration/ComposableSettingsWindow/Views/TextAreaEditView.swift`
+  `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/Views/TextAreaEditView.swift`
   — a macOS-only (`import AppKit`), `@MainActor`, non-`final` `NSView`
   subclass inside the `ComposableSettings` namespace, conforming to
   `SettingsViewProtocol` and `NSTextViewDelegate` directly (not by
@@ -490,7 +490,7 @@ Not applicable: the component performs no logging.
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/macOS/SystemIntegration/ComposableSettingsWindow/Views/TextAreaEditView.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/Views/TextAreaEditView.swift` |
 
 ## Design Decisions
 

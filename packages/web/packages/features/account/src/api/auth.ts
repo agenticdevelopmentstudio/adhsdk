@@ -4,14 +4,14 @@
 // availability, and password change.
 //
 // Request/response shapes below are TRANSCRIBED from the backend rather than
-// imported from `@agentic-toolkit/adh-api-types`, unlike hub's original (which typed
+// imported from `@adh-sdk/adh-api-types`, unlike hub's original (which typed
 // them as `SuccessBody<'/auth/me', 'get'>` etc). That package's name starts with
-// `@agentic-toolkit/adh`, which `tools/check_boundaries.py`'s `_is_vocabulary`
-// check classifies as the adh VOCABULARY tier (name === '@agentic-toolkit/adh' or
-// name.startswith('@agentic-toolkit/adh-')) — confirmed by running the guard with
+// `@adh-sdk/adh`, which `tools/check_boundaries.py`'s `_is_vocabulary`
+// check classifies as the adh VOCABULARY tier (name === '@adh-sdk/adh' or
+// name.startswith('@adh-sdk/adh-')) — confirmed by running the guard with
 // this package importing it, which failed naming `adh-api-types`. This package is
 // MECHANISM tier (see package.json's `comment:tier`) and may never import
-// vocabulary. `@agentic-toolkit/data/profile`'s `wire.ts` establishes the same
+// vocabulary. `@adh-sdk/data/profile`'s `wire.ts` establishes the same
 // pattern for the same reason; see its header for the fuller rationale.
 //
 // Fields copied verbatim from `packages/adh-api-types/src/schema.ts` as of this
@@ -21,7 +21,7 @@
 // — a rename/removal there silently stops matching this file rather than failing
 // `tsc`.
 import { useQuery } from "@tanstack/react-query";
-import { authedJson, authedRequest } from "@agentic-toolkit/auth/client";
+import { authedJson, authedRequest } from "@adh-sdk/auth/client";
 
 /**
  * The signed-in user exactly as the backend's GET /auth/me returns it
@@ -70,11 +70,11 @@ export function updateMe(body: {
   });
 }
 
-// MOVED to @agentic-toolkit/data in hub too. The endpoint answers about the ONE
+// MOVED to @adh-sdk/data in hub too. The endpoint answers about the ONE
 // URL namespace users and organizations share, and the organizations feature has
 // to ask it as well — so the path lives with the workspaces client rather than
 // being transcribed once per host.
-export { checkWorkspaceSlugAvailable as checkSlugAvailable } from "@agentic-toolkit/data";
+export { checkWorkspaceSlugAvailable as checkSlugAvailable } from "@adh-sdk/data";
 
 /**
  * Change the signed-in user's password.

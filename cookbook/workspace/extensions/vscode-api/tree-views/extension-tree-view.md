@@ -1,7 +1,7 @@
 ---
 id: 28fc5136-e1bf-4672-b783-ed2f3a8983f5
 title: "Extension Tree View"
-domain: adtoolkit://cookbook/workspace/extensions/vscode-api/tree-views/extension-tree-view
+domain: adhsdk://cookbook/workspace/extensions/vscode-api/tree-views/extension-tree-view
 type: ingredient
 version: 1.2.2
 status: review
@@ -318,7 +318,7 @@ Subsystem: the app's own bundle identifier | Category: this component's tree-ren
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/macOS/Features/Extensions/Tree/ExtensionTreeViewController.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/Tree/ExtensionTreeViewController.swift` |
 
 ## Design Decisions
 

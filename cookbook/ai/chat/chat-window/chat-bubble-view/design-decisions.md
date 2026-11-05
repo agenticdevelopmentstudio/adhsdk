@@ -20,7 +20,7 @@
 **Approved**: pending**
 
 **Decision**: The timestamp uses a fixed `h:mm a` (12-hour, unpadded hour) pattern rather than a locale-derived hour-cycle template.
-**Rationale**: The class comment documents this as an intentional glance-legibility choice shared with `ChatTranscriptRowView`'s own timestamp, not an oversight. This is a real divergence from `AgenticDeveloperToolkit`'s `MessageBubbleView`, which derives its timestamp pattern from the locale's own hour-cycle template — `AIChatBubbleView` does not follow that convention, and a reader in a 24-hour-clock locale will still see a 12-hour timestamp here.
+**Rationale**: The class comment documents this as an intentional glance-legibility choice shared with `ChatTranscriptRowView`'s own timestamp, not an oversight. This is a real divergence from `AgenticDeveloperHubSDK`'s `MessageBubbleView`, which derives its timestamp pattern from the locale's own hour-cycle template — `AIChatBubbleView` does not follow that convention, and a reader in a 24-hour-clock locale will still see a 12-hour timestamp here.
 **Approved**: pending**
 
 **Decision**: `AIChatBubbleView.mouseDown(with:)`, when `isTextSelectable` is `true`, consumes a click on the bubble's own padding without ever calling `super.mouseDown(with:)`; when `isTextSelectable` is `false`, it does call `super.mouseDown(with:)`.

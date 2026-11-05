@@ -1,5 +1,5 @@
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/macOS/UI/Panels/FloatingChooserPanelController.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/Panels/FloatingChooserPanelController.swift` |
 

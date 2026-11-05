@@ -15,13 +15,13 @@ import {
 } from 'react'
 import { ChevronDown } from 'lucide-react'
 import { type NavLinkIcon } from './NavLink'
-import { cn, noAutofillProps } from '@agenticdevelopertoolkit/ui'
+import { cn, noAutofillProps } from '@adh-sdk/ui'
 import {
   confirmNavigation,
   GUARDED_NAV_ATTR,
   isModifiedClick,
-} from '@agenticdevelopertoolkit/ui/lib/navigation-guard'
-import { useShortcut, chordFromEvent, sameChord } from '@agenticdevelopertoolkit/ui/hooks/useShortcut'
+} from '@adh-sdk/ui/lib/navigation-guard'
+import { useShortcut, chordFromEvent, sameChord } from '@adh-sdk/ui/hooks/useShortcut'
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -31,7 +31,7 @@ import {
   DropdownMenuSub,
   DropdownMenuSubTrigger,
   DropdownMenuSubContent,
-} from '@agenticdevelopertoolkit/ui/components/dropdown-menu'
+} from '@adh-sdk/ui/components/dropdown-menu'
 
 // The menu rows are real <a href> links but navigate PROGRAMMATICALLY through
 // chooseItem (to match the keyboard path / SSO rewriting), which consults the
@@ -170,7 +170,7 @@ export type NavigationPopoverProps = {
    *  row's area already spelled out, so a heading there would label nothing. Not a row:
    *  never highlighted, never reached by the arrow keys. */
   sectionLabels?: Partial<Record<number, string>>
-  /** A chord that TOGGLES the menu, in `@agenticdevelopertoolkit/ui/hooks/useShortcut`
+  /** A chord that TOGGLES the menu, in `@adh-sdk/ui/hooks/useShortcut`
    *  spelling — `'mod+shift+k'`, say. Omit (or pass `''`) for no shortcut, which is
    *  what every popover that isn't the site menu wants: two popovers registering the
    *  same chord would race, and the registry's most-recent-wins tie-break would hand

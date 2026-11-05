@@ -30,7 +30,7 @@
   context still reach it — the web analog of the `themedRoot()`-inside-the-
   popover quirk this source works around.
 - **AppKit / UIKit** (source platform): Implemented in
-  `packages/apple/AgenticToolkit/macOS/Features/AIChatWindow/MCPChipsBarView.swift`.
+  `packages/apple/AgenticDeveloperHubSDK/macOS/Features/AIChatWindow/MCPChipsBarView.swift`.
   A `@MainActor`, `final` `NSView` that hosts SwiftUI content
   (`MCPChipsBar`/`MCPServerPicker`) via `NSHostingView`, pinned to its own
   bounds with Auto Layout, rather than being built as raw AppKit controls.
@@ -46,7 +46,7 @@
   presented with `arrowEdge: .bottom`. The unmodified default type sizes
   cited under Appearance's **Font** entry come from
   `ThemeTypography.defaultStyle(_:)` in
-  `packages/apple/AgenticDeveloperToolkit/Sources/Theme/ThemeTypography.swift`.
+  `packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Theme/ThemeTypography.swift`.
   The app's `\.theme` environment value is applied to that content via the
   shared `.themedRoot()` helper (once on `MCPChipsBar`'s root, and again on
   `MCPServerPicker` inside the popover, since a popover is its own window —

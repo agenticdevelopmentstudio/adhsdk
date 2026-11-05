@@ -24,7 +24,7 @@
   it rather than relied upon implicitly.
 - **AppKit / UIKit**: identical to the SwiftUI note — the component depends
   on neither AppKit nor UIKit, so a macOS host consumes the same
-  `AgenticToolkitCore` type directly with no translation.
+  `AgenticDeveloperHubSDKCore` type directly with no translation.
 - **WinUI 3**: there is no existing .NET or Windows App SDK type that
   implements VS Code's `engines.vscode` grammar, so it needs a direct C#
   port rather than an existing library. Port `VSCodeEngineRange` and

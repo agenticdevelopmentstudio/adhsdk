@@ -3,7 +3,7 @@
   "meta": {
     "id": "49A8F652-C8FA-4DC6-AFFB-FE834B1E7837",
     "title": "Unique Name",
-    "domain": "adtoolkit://cookbook/foundation/unique-name",
+    "domain": "adhsdk://cookbook/foundation/unique-name",
     "type": "ingredient",
     "version": "1.0.0",
     "status": "review",

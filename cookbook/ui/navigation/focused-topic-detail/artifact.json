@@ -3,7 +3,7 @@
   "meta": {
     "id": "7f122a27-5b49-4f03-9439-1152249bc08f",
     "title": "Focused Topic Detail (FTD) View",
-    "domain": "adtoolkit://cookbook/ui/navigation/focused-topic-detail",
+    "domain": "adhsdk://cookbook/ui/navigation/focused-topic-detail",
     "type": "recipe",
     "version": "1.2.5",
     "status": "accepted",
@@ -25,12 +25,12 @@
       "navigation"
     ],
     "ingredients": [
-      "agenticdevelopertoolkit://recipes/resizable-split",
-      "agenticdevelopertoolkit://recipes/option-menu",
-      "agenticdevelopertoolkit://recipes/alert-and-dialog",
-      "agenticdevelopertoolkit://recipes/data-table",
-      "agenticdevelopertoolkit://recipes/disclosure",
-      "agenticdevelopertoolkit://recipes/topic-detail"
+      "adhsdk://recipes/resizable-split",
+      "adhsdk://recipes/option-menu",
+      "adhsdk://recipes/alert-and-dialog",
+      "adhsdk://recipes/data-table",
+      "adhsdk://recipes/disclosure",
+      "adhsdk://recipes/topic-detail"
     ],
     "depends-on": [],
     "related": [],

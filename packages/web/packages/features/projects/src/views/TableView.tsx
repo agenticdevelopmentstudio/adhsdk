@@ -1,13 +1,13 @@
 "use client";
 
 import { useCallback, useMemo, useState, type ReactElement } from "react";
-import { DataTable, type DataTableColumn } from "@agenticdevelopertoolkit/ui/components/data-table";
-import { ListHeader } from "@agenticdevelopertoolkit/ui/blocks/list-header";
-import { SelectionActions } from "@agenticdevelopertoolkit/ui/blocks/selection-actions";
-import { Badge } from "@agenticdevelopertoolkit/ui/components/badge";
-import { EmptyState } from "@agenticdevelopertoolkit/ui/components/empty-state";
-import { ErrorText } from "@agenticdevelopertoolkit/ui/components/error-text";
-import { type WorkItem } from "@agentic-toolkit/data/projects";
+import { DataTable, type DataTableColumn } from "@adh-sdk/ui/components/data-table";
+import { ListHeader } from "@adh-sdk/ui/blocks/list-header";
+import { SelectionActions } from "@adh-sdk/ui/blocks/selection-actions";
+import { Badge } from "@adh-sdk/ui/components/badge";
+import { EmptyState } from "@adh-sdk/ui/components/empty-state";
+import { ErrorText } from "@adh-sdk/ui/components/error-text";
+import { type WorkItem } from "@adh-sdk/data/projects";
 import {
   type EstimateScale,
   type Iteration,
@@ -15,7 +15,7 @@ import {
   type PriorityScale,
   type ProjectStatus,
   type ProjectParticipant,
-} from "@agentic-toolkit/data/projects";
+} from "@adh-sdk/data/projects";
 import { priorityMeta } from "../WorkItemEditor";
 import { ItemKey } from "../ItemKey";
 import { assigneeLabel, estimateLabel, itemKeyNumber, statusMeta } from "../helpers";

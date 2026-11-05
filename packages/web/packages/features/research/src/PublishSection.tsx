@@ -3,25 +3,25 @@
 import { useId } from "react";
 import { Check, Copy, ExternalLink, Globe } from "lucide-react";
 
-import { useAction } from "@agentic-toolkit/crud";
-import { ErrorText } from "@agenticdevelopertoolkit/ui/components/error-text";
-import { Badge } from "@agenticdevelopertoolkit/ui/components/badge";
-import { Button, buttonVariants } from "@agenticdevelopertoolkit/ui/components/button";
-import { Input } from "@agenticdevelopertoolkit/ui/components/input";
-import { Label } from "@agenticdevelopertoolkit/ui/components/label";
-import { FieldGroup } from "@agenticdevelopertoolkit/ui/blocks/field-group";
-import { useClipboard } from "@agenticdevelopertoolkit/ui/hooks/useClipboard";
-import type { ResearchDocument } from "@agentic-toolkit/data/markdown";
-import { markdownApi } from "@agentic-toolkit/data/markdown";
-import type { SlugVerdict } from "@agenticdevelopertoolkit/ui/blocks/document-identity-field";
-import { toneTextClass } from "@agenticdevelopertoolkit/ui/lib/tone";
+import { useAction } from "@adh-sdk/crud";
+import { ErrorText } from "@adh-sdk/ui/components/error-text";
+import { Badge } from "@adh-sdk/ui/components/badge";
+import { Button, buttonVariants } from "@adh-sdk/ui/components/button";
+import { Input } from "@adh-sdk/ui/components/input";
+import { Label } from "@adh-sdk/ui/components/label";
+import { FieldGroup } from "@adh-sdk/ui/blocks/field-group";
+import { useClipboard } from "@adh-sdk/ui/hooks/useClipboard";
+import type { ResearchDocument } from "@adh-sdk/data/markdown";
+import { markdownApi } from "@adh-sdk/data/markdown";
+import type { SlugVerdict } from "@adh-sdk/ui/blocks/document-identity-field";
+import { toneTextClass } from "@adh-sdk/ui/lib/tone";
 import { PUBLIC_ROUTE_RE } from "./research-model";
 
 // Deliberately hard-coded, not per-environment, and not a defect: `features/research` is a
 // MECHANISM-tier package (see `tools/check_boundaries.py` at the submodule root, which both
 // defines and enforces the mechanism/vocabulary tier rule), and the per-environment origin
 // that would replace this literal — `adh-registry`'s `research` site entry, resolved through
-// its `siteUrl`/`localOrigin` seam — lives in `@agentic-toolkit/adh-registry`, a
+// its `siteUrl`/`localOrigin` seam — lives in `@adh-sdk/adh-registry`, a
 // VOCABULARY-tier package that encodes the whole site registry. A MECHANISM package must not
 // import a VOCABULARY one (this file would otherwise be reaching past its own layer for one
 // string), and the host that COULD inject it — this feature's mount point — is

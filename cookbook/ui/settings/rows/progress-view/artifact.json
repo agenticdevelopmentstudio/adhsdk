@@ -3,7 +3,7 @@
   "meta": {
     "id": "ea2dae31-1020-4930-aa12-15f7d04967a5",
     "title": "Progress View",
-    "domain": "adtoolkit://cookbook/ui/settings/rows/progress-view",
+    "domain": "adhsdk://cookbook/ui/settings/rows/progress-view",
     "type": "ingredient",
     "version": "1.2.2",
     "status": "review",
@@ -25,9 +25,9 @@
     ],
     "depends-on": [],
     "related": [
-      "adtoolkit://cookbook/ui/settings/rows/checkbox-view",
-      "adtoolkit://cookbook/ui/settings/rows/button-view",
-      "adtoolkit://cookbook/ui/settings/layout/explanation-view"
+      "adhsdk://cookbook/ui/settings/rows/checkbox-view",
+      "adhsdk://cookbook/ui/settings/rows/button-view",
+      "adhsdk://cookbook/ui/settings/layout/explanation-view"
     ],
     "references": [
       "https://developer.apple.com/documentation/appkit/nsprogressindicator",

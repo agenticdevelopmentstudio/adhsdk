@@ -1,8 +1,8 @@
 'use client';
 
 import { useMemo } from 'react';
-import { authedFetch } from '@agentic-toolkit/auth/client';
-import { createRegistryClient, type RegistryClient } from '@agentic-toolkit/registry/client';
+import { authedFetch } from '@adh-sdk/auth/client';
+import { createRegistryClient, type RegistryClient } from '@adh-sdk/registry/client';
 
 /**
  * The hub's registry client.
@@ -21,7 +21,7 @@ import { createRegistryClient, type RegistryClient } from '@agentic-toolkit/regi
  * `authedFetch` throws `AuthHttpError` on a non-ok response; `createRegistryClient` allows
  * a fetcher to fail either by throwing or by returning a non-ok Response, so no adapter is
  * needed. `createRegistryClient`'s `Fetcher` declares `init` optional and `authedFetch` now
- * defaults it to `{}` too (`@agentic-toolkit/auth/client`), so it satisfies `Fetcher` directly
+ * defaults it to `{}` too (`@adh-sdk/auth/client`), so it satisfies `Fetcher` directly
  * and can be passed straight through.
  */
 export function useRegistryClient(): RegistryClient {

@@ -37,7 +37,7 @@
   `keydown` handler (or a Cancel button) to cancellation, mirroring
   `escape-cancellation`.
 - **AppKit/UIKit** (source platform): Source file
-  `packages/apple/AgenticToolkit/macOS/Features/Extensions/UI/ExtensionInputBoxViewController.swift`
+  `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/UI/ExtensionInputBoxViewController.swift`
   — macOS-only (`import AppKit`), `@MainActor` `NSViewController`, laid
   out entirely with programmatic Auto Layout (no XIB/Storyboard), sharing
   `PickerKeyboardController` with `ExtensionQuickPickViewController`.

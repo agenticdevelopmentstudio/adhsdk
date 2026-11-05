@@ -3,17 +3,17 @@
 import { useState } from "react";
 import { Trash2 } from "lucide-react";
 
-import { reportUnexpectedAuthError } from "@agentic-toolkit/auth";
-import { Field, FieldGroup } from "@agenticdevelopertoolkit/ui/blocks";
-import { EmptyState } from "@agenticdevelopertoolkit/ui/components/empty-state";
-import { List, ListItem } from "@agenticdevelopertoolkit/ui/components/list";
-import { PermissionToggles } from "@agenticdevelopertoolkit/ui/components/permission-toggles";
-import type { Crud } from "@agenticdevelopertoolkit/ui/components/crud";
-import { bucketAccessApi } from "@agentic-toolkit/data/security";
-import { ErrorText } from "@agenticdevelopertoolkit/ui/components/error-text";
-import { Button } from "@agenticdevelopertoolkit/ui/components/button";
-import { Input } from "@agenticdevelopertoolkit/ui/components/input";
-import { Select } from "@agenticdevelopertoolkit/ui/components/select";
+import { reportUnexpectedAuthError } from "@adh-sdk/auth";
+import { Field, FieldGroup } from "@adh-sdk/ui/blocks";
+import { EmptyState } from "@adh-sdk/ui/components/empty-state";
+import { List, ListItem } from "@adh-sdk/ui/components/list";
+import { PermissionToggles } from "@adh-sdk/ui/components/permission-toggles";
+import type { Crud } from "@adh-sdk/ui/components/crud";
+import { bucketAccessApi } from "@adh-sdk/data/security";
+import { ErrorText } from "@adh-sdk/ui/components/error-text";
+import { Button } from "@adh-sdk/ui/components/button";
+import { Input } from "@adh-sdk/ui/components/input";
+import { Select } from "@adh-sdk/ui/components/select";
 import {
   formatCrud,
   GRANT_TARGET_LABEL,

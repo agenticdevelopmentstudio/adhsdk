@@ -1,7 +1,7 @@
 ---
 id: b307116d-3ab8-422a-b031-885710e11e70
 title: "File Tree View"
-domain: adtoolkit://cookbook/workspace/files/file-tree-view
+domain: adhsdk://cookbook/workspace/files/file-tree-view
 type: ingredient
 version: 1.2.3
 status: review
@@ -20,7 +20,7 @@ tags:
   - tree-view
 depends-on: []
 related:
-  - adtoolkit://cookbook/workspace/files/file-browser-view
+  - adhsdk://cookbook/workspace/files/file-browser-view
   - agenticdevelopercookbook://guidelines/cookbook/ui/platform-design-languages
 references:
   - https://developer.apple.com/documentation/appkit/nsoutlineview
@@ -37,7 +37,7 @@ This component draws the file tree itself: one collapsible header row per
 root directory (a root manager), and the files and folders under each one,
 in a tree outline rather than a flat list. It is hosted inside the file
 browser (see
-[File Browser](adtoolkit://cookbook/workspace/files/file-browser-view)),
+[File Browser](adhsdk://cookbook/workspace/files/file-browser-view)),
 which owns the footer strip and the per-root managers; this component owns
 only the tree surface: lazy per-directory loading, expand/collapse and
 selection state kept in sync with injected shared state (a selection model,
@@ -673,7 +673,7 @@ Not applicable: this component contains no logging calls of any kind.
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/macOS/UI/ViewControllers/FileBrowser/Views/FileTreeOutlineViewController.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/FileBrowser/Views/FileTreeOutlineViewController.swift` |
 
 ## Design Decisions
 
@@ -748,7 +748,7 @@ it in this component.
 **Rationale**: this component's own reselection logic only clears
 `selection.selectedNode` when the outgoing selection was a node; a selected
 root *header* (a root manager) that disappears from a reload is not cleared
-here. The [File Browser](adtoolkit://cookbook/workspace/files/file-browser-view)'s
+here. The [File Browser](adhsdk://cookbook/workspace/files/file-browser-view)'s
 own `teardown-clears-orphaned-root-selection` requirement is what actually
 guarantees `selection.selectedRoot` is cleared when its root is removed.
 **Approved**: pending.

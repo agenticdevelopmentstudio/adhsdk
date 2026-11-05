@@ -2,7 +2,7 @@
  * dialog everywhere else through SiteFooter) and the dialogs it opens: the sites overview
  * (SitesPopover), Terms and Privacy (LegalModals), all on the shared
  * modal frame (AdhModalPopover). Exported alone as
- * `@agentic-toolkit/adh/landing-footer.css` so a site can carry the footer without the rest of
+ * `@adh-sdk/adh/landing-footer.css` so a site can carry the footer without the rest of
  * adh's sheet, whose themes, primitives and Tailwind sources would restyle a page that is not
  * on the adh theme. adh-site.css @imports it, so `styles.css` still delivers it, from here.
  *

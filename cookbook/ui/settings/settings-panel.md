@@ -1,7 +1,7 @@
 ---
 id: 432e8d4b-43c3-49fd-b481-036a759e7c55
 title: "Settings Panel"
-domain: adtoolkit://cookbook/ui/settings/settings-panel
+domain: adhsdk://cookbook/ui/settings/settings-panel
 type: ingredient
 version: 1.2.3
 status: review
@@ -20,9 +20,9 @@ tags:
   - panel-controller
   - view-controller
 depends-on:
-  - adtoolkit://cookbook/ui/settings/layout/panel-view
+  - adhsdk://cookbook/ui/settings/layout/panel-view
 related:
-  - adtoolkit://cookbook/ui/settings/layout/group-view
+  - adhsdk://cookbook/ui/settings/layout/group-view
   - agenticdevelopercookbook://guidelines/cookbook/ui/platform-design-languages
 references: []
 approved-by: ""
@@ -94,11 +94,11 @@ in.
 - **Corner radius**: Not set by this component; it draws nothing of its
   own. Any corner radius on screen belongs to whatever group view cards a
   subclass adds (10pt corner radius by default; see
-  `adtoolkit://cookbook/ui/settings/layout/group-view`).
+  `adhsdk://cookbook/ui/settings/layout/group-view`).
 - **Padding**: Not set by this component. The panel inset and inter-group
   spacing (20pt each, by default) belong to its own content view, hosted
   unchanged; see
-  `adtoolkit://cookbook/ui/settings/layout/panel-view`.
+  `adhsdk://cookbook/ui/settings/layout/panel-view`.
 - **Font**: Not applicable — this component sets no font of its own; any
   text rendered comes from the group views a subclass composes, or from
   content hosted through the hosting helper, whose fonts are the
@@ -106,7 +106,7 @@ in.
 - **Background**: Not set by this component. Its content view paints the
   theme's window-background role behind the group stack, reactively,
   through its own theme-change subscription; see
-  `adtoolkit://cookbook/ui/settings/layout/panel-view`.
+  `adhsdk://cookbook/ui/settings/layout/panel-view`.
 - **Foreground/Text**: Not applicable — this component renders no text of
   its own.
 - **Border**: Not applicable — no border is set anywhere in this
@@ -135,7 +135,7 @@ in.
   a transparent container whose view is its own content view, with no
   label, icon, or control of its own to expose. Each group view a
   subclass adds manages its own accessibility per its own recipe
-  (`adtoolkit://cookbook/ui/settings/layout/group-view`).
+  (`adhsdk://cookbook/ui/settings/layout/group-view`).
 - **Label requirements**: Not applicable — this component sets no
   accessibility label on its own view. The descriptor's title becomes the
   sidebar row's accessible name only through the sidebar list component,
@@ -286,7 +286,7 @@ Not applicable: this component contains no logging call.
   workaround, since a React component never carries AppKit-style required
   size constraints into its parent.
 - **AppKit** (source platform): Source file
-  `packages/apple/AgenticToolkit/macOS/SystemIntegration/ComposableSettingsWindow/SettingsPanel/SettingsPanelViewController.swift`.
+  `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/SettingsPanel/SettingsPanelViewController.swift`.
   A macOS-only (`import AppKit`, `import SwiftUI`), `@MainActor`, `open`
   `NSViewController` subclass conforming to `ComposableSettingsPanel`. The
   class declaration itself is the platform's contract: `@MainActor`
@@ -295,7 +295,7 @@ Not applicable: this component contains no logging call.
   construction only through `init(with:)` — the required `init?(coder:)`
   is overridden to trigger a fatal error, so a caller cannot construct one
   through that path. It composes `PanelView`, `SettingsPanelDescriptor`,
-  and `GroupView` — all defined elsewhere in `AgenticToolkit` — rather than
+  and `GroupView` — all defined elsewhere in `AgenticDeveloperHubSDK` — rather than
   reimplementing their layout. Its `loadView()` sets `self.view` to
   `settingsView`, the `PanelView` instance the class owns. The hosting
   helper's `NSHostingView` also sets
@@ -348,7 +348,7 @@ Not applicable: this component contains no logging call.
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/macOS/SystemIntegration/ComposableSettingsWindow/SettingsPanel/SettingsPanelViewController.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/SettingsPanel/SettingsPanelViewController.swift` |
 
 ## Design Decisions
 

@@ -1,7 +1,7 @@
 ---
 id: 968f66df-4c2d-47ba-92cf-ff1e34f5deb2
 title: Paper Search View
-domain: agenticdevelopertoolkit://recipes/paper-search-view
+domain: adhsdk://recipes/paper-search-view
 type: ingredient
 version: 1.1.1
 status: review
@@ -20,7 +20,7 @@ tags:
 - search
 - papers
 depends-on:
-- agenticdevelopertoolkit://recipes/search-view
+- adhsdk://recipes/search-view
 related: []
 references: []
 approved-by: ''
@@ -58,7 +58,7 @@ Not applicable: Paper Search View is a stateless wrapper component. All state ma
 
 ## Accessibility
 
-Paper Search View owns the default accessible name (`Search research papers`) and landmark label (`Research paper search`) for the search control, expressed as the `searchLabel` and `searchLandmarkLabel` prop defaults (see **default-search-label**, **default-landmark-label**). Together with `searchPlaceholder` (see **default-search-placeholder**), these are forwarded to the wrapped SearchView on every render (see **search-view-props**). SearchView implements the actual ARIA roles, keyboard interaction, and focus management, as described in its own recipe (agenticdevelopertoolkit://recipes/search-view); this component's responsibility ends at supplying correct, overridable label text.
+Paper Search View owns the default accessible name (`Search research papers`) and landmark label (`Research paper search`) for the search control, expressed as the `searchLabel` and `searchLandmarkLabel` prop defaults (see **default-search-label**, **default-landmark-label**). Together with `searchPlaceholder` (see **default-search-placeholder**), these are forwarded to the wrapped SearchView on every render (see **search-view-props**). SearchView implements the actual ARIA roles, keyboard interaction, and focus management, as described in its own recipe (adhsdk://recipes/search-view); this component's responsibility ends at supplying correct, overridable label text.
 
 ## Conformance Test Vectors
 

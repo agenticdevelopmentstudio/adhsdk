@@ -1,11 +1,11 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import { ImageIcon, Upload } from "lucide-react";
-import { Avatar, AvatarImage, AvatarFallback } from "@agenticdevelopertoolkit/ui/components/avatar";
-import { Button } from "@agenticdevelopertoolkit/ui/components/button";
-import { ErrorText } from "@agenticdevelopertoolkit/ui/components/error-text";
-import { authedJson } from "@agentic-toolkit/auth/client";
-import { useReportBusy } from "@agentic-toolkit/resource";
+import { Avatar, AvatarImage, AvatarFallback } from "@adh-sdk/ui/components/avatar";
+import { Button } from "@adh-sdk/ui/components/button";
+import { ErrorText } from "@adh-sdk/ui/components/error-text";
+import { authedJson } from "@adh-sdk/auth/client";
+import { useReportBusy } from "@adh-sdk/resource";
 
 /**
  * Persona avatar upload. Drives the existing presigned R2 flow:

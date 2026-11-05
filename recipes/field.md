@@ -1,7 +1,7 @@
 ---
 id: 0c199036-81c3-47c3-9e79-e4b8187ca69a
 title: Field
-domain: agenticdevelopertoolkit://recipes/field
+domain: adhsdk://recipes/field
 type: ingredient
 version: 1.2.1
 status: review
@@ -23,7 +23,7 @@ tags:
 - ui
 depends-on: []
 related:
-- agenticdevelopertoolkit://recipes/field-group
+- adhsdk://recipes/field-group
 references: []
 approved-by: ''
 approved-date: ''
@@ -33,7 +33,7 @@ approved-date: ''
 
 ## Overview
 
-The shared `Field` in `@agenticdevelopertoolkit/ui` — the family's standard form row. It stacks
+The shared `Field` in `@adh-sdk/ui` — the family's standard form row. It stacks
 an uppercase-mono caption above whatever control it wraps (`Input`, `Select`,
 `Switch`, `Textarea`, or any other primitive passed as `children`), and it renders
 the whole row inside the shared `Label` so the caption is **implicitly associated**
@@ -214,7 +214,7 @@ any telemetry belong to the control and the owning form, not to `Field`.
 
 ## Platform Notes
 
-- **React / Web (TypeScript):** `packages/web/packages/ui/src/blocks/field.tsx`, exported via `@agenticdevelopertoolkit/ui/blocks/field`. Composes the shared `Label` (`components/label`) and the `fieldCaptionClass` from `lib/typography`. The `inline` layout uses CSS Grid with `--apt-field-label-w` custom property for label column width; stacked layout is a vertical flexbox. Server-safe with no `"use client"` directive.
+- **React / Web (TypeScript):** `packages/web/packages/ui/src/blocks/field.tsx`, exported via `@adh-sdk/ui/blocks/field`. Composes the shared `Label` (`components/label`) and the `fieldCaptionClass` from `lib/typography`. The `inline` layout uses CSS Grid with `--apt-field-label-w` custom property for label column width; stacked layout is a vertical flexbox. Server-safe with no `"use client"` directive.
 
 - **SwiftUI:** Compose with `VStack` for stacked layout, or `HStack` with a fixed-width label column and `Spacer` for inline layout (the fixed width is the platform's equivalent of `--apt-field-label-w`, shared by a group rather than owned by one field). Wrap the caption and control in a `LabeledContent`, or apply `.accessibilityLabel(caption)` directly to the control, so the control's accessible name carries the caption without the caller wiring an id — this is the mechanism behind **associate-label-implicitly**. Render the caption in a monospaced font at the same small size as the hint/error (matching `font-mono text-[0.7rem]`), transformed with `.uppercased()` — locale-sensitive, using the current locale, not a title-case/"capitalized" style and never `Locale(identifier: "en_US_POSIX")` — with `tracking(.wide)` if available. Render hint or error text in the same monospaced size below/beside the control, coloring the error with the semantic red token. Substitute SwiftUI's `@Environment(\.isEnabled)` for peer-disabled dimming, since SwiftUI has no sibling-selector equivalent.
 

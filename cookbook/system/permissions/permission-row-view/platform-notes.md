@@ -35,7 +35,7 @@
   dot's `background-color` and the text, matching the source's non-color-only
   behavior.
 - **AppKit / UIKit**: this is the source platform —
-  `packages/apple/AgenticToolkit/PermissionsUI/PermissionRowView.swift`
+  `packages/apple/AgenticDeveloperHubSDK/PermissionsUI/PermissionRowView.swift`
   builds the whole row from `NSImageView`, `NSTextField` (label and
   wrapping-label variants), a plain `NSView` for the status dot, an
   `NSStackView` for the status row, and an `NSButton`, laid out with

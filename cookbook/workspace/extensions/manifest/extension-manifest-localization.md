@@ -1,7 +1,7 @@
 ---
 id: 24e1710c-a805-4f6e-b720-fbd869472ca9
 title: "Extension Manifest Localization"
-domain: adtoolkit://cookbook/workspace/extensions/manifest/extension-manifest-localization
+domain: adhsdk://cookbook/workspace/extensions/manifest/extension-manifest-localization
 type: ingredient
 version: 1.1.0
 status: review
@@ -23,10 +23,10 @@ tags:
   - jsonc
 depends-on: []
 related:
-  - adtoolkit://cookbook/workspace/extensions/manifest/extension-manifest
+  - adhsdk://cookbook/workspace/extensions/manifest/extension-manifest
 references:
-  - packages/apple/AgenticToolkit/Core/Extensions/ExtensionManifestLocalization.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Tests/AgenticToolkitCoreTests/Extensions/ExtensionManifestLocalizationTests.swift (agenticdevelopertoolkit)
+  - packages/apple/AgenticDeveloperHubSDK/Core/Extensions/ExtensionManifestLocalization.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKCoreTests/Extensions/ExtensionManifestLocalizationTests.swift (adhsdk)
 approved-by: ""
 approved-date: ""
 ---
@@ -297,7 +297,7 @@ but could not be used (see Design Decisions and the
 ## Platform Notes
 
 - **Swift (source)**: This component targets macOS today, via the
-  `AgenticToolkitCore` framework target (`project.yml`); nothing in it — a
+  `AgenticDeveloperHubSDKCore` framework target (`project.yml`); nothing in it — a
   caseless `enum` of `static func`s over Foundation's `FileManager`,
   `Data`, `JSONSerialization`, and the sibling `JSONCPreprocessor` helper —
   depends on `AppKit`, `UIKit`, or any other platform framework, so the
@@ -349,7 +349,7 @@ but could not be used (see Design Decisions and the
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/Core/Extensions/ExtensionManifestLocalization.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Extensions/ExtensionManifestLocalization.swift` |
 
 ## Design Decisions
 

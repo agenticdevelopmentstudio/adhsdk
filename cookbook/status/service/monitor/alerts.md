@@ -1,7 +1,7 @@
 ---
 id: 1d3c4f89-f2d5-4cf1-b5c2-879ec0e594a9
 title: "Monitor Alerts"
-domain: adtoolkit://cookbook/status/service/monitor/alerts
+domain: adhsdk://cookbook/status/service/monitor/alerts
 type: ingredient
 version: 1.2.0
 status: review
@@ -25,8 +25,8 @@ depends-on:
   - agenticdevelopercookbook://guidelines/implementing/networking/retry-and-resilience
 related: []
 references:
-  - packages/web/packages/status-server/src/monitor/alerts.ts (agenticdevelopertoolkit)
-  - packages/web/packages/status-server/test/alerts.int.test.ts (agenticdevelopertoolkit)
+  - packages/web/packages/status-server/src/monitor/alerts.ts (adhsdk)
+  - packages/web/packages/status-server/test/alerts.int.test.ts (adhsdk)
 approved-by: ""
 approved-date: ""
 ---

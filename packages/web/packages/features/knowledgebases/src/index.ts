@@ -1,4 +1,4 @@
-// @agentic-toolkit/knowledgebases — the Knowledge Bases feature: CRUD data views over the
+// @adh-sdk/knowledgebases — the Knowledge Bases feature: CRUD data views over the
 // persona-memory tables, in the one merged stack (the hub's rail-host, or standalone on a feature
 // site's /home). The panel is internal; the barrel exposes the feature entry (the host passes
 // `basePath` + the `tables` it resolved from its own catalogs) and the URL parse both hosts share.

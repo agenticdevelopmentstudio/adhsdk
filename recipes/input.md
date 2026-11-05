@@ -1,7 +1,7 @@
 ---
 id: 0f5b7167-b375-4f44-977b-566f720a453d
 title: Input
-domain: agenticdevelopertoolkit://recipes/input
+domain: adhsdk://recipes/input
 type: ingredient
 version: 1.2.1
 status: review

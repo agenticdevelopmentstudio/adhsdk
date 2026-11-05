@@ -1,7 +1,7 @@
 ---
 id: c1787e74-2485-4d7b-a219-feb4c07cf97c
 title: "Text Edit View"
-domain: adtoolkit://cookbook/ui/settings/rows/text-edit-view
+domain: adhsdk://cookbook/ui/settings/rows/text-edit-view
 type: ingredient
 version: 1.3.1
 status: review
@@ -21,7 +21,7 @@ tags:
   - text-input
 depends-on: []
 related:
-  - adtoolkit://cookbook/ui/settings/rows/secure-text-edit-view
+  - adhsdk://cookbook/ui/settings/rows/secure-text-edit-view
 references: []
 approved-by: ""
 approved-date: ""
@@ -37,7 +37,7 @@ field through an overridable construction point so a variant can substitute
 a different control type while inheriting everything else — the row layout,
 the theme-driven font/color styling, the edit-completion commit path, and
 the view-model sync. The Secure Text Edit View (documented separately at
-`adtoolkit://cookbook/ui/settings/rows/secure-text-edit-view`) is the
+`adhsdk://cookbook/ui/settings/rows/secure-text-edit-view`) is the
 one variant that exists today, overriding only that construction point to
 return a secure text-entry control. This recipe documents the Text Edit View
 itself: the behavior every row built from it — plain or secure — inherits.
@@ -300,7 +300,7 @@ Not applicable: the component performs no logging.
   input's font/color and any placeholder from theme tokens equivalent to
   `.body`/`primaryText`/`placeholderText`, mirroring applies-theme-styling.
 - **AppKit/UIKit** (source platform): Source file
-  `packages/apple/AgenticToolkit/macOS/SystemIntegration/ComposableSettingsWindow/Views/TextEditView.swift`:
+  `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/Views/TextEditView.swift`:
   a macOS-only, `@MainActor` `NSView` subclass inside the
   `ComposableSettings` namespace, `open` to subclassing through its
   `makeTextField(initialValue:)` factory — the mechanism
@@ -350,7 +350,7 @@ Not applicable: the component performs no logging.
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/macOS/SystemIntegration/ComposableSettingsWindow/Views/TextEditView.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/Views/TextEditView.swift` |
 
 ## Design Decisions
 

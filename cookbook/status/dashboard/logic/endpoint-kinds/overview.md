@@ -6,7 +6,7 @@ It exports four things:
 - `ENDPOINT_KINDS`, a readonly tuple of the six kind strings, in display order.
 - `EndpointKind`, the string-literal union derived from that tuple.
 - `isEndpointKind(k)`, a type guard that narrows an arbitrary string to `EndpointKind`.
-- `NON_DEPLOY_KINDS`, re-exported unchanged from `@agentic-toolkit/deploy-platform/engine` (`classify.ts`). The module does not restate its members.
+- `NON_DEPLOY_KINDS`, re-exported unchanged from `@adh-sdk/deploy-platform/engine` (`classify.ts`). The module does not restate its members.
 
-The module has no state, no I/O and no side effects. Inside status-web, `src/api/monitored-sites.ts` re-exports `ENDPOINT_KINDS` so existing imports from `./monitored-sites` keep working ([Status Web API](adtoolkit://cookbook/status/dashboard/api)). The status server keeps its own copy of the same vocabulary in `status-server/src/monitor/endpoint-kinds.ts`, which it says is "kept in step" with this file.
+The module has no state, no I/O and no side effects. Inside status-web, `src/api/monitored-sites.ts` re-exports `ENDPOINT_KINDS` so existing imports from `./monitored-sites` keep working ([Status Web API](adhsdk://cookbook/status/dashboard/api)). The status server keeps its own copy of the same vocabulary in `status-server/src/monitor/endpoint-kinds.ts`, which it says is "kept in step" with this file.
 

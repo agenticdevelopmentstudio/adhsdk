@@ -1,8 +1,8 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { RailHostBoundary, useBasePathRoute } from "@agentic-toolkit/resource";
-import type { Persona } from "@agentic-toolkit/data/personas";
+import { RailHostBoundary, useBasePathRoute } from "@adh-sdk/resource";
+import type { Persona } from "@adh-sdk/data/personas";
 import { PersonasSection } from "./PersonasSection";
 
 /**

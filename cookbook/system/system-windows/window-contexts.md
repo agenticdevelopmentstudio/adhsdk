@@ -1,7 +1,7 @@
 ---
 id: aaf56f9b-896b-4f74-9e18-1ef4116270a9
 title: "Window Contexts"
-domain: adtoolkit://cookbook/system/system-windows/window-contexts
+domain: adhsdk://cookbook/system/system-windows/window-contexts
 type: ingredient
 version: 1.2.0
 status: review
@@ -22,9 +22,9 @@ tags:
   - persistence
 depends-on: []
 related:
-  - adtoolkit://cookbook/system/system-windows/window-context-model
-  - adtoolkit://cookbook/system/system-windows/system-windows-engine
-  - adtoolkit://cookbook/system/system-windows/matching/title-heuristics
+  - adhsdk://cookbook/system/system-windows/window-context-model
+  - adhsdk://cookbook/system/system-windows/system-windows-engine
+  - adhsdk://cookbook/system/system-windows/matching/title-heuristics
 references:
   - https://developer.apple.com/documentation/coregraphics/cgwindowid
   - https://man7.org/linux/man-pages/man2/flock.2.html
@@ -387,13 +387,13 @@ Window-controller failures (move, set frame, focus) and notification authorizati
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/Core/SystemWindows/Contexts/ReconcileModels.swift` |
-| apple | `packages/apple/AgenticToolkit/Core/SystemWindows/Contexts/SystemWindowContextStore.swift` |
-| apple | `packages/apple/AgenticToolkit/Core/SystemWindows/Contexts/SystemWindowContextsSettings.swift` |
-| apple | `packages/apple/AgenticToolkit/Core/SystemWindows/Contexts/SystemWindowContextsState.swift` |
-| apple | `packages/apple/AgenticToolkit/CoreMacOS/SystemWindows/Contexts/SystemWindowContextError.swift` |
-| apple | `packages/apple/AgenticToolkit/CoreMacOS/SystemWindows/Contexts/SystemWindowContextManager.swift` |
-| apple | `packages/apple/AgenticToolkit/CoreMacOS/SystemWindows/Contexts/SystemWindowContextsModel.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/SystemWindows/Contexts/ReconcileModels.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/SystemWindows/Contexts/SystemWindowContextStore.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/SystemWindows/Contexts/SystemWindowContextsSettings.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/SystemWindows/Contexts/SystemWindowContextsState.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/CoreMacOS/SystemWindows/Contexts/SystemWindowContextError.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/CoreMacOS/SystemWindows/Contexts/SystemWindowContextManager.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/CoreMacOS/SystemWindows/Contexts/SystemWindowContextsModel.swift` |
 
 ## Design Decisions
 

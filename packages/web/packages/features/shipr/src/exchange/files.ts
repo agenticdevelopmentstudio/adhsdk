@@ -2,14 +2,14 @@
  * The two places a shipr document crosses between this page and the operator's disk.
  *
  * THE BROWSER PLUMBING ITSELF IS NOT HERE ANY MORE. `saveTextFile` and `readTextFile` are
- * `@agenticdevelopertoolkit/ui`'s `lib/file-exchange`: a `Blob`, an object URL, an `<a>` the DOM
+ * `@adh-sdk/ui`'s `lib/file-exchange`: a `Blob`, an object URL, an `<a>` the DOM
  * has to click for us and a `File` turned into text have no opinion about what the bytes mean,
  * and integrations exports its provider configs through exactly the same three browser quirks.
  * What is left here is the one shipr-specific fact — that the bytes are a serialized
  * `ShiprDocument` and the file is called `DEFAULT_FILENAME`.
  */
 
-import { readTextFile, saveTextFile } from '@agenticdevelopertoolkit/ui/lib/file-exchange';
+import { readTextFile, saveTextFile } from '@adh-sdk/ui/lib/file-exchange';
 
 import { DEFAULT_FILENAME, serializeDocument, type ShiprDocument } from './document';
 

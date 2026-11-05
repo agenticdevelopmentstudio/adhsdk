@@ -1,7 +1,7 @@
 ---
 id: c8438764-89c9-4286-9b58-10c9cd175a97
 title: "Model Catalog"
-domain: adtoolkit://cookbook/ai/models/model-catalog
+domain: adhsdk://cookbook/ai/models/model-catalog
 type: ingredient
 version: 1.1.1
 status: review
@@ -23,13 +23,13 @@ tags:
 depends-on: []
 related: []
 references:
-  - packages/apple/AgenticToolkit/AIPluginKit/AIModelCatalog.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/AIPluginKit/AIPluginDescriptor.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/AIPluginKit/AIPluginManager.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/AIPluginKit/ModelCapability.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/AIPluginKit/model-catalog.json (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Tests/AIPluginKitTests/AIModelCatalogTests.swift (agenticdevelopertoolkit)
-  - packages/apple/AIPlugins/tools/generate_model_catalog.py (agenticdevelopertoolkit)
+  - packages/apple/AgenticDeveloperHubSDK/AIPluginKit/AIModelCatalog.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/AIPluginKit/AIPluginDescriptor.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/AIPluginKit/AIPluginManager.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/AIPluginKit/ModelCapability.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/AIPluginKit/model-catalog.json (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Tests/AIPluginKitTests/AIModelCatalogTests.swift (adhsdk)
+  - packages/apple/AIPlugins/tools/generate_model_catalog.py (adhsdk)
 approved-by: ""
 approved-date: ""
 ---
@@ -304,7 +304,7 @@ Behavioral Requirements).
 
 ## Platform Notes
 
-- **SwiftUI**: The source (`packages/apple/AgenticToolkit/AIPluginKit/AIModelCatalog.swift`,
+- **SwiftUI**: The source (`packages/apple/AgenticDeveloperHubSDK/AIPluginKit/AIModelCatalog.swift`,
   bundled resource `model-catalog.json`, generator
   `packages/apple/AIPlugins/tools/generate_model_catalog.py`, tests
   `Tests/AIPluginKitTests/AIModelCatalogTests.swift`) has no SwiftUI
@@ -367,7 +367,7 @@ Behavioral Requirements).
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/AIPluginKit/AIModelCatalog.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/AIPluginKit/AIModelCatalog.swift` |
 
 ## Design Decisions
 

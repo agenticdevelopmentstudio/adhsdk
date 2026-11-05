@@ -3,7 +3,7 @@
   "meta": {
     "id": "b360162a-7acb-4354-af85-0f131c84c601",
     "title": "Extension Settings",
-    "domain": "adtoolkit://cookbook/workspace/extensions/registry/extension-settings",
+    "domain": "adhsdk://cookbook/workspace/extensions/registry/extension-settings",
     "type": "ingredient",
     "version": "1.1.1",
     "status": "review",
@@ -25,17 +25,17 @@
     ],
     "depends-on": [],
     "related": [
-      "adtoolkit://cookbook/workspace/extensions/manifest/contributed-settings"
+      "adhsdk://cookbook/workspace/extensions/manifest/contributed-settings"
     ],
     "references": [
-      "packages/apple/AgenticToolkit/Core/Extensions/ExtensionSettings.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/Core/SettingStorage/UserSetting.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/Core/SettingStorage/StorableSetting.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/Core/SettingStorage/SettingsStore.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/Core/SettingStorage/SettingsStorageProviders/UserDefaultsSettingsStorageProvider.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/Core/SettingStorage/UserSettings+Theme.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/Tests/AgenticToolkitCoreTests/Extensions/ExtensionSettingsTests.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/Tests/AgenticToolkitCoreTests/SettingsStore/UserDefaultsSettingsStoreTests.swift (agenticdevelopertoolkit)"
+      "packages/apple/AgenticDeveloperHubSDK/Core/Extensions/ExtensionSettings.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/Core/SettingStorage/UserSetting.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/Core/SettingStorage/StorableSetting.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/Core/SettingStorage/SettingsStore.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/Core/SettingStorage/SettingsStorageProviders/UserDefaultsSettingsStorageProvider.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/Core/SettingStorage/UserSettings+Theme.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKCoreTests/Extensions/ExtensionSettingsTests.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKCoreTests/SettingsStore/UserDefaultsSettingsStoreTests.swift (adhsdk)"
     ],
     "approved-by": "",
     "approved-date": ""

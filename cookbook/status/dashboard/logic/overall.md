@@ -1,7 +1,7 @@
 ---
 id: ef8570df-111e-484f-aad7-20ad49bd34dc
 title: "Overall Status Rollup"
-domain: adtoolkit://cookbook/status/dashboard/logic/overall
+domain: adhsdk://cookbook/status/dashboard/logic/overall
 type: ingredient
 version: 1.0.2
 status: review
@@ -18,8 +18,8 @@ platforms:
 tags: []
 depends-on: []
 related:
-  - adtoolkit://cookbook/status/service/monitor/overall
-  - adtoolkit://cookbook/status/dashboard/session-client
+  - adhsdk://cookbook/status/service/monitor/overall
+  - adhsdk://cookbook/status/dashboard/session-client
 references: []
 approved-by: ""
 approved-date: ""
@@ -33,7 +33,7 @@ approved-date: ""
 
 The rule is: no statuses is `"unknown"`; every status `"down"` is `"major_outage"`; any status `"down"` or `"degraded"` short of all-down is `"degraded"`; otherwise `"operational"`.
 
-Within status-web, `OverallStatus` is re-exported by `src/types.ts` and types the `overall` field of `StatusResponse`, the shape of the payload the status server returns. No status-web module calls `computeOverall` at runtime; the verdict a page shows arrives already computed in `StatusResponse.overall`. The status server owns the authoritative rollup in its own `monitor/overall.ts` (see [Status Server Monitor Overall](adtoolkit://cookbook/status/service/monitor/overall)), which carries the same `computeOverall` plus an extra `publicOverall` step that this client copy does not have.
+Within status-web, `OverallStatus` is re-exported by `src/types.ts` and types the `overall` field of `StatusResponse`, the shape of the payload the status server returns. No status-web module calls `computeOverall` at runtime; the verdict a page shows arrives already computed in `StatusResponse.overall`. The status server owns the authoritative rollup in its own `monitor/overall.ts` (see [Status Server Monitor Overall](adhsdk://cookbook/status/service/monitor/overall)), which carries the same `computeOverall` plus an extra `publicOverall` step that this client copy does not have.
 
 ## Behavioral Requirements
 

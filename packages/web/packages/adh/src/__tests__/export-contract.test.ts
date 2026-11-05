@@ -6,7 +6,7 @@ import pkg from '../../package.json' with { type: 'json' }
 
 const SRC = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 
-describe('@agentic-toolkit/adh export contract', () => {
+describe('@adh-sdk/adh export contract', () => {
   const subpathEntries = Object.entries(pkg.exports).filter(
     ([, value]) => typeof value === 'object' && value !== null,
   ) as [string, Record<string, string>][]
@@ -75,7 +75,7 @@ describe('@agentic-toolkit/adh export contract', () => {
   // live-build-identity. `./layout` is a barrel that `'use client'` code imports — every
   // site's app/global-error.tsx pulls `GlobalError` from it — and with tsup's
   // `bundle: true, splitting: false` that barrel is ONE file containing AppShell. So any
-  // src/layout/ module that names `@agentic-toolkit/adh/server` puts an edge from the client
+  // src/layout/ module that names `@adh-sdk/adh/server` puts an edge from the client
   // barrel to the builtins, and the consuming site's bundler follows it:
   //
   //     Module not found: Can't resolve 'child_process'   dist/server.js:226
@@ -97,17 +97,17 @@ describe('@agentic-toolkit/adh export contract', () => {
       expect(layoutFiles.length).toBeGreaterThan(5)
     })
 
-    it.each(layoutFiles)('layout/%s does not import @agentic-toolkit/adh/server', (name) => {
+    it.each(layoutFiles)('layout/%s does not import @adh-sdk/adh/server', (name) => {
       const source = readFileSync(path.join(SRC, 'layout', name), 'utf-8')
       const importing = source
         .split('\n')
-        .filter((line) => /^\s*import\b/.test(line) && line.includes("'@agentic-toolkit/adh/server'"))
+        .filter((line) => /^\s*import\b/.test(line) && line.includes("'@adh-sdk/adh/server'"))
       expect(importing).toEqual([])
     })
 
     it('AppShell reaches the build identity through the browser-split subpath', () => {
       const source = readFileSync(path.join(SRC, 'layout', 'AppShell.tsx'), 'utf-8')
-      expect(source).toContain("from '@agentic-toolkit/adh/live-build-identity'")
+      expect(source).toContain("from '@adh-sdk/adh/live-build-identity'")
     })
   })
 

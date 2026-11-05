@@ -2,9 +2,9 @@ import { type ReactNode } from 'react';
 export type SiteNotFoundProps = {
     /** The URL-fragment marker a site-switch navigation carries, e.g. `#site-switch`. Injected
      *  rather than imported: the constant is adh VOCABULARY living in
-     *  `@agentic-toolkit/adh-registry`. This package does declare that sibling now — the prop is
+     *  `@adh-sdk/adh-registry`. This package does declare that sibling now — the prop is
      *  a DESIGN choice, not a boundary the build enforces: it keeps this 404 body a registry-free
-     *  primitive a non-adh host can render. `@agentic-toolkit/adh/layout`'s AppShell wraps it and
+     *  primitive a non-adh host can render. `@adh-sdk/adh/layout`'s AppShell wraps it and
      *  passes `SITE_SWITCH_HASH`, so adh call sites keep their current props. */
     siteSwitchHash: string;
     /** The normal 404 UI to show when this isn't a site-switch up-walk. */

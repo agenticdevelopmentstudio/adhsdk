@@ -3,11 +3,11 @@
 // src/themes/AdhThemeStyle.tsx
 import dynamic from "next/dynamic";
 import { preload } from "react-dom";
-import { themes as themes2 } from "@agenticdevelopertoolkit/themes/manifest";
-import { splitImports, parseRootProps } from "@agenticdevelopertoolkit/themes/tokens";
-import { APPEARANCE_PREPAINT_SCRIPT } from "@agenticdevelopertoolkit/themes/appearance";
-import { DocumentLoadScript } from "@agenticdevelopertoolkit/themes/DocumentLoadScript";
-import { THEME_FONT_PRELOADS } from "@agenticdevelopertoolkit/themes/fonts";
+import { themes as themes2 } from "@adh-sdk/themes/manifest";
+import { splitImports, parseRootProps } from "@adh-sdk/themes/tokens";
+import { APPEARANCE_PREPAINT_SCRIPT } from "@adh-sdk/themes/appearance";
+import { DocumentLoadScript } from "@adh-sdk/themes/DocumentLoadScript";
+import { THEME_FONT_PRELOADS } from "@adh-sdk/themes/fonts";
 
 // src/themes/adh-themes.ts
 var ADH_THEME_COOKIE = "adh-theme";
@@ -81,7 +81,7 @@ var usesBaseThemeFonts = (key) => BASE_FACE_THEMES.includes(key);
 var isFullPaletteTheme = (key) => FULL_PALETTE_THEMES.includes(key);
 
 // src/themes/theme-keys.ts
-import { themes } from "@agenticdevelopertoolkit/themes/manifest";
+import { themes } from "@adh-sdk/themes/manifest";
 var adhThemeKeys = () => Object.keys(themes).filter(
   (k) => k.startsWith("adh") && !isBaseCutAlias(k)
 );
@@ -149,11 +149,11 @@ function themePrePaintScript() {
 }
 
 // src/themes/AdhThemeStyle.tsx
-import { isDevDeploymentEnv } from "@agentic-toolkit/adh-registry/deployment-env";
+import { isDevDeploymentEnv } from "@adh-sdk/adh-registry/deployment-env";
 import { Fragment, jsx, jsxs } from "react/jsx-runtime";
 var switcherEnv = () => isDevDeploymentEnv(process.env.DEPLOYMENT_ENV);
 var DbThemeApplier = process.env.NEXT_PUBLIC_DEPLOYMENT_ENV === "local" || process.env.NEXT_PUBLIC_DEPLOYMENT_ENV === "testing" || process.env.NEXT_PUBLIC_DEPLOYMENT_ENV === "staging" ? dynamic(
-  () => import("@agentic-toolkit/adh/themes/DbThemeApplier").then((m) => m.DbThemeApplier)
+  () => import("@adh-sdk/adh/themes/DbThemeApplier").then((m) => m.DbThemeApplier)
 ) : null;
 function ThemeSwitcherAssets({ defaultImports }) {
   if (!switcherEnv()) return null;
@@ -277,7 +277,7 @@ import {
   DropdownMenuSubContent,
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem
-} from "@agenticdevelopertoolkit/ui/components/dropdown-menu";
+} from "@adh-sdk/ui/components/dropdown-menu";
 import { jsx as jsx2, jsxs as jsxs2 } from "react/jsx-runtime";
 function ThemeSwitcher({
   current,
@@ -312,7 +312,7 @@ function ThemeSwitcher({
 
 // src/themes/useThemeEditor.ts
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { themes as themes3 } from "@agenticdevelopertoolkit/themes/manifest";
+import { themes as themes3 } from "@adh-sdk/themes/manifest";
 
 // src/themes/resolve.ts
 function isSwitcherSeed(key) {
@@ -346,7 +346,7 @@ function clearThemeOverride() {
 }
 
 // src/themes/useThemeEditor.ts
-import { reportUnexpectedError } from "@agentic-toolkit/adh/telemetry/report-error";
+import { reportUnexpectedError } from "@adh-sdk/adh/telemetry/report-error";
 
 // src/themes/themes-client.ts
 var API = "/api";
@@ -621,7 +621,7 @@ function useThemeEditor() {
 }
 
 // src/themes/index.ts
-import { DbThemeApplier as DbThemeApplier2 } from "@agentic-toolkit/adh/themes/DbThemeApplier";
+import { DbThemeApplier as DbThemeApplier2 } from "@adh-sdk/adh/themes/DbThemeApplier";
 export {
   ADH_THEMES,
   ADH_THEME_COOKIE,

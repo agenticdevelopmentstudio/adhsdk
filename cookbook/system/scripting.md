@@ -1,7 +1,7 @@
 ---
 id: d5812249-f235-43df-9cd7-504220da1a7d
 title: "Scripting Support"
-domain: adtoolkit://cookbook/system/scripting
+domain: adhsdk://cookbook/system/scripting
 type: ingredient
 version: 1.1.0
 status: review
@@ -24,11 +24,11 @@ depends-on:
   - agenticdevelopercookbook://principles/fail-fast
 related: []
 references:
-  - packages/apple/AgenticToolkit/macOS/Scripting/AppleScriptRunner.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/macOS/Scripting/MainActorScriptCommand.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/macOS/SystemIntegration/ScriptingReExports.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Tests/AgenticToolkitMacOSTests/Scripting/AppleScriptRunnerTests.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Tests/AgenticToolkitMacOSTests/Scripting/MainActorScriptCommandTests.swift (agenticdevelopertoolkit)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/Scripting/AppleScriptRunner.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/Scripting/MainActorScriptCommand.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ScriptingReExports.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKMacOSTests/Scripting/AppleScriptRunnerTests.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKMacOSTests/Scripting/MainActorScriptCommandTests.swift (adhsdk)
 approved-by: ""
 approved-date: ""
 ---
@@ -183,7 +183,7 @@ Not applicable: none of the three given primitives call a logger or any other di
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/macOS/Scripting/` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Scripting/` |
 
 ## Design Decisions
 

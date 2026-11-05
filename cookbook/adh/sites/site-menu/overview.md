@@ -7,7 +7,7 @@ only the **top section** differs by auth state.
 
 It is chrome. The menu itself — `SiteMenu` and the `menu-icons` map — is ADH
 vocabulary, and the registry-free machinery it composes (`NavigationPopover`, the
-recents store) is generic; both halves now live in `@agentic-toolkit/adh/header`,
+recents store) is generic; both halves now live in `@adh-sdk/adh/header`,
 so the tier boundary this recipe once straddled is gone. It is built by composing that
 `NavigationPopover` (surface, search, keyboard nav, flyout submenus) with a
 declarative config (`MenuGroup[]`). This recipe defines the enhanced menu:

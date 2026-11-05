@@ -3,7 +3,7 @@
   "meta": {
     "id": "765b853f-36a2-4e4f-b8aa-2cd15714a67f",
     "title": "Vertical Stack View",
-    "domain": "adtoolkit://cookbook/ui/settings/layout/vertical-stack-view",
+    "domain": "adhsdk://cookbook/ui/settings/layout/vertical-stack-view",
     "type": "ingredient",
     "version": "1.2.2",
     "status": "review",
@@ -25,7 +25,7 @@
     ],
     "depends-on": [],
     "related": [
-      "adtoolkit://cookbook/ui/settings/layout/horizontal-stack-view"
+      "adhsdk://cookbook/ui/settings/layout/horizontal-stack-view"
     ],
     "references": [],
     "approved-by": "",

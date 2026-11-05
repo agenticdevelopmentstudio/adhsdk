@@ -3,13 +3,13 @@
 import { useCallback } from "react";
 import type { ReactNode } from "react";
 
-import { reportUnexpectedAuthError } from "@agentic-toolkit/auth";
-import { isForbidden, useResourceItemQuery, useResourceItemWriter } from "@agentic-toolkit/data";
-import { gamesApi, type Game, type GameInput } from "@agentic-toolkit/data/games";
-import { DetailsPane, SettingsDirtyProvider, useSettingsDraft } from "@agentic-toolkit/resource";
-import { ErrorText } from "@agenticdevelopertoolkit/ui/components/error-text";
-import { gamificationApi, type RealmConfig } from "@agentic-toolkit/data/gamification";
-import { FeatureSwitch } from "@agentic-toolkit/ecosystems";
+import { reportUnexpectedAuthError } from "@adh-sdk/auth";
+import { isForbidden, useResourceItemQuery, useResourceItemWriter } from "@adh-sdk/data";
+import { gamesApi, type Game, type GameInput } from "@adh-sdk/data/games";
+import { DetailsPane, SettingsDirtyProvider, useSettingsDraft } from "@adh-sdk/resource";
+import { ErrorText } from "@adh-sdk/ui/components/error-text";
+import { gamificationApi, type RealmConfig } from "@adh-sdk/data/gamification";
+import { FeatureSwitch } from "@adh-sdk/ecosystems";
 import { GAME_FOR_ECOSYSTEM_CACHE_KEY, REALM_CONFIG_CACHE_KEY, loadGameRow } from "./useGameForEcosystem";
 import { GameOperationalFields, gameDiffers, gameNormalize, gameToInput, gameValidate } from "./GameDetail";
 

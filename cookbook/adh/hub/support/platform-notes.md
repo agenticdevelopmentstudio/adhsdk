@@ -28,16 +28,16 @@
   normalizer as a function normalizing any thrown value into a tagged
   error union.
 - **AppKit / UIKit**: This is the source platform.
-  `packages/apple/AgenticToolkit/Hub/Features/Support/HubDates.swift`,
+  `packages/apple/AgenticDeveloperHubSDK/Hub/Features/Support/HubDates.swift`,
   `HubError+Wrap.swift`, `HubText.swift`, `JSONValue.swift`,
   `RailPath.swift`, and `Slug.swift` import only `Foundation` (plus
-  `AgenticToolkitHTDV` for the date helper's/rail-path's HTDV types) and
+  `AgenticDeveloperHubSDKHTDV` for the date helper's/rail-path's HTDV types) and
   hold no AppKit/UIKit import of their own; only `FormDetails.swift` reaches
   into a platform-specific view controller, and it does so through
   `FormViewController`, which exists in both an AppKit variant
-  (`packages/apple/AgenticToolkit/HTDV/Views/macOS/FormViewController.swift`)
+  (`packages/apple/AgenticDeveloperHubSDK/HTDV/Views/macOS/FormViewController.swift`)
   and a UIKit variant
-  (`packages/apple/AgenticToolkit/HTDV/Views/iOS/FormViewController+UIKit.swift`) —
+  (`packages/apple/AgenticDeveloperHubSDK/HTDV/Views/iOS/FormViewController+UIKit.swift`) —
   the other six files are shared unchanged between macOS and iOS. The
   closure-taking form of `HubError.wrap` (`HubError.wrap(isolation:_:)`)
   declares its `isolation` parameter as `isolated (any Actor)? =

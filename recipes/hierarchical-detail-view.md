@@ -1,7 +1,7 @@
 ---
 id: 8ce108f2-b64b-4e01-8dbb-94ef3397b46a
 title: Hierarchical Detail View
-domain: agenticdevelopertoolkit://recipes/hierarchical-detail-view
+domain: adhsdk://recipes/hierarchical-detail-view
 type: ingredient
 version: 1.1.1
 status: review
@@ -20,8 +20,8 @@ tags:
 - navigation
 - context
 depends-on:
-- agenticdevelopertoolkit://recipes/hierarchical-menu-detail
-- agenticdevelopertoolkit://recipes/hierarchical-topic-detail
+- adhsdk://recipes/hierarchical-menu-detail
+- adhsdk://recipes/hierarchical-topic-detail
 related: []
 references: []
 approved-by: ''
@@ -88,7 +88,7 @@ Not applicable: Accessibility is the responsibility of the detail view component
 | `menuDetail` | `boolean` | `false` | Passed to `HierarchicalDetailViewProvider` to select the cascading menu view (`true`) or classic topic view (`false`) |
 | `children` | `ReactNode` | — | Child components to render within the provider context |
 
-`HierarchicalDetailView` itself takes `ComponentProps<typeof HierarchicalMenuDetail>`. This is not a full superset of `HierarchicalTopicDetail`'s props: `HierarchicalTopicDetail`'s `surfaceScope` prop is absent from `HierarchicalMenuDetail`, so it cannot be passed to the router at all, in either context. The props `HierarchicalMenuDetail` does declare are documented once, on `HierarchicalMenuDetail` (`agenticdevelopertoolkit://recipes/hierarchical-menu-detail`), rather than restated here; see **preserve-other-props** and **cascading-to-covered** for how the router narrows that surface under the classic view.
+`HierarchicalDetailView` itself takes `ComponentProps<typeof HierarchicalMenuDetail>`. This is not a full superset of `HierarchicalTopicDetail`'s props: `HierarchicalTopicDetail`'s `surfaceScope` prop is absent from `HierarchicalMenuDetail`, so it cannot be passed to the router at all, in either context. The props `HierarchicalMenuDetail` does declare are documented once, on `HierarchicalMenuDetail` (`adhsdk://recipes/hierarchical-menu-detail`), rather than restated here; see **preserve-other-props** and **cascading-to-covered** for how the router narrows that surface under the classic view.
 
 ## Deep Linking
 

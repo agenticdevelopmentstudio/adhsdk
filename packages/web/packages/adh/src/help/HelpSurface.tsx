@@ -4,7 +4,7 @@
 // The content is therefore in the SSR HTML (crawlable, no client fetch); only the rail hydrates.
 
 import type { ReactNode } from 'react'
-import { EmptyState } from '@agenticdevelopertoolkit/ui/components/empty-state'
+import { EmptyState } from '@adh-sdk/ui/components/empty-state'
 import { MarkdownHtml } from '../docs/MarkdownHtml'
 import { getDocHtmlByKey } from '../docs/content'
 import {
@@ -18,7 +18,7 @@ import {
 // its directive can't be hoisted over this server module — the same isolation trick as this
 // package's themes/DbThemeApplier, which keeps server.ts a plain server module (see
 // tsup.config.ts `external`).
-import { HelpMasterDetail, type HelpRouteLevel } from '@agentic-toolkit/adh/help/HelpMasterDetail'
+import { HelpMasterDetail, type HelpRouteLevel } from '@adh-sdk/adh/help/HelpMasterDetail'
 
 /** Join a site `basePath` (no trailing slash; `''` or `/` = apex) with a base-relative slug. */
 export function helpHref(basePath: string, slug: string): string {

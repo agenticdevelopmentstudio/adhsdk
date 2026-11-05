@@ -1,7 +1,7 @@
 ---
 id: 4d7ed9a3-c6d8-491b-911a-cf257fde1c38
 title: "Daemon AI Chat"
-domain: adtoolkit://cookbook/ai/chat/daemon-ai-chat
+domain: adhsdk://cookbook/ai/chat/daemon-ai-chat
 type: ingredient
 version: 1.1.2
 status: review
@@ -23,17 +23,17 @@ tags:
   - inference-guard
   - cli-fallback
 depends-on:
-  - adtoolkit://cookbook/ai/plugins/ai-plugin
-  - adtoolkit://cookbook/ai/plugins/plugin-descriptor
-  - adtoolkit://cookbook/ai/chat/chat-context
-  - adtoolkit://cookbook/ai/plugins/request-spec
-  - adtoolkit://cookbook/ai/plugins/stream-event
-  - adtoolkit://cookbook/ai/providers/provider-configuration
-  - adtoolkit://cookbook/ai/providers/provider-config-keys
-  - adtoolkit://cookbook/ai/providers/daemon-provider-resolver
-  - adtoolkit://cookbook/ai/models/local/local-inference-guard
+  - adhsdk://cookbook/ai/plugins/ai-plugin
+  - adhsdk://cookbook/ai/plugins/plugin-descriptor
+  - adhsdk://cookbook/ai/chat/chat-context
+  - adhsdk://cookbook/ai/plugins/request-spec
+  - adhsdk://cookbook/ai/plugins/stream-event
+  - adhsdk://cookbook/ai/providers/provider-configuration
+  - adhsdk://cookbook/ai/providers/provider-config-keys
+  - adhsdk://cookbook/ai/providers/daemon-provider-resolver
+  - adhsdk://cookbook/ai/models/local/local-inference-guard
 related:
-  - adtoolkit://cookbook/ai/plugins/plugin-manager
+  - adhsdk://cookbook/ai/plugins/plugin-manager
 references: []
 approved-by: ""
 approved-date: ""
@@ -218,7 +218,7 @@ Not applicable: this component contains no logging call; it is orchestration log
 
 ## Platform Notes
 
-- **SwiftUI**: The source, `packages/apple/AgenticToolkit/AIPluginKit/DaemonAIChat.swift`, has no view-layer dependency at all — `complete` is a plain `static func` a SwiftUI (or any other) host calls from a `Task`, typically wrapping the call in a view model that publishes the in-flight/succeeded/failed state, since `DaemonAIChat` itself is not observable and returns only a final `String` (no partial-progress callback).
+- **SwiftUI**: The source, `packages/apple/AgenticDeveloperHubSDK/AIPluginKit/DaemonAIChat.swift`, has no view-layer dependency at all — `complete` is a plain `static func` a SwiftUI (or any other) host calls from a `Task`, typically wrapping the call in a view model that publishes the in-flight/succeeded/failed state, since `DaemonAIChat` itself is not observable and returns only a final `String` (no partial-progress callback).
 - **Compose**: model the two-path dispatch as a `suspend fun complete(...)` in a plain Kotlin object, with `PluginRuntime` and `CLIRunner` as constructor-injected function types (or a small interface each) for the same hermetic-testing seam. Android has no `dlopen`/`NSPrincipalClass` equivalent for the plugin path itself (see the `ai-plugin-manager` recipe's Compose note); the guard's actor-based mutual exclusion maps to a `Mutex` (kotlinx.coroutines) guarding the local-inference critical section, and the FIFO recheck-after-acquire pattern (`guard-recheck-in-lock`) carries over directly since `Mutex.withLock` also has to reconsider state that may have changed while suspended waiting for the lock.
 - **React/Web**: model `complete` as an `async function` returning `Promise<string>`, with `runtime`/`cliRunner`/`settings`/`secretStore` as injected parameters or closures for the same test seams. There is no local subprocess (`claude -p`) equivalent in a browser; a web port's "zero-config default" would more plausibly be a server-side proxy endpoint than an in-process CLI fallback. The local-inference guard's process-wide mutual exclusion has no direct browser analogue (there is one JS execution context per tab); a multi-tab web host would need a `BroadcastChannel`- or server-mediated equivalent of `LocalInferenceGuard.runExclusive` to serialize local-model calls across tabs.
 - **AppKit / UIKit**: same note as SwiftUI — `DaemonAIChat.swift` has no AppKit/UIKit dependency; only the host embedding it differs. The `.aiplugin` bundle-loading path this file drives is macOS-only (see the `ai-plugin-manager` and `ai-plugin` recipes), which is why this recipe's `platforms` list `macos` and not `ios`; an iOS host could still use the CLI-independent plugin path if a plugin bundle-loading mechanism were ported, but never the `claude -p` subprocess fallback, since iOS sandboxes forbid spawning arbitrary subprocesses. Internally, the live plugin runtime's `load` hops onto the main actor via `MainActor.run`, because `AIPluginManager` (which `LivePluginCache` wraps) is `@MainActor`-isolated — a concurrency detail with no view dependency of its own. `LivePluginCache` itself is a `@MainActor`-isolated private enum whose mutable static state (the cached manager, its search paths, and loaded plugin instances) is safe to mutate without a separate lock because the main actor serializes all access to it. Separately, `ChatError` declares `Error, LocalizedError` conformance only, with no explicit `Sendable` conformance, so it must be treated as non-`Sendable` across a concurrency-domain boundary regardless of its sole associated value (`String`) being itself `Sendable`. The file also authors no localized string via `NSLocalizedString`/`String(localized:)` and makes no logging call (no `Logger`/`os` import).
@@ -228,7 +228,7 @@ Not applicable: this component contains no logging call; it is orchestration log
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/AIPluginKit/DaemonAIChat.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/AIPluginKit/DaemonAIChat.swift` |
 
 ## Design Decisions
 

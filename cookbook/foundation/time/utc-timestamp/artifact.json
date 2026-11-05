@@ -3,7 +3,7 @@
   "meta": {
     "id": "59F7893E-58FE-4F11-ABD9-F80C1E05C002",
     "title": "UTC Timestamp",
-    "domain": "adtoolkit://cookbook/foundation/time/utc-timestamp",
+    "domain": "adhsdk://cookbook/foundation/time/utc-timestamp",
     "type": "ingredient",
     "version": "1.0.0",
     "status": "review",
@@ -26,9 +26,9 @@
     ],
     "depends-on": [],
     "related": [
-      "adtoolkit://cookbook/foundation/time/timestamp-parsing",
-      "adtoolkit://cookbook/foundation/time/local-time-text",
-      "adtoolkit://cookbook/foundation/time/activity-runs"
+      "adhsdk://cookbook/foundation/time/timestamp-parsing",
+      "adhsdk://cookbook/foundation/time/local-time-text",
+      "adhsdk://cookbook/foundation/time/activity-runs"
     ],
     "references": [],
     "approved-by": "",

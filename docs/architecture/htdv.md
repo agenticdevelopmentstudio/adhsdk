@@ -1,6 +1,6 @@
-# AgenticToolkitHTDV — native Hierarchical Topic Detail View
+# AgenticDeveloperHubSDKHTDV — native Hierarchical Topic Detail View
 
-`AgenticToolkitHTDV` is a multi-platform (macOS 14+, iOS 26+) framework that renders a tree of "levels"
+`AgenticDeveloperHubSDKHTDV` is a multi-platform (macOS 14+, iOS 26+) framework that renders a tree of "levels"
 as side-by-side rails (regular width) or a navigation stack (compact width), with a detail pane for leaf
 items. It depends on Foundation plus AppKit/UIKit only.
 
@@ -68,13 +68,13 @@ are user-facing. `FormState.blockedReason` disables saving and shows the reason 
 
 ## Testing
 
-`AgenticToolkitHTDVTests` (XCTest, macOS) covers the model, controller (including stale-result protection),
+`AgenticDeveloperHubSDKHTDVTests` (XCTest, macOS) covers the model, controller (including stale-result protection),
 layout engine, validator, form state, plain-text markdown, rails, and `FormViewController`. iOS is verified
 by building the scheme for `generic/platform=iOS Simulator`.
 
-# AgenticToolkitHub
+# AgenticDeveloperHubSDKHub
 
-Depends on `AgenticToolkitHTDV` only. Holds `HubModules` (app-installed injection points such as
+Depends on `AgenticDeveloperHubSDKHTDV` only. Holds `HubModules` (app-installed injection points such as
 `markdownEditing`), `HubError`, `HubWorkspace` (+ `HubWorkspaceType`) — the shared, generated-code-free shape
 the app maps the API's `Workspace` schema into, and passes to feature modules as their context — and, as
 feature plans land, one `Features/<Name>/` folder per hub feature with `<Name>Models.swift`,

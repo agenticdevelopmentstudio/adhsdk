@@ -1,7 +1,7 @@
 ---
 id: b7a4a259-620f-42a3-8bc2-9e5c07c1819d
 title: StatCard
-domain: agenticdevelopertoolkit://recipes/stat-card
+domain: adhsdk://recipes/stat-card
 type: recipe
 version: 1.4.1
 status: review
@@ -22,14 +22,14 @@ tags:
 - dashboard
 - ui
 ingredients:
-- agenticdevelopertoolkit://recipes/info-panel
-- agenticdevelopertoolkit://recipes/stat
-- agenticdevelopertoolkit://recipes/external-link
+- adhsdk://recipes/info-panel
+- adhsdk://recipes/stat
+- adhsdk://recipes/external-link
 depends-on: []
 related:
-- agenticdevelopertoolkit://recipes/info-panel
-- agenticdevelopertoolkit://recipes/stat
-- agenticdevelopertoolkit://recipes/external-link
+- adhsdk://recipes/info-panel
+- adhsdk://recipes/stat
+- adhsdk://recipes/external-link
 references: []
 approved-by: ''
 approved-date: ''
@@ -39,7 +39,7 @@ approved-date: ''
 
 ## Overview
 
-`StatCard` in `@agenticdevelopertoolkit/ui` is the dashboard stat card: an `InfoPanel` headed by
+`StatCard` in `@adh-sdk/ui` is the dashboard stat card: an `InfoPanel` headed by
 an icon + title with an optional "{tool} ↗" deep link (plus optional extra header
 controls via `actions`) in the header actions slot, over a vertical stack of `StatRow` figures, optional freeform content, and a muted
 mono footnote. It is **pure assembly** — the shell is `InfoPanel`, the rows are
@@ -60,9 +60,9 @@ It was extracted from a status site's Traffic/Errors telemetry cards, so every s
 
 | Name | Domain | Role | Required | Configuration |
 |---|---|---|---|---|
-| InfoPanel | agenticdevelopertoolkit://recipes/info-panel | The card shell — bordered/rounded frame with the standard header (icon + title) and a content-sized body | yes | `title`, `icon`, `actions` (the link + extra `actions`), `className` and remaining host attributes forwarded; default content-sized (no `scroll`) |
-| StatRow | agenticdevelopertoolkit://recipes/stat | One label/value figure per `stats[]` entry, in the body stack | yes (when `stats[]` non-empty) | `label`, `value`, `tone` passed through from each `StatCardStat` |
-| ExternalLink | agenticdevelopertoolkit://recipes/external-link | The "{label} ↗" deep link into the source tool, placed in the InfoPanel actions slot | no (only when `link` given) | `href` = `link.href`, children = `link.label`; opens a new tab (noopener) |
+| InfoPanel | adhsdk://recipes/info-panel | The card shell — bordered/rounded frame with the standard header (icon + title) and a content-sized body | yes | `title`, `icon`, `actions` (the link + extra `actions`), `className` and remaining host attributes forwarded; default content-sized (no `scroll`) |
+| StatRow | adhsdk://recipes/stat | One label/value figure per `stats[]` entry, in the body stack | yes (when `stats[]` non-empty) | `label`, `value`, `tone` passed through from each `StatCardStat` |
+| ExternalLink | adhsdk://recipes/external-link | The "{label} ↗" deep link into the source tool, placed in the InfoPanel actions slot | no (only when `link` given) | `href` = `link.href`, children = `link.label`; opens a new tab (noopener) |
 
 The body-stack container, the footnote treatment, and the `stats[]`→rows mapping are
 the only things this block owns; `StatCardStat` (`{ label, value, tone }`) is exported
@@ -167,7 +167,7 @@ into a composed part; nothing flows back up except the browser navigation an
 
 - **Swift / SwiftUI**: A bordered/rounded container (`.background` + `.clipShape(RoundedRectangle)`, or `GroupBox`) holds a header `HStack` (an `Image` icon marked `.accessibilityHidden(true)`, a `Text` title, a `Spacer`, then — only when `link` or `actions` is present — a nested `HStack` holding a `Link` for the "{tool} ↗" deep link followed by any extra `actions` view) and a body `VStack(spacing: 10)` of label/value `HStack` pairs (one per stat, mirroring `StatRow`), then any freeform child `View`s, then a muted footnote `Text` (`.font(.system(size: 10, design: .monospaced))`, `.foregroundStyle(.secondary)`) as the stack's last child. Forward host attributes through SwiftUI view modifiers (e.g. `.accessibilityIdentifier`) rather than arbitrary attributes.
 - **Kotlin / Compose**: A bordered `Card` (or `Surface` with `border`/`shape`) with a header `Row` (an `Icon` given an empty `contentDescription` to mark it decorative, a `Text` title, a `Modifier.weight(1f)` spacer, then — only when `link` or `actions` is present — a nested `Row` holding a `TextButton`/`ClickableText` for the deep link followed by any extra `actions` composable) and a body `Column(verticalArrangement = Arrangement.spacedBy(10.dp))` of label/value `Row` pairs per stat (mirroring `StatRow`), then freeform child composables, then a `Text` footnote (small monospace `FontFamily`, muted `color`) as the column's last child. Forward host attributes via a custom `Modifier` (e.g. `Modifier.semantics { testTag = … }`) rather than arbitrary attributes.
-- **React / Web (TypeScript)**: `packages/web/packages/ui/src/blocks/stat-card.tsx`, exported from `@agenticdevelopertoolkit/ui` (`@agenticdevelopertoolkit/ui/blocks/stat-card`). Composes `InfoPanel` (`../blocks/info-panel`), `StatRow` (`../components/stat`), and `ExternalLink` (`../components/external-link`). Exports `StatCard`, `StatCardProps`, and the `StatCardStat` type. Demo: `ui-showcase` Topic `stat-card` (group "Blocks — cards & sections"); the demo shows a Traffic card (declarative stats + footnote), an Errors card (stats + freeform children), and a monitor card (header `actions` status word, no link). Regenerate `sources.generated.ts` via `gen-sources.py` after source changes. Responsive: the demo lays the cards in a `sm:grid-cols-2` grid; each card is content-sized and full-width in its cell — verify at 375 / 768 / 1440.
+- **React / Web (TypeScript)**: `packages/web/packages/ui/src/blocks/stat-card.tsx`, exported from `@adh-sdk/ui` (`@adh-sdk/ui/blocks/stat-card`). Composes `InfoPanel` (`../blocks/info-panel`), `StatRow` (`../components/stat`), and `ExternalLink` (`../components/external-link`). Exports `StatCard`, `StatCardProps`, and the `StatCardStat` type. Demo: `ui-showcase` Topic `stat-card` (group "Blocks — cards & sections"); the demo shows a Traffic card (declarative stats + footnote), an Errors card (stats + freeform children), and a monitor card (header `actions` status word, no link). Regenerate `sources.generated.ts` via `gen-sources.py` after source changes. Responsive: the demo lays the cards in a `sm:grid-cols-2` grid; each card is content-sized and full-width in its cell — verify at 375 / 768 / 1440.
 - **AppKit / UIKit**: iOS (UIKit): a container `UIView` with a rounded `CALayer` holds a header `UIStackView` (a decorative `UIImageView` icon, a `UILabel` title, then — only when `link` or `actions` is present — a nested `UIStackView` with a link-styled `UIButton` followed by any extra action views) and a body `UIStackView` (spacing 10) of label/value `UIStackView` pairs per stat, then freeform child views, then a muted footnote `UILabel` (10pt, secondary text color) as the last arranged subview. macOS (AppKit): the same shape with `NSStackView` and `NSTextField` labels, and an `NSButton` styled as a link for the deep link. Forward host attributes via `accessibilityIdentifier` on the root view.
 - **WinUI 3**: Start with a `Border` (CornerRadius for rounded corners, BorderBrush for the card outline) containing a `Grid` with two rows — a header row and a body row — so the header-to-body gap is independent of the body's own row spacing. The header row is itself a `Grid` with three columns: icon (`Image` or `SymbolIcon`), title (`TextBlock` with heading-level font), and a horizontal `StackPanel` (Spacing=4) holding a `HyperlinkButton` for the deep link followed by any extra `actions` content; bind that actions `StackPanel`'s `Visibility` to `Collapsed` when both the link and actions are absent, and the `HyperlinkButton`'s `Visibility` to `Collapsed` when only the link is absent. The body row is a `StackPanel` with `Spacing=10` (gap-2.5 equivalence), containing `TextBlock` pairs for each stat row (label and value), a `ContentPresenter` for freeform children, and a `TextBlock` for the footnote (FontSize=10, `Foreground` set to a secondary/dim text brush) as its last child, with `Visibility` bound to `Collapsed` when null. Map forwarded host attributes (`data-*`, `id`) to `AutomationProperties.AutomationId`/`Name`, or a `Tag` dictionary, on the root `Border`, since WinUI has no direct arbitrary-attribute equivalent. Use a `Resources` section to define color and typography tokens matching the design system.
 

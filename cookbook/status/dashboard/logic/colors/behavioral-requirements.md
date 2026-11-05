@@ -39,7 +39,7 @@
 ### Data shape, purity and side effects
 
 - **css-string-values**: Every exported color value MUST be a CSS color string (a `var()` reference, a `color-mix()` expression, or a named color) that is resolved by the browser at render time, never a precomputed hex or RGB value.
-- **theme-token-owner**: Token values MUST be supplied by the host page's stylesheet from `@agenticdevelopertoolkit/themes`; this module MUST NOT define or inject any CSS custom property.
+- **theme-token-owner**: Token values MUST be supplied by the host page's stylesheet from `@adh-sdk/themes`; this module MUST NOT define or inject any CSS custom property.
 - **no-side-effects**: Importing the module and calling `envColor` or `envBadgeLabel` MUST perform no I/O, DOM access, logging, network, or storage access.
 - **pure-helpers**: `envColor` and `envBadgeLabel` MUST be deterministic: the same input MUST always produce the same output.
 - **readonly-at-type-level**: `PALETTE`, `COLORS` and `TINT` MUST be declared `as const` (readonly literal types); none of the exported objects is frozen at runtime.

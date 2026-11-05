@@ -4,7 +4,7 @@ import { DEFAULT_TUNING, type Tuning } from "./types";
 
 // Smoke tests only: guard the public API surface + tuning contract. The engine is
 // a GSAP-driven hook — its motion is verified in-app (it can't be asserted headless).
-describe("@agenticdevelopertoolkit/avatar public API", () => {
+describe("@adh-sdk/avatar public API", () => {
   it("exports the engine hook and every reflex/pose piece", () => {
     const surface = Avatar as Record<string, unknown>;
     for (const name of [

@@ -3,7 +3,7 @@
   "meta": {
     "id": "773a1876-24d8-4134-8815-41fbc8c53096",
     "title": "Activity Query Filter",
-    "domain": "adtoolkit://cookbook/status/dashboard/logic/filter",
+    "domain": "adhsdk://cookbook/status/dashboard/logic/filter",
     "type": "ingredient",
     "version": "1.1.0",
     "status": "review",
@@ -21,7 +21,7 @@
     "tags": [],
     "depends-on": [],
     "related": [
-      "adtoolkit://cookbook/status/dashboard/state/source-filter"
+      "adhsdk://cookbook/status/dashboard/state/source-filter"
     ],
     "references": [],
     "approved-by": "",

@@ -1,7 +1,7 @@
 ---
 id: 56828ee6-f522-45da-a9d8-6e1a99adf4e2
 title: Help Popover
-domain: agenticdevelopertoolkit://recipes/help-popover
+domain: adhsdk://recipes/help-popover
 type: ingredient
 version: 1.1.1
 status: review
@@ -21,7 +21,7 @@ tags:
 - popover
 - accessibility
 depends-on:
-- agenticdevelopertoolkit://recipes/popover
+- adhsdk://recipes/popover
 related: []
 references: []
 approved-by: ''
@@ -162,7 +162,7 @@ Not applicable; the component does not emit logs.
 
 ## Platform Notes
 
-- **React/Web**: Help Popover Content is implemented as a functional React component using Tailwind CSS for styling and Lucide React for icons (`CircleHelp`, `Info`, `Sparkles`). The component composes `PopoverContent` (a Base UI Popover wrapper) with its `arrow` prop enabled, and must be used together with a `Popover.Trigger` element to be functional. It sets `aria-label` on `PopoverContent` to the flavor label combined with `entry.title` when present, and marks the icon `aria-hidden="true"`. The panel width is constrained via the Tailwind class `w-80`; title/body spacing uses `mb-1` (title bottom margin) and `gap-2.5` (icon/text gap). Import `HelpPopoverContent` from `@agenticdevelopertoolkit/ui/components/help-popover`.
+- **React/Web**: Help Popover Content is implemented as a functional React component using Tailwind CSS for styling and Lucide React for icons (`CircleHelp`, `Info`, `Sparkles`). The component composes `PopoverContent` (a Base UI Popover wrapper) with its `arrow` prop enabled, and must be used together with a `Popover.Trigger` element to be functional. It sets `aria-label` on `PopoverContent` to the flavor label combined with `entry.title` when present, and marks the icon `aria-hidden="true"`. The panel width is constrained via the Tailwind class `w-80`; title/body spacing uses `mb-1` (title bottom margin) and `gap-2.5` (icon/text gap). Import `HelpPopoverContent` from `@adh-sdk/ui/components/help-popover`.
 - **SwiftUI**: Implement using SwiftUI's `.popover()` modifier or `Menu` with `Label`. Render an `Image(systemName:)` for the flavor icon (`questionmark.circle`, `info.circle`, or `sparkles` for the three flavors — `help.circle` does not exist as an SF Symbol), a `Text` view for the optional title (`.font(.headline)` or similar emphasis), and a `Text` view for the body. Set `.accessibilityElement(children: .combine)` on the popover container and apply a custom `accessibilityLabel` combining flavor and title as described in Accessibility. Use `.frame(width: 320)` to constrain width to 320pt (`preferredContentSize` is a UIKit API, not available in SwiftUI).
 - **Kotlin (Compose)**: Implement using `Popup` or `DropdownMenu` with a `Card` or `Surface` for the panel. Use Material Design 3 icon resources (`HelpOutline`, `Info`, or `AutoAwesome`) for the three flavors. Apply `.width(320.dp)` and use `Row` for the icon+text layout. Set the popover container's `semantics { contentDescription = ... }` combining flavor and title per the Accessibility section. Apply color tokens from the design system (`MaterialTheme.colorScheme.onSurface` for `apt-text`, `MaterialTheme.colorScheme.onSurfaceVariant` for `apt-text-muted`).
 - **AppKit / UIKit**: On AppKit, implement as an `NSPopover` presenting an `NSViewController` whose view lays out the icon and text (e.g., with `NSStackView`); use `NSImage(systemSymbolName:)` for SF Symbols. On UIKit, implement as a `UIViewController` (popover presentation controller) or a SwiftUI view bridged via `UIHostingController`. On both, use SF Symbols (`questionmark.circle`, `info.circle`, `sparkles`) for the three flavors — `help.circle` does not exist. Constrain width to 320pt (`preferredContentSize = CGSize(width: 320, height: ...)` on UIKit; the AppKit popover's `contentSize`). Set the accessible label (`accessibilityLabel` on UIKit, `setAccessibilityLabel` on AppKit) combining flavor and title. Apply semantic colors for text (`UIColor.label` / `NSColor.labelColor` for `apt-text`, `UIColor.secondaryLabel` / `NSColor.secondaryLabelColor` for `apt-text-muted`).

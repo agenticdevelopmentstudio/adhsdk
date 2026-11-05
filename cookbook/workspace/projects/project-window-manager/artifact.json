@@ -3,7 +3,7 @@
   "meta": {
     "id": "7f1b8bef-e78e-4cac-be55-c948fe9062e5",
     "title": "Project Window Manager",
-    "domain": "adtoolkit://cookbook/workspace/projects/project-window-manager",
+    "domain": "adhsdk://cookbook/workspace/projects/project-window-manager",
     "type": "ingredient",
     "version": "1.1.1",
     "status": "review",
@@ -25,23 +25,23 @@
     ],
     "depends-on": [],
     "related": [
-      "adtoolkit://cookbook/workspace/projects/project-controller",
-      "adtoolkit://cookbook/ui/layout/composable-tabs/tabs-window",
-      "adtoolkit://cookbook/workspace/projects/git-repo",
-      "adtoolkit://cookbook/workspace/projects/project-database"
+      "adhsdk://cookbook/workspace/projects/project-controller",
+      "adhsdk://cookbook/ui/layout/composable-tabs/tabs-window",
+      "adhsdk://cookbook/workspace/projects/git-repo",
+      "adhsdk://cookbook/workspace/projects/project-database"
     ],
     "references": [
-      "packages/apple/AgenticToolkit/macOS/Features/Projects/ProjectWindowManager.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/macOS/Features/Projects/ProjectsCoordinator.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/macOS/Features/Projects/ProjectWorkspace.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/macOS/Features/Projects/ProjectController.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/macOS/Features/Projects/GitRepo.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/macOS/Features/Projects/ProjectDatabase.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/macOS/SystemIntegration/WindowManager/WindowManager.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/Core/Concurrency/PendingTeardowns.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/Core/Loggable.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/macOS/UI/ViewControllers/ComposableTabs/ComposableTabsWindowController.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/Tests/AgenticToolkitMacOSTests/Projects/ProjectWindowManagerControllerTests.swift (agenticdevelopertoolkit)"
+      "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectWindowManager.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectsCoordinator.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectWorkspace.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectController.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/GitRepo.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectDatabase.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/WindowManager/WindowManager.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/Core/Concurrency/PendingTeardowns.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/Core/Loggable.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/ComposableTabs/ComposableTabsWindowController.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKMacOSTests/Projects/ProjectWindowManagerControllerTests.swift (adhsdk)"
     ],
     "approved-by": "",
     "approved-date": ""

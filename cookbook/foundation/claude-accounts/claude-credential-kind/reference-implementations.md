@@ -1,5 +1,5 @@
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/Core/ClaudeAccounts/ClaudeCredentialKind.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/ClaudeAccounts/ClaudeCredentialKind.swift` |
 

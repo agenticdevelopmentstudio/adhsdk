@@ -3,7 +3,7 @@
   "meta": {
     "id": "da18e58b-c2d9-4798-8143-2dd30b5976fc",
     "title": "Status Server Monitor Reconcile Stuck Deploys",
-    "domain": "adtoolkit://cookbook/status/service/monitor/reconcile-stuck-deploys",
+    "domain": "adhsdk://cookbook/status/service/monitor/reconcile-stuck-deploys",
     "type": "ingredient",
     "version": "1.0.2",
     "status": "review",
@@ -32,22 +32,22 @@
       "agenticdevelopercookbook://guidelines/implementing/networking/rate-limiting"
     ],
     "related": [
-      "adtoolkit://cookbook/status/service/monitor/enrich-deploy-errors",
-      "adtoolkit://cookbook/status/service/monitor/deploy-status",
-      "adtoolkit://cookbook/status/service/monitor/provider-conn"
+      "adhsdk://cookbook/status/service/monitor/enrich-deploy-errors",
+      "adhsdk://cookbook/status/service/monitor/deploy-status",
+      "adhsdk://cookbook/status/service/monitor/provider-conn"
     ],
     "references": [
-      "packages/web/packages/status-server/src/monitor/reconcile-stuck-deploys.ts (agenticdevelopertoolkit)",
-      "packages/web/packages/status-server/src/monitor/deploy-status.ts (agenticdevelopertoolkit)",
-      "packages/web/packages/status-server/src/monitor/sync.ts (agenticdevelopertoolkit)",
-      "packages/web/packages/status-server/src/monitor/cycle-runner.ts (agenticdevelopertoolkit)",
-      "packages/web/packages/status-server/src/storage/ports.ts (agenticdevelopertoolkit)",
-      "packages/web/packages/status-server/src/libsql/stores/deploy-store.ts (agenticdevelopertoolkit)",
-      "packages/web/packages/deploy-platform/src/conn/index.ts (agenticdevelopertoolkit)",
-      "packages/web/packages/deploy-platform/src/cooldown/provider-cooldown.ts (agenticdevelopertoolkit)",
-      "packages/web/packages/deploy-platform/src/util/map-limit.ts (agenticdevelopertoolkit)",
-      "packages/web/packages/deploy-platform/src/providers/railway.ts (agenticdevelopertoolkit)",
-      "packages/web/packages/status-server/test/reconcile-stuck-deploys.test.ts (agenticdevelopertoolkit)"
+      "packages/web/packages/status-server/src/monitor/reconcile-stuck-deploys.ts (adhsdk)",
+      "packages/web/packages/status-server/src/monitor/deploy-status.ts (adhsdk)",
+      "packages/web/packages/status-server/src/monitor/sync.ts (adhsdk)",
+      "packages/web/packages/status-server/src/monitor/cycle-runner.ts (adhsdk)",
+      "packages/web/packages/status-server/src/storage/ports.ts (adhsdk)",
+      "packages/web/packages/status-server/src/libsql/stores/deploy-store.ts (adhsdk)",
+      "packages/web/packages/deploy-platform/src/conn/index.ts (adhsdk)",
+      "packages/web/packages/deploy-platform/src/cooldown/provider-cooldown.ts (adhsdk)",
+      "packages/web/packages/deploy-platform/src/util/map-limit.ts (adhsdk)",
+      "packages/web/packages/deploy-platform/src/providers/railway.ts (adhsdk)",
+      "packages/web/packages/status-server/test/reconcile-stuck-deploys.test.ts (adhsdk)"
     ],
     "approved-by": "",
     "approved-date": ""

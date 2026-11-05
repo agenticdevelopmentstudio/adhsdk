@@ -1,7 +1,7 @@
 ---
 id: 2b4d0f95-dbdf-48a9-8579-a3e5b7d488fe
 title: "Pane View"
-domain: adtoolkit://cookbook/ui/layout/pane-view
+domain: adhsdk://cookbook/ui/layout/pane-view
 type: ingredient
 version: 1.2.2
 status: review
@@ -20,14 +20,14 @@ tags:
   - view-controller
   - accessibility
 depends-on:
-  - agenticdevelopertoolkit://recipes/pane-title-bar-view
-  - agenticdevelopertoolkit://recipes/pane-minimize-picker
-  - agenticdevelopertoolkit://recipes/pane-minimized-strip-view
-  - agenticdevelopertoolkit://recipes/options-dialog-view-controller
+  - adhsdk://recipes/pane-title-bar-view
+  - adhsdk://recipes/pane-minimize-picker
+  - adhsdk://recipes/pane-minimized-strip-view
+  - adhsdk://recipes/options-dialog-view-controller
 related:
-  - adtoolkit://cookbook/ui/layout/composable-tabs/leaf-pane-view
-  - agenticdevelopertoolkit://recipes/window-options-dialog
-  - agenticdevelopertoolkit://recipes/pane-control-cluster
+  - adhsdk://cookbook/ui/layout/composable-tabs/leaf-pane-view
+  - adhsdk://recipes/window-options-dialog
+  - adhsdk://recipes/pane-control-cluster
   - agenticdevelopercookbook://guidelines/cookbook/ui/platform-design-languages
 references: []
 approved-by: ""
@@ -306,7 +306,7 @@ Not applicable: no logging call of any kind appears anywhere in this concept.
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/macOS/UI/ViewControllers/Panes/PaneViewController.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/Panes/PaneViewController.swift` |
 
 ## Design Decisions
 
@@ -359,4 +359,4 @@ Statuses rest on `PaneViewController.swift` and `PaneSpacingOverride.swift` as b
 | 1.1.2 | 2026-09-25 | Mike Fullerton | Moved into the library cookbook; added Reference Implementations. |
 | 1.2.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to ui/layout/. |
 | 1.2.1 | 2026-10-04 | Mike Fullerton | Added separation-of-concerns and unit-test-coverage compliance rows. Added the confines-to-ui-thread requirement and vector. |
-| 1.2.2 | 2026-10-04 | Mike Fullerton | Legacy recipe citations restored to the legacy recipes' own agenticdevelopertoolkit://recipes/ domains; the adtoolkit://recipes/ form named nothing. |
+| 1.2.2 | 2026-10-04 | Mike Fullerton | Legacy recipe citations restored to the legacy recipes' own adhsdk://recipes/ domains; the adhsdk://recipes/ form named nothing. |

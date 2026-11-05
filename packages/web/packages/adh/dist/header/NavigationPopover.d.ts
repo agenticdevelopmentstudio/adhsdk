@@ -136,7 +136,7 @@ export type NavigationPopoverProps = {
      *  row's area already spelled out, so a heading there would label nothing. Not a row:
      *  never highlighted, never reached by the arrow keys. */
     sectionLabels?: Partial<Record<number, string>>;
-    /** A chord that TOGGLES the menu, in `@agenticdevelopertoolkit/ui/hooks/useShortcut`
+    /** A chord that TOGGLES the menu, in `@adh-sdk/ui/hooks/useShortcut`
      *  spelling — `'mod+shift+k'`, say. Omit (or pass `''`) for no shortcut, which is
      *  what every popover that isn't the site menu wants: two popovers registering the
      *  same chord would race, and the registry's most-recent-wins tie-break would hand

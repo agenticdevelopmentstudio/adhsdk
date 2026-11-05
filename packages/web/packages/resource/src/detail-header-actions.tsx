@@ -2,7 +2,7 @@
 
 import type { ReactNode } from "react";
 
-import { DetailHeaderPortal, DisabledHelpButton, useHasDetailHeader } from "@agenticdevelopertoolkit/ui/blocks";
+import { DetailHeaderPortal, DisabledHelpButton, useHasDetailHeader } from "@adh-sdk/ui/blocks";
 
 import { HeaderApiButton } from "./header-api-button";
 import { HelpPopover } from "./HelpPopover";

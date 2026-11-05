@@ -3,7 +3,7 @@
   "meta": {
     "id": "b0e815fd-22cc-4d58-a0c6-001c21bad468",
     "title": "VS Code URI",
-    "domain": "adtoolkit://cookbook/workspace/extensions/vscode-api/uri",
+    "domain": "adhsdk://cookbook/workspace/extensions/vscode-api/uri",
     "type": "ingredient",
     "version": "1.1.0",
     "status": "review",
@@ -25,18 +25,18 @@
     ],
     "depends-on": [],
     "related": [
-      "adtoolkit://cookbook/workspace/extensions/host/js-value-bridge",
-      "adtoolkit://cookbook/workspace/extensions/vscode-api/commands/main-thread-commands",
-      "adtoolkit://cookbook/workspace/extensions/vscode-api/languages/main-thread-diagnostics",
-      "adtoolkit://cookbook/workspace/extensions/vscode-api/webviews/extension-webview-presenting",
-      "adtoolkit://cookbook/workspace/extensions/vscode-api/language-models/language-model-message-vocabulary"
+      "adhsdk://cookbook/workspace/extensions/host/js-value-bridge",
+      "adhsdk://cookbook/workspace/extensions/vscode-api/commands/main-thread-commands",
+      "adhsdk://cookbook/workspace/extensions/vscode-api/languages/main-thread-diagnostics",
+      "adhsdk://cookbook/workspace/extensions/vscode-api/webviews/extension-webview-presenting",
+      "adhsdk://cookbook/workspace/extensions/vscode-api/language-models/language-model-message-vocabulary"
     ],
     "references": [
-      "packages/apple/AgenticToolkit/macOS/Features/Extensions/VSCodeAPI/Uri.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/Tests/AgenticToolkitMacOSTests/Extensions/UriTests.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/macOS/Features/Extensions/VSCodeAPI/VSCodeAPI.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/macOS/Features/Extensions/Host/ExtensionHost.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/project.yml (agenticdevelopertoolkit)"
+      "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/Uri.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKMacOSTests/Extensions/UriTests.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/VSCodeAPI.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/Host/ExtensionHost.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/project.yml (adhsdk)"
     ],
     "approved-by": "",
     "approved-date": ""

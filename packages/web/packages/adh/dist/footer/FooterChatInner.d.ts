@@ -1,4 +1,4 @@
-import '@agentic-toolkit/bitbag/css/bitbag-dock.css';
+import '@adh-sdk/bitbag/css/bitbag-dock.css';
 /**
  * bitbag in the footer — the SAME fixture fishlamp.com runs, not a second chat
  * that merely shares his name: his face riding above his chat, his mood and gaze

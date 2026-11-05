@@ -10,7 +10,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, fireEvent, waitFor, cleanup, act } from "@testing-library/react";
 
-vi.mock("@agentic-toolkit/data/personas", () => ({
+vi.mock("@adh-sdk/data/personas", () => ({
   personaToolsApi: {
     list: vi.fn(),
     grant: vi.fn(),
@@ -20,7 +20,7 @@ vi.mock("@agentic-toolkit/data/personas", () => ({
 }));
 
 import { AbilitiesPanel } from "./AbilitiesPanel";
-import { personaToolsApi, type ToolCatalogItem, type ToolGrant } from "@agentic-toolkit/data/personas";
+import { personaToolsApi, type ToolCatalogItem, type ToolGrant } from "@adh-sdk/data/personas";
 
 const list = vi.mocked(personaToolsApi.list);
 const grant = vi.mocked(personaToolsApi.grant);

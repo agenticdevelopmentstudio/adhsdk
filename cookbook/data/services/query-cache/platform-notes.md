@@ -4,7 +4,7 @@
   `useQueryClient` back the cache and its React binding; a module-scope
   `let` binding backs the one-per-tab singleton; `window.addEventListener
   ('storage', ...)` backs the cross-tab session watch;
-  `@agentic-toolkit/auth/client`'s `onSessionChange`/`readTokenSubject`
+  `@adh-sdk/auth/client`'s `onSessionChange`/`readTokenSubject`
   supply the same-tab session signal and the principal comparison value.
 - **SwiftUI / AppKit / UIKit**: A `final class` or `actor`-isolated cache
   object (an `NSCache`- or `Dictionary`-backed store keyed the same way the

@@ -3,7 +3,7 @@
   "meta": {
     "id": "b2cf12e3-71de-4d87-9216-d5e8d604169c",
     "title": "Extension Host",
-    "domain": "adtoolkit://cookbook/workspace/extensions/host/extension-host",
+    "domain": "adhsdk://cookbook/workspace/extensions/host/extension-host",
     "type": "ingredient",
     "version": "1.2.0",
     "status": "review",
@@ -24,16 +24,16 @@
       "not-implemented-ledger"
     ],
     "depends-on": [
-      "adtoolkit://cookbook/workspace/extensions/manifest/activation-event-matcher",
-      "adtoolkit://cookbook/workspace/extensions/manifest/extension-resource-path",
-      "adtoolkit://cookbook/workspace/extensions/manifest/extension-manifest",
-      "adtoolkit://cookbook/workspace/extensions/registry/extension-registry"
+      "adhsdk://cookbook/workspace/extensions/manifest/activation-event-matcher",
+      "adhsdk://cookbook/workspace/extensions/manifest/extension-resource-path",
+      "adhsdk://cookbook/workspace/extensions/manifest/extension-manifest",
+      "adhsdk://cookbook/workspace/extensions/registry/extension-registry"
     ],
     "related": [
-      "adtoolkit://cookbook/workspace/extensions/manifest/activation-event-matcher",
-      "adtoolkit://cookbook/workspace/extensions/manifest/extension-resource-path",
-      "adtoolkit://cookbook/workspace/extensions/manifest/extension-manifest",
-      "adtoolkit://cookbook/workspace/extensions/registry/extension-registry"
+      "adhsdk://cookbook/workspace/extensions/manifest/activation-event-matcher",
+      "adhsdk://cookbook/workspace/extensions/manifest/extension-resource-path",
+      "adhsdk://cookbook/workspace/extensions/manifest/extension-manifest",
+      "adhsdk://cookbook/workspace/extensions/registry/extension-registry"
     ],
     "references": [],
     "approved-by": "",

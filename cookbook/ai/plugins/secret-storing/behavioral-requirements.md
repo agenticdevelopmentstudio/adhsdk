@@ -38,7 +38,7 @@
   instance.
 - **legacy-service-constant**: the production implementation's
   legacy-service identifier MUST equal the fixed literal
-  "com.agentictoolkit", mirroring the secure-storage helper's own default
+  "com.mikefullerton.agenticdeveloperhubsdk", mirroring the secure-storage helper's own default
   fallback service identifier.
 - **deletelegacy-targets-legacy-service**: delete-legacy MUST remove the
   entry stored under the legacy-service identifier for key, and MUST NOT

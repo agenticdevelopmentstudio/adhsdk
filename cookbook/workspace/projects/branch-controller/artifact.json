@@ -3,7 +3,7 @@
   "meta": {
     "id": "92f11498-2cb2-4b04-92b9-560d9f2de6ee",
     "title": "Branch Management",
-    "domain": "adtoolkit://cookbook/workspace/projects/branch-controller",
+    "domain": "adhsdk://cookbook/workspace/projects/branch-controller",
     "type": "ingredient",
     "version": "1.2.2",
     "status": "review",
@@ -27,21 +27,21 @@
     ],
     "depends-on": [],
     "related": [
-      "adtoolkit://cookbook/workspace/files/git-status-provider",
-      "adtoolkit://cookbook/ui/layout/tabbed-view/tab-pane"
+      "adhsdk://cookbook/workspace/files/git-status-provider",
+      "adhsdk://cookbook/ui/layout/tabbed-view/tab-pane"
     ],
     "references": [
-      "packages/apple/AgenticToolkit/macOS/Features/Projects/BranchController.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/macOS/Features/Projects/ProjectCheckout.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/macOS/Features/Projects/ProjectController.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/Core/Git/GitClient.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/macOS/UI/ViewControllers/MultiTabbedViewController/TabPane/TabPaneDataSource.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/macOS/UI/ViewControllers/MultiTabbedViewController/TabPane/TabPaneDelegate.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/macOS/UI/ViewControllers/MultiTabbedViewController/Edge.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/macOS/UI/ViewControllers/MultiTabbedViewController/TabPane/TabPaneStatusSymbol.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/macOS/UI/AppShell/AppCommand.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/macOS/UI/AppShell/ClosureMenuItemTarget.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/Tests/AgenticToolkitMacOSTests/Projects/BranchControllerTests.swift (agenticdevelopertoolkit)"
+      "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/BranchController.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectCheckout.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectController.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/Core/Git/GitClient.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/MultiTabbedViewController/TabPane/TabPaneDataSource.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/MultiTabbedViewController/TabPane/TabPaneDelegate.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/MultiTabbedViewController/Edge.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/MultiTabbedViewController/TabPane/TabPaneStatusSymbol.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/macOS/UI/AppShell/AppCommand.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/macOS/UI/AppShell/ClosureMenuItemTarget.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKMacOSTests/Projects/BranchControllerTests.swift (adhsdk)"
     ],
     "approved-by": "",
     "approved-date": ""

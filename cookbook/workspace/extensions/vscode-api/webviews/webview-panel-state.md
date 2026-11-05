@@ -1,7 +1,7 @@
 ---
 id: b1a34260-3966-4309-ac58-6249752c95fb
 title: "Webview Panel State"
-domain: adtoolkit://cookbook/workspace/extensions/vscode-api/webviews/webview-panel-state
+domain: adhsdk://cookbook/workspace/extensions/vscode-api/webviews/webview-panel-state
 type: ingredient
 version: 1.2.0
 status: review
@@ -22,13 +22,13 @@ tags:
   - persistence
 depends-on: []
 related:
-  - adtoolkit://cookbook/workspace/extensions/vscode-api/webviews/webview-panel-view
+  - adhsdk://cookbook/workspace/extensions/vscode-api/webviews/webview-panel-view
 references:
-  - packages/apple/AgenticToolkit/Core/Extensions/WebviewPanelState.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Tests/AgenticToolkitCoreTests/Extensions/WebviewPanelStateTests.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Core/Extensions/WebviewPanelOptions.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/macOS/Features/Extensions/Webview/WebviewPanelViewController.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/macOS/Features/Extensions/Webview/WebviewPanelSerializer.swift (agenticdevelopertoolkit)
+  - packages/apple/AgenticDeveloperHubSDK/Core/Extensions/WebviewPanelState.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKCoreTests/Extensions/WebviewPanelStateTests.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Core/Extensions/WebviewPanelOptions.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/Webview/WebviewPanelViewController.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/Webview/WebviewPanelSerializer.swift (adhsdk)
 approved-by: ""
 approved-date: ""
 ---
@@ -264,7 +264,7 @@ written to a log by this component.
 - **SwiftUI**: the source (`WebviewPanelState.swift`) is plain
   `Foundation` — `JSONEncoder`, `JSONDecoder`, `Data`, `String` — with no
   dependency on SwiftUI or any view-layer framework. It sits in
-  `AgenticToolkitCore`, alongside its sibling `WebviewPanelOptions`, and is
+  `AgenticDeveloperHubSDKCore`, alongside its sibling `WebviewPanelOptions`, and is
   consumed by the `macOS`-tier `WebviewPanelViewController` and
   `WebviewPanelSerializer`. A port that keeps this type in Swift needs
   nothing beyond `Foundation` and `Codable`. `WebviewPanelState` is a
@@ -315,7 +315,7 @@ written to a log by this component.
   that enforces per-field presence the way Swift's `Codable` does.
 - **AppKit / UIKit**: identical to the SwiftUI note — the type depends on
   neither AppKit nor UIKit, so a macOS host consumes the same
-  `AgenticToolkitCore` type directly with no translation needed. (The panel
+  `AgenticDeveloperHubSDKCore` type directly with no translation needed. (The panel
   that actually renders from a restored value, `WebviewPanelViewController`,
   is AppKit and is out of this file's own scope.)
 - **WinUI 3**: use `System.Text.Json` with a `JsonSerializerOptions` whose
@@ -341,7 +341,7 @@ written to a log by this component.
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/Core/Extensions/WebviewPanelState.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Extensions/WebviewPanelState.swift` |
 
 ## Design Decisions
 

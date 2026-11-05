@@ -1,0 +1,192 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Scheme
+   LastUpgradeVersion = "2640"
+   version = "1.7">
+   <BuildAction
+      parallelizeBuildables = "YES"
+      buildImplicitDependencies = "YES"
+      runPostActionsOnFailure = "NO">
+      <BuildActionEntries>
+         <BuildActionEntry
+            buildForTesting = "YES"
+            buildForRunning = "YES"
+            buildForProfiling = "YES"
+            buildForArchiving = "YES"
+            buildForAnalyzing = "YES">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "03714E84C5F66E1445582C76"
+               BuildableName = "AgenticDeveloperHubSDKMacOS.framework"
+               BlueprintName = "AgenticDeveloperHubSDKMacOS"
+               ReferencedContainer = "container:AgenticDeveloperHubSDK.xcodeproj">
+            </BuildableReference>
+         </BuildActionEntry>
+      </BuildActionEntries>
+   </BuildAction>
+   <TestAction
+      buildConfiguration = "Debug"
+      selectedDebuggerIdentifier = "Xcode.DebuggerFoundation.Debugger.LLDB"
+      selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
+      shouldUseLaunchSchemeArgsEnv = "YES"
+      onlyGenerateCoverageForSpecifiedTargets = "NO">
+      <MacroExpansion>
+         <BuildableReference
+            BuildableIdentifier = "primary"
+            BlueprintIdentifier = "03714E84C5F66E1445582C76"
+            BuildableName = "AgenticDeveloperHubSDKMacOS.framework"
+            BlueprintName = "AgenticDeveloperHubSDKMacOS"
+            ReferencedContainer = "container:AgenticDeveloperHubSDK.xcodeproj">
+         </BuildableReference>
+      </MacroExpansion>
+      <Testables>
+         <TestableReference
+            skipped = "NO"
+            parallelizable = "NO">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "1B766FC5142B8AD81866D455"
+               BuildableName = "AgenticDeveloperHubSDKCoreTests.xctest"
+               BlueprintName = "AgenticDeveloperHubSDKCoreTests"
+               ReferencedContainer = "container:AgenticDeveloperHubSDK.xcodeproj">
+            </BuildableReference>
+         </TestableReference>
+         <TestableReference
+            skipped = "NO"
+            parallelizable = "NO">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "F46B44A03965A16F13BBCC09"
+               BuildableName = "AgenticDeveloperHubSDKCoreUITests.xctest"
+               BlueprintName = "AgenticDeveloperHubSDKCoreUITests"
+               ReferencedContainer = "container:AgenticDeveloperHubSDK.xcodeproj">
+            </BuildableReference>
+         </TestableReference>
+         <TestableReference
+            skipped = "NO"
+            parallelizable = "NO">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "BFF911AF35212C742E730661"
+               BuildableName = "AgenticDeveloperHubSDKCoreMacOSTests.xctest"
+               BlueprintName = "AgenticDeveloperHubSDKCoreMacOSTests"
+               ReferencedContainer = "container:AgenticDeveloperHubSDK.xcodeproj">
+            </BuildableReference>
+         </TestableReference>
+         <TestableReference
+            skipped = "NO"
+            parallelizable = "NO">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "4EE9A79383EF5D54D3B16B63"
+               BuildableName = "AIPluginKitTests.xctest"
+               BlueprintName = "AIPluginKitTests"
+               ReferencedContainer = "container:AgenticDeveloperHubSDK.xcodeproj">
+            </BuildableReference>
+         </TestableReference>
+         <TestableReference
+            skipped = "NO"
+            parallelizable = "NO">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "6657366A4FEA0301A565CE2C"
+               BuildableName = "AgenticDeveloperHubSDKPermissionsTests.xctest"
+               BlueprintName = "AgenticDeveloperHubSDKPermissionsTests"
+               ReferencedContainer = "container:AgenticDeveloperHubSDK.xcodeproj">
+            </BuildableReference>
+         </TestableReference>
+         <TestableReference
+            skipped = "NO"
+            parallelizable = "NO">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "37CBB925DB5D0306087F1406"
+               BuildableName = "AgenticDeveloperHubSDKPermissionsUITests.xctest"
+               BlueprintName = "AgenticDeveloperHubSDKPermissionsUITests"
+               ReferencedContainer = "container:AgenticDeveloperHubSDK.xcodeproj">
+            </BuildableReference>
+         </TestableReference>
+         <TestableReference
+            skipped = "NO"
+            parallelizable = "NO">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "754912831752EBB176C8DADC"
+               BuildableName = "AgenticDeveloperHubSDKDisplaysTests.xctest"
+               BlueprintName = "AgenticDeveloperHubSDKDisplaysTests"
+               ReferencedContainer = "container:AgenticDeveloperHubSDK.xcodeproj">
+            </BuildableReference>
+         </TestableReference>
+         <TestableReference
+            skipped = "NO"
+            parallelizable = "NO">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "739CAA10AD576461D3C220BA"
+               BuildableName = "AgenticDeveloperHubSDKMacOSTests.xctest"
+               BlueprintName = "AgenticDeveloperHubSDKMacOSTests"
+               ReferencedContainer = "container:AgenticDeveloperHubSDK.xcodeproj">
+            </BuildableReference>
+         </TestableReference>
+         <TestableReference
+            skipped = "NO"
+            parallelizable = "NO">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "D199DF20D6FF180113697869"
+               BuildableName = "AgenticDeveloperHubSDKDatabaseTests.xctest"
+               BlueprintName = "AgenticDeveloperHubSDKDatabaseTests"
+               ReferencedContainer = "container:AgenticDeveloperHubSDK.xcodeproj">
+            </BuildableReference>
+         </TestableReference>
+      </Testables>
+      <CommandLineArguments>
+      </CommandLineArguments>
+   </TestAction>
+   <LaunchAction
+      buildConfiguration = "Debug"
+      selectedDebuggerIdentifier = "Xcode.DebuggerFoundation.Debugger.LLDB"
+      selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
+      launchStyle = "0"
+      useCustomWorkingDirectory = "NO"
+      ignoresPersistentStateOnLaunch = "NO"
+      debugDocumentVersioning = "YES"
+      debugServiceExtension = "internal"
+      allowLocationSimulation = "YES">
+      <MacroExpansion>
+         <BuildableReference
+            BuildableIdentifier = "primary"
+            BlueprintIdentifier = "03714E84C5F66E1445582C76"
+            BuildableName = "AgenticDeveloperHubSDKMacOS.framework"
+            BlueprintName = "AgenticDeveloperHubSDKMacOS"
+            ReferencedContainer = "container:AgenticDeveloperHubSDK.xcodeproj">
+         </BuildableReference>
+      </MacroExpansion>
+      <CommandLineArguments>
+      </CommandLineArguments>
+   </LaunchAction>
+   <ProfileAction
+      buildConfiguration = "Release"
+      shouldUseLaunchSchemeArgsEnv = "YES"
+      savedToolIdentifier = ""
+      useCustomWorkingDirectory = "NO"
+      debugDocumentVersioning = "YES">
+      <CommandLineArguments>
+      </CommandLineArguments>
+      <MacroExpansion>
+         <BuildableReference
+            BuildableIdentifier = "primary"
+            BlueprintIdentifier = "03714E84C5F66E1445582C76"
+            BuildableName = "AgenticDeveloperHubSDKMacOS.framework"
+            BlueprintName = "AgenticDeveloperHubSDKMacOS"
+            ReferencedContainer = "container:AgenticDeveloperHubSDK.xcodeproj">
+         </BuildableReference>
+      </MacroExpansion>
+   </ProfileAction>
+   <AnalyzeAction
+      buildConfiguration = "Debug">
+   </AnalyzeAction>
+   <ArchiveAction
+      buildConfiguration = "Release"
+      revealArchiveInOrganizer = "YES">
+   </ArchiveAction>
+</Scheme>

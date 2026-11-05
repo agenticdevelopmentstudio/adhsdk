@@ -21,6 +21,6 @@ never installs anything; it only hands back registry-published bytes and
 metadata, safely, to whichever caller does.
 
 All line references below are to
-`packages/apple/AgenticToolkit/Core/Extensions/OpenVSXClient.swift` unless
+`packages/apple/AgenticDeveloperHubSDK/Core/Extensions/OpenVSXClient.swift` unless
 another file is named.
 

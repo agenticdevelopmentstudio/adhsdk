@@ -1,7 +1,7 @@
 ---
 id: 0B7E4C0A-3C55-4B4F-9E52-6D1A8F2C7A11
 title: "Record Detail Panel"
-domain: adtoolkit://cookbook/ui/settings/record-detail-panel
+domain: adhsdk://cookbook/ui/settings/record-detail-panel
 type: ingredient
 version: 1.0.1
 status: review
@@ -21,8 +21,8 @@ tags:
   - records
 depends-on: []
 related:
-  - adtoolkit://cookbook/ui/settings/field-sync
-  - adtoolkit://cookbook/ui/settings/record-detail-window-controller
+  - adhsdk://cookbook/ui/settings/field-sync
+  - adhsdk://cookbook/ui/settings/record-detail-window-controller
 references: []
 approved-by: ""
 approved-date: ""
@@ -172,7 +172,7 @@ Not applicable: the pane performs no logging.
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/macOS/SystemIntegration/ComposableSettingsWindow/RecordDetailPanel.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/RecordDetailPanel.swift` |
 
 ## Design Decisions
 

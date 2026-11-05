@@ -21,7 +21,7 @@ either throws `AuthHttpError` (via the shared `authedFetch`) or one of the two h
 friendly `Error`s this recipe documents. `unit-test-coverage` **failed**: no `__tests__` directory
 or `*.test.ts` file exists next to `organizations.ts`/`members.ts` in this checkout, and the
 consumer feature tests found elsewhere in the repository (`NewOrganizationModal.test.tsx`,
-`orgRenameSavePath.test.tsx`) mock `@agentic-toolkit/data/organizations` wholesale rather than
+`orgRenameSavePath.test.tsx`) mock `@adh-sdk/data/organizations` wholesale rather than
 exercising this module's own request-building or error-mapping logic — none of the requirements
 above is exercised by a dedicated test in this checkout. `server-side-authorization` **passed**:
 neither module performs a client-side permission check of any kind, per

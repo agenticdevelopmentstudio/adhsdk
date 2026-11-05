@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { PLACEHOLDER_URL } from "@agentic-toolkit/deploy-platform/engine";
+import { PLACEHOLDER_URL } from "@adh-sdk/deploy-platform/engine";
 import { endpointLabel, siteNameForUrl } from "./url";
 
 describe("a deploy-only monitor's placeholder URL", () => {

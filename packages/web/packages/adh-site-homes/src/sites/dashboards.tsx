@@ -1,13 +1,13 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { defineSiteHome } from "@agentic-toolkit/adh/home";
-import { reservedWorkspaceSlugs } from "@agentic-toolkit/adh/site";
-import { DashboardsFeature } from "@agentic-toolkit/dashboards";
+import { defineSiteHome } from "@adh-sdk/adh/home";
+import { reservedWorkspaceSlugs } from "@adh-sdk/adh/site";
+import { DashboardsFeature } from "@adh-sdk/dashboards";
 // The parse helper comes from the server-safe ./parse subpath, as it did when this was an RSC:
 // the barrel dist is a "use client" module, and keeping the grammar in one module is what stops
 // this host and the hub drifting into parsing the same URL differently.
-import { parseDashboardsPath } from "@agentic-toolkit/dashboards/parse";
+import { parseDashboardsPath } from "@adh-sdk/dashboards/parse";
 
 /**
  * The Dashboards (Site Monitoring) feature — this site's gated product surface

@@ -1,6 +1,6 @@
 'use client';
 
-import { connectSse, type SseHandle } from '@agentic-toolkit/data/stream';
+import { connectSse, type SseHandle } from '@adh-sdk/data/stream';
 
 import { BASE } from './client';
 import type { Operation, RunState, ScopeKind } from './types';

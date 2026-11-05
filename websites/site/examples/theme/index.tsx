@@ -6,18 +6,18 @@ import {
   InlineChatView,
   MockBackend,
   useChatSession,
-} from '@agenticdevelopertoolkit/chat'
-import '@agenticdevelopertoolkit/chat/css/base.css'
-import '@agenticdevelopertoolkit/chat/css/modes/inline.css'
-import { SourceCodePanel } from '@agenticdevelopertoolkit/controls/source-code-panel'
-import '@agenticdevelopertoolkit/controls/source-code-panel/styles.css'
+} from '@adh-sdk/chat'
+import '@adh-sdk/chat/css/base.css'
+import '@adh-sdk/chat/css/modes/inline.css'
+import { SourceCodePanel } from '@adh-sdk/controls/source-code-panel'
+import '@adh-sdk/controls/source-code-panel/styles.css'
 import {
   themes,
   themeIds,
   type ThemeKey,
-} from '@agenticdevelopertoolkit/themes'
+} from '@adh-sdk/themes'
 import './index.css'
-import { noAutofillProps } from '@agenticdevelopertoolkit/ui/lib/autofill'
+import { noAutofillProps } from '@adh-sdk/ui/lib/autofill'
 
 export const meta = { id: 'theme', label: 'Theme' }
 

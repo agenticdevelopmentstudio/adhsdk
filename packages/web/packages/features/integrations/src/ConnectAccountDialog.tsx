@@ -8,21 +8,21 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "@agenticdevelopertoolkit/ui/components/dialog";
-import { reportUnexpectedAuthError } from "@agentic-toolkit/auth";
-import { Button } from "@agenticdevelopertoolkit/ui/components/button";
-import { Input } from "@agenticdevelopertoolkit/ui/components/input";
-import { Label } from "@agenticdevelopertoolkit/ui/components/label";
-import { ErrorText } from "@agenticdevelopertoolkit/ui/components/error-text";
+} from "@adh-sdk/ui/components/dialog";
+import { reportUnexpectedAuthError } from "@adh-sdk/auth";
+import { Button } from "@adh-sdk/ui/components/button";
+import { Input } from "@adh-sdk/ui/components/input";
+import { Label } from "@adh-sdk/ui/components/label";
+import { ErrorText } from "@adh-sdk/ui/components/error-text";
 import {
   integrationsApi,
   oauthCallbackUrl,
   type MaskedProviderConfig,
   type ProviderCatalogEntry,
-} from "@agentic-toolkit/data/integrations";
+} from "@adh-sdk/data/integrations";
 import { currentReturnTo, stashPendingConnect } from "./oauth-callback-store";
 import { PlaidLinkLauncher } from "./PlaidLinkLauncher";
-import { errMsg } from "@agentic-toolkit/data";
+import { errMsg } from "@adh-sdk/data";
 
 /**
  * The "Connect account" dialog — branches on the provider's catalog `authMethod`:

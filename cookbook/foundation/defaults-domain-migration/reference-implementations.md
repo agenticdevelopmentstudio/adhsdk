@@ -1,5 +1,5 @@
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/Core/SettingStorage/DefaultsDomainMigration.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/SettingStorage/DefaultsDomainMigration.swift` |
 

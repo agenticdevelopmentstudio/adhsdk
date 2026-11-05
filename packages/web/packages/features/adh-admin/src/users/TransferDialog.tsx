@@ -1,8 +1,8 @@
 "use client";
 
 import * as React from "react";
-import { Alert, AlertDescription, AlertTitle } from "@agenticdevelopertoolkit/ui/components/alert";
-import { Button } from "@agenticdevelopertoolkit/ui/components/button";
+import { Alert, AlertDescription, AlertTitle } from "@adh-sdk/ui/components/alert";
+import { Button } from "@adh-sdk/ui/components/button";
 import {
   Dialog,
   DialogContent,
@@ -10,9 +10,9 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@agenticdevelopertoolkit/ui/components/dialog";
-import { Input } from "@agenticdevelopertoolkit/ui/components/input";
-import { Label } from "@agenticdevelopertoolkit/ui/components/label";
+} from "@adh-sdk/ui/components/dialog";
+import { Input } from "@adh-sdk/ui/components/input";
+import { Label } from "@adh-sdk/ui/components/label";
 import type { TransferConflict } from "./transfer";
 
 export interface ConfirmSourceDialogProps {

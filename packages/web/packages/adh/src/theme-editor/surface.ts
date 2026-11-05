@@ -1,4 +1,4 @@
-import type { ThemeAreasSurface } from '@agentic-toolkit/adh/debug-env'
+import type { ThemeAreasSurface } from '@adh-sdk/adh/debug-env'
 
 import { THEME_AREAS, readItemCss } from './areas'
 import { CssEditor } from './CssEditor'

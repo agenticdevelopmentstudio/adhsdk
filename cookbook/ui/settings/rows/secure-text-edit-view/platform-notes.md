@@ -33,7 +33,7 @@
   `.body`/`primaryText`/`placeholderText`, mirroring the theme styling
   documented for `TextEditView`.
 - **AppKit/UIKit** (source platform): Source file
-  `packages/apple/AgenticToolkit/macOS/SystemIntegration/ComposableSettingsWindow/Views/SecureTextEditView.swift`
+  `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/Views/SecureTextEditView.swift`
   — a macOS-only, `@MainActor`, `final` subclass of `TextEditView` inside the
   `ComposableSettings` namespace, overriding only
   `makeTextField(initialValue:)` to return `NSSecureTextField(string:
@@ -45,7 +45,7 @@
   `static`) because it overrides `TextEditView`'s `open class func
   makeTextField`, which trips SwiftLint's `static_over_final_class` rule
   (see Design Decisions). `TextEditView.swift`
-  (`adtoolkit://cookbook/ui/settings/rows/text-edit-view`) supplies everything else — row
+  (`adhsdk://cookbook/ui/settings/rows/text-edit-view`) supplies everything else — row
   layout, content-hugging, the `textFieldChanged(_:)` target/action commit
   path, `observeTheme` styling, and `viewModel.onChange` sync — and is out of
   this recipe's scope. There is no UIKit code path in source; a UIKit port

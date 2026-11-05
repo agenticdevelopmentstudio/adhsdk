@@ -7,7 +7,7 @@ import {
   definitionValidate,
 } from "../DefinitionDetail";
 import { wholeNumberProblem } from "../fields";
-import type { GameDefinition } from "@agentic-toolkit/data/games";
+import type { GameDefinition } from "@adh-sdk/data/games";
 
 function row(over: Partial<GameDefinition> = {}): GameDefinition {
   return {

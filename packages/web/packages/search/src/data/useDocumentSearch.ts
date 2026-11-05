@@ -14,7 +14,7 @@ export const DEFAULT_PAGE_SIZE = 50
 export const DEFAULT_DEBOUNCE_MS = 250
 
 /**
- * Default per-request timeout (ms). Mirrors @agenticdevelopertoolkit/markdown's MarkdownViewer
+ * Default per-request timeout (ms). Mirrors @adh-sdk/markdown's MarkdownViewer
  * (15s): a request that does not resolve by then is aborted and surfaced as an
  * error rather than spinning on the loading skeleton forever.
  */

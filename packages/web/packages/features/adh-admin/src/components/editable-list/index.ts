@@ -1,5 +1,5 @@
 /**
- * The admin site's list vocabulary. Four of these names now live in `@agenticdevelopertoolkit/ui/blocks` —
+ * The admin site's list vocabulary. Four of these names now live in `@adh-sdk/ui/blocks` —
  * the ecosystem panes render the same list of the same rows, and a second copy of it would be two
  * tables nothing makes agree. They are re-exported rather than imported directly at each call site
  * so that where a piece lives stays one decision, made here, instead of thirty import lines to
@@ -22,7 +22,7 @@ export {
   type EditableListFacet,
   type EditableListTextFilter,
   type ListSort,
-} from "@agenticdevelopertoolkit/ui/blocks";
+} from "@adh-sdk/ui/blocks";
 export { TypeToConfirmDialog, type TypeToConfirmDialogProps } from "./TypeToConfirmDialog";
 export { WindowFooter, type WindowFooterProps } from "./WindowFooter";
 export {

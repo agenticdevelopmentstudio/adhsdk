@@ -17,7 +17,7 @@ vi.mock("../../../../data/src/markdown/markdown", async (importOriginal) => ({
 
 type Row = { id: string; title: string };
 // The grid: its rows' titles, and the New / Edit / Delete a user would click.
-vi.mock("@agentic-toolkit/crud", () => ({
+vi.mock("@adh-sdk/crud", () => ({
   CrudTable: ({
     rows,
     canWrite,

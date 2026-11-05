@@ -1,8 +1,8 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { TopicSelectHint } from "@agenticdevelopertoolkit/ui/blocks";
-import { ErrorText } from "@agenticdevelopertoolkit/ui/components/error-text";
+import { TopicSelectHint } from "@adh-sdk/ui/blocks";
+import { ErrorText } from "@adh-sdk/ui/components/error-text";
 import { ButtonBar, type MasterDetailActions } from "./MasterDetailLayout";
 import type { RecordAffordanceProps } from "../record-affordance";
 

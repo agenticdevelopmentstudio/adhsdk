@@ -8,8 +8,8 @@ import {
   type GameEffectInput,
   type GameMapping,
   type GameMappingInput,
-} from "@agentic-toolkit/data/games";
-import type { TopicLeaf } from "@agentic-toolkit/resource";
+} from "@adh-sdk/data/games";
+import type { TopicLeaf } from "@adh-sdk/resource";
 import { InlineChildList, type InlineChildListConfig } from "./InlineChildList";
 import {
   EffectFields,

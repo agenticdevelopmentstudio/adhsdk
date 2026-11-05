@@ -4,12 +4,12 @@
 | sed-001 | token-filter | the display name `"Coffee Grinder"` | `"CoffeeGrinder"` |
 | sed-002 | token-order | the display name `"Percolator"` | `"Percolator"` |
 | sed-003 | token-filter | the display name `"Coffee/Grinder 2.0"` | `"CoffeeGrinder20"` |
-| sed-004 | token-empty-fallback, fallback-token | an input of only spaces, and separately an empty string | `"AgenticToolkit"` in both cases |
+| sed-004 | token-empty-fallback, fallback-token | an input of only spaces, and separately an empty string | `"AgenticDeveloperHubSDK"` in both cases |
 | sed-005 | token-non-ascii | the display name `"Café"` | `"Café"` |
 | sed-006 | directory-shape | home directory `/tmp/home`, token `"CoffeeGrinder"` | path `/tmp/home/.coffeegrinder` |
 | sed-007 | directory-case-fold | tokens `"COFFEEgrinder"` and `"CoffeeGrinder"` under `/tmp/home` | identical paths |
 | sed-008 | directory-no-io | the storage-directory operation for a home with no such dotfolder | a location is returned; the directory still does not exist afterward |
-| sed-009 | display-name-fallback | no declared display name available | display name and token both resolve to `"AgenticToolkit"` |
+| sed-009 | display-name-fallback | no declared display name available | display name and token both resolve to `"AgenticDeveloperHubSDK"` |
 | sed-010 | write-transaction, read-reader, file-backed-pool | a file-backed database configured with 2 readers; a write creates a table and inserts the value `42`; then a top-level read selects it back | `42` |
 | sed-011 | read-your-writes, reentrant-inline | inside one write: create a table, insert the value `7`, then a nested read selects it back | the nested read returns `7` before the write commits |
 | sed-012 | eviction-error, progress-interval | a table of 1500 rows; a read with a 200ms deadline runs a triple self-join count | raises the deadline-exceeded error for lane `"read"` in under 3 seconds |

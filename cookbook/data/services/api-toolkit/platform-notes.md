@@ -20,7 +20,7 @@
   resource state's use of a response-body-discarding request helper and a
   JSON-parsing request helper from the auth client recipe for the actual
   network calls, are specific to this source's implementation in
-  `@agentic-toolkit/api-explorer` and `@agentic-toolkit/crud`.
+  `@adh-sdk/api-explorer` and `@adh-sdk/crud`.
 - **Apple (Swift, not in source)**: `URLSession` (with `URLRequest`) is the
   equivalent of the request builder/executor; `Codable` is the equivalent of
   the schema-driven example/field-description derivation (though Codable is

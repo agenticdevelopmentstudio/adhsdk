@@ -3,7 +3,7 @@
   "meta": {
     "id": "aa2f3a92-8bac-4a0f-8e61-382958ab53ef",
     "title": "Uptime Math",
-    "domain": "adtoolkit://cookbook/status/dashboard/logic/uptime",
+    "domain": "adhsdk://cookbook/status/dashboard/logic/uptime",
     "type": "ingredient",
     "version": "1.1.1",
     "status": "review",
@@ -20,11 +20,11 @@
     ],
     "tags": [],
     "depends-on": [
-      "adtoolkit://cookbook/status/dashboard/logic/health"
+      "adhsdk://cookbook/status/dashboard/logic/health"
     ],
     "related": [
-      "adtoolkit://cookbook/status/service/monitor/uptime",
-      "adtoolkit://cookbook/status/dashboard/state/uptime"
+      "adhsdk://cookbook/status/service/monitor/uptime",
+      "adhsdk://cookbook/status/dashboard/state/uptime"
     ],
     "references": [],
     "approved-by": "",

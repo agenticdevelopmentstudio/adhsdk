@@ -1,6 +1,6 @@
 import { defineConfig } from 'vitest/config'
 
-// Self-contained config so `pnpm --filter @agenticdevelopertoolkit/ui run test`
+// Self-contained config so `pnpm --filter @adh-sdk/ui run test`
 // (cwd = this package) discovers src/__tests__/*. Vitest walks up to the
 // workspace-root config but keeps cwd as its root, so that config's
 // `dir: './packages'` would resolve to `<this package>/packages` and match

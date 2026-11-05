@@ -9,8 +9,8 @@ import { type SiteLink } from './SiteOptionsMenu'
 import { NavLinkItem, type NavLink } from './NavLink'
 import { PreviewNotice } from './PreviewNotice'
 import type { AdhThemeKey } from '../themes/adh-themes'
-import { Badge } from '@agenticdevelopertoolkit/ui/components/badge'
-import { HelpEnabled } from '@agenticdevelopertoolkit/ui/components/help-enabled'
+import { Badge } from '@adh-sdk/ui/components/badge'
+import { HelpEnabled } from '@adh-sdk/ui/components/help-enabled'
 
 /** A small pill shown under the site name. `tone` selects its colour. */
 export type HeaderBadge = {

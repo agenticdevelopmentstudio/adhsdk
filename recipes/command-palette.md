@@ -1,7 +1,7 @@
 ---
 id: 059093ee-8776-4e6a-b2a2-3fe1e20c2ee9
 title: Command Palette
-domain: agenticdevelopertoolkit://recipes/command-palette
+domain: adhsdk://recipes/command-palette
 type: ingredient
 version: 1.1.1
 status: review

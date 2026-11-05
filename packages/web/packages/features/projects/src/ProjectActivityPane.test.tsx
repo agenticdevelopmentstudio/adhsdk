@@ -2,12 +2,12 @@
 //
 // Component test for ProjectActivityPane — the project Activity topic (T6). The
 // hub's vitest config is node-only, so this file opts into jsdom via the docblock.
-// The api-client boundary (@agentic-toolkit/data/projects) is mocked, so the pane → feed
+// The api-client boundary (@adh-sdk/data/projects) is mocked, so the pane → feed
 // wiring is exercised: the project-scoped `load` feeds projectActivity(projectId).
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, waitFor, cleanup } from "@testing-library/react";
 
-vi.mock("@agentic-toolkit/data/projects", () => ({
+vi.mock("@adh-sdk/data/projects", () => ({
   projectActivityApi: {
     projectActivity: vi.fn(),
     workItemActivity: vi.fn(),
@@ -20,7 +20,7 @@ vi.mock("@agentic-toolkit/data/projects", () => ({
 }));
 
 import { ProjectActivityPane } from "./ProjectActivityPane";
-import { projectActivityApi, type ProjectActivity } from "@agentic-toolkit/data/projects";
+import { projectActivityApi, type ProjectActivity } from "@adh-sdk/data/projects";
 
 const projectActivity = vi.mocked(projectActivityApi.projectActivity);
 

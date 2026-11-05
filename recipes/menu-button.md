@@ -1,7 +1,7 @@
 ---
 id: e82102a9-a60c-4498-aba3-7cd5a33ade3c
 title: Menu Button
-domain: agenticdevelopertoolkit://recipes/menu-button
+domain: adhsdk://recipes/menu-button
 type: ingredient
 version: 1.2.1
 status: review
@@ -22,7 +22,7 @@ tags:
 - navigation
 depends-on: []
 related:
-- agenticdevelopertoolkit://recipes/button
+- adhsdk://recipes/button
 references: []
 approved-by: ''
 approved-date: ''

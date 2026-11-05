@@ -12,25 +12,25 @@ import {
   RailHostContext,
   type RailHostRegistry,
   type RegisteredLevels,
-} from "@agentic-toolkit/resource";
-import type { TopicLevel } from "@agenticdevelopertoolkit/ui/blocks";
-import type { Workspace } from "@agentic-toolkit/data";
+} from "@adh-sdk/resource";
+import type { TopicLevel } from "@adh-sdk/ui/blocks";
+import type { Workspace } from "@adh-sdk/data";
 
 const { push } = vi.hoisted(() => ({ push: vi.fn() }));
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push, replace: vi.fn(), prefetch: vi.fn() }),
 }));
 
-vi.mock("@agentic-toolkit/data/personas", () => ({
+vi.mock("@adh-sdk/data/personas", () => ({
   api: { personas: { list: vi.fn() } },
 }));
 
-vi.mock("@agentic-toolkit/data/ecosystems", () => ({
+vi.mock("@adh-sdk/data/ecosystems", () => ({
   ecosystemsApi: { listForWorkspace: vi.fn() },
   useWorkspaceDefaultEcosystemId: vi.fn(),
 }));
 
-vi.mock("@agentic-toolkit/data/integrations", () => ({
+vi.mock("@adh-sdk/data/integrations", () => ({
   integrationsApi: {
     listProviderConfigs: vi.fn(),
     listProviders: vi.fn(),
@@ -40,13 +40,13 @@ vi.mock("@agentic-toolkit/data/integrations", () => ({
 }));
 
 import { IntegrationsFeature } from "./IntegrationsFeature";
-import { api as personasApi, type Persona } from "@agentic-toolkit/data/personas";
+import { api as personasApi, type Persona } from "@adh-sdk/data/personas";
 import {
   ecosystemsApi,
   useWorkspaceDefaultEcosystemId,
   type Ecosystem,
-} from "@agentic-toolkit/data/ecosystems";
-import { integrationsApi } from "@agentic-toolkit/data/integrations";
+} from "@adh-sdk/data/ecosystems";
+import { integrationsApi } from "@adh-sdk/data/integrations";
 
 const listPersonas = vi.mocked(personasApi.personas.list);
 const listProducts = vi.mocked(ecosystemsApi.listForWorkspace);

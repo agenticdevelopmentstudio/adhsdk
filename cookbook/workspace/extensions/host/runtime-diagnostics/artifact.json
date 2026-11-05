@@ -3,7 +3,7 @@
   "meta": {
     "id": "639bf7b5-011e-4dc0-9c4e-bc704957cf97",
     "title": "Extension Runtime Diagnostics",
-    "domain": "adtoolkit://cookbook/workspace/extensions/host/runtime-diagnostics",
+    "domain": "adhsdk://cookbook/workspace/extensions/host/runtime-diagnostics",
     "type": "ingredient",
     "version": "1.1.0",
     "status": "review",
@@ -30,15 +30,15 @@
       "agenticdevelopercookbook://guidelines/implementing/security/sensitive-data"
     ],
     "related": [
-      "adtoolkit://cookbook/workspace/extensions/host/extension-host"
+      "adhsdk://cookbook/workspace/extensions/host/extension-host"
     ],
     "references": [
-      "packages/apple/AgenticToolkit/Core/Diagnostics/JITAvailability.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/Core/Diagnostics/UpstreamDivergence.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/Core/Diagnostics/UpstreamDivergenceLedger.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/Core/Loggable.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/Tests/AgenticToolkitCoreTests/Diagnostics/JITAvailabilityTests.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/Tests/AgenticToolkitCoreTests/Diagnostics/UpstreamDivergenceLedgerTests.swift (agenticdevelopertoolkit)"
+      "packages/apple/AgenticDeveloperHubSDK/Core/Diagnostics/JITAvailability.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/Core/Diagnostics/UpstreamDivergence.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/Core/Diagnostics/UpstreamDivergenceLedger.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/Core/Loggable.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKCoreTests/Diagnostics/JITAvailabilityTests.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKCoreTests/Diagnostics/UpstreamDivergenceLedgerTests.swift (adhsdk)"
     ],
     "approved-by": "",
     "approved-date": ""

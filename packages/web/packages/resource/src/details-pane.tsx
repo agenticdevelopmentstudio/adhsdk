@@ -12,7 +12,7 @@ import {
   type ReactNode,
 } from "react";
 
-import { cn } from "@agenticdevelopertoolkit/ui/lib/utils";
+import { cn } from "@adh-sdk/ui/lib/utils";
 import { ButtonBar, type MasterDetailActions } from "./master-detail/MasterDetailLayout";
 import type { RecordAffordanceProps } from "./record-affordance";
 import { useRailExitGuard } from "./rail-host";

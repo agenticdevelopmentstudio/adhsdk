@@ -1,13 +1,13 @@
 "use client";
 
 import { X } from "lucide-react";
-import { Button } from "@agenticdevelopertoolkit/ui/components/button";
-import { DataTable, type DataTableColumn } from "@agenticdevelopertoolkit/ui/components/data-table";
-import { Alert, AlertTitle, AlertDescription } from "@agenticdevelopertoolkit/ui/components/alert";
-import { errorMessage } from "@agenticdevelopertoolkit/ui/lib/errors";
-import { formatMicros, formatMicrosFloor } from "@agenticdevelopertoolkit/ui/lib/money";
-import { formatCompact } from "@agenticdevelopertoolkit/ui/lib/quantities";
-import { TimeSeriesChart } from "@agentic-toolkit/adh-ui/components/time-series-chart";
+import { Button } from "@adh-sdk/ui/components/button";
+import { DataTable, type DataTableColumn } from "@adh-sdk/ui/components/data-table";
+import { Alert, AlertTitle, AlertDescription } from "@adh-sdk/ui/components/alert";
+import { errorMessage } from "@adh-sdk/ui/lib/errors";
+import { formatMicros, formatMicrosFloor } from "@adh-sdk/ui/lib/money";
+import { formatCompact } from "@adh-sdk/ui/lib/quantities";
+import { TimeSeriesChart } from "@adh-sdk/adh-ui/components/time-series-chart";
 import {
   useBreakdownDetail,
   type BreakdownBy,

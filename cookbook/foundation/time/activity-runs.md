@@ -1,7 +1,7 @@
 ---
 id: E06B149B-D083-4812-8511-AAB2998C6969
 title: "Activity Runs"
-domain: adtoolkit://cookbook/foundation/time/activity-runs
+domain: adhsdk://cookbook/foundation/time/activity-runs
 type: ingredient
 version: 1.0.0
 status: review
@@ -22,7 +22,7 @@ tags:
   - activity
 depends-on: []
 related:
-  - adtoolkit://cookbook/foundation/time/utc-timestamp
+  - adhsdk://cookbook/foundation/time/utc-timestamp
 references: []
 approved-by: ""
 approved-date: ""
@@ -133,7 +133,7 @@ Not applicable: The algorithms calls no logging API.
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/Core/Time/ActivityRuns.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Time/ActivityRuns.swift` |
 
 ## Design Decisions
 
@@ -152,7 +152,7 @@ Not applicable: The algorithms calls no logging API.
 | [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
 | [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
 
-`separation-of-concerns` passes because the type holds only the split and union algorithms and leaves every policy to callers. `unit-test-coverage` passes because `AgenticToolkitCoreTests/Time/ActivityRunsTests.swift` covers gaps longer than and equal to the idle gap, no stamps, the streaming splitter's close, union merging, union length and union over strings.
+`separation-of-concerns` passes because the type holds only the split and union algorithms and leaves every policy to callers. `unit-test-coverage` passes because `AgenticDeveloperHubSDKCoreTests/Time/ActivityRunsTests.swift` covers gaps longer than and equal to the idle gap, no stamps, the streaming splitter's close, union merging, union length and union over strings.
 
 ## Change History
 

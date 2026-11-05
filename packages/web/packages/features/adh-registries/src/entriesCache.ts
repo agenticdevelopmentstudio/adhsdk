@@ -1,5 +1,5 @@
-import { revalidateResources } from '@agentic-toolkit/data';
-import type { EntryStatus } from '@agentic-toolkit/registry/client';
+import { revalidateResources } from '@adh-sdk/data';
+import type { EntryStatus } from '@adh-sdk/registry/client';
 
 /**
  * Where one registry's entries live in the platform cache.

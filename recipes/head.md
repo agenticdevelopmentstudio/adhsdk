@@ -1,7 +1,7 @@
 ---
 id: 31198bb7-2270-449e-94c1-026b68d2bc81
 title: Head
-domain: agenticdevelopertoolkit://recipes/head
+domain: adhsdk://recipes/head
 type: ingredient
 version: 1.1.1
 status: review
@@ -22,7 +22,7 @@ tags:
 - section
 depends-on: []
 related:
-- agenticdevelopertoolkit://recipes/lede
+- adhsdk://recipes/lede
 references: []
 approved-by: ''
 approved-date: ''

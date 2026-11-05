@@ -46,7 +46,7 @@ export type UserCardPersona = {
 
 /**
  * Structurally matches the `PublicUserProfile` schema in the backend's generated
- * API types. Defined here to keep @agenticdevelopertoolkit/ui free of a dependency on
+ * API types. Defined here to keep @adh-sdk/ui free of a dependency on
  * that generated package — pass `SuccessBody<'/public/users/{slug}', 'get'>` directly.
  */
 export type UserCardDto = {

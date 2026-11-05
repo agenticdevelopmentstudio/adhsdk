@@ -1,7 +1,7 @@
 ---
 id: d7171e41-4638-4243-9821-7a46cecf15c2
 title: "Project Tab Reconciler"
-domain: adtoolkit://cookbook/workspace/projects/project-tab-reconciler
+domain: adhsdk://cookbook/workspace/projects/project-tab-reconciler
 type: ingredient
 version: 1.2.0
 status: review
@@ -23,17 +23,17 @@ tags:
   - pure-function
 depends-on: []
 related:
-  - adtoolkit://cookbook/workspace/projects/project-controller
-  - adtoolkit://cookbook/workspace/projects/project-checkout
-  - adtoolkit://cookbook/workspace/projects/project-database-layout
+  - adhsdk://cookbook/workspace/projects/project-controller
+  - adhsdk://cookbook/workspace/projects/project-checkout
+  - adhsdk://cookbook/workspace/projects/project-database-layout
 references:
-  - packages/apple/AgenticToolkit/macOS/Features/Projects/ProjectTabReconciler.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Tests/AgenticToolkitMacOSTests/Projects/ProjectTabReconcilerTests.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/macOS/UI/ViewControllers/ComposableTabs/LayoutNode.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/macOS/UI/ViewControllers/MultiTabbedViewController/Edge.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/macOS/Features/Projects/ProjectCheckout.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/macOS/Features/Projects/ProjectController.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/macOS/Features/Projects/ProjectDatabase+Layout.swift (agenticdevelopertoolkit)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectTabReconciler.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKMacOSTests/Projects/ProjectTabReconcilerTests.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/ComposableTabs/LayoutNode.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/MultiTabbedViewController/Edge.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectCheckout.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectController.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectDatabase+Layout.swift (adhsdk)
 approved-by: ""
 approved-date: ""
 ---
@@ -312,8 +312,8 @@ caller is the one that acts on the plan this file returns.
 ## Platform Notes
 
 - **SwiftUI**: The source is
-  `packages/apple/AgenticToolkit/macOS/Features/Projects/ProjectTabReconciler.swift`,
-  which imports only `AgenticToolkitCore` and `Foundation` — no SwiftUI,
+  `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectTabReconciler.swift`,
+  which imports only `AgenticDeveloperHubSDKCore` and `Foundation` — no SwiftUI,
   AppKit, or UIKit dependency. A port needs its sibling value types
   alongside it: `TabRecord` and `Edge` from
   `macOS/UI/ViewControllers/ComposableTabs/LayoutNode.swift` and
@@ -386,7 +386,7 @@ caller is the one that acts on the plan this file returns.
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/macOS/Features/Projects/ProjectTabReconciler.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectTabReconciler.swift` |
 
 ## Design Decisions
 

@@ -38,7 +38,7 @@
   `onVisibilityChange`-equivalent callback is required the way the AppKit
   source's fixed-layout hosting `GroupView` needs one.
 - **AppKit/UIKit** (source platform): Source file
-  `packages/apple/AgenticToolkit/macOS/SystemIntegration/ComposableSettingsWindow/Views/DismissibleHintView.swift`,
+  `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/Views/DismissibleHintView.swift`,
   with layout constants from `ViewLayout.swift`, the `SelfHidingSettingsView`
   contract from `GroupView.swift`/`SettingsViewProtocol.swift`, the
   persisted-setting plumbing from `UserSetting.swift`, and the theme

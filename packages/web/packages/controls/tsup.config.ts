@@ -70,7 +70,7 @@ export default defineConfig({
     'react',
     'react-dom',
     'react/jsx-runtime',
-    '@agenticdevelopertoolkit/model',
+    '@adh-sdk/model',
     'shiki',
   ],
   esbuildPlugins: [

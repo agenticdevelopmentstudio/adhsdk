@@ -1,7 +1,7 @@
 ---
 id: f3c25236-d72f-4a7b-839a-b7f335b3acd0
 title: Button
-domain: agenticdevelopertoolkit://recipes/button
+domain: adhsdk://recipes/button
 type: ingredient
 version: 1.4.1
 status: review
@@ -21,10 +21,10 @@ tags:
   - forms
   - ui
 depends-on:
-  - agenticdevelopertoolkit://recipes/button-pressable
+  - adhsdk://recipes/button-pressable
 related:
   - agenticdevelopercookbook://guidelines/cookbook/ui/platform-design-languages
-  - agenticdevelopertoolkit://recipes/button-pressable
+  - adhsdk://recipes/button-pressable
 references: []
 approved-by: ''
 approved-date: ''
@@ -34,15 +34,15 @@ approved-date: ''
 
 ## Overview
 
-The shared `Button` in `@agenticdevelopertoolkit/ui` — a Base UI button primitive dressed in
-the shadcn token vocabulary so every site drawing from `@agenticdevelopertoolkit/ui`
+The shared `Button` in `@adh-sdk/ui` — a Base UI button primitive dressed in
+the shadcn token vocabulary so every site drawing from `@adh-sdk/ui`
 renders one button. It exposes eight visual `variant`s × a size scale, the standard disabled/focus/
 invalid states, a **pointer-driven pressed state** that reflects a real press
 the way CSS `:active` cannot, and an **ancestor-settable minimum touch-target
 floor** that lets a surface raise every descendant button's minimum hit area
 without changing any button's `size` prop.
 
-Two exports ship from `@agenticdevelopertoolkit/ui/components/button`:
+Two exports ship from `@adh-sdk/ui/components/button`:
 
 - `buttonVariants` — the `cva` styling function. It MUST stay callable from
   server components (e.g. `<Link className={buttonVariants()}/>`), so `button.tsx`
@@ -60,7 +60,7 @@ press correctly clears when the pointer leaves the button while it is still held
 *Provenance: `press-on-pointerdown-inside` through `no-pointer-capture` below describe the
 observable pointer-tracking behavior of `Button` as rendered — behavior that `Button` gets by
 composing the sibling `PressableButton` (`button-pressable.tsx`), which is that contract's
-single owner (`agenticdevelopertoolkit://recipes/button-pressable`, see its own
+single owner (`adhsdk://recipes/button-pressable`, see its own
 `pressed-on-pointerdown` through `no-pointer-capture` requirements and its
 **active press** terminology, called "held" below). This recipe restates them at the `Button`
 level only so `Button`'s own Conformance Test Vectors can exercise them end-to-end; do not edit
@@ -351,7 +351,7 @@ telemetry belong to the consumer's handler, not the button.
 **Approved**: pending
 
 **Decision**: `warning` reuses the M3 warning role instead of minting a new alias.
-**Rationale**: The variant reads the `apt-orange` role that every theme already defines (exposed by `@agenticdevelopertoolkit/themes`), rather than minting a second color alias — it needs no new token and no per-theme work.
+**Rationale**: The variant reads the `apt-orange` role that every theme already defines (exposed by `@adh-sdk/themes`), rather than minting a second color alias — it needs no new token and no per-theme work.
 **Approved**: pending
 
 **Decision**: Make the minimum size ancestor-settable instead of prop-drilled.
@@ -367,7 +367,7 @@ telemetry belong to the consumer's handler, not the button.
 **Approved**: pending
 
 **Decision**: Document the `--adh-button-min-*` / `apt-orange` prefix mismatch as-is rather than normalizing it.
-**Rationale**: `--adh-button-min-height`/`--adh-button-min-width` and the `apt-orange` warning-role token both belong to the `@agenticdevelopertoolkit` package family, but use different abbreviated prefixes (`adh` vs `apt`). Reconciling the two is a source-code naming change outside the scope of this recipe pass, so the recipe records the tokens exactly as `button.tsx` and the theme package expose them.
+**Rationale**: `--adh-button-min-height`/`--adh-button-min-width` and the `apt-orange` warning-role token both belong to the `@adh-sdk` package family, but use different abbreviated prefixes (`adh` vs `apt`). Reconciling the two is a source-code naming change outside the scope of this recipe pass, so the recipe records the tokens exactly as `button.tsx` and the theme package expose them.
 **Approved**: pending
 
 ## Compliance

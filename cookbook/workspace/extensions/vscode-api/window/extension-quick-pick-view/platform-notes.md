@@ -29,7 +29,7 @@
   closing the accessible-label gap flagged in Accessibility above rather
   than reproducing it.
 - **AppKit/UIKit** (source platform): Source file
-  `packages/apple/AgenticToolkit/macOS/Features/Extensions/UI/ExtensionQuickPickViewController.swift`.
+  `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/UI/ExtensionQuickPickViewController.swift`.
   A macOS-only (`import AppKit`) `NSViewController`, `@MainActor`,
   composing an `NSSearchField` and a `ThemedTableView` inside an
   `NSScrollView`, with `PickerKeyboardController` for keyboard routing and

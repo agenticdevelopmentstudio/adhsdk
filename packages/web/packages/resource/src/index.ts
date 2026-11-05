@@ -1,4 +1,4 @@
-// @agentic-toolkit/resource — the generic resource-browsing UI.
+// @adh-sdk/resource — the generic resource-browsing UI.
 //
 // A ResourceExplorer<T> orchestrates a selectable-resource feature (a resource
 // list ▸ its topics ▸ each topic's pane) as one hierarchical topic/detail. It runs
@@ -11,10 +11,10 @@
 // The resource orchestrator + its config types.
 export { ResourceExplorer } from "./resource-explorer";
 export type { ResourceTopic, TopicLeaf, ResourceRailConfig } from "./resource-explorer";
-// Re-exported (it is declared with the stack, in @agenticdevelopertoolkit/ui) because it is part of
+// Re-exported (it is declared with the stack, in @adh-sdk/ui) because it is part of
 // TopicLeaf's OWN signature: a consumer implementing a leaf here shouldn't have to reach into
 // another package to name the argument the stack hands it.
-export type { TopicSelectOptions } from "@agenticdevelopertoolkit/ui/blocks";
+export type { TopicSelectOptions } from "@adh-sdk/ui/blocks";
 
 // The host-or-standalone boundary every feature ENTRY wraps its published content in:
 // pass-through under an existing rail host (the hub shell), a self-hosted rail + exit
@@ -62,7 +62,7 @@ export type {
 } from "./rail-host";
 
 // One cached item, wired to the stack's missing-item report. The query layer itself
-// (`useResourceItemQuery`) lives in `@agentic-toolkit/data`; this is the composition that talks to
+// (`useResourceItemQuery`) lives in `@adh-sdk/data`; this is the composition that talks to
 // the rail host.
 export { useResourceItem, type ResourceItem } from "./use-resource-item";
 
@@ -134,7 +134,7 @@ export {
   NO_HELP,
   type DetailHeaderHost,
   type DetailHeaderKind,
-} from "@agenticdevelopertoolkit/ui/blocks";
+} from "@adh-sdk/ui/blocks";
 export { DetailHeaderActions } from "./detail-header-actions";
 export {
   SettingsDirtyProvider,

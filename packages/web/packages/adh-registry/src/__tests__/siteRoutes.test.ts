@@ -15,7 +15,7 @@ import { MAIN_SITE_IDS, MARKETING_SITE_IDS } from '../sites/registry'
 // `routes.hub.generated.ts` from agenticdeveloperhubwebsite,
 // `routes.devteam.generated.ts` from agenticdeveloperteamwebsite,
 // `routes.cookbook.generated.ts` from agenticdevelopercookbookwebsite,
-// `routes.toolkit.generated.ts` from agenticdevelopertoolkitwebsite,
+// `routes.toolkit.generated.ts` from adhsdkwebsite,
 // `routes.personaregistry.generated.ts` from agenticpersonaregistrywebsite,
 // `routes.community.generated.ts` from agenticdevelopercommunitywebsite — because
 // this package is a submodule of all of them, each owns part of the fleet, and no

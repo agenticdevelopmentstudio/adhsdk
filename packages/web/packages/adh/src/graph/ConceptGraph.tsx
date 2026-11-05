@@ -1,7 +1,7 @@
 import type { ReactElement } from 'react'
 import { headers } from 'next/headers'
-import { conceptIds, graphTree } from '@agentic-toolkit/adh/concepts'
-import { detectEnv, type SiteEnv, type SiteId } from '@agentic-toolkit/adh-registry'
+import { conceptIds, graphTree } from '@adh-sdk/adh/concepts'
+import { detectEnv, type SiteEnv, type SiteId } from '@adh-sdk/adh-registry'
 // PRESERVED IMPORT — the package path, never './ConceptGraphClient'. This module is a
 // SERVER component (it reads next/headers); the diagram it renders is 'use client'.
 // Under `bundle: true, splitting: false` a relative specifier would inline the client
@@ -11,7 +11,7 @@ import { detectEnv, type SiteEnv, type SiteId } from '@agentic-toolkit/adh-regis
 // boundary trick as footer/FooterChatInner; see verify-bundle-boundaries.py.
 // Statically imported (no ssr:false): the graph is deterministic, so Next server-renders
 // it to crawlable, keyboard-navigable markup and hydrates the animation in place.
-import { ConceptGraphClient } from '@agentic-toolkit/adh/graph/ConceptGraphClient'
+import { ConceptGraphClient } from '@adh-sdk/adh/graph/ConceptGraphClient'
 
 export interface ConceptGraphProps {
   /** Node id to open focused on. Unknown ids fall back to the root. */

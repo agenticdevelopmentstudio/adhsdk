@@ -3,7 +3,7 @@
   "meta": {
     "id": "d79f556c-163b-48aa-82f0-baff52fa9dab",
     "title": "Status Sublabel",
-    "domain": "adtoolkit://cookbook/status/dashboard/logic/status-sublabel",
+    "domain": "adhsdk://cookbook/status/dashboard/logic/status-sublabel",
     "type": "ingredient",
     "version": "1.1.0",
     "status": "review",
@@ -20,8 +20,8 @@
     ],
     "tags": [],
     "depends-on": [
-      "adtoolkit://cookbook/status/dashboard/logic/row-model",
-      "adtoolkit://cookbook/status/dashboard/logic/overview"
+      "adhsdk://cookbook/status/dashboard/logic/row-model",
+      "adhsdk://cookbook/status/dashboard/logic/overview"
     ],
     "related": [],
     "references": [],

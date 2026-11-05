@@ -1,5 +1,5 @@
 // Cross-platform chat contract — TypeScript expression of the Swift
-// protocols under apple/AgenticDeveloperToolkit/Sources/. Keep both in lockstep.
+// protocols under apple/AgenticDeveloperHubSDK/SDK/Sources/. Keep both in lockstep.
 
 export type { Participant } from './participants/Participant'
 export type { ParticipantConversationState } from './participants/ParticipantConversationState'

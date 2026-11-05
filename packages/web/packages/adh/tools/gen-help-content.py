@@ -19,7 +19,7 @@ directly, with no "Rendering…" pass, and the docs sites inject the same HTML
 server-side with no per-build re-processing. There is one derived
 representation (HTML), produced once, consumed by every surface.
 
-The Markdown -> HTML conversion is @agenticdevelopertoolkit/markdown's `processMarkdown`
+The Markdown -> HTML conversion is @adh-sdk/markdown's `processMarkdown`
 (remark/rehype + shiki + rehype-sanitize) — the SAME pipeline the runtime
 renderers use, so the committed HTML is byte-identical to what those would
 produce. That pipeline only runs in the JS runtime, so this Python generator
@@ -92,10 +92,10 @@ FOOTER = """\
 
 # ESM program run by `node` as the rendering engine. Reads {key: markdown} JSON on
 # stdin, runs the shared processMarkdown pipeline on each, writes {key: html} JSON on
-# stdout. Resolves @agenticdevelopertoolkit/markdown from PACKAGE_DIR's node_modules (its
+# stdout. Resolves @adh-sdk/markdown from PACKAGE_DIR's node_modules (its
 # `import` condition -> the built dist), so the package's dist must be present.
 NODE_RENDER_PROGRAM = r"""
-import { processMarkdown } from '@agenticdevelopertoolkit/markdown'
+import { processMarkdown } from '@adh-sdk/markdown'
 
 const chunks = []
 for await (const chunk of process.stdin) chunks.push(chunk)
@@ -225,7 +225,7 @@ def render_html(entries: dict[str, str]) -> dict[str, str]:
     )
     if result.returncode != 0:
         raise SystemExit(
-            "processMarkdown render failed (is @agenticdevelopertoolkit/markdown built?):\n"
+            "processMarkdown render failed (is @adh-sdk/markdown built?):\n"
             + result.stderr.strip()
         )
     rendered: dict[str, str] = json.loads(result.stdout)

@@ -1,4 +1,4 @@
-import type { UserCardDto } from '@agenticdevelopertoolkit/ui/blocks/user-card'
+import type { UserCardDto } from '@adh-sdk/ui/blocks/user-card'
 
 /**
  * A principal as a profile page sees it — a user or an organization, in the ONE shape both

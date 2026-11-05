@@ -1,5 +1,5 @@
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/macOS/Features/WindowDiscovery/WindowDiscoveryViewModel.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/WindowDiscovery/WindowDiscoveryViewModel.swift` |
 

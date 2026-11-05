@@ -4,9 +4,9 @@ import type { ReactNode } from "react";
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import type { TopicLevel } from "@agenticdevelopertoolkit/ui/blocks";
-import { UnsavedChangesAlert } from "@agenticdevelopertoolkit/ui/components/unsaved-changes-alert";
-import { useExitGate } from "@agenticdevelopertoolkit/ui/hooks/useExitGate";
+import type { TopicLevel } from "@adh-sdk/ui/blocks";
+import { UnsavedChangesAlert } from "@adh-sdk/ui/components/unsaved-changes-alert";
+import { useExitGate } from "@adh-sdk/ui/hooks/useExitGate";
 
 // The bucket layout (Mike, 2026-09-24): the buckets list, then the open bucket's own rail — its
 // tables, with a gear opening the bucket's Settings in a dialog and the "+" adding a table — and a
@@ -19,8 +19,8 @@ const { schemasApi, markdownApi } = vi.hoisted(() => ({
   schemasApi: { list: vi.fn(), get: vi.fn(), update: vi.fn(), delete: vi.fn(), create: vi.fn() },
   markdownApi: { list: vi.fn(), get: vi.fn(), create: vi.fn(), update: vi.fn(), remove: vi.fn() },
 }));
-vi.mock("@agentic-toolkit/data/markdown", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("@agentic-toolkit/data/markdown")>()),
+vi.mock("@adh-sdk/data/markdown", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@adh-sdk/data/markdown")>()),
   schemasApi,
 }));
 // The markdown client at its SOURCE module, not only the barrel: the notes and docs shelf clients
@@ -33,7 +33,7 @@ vi.mock("../../../../data/src/markdown/markdown", async (importOriginal) => ({
 // Its "stage a row" button stands in for an unsaved row: the view reports a dirty guard, and
 // withdraws it when it unmounts, as the real grid does. `CrudTable` is the grid a markdown-backed
 // table draws its rows in; it reports how many it was handed.
-vi.mock("@agentic-toolkit/crud", async () => {
+vi.mock("@adh-sdk/crud", async () => {
   const { useEffect, useState } = await import("react");
   const { useExitGuardChannel } = await import("../../../../crud/src/useExitGuardChannel");
   return {
@@ -74,10 +74,10 @@ vi.mock("@agentic-toolkit/crud", async () => {
     ),
   };
 });
-vi.mock("@agentic-toolkit/api-explorer", () => ({ RecordApiButton: () => null }));
+vi.mock("@adh-sdk/api-explorer", () => ({ RecordApiButton: () => null }));
 
-import { RailHostContext } from "@agentic-toolkit/resource";
-import type { PaneExitGuard, RailHostRegistry, RegisteredLevels } from "@agentic-toolkit/resource";
+import { RailHostContext } from "@adh-sdk/resource";
+import type { PaneExitGuard, RailHostRegistry, RegisteredLevels } from "@adh-sdk/resource";
 import { SchemasPane } from "./SchemasPane";
 
 const STAMPS = { createdAt: "2026-01-01T00:00:00Z", updatedAt: "2026-01-01T00:00:00Z" };

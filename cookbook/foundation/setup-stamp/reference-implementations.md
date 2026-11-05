@@ -1,5 +1,5 @@
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/Core/SetupStamp.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/SetupStamp.swift` |
 

@@ -3,7 +3,7 @@
   "meta": {
     "id": "a9222936-8474-4073-8581-d314a258bf0a",
     "title": "Invitation Panes",
-    "domain": "adtoolkit://cookbook/adh/hub/invitations/invitation-panes",
+    "domain": "adhsdk://cookbook/adh/hub/invitations/invitation-panes",
     "type": "ingredient",
     "version": "1.2.2",
     "status": "review",
@@ -25,9 +25,9 @@
       "users"
     ],
     "depends-on": [
-      "agenticdevelopertoolkit://recipes/list-with-details-pane",
-      "adtoolkit://cookbook/adh/hub/invitations/send-invitation-modal",
-      "agenticdevelopertoolkit://recipes/add-users-modal"
+      "adhsdk://recipes/list-with-details-pane",
+      "adhsdk://cookbook/adh/hub/invitations/send-invitation-modal",
+      "adhsdk://recipes/add-users-modal"
     ],
     "related": [],
     "references": [],

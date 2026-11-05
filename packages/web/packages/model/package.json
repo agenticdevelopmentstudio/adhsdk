@@ -1,7 +1,7 @@
 {
-  "name": "@agenticdevelopertoolkit/model",
+  "name": "@adh-sdk/model",
   "version": "0.1.0",
-  "description": "Site configuration, content providers, routing, and search hooks for agenticdevelopertoolkit.",
+  "description": "Site configuration, content providers, routing, and search hooks for adhsdk.",
   "license": "Apache-2.0",
   "type": "module",
   "main": "./dist/index.js",

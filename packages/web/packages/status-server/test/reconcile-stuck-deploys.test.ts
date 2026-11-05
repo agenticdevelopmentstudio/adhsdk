@@ -15,8 +15,8 @@ import {
   _resetReconcileBackoff,
 } from "../src/monitor/reconcile-stuck-deploys";
 import { isInFlight } from "../src/monitor/deploy-status";
-import { noteRateLimited, rateLimitedUntil, _resetProviderCooldowns } from "@agentic-toolkit/deploy-platform/cooldown";
-import type { ProviderConn } from "@agentic-toolkit/deploy-platform/conn";
+import { noteRateLimited, rateLimitedUntil, _resetProviderCooldowns } from "@adh-sdk/deploy-platform/cooldown";
+import type { ProviderConn } from "@adh-sdk/deploy-platform/conn";
 import { MIGRATIONS_FOLDER } from '../src/libsql/client';
 import { createLibsqlStorage } from '../src/libsql';
 

@@ -1,6 +1,6 @@
 
 - **SwiftUI**: The source is
-  `packages/apple/AgenticToolkit/macOS/Features/Projects/GitRepoScanner.swift`,
+  `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/GitRepoScanner.swift`,
   using Foundation's `FileManager`, `URL`, `URLResourceKey`, and the C
   `fnmatch`/`FNM_CASEFOLD` functions; its companion type `ScannedGitRepo`
   lives in `GitRepo.swift` in the same directory. Nothing here is

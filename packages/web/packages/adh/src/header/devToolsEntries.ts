@@ -1,5 +1,5 @@
-import { DEV_BUILD, isDevDeploymentEnv } from '@agentic-toolkit/adh-registry/deployment-env'
-import { type SiteEnv } from '@agentic-toolkit/adh-registry'
+import { DEV_BUILD, isDevDeploymentEnv } from '@adh-sdk/adh-registry/deployment-env'
+import { type SiteEnv } from '@adh-sdk/adh-registry'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // The gate for the header's one remaining dev-tools door, "Debug Options" (opens the

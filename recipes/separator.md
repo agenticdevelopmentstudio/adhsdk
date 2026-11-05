@@ -1,7 +1,7 @@
 ---
 id: da56ecc7-18f6-412e-9368-3beb29309d8d
 title: Separator
-domain: agenticdevelopertoolkit://recipes/separator
+domain: adhsdk://recipes/separator
 type: ingredient
 version: 1.1.1
 status: review
@@ -22,7 +22,7 @@ tags:
 - layout-primitive
 depends-on: []
 related:
-- agenticdevelopertoolkit://recipes/divider
+- adhsdk://recipes/divider
 references: []
 approved-by: ''
 approved-date: ''
@@ -34,7 +34,7 @@ approved-date: ''
 
 The Separator component renders a thin line that visually and semantically separates adjacent content. It is a layout primitive with no interactivity, used to organize sections within a layout. It supports both horizontal and vertical orientations and communicates its orientation to assistive technologies.
 
-A related component, `agenticdevelopertoolkit://recipes/divider`, comes from a different source package and renders a semantic `<hr>`-based, horizontal-only line. This Separator instead renders a styled element with `role="separator"` that supports both orientations and is not tied to the `<hr>` element — use Divider where a plain thematic-break line is enough, and Separator where orientation control or ARIA orientation sync is needed.
+A related component, `adhsdk://recipes/divider`, comes from a different source package and renders a semantic `<hr>`-based, horizontal-only line. This Separator instead renders a styled element with `role="separator"` that supports both orientations and is not tied to the `<hr>` element — use Divider where a plain thematic-break line is enough, and Separator where orientation control or ARIA orientation sync is needed.
 
 ## Behavioral Requirements
 

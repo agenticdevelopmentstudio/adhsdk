@@ -2,7 +2,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import type { RegistryClient } from '@agentic-toolkit/registry/client';
+import type { RegistryClient } from '@adh-sdk/registry/client';
 
 // The editor mounts the real EntryPhotoField, which resolves an existing photo through a
 // presigned download the moment its `value` is non-null. Stubbed rather than left real so the
@@ -12,7 +12,7 @@ import type { RegistryClient } from '@agentic-toolkit/registry/client';
 const { authedJson } = vi.hoisted(() => ({ authedJson: vi.fn() }));
 // `readAccessToken` is the toolkit cache's tenant lookup, reached through the services
 // panel's cached list: null is a signed-out tenant, which is all these tests need it to be.
-vi.mock('@agentic-toolkit/auth/client', () => ({
+vi.mock('@adh-sdk/auth/client', () => ({
   authedJson,
   authedFetch: vi.fn(),
   readAccessToken: () => null,

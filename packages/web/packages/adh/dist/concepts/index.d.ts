@@ -1,12 +1,12 @@
-import { type SiteId } from '@agentic-toolkit/adh-registry';
+import { type SiteId } from '@adh-sdk/adh-registry';
 import type { ConceptNode, GraphNode, NodeKind } from './types';
 export * from './types';
 export * from './assemble';
-export type { SiteId } from '@agentic-toolkit/adh-registry';
-export { siteProdUrl } from '@agentic-toolkit/adh-registry';
+export type { SiteId } from '@adh-sdk/adh-registry';
+export { siteProdUrl } from '@adh-sdk/adh-registry';
 export { conceptStructure } from './structure';
 export { catalogs } from './content';
-export { CONCEPT_SITE_IDS, isConceptSite, } from '@agentic-toolkit/adh/concepts/participating';
+export { CONCEPT_SITE_IDS, isConceptSite, } from '@adh-sdk/adh/concepts/participating';
 /** The assembled taxonomy for the active locale — the single rooted node behind
  *  the graph, the `/details` routes, and every derived index in this module. */
 export declare const conceptTree: ConceptNode;
@@ -56,7 +56,7 @@ export declare function graphTree(): GraphNode;
 /** The detail topics within a given site's branch — what that site's
  *  `/details/[topic]` route should statically generate. Falls back to the empty
  *  list for a site with no concept node. (Next `Metadata` for these pages is
- *  built by `detailsMetadata` in `@agentic-toolkit/adh/details`, which is allowed to
+ *  built by `detailsMetadata` in `@adh-sdk/adh/details`, which is allowed to
  *  depend on `next`; this module stays framework-free.) */
 export declare function detailsParamsForSite(siteId: SiteId): {
     topic: string;

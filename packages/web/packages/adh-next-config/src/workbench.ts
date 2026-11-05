@@ -1,8 +1,8 @@
 import type { NextConfig } from "next";
-import { mergeHeaders } from "@agentic-toolkit/next-headers";
-import { commitSha, readSiteVersion, resolveBackendUrl } from "@agentic-toolkit/next-env";
+import { mergeHeaders } from "@adh-sdk/next-headers";
+import { commitSha, readSiteVersion, resolveBackendUrl } from "@adh-sdk/next-env";
 // Same import-by-name rationale as index.ts's — see the long comment there.
-import { materializeThemeFonts } from "@agenticdevelopertoolkit/themes/materialize-fonts";
+import { materializeThemeFonts } from "@adh-sdk/themes/materialize-fonts";
 
 /** What a workbench must supply, and the little it may. */
 export type WorkbenchNextConfigOptions = {
@@ -69,7 +69,7 @@ export function workbenchNextConfig(options: WorkbenchNextConfigOptions): NextCo
     },
     headers: mergeHeaders({}),
     async rewrites() {
-      // The shared chrome in `@agentic-toolkit/adh` reads `/system/feature-flags` from
+      // The shared chrome in `@adh-sdk/adh` reads `/system/feature-flags` from
       // whatever mounts it, the workbenches included — `mergedRewrites`
       // (`next-config-base.mjs:164`) declared this once for every app for that reason.
       return [{ source: "/api/system/:path*", destination: `${backendUrl}/system/:path*` }];

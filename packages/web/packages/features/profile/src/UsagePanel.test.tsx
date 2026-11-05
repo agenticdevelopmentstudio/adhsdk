@@ -2,13 +2,13 @@
 import { describe, it, expect, afterEach, beforeEach, vi } from "vitest";
 import { render, screen, waitFor, cleanup } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import type { UsageRow } from "@agentic-toolkit/data/profile";
+import type { UsageRow } from "@adh-sdk/data/profile";
 
 // Stub the read path — the panel's whole job is arranging rows it is handed, and the numbers
 // themselves are the ledger's (covered by the backend's usage-ledger tests).
 const { getUsageSummary } = vi.hoisted(() => ({ getUsageSummary: vi.fn() }));
-vi.mock("@agentic-toolkit/data/profile", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("@agentic-toolkit/data/profile")>()),
+vi.mock("@adh-sdk/data/profile", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@adh-sdk/data/profile")>()),
   getUsageSummary,
 }));
 

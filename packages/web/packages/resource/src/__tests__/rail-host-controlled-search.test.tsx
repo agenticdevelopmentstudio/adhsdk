@@ -13,7 +13,7 @@
 import { useState } from "react";
 import { describe, it, expect, vi, afterEach } from "vitest";
 import { render, screen, fireEvent, cleanup, within } from "@testing-library/react";
-import type { TopicLevel } from "@agenticdevelopertoolkit/ui/blocks";
+import type { TopicLevel } from "@adh-sdk/ui/blocks";
 import { StandaloneRailHost } from "../standalone-rail-host";
 import { StackLevels, useStackLevel } from "../rail-host";
 import { ResourceExplorer, type ResourceTopic } from "../resource-explorer";

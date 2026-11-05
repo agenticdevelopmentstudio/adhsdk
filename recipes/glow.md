@@ -1,7 +1,7 @@
 ---
 id: b341dd02-fbcb-4da8-b2b6-897807b4ebbc
 title: Glow
-domain: agenticdevelopertoolkit://recipes/glow
+domain: adhsdk://recipes/glow
 type: ingredient
 version: 1.1.1
 status: review
@@ -20,10 +20,10 @@ tags:
 - visual
 - decorative
 depends-on:
-- agenticdevelopertoolkit://recipes/hero
+- adhsdk://recipes/hero
 related:
-- agenticdevelopertoolkit://recipes/hero
-- agenticdevelopertoolkit://recipes/deck
+- adhsdk://recipes/hero
+- adhsdk://recipes/deck
 references: []
 approved-by: ''
 approved-date: ''

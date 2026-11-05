@@ -32,7 +32,7 @@
   (`grid-template-areas` for top/left/center/right/bottom), toggling a bar's
   `display: none` to mirror `isHidden`.
 - **AppKit / UIKit** (source platform): Implemented in
-  `packages/apple/AgenticToolkit/macOS/UI/ViewControllers/MultiTabbedViewController/`
+  `packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/MultiTabbedViewController/`
   across `MultiTabbedViewController.swift` (edge/tab/selection state, layout,
   center mounting), `TabBarView.swift` (bar rendering, `TabButton`,
   `TabItemHostView`, card stacking), `TabItem.swift` (`TabItem`,

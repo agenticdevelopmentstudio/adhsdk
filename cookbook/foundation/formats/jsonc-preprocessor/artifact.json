@@ -3,7 +3,7 @@
   "meta": {
     "id": "2e71f72e-88d7-417e-9969-a414e1ab1a10",
     "title": "JSONC Preprocessor",
-    "domain": "adtoolkit://cookbook/foundation/formats/jsonc-preprocessor",
+    "domain": "adhsdk://cookbook/foundation/formats/jsonc-preprocessor",
     "type": "ingredient",
     "version": "1.1.0",
     "status": "review",
@@ -26,9 +26,9 @@
     ],
     "depends-on": [],
     "related": [
-      "adtoolkit://cookbook/workspace/extensions/manifest/extension-manifest-localization",
-      "adtoolkit://cookbook/workspace/extensions/registry/extension-registry",
-      "adtoolkit://cookbook/workspace/extensions/registry/vsix-installer"
+      "adhsdk://cookbook/workspace/extensions/manifest/extension-manifest-localization",
+      "adhsdk://cookbook/workspace/extensions/registry/extension-registry",
+      "adhsdk://cookbook/workspace/extensions/registry/vsix-installer"
     ],
     "references": [],
     "approved-by": "",

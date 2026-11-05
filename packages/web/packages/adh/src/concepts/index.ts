@@ -1,4 +1,4 @@
-import { type SiteId } from '@agentic-toolkit/adh-registry'
+import { type SiteId } from '@adh-sdk/adh-registry'
 import { assembleTree, getLocale } from './assemble'
 import { conceptStructure } from './structure'
 import { catalogs } from './content'
@@ -6,10 +6,10 @@ import type { ConceptNode, GraphNode, NodeKind } from './types'
 
 export * from './types'
 export * from './assemble'
-export type { SiteId } from '@agentic-toolkit/adh-registry'
+export type { SiteId } from '@adh-sdk/adh-registry'
 // Re-exported so server components (e.g. the help-site doc backlink) can build a
 // cross-site `/details` URL without importing the 'use client' main barrel.
-export { siteProdUrl } from '@agentic-toolkit/adh-registry'
+export { siteProdUrl } from '@adh-sdk/adh-registry'
 export { conceptStructure } from './structure'
 export { catalogs } from './content'
 // PRESERVED IMPORT — the package path, never './participating'. The header entry
@@ -20,7 +20,7 @@ export { catalogs } from './content'
 export {
   CONCEPT_SITE_IDS,
   isConceptSite,
-} from '@agentic-toolkit/adh/concepts/participating'
+} from '@adh-sdk/adh/concepts/participating'
 
 // The taxonomy every query below reads is ASSEMBLED from two authored layers: the
 // locale-agnostic `structure.json` (the shape) + the active locale's content
@@ -182,7 +182,7 @@ export function graphTree(): GraphNode {
 /** The detail topics within a given site's branch — what that site's
  *  `/details/[topic]` route should statically generate. Falls back to the empty
  *  list for a site with no concept node. (Next `Metadata` for these pages is
- *  built by `detailsMetadata` in `@agentic-toolkit/adh/details`, which is allowed to
+ *  built by `detailsMetadata` in `@adh-sdk/adh/details`, which is allowed to
  *  depend on `next`; this module stays framework-free.) */
 export function detailsParamsForSite(siteId: SiteId): { topic: string }[] {
   const node = siteConcept(siteId)

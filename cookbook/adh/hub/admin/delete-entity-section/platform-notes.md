@@ -26,7 +26,7 @@
   block dismissal, and swap `Icons.Filled.Delete` for `Icons.Filled.Archive` when
   `actionVerb.reversible` is `true`.
 - **React/Web**: `packages/web/packages/adh-ui/src/blocks/delete-entity-section.tsx`
-  (`"use client"`), exported via `@agentic-toolkit/adh-ui/blocks/delete-entity-section`.
+  (`"use client"`), exported via `@adh-sdk/adh-ui/blocks/delete-entity-section`.
   Composes `Disclosure`, `Button`, `Dialog` (+ `DialogHeader`/`Title`/`Description`/
   `Footer`), `Input`, and `Label`, with the `Trash2`/`TriangleAlert`/`Archive`
   glyphs from `lucide-react`. Props: `entityNoun`, `confirmValue`, `childEntities`,
@@ -39,7 +39,7 @@
   `delete-entity-section` (regenerate `sources.generated.ts` via
   `gen-sources.py` after source changes); verify responsively via Playwright at
   375 / 768 / 1440. Shared across every focused-topic-detail settings route
-  (`adtoolkit://cookbook/ui/navigation/focused-topic-detail`), usually as the final
+  (`adhsdk://cookbook/ui/navigation/focused-topic-detail`), usually as the final
   group in a settings pane below the `FieldGroup`s.
 - **AppKit/UIKit**: On macOS, build the disclosure from an `NSButton` with
   `bezelStyle = .disclosure` (there is no `NSDisclosureButton` class) toggling a

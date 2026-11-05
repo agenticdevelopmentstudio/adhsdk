@@ -1,7 +1,7 @@
 ---
 id: ab6d7655-9476-4318-8c36-f431686e2d23
 title: "File Browser"
-domain: adtoolkit://cookbook/workspace/files/file-browser-view
+domain: adhsdk://cookbook/workspace/files/file-browser-view
 type: ingredient
 version: 1.2.2
 status: review
@@ -19,7 +19,7 @@ tags:
   - file-browser
   - tree-view
 depends-on:
-  - adtoolkit://cookbook/workspace/files/file-tree-view
+  - adhsdk://cookbook/workspace/files/file-tree-view
 related:
   - agenticdevelopercookbook://guidelines/cookbook/ui/platform-design-languages
 references: []
@@ -474,7 +474,7 @@ Not applicable: this component contains no logging calls.
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/macOS/UI/ViewControllers/FileBrowser/FileBrowserViewController.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/FileBrowser/FileBrowserViewController.swift` |
 
 ## Design Decisions
 

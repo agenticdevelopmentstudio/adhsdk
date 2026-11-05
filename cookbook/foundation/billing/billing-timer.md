@@ -1,7 +1,7 @@
 ---
 id: F2A31FE2-1302-46D9-8CB4-CC6E9A5E8A12
 title: "Billing Timer"
-domain: adtoolkit://cookbook/foundation/billing/billing-timer
+domain: adhsdk://cookbook/foundation/billing/billing-timer
 type: ingredient
 version: 1.0.0
 status: review
@@ -21,9 +21,9 @@ tags:
   - timer
 depends-on: []
 related:
-  - adtoolkit://cookbook/foundation/billing/billing-store
-  - adtoolkit://cookbook/foundation/billing/billing-persistence
-  - adtoolkit://cookbook/foundation/billing/billing-dt-os
+  - adhsdk://cookbook/foundation/billing/billing-store
+  - adhsdk://cookbook/foundation/billing/billing-persistence
+  - adhsdk://cookbook/foundation/billing/billing-dt-os
 references: []
 approved-by: ""
 approved-date: ""
@@ -131,7 +131,7 @@ Not applicable: the timer makes no log calls; failures are thrown to the caller.
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/Core/Billing/BillingTimer.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Billing/BillingTimer.swift` |
 
 ## Design Decisions
 

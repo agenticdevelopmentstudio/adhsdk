@@ -25,10 +25,10 @@ describe('ThemeStyle', () => {
     const { container } = render(<ThemeStyle theme={'stub' as never} />)
     const style = container.querySelector('style')
     expect(style).not.toBeNull()
-    expect(style).toHaveAttribute('id', 'agentic-toolkit-theme')
+    expect(style).toHaveAttribute('id', 'adh-sdk-theme')
     // Not appended to document.head: the pre-merge render path put it in the
     // container the component itself renders into.
-    expect(document.head.querySelector('#agentic-toolkit-theme')).toBeNull()
+    expect(document.head.querySelector('#adh-sdk-theme')).toBeNull()
     expect(style!.innerHTML).toContain('--a: 1')
   })
 

@@ -32,5 +32,5 @@ fallback to `FontViewModel.font` (see **delegates-font-resolution-fallback**).
 builds its output from hardcoded, unlocalized string fragments (see
 Localization).
 
-No test in the repository's test targets constructs `FontPickerView`, so `unit-test-coverage` is `failed`: a search of `AgenticToolkitMacOSTests` and the other test targets for the type name finds nothing. `FontChooserButtonTests.swift` covers only the button this row composes, not the row's binding, resync or dimming.
+No test in the repository's test targets constructs `FontPickerView`, so `unit-test-coverage` is `failed`: a search of `AgenticDeveloperHubSDKMacOSTests` and the other test targets for the type name finds nothing. `FontChooserButtonTests.swift` covers only the button this row composes, not the row's binding, resync or dimming.
 

@@ -1,7 +1,7 @@
 ---
 id: 87ca0139-6cd0-46dd-a9fb-40ad3406f175
 title: "Ecosystem Config"
-domain: adtoolkit://cookbook/adh/hub/ecosystems/ecosystem-config
+domain: adhsdk://cookbook/adh/hub/ecosystems/ecosystem-config
 type: ingredient
 version: 1.2.1
 status: review
@@ -28,36 +28,36 @@ tags:
   - storage-tokens
 depends-on: []
 related:
-  - adtoolkit://cookbook/adh/hub/security/authentication-client
-  - adtoolkit://cookbook/adh/hub/ecosystems/ecosystems
+  - adhsdk://cookbook/adh/hub/security/authentication-client
+  - adhsdk://cookbook/adh/hub/ecosystems/ecosystems
 references:
-  - packages/apple/AgenticToolkit/Hub/Features/EcosystemConfig/AuthSettingsTopic.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Hub/Features/EcosystemConfig/EcosystemConfigModels.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Hub/Features/EcosystemConfig/FeatureFlagsTopic.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Hub/Features/EcosystemConfig/ServerBagsTopic.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Hub/Features/EcosystemConfig/SigninAppsTopic.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Hub/Features/EcosystemConfig/StorageTokensRail.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Hub/Features/EcosystemConfig/StorageTokensTopic.swift (agenticdevelopertoolkit)
-  - packages/web/packages/data/src/ecosystem-config/feature-flags.ts (agenticdevelopertoolkit)
-  - packages/web/packages/data/src/ecosystem-config/server-bags.ts (agenticdevelopertoolkit)
-  - packages/web/packages/data/src/ecosystem-config/client-auth.ts (agenticdevelopertoolkit)
-  - packages/web/packages/data/src/ecosystem-config/storage-tokens.ts (agenticdevelopertoolkit)
-  - packages/web/packages/data/src/ecosystem-config/wire.ts (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Tests/AgenticToolkitHubTests/EcosystemConfigTopicsTests.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Hub/HubError.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Hub/Features/Ecosystems/EcosystemTopic.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Hub/Features/Ecosystems/EcosystemsModels.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Hub/Features/Support/Slug.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Hub/Features/Support/HubDates.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Hub/Features/Support/HubText.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Hub/Features/Support/JSONValue.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Hub/Features/Applications/ApplicationsTopic.swift (agenticdevelopertoolkit)
-  - packages/web/packages/data/src/http.ts (agenticdevelopertoolkit)
-  - packages/web/packages/data/src/client-helpers.ts (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/project.yml (agenticdevelopertoolkit)
-  - packages/web/packages/features/ecosystem-config/src/dialog-state/bag-dialog-state.ts (agenticdevelopertoolkit)
-  - packages/web/packages/features/ecosystem-config/src/dialog-state/flag-dialog-state.ts (agenticdevelopertoolkit)
-  - packages/web/packages/features/ecosystem-config/src/ApplicationClientAuthSection.tsx (agenticdevelopertoolkit)
+  - packages/apple/AgenticDeveloperHubSDK/Hub/Features/EcosystemConfig/AuthSettingsTopic.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Hub/Features/EcosystemConfig/EcosystemConfigModels.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Hub/Features/EcosystemConfig/FeatureFlagsTopic.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Hub/Features/EcosystemConfig/ServerBagsTopic.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Hub/Features/EcosystemConfig/SigninAppsTopic.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Hub/Features/EcosystemConfig/StorageTokensRail.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Hub/Features/EcosystemConfig/StorageTokensTopic.swift (adhsdk)
+  - packages/web/packages/data/src/ecosystem-config/feature-flags.ts (adhsdk)
+  - packages/web/packages/data/src/ecosystem-config/server-bags.ts (adhsdk)
+  - packages/web/packages/data/src/ecosystem-config/client-auth.ts (adhsdk)
+  - packages/web/packages/data/src/ecosystem-config/storage-tokens.ts (adhsdk)
+  - packages/web/packages/data/src/ecosystem-config/wire.ts (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKHubTests/EcosystemConfigTopicsTests.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Hub/HubError.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Hub/Features/Ecosystems/EcosystemTopic.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Hub/Features/Ecosystems/EcosystemsModels.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Hub/Features/Support/Slug.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Hub/Features/Support/HubDates.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Hub/Features/Support/HubText.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Hub/Features/Support/JSONValue.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Hub/Features/Applications/ApplicationsTopic.swift (adhsdk)
+  - packages/web/packages/data/src/http.ts (adhsdk)
+  - packages/web/packages/data/src/client-helpers.ts (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/project.yml (adhsdk)
+  - packages/web/packages/features/ecosystem-config/src/dialog-state/bag-dialog-state.ts (adhsdk)
+  - packages/web/packages/features/ecosystem-config/src/dialog-state/flag-dialog-state.ts (adhsdk)
+  - packages/web/packages/features/ecosystem-config/src/ApplicationClientAuthSection.tsx (adhsdk)
 approved-by: ""
 approved-date: ""
 ---
@@ -523,12 +523,12 @@ kind.
   imports SwiftUI; they build form/level/detail value objects that a SwiftUI (or
   AppKit) rendering layer elsewhere consumes unchanged.
 - **AppKit / UIKit**: this is one of the two source platforms. The files live under
-  `packages/apple/AgenticToolkit/Hub/Features/EcosystemConfig/`
+  `packages/apple/AgenticDeveloperHubSDK/Hub/Features/EcosystemConfig/`
   (`AuthSettingsTopic.swift`, `EcosystemConfigModels.swift`,
   `FeatureFlagsTopic.swift`, `ServerBagsTopic.swift`, `SigninAppsTopic.swift`,
   `StorageTokensRail.swift`, `StorageTokensTopic.swift`), part of the
-  `AgenticToolkitHub` sources directory that `project.yml` builds into both
-  `AgenticToolkitHub-macOS` and `AgenticToolkitHub-iOS` targets from the same
+  `AgenticDeveloperHubSDKHub` sources directory that `project.yml` builds into both
+  `AgenticDeveloperHubSDKHub-macOS` and `AgenticDeveloperHubSDKHub-iOS` targets from the same
   source tree — there is no platform-specific branch anywhere in these files. Each
   topic conforms to `EcosystemTopicProvider` and implements
   `child(for:path:rail:)`; every data-source call not covered by the exception
@@ -631,7 +631,7 @@ kind.
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/Hub/Features/EcosystemConfig/` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Hub/Features/EcosystemConfig/` |
 | web | `packages/web/packages/data/src/ecosystem-config/` |
 
 ## Design Decisions
@@ -646,7 +646,7 @@ Platform scope: Swift implementation (the alternate client has no equivalent cre
 **Approved**: pending
 
 **Decision**: the storage-tokens detail sources its post-reveal notice text from a constant declared in a sibling Applications module (Applications' own token-reveal notice), rather than declaring its own copy.
-**Rationale**: the source's own comment states this directly — the reveal-once behavior exists specifically because that sibling constant's promise ("you won't be able to see it again") must actually hold; the same lifecycle and constant are documented as canonical in the sibling recipe `adtoolkit://cookbook/adh/hub/security/authentication-client`, which this recipe treats as the complete reference for that shared behavior rather than re-deriving it here. The coupling means a future rename of that constant would need to be tracked across both modules with no compiler-enforced link beyond the direct reference.
+**Rationale**: the source's own comment states this directly — the reveal-once behavior exists specifically because that sibling constant's promise ("you won't be able to see it again") must actually hold; the same lifecycle and constant are documented as canonical in the sibling recipe `adhsdk://cookbook/adh/hub/security/authentication-client`, which this recipe treats as the complete reference for that shared behavior rather than re-deriving it here. The coupling means a future rename of that constant would need to be tracked across both modules with no compiler-enforced link beyond the direct reference.
 Platform scope: Swift implementation — this is a cross-module source-file coupling specific to that codebase's module layout.
 **Approved**: pending
 

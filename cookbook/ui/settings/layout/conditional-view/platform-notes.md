@@ -28,7 +28,7 @@
   `onVisibilityChange` prop from a `useEffect` keyed on that computed
   boolean, mirroring notifies-visibility-change-once.
 - **AppKit/UIKit** (source platform): Source file
-  `packages/apple/AgenticToolkit/macOS/SystemIntegration/ComposableSettingsWindow/Views/ConditionalView.swift`.
+  `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/Views/ConditionalView.swift`.
   A macOS-only (`import AppKit`) `NSView` subclass, `@MainActor`, generic
   over `Value: Codable & Sendable`, inside the `ComposableSettings`
   namespace, conforming to `SettingsViewProtocol` and

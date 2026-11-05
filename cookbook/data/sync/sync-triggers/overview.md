@@ -1,5 +1,5 @@
 
-The trigger sources are the producers that tell the sync engine when to run a cycle. Each one conforms to the `SyncTriggerSource` protocol (declared in `SyncProtocols.swift`), whose only requirement is a `kicks: AsyncStream<SyncKickReason>` property. A host constructs one or more sources and hands each to `SyncEngine.attach(_:)`, which iterates the stream and calls `kick(reason:)` for every element (see [SyncEngine](adtoolkit://cookbook/data/sync/sync-engine)).
+The trigger sources are the producers that tell the sync engine when to run a cycle. Each one conforms to the `SyncTriggerSource` protocol (declared in `SyncProtocols.swift`), whose only requirement is a `kicks: AsyncStream<SyncKickReason>` property. A host constructs one or more sources and hands each to `SyncEngine.attach(_:)`, which iterates the stream and calls `kick(reason:)` for every element (see [SyncEngine](adhsdk://cookbook/data/sync/sync-engine)).
 
 Three concrete sources ship:
 

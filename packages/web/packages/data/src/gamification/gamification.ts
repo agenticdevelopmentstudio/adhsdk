@@ -11,7 +11,7 @@
 // so its response may carry `replayed`.
 //
 // The types come from ./wire, this module's own transcription of the backend's
-// `Gamification*` schemas — NOT from `@agentic-toolkit/adh-api-types`. Every other client
+// `Gamification*` schemas — NOT from `@adh-sdk/adh-api-types`. Every other client
 // in this package follows that rule (see ecosystems/wire.ts): a generic data client does
 // not take a dependency on adh's generated product vocabulary.
 

@@ -1,7 +1,7 @@
 ---
 id: 08448e7e-b673-49b3-97d4-d83136d108d6
 title: "Conversation Focus Overlay"
-domain: adtoolkit://cookbook/ai/chat/conversations/conversation-focus-overlay
+domain: adhsdk://cookbook/ai/chat/conversations/conversation-focus-overlay
 type: ingredient
 version: 1.0.0
 status: review
@@ -20,10 +20,10 @@ tags:
   - overlay
   - conversations
 depends-on:
-  - adtoolkit://cookbook/ui/containers/dismissible-overlay-view
+  - adhsdk://cookbook/ui/containers/dismissible-overlay-view
 related:
-  - adtoolkit://cookbook/ai/chat/chat-window/chat-view
-  - adtoolkit://cookbook/ai/chat/mock-chat-session
+  - adhsdk://cookbook/ai/chat/chat-window/chat-view
+  - adhsdk://cookbook/ai/chat/mock-chat-session
 references: []
 approved-by: ""
 approved-date: ""
@@ -247,7 +247,7 @@ Not applicable: the source contains no logging call.
 ## Platform Notes
 
 - **AppKit** (source platform): Implemented in
-  `packages/apple/AgenticToolkit/macOS/Features/ConversationsWindow/ConversationFocusOverlay.swift`
+  `packages/apple/AgenticDeveloperHubSDK/macOS/Features/ConversationsWindow/ConversationFocusOverlay.swift`
   as a `public final` subclass of `DismissibleOverlayView` that holds a
   `ChatView`, a `FeedChatSession` and an `AIChatViewModel`. The initializer
   takes `refreshInterval: Duration`, `load: FeedChatSession.Loader`,
@@ -275,7 +275,7 @@ Not applicable: the source contains no logging call.
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/macOS/Features/ConversationsWindow/ConversationFocusOverlay.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/ConversationsWindow/ConversationFocusOverlay.swift` |
 
 ## Design Decisions
 

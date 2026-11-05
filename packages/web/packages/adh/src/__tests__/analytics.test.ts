@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 // captureEvent hands off to the shared analytics package, which owns the PostHog instance.
 const captureMock = vi.hoisted(() => vi.fn())
-vi.mock('@agenticdevelopertoolkit/analytics', () => ({ captureAnalyticsEvent: captureMock }))
+vi.mock('@adh-sdk/analytics', () => ({ captureAnalyticsEvent: captureMock }))
 
 import {
   captureEvent,

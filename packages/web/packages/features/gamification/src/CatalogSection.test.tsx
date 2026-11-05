@@ -2,9 +2,9 @@
 import { useState } from "react";
 import { describe, it, expect, afterEach, vi } from "vitest";
 import { render, screen, fireEvent, waitFor, cleanup } from "@testing-library/react";
-import { SettingsDirtyProvider, useSettingsDirty } from "@agentic-toolkit/resource";
+import { SettingsDirtyProvider, useSettingsDirty } from "@adh-sdk/resource";
 
-vi.mock("@agentic-toolkit/auth", () => ({
+vi.mock("@adh-sdk/auth", () => ({
   reportUnexpectedAuthError: vi.fn(),
 }));
 
@@ -19,7 +19,7 @@ const { getCatalog, createRealmBadge, updateRealmBadge } = vi.hoisted(() => ({
   createRealmBadge: vi.fn(),
   updateRealmBadge: vi.fn(),
 }));
-vi.mock("@agentic-toolkit/data/gamification", () => ({
+vi.mock("@adh-sdk/data/gamification", () => ({
   gamificationApi: {
     getCatalog,
     createRealmBadge,
@@ -32,7 +32,7 @@ vi.mock("@agentic-toolkit/data/gamification", () => ({
 
 import { CatalogSection } from "./CatalogSection";
 import { RealmCatalogProvider } from "./realm-catalog";
-import type { CatalogBadge } from "@agentic-toolkit/data/gamification";
+import type { CatalogBadge } from "@adh-sdk/data/gamification";
 
 afterEach(cleanup);
 

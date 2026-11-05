@@ -1,5 +1,5 @@
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/Sync/Triggers/` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Sync/Triggers/` |
 

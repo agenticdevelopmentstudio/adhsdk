@@ -27,26 +27,26 @@ import {
   SettingsLayout,
   SubscriptionPanel,
   type Topic,
-} from "@agentic-toolkit/account";
-import { UsagePanel, SocialLinksPanel, AddressesPanel } from "@agentic-toolkit/profile";
-import { TokensPanel } from "@agentic-toolkit/authentication";
-import { AssistantsPanel } from "@agentic-toolkit/personas";
+} from "@adh-sdk/account";
+import { UsagePanel, SocialLinksPanel, AddressesPanel } from "@adh-sdk/profile";
+import { TokensPanel } from "@adh-sdk/authentication";
+import { AssistantsPanel } from "@adh-sdk/personas";
 import {
   FeatureTitle,
   RecordAffordanceContext,
   SettingsDirtyProvider,
   type RecordAffordanceProps,
-} from "@agentic-toolkit/resource";
-import { RecordApiButton } from "@agentic-toolkit/api-explorer";
+} from "@adh-sdk/resource";
+import { RecordApiButton } from "@adh-sdk/api-explorer";
 
 // The settings sections supply their own API affordance rather than trusting a host to: the
 // overlay mounts on every site, most of which have no workspace shell (and so no
 // RecordAffordanceContext) above it. The header's API slot draws whatever this renders.
 const renderSettingsApi = (props: RecordAffordanceProps) => <RecordApiButton {...props} />;
 
-// Relative, and deliberately NOT the "@agentic-toolkit/adh/site" package path the topics
+// Relative, and deliberately NOT the "@adh-sdk/adh/site" package path the topics
 // import below uses — the two rules point opposite ways here, so record which applies.
-// `@agentic-toolkit/adh/site` is absent from tsup's `external` list (only its
+// `@adh-sdk/adh/site` is absent from tsup's `external` list (only its
 // `site/hubWorkspacePath` leaf is there, tsup.config.ts:272), on purpose: the barrel holds no
 // module state (see site/index.ts's own header — "owes tsup no `external` pairing"), so two
 // copies cannot disagree about anything, and the package path would only turn a tree-shaken
@@ -56,7 +56,7 @@ const renderSettingsApi = (props: RecordAffordanceProps) => <RecordApiButton {..
 // settings. Making it external would cost more, not less. The rule that bans a relative
 // import is about client-directive taint and module identity; neither is in play here.
 import { reservedWorkspaceSlugs } from "../site";
-import { siteUrl } from "@agentic-toolkit/adh-registry";
+import { siteUrl } from "@adh-sdk/adh-registry";
 import { AppearancePanel } from "./AppearancePanel";
 // Relative, like AppearancePanel above and for the same reason: this panel is part of
 // THIS entry and holds no module state of its own. The store it writes through to does,
@@ -70,7 +70,7 @@ import {
   SETTINGS_TOPICS,
   resolveSettingsTopic,
   type SettingsTopicId,
-} from "@agentic-toolkit/adh/settings/topics";
+} from "@adh-sdk/adh/settings/topics";
 
 // The four tables below are keyed by `SettingsTopicId`, not by `string`, and the split
 // between TOTAL and PARTIAL is the contract:

@@ -101,7 +101,7 @@ describe('authedFetch', () => {
     // rawFetch reads `init.headers`/`init.body` unconditionally. Before `init` defaulted to
     // `{}`, calling authedFetch(url) with no second argument was a type error for every
     // in-repo caller, but nothing stopped a structurally-compatible fetcher type (e.g.
-    // @agentic-toolkit/registry's `Fetcher`, whose `init` is optional) from calling it with
+    // @adh-sdk/registry's `Fetcher`, whose `init` is optional) from calling it with
     // none at runtime — which would have thrown reading `.headers` off `undefined`.
     writeTokens({ accessToken: 'TOK', refreshToken: '' })
     const fetchMock = vi.fn().mockResolvedValue({

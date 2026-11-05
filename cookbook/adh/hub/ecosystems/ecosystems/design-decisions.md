@@ -76,7 +76,7 @@ not invent new semantics.
 **Decision**: `ecosystem-invitations.ts`'s row-shape mappers
 (`toRequest`, `toPendingUser`, `toInvite`, `toAdminNote`,
 `toHistoryEntry`) and their backend types are imported from
-`@agentic-toolkit/adh-ui/invitations-types` rather than defined in this
+`@adh-sdk/adh-ui/invitations-types` rather than defined in this
 recipe.
 **Rationale**: Those mappers are shared with the platform-admin
 invitations hooks referenced in this file's own header comment

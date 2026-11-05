@@ -1,7 +1,7 @@
 import '@testing-library/jest-dom/vitest'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, within } from '@testing-library/react'
-import type { AuthUser } from '@agentic-toolkit/auth'
+import type { AuthUser } from '@adh-sdk/auth'
 import type { CrudExposure, CrudTableMeta } from '../types'
 import type { CrudShellProps } from '../CrudDataBrowser'
 
@@ -14,8 +14,8 @@ const viewerUser = (admin: boolean): AuthUser =>
 
 vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn() }) }))
 // Only the auth context is faked; `isAdmin` and the rest stay real.
-vi.mock('@agentic-toolkit/auth', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('@agentic-toolkit/auth')>()),
+vi.mock('@adh-sdk/auth', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@adh-sdk/auth')>()),
   useOptionalAuth: () => auth,
   useAuth: () => auth,
 }))

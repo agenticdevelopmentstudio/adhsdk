@@ -1,7 +1,7 @@
 ---
 id: e26e765d-2caa-40f8-a668-661ed2b0632c
 title: AlertModal
-domain: agenticdevelopertoolkit://recipes/alert-modal
+domain: adhsdk://recipes/alert-modal
 type: ingredient
 version: 1.1.1
 status: review
@@ -23,13 +23,13 @@ tags:
 - modal
 - base-ui
 depends-on:
-- agenticdevelopertoolkit://recipes/dialog
-- agenticdevelopertoolkit://recipes/dialog-actions
-- agenticdevelopertoolkit://recipes/button
+- adhsdk://recipes/dialog
+- adhsdk://recipes/dialog-actions
+- adhsdk://recipes/button
 related:
-- agenticdevelopertoolkit://recipes/dialog
-- agenticdevelopertoolkit://recipes/dialog-actions
-- agenticdevelopertoolkit://recipes/alert-and-dialog
+- adhsdk://recipes/dialog
+- adhsdk://recipes/dialog-actions
+- adhsdk://recipes/alert-and-dialog
 references:
 - https://www.w3.org/TR/WCAG21/
 - https://base-ui.com/react/components/dialog
@@ -96,7 +96,7 @@ disables keyboard shortcuts.
 
 ## Appearance
 
-- **Corner radius**: Not applicable — owned by `DialogContent` via the Dialog recipe (`agenticdevelopertoolkit://recipes/dialog`).
+- **Corner radius**: Not applicable — owned by `DialogContent` via the Dialog recipe (`adhsdk://recipes/dialog`).
 - **Padding**: Not applicable — owned by `DialogContent` via the Dialog recipe.
 - **Font**: Title weight/size are inherited from `DialogTitle` (unmodified here); `AlertModal` only overrides the title's text color and adds a leading-icon layout (`flex items-center gap-2 text-apt-gold`).
 - **Background**: Not applicable — owned by `DialogContent` via the Dialog recipe.
@@ -122,12 +122,12 @@ disables keyboard shortcuts.
 
 ## Accessibility
 
-- Dialog role, `aria-modal`, focus trap, and focus restoration to the opener are inherited unchanged from the `Dialog` primitive (`agenticdevelopertoolkit://recipes/dialog`); `AlertModal` does not re-derive or override them.
+- Dialog role, `aria-modal`, focus trap, and focus restoration to the opener are inherited unchanged from the `Dialog` primitive (`adhsdk://recipes/dialog`); `AlertModal` does not re-derive or override them.
 - The dialog MUST be labelled by `title` (via `DialogTitle`) and, when provided, described by `description` (via `DialogDescription`).
 - The tone icon is decorative: it is rendered with `aria-hidden` and never substitutes for a text label.
-- The alert-mode busy spinner exposes `role="status"` and `aria-label="Working…"`; confirm-mode busy is forwarded to `DialogActions`, which applies the identical `role="status"` / `aria-label="Working…"` treatment (`agenticdevelopertoolkit://recipes/dialog-actions`).
-- Both footer buttons are the shared `Button` component, which renders a real, focusable `<button>` — keyboard activation (Space/Enter) is native (`agenticdevelopertoolkit://recipes/button`).
-- Minimum touch/click target size, minimum contrast ratio, and other platform-specific accessibility requirements are inherited from the `Button` component and the shared design-token stylesheet; see `agenticdevelopertoolkit://recipes/button` and the WCAG 2.1 AA reference in `agenticdevelopercookbook://guidelines/cookbook/ui/platform-design-languages`.
+- The alert-mode busy spinner exposes `role="status"` and `aria-label="Working…"`; confirm-mode busy is forwarded to `DialogActions`, which applies the identical `role="status"` / `aria-label="Working…"` treatment (`adhsdk://recipes/dialog-actions`).
+- Both footer buttons are the shared `Button` component, which renders a real, focusable `<button>` — keyboard activation (Space/Enter) is native (`adhsdk://recipes/button`).
+- Minimum touch/click target size, minimum contrast ratio, and other platform-specific accessibility requirements are inherited from the `Button` component and the shared design-token stylesheet; see `adhsdk://recipes/button` and the WCAG 2.1 AA reference in `agenticdevelopercookbook://guidelines/cookbook/ui/platform-design-languages`.
 
 ## Conformance Test Vectors
 
@@ -184,7 +184,7 @@ disables keyboard shortcuts.
 - **Error states**: the source does not catch or otherwise handle exceptions thrown by `onConfirm` or `onCancel`. Such an exception MUST propagate uncaught out of the event handler to the caller's own error boundary; `AlertModal` performs no retry, logging, or user-facing error display of its own.
 - **Offline/disconnected state**: Not applicable — `AlertModal` makes no network requests itself; any network operation lives in the caller-supplied `onConfirm`/`onCancel` handlers, outside this component's scope.
 - **`busy` and `dismissible={false}` combined**: both flags independently block dismissal (`handleOpenChange` returns early on `busy || !dismissible`); the two conditions are redundant, not additive, and produce identical blocked behavior.
-- **Backdrop/outside clicks never dismiss the modal, under any combination of props**: `AlertModal` renders the shared `Dialog` (`agenticdevelopertoolkit://recipes/dialog`) without overriding its `disablePointerDismissal`, which the `Dialog` recipe hard-sets. Base UI therefore never calls `onOpenChange` for an outside press, so `handleOpenChange` never runs and neither `onConfirm` nor `onCancel` fires. Only the ✕ affordance (`close-press`, when shown) and Escape (`escape-key`) can reach `handleOpenChange` — `dismissible`, `busy`, and `keyboard` only gate what happens once one of those two reasons arrives, they do not enable backdrop dismissal.
+- **Backdrop/outside clicks never dismiss the modal, under any combination of props**: `AlertModal` renders the shared `Dialog` (`adhsdk://recipes/dialog`) without overriding its `disablePointerDismissal`, which the `Dialog` recipe hard-sets. Base UI therefore never calls `onOpenChange` for an outside press, so `handleOpenChange` never runs and neither `onConfirm` nor `onCancel` fires. Only the ✕ affordance (`close-press`, when shown) and Escape (`escape-key`) can reach `handleOpenChange` — `dismissible`, `busy`, and `keyboard` only gate what happens once one of those two reasons arrives, they do not enable backdrop dismissal.
 - **`destructive={true}` with an explicit `keyboard` map**: `destructive` forces `keyboardEnabled` to `false` regardless of the map, so `force-keyboard-none-when-destructive` MUST take precedence over `honor-explicit-keyboard-map`.
 
 ## Configuration
@@ -242,7 +242,7 @@ Not applicable — `AlertModal` is a presentational component and issues no log 
 
 - **SwiftUI**: Not applicable — no SwiftUI implementation is in scope for this recipe.
 - **Compose**: Not applicable — no Compose implementation is in scope for this recipe.
-- **React/Web**: `packages/web/packages/ui/src/components/alert-modal.tsx`, `"use client"`, built on `@base-ui/react/dialog` via the shared `Dialog` primitive (`agenticdevelopertoolkit://recipes/dialog`). Renders `DialogActions` (`agenticdevelopertoolkit://recipes/dialog-actions`) in confirm mode and the shared `Button` (`agenticdevelopertoolkit://recipes/button`) in alert mode.
+- **React/Web**: `packages/web/packages/ui/src/components/alert-modal.tsx`, `"use client"`, built on `@base-ui/react/dialog` via the shared `Dialog` primitive (`adhsdk://recipes/dialog`). Renders `DialogActions` (`adhsdk://recipes/dialog-actions`) in confirm mode and the shared `Button` (`adhsdk://recipes/button`) in alert mode.
 - **AppKit / UIKit**: Not applicable — no AppKit/UIKit implementation is in scope for this recipe.
 - **WinUI 3**: Start from `ContentDialog` (Fluent 2's modal primitive). In alert mode, render a single `PrimaryButtonText` button; in confirm mode, add `SecondaryButtonText` and set `SecondaryButtonClick` to invoke cancel. Replace buttons with a custom busy `Content` template (a `ProgressRing` inside a `StackPanel`) when busy. `IsPrimaryButtonEnabled` only disables the primary button — it does not block light-dismiss or Escape — so blocking dismissal while `busy` or `!dismissible` requires handling `ContentDialog.Closing` and setting `args.Cancel = busy || !dismissible`; hide the close button via a custom template override. For keyboard policy: `ContentDialog` has no built-in per-instance `Escape`/`Enter` remapping, so attach a `KeyDown` handler to the dialog when `keyboard` is an explicit map or `"none"`; when `keyboard="default"`, defer to the default behavior (Enter → `PrimaryButton`, Escape → cancel/dismiss, subject to the same `Closing` guard). The `destructive` flag changes the primary button's styling to danger/red and forces the keyboard handler to block all key actions.
 

@@ -1,4 +1,4 @@
-// @agentic-toolkit/adh-billing — the Billing feature.
+// @adh-sdk/adh-billing — the Billing feature.
 //
 // Mounted by three hosts: agenticdeveloperbilling.com's own workspace route (with URL selection),
 // the hub's workspace rail and agenticdeveloperproducts.com's product topic rail (both with
@@ -7,7 +7,7 @@
 //
 // THIS BARREL IS THE PANES, and importing anything from it costs all of them. It is one bundled
 // module, so a static import of any export pulls the other four panes and — through the Stripe
-// topic — `@agentic-toolkit/integrations`' pane too, no matter how the importer wrapped
+// topic — `@adh-sdk/integrations`' pane too, no matter how the importer wrapped
 // `BillingGroup` in `next/dynamic`. Everything a host needs WITHOUT mounting a pane therefore
 // lives on its own subpath, and that is the rule to keep:
 //

@@ -10,15 +10,15 @@ import {
   MockBackend,
   useChatSession,
   type InlineChatSizing,
-} from '@agenticdevelopertoolkit/chat'
-import '@agenticdevelopertoolkit/chat/css/base.css'
-import '@agenticdevelopertoolkit/chat/css/modes/inline.css'
-import '@agenticdevelopertoolkit/chat/css/modes/three-pane.css'
-import '@agenticdevelopertoolkit/chat/css/modes/mobile.css'
-import '@agenticdevelopertoolkit/chat/css/components/content-overlay.css'
+} from '@adh-sdk/chat'
+import '@adh-sdk/chat/css/base.css'
+import '@adh-sdk/chat/css/modes/inline.css'
+import '@adh-sdk/chat/css/modes/three-pane.css'
+import '@adh-sdk/chat/css/modes/mobile.css'
+import '@adh-sdk/chat/css/components/content-overlay.css'
 
 import backgroundImage from './shih_tzu.webp'
-import { noAutofillProps } from '@agenticdevelopertoolkit/ui/lib/autofill'
+import { noAutofillProps } from '@adh-sdk/ui/lib/autofill'
 
 export const meta = { id: 'chat', label: 'Chat' }
 

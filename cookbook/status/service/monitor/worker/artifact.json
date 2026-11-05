@@ -3,7 +3,7 @@
   "meta": {
     "id": "5cb60b95-0a8b-43c8-a747-cb5ca7353f09",
     "title": "Status Server Monitor Worker",
-    "domain": "adtoolkit://cookbook/status/service/monitor/worker",
+    "domain": "adhsdk://cookbook/status/service/monitor/worker",
     "type": "ingredient",
     "version": "1.0.2",
     "status": "review",
@@ -34,20 +34,20 @@
       "agenticdevelopercookbook://guidelines/implementing/code-quality/dependency-injection"
     ],
     "related": [
-      "adtoolkit://cookbook/status/service/monitor/cycle-runner",
-      "adtoolkit://cookbook/status/service/storage/libsql"
+      "adhsdk://cookbook/status/service/monitor/cycle-runner",
+      "adhsdk://cookbook/status/service/storage/libsql"
     ],
     "references": [
-      "packages/web/packages/status-server/src/monitor/worker.ts (agenticdevelopertoolkit)",
-      "packages/web/packages/status-server/src/monitor/worker-client.ts (agenticdevelopertoolkit)",
-      "packages/web/packages/status-server/src/monitor/cycle-runner.ts (agenticdevelopertoolkit)",
-      "packages/web/packages/status-server/src/libsql/client.ts (agenticdevelopertoolkit)",
-      "packages/web/packages/status-server/src/libsql/index.ts (agenticdevelopertoolkit)",
-      "packages/web/packages/deploy-platform/src/cooldown/provider-cooldown.ts (agenticdevelopertoolkit)",
-      "packages/web/packages/status-server/src/config/port.ts (agenticdevelopertoolkit)",
-      "packages/web/packages/status-server/test/worker-boot.int.test.ts (agenticdevelopertoolkit)",
-      "packages/web/packages/status-server/test/helpers/worker-boot-driver.mjs (agenticdevelopertoolkit)",
-      "packages/web/packages/status-server/test/provider-cooldown-shared.int.test.ts (agenticdevelopertoolkit)"
+      "packages/web/packages/status-server/src/monitor/worker.ts (adhsdk)",
+      "packages/web/packages/status-server/src/monitor/worker-client.ts (adhsdk)",
+      "packages/web/packages/status-server/src/monitor/cycle-runner.ts (adhsdk)",
+      "packages/web/packages/status-server/src/libsql/client.ts (adhsdk)",
+      "packages/web/packages/status-server/src/libsql/index.ts (adhsdk)",
+      "packages/web/packages/deploy-platform/src/cooldown/provider-cooldown.ts (adhsdk)",
+      "packages/web/packages/status-server/src/config/port.ts (adhsdk)",
+      "packages/web/packages/status-server/test/worker-boot.int.test.ts (adhsdk)",
+      "packages/web/packages/status-server/test/helpers/worker-boot-driver.mjs (adhsdk)",
+      "packages/web/packages/status-server/test/provider-cooldown-shared.int.test.ts (adhsdk)"
     ],
     "approved-by": "",
     "approved-date": ""

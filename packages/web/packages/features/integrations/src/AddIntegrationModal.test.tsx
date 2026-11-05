@@ -2,7 +2,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { render, screen, fireEvent, waitFor, cleanup, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import type { MaskedProviderConfig, ProviderCatalogEntry } from "@agentic-toolkit/data/integrations";
+import type { MaskedProviderConfig, ProviderCatalogEntry } from "@adh-sdk/data/integrations";
 
 /**
  * Adding an integration is a PICKER and then a dialog about one service, and every assertion
@@ -21,7 +21,7 @@ const { createProviderConfig, listProviders } = vi.hoisted(() => ({
   createProviderConfig: vi.fn(),
   listProviders: vi.fn(),
 }));
-vi.mock("@agentic-toolkit/data/integrations", () => ({
+vi.mock("@adh-sdk/data/integrations", () => ({
   integrationsApi: { createProviderConfig, listProviders },
 }));
 

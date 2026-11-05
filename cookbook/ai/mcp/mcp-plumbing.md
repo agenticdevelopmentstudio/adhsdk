@@ -1,7 +1,7 @@
 ---
 id: 52650804-a096-4b71-b4eb-da3afa95ac56
 title: "MCP Plumbing"
-domain: adtoolkit://cookbook/ai/mcp/mcp-plumbing
+domain: adhsdk://cookbook/ai/mcp/mcp-plumbing
 type: ingredient
 version: 1.2.1
 status: review
@@ -23,7 +23,7 @@ tags:
   - settings
 depends-on: []
 related:
-  - adtoolkit://cookbook/ai/chat/chat-window/mcp-chips-bar-view
+  - adhsdk://cookbook/ai/chat/chat-window/mcp-chips-bar-view
 references: []
 approved-by: ""
 approved-date: ""
@@ -39,26 +39,26 @@ tool-capable connection, keeps that connection's lifecycle safe under
 concurrent connect/disconnect requests, and lets the host application itself
 act as an in-process MCP server. It spans six files:
 
-- `packages/apple/AgenticToolkit/Core/MCP/MCPClient.swift` — the client, its
+- `packages/apple/AgenticDeveloperHubSDK/Core/MCP/MCPClient.swift` — the client, its
   client-protocol surface, its connection-state type, and its error type. One
   instance owns one server's transport, its cached tool list, and the
   connect/disconnect race-safety documented on `teardown()`.
-- `packages/apple/AgenticToolkit/Core/MCP/MCPServerConfiguration.swift` — the
+- `packages/apple/AgenticDeveloperHubSDK/Core/MCP/MCPServerConfiguration.swift` — the
   persisted, user-editable description of one server (a stdio command or an
   HTTP endpoint).
-- `packages/apple/AgenticToolkit/Core/MCP/MCPServerRegistry.swift` — the
+- `packages/apple/AgenticDeveloperHubSDK/Core/MCP/MCPServerRegistry.swift` — the
   registry that reconciles a set of live clients against the configurations
   and secrets the settings store reports, and exposes `tools(forIds:)` to
   callers assembling a tool list across servers.
-- `packages/apple/AgenticToolkit/Core/MCP/MCPSettings.swift` — the settings
+- `packages/apple/AgenticDeveloperHubSDK/Core/MCP/MCPSettings.swift` — the settings
   declarations that route non-secret server descriptions to the regular
   settings provider and secret environment values to the secure (Keychain)
   provider.
-- `packages/apple/AgenticToolkit/Core/MCP/SubprocessTransport.swift` — the
+- `packages/apple/AgenticDeveloperHubSDK/Core/MCP/SubprocessTransport.swift` — the
   subprocess transport, an implementation of MCP's own transport contract
   built on this codebase's shared subprocess-channel abstraction, used for
   every `.stdio` server instead of the MCP SDK's own stock stdio transport.
-- `packages/apple/AgenticToolkit/macOS/Features/MCP/HostMCPServer.swift` — a
+- `packages/apple/AgenticDeveloperHubSDK/macOS/Features/MCP/HostMCPServer.swift` — a
   self-contained in-process MCP server that exposes host
   application info and a "open a chat window" tool over an in-memory
   transport pair, with no subprocess and no registry integration.
@@ -200,7 +200,7 @@ Not applicable — this is a Model Context Protocol connection and reconciliatio
 |--------|------|---------|-------------|
 | `configuration` (parameter to constructing a client) | `MCPServerConfiguration` | none — required | The server this client connects to: its transport, name, and id. |
 | `secrets` (parameter to constructing a client) | `[String: String]` | `[:]` | Secret environment values merged over the configuration's own environment for a `.stdio` server, per secrets-override-environment. |
-| `clientName` (parameter to constructing a client) | `String` | `"AgenticToolkit"` | The name this client presents to the MCP server during initialization. |
+| `clientName` (parameter to constructing a client) | `String` | `"AgenticDeveloperHubSDK"` | The name this client presents to the MCP server during initialization. |
 | `clientVersion` (parameter to constructing a client) | `String` | `"1.0.0"` | The version this client presents to the MCP server during initialization. |
 | `store` (parameter to constructing the registry) | `SettingsStore` | none — required | Source of the server-configurations and server-secrets settings the registry reconciles against. |
 | `clientFactory` (parameter to constructing the registry) | `ClientFactory` (a function, invoked on the UI thread, from a server configuration and a string-to-string secrets map to an MCP client) | Constructs a real client from a server configuration and its secrets | Lets a caller substitute a test double; production code accepts the default. |
@@ -252,7 +252,7 @@ Not applicable: none of the six sources contains an analytics or event-tracking 
 
 ## Logging
 
-Subsystem: `com.mikefullerton.agentictoolkit` | Category: client, registry
+Subsystem: `com.mikefullerton.agenticdeveloperhubsdk` | Category: client, registry
 
 | Event | Level | Message |
 |-------|-------|---------|
@@ -264,10 +264,10 @@ The client itself has its own logger, but the given source contains no call site
 
 ## Platform Notes
 
-- **SwiftUI**: The sources are `packages/apple/AgenticToolkit/Core/MCP/*.swift` (built into the `AgenticToolkitCore` framework target, macOS-only) and `packages/apple/AgenticToolkit/macOS/Features/MCP/HostMCPServer.swift` (built into the `AgenticToolkitMacOS` target). `MCPServerRegistry`'s `@Published clients` and `MCPClient`'s `state`/`cachedTools` are consumed reactively by SwiftUI views (e.g. the sibling `MCPChipsBarView` recipe) via `ObservableObject`, but nothing in these six files imports `SwiftUI` itself — the layer is UI-framework-agnostic.
+- **SwiftUI**: The sources are `packages/apple/AgenticDeveloperHubSDK/Core/MCP/*.swift` (built into the `AgenticDeveloperHubSDKCore` framework target, macOS-only) and `packages/apple/AgenticDeveloperHubSDK/macOS/Features/MCP/HostMCPServer.swift` (built into the `AgenticDeveloperHubSDKMacOS` target). `MCPServerRegistry`'s `@Published clients` and `MCPClient`'s `state`/`cachedTools` are consumed reactively by SwiftUI views (e.g. the sibling `MCPChipsBarView` recipe) via `ObservableObject`, but nothing in these six files imports `SwiftUI` itself — the layer is UI-framework-agnostic.
 - **Compose**: Model `MCPClient` as a class wrapping a `Mutex`-guarded `MutableStateFlow<MCPClientState>` and `MutableStateFlow<List<Tool>>` in place of the actor's isolated `state`/`cachedTools`, with `connect`/`disconnect`/`refreshTools`/`callTool` as `suspend` functions; reproduce `teardown-sequence`'s ordering with `withTimeoutOrNull(1_000L) { connectJob?.join() }` in place of the wall-clock budget, and `connectJob?.cancel()` in place of `connectTask?.cancel()`. Model `MCPServerRegistry` as a class exposing `StateFlow<Map<UUID, MCPClientProtocol>>`, driven by `combine` over two settings `Flow`s in place of Combine's `combineLatest`. Model `SubprocessTransport` with `ProcessBuilder`, reading stdout line-by-line on a background dispatcher to reproduce `.newlineDelimited` framing, and filtering blank lines the same way `subprocess-blank-line-filtering` does. Route secrets through Android's `EncryptedSharedPreferences` in place of Keychain.
 - **React/Web**: In a Node.js or Electron host (a browser has no subprocess primitive and no OS keychain), model `MCPClient` as an `EventEmitter`-based class or an async class exposing `state`/`cachedTools` getters, with `connect`/`disconnect` as `async` methods; reproduce `teardown-sequence`'s bounded wait with `Promise.race([connectPromise, delay(1000)])` in place of the wall-clock budget. Model `MCPServerRegistry` as a class holding a `Map<string, MCPClientProtocol>` and re-running its reconcile logic on every settings-store change event. Model `SubprocessTransport` with `child_process.spawn`, reading `.stdout` through `readline.createInterface` (or manual `\n`-splitting) for `.newlineDelimited` framing, and filtering blank lines per `subprocess-blank-line-filtering`; route secrets through an OS-keychain wrapper (e.g. `keytar`) in place of Keychain, and support only the `.http` transport in an Electron renderer sandbox that cannot spawn arbitrary executables.
-- **AppKit / UIKit**: Identical to the SwiftUI note — this component is UI-framework-agnostic; only the application embedding `AgenticToolkitCore`/`AgenticToolkitMacOS` differs, never this contract.
+- **AppKit / UIKit**: Identical to the SwiftUI note — this component is UI-framework-agnostic; only the application embedding `AgenticDeveloperHubSDKCore`/`AgenticDeveloperHubSDKMacOS` differs, never this contract.
 - **WinUI 3**: Model the `.http` path of `MCPClient`/`SubprocessTransport` with `System.Net.Http.HttpClient`, and the `.stdio` path with `System.Diagnostics.Process`/`ProcessStartInfo` (`RedirectStandardInput`/`RedirectStandardOutput`/`RedirectStandardError` all `true`), reading stdout via a `StreamReader.ReadLineAsync()` loop to reproduce `.newlineDelimited` framing and `subprocess-blank-line-filtering`'s blank-line skip. Reproduce `teardown-sequence`'s bounded wait for an abandoned connect with a `CancellationTokenSource` whose `CancelAfter(TimeSpan.FromSeconds(1))` gates a `Task.WhenAny(connectTask, Task.Delay(Timeout.Infinite, token))`, in place of `withWallClockBudget`. Represent `MCPServerRegistry.clients` as an `ObservableCollection<KeyValuePair<Guid, IMcpClient>>` or a `Dictionary` behind a type implementing `INotifyPropertyChanged`/`INotifyCollectionChanged`, raised from the `reconcile` equivalent the same way `@Published` raises `objectWillChange`. Store `mcp.serverConfigurations` via `Windows.Storage.ApplicationData.LocalSettings` (serialized with `System.Text.Json`) and route `mcp.serverSecrets` through `Windows.Security.Credentials.PasswordVault` in place of Keychain, since `Windows.Storage`'s settings containers are not encrypted at rest the way `mcp.serverSecrets` requires.
 - **clientFactory**: On Apple platforms `ClientFactory` is `@MainActor (MCPServerConfiguration, [String: String]) -> any MCPClientProtocol`.
 - **openChatWindow**: On Apple platforms `openChatWindow` is a `@Sendable () -> Void`.
@@ -276,12 +276,12 @@ The client itself has its own logger, but the given source contains no call site
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/Core/MCP/MCPClient.swift` |
-| apple | `packages/apple/AgenticToolkit/Core/MCP/MCPServerConfiguration.swift` |
-| apple | `packages/apple/AgenticToolkit/Core/MCP/MCPServerRegistry.swift` |
-| apple | `packages/apple/AgenticToolkit/Core/MCP/MCPSettings.swift` |
-| apple | `packages/apple/AgenticToolkit/Core/MCP/SubprocessTransport.swift` |
-| apple | `packages/apple/AgenticToolkit/macOS/Features/MCP/HostMCPServer.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/MCP/MCPClient.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/MCP/MCPServerConfiguration.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/MCP/MCPServerRegistry.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/MCP/MCPSettings.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/MCP/SubprocessTransport.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/MCP/HostMCPServer.swift` |
 
 ## Design Decisions
 

@@ -57,10 +57,10 @@ def make_site(
 def test_a_resolvable_specifier_naming_the_right_package_passes() -> None:
     with tempfile.TemporaryDirectory() as tmp:
         repo_root = Path(tmp)
-        make_package(repo_root, "@agenticdevelopertoolkit/chat", "packages/web/packages/chat")
+        make_package(repo_root, "@adh-sdk/chat", "packages/web/packages/chat")
         make_site(
             repo_root,
-            deps={"@agenticdevelopertoolkit/chat": "file:../../packages/web/packages/chat"},
+            deps={"@adh-sdk/chat": "file:../../packages/web/packages/chat"},
         )
         result = run(repo_root)
         assert result.returncode == 0, f"clean site rejected: {result.stderr}"
@@ -71,7 +71,7 @@ def test_a_specifier_resolving_nowhere_is_a_finding() -> None:
         repo_root = Path(tmp)
         make_site(
             repo_root,
-            deps={"@agenticdevelopertoolkit/chat": "file:../../packages/web/packages/chat"},
+            deps={"@adh-sdk/chat": "file:../../packages/web/packages/chat"},
         )
         result = run(repo_root)
         assert result.returncode == 1, f"dangling specifier missed: {result.stdout}"
@@ -86,14 +86,14 @@ def test_a_specifier_resolving_to_the_wrong_package_is_a_finding() -> None:
     """
     with tempfile.TemporaryDirectory() as tmp:
         repo_root = Path(tmp)
-        make_package(repo_root, "@agenticdevelopertoolkit/search", "packages/web/packages/chat")
+        make_package(repo_root, "@adh-sdk/search", "packages/web/packages/chat")
         make_site(
             repo_root,
-            deps={"@agenticdevelopertoolkit/chat": "file:../../packages/web/packages/chat"},
+            deps={"@adh-sdk/chat": "file:../../packages/web/packages/chat"},
         )
         result = run(repo_root)
         assert result.returncode == 1, f"wrong package missed: {result.stdout}"
-        assert "is package '@agenticdevelopertoolkit/search'" in result.stderr
+        assert "is package '@adh-sdk/search'" in result.stderr
 
 
 def test_link_is_checked_the_same_as_file() -> None:
@@ -101,7 +101,7 @@ def test_link_is_checked_the_same_as_file() -> None:
         repo_root = Path(tmp)
         make_site(
             repo_root,
-            deps={"@agenticdevelopertoolkit/ui": "link:../../packages/web/packages/ui"},
+            deps={"@adh-sdk/ui": "link:../../packages/web/packages/ui"},
         )
         result = run(repo_root)
         assert result.returncode == 1, f"link: specifier not checked: {result.stdout}"
@@ -111,11 +111,11 @@ def test_an_undeclared_owned_import_is_a_finding() -> None:
     """Resolves in a hoisted workspace, right up until the hoist changes."""
     with tempfile.TemporaryDirectory() as tmp:
         repo_root = Path(tmp)
-        make_package(repo_root, "@agenticdevelopertoolkit/chat", "packages/web/packages/chat")
+        make_package(repo_root, "@adh-sdk/chat", "packages/web/packages/chat")
         make_site(
             repo_root,
-            deps={"@agenticdevelopertoolkit/chat": "file:../../packages/web/packages/chat"},
-            source="import { Button } from '@agenticdevelopertoolkit/ui'\n",
+            deps={"@adh-sdk/chat": "file:../../packages/web/packages/chat"},
+            source="import { Button } from '@adh-sdk/ui'\n",
         )
         result = run(repo_root)
         assert result.returncode == 1, f"undeclared import missed: {result.stdout}"
@@ -126,11 +126,11 @@ def test_a_subpath_import_is_credited_to_its_package() -> None:
     """`@scope/ui/components/card` is the `@scope/ui` dependency, not a new one."""
     with tempfile.TemporaryDirectory() as tmp:
         repo_root = Path(tmp)
-        make_package(repo_root, "@agenticdevelopertoolkit/ui", "packages/web/packages/ui")
+        make_package(repo_root, "@adh-sdk/ui", "packages/web/packages/ui")
         make_site(
             repo_root,
-            deps={"@agenticdevelopertoolkit/ui": "file:../../packages/web/packages/ui"},
-            source="import { Card } from '@agenticdevelopertoolkit/ui/components/card'\n",
+            deps={"@adh-sdk/ui": "file:../../packages/web/packages/ui"},
+            source="import { Card } from '@adh-sdk/ui/components/card'\n",
         )
         result = run(repo_root)
         assert result.returncode == 0, f"subpath treated as its own package: {result.stderr}"
@@ -147,14 +147,14 @@ def test_a_third_party_import_is_not_this_guards_business() -> None:
 def test_a_dev_dependency_counts_as_declared() -> None:
     with tempfile.TemporaryDirectory() as tmp:
         repo_root = Path(tmp)
-        make_package(repo_root, "@agenticdevelopertoolkit/themes", "packages/web/packages/themes")
-        site = make_site(repo_root, source="import '@agenticdevelopertoolkit/themes'\n")
+        make_package(repo_root, "@adh-sdk/themes", "packages/web/packages/themes")
+        site = make_site(repo_root, source="import '@adh-sdk/themes'\n")
         write_json(
             site / "package.json",
             {
                 "name": "demo-site",
                 "devDependencies": {
-                    "@agenticdevelopertoolkit/themes": "file:../../packages/web/packages/themes"
+                    "@adh-sdk/themes": "file:../../packages/web/packages/themes"
                 },
             },
         )
@@ -170,7 +170,7 @@ def test_node_modules_is_not_scanned_for_imports() -> None:
         vendored = site / "node_modules" / "something" / "dist"
         vendored.mkdir(parents=True)
         (vendored / "index.js").write_text(
-            "require('@agenticdevelopertoolkit/search')\n", encoding="utf-8"
+            "require('@adh-sdk/search')\n", encoding="utf-8"
         )
         result = run(repo_root)
         assert result.returncode == 0, f"node_modules scanned: {result.stderr}"
@@ -201,16 +201,16 @@ def test_a_sites_directory_with_no_manifests_is_exit_2() -> None:
 def test_every_site_is_checked_not_just_the_first() -> None:
     with tempfile.TemporaryDirectory() as tmp:
         repo_root = Path(tmp)
-        make_package(repo_root, "@agenticdevelopertoolkit/chat", "packages/web/packages/chat")
+        make_package(repo_root, "@adh-sdk/chat", "packages/web/packages/chat")
         make_site(
             repo_root,
             name="aaa-clean",
-            deps={"@agenticdevelopertoolkit/chat": "file:../../packages/web/packages/chat"},
+            deps={"@adh-sdk/chat": "file:../../packages/web/packages/chat"},
         )
         make_site(
             repo_root,
             name="zzz-broken",
-            deps={"@agenticdevelopertoolkit/ui": "file:../../packages/web/packages/ui"},
+            deps={"@adh-sdk/ui": "file:../../packages/web/packages/ui"},
         )
         result = run(repo_root)
         assert result.returncode == 1, f"second site not checked: {result.stdout}"

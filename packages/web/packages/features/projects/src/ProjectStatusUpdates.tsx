@@ -2,20 +2,20 @@
 
 import { useCallback, useEffect, useRef, useState, type ReactElement } from "react";
 import { Pencil, Trash2 } from "lucide-react";
-import { AlertModal } from "@agenticdevelopertoolkit/ui/components/alert-modal";
-import { Badge } from "@agenticdevelopertoolkit/ui/components/badge";
-import { Button } from "@agenticdevelopertoolkit/ui/components/button";
-import { ErrorText } from "@agenticdevelopertoolkit/ui/components/error-text";
-import { Field } from "@agenticdevelopertoolkit/ui/blocks/field";
-import { Select } from "@agenticdevelopertoolkit/ui/components/select";
-import { Textarea } from "@agenticdevelopertoolkit/ui/components/textarea";
-import { readTokenSubject, useResourceList } from "@agentic-toolkit/data";
+import { AlertModal } from "@adh-sdk/ui/components/alert-modal";
+import { Badge } from "@adh-sdk/ui/components/badge";
+import { Button } from "@adh-sdk/ui/components/button";
+import { ErrorText } from "@adh-sdk/ui/components/error-text";
+import { Field } from "@adh-sdk/ui/blocks/field";
+import { Select } from "@adh-sdk/ui/components/select";
+import { Textarea } from "@adh-sdk/ui/components/textarea";
+import { readTokenSubject, useResourceList } from "@adh-sdk/data";
 import {
   projectStatusUpdatesApi,
   type ProjectHealth,
   type ProjectParticipant,
   type ProjectStatusUpdate,
-} from "@agentic-toolkit/data/projects";
+} from "@adh-sdk/data/projects";
 import { participantLabel } from "./AssigneePicker";
 import { PROJECT_HEALTHS, healthMeta, relativeTime } from "./helpers";
 

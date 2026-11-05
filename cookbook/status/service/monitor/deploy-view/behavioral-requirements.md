@@ -2,7 +2,7 @@
 ### Data Shapes
 
 - **indicator-shape**: An `Indicator` value MUST carry exactly two fields — `state: IndicatorState`, where `IndicatorState` is the three-member union `"ok" | "warn" | "down"`, and `count: number` — and a literal using another `state` value or omitting either field MUST fail to type-check.
-- **env-from-project-reexport**: This module MUST re-export the `envFromProject` function it imports from `@agentic-toolkit/deploy-platform/canon` unchanged, so a caller importing `envFromProject` from `./deploy-view` gets the identical function, and identical results, as a caller importing it directly from the `canon` package.
+- **env-from-project-reexport**: This module MUST re-export the `envFromProject` function it imports from `@adh-sdk/deploy-platform/canon` unchanged, so a caller importing `envFromProject` from `./deploy-view` gets the identical function, and identical results, as a caller importing it directly from the `canon` package.
 
 ### Environment Derivation
 

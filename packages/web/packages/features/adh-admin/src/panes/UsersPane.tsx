@@ -17,15 +17,15 @@ import {
   type UserEcosystem,
 } from "../api/memberships";
 import { authedJson } from "../api/http";
-import { Badge } from "@agenticdevelopertoolkit/ui/components/badge";
-import { Button } from "@agenticdevelopertoolkit/ui/components/button";
-import { OptionMenu } from "@agenticdevelopertoolkit/ui/components/option-menu";
-import { RemovableChip } from "@agenticdevelopertoolkit/ui/components/removable-chip";
-import { AlertModal } from "@agenticdevelopertoolkit/ui/components/alert-modal";
-import { errorMessage } from "@agenticdevelopertoolkit/ui/lib/errors";
-import { RdidPicker, type RdidOption } from "@agentic-toolkit/adh-ui/blocks";
-import { ProgressModal } from "@agenticdevelopertoolkit/ui/blocks";
-import { FeatureTitle } from "@agentic-toolkit/resource";
+import { Badge } from "@adh-sdk/ui/components/badge";
+import { Button } from "@adh-sdk/ui/components/button";
+import { OptionMenu } from "@adh-sdk/ui/components/option-menu";
+import { RemovableChip } from "@adh-sdk/ui/components/removable-chip";
+import { AlertModal } from "@adh-sdk/ui/components/alert-modal";
+import { errorMessage } from "@adh-sdk/ui/lib/errors";
+import { RdidPicker, type RdidOption } from "@adh-sdk/adh-ui/blocks";
+import { ProgressModal } from "@adh-sdk/ui/blocks";
+import { FeatureTitle } from "@adh-sdk/resource";
 import {
   EditableList,
   TypeToConfirmDialog,

@@ -4,7 +4,7 @@
 // editable-detail Save wiring): Save must start DISABLED for an already-loaded service and only
 // enable once the draft actually differs from what was loaded (dirty && valid), not merely because
 // the required fields happen to be filled (the pre-existing bug this task fixes). Only the
-// `@agentic-toolkit/data/personas` module boundary is mocked, so the real ServiceEditor/useDirtyDraft
+// `@adh-sdk/data/personas` module boundary is mocked, so the real ServiceEditor/useDirtyDraft
 // wiring is exercised, not the transport.
 //
 // HierarchicalTopicDetail (which ServicesSection renders through) measures its container's
@@ -16,7 +16,7 @@ import { describe, it, expect, vi, beforeEach, afterEach, afterAll } from "vites
 import { render, screen, fireEvent, waitFor, cleanup } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
-vi.mock("@agentic-toolkit/data/personas", () => ({
+vi.mock("@adh-sdk/data/personas", () => ({
   api: {
     templates: vi.fn(),
     services: {
@@ -35,8 +35,8 @@ import {
   RailHostContext,
   type PaneExitGuard,
   type RailHostRegistry,
-} from "@agentic-toolkit/resource";
-import { api, type UserService } from "@agentic-toolkit/data/personas";
+} from "@adh-sdk/resource";
+import { api, type UserService } from "@adh-sdk/data/personas";
 
 const list = vi.mocked(api.services.list);
 const patchService = vi.mocked(api.services.patch);

@@ -14,7 +14,7 @@ const { setAuthErrorReporter, setAuthRetryMarker, captureException, markRetriedR
   markRetriedRequest: vi.fn(),
 }))
 
-vi.mock('@agentic-toolkit/auth', () => ({
+vi.mock('@adh-sdk/auth', () => ({
   AuthProvider: ({ children }: { children?: React.ReactNode }) => <>{children}</>,
   setAuthErrorReporter,
   setAuthRetryMarker,
@@ -29,8 +29,8 @@ vi.mock('@agentic-toolkit/auth', () => ({
 // exports map ever drops `development` (or the run goes production-conditioned), the subject
 // resolves to dist/ and a src-relative mock would silently stop intercepting, leaving both
 // assertions below failing against a correct implementation.
-vi.mock('@agentic-toolkit/adh/telemetry/report-error', () => ({ captureException }))
-vi.mock('@agentic-toolkit/adh/telemetry/retry', () => ({ markRetriedRequest }))
+vi.mock('@adh-sdk/adh/telemetry/report-error', () => ({ captureException }))
+vi.mock('@adh-sdk/adh/telemetry/retry', () => ({ markRetriedRequest }))
 
 import { AuthProvider } from '../wired-provider'
 

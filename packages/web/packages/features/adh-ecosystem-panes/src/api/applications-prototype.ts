@@ -25,15 +25,15 @@
 // client maps the UI's `Crud` objects ↔ the route's "C,R,U,D" wire and loads/saves them alongside
 // the application row. (tokens remain a separate real backend — AccessTokensSection.)
 
-import type { RequestBody, SuccessBody } from "@agentic-toolkit/adh-api-types";
-import { authedJson, authedRequest } from "@agentic-toolkit/auth/client";
-import { rethrowConflict } from "@agentic-toolkit/data";
-import { identifiersApi } from "@agentic-toolkit/data/ecosystems";
+import type { RequestBody, SuccessBody } from "@adh-sdk/adh-api-types";
+import { authedJson, authedRequest } from "@adh-sdk/auth/client";
+import { rethrowConflict } from "@adh-sdk/data";
+import { identifiersApi } from "@adh-sdk/data/ecosystems";
 import {
   APPLICATION_PLATFORMS,
   type ApplicationPlatform,
-} from "@agentic-toolkit/data/ecosystem-config";
-import { compact, enc, narrow, scopeByOwner, sortByText } from "@agentic-toolkit/data";
+} from "@adh-sdk/data/ecosystem-config";
+import { compact, enc, narrow, scopeByOwner, sortByText } from "@adh-sdk/data";
 import {
   CRUD_KEYS,
   type Crud,

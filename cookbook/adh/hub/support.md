@@ -1,7 +1,7 @@
 ---
 id: 9bec9953-29fb-4184-8bf6-a6c27187c99d
 title: "Support"
-domain: adtoolkit://cookbook/adh/hub/support
+domain: adhsdk://cookbook/adh/hub/support
 type: ingredient
 version: 1.1.1
 status: review
@@ -26,16 +26,16 @@ tags:
   - error-handling
 depends-on: []
 related:
-  - adtoolkit://cookbook/ui/navigation/htdv
+  - adhsdk://cookbook/ui/navigation/htdv
 references:
-  - packages/apple/AgenticToolkit/Hub/Features/Support/FormDetails.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Hub/Features/Support/HubDates.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Hub/Features/Support/HubError+Wrap.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Hub/Features/Support/HubText.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Hub/Features/Support/JSONValue.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Hub/Features/Support/RailPath.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Hub/Features/Support/Slug.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Tests/AgenticToolkitHubTests/SupportTests.swift (agenticdevelopertoolkit)
+  - packages/apple/AgenticDeveloperHubSDK/Hub/Features/Support/FormDetails.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Hub/Features/Support/HubDates.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Hub/Features/Support/HubError+Wrap.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Hub/Features/Support/HubText.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Hub/Features/Support/JSONValue.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Hub/Features/Support/RailPath.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Hub/Features/Support/Slug.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKHubTests/SupportTests.swift (adhsdk)
 approved-by: ""
 approved-date: ""
 ---
@@ -430,16 +430,16 @@ error, as described under Behavioral Requirements and Edge Cases.
   normalizer as a function normalizing any thrown value into a tagged
   error union.
 - **AppKit / UIKit**: This is the source platform.
-  `packages/apple/AgenticToolkit/Hub/Features/Support/HubDates.swift`,
+  `packages/apple/AgenticDeveloperHubSDK/Hub/Features/Support/HubDates.swift`,
   `HubError+Wrap.swift`, `HubText.swift`, `JSONValue.swift`,
   `RailPath.swift`, and `Slug.swift` import only `Foundation` (plus
-  `AgenticToolkitHTDV` for the date helper's/rail-path's HTDV types) and
+  `AgenticDeveloperHubSDKHTDV` for the date helper's/rail-path's HTDV types) and
   hold no AppKit/UIKit import of their own; only `FormDetails.swift` reaches
   into a platform-specific view controller, and it does so through
   `FormViewController`, which exists in both an AppKit variant
-  (`packages/apple/AgenticToolkit/HTDV/Views/macOS/FormViewController.swift`)
+  (`packages/apple/AgenticDeveloperHubSDK/HTDV/Views/macOS/FormViewController.swift`)
   and a UIKit variant
-  (`packages/apple/AgenticToolkit/HTDV/Views/iOS/FormViewController+UIKit.swift`) —
+  (`packages/apple/AgenticDeveloperHubSDK/HTDV/Views/iOS/FormViewController+UIKit.swift`) —
   the other six files are shared unchanged between macOS and iOS. The
   closure-taking form of `HubError.wrap` (`HubError.wrap(isolation:_:)`)
   declares its `isolation` parameter as `isolated (any Actor)? =
@@ -472,7 +472,7 @@ error, as described under Behavioral Requirements and Edge Cases.
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/Hub/Features/Support/` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Hub/Features/Support/` |
 
 ## Design Decisions
 

@@ -2,7 +2,7 @@ import { defineConfig, type Options } from 'tsup'
 import { preserveDirectivesPlugin } from 'esbuild-plugin-preserve-directives'
 
 // Single source of the feature-package build knowledge (DRY). Every
-// @agentic-toolkit/features/* package builds the same way — ESM, browser, code
+// @adh-sdk/features/* package builds the same way — ESM, browser, code
 // splitting, directives preserved, and react + the sibling toolkit packages +
 // next + lucide-react kept external — differing ONLY in which entry points it
 // exposes. A per-package tsup.config.ts is therefore one line: the default export
@@ -32,7 +32,7 @@ export function featureTsup(entry: Options['entry']) {
     // Peer/shared libs stay external so dist imports them (single version, resolved
     // from the consumer) rather than bundling copies: react, the sibling toolkit
     // packages, next (the host app owns it), and lucide-react.
-    external: [/^react/, /^@agentic-toolkit\//, /^next\//, 'lucide-react'],
+    external: [/^react/, /^@adh-sdk\//, /^next\//, 'lucide-react'],
     esbuildPlugins: [
       preserveDirectivesPlugin({
         directives: ['use client', 'use server'],

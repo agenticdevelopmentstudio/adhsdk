@@ -1,7 +1,7 @@
 ---
 id: 6a7598bd-afe0-4ae9-af93-237908b767f8
 title: "Host Diagnostic Sink"
-domain: adtoolkit://cookbook/workspace/extensions/vscode-api/languages/host-diagnostic-sink
+domain: adhsdk://cookbook/workspace/extensions/vscode-api/languages/host-diagnostic-sink
 type: ingredient
 version: 1.1.1
 status: review
@@ -21,15 +21,15 @@ tags:
   - diagnostics
   - event-emitter
 depends-on:
-  - adtoolkit://cookbook/workspace/extensions/host/extension-event
+  - adhsdk://cookbook/workspace/extensions/host/extension-event
 related: []
 references:
-  - packages/apple/AgenticToolkit/macOS/Features/Extensions/VSCodeAPI/HostDiagnosticSink.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/macOS/Features/Extensions/VSCodeAPI/MainThreadDiagnostics.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/macOS/Features/Extensions/VSCodeAPI/ExtensionEvent.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/macOS/Features/Extensions/Host/ExtensionHostInstaller.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Core/Loggable.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Tests/AgenticToolkitMacOSTests/Extensions/MainThreadDiagnosticsTests.swift (agenticdevelopertoolkit)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/HostDiagnosticSink.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/MainThreadDiagnostics.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/ExtensionEvent.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/Host/ExtensionHostInstaller.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Core/Loggable.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKMacOSTests/Extensions/MainThreadDiagnosticsTests.swift (adhsdk)
 approved-by: ""
 approved-date: ""
 ---
@@ -130,8 +130,8 @@ No other event in this component is logged: `diagnosticsChanged(for:)` has exact
 
 ## Platform Notes
 
-- **SwiftUI**: not applicable to this file — `HostDiagnosticSink.swift` imports only `Foundation`, `OSLog`, and `AgenticToolkitCore`, with no SwiftUI dependency; nothing in this component renders a view.
-- **AppKit / UIKit**: this is the source. `packages/apple/AgenticToolkit/macOS/Features/Extensions/VSCodeAPI/HostDiagnosticSink.swift` is part of the `AgenticToolkitMacOS` framework target, macOS-only per `project.yml`. It is `@MainActor`-isolated, constructed once by `ExtensionHostInstaller.init` alongside the shared `ExtensionEventEmitter<[URL]>` it fires, and consumed only through the `ExtensionDiagnosticSink` requirement `MainThreadDiagnostics` calls. `HostDiagnosticSink` MUST be declared `@MainActor`; `emitter`'s reads and every `diagnosticsChanged(for:)` call MUST execute on the main actor, matching `ExtensionDiagnosticSink`'s own `@MainActor` protocol declaration. `HostDiagnosticSink` MUST NOT declare `Sendable` conformance; being a `public final class` isolated only by `@MainActor`, the compiler MUST keep every instance confined to the main actor's isolation domain rather than allow it to cross actors implicitly — so a call to `diagnosticsChanged(for:)` from a context not already isolated to `@MainActor`, with no `await`, fails to compile.
+- **SwiftUI**: not applicable to this file — `HostDiagnosticSink.swift` imports only `Foundation`, `OSLog`, and `AgenticDeveloperHubSDKCore`, with no SwiftUI dependency; nothing in this component renders a view.
+- **AppKit / UIKit**: this is the source. `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/HostDiagnosticSink.swift` is part of the `AgenticDeveloperHubSDKMacOS` framework target, macOS-only per `project.yml`. It is `@MainActor`-isolated, constructed once by `ExtensionHostInstaller.init` alongside the shared `ExtensionEventEmitter<[URL]>` it fires, and consumed only through the `ExtensionDiagnosticSink` requirement `MainThreadDiagnostics` calls. `HostDiagnosticSink` MUST be declared `@MainActor`; `emitter`'s reads and every `diagnosticsChanged(for:)` call MUST execute on the main actor, matching `ExtensionDiagnosticSink`'s own `@MainActor` protocol declaration. `HostDiagnosticSink` MUST NOT declare `Sendable` conformance; being a `public final class` isolated only by `@MainActor`, the compiler MUST keep every instance confined to the main actor's isolation domain rather than allow it to cross actors implicitly — so a call to `diagnosticsChanged(for:)` from a context not already isolated to `@MainActor`, with no `await`, fails to compile.
 - **Compose**: model `HostDiagnosticSink` as a small Kotlin class, e.g. `HostDiagnosticSink(private val emitter: ExtensionEventEmitter<List<Uri>>)`, confined to the main dispatcher and implementing an `ExtensionDiagnosticSink` interface's single `fun diagnosticsChanged(uris: List<Uri>)`. Log via a Timber-style tree (or `android.util.Log`) tagged with the class's simple name before calling `emitter.fire(uris)`, keeping the same log-then-fire order and no guard on an empty list.
 - **React/Web**: this component's own upstream (`extHostDiagnostics.ts`) never introduces a separate sink object — its mutating methods call `this._onDidChangeDiagnostics.fire(...)` directly. A web port can collapse the indirection this Swift host keeps for its own architectural reasons (Ledger Ruling 5's "extension diagnostics get their own store," and the doc comment's "opposite sides of the seam"): log via a small logger utility, then call the emitter's own `fire(uris)` inline from the diagnostics store's mutation, rather than routing through a separate sink type.
 - **WinUI 3**: model `HostDiagnosticSink` as a sealed class implementing an `IExtensionDiagnosticSink` interface (`void DiagnosticsChanged(IReadOnlyList<Uri> uris)`), holding a required `ExtensionEventEmitter<IReadOnlyList<Uri>>` field passed through the constructor with no default. Since WinUI 3 has no compiler-enforced actor isolation, `DiagnosticsChanged` MUST assert `DispatcherQueue.HasThreadAccess` (or marshal via `DispatcherQueue.TryEnqueue`) at its top, where Swift's `@MainActor` would otherwise catch a wrong-thread call at compile time. Log via `Microsoft.Extensions.Logging.ILogger<HostDiagnosticSink>.LogDebug(...)` before calling `emitter.Fire(uris)`; `System.Text.Json`, `HttpClient`, and `Windows.Storage` have no role here, since nothing in this file serializes, transmits, or persists.
@@ -140,7 +140,7 @@ No other event in this component is logged: `diagnosticsChanged(for:)` has exact
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/macOS/Features/Extensions/VSCodeAPI/HostDiagnosticSink.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/HostDiagnosticSink.swift` |
 
 ## Design Decisions
 

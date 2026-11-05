@@ -1,5 +1,5 @@
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/Core/Git/` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Git/` |
 

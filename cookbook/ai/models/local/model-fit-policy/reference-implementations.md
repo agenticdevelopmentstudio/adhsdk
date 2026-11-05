@@ -1,5 +1,5 @@
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/AIPluginKit/ModelFitPolicy.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/AIPluginKit/ModelFitPolicy.swift` |
 

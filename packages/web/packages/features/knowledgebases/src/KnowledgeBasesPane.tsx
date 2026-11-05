@@ -8,9 +8,9 @@ import {
   useExitGuardChannel,
   useViewer,
   type CrudTableMeta,
-} from "@agentic-toolkit/crud";
-import type { TopicDetailItem, TopicLevel } from "@agenticdevelopertoolkit/ui/blocks";
-import { StackLevels, useRailExitGuard } from "@agentic-toolkit/resource";
+} from "@adh-sdk/crud";
+import type { TopicDetailItem, TopicLevel } from "@adh-sdk/ui/blocks";
+import { StackLevels, useRailExitGuard } from "@adh-sdk/resource";
 
 /**
  * Knowledge Bases, in the one merged stack: the persona-memory tables are PUBLISHED as a rail level

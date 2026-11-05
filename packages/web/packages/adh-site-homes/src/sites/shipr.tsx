@@ -1,8 +1,8 @@
 "use client";
 
-import { defineSiteHome, noSubPath } from "@agentic-toolkit/adh/home";
-import { authedFetch } from "@agentic-toolkit/auth/client";
-import { ShiprHome } from "@agentic-toolkit/shipr";
+import { defineSiteHome, noSubPath } from "@adh-sdk/adh/home";
+import { authedFetch } from "@adh-sdk/auth/client";
+import { ShiprHome } from "@adh-sdk/shipr";
 
 /**
  * This site's workspace route — `/<workspace>`.
@@ -18,7 +18,7 @@ import { ShiprHome } from "@agentic-toolkit/shipr";
  * Component into the client shell — see SiteHomeRoute.
  *
  * THIS IS THE WHOLE SITE-SIDE IMPLEMENTATION, and it is four lines because the console's mount
- * is shipr's UI and lives with it (`ShiprHome`, in @agentic-toolkit/shipr). What is left here is
+ * is shipr's UI and lives with it (`ShiprHome`, in @adh-sdk/shipr). What is left here is
  * the two things only a host knows: that this site has no grammar below the workspace, and how a
  * request from it is signed.
  *

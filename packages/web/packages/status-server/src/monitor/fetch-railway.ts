@@ -1,13 +1,13 @@
 import { railwayPhases } from "./deploy-status";
 import { shortSha, commitFullMessage } from "./format";
-import { mapLimit } from "@agentic-toolkit/deploy-platform/util";
+import { mapLimit } from "@adh-sdk/deploy-platform/util";
 import { toValidDate, type ProviderDeploy } from "./provider-deploy";
-import { rateLimitedUntil } from "@agentic-toolkit/deploy-platform/cooldown";
+import { rateLimitedUntil } from "@adh-sdk/deploy-platform/cooldown";
 import {
   gqlPost,
   listRailwayProjects,
   type RailwayProject,
-} from "@agentic-toolkit/deploy-platform/providers";
+} from "@adh-sdk/deploy-platform/providers";
 
 interface RailwayMeta {
   branch?: string | null;
@@ -39,7 +39,7 @@ interface RailwayEnvNode {
 
 /** Build an environmentId→name map from a Railway `environments.edges` array — the one
  *  place that shape is flattened on this side. (The domains fetch flattens its own copy
- *  inside the vendored `@agentic-toolkit/deploy-platform` provider, which this package
+ *  inside the vendored `@adh-sdk/deploy-platform` provider, which this package
  *  cannot reach into; an earlier version of this comment claimed the two shared this
  *  function.) */
 function buildEnvNameMap(edges: { node: RailwayEnvNode }[] | undefined): Record<string, string> {

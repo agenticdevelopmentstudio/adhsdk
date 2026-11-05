@@ -1,5 +1,5 @@
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/AIPluginKit/AIChatContext.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/AIPluginKit/AIChatContext.swift` |
 

@@ -1,7 +1,7 @@
 ---
 id: 07c437af-a291-4356-bd83-c896bd4facde
 title: Screen
-domain: agenticdevelopertoolkit://recipes/screen
+domain: adhsdk://recipes/screen
 type: ingredient
 version: 1.1.1
 status: review
@@ -21,9 +21,9 @@ tags:
 - layout
 - viewport
 depends-on:
-- agenticdevelopertoolkit://recipes/glow
+- adhsdk://recipes/glow
 related:
-- agenticdevelopertoolkit://recipes/deck
+- adhsdk://recipes/deck
 references:
 - https://developer.mozilla.org/en-US/docs/Web/HTML/Element/section
 - https://developer.mozilla.org/en-US/docs/Web/CSS/vh

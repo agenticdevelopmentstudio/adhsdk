@@ -1,5 +1,5 @@
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/Core/AIPlugins/` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/AIPlugins/` |
 

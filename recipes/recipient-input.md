@@ -1,7 +1,7 @@
 ---
 id: d9ad192e-a642-46a2-8b25-b8aac9d9f441
 title: RecipientInput
-domain: agenticdevelopertoolkit://recipes/recipient-input
+domain: adhsdk://recipes/recipient-input
 type: ingredient
 version: 1.3.1
 status: review
@@ -31,7 +31,7 @@ approved-date: ''
 
 ## Overview
 
-RecipientInput is a controlled token input component in `@agenticdevelopertoolkit/ui` that collects recipients via a text field and displays them as removable chips. It supports three input kinds (email, phone, text) with corresponding light validation, and offers two layout modes: fused (default, single container) and separate (two-part layout with stacked chips and input).
+RecipientInput is a controlled token input component in `@adh-sdk/ui` that collects recipients via a text field and displays them as removable chips. It supports three input kinds (email, phone, text) with corresponding light validation, and offers two layout modes: fused (default, single container) and separate (two-part layout with stacked chips and input).
 
 ## Behavioral Requirements
 

@@ -1,7 +1,7 @@
 ---
 id: 18ea2506-0cbc-4c6a-880b-e94abcdc55b2
 title: "Hub Domain: Buckets"
-domain: adtoolkit://cookbook/adh/hub/buckets
+domain: adhsdk://cookbook/adh/hub/buckets
 type: ingredient
 version: 1.1.0
 status: review
@@ -24,12 +24,12 @@ tags:
   - crud
 depends-on: []
 related:
-  - adtoolkit://cookbook/ui/navigation/htdv
+  - adhsdk://cookbook/ui/navigation/htdv
 references:
-  - packages/apple/AgenticToolkit/Hub/Features/Buckets/BucketsDataSource.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Hub/Features/Buckets/BucketsModels.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Hub/Features/Buckets/BucketsTopic.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Tests/AgenticToolkitHubTests/BucketsTopicTests.swift (agenticdevelopertoolkit)
+  - packages/apple/AgenticDeveloperHubSDK/Hub/Features/Buckets/BucketsDataSource.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Hub/Features/Buckets/BucketsModels.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Hub/Features/Buckets/BucketsTopic.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKHubTests/BucketsTopicTests.swift (adhsdk)
 approved-by: ""
 approved-date: ""
 ---
@@ -286,7 +286,7 @@ Not applicable — this is the Buckets domain's data-access protocol, data
 shapes, and navigation/forms logic, not a visual component. `BucketsDataSource`,
 `BucketsModels`, and `BucketsTopic` produce no view, role, trait, or label
 of their own; any accessibility surface belongs to the `FormViewController`/
-`AgenticToolkitHTDVViewController` presentation layer that renders the
+`AgenticDeveloperHubSDKHTDVViewController` presentation layer that renders the
 `HTDVLevel`/`HTDVDetail`/`FormSpec` values these sources build (out of this
 recipe's given sources; see the related HTDV Engine recipe).
 
@@ -516,7 +516,7 @@ happens outside these sources.
 - **AppKit / UIKit**: This is the source: `BucketsDataSource.swift`,
   `BucketsModels.swift`, and `BucketsTopic.swift` hold no AppKit/UIKit
   import of their own — `BucketsTopic` depends only on `Foundation` and the
-  `AgenticToolkitHTDV` module (`HTDVItem`, `HTDVLevel`, `HTDVChild`,
+  `AgenticDeveloperHubSDKHTDV` module (`HTDVItem`, `HTDVLevel`, `HTDVChild`,
   `HTDVCreateAction`, `FormSpec`/`FormSection`/`FormAction`/`FormDeleteAction`/
   `FormActions`), and presents its create sheets through the shared
   `FormSheet.present` rather than any AppKit/UIKit API of its own.
@@ -554,7 +554,7 @@ happens outside these sources.
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/Hub/Features/Buckets/` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Hub/Features/Buckets/` |
 
 ## Design Decisions
 
@@ -646,7 +646,7 @@ server-`HubError.conflict` fallback branches (`create-bucket-conflict-fallback`,
 `create-table-conflict-fallback`) are exercised only by inspection of the
 source's `catch` blocks, not by a dedicated test, per Conformance Test
 Vectors 011 and 021. separation-of-concerns passes because all three given
-sources import only `Foundation` (plus `AgenticToolkitHTDV` for the HTDV/
+sources import only `Foundation` (plus `AgenticDeveloperHubSDKHTDV` for the HTDV/
 Forms types) and hold no AppKit/UIKit dependency of their own.
 explicit-error-handling passes because every `throws` boundary in these
 three sources is caught and converted into an explicit `HubError` (via a

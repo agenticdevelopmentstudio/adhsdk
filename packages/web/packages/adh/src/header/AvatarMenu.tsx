@@ -3,7 +3,7 @@
 import { useId } from 'react'
 import Link from 'next/link'
 import { ChevronDown, Home, LogOut, Settings, User as UserIcon, Wrench } from 'lucide-react'
-import { Avatar, AvatarFallback, AvatarImage } from '@agenticdevelopertoolkit/ui/components/avatar'
+import { Avatar, AvatarFallback, AvatarImage } from '@adh-sdk/ui/components/avatar'
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -11,12 +11,12 @@ import {
   DropdownMenuItem,
   DropdownMenuLinkItem,
   DropdownMenuSeparator,
-} from '@agenticdevelopertoolkit/ui/components/dropdown-menu'
-import { isModifiedClick } from '@agenticdevelopertoolkit/ui/lib/navigation-guard'
+} from '@adh-sdk/ui/components/dropdown-menu'
+import { isModifiedClick } from '@adh-sdk/ui/lib/navigation-guard'
 // By PACKAGE PATH: this module ships in the `header` entry, and `slideNavigate` slides only
 // when it sees the `push` the `layout` entry's SlideTransitions registered. That needs the
 // same module copy, which a relative '../layout/SlideNavigation' would fork (tsup.config.ts).
-import { slideNavigate } from '@agentic-toolkit/adh/layout/SlideNavigation'
+import { slideNavigate } from '@adh-sdk/adh/layout/SlideNavigation'
 
 export type AvatarMenuUser = {
   /** What this account is CALLED — the personal name when one is known, else the

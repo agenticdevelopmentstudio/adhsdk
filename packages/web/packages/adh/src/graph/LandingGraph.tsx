@@ -1,5 +1,5 @@
-import { getSite, splitSiteTitle, type SiteId } from '@agentic-toolkit/adh-registry'
-import { siteConcept } from '@agentic-toolkit/adh/concepts'
+import { getSite, splitSiteTitle, type SiteId } from '@adh-sdk/adh-registry'
+import { siteConcept } from '@adh-sdk/adh/concepts'
 import { ConceptGraph } from './ConceptGraph'
 
 export interface LandingGraphProps {

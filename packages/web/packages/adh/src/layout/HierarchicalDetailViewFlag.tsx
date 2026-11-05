@@ -1,7 +1,7 @@
 'use client'
 
 import type { ReactNode } from 'react'
-import { HierarchicalDetailViewProvider } from '@agenticdevelopertoolkit/ui/blocks'
+import { HierarchicalDetailViewProvider } from '@adh-sdk/ui/blocks'
 
 /**
  * Binds the toolkit's hierarchical-view switch for the whole app — every topic/detail stack under
@@ -19,8 +19,8 @@ import { HierarchicalDetailViewProvider } from '@agenticdevelopertoolkit/ui/bloc
  *   // `external`. Split across two packages (Task 5.3): the provider mechanism lives in the
  *   // toolkit, the FLAG vocabulary in the app tier — both now in this package, but still
  *   // two entries, so both specifiers stay full package paths.
- *   import { FlagState, useFeatureFlag } from '@agentic-toolkit/adh/flags'
- *   import { FLAG } from '@agentic-toolkit/adh/flags'
+ *   import { FlagState, useFeatureFlag } from '@adh-sdk/adh/flags'
+ *   import { FLAG } from '@adh-sdk/adh/flags'
  *   const menuDetail = useFeatureFlag(FLAG.useHierarchicalMenuDetailsView) === FlagState.Yes
  *
  * and pass `menuDetail` below instead of the literal `false`. (When re-arming, mind the first-paint
@@ -31,13 +31,13 @@ import { HierarchicalDetailViewProvider } from '@agenticdevelopertoolkit/ui/bloc
  *
  * ALSO WHEN RE-ARMING — the help modal is currently OUTSIDE this provider. Task 5.8 split the
  * shell in two: this flag now lives inside `AdhAppShell` (here), while `HelpProvider` is mounted
- * one level ABOVE it by `@agentic-toolkit/adh/layout`'s AppShell. Before the split the nesting was the
+ * one level ABOVE it by `@adh-sdk/adh/layout`'s AppShell. Before the split the nesting was the
  * other way round, so HelpWindow's own <HierarchicalDetailView> sat under this provider; today it
  * reads MenuDetailViewContext's `createContext(false)` default instead. Identical while
  * `menuDetail` is hard-coded `false` — the moment you pass a real flag value here, the help
  * modal will keep rendering HTDV while the rest of the app switches. The fix is to re-nest:
  * either move HelpProvider inside AdhAppShell, or hoist this provider back above it in
- * `@agentic-toolkit/adh/layout`'s AppShell.
+ * `@adh-sdk/adh/layout`'s AppShell.
  */
 export function HierarchicalDetailViewFlag({ children }: { children: ReactNode }) {
   return <HierarchicalDetailViewProvider menuDetail={false}>{children}</HierarchicalDetailViewProvider>

@@ -3,7 +3,7 @@
   "meta": {
     "id": "b4cfbb31-cacc-4532-97c3-03e53852e8d3",
     "title": "System Permissions",
-    "domain": "adtoolkit://cookbook/system/permissions/system-permissions",
+    "domain": "adhsdk://cookbook/system/permissions/system-permissions",
     "type": "ingredient",
     "version": "1.1.0",
     "status": "review",
@@ -24,8 +24,8 @@
     ],
     "depends-on": [],
     "related": [
-      "adtoolkit://cookbook/system/permissions/permission-row-view",
-      "adtoolkit://cookbook/system/permissions/permissions-panel-view"
+      "adhsdk://cookbook/system/permissions/permission-row-view",
+      "adhsdk://cookbook/system/permissions/permissions-panel-view"
     ],
     "references": [
       "https://developer.apple.com/documentation/coreservices/1446026-aedeterminepermissiontoautomatetarget"

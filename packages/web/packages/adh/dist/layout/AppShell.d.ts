@@ -1,5 +1,5 @@
 import { type ComponentType, type ReactNode } from 'react';
-import { type SiteContact, type SiteLink } from '@agentic-toolkit/adh/footer';
+import { type SiteContact, type SiteLink } from '@adh-sdk/adh/footer';
 export type AppShellProps = {
     /** The site header (e.g. <AdhHeader siteId=… />), supplied by the site so it
      *  can wire in its own auth/user. */
@@ -39,7 +39,7 @@ export type AppShellProps = {
  * shared footer, with adh's cross-cutting providers mounted around it. Call-site signature is
  * unchanged from the pre-split husk's AppShell.
  *
- * The layout MECHANISM is `AdhAppShell` in `@agentic-toolkit/adh/layout`; this component is the
+ * The layout MECHANISM is `AdhAppShell` in `@adh-sdk/adh/layout`; this component is the
  * adh-specific composition root — which providers wrap the shell, and what goes in its footer
  * slot. Stays hook-free itself (server-renderable); the providers are client children.
  */

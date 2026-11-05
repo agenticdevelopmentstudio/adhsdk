@@ -3,9 +3,9 @@
 // Component test for ProjectOverviewPane — a project's front door: what it is, how the work
 // stands, what material it holds, who is in it, and its own record behind a Disclosure. The hub's
 // vitest config is node-only, so this file opts into jsdom via the docblock above and drives React
-// with @testing-library/react. Only the api-client boundary (@agentic-toolkit/data/projects) is
+// with @testing-library/react. Only the api-client boundary (@adh-sdk/data/projects) is
 // mocked, so the load → edit → save and the participant add/remove wiring are exercised, not the
-// transport. @agentic-toolkit/data is deliberately NOT mocked: the summary lists run through the
+// transport. @adh-sdk/data is deliberately NOT mocked: the summary lists run through the
 // REAL useResourceList, including its module-scope cache.
 //
 // That cache is keyed by `project:<id>:<list>` at module scope and OUTLIVES cleanup(), so rows
@@ -16,10 +16,10 @@
 // enough — no rail-host harness.
 //
 // The 409 case uses a real AuthHttpError(409) so the pane's real isConflict path
-// (via @agentic-toolkit/data) turns it into a friendly inline message, not a raw throw.
+// (via @adh-sdk/data) turns it into a friendly inline message, not a raw throw.
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, fireEvent, waitFor, cleanup, act, within } from "@testing-library/react";
-import { AuthHttpError } from "@agentic-toolkit/auth/client";
+import { AuthHttpError } from "@adh-sdk/auth/client";
 
 // The Overview summarises four lists it does not own, so their clients are stubbed alongside the
 // two it does. Each defaults to empty in beforeEach — a test that cares about a figure says so.
@@ -27,8 +27,8 @@ import { AuthHttpError } from "@agentic-toolkit/auth/client";
 // the point of the field's inline error is that the real rule decides it. The two default nouns
 // come through for the same reason — they are data, `./vocabulary` reads them from here, and a
 // mock that omits them breaks the import chain rather than the value.
-vi.mock("@agentic-toolkit/data/projects", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("@agentic-toolkit/data/projects")>();
+vi.mock("@adh-sdk/data/projects", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@adh-sdk/data/projects")>();
   return {
     validateKeyPrefix: actual.validateKeyPrefix,
     DEFAULT_ITEM_NOUN: actual.DEFAULT_ITEM_NOUN,
@@ -67,7 +67,7 @@ import {
   type ProjectParticipant,
   type ProjectStatus,
   type WorkItem,
-} from "@agentic-toolkit/data/projects";
+} from "@adh-sdk/data/projects";
 
 const get = vi.mocked(projectsApi.get);
 const update = vi.mocked(projectsApi.update);

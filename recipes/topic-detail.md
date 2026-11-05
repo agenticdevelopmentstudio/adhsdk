@@ -1,7 +1,7 @@
 ---
 id: 8fa7aaae-df62-44ea-b10c-182f3094ed9f
 title: Topic Detail
-domain: agenticdevelopertoolkit://recipes/topic-detail
+domain: adhsdk://recipes/topic-detail
 type: ingredient
 version: 1.6.1
 status: review

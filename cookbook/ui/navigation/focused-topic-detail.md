@@ -1,7 +1,7 @@
 ---
 id: 7f122a27-5b49-4f03-9439-1152249bc08f
 title: "Focused Topic Detail (FTD) View"
-domain: adtoolkit://cookbook/ui/navigation/focused-topic-detail
+domain: adhsdk://cookbook/ui/navigation/focused-topic-detail
 type: recipe
 version: 1.2.5
 status: accepted
@@ -21,12 +21,12 @@ tags:
   - layout
   - navigation
 ingredients:
-  - agenticdevelopertoolkit://recipes/resizable-split
-  - agenticdevelopertoolkit://recipes/option-menu
-  - agenticdevelopertoolkit://recipes/alert-and-dialog
-  - agenticdevelopertoolkit://recipes/data-table
-  - agenticdevelopertoolkit://recipes/disclosure
-  - agenticdevelopertoolkit://recipes/topic-detail
+  - adhsdk://recipes/resizable-split
+  - adhsdk://recipes/option-menu
+  - adhsdk://recipes/alert-and-dialog
+  - adhsdk://recipes/data-table
+  - adhsdk://recipes/disclosure
+  - adhsdk://recipes/topic-detail
 depends-on: []
 related: []
 references: []
@@ -52,7 +52,7 @@ kind* (ecosystems, teams, persona-services, …). At any moment the user is eith
 
 The user moves between entities (and into "All") through a single **selector
 popup** at the top-left of the view. The canonical implementation is the shared
-`FocusedTopicDetail` block in `@agenticdevelopertoolkit/ui/blocks` (master/detail
+`FocusedTopicDetail` block in `@adh-sdk/ui/blocks` (master/detail
 layout) — all FTD routes compose it; none hand-roll the layout.
 
 **Terminology / parameters.** Every FTD route binds these parameters (Ecosystems
@@ -82,16 +82,16 @@ view rather than a 404.
 
 | Name | Domain | Role | Required | Configuration |
 |---|---|---|---|---|
-| FocusedTopicDetail block | agenticdevelopertoolkit://recipes/topic-detail | The master/detail layout (topic list + detail panel) every route composes | yes | `topics`, `paneOwnedActions` |
-| OptionMenu | agenticdevelopertoolkit://recipes/option-menu | The selector popup that switches focus and hosts the New action | yes | radio entities + All + trailing New item |
-| AlertAndDialog | agenticdevelopertoolkit://recipes/alert-and-dialog | Step-1 warning alert + step-2 type-to-confirm delete dialog | yes | destructive; `Entity`/`rdid`/`childEntities` params |
-| Disclosure | agenticdevelopertoolkit://recipes/disclosure | The collapsible Danger Zone in the entity pane | yes | collapsed default; apt-red accent only when open |
-| DataTable | agenticdevelopertoolkit://recipes/data-table | The All view "list" render mode (one row per entity) | yes | name + identifier + key meta columns |
-| ResizableSplit | agenticdevelopertoolkit://recipes/resizable-split | Optional split layout within a topic's detail panel | no | as needed per topic |
+| FocusedTopicDetail block | adhsdk://recipes/topic-detail | The master/detail layout (topic list + detail panel) every route composes | yes | `topics`, `paneOwnedActions` |
+| OptionMenu | adhsdk://recipes/option-menu | The selector popup that switches focus and hosts the New action | yes | radio entities + All + trailing New item |
+| AlertAndDialog | adhsdk://recipes/alert-and-dialog | Step-1 warning alert + step-2 type-to-confirm delete dialog | yes | destructive; `Entity`/`rdid`/`childEntities` params |
+| Disclosure | adhsdk://recipes/disclosure | The collapsible Danger Zone in the entity pane | yes | collapsed default; apt-red accent only when open |
+| DataTable | adhsdk://recipes/data-table | The All view "list" render mode (one row per entity) | yes | name + identifier + key meta columns |
+| ResizableSplit | adhsdk://recipes/resizable-split | Optional split layout within a topic's detail panel | no | as needed per topic |
 
 ## Integration Requirements
 
-- **shared-block-composition**: Every FTD route MUST compose the shared `FocusedTopicDetail` block (`@agenticdevelopertoolkit/ui/blocks`) and MUST NOT hand-roll the master/detail layout.
+- **shared-block-composition**: Every FTD route MUST compose the shared `FocusedTopicDetail` block (`@adh-sdk/ui/blocks`) and MUST NOT hand-roll the master/detail layout.
 - **first-topic-is-entity**: The first topic MUST be the entity itself, labelled with the singular `Entity` name, editing the entity's own attributes plus the Danger section; there MUST be no divider above the first topic.
 - **no-action-bar**: The FTD view MUST NOT render a full-width `New | Delete` action bar; New lives in the selector popup and Delete lives in the entity pane's Danger section.
 - **editable-identifier**: The Identifier (rdid) MUST be editable for existing entities, renaming via `PATCH /registry/identifiers/{rdid}` with the **old** rdid in the path, leaving the internal UUID and all FK references unchanged.
@@ -113,7 +113,7 @@ view rather than a 404.
 - **resume-last-selected**: On entering the bare base path, after the entity list loads the view MUST focus the last-selected entity under `{{app_prefix}}:ftd:{basePath}:lastId` when it still matches a live entity, otherwise show the All view.
 - **clear-laststate-on-delete**: When an entity is deleted, the view MUST clear `…:lastId` if it pointed at that entity.
 - **resolve-after-list-load**: Local-storage resolution MUST occur after the list has loaded (to avoid SSR hydration mismatch), showing the normal loading state until then.
-- **shared-piece-location**: New shared pieces (the Danger Zone / delete-confirm `DeleteEntitySection` block, the All toolbar, the list-mode renderer) MUST go into `@agentic-toolkit/adh-ui/blocks`, never forked into a site.
+- **shared-piece-location**: New shared pieces (the Danger Zone / delete-confirm `DeleteEntitySection` block, the All toolbar, the list-mode renderer) MUST go into `@adh-sdk/adh-ui/blocks`, never forked into a site.
 - **surface-states**: Every new surface MUST handle loading, empty, and error states (All list loading, no entities yet, filter-no-match, delete error inline, identifier-collision inline).
 - **accessibility**: Dialogs MUST be `role="dialog"` with focus trap + restore and labelled controls; the type-to-confirm input MUST have a `<label htmlFor>`; the All view's card/list toggle MUST carry `role="radiogroup"` and `aria-label="View as"`; full keyboard operability (Esc cancels dialogs) is required.
 
@@ -207,7 +207,7 @@ Color only via `apt-*` tokens (`apt-red` destructive, `apt-border`, `apt-text-mu
 
 ## Platform Notes
 
-- **React/Web** (source): Each FTD route composes the shared `FocusedTopicDetail` block (`@agenticdevelopertoolkit/ui/blocks`) for the master/detail layout and the `DeleteEntitySection` block (`@agentic-toolkit/adh-ui/blocks`) for the Danger Zone and two-step delete; the selector popup and All-view toolbar are the route's own composition around those two blocks. The Identifier field's rename flow calls `PATCH /registry/identifiers/{rdid}` (keyed by the *old* rdid) and `GET /registry/identifiers/{rdid}/exists`; the entity's own create/update endpoint never sends `identifier`, since it is server-managed and renamed only through the identifiers route.
+- **React/Web** (source): Each FTD route composes the shared `FocusedTopicDetail` block (`@adh-sdk/ui/blocks`) for the master/detail layout and the `DeleteEntitySection` block (`@adh-sdk/adh-ui/blocks`) for the Danger Zone and two-step delete; the selector popup and All-view toolbar are the route's own composition around those two blocks. The Identifier field's rename flow calls `PATCH /registry/identifiers/{rdid}` (keyed by the *old* rdid) and `GET /registry/identifiers/{rdid}/exists`; the entity's own create/update endpoint never sends `identifier`, since it is server-managed and renamed only through the identifiers route.
 - **SwiftUI**: A `NavigationSplitView` supplies the topic list as its sidebar and the detail panel as its detail column; the selector popup is a toolbar `Menu`/`Picker`; the Danger Zone is a `DisclosureGroup` gated behind a two-step `.alert` / `.confirmationDialog` pair; the All view toggles a `Grid`/`List` via a segmented `Picker(.segmented)`.
 - **Compose**: A `ListDetailPaneScaffold` (or an adaptive two-pane `Row`) plays the split-view role; the selector popup is a `DropdownMenu`; the Danger Zone is an `ExpandableCard` gated behind a two-step `AlertDialog` pair; the All view toggles `LazyVerticalGrid`/`LazyColumn` via a segmented control.
 - **AppKit / UIKit**: `NSSplitViewController` (AppKit) or a two-pane `UISplitViewController` (UIKit) plays the split-view role; the selector popup is an `NSPopUpButton` / `UIMenu`; the Danger Zone is a collapsible section gated behind a two-step `NSAlert` / `UIAlertController` pair.
@@ -233,7 +233,7 @@ Color only via `apt-*` tokens (`apt-red` destructive, `apt-border`, `apt-text-mu
   **Rationale**: Matches the platform-wide pattern of renaming organizations/namespaces via the identifiers route rather than an entity's own update endpoint, so FK relationships never need to be rewritten on rename; because the endpoint already exists, this recipe's remaining work is frontend wiring.
   **Approved**: pending
 
-- **Decision**: Replace `window.confirm()` with a two-step delete built as one shared block, `DeleteEntitySection` (`@agentic-toolkit/adh-ui/blocks`), parameterized by `Entity`, `rdid`, and `childEntities`; the step-1 warning copy is templated ("{gerund} {a/an} {entity} deletes all the data associated with the {entity}, including {childEntities}. Do you wish to proceed?") with the article chosen by the entity noun's leading sound (**warning-copy-article-agreement**).
+- **Decision**: Replace `window.confirm()` with a two-step delete built as one shared block, `DeleteEntitySection` (`@adh-sdk/adh-ui/blocks`), parameterized by `Entity`, `rdid`, and `childEntities`; the step-1 warning copy is templated ("{gerund} {a/an} {entity} deletes all the data associated with the {entity}, including {childEntities}. Do you wish to proceed?") with the article chosen by the entity noun's leading sound (**warning-copy-article-agreement**).
   **Rationale**: One authoritative implementation is shared by every FTD route (DRY) instead of each route re-deriving its own confirm copy and article agreement.
   **Approved**: pending
 
@@ -281,7 +281,7 @@ keeps ignoring `identifier` (it is server-managed).
 **Hub file map:**
 - `src/components/settings/topics.ts` — the ecosystem topic list: `Ecosystem` first (no divider above it), `Buckets` in place of `Schemas`.
 - `src/components/settings/ecosystems/EcosystemDetail.tsx` — editable Identifier; Danger Zone.
-- `@agentic-toolkit/adh-ui/blocks` — the shared `DeleteEntitySection` block, parameterized by `Entity`, `rdid`, `childEntities`.
+- `@adh-sdk/adh-ui/blocks` — the shared `DeleteEntitySection` block, parameterized by `Entity`, `rdid`, `childEntities`.
 - `src/components/home/resource/ResourcePopup.tsx` — the New action (trailing divider + non-radio `New {Entity}…`).
 - `src/components/home/resource/ResourceLanding.tsx` — the All toolbar: filter, card/list toggle, list renderer.
 - `src/components/home/resource/ResourceTab.tsx` — last-selected + view-mode persistence and bare-path resolution.
@@ -343,10 +343,10 @@ Separation-of-concerns is passed: `focused-topic-detail.tsx` composes only exist
 | Version | Date | Author | Summary |
 |---|---|---|---|
 | 1.2.5 | 2026-10-04 | Mike Fullerton | Matches its type's shape: required fields, title heading, and only the type's own sections. |
-| 1.2.4 | 2026-10-04 | Mike Fullerton | Legacy recipe citations restored to the legacy recipes' own agenticdevelopertoolkit://recipes/ domains; the adtoolkit://recipes/ form named nothing. |
+| 1.2.4 | 2026-10-04 | Mike Fullerton | Legacy recipe citations restored to the legacy recipes' own adhsdk://recipes/ domains; the adhsdk://recipes/ form named nothing. |
 | 1.2.3 | 2026-10-04 | Mike Fullerton | Filled Reference Implementations and Compliance rows |
 | 1.2.2 | 2026-09-27 | Mike Fullerton | Moved into the concept grouping. |
 | 1.2.1 | 2026-09-25 | Mike Fullerton | Moved into the library cookbook; added Reference Implementations. |
-| 1.2.0 | 2026-09-23 | Mike Fullerton | Lint pass: renamed the remaining verb-phrase requirements to subject-only names and updated every citation; split the Ecosystems/Teams instantiation values out of the general contract into a new Instantiations section; reworded Platform Notes and Design Decisions from migration-plan phrasing to a steady-state contract (Design Decisions reformatted to Decision/Rationale/Approved) and gave Platform Notes real per-platform APIs; fixed the `{basePath}` route templates that doubled a leading slash; clarified that `{id}`/`lastId` are the rdid and stated the post-rename deep-link fallback; replaced hardcoded `adh:`/hub-path/example values with `{{app_prefix}}`/`{{org_package}}` placeholders outside the instantiation appendix; promoted four requirements (rename-unknown-rdid-404, identifier-availability-check, warning-copy-article-agreement, explicit-all-precedence) out of Edge Cases/Design Decisions; added test vectors for every previously-uncovered requirement plus a delete-error vector; moved the concrete toggle ARIA rule into the accessibility requirement; explained the identifier regex's segment asymmetry and the always-lowercase rdid; standardized the shared-block naming (`FocusedTopicDetail` in `@agenticdevelopertoolkit/ui/blocks`, `DeleteEntitySection` in `@agentic-toolkit/adh-ui/blocks`); rebuilt Compliance as real linked catalog checks with a process note replacing the pre-commit-gate row. |
+| 1.2.0 | 2026-09-23 | Mike Fullerton | Lint pass: renamed the remaining verb-phrase requirements to subject-only names and updated every citation; split the Ecosystems/Teams instantiation values out of the general contract into a new Instantiations section; reworded Platform Notes and Design Decisions from migration-plan phrasing to a steady-state contract (Design Decisions reformatted to Decision/Rationale/Approved) and gave Platform Notes real per-platform APIs; fixed the `{basePath}` route templates that doubled a leading slash; clarified that `{id}`/`lastId` are the rdid and stated the post-rename deep-link fallback; replaced hardcoded `adh:`/hub-path/example values with `{{app_prefix}}`/`{{org_package}}` placeholders outside the instantiation appendix; promoted four requirements (rename-unknown-rdid-404, identifier-availability-check, warning-copy-article-agreement, explicit-all-precedence) out of Edge Cases/Design Decisions; added test vectors for every previously-uncovered requirement plus a delete-error vector; moved the concrete toggle ARIA rule into the accessibility requirement; explained the identifier regex's segment asymmetry and the always-lowercase rdid; standardized the shared-block naming (`FocusedTopicDetail` in `@adh-sdk/ui/blocks`, `DeleteEntitySection` in `@adh-sdk/adh-ui/blocks`); rebuilt Compliance as real linked catalog checks with a process note replacing the pre-commit-gate row. |
 | 1.1.0 | 2026-09-23 | Mike Fullerton | Renamed every requirement to subject-only kebab-case, dropping the old prefix everywhere it is cited. |
 | 1.0.0 | 2026-06-26 | Mike Fullerton | Initial conversion from legacy UI spec (carries forward the v0.2 locked decisions A–D). |

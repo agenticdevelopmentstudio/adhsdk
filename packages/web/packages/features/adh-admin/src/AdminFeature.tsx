@@ -1,8 +1,8 @@
 "use client";
 
 import { useCallback } from "react";
-import { RailHostBoundary, StackGroupDetail, useBasePathRoute } from "@agentic-toolkit/resource";
-import { confirmNavigation } from "@agenticdevelopertoolkit/ui/lib/navigation-guard";
+import { RailHostBoundary, StackGroupDetail, useBasePathRoute } from "@adh-sdk/resource";
+import { confirmNavigation } from "@adh-sdk/ui/lib/navigation-guard";
 
 import { AdminQueryProvider } from "./AdminQueryProvider";
 import { ADMIN_PANES } from "./adminPanes";

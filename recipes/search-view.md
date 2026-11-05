@@ -1,7 +1,7 @@
 ---
 id: fed0a111-253c-427b-89c0-14f729657a7d
 title: SearchView
-domain: agenticdevelopertoolkit://recipes/search-view
+domain: adhsdk://recipes/search-view
 type: ingredient
 version: 1.1.1
 status: review
@@ -22,12 +22,12 @@ tags:
 - result-listing
 - keyboard-navigation
 depends-on:
-- agenticdevelopertoolkit://recipes/badge
-- agenticdevelopertoolkit://recipes/button
-- agenticdevelopertoolkit://recipes/collapse-toggle
-- agenticdevelopertoolkit://recipes/empty-state
-- agenticdevelopertoolkit://recipes/search-filter-bar
-- agenticdevelopertoolkit://recipes/split-divider
+- adhsdk://recipes/badge
+- adhsdk://recipes/button
+- adhsdk://recipes/collapse-toggle
+- adhsdk://recipes/empty-state
+- adhsdk://recipes/search-filter-bar
+- adhsdk://recipes/split-divider
 related: []
 references: []
 approved-by: ''

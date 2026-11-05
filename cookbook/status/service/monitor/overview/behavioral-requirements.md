@@ -3,7 +3,7 @@
 
 - **platform-summary-shape**: A `PlatformSummary` value MUST carry exactly five fields — `platform: string`, `ready: number`, `building: number`, `failed: number`, `total: number` — with no other field.
 - **endpoint-like-shape**: An `EndpointLike` value MUST carry `platform`, `deployProject`, and `environment`, each typed `string | null` and each OPTIONAL (a caller MAY omit any of the three entirely, not only pass `null`).
-- **canon-reexport**: This module MUST re-export the `platformCanon` and `deployTargetKey` functions it imports from `@agentic-toolkit/deploy-platform/canon` unchanged, so a caller importing either name from `./overview` gets the identical function, and identical results, as a caller importing it directly from the `canon` package.
+- **canon-reexport**: This module MUST re-export the `platformCanon` and `deployTargetKey` functions it imports from `@adh-sdk/deploy-platform/canon` unchanged, so a caller importing either name from `./overview` gets the identical function, and identical results, as a caller importing it directly from the `canon` package.
 
 ### Platform Summarization
 

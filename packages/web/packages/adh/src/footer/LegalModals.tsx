@@ -1,13 +1,13 @@
 'use client'
 
 import { useEffect, useState, type MouseEvent, type ReactNode } from 'react'
-import { isModifiedClick } from '@agenticdevelopertoolkit/ui/lib/navigation-guard'
+import { isModifiedClick } from '@adh-sdk/ui/lib/navigation-guard'
 // PRESERVED IMPORT — the package path, never '../legal', even though it is a sibling
 // directory here. `legal/index` is its own tsup entry with a matching `external`; a
 // relative specifier would inline the whole legal tier (both prose bodies plus
 // LegalPageShell) into the ALWAYS-loaded footer entry, and hoist its `'use client'`
 // banner over everything else that entry inlines. See verify-bundle-boundaries.py.
-import { LEGAL_EFFECTIVE_DATE, TermsBody, PrivacyBody } from '@agentic-toolkit/adh/legal'
+import { LEGAL_EFFECTIVE_DATE, TermsBody, PrivacyBody } from '@adh-sdk/adh/legal'
 import { AdhModalPopover } from './AdhModalPopover'
 
 /** DOM ids of the footer's legal modals (opened by the footer's legal links, see openLegalModal). */

@@ -2,19 +2,19 @@
 
 // Header notification bell — a ghost icon Button with a numeric unread Badge
 // overlaid, toggling a Popover that shows the inbox. Composes the shared
-// @agenticdevelopertoolkit/ui primitives (Button, Badge, Popover) so it renders identically to
+// @adh-sdk/ui primitives (Button, Badge, Popover) so it renders identically to
 // the rest of the platform chrome.
 
 import { useState } from 'react'
 import { Bell } from 'lucide-react'
 
-import { Badge } from '@agenticdevelopertoolkit/ui/components/badge'
-import { Button } from '@agenticdevelopertoolkit/ui/components/button'
+import { Badge } from '@adh-sdk/ui/components/badge'
+import { Button } from '@adh-sdk/ui/components/button'
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from '@agenticdevelopertoolkit/ui/components/popover'
+} from '@adh-sdk/ui/components/popover'
 
 import { useUnreadCount } from '../hooks/use-notifications'
 import { NotificationInbox } from './notification-inbox'

@@ -3,7 +3,7 @@
   "meta": {
     "id": "d46b3e1c-9cd9-41b6-bdd2-524ece5e294b",
     "title": "Notes Model",
-    "domain": "adtoolkit://cookbook/workspace/notes/notes-model",
+    "domain": "adhsdk://cookbook/workspace/notes/notes-model",
     "type": "ingredient",
     "version": "1.1.3",
     "status": "review",
@@ -28,16 +28,16 @@
       "taxonomy"
     ],
     "depends-on": [
-      "agenticdevelopertoolkit://recipes/markdown-core"
+      "adhsdk://recipes/markdown-core"
     ],
     "related": [],
     "references": [
-      "packages/apple/AgenticToolkit/macOS/Features/NotesWindow/Note.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/macOS/Features/NotesWindow/NoteFolder.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/macOS/Features/NotesWindow/NoteStorage.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/macOS/Features/NotesWindow/NoteTaxonomyProviding.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/macOS/Features/NotesWindow/MarkdownNoteStorage.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/macOS/Features/NotesWindow/NotesManager.swift (agenticdevelopertoolkit)"
+      "packages/apple/AgenticDeveloperHubSDK/macOS/Features/NotesWindow/Note.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/macOS/Features/NotesWindow/NoteFolder.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/macOS/Features/NotesWindow/NoteStorage.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/macOS/Features/NotesWindow/NoteTaxonomyProviding.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/macOS/Features/NotesWindow/MarkdownNoteStorage.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/macOS/Features/NotesWindow/NotesManager.swift (adhsdk)"
     ],
     "approved-by": "",
     "approved-date": ""

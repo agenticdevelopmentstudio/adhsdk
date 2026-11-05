@@ -6,7 +6,7 @@ import { render, screen } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { describe, expect, it } from "vitest";
 
-import { NO_API_ENDPOINT } from "@agenticdevelopertoolkit/ui/blocks";
+import { NO_API_ENDPOINT } from "@adh-sdk/ui/blocks";
 import { ButtonBar, type MasterDetailActions } from "../master-detail/MasterDetailLayout";
 import { RecordAffordanceContext, type RecordAffordanceProps } from "../record-affordance";
 

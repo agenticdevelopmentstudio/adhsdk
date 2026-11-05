@@ -1,6 +1,6 @@
-// WRITTEN by @agenticdevelopertoolkit/site-template's assembler — do not edit.
+// WRITTEN by @adh-sdk/site-template's assembler — do not edit.
 import type { MetadataRoute } from 'next'
-import { frameSitemap } from '@agenticdevelopertoolkit/site-template'
+import { frameSitemap } from '@adh-sdk/site-template'
 import { config } from '../src/site/config'
 import { sitemapRoutes } from '../src/site/sitemap'
 

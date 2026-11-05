@@ -1,7 +1,7 @@
 ---
 id: 4d2b7231-1235-49e9-8b7d-1e7507c6eba7
 title: "Navigation Chrome (Bar + Drawer)"
-domain: agenticdevelopertoolkit://recipes/nav-chrome
+domain: adhsdk://recipes/nav-chrome
 type: ingredient
 version: 1.1.1
 status: review

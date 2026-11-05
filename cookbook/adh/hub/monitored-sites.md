@@ -1,7 +1,7 @@
 ---
 id: a3e87176-5845-43ff-9041-af53437d605d
 title: "Monitored Sites"
-domain: adtoolkit://cookbook/adh/hub/monitored-sites
+domain: adhsdk://cookbook/adh/hub/monitored-sites
 type: ingredient
 version: 1.2.1
 status: review
@@ -27,13 +27,13 @@ tags:
 depends-on: []
 related: []
 references:
-  - packages/web/packages/data/src/monitored-sites/monitored-sites.ts (agenticdevelopertoolkit)
-  - packages/web/packages/data/src/monitored-sites/wire.ts (agenticdevelopertoolkit)
-  - packages/web/packages/data/src/monitored-sites/index.ts (agenticdevelopertoolkit)
-  - packages/web/packages/data/src/monitored-sites/__tests__/monitored-sites.test.ts (agenticdevelopertoolkit)
-  - packages/web/packages/data/src/http.ts (agenticdevelopertoolkit)
-  - packages/web/packages/data/src/client-helpers.ts (agenticdevelopertoolkit)
-  - packages/web/packages/auth/src/client.ts (agenticdevelopertoolkit)
+  - packages/web/packages/data/src/monitored-sites/monitored-sites.ts (adhsdk)
+  - packages/web/packages/data/src/monitored-sites/wire.ts (adhsdk)
+  - packages/web/packages/data/src/monitored-sites/index.ts (adhsdk)
+  - packages/web/packages/data/src/monitored-sites/__tests__/monitored-sites.test.ts (adhsdk)
+  - packages/web/packages/data/src/http.ts (adhsdk)
+  - packages/web/packages/data/src/client-helpers.ts (adhsdk)
+  - packages/web/packages/auth/src/client.ts (adhsdk)
 approved-by: ""
 approved-date: ""
 ---
@@ -353,9 +353,9 @@ Not applicable: this logic contains no logging call of any kind.
 ## Platform Notes
 
 - **React/Web** (source platform): `packages/web/packages/data/src/monitored-sites/monitored-sites.ts`
-  and `wire.ts` hold the client, re-exported by `index.ts` as `@agentic-toolkit/data/monitored-sites`;
+  and `wire.ts` hold the client, re-exported by `index.ts` as `@adh-sdk/data/monitored-sites`;
   every function is built on `authedJson`/`authedRequest` (from `../http`, re-exporting
-  `@agentic-toolkit/auth/client`) and `compact`/`enc`/`sortByText`/`workspaceQuery` (from
+  `@adh-sdk/auth/client`) and `compact`/`enc`/`sortByText`/`workspaceQuery` (from
   `../client-helpers`). The Dashboards feature (`packages/web/packages/features/dashboards/src/*`) is the
   one current consumer.
 - **SwiftUI**: model `SiteGroupView`/`SiteView`/`EndpointView` (and the create/update body shapes) as

@@ -2,7 +2,7 @@
 - **Role/trait**: Not observable beyond the platform's defaults - no
   custom accessibility role or element grouping call appears in source.
   The button carries its platform's native button role (see
-  `adtoolkit://cookbook/ui/settings/rows/font-chooser-button`); the label is a plain
+  `adhsdk://cookbook/ui/settings/rows/font-chooser-button`); the label is a plain
   static-text control.
 - **Label requirements**: The label and the button are laid out as sibling
   views in the same row, but source sets no accessibility linkage between

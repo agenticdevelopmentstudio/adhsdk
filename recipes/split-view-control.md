@@ -1,7 +1,7 @@
 ---
 id: 6e0e27bf-5f7d-46bf-85d0-fb5bdf5dab8a
 title: Split View Control
-domain: agenticdevelopertoolkit://recipes/split-view-control
+domain: adhsdk://recipes/split-view-control
 type: ingredient
 version: 1.1.1
 status: review
@@ -21,7 +21,7 @@ tags:
 - view-switcher
 - responsive
 depends-on:
-- agenticdevelopertoolkit://recipes/toggle-group
+- adhsdk://recipes/toggle-group
 related: []
 references: []
 approved-by: ''

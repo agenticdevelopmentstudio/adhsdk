@@ -1,15 +1,15 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { useResourceList } from '@agentic-toolkit/data';
-import { Field, FieldGroup } from '@agenticdevelopertoolkit/ui/blocks';
-import { ErrorText } from '@agenticdevelopertoolkit/ui/components/error-text';
-import { Button } from '@agenticdevelopertoolkit/ui/components/button';
-import { Input } from '@agenticdevelopertoolkit/ui/components/input';
-import { Select } from '@agenticdevelopertoolkit/ui/components/select';
+import { useResourceList } from '@adh-sdk/data';
+import { Field, FieldGroup } from '@adh-sdk/ui/blocks';
+import { ErrorText } from '@adh-sdk/ui/components/error-text';
+import { Button } from '@adh-sdk/ui/components/button';
+import { Input } from '@adh-sdk/ui/components/input';
+import { Select } from '@adh-sdk/ui/components/select';
 import type {
   PricingModel, RegistryClient, ServiceDeliveryMode, ServiceRow,
-} from '@agentic-toolkit/registry/client';
+} from '@adh-sdk/registry/client';
 import { registryServicesKey } from './entriesCache';
 
 /**

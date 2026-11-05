@@ -6,7 +6,7 @@
 // required by the pane, and `scopeEcosystemId` threads through.
 import { describe, it, expect, vi, afterEach } from "vitest";
 import { render, screen, cleanup } from "@testing-library/react";
-import type { CrudTableMeta } from "@agentic-toolkit/crud";
+import type { CrudTableMeta } from "@adh-sdk/crud";
 
 vi.mock("./KnowledgeBasesPane", () => ({
   KnowledgeBasesPane: ({

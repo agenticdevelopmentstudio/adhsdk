@@ -3,13 +3,13 @@
 - **Compose**: Not applicable — web-only shared component.
 - **React / Web (TypeScript):** Component at
   `packages/web/packages/adh/src/marketing/SiteWordmark.tsx`, exported on its own
-  subpath `@agentic-toolkit/adh/marketing/SiteWordmark` (with a dedicated `tsup`
+  subpath `@adh-sdk/adh/marketing/SiteWordmark` (with a dedicated `tsup`
   entry + `exports` key). Reuses `getSite` + `splitSiteTitle` from
-  `@agentic-toolkit/adh-registry`. It lives in `@agentic-toolkit/adh` — the
+  `@adh-sdk/adh-registry`. It lives in `@adh-sdk/adh` — the
   vocabulary package — rather than a generic package such as
-  `@agenticdevelopertoolkit/ui` or `@agenticdevelopertoolkit/themes`, since it
+  `@adh-sdk/ui` or `@adh-sdk/themes`, since it
   resolves the ADH site registry; the `HubMark` glyph inside it comes from
-  `@agentic-toolkit/adh/header` because that one piece is registry-free. Root
+  `@adh-sdk/adh/header` because that one piece is registry-free. Root
   element is a `<div>` carrying any `className`; the wordmark line is
   `font-serif text-lg leading-tight font-medium tracking-tight text-apt-text
   sm:text-xl`, with the accent word wrapped in `<span

@@ -1,14 +1,14 @@
 'use client'
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { themes } from '@agenticdevelopertoolkit/themes/manifest'
+import { themes } from '@adh-sdk/themes/manifest'
 
 import { DEFAULT_ADH_THEME, DEFAULT_SITE_THEME, normalizeThemeKey } from './adh-themes'
 import { switcherThemeKeys } from './theme-keys'
 import { isSwitcherSeed, concatItemCss } from './resolve'
 import { applyThemeCss, clearThemeOverride } from './theme-overrides'
 import { applyBaseTheme, persistTheme, readStoredTheme } from './theme-preview'
-import { reportUnexpectedError } from '@agentic-toolkit/adh/telemetry/report-error'
+import { reportUnexpectedError } from '@adh-sdk/adh/telemetry/report-error'
 import {
   listThemes,
   createTheme,

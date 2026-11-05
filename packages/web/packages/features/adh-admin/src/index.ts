@@ -1,4 +1,4 @@
-// @agentic-toolkit/adh-admin — the admin console's panes and rail, extracted from
+// @adh-sdk/adh-admin — the admin console's panes and rail, extracted from
 // admin.agenticdeveloperhub so a second host (the hub's Admin workspace, at the top-level /admin)
 // can mount the same twelve sections without depending on that site's app/ tree.
 

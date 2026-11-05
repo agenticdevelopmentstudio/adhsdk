@@ -1,9 +1,9 @@
 'use client'
 
 import type { ReactElement, ReactNode } from 'react'
-import { Btn, indexRows } from '@agenticdevelopertoolkit/landing'
-import type { LandingPage, NavLink } from '@agenticdevelopertoolkit/landing'
-import { NavChrome } from '@agenticdevelopertoolkit/landing/client'
+import { Btn, indexRows } from '@adh-sdk/landing'
+import type { LandingPage, NavLink } from '@adh-sdk/landing'
+import { NavChrome } from '@adh-sdk/landing/client'
 import type { FrameConfig, FrameCopy } from './types'
 import { Words } from './words'
 

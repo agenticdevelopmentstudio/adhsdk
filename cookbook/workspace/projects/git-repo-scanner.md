@@ -1,7 +1,7 @@
 ---
 id: 3bec9b27-a9e3-4716-b516-688cc7f5a1c5
 title: "Git Repository Scanner"
-domain: adtoolkit://cookbook/workspace/projects/git-repo-scanner
+domain: adhsdk://cookbook/workspace/projects/git-repo-scanner
 type: ingredient
 version: 1.2.0
 status: review
@@ -22,10 +22,10 @@ tags:
 depends-on: []
 related: []
 references:
-  - packages/apple/AgenticToolkit/macOS/Features/Projects/GitRepoScanner.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/macOS/Features/Projects/GitRepo.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/macOS/Features/Projects/UserSettings+Projects.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Tests/AgenticToolkitMacOSTests/Projects/GitRepoScannerTests.swift (agenticdevelopertoolkit)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/GitRepoScanner.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/GitRepo.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/UserSettings+Projects.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKMacOSTests/Projects/GitRepoScannerTests.swift (adhsdk)
 approved-by: ""
 approved-date: ""
 ---
@@ -295,7 +295,7 @@ discarded with no log output — see the pending decision on
 ## Platform Notes
 
 - **SwiftUI**: The source is
-  `packages/apple/AgenticToolkit/macOS/Features/Projects/GitRepoScanner.swift`,
+  `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/GitRepoScanner.swift`,
   using Foundation's `FileManager`, `URL`, `URLResourceKey`, and the C
   `fnmatch`/`FNM_CASEFOLD` functions; its companion type `ScannedGitRepo`
   lives in `GitRepo.swift` in the same directory. Nothing here is
@@ -347,7 +347,7 @@ discarded with no log output — see the pending decision on
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/macOS/Features/Projects/GitRepoScanner.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/GitRepoScanner.swift` |
 
 ## Design Decisions
 

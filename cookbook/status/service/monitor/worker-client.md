@@ -1,7 +1,7 @@
 ---
 id: bd58dfa4-13f8-4e92-adbe-45f8a020168d
 title: "Monitor Worker Client"
-domain: adtoolkit://cookbook/status/service/monitor/worker-client
+domain: adhsdk://cookbook/status/service/monitor/worker-client
 type: ingredient
 version: 1.1.0
 status: review
@@ -25,18 +25,18 @@ depends-on:
   - agenticdevelopercookbook://guidelines/implementing/networking/timeouts
   - agenticdevelopercookbook://guidelines/implementing/code-quality/dependency-injection
 related:
-  - adtoolkit://cookbook/status/service/config
-  - adtoolkit://cookbook/status/service/monitor/cycle-runner
+  - adhsdk://cookbook/status/service/config
+  - adhsdk://cookbook/status/service/monitor/cycle-runner
 references:
-  - packages/web/packages/status-server/src/monitor/worker-client.ts (agenticdevelopertoolkit)
-  - packages/web/packages/status-server/src/monitor/worker.ts (agenticdevelopertoolkit)
-  - packages/web/packages/status-server/src/monitor/cycle-runner.ts (agenticdevelopertoolkit)
-  - packages/web/packages/status-server/src/config/port.ts (agenticdevelopertoolkit)
-  - packages/web/packages/deploy-platform/src/cooldown/provider-cooldown.ts (agenticdevelopertoolkit)
-  - packages/web/packages/deploy-platform/src/cooldown/index.ts (agenticdevelopertoolkit)
-  - packages/web/packages/status-server/package.json (agenticdevelopertoolkit)
-  - packages/web/packages/status-server/test/worker-boot.int.test.ts (agenticdevelopertoolkit)
-  - packages/web/packages/status-server/test/helpers/worker-boot-driver.mjs (agenticdevelopertoolkit)
+  - packages/web/packages/status-server/src/monitor/worker-client.ts (adhsdk)
+  - packages/web/packages/status-server/src/monitor/worker.ts (adhsdk)
+  - packages/web/packages/status-server/src/monitor/cycle-runner.ts (adhsdk)
+  - packages/web/packages/status-server/src/config/port.ts (adhsdk)
+  - packages/web/packages/deploy-platform/src/cooldown/provider-cooldown.ts (adhsdk)
+  - packages/web/packages/deploy-platform/src/cooldown/index.ts (adhsdk)
+  - packages/web/packages/status-server/package.json (adhsdk)
+  - packages/web/packages/status-server/test/worker-boot.int.test.ts (adhsdk)
+  - packages/web/packages/status-server/test/helpers/worker-boot-driver.mjs (adhsdk)
 approved-by: ""
 approved-date: ""
 ---
@@ -202,7 +202,7 @@ This component makes no logging call of its own — no console output and no str
 
 - **SwiftUI**: not a SwiftUI concern (no view). An Apple companion backend embedding this pattern models `MonitorWorkerClient` as an `actor` (so `pending`/`seq`/the worker handle are protected from concurrent mutation without a manual lock), spawning the cycle's work as a `Task` rather than an OS-level worker thread; a "kill a wedged task" guarantee equivalent to `Worker.terminate()` requires cooperative cancellation (`Task.isCancelled` checks inside the cycle) since Swift `Task` cancellation cannot forcibly stop code that never checks it.
 - **Compose**: same non-UI framing as SwiftUI. A Kotlin port models the client as a class holding a `Channel`-backed request/reply pair per in-flight call (the `pending` map analog is a `ConcurrentHashMap<Long, CompletableDeferred<Unit>>`), launches the cycle work in its own coroutine, and enforces `cycleTimeoutMs` with `withTimeout`/`withTimeoutOrNull` — which, like `Task` cancellation, is cooperative: a coroutine that never suspends at a cancellation point cannot be forcibly killed the way `Worker.terminate()` kills an OS thread.
-- **React/Web** (source platform): lives at `packages/web/packages/status-server/src/monitor/worker-client.ts` as a plain exported class on the Node status backend, imported by `worker.ts`'s sibling wiring and re-exported from `index.ts`. It depends only on `node:worker_threads`, `node:module`'s `createRequire`, and the shared `cooldownState()`/`attachCooldownState()` pair from `@agentic-toolkit/deploy-platform/cooldown` — no framework of its own.
+- **React/Web** (source platform): lives at `packages/web/packages/status-server/src/monitor/worker-client.ts` as a plain exported class on the Node status backend, imported by `worker.ts`'s sibling wiring and re-exported from `index.ts`. It depends only on `node:worker_threads`, `node:module`'s `createRequire`, and the shared `cooldownState()`/`attachCooldownState()` pair from `@adh-sdk/deploy-platform/cooldown` — no framework of its own.
 - **AppKit / UIKit**: same non-UI framing as SwiftUI. A macOS/iOS agent embedding this pattern would typically reach for a background `Task` rather than a separate OS thread/process the way Node's `Worker` isolates it here; the "why isolate the cycle" rationale in this file's own header comment (keeping the scheduler's watchdog and cadence logic responsive) has no direct AppKit/UIKit analogue unless the host app also multiplexes a UI event loop with this work.
 - **WinUI 3**: a .NET port models the request/reply correlation with a `ConcurrentDictionary<long, TaskCompletionSource>` in place of `pending`, an `Interlocked.Increment(ref _seq)` in place of `++this.seq` (a stricter analog than the source needs, since the source's single JS main thread makes `++this.seq` inherently safe, while a WinUI host's UI thread and background `Task`s are not single-threaded), and `CancellationTokenSource.CancelAfter(cycleTimeoutMs)` in place of the `setTimeout`. The critical divergence to flag: .NET `Task` cancellation is COOPERATIVE — a hung `Task` that never observes its `CancellationToken` cannot be forcibly killed the way `Worker.terminate()` kills an OS-level thread. Reproducing the source's "TERMINATE the wedged worker" guarantee exactly requires isolating the cycle in a separate OS process (`Process.Start`, killed with `Process.Kill()` on timeout) rather than a `Task`; a `Task`-based port that skips this can only abandon a wedged cycle, not truly stop it, and that gap SHOULD be called out to whoever approves the port. `System.Threading.Channels.Channel<T>` is the .NET analog of the `postMessage`/`on("message")` request/reply pipe. `ObservableCollection`/`INotifyPropertyChanged` do not apply here: this client has no UI-bound state of its own to expose.
 
@@ -214,7 +214,7 @@ This component makes no logging call of its own — no console output and no str
 
 ## Design Decisions
 
-- **Decision**: resolve the worker entry through the package's own `exports` map (`@agentic-toolkit/status-server/worker`) rather than a relative path to `worker.ts`.
+- **Decision**: resolve the worker entry through the package's own `exports` map (`@adh-sdk/status-server/worker`) rather than a relative path to `worker.ts`.
   **Rationale**: the source comment states it plainly — a container image ships no `tsx`/TypeScript loader, so a relative path to the `.ts` source "would work in dev and die on first boot in prod"; resolving through `exports` always lands on the built `dist/monitor/worker.js`, "the only form guaranteed runnable in that container." `worker-boot.int.test.ts` exercises exactly this resolution path under bare `node`.
   **Approved**: pending
 - **Decision**: attach the shared `cooldownState()` buffer inside `spawn()` itself rather than accepting it as part of the caller-supplied `opts.workerData`.

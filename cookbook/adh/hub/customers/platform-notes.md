@@ -27,7 +27,7 @@
 - **AppKit / UIKit**: This is the source: `CustomersDataSource.swift`,
   `CustomersModels.swift`, and `CustomersTopic.swift` hold no AppKit/UIKit
   import of their own — `CustomersTopic` depends only on `Foundation` and
-  the `AgenticToolkitHTDV` module (`HTDVItem`, `HTDVLevel`, `HTDVChild`,
+  the `AgenticDeveloperHubSDKHTDV` module (`HTDVItem`, `HTDVLevel`, `HTDVChild`,
   `HTDVCreateAction`, `HTDVDetail`,
   `FormSpec`/`FormSection`/`FormAction`/`FormDeleteAction`/`FormActions`),
   and presents its create sheet through the shared `FormSheet.present`

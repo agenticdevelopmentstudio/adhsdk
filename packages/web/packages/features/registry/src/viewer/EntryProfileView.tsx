@@ -1,8 +1,8 @@
 'use client';
 
 import { useEffect, useState, type ReactNode } from 'react';
-import { RegistryProfile } from '@agenticdevelopertoolkit/registry-profile';
-import type { PublicEntry } from '@agenticdevelopertoolkit/registry-profile';
+import { RegistryProfile } from '@adh-sdk/registry-profile';
+import type { PublicEntry } from '@adh-sdk/registry-profile';
 import { fetchEntryProfileAsMember, type Fetcher } from '../client';
 
 export interface EntryProfileViewProps {

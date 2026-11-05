@@ -1,5 +1,5 @@
 {
-  "name": "@agentic-toolkit/next-env",
+  "name": "@adh-sdk/next-env",
   "version": "0.1.0",
   "private": true,
   "type": "module",

@@ -32,7 +32,7 @@
   workaround, since a React component never carries AppKit-style required
   size constraints into its parent.
 - **AppKit** (source platform): Source file
-  `packages/apple/AgenticToolkit/macOS/SystemIntegration/ComposableSettingsWindow/SettingsPanel/SettingsPanelViewController.swift`.
+  `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/SettingsPanel/SettingsPanelViewController.swift`.
   A macOS-only (`import AppKit`, `import SwiftUI`), `@MainActor`, `open`
   `NSViewController` subclass conforming to `ComposableSettingsPanel`. The
   class declaration itself is the platform's contract: `@MainActor`
@@ -41,7 +41,7 @@
   construction only through `init(with:)` — the required `init?(coder:)`
   is overridden to trigger a fatal error, so a caller cannot construct one
   through that path. It composes `PanelView`, `SettingsPanelDescriptor`,
-  and `GroupView` — all defined elsewhere in `AgenticToolkit` — rather than
+  and `GroupView` — all defined elsewhere in `AgenticDeveloperHubSDK` — rather than
   reimplementing their layout. Its `loadView()` sets `self.view` to
   `settingsView`, the `PanelView` instance the class owns. The hosting
   helper's `NSHostingView` also sets

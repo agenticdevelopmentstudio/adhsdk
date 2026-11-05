@@ -1,7 +1,7 @@
 ---
 id: c99e2822-f5a9-4e84-8740-9341880bb82a
 title: Disclosure
-domain: agenticdevelopertoolkit://recipes/disclosure
+domain: adhsdk://recipes/disclosure
 type: ingredient
 version: 1.3.1
 status: review

@@ -50,9 +50,9 @@ function makeFixture(): void {
   writeFileSync(join(WITH_CONFIG, "vitest.config.ts"), "export default {}\n");
   writeFileSync(
     join(WITH_CONFIG, "package.json"),
-    JSON.stringify({ name: "@agentic-toolkit/has-own-config" }),
+    JSON.stringify({ name: "@adh-sdk/has-own-config" }),
   );
-  writeFileSync(join(WITHOUT_CONFIG, "package.json"), JSON.stringify({ name: "@agentic-toolkit/no-own-config" }));
+  writeFileSync(join(WITHOUT_CONFIG, "package.json"), JSON.stringify({ name: "@adh-sdk/no-own-config" }));
 }
 
 afterEach(() => {
@@ -74,7 +74,7 @@ describe("workspace-root vitest.config.ts's --dir guard", () => {
   it("fires, naming the filter command, for a package that owns a config", () => {
     makeFixture();
     expect(() => checkDirTarget(["node", "vitest.mjs", "run", "--dir", "has-own-config"], FIXTURE_ROOT, FIXTURE_ROOT)).toThrow(
-      /has-own-config.*pnpm --filter @agentic-toolkit\/has-own-config run test/s,
+      /has-own-config.*pnpm --filter @adh-sdk\/has-own-config run test/s,
     );
   });
 
@@ -86,7 +86,7 @@ describe("workspace-root vitest.config.ts's --dir guard", () => {
     makeFixture();
     expect(() =>
       checkDirTarget(["node", "vitest.mjs", "run", "--dir=has-own-config"], FIXTURE_ROOT, FIXTURE_ROOT),
-    ).toThrow(/has-own-config.*pnpm --filter @agentic-toolkit\/has-own-config run test/s);
+    ).toThrow(/has-own-config.*pnpm --filter @adh-sdk\/has-own-config run test/s);
   });
 
   it("stays out of the way for --dir=value naming a package that owns no config", () => {

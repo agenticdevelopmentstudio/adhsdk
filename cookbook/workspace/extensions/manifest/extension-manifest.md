@@ -1,7 +1,7 @@
 ---
 id: 68d182dc-3fc0-489c-ab04-ff4da25fc4df
 title: "Extension Manifest"
-domain: adtoolkit://cookbook/workspace/extensions/manifest/extension-manifest
+domain: adhsdk://cookbook/workspace/extensions/manifest/extension-manifest
 type: ingredient
 version: 1.1.0
 status: review
@@ -23,8 +23,8 @@ tags:
 depends-on: []
 related: []
 references:
-  - packages/apple/AgenticToolkit/Core/Extensions/ExtensionManifest.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Tests/AgenticToolkitCoreTests/Extensions/ExtensionManifestTests.swift (agenticdevelopertoolkit)
+  - packages/apple/AgenticDeveloperHubSDK/Core/Extensions/ExtensionManifest.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKCoreTests/Extensions/ExtensionManifestTests.swift (adhsdk)
 approved-by: ""
 approved-date: ""
 ---
@@ -475,7 +475,7 @@ writes no log line.
 ## Platform Notes
 
 - **Swift (source)**: This component targets macOS today, via the
-  `AgenticToolkitCore` framework target (`project.yml`); nothing in it —
+  `AgenticDeveloperHubSDKCore` framework target (`project.yml`); nothing in it —
   plain `Codable`/`Sendable` structs and enums over Foundation's
   `JSONDecoder`/`JSONEncoder` — depends on `AppKit`, `UIKit`, or any other
   platform framework, so the same source would decode identically if the
@@ -489,7 +489,7 @@ writes no log line.
   `ExtensionManifest.JSONValue` rather than as a bare top-level type,
   because a bare top-level `public enum JSONValue` in this module is
   flagged `duplicate_name` by `abstractr check --content-file` against the
-  sibling foundation tier `AgenticToolkitSync`'s own top-level `JSONValue`.
+  sibling foundation tier `AgenticDeveloperHubSDKSync`'s own top-level `JSONValue`.
   `describe(_:)` switches on the four `DecodingError` cases (`.keyNotFound`,
   `.typeMismatch`, `.valueNotFound`, `.dataCorrupted`) plus a catch-all for
   `DecodingError.@unknown default` and any non-`DecodingError` `Error`,
@@ -529,7 +529,7 @@ writes no log line.
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/Core/Extensions/ExtensionManifest.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Extensions/ExtensionManifest.swift` |
 
 ## Design Decisions
 
@@ -574,7 +574,7 @@ throws.
 rather than as a bare top-level type.
 **Rationale**: A bare top-level `public enum JSONValue` in this module is
 flagged `duplicate_name` by `abstractr check --content-file` against the
-sibling foundation tier `AgenticToolkitSync`'s own top-level `JSONValue` —
+sibling foundation tier `AgenticDeveloperHubSDKSync`'s own top-level `JSONValue` —
 `apple-sync` and `apple-core` are declared sibling foundation tiers in
 `.abstractr.json`, not a tier/sub-tier pair, so nesting rather than renaming
 resolves the collision without introducing a downward dependency between

@@ -1,7 +1,7 @@
 ---
 id: 143b0352-49d4-46a9-a922-bb45c4cc0e7e
 title: "Conversations Key Commands"
-domain: adtoolkit://cookbook/ai/chat/conversations/conversations-key-commands
+domain: adhsdk://cookbook/ai/chat/conversations/conversations-key-commands
 type: ingredient
 version: 1.0.0
 status: review
@@ -21,8 +21,8 @@ tags:
   - conversations
 depends-on: []
 related:
-  - adtoolkit://cookbook/ui/controls/key-command-capture-field
-  - adtoolkit://cookbook/ui/settings/rows/key-command-row-view
+  - adhsdk://cookbook/ui/controls/key-command-capture-field
+  - adhsdk://cookbook/ui/settings/rows/key-command-row-view
 references: []
 approved-by: ""
 approved-date: ""
@@ -184,7 +184,7 @@ Not applicable: the source contains no logging call.
 ## Platform Notes
 
 - **AppKit** (source platform): Implemented in
-  `packages/apple/AgenticToolkit/macOS/Features/ConversationsWindow/ConversationsKeyCommands.swift`
+  `packages/apple/AgenticDeveloperHubSDK/macOS/Features/ConversationsWindow/ConversationsKeyCommands.swift`
   as a `public enum ConversationsKeyCommands` with static constants
   `moveSelectionUpID`, `moveSelectionDownID`, `toggleShelfID`,
   `sectionTitle` and `singleModeFeatureTitle`. `section(resolve:)` takes a
@@ -204,7 +204,7 @@ Not applicable: the source contains no logging call.
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/macOS/Features/ConversationsWindow/ConversationsKeyCommands.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/ConversationsWindow/ConversationsKeyCommands.swift` |
 
 ## Design Decisions
 

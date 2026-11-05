@@ -1,5 +1,5 @@
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/Core/SettingStorage/RawSetting.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/SettingStorage/RawSetting.swift` |
 

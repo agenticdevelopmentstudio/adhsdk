@@ -29,7 +29,7 @@ export interface BitbagMarkProps {
  * him where nothing should animate, or stand him in while the rig's chunk loads
  * without anything moving when it arrives.
  *
- * Its own entry (`@agentic-toolkit/bitbag/mark`), deliberately: the main barrel
+ * Its own entry (`@adh-sdk/bitbag/mark`), deliberately: the main barrel
  * pulls in the rig, gsap and the chat, which is exactly the weight a stand-in
  * exists to avoid. No hooks, so it server-renders.
  *

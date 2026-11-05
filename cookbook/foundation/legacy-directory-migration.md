@@ -1,7 +1,7 @@
 ---
 id: 1996A181-6B83-4000-9671-7E872C625B4C
 title: "Legacy Directory Migration"
-domain: adtoolkit://cookbook/foundation/legacy-directory-migration
+domain: adhsdk://cookbook/foundation/legacy-directory-migration
 type: ingredient
 version: 1.0.0
 status: review
@@ -21,8 +21,8 @@ tags:
   - migration
 depends-on: []
 related:
-  - adtoolkit://cookbook/foundation/defaults-domain-migration
-  - adtoolkit://cookbook/foundation/file-system
+  - adhsdk://cookbook/foundation/defaults-domain-migration
+  - adhsdk://cookbook/foundation/file-system
 references: []
 approved-by: ""
 approved-date: ""
@@ -145,7 +145,7 @@ Not applicable: The migration calls no logging API; the caller reports the outco
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/Core/LegacyDirectoryMigration.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/LegacyDirectoryMigration.swift` |
 
 ## Design Decisions
 
@@ -169,7 +169,7 @@ Not applicable: The migration calls no logging API; the caller reports the outco
 | [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
 | [idempotent-operations](agenticdevelopercookbook://compliance/reliability#idempotent-operations) | passed | Reliability |
 
-`separation-of-concerns` passes because the type only moves a directory; when to call it and what the data means stay with the host. `unit-test-coverage` passes because `AgenticToolkitCoreTests/LegacyDirectoryMigrationTests.swift` covers every outcome, placeholder handling, aside-name collisions and rollback. `idempotent-operations` passes because a second run after a move finds only the new directory and reports already migrated.
+`separation-of-concerns` passes because the type only moves a directory; when to call it and what the data means stay with the host. `unit-test-coverage` passes because `AgenticDeveloperHubSDKCoreTests/LegacyDirectoryMigrationTests.swift` covers every outcome, placeholder handling, aside-name collisions and rollback. `idempotent-operations` passes because a second run after a move finds only the new directory and reports already migrated.
 
 ## Change History
 

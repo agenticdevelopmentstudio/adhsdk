@@ -1,7 +1,7 @@
 ---
 id: 0d85c3a1-c754-4d8b-8aab-6565dfee6100
 title: Category Delete Dialog
-domain: agenticdevelopertoolkit://recipes/category-delete-dialog
+domain: adhsdk://recipes/category-delete-dialog
 type: ingredient
 version: 1.1.1
 status: review
@@ -22,8 +22,8 @@ tags:
 - confirmation
 depends-on: []
 related:
-- agenticdevelopertoolkit://recipes/alert-modal
-- agenticdevelopertoolkit://recipes/error-text
+- adhsdk://recipes/alert-modal
+- adhsdk://recipes/error-text
 references: []
 approved-by: ''
 approved-date: ''
@@ -171,11 +171,11 @@ Not applicable: The component does not emit structured logs or debug messages. D
 
 ## Platform Notes
 
-- **React/Web**: `packages/web/packages/ui/src/blocks/category-delete-dialog.tsx`. Wraps `AlertModal` (`agenticdevelopertoolkit://recipes/alert-modal`) with `tone="error"` and `destructive={true}`, which forces the error tone and disables `AlertModal`'s Enter/Escape shortcuts (see **ignores-escape-when-destructive**); the shared `Dialog` primitive sets `disablePointerDismissal` unconditionally, so a backdrop click never dismisses the dialog; only the `×` close affordance reaches `onCancel`, through Base UI's non-Escape dismissal path, whenever `busy` is `false`. The description is rendered as a fragment of block-level `<span>` elements to avoid `<p>` nesting violations inside `DialogDescription`. Errors render through `DialogErrorText` (`agenticdevelopertoolkit://recipes/error-text`), whose truthy guard treats `null`, `undefined`, and `""` alike as "no error." The `useLastPresent` hook retains the most recently supplied non-null `node` for the component's lifetime, which is what makes **retains-node-name-during-transition** and **renders-nothing-before-first-node** true.
+- **React/Web**: `packages/web/packages/ui/src/blocks/category-delete-dialog.tsx`. Wraps `AlertModal` (`adhsdk://recipes/alert-modal`) with `tone="error"` and `destructive={true}`, which forces the error tone and disables `AlertModal`'s Enter/Escape shortcuts (see **ignores-escape-when-destructive**); the shared `Dialog` primitive sets `disablePointerDismissal` unconditionally, so a backdrop click never dismisses the dialog; only the `×` close affordance reaches `onCancel`, through Base UI's non-Escape dismissal path, whenever `busy` is `false`. The description is rendered as a fragment of block-level `<span>` elements to avoid `<p>` nesting violations inside `DialogDescription`. Errors render through `DialogErrorText` (`adhsdk://recipes/error-text`), whose truthy guard treats `null`, `undefined`, and `""` alike as "no error." The `useLastPresent` hook retains the most recently supplied non-null `node` for the component's lifetime, which is what makes **retains-node-name-during-transition** and **renders-nothing-before-first-node** true.
 - **SwiftUI**: Present with `.alert(_:isPresented:presenting:actions:message:)`, using a `Button("Delete", role: .destructive)` and a `Button("Cancel", role: .cancel)` — not `confirmationDialog`, which renders as an action sheet on iOS and fits this multi-paragraph warning poorly. Capture the node into a local `@State` the moment the dialog is presented (e.g. in the action that sets `isPresented = true`), and clear that captured state in the dismissal-completion callback, rather than updating state on a timed delay.
 - **Compose**: Build as a Material `AlertDialog` with `confirmButton` styled as a destructive red button and `dismissButton` as the cancel action. Hoist the retained node into `remember { mutableStateOf(...) }`, updating it only when a non-null node arrives, mirroring `useLastPresent`. Replace both buttons with a busy indicator while busy, matching **disables-actions-while-busy**; the orphaned-subcategory message is conditionally rendered with `if (orphanedNames.isNotEmpty())`.
 - **AppKit / UIKit**: Use `UIAlertController(style: .alert)` for iOS or `NSAlert` for macOS, with a destructive-styled action for Delete. Format the title as `Delete "{name}"?`. Render the description as an `NSAttributedString`/`AttributedString` with bold emphasis limited to the "are not deleted" phrase and the orphaned category names, per **bolds-destructive-emphasis** — no other span is emphasized. Retain the node name in a stored property for the lifetime of the presenting controller, mirroring `useLastPresent`.
-- **WinUI 3**: Implement as a `ContentDialog` with `Title = Delete "{name}"?`, `PrimaryButtonText = "Delete"`, `SecondaryButtonText = "Cancel"`. While `busy` is `true`, replace the button area with a busy `Content` template (e.g. a `ProgressRing`) rather than merely disabling the buttons, mirroring `AlertModal`'s WinUI guidance (`agenticdevelopertoolkit://recipes/alert-modal#platforms/winui-3`) and matching **disables-actions-while-busy**. `PrimaryButtonClick` invokes `onConfirm`; `SecondaryButtonClick` invokes `onCancel`. `ContentDialog.Closing` fires with `Result == ContentDialogResult.None` for both Escape and light-dismiss, and the two cannot be distinguished there; since this dialog is always destructive, call `onCancel()` for that case rather than trying to block Escape alone, and set `args.Cancel = true` whenever `busy` is `true`. This is a WinUI-specific accommodation — light-dismiss has no web equivalent, since web's `Dialog` primitive disables backdrop dismissal outright (see **calls-oncancel-on-close-affordance**). Retain the node name in a local field for the duration of the dismiss animation, similar to `useLastPresent`.
+- **WinUI 3**: Implement as a `ContentDialog` with `Title = Delete "{name}"?`, `PrimaryButtonText = "Delete"`, `SecondaryButtonText = "Cancel"`. While `busy` is `true`, replace the button area with a busy `Content` template (e.g. a `ProgressRing`) rather than merely disabling the buttons, mirroring `AlertModal`'s WinUI guidance (`adhsdk://recipes/alert-modal#platforms/winui-3`) and matching **disables-actions-while-busy**. `PrimaryButtonClick` invokes `onConfirm`; `SecondaryButtonClick` invokes `onCancel`. `ContentDialog.Closing` fires with `Result == ContentDialogResult.None` for both Escape and light-dismiss, and the two cannot be distinguished there; since this dialog is always destructive, call `onCancel()` for that case rather than trying to block Escape alone, and set `args.Cancel = true` whenever `busy` is `true`. This is a WinUI-specific accommodation — light-dismiss has no web equivalent, since web's `Dialog` primitive disables backdrop dismissal outright (see **calls-oncancel-on-close-affordance**). Retain the node name in a local field for the duration of the dismiss animation, similar to `useLastPresent`.
 
 ## Design Decisions
 

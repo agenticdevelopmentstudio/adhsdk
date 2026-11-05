@@ -1,7 +1,7 @@
 ---
 id: fcd5062f-05c2-4877-adfb-9b77c75c6076
 title: Editable List
-domain: agenticdevelopertoolkit://recipes/editable-list
+domain: adhsdk://recipes/editable-list
 type: ingredient
 version: 1.1.1
 status: review
@@ -21,13 +21,13 @@ tags:
 - table
 - data-grid
 depends-on:
-- agenticdevelopertoolkit://recipes/data-table
-- agenticdevelopertoolkit://recipes/resizable-split
-- agenticdevelopertoolkit://recipes/input
-- agenticdevelopertoolkit://recipes/button
-- agenticdevelopertoolkit://recipes/alert
-- agenticdevelopertoolkit://recipes/button-bar
-- agenticdevelopertoolkit://recipes/facet-menu
+- adhsdk://recipes/data-table
+- adhsdk://recipes/resizable-split
+- adhsdk://recipes/input
+- adhsdk://recipes/button
+- adhsdk://recipes/alert
+- adhsdk://recipes/button-bar
+- adhsdk://recipes/facet-menu
 related: []
 references: []
 approved-by: ''
@@ -307,7 +307,7 @@ This component does not emit analytics itself; instrumentation is the responsibi
 
 ## Logging
 
-Subsystem: `agenticdevelopertoolkit.ui.blocks` | Category: `EditableList`
+Subsystem: `adhsdk.ui.blocks` | Category: `EditableList`
 
 | Event | Level | Message |
 |-------|-------|---------|

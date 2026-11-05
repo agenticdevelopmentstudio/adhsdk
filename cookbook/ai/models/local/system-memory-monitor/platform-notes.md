@@ -1,6 +1,6 @@
 
 - **SwiftUI**: The source is
-  `packages/apple/AgenticToolkit/AIPluginKit/SystemMemoryMonitor.swift`,
+  `packages/apple/AgenticDeveloperHubSDK/AIPluginKit/SystemMemoryMonitor.swift`,
   alongside the `MemoryPressureLevel` enum it depends on
   (`ModelFitPolicy.swift`) and its consumer `LocalInferenceGuard.swift`. It
   uses `ProcessInfo.processInfo.physicalMemory` for RAM,

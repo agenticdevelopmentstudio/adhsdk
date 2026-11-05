@@ -2,9 +2,9 @@
 import { render, screen, fireEvent, cleanup, waitFor } from '@testing-library/react'
 import { describe, it, expect, afterEach, vi } from 'vitest'
 import { ApplicationClientAuthSection, useApplicationClientAuth } from './ApplicationClientAuthSection'
-import { clientAuthApi, type ApplicationClientAuth } from '@agentic-toolkit/data/ecosystem-config'
+import { clientAuthApi, type ApplicationClientAuth } from '@adh-sdk/data/ecosystem-config'
 
-vi.mock('@agentic-toolkit/data/ecosystem-config', () => ({
+vi.mock('@adh-sdk/data/ecosystem-config', () => ({
   clientAuthApi: {
     application: vi.fn(),
     updateApplication: vi.fn(),

@@ -1,7 +1,7 @@
 ---
 id: B8C3DBF6-F3EE-4346-AC87-542A4FBF7917
 title: "Currency Code"
-domain: adtoolkit://cookbook/foundation/money/currency-code
+domain: adhsdk://cookbook/foundation/money/currency-code
 type: ingredient
 version: 1.0.0
 status: review
@@ -22,7 +22,7 @@ tags:
   - validation
 depends-on: []
 related:
-  - adtoolkit://cookbook/foundation/money
+  - adhsdk://cookbook/foundation/money
 references: []
 approved-by: ""
 approved-date: ""
@@ -120,7 +120,7 @@ Not applicable: The currency code rule calls no logging API.
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/Core/Money/CurrencyCode.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Money/CurrencyCode.swift` |
 
 ## Design Decisions
 
@@ -135,7 +135,7 @@ Not applicable: The currency code rule calls no logging API.
 | [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
 | [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
 
-`separation-of-concerns` passes because the function only normalizes the shape of a code; formatting and arithmetic are elsewhere. `unit-test-coverage` passes because `CurrencyCodeTests` in `AgenticToolkitCoreTests/MoneyTotalsTests.swift` asserts the trim-and-upper-case path and rejection of `U5D`, `US`, `EURO` and the empty string.
+`separation-of-concerns` passes because the function only normalizes the shape of a code; formatting and arithmetic are elsewhere. `unit-test-coverage` passes because `CurrencyCodeTests` in `AgenticDeveloperHubSDKCoreTests/MoneyTotalsTests.swift` asserts the trim-and-upper-case path and rejection of `U5D`, `US`, `EURO` and the empty string.
 
 ## Change History
 

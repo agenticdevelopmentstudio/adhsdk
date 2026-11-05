@@ -8,11 +8,11 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@agenticdevelopertoolkit/ui/components/dialog";
-import { Input } from "@agenticdevelopertoolkit/ui/components/input";
-import { Alert } from "@agenticdevelopertoolkit/ui/components/alert";
-import { Button } from "@agenticdevelopertoolkit/ui/components/button";
-import type { MaskedProviderConfig, ProviderCatalogEntry } from "@agentic-toolkit/data/integrations";
+} from "@adh-sdk/ui/components/dialog";
+import { Input } from "@adh-sdk/ui/components/input";
+import { Alert } from "@adh-sdk/ui/components/alert";
+import { Button } from "@adh-sdk/ui/components/button";
+import type { MaskedProviderConfig, ProviderCatalogEntry } from "@adh-sdk/data/integrations";
 import { intBlank, type IntegrationInput } from "./IntegrationDetail";
 import {
   IntegrationDetailBody,

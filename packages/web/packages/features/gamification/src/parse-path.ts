@@ -1,4 +1,4 @@
-import { parseEcosystemsPath, type EcosystemsPathSelection } from "@agentic-toolkit/ecosystems/parse";
+import { parseEcosystemsPath, type EcosystemsPathSelection } from "@adh-sdk/ecosystems/parse";
 
 /**
  * The gamification site's URL grammar, below the workspace segment:
@@ -10,9 +10,9 @@ import { parseEcosystemsPath, type EcosystemsPathSelection } from "@agentic-tool
  * second copy of "first segment is the entity, second is the topic" is a rule that can drift
  * from the one the feature actually navigates by.
  *
- * SERVER-SAFE, and its own entry (`@agentic-toolkit/gamification/parse`) for that reason: the
+ * SERVER-SAFE, and its own entry (`@adh-sdk/gamification/parse`) for that reason: the
  * package barrel's dist carries "use client", so an RSC importing the parser from there would
- * throw on a render-only client reference. Mirrors @agentic-toolkit/ecosystems/parse.
+ * throw on a render-only client reference. Mirrors @adh-sdk/ecosystems/parse.
  */
 export type GamificationPathSelection = EcosystemsPathSelection;
 

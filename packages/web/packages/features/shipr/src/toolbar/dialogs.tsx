@@ -2,23 +2,23 @@
 
 import * as React from 'react';
 
-import { AlertModal } from '@agenticdevelopertoolkit/ui/components/alert-modal';
-import { Button } from '@agenticdevelopertoolkit/ui/components/button';
-import { Checkbox } from '@agenticdevelopertoolkit/ui/components/checkbox';
+import { AlertModal } from '@adh-sdk/ui/components/alert-modal';
+import { Button } from '@adh-sdk/ui/components/button';
+import { Checkbox } from '@adh-sdk/ui/components/checkbox';
 import {
   Dialog,
   DialogContent,
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@agenticdevelopertoolkit/ui/components/dialog';
+} from '@adh-sdk/ui/components/dialog';
 import {
   DialogErrorText,
   ErrorText,
-} from '@agenticdevelopertoolkit/ui/components/error-text';
-import { Input } from '@agenticdevelopertoolkit/ui/components/input';
-import { Label } from '@agenticdevelopertoolkit/ui/components/label';
-import { Select } from '@agenticdevelopertoolkit/ui/components/select';
+} from '@adh-sdk/ui/components/error-text';
+import { Input } from '@adh-sdk/ui/components/input';
+import { Label } from '@adh-sdk/ui/components/label';
+import { Select } from '@adh-sdk/ui/components/select';
 
 import { flattenGroups, type NodeRef } from '../tree/levels';
 import {

@@ -37,7 +37,7 @@
   (**levels-replace-wholesale**). Every method issues its request
   through `authedJson` and never wraps it in a `try`/`catch`
   (**error-propagation-unmodified**, **no-response-caching**);
-  `authedJson`/`authedFetch` (in `@agentic-toolkit/auth/client.ts`,
+  `authedJson`/`authedFetch` (in `@adh-sdk/auth/client.ts`,
   outside these two given files) attach the bearer access token, convert
   a non-ok response to `AuthHttpError`, and perform the
   one-refresh-and-retry described in Edge Cases. `listEventTypes`

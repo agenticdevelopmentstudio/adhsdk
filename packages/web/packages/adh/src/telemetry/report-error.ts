@@ -2,7 +2,7 @@
 
 // Posthog/Sentry-FREE leaf module (mirrors retry.ts): any module — including a host's
 // low-level auth client — imports `captureException` via
-// `@agentic-toolkit/adh/telemetry/report-error` to report a HANDLED error to our error pipeline (GlitchTip) WITHOUT pulling
+// `@adh-sdk/adh/telemetry/report-error` to report a HANDLED error to our error pipeline (GlitchTip) WITHOUT pulling
 // @sentry/react into its own module graph.
 //
 // The actual reporter is registered by TelemetryProvider once the Sentry SDK has

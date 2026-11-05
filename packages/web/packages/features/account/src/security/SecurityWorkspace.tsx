@@ -3,35 +3,35 @@
 import { useMemo, useState, type ReactElement, type ReactNode } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Smartphone } from "lucide-react";
-import { Button } from "@agenticdevelopertoolkit/ui/components/button";
-import { Card, CardContent } from "@agenticdevelopertoolkit/ui/components/card";
-import { Input } from "@agenticdevelopertoolkit/ui/components/input";
-import { Label } from "@agenticdevelopertoolkit/ui/components/label";
-import { Badge } from "@agenticdevelopertoolkit/ui/components/badge";
+import { Button } from "@adh-sdk/ui/components/button";
+import { Card, CardContent } from "@adh-sdk/ui/components/card";
+import { Input } from "@adh-sdk/ui/components/input";
+import { Label } from "@adh-sdk/ui/components/label";
+import { Badge } from "@adh-sdk/ui/components/badge";
 import {
   Dialog,
   DialogContent,
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@agenticdevelopertoolkit/ui/components/dialog";
-import { AlertModal } from "@agenticdevelopertoolkit/ui/components/alert-modal";
-import { Select } from "@agenticdevelopertoolkit/ui/components/select";
-import { Spinner } from "@agenticdevelopertoolkit/ui/components/spinner";
-import { DialogErrorText, ErrorText } from "@agenticdevelopertoolkit/ui/components/error-text";
+} from "@adh-sdk/ui/components/dialog";
+import { AlertModal } from "@adh-sdk/ui/components/alert-modal";
+import { Select } from "@adh-sdk/ui/components/select";
+import { Spinner } from "@adh-sdk/ui/components/spinner";
+import { DialogErrorText, ErrorText } from "@adh-sdk/ui/components/error-text";
 import {
   EditableList,
   Field,
   useEditableList,
   type EditableListColumn,
-} from "@agenticdevelopertoolkit/ui/blocks";
-import { formatDate } from "@agenticdevelopertoolkit/ui/lib/timestamps";
+} from "@adh-sdk/ui/blocks";
+import { formatDate } from "@adh-sdk/ui/lib/timestamps";
 import {
   DetailSection,
   ListBarActions,
   SettingsBody,
   useBulkRemove,
-} from "@agentic-toolkit/resource";
+} from "@adh-sdk/resource";
 import {
   confirmTotp,
   enrollTotp,
@@ -45,8 +45,8 @@ import {
   type MfaStatus,
   type PreferredMethod,
   type WebauthnCredential,
-} from "@agentic-toolkit/auth";
-import { extractErrorMessage } from "@agentic-toolkit/auth/client";
+} from "@adh-sdk/auth";
+import { extractErrorMessage } from "@adh-sdk/auth/client";
 
 const MFA_KEY = ["account", "mfa"] as const;
 const WEBAUTHN_KEY = ["account", "webauthn"] as const;

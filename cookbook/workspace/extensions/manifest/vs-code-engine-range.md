@@ -1,7 +1,7 @@
 ---
 id: fea35fb1-9eeb-4647-b185-902c1d1cb988
 title: "VSCodeEngineRange"
-domain: adtoolkit://cookbook/workspace/extensions/manifest/vs-code-engine-range
+domain: adhsdk://cookbook/workspace/extensions/manifest/vs-code-engine-range
 type: ingredient
 version: 1.0.3
 status: review
@@ -22,15 +22,15 @@ tags:
   - version-range
 depends-on: []
 related:
-  - adtoolkit://cookbook/workspace/extensions/manifest/activation-event-matcher
+  - adhsdk://cookbook/workspace/extensions/manifest/activation-event-matcher
 references:
-  - packages/apple/AgenticToolkit/Core/Extensions/VSCodeEngineRange.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Core/SemanticVersion.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Tests/AgenticToolkitCoreTests/Extensions/VSCodeEngineRangeTests.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Core/Extensions/ActivationEventMatcher.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Core/Extensions/ExtensionRegistry.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Core/Extensions/OpenVSXCatalog.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Core/Extensions/VSIXInstaller.swift (agenticdevelopertoolkit)
+  - packages/apple/AgenticDeveloperHubSDK/Core/Extensions/VSCodeEngineRange.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Core/SemanticVersion.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKCoreTests/Extensions/VSCodeEngineRangeTests.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Core/Extensions/ActivationEventMatcher.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Core/Extensions/ExtensionRegistry.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Core/Extensions/OpenVSXCatalog.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Core/Extensions/VSIXInstaller.swift (adhsdk)
 approved-by: ""
 approved-date: ""
 ---
@@ -39,7 +39,7 @@ approved-date: ""
 
 ## Overview
 
-`VSCodeEngineRange` is `AgenticToolkitCore`'s parser and evaluator for a VS
+`VSCodeEngineRange` is `AgenticDeveloperHubSDKCore`'s parser and evaluator for a VS
 Code extension manifest's `engines.vscode` field. Per its own doc comment it
 is a deliberate port — not an interpretation — of VS Code's own
 `extensionValidator.ts` (`isValidVersionStr`, `parseVersion`,
@@ -64,7 +64,7 @@ version claim at all (`*`, or an all-`x` range) — a distinction
 read as a floor of 0.0.0.
 
 Four production call sites consume it today, all in
-`AgenticToolkitCore`: `ActivationEventMatcher.init(manifest:)` reads
+`AgenticDeveloperHubSDKCore`: `ActivationEventMatcher.init(manifest:)` reads
 `minimumVersion` and `isUnconstrained` to decide whether a manifest's engine
 grants VS Code 1.74's implicit-activation-from-`contributes.commands` rule;
 `ExtensionRegistry.load(from:)` (`ExtensionRegistry.swift`) and
@@ -359,7 +359,7 @@ states).
   it rather than relied upon implicitly.
 - **AppKit / UIKit**: identical to the SwiftUI note — the component depends
   on neither AppKit nor UIKit, so a macOS host consumes the same
-  `AgenticToolkitCore` type directly with no translation.
+  `AgenticDeveloperHubSDKCore` type directly with no translation.
 - **WinUI 3**: there is no existing .NET or Windows App SDK type that
   implements VS Code's `engines.vscode` grammar, so it needs a direct C#
   port rather than an existing library. Port `VSCodeEngineRange` and
@@ -384,7 +384,7 @@ states).
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/Core/Extensions/VSCodeEngineRange.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Extensions/VSCodeEngineRange.swift` |
 
 ## Design Decisions
 

@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""Assert `@agentic-toolkit/adh`'s copied chat contract still matches its source.
+"""Assert `@adh-sdk/adh`'s copied chat contract still matches its source.
 
 `packages/adh/src/persona-chat/chat-types.ts` is a VERBATIM copy of type declarations
-that live in `@agenticdevelopertoolkit/chat`. Its own header explains why it is a copy
-rather than a dependency: chat belongs to the persona toolkit, which adh keeps out of its
+that live in `@adh-sdk/chat`. Its own header explains why it is a copy
+rather than a dependency: chat belongs to the persona layer, which adh keeps out of its
 shipped graph, and even a type-only import would resurface in adh's emitted `.d.ts`.
 Both uses (`persona-chat/index.ts`,
 `visitor-chat/sse.ts`) are TYPE-ONLY, so the declarations erase at build time and a
@@ -66,7 +66,7 @@ def main() -> int:
             print(f"error: not found: {p}", file=sys.stderr)
         if any(p != COPY for p in missing):
             print(
-                "\nThe agenticdevelopertoolkit submodule is probably not checked out.\n"
+                "\nThe adhsdk submodule is probably not checked out.\n"
                 "Run `./install.sh` (or `git submodule update --init --recursive`) first.",
                 file=sys.stderr,
             )
@@ -105,7 +105,7 @@ def main() -> int:
             print(f"  {name}")
         print(
             "\nchat-types.ts is a copy, not a definition site. Declare these in\n"
-            "@agenticdevelopertoolkit/chat and copy them here, or drop them."
+            "@adh-sdk/chat and copy them here, or drop them."
         )
     if drifted:
         print(f"{' DRIFTED FROM SOURCE ':-^72}")
@@ -120,7 +120,7 @@ def main() -> int:
 
     print(
         f"verify_chat_types_copy: OK — {len(copied)} copied declaration(s) match "
-        f"@agenticdevelopertoolkit/chat."
+        f"@adh-sdk/chat."
     )
     return 0
 

@@ -25,7 +25,7 @@ A checklist to review against when writing or reviewing toolkit code. Invoke thi
 - [ ] **No silent failure.** If an operation can fail, it throws or returns an error; it does not swallow and return a default.
 - [ ] **Deprecated API avoided.** No warnings about deprecated NSTableView styles, etc.
 
-## 3. Agentic-Toolkit Code
+## 3. Agentic Developer Hub SDK Code
 
 - [ ] **Lives in the right module.** `Core` for Foundation-only cross-platform utilities; `CoreUI` for cross-cutting AppKit UI (windowing, shared views); a feature target (`LoggingWindow`, `ChatWindow`, etc.) for standalone features; `Scripting`/`AIProvider` for Foundation-only services.
 - [ ] **No app-specific strings or identifiers.** Logger subsystems use toolkit-owned namespaces (`"CoreUI"`, `"TerminalWindow"`, not `"com.mikefullerton.AgenticPluginTester"`). File paths are parameterized, not hardcoded.
@@ -34,8 +34,8 @@ A checklist to review against when writing or reviewing toolkit code. Invoke thi
 - [ ] **Value types for data crossing the boundary.** Clients pass in plain structs (`WindowActivationTarget`, `ChatBackendMessage`, `WindowSpec`) — not their domain objects.
 - [ ] **Generic over client types where appropriate.** `SettingsView<Topic>`, `SettingsWindowController<Topic>` — let clients bring their own type without casting.
 - [ ] **Documentation comments include usage examples** for anything non-obvious (registration flow, window lifecycle, stream lifetimes).
-- [ ] **Tests exist.** Public types have at least smoke tests colocated under their feature's `Tests/` subdirectory in `packages/apple/AgenticToolkit/`. Pure-math and value types get unit tests; UI types get construction tests.
-- [ ] **Builds clean via `xcodebuild` on the `AgenticToolkitMacOS` scheme** (see `.claude/CLAUDE.md` for the full command). No errors, no new warnings.
+- [ ] **Tests exist.** Public types have at least smoke tests colocated under their feature's `Tests/` subdirectory in `packages/apple/AgenticDeveloperHubSDK/`. Pure-math and value types get unit tests; UI types get construction tests.
+- [ ] **Builds clean via `xcodebuild` on the `AgenticDeveloperHubSDKMacOS` scheme** (see `.claude/CLAUDE.md` for the full command). No errors, no new warnings.
 
 ## 4. Client Code
 

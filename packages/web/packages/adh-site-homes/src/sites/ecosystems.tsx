@@ -1,15 +1,15 @@
 "use client";
 
-import { defineSiteHome } from "@agentic-toolkit/adh/home";
-import { ToolkitQueryProvider } from "@agentic-toolkit/data/query";
-import { EcosystemsFeature, IN_PACKAGE_TOPICS } from "@agentic-toolkit/ecosystems";
+import { defineSiteHome } from "@adh-sdk/adh/home";
+import { ToolkitQueryProvider } from "@adh-sdk/data/query";
+import { EcosystemsFeature, IN_PACKAGE_TOPICS } from "@adh-sdk/ecosystems";
 // The same grammar module the hub parses with, so the two hosts can't drift into reading the
 // same URL differently.
-import { parseEcosystemsPath } from "@agentic-toolkit/ecosystems/parse";
+import { parseEcosystemsPath } from "@adh-sdk/ecosystems/parse";
 
 /**
  * The Ecosystems feature — this site's gated product surface
- * (adh/docs/platform/feature-platform-phase2.md): the SAME @agentic-toolkit/ecosystems explorer the
+ * (adh/docs/platform/feature-platform-phase2.md): the SAME @adh-sdk/ecosystems explorer the
  * hub's /<slug>/ecosystems route renders, host-composed with this site's (deliberately smaller)
  * topic set, now rooted at the workspace rather than at /home.
  *
@@ -28,7 +28,7 @@ import { parseEcosystemsPath } from "@agentic-toolkit/ecosystems/parse";
  * A client module regardless of the model's own requirement: the injected renderers are functions,
  * which an RSC could never pass across the serialization boundary. EcosystemsFeature's
  * react-query hooks read the toolkit's OWN query runtime — ToolkitQueryProvider from
- * @agentic-toolkit/data/query (the same physical react-query module as the hooks; a
+ * @adh-sdk/data/query (the same physical react-query module as the hooks; a
  * host-constructed QueryClientProvider can never be, see that module's doc) — mounted here since
  * this site has no other react-query consumer.
  *

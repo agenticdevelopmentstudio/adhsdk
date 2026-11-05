@@ -1,7 +1,7 @@
 ---
 id: 990362d5-9c3a-4263-828f-a174b2dd2134
 title: "Monitor Endpoint Kinds"
-domain: adtoolkit://cookbook/status/service/monitor/endpoint-kinds
+domain: adhsdk://cookbook/status/service/monitor/endpoint-kinds
 type: ingredient
 version: 1.1.0
 status: review
@@ -23,9 +23,9 @@ tags:
 depends-on: []
 related: []
 references:
-  - packages/web/packages/status-server/src/monitor/endpoint-kinds.ts (agenticdevelopertoolkit)
-  - packages/web/packages/deploy-platform/src/engine/classify.ts (agenticdevelopertoolkit)
-  - packages/web/packages/deploy-platform/src/engine/classify.test.ts (agenticdevelopertoolkit)
+  - packages/web/packages/status-server/src/monitor/endpoint-kinds.ts (adhsdk)
+  - packages/web/packages/deploy-platform/src/engine/classify.ts (adhsdk)
+  - packages/web/packages/deploy-platform/src/engine/classify.test.ts (adhsdk)
 approved-by: ""
 approved-date: ""
 ---
@@ -154,7 +154,7 @@ This module makes no logging call of any kind.
 
 ## Design Decisions
 
-- **Decision**: re-export `NON_DEPLOY_KINDS` from `@agentic-toolkit/deploy-platform/engine` rather than declaring a separate literal set in this file.
+- **Decision**: re-export `NON_DEPLOY_KINDS` from `@adh-sdk/deploy-platform/engine` rather than declaring a separate literal set in this file.
   **Rationale**: stated directly in the source comment — "they used to be three separate literal Sets, here, in the browser, and in the engine" and could "come to disagree" over which kinds are non-deploy-backed, most concretely `dns`. Re-exporting one shared object removes the possibility of the three call sites drifting apart on that specific question.
   **Approved**: pending
 - **Decision**: derive `EndpointKind` from `ENDPOINT_KINDS` via `(typeof ENDPOINT_KINDS)[number]` instead of a hand-written union type declared independently of the array.

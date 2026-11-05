@@ -1,7 +1,7 @@
 ---
 id: a602608c-c061-44b6-a7ab-829e798d6b0c
 title: "AI Plugin Language Model Provider"
-domain: adtoolkit://cookbook/workspace/extensions/vscode-api/language-models/ai-plugin-language-model-provider
+domain: adhsdk://cookbook/workspace/extensions/vscode-api/language-models/ai-plugin-language-model-provider
 type: ingredient
 version: 1.1.1
 status: review
@@ -22,30 +22,30 @@ tags:
   - language-model
   - streaming
 depends-on:
-  - adtoolkit://cookbook/ai/providers/provider-configuration
-  - adtoolkit://cookbook/ai/plugins/plugin-manager
-  - adtoolkit://cookbook/ai/plugins/plugin-descriptor
-  - adtoolkit://cookbook/ai/chat/chat-context
-  - adtoolkit://cookbook/ai/models/model-catalog
-  - adtoolkit://cookbook/ai/plugins/plugin-transport
-  - adtoolkit://cookbook/ai/plugins/stream-event
-  - adtoolkit://cookbook/ai/plugins/ai-plugin
+  - adhsdk://cookbook/ai/providers/provider-configuration
+  - adhsdk://cookbook/ai/plugins/plugin-manager
+  - adhsdk://cookbook/ai/plugins/plugin-descriptor
+  - adhsdk://cookbook/ai/chat/chat-context
+  - adhsdk://cookbook/ai/models/model-catalog
+  - adhsdk://cookbook/ai/plugins/plugin-transport
+  - adhsdk://cookbook/ai/plugins/stream-event
+  - adhsdk://cookbook/ai/plugins/ai-plugin
 related: []
 references:
-  - packages/apple/AgenticToolkit/macOS/Features/Extensions/VSCodeAPI/AIPluginLanguageModelProvider.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/macOS/Features/Extensions/VSCodeAPI/MainThreadLanguageModels.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Tests/AgenticToolkitMacOSTests/Extensions/AIPluginLanguageModelProviderTests.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/macOS/Features/AIPlugins/AIProviderResolver.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/macOS/Features/AIPlugins/AIProviderConfiguration.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/AIPluginKit/AIPluginManager.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/AIPluginKit/AIPluginDescriptor.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/AIPluginKit/AIChatContext.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/AIPluginKit/AIStreamEvent.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/AIPluginKit/PluginTransport.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/AIPluginKit/AIModelCatalog.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Core/SettingStorage/UserSetting.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Core/Loggable.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/project.yml (agenticdevelopertoolkit)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/AIPluginLanguageModelProvider.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/MainThreadLanguageModels.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKMacOSTests/Extensions/AIPluginLanguageModelProviderTests.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/Features/AIPlugins/AIProviderResolver.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/Features/AIPlugins/AIProviderConfiguration.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/AIPluginKit/AIPluginManager.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/AIPluginKit/AIPluginDescriptor.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/AIPluginKit/AIChatContext.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/AIPluginKit/AIStreamEvent.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/AIPluginKit/PluginTransport.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/AIPluginKit/AIModelCatalog.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Core/SettingStorage/UserSetting.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Core/Loggable.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/project.yml (adhsdk)
 approved-by: ""
 approved-date: ""
 ---
@@ -334,8 +334,8 @@ No other event in this file is logged: neither the unknown-model error nor the p
 
 ## Platform Notes
 
-- **SwiftUI**: not applicable to this file — `AIPluginLanguageModelProvider.swift` imports only `Foundation`, `OSLog`, `AgenticToolkitCore`, and `AIPluginKit`, with no SwiftUI dependency; a SwiftUI-based LLM Providers settings surface would call `availableChatModels`/`streamResponse` unchanged, the same relationship the sibling `AIProviderConfiguration`/`AIPluginManager` recipes describe for these same dependencies.
-- **AppKit / UIKit**: this is the source. `packages/apple/AgenticToolkit/macOS/Features/Extensions/VSCodeAPI/AIPluginLanguageModelProvider.swift` is part of the `AgenticToolkitMacOS` framework target, which `project.yml` declares `platform: macOS` only — no iOS target packages this file. It is `@MainActor`-isolated per its class declaration (satisfying "thread-confined access" above), and its only consumer among the given sources is `MainThreadLanguageModels` (declaring the `ExtensionLanguageModelProviding` protocol this type conforms to, in the same `Extensions/VSCodeAPI` folder), itself also `@MainActor`. `ProviderError` is this type's own error enum with cases `unknownModel(String)` and `pluginUnavailable(String)`. The "plugin's request-configuration bag" of **request-model-override** is `AIPluginConfig`; the "chat context" is `AIChatContext`; the "response-part stream" is `ExtensionLanguageModelResponsePart`. The justification/extensionIdentifier privacy tagging of **justification-privacy** is OSLog's `privacy: .private`/`privacy: .public` string-interpolation annotations, applied at the `Self.logger.info(...)` call site.
+- **SwiftUI**: not applicable to this file — `AIPluginLanguageModelProvider.swift` imports only `Foundation`, `OSLog`, `AgenticDeveloperHubSDKCore`, and `AIPluginKit`, with no SwiftUI dependency; a SwiftUI-based LLM Providers settings surface would call `availableChatModels`/`streamResponse` unchanged, the same relationship the sibling `AIProviderConfiguration`/`AIPluginManager` recipes describe for these same dependencies.
+- **AppKit / UIKit**: this is the source. `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/AIPluginLanguageModelProvider.swift` is part of the `AgenticDeveloperHubSDKMacOS` framework target, which `project.yml` declares `platform: macOS` only — no iOS target packages this file. It is `@MainActor`-isolated per its class declaration (satisfying "thread-confined access" above), and its only consumer among the given sources is `MainThreadLanguageModels` (declaring the `ExtensionLanguageModelProviding` protocol this type conforms to, in the same `Extensions/VSCodeAPI` folder), itself also `@MainActor`. `ProviderError` is this type's own error enum with cases `unknownModel(String)` and `pluginUnavailable(String)`. The "plugin's request-configuration bag" of **request-model-override** is `AIPluginConfig`; the "chat context" is `AIChatContext`; the "response-part stream" is `ExtensionLanguageModelResponsePart`. The justification/extensionIdentifier privacy tagging of **justification-privacy** is OSLog's `privacy: .private`/`privacy: .public` string-interpolation annotations, applied at the `Self.logger.info(...)` call site.
 - **Compose**: model this as a Kotlin `class AIPluginLanguageModelProvider(private val pluginManager: AIPluginManager) : ExtensionLanguageModelProviding` confined to the main dispatcher; `availableChatModels` becomes a computed property recomputed from whatever `StateFlow`/settings store mirrors the saved provider-configuration list, and `streamResponse` becomes a `suspend fun streamResponse(...): Flow<ExtensionLanguageModelResponsePart>` built with `callbackFlow`, whose `awaitClose` block plays the role of the stream's termination handler and cancels the underlying transport the same way. `ProviderError` becomes a `sealed class` with the same two cases (`UnknownModel(id: String)`, `PluginUnavailable(identifier: String)`).
 - **React/Web**: model as a module exposing `availableChatModels(): LanguageModelChatDescriptor[]` and `async function* streamResponse(...)` — an async generator in place of an async throwing stream — where the consumer's early `return`/`break` (which triggers the generator's `finally` block) is the cancellation-propagation equivalent of the stream's termination handler. `ProviderError` becomes a custom `Error` subclass or discriminated union with the same two variants, and the settings read becomes whatever store backs the extension host's own provider-configuration list in that runtime.
 - **WinUI 3**: model this provider as a class implementing an `IExtensionLanguageModelProviding` interface: `IReadOnlyList<LanguageModelChatDescriptor> AvailableChatModels { get; }`, `event Action? AvailableChatModelsChanged`, and `IAsyncEnumerable<ExtensionLanguageModelResponsePart> StreamResponseAsync(LanguageModelChatDescriptor model, IReadOnlyList<ExtensionLanguageModelMessage> messages, string? justification, string extensionIdentifier, [EnumeratorCancellation] CancellationToken cancellationToken = default)`, where a cancelled `CancellationToken` plays the role of the stream's termination handler and must propagate into the HttpClient call or process the same way. `ProviderError` becomes two custom `Exception` subclasses (`UnknownModelException`, `PluginUnavailableException`), since C# has no error enum with associated values. `HttpClient` and `System.Text.Json.JsonSerializer` are the .NET equivalents of the transport/decoding machinery one layer down in the plugin transport, which this type itself never calls directly. The settings read becomes an `ObservableCollection<AIProviderConfiguration>` or `INotifyPropertyChanged`-backed store, with its `CollectionChanged` event replacing the settings observer's subscription to raise `AvailableChatModelsChanged`.
@@ -344,7 +344,7 @@ No other event in this file is logged: neither the unknown-model error nor the p
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/macOS/Features/Extensions/VSCodeAPI/AIPluginLanguageModelProvider.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/AIPluginLanguageModelProvider.swift` |
 
 ## Design Decisions
 

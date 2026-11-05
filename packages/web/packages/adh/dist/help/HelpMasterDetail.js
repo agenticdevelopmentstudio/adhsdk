@@ -5,7 +5,7 @@
 // src/help/HelpMasterDetail.tsx
 import { useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { HierarchicalDetailView } from "@agenticdevelopertoolkit/ui/blocks";
+import { HierarchicalDetailView } from "@adh-sdk/ui/blocks";
 
 // src/help/topic-icons.tsx
 import { Braces, FileText, Info, LayoutGrid, Plug } from "lucide-react";

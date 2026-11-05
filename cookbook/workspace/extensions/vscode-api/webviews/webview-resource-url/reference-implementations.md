@@ -1,5 +1,5 @@
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/Core/Extensions/WebviewResourceURL.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Extensions/WebviewResourceURL.swift` |
 

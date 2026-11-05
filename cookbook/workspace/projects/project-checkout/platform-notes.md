@@ -1,9 +1,9 @@
 
 - **SwiftUI**: The source is
-  `packages/apple/AgenticToolkit/macOS/Features/Projects/ProjectCheckout.swift`,
+  `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectCheckout.swift`,
   using only Foundation's `URL` (`resolvingSymlinksInPath()`,
   `lastPathComponent`, `path`) and the sibling type `GitWorktree` from
-  `packages/apple/AgenticToolkit/Core/Git/GitWorktree.swift`; nothing here is
+  `packages/apple/AgenticDeveloperHubSDK/Core/Git/GitWorktree.swift`; nothing here is
   SwiftUI-specific — the type has no view and no observable state, and is
   used elsewhere purely as a `Hashable`/`Sendable` identity for tab groups.
   The `Sendable` conformance, together with every stored property being

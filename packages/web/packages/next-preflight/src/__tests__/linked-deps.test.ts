@@ -36,24 +36,24 @@ afterEach(() => {
 describe("assertLinkedDepsInstalled", () => {
   it("throws, naming the edge and the install command, when a linked package's dependency is absent", () => {
     const pkg = join(root, "toolkit", "adh");
-    manifest(pkg, { name: "@agentic-toolkit/adh", dependencies: { "@agentic-toolkit/account": "workspace:*" } });
-    manifest(site, { dependencies: { "@agentic-toolkit/adh": `link:${pkg}` } });
+    manifest(pkg, { name: "@adh-sdk/adh", dependencies: { "@adh-sdk/account": "workspace:*" } });
+    manifest(site, { dependencies: { "@adh-sdk/adh": `link:${pkg}` } });
 
     // The failure this exists for: the toolkit package is checked out, declared and in
     // the lockfile — its workspace was simply never re-installed after it gained the
-    // dep — and webpack reports it as `Can't resolve '@agentic-toolkit/account/...'`,
+    // dep — and webpack reports it as `Can't resolve '@adh-sdk/account/...'`,
     // which reads as a broken toolkit. The message has to name the un-run install.
     expect(() => assertLinkedDepsInstalled(site)).toThrowError(
-      /@agentic-toolkit\/adh -> @agentic-toolkit\/account/,
+      /@adh-sdk\/adh -> @adh-sdk\/account/,
     );
     expect(() => assertLinkedDepsInstalled(site)).toThrowError(/build:shared/);
   });
 
   it("passes once the linked package's dependency is installed where it can see it", () => {
     const pkg = join(root, "toolkit", "adh");
-    manifest(pkg, { name: "@agentic-toolkit/adh", dependencies: { "@agentic-toolkit/account": "workspace:*" } });
-    install(pkg, "@agentic-toolkit/account");
-    manifest(site, { dependencies: { "@agentic-toolkit/adh": `link:${pkg}` } });
+    manifest(pkg, { name: "@adh-sdk/adh", dependencies: { "@adh-sdk/account": "workspace:*" } });
+    install(pkg, "@adh-sdk/account");
+    manifest(site, { dependencies: { "@adh-sdk/adh": `link:${pkg}` } });
 
     expect(() => assertLinkedDepsInstalled(site)).not.toThrow();
   });
@@ -67,29 +67,29 @@ describe("assertLinkedDepsInstalled", () => {
   it("checks peerDependencies as well as dependencies", () => {
     const pkg = join(root, "toolkit", "registry");
     manifest(pkg, {
-      name: "@agentic-toolkit/registry",
-      peerDependencies: { "@agenticdevelopertoolkit/registry-types": "*" },
+      name: "@adh-sdk/registry",
+      peerDependencies: { "@adh-sdk/registry-types": "*" },
     });
-    manifest(site, { dependencies: { "@agentic-toolkit/registry": `link:${pkg}` } });
+    manifest(site, { dependencies: { "@adh-sdk/registry": `link:${pkg}` } });
 
     expect(() => assertLinkedDepsInstalled(site)).toThrowError(
-      /@agentic-toolkit\/registry -> @agenticdevelopertoolkit\/registry-types/,
+      /@adh-sdk\/registry -> @adh-sdk\/registry-types/,
     );
 
-    install(pkg, "@agenticdevelopertoolkit/registry-types");
+    install(pkg, "@adh-sdk/registry-types");
     expect(() => assertLinkedDepsInstalled(site)).not.toThrow();
   });
 
   it("ignores a registry dependency — only link: specs name a workspace pnpm did not install", () => {
     const pkg = join(root, "toolkit", "adh");
-    manifest(pkg, { name: "@agentic-toolkit/adh", dependencies: { nothing: "1.0.0" } });
-    manifest(site, { dependencies: { "@agentic-toolkit/adh": "^1.2.3", next: "^16.2.9" } });
+    manifest(pkg, { name: "@adh-sdk/adh", dependencies: { nothing: "1.0.0" } });
+    manifest(site, { dependencies: { "@adh-sdk/adh": "^1.2.3", next: "^16.2.9" } });
 
     expect(() => assertLinkedDepsInstalled(site)).not.toThrow();
   });
 
   it("ignores a link: pointing at nothing — that is pnpm's error to report, not this one's", () => {
-    manifest(site, { dependencies: { "@agentic-toolkit/gone": `link:${join(root, "no-such-dir")}` } });
+    manifest(site, { dependencies: { "@adh-sdk/gone": `link:${join(root, "no-such-dir")}` } });
 
     expect(() => assertLinkedDepsInstalled(site)).not.toThrow();
   });
@@ -97,8 +97,8 @@ describe("assertLinkedDepsInstalled", () => {
   it("does nothing on Vercel, where the layout is hoisted and the hazard cannot occur", () => {
     vi.stubEnv("VERCEL", "1");
     const pkg = join(root, "toolkit", "adh");
-    manifest(pkg, { name: "@agentic-toolkit/adh", dependencies: { "@agentic-toolkit/account": "workspace:*" } });
-    manifest(site, { dependencies: { "@agentic-toolkit/adh": `link:${pkg}` } });
+    manifest(pkg, { name: "@adh-sdk/adh", dependencies: { "@adh-sdk/account": "workspace:*" } });
+    manifest(site, { dependencies: { "@adh-sdk/adh": `link:${pkg}` } });
 
     // Would throw off-Vercel (first test above, same fixture). A hosted build installs
     // from the lockfile every time and then flattens the closure with

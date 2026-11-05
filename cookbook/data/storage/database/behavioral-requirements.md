@@ -1,7 +1,7 @@
 
 ### Storage Location
 
-- **fallback-token**: The fallback token MUST be the string `"AgenticToolkit"`.
+- **fallback-token**: The fallback token MUST be the string `"AgenticDeveloperHubSDK"`.
 - **token-filter**: The token-deriving operation MUST return the display name with every character that is not a letter, mark, or number removed, with no substitute character inserted.
 - **token-order**: The token-deriving operation MUST keep the surviving characters in their original order and original case.
 - **token-empty-fallback**: The token-deriving operation MUST return the fallback token when no character survives the filter, including for an empty input.

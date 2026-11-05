@@ -1,7 +1,7 @@
 ---
 id: fcc6d4c4-d83e-402a-857c-fbd0aff91113
 title: Stack
-domain: agenticdevelopertoolkit://recipes/stack
+domain: adhsdk://recipes/stack
 type: ingredient
 version: 1.1.1
 status: review

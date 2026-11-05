@@ -1,7 +1,7 @@
 ---
 id: c212ea39-10e7-4146-89dd-36edb3b3455a
 title: "Project Database"
-domain: adtoolkit://cookbook/workspace/projects/project-database
+domain: adhsdk://cookbook/workspace/projects/project-database
 type: ingredient
 version: 1.2.1
 status: review
@@ -24,12 +24,12 @@ tags:
   - migrations
 depends-on: []
 related:
-  - adtoolkit://cookbook/workspace/projects/git-repo
+  - adhsdk://cookbook/workspace/projects/git-repo
 references:
-  - packages/apple/AgenticToolkit/macOS/Features/Projects/ProjectDatabase.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/macOS/Features/Projects/GitRepo.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Database/AppStorageLocation.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Tests/AgenticToolkitMacOSTests/Projects/ProjectDatabaseTests.swift (agenticdevelopertoolkit)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectDatabase.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/GitRepo.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Database/AppStorageLocation.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKMacOSTests/Projects/ProjectDatabaseTests.swift (adhsdk)
 approved-by: ""
 approved-date: ""
 ---
@@ -449,10 +449,10 @@ caller through a thrown error, not written to a log by this file.
 ## Platform Notes
 
 - **SwiftUI**: The source is
-  `packages/apple/AgenticToolkit/macOS/Features/Projects/ProjectDatabase.swift`,
+  `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectDatabase.swift`,
   importing only `Foundation`, `SQLite3` (the C SQLite library linked
-  directly, not `Core Data` or `SwiftData`), `AgenticToolkitCore`, and
-  `AgenticToolkitDatabase` (for `AppStorageLocation`); it depends on no UI
+  directly, not `Core Data` or `SwiftData`), `AgenticDeveloperHubSDKCore`, and
+  `AgenticDeveloperHubSDKDatabase` (for `AppStorageLocation`); it depends on no UI
   framework, and a caller anywhere in a SwiftUI app — an `@Observable` view
   model, an `App`'s startup code — constructs and owns one instance
   directly. `ProjectDatabase` is declared as a plain `final class` with no
@@ -516,7 +516,7 @@ caller through a thrown error, not written to a log by this file.
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/macOS/Features/Projects/ProjectDatabase.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectDatabase.swift` |
 
 ## Design Decisions
 

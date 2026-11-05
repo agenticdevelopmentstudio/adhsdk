@@ -16,15 +16,15 @@ import {
   GanttChartSquare,
   CalendarDays,
 } from "lucide-react";
-import { TopicSelectHint } from "@agenticdevelopertoolkit/ui/blocks";
-import { ErrorText } from "@agenticdevelopertoolkit/ui/components/error-text";
-import { useSearchParam } from "@agenticdevelopertoolkit/ui/hooks/useSearchParam";
-import { writeSearchParams } from "@agenticdevelopertoolkit/ui/lib/search-params";
+import { TopicSelectHint } from "@adh-sdk/ui/blocks";
+import { ErrorText } from "@adh-sdk/ui/components/error-text";
+import { useSearchParam } from "@adh-sdk/ui/hooks/useSearchParam";
+import { writeSearchParams } from "@adh-sdk/ui/lib/search-params";
 import {
   projectWorkItemsApi,
   type WorkItem,
   type WorkItemMoveTarget,
-} from "@agentic-toolkit/data/projects";
+} from "@adh-sdk/data/projects";
 import {
   projectIterationsApi,
   projectMilestonesApi,
@@ -38,9 +38,9 @@ import {
   type ProjectStatus,
   type ProjectParticipant,
   type Template,
-} from "@agentic-toolkit/data/projects";
-import { useResourceItemQuery, useResourceList } from "@agentic-toolkit/data";
-import { FeatureTitle, useStackLevel, type TopicLeaf } from "@agentic-toolkit/resource";
+} from "@adh-sdk/data/projects";
+import { useResourceItemQuery, useResourceList } from "@adh-sdk/data";
+import { FeatureTitle, useStackLevel, type TopicLeaf } from "@adh-sdk/resource";
 import { WorkItemEditor } from "./WorkItemEditor";
 import { NewWorkItemDialog } from "./NewWorkItemDialog";
 import { WorkItemFilterBar } from "./WorkItemFilterBar";

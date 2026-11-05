@@ -5,14 +5,14 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { ArchivedWorkspace } from "../api/archived-workspaces";
 
 // Stub only the transport boundary: the fetcher `useArchivedWorkspaces` calls under the hood
-// (`authedJson`, imported straight from `@agentic-toolkit/auth/client` — hub's `@/api/http`
+// (`authedJson`, imported straight from `@adh-sdk/auth/client` — hub's `@/api/http`
 // re-export shim isn't part of this package) and `organizationsApi.restore`. The hook itself
 // keeps its real `useQuery`, run against a real `QueryClientProvider` below — this is what
 // proves the panel's states (error → loading → empty → table) against a REAL query
 // lifecycle, not a hand-rolled stand-in for react-query.
 const { authedJson } = vi.hoisted(() => ({ authedJson: vi.fn() }));
-vi.mock("@agentic-toolkit/auth/client", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("@agentic-toolkit/auth/client")>()),
+vi.mock("@adh-sdk/auth/client", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@adh-sdk/auth/client")>()),
   authedJson,
 }));
 

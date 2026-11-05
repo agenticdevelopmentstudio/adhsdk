@@ -1,6 +1,6 @@
 import { type ReactElement } from 'react';
-import type { GraphNode } from '@agentic-toolkit/adh/concepts';
-import { type SiteEnv, type SiteId } from '@agentic-toolkit/adh-registry';
+import type { GraphNode } from '@adh-sdk/adh/concepts';
+import { type SiteEnv, type SiteId } from '@adh-sdk/adh-registry';
 export interface ConceptGraphClientProps {
     /** Slim graph tree (labels + structure only — no detail prose). */
     tree: GraphNode;

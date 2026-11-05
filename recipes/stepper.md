@@ -1,7 +1,7 @@
 ---
 id: 0eaf03a3-c00b-4f3a-81d7-5bd0560a5274
 title: Stepper
-domain: agenticdevelopertoolkit://recipes/stepper
+domain: adhsdk://recipes/stepper
 type: ingredient
 version: 1.1.1
 status: review

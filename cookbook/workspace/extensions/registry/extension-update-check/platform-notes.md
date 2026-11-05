@@ -1,7 +1,7 @@
 
 - **SwiftUI**: The source itself:
-  `packages/apple/AgenticToolkit/Core/Extensions/ExtensionUpdateCheck.swift`,
-  part of the macOS-only `AgenticToolkitCore` framework target. It has no
+  `packages/apple/AgenticDeveloperHubSDK/Core/Extensions/ExtensionUpdateCheck.swift`,
+  part of the macOS-only `AgenticDeveloperHubSDKCore` framework target. It has no
   SwiftUI dependency — `ExtensionUpdateCheck` is plain `Foundation`/`OSLog`
   code. A SwiftUI settings screen listing available updates would call
   `check(_:)` from a `Task`, typically inside an `@Observable` view model
@@ -34,7 +34,7 @@
   anything else) the same way `reason(for:)` does.
 - **AppKit / UIKit**: No divergence from the SwiftUI bullet above — the
   source is framework-agnostic `Foundation`/`OSLog` code called identically
-  from an AppKit-hosted caller. `AgenticToolkitCore` targets only macOS
+  from an AppKit-hosted caller. `AgenticDeveloperHubSDKCore` targets only macOS
   today; an iOS caller would first need the framework made available to an
   iOS target, but `ExtensionUpdateCheck` itself needs no AppKit/UIKit-specific
   change.

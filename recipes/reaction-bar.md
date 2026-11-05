@@ -1,7 +1,7 @@
 ---
 id: 169da1b6-2a22-4fec-9f01-8118e5242bd5
 title: ReactionBar
-domain: agenticdevelopertoolkit://recipes/reaction-bar
+domain: adhsdk://recipes/reaction-bar
 type: ingredient
 version: 1.2.1
 status: review
@@ -23,8 +23,8 @@ tags:
 - ui
 depends-on: []
 related:
-- agenticdevelopertoolkit://recipes/button
-- agenticdevelopertoolkit://recipes/popover
+- adhsdk://recipes/button
+- adhsdk://recipes/popover
 references: []
 approved-by: ''
 approved-date: ''
@@ -34,7 +34,7 @@ approved-date: ''
 
 ## Overview
 
-The shared `ReactionBar` in `@agenticdevelopertoolkit/ui` — the emoji reactions on **one subject**,
+The shared `ReactionBar` in `@adh-sdk/ui` — the emoji reactions on **one subject**,
 rendered as a row of count chips plus a small palette for adding one. It is the single home
 for the reaction treatment, so a work-item comment, a discussion post and anything else the
 backend's polymorphic reaction store can name all react the same way.
@@ -49,7 +49,7 @@ reaction back; pressing one you are not adds it. Both directions call the same `
 the same argument, because the caller can already tell which way it goes from the `mine` flag it
 supplied — two callbacks would be two chances for them to disagree.
 
-Two exports ship from `@agenticdevelopertoolkit/ui/components/reaction-bar`: the `ReactionBar`
+Two exports ship from `@adh-sdk/ui/components/reaction-bar`: the `ReactionBar`
 component and `DEFAULT_REACTIONS`, the default palette, exported so a host starts from one
 fact rather than restating a literal per surface.
 
@@ -191,7 +191,7 @@ Not applicable: The component responds to all standard browser and OS-level acce
 
 ## Feature Flags
 
-Not applicable: The component is not feature-flagged. It is always available as part of `@agenticdevelopertoolkit/ui`.
+Not applicable: The component is not feature-flagged. It is always available as part of `@adh-sdk/ui`.
 
 ## Analytics
 
@@ -207,7 +207,7 @@ No logging. `ReactionBar` is presentational; what a toggle means, and any teleme
 
 ## Platform Notes
 
-- **React/Web**: File: `packages/web/packages/ui/src/components/reaction-bar.tsx`, exported from `@agenticdevelopertoolkit/ui/components/reaction-bar` via the package's `./components/*` wildcard. Composes the shared `Button` and `Popover`/`PopoverTrigger`/`PopoverContent` primitives, plus a lucide `SmilePlus` icon; carries `"use client"` directive to own the popover's open state. Themes via `@agenticdevelopertoolkit/ui` token system (`apt-gold`, `apt-border`, `apt-text-*`, etc.).
+- **React/Web**: File: `packages/web/packages/ui/src/components/reaction-bar.tsx`, exported from `@adh-sdk/ui/components/reaction-bar` via the package's `./components/*` wildcard. Composes the shared `Button` and `Popover`/`PopoverTrigger`/`PopoverContent` primitives, plus a lucide `SmilePlus` icon; carries `"use client"` directive to own the popover's open state. Themes via `@adh-sdk/ui` token system (`apt-gold`, `apt-border`, `apt-text-*`, etc.).
 
 - **SwiftUI**: `VStack`/`HStack` do not wrap, so use a custom flow `Layout` for the chip row.
   Each reaction is a SwiftUI `Button` with its pressed state driven from the `mine` input, not

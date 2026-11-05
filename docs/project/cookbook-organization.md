@@ -2,9 +2,9 @@
 
 `cookbook/` holds one behavioral spec per component, window, service or model
 this repo implements (443 specs at 2026-10-04). Each spec is addressed as
-`adtoolkit://cookbook/<group>/.../<name>` and lists the code that implements it
+`adhsdk://cookbook/<group>/.../<name>` and lists the code that implements it
 in its **Reference Implementations** table. The legacy root `recipes/` keeps
-its own `agenticdevelopertoolkit://recipes/<name>` domains.
+its own `adhsdk://recipes/<name>` domains.
 
 Every spec is a **source folder** (`<name>/artifact.json` plus one `.md` per
 section) with `<name>.md` compiled from it beside it. Edit `<name>.md`, then

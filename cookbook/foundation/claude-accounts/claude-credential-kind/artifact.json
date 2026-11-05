@@ -3,7 +3,7 @@
   "meta": {
     "id": "D457C4D4-005C-4FCB-A3A6-3E1680BCB561",
     "title": "Claude Credential Kind",
-    "domain": "adtoolkit://cookbook/foundation/claude-accounts/claude-credential-kind",
+    "domain": "adhsdk://cookbook/foundation/claude-accounts/claude-credential-kind",
     "type": "ingredient",
     "version": "1.0.0",
     "status": "review",
@@ -26,7 +26,7 @@
     ],
     "depends-on": [],
     "related": [
-      "adtoolkit://cookbook/foundation/claude-accounts/claude-o-auth-credential"
+      "adhsdk://cookbook/foundation/claude-accounts/claude-o-auth-credential"
     ],
     "references": [],
     "approved-by": "",

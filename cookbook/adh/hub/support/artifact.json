@@ -3,7 +3,7 @@
   "meta": {
     "id": "9bec9953-29fb-4184-8bf6-a6c27187c99d",
     "title": "Support",
-    "domain": "adtoolkit://cookbook/adh/hub/support",
+    "domain": "adhsdk://cookbook/adh/hub/support",
     "type": "ingredient",
     "version": "1.1.1",
     "status": "review",
@@ -30,17 +30,17 @@
     ],
     "depends-on": [],
     "related": [
-      "adtoolkit://cookbook/ui/navigation/htdv"
+      "adhsdk://cookbook/ui/navigation/htdv"
     ],
     "references": [
-      "packages/apple/AgenticToolkit/Hub/Features/Support/FormDetails.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/Hub/Features/Support/HubDates.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/Hub/Features/Support/HubError+Wrap.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/Hub/Features/Support/HubText.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/Hub/Features/Support/JSONValue.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/Hub/Features/Support/RailPath.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/Hub/Features/Support/Slug.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/Tests/AgenticToolkitHubTests/SupportTests.swift (agenticdevelopertoolkit)"
+      "packages/apple/AgenticDeveloperHubSDK/Hub/Features/Support/FormDetails.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/Hub/Features/Support/HubDates.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/Hub/Features/Support/HubError+Wrap.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/Hub/Features/Support/HubText.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/Hub/Features/Support/JSONValue.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/Hub/Features/Support/RailPath.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/Hub/Features/Support/Slug.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKHubTests/SupportTests.swift (adhsdk)"
     ],
     "approved-by": "",
     "approved-date": ""

@@ -1,7 +1,7 @@
 ---
 id: b5b27bc2-99b2-469e-9dd4-e446b0157444
 title: Reveal
-domain: agenticdevelopertoolkit://recipes/reveal
+domain: adhsdk://recipes/reveal
 type: ingredient
 version: 1.1.1
 status: review
@@ -21,12 +21,12 @@ tags:
 - scroll
 depends-on: []
 related:
-- agenticdevelopertoolkit://recipes/band
-- agenticdevelopertoolkit://recipes/bleed
-- agenticdevelopertoolkit://recipes/flow
-- agenticdevelopertoolkit://recipes/flow-hero
-- agenticdevelopertoolkit://recipes/site-footer
-- agenticdevelopertoolkit://recipes/site-header
+- adhsdk://recipes/band
+- adhsdk://recipes/bleed
+- adhsdk://recipes/flow
+- adhsdk://recipes/flow-hero
+- adhsdk://recipes/site-footer
+- adhsdk://recipes/site-header
 references:
 - https://developer.mozilla.org/en-US/docs/Web/API/Intersection_Observer_API
 approved-by: ''

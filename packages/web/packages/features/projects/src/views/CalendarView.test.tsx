@@ -12,7 +12,7 @@ import { describe, it, expect, vi, beforeEach, afterEach, afterAll } from "vites
 import { render, screen, fireEvent, cleanup, within } from "@testing-library/react";
 
 import { CalendarView } from "./CalendarView";
-import { type WorkItem } from "@agentic-toolkit/data/projects";
+import { type WorkItem } from "@adh-sdk/data/projects";
 
 function makeItem(over: Partial<WorkItem> & Pick<WorkItem, "id" | "title">): WorkItem {
   return {

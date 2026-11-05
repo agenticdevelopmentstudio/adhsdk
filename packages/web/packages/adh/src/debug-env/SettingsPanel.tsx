@@ -1,6 +1,6 @@
 'use client'
 
-import { Switch } from '@agenticdevelopertoolkit/ui/components/switch'
+import { Switch } from '@adh-sdk/ui/components/switch'
 import {
   useShowDebugFrames,
   setShowDebugFrames,
@@ -8,7 +8,7 @@ import {
   setSlowAnimations,
   useCascadeLog,
   setCascadeLog,
-} from '@agenticdevelopertoolkit/ui/blocks'
+} from '@adh-sdk/ui/blocks'
 import type { ReactNode } from 'react'
 import type { EnvOverrideSurface } from './seams'
 

@@ -7,7 +7,7 @@
   surface of its own.
 - **AppKit / UIKit**: This is in fact the source's own platform:
   `BoundedBodyLoader` (`Core/Networking/BoundedBodyLoader.swift`) is a
-  `final class`, not `public`, visible only inside `AgenticToolkitCore`,
+  `final class`, not `public`, visible only inside `AgenticDeveloperHubSDKCore`,
   which builds for macOS but uses only the plain
   `URLSession`/`URLSessionDataDelegate` API available identically on
   iOS — nothing in it is AppKit-specific. Its one method,

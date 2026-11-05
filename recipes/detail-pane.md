@@ -1,7 +1,7 @@
 ---
 id: 292f17e2-1df8-4126-a26c-4160e8e88708
 title: Detail Pane
-domain: agenticdevelopertoolkit://recipes/detail-pane
+domain: adhsdk://recipes/detail-pane
 type: ingredient
 version: 1.2.1
 status: review
@@ -21,9 +21,9 @@ tags:
 - panel
 - three-pane-layout
 depends-on:
-- agenticdevelopertoolkit://recipes/connector-anchor
+- adhsdk://recipes/connector-anchor
 related:
-- agenticdevelopertoolkit://recipes/three-pane-chat
+- adhsdk://recipes/three-pane-chat
 references:
 - https://www.w3.org/WAI/WCAG21/Understanding/focus-order.html
 approved-by: ''

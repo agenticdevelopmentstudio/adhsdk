@@ -5,9 +5,9 @@
 
 # SPM dynamic linking for host + NSBundle plugins
 
-Reference note on why `packages/apple/AgenticToolkit/Package.swift` ships an
+Reference note on why `packages/apple/AgenticDeveloperHubSDK/Package.swift` ships an
 asymmetric product list — 13 per-target automatic `.library` products plus
-one `.dynamic` umbrella named `AgenticToolkitPluginHost`. The shape is a
+one `.dynamic` umbrella named `AgenticDeveloperHubSDKPluginHost`. The shape is a
 deliberate workaround for a known SPM limitation; this note captures the
 research so anyone asking "why?" has an answer.
 
@@ -23,8 +23,8 @@ into the final binary.
 It breaks when one process loads another binary that also statically
 links the same SPM modules. Our topology:
 
-- **Host app** (`AgenticToolkitApp`) statically links `AgenticToolkitCore`,
-  `AgenticToolkitAIPlugins`, etc.
+- **Host app** (`AgenticDeveloperHubSDKApp`) statically links `AgenticDeveloperHubSDKCore`,
+  `AgenticDeveloperHubSDKAIPlugins`, etc.
 - **Plugin bundles** (`ClaudeAPIPlugin.aiplugin`, `OpenAIPlugin.aiplugin`, …) in
   `~/.agenticplugins/` each statically link the same modules and are
   loaded into the host at runtime via `Bundle.load()`.
@@ -67,8 +67,8 @@ product's linkage — the decision must be expressed in `Package.swift`.
 Flipping an existing product's `type:` to `.dynamic` produces, for every
 target consumed statically elsewhere in the build graph:
 
-> Swift package target 'AgenticToolkitCore' is linked as a static library
-> by 'AgenticToolkitAIPluginsCore' and 2 other targets, but cannot be
+> Swift package target 'AgenticDeveloperHubSDKCore' is linked as a static library
+> by 'AgenticDeveloperHubSDKAIPluginsCore' and 2 other targets, but cannot be
 > built dynamically because there is a package product with the same
 > name.
 
@@ -102,28 +102,28 @@ actually have), we add **one** dynamic umbrella:
 
 ```swift
 .library(
-    name: "AgenticToolkitPluginHost",
+    name: "AgenticDeveloperHubSDKPluginHost",
     type: .dynamic,
     targets: [
-        "AgenticToolkitCore",
-        "AgenticToolkitScripting",
-        "AgenticToolkitCoreUI",
-        "AgenticToolkitSettingsWindow",
-        "AgenticToolkitChatWindow",
-        "AgenticToolkitAIPlugins",
+        "AgenticDeveloperHubSDKCore",
+        "AgenticDeveloperHubSDKScripting",
+        "AgenticDeveloperHubSDKCoreUI",
+        "AgenticDeveloperHubSDKSettingsWindow",
+        "AgenticDeveloperHubSDKChatWindow",
+        "AgenticDeveloperHubSDKAIPlugins",
     ]
 ),
 ```
 
 Wiring:
 
-- `AgenticToolkitApp` **embeds** `AgenticToolkitPluginHost` (`embed: true,
-  link: true` in `packages/packages/apple/AgenticToolkitApp/project.yml`). The framework
-  lands in `AgenticToolkitApp.app/Contents/Frameworks/`.
+- `AgenticDeveloperHubSDKApp` **embeds** `AgenticDeveloperHubSDKPluginHost` (`embed: true,
+  link: true` in `packages/packages/apple/AgenticDeveloperHubSDKApp/project.yml`). The framework
+  lands in `AgenticDeveloperHubSDKApp.app/Contents/Frameworks/`.
 - Plugin bundles **link without embedding** (`embed: false, link: true`
   in `packages/apple/AIPlugins/project.yml`). At load time, the plugin's `@rpath`
   (configured via `LD_RUNPATH_SEARCH_PATHS = @loader_path/../../../../Frameworks`)
-  resolves `AgenticToolkitPluginHost.framework` to the copy in the host's
+  resolves `AgenticDeveloperHubSDKPluginHost.framework` to the copy in the host's
   `Contents/Frameworks/`.
 - Both ends resolve the bundled Swift types to the same loaded image —
   `ChatMessage`, `PluginManager`, logger subsystems, and singleton
@@ -144,14 +144,14 @@ signals "both linkage modes are expected for every module," which isn't
 true. Asymmetric is the more honest shape.
 
 **Boundary list in `Package.swift`.** Adding a module to the host/plugin
-boundary now means editing the `AgenticToolkitPluginHost` `targets:`
+boundary now means editing the `AgenticDeveloperHubSDKPluginHost` `targets:`
 list. That's one extra step vs. just adding another per-target product,
 but the list is short enough to keep legible.
 
 **Plugin churn.** Every plugin now depends on one package product
-(`AgenticToolkitPluginHost`) instead of enumerating six. Plugin sources
-import the specific modules they need — `import AgenticToolkitCore`,
-`import AgenticToolkitAIPlugins`, etc. — and the umbrella provides them.
+(`AgenticDeveloperHubSDKPluginHost`) instead of enumerating six. Plugin sources
+import the specific modules they need — `import AgenticDeveloperHubSDKCore`,
+`import AgenticDeveloperHubSDKAIPlugins`, etc. — and the umbrella provides them.
 
 ## When to revisit
 

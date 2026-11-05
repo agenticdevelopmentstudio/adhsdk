@@ -8,6 +8,6 @@
 - **Errored cron or correlated check alone**: MUST produce `null` and MUST NOT turn the bar red (vector 010).
 - **`missingEnvError` implies non-null**: `missingEnvError` can only be `true` when `missingEnv` is non-empty, so a returned view with `missingEnvError: true` MUST have at least one name.
 - **Malformed report**: a defined report without a `checks` list, or a `missingEnv` that is not a list, violates the typed precondition; the function performs no runtime check and a missing `checks` would raise a runtime error to the caller (see Platform Notes). This is a documented precondition (no-validation), not a handled path.
-- **Network failure, timeout, offline**: not applicable to this function; it does no I/O. Fetch failures belong to [the integrations state](adtoolkit://cookbook/status/dashboard/state/integrations), which passes an absent report or the last good report.
+- **Network failure, timeout, offline**: not applicable to this function; it does no I/O. Fetch failures belong to [the integrations state](adhsdk://cookbook/status/dashboard/state/integrations), which passes an absent report or the last good report.
 - **Concurrent calls**: not applicable; the function is pure and synchronous, so concurrent callers (the banner and the dashboard pill) always get the same result for the same report.
 

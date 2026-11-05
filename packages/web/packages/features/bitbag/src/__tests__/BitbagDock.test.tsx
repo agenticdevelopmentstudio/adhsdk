@@ -15,7 +15,7 @@ const pageLock = vi.hoisted(() => ({ active: false }))
 // His travels between the bar and the chat's corner: what the dock asked for, and
 // how he was drawn when it asked. jsdom does no layout, so each is a stand-in.
 const travels = vi.hoisted(() => ({ calls: [] as { from: DOMRect; options: Record<string, unknown> }[] }))
-vi.mock('@agenticdevelopertoolkit/avatar', () => ({
+vi.mock('@adh-sdk/avatar', () => ({
   travelFrom: (_el: HTMLElement, from: DOMRect, options: Record<string, unknown>) => {
     travels.calls.push({ from, options })
     return null
@@ -33,7 +33,7 @@ vi.mock('../BitbagChat', () => ({
     )
   },
 }))
-vi.mock('@agenticdevelopertoolkit/viewport', () => ({
+vi.mock('@adh-sdk/viewport', () => ({
   useKeyboardInset: () => {},
   usePageScrollLock: (active: boolean) => {
     pageLock.active = active

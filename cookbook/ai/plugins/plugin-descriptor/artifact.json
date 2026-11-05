@@ -3,7 +3,7 @@
   "meta": {
     "id": "39de0dff-2b26-4d3d-97a3-ebdbdb38846a",
     "title": "Plugin Descriptor",
-    "domain": "adtoolkit://cookbook/ai/plugins/plugin-descriptor",
+    "domain": "adhsdk://cookbook/ai/plugins/plugin-descriptor",
     "type": "ingredient",
     "version": "1.1.1",
     "status": "review",
@@ -25,7 +25,7 @@
     ],
     "depends-on": [],
     "related": [
-      "adtoolkit://cookbook/ai/chat/chat-context"
+      "adhsdk://cookbook/ai/chat/chat-context"
     ],
     "references": [],
     "approved-by": "",

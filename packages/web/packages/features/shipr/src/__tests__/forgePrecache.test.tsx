@@ -37,7 +37,7 @@ vi.mock('../live', () => ({
   watchWorkspaceRuns: () => ({ close: vi.fn() }),
 }));
 
-vi.mock('@agentic-toolkit/data/ecosystems', () => ({
+vi.mock('@adh-sdk/data/ecosystems', () => ({
   useWorkspaceDefaultEcosystemId: () => ({
     ecosystemId: 'eco-1',
     canManage: true,
@@ -51,9 +51,9 @@ vi.mock('@agentic-toolkit/data/ecosystems', () => ({
  *  this file is about. */
 const pane: { onChanged?: () => void } = {};
 
-vi.mock('@agentic-toolkit/integrations', async (importOriginal) => ({
+vi.mock('@adh-sdk/integrations', async (importOriginal) => ({
   CONNECTIONS_HASH: (
-    await importOriginal<typeof import('@agentic-toolkit/integrations')>()
+    await importOriginal<typeof import('@adh-sdk/integrations')>()
   ).CONNECTIONS_HASH,
   IntegrationsPane: (props: { onChanged?: () => void }) => {
     pane.onChanged = props.onChanged;

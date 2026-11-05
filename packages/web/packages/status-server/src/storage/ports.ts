@@ -473,7 +473,7 @@ export interface ProjectMetaInput {
 }
 
 /** One project's descriptive metadata as read back — the shape `ProjectMetaLike`
- *  (`@agentic-toolkit/deploy-platform/enumerate`) expects. */
+ *  (`@adh-sdk/deploy-platform/enumerate`) expects. */
 export type ProjectMetaRow = ProjectMetaInput;
 
 /** Which deploy projects a live site monitors, keyed by canonical platform — the input

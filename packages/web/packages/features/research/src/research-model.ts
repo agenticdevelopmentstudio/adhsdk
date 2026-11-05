@@ -7,7 +7,7 @@ import type {
   CreateMarkdownBody,
   ResearchDocument,
   UpdateMarkdownBody,
-} from "@agentic-toolkit/data/markdown";
+} from "@adh-sdk/data/markdown";
 
 /** The fields the editor binds to: the raw markdown body + classification.
  *
@@ -32,7 +32,7 @@ const MAX_ROUTE = 128;
  * The slug a title suggests: lowercased, non-alphanumerics collapsed to single dashes,
  * trimmed of leading/trailing dashes, capped at the route length.
  *
- * Deliberately NOT `@agenticdevelopertoolkit/ui/lib/slug`'s `slugify`: that one enforces the USER
+ * Deliberately NOT `@adh-sdk/ui/lib/slug`'s `slugify`: that one enforces the USER
  * HANDLE alphabet (≤40 chars, no `_`). A paper route is a different rule with a different
  * limit, and sharing the function would silently truncate long titles at 40.
  *

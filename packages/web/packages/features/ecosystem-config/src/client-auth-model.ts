@@ -8,7 +8,7 @@ import type {
   ClientAuthPolicy,
   LoginRegistration,
   LoginRegistrationInput,
-} from "@agentic-toolkit/data/ecosystem-config";
+} from "@adh-sdk/data/ecosystem-config";
 
 /** The editable half of a login registration. The client id is the server's and is not edited. */
 export type RegistrationDraft = LoginRegistrationInput;

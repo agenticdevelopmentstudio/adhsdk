@@ -1,7 +1,7 @@
 ---
 id: ee901ea5-cf3e-4276-8367-0693911bc02e
 title: Markdown Reading Palette
-domain: agenticdevelopertoolkit://recipes/markdown-reading-palette
+domain: adhsdk://recipes/markdown-reading-palette
 type: ingredient
 version: 1.1.1
 status: review
@@ -21,7 +21,7 @@ tags:
 - styling
 depends-on: []
 related:
-- agenticdevelopertoolkit://recipes/markdown-renderer
+- adhsdk://recipes/markdown-renderer
 references: []
 approved-by: ''
 approved-date: ''
@@ -114,7 +114,7 @@ Not applicable: MarkdownReadingPalette has no operational logging. Error handlin
 
 ## Platform Notes
 
-- **React/Web**: Exported from `packages/web/packages/markdown/src/components/MarkdownReadingPalette.tsx`. Server-safe by design — no React hooks, no "use client" directive, compatible with async RSCs. Receives theme from the `getThemeById` function in the themes registry. Merges className via `cn` utility from `@agenticdevelopertoolkit/ui/lib/utils`.
+- **React/Web**: Exported from `packages/web/packages/markdown/src/components/MarkdownReadingPalette.tsx`. Server-safe by design — no React hooks, no "use client" directive, compatible with async RSCs. Receives theme from the `getThemeById` function in the themes registry. Merges className via `cn` utility from `@adh-sdk/ui/lib/utils`.
 - **SwiftUI**: A SwiftUI wrapper reads theme colors from the environment (a custom `EnvironmentKey` or `EnvironmentObject`) and applies them to its content via `.background()` and `.foregroundStyle()`. The equivalent of `data-mdv-theme` for testing/selection MUST be an `.accessibilityIdentifier()` on the wrapper view.
 - **Compose**: A Compose wrapper reads the theme from a `CompositionLocal` and applies it via `Box`/`Surface`, using `backgroundColor` from `MaterialTheme.colorScheme` (or the custom palette) and `contentColor` for text. The equivalent of `data-mdv-theme` for testing/selection MUST be a `Modifier.testTag()` on the wrapper.
 - **AppKit / UIKit**: A UIKit wrapper sets `layer.backgroundColor` and its content's text color via `UIColor`, with Auto Layout constraints supplying the padding. AppKit applies the same pattern with `NSView.layer.backgroundColor` and `NSColor`. The equivalent of `data-mdv-theme` for testing/selection MUST be `accessibilityIdentifier`.

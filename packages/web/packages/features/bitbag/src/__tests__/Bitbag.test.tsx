@@ -8,7 +8,7 @@ import { EXPRESSIONS } from '../avatar/expressions'
 // The engine is where his motion runs, and jsdom can't watch gsap move anything —
 // so this file captures what bitbag ASKS the engine for, and the poke it hands back,
 // which is all the reduced-motion stilling is: his ordinary configuration, turned
-// down. (The engine itself is tested in @agenticdevelopertoolkit/avatar.)
+// down. (The engine itself is tested in @adh-sdk/avatar.)
 type EngineArgs = {
   expression?: string
   gaze?: unknown
@@ -18,7 +18,7 @@ type EngineArgs = {
   blinkSuppressed: readonly string[]
 }
 const engine = vi.hoisted(() => ({ args: null as EngineArgs | null, poke: vi.fn() }))
-vi.mock('@agenticdevelopertoolkit/avatar', () => ({
+vi.mock('@adh-sdk/avatar', () => ({
   useAvatarEngine: (args: EngineArgs) => {
     engine.args = args
     return { effective: args.expression ?? 'idle', speech: null, poke: engine.poke }

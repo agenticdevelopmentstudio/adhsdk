@@ -1,7 +1,7 @@
 ---
 id: ea2dae31-1020-4930-aa12-15f7d04967a5
 title: "Progress View"
-domain: adtoolkit://cookbook/ui/settings/rows/progress-view
+domain: adhsdk://cookbook/ui/settings/rows/progress-view
 type: ingredient
 version: 1.2.2
 status: review
@@ -21,9 +21,9 @@ tags:
   - progress
 depends-on: []
 related:
-  - adtoolkit://cookbook/ui/settings/rows/checkbox-view
-  - adtoolkit://cookbook/ui/settings/rows/button-view
-  - adtoolkit://cookbook/ui/settings/layout/explanation-view
+  - adhsdk://cookbook/ui/settings/rows/checkbox-view
+  - adhsdk://cookbook/ui/settings/rows/button-view
+  - adhsdk://cookbook/ui/settings/layout/explanation-view
 references:
   - https://developer.apple.com/documentation/appkit/nsprogressindicator
   - https://developer.apple.com/documentation/uikit/uiprogressview
@@ -352,7 +352,7 @@ logger reference anywhere in source).
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/macOS/SystemIntegration/ComposableSettingsWindow/Views/ProgressView.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/Views/ProgressView.swift` |
 
 ## Design Decisions
 
@@ -432,7 +432,7 @@ Label requirements in Accessibility above, no accessibility label or
 title-UI-element link connects `progressIndicator` to `viewModel.title`, so
 `ProgressView` plainly does not implement this check today.
 
-`separation-of-concerns` passes because `ProgressView` only maps the view model's optional `progress` onto its indicator (a value means determinate at that value with animation stopped, `nil` means indeterminate with animation started) through one Combine subscription; the progress itself is produced elsewhere. No test in the repository's test targets constructs `ProgressView`, so `unit-test-coverage` is `failed`: a search of `AgenticToolkitMacOSTests` and the other test targets for the type name finds nothing.
+`separation-of-concerns` passes because `ProgressView` only maps the view model's optional `progress` onto its indicator (a value means determinate at that value with animation stopped, `nil` means indeterminate with animation started) through one Combine subscription; the progress itself is produced elsewhere. No test in the repository's test targets constructs `ProgressView`, so `unit-test-coverage` is `failed`: a search of `AgenticDeveloperHubSDKMacOSTests` and the other test targets for the type name finds nothing.
 
 ## Change History
 

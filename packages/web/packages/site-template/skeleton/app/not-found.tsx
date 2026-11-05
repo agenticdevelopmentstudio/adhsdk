@@ -1,9 +1,9 @@
-// WRITTEN by @agenticdevelopertoolkit/site-template's assembler — do not edit.
+// WRITTEN by @adh-sdk/site-template's assembler — do not edit.
 import type { Metadata } from 'next'
 import type { ReactElement } from 'react'
-import { Flow } from '@agenticdevelopertoolkit/landing'
-import { FrameNotFound, frameNotFoundMetadata } from '@agenticdevelopertoolkit/site-template'
-import type { FrameCopy } from '@agenticdevelopertoolkit/site-template'
+import { Flow } from '@adh-sdk/landing'
+import { FrameNotFound, frameNotFoundMetadata } from '@adh-sdk/site-template'
+import type { FrameCopy } from '@adh-sdk/site-template'
 import siteCopy from '../src/content/site/site.json'
 import FrameLayout from './(frame)/layout'
 

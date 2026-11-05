@@ -1,6 +1,6 @@
 
 - **Swift (source)**: This component targets macOS today, via the
-  `AgenticToolkitCore` framework target (`project.yml`); nothing in it — a
+  `AgenticDeveloperHubSDKCore` framework target (`project.yml`); nothing in it — a
   caseless `enum` of `static func`s over Foundation's `FileManager`,
   `Data`, `JSONSerialization`, and the sibling `JSONCPreprocessor` helper —
   depends on `AppKit`, `UIKit`, or any other platform framework, so the

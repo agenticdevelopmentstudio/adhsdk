@@ -11,18 +11,18 @@ import {
   type CannedInk,
   type DemoPreviewDiagnostic,
   type DemoPreviewTurn,
-} from "@agentic-toolkit/data/personas";
-import { Field } from "@agenticdevelopertoolkit/ui/blocks";
-import { Button } from "@agenticdevelopertoolkit/ui/components/button";
-import { Checkbox } from "@agenticdevelopertoolkit/ui/components/checkbox";
-import { EditorToolbar } from "@agenticdevelopertoolkit/ui/components/editor-toolbar";
-import { ErrorText } from "@agenticdevelopertoolkit/ui/components/error-text";
-import { Input } from "@agenticdevelopertoolkit/ui/components/input";
-import { Label } from "@agenticdevelopertoolkit/ui/components/label";
-import { SyntaxQuickReference } from "@agenticdevelopertoolkit/ui/components/quick-reference";
-import { Textarea } from "@agenticdevelopertoolkit/ui/components/textarea";
-import { cn } from "@agenticdevelopertoolkit/ui/lib/utils";
-import { fieldCaptionClass } from "@agenticdevelopertoolkit/ui/lib/typography";
+} from "@adh-sdk/data/personas";
+import { Field } from "@adh-sdk/ui/blocks";
+import { Button } from "@adh-sdk/ui/components/button";
+import { Checkbox } from "@adh-sdk/ui/components/checkbox";
+import { EditorToolbar } from "@adh-sdk/ui/components/editor-toolbar";
+import { ErrorText } from "@adh-sdk/ui/components/error-text";
+import { Input } from "@adh-sdk/ui/components/input";
+import { Label } from "@adh-sdk/ui/components/label";
+import { SyntaxQuickReference } from "@adh-sdk/ui/components/quick-reference";
+import { Textarea } from "@adh-sdk/ui/components/textarea";
+import { cn } from "@adh-sdk/ui/lib/utils";
+import { fieldCaptionClass } from "@adh-sdk/ui/lib/typography";
 
 /** How long the author has to stop typing before the script is sent to be compiled. */
 const LINT_DEBOUNCE_MS = 600;

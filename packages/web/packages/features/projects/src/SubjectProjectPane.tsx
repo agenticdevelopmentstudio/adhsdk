@@ -1,10 +1,10 @@
 "use client";
 
 import { useCallback, useState, type ReactElement } from "react";
-import { EmptyState } from "@agenticdevelopertoolkit/ui/components/empty-state";
-import { useResourceItemQuery } from "@agentic-toolkit/data";
-import { projectsApi, type Project } from "@agentic-toolkit/data/projects";
-import { StackGroupDetail, type GroupTopicItem, type TopicLeaf } from "@agentic-toolkit/resource";
+import { EmptyState } from "@adh-sdk/ui/components/empty-state";
+import { useResourceItemQuery } from "@adh-sdk/data";
+import { projectsApi, type Project } from "@adh-sdk/data/projects";
+import { StackGroupDetail, type GroupTopicItem, type TopicLeaf } from "@adh-sdk/resource";
 import { projectTopics } from "./projectTopics";
 import { itemWordsOf } from "./vocabulary";
 import { useBoardLive } from "./useBoardLive";

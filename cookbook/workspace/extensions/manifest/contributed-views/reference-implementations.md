@@ -1,5 +1,5 @@
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/Core/Extensions/ContributedViews.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Extensions/ContributedViews.swift` |
 

@@ -3,7 +3,7 @@
   "meta": {
     "id": "c79094d2-1f4b-4c3f-8005-8fb095fb1b40",
     "title": "Breadcrumb Popover",
-    "domain": "adtoolkit://cookbook/workspace/documents/breadcrumb-popover-view",
+    "domain": "adhsdk://cookbook/workspace/documents/breadcrumb-popover-view",
     "type": "ingredient",
     "version": "1.2.2",
     "status": "review",
@@ -25,7 +25,7 @@
     ],
     "depends-on": [],
     "related": [
-      "adtoolkit://cookbook/workspace/documents/breadcrumb-view"
+      "adhsdk://cookbook/workspace/documents/breadcrumb-view"
     ],
     "references": [],
     "approved-by": "",

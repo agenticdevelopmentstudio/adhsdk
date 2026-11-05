@@ -1,7 +1,7 @@
 ---
 id: ea580796-8b16-4832-b11d-ad3cae991ecd
 title: "Database"
-domain: adtoolkit://cookbook/data/storage/database
+domain: adhsdk://cookbook/data/storage/database
 type: ingredient
 version: 1.2.0
 status: review
@@ -22,15 +22,15 @@ tags:
   - persistence
 depends-on: []
 related:
-  - adtoolkit://cookbook/data/sync/sync-engine
-  - adtoolkit://cookbook/data/sync/offline-sync-client
-  - adtoolkit://cookbook/adh/hub/content/markdown-store
-  - adtoolkit://cookbook/workspace/projects/project-database
+  - adhsdk://cookbook/data/sync/sync-engine
+  - adhsdk://cookbook/data/sync/offline-sync-client
+  - adhsdk://cookbook/adh/hub/content/markdown-store
+  - adhsdk://cookbook/workspace/projects/project-database
 references:
-  - packages/apple/AgenticToolkit/Database/BoundedDatabase.swift
-  - packages/apple/AgenticToolkit/Database/AppStorageLocation.swift
-  - packages/apple/AgenticToolkit/Tests/AgenticToolkitDatabaseTests/BoundedDatabaseTests.swift
-  - packages/apple/AgenticToolkit/Tests/AgenticToolkitDatabaseTests/AppStorageLocationTests.swift
+  - packages/apple/AgenticDeveloperHubSDK/Database/BoundedDatabase.swift
+  - packages/apple/AgenticDeveloperHubSDK/Database/AppStorageLocation.swift
+  - packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKDatabaseTests/BoundedDatabaseTests.swift
+  - packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKDatabaseTests/AppStorageLocationTests.swift
 approved-by: ""
 approved-date: ""
 ---
@@ -58,17 +58,17 @@ sit on. It has two parts:
   reduced to characters a path can hold.
 
 Consumers include the sync store (see
-[Offline Sync Client](adtoolkit://cookbook/data/sync/offline-sync-client)),
-the markdown store (see [Markdown Core](adtoolkit://cookbook/adh/hub/content/markdown-store)),
+[Offline Sync Client](adhsdk://cookbook/data/sync/offline-sync-client)),
+the markdown store (see [Markdown Core](adhsdk://cookbook/adh/hub/content/markdown-store)),
 and the project database (see
-[Project Database](adtoolkit://cookbook/workspace/projects/project-database)),
+[Project Database](adhsdk://cookbook/workspace/projects/project-database)),
 which names its file inside the storage-location helper's directory.
 
 ## Behavioral Requirements
 
 ### Storage Location
 
-- **fallback-token**: The fallback token MUST be the string `"AgenticToolkit"`.
+- **fallback-token**: The fallback token MUST be the string `"AgenticDeveloperHubSDK"`.
 - **token-filter**: The token-deriving operation MUST return the display name with every character that is not a letter, mark, or number removed, with no substitute character inserted.
 - **token-order**: The token-deriving operation MUST keep the surviving characters in their original order and original case.
 - **token-empty-fallback**: The token-deriving operation MUST return the fallback token when no character survives the filter, including for an empty input.
@@ -171,12 +171,12 @@ Not applicable — this is a database access layer and storage-path helper, not 
 | sed-001 | token-filter | the display name `"Coffee Grinder"` | `"CoffeeGrinder"` |
 | sed-002 | token-order | the display name `"Percolator"` | `"Percolator"` |
 | sed-003 | token-filter | the display name `"Coffee/Grinder 2.0"` | `"CoffeeGrinder20"` |
-| sed-004 | token-empty-fallback, fallback-token | an input of only spaces, and separately an empty string | `"AgenticToolkit"` in both cases |
+| sed-004 | token-empty-fallback, fallback-token | an input of only spaces, and separately an empty string | `"AgenticDeveloperHubSDK"` in both cases |
 | sed-005 | token-non-ascii | the display name `"Café"` | `"Café"` |
 | sed-006 | directory-shape | home directory `/tmp/home`, token `"CoffeeGrinder"` | path `/tmp/home/.coffeegrinder` |
 | sed-007 | directory-case-fold | tokens `"COFFEEgrinder"` and `"CoffeeGrinder"` under `/tmp/home` | identical paths |
 | sed-008 | directory-no-io | the storage-directory operation for a home with no such dotfolder | a location is returned; the directory still does not exist afterward |
-| sed-009 | display-name-fallback | no declared display name available | display name and token both resolve to `"AgenticToolkit"` |
+| sed-009 | display-name-fallback | no declared display name available | display name and token both resolve to `"AgenticDeveloperHubSDK"` |
 | sed-010 | write-transaction, read-reader, file-backed-pool | a file-backed database configured with 2 readers; a write creates a table and inserts the value `42`; then a top-level read selects it back | `42` |
 | sed-011 | read-your-writes, reentrant-inline | inside one write: create a table, insert the value `7`, then a nested read selects it back | the nested read returns `7` before the write commits |
 | sed-012 | eviction-error, progress-interval | a table of 1500 rows; a read with a 200ms deadline runs a triple self-join count | raises the deadline-exceeded error for lane `"read"` in under 3 seconds |
@@ -194,7 +194,7 @@ Not applicable — this is a database access layer and storage-path helper, not 
 
 ## Edge Cases
 
-- **Empty display name**: The token-deriving operation applied to an empty string, or to a name made only of spaces or punctuation, MUST return `"AgenticToolkit"`; a missing or empty declared display name MUST make the display-name reader return `"AgenticToolkit"`.
+- **Empty display name**: The token-deriving operation applied to an empty string, or to a name made only of spaces or punctuation, MUST return `"AgenticDeveloperHubSDK"`; a missing or empty declared display name MUST make the display-name reader return `"AgenticDeveloperHubSDK"`.
 - **Path separators in the name**: Path-separator characters, periods, and spaces MUST be dropped by the token-deriving operation, so the result can never escape the home directory or add a nested path component.
 - **Localized bundle name**: When an app localizes its declared display name, the display-name reader and the token-deriving operation MUST follow the active localization, so the storage directory can differ between locales (see Design Decisions).
 - **Non-ASCII names**: Letters, combining marks, and digits outside ASCII MUST survive the token-deriving operation; the directory then carries non-ASCII characters, lowercased by a locale-independent lowercasing operation.
@@ -225,7 +225,7 @@ Not applicable — this is a database access layer and storage-path helper, not 
 | `busyTimeout` | duration (seconds) | `5` | Seconds to wait on a locked database before failing. |
 | `prepare` | optional hook function | none | Runs on every connection at open, after the temp-store setting and before the ejection mechanism is installed; for app-specific setup. |
 | `deadline` (per call) | optional duration | none (use the lane default) | Overrides the deadline for one top-level call; ignored on nested calls. |
-| Declared display name (platform bundle metadata) | string | `"AgenticToolkit"` when absent or empty | Source of the display name and token. |
+| Declared display name (platform bundle metadata) | string | `"AgenticDeveloperHubSDK"` when absent or empty | Source of the display name and token. |
 | `home` (storage-directory operation) | location | required | Directory under which the dotfolder is placed. |
 | `token` (storage-directory operation) | string | the default token | Name folded to lowercase for the dotfolder. |
 | Progress-check interval | constant | 1000 execution steps | Not configurable. |
@@ -237,11 +237,11 @@ Not applicable: neither component handles URLs or routes; the only location valu
 
 ## Localization
 
-The storage-location helper contains no user-facing string of its own; the fallback token (`"AgenticToolkit"`) is a hardcoded, unlocalized identifier, and the display-name reader returns the platform's own resolution of the declared display name, which is the localized value when the app localizes that value. Consumers interpolate the display name into sentences the user reads.
+The storage-location helper contains no user-facing string of its own; the fallback token (`"AgenticDeveloperHubSDK"`) is a hardcoded, unlocalized identifier, and the display-name reader returns the platform's own resolution of the declared display name, which is the localized value when the app localizes that value. Consumers interpolate the display name into sentences the user reads.
 
 | String Key | Default (en) | Context |
 |-----------|-------------|---------|
-| Declared display name (platform bundle metadata) | the app's declared name, or `AgenticToolkit` when absent | Returned by the display-name reader; also the input to the token-deriving operation and therefore to the storage directory name. |
+| Declared display name (platform bundle metadata) | the app's declared name, or `AgenticDeveloperHubSDK` when absent | Returned by the display-name reader; also the input to the token-deriving operation and therefore to the storage directory name. |
 
 ## Accessibility Options
 
@@ -268,7 +268,7 @@ Not applicable: neither component performs its own logging; ejections surface as
 
 ## Platform Notes
 
-- **SwiftUI**: Source platform (`Database/BoundedDatabase.swift`, `Database/AppStorageLocation.swift`, module `AgenticToolkitDatabase`). It imports `Foundation`, `SQLite3` (for `sqlite3_progress_handler`) and GRDB; the per-op deadline and current connection live in `Thread.current.threadDictionary`, which works because GRDB runs each sync op on one thread; the handler is a capture-free `@convention(c)` closure; `DispatchTime` supplies the monotonic clock and `NSLock` guards the metrics. A SwiftUI app owns one instance per database file and should call it off the main actor, since every call blocks.
+- **SwiftUI**: Source platform (`Database/BoundedDatabase.swift`, `Database/AppStorageLocation.swift`, module `AgenticDeveloperHubSDKDatabase`). It imports `Foundation`, `SQLite3` (for `sqlite3_progress_handler`) and GRDB; the per-op deadline and current connection live in `Thread.current.threadDictionary`, which works because GRDB runs each sync op on one thread; the handler is a capture-free `@convention(c)` closure; `DispatchTime` supplies the monotonic clock and `NSLock` guards the metrics. A SwiftUI app owns one instance per database file and should call it off the main actor, since every call blocks.
 - **Compose**: Start from Android's `SQLiteDatabase` with `enableWriteAheadLogging()` or Room with `JournalMode.WRITE_AHEAD_LOGGING`, which already gives one writer plus a reader pool. Android exposes no progress handler, so ejection maps to `CancellationSignal` passed to `rawQuery`/`query` and cancelled from a `withTimeout` coroutine; the thread-local reentrancy slot becomes a `ThreadLocal<SupportSQLiteDatabase?>` or, in coroutines, a `CoroutineContext` element (Room's `withTransaction` already does this). Metrics use `AtomicInteger` or a `Mutex`. The storage folder is `Context.filesDir` rather than a home dotfolder, so `AppStorageLocation` reduces to the token filter.
 - **React/Web**: The closest equivalent is IndexedDB or SQLite-WASM (`@sqlite.org/sqlite-wasm` with OPFS) in a Web Worker; SQLite-WASM exposes `sqlite3_progress_handler`, so ejection ports directly, with `performance.now()` as the monotonic clock. Single-threaded JS has no thread-locals, so reentrancy needs an explicit "current connection" passed down or an `AsyncLocalStorage`-style context in Node (`better-sqlite3` offers a synchronous API and `db.function`-level hooks but no progress handler). The home dotfolder applies only to Node (`os.homedir()`).
 - **AppKit / UIKit**: The same Swift sources apply unchanged. On iOS the home directory is the app sandbox container, so a caller passes `FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)` as `home` if a hidden dotfolder at the container root is not wanted; `Bundle.main` supplies `CFBundleName` in both.
@@ -278,7 +278,7 @@ Not applicable: neither component performs its own logging; ejections surface as
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/Database/` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Database/` |
 
 ## Design Decisions
 

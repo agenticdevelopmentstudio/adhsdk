@@ -6,7 +6,7 @@ import {
   AuthHttpError,
   onSessionChange,
   readTokenSubject,
-} from '@agentic-toolkit/auth/client'
+} from '@adh-sdk/auth/client'
 import { listUrl } from './useCrudResource'
 import type { CrudTableMeta } from './types'
 

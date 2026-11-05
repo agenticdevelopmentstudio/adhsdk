@@ -2,11 +2,11 @@
 
 import { useState } from 'react'
 import { ExamplePanel } from '../../ExamplePanel'
-import { OrbRow } from '@agenticdevelopertoolkit/controls/orb-row'
-import type { OrbSite } from '@agenticdevelopertoolkit/controls/orb-row'
-import '@agenticdevelopertoolkit/controls/orb-row/styles.css'
-import { SourceCodePanel } from '@agenticdevelopertoolkit/controls/source-code-panel'
-import '@agenticdevelopertoolkit/controls/source-code-panel/styles.css'
+import { OrbRow } from '@adh-sdk/controls/orb-row'
+import type { OrbSite } from '@adh-sdk/controls/orb-row'
+import '@adh-sdk/controls/orb-row/styles.css'
+import { SourceCodePanel } from '@adh-sdk/controls/source-code-panel'
+import '@adh-sdk/controls/source-code-panel/styles.css'
 
 export const meta = { id: 'orb-row', label: 'Orb Row' }
 
@@ -40,7 +40,7 @@ const sites: OrbSite[] = [
     url: 'https://agenticdatastore.com',
   },
   {
-    id: 'persona-toolkit',
+    id: 'adh-sdk',
     name: 'Agentic Persona Toolkit',
     emoji: '🧰',
     iconGradient: 'linear-gradient(135deg,#5cc4c4,#7de0e0)',
@@ -173,9 +173,9 @@ const selectStyle: React.CSSProperties = {
   minWidth: 220,
 }
 
-const CONSUMER_SOURCE = `import { OrbRow } from '@agenticdevelopertoolkit/controls/orb-row'
-import type { OrbSite } from '@agenticdevelopertoolkit/controls/orb-row'
-import '@agenticdevelopertoolkit/controls/orb-row/styles.css'
+const CONSUMER_SOURCE = `import { OrbRow } from '@adh-sdk/controls/orb-row'
+import type { OrbSite } from '@adh-sdk/controls/orb-row'
+import '@adh-sdk/controls/orb-row/styles.css'
 
 const sites: OrbSite[] = [
   { id: 'cookbook', name: 'The Agentic Cookbook', emoji: '📖',

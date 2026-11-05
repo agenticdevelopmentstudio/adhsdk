@@ -3,7 +3,7 @@
   "meta": {
     "id": "da0c6c07-d0f4-4c6c-a1ef-51b696910c72",
     "title": "Status Server Monitor Integrations",
-    "domain": "adtoolkit://cookbook/status/service/monitor/integrations",
+    "domain": "adhsdk://cookbook/status/service/monitor/integrations",
     "type": "ingredient",
     "version": "1.0.2",
     "status": "review",
@@ -32,18 +32,18 @@
       "agenticdevelopercookbook://guidelines/implementing/observability/logging"
     ],
     "related": [
-      "adtoolkit://cookbook/status/service/monitor/fetch-cloudflare",
-      "adtoolkit://cookbook/status/service/config",
-      "adtoolkit://cookbook/status/service/auth"
+      "adhsdk://cookbook/status/service/monitor/fetch-cloudflare",
+      "adhsdk://cookbook/status/service/config",
+      "adhsdk://cookbook/status/service/auth"
     ],
     "references": [
-      "packages/web/packages/status-server/src/monitor/integrations.ts (agenticdevelopertoolkit)",
-      "packages/web/packages/status-server/src/monitor/self-check-stability.ts (agenticdevelopertoolkit)",
-      "packages/web/packages/status-server/src/monitor/types.ts (agenticdevelopertoolkit)",
-      "packages/web/packages/status-server/src/monitor/time-ago.ts (agenticdevelopertoolkit)",
-      "packages/web/packages/status-server/test/integrations-retry.test.ts (agenticdevelopertoolkit)",
-      "packages/web/packages/status-server/test/integrations-missing-env.test.ts (agenticdevelopertoolkit)",
-      "packages/web/packages/status-server/test/integrations-telemetry.test.ts (agenticdevelopertoolkit)"
+      "packages/web/packages/status-server/src/monitor/integrations.ts (adhsdk)",
+      "packages/web/packages/status-server/src/monitor/self-check-stability.ts (adhsdk)",
+      "packages/web/packages/status-server/src/monitor/types.ts (adhsdk)",
+      "packages/web/packages/status-server/src/monitor/time-ago.ts (adhsdk)",
+      "packages/web/packages/status-server/test/integrations-retry.test.ts (adhsdk)",
+      "packages/web/packages/status-server/test/integrations-missing-env.test.ts (adhsdk)",
+      "packages/web/packages/status-server/test/integrations-telemetry.test.ts (adhsdk)"
     ],
     "approved-by": "",
     "approved-date": ""

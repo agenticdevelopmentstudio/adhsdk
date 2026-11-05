@@ -1,7 +1,7 @@
 ---
 id: 5ec45ac4-a02f-4ee7-becb-7894c2893f23
 title: Pane Minimized Strip View
-domain: agenticdevelopertoolkit://recipes/pane-minimized-strip-view
+domain: adhsdk://recipes/pane-minimized-strip-view
 type: ingredient
 version: 1.1.1
 status: review
@@ -23,8 +23,8 @@ tags:
 - minimized
 depends-on: []
 related:
-- agenticdevelopertoolkit://recipes/separator
-- agenticdevelopertoolkit://recipes/pane-title-bar-view
+- adhsdk://recipes/separator
+- adhsdk://recipes/pane-title-bar-view
 references: []
 approved-by: ''
 approved-date: ''
@@ -166,7 +166,7 @@ Not applicable: This component does not emit diagnostic logs; logging of pane st
 
 ## Platform Notes
 
-- **Source**: `PaneMinimizedStripView.swift` in `AgenticDeveloperToolkit/SourcesUI/macOS/Chrome/`. Uses `NSView`, `NSButton`, `NSImageView`, theme-aware `ThemedBackgroundView` and `ThemedSeparatorView` helpers. Fixed layout via Auto Layout constraints. `@MainActor` actor-isolated for UI thread safety.
+- **Source**: `PaneMinimizedStripView.swift` in `AgenticDeveloperHubSDK/SDK/SourcesUI/macOS/Chrome/`. Uses `NSView`, `NSButton`, `NSImageView`, theme-aware `ThemedBackgroundView` and `ThemedSeparatorView` helpers. Fixed layout via Auto Layout constraints. `@MainActor` actor-isolated for UI thread safety.
 - **SwiftUI**: Wrap the AppKit view using `NSViewRepresentable`, or build natively using `VStack` with `Button` (label: Image), a `Divider` for the hairline, and state to bind `symbolName` and `tooltip`. Apply secondary text color via `.foregroundStyle()`.
 - **Compose**: Implement using `Column` with an icon `Button` (icon: `Icons.Default.Add`) at top, `Spacer(Modifier.height(6.dp))`, and the glyph icon below. Use `Modifier.fillMaxHeight()` on the column, `Modifier.width(28.dp)` for the fixed width, and `Divider(color = ..., thickness = 1.dp, modifier = Modifier.fillMaxHeight())` positioned on the leading or trailing edge of the column based on the `edge` parameter.
 - **AppKit / UIKit**: On UIKit/iOS, adapt using `UIView` with `UIButton` (system style, image: UIImage(systemName: "plus")), `UIImageView` for glyph, and `UIView` separator. Use Auto Layout constraints matching desktop spacing. Ensure button and glyph areas meet 44×44 minimum tap target on iOS.

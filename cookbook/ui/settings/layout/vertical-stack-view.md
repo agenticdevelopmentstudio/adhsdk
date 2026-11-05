@@ -1,7 +1,7 @@
 ---
 id: 765b853f-36a2-4e4f-b8aa-2cd15714a67f
 title: "Vertical Stack View"
-domain: adtoolkit://cookbook/ui/settings/layout/vertical-stack-view
+domain: adhsdk://cookbook/ui/settings/layout/vertical-stack-view
 type: ingredient
 version: 1.2.2
 status: review
@@ -21,7 +21,7 @@ tags:
   - settings
 depends-on: []
 related:
-  - adtoolkit://cookbook/ui/settings/layout/horizontal-stack-view
+  - adhsdk://cookbook/ui/settings/layout/horizontal-stack-view
 references: []
 approved-by: ""
 approved-date: ""
@@ -252,7 +252,7 @@ Not applicable: the component contains no logging calls.
   no manual spacer elements needed; children are ordinary DOM children in
   document order, corresponding to the order arranged subviews are added.
 - **AppKit / UIKit (source)**: `VerticalStackView.swift`
-  (`packages/apple/AgenticToolkit/macOS/SystemIntegration/ComposableSettingsWindow/Views/VerticalStackView.swift`)
+  (`packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/Views/VerticalStackView.swift`)
   is a macOS-only (`import AppKit`), `@MainActor` `NSView` subclass
   conforming to `SettingsViewProtocol` (a marker protocol with no
   requirements of its own, so the conformance is recorded here rather than
@@ -303,7 +303,7 @@ Not applicable: the component contains no logging calls.
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/macOS/SystemIntegration/ComposableSettingsWindow/Views/VerticalStackView.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/Views/VerticalStackView.swift` |
 
 ## Design Decisions
 

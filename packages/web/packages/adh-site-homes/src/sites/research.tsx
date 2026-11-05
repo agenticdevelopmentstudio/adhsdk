@@ -1,14 +1,14 @@
 "use client";
 
-import { defineSiteHome } from "@agentic-toolkit/adh/home";
-import { ResearchFeature } from "@agentic-toolkit/research";
+import { defineSiteHome } from "@adh-sdk/adh/home";
+import { ResearchFeature } from "@adh-sdk/research";
 // The parse helper comes from the server-safe ./parse subpath, and keeping the grammar in one
 // module is what stops this host and the hub drifting into parsing the same URL differently.
-import { parseResearchPath } from "@agentic-toolkit/research/parse";
+import { parseResearchPath } from "@adh-sdk/research/parse";
 
 /**
  * The Research feature — this site's gated product surface: the signed-in user's markdown
- * research papers (search, editor, publish flow), the SAME @agentic-toolkit/research surface the
+ * research papers (search, editor, publish flow), the SAME @adh-sdk/research surface the
  * hub's /<slug>/research route renders.
  *
  * This site's routes are NOT the family's, and the difference is the whole reason this file has

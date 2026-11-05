@@ -4,10 +4,10 @@
 import { useCallback as useCallback3, useEffect as useEffect4, useRef as useRef2 } from "react";
 import dynamic from "next/dynamic";
 import { MessagesSquare, Palette, SlidersHorizontal, SquareTerminal } from "lucide-react";
-import { HierarchicalDetailView } from "@agenticdevelopertoolkit/ui/blocks";
-import { EmptyState } from "@agenticdevelopertoolkit/ui/components/empty-state";
-import { DEV_BUILD } from "@agentic-toolkit/adh-registry/deployment-env";
-import { settingsLast } from "@agentic-toolkit/resource";
+import { HierarchicalDetailView } from "@adh-sdk/ui/blocks";
+import { EmptyState } from "@adh-sdk/ui/components/empty-state";
+import { DEV_BUILD } from "@adh-sdk/adh-registry/deployment-env";
+import { settingsLast } from "@adh-sdk/resource";
 
 // src/debug-env/FloatingWindow.tsx
 import {
@@ -20,9 +20,9 @@ import {
 } from "react";
 import { createPortal } from "react-dom";
 import { X } from "lucide-react";
-import { Button } from "@agenticdevelopertoolkit/ui/components/button";
-import { PHONE_SHEET_CLASSES } from "@agenticdevelopertoolkit/ui/components/dialog";
-import { PHONE_MAX_WIDTH, useMediaQuery } from "@agenticdevelopertoolkit/ui/hooks/useMediaQuery";
+import { Button } from "@adh-sdk/ui/components/button";
+import { PHONE_SHEET_CLASSES } from "@adh-sdk/ui/components/dialog";
+import { PHONE_MAX_WIDTH, useMediaQuery } from "@adh-sdk/ui/hooks/useMediaQuery";
 
 // src/hooks/useIsMounted.ts
 import { useEffect, useState } from "react";
@@ -324,7 +324,7 @@ function EnvironmentPanel() {
 }
 
 // src/debug-env/SettingsPanel.tsx
-import { Switch } from "@agenticdevelopertoolkit/ui/components/switch";
+import { Switch } from "@adh-sdk/ui/components/switch";
 import {
   useShowDebugFrames,
   setShowDebugFrames,
@@ -332,7 +332,7 @@ import {
   setSlowAnimations,
   useCascadeLog,
   setCascadeLog
-} from "@agenticdevelopertoolkit/ui/blocks";
+} from "@adh-sdk/ui/blocks";
 import { Fragment, jsx as jsx5, jsxs as jsxs4 } from "react/jsx-runtime";
 function DebugSwitch({
   id,
@@ -494,7 +494,7 @@ function rootTopicsFor({
   );
 }
 var SiteThemeConsole = process.env.NEXT_PUBLIC_DEPLOYMENT_ENV === "local" || process.env.NEXT_PUBLIC_DEPLOYMENT_ENV === "testing" || process.env.NEXT_PUBLIC_DEPLOYMENT_ENV === "staging" ? dynamic(
-  () => import("@agentic-toolkit/adh/debug-env/SiteThemeConsole").then((m) => m.SiteThemeConsole)
+  () => import("@adh-sdk/adh/debug-env/SiteThemeConsole").then((m) => m.SiteThemeConsole)
 ) : null;
 function DebugConsoleWindow({
   open,

@@ -1,9 +1,9 @@
 'use client';
 
 import type { ReactNode } from 'react';
-import { Badge } from '@agenticdevelopertoolkit/ui/components/badge';
-import { formatDate } from '@agenticdevelopertoolkit/ui/lib/timestamps';
-import type { EntryLink, EntryRow } from '@agentic-toolkit/registry/client';
+import { Badge } from '@adh-sdk/ui/components/badge';
+import { formatDate } from '@adh-sdk/ui/lib/timestamps';
+import type { EntryLink, EntryRow } from '@adh-sdk/registry/client';
 import { CONTACT_MODE_LABEL, DELIVERY_MODE_LABEL } from './EntryReachPanel';
 import { safeHref } from './links';
 import { VISIBILITY_LABEL } from './EntryPublishPanel';

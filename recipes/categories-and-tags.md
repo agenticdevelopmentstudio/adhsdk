@@ -1,7 +1,7 @@
 ---
 id: d9df7837-8e06-460a-a703-60441d74eeed
 title: Categories and Tags
-domain: agenticdevelopertoolkit://recipes/categories-and-tags
+domain: adhsdk://recipes/categories-and-tags
 type: ingredient
 version: 1.1.1
 status: review
@@ -20,10 +20,10 @@ tags:
 - classification
 - form-fields
 depends-on:
-- agenticdevelopertoolkit://recipes/category-field
-- agenticdevelopertoolkit://recipes/tag-set-field
+- adhsdk://recipes/category-field
+- adhsdk://recipes/tag-set-field
 related:
-- agenticdevelopertoolkit://recipes/document-identity-field
+- adhsdk://recipes/document-identity-field
 references: []
 approved-by: ''
 approved-date: ''

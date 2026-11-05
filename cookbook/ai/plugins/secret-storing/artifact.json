@@ -3,7 +3,7 @@
   "meta": {
     "id": "d274abfa-3696-4fd0-b3e8-cff6fdffb825",
     "title": "Secret Storing",
-    "domain": "adtoolkit://cookbook/ai/plugins/secret-storing",
+    "domain": "adhsdk://cookbook/ai/plugins/secret-storing",
     "type": "ingredient",
     "version": "1.2.0",
     "status": "review",
@@ -26,17 +26,17 @@
     ],
     "depends-on": [],
     "related": [
-      "adtoolkit://cookbook/ai/chat/daemon-ai-chat",
-      "adtoolkit://cookbook/ai/providers/provider-config-keys"
+      "adhsdk://cookbook/ai/chat/daemon-ai-chat",
+      "adhsdk://cookbook/ai/providers/provider-config-keys"
     ],
     "references": [
-      "packages/apple/AgenticToolkit/AIPluginKit/SecretStoring.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/Core/KeychainHelper.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/Tests/AgenticToolkitCoreTests/KeychainHelperTests.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/Tests/AIPluginKitTests/AIPluginKitTestSupport.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/AIPluginKit/DaemonAIChat.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/Tests/AIPluginKitTests/DaemonAIChatTests.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/AIPluginKit/AIProviderConfigKeys.swift (agenticdevelopertoolkit)"
+      "packages/apple/AgenticDeveloperHubSDK/AIPluginKit/SecretStoring.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/Core/KeychainHelper.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKCoreTests/KeychainHelperTests.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/Tests/AIPluginKitTests/AIPluginKitTestSupport.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/AIPluginKit/DaemonAIChat.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/Tests/AIPluginKitTests/DaemonAIChatTests.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/AIPluginKit/AIProviderConfigKeys.swift (adhsdk)"
     ],
     "approved-by": "",
     "approved-date": ""

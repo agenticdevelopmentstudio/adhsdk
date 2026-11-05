@@ -1,5 +1,5 @@
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/AIPluginKit/LocalInferenceGuard.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/AIPluginKit/LocalInferenceGuard.swift` |
 

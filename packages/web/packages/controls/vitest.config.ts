@@ -1,6 +1,6 @@
 import { defineConfig } from 'vitest/config'
 
-// Self-contained so `pnpm --filter @agenticdevelopertoolkit/controls run test` (cwd = this
+// Self-contained so `pnpm --filter @adh-sdk/controls run test` (cwd = this
 // package) discovers src/**/__tests__/*. The workspace-root config's `dir: '../packages'`
 // resolves outside the web workspace, so it finds nothing — the same reason the `ui`
 // and `editing` packages carry their own. The root setup file supplies the deterministic

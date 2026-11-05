@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useId, useRef, useState, type ReactNode } from 'react'
-import { CHAT_INSIDE_ATTR } from '@agenticdevelopertoolkit/chat'
+import { CHAT_INSIDE_ATTR } from '@adh-sdk/chat'
 
 /**
  * Where else bitbag lives. He's a persona, not a feature of whatever site he's

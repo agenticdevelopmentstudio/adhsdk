@@ -3,25 +3,25 @@
 import { useCallback, useEffect, useRef, useState, type ReactElement } from "react";
 import { Plug, RefreshCw } from "lucide-react";
 
-import { reportUnexpectedAuthError } from "@agentic-toolkit/auth";
-import { List, ListItem } from "@agenticdevelopertoolkit/ui/components/list";
-import { Badge, type badgeVariants } from "@agenticdevelopertoolkit/ui/components/badge";
-import { AlertModal } from "@agenticdevelopertoolkit/ui/components/alert-modal";
+import { reportUnexpectedAuthError } from "@adh-sdk/auth";
+import { List, ListItem } from "@adh-sdk/ui/components/list";
+import { Badge, type badgeVariants } from "@adh-sdk/ui/components/badge";
+import { AlertModal } from "@adh-sdk/ui/components/alert-modal";
 import type { VariantProps } from "class-variance-authority";
-import { Button } from "@agenticdevelopertoolkit/ui/components/button";
-import { Input } from "@agenticdevelopertoolkit/ui/components/input";
-import { Label } from "@agenticdevelopertoolkit/ui/components/label";
-import { Disclosure } from "@agenticdevelopertoolkit/ui/components/disclosure";
-import { ErrorText } from "@agenticdevelopertoolkit/ui/components/error-text";
+import { Button } from "@adh-sdk/ui/components/button";
+import { Input } from "@adh-sdk/ui/components/input";
+import { Label } from "@adh-sdk/ui/components/label";
+import { Disclosure } from "@adh-sdk/ui/components/disclosure";
+import { ErrorText } from "@adh-sdk/ui/components/error-text";
 import {
   integrationsApi,
   type MaskedProviderConfig,
   type ProviderCatalogEntry,
   type SafeConnection,
-} from "@agentic-toolkit/data/integrations";
-import { isServiceUnavailable, errMsg, useResourceList } from "@agentic-toolkit/data";
-import { DetailSection } from "@agentic-toolkit/resource";
-import { useReportSettingsDirty } from "@agentic-toolkit/resource";
+} from "@adh-sdk/data/integrations";
+import { isServiceUnavailable, errMsg, useResourceList } from "@adh-sdk/data";
+import { DetailSection } from "@adh-sdk/resource";
+import { useReportSettingsDirty } from "@adh-sdk/resource";
 import { ConnectAccountDialog } from "./ConnectAccountDialog";
 import { AudienceSyncSettings } from "./AudienceSyncSettings";
 

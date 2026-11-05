@@ -1,7 +1,7 @@
 "use client";
 
 import { QueryClientProvider, type QueryClient } from "@tanstack/react-query";
-import { getToolkitQueryClient } from "@agentic-toolkit/data/query";
+import { getToolkitQueryClient } from "@adh-sdk/data/query";
 import type { ReactNode } from "react";
 
 /**
@@ -47,7 +47,7 @@ export function applyAdminQueryDefaults(client: QueryClient): QueryClient {
 /**
  * The query scope every admin pane reads through, on every host.
  *
- * It hands down the TOOLKIT's client — the module-scope singleton `@agentic-toolkit/data/query`
+ * It hands down the TOOLKIT's client — the module-scope singleton `@adh-sdk/data/query`
  * owns — because the panes import react-query from the toolkit's copy, and a provider built from
  * any other copy is invisible to them ("No QueryClient set"). That is exactly what the admin site
  * shipped with: its `QueryClientProvider` is built from the SITE's react-query, so the extracted

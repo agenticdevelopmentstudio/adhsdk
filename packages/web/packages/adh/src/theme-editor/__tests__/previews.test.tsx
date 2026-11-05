@@ -8,7 +8,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, render } from '@testing-library/react'
 import type { ComponentType } from 'react'
-import type { PopoverEntry, PopoverItem } from '@agentic-toolkit/adh/header'
+import type { PopoverEntry, PopoverItem } from '@adh-sdk/adh/header'
 
 const push = vi.hoisted(() => vi.fn())
 // A workspace route, not `/`: signed in, the header swaps in the workspace switcher ONLY there —
@@ -27,7 +27,7 @@ vi.mock('next/link', () => ({
 }))
 
 // The bell opens a live channel the moment it mounts; who gets one is site-header.test's subject.
-vi.mock('@agentic-toolkit/messaging/components/notification-bell', () => ({
+vi.mock('@adh-sdk/messaging/components/notification-bell', () => ({
   NotificationBell: () => null,
 }))
 
@@ -57,8 +57,8 @@ import {
   WorkspacesMenuProvider,
   type MenuWorkspace,
   type WorkspacesMenu,
-} from '@agentic-toolkit/adh/header'
-import { SiteFooter } from '@agentic-toolkit/adh/footer'
+} from '@adh-sdk/adh/header'
+import { SiteFooter } from '@adh-sdk/adh/footer'
 import { THEME_AREAS } from '../areas'
 
 /** The preview the editor shows for one of its items. */

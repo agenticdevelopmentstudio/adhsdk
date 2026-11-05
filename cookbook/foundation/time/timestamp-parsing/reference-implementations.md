@@ -1,5 +1,5 @@
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/Core/Time/TimestampParsing.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Time/TimestampParsing.swift` |
 

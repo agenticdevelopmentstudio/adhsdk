@@ -1,7 +1,7 @@
 ---
 id: 57e33900-ca06-474e-abb1-d904c27a6336
 title: Log Panel
-domain: agenticdevelopertoolkit://recipes/log-panel
+domain: adhsdk://recipes/log-panel
 type: ingredient
 version: 1.2.2
 status: review

@@ -1,7 +1,7 @@
 ---
 id: 56388aa3-bc75-4d0a-830b-222f39750a9d
 title: Options Dialog View Controller
-domain: agenticdevelopertoolkit://recipes/options-dialog-view-controller
+domain: adhsdk://recipes/options-dialog-view-controller
 type: ingredient
 version: 1.1.1
 status: review
@@ -150,7 +150,7 @@ Not applicable: This component does not emit log messages. Logging (if needed) m
 
 ## Platform Notes
 
-- **Source (AppKit)**: `OptionsDialogViewController` is an NSViewController subclass implemented in `packages/apple/AgenticDeveloperToolkit/SourcesUI/macOS/Chrome/OptionsDialogViewController.swift`. It uses NSStackView for layout, NSButton for the Done button, and NSLayoutConstraint for sizing. The `ThemedLabel` and `ThemedBackgroundView` are AgenticDeveloperToolkit UI components that provide system-aware theming.
+- **Source (AppKit)**: `OptionsDialogViewController` is an NSViewController subclass implemented in `packages/apple/AgenticDeveloperHubSDK/SDK/SourcesUI/macOS/Chrome/OptionsDialogViewController.swift`. It uses NSStackView for layout, NSButton for the Done button, and NSLayoutConstraint for sizing. The `ThemedLabel` and `ThemedBackgroundView` are AgenticDeveloperHubSDK UI components that provide system-aware theming.
 - **SwiftUI**: A SwiftUI version would wrap this NSViewController in a `NSViewControllerRepresentable`, or build an equivalent SwiftUI View using `VStack`, `GroupBox`, and `Button` with similar layout and callback patterns. State would be managed via `@State` or `@ObservedObject` rather than properties.
 - **Compose (Android)**: A Compose implementation would host the content in a `Dialog` (or `AlertDialog`) composable, with a `Column` for vertical layout inside it: an optional `Text` for the heading, the row composables, and a `Button` at the bottom for Done. `onDismissRequest` would map to the close callback, and a lambda passed to the Done `Button` would map to `onDone`. Insets would be applied via `Modifier.padding()`.
 - **AppKit / UIKit**: On iOS, this would use `UIViewController` with a `UIStackView` (vertical). The Done button would be styled as `UIButton.Configuration.plain()` or `.tinted()`. Presentation would use `UISheetPresentationController` or `UIAlertController` modal style. Sheet detection (`isModalInPresentation`) would replace the macOS window-sizing behavior described above.

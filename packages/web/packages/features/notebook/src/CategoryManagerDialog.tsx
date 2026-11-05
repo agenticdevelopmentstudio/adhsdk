@@ -3,28 +3,28 @@
 import { useMemo, useState } from "react";
 import { Trash2, Unlink } from "lucide-react";
 
-import { reportUnexpectedAuthError } from "@agentic-toolkit/auth";
-import { AlertModal } from "@agenticdevelopertoolkit/ui/components/alert-modal";
-import { Button } from "@agenticdevelopertoolkit/ui/components/button";
+import { reportUnexpectedAuthError } from "@adh-sdk/auth";
+import { AlertModal } from "@adh-sdk/ui/components/alert-modal";
+import { Button } from "@adh-sdk/ui/components/button";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "@agenticdevelopertoolkit/ui/components/dialog";
-import { ErrorText } from "@agenticdevelopertoolkit/ui/components/error-text";
-import { Input } from "@agenticdevelopertoolkit/ui/components/input";
-import { Select } from "@agenticdevelopertoolkit/ui/components/select";
-import { markdownApi } from "@agentic-toolkit/data/markdown";
-import { taxonomyApi, type NoteCategory } from "@agentic-toolkit/data/notes";
+} from "@adh-sdk/ui/components/dialog";
+import { ErrorText } from "@adh-sdk/ui/components/error-text";
+import { Input } from "@adh-sdk/ui/components/input";
+import { Select } from "@adh-sdk/ui/components/select";
+import { markdownApi } from "@adh-sdk/data/markdown";
+import { taxonomyApi, type NoteCategory } from "@adh-sdk/data/notes";
 
 import {
   buildCategoryTree,
   categoryKey,
   flattenCategoryTree,
   type CategoryNode,
-} from "@agenticdevelopertoolkit/ui/blocks";
+} from "@adh-sdk/ui/blocks";
 
 /** parent id → the ids filed directly under it. Built once per row set; the reachability walk
  *  below runs per rendered row and would otherwise rebuild it every time. */

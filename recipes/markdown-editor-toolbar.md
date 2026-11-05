@@ -1,7 +1,7 @@
 ---
 id: 3600088a-a9f6-42ca-81db-43f0eb6ddd79
 title: Markdown Editor Toolbar
-domain: agenticdevelopertoolkit://recipes/markdown-editor-toolbar
+domain: adhsdk://recipes/markdown-editor-toolbar
 type: ingredient
 version: 1.2.1
 status: review
@@ -23,7 +23,7 @@ tags:
 - markdown
 depends-on: []
 related:
-- agenticdevelopertoolkit://recipes/markdown-document-editor
+- adhsdk://recipes/markdown-document-editor
 references: []
 approved-by: ''
 approved-date: ''
@@ -183,7 +183,7 @@ Not applicable: The toolbar does not emit logging output in its current implemen
 - **SwiftUI**: A SwiftUI wrapper around the UIView/NSView would use `UIViewRepresentable` (iOS) or `NSViewRepresentable` (macOS) to embed the native toolbar. Callbacks are mapped to SwiftUI state updates via `@State` or parent-driven properties.
 - **Compose (Android)**: Start with a `Row` layout containing a `SegmentedButton` group for modes, a `Spacer` modifier with `Modifier.weight(1f)`, and `IconButton` or `Button` composables for help and import. Mode changes call a callback passed as a lambda. Visibility controlled by simple conditional rendering.
 - **React/Web**: A `<div role="toolbar">` with `display: flex` (row) hosts a `radiogroup` of `role="radio"` buttons — one per `MarkdownEditorMode` — for the mode selector, a `flex: 1` spacer `<div>`, and two `<button>` elements for help and import. Selecting a radio calls an `onModeChange` prop with the new mode; the mode selector renders nothing (or `display: none`) when `availableModes.length < 2`. Apply theme colors via CSS custom properties bound to the semantic palette.
-- **AppKit / UIKit**: Implemented directly in `packages/apple/AgenticDeveloperToolkit/SourcesUI/iOS/Markdown/MarkdownEditorToolbar.swift` (`UIView`) and `packages/apple/AgenticDeveloperToolkit/SourcesUI/macOS/Markdown/MarkdownEditorToolbar.swift` (`NSView`); both expose the same property and callback API. Apply theme via `applyTheme(_:)` after initialization and wire callbacks to your presentation logic. `presentSyntaxHelp` differs by platform: `UIViewController.present` (modal `.formSheet`) on iOS, `NSPopover` on macOS.
+- **AppKit / UIKit**: Implemented directly in `packages/apple/AgenticDeveloperHubSDK/SDK/SourcesUI/iOS/Markdown/MarkdownEditorToolbar.swift` (`UIView`) and `packages/apple/AgenticDeveloperHubSDK/SDK/SourcesUI/macOS/Markdown/MarkdownEditorToolbar.swift` (`NSView`); both expose the same property and callback API. Apply theme via `applyTheme(_:)` after initialization and wire callbacks to your presentation logic. `presentSyntaxHelp` differs by platform: `UIViewController.present` (modal `.formSheet`) on iOS, `NSPopover` on macOS.
 - **WinUI 3**: Build the mode selector from a single `RadioButtons` control (`Microsoft.UI.Xaml.Controls.RadioButtons`), one radio per `MarkdownEditorMode`, followed by a flexible spacer and `AppBarButton` controls for help and import. Map the control's `SelectionChanged` event to `onModeChange` by indexing `availableModes` with the control's `SelectedIndex`. Apply theme colors via `Resources` (theme overrides) or direct property assignment. Help presentation uses a `ContentDialog` or `TeachingTip` instead of `NSPopover`.
 
 ## Design Decisions

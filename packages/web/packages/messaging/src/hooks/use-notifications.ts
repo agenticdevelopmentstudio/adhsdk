@@ -13,9 +13,9 @@
 // set headers, so the raw access token rides the query string.
 
 import { useCallback, useEffect, useState } from 'react'
-import { authedJson, authedRequest } from '@agentic-toolkit/auth/client'
+import { authedJson, authedRequest } from '@adh-sdk/auth/client'
 
-import { connectSse, type SseHandle } from '@agentic-toolkit/data/stream'
+import { connectSse, type SseHandle } from '@adh-sdk/data/stream'
 
 /** Same-origin base — the Next BFF proxy rewrites `/api/*` onto the backend. */
 const API_BASE = '/api/notifications'

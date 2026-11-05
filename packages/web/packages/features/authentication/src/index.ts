@@ -1,4 +1,4 @@
-// @agentic-toolkit/authentication — the Authentication feature: API tokens and
+// @adh-sdk/authentication — the Authentication feature: API tokens and
 // ecosystem bucket-access lists.
 //
 // AccessPane is the Ecosystems "Access" topic (every access list across an

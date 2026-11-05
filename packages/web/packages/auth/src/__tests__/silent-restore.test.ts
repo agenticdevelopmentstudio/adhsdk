@@ -128,7 +128,7 @@ describe('shouldSilentRestore', () => {
     // An unset var is a misconfigured DEPLOY, not a local convenience — one site had
     // it missing on all three tiers and the only symptom was a logged-out header, which
     // looks exactly like not being signed in. The build guard fails such a build now
-    // (`@agentic-toolkit/next-preflight`'s `assertAuthApiUrl`); this is the runtime
+    // (`@adh-sdk/next-preflight`'s `assertAuthApiUrl`); this is the runtime
     // half, and it names the
     // variable so the console says what to fix rather than that something declined.
     //

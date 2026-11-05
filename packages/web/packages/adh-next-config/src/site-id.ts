@@ -1,5 +1,5 @@
 import { basename } from "node:path";
-import { siteIdForDir, type SiteId } from "@agentic-toolkit/adh-registry";
+import { siteIdForDir, type SiteId } from "@adh-sdk/adh-registry";
 
 /**
  * Which site is being built?

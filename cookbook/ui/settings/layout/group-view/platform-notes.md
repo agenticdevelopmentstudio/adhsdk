@@ -38,13 +38,13 @@
   `display: none` alone, so the surrounding gap actually closes, mirroring
   `#requirements/row-visibility-binding`.
 - **AppKit/UIKit** (source platform): Source file
-  `packages/apple/AgenticToolkit/macOS/SystemIntegration/ComposableSettingsWindow/Views/GroupView.swift`,
+  `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/Views/GroupView.swift`,
   with layout constants from `ViewLayout.swift` (`SettingsLayout.default`,
   keyed `.cardCornerRadius` = 10pt, `.captionSpacing` = 6pt,
   `.cardHorizontalInset` = 14pt, `.cardVerticalInset` = 9pt,
   `.dividerThickness` = 1pt — the source of every fixed number in this
   recipe), `ThemedBox`/`ThemedSeparatorView`/`ThemedLabel` from the
-  `agenticdevelopertoolkit` submodule's `ThemedViews.swift` (`card-surface`
+  `adhsdk` submodule's `ThemedViews.swift` (`card-surface`
   is a `ThemedBox` filled with `.elevatedSurface`, `stroke: nil`), and the
   caption view from `HeaderView.swift`. A macOS-only (`import AppKit`)
   `NSView` subclass, `@MainActor`, inside the `ComposableSettings`

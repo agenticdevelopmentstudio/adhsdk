@@ -1,7 +1,7 @@
 ---
 id: FA95BD9D-DE48-4B37-8B30-748DC7B09280
 title: "LRU Cache"
-domain: adtoolkit://cookbook/foundation/collections/lru-cache
+domain: adhsdk://cookbook/foundation/collections/lru-cache
 type: ingredient
 version: 1.0.0
 status: review
@@ -22,7 +22,7 @@ tags:
   - lru
 depends-on: []
 related:
-  - adtoolkit://cookbook/foundation/collections/expiring-memo
+  - adhsdk://cookbook/foundation/collections/expiring-memo
 references: []
 approved-by: ""
 approved-date: ""
@@ -130,7 +130,7 @@ Not applicable: The cache calls no logging API.
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/Core/Collections/LRUCache.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Collections/LRUCache.swift` |
 
 ## Design Decisions
 
@@ -150,7 +150,7 @@ Not applicable: The cache calls no logging API.
 | [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
 | [caching-strategy](agenticdevelopercookbook://compliance/performance#caching-strategy) | passed | Performance |
 
-`separation-of-concerns` passes because the type only stores and evicts; what to cache and how to fetch are the caller's. `unit-test-coverage` passes because `AgenticToolkitCoreTests/Collections/LRUCacheTests.swift` covers store and read, least-recently-used eviction, peek not counting as a use, overwrite, removal and concurrent use within capacity.
+`separation-of-concerns` passes because the type only stores and evicts; what to cache and how to fetch are the caller's. `unit-test-coverage` passes because `AgenticDeveloperHubSDKCoreTests/Collections/LRUCacheTests.swift` covers store and read, least-recently-used eviction, peek not counting as a use, overwrite, removal and concurrent use within capacity.
 
 ## Change History
 

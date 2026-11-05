@@ -1,6 +1,6 @@
 
 - **SwiftUI**: The source
-  (`packages/apple/AgenticToolkit/AIPluginKit/LocalModelServer.swift`,
+  (`packages/apple/AgenticDeveloperHubSDK/AIPluginKit/LocalModelServer.swift`,
   tested by `Tests/AIPluginKitTests/LocalModelServerTests.swift`) has no
   SwiftUI, or any UI framework, dependency — it is a plain
   `Foundation`-only Swift `enum` with no case. A SwiftUI model-picker view
@@ -37,7 +37,7 @@
   `AIPluginKit` target that contains `LocalModelServer.swift` builds for
   macOS only (`platform: macOS` in `project.yml`), and is consumed from
   AppKit-hosted code at
-  `AgenticToolkit/macOS/Features/AIPlugins/Settings/ModelChooserContent.swift`
+  `AgenticDeveloperHubSDK/macOS/Features/AIPlugins/Settings/ModelChooserContent.swift`
   and `ModelChooserViewController.swift`, as well as from the non-UI
   callers `LocalModelCatalog.swift`, `LocalProviderModelStore.swift`, and
   `DaemonAIChat.swift`. Nothing in `LocalModelServer` itself is

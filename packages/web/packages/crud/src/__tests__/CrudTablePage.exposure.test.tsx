@@ -1,7 +1,7 @@
 import '@testing-library/jest-dom/vitest'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
-import type { AuthUser } from '@agentic-toolkit/auth'
+import type { AuthUser } from '@adh-sdk/auth'
 import type { CrudColumn, CrudExposure, CrudTableMeta } from '../types'
 
 /** The auth context as the page sees it. Only these two fields are read. */
@@ -10,17 +10,17 @@ let auth: { user: AuthUser | null; isLoading: boolean } = { user: null, isLoadin
 const viewerUser = (admin: boolean): AuthUser =>
   ({ id: 'u1', email: 'u@example.com', capabilities: admin ? ['admin'] : [] }) as AuthUser
 
-vi.mock('@agentic-toolkit/auth/client', () => ({
+vi.mock('@adh-sdk/auth/client', () => ({
   authedJson: vi.fn(),
   authedRequest: vi.fn(),
 }))
-vi.mock('@agentic-toolkit/auth', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('@agentic-toolkit/auth')>()),
+vi.mock('@adh-sdk/auth', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@adh-sdk/auth')>()),
   useOptionalAuth: () => auth,
   useAuth: () => auth,
 }))
 
-const { authedJson } = vi.mocked(await import('@agentic-toolkit/auth/client'))
+const { authedJson } = vi.mocked(await import('@adh-sdk/auth/client'))
 const { CrudTablePage } = await import('../CrudTablePage')
 
 const col = (name: string, overrides: Partial<CrudColumn> = {}): CrudColumn => ({

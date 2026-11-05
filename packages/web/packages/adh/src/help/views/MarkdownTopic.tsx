@@ -1,15 +1,15 @@
 'use client'
 
 import type { MouseEvent } from 'react'
-import { isModifiedClick } from '@agenticdevelopertoolkit/ui/lib/navigation-guard'
+import { isModifiedClick } from '@adh-sdk/ui/lib/navigation-guard'
 // Package path (not '../HelpProvider') so useHelp resolves to the SINGLE HelpContext the provider
 // created — a relative import would bundle a second HelpProvider/context into this window chunk and
 // useHelp() would read the wrong (empty) context, silently no-op'ing the navigation below. Same
 // preserved-import rationale as this package's header/recents and themes (see tsup.config.ts
-// `external`). Note this is a SELF-reference: '@agentic-toolkit/adh/help' resolves back into this
+// `external`). Note this is a SELF-reference: '@adh-sdk/adh/help' resolves back into this
 // same package, and a self-reference is exactly the shape that silently forks state, because
 // nothing about it reads as a cross-package boundary.
-import { useHelp } from '@agentic-toolkit/adh/help'
+import { useHelp } from '@adh-sdk/adh/help'
 import { MarkdownHtml } from '../../docs/MarkdownHtml'
 import { HELP_CONTENT_HTML } from '../content.generated'
 import { topicBySlug } from '../topics'

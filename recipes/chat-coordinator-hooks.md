@@ -1,7 +1,7 @@
 ---
 id: 259f4a99-1b18-44a2-a102-e14e0fd8e30f
 title: Chat Coordinator Hooks
-domain: agenticdevelopertoolkit://recipes/chat-coordinator-hooks
+domain: adhsdk://recipes/chat-coordinator-hooks
 type: ingredient
 version: 1.0.1
 status: review
@@ -22,12 +22,12 @@ tags:
 - react
 - coordinator
 depends-on:
-- agenticdevelopertoolkit://recipes/chat-coordinator-runtime
-- agenticdevelopertoolkit://recipes/chat-coordinator-backends
-- agenticdevelopertoolkit://recipes/chat-coordinator-projection
+- adhsdk://recipes/chat-coordinator-runtime
+- adhsdk://recipes/chat-coordinator-backends
+- adhsdk://recipes/chat-coordinator-projection
 related:
-- agenticdevelopertoolkit://recipes/chat-coordinator
-- agenticdevelopertoolkit://recipes/chat-contract
+- adhsdk://recipes/chat-coordinator
+- adhsdk://recipes/chat-contract
 references: []
 approved-by: ''
 approved-date: ''
@@ -35,7 +35,7 @@ approved-date: ''
 
 ## Overview
 
-This recipe covers the thirteen React hooks in `@agenticdevelopertoolkit/chat`'s
+This recipe covers the thirteen React hooks in `@adh-sdk/chat`'s
 `src/hooks/` directory: `useAllImagesLoaded`, `useBlockCursor`, `useCaretGaze`,
 `useCaretTracker` (which also exports the standalone `caretMetrics` function),
 `useChatSession`, `useChatSizing`, `useConnectRitual`,
@@ -912,4 +912,4 @@ persist nothing (see Privacy).
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
 | 1.0.1 | 2026-09-25 | Mike Fullerton | Trimmed summary <=160c; fixed caret-gaze input-width normalization; corrected sayStream teardown. |
-| 1.0.0 | 2026-09-23 | Claude Sonnet 5 | Initial creation from the thirteen hook sources in `@agenticdevelopertoolkit/chat`'s `src/hooks/` and their test suites; documents the hardcoded English apology string on `useChatSession`'s legacy-backend error path under Localization. |
+| 1.0.0 | 2026-09-23 | Claude Sonnet 5 | Initial creation from the thirteen hook sources in `@adh-sdk/chat`'s `src/hooks/` and their test suites; documents the hardcoded English apology string on `useChatSession`'s legacy-backend error path under Localization. |

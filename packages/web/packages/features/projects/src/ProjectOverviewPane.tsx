@@ -10,25 +10,25 @@ import {
   type ReactNode,
 } from "react";
 import { Activity, FileStack, HeartPulse, ListTodo, Trash2, Users } from "lucide-react";
-import { ErrorText } from "@agenticdevelopertoolkit/ui/components/error-text";
-import { Badge } from "@agenticdevelopertoolkit/ui/components/badge";
-import { EmptyState } from "@agenticdevelopertoolkit/ui/components/empty-state";
-import { Field } from "@agenticdevelopertoolkit/ui/blocks/field";
-import { Select } from "@agenticdevelopertoolkit/ui/components/select";
-import { List, ListItem } from "@agenticdevelopertoolkit/ui/components/list";
-import { Input } from "@agenticdevelopertoolkit/ui/components/input";
-import { Textarea } from "@agenticdevelopertoolkit/ui/components/textarea";
-import { Button } from "@agenticdevelopertoolkit/ui/components/button";
-import { Disclosure } from "@agenticdevelopertoolkit/ui/components/disclosure";
-import { InfoPanel } from "@agenticdevelopertoolkit/ui/blocks/info-panel";
-import { StatCard } from "@agenticdevelopertoolkit/ui/blocks/stat-card";
-import { StatList, StatListRow } from "@agenticdevelopertoolkit/ui/blocks/stat-list";
+import { ErrorText } from "@adh-sdk/ui/components/error-text";
+import { Badge } from "@adh-sdk/ui/components/badge";
+import { EmptyState } from "@adh-sdk/ui/components/empty-state";
+import { Field } from "@adh-sdk/ui/blocks/field";
+import { Select } from "@adh-sdk/ui/components/select";
+import { List, ListItem } from "@adh-sdk/ui/components/list";
+import { Input } from "@adh-sdk/ui/components/input";
+import { Textarea } from "@adh-sdk/ui/components/textarea";
+import { Button } from "@adh-sdk/ui/components/button";
+import { Disclosure } from "@adh-sdk/ui/components/disclosure";
+import { InfoPanel } from "@adh-sdk/ui/blocks/info-panel";
+import { StatCard } from "@adh-sdk/ui/blocks/stat-card";
+import { StatList, StatListRow } from "@adh-sdk/ui/blocks/stat-list";
 import {
   isConflict,
   useResourceItemQuery,
   useResourceItemWriter,
   useResourceList,
-} from "@agentic-toolkit/data";
+} from "@adh-sdk/data";
 import {
   projectsApi,
   projectWorkItemsApi,
@@ -47,8 +47,8 @@ import {
   type PriorityScale,
   type ProjectStatus,
   type WorkItem,
-} from "@agentic-toolkit/data/projects";
-import { FeatureTitle } from "@agentic-toolkit/resource";
+} from "@adh-sdk/data/projects";
+import { FeatureTitle } from "@adh-sdk/resource";
 import { AssigneePicker, fromOptionValue, toOptionValue } from "./AssigneePicker";
 import { ProjectStatusUpdates } from "./ProjectStatusUpdates";
 import {

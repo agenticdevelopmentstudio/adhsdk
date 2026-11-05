@@ -3,7 +3,7 @@
 - **Compose**: On Compose for Desktop, apply `Modifier.pointerHoverIcon(PointerIcon.Hand)` to the composable; verify in a non-key panel that the pointer icon still applies there, since Compose Desktop's documentation does not state whether pointer-icon handling depends on window focus the way AppKit's cursor rects do.
 - **React/Web**: Set CSS `cursor: pointer` on the element. Browsers already display the pointer cursor over an element in any window, focused or not, so there is no equivalent to the source's key-window workaround to port.
 - **AppKit / UIKit** (source platform): Source file
-  `packages/apple/AgenticToolkit/CoreUI/PointingHandButton.swift` is
+  `packages/apple/AgenticDeveloperHubSDK/CoreUI/PointingHandButton.swift` is
   macOS-only (`import AppKit`); there is no iOS/UIKit counterpart, since
   UIKit has no cursor-rect or `NSCursor` concept — cursors do not apply to
   a touch interface. The class subclasses `NSButton` and layers an

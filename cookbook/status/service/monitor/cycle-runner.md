@@ -1,7 +1,7 @@
 ---
 id: 99e2ec9b-b209-4af9-a7d9-f3c4cc5e27db
 title: "Status Server Monitor Cycle Runner"
-domain: adtoolkit://cookbook/status/service/monitor/cycle-runner
+domain: adhsdk://cookbook/status/service/monitor/cycle-runner
 type: ingredient
 version: 1.0.2
 status: review
@@ -26,19 +26,19 @@ depends-on:
   - agenticdevelopercookbook://guidelines/implementing/observability/logging
   - agenticdevelopercookbook://guidelines/implementing/code-quality/dependency-injection
 related:
-  - adtoolkit://cookbook/status/service/monitor/alerts
+  - adhsdk://cookbook/status/service/monitor/alerts
 references:
-  - packages/web/packages/status-server/src/monitor/cycle-runner.ts (agenticdevelopertoolkit)
-  - packages/web/packages/status-server/src/monitor/sync.ts (agenticdevelopertoolkit)
-  - packages/web/packages/status-server/src/monitor/heartbeat.ts (agenticdevelopertoolkit)
-  - packages/web/packages/status-server/src/monitor/alerts.ts (agenticdevelopertoolkit)
-  - packages/web/packages/status-server/src/peers/fetch.ts (agenticdevelopertoolkit)
-  - packages/web/packages/status-server/src/telemetry/server.ts (agenticdevelopertoolkit)
-  - packages/web/packages/status-server/src/libsql/stores/maintenance-store.ts (agenticdevelopertoolkit)
-  - packages/web/packages/status-server/src/monitor/worker.ts (agenticdevelopertoolkit)
-  - packages/web/packages/status-server/src/scheduler.ts (agenticdevelopertoolkit)
-  - packages/web/packages/status-server/src/config/port.ts (agenticdevelopertoolkit)
-  - packages/web/packages/status-server/test/heartbeat.int.test.ts (agenticdevelopertoolkit)
+  - packages/web/packages/status-server/src/monitor/cycle-runner.ts (adhsdk)
+  - packages/web/packages/status-server/src/monitor/sync.ts (adhsdk)
+  - packages/web/packages/status-server/src/monitor/heartbeat.ts (adhsdk)
+  - packages/web/packages/status-server/src/monitor/alerts.ts (adhsdk)
+  - packages/web/packages/status-server/src/peers/fetch.ts (adhsdk)
+  - packages/web/packages/status-server/src/telemetry/server.ts (adhsdk)
+  - packages/web/packages/status-server/src/libsql/stores/maintenance-store.ts (adhsdk)
+  - packages/web/packages/status-server/src/monitor/worker.ts (adhsdk)
+  - packages/web/packages/status-server/src/scheduler.ts (adhsdk)
+  - packages/web/packages/status-server/src/config/port.ts (adhsdk)
+  - packages/web/packages/status-server/test/heartbeat.int.test.ts (adhsdk)
 approved-by: ""
 approved-date: ""
 ---
@@ -128,7 +128,7 @@ Not applicable: this file defines no application URL scheme or HTTP route of its
 
 ## Localization
 
-This file's only literal string is the hardcoded English `console.log` message it builds for a retention prune (maintenance-prune-logged-on-deletion). It routes through no localization mechanism, and unlike the Slack/Discord-rendered lines in `alerts.ts` (see the [Status Server Monitor Alerts](adtoolkit://cookbook/status/service/monitor/alerts) recipe), this string's only audience is an operator reading container stdout, never an end user or a webhook receiver.
+This file's only literal string is the hardcoded English `console.log` message it builds for a retention prune (maintenance-prune-logged-on-deletion). It routes through no localization mechanism, and unlike the Slack/Discord-rendered lines in `alerts.ts` (see the [Status Server Monitor Alerts](adhsdk://cookbook/status/service/monitor/alerts) recipe), this string's only audience is an operator reading container stdout, never an end user or a webhook receiver.
 
 | String Key | Default (en) | Context |
 |-----------|-------------|---------|

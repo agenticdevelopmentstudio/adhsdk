@@ -1,5 +1,5 @@
 
-- **shared-block-composition**: Every FTD route MUST compose the shared `FocusedTopicDetail` block (`@agenticdevelopertoolkit/ui/blocks`) and MUST NOT hand-roll the master/detail layout.
+- **shared-block-composition**: Every FTD route MUST compose the shared `FocusedTopicDetail` block (`@adh-sdk/ui/blocks`) and MUST NOT hand-roll the master/detail layout.
 - **first-topic-is-entity**: The first topic MUST be the entity itself, labelled with the singular `Entity` name, editing the entity's own attributes plus the Danger section; there MUST be no divider above the first topic.
 - **no-action-bar**: The FTD view MUST NOT render a full-width `New | Delete` action bar; New lives in the selector popup and Delete lives in the entity pane's Danger section.
 - **editable-identifier**: The Identifier (rdid) MUST be editable for existing entities, renaming via `PATCH /registry/identifiers/{rdid}` with the **old** rdid in the path, leaving the internal UUID and all FK references unchanged.
@@ -21,7 +21,7 @@
 - **resume-last-selected**: On entering the bare base path, after the entity list loads the view MUST focus the last-selected entity under `{{app_prefix}}:ftd:{basePath}:lastId` when it still matches a live entity, otherwise show the All view.
 - **clear-laststate-on-delete**: When an entity is deleted, the view MUST clear `…:lastId` if it pointed at that entity.
 - **resolve-after-list-load**: Local-storage resolution MUST occur after the list has loaded (to avoid SSR hydration mismatch), showing the normal loading state until then.
-- **shared-piece-location**: New shared pieces (the Danger Zone / delete-confirm `DeleteEntitySection` block, the All toolbar, the list-mode renderer) MUST go into `@agentic-toolkit/adh-ui/blocks`, never forked into a site.
+- **shared-piece-location**: New shared pieces (the Danger Zone / delete-confirm `DeleteEntitySection` block, the All toolbar, the list-mode renderer) MUST go into `@adh-sdk/adh-ui/blocks`, never forked into a site.
 - **surface-states**: Every new surface MUST handle loading, empty, and error states (All list loading, no entities yet, filter-no-match, delete error inline, identifier-collision inline).
 - **accessibility**: Dialogs MUST be `role="dialog"` with focus trap + restore and labelled controls; the type-to-confirm input MUST have a `<label htmlFor>`; the All view's card/list toggle MUST carry `role="radiogroup"` and `aria-label="View as"`; full keyboard operability (Esc cancels dialogs) is required.
 

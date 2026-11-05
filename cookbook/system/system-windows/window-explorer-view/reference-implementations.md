@@ -1,5 +1,5 @@
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/macOS/SystemWindows/UI/WindowExplorerView.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemWindows/UI/WindowExplorerView.swift` |
 

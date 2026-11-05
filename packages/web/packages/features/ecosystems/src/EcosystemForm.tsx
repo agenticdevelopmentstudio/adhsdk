@@ -3,13 +3,13 @@
 import { useEffect, useId, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { CheckCircle2, Loader2, OctagonX, TriangleAlert } from "lucide-react";
-import { Card, CardContent } from "@agenticdevelopertoolkit/ui/components/card";
-import { Input } from "@agenticdevelopertoolkit/ui/components/input";
-import { Label } from "@agenticdevelopertoolkit/ui/components/label";
-import { Textarea } from "@agenticdevelopertoolkit/ui/components/textarea";
-import { ErrorText } from "@agenticdevelopertoolkit/ui/components/error-text";
-import { SEGMENT_RE, prefixFor, validateLeaf } from "@agentic-toolkit/adh-ui/rdid";
-import { identifiersApi, type EcosystemInput } from "@agentic-toolkit/data/ecosystems";
+import { Card, CardContent } from "@adh-sdk/ui/components/card";
+import { Input } from "@adh-sdk/ui/components/input";
+import { Label } from "@adh-sdk/ui/components/label";
+import { Textarea } from "@adh-sdk/ui/components/textarea";
+import { ErrorText } from "@adh-sdk/ui/components/error-text";
+import { SEGMENT_RE, prefixFor, validateLeaf } from "@adh-sdk/adh-ui/rdid";
+import { identifiersApi, type EcosystemInput } from "@adh-sdk/data/ecosystems";
 
 /**
  * The live verdict on a derived identifier. In the CREATE dialog it is carried IN the

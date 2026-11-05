@@ -1,7 +1,7 @@
 {
-  "name": "@agentic-toolkit/adh-products",
+  "name": "@adh-sdk/adh-products",
   "version": "0.1.0",
-  "description": "The Products feature: @agentic-toolkit/ecosystems presented as Products, with its topic rail and the panes each topic opens.",
+  "description": "The Products feature: @adh-sdk/ecosystems presented as Products, with its topic rail and the panes each topic opens.",
   "license": "UNLICENSED",
   "type": "module",
   "main": "./dist/index.js",
@@ -13,8 +13,8 @@
   "sideEffects": [
     "**/*.css"
   ],
-  "comment:tier": "VOCABULARY, not mechanism — see tools/check_boundaries.py. This package composes @agentic-toolkit/adh-ecosystem-panes and @agentic-toolkit/adh's help store, both of which are vocabulary, so it must carry the `adh-` prefix to sit on the right side of the guard's line. That is not incidental: the whole point of this package is a HUB CONCEPT (a Product is what adh calls an ecosystem, with adh's own topic rail on it), not the ecosystem machinery — which stays in @agentic-toolkit/ecosystems, mechanism, where a non-adh host can still mount it. The directory is `features/` only because the tsup/vitest presets live there.",
-  "comment:exports": "see @agentic-toolkit/adh for the full rationale. The barrel is `use client` (the feature composes client panes) and tsup hoists that directive over the chunk, so the topic RAIL — plain data — gets its own directive-free entry, the same split the tsup preset describes for ./parse and ./tables. Its consumer is any host that wants a product topic's id or label without mounting the feature.",
+  "comment:tier": "VOCABULARY, not mechanism — see tools/check_boundaries.py. This package composes @adh-sdk/adh-ecosystem-panes and @adh-sdk/adh's help store, both of which are vocabulary, so it must carry the `adh-` prefix to sit on the right side of the guard's line. That is not incidental: the whole point of this package is a HUB CONCEPT (a Product is what adh calls an ecosystem, with adh's own topic rail on it), not the ecosystem machinery — which stays in @adh-sdk/ecosystems, mechanism, where a non-adh host can still mount it. The directory is `features/` only because the tsup/vitest presets live there.",
+  "comment:exports": "see @adh-sdk/adh for the full rationale. The barrel is `use client` (the feature composes client panes) and tsup hoists that directive over the chunk, so the topic RAIL — plain data — gets its own directive-free entry, the same split the tsup preset describes for ./parse and ./tables. Its consumer is any host that wants a product topic's id or label without mounting the feature.",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -37,19 +37,19 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@agentic-toolkit/adh": "workspace:*",
-    "@agentic-toolkit/adh-ecosystem-panes": "workspace:*",
-    "@agentic-toolkit/auth": "workspace:*",
-    "@agentic-toolkit/authentication": "workspace:*",
-    "@agentic-toolkit/data": "workspace:*",
-    "@agentic-toolkit/ecosystem-config": "workspace:*",
-    "@agentic-toolkit/ecosystems": "workspace:*",
-    "@agentic-toolkit/gamification": "workspace:*",
-    "@agentic-toolkit/games": "workspace:*",
-    "@agentic-toolkit/integrations": "workspace:*",
-    "@agentic-toolkit/resource": "workspace:*",
+    "@adh-sdk/adh": "workspace:*",
+    "@adh-sdk/adh-ecosystem-panes": "workspace:*",
+    "@adh-sdk/auth": "workspace:*",
+    "@adh-sdk/authentication": "workspace:*",
+    "@adh-sdk/data": "workspace:*",
+    "@adh-sdk/ecosystem-config": "workspace:*",
+    "@adh-sdk/ecosystems": "workspace:*",
+    "@adh-sdk/gamification": "workspace:*",
+    "@adh-sdk/games": "workspace:*",
+    "@adh-sdk/integrations": "workspace:*",
+    "@adh-sdk/resource": "workspace:*",
     "lucide-react": "^1.16.0",
-    "@agenticdevelopertoolkit/ui": "workspace:*"
+    "@adh-sdk/ui": "workspace:*"
   },
   "peerDependencies": {
     "next": ">=15",

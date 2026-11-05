@@ -1,7 +1,7 @@
 ---
 id: 5e401b96-7157-4c5b-a623-b90dde372231
 title: Section Header
-domain: agenticdevelopertoolkit://recipes/section-header
+domain: adhsdk://recipes/section-header
 type: ingredient
 version: 1.1.1
 status: review
@@ -21,9 +21,9 @@ tags:
 - header
 - structure
 depends-on:
-- agenticdevelopertoolkit://recipes/popover
+- adhsdk://recipes/popover
 related:
-- agenticdevelopertoolkit://recipes/popover
+- adhsdk://recipes/popover
 references: []
 approved-by: ''
 approved-date: ''
@@ -44,7 +44,7 @@ A section header is a layout component that anchors a content area with a promin
 - **support-help**: The component MUST render a help trigger button when the `help` prop is provided and non-empty; when `help` is empty, the help trigger button MUST NOT be rendered.
 - **support-actions**: The component MUST render the `actions` prop content when it is provided and non-empty; when `actions` is empty, the actions slot MUST NOT be rendered.
 - **apply-custom-class**: The component MUST apply the `className` prop to the root container if provided.
-- **display-help-popover**: When the help trigger button is activated — by click, or by keyboard Enter or Space while focused — the component MUST display a popover containing the `help` prop content, positioned below and aligned to the end (right edge). See agenticdevelopertoolkit://recipes/popover#accessibility/escape-closes and agenticdevelopertoolkit://recipes/popover#accessibility/return-focus-on-close for how the popover closes and returns focus, and agenticdevelopertoolkit://recipes/popover#accessibility/aria-expanded for its open/closed toggle state.
+- **display-help-popover**: When the help trigger button is activated — by click, or by keyboard Enter or Space while focused — the component MUST display a popover containing the `help` prop content, positioned below and aligned to the end (right edge). See adhsdk://recipes/popover#accessibility/escape-closes and adhsdk://recipes/popover#accessibility/return-focus-on-close for how the popover closes and returns focus, and adhsdk://recipes/popover#accessibility/aria-expanded for its open/closed toggle state.
 - **label-help-trigger**: The help trigger button MUST have an accessible label "About this section" via the `aria-label` attribute.
 - **maintain-layout-order**: Left section (title area) MUST be positioned before right section (actions and help) in visual and DOM order.
 
@@ -73,7 +73,7 @@ A section header is a layout component that anchors a content area with a promin
 
 - **Semantic heading**: Title is rendered as an `<h2>` to establish document outline hierarchy.
 - **Help button label**: `aria-label="About this section"` describes the button purpose for screen readers.
-- **Popover keyboard**: The help trigger is activated by click, Enter, or Space. Opening, closing (Escape or an outside interaction), and returning focus to the trigger are the underlying Popover component's behavior — see agenticdevelopertoolkit://recipes/popover#accessibility/escape-closes and agenticdevelopertoolkit://recipes/popover#accessibility/return-focus-on-close.
+- **Popover keyboard**: The help trigger is activated by click, Enter, or Space. Opening, closing (Escape or an outside interaction), and returning focus to the trigger are the underlying Popover component's behavior — see adhsdk://recipes/popover#accessibility/escape-closes and adhsdk://recipes/popover#accessibility/return-focus-on-close.
 - **Text content**: Eyebrow and title content are read as-is; no additional aria-labels required if text is meaningful.
 - **Icon-only button**: Help button contains only an icon; `aria-label` is REQUIRED to provide accessible name.
 
@@ -94,16 +94,16 @@ A section header is a layout component that anchors a content area with a promin
 | section-header-011 | apply-custom-class | `className="my-custom-class"`, `title="Title"` | Root container has both default flex classes and "my-custom-class" |
 | section-header-012 | maintain-layout-order | All props provided | Left section (title area) precedes right section (actions + help) in visual layout; justified to opposite edges |
 | section-header-013 | display-help-popover | Help button present, user presses Space on focused help trigger | Popover opens (same as click/Enter) |
-| section-header-014 | display-help-popover | Popover open, user presses Escape | Popover closes and focus returns to the help trigger (per agenticdevelopertoolkit://recipes/popover#accessibility/escape-closes, agenticdevelopertoolkit://recipes/popover#accessibility/return-focus-on-close) |
-| section-header-015 | display-help-popover | Help button activated a second time while the popover is open | Popover closes; toggle state is reflected via `aria-expanded` (per agenticdevelopertoolkit://recipes/popover#accessibility/aria-expanded) |
+| section-header-014 | display-help-popover | Popover open, user presses Escape | Popover closes and focus returns to the help trigger (per adhsdk://recipes/popover#accessibility/escape-closes, adhsdk://recipes/popover#accessibility/return-focus-on-close) |
+| section-header-015 | display-help-popover | Help button activated a second time while the popover is open | Popover closes; toggle state is reflected via `aria-expanded` (per adhsdk://recipes/popover#accessibility/aria-expanded) |
 
 ## Edge Cases
 
 - **Empty title string**: The component does not validate `title`; passing an empty string still renders an `<h2>`, which is present in the DOM but conveys no accessible name to screen reader users. Callers MUST supply non-empty `title` content — Section Header itself performs no such check.
 - **Very long title**: Title renders without an explicit wrap constraint. Because the left section has no flex-shrink override while the right section is `shrink-0`, the left section shrinks first as available width tightens, so a long title wraps onto multiple lines once space is insufficient.
 - **Very long help content**: The popover has a fixed width (288px) and no max-height constraint in the source, so the panel grows to fit the content rather than scrolling.
-- **Help button focus during popover open**: Escape closes the popover and returns focus to the trigger (agenticdevelopertoolkit://recipes/popover#accessibility/escape-closes, agenticdevelopertoolkit://recipes/popover#accessibility/return-focus-on-close).
-- **Multiple rapid help button activations**: The Popover trigger toggles open/closed state on activation, reflected via `aria-expanded` (agenticdevelopertoolkit://recipes/popover#accessibility/aria-expanded).
+- **Help button focus during popover open**: Escape closes the popover and returns focus to the trigger (adhsdk://recipes/popover#accessibility/escape-closes, adhsdk://recipes/popover#accessibility/return-focus-on-close).
+- **Multiple rapid help button activations**: The Popover trigger toggles open/closed state on activation, reflected via `aria-expanded` (adhsdk://recipes/popover#accessibility/aria-expanded).
 - **Actions slot too wide**: Actions element shares right section with help button; if actions exceed available space, layout depends on actions' own flex properties. The right section container applies `shrink-0`, so it does not shrink to accommodate overflow.
 - **Custom className conflicts**: If `className` prop contains flex or positioning classes, they merge via `cn()` utility; later classes may override defaults (standard Tailwind precedence).
 
@@ -129,7 +129,7 @@ The `title`, `eyebrow`, `help`, and `actions` props accept content supplied — 
 
 | Option | Behavior |
 |--------|----------|
-| Reduce Motion | Popover open/close transitions, if any, are the underlying Popover component's concern — see agenticdevelopertoolkit://recipes/popover#accessibility-options/reduce-motion. |
+| Reduce Motion | Popover open/close transitions, if any, are the underlying Popover component's concern — see adhsdk://recipes/popover#accessibility-options/reduce-motion. |
 | Increase Contrast | No component-specific support; parent theme applies contrast adjustments to `apt-gold` and `apt-text-dim` tokens. |
 | Differentiate Without Color | Eyebrow and title rely on monospace font weight and size for differentiation, not color alone. |
 

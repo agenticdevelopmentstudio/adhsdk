@@ -2,13 +2,13 @@
 
 // Self-serve account-security API: second-factor management (TOTP, WebAuthn,
 // recovery codes) + preferred method, over /account/mfa/*. Backs the Security
-// settings workspace. Lives in this package (not @agentic-toolkit/data)
+// settings workspace. Lives in this package (not @adh-sdk/data)
 // because the WebAuthn registration ceremony shares @simplewebauthn/browser
 // with the login-time MFA completion in ./mfa.ts — enrollment and challenge
 // are two halves of one factor lifecycle.
 //
 // The response types are authored locally (mirroring the backend's
-// /account/mfa OpenAPI schemas) — the hub's generated @agentic-toolkit/adh-api-types
+// /account/mfa OpenAPI schemas) — the hub's generated @adh-sdk/adh-api-types
 // is a monorepo coupling this package can't take.
 import { startRegistration } from '@simplewebauthn/browser'
 import type { PublicKeyCredentialCreationOptionsJSON } from '@simplewebauthn/browser'

@@ -1,13 +1,13 @@
 'use client'
 
-import { Badge } from '@agenticdevelopertoolkit/ui/components/badge'
-import { Button } from '@agenticdevelopertoolkit/ui/components/button'
-import { Spinner } from '@agenticdevelopertoolkit/ui/components/spinner'
-import { ErrorText } from '@agenticdevelopertoolkit/ui/components/error-text'
+import { Badge } from '@adh-sdk/ui/components/badge'
+import { Button } from '@adh-sdk/ui/components/button'
+import { Spinner } from '@adh-sdk/ui/components/spinner'
+import { ErrorText } from '@adh-sdk/ui/components/error-text'
 import { rowKey } from './useCrudResource'
 import type { CrudColumn, CrudRow, CrudTableMeta } from './types'
-import { cn } from '@agenticdevelopertoolkit/ui/lib/utils'
-import { fieldCaptionClass } from '@agenticdevelopertoolkit/ui/lib/typography'
+import { cn } from '@adh-sdk/ui/lib/utils'
+import { fieldCaptionClass } from '@adh-sdk/ui/lib/typography'
 
 const MAX_COLUMNS = 6
 const MAX_CELL_CHARS = 80

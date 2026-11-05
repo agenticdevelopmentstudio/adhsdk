@@ -2,13 +2,13 @@
 
 import { useCallback, type ReactNode } from "react";
 import { Plus } from "lucide-react";
-import { useResourceList } from "@agentic-toolkit/data";
-import { ButtonBar } from "@agenticdevelopertoolkit/ui/blocks";
-import { Button } from "@agenticdevelopertoolkit/ui/components/button";
-import { AlertModal } from "@agenticdevelopertoolkit/ui/components/alert-modal";
-import { ErrorText } from "@agenticdevelopertoolkit/ui/components/error-text";
-import { cn } from "@agenticdevelopertoolkit/ui/lib/utils";
-import { useMasterDetailForm, type TopicLeaf } from "@agentic-toolkit/resource";
+import { useResourceList } from "@adh-sdk/data";
+import { ButtonBar } from "@adh-sdk/ui/blocks";
+import { Button } from "@adh-sdk/ui/components/button";
+import { AlertModal } from "@adh-sdk/ui/components/alert-modal";
+import { ErrorText } from "@adh-sdk/ui/components/error-text";
+import { cn } from "@adh-sdk/ui/lib/utils";
+import { useMasterDetailForm, type TopicLeaf } from "@adh-sdk/resource";
 import { sortByGroup } from "./group";
 import { inlineUrlSelection } from "./inlineSelection";
 

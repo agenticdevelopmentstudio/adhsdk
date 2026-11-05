@@ -60,16 +60,16 @@ import {
   Waypoints,
   Wrench,
 } from 'lucide-react'
-import { InfoPanel } from '@agenticdevelopertoolkit/ui/blocks/info-panel'
-import { Checkbox } from '@agenticdevelopertoolkit/ui/components/checkbox'
-import { TextBubble } from '@agenticdevelopertoolkit/ui/components/text-bubble'
-import type { GraphNode } from '@agentic-toolkit/adh/concepts'
-import { detectEnv, getSite, siteHeaderTitle, type SiteEnv, type SiteId } from '@agentic-toolkit/adh-registry'
+import { InfoPanel } from '@adh-sdk/ui/blocks/info-panel'
+import { Checkbox } from '@adh-sdk/ui/components/checkbox'
+import { TextBubble } from '@adh-sdk/ui/components/text-bubble'
+import type { GraphNode } from '@adh-sdk/adh/concepts'
+import { detectEnv, getSite, siteHeaderTitle, type SiteEnv, type SiteId } from '@adh-sdk/adh-registry'
 // The generic mounted-hostname hook (same story as marketing/SiteWordmark): this once
 // reached the toolkit's own header barrel to keep the app tier's registry-bound site menu
 // out of the graph client chunk. One merged barrel now publishes both halves, so the
 // package path here buys a separate `external` chunk rather than a smaller one.
-import { useClientHost } from '@agentic-toolkit/adh/header'
+import { useClientHost } from '@adh-sdk/adh/header'
 import { FOCUS_X, FOCUS_Y, findGraphNode, graphChain, parentSpot, placeChildren } from './layout'
 
 export interface ConceptGraphClientProps {

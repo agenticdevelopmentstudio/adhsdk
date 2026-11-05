@@ -1,7 +1,7 @@
 ---
 id: e3a2394d-d0d0-4495-bde4-59197f9d7866
 title: Avatar
-domain: agenticdevelopertoolkit://recipes/avatar
+domain: adhsdk://recipes/avatar
 type: ingredient
 version: 1.2.1
 status: review
@@ -33,7 +33,7 @@ approved-date: ''
 
 ## Overview
 
-`Avatar` is the shared avatar ingredient in `@agenticdevelopertoolkit/ui`: a thin,
+`Avatar` is the shared avatar ingredient in `@adh-sdk/ui`: a thin,
 three-part wrapper around Base UI's `Avatar` primitive (`@base-ui/react/avatar`),
 the reference implementation for this ingredient's delegated behavior. It exports
 `Avatar` (wraps `Avatar.Root`), `AvatarImage` (wraps `Avatar.Image`), and

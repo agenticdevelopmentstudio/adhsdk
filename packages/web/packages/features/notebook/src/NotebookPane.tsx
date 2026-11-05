@@ -2,10 +2,10 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
-import { reportUnexpectedAuthError } from "@agentic-toolkit/auth";
-import { AlertModal } from "@agenticdevelopertoolkit/ui/components/alert-modal";
-import type { CategoryTreeNode } from "@agenticdevelopertoolkit/ui/blocks/category-field";
-import type { TopicDetailItem, TopicLevel } from "@agenticdevelopertoolkit/ui/blocks";
+import { reportUnexpectedAuthError } from "@adh-sdk/auth";
+import { AlertModal } from "@adh-sdk/ui/components/alert-modal";
+import type { CategoryTreeNode } from "@adh-sdk/ui/blocks/category-field";
+import type { TopicDetailItem, TopicLevel } from "@adh-sdk/ui/blocks";
 import {
   StackLevels,
   useRailExitGuard,
@@ -13,22 +13,22 @@ import {
   CreateResourceDialog,
   useResourceItem,
   type MasterDetailActions,
-} from "@agentic-toolkit/resource";
+} from "@adh-sdk/resource";
 import {
   revalidateResources,
   useResourceItemPrefetch,
   useResourceItemWriter,
   useResourceList,
-} from "@agentic-toolkit/data";
+} from "@adh-sdk/data";
 import {
   taxonomyApi,
   type Note,
   type NoteCategory,
   type NoteSummary,
   type NoteTag,
-} from "@agentic-toolkit/data/notes";
-import { categoryNames, type CategoryNode } from "@agenticdevelopertoolkit/ui/blocks";
-import { useCategoryLevels } from "@agentic-toolkit/categories";
+} from "@adh-sdk/data/notes";
+import { categoryNames, type CategoryNode } from "@adh-sdk/ui/blocks";
+import { useCategoryLevels } from "@adh-sdk/categories";
 import {
   noteBlank,
   noteDiffers,
@@ -203,7 +203,7 @@ export function NotebookPane({
   const onCategoriesChanged = useCallback(() => refreshRef.current(), []);
 
   // The category levels are the shared ones - the same rail the research surface draws, from
-  // @agentic-toolkit/categories. This pane contributes the notes level below them. The RAW URL
+  // @adh-sdk/categories. This pane contributes the notes level below them. The RAW URL
   // slugs go in; the resolved chain comes back out, and everything the pane still needs about
   // where it is standing is derived from that rather than re-resolved here.
   const {
@@ -562,7 +562,7 @@ export function NotebookPane({
       />
     ),
     // The gear's PLAIN companion, as the rail host's publish key asks of any node (`levelsKey` in
-    // @agentic-toolkit/resource): the host draws the level it REGISTERED, and a node is invisible
+    // @adh-sdk/resource): the host draws the level it REGISTERED, and a node is invisible
     // to that key. `filtering` above only moves when the filter set empties or fills, so with one
     // filter already on, changing the other onto a cached list with the same rows re-registered
     // nothing — the gear kept the old radio and text — and a tags read landing after the notes

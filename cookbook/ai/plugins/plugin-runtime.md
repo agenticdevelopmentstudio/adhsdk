@@ -1,7 +1,7 @@
 ---
 id: e886e448-6aa5-4359-979d-49fba713ab2a
 title: "Plugin Runtime"
-domain: adtoolkit://cookbook/ai/plugins/plugin-runtime
+domain: adhsdk://cookbook/ai/plugins/plugin-runtime
 type: ingredient
 version: 1.2.1
 status: review
@@ -740,7 +740,7 @@ but unused.
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/macOS/Features/AIPlugins/` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/AIPlugins/` |
 
 ## Design Decisions
 

@@ -2,20 +2,20 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactElement } from "react";
 import { Pencil, Reply, Trash2 } from "lucide-react";
-import { AlertModal } from "@agenticdevelopertoolkit/ui/components/alert-modal";
-import { Badge } from "@agenticdevelopertoolkit/ui/components/badge";
-import { Button } from "@agenticdevelopertoolkit/ui/components/button";
-import { ErrorText } from "@agenticdevelopertoolkit/ui/components/error-text";
-import { ReactionBar, type ReactionBarItem } from "@agenticdevelopertoolkit/ui/components/reaction-bar";
-import { Textarea } from "@agenticdevelopertoolkit/ui/components/textarea";
-import { readTokenSubject, useResourceList } from "@agentic-toolkit/data";
+import { AlertModal } from "@adh-sdk/ui/components/alert-modal";
+import { Badge } from "@adh-sdk/ui/components/badge";
+import { Button } from "@adh-sdk/ui/components/button";
+import { ErrorText } from "@adh-sdk/ui/components/error-text";
+import { ReactionBar, type ReactionBarItem } from "@adh-sdk/ui/components/reaction-bar";
+import { Textarea } from "@adh-sdk/ui/components/textarea";
+import { readTokenSubject, useResourceList } from "@adh-sdk/data";
 import {
   COMMENT_REACTION_KIND,
   projectCommentsApi,
   threadOf,
   type ProjectComment,
-} from "@agentic-toolkit/data/projects";
-import { byTarget, reactionsApi, tally, type Reaction } from "@agentic-toolkit/data/reactions";
+} from "@adh-sdk/data/projects";
+import { byTarget, reactionsApi, tally, type Reaction } from "@adh-sdk/data/reactions";
 import { authorText, relativeTime } from "./helpers";
 
 /**

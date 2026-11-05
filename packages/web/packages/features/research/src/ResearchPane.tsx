@@ -3,20 +3,20 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Globe } from "lucide-react";
 
-import { reportUnexpectedAuthError, useAuth } from "@agentic-toolkit/auth";
-import { deriveDocumentTitle, setFrontmatterTitle } from "@agenticdevelopertoolkit/markdown";
-import { AlertModal } from "@agenticdevelopertoolkit/ui/components/alert-modal";
-import type { TopicDetailItem, TopicLevel } from "@agenticdevelopertoolkit/ui/blocks";
-import { Field } from "@agenticdevelopertoolkit/ui/blocks";
+import { reportUnexpectedAuthError, useAuth } from "@adh-sdk/auth";
+import { deriveDocumentTitle, setFrontmatterTitle } from "@adh-sdk/markdown";
+import { AlertModal } from "@adh-sdk/ui/components/alert-modal";
+import type { TopicDetailItem, TopicLevel } from "@adh-sdk/ui/blocks";
+import { Field } from "@adh-sdk/ui/blocks";
 import {
   DocumentIdentityField,
   useSlugAvailability,
-} from "@agenticdevelopertoolkit/ui/blocks/document-identity-field";
-import { Input } from "@agenticdevelopertoolkit/ui/components/input";
-import { useDualModeSelection } from "@agenticdevelopertoolkit/ui/hooks/useDualModeSelection";
-import { slugify } from "@agenticdevelopertoolkit/ui/lib/slug";
-import { ErrorText } from "@agenticdevelopertoolkit/ui/components/error-text";
-import { useDetailTitle } from "@agenticdevelopertoolkit/ui/blocks/detail-title";
+} from "@adh-sdk/ui/blocks/document-identity-field";
+import { Input } from "@adh-sdk/ui/components/input";
+import { useDualModeSelection } from "@adh-sdk/ui/hooks/useDualModeSelection";
+import { slugify } from "@adh-sdk/ui/lib/slug";
+import { ErrorText } from "@adh-sdk/ui/components/error-text";
+import { useDetailTitle } from "@adh-sdk/ui/blocks/detail-title";
 import {
   StackLevels,
   useRailExitGuard as useWorkspaceExitGuard,
@@ -24,21 +24,21 @@ import {
   CreateResourceDialog,
   useResourceItem,
   type MasterDetailActions,
-} from "@agentic-toolkit/resource";
+} from "@adh-sdk/resource";
 import {
   revalidateResources,
   useResourceItemPrefetch,
   useResourceItemWriter,
   useResourceList,
-} from "@agentic-toolkit/data";
+} from "@adh-sdk/data";
 import {
   markdownApi,
   type MarkdownCategoryNode,
   type MarkdownRouteAvailability,
   type ResearchDocument,
   type ResearchSummary,
-} from "@agentic-toolkit/data/markdown";
-import { resolveListCategory, useCategoryLevels, UNCATEGORIZED_SLUG } from "@agentic-toolkit/categories";
+} from "@adh-sdk/data/markdown";
+import { resolveListCategory, useCategoryLevels, UNCATEGORIZED_SLUG } from "@adh-sdk/categories";
 import {
   categoriesOf,
   researchDiffers,
@@ -227,7 +227,7 @@ export function ResearchPane({
   const onCategoriesChanged = useCallback(() => refreshRef.current(), []);
 
   // The category levels are the shared ones — the same rail the notebook draws, from
-  // @agentic-toolkit/categories. This pane contributes the documents level below them. The RAW
+  // @adh-sdk/categories. This pane contributes the documents level below them. The RAW
   // URL slugs go in; the resolved chain comes back out, and everything the pane still needs
   // about where it is standing is derived from that rather than re-resolved here.
   const {
@@ -767,7 +767,7 @@ export function ResearchPane({
       />
     ),
     // The gear's PLAIN companion, as the rail host's publish key asks of any node (`levelsKey` in
-    // @agentic-toolkit/resource): the host draws the level it REGISTERED, and a node is invisible
+    // @adh-sdk/resource): the host draws the level it REGISTERED, and a node is invisible
     // to that key. Without this the gear froze at its last registration — options the universe
     // read delivered late never appeared, and a filter cleared onto a cached list with the same
     // rows stayed gold and checked. So it moves with everything the gear draws.

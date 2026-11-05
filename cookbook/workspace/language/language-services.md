@@ -1,7 +1,7 @@
 ---
 id: 82065ef6-9f0a-424f-aa32-3814d9cb843f
 title: "Language Services"
-domain: adtoolkit://cookbook/workspace/language/language-services
+domain: adhsdk://cookbook/workspace/language/language-services
 type: ingredient
 version: 1.1.0
 status: review
@@ -25,17 +25,17 @@ tags:
   - utf-16
 depends-on: []
 related:
-  - adtoolkit://cookbook/workspace/files/file-editor-view
-  - adtoolkit://cookbook/workspace/documents/document-editor-view
+  - adhsdk://cookbook/workspace/files/file-editor-view
+  - adhsdk://cookbook/workspace/documents/document-editor-view
 references:
-  - packages/apple/AgenticToolkit/Language/TextDocument.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Language/TextDocumentSaveScheduler.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Language/TextDocumentStore.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Language/URL+DocumentUri.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Core/Concurrency/KeyedDebouncer.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Tests/AgenticToolkitLanguageTests/TextDocumentTests.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Tests/AgenticToolkitLanguageTests/TextDocumentSaveSchedulerTests.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Tests/AgenticToolkitLanguageTests/TextDocumentStoreTests.swift (agenticdevelopertoolkit)
+  - packages/apple/AgenticDeveloperHubSDK/Language/TextDocument.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Language/TextDocumentSaveScheduler.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Language/TextDocumentStore.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Language/URL+DocumentUri.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Core/Concurrency/KeyedDebouncer.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKLanguageTests/TextDocumentTests.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKLanguageTests/TextDocumentSaveSchedulerTests.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKLanguageTests/TextDocumentStoreTests.swift (adhsdk)
 approved-by: ""
 approved-date: ""
 ---
@@ -202,7 +202,7 @@ The text document, the document store, and the URL-to-document-URI conversion ma
 ## Platform Notes
 
 - **SwiftUI**: not a dependency of any of the four files — each imports only `Foundation` (plus `LanguageServerProtocol`, and `os` for the scheduler's logger). A SwiftUI editor view consumes `TextDocument`/`TextDocumentStore`/`TextDocumentSaveScheduler` through injected instances and its own `@State`/`@Observable` wiring around the change/dirty-state handler tokens, not through anything this component provides directly.
-- **AppKit / UIKit**: this is the source. All four files live in `packages/apple/AgenticToolkit/Language/`, part of the `AgenticToolkitLanguage` framework target (`project.yml` declares `platform: macOS`, no iOS target today), depending on `AgenticToolkitCore`, `JSONRPC`, `LanguageServerProtocol`, and `LanguageClient`. None imports AppKit or UIKit, so the type is equally usable from the headless daemon process or a windowed host. `TextDocument`, `TextDocumentStore`, and `TextDocumentSaveScheduler` are each declared `@MainActor final class`, so the primary-execution-context confinement in the behavioral requirements above is Swift actor isolation, not a locking convention this repo built by hand; an observation token's teardown is an `isolated deinit`, which itself hops back onto the main actor before unregistering its handler. The save scheduler's injected write closure is typed `@MainActor (TextDocument) async throws -> Void`, and it wraps a generic `KeyedDebouncer<DocumentUri>` (`Core/Concurrency/KeyedDebouncer.swift`) for its debounce/retry bookkeeping. Its failure log line goes through `Loggable` conformance, with subsystem `Bundle.main.bundleIdentifier` and category `TextDocumentSaveScheduler`, using the `os` unified logging framework. In `apply(_:)`'s edit-reordering step, Swift's `sorted(by:)` uses a small-array insertion-sort fast path that happens to preserve a non-total-order comparator's original relative order below a size threshold; the "large, scrambled batch" edge case exists to exercise the general-purpose sort path beyond that threshold, where such preservation is not guaranteed by the standard library and must instead come from the documented descending-caller-index tiebreak.
+- **AppKit / UIKit**: this is the source. All four files live in `packages/apple/AgenticDeveloperHubSDK/Language/`, part of the `AgenticDeveloperHubSDKLanguage` framework target (`project.yml` declares `platform: macOS`, no iOS target today), depending on `AgenticDeveloperHubSDKCore`, `JSONRPC`, `LanguageServerProtocol`, and `LanguageClient`. None imports AppKit or UIKit, so the type is equally usable from the headless daemon process or a windowed host. `TextDocument`, `TextDocumentStore`, and `TextDocumentSaveScheduler` are each declared `@MainActor final class`, so the primary-execution-context confinement in the behavioral requirements above is Swift actor isolation, not a locking convention this repo built by hand; an observation token's teardown is an `isolated deinit`, which itself hops back onto the main actor before unregistering its handler. The save scheduler's injected write closure is typed `@MainActor (TextDocument) async throws -> Void`, and it wraps a generic `KeyedDebouncer<DocumentUri>` (`Core/Concurrency/KeyedDebouncer.swift`) for its debounce/retry bookkeeping. Its failure log line goes through `Loggable` conformance, with subsystem `Bundle.main.bundleIdentifier` and category `TextDocumentSaveScheduler`, using the `os` unified logging framework. In `apply(_:)`'s edit-reordering step, Swift's `sorted(by:)` uses a small-array insertion-sort fast path that happens to preserve a non-total-order comparator's original relative order below a size threshold; the "large, scrambled batch" edge case exists to exercise the general-purpose sort path beyond that threshold, where such preservation is not guaranteed by the standard library and must instead come from the documented descending-caller-index tiebreak.
 - **Compose**: Kotlin's `String` is UTF-16-backed like Swift's, so the offset/position math (including the surrogate-pair and CRLF boundary rounding) ports with direct code-unit arithmetic over `CharSequence`, not a `codePoint`-aware API. Model the refcounted registry as a class holding a `MutableMap<String, Entry>` confined to a single `CoroutineDispatcher` (the direct analogue of `@MainActor`), and port the save scheduler/debounce-and-retry helper as a `Job`-per-key debounce (`launch { delay(debounceMs) }`) with the same generation-bump-on-reschedule and exponential-backoff-on-failure bookkeeping, since Kotlin coroutines offer no built-in debounce-with-retry primitive.
 - **React/Web**: JavaScript strings are UTF-16 internally (`String.prototype.length`/`charCodeAt` already operate on UTF-16 code units), so the offset/position math ports almost unchanged. Model the debounced autosave with a `Map<uri, { timer, generation, failures }>` and `setTimeout`/`clearTimeout` in place of the native debounce-and-retry helper, and the refcounted store as a `Map<string, { document, openCount }>`; persistence goes through the File System Access API or a backend endpoint, wrapped in the same never-remove-on-failure retry loop.
 - **WinUI 3**: .NET's `System.String` is also UTF-16 (`Length`/the string indexer are UTF-16 code units, matching Swift's `text.utf16`), so the offset/position conversion, including surrogate-pair and CRLF boundary rounding, ports with direct index arithmetic and no encoding translation. Model the document store's refcounted registry as a `Dictionary<string, Entry>` confined to the UI thread's `DispatcherQueue` (the closest analogue to `@MainActor`), and port the save scheduler/debounce-and-retry helper with a `DispatcherQueueTimer` or `Task.Delay`-based per-key debounce that keeps a failed key's entry — mirroring `retry-ceiling-default-and-floor`-style backoff — until a write via `System.IO.File.WriteAllTextAsync` succeeds or is explicitly cancelled.
@@ -211,10 +211,10 @@ The text document, the document store, and the URL-to-document-URI conversion ma
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/Language/TextDocument.swift` |
-| apple | `packages/apple/AgenticToolkit/Language/TextDocumentSaveScheduler.swift` |
-| apple | `packages/apple/AgenticToolkit/Language/TextDocumentStore.swift` |
-| apple | `packages/apple/AgenticToolkit/Language/URL+DocumentUri.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Language/TextDocument.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Language/TextDocumentSaveScheduler.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Language/TextDocumentStore.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Language/URL+DocumentUri.swift` |
 
 ## Design Decisions
 

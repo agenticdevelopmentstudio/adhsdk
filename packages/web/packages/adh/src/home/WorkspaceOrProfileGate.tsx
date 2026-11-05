@@ -2,9 +2,9 @@
 
 import type { ReactElement, ReactNode } from 'react'
 import { useParams } from 'next/navigation'
-import { useAuth } from '@agentic-toolkit/auth'
+import { useAuth } from '@adh-sdk/auth'
 import { ProfileFallback } from '../profile/ProfileFallback'
-import { useSiteId } from '@agentic-toolkit/adh/site/site-id'
+import { useSiteId } from '@adh-sdk/adh/site/site-id'
 
 /**
  * The family's gate for `/<workspace>`: the workspace for a caller who can reach it, that

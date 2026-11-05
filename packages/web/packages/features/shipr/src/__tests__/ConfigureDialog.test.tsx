@@ -3,7 +3,7 @@ import { act, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import * as React from 'react';
 
-import { useStackLevel } from '@agentic-toolkit/resource';
+import { useStackLevel } from '@adh-sdk/resource';
 
 import type { AccessVerb, DevRepo, Environment, RepoItem } from '../types';
 import type { ForgeCatalogue } from '../forge/useForgeCatalogue';
@@ -23,7 +23,7 @@ import type { RepoSettingsPatch } from '../settings/SettingsDialog';
  * the dialog it now lives in has to get right is pinned in `ConnectionsDialog.test.tsx`.
  */
 
-vi.mock('@agentic-toolkit/data/ecosystems', () => ({
+vi.mock('@adh-sdk/data/ecosystems', () => ({
   useWorkspaceDefaultEcosystemId: () => ({
     ecosystemId: 'eco-1',
     canManage: true,
@@ -38,9 +38,9 @@ vi.mock('@agentic-toolkit/data/ecosystems', () => ({
 // again here. It is the one string both ends of the OAuth round-trip have to agree on, and a
 // fixture that declares its own would keep passing through exactly the divergence that breaks
 // the return leg.
-vi.mock('@agentic-toolkit/integrations', async (importOriginal) => ({
+vi.mock('@adh-sdk/integrations', async (importOriginal) => ({
   CONNECTIONS_HASH: (
-    await importOriginal<typeof import('@agentic-toolkit/integrations')>()
+    await importOriginal<typeof import('@adh-sdk/integrations')>()
   ).CONNECTIONS_HASH,
   IntegrationsPane: ({ levelTitle }: { levelTitle?: string }) => {
     useStackLevel({

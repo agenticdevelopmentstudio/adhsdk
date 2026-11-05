@@ -1,5 +1,5 @@
 {
-  "name": "@agentic-toolkit/adh-admin",
+  "name": "@adh-sdk/adh-admin",
   "version": "0.1.0",
   "description": "The Admin console feature: users, invitations, feature flags, server bags, sync, audit, messaging, feedback, authentication, LLM providers, usage limits, and reserved identifiers.",
   "license": "UNLICENSED",
@@ -13,7 +13,7 @@
   "sideEffects": [
     "**/*.css"
   ],
-  "comment:tier": "VOCABULARY, not mechanism — see tools/check_boundaries.py, which classifies on the `@agentic-toolkit/adh` name boundary alone. This package imports BOTH vocabulary (adh, adh-api-types, adh-ui) and mechanism (api-explorer, auth, data, resource) packages, which only a vocabulary name may do. The `adh-` prefix is a deliberate claim about the CONTENT — every shape in src/api/*.ts is a column of adh's own schema (customer.customers, system.feature_flags, usage.rate_limit_tiers, …), and the panes' copy names adh's own admin surface (isAdmin(), the hub ecosystem, adh's messaging providers) — so a non-adh host mounting this would be mounting adh's model of administration, not a general one.",
+  "comment:tier": "VOCABULARY, not mechanism — see tools/check_boundaries.py, which classifies on the `@adh-sdk/adh` name boundary alone. This package imports BOTH vocabulary (adh, adh-api-types, adh-ui) and mechanism (api-explorer, auth, data, resource) packages, which only a vocabulary name may do. The `adh-` prefix is a deliberate claim about the CONTENT — every shape in src/api/*.ts is a column of adh's own schema (customer.customers, system.feature_flags, usage.rate_limit_tiers, …), and the panes' copy names adh's own admin surface (isAdmin(), the hub ecosystem, adh's messaging providers) — so a non-adh host mounting this would be mounting adh's model of administration, not a general one.",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -41,18 +41,18 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@agentic-toolkit/adh": "workspace:*",
-    "@agentic-toolkit/adh-api-types": "workspace:*",
-    "@agentic-toolkit/adh-ui": "workspace:*",
-    "@agentic-toolkit/api-explorer": "workspace:*",
-    "@agentic-toolkit/auth": "workspace:*",
-    "@agentic-toolkit/data": "workspace:*",
-    "@agentic-toolkit/resource": "workspace:*",
+    "@adh-sdk/adh": "workspace:*",
+    "@adh-sdk/adh-api-types": "workspace:*",
+    "@adh-sdk/adh-ui": "workspace:*",
+    "@adh-sdk/api-explorer": "workspace:*",
+    "@adh-sdk/auth": "workspace:*",
+    "@adh-sdk/data": "workspace:*",
+    "@adh-sdk/resource": "workspace:*",
     "@tanstack/react-query": "^5.62.0",
     "clsx": "^2.1.1",
     "lucide-react": "^1.16.0",
     "tailwind-merge": "^2.6.0",
-    "@agenticdevelopertoolkit/ui": "workspace:*"
+    "@adh-sdk/ui": "workspace:*"
   },
   "peerDependencies": {
     "next": ">=15",

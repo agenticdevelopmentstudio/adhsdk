@@ -1,5 +1,5 @@
 import type { ReactElement, ReactNode } from 'react';
-import type { SiteId } from '@agentic-toolkit/adh-registry';
+import type { SiteId } from '@adh-sdk/adh-registry';
 import type { ProfilePrincipal } from './types';
 export interface ProfileViewProps {
     principal: ProfilePrincipal;
@@ -23,7 +23,7 @@ export interface ProfileViewProps {
  *   [ this site's own section, or nothing ]
  *   [ Full Profile → the hub, unless this IS the hub ]
  *
- * Lives in `@agentic-toolkit/adh` rather than `packages/ui` because it has to know site ids and
+ * Lives in `@adh-sdk/adh` rather than `packages/ui` because it has to know site ids and
  * which one is the hub, and `ui` is the generic layer that must not.
  *
  * The header is `<UserCard>` unchanged — it already renders exactly what "general public info"

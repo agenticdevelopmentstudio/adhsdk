@@ -2,13 +2,13 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import type { EntryRow } from '@agentic-toolkit/registry/client';
+import type { EntryRow } from '@adh-sdk/registry/client';
 
 // ONLY TagSetField is stubbed, and only because both of its halves are Base UI popovers
 // that jsdom cannot open. `Field` and `FieldGroup` stay REAL — `Field` is what wraps each
 // control in a <Label>, which is the entire reason getByLabelText finds these inputs.
-vi.mock('@agenticdevelopertoolkit/ui/blocks', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('@agenticdevelopertoolkit/ui/blocks')>()),
+vi.mock('@adh-sdk/ui/blocks', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@adh-sdk/ui/blocks')>()),
   TagSetField: ({
     label,
     value,

@@ -275,8 +275,8 @@ def embed_transitive_frameworks(app: Path) -> None:
     framework reached only through another framework is linked but never copied.
     The app's own `Contents/Frameworks` rpath then has a hole in it and dyld
     kills the process at launch — `Library not loaded:
-    @rpath/AgenticToolkitCore.framework/...`, referenced from the embedded
-    `AgenticToolkitCoreMacOS`, which is exactly what a Debug build of this app
+    @rpath/AgenticDeveloperHubSDKCore.framework/...`, referenced from the embedded
+    `AgenticDeveloperHubSDKCoreMacOS`, which is exactly what a Debug build of this app
     did before this call existed.
 
     `install` already runs this helper over its Release build for the same

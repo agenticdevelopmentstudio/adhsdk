@@ -5,7 +5,7 @@ import type {
   DeliverabilityWebhook,
   MaskedProviderConfig,
   ProviderCatalogEntry,
-} from "@agentic-toolkit/data/integrations";
+} from "@adh-sdk/data/integrations";
 
 // Same boundary AddIntegrationModal.test.tsx stubs: no real network, everything else real.
 const { createProviderConfig, updateProviderConfig, rotateWebhookSecret } = vi.hoisted(() => ({
@@ -13,7 +13,7 @@ const { createProviderConfig, updateProviderConfig, rotateWebhookSecret } = vi.h
   updateProviderConfig: vi.fn(),
   rotateWebhookSecret: vi.fn(),
 }));
-vi.mock("@agentic-toolkit/data/integrations", () => ({
+vi.mock("@adh-sdk/data/integrations", () => ({
   integrationsApi: { createProviderConfig, updateProviderConfig, rotateWebhookSecret },
 }));
 

@@ -2,16 +2,16 @@
 
 import { useCallback, useState, type ReactElement } from "react";
 import { Layers } from "lucide-react";
-import { Badge } from "@agenticdevelopertoolkit/ui/components/badge";
-import { EmptyState } from "@agenticdevelopertoolkit/ui/components/empty-state";
-import { ErrorText } from "@agenticdevelopertoolkit/ui/components/error-text";
-import { List, ListItem } from "@agenticdevelopertoolkit/ui/components/list";
-import { useResourceList } from "@agentic-toolkit/data";
+import { Badge } from "@adh-sdk/ui/components/badge";
+import { EmptyState } from "@adh-sdk/ui/components/empty-state";
+import { ErrorText } from "@adh-sdk/ui/components/error-text";
+import { List, ListItem } from "@adh-sdk/ui/components/list";
+import { useResourceList } from "@adh-sdk/data";
 import {
   projectProgramsApi,
   type Program,
   type Project,
-} from "@agentic-toolkit/data/projects";
+} from "@adh-sdk/data/projects";
 import {
   CreateResourceDialog,
   DetailSection,
@@ -20,7 +20,7 @@ import {
   useMasterDetailForm,
   useMasterDetailLevel,
   type TopicLeaf,
-} from "@agentic-toolkit/resource";
+} from "@adh-sdk/resource";
 import {
   ProgramDetail,
   programBlank,

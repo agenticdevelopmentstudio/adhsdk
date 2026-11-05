@@ -3,7 +3,7 @@
   "meta": {
     "id": "F1868607-3458-427A-B784-B05BE97C7E8F",
     "title": "Money Formatter",
-    "domain": "adtoolkit://cookbook/foundation/money/money-formatter",
+    "domain": "adhsdk://cookbook/foundation/money/money-formatter",
     "type": "ingredient",
     "version": "1.0.0",
     "status": "review",
@@ -26,8 +26,8 @@
     ],
     "depends-on": [],
     "related": [
-      "adtoolkit://cookbook/foundation/money",
-      "adtoolkit://cookbook/foundation/money/money-totals"
+      "adhsdk://cookbook/foundation/money",
+      "adhsdk://cookbook/foundation/money/money-totals"
     ],
     "references": [],
     "approved-by": "",

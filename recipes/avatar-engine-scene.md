@@ -1,7 +1,7 @@
 ---
 id: c708a65f-4d6c-40e4-b1b8-a24584cd45a1
 title: Avatar Engine Scene
-domain: agenticdevelopertoolkit://recipes/avatar-engine-scene
+domain: adhsdk://recipes/avatar-engine-scene
 type: ingredient
 version: 1.0.2
 status: review
@@ -25,13 +25,13 @@ tags:
 - scene
 - compositing
 depends-on:
-- agenticdevelopertoolkit://recipes/avatar-engine-config
-- agenticdevelopertoolkit://recipes/avatar-engine-math
-- agenticdevelopertoolkit://recipes/avatar-engine-path
-- agenticdevelopertoolkit://recipes/avatar-engine-runtime
+- adhsdk://recipes/avatar-engine-config
+- adhsdk://recipes/avatar-engine-math
+- adhsdk://recipes/avatar-engine-path
+- adhsdk://recipes/avatar-engine-runtime
 related:
-- agenticdevelopertoolkit://recipes/avatar-engine-render
-- agenticdevelopertoolkit://recipes/avatar-engine
+- adhsdk://recipes/avatar-engine-render
+- adhsdk://recipes/avatar-engine
 references: []
 approved-by: ''
 approved-date: ''
@@ -170,7 +170,7 @@ are not required to agree on exact error message text.
 - **bend-damping-applied-upstream**: `compose`/`resolvePath` MUST NOT apply
   a bend's inward damping to the `.bend` channel's value itself; damping is
   applied exactly once, where the channel value is written
-  (`CharacterConfig.respond`, `agenticdevelopertoolkit://recipes/avatar-engine-config`), never at composition time.
+  (`CharacterConfig.respond`, `adhsdk://recipes/avatar-engine-config`), never at composition time.
 - **unsupported-shape-kind-rejected** (web): the web `resolvePath`'s
   `switch` MUST throw `unknown shape kind: <kind>` for a `Shape.kind` value
   outside the six handled cases. The equivalent Apple code path is
@@ -178,7 +178,7 @@ are not required to agree on exact error message text.
   enum the compiler enforces exhaustively at the call site.
 - **kind-derived-from-parsed-path**: every `DisplayItem`'s `kind` field MUST
   equal the command-signature string (`parsePath(d).kind`,
-  `agenticdevelopertoolkit://recipes/avatar-engine-path`) of that same
+  `adhsdk://recipes/avatar-engine-path`) of that same
   item's own resolved `d`, computed fresh on every call, never cached from a
   previous frame.
 
@@ -253,7 +253,7 @@ are not required to agree on exact error message text.
 
 - **rest-value-seeding**: `CharacterConfig.seed(into:)` (Apple) /
   `seedChannels` (web) MUST write every entry of `config.rest`
-  (`agenticdevelopertoolkit://recipes/avatar-engine-config`) into the given
+  (`adhsdk://recipes/avatar-engine-config`) into the given
   `Channels` store, keyed and valued exactly as the config's `rest` map
   supplies them.
 
@@ -374,7 +374,7 @@ component.
   Neither source file defines a synchronization contract of its own beyond
   those declarations; whether a `Channels` store may safely be read by
   `compose` while written concurrently is entirely the `Channels` store's
-  own contract (`agenticdevelopertoolkit://recipes/avatar-engine-runtime`),
+  own contract (`adhsdk://recipes/avatar-engine-runtime`),
   not something `Scene`/`compose` add to or subtract from.
 - **Error states**: an unknown variant, an unknown crop, an unresolved
   colour reference, a missing late-bound `.ink` channel value, and a
@@ -422,7 +422,7 @@ shown to a user.
 Not applicable: Scene/`compose`/`crop` expose nothing to assistive
 technology and read no accessibility display setting (Reduce Motion,
 Increase Contrast, Differentiate Without Color); that concern belongs to the
-render/host layer downstream (`agenticdevelopertoolkit://recipes/avatar-engine-render`), not to this component.
+render/host layer downstream (`adhsdk://recipes/avatar-engine-render`), not to this component.
 
 ## Feature Flags
 
@@ -459,7 +459,7 @@ a thrown/raised error.
   Foundation code with no `import SwiftUI`/`AppKit`/`UIKit`; a SwiftUI host
   re-invokes `scene.compose(channels)` every frame (typically from a
   `TimelineView(.animation)` or a `CADisplayLink`-driven wrapper, see
-  `agenticdevelopertoolkit://recipes/avatar-engine-render`) and hands the
+  `adhsdk://recipes/avatar-engine-render`) and hands the
   resulting `DisplayList` to that render layer's bridges, never observing
   `Scene` itself as `@Published`/`@Observable` state.
 - **AppKit / UIKit**: no distinction from the SwiftUI note above — the same
@@ -479,7 +479,7 @@ a thrown/raised error.
   `compose`, and `cropList` as ordinary synchronous functions — no
   coroutine or `Flow` is warranted, since the reference implementations on
   both source platforms are synchronous and side-effect free. A `Channels`
-  port (`agenticdevelopertoolkit://recipes/avatar-engine-runtime`) backs
+  port (`adhsdk://recipes/avatar-engine-runtime`) backs
   the per-node channel lookups this component performs.
 - **WinUI 3 (.NET, port target)**: model `DisplayItem` as a C# record (with
   a nested `Paint` record for `ink`/`alpha`/`fill`/`width`), and port
@@ -488,7 +488,7 @@ a thrown/raised error.
   `Task`/`async` is warranted, matching the synchronous reference on both
   source platforms. Back the per-frame `<id>.x`/`.rotation`/etc. lookups
   with the `Channels`/`ChannelValue` port described in
-  `agenticdevelopertoolkit://recipes/avatar-engine-runtime`
+  `adhsdk://recipes/avatar-engine-runtime`
   (`System.Text.Json` and `Windows.Storage` have no role here, since
   neither Scene construction nor `compose` performs any I/O). Represent
   `SceneError`/the web `Error` as a dedicated exception type (e.g.

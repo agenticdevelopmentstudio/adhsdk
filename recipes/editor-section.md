@@ -1,7 +1,7 @@
 ---
 id: 5a028319-034c-4852-a1ee-01247a747183
 title: EditorSection
-domain: agenticdevelopertoolkit://recipes/editor-section
+domain: adhsdk://recipes/editor-section
 type: recipe
 version: 1.2.1
 status: review
@@ -21,12 +21,12 @@ tags:
 - layout
 - toolbar
 ingredients:
-- agenticdevelopertoolkit://recipes/button-bar
-- agenticdevelopertoolkit://recipes/topic-detail
-- agenticdevelopertoolkit://recipes/empty-state
+- adhsdk://recipes/button-bar
+- adhsdk://recipes/topic-detail
+- adhsdk://recipes/empty-state
 depends-on: []
 related:
-- agenticdevelopertoolkit://recipes/list-with-details-pane
+- adhsdk://recipes/list-with-details-pane
 references: []
 approved-by: ''
 approved-date: ''
@@ -36,7 +36,7 @@ approved-date: ''
 
 ## Overview
 
-`EditorSection` in `@agenticdevelopertoolkit/ui/blocks/editor-section` is the platform's
+`EditorSection` in `@adh-sdk/ui/blocks/editor-section` is the platform's
 standard master/detail **editor shell**: a records rail on the left, an editing
 detail pane on the right, and a fixed editing toolbar across the top. It is a
 **pure assembly** — it owns no visual grammar of its own. It stacks three shared
@@ -63,9 +63,9 @@ It is the base editor shell behind hub/admin topics that manage a list of record
 
 | Name | Domain | Role | Required | Configuration |
 |---|---|---|---|---|
-| ButtonBar | agenticdevelopertoolkit://recipes/button-bar | The fixed editing toolbar: gold mono title (`leading`) + the New/Delete/Cancel/Save preset | yes | `leading` = title + `titleBadge`; `actions` = `{ onCreate, createLabel, onCancel, canCancel, onSave, canSave, saving, onDelete, canDelete }`; `showDelete` = `!!onDelete` |
-| TopicDetail | agenticdevelopertoolkit://recipes/topic-detail | The two-pane rail\|pane primitive: collapsible records rail + detail pane | yes | `items` (mapped from `EditorSectionItem[]`), `selectedId`, `onSelect`, `emptyLabel` = `emptyList`, `railSlot` = `listHeader`, `railWidth`, `panePadding={false}` |
-| EmptyState | agenticdevelopertoolkit://recipes/empty-state | The "nothing selected" placeholder rendered in the pane when not editing | yes | `title` = `emptyDetail`; fixed standard detail-pane inset (literal classes: see the React/Web platform note) |
+| ButtonBar | adhsdk://recipes/button-bar | The fixed editing toolbar: gold mono title (`leading`) + the New/Delete/Cancel/Save preset | yes | `leading` = title + `titleBadge`; `actions` = `{ onCreate, createLabel, onCancel, canCancel, onSave, canSave, saving, onDelete, canDelete }`; `showDelete` = `!!onDelete` |
+| TopicDetail | adhsdk://recipes/topic-detail | The two-pane rail\|pane primitive: collapsible records rail + detail pane | yes | `items` (mapped from `EditorSectionItem[]`), `selectedId`, `onSelect`, `emptyLabel` = `emptyList`, `railSlot` = `listHeader`, `railWidth`, `panePadding={false}` |
+| EmptyState | adhsdk://recipes/empty-state | The "nothing selected" placeholder rendered in the pane when not editing | yes | `title` = `emptyDetail`; fixed standard detail-pane inset (literal classes: see the React/Web platform note) |
 
 Composed shared primitives without their own recipe domains: `Badge`
 (`variant="accent"`) for the `⚠ N` count badge on warned rows.
@@ -207,7 +207,7 @@ Composed shared primitives without their own recipe domains: `Badge`
   warn badge/label, leaving the icon strip — that collapse-time hiding is
   `TopicDetail`'s own behavior (`support-trailing-accessory`,
   `hide-label-when-collapsed`; see
-  agenticdevelopertoolkit://recipes/topic-detail#behavioral-requirements), not
+  adhsdk://recipes/topic-detail#behavioral-requirements), not
   something EditorSection adds.
 
 ## Platform Notes
@@ -216,7 +216,7 @@ Composed shared primitives without their own recipe domains: `Badge`
 
 - **Compose**: Root is a `Column` containing a `Row` for the toolbar (Material3 `TopAppBar` or a custom `Row` with Material3 `Button`s), an optional error `Text` (red foreground, small padding), and a horizontal `Row` splitting a records rail and the detail pane. The rail collapses the way `TopicDetail`'s own Compose note describes — an animated-width `NavigationRail` (or a `LazyColumn` whose column width animates between full and icon-only) — rather than a fixed-width column. Selection state (`selectedId`) drives rail selection and pane visibility. Warn badges render inline in the row's trailing slot as `Badge` composables or overlay `Icon`s tinted with the warning color. Plain values flow downward as parameters (never `MutableState` props, which would let a child mutate the parent's state directly); mutations flow upward via lambda callbacks, per Compose's state-hoisting pattern.
 
-- **React/Web (TypeScript)**: Block at `packages/web/packages/ui/src/blocks/editor-section.tsx`, exported via `@agenticdevelopertoolkit/ui/blocks`. Assembles `ButtonBar` (toolbar), `TopicDetail` (records rail + detail pane), `EmptyState`, and `Badge` from `@agenticdevelopertoolkit/ui/components`. Responsive collapsing (rail to icon strip) and mobile toolbar wrapping (375/768/1440px) are inherited from TopicDetail and ButtonBar; verify with Playwright in ui-showcase. Demo at ui-showcase Topic editor-section; regenerate sources.generated.ts via gen-sources.py after source changes. Literal Tailwind: root `flex min-h-0 flex-1 flex-col`; toolbar title `font-mono text-[13px] text-apt-gold`; error line `shrink-0 border-b border-apt-border px-3.5 py-1.5 font-mono text-xs text-apt-red`; the pane's `EmptyState` inset `m-3.5 min-h-[200px] flex-1`.
+- **React/Web (TypeScript)**: Block at `packages/web/packages/ui/src/blocks/editor-section.tsx`, exported via `@adh-sdk/ui/blocks`. Assembles `ButtonBar` (toolbar), `TopicDetail` (records rail + detail pane), `EmptyState`, and `Badge` from `@adh-sdk/ui/components`. Responsive collapsing (rail to icon strip) and mobile toolbar wrapping (375/768/1440px) are inherited from TopicDetail and ButtonBar; verify with Playwright in ui-showcase. Demo at ui-showcase Topic editor-section; regenerate sources.generated.ts via gen-sources.py after source changes. Literal Tailwind: root `flex min-h-0 flex-1 flex-col`; toolbar title `font-mono text-[13px] text-apt-gold`; error line `shrink-0 border-b border-apt-border px-3.5 py-1.5 font-mono text-xs text-apt-red`; the pane's `EmptyState` inset `m-3.5 min-h-[200px] flex-1`.
 
 - **AppKit / UIKit**: Start with `NSSplitViewController` (macOS) or `UISplitViewController` (iOS). Toolbar is `NSToolbar` (macOS) with an `NSToolbarItem` holding an `NSTextField` label for the title plus button items, or `UIToolbar` (iOS) with `UIBarButtonItem`s (New, Delete, Cancel, Save). Records rail is `NSTableView`/`NSOutlineView` (macOS) or a `UITableViewController` (iOS) with selection bindings driving pane visibility. Detail pane is a conditional container: editing state shows the form, nothing-selected state shows `EmptyState`. Warn badges are overlay `NSImageView`/`UIImageView` icons (⚠ glyph) or cell background tints. All state and callbacks flow through the view controller.
 
@@ -280,7 +280,7 @@ exercises `EditorSection`.
 
 ## API
 
-`@agenticdevelopertoolkit/ui/blocks/editor-section`:
+`@adh-sdk/ui/blocks/editor-section`:
 
 ```ts
 interface EditorSectionItem {

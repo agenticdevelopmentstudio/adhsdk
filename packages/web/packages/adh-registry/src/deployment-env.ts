@@ -13,11 +13,11 @@
 // The backend keeps its own copy (separate process, separate env, and no import path
 // between them); adh's `backend/src/adh/test/themeSurfaceEnv.test.ts` reads THIS file and
 // fails if the two lists drift. That guard now reaches ACROSS the repo boundary — this
-// package lives in the agentictoolkit submodule, adh consumes it — so the test resolves
-// this path through `frontend/src/external/agentictoolkit/…`, and moving or renaming this
+// package lives in the adhsdk submodule, adh consumes it — so the test resolves
+// this path through `frontend/src/external/adhsdk/…`, and moving or renaming this
 // file is a two-repo change.
 //
-// It lives in adh-registry rather than in `@agentic-toolkit/adh`, where its consumers are,
+// It lives in adh-registry rather than in `@adh-sdk/adh`, where its consumers are,
 // for one structural reason: adh DEPENDS on this package, so a home here can be read from
 // both sides, and a home in adh could not be read from `seo/metadata.ts` at all without a
 // cycle. Splitting it — one copy per package — is precisely the drift this module was
@@ -41,7 +41,7 @@
 // Keeping a module OUT of a production bundle takes more than a boolean, and the two
 // missing halves are why `DEV_BUILD ? dynamic(() => import('./X'))` shipped the whole
 // site-theme editor (Monaco included) into every production build of every site. The
-// gates themselves live in `@agentic-toolkit/adh` (that is where the dev-only surfaces
+// gates themselves live in `@adh-sdk/adh` (that is where the dev-only surfaces
 // are); the contract is written down HERE because it is the thing every reader of
 // DEV_BUILD has to know before reaching for it:
 //
@@ -55,7 +55,7 @@
 //   2. IMPORT BY PACKAGE SUBPATH, not by relative path. adh's tsup builds each entry with
 //      `splitting: false`, which turns a relative `import('./X')` into a lazy-init
 //      wrapper around X's code INLINED into the same file — the module boundary the gate
-//      needs is gone before a consumer ever sees it. A bare `@agentic-toolkit/adh/…`
+//      needs is gone before a consumer ever sees it. A bare `@adh-sdk/adh/…`
 //      specifier survives only if it is listed in tsup's `external` AND has its own
 //      entry AND is exported from package.json; the same test checks all three.
 //
@@ -78,7 +78,7 @@ export function isDevDeploymentEnv(env: string | null | undefined): env is DevDe
 /**
  * Whether this BUILD carries dev-only client code: true in the three dev envs, false
  * in production. NEXT_PUBLIC_DEPLOYMENT_ENV is inlined per build (promoted from the
- * server-side DEPLOYMENT_ENV by `adhNextConfig()`, see @agentic-toolkit/adh-next-config),
+ * server-side DEPLOYMENT_ENV by `adhNextConfig()`, see @adh-sdk/adh-next-config),
  * so this collapses to a literal boolean at build time. Evaluated once at module load.
  *
  * 🔑 It is written as three explicit `===` comparisons ON PURPOSE and must stay that

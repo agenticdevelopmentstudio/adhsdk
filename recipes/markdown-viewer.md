@@ -1,7 +1,7 @@
 ---
 id: 8f2e1c9d-7a4b-4c2e-9d8e-5f6c7d8e9f0a
 title: Markdown Viewer
-domain: agenticdevelopertoolkit://recipes/markdown-viewer
+domain: adhsdk://recipes/markdown-viewer
 type: ingredient
 version: 1.1.1
 status: review
@@ -24,11 +24,11 @@ tags:
 - theming
 - syntax-highlighting
 depends-on:
-- agenticdevelopertoolkit://recipes/markdown-renderer
-- agenticdevelopertoolkit://recipes/markdown-document-renderer
-- agenticdevelopertoolkit://recipes/markdown-theme-switcher
+- adhsdk://recipes/markdown-renderer
+- adhsdk://recipes/markdown-document-renderer
+- adhsdk://recipes/markdown-theme-switcher
 related:
-- agenticdevelopertoolkit://recipes/markdown-reading-palette
+- adhsdk://recipes/markdown-reading-palette
 references: []
 approved-by: ''
 approved-date: ''

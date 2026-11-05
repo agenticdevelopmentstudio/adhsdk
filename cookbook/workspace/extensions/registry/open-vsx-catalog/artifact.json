@@ -3,7 +3,7 @@
   "meta": {
     "id": "1bbc9593-4064-4e79-8bce-08b3cf00c13d",
     "title": "Open VSX Catalog",
-    "domain": "adtoolkit://cookbook/workspace/extensions/registry/open-vsx-catalog",
+    "domain": "adhsdk://cookbook/workspace/extensions/registry/open-vsx-catalog",
     "type": "ingredient",
     "version": "1.1.0",
     "status": "review",
@@ -28,10 +28,10 @@
     "depends-on": [],
     "related": [],
     "references": [
-      "packages/apple/AgenticToolkit/Core/Extensions/OpenVSXCatalog.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/Tests/AgenticToolkitCoreTests/Extensions/OpenVSXCatalogTests.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/Core/Extensions/VSCodeEngineRange.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/Core/SemanticVersion.swift (agenticdevelopertoolkit)"
+      "packages/apple/AgenticDeveloperHubSDK/Core/Extensions/OpenVSXCatalog.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKCoreTests/Extensions/OpenVSXCatalogTests.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/Core/Extensions/VSCodeEngineRange.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/Core/SemanticVersion.swift (adhsdk)"
     ],
     "approved-by": "",
     "approved-date": ""

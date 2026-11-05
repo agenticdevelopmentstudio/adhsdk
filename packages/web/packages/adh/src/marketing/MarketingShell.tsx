@@ -13,20 +13,20 @@ import {
 // this whole server entry. A relative specifier would inline a private copy and silently fork
 // that state. Both halves of the remedy are required — see the note atop layout/AppShell.tsx
 // and <adh-tools>/sites/scripts/verify-bundle-boundaries.py.
-import { AppShell, type AppShellProps } from "@agentic-toolkit/adh/layout";
-import type { SiteId } from "@agentic-toolkit/adh-registry";
-import { AuthProvider } from "@agentic-toolkit/adh/auth";
-import { MarketingSiteHeader } from "@agentic-toolkit/adh/marketing/MarketingSiteHeader";
+import { AppShell, type AppShellProps } from "@adh-sdk/adh/layout";
+import type { SiteId } from "@adh-sdk/adh-registry";
+import { AuthProvider } from "@adh-sdk/adh/auth";
+import { MarketingSiteHeader } from "@adh-sdk/adh/marketing/MarketingSiteHeader";
 // The generic header type, from the merged header barrel — the same one SiteHeader comes
 // from. It used to ride in on the retired @adh-shared auth shim, which re-exported it from
 // the SiteHeader that Task 6.2 folded into the app tier's own header barrel; both barrels
 // are this one now.
-import type { NavLink } from "@agentic-toolkit/adh/header";
-import type { FooterLink } from "@agentic-toolkit/adh/footer";
+import type { NavLink } from "@adh-sdk/adh/header";
+import type { FooterLink } from "@adh-sdk/adh/footer";
 import {
   HelpContentProvider,
   type SiteHelp,
-} from "@agenticdevelopertoolkit/ui/components/help-content";
+} from "@adh-sdk/ui/components/help-content";
 
 /** The serializable half of a link: what a server layout can hand across the
  *  boundary. NavLink's `icon`/function form and FooterLink's `onSelect` cannot
@@ -152,7 +152,7 @@ const FAMILY_ROOT_STYLE = { display: "contents" } as const;
  *
  * `MarketingRootHtml` is this inside `<html>`/`<head>`/`<body>`, and every family site whose
  * root layout is its own mounts that. This exists for the one case where the document is
- * somebody else's: a site built on `@agenticdevelopertoolkit/site-template` has the template's
+ * somebody else's: a site built on `@adh-sdk/site-template` has the template's
  * root layout, which already writes `<html>` and `<body>`, and keeps its family routes (privacy,
  * terms, the signed-in pages) in a route group below it. That group mounts this, with
  * `<AdhThemeStyle/>` beside it, instead of copying the chain — the copy is what the uniformity

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import * as server from '../server'
 
-describe('@agentic-toolkit/adh/server is the union of both pre-merge surfaces', () => {
+describe('@adh-sdk/adh/server is the union of both pre-merge surfaces', () => {
   // From the toolkit's own pre-merge server.ts — dropping any of these breaks
   // adh/src/debug/DebugMenu.tsx and adh/src/index.ts inside this package.
   it('keeps every toolkit-side export', () => {

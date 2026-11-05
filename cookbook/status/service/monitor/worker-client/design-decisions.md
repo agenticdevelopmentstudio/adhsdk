@@ -1,5 +1,5 @@
 
-- **Decision**: resolve the worker entry through the package's own `exports` map (`@agentic-toolkit/status-server/worker`) rather than a relative path to `worker.ts`.
+- **Decision**: resolve the worker entry through the package's own `exports` map (`@adh-sdk/status-server/worker`) rather than a relative path to `worker.ts`.
   **Rationale**: the source comment states it plainly — a container image ships no `tsx`/TypeScript loader, so a relative path to the `.ts` source "would work in dev and die on first boot in prod"; resolving through `exports` always lands on the built `dist/monitor/worker.js`, "the only form guaranteed runnable in that container." `worker-boot.int.test.ts` exercises exactly this resolution path under bare `node`.
   **Approved**: pending
 - **Decision**: attach the shared `cooldownState()` buffer inside `spawn()` itself rather than accepting it as part of the caller-supplied `opts.workerData`.

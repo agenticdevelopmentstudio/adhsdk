@@ -1,9 +1,9 @@
 "use client";
 
-import { defineSiteHome } from "@agentic-toolkit/adh/home";
-import { ToolkitQueryProvider } from "@agentic-toolkit/data/query";
-import { IntegrationsFeature } from "@agentic-toolkit/integrations";
-import { parseIntegrationsPath } from "@agentic-toolkit/integrations/parse";
+import { defineSiteHome } from "@adh-sdk/adh/home";
+import { ToolkitQueryProvider } from "@adh-sdk/data/query";
+import { IntegrationsFeature } from "@adh-sdk/integrations";
+import { parseIntegrationsPath } from "@adh-sdk/integrations/parse";
 
 /**
  * This site's workspace route — `/<workspace>` and everything below it.

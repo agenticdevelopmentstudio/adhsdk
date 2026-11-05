@@ -1,7 +1,7 @@
 
 - **SwiftUI / AppKit / UIKit**: This is one of the two reference
   implementations, under
-  `packages/apple/AgenticToolkit/Hub/Features/Ecosystems/`. `EcosystemsModule`
+  `packages/apple/AgenticDeveloperHubSDK/Hub/Features/Ecosystems/`. `EcosystemsModule`
   and its topics are `@MainActor` and `Sendable`-safe under Swift 6 strict
   concurrency; the same `FormSpec`/`HTDVDetail` values these topics build
   are rendered by both the macOS `FormSheet`/`FormViewController`
@@ -88,7 +88,7 @@
   `useEcoRowHistory`, `useEcoSaveNotes`, `useEcoSendInvitations`,
   `useEcoAddPendingUsers`, `useEcoDeleteRow`) implement the **Invitations
   topic data** group; their row-shape mappers are imported from
-  `@agentic-toolkit/adh-ui/invitations-types` rather than defined in this
+  `@adh-sdk/adh-ui/invitations-types` rather than defined in this
   recipe (see Design Decisions).
 
   `ecosystemFeaturesApi` plus its hooks (`ecosystem-features.ts`, tested by
@@ -102,7 +102,7 @@
   other reference implementation.
 
   Every error this implementation raises is a plain `Error` carrying a
-  numeric `.status` (`AuthHttpError`-shaped, from `@agentic-toolkit/auth`'s
+  numeric `.status` (`AuthHttpError`-shaped, from `@adh-sdk/auth`'s
   Bearer-token client — see `auth-client`); `isNotFound`/`isConflict`/
   `rethrowConflict` (`client-helpers.ts`, `http.ts`) are the conflict/
   not-found mapping helpers every requirement above that mentions

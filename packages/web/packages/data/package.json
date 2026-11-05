@@ -1,5 +1,5 @@
 {
-  "name": "@agentic-toolkit/data",
+  "name": "@adh-sdk/data",
   "version": "0.1.0",
   "description": "Unified headless data model: authed HTTP, tenant, resource-list cache, feature domains.",
   "license": "UNLICENSED",
@@ -132,10 +132,10 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@agentic-toolkit/adh-ui": "workspace:*",
-    "@agentic-toolkit/auth": "workspace:*",
+    "@adh-sdk/adh-ui": "workspace:*",
+    "@adh-sdk/auth": "workspace:*",
     "@tanstack/react-query": "^5.62.0",
-    "@agenticdevelopertoolkit/ui": "workspace:*"
+    "@adh-sdk/ui": "workspace:*"
   },
   "peerDependencies": {
     "react": "^19.0.0"

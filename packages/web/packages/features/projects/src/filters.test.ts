@@ -11,7 +11,7 @@
 //   - that a filter survives a round trip through storage, and that an OLD stored filter still
 //     decodes — the property saved views are built on.
 import { describe, it, expect } from "vitest";
-import type { WorkItem } from "@agentic-toolkit/data/projects";
+import type { WorkItem } from "@adh-sdk/data/projects";
 import {
   EMPTY_FILTER,
   NO_ITERATION,

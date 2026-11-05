@@ -1,7 +1,7 @@
 ---
 id: 969b7f76-3fff-4a13-9b85-a61df25c70ee
 title: "Key Command Capture Field"
-domain: adtoolkit://cookbook/ui/controls/key-command-capture-field
+domain: adhsdk://cookbook/ui/controls/key-command-capture-field
 type: ingredient
 version: 1.3.0
 status: review
@@ -21,7 +21,7 @@ tags:
   - focus
 depends-on: []
 related:
-  - adtoolkit://cookbook/ui/settings/rows/key-command-row-view
+  - adhsdk://cookbook/ui/settings/rows/key-command-row-view
 references:
   - https://github.com/sindresorhus/KeyboardShortcuts
 approved-by: ""
@@ -192,7 +192,7 @@ that either way.
 
 - **Role/trait**: Not implemented in source. No accessibility role, label,
   or title-element link — unlike the Key Command Row View
-  (`adtoolkit://cookbook/ui/settings/rows/key-command-row-view`),
+  (`adhsdk://cookbook/ui/settings/rows/key-command-row-view`),
   whose sibling toggle control links to its label — appears anywhere in
   this component's own source; the view relies entirely on the platform's
   default accessibility exposure. The view is an interactive,
@@ -407,11 +407,11 @@ Not applicable: this component's own source contains no logging call.
   changes above) — `role="textbox"` would incorrectly tell assistive tech to
   expect editable text, which this control is not.
 - **AppKit / UIKit** (source platform): Source file
-  `packages/apple/AgenticToolkit/macOS/Features/KeyCommands/KeyCommandCaptureField.swift`.
+  `packages/apple/AgenticDeveloperHubSDK/macOS/Features/KeyCommands/KeyCommandCaptureField.swift`.
   A macOS-only (`import AppKit`) `NSView` subclass, `@MainActor`, depending
   on the third-party `KeyboardShortcuts` package (github.com/sindresorhus/
   KeyboardShortcuts) for its `Shortcut` type and key constants, and on
-  `AgenticToolkitCore`'s theming (`observeTheme`, `SemanticPalette`). The
+  `AgenticDeveloperHubSDKCore`'s theming (`observeTheme`, `SemanticPalette`). The
   primary modifier on this platform is Command: the "primary modifier plus
   K"/"primary modifier plus Shift plus K"/"Option plus primary modifier
   plus P" test-vector inputs above correspond to ⌘K, ⌘⇧K, and ⌥⌘P
@@ -497,7 +497,7 @@ Not applicable: this component's own source contains no logging call.
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/macOS/Features/KeyCommands/KeyCommandCaptureField.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/KeyCommands/KeyCommandCaptureField.swift` |
 
 ## Design Decisions
 

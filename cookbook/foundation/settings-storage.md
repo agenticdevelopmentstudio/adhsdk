@@ -1,7 +1,7 @@
 ---
 id: 6363b5ff-f511-4e21-9ba7-6850787dba62
 title: "Settings Storage"
-domain: adtoolkit://cookbook/foundation/settings-storage
+domain: adhsdk://cookbook/foundation/settings-storage
 type: ingredient
 version: 1.2.1
 status: review
@@ -276,36 +276,36 @@ The in-memory provider, in-memory secure provider, plain persistent provider, an
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/Core/SettingStorage/ColorSetting.swift` |
-| apple | `packages/apple/AgenticToolkit/Core/SettingStorage/SettingsStorageProviders/InMemorySecureSettingsStorageProvider.swift` |
-| apple | `packages/apple/AgenticToolkit/Core/SettingStorage/SettingsStorageProviders/InMemorySettingsStorageProvider.swift` |
-| apple | `packages/apple/AgenticToolkit/Core/SettingStorage/SettingsStorageProviders/KeychainSecureSettingsStorageProvider.swift` |
-| apple | `packages/apple/AgenticToolkit/Core/SettingStorage/SettingsStorageProviders/SecureStoredSettingsStorageProvider.swift` |
-| apple | `packages/apple/AgenticToolkit/Core/SettingStorage/SettingsStorageProviders/SqliteStorageProvider.swift` |
-| apple | `packages/apple/AgenticToolkit/Core/SettingStorage/SettingsStorageProviders/UserDefaultsSettingsStorageProvider.swift` |
-| apple | `packages/apple/AgenticToolkit/Core/SettingStorage/SettingsStorageProviders/iCloudSettingsStorageProvider.swift` |
-| apple | `packages/apple/AgenticToolkit/Core/SettingStorage/SettingsStore.swift` |
-| apple | `packages/apple/AgenticToolkit/Core/SettingStorage/StorableSetting.swift` |
-| apple | `packages/apple/AgenticToolkit/Core/SettingStorage/StoredSettingPropertyWrapper.swift` |
-| apple | `packages/apple/AgenticToolkit/Core/SettingStorage/StoredSettingsStorageProvider.swift` |
-| apple | `packages/apple/AgenticToolkit/Core/SettingStorage/UserSetting.swift` |
-| apple | `packages/apple/AgenticToolkit/Core/SettingStorage/UserSettings+Editor.swift` |
-| apple | `packages/apple/AgenticToolkit/Core/SettingStorage/UserSettings+Git.swift` |
-| apple | `packages/apple/AgenticToolkit/Core/SettingStorage/UserSettings+Theme.swift` |
-| apple | `packages/apple/AgenticToolkit/Core/SettingStorage/UserSettings.swift` |
-| apple | `packages/apple/AgenticToolkit/macOS/Features/CommandPalette/CommandPaletteCoordinator.swift` |
-| apple | `packages/apple/AgenticToolkit/macOS/Features/CommandPalette/CommandPaletteModel.swift` |
-| apple | `packages/apple/AgenticToolkit/macOS/SystemIntegration/Appearance/AppearanceManager.swift` |
-| apple | `packages/apple/AgenticToolkit/macOS/SystemIntegration/ComposableSettingsWindow/ViewModels/AbstractViewModel.swift` |
-| apple | `packages/apple/AgenticToolkit/macOS/SystemIntegration/ComposableSettingsWindow/ViewModels/ButtonViewModel.swift` |
-| apple | `packages/apple/AgenticToolkit/macOS/SystemIntegration/ComposableSettingsWindow/ViewModels/ChoiceViewModel.swift` |
-| apple | `packages/apple/AgenticToolkit/macOS/SystemIntegration/ComposableSettingsWindow/ViewModels/ColorViewModel.swift` |
-| apple | `packages/apple/AgenticToolkit/macOS/SystemIntegration/ComposableSettingsWindow/ViewModels/FontViewModel.swift` |
-| apple | `packages/apple/AgenticToolkit/macOS/SystemIntegration/ComposableSettingsWindow/ViewModels/ProgressViewModel.swift` |
-| apple | `packages/apple/AgenticToolkit/macOS/SystemIntegration/ComposableSettingsWindow/ViewModels/RangeViewModel.swift` |
-| apple | `packages/apple/AgenticToolkit/macOS/SystemIntegration/ComposableSettingsWindow/ViewModels/ThemeChoiceViewModel.swift` |
-| apple | `packages/apple/AgenticToolkit/macOS/SystemIntegration/ComposableSettingsWindow/ViewModels/ViewModel.swift` |
-| apple | `packages/apple/AgenticToolkit/macOS/SystemIntegration/LaunchAtLogin/LaunchAtLoginManager.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/SettingStorage/ColorSetting.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/SettingStorage/SettingsStorageProviders/InMemorySecureSettingsStorageProvider.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/SettingStorage/SettingsStorageProviders/InMemorySettingsStorageProvider.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/SettingStorage/SettingsStorageProviders/KeychainSecureSettingsStorageProvider.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/SettingStorage/SettingsStorageProviders/SecureStoredSettingsStorageProvider.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/SettingStorage/SettingsStorageProviders/SqliteStorageProvider.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/SettingStorage/SettingsStorageProviders/UserDefaultsSettingsStorageProvider.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/SettingStorage/SettingsStorageProviders/iCloudSettingsStorageProvider.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/SettingStorage/SettingsStore.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/SettingStorage/StorableSetting.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/SettingStorage/StoredSettingPropertyWrapper.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/SettingStorage/StoredSettingsStorageProvider.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/SettingStorage/UserSetting.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/SettingStorage/UserSettings+Editor.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/SettingStorage/UserSettings+Git.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/SettingStorage/UserSettings+Theme.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/SettingStorage/UserSettings.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/CommandPalette/CommandPaletteCoordinator.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/CommandPalette/CommandPaletteModel.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/Appearance/AppearanceManager.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/ViewModels/AbstractViewModel.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/ViewModels/ButtonViewModel.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/ViewModels/ChoiceViewModel.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/ViewModels/ColorViewModel.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/ViewModels/FontViewModel.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/ViewModels/ProgressViewModel.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/ViewModels/RangeViewModel.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/ViewModels/ThemeChoiceViewModel.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/ViewModels/ViewModel.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/LaunchAtLogin/LaunchAtLoginManager.swift` |
 
 ## Design Decisions
 

@@ -3,7 +3,7 @@
 // research feature's `research-model` split: the *Pane owns data + selection, the *Detail
 // is fields-only, and the blank/toInput/validate/normalize/differs knowledge lives here.
 //
-// A note IS a markdown document (see @agentic-toolkit/data/notes), so these are the same
+// A note IS a markdown document (see @adh-sdk/data/notes), so these are the same
 // four fields research edits — minus everything about PUBLISHING. There is no public-route
 // regex here because a note has no public route: the notebook has no publish flow, and the
 // backend never mints a `content.papers` marker for a document created through it.
@@ -11,7 +11,7 @@ import type {
   CreateNoteBody,
   Note,
   UpdateNoteBody,
-} from "@agentic-toolkit/data/notes";
+} from "@adh-sdk/data/notes";
 
 /** The fields the editor binds to: the raw markdown body + classification.
  *
@@ -109,7 +109,7 @@ export function toUpdateBody(input: NoteInput): UpdateNoteBody {
 }
 
 // The rail's scope and the fold that combines it with the button bar's filter now live in
-// @agentic-toolkit/categories/src/category-scope.ts — verbatim the same union and the same
+// @adh-sdk/categories/src/category-scope.ts — verbatim the same union and the same
 // function body — because Task 8's research pane needs the identical fold and a second copy
 // is the duplication this move exists to remove. Re-exported here so nothing that imports
 // them from `note-model` has to change.
@@ -117,7 +117,7 @@ export {
   resolveListCategory,
   type CategoryScope,
   type ListCategoryQuery,
-} from "@agentic-toolkit/categories";
+} from "@adh-sdk/categories";
 
 /** Distinct, sorted tags present across a set of notes (for the filter dropdown). */
 export function tagsOf(notes: { tags: string[] }[]): string[] {

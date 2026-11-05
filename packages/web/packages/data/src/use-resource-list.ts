@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef } from "react";
 import { useQuery, type QueryKey } from "@tanstack/react-query";
-import { reportUnexpectedAuthError } from "@agentic-toolkit/auth";
+import { reportUnexpectedAuthError } from "@adh-sdk/auth";
 import { httpStatus } from "./http";
 import { RESOURCE_GC_TIME, getToolkitQueryClient } from "./query";
 import { useTenantId } from "./tenant";

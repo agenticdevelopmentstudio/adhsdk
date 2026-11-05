@@ -1,6 +1,6 @@
 
 - **AppKit** (source platform): Implemented in
-  `packages/apple/AgenticToolkit/macOS/Features/ConversationsWindow/ConversationFocusOverlay.swift`
+  `packages/apple/AgenticDeveloperHubSDK/macOS/Features/ConversationsWindow/ConversationFocusOverlay.swift`
   as a `public final` subclass of `DismissibleOverlayView` that holds a
   `ChatView`, a `FeedChatSession` and an `AIChatViewModel`. The initializer
   takes `refreshInterval: Duration`, `load: FeedChatSession.Loader`,

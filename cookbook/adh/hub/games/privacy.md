@@ -8,7 +8,7 @@
 - **Storage**: This module holds no cache of its own; every call is a live
   round trip through `authedJson`/`authedRequest`.
 - **Transmission**: Every request travels through the injected
-  `@agentic-toolkit/auth` Bearer-token client (`authedJson`/
+  `@adh-sdk/auth` Bearer-token client (`authedJson`/
   `authedRequest`, re-exported via `./http`); this module itself attaches
   no credentials and reads no cookies (see `auth-client`).
 - **Retention**: Not applicable — this module retains nothing between

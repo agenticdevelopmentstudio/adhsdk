@@ -1,5 +1,5 @@
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/Core/Diagnostics/` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Diagnostics/` |
 

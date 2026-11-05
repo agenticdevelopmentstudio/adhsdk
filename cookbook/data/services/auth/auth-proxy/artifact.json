@@ -3,7 +3,7 @@
   "meta": {
     "id": "4a345333-b18d-48f1-806d-453c15155dfa",
     "title": "Authentication Proxy",
-    "domain": "adtoolkit://cookbook/data/services/auth/auth-proxy",
+    "domain": "adhsdk://cookbook/data/services/auth/auth-proxy",
     "type": "ingredient",
     "version": "1.1.1",
     "status": "review",
@@ -27,9 +27,9 @@
     "depends-on": [],
     "related": [],
     "references": [
-      "packages/web/packages/auth/src/server/proxy.ts (agenticdevelopertoolkit)",
-      "packages/web/packages/auth/src/server/index.ts (agenticdevelopertoolkit)",
-      "packages/web/packages/auth/src/__tests__/proxy.test.ts (agenticdevelopertoolkit)"
+      "packages/web/packages/auth/src/server/proxy.ts (adhsdk)",
+      "packages/web/packages/auth/src/server/index.ts (adhsdk)",
+      "packages/web/packages/auth/src/__tests__/proxy.test.ts (adhsdk)"
     ],
     "approved-by": "",
     "approved-date": ""

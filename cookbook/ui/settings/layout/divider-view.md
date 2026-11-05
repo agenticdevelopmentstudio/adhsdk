@@ -1,7 +1,7 @@
 ---
 id: 18ad68ea-187b-463d-9f5c-b855b9bc36a9
 title: "Divider View"
-domain: adtoolkit://cookbook/ui/settings/layout/divider-view
+domain: adhsdk://cookbook/ui/settings/layout/divider-view
 type: ingredient
 version: 1.2.2
 status: review
@@ -21,7 +21,7 @@ tags:
   - settings
 depends-on: []
 related:
-  - adtoolkit://cookbook/ui/settings/rows/button-view
+  - adhsdk://cookbook/ui/settings/rows/button-view
 references: []
 approved-by: ""
 approved-date: ""
@@ -222,7 +222,7 @@ Not applicable: the component performs no logging of its own.
 - **Compose**: Use `HorizontalDivider()` — Material 3's replacement for the deprecated `Divider()` — (or a plain `Box(Modifier.height(1.dp).fillMaxWidth().background(...))` for full control over the fixed thickness) reading its color from a `CompositionLocal` exposing the current palette. Compose's own recomposition on `CompositionLocal` change is the equivalent of this source's manual repaint paths — no observer object or notification bookkeeping is needed.
 - **React/Web**: An `<hr>` styled with `border: none; height: 1px; background-color: var(--divider-color);` (or a plain `<div>` of the same height), where `--divider-color` is set by whatever theme-provider component wraps the tree. A CSS custom property's cascade already repaints on a theme-class change with no JS callback required, standing in for both the notification-driven repaint and the redundant repaint override in the source.
 - **AppKit / UIKit (source)**: `DividerView.swift`
-  (`packages/apple/AgenticToolkit/macOS/SystemIntegration/ComposableSettingsWindow/Views/DividerView.swift`)
+  (`packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/Views/DividerView.swift`)
   is macOS-only (`import AppKit`) — there is no iOS/UIKit counterpart in
   this file. It is an `NSView` nested in the `ComposableSettings`
   namespace, declared `@MainActor` (thread confinement enforced at compile
@@ -253,7 +253,7 @@ Not applicable: the component performs no logging of its own.
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/macOS/SystemIntegration/ComposableSettingsWindow/Views/DividerView.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/Views/DividerView.swift` |
 
 ## Design Decisions
 

@@ -2,7 +2,7 @@
 
 import { useMemo, useState, type ReactNode } from "react";
 import { RotateCcw, Wifi, WifiOff } from "lucide-react";
-import { FeatureTitle } from "@agentic-toolkit/resource";
+import { FeatureTitle } from "@adh-sdk/resource";
 import {
   useAdminEcosystems,
   useSyncTables,
@@ -11,10 +11,10 @@ import {
   schemaOf,
   type EnrollmentRow,
 } from "../api/sync-tables";
-import { Select } from "@agenticdevelopertoolkit/ui/components/select";
-import { Badge } from "@agenticdevelopertoolkit/ui/components/badge";
-import { Button } from "@agenticdevelopertoolkit/ui/components/button";
-import { ProgressModal } from "@agenticdevelopertoolkit/ui/blocks";
+import { Select } from "@adh-sdk/ui/components/select";
+import { Badge } from "@adh-sdk/ui/components/badge";
+import { Button } from "@adh-sdk/ui/components/button";
+import { ProgressModal } from "@adh-sdk/ui/blocks";
 import {
   EditableList,
   useBatchRun,

@@ -3,7 +3,7 @@
   "meta": {
     "id": "61c7b509-78d1-4407-9a4e-25b155f06fbb",
     "title": "Window Manager",
-    "domain": "adtoolkit://cookbook/ui/windows/window-manager",
+    "domain": "adhsdk://cookbook/ui/windows/window-manager",
     "type": "ingredient",
     "version": "1.2.1",
     "status": "review",
@@ -24,12 +24,12 @@
       "recents"
     ],
     "depends-on": [
-      "adtoolkit://cookbook/foundation/settings-storage",
-      "adtoolkit://cookbook/ui/windows/screen-manager",
-      "adtoolkit://cookbook/ui/windows/single-window-controller"
+      "adhsdk://cookbook/foundation/settings-storage",
+      "adhsdk://cookbook/ui/windows/screen-manager",
+      "adhsdk://cookbook/ui/windows/single-window-controller"
     ],
     "related": [
-      "adtoolkit://cookbook/ui/windows/window-recents"
+      "adhsdk://cookbook/ui/windows/window-recents"
     ],
     "references": [],
     "approved-by": "",

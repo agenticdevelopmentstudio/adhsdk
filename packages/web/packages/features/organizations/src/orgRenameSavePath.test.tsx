@@ -2,19 +2,19 @@
 import { render, screen, fireEvent, cleanup, waitFor } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { describe, it, expect, afterEach, beforeEach, vi } from 'vitest'
-import { SettingsDirtyProvider } from '@agentic-toolkit/resource'
+import { SettingsDirtyProvider } from '@adh-sdk/resource'
 
 // The provider mounts its own UnsavedChangesGuard when no rail host is above it — the same guard
 // the hub's WorkspaceChromeProvider mounts around every /[workspace]/… route. That guard is the point
 // of these tests, so it must really be there.
 vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn() }) }))
-vi.mock('@agentic-toolkit/auth', () => ({ reportUnexpectedAuthError: vi.fn() }))
+vi.mock('@adh-sdk/auth', () => ({ reportUnexpectedAuthError: vi.fn() }))
 
 const { checkWorkspaceSlugAvailable } = vi.hoisted(() => ({ checkWorkspaceSlugAvailable: vi.fn() }))
 // Only the probe is stubbed: `WORKSPACES_QUERY_KEY` is a real export of this module and the
 // form invalidates it, so a whole-module factory would replace the key the assertion checks.
-vi.mock('@agentic-toolkit/data', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('@agentic-toolkit/data')>()),
+vi.mock('@adh-sdk/data', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@adh-sdk/data')>()),
   checkWorkspaceSlugAvailable,
 }))
 
@@ -22,7 +22,7 @@ const { rename } = vi.hoisted(() => ({ rename: vi.fn() }))
 // ORGANIZATIONS_QUERY_KEY is part of the mock because the save INVALIDATES it: a partial mock
 // leaves it undefined, `invalidateQueries({ queryKey: undefined })` throws inside the save, and
 // both navigation assertions below fail for a reason that has nothing to do with navigation.
-vi.mock('@agentic-toolkit/data/organizations', () => ({
+vi.mock('@adh-sdk/data/organizations', () => ({
   organizationsApi: { rename },
   ORGANIZATIONS_QUERY_KEY: ['organizations'],
 }))

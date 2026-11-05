@@ -1,16 +1,16 @@
 "use client";
 
 import { useState } from "react";
-import { Label } from "@agenticdevelopertoolkit/ui/components/label";
-import { Select } from "@agenticdevelopertoolkit/ui/components/select";
-import { Pagination } from "@agenticdevelopertoolkit/ui/components/pagination";
-import { Alert, AlertTitle, AlertDescription } from "@agenticdevelopertoolkit/ui/components/alert";
-import { errorMessage } from "@agenticdevelopertoolkit/ui/lib/errors";
-import { formatMicros } from "@agenticdevelopertoolkit/ui/lib/money";
+import { Label } from "@adh-sdk/ui/components/label";
+import { Select } from "@adh-sdk/ui/components/select";
+import { Pagination } from "@adh-sdk/ui/components/pagination";
+import { Alert, AlertTitle, AlertDescription } from "@adh-sdk/ui/components/alert";
+import { errorMessage } from "@adh-sdk/ui/lib/errors";
+import { formatMicros } from "@adh-sdk/ui/lib/money";
 import {
   DateRangePicker,
   type DateRange,
-} from "@agenticdevelopertoolkit/ui/components/date-range-picker";
+} from "@adh-sdk/ui/components/date-range-picker";
 import { useBreakdown, type BreakdownBy, type BreakdownSort } from "../api/insight";
 import { BreakdownTable, ESTIMATE_HINT, unattributedLast } from "../breakdown/BreakdownTable";
 import { BreakdownDetail } from "../breakdown/BreakdownDetail";

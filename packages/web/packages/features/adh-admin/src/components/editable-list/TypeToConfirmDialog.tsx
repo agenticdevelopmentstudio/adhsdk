@@ -1,10 +1,10 @@
 "use client";
 
 import { useCallback, useId, useState, type ReactElement, type ReactNode } from "react";
-import { Button } from "@agenticdevelopertoolkit/ui/components/button";
-import { Input } from "@agenticdevelopertoolkit/ui/components/input";
-import { Label } from "@agenticdevelopertoolkit/ui/components/label";
-import { ErrorText } from "@agenticdevelopertoolkit/ui/components/error-text";
+import { Button } from "@adh-sdk/ui/components/button";
+import { Input } from "@adh-sdk/ui/components/input";
+import { Label } from "@adh-sdk/ui/components/label";
+import { ErrorText } from "@adh-sdk/ui/components/error-text";
 import {
   Dialog,
   DialogContent,
@@ -12,7 +12,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@agenticdevelopertoolkit/ui/components/dialog";
+} from "@adh-sdk/ui/components/dialog";
 
 export interface TypeToConfirmDialogProps {
   open: boolean;

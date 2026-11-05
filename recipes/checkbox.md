@@ -1,7 +1,7 @@
 ---
 id: a105b6cf-307d-4156-8b73-468f627f3c9b
 title: Checkbox
-domain: agenticdevelopertoolkit://recipes/checkbox
+domain: adhsdk://recipes/checkbox
 type: ingredient
 version: 1.4.2
 status: review
@@ -22,7 +22,7 @@ tags:
 - checkbox
 depends-on: []
 related:
-- agenticdevelopertoolkit://recipes/switch
+- adhsdk://recipes/switch
 references: []
 approved-by: ''
 approved-date: ''

@@ -1,4 +1,4 @@
-# @agentic-toolkit/adh-site-config — the ecosystem's shape + content
+# @adh-sdk/adh-site-config — the ecosystem's shape + content
 
 This is the **single source of truth** for how the whole Agentic Developer Hub is
 organized and what every piece says. Two plain-JSON files, editable by hand or in
@@ -31,8 +31,8 @@ the `/details` pages, and the docs cross-links.
 
 ## How it reaches the sites
 
-Pure data — **no build step**. `@agentic-toolkit/adh` imports these JSON files
-(`@agentic-toolkit/adh-site-config/structure.json` + `content/<locale>.json`),
+Pure data — **no build step**. `@adh-sdk/adh` imports these JSON files
+(`@adh-sdk/adh-site-config/structure.json` + `content/<locale>.json`),
 applies the TypeScript types in `packages/adh/src/concepts/`, and bundles the result
 into the chrome package every site already consumes. So edits are injected at compile
 time — nothing to wire per site.

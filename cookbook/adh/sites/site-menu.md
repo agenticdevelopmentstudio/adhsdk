@@ -1,7 +1,7 @@
 ---
 id: f2d56415-ac36-4a27-bee5-b447c4186513
 title: "SiteMenu"
-domain: adtoolkit://cookbook/adh/sites/site-menu
+domain: adhsdk://cookbook/adh/sites/site-menu
 type: recipe
 version: 1.1.1
 status: review
@@ -46,7 +46,7 @@ only the **top section** differs by auth state.
 
 It is chrome. The menu itself — `SiteMenu` and the `menu-icons` map — is ADH
 vocabulary, and the registry-free machinery it composes (`NavigationPopover`, the
-recents store) is generic; both halves now live in `@agentic-toolkit/adh/header`,
+recents store) is generic; both halves now live in `@adh-sdk/adh/header`,
 so the tier boundary this recipe once straddled is gone. It is built by composing that
 `NavigationPopover` (surface, search, keyboard nav, flyout submenus) with a
 declarative config (`MenuGroup[]`). This recipe defines the enhanced menu:
@@ -60,12 +60,12 @@ the user actually landed on and deep-links back to each.
 
 | Name | Domain | Role | Required | Configuration |
 |---|---|---|---|---|
-| NavigationPopover | `@agentic-toolkit/adh/header` | Popover surface, search box, keyboard navigation, row rendering, flyout submenus | yes | Consumes `PopoverEntry[]` with icon + inline-subitem support |
-| SiteWordmark | adtoolkit://cookbook/adh/sites/site-wordmark | The header trigger that opens the menu | yes | Unchanged |
-| menu-icons map | `@agentic-toolkit/adh/header` `menu-icons.ts` (ADH vocabulary — it is keyed by `SiteId`) | Single source of truth for every row's icon — keyed by SiteId, in-hub route path, or chrome key | yes | `MENU_ICONS` record + `menuIcon(key)` resolver |
+| NavigationPopover | `@adh-sdk/adh/header` | Popover surface, search box, keyboard navigation, row rendering, flyout submenus | yes | Consumes `PopoverEntry[]` with icon + inline-subitem support |
+| SiteWordmark | adhsdk://cookbook/adh/sites/site-wordmark | The header trigger that opens the menu | yes | Unchanged |
+| menu-icons map | `@adh-sdk/adh/header` `menu-icons.ts` (ADH vocabulary — it is keyed by `SiteId`) | Single source of truth for every row's icon — keyed by SiteId, in-hub route path, or chrome key | yes | `MENU_ICONS` record + `menuIcon(key)` resolver |
 | lucide-react icons | (library) | The icon glyphs | yes | Only icons already used elsewhere on the platform are reused where one exists |
 | `useWorkspaces` | `@/api/workspaces` (hub) | Supplies the Workspaces flyout entries | yes (logged-in) | react-query; `{ slug, name, type }[]` |
-| Recents store | `@agentic-toolkit/adh/header/recents` — import that subpath, never `./recents`; it holds module-level state and a second inlined copy would silently fork the history | Persists + reads the last 10 visited places | yes (logged-in) | localStorage, `ftd-storage` pattern |
+| Recents store | `@adh-sdk/adh/header/recents` — import that subpath, never `./recents`; it holds module-level state and a second inlined copy would silently fork the history | Persists + reads the last 10 visited places | yes (logged-in) | localStorage, `ftd-storage` pattern |
 
 ## Integration Requirements
 
@@ -222,7 +222,7 @@ LOGGED OUT (marketing)               LOGGED IN (/home + workspace)
   both auth states with seeded workspaces + recents.
 - Responsive: verify via Playwright at 375 / 768 / 1440; keyboard + pointer.
 - Tailwind sources: no new package boundary; icons are lucide (already a dependency
-  of `@agentic-toolkit/adh` and externalized by it, so the host supplies the one copy).
+  of `@adh-sdk/adh` and externalized by it, so the host supplies the one copy).
 - **WinUI 3**: Build the menu from a `Flyout`/`MenuFlyout` anchored to the wordmark button, with a `NavigationViewItem`-style row template of icon (`FontIcon`/`SymbolIcon` from a single `MenuIcons` dictionary keyed by site id, route, or chrome key), label and description `TextBlock`s. Inline sub-items map to a nested `ItemsRepeater` with a left margin; the Workspaces and Recents flyouts map to `MenuFlyoutSubItem`. Port Recents as a class holding a capped `List<Place>` persisted through `ApplicationData.Current.LocalSettings`, with a `DispatcherTimer` as the settle debounce; keyboard navigation comes from `MenuFlyout`'s built-in arrow, Escape and focus-return behavior.
 
 ## Reference Implementations

@@ -3,7 +3,7 @@
   "meta": {
     "id": "4DF278A3-4897-4A87-A506-BD3F58DB3121",
     "title": "Billing Store",
-    "domain": "adtoolkit://cookbook/foundation/billing/billing-store",
+    "domain": "adhsdk://cookbook/foundation/billing/billing-store",
     "type": "ingredient",
     "version": "1.0.0",
     "status": "review",
@@ -25,11 +25,11 @@
     ],
     "depends-on": [],
     "related": [
-      "adtoolkit://cookbook/foundation/billing/billing-persistence",
-      "adtoolkit://cookbook/foundation/billing/billing-rate",
-      "adtoolkit://cookbook/foundation/billing/billing-derivation",
-      "adtoolkit://cookbook/foundation/billing/billing-activity-cache",
-      "adtoolkit://cookbook/foundation/billing/billing-timer"
+      "adhsdk://cookbook/foundation/billing/billing-persistence",
+      "adhsdk://cookbook/foundation/billing/billing-rate",
+      "adhsdk://cookbook/foundation/billing/billing-derivation",
+      "adhsdk://cookbook/foundation/billing/billing-activity-cache",
+      "adhsdk://cookbook/foundation/billing/billing-timer"
     ],
     "references": [],
     "approved-by": "",

@@ -12,7 +12,7 @@ vi.mock('next/navigation', () => ({
 }))
 
 // The package path, as SiteMenu reads the provider's context.
-import { SiteMenu, WorkspacesMenuProvider, type WorkspacesMenu } from '@agentic-toolkit/adh/header'
+import { SiteMenu, WorkspacesMenuProvider, type WorkspacesMenu } from '@adh-sdk/adh/header'
 
 afterEach(cleanup)
 

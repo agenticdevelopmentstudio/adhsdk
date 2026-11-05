@@ -1,7 +1,7 @@
 ---
 id: 9c6338b6-9a7a-4692-8164-a75800875031
 title: Chat Coordinator
-domain: agenticdevelopertoolkit://recipes/chat-coordinator
+domain: adhsdk://recipes/chat-coordinator
 type: ingredient
 version: 1.0.2
 status: review

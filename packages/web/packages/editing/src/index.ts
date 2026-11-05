@@ -1,5 +1,5 @@
 /**
- * @agenticdevelopertoolkit/editing — the one way to edit data on this platform.
+ * @adh-sdk/editing — the one way to edit data on this platform.
  *
  * The public surface is deliberately small: a container, the field descriptors it
  * takes, the section helpers that lay them out, and the host a Next app wires its

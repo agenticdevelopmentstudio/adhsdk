@@ -1,25 +1,25 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { reportUnexpectedAuthError } from "@agentic-toolkit/auth";
+import { reportUnexpectedAuthError } from "@adh-sdk/auth";
 
-import type { EndpointView } from "@agentic-toolkit/data/monitored-sites";
+import type { EndpointView } from "@adh-sdk/data/monitored-sites";
 import {
   ENDPOINT_KINDS,
   createEndpoint,
   deleteEndpoint,
   listEndpoints,
   updateEndpoint,
-} from "@agentic-toolkit/data/monitored-sites";
-import { Card, CardContent } from "@agenticdevelopertoolkit/ui/components/card";
-import { Checkbox } from "@agenticdevelopertoolkit/ui/components/checkbox";
-import { Input } from "@agenticdevelopertoolkit/ui/components/input";
-import { Label } from "@agenticdevelopertoolkit/ui/components/label";
-import { Select } from "@agenticdevelopertoolkit/ui/components/select";
-import { EmptyState } from "@agenticdevelopertoolkit/ui/components/empty-state";
-import { TopicSelectHint } from "@agenticdevelopertoolkit/ui/blocks";
-import { MasterDetailLayout, useMasterDetailForm } from "@agentic-toolkit/resource";
-import { ErrorText } from "@agenticdevelopertoolkit/ui/components/error-text";
+} from "@adh-sdk/data/monitored-sites";
+import { Card, CardContent } from "@adh-sdk/ui/components/card";
+import { Checkbox } from "@adh-sdk/ui/components/checkbox";
+import { Input } from "@adh-sdk/ui/components/input";
+import { Label } from "@adh-sdk/ui/components/label";
+import { Select } from "@adh-sdk/ui/components/select";
+import { EmptyState } from "@adh-sdk/ui/components/empty-state";
+import { TopicSelectHint } from "@adh-sdk/ui/blocks";
+import { MasterDetailLayout, useMasterDetailForm } from "@adh-sdk/resource";
+import { ErrorText } from "@adh-sdk/ui/components/error-text";
 
 interface Draft {
   url: string;

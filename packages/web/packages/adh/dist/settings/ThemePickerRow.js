@@ -8,9 +8,9 @@ import {
   applyBaseTheme,
   persistTheme,
   readStoredTheme
-} from "@agentic-toolkit/adh/themes/theme-preview";
-import { Select } from "@agenticdevelopertoolkit/ui/components/select";
-import { SettingRow } from "@agentic-toolkit/account";
+} from "@adh-sdk/adh/themes/theme-preview";
+import { Select } from "@adh-sdk/ui/components/select";
+import { SettingRow } from "@adh-sdk/account";
 import { jsx, jsxs } from "react/jsx-runtime";
 function readAltThemes() {
   const nodes = document.querySelectorAll("style[data-adh-theme-alt]");

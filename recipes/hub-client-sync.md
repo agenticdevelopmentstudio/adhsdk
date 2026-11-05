@@ -1,7 +1,7 @@
 ---
 id: e7262e09-e6f7-4152-acff-7fa09c242088
 title: Hub Client Sync
-domain: agenticdevelopertoolkit://recipes/hub-client-sync
+domain: adhsdk://recipes/hub-client-sync
 type: ingredient
 version: 1.0.0
 status: review
@@ -23,7 +23,7 @@ tags:
 - client
 depends-on: []
 related:
-- agenticdevelopertoolkit://recipes/offline-sync-client
+- adhsdk://recipes/offline-sync-client
 references: []
 approved-by: ''
 approved-date: ''

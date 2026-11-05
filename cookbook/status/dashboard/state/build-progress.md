@@ -1,7 +1,7 @@
 ---
 id: a076f315-885d-45df-998d-68703a319ec8
 title: "Build Progress"
-domain: adtoolkit://cookbook/status/dashboard/state/build-progress
+domain: adhsdk://cookbook/status/dashboard/state/build-progress
 type: ingredient
 version: 1.1.1
 status: review
@@ -18,7 +18,7 @@ platforms:
 tags: []
 depends-on: []
 related:
-  - adtoolkit://cookbook/status/dashboard/state/activity-ttl
+  - adhsdk://cookbook/status/dashboard/state/activity-ttl
 references: []
 approved-by: ""
 approved-date: ""

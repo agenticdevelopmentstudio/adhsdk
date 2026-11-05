@@ -1,7 +1,7 @@
 ---
 id: A252605D-12CE-4235-9EB4-2582678F6F49
 title: "Billing Rollup"
-domain: adtoolkit://cookbook/foundation/billing/billing-rollup
+domain: adhsdk://cookbook/foundation/billing/billing-rollup
 type: ingredient
 version: 1.0.0
 status: review
@@ -22,11 +22,11 @@ tags:
   - entries
 depends-on: []
 related:
-  - adtoolkit://cookbook/foundation/billing/billing-rate
-  - adtoolkit://cookbook/foundation/billing/billing-rounding
-  - adtoolkit://cookbook/foundation/billing/billing-clock
-  - adtoolkit://cookbook/foundation/billing/billing-persistence
-  - adtoolkit://cookbook/foundation/billing/billing-store
+  - adhsdk://cookbook/foundation/billing/billing-rate
+  - adhsdk://cookbook/foundation/billing/billing-rounding
+  - adhsdk://cookbook/foundation/billing/billing-clock
+  - adhsdk://cookbook/foundation/billing/billing-persistence
+  - adhsdk://cookbook/foundation/billing/billing-store
 references: []
 approved-by: ""
 approved-date: ""
@@ -152,7 +152,7 @@ Not applicable: this code makes no log calls.
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/Core/Billing/BillingRollup.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Billing/BillingRollup.swift` |
 
 ## Design Decisions
 
@@ -167,7 +167,7 @@ Not applicable: this code makes no log calls.
 | [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
 | [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | failed | Best Practices |
 
-separation-of-concerns passes: rolling and entry rules live here while storage is the persistence contract, and rate, rounding, money and the local-day rule are shared types. unit-test-coverage fails: no test in `AgenticToolkitCoreTests/Billing` calls `BillingRollup`; `BillingRoundingTests` and `BillingRateResolutionTests` cover only its collaborators.
+separation-of-concerns passes: rolling and entry rules live here while storage is the persistence contract, and rate, rounding, money and the local-day rule are shared types. unit-test-coverage fails: no test in `AgenticDeveloperHubSDKCoreTests/Billing` calls `BillingRollup`; `BillingRoundingTests` and `BillingRateResolutionTests` cover only its collaborators.
 
 ## Change History
 

@@ -27,7 +27,7 @@
   Keep `isEditing`/`pendingShortcut`/`refusal` in the row component's own
   state, not the recorder's.
 - **AppKit/UIKit** (source platform): Source file
-  `packages/apple/AgenticToolkit/macOS/Features/KeyCommands/KeyCommandRowView.swift`.
+  `packages/apple/AgenticDeveloperHubSDK/macOS/Features/KeyCommands/KeyCommandRowView.swift`.
   A macOS-only (`import AppKit`) `NSView` subclass, `@MainActor`, composing
   a `ThemedLabel`, a `KeyCommandCaptureField`, a `ConfirmCancelControl`, and
   an `NSSwitch` into a two-row vertical `NSStackView` via

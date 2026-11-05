@@ -1,12 +1,12 @@
 
 - **React/Web**: The component (`AdminNotesModal`) lives at
-  `packages/web/packages/adh-ui/src/blocks/admin-notes-modal.tsx` in `@agentic-toolkit/adh-ui`,
+  `packages/web/packages/adh-ui/src/blocks/admin-notes-modal.tsx` in `@adh-sdk/adh-ui`,
   and composes `Dialog`/`DialogContent`/`DialogHeader`/`DialogTitle`/`DialogFooter` and
-  `Textarea` from `@agenticdevelopertoolkit/ui/components/dialog` and
-  `@agenticdevelopertoolkit/ui/components/textarea`, `Button` from
-  `@agenticdevelopertoolkit/ui/components/button`, `ListWithDetailsPane` and
-  `DataTableColumn` from `@agenticdevelopertoolkit/ui/blocks/list-with-details-pane`
-  and `@agenticdevelopertoolkit/ui/components/data-table`, and the `AdminNote` type
+  `Textarea` from `@adh-sdk/ui/components/dialog` and
+  `@adh-sdk/ui/components/textarea`, `Button` from
+  `@adh-sdk/ui/components/button`, `ListWithDetailsPane` and
+  `DataTableColumn` from `@adh-sdk/ui/blocks/list-with-details-pane`
+  and `@adh-sdk/ui/components/data-table`, and the `AdminNote` type
   from `../lib/invitations-types`. Two independent `Dialog` roots are controlled by
   the `open` and `editorOpen` state values respectively; the staged working list is
   held in a `working` state value. The "New note" control is supplied to

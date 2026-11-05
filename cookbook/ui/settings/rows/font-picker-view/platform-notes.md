@@ -1,7 +1,7 @@
 
 - **SwiftUI**: Compose an `HStack` with `Text(viewModel.title)` and a
   trailing font-sample button (an `NSViewRepresentable` wrapping
-  `FontChooserButton`, per `adtoolkit://cookbook/ui/settings/rows/font-chooser-button`'s
+  `FontChooserButton`, per `adhsdk://cookbook/ui/settings/rows/font-chooser-button`'s
   own SwiftUI note, or an equivalent custom `Button` that opens a font
   picker) bound to a `Binding` that reads and writes through the same
   view-model font, mirroring **commits-picked-font-through-view-model** and
@@ -13,7 +13,7 @@
   `FontFamily` at a fixed sample size, opening a custom
   `AlertDialog`/`ModalBottomSheet` listing available font families and
   sizes on click (there is no Android system font panel to defer to, per
-  `adtoolkit://cookbook/ui/settings/rows/font-chooser-button`'s Compose note); commit the
+  `adhsdk://cookbook/ui/settings/rows/font-chooser-button`'s Compose note); commit the
   picked family/size back to the view model unconditionally on selection,
   and gate both children's `enabled`/alpha from one boolean, mirroring
   **dims-and-disables-the-row**.
@@ -27,7 +27,7 @@
   attribute plus a reduced-opacity class on both children together,
   mirroring **dims-and-disables-the-row**.
 - **AppKit / UIKit** (source platform): Source file
-  `packages/apple/AgenticToolkit/macOS/SystemIntegration/ComposableSettingsWindow/Views/FontPickerView.swift`.
+  `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/Views/FontPickerView.swift`.
   A macOS-only (`import AppKit`) `NSView` subclass, `@MainActor`, inside the
   `ComposableSettings` namespace, conforming to `SettingsViewProtocol`. It
   composes two subviews - a `ThemedLabel` from
@@ -41,14 +41,14 @@
   behind **requires-view-model-at-construction**), leaving the designated
   `init(viewModel:)` as the only surviving construction path. There is no
   UIKit code path in source; a UIKit port has no `NSFontPanel` equivalent to defer to
-  (see `adtoolkit://cookbook/ui/settings/rows/font-chooser-button`'s own AppKit/UIKit
+  (see `adhsdk://cookbook/ui/settings/rows/font-chooser-button`'s own AppKit/UIKit
   note for the button's side of that gap) and would need its own
   `isEnabled`-driven dimming, since UIKit has no direct `alphaValue`
   analogue on `UILabel` beyond its inherited `UIView.alpha`.
 - **WinUI 3** (the reason this recipe exists): Build the row as a `Grid`
   with column definitions `Auto,*`: a `TextBlock` bound to `viewModel.title`
   in column 0, and in column 1 the font-sample `Button` described in
-  `adtoolkit://cookbook/ui/settings/rows/font-chooser-button`'s own WinUI 3 note (its
+  `adhsdk://cookbook/ui/settings/rows/font-chooser-button`'s own WinUI 3 note (its
   `Content` `TextBlock` bound to the selected font's family/size at a fixed
   sample `FontSize`, opening a `ContentDialog`/`Flyout` for selection since
   WinUI ships no system font panel). Wire that dialog's confirm/selection

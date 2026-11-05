@@ -3,7 +3,7 @@
 - **shows-icon-only-with-attribution**: The component MUST include the source application's icon in the header only when `message.attribution` is non-nil; a message with no attribution MUST render the header with no icon.
 - **icon-wired-only-when-jump-provided**: The component MUST set the app icon's target/action, tooltip, and accessibility label only when `actions.onJump` is non-nil; when `actions.onJump` is nil the icon MUST render with no target and no tooltip.
 - **jump-invokes-callback**: Clicking the app icon, when wired, MUST invoke `actions.onJump` with the row's message.
-- **renders-bubble-without-inline-timestamp**: The component MUST embed the chat bubble component (see `adtoolkit://cookbook/ai/chat/chat-window/chat-bubble-view`) with its inline timestamp disabled, so the bubble never draws its own timestamp.
+- **renders-bubble-without-inline-timestamp**: The component MUST embed the chat bubble component (see `adhsdk://cookbook/ai/chat/chat-window/chat-bubble-view`) with its inline timestamp disabled, so the bubble never draws its own timestamp.
 - **renders-own-timestamp**: The component MUST render the message's timestamp in its own label, on its own line below the bubble (or below the delivery indicator, when one is present).
 - **aligns-by-role**: The component MUST align the header, bubble, and timestamp against the trailing edge when `message.role == .user`, and against the leading edge for any other role.
 - **reserves-icon-column**: The component MUST reserve an outer margin of 44pt (8pt inset + 28pt icon + 8pt gap) on both sides for the icon column, regardless of which side's icon is actually filled.
@@ -18,7 +18,7 @@
 - **hover-fill-clears-on-exit**: When the pointer exits the row, the component MUST clear the hover fill unconditionally.
 - **pointing-cursor-when-pressable**: The component MUST show a pointing-hand cursor covering its full bounds when `actions.onOpen` is set, and MUST show no special cursor otherwise.
 - **selection-frame**: Setting `isSelected` to `true` MUST draw a 2pt border in the theme's `.selection` color around the row; setting it to `false` MUST remove the border (width 0, no color); setting it to its current value MUST be a no-op.
-- **delivery-sending-shows-indicator**: When `message.delivery == .sending`, the component MUST insert an animated instance of the typing indicator component (see `adtoolkit://cookbook/ai/chat/chat-window/typing-indicator-view`) between the bubble and the timestamp, and MUST start its animation.
+- **delivery-sending-shows-indicator**: When `message.delivery == .sending`, the component MUST insert an animated instance of the typing indicator component (see `adhsdk://cookbook/ai/chat/chat-window/typing-indicator-view`) between the bubble and the timestamp, and MUST start its animation.
 - **delivery-failed-shows-reason**: When `message.delivery == .failed(reason)`, the component MUST insert a word-wrapping label between the bubble and the timestamp showing `reason`, using the theme's caption font and `.danger` color, and MUST NOT show a typing indicator.
 - **delivery-settled-no-extra-view**: When `message.delivery == .settled`, the component MUST insert no view between the bubble and the timestamp, and the timestamp MUST attach directly below the bubble.
 - **remeasure-failure-label-width**: Whenever the row's layout pass runs, the component MUST re-set the failure label's maximum layout width to the label's actual frame width, and invalidate its cached natural size, whenever the two differ and the frame has a non-zero width.

@@ -1,7 +1,7 @@
 ---
 id: 37b7b456-790f-4b2d-8f3a-a364016ce389
 title: StatList
-domain: agenticdevelopertoolkit://recipes/stat-list
+domain: adhsdk://recipes/stat-list
 type: recipe
 version: 1.3.1
 status: review
@@ -22,10 +22,10 @@ tags:
 - list
 - ui
 ingredients:
-- agenticdevelopertoolkit://recipes/status-dot
+- adhsdk://recipes/status-dot
 depends-on: []
 related:
-- agenticdevelopertoolkit://recipes/stat-card
+- adhsdk://recipes/stat-card
 references: []
 approved-by: ''
 approved-date: ''
@@ -35,7 +35,7 @@ approved-date: ''
 
 ## Overview
 
-`StatList` and `StatListRow` in `@agenticdevelopertoolkit/ui` are the shared **status list** — a
+`StatList` and `StatListRow` in `@adh-sdk/ui` are the shared **status list** — a
 vertical stack of "tone dot + truncating label + trailing figure" rows. It is the
 fleet/telemetry idiom: a monitor's *down sites* (name · duration), a card's *top
 error issues* (title · count · deep link). Each row is a `StatusDot` (size 7) at the
@@ -53,7 +53,7 @@ primitive is the shared `StatusDot`; everything else is layout + the caller's te
 
 | Name | Domain | Role | Required | Configuration |
 |---|---|---|---|---|
-| StatusDot | agenticdevelopertoolkit://recipes/status-dot | The leading tone dot on each row (size 7), decorative (no aria label — the row's text carries the meaning) | yes | `tone` per row from `StatListRow.tone`; fixed `size={7}` |
+| StatusDot | adhsdk://recipes/status-dot | The leading tone dot on each row (size 7), decorative (no aria label — the row's text carries the meaning) | yes | `tone` per row from `StatListRow.tone`; fixed `size={7}` |
 
 In this toolkit, leaf UI components are themselves recipes rather than a
 separate `ingredient` type, so `StatusDot` is cited here by its recipe domain.
@@ -128,7 +128,7 @@ composed `StatusDot`; nothing flows back up.
 - **Decorative dots**: the dot never carries an aria label — the row's own text
   (label + trailing) is the accessible content, so a screen reader reads the item
   once, not "status" twice, the same pattern StatusDot's own
-  `agenticdevelopertoolkit://recipes/status-dot#requirements/unlabeled-is-decorative`
+  `adhsdk://recipes/status-dot#requirements/unlabeled-is-decorative`
   requirement documents for an unlabeled dot.
 - **`labelTitle` vs `label`**: pass the plain-text form as `labelTitle` so the native
   tooltip works even when `label` is rich `ReactNode`.
@@ -141,7 +141,7 @@ composed `StatusDot`; nothing flows back up.
 
 - **SwiftUI**: This is a web/React component; on Apple platforms, build an equivalent using a vertical `VStack` of rows, each an `HStack` containing a decorative status indicator (via `Circle` or a custom view), a text label with `.lineLimit(1)` and `.truncationMode(.tail)`, and a trailing value view pinned after a `Spacer()` with `.layoutPriority(1)` so it stays fully visible while the label clips.
 - **Compose**: This is a web/React component; on Android, compose rows using a `Column` with `verticalArrangement = Arrangement.spacedBy()`, each row a `Row` containing a leading status dot, a `Text` with `maxLines = 1`, `overflow = TextOverflow.Ellipsis`, and `Modifier.weight(1f)` so it claims the remaining width and clips before a trailing value composable placed after it.
-- **React/Web (TypeScript)**: `packages/web/packages/ui/src/blocks/stat-list.tsx`, exported from `@agenticdevelopertoolkit/ui` (`@agenticdevelopertoolkit/ui/blocks/stat-list`). Composes `StatusDot` (`../components/status-dot`). Exports `StatList`, `StatListRow`, `StatListProps`, `StatListRowProps`. Demo in `ui-showcase` Topic `stat-list` (group "Blocks — cards & sections"); regenerate `sources.generated.ts` via `gen-sources.py` after source changes. Rows truncate their label to fit any width; verify at 375 / 768 / 1440 that the trailing figure stays visible while the label clips.
+- **React/Web (TypeScript)**: `packages/web/packages/ui/src/blocks/stat-list.tsx`, exported from `@adh-sdk/ui` (`@adh-sdk/ui/blocks/stat-list`). Composes `StatusDot` (`../components/status-dot`). Exports `StatList`, `StatListRow`, `StatListProps`, `StatListRowProps`. Demo in `ui-showcase` Topic `stat-list` (group "Blocks — cards & sections"); regenerate `sources.generated.ts` via `gen-sources.py` after source changes. Rows truncate their label to fit any width; verify at 375 / 768 / 1440 that the trailing figure stays visible while the label clips.
 - **AppKit / UIKit**: This is a web/React component; on macOS and iOS, build an equivalent using `NSStackView` (AppKit) or `UIStackView` (UIKit) with vertical axis, each row a horizontal stack containing a decorative status badge, a truncating label with `lineBreakMode = .byTruncatingTail`, and a trailing value.
 - **WinUI 3**: Build the list using a vertical `StackPanel` (Orientation="Vertical", with `Spacing` for row gaps) or an `ItemsRepeater` bound to the rows. Each row is a `Grid` with column definitions `Auto`, `*`, `Auto` (dot / label / trailing) — a horizontal `StackPanel` gives its children unlimited width, so a `TextTrimming` value never fires and `HorizontalAlignment="Right"` has no effect inside it. Put the status indicator (`Ellipse` or custom control) in the first column; a `TextBlock` with `TextWrapping="NoWrap"` and `TextTrimming="CharacterEllipsis"` in the `*` column so it clips within its constrained width; and the trailing content in the third column, inside a `StackPanel` with Orientation="Horizontal" and HorizontalAlignment="Right".
 
@@ -158,7 +158,7 @@ composed `StatusDot`; nothing flows back up.
   **Rationale**: the row's
   visible label + trailing already convey the item; labeling the dot too would make a
   screen reader announce the status twice — the same a11y trap StatusDot's own
-  `agenticdevelopertoolkit://recipes/status-dot#requirements/unlabeled-is-decorative`
+  `adhsdk://recipes/status-dot#requirements/unlabeled-is-decorative`
   requirement addresses.
   **Approved**: pending
 - **Decision**: `divided` is a boolean, not a caller-supplied className.
@@ -200,7 +200,7 @@ output (unit-test-coverage passed).
 | Version | Date | Author | Summary |
 |---|---|---|---|
 | 1.3.1 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: passed). |
-| 1.3.0 | 2026-09-22 | Mike Fullerton | Lint pass: rename requirements to subject-only kebab-case and add as-consistency; state truncation/stacking/divider behavior instead of literal Tailwind classes; add test vectors for default `div` roots, `StatListRow` attribute spreading, `trailing={0}`, and the `as` mismatch case; rework WinUI 3 Platform Notes onto a `Grid` layout and drop "Not applicable" from SwiftUI/Compose/AppKit-UIKit, adding trailing-visibility guidance to SwiftUI/Compose; link Compliance checks to the catalog with `passed`/`partial` status and reformat Design Decisions with `Approved` lines; trim the frontmatter summary; note that leaf components are recipes in this toolkit; record the domain scheme's move to `agenticdevelopertoolkit` (commit c1d412c), which this version's frontmatter already carries. |
+| 1.3.0 | 2026-09-22 | Mike Fullerton | Lint pass: rename requirements to subject-only kebab-case and add as-consistency; state truncation/stacking/divider behavior instead of literal Tailwind classes; add test vectors for default `div` roots, `StatListRow` attribute spreading, `trailing={0}`, and the `as` mismatch case; rework WinUI 3 Platform Notes onto a `Grid` layout and drop "Not applicable" from SwiftUI/Compose/AppKit-UIKit, adding trailing-visibility guidance to SwiftUI/Compose; link Compliance checks to the catalog with `passed`/`partial` status and reformat Design Decisions with `Approved` lines; trim the frontmatter summary; note that leaf components are recipes in this toolkit; record the domain scheme's move to `adhsdk` (commit c1d412c), which this version's frontmatter already carries. |
 | 1.2.0 | 2026-09-22 | Mike Fullerton | Revise WinUI 3 Platform Notes with concrete control guidance; remove "Not applicable" phrasing. |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Reorganize Platform Notes per cookbook standards; fix domain URI scheme from agenticdeveloperhub to agenticdevelopercookbook; update status to review. |
 | 1.0.0 | 2026-07-03 | Mike Fullerton | Initial recipe; the StatusDot + truncating label + trailing figure row/list grammar extracted from the fleet and telemetry status lists. |

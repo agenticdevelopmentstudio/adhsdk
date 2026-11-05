@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import type { SuccessBody } from "@agentic-toolkit/adh-api-types";
+import type { SuccessBody } from "@adh-sdk/adh-api-types";
 import { authedJson } from "./http";
 
 // ── Per-ecosystem offline-sync table enrollment ──────────────────────────────
@@ -12,7 +12,7 @@ import { authedJson } from "./http";
 // code default in the sync registry. `:id` is the ecosystem's rdid OR its raw
 // uuid (the route resolves either).
 //
-// `/admin/sync/tables` is NOT in the OpenAPI surface (@agentic-toolkit/adh-api-types), so
+// `/admin/sync/tables` is NOT in the OpenAPI surface (@adh-sdk/adh-api-types), so
 // the row/body shapes are hand-written here (as `AccessAuditEvent` in admin.ts
 // does for its undocumented route). The ecosystem picker's list, by contrast,
 // comes from the documented generic-CRUD `/ecosystem/ecosystems`, so that one

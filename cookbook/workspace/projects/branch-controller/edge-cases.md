@@ -19,7 +19,7 @@
   Notes), so no interleaving can observe a torn write. Refresh itself has
   no coalescing, generation counter, or in-flight guard of any kind —
   unlike its sibling git status provider (see
-  `adtoolkit://cookbook/workspace/files/git-status-provider`), which
+  `adhsdk://cookbook/workspace/files/git-status-provider`), which
   explicitly coalesces overlapping calls into at most one queued follow-up
   and discards a stale response with a generation check. Two overlapping
   refresh calls (for example, two rapid Refresh Status invocations) each
@@ -37,7 +37,7 @@
   branch read specifically failed, as distinct from succeeding with an
   unchanged value; the failure's only record is the git command log kept
   by the injected git client (a collaborator, not this component — see
-  `adtoolkit://cookbook/workspace/files/git-status-provider`'s sibling
+  `adhsdk://cookbook/workspace/files/git-status-provider`'s sibling
   git client entry).
 - **Offline or disconnected state**: Not applicable in the network sense —
   reading the current branch runs a local git command against the local

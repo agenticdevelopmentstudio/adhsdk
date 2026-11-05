@@ -2,15 +2,15 @@
 
 import { useMemo, useState, type ReactElement, type ReactNode } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Switch } from "@agenticdevelopertoolkit/ui/components/switch";
+import { Switch } from "@adh-sdk/ui/components/switch";
 import {
   EditableList,
   useEditableList,
   type EditableListColumn,
-} from "@agenticdevelopertoolkit/ui/blocks";
+} from "@adh-sdk/ui/blocks";
 // No RecordApiButton here: the settings registry's FeatureTitle carries the topic's API link
 // (`/notifications/preferences`) above every panel, and a second one inside it was a duplicate.
-import { DetailSection, DetailsPane, type DetailsSection } from "@agentic-toolkit/resource";
+import { DetailSection, DetailsPane, type DetailsSection } from "@adh-sdk/resource";
 import {
   listPreferences,
   savePreferences,

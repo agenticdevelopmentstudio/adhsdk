@@ -1,7 +1,7 @@
 ---
 id: 91891cc2-3511-4d00-888a-1ff7585c0b64
 title: Chat Coordinator Backends
-domain: agenticdevelopertoolkit://recipes/chat-coordinator-backends
+domain: adhsdk://recipes/chat-coordinator-backends
 type: ingredient
 version: 1.0.2
 status: review
@@ -21,10 +21,10 @@ tags:
 - transport
 - coordinator
 depends-on:
-- agenticdevelopertoolkit://recipes/chat-coordinator-projection
+- adhsdk://recipes/chat-coordinator-projection
 related:
-- agenticdevelopertoolkit://ingredients/chat/persona-chat-coordinator
-- agenticdevelopertoolkit://recipes/persona-chat
+- adhsdk://ingredients/chat/persona-chat-coordinator
+- adhsdk://recipes/persona-chat
 references: []
 approved-by: ''
 approved-date: ''

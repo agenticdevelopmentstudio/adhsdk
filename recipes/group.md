@@ -1,7 +1,7 @@
 ---
 id: c9bdfe9a-6c8f-44c4-957e-757ecfa2e658
 title: Group
-domain: agenticdevelopertoolkit://recipes/group
+domain: adhsdk://recipes/group
 type: ingredient
 version: 1.1.1
 status: review

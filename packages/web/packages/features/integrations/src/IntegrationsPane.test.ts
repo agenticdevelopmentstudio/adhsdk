@@ -9,7 +9,7 @@
 // Both helpers are exercised with rows whose `rdid` is null AND whose `id`s differ, because the
 // whole failure mode is two DIFFERENT unmapped rows being read as one.
 import { describe, expect, it } from 'vitest';
-import type { MaskedProviderConfig } from '@agentic-toolkit/data/integrations';
+import type { MaskedProviderConfig } from '@adh-sdk/data/integrations';
 import { addressOf, mergeFetchedRow } from './IntegrationsPane';
 
 const cfg = (patch: Partial<MaskedProviderConfig>): MaskedProviderConfig => ({

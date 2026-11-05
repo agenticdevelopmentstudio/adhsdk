@@ -1,7 +1,7 @@
 ---
 id: D457C4D4-005C-4FCB-A3A6-3E1680BCB561
 title: "Claude Credential Kind"
-domain: adtoolkit://cookbook/foundation/claude-accounts/claude-credential-kind
+domain: adhsdk://cookbook/foundation/claude-accounts/claude-credential-kind
 type: ingredient
 version: 1.0.0
 status: review
@@ -22,7 +22,7 @@ tags:
   - keys
 depends-on: []
 related:
-  - adtoolkit://cookbook/foundation/claude-accounts/claude-o-auth-credential
+  - adhsdk://cookbook/foundation/claude-accounts/claude-o-auth-credential
 references: []
 approved-by: ""
 approved-date: ""
@@ -127,7 +127,7 @@ Not applicable: The kind type calls no logging API.
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/Core/ClaudeAccounts/ClaudeCredentialKind.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/ClaudeAccounts/ClaudeCredentialKind.swift` |
 
 ## Design Decisions
 
@@ -146,7 +146,7 @@ Not applicable: The kind type calls no logging API.
 | [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
 | [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | partial | Best Practices |
 
-`separation-of-concerns` passes because the type does exactly one thing, naming the credential kinds and their one key spelling, and holds no storage, network or UI of its own. `unit-test-coverage` is partial: no test file targets `ClaudeCredentialKind` directly; `AgenticToolkitMacOSTests/ClaudeAccounts/ClaudeLiveLoginRecordTests.swift` constructs accounts with each kind but does not assert the key or parse functions.
+`separation-of-concerns` passes because the type does exactly one thing, naming the credential kinds and their one key spelling, and holds no storage, network or UI of its own. `unit-test-coverage` is partial: no test file targets `ClaudeCredentialKind` directly; `AgenticDeveloperHubSDKMacOSTests/ClaudeAccounts/ClaudeLiveLoginRecordTests.swift` constructs accounts with each kind but does not assert the key or parse functions.
 
 ## Change History
 

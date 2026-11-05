@@ -10,20 +10,20 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@agenticdevelopertoolkit/ui/components/dialog";
-import { AlertModal } from "@agenticdevelopertoolkit/ui/components/alert-modal";
-import { UnsavedChangesAlert } from "@agenticdevelopertoolkit/ui/components/unsaved-changes-alert";
+} from "@adh-sdk/ui/components/dialog";
+import { AlertModal } from "@adh-sdk/ui/components/alert-modal";
+import { UnsavedChangesAlert } from "@adh-sdk/ui/components/unsaved-changes-alert";
 import {
   EditableList,
   Field,
   useEditableList,
   type EditableListColumn,
-} from "@agenticdevelopertoolkit/ui/blocks";
-import { Button } from "@agenticdevelopertoolkit/ui/components/button";
-import { Input } from "@agenticdevelopertoolkit/ui/components/input";
-import { Select } from "@agenticdevelopertoolkit/ui/components/select";
-import { Badge } from "@agenticdevelopertoolkit/ui/components/badge";
-import { DialogErrorText, ErrorText } from "@agenticdevelopertoolkit/ui/components/error-text";
+} from "@adh-sdk/ui/blocks";
+import { Button } from "@adh-sdk/ui/components/button";
+import { Input } from "@adh-sdk/ui/components/input";
+import { Select } from "@adh-sdk/ui/components/select";
+import { Badge } from "@adh-sdk/ui/components/badge";
+import { DialogErrorText, ErrorText } from "@adh-sdk/ui/components/error-text";
 import {
   addContact,
   confirmContactVerification,
@@ -32,13 +32,13 @@ import {
   startContactVerification,
   type ContactMethod,
 } from "../api/account";
-import { extractErrorMessage } from "@agentic-toolkit/auth/client";
+import { extractErrorMessage } from "@adh-sdk/auth/client";
 import {
   DetailSection,
   ListBarActions,
   useBulkRemove,
   useReportSettingsDirty,
-} from "@agentic-toolkit/resource";
+} from "@adh-sdk/resource";
 
 const CONTACTS_KEY = ["account", "contacts"] as const;
 

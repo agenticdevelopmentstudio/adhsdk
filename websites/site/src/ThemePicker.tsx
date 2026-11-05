@@ -1,6 +1,6 @@
 'use client'
 
-import { themeIds, themes, type ThemeKey } from '@agenticdevelopertoolkit/themes'
+import { themeIds, themes, type ThemeKey } from '@adh-sdk/themes'
 
 export interface ThemePickerProps {
   value: ThemeKey

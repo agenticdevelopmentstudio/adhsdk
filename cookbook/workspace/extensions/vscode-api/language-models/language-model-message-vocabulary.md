@@ -1,7 +1,7 @@
 ---
 id: 4d04037c-098f-4ea5-8313-7e0374700a96
 title: "Language Model Message Vocabulary"
-domain: adtoolkit://cookbook/workspace/extensions/vscode-api/language-models/language-model-message-vocabulary
+domain: adhsdk://cookbook/workspace/extensions/vscode-api/language-models/language-model-message-vocabulary
 type: ingredient
 version: 1.1.1
 status: review
@@ -21,15 +21,15 @@ tags:
   - language-model
 depends-on: []
 related:
-  - adtoolkit://cookbook/workspace/extensions/host/extension-host
-  - adtoolkit://cookbook/workspace/extensions/vscode-api/language-models/ai-plugin-language-model-provider
+  - adhsdk://cookbook/workspace/extensions/host/extension-host
+  - adhsdk://cookbook/workspace/extensions/vscode-api/language-models/ai-plugin-language-model-provider
 references:
-  - packages/apple/AgenticToolkit/macOS/Features/Extensions/VSCodeAPI/LanguageModelMessageVocabulary.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Tests/AgenticToolkitMacOSTests/Extensions/LanguageModelMessageVocabularyTests.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/macOS/Features/Extensions/VSCodeAPI/VSCodeAPI.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/macOS/Features/Extensions/Host/ExtensionHost.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Core/Loggable.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/project.yml (agenticdevelopertoolkit)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/LanguageModelMessageVocabulary.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKMacOSTests/Extensions/LanguageModelMessageVocabularyTests.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/VSCodeAPI.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/Host/ExtensionHost.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Core/Loggable.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/project.yml (adhsdk)
 approved-by: ""
 approved-date: ""
 ---
@@ -197,8 +197,8 @@ No other event in this file is logged: the failed cache-write `Object.defineProp
 
 ## Platform Notes
 
-- **SwiftUI**: not applicable to this file — `LanguageModelMessageVocabulary.swift` imports only `Foundation`, `JavaScriptCore`, `OSLog`, and `AgenticToolkitCore`, with no SwiftUI dependency; nothing here renders or observes view state.
-- **AppKit / UIKit**: this is the source. `packages/apple/AgenticToolkit/macOS/Features/Extensions/VSCodeAPI/LanguageModelMessageVocabulary.swift` is part of the `AgenticToolkitMacOS` framework target, which `project.yml` declares `platform: macOS` only — no iOS target packages this file. It is an extension of the `@MainActor` `VSCodeAPI` enum; its confirmed consumers among the repository's other files are `ExtensionHost.installRuntime`, which installs the eight members eagerly on every activation via the shared, sorted `installVSCodeMembers(_:onto:)` loop, and `MainThreadLanguageModels.swift`'s `vscode.lm` adaptor, which calls `installLanguageModelVocabulary(in:)` again per streamed request to read the cached container back — both outside this recipe's scope. Every function this file adds MUST execute on the main actor: `VSCodeAPI` is declared `@MainActor`, a caseless `enum` with no state of its own, because `JSContext`/`JSValue` are not `Sendable` and JavaScriptCore always calls back on the thread that made the call — the type carries its isolation in its own declaration, and this file adds no conformance of its own. This is purely a Swift-concurrency fact about this implementation; a port to another platform's threading model documents its own equivalent confinement mechanism instead.
+- **SwiftUI**: not applicable to this file — `LanguageModelMessageVocabulary.swift` imports only `Foundation`, `JavaScriptCore`, `OSLog`, and `AgenticDeveloperHubSDKCore`, with no SwiftUI dependency; nothing here renders or observes view state.
+- **AppKit / UIKit**: this is the source. `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/LanguageModelMessageVocabulary.swift` is part of the `AgenticDeveloperHubSDKMacOS` framework target, which `project.yml` declares `platform: macOS` only — no iOS target packages this file. It is an extension of the `@MainActor` `VSCodeAPI` enum; its confirmed consumers among the repository's other files are `ExtensionHost.installRuntime`, which installs the eight members eagerly on every activation via the shared, sorted `installVSCodeMembers(_:onto:)` loop, and `MainThreadLanguageModels.swift`'s `vscode.lm` adaptor, which calls `installLanguageModelVocabulary(in:)` again per streamed request to read the cached container back — both outside this recipe's scope. Every function this file adds MUST execute on the main actor: `VSCodeAPI` is declared `@MainActor`, a caseless `enum` with no state of its own, because `JSContext`/`JSValue` are not `Sendable` and JavaScriptCore always calls back on the thread that made the call — the type carries its isolation in its own declaration, and this file adds no conformance of its own. This is purely a Swift-concurrency fact about this implementation; a port to another platform's threading model documents its own equivalent confinement mechanism instead.
 - **Compose**: model the eight members as Kotlin: `LanguageModelChatMessageRole` as an enum class with an explicit numeric `value` property (Kotlin enums do not compile to the bidirectional-mapping object shape a JS numeric enum can; this type has no reverse mapping to reproduce, only the two forward values). Model the seven constructor functions as `data class`es whose constructors perform no validation, matching **tool-call-part-stores-fields** / **tool-result-part-stores-fields** / etc. Model `LanguageModelChatMessage.content` as a Kotlin property with a custom setter performing the same `is String` coercion into a single-element `LanguageModelTextPart` list, matching **chat-message-content-setter-string-coercion**; a `data class`'s freeze-after-construction is not directly reproducible on the class itself (Kotlin has no `Object.freeze` analogue for a class), so the "frozen class" contract (**classes-frozen-after-construction**) has no direct Kotlin equivalent beyond documenting it as an implementation note.
 - **React/Web**: this is closest to the actual runtime shape — extension code in the real VS Code product already runs against the genuine `vscode.d.ts` declarations this file mirrors. A React/Web host embedding a similar extension bridge would construct the same eight shapes directly as plain ES classes (no `JSContext` boundary to cross), and would reproduce the "single evaluation, shared lexical scope" requirement (**single-evaluation-builds-all-eight**) simply by defining all eight in one module.
 - **WinUI 3**: model `LanguageModelChatMessageRole` as `public enum LanguageModelChatMessageRole { User = 1, Assistant = 2 }` — a real C# enum gives the forward mapping directly, matching **role-enum-shape**. Model the seven constructor-function equivalents as plain mutable classes (not `init`-only `record`s, which would make properties immutable after construction and violate **instances-not-frozen**) with public settable properties and no constructor-time validation. Model `LanguageModelChatMessage.Content`'s coercing setter as an ordinary C# property setter that checks `is string` and wraps it in a single-element `List<LanguageModelTextPart>`, the direct analogue of **chat-message-content-setter-string-coercion**; `Role` and `Name` stay plain auto-properties, matching **chat-message-role-name-not-accessors**. Model `LanguageModelDataPart.Json`/`.Text` as static factory methods using `System.Text.Json.JsonSerializer.Serialize` for the payload and `System.Text.Encoding.UTF8.GetBytes` for the bytes — note that `JsonSerializerOptions.WriteIndented` defaults to two-space indentation, not tabs, so matching **data-part-json-factory-serialization** byte-for-byte requires a custom `JsonWriterOptions` with a tab `IndentCharacter`; `Encoding.UTF8.GetBytes` already replaces an unpaired surrogate with U+FFFD by default, reproducing **utf8-encoder-unpaired-surrogate** with no extra code. There is no `Object.freeze` equivalent in .NET; a WinUI 3 port has no way to reproduce **classes-frozen-after-construction**'s "the class itself is frozen" contract and would need to document that gap explicitly rather than silently drop it.
@@ -207,7 +207,7 @@ No other event in this file is logged: the failed cache-write `Object.defineProp
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/macOS/Features/Extensions/VSCodeAPI/LanguageModelMessageVocabulary.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/LanguageModelMessageVocabulary.swift` |
 
 ## Design Decisions
 
@@ -233,7 +233,7 @@ No other event in this file is logged: the failed cache-write `Object.defineProp
 | [secure-log-output](agenticdevelopercookbook://compliance/security#secure-log-output) | passed | Security |
 | [no-hardcoded-strings](agenticdevelopercookbook://compliance/internationalization#no-hardcoded-strings) | failed | Internationalization |
 
-`separation-of-concerns` passes because this file's only responsibility is installing eight JS declarations in a `JSContext`; it defines no UI, no networking, and no persistence, and depends on nothing outside `Foundation`/`JavaScriptCore`/`OSLog`/`AgenticToolkitCore`. `unit-test-coverage` passes: `LanguageModelMessageVocabularyTests.swift`'s nineteen test methods exercise all ten of the task brief's numbered mutation points plus several additional property checks (the four previously-unread constructors' field storage, the UTF-8 surrogate-pair and unpaired-surrogate branches, and `.image`'s pass-through), per that file's own header. `explicit-error-handling` is partial: the failure is signalled — `installLanguageModelVocabulary(in:)` logs an error and every member stays the shim's not-implemented stub — but the inner `try`/`catch` discards the caught JavaScript `error`, so the log cannot say which member failed or why. `secure-log-output` passes: both logged messages carry only the context's own name (already `privacy: .public` in the source) and a member name drawn from a fixed, non-secret constant list; neither message can carry a credential, token, or extension-authored PII. `no-hardcoded-strings` fails because both `logger.error` messages are English literals with no localization mechanism (see Localization).
+`separation-of-concerns` passes because this file's only responsibility is installing eight JS declarations in a `JSContext`; it defines no UI, no networking, and no persistence, and depends on nothing outside `Foundation`/`JavaScriptCore`/`OSLog`/`AgenticDeveloperHubSDKCore`. `unit-test-coverage` passes: `LanguageModelMessageVocabularyTests.swift`'s nineteen test methods exercise all ten of the task brief's numbered mutation points plus several additional property checks (the four previously-unread constructors' field storage, the UTF-8 surrogate-pair and unpaired-surrogate branches, and `.image`'s pass-through), per that file's own header. `explicit-error-handling` is partial: the failure is signalled — `installLanguageModelVocabulary(in:)` logs an error and every member stays the shim's not-implemented stub — but the inner `try`/`catch` discards the caught JavaScript `error`, so the log cannot say which member failed or why. `secure-log-output` passes: both logged messages carry only the context's own name (already `privacy: .public` in the source) and a member name drawn from a fixed, non-secret constant list; neither message can carry a credential, token, or extension-authored PII. `no-hardcoded-strings` fails because both `logger.error` messages are English literals with no localization mechanism (see Localization).
 
 ## Change History
 

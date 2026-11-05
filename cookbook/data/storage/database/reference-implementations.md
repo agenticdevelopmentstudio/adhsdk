@@ -1,5 +1,5 @@
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/Database/` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Database/` |
 

@@ -32,7 +32,7 @@ vi.mock("../EventsPane", () => ({ EventsPane: () => <div>events-pane</div> }));
 // mode off that prop, and it is the ENTIRE billing-side implementation of "connect Stripe" — so
 // the mode it is put in decides whether the Stripe topic works at all on the two hosts that cede
 // no URL segment.
-vi.mock("@agentic-toolkit/integrations", () => ({
+vi.mock("@adh-sdk/integrations", () => ({
   IntegrationsPane: ({ leaf }: { leaf?: unknown }) => (
     <div data-testid="integrations-pane">
       integrations-pane {leaf ? "url-driven" : "internal-selection"}

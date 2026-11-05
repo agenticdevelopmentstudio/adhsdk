@@ -1,7 +1,7 @@
 ---
 id: 98d7c94e-4db9-42c9-b36e-1a2a59409fda
 title: "Organizations"
-domain: adtoolkit://cookbook/adh/hub/organizations
+domain: adhsdk://cookbook/adh/hub/organizations
 type: ingredient
 version: 1.2.1
 status: review
@@ -23,15 +23,15 @@ tags:
   - api
 depends-on: []
 related:
-  - adtoolkit://cookbook/data/services/auth/auth-client
+  - adhsdk://cookbook/data/services/auth/auth-client
 references:
-  - packages/web/packages/data/src/organizations/organizations.ts (agenticdevelopertoolkit)
-  - packages/web/packages/data/src/organizations/members.ts (agenticdevelopertoolkit)
-  - packages/web/packages/data/src/organizations/wire.ts (agenticdevelopertoolkit)
-  - packages/web/packages/data/src/organizations/index.ts (agenticdevelopertoolkit)
-  - packages/web/packages/data/src/http.ts (agenticdevelopertoolkit)
-  - packages/web/packages/data/src/client-helpers.ts (agenticdevelopertoolkit)
-  - packages/web/packages/auth/src/client.ts (agenticdevelopertoolkit)
+  - packages/web/packages/data/src/organizations/organizations.ts (adhsdk)
+  - packages/web/packages/data/src/organizations/members.ts (adhsdk)
+  - packages/web/packages/data/src/organizations/wire.ts (adhsdk)
+  - packages/web/packages/data/src/organizations/index.ts (adhsdk)
+  - packages/web/packages/data/src/http.ts (adhsdk)
+  - packages/web/packages/data/src/client-helpers.ts (adhsdk)
+  - packages/web/packages/auth/src/client.ts (adhsdk)
 approved-by: ""
 approved-date: ""
 ---
@@ -371,9 +371,9 @@ logging of that failure is the responsibility of the caller or host application.
 
 - **React/Web** (source platform): `packages/web/packages/data/src/organizations/organizations.ts`,
   `members.ts`, and `wire.ts` hold the client; every method is a plain async function over
-  `authedJson`/`authedRequest` (`@agentic-toolkit/auth/client`, re-exported through `./http`) and
+  `authedJson`/`authedRequest` (`@adh-sdk/auth/client`, re-exported through `./http`) and
   `enc`/`compact` from `./client-helpers`; `index.ts` re-exports both files as the package's public
-  surface (`@agentic-toolkit/data/organizations`). The organizations cache-key prefix is exported
+  surface (`@adh-sdk/data/organizations`). The organizations cache-key prefix is exported
   as `ORGANIZATIONS_QUERY_KEY`, the one-element tuple `["organizations"]`, in the react-query
   key-array convention; a caller appends the workspace slug (`[...ORGANIZATIONS_QUERY_KEY, slug]`)
   to form a complete key. `wire.ts` also exports `OrganizationRenamed`, a type alias of
@@ -501,7 +501,7 @@ either throws `AuthHttpError` (via the shared `authedFetch`) or one of the two h
 friendly `Error`s this recipe documents. `unit-test-coverage` **failed**: no `__tests__` directory
 or `*.test.ts` file exists next to `organizations.ts`/`members.ts` in this checkout, and the
 consumer feature tests found elsewhere in the repository (`NewOrganizationModal.test.tsx`,
-`orgRenameSavePath.test.tsx`) mock `@agentic-toolkit/data/organizations` wholesale rather than
+`orgRenameSavePath.test.tsx`) mock `@adh-sdk/data/organizations` wholesale rather than
 exercising this module's own request-building or error-mapping logic — none of the requirements
 above is exercised by a dedicated test in this checkout. `server-side-authorization` **passed**:
 neither module performs a client-side permission check of any kind, per

@@ -1,5 +1,5 @@
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/macOS/SystemWindows/Shortcuts/` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemWindows/Shortcuts/` |
 

@@ -6,8 +6,8 @@ import type { ReactElement, ReactNode } from 'react'
 // specifier below is the merged barrel. It stays a package path (the barrel is `external`
 // in tsup.config.ts) so it remains a separate chunk the consumer resolves rather than
 // something inlined here — but the light-entry claim is now about chunking, not contents.
-import { HubMark } from '@agentic-toolkit/adh/header'
-import { getSite, splitSiteTitle, type SiteId } from '@agentic-toolkit/adh-registry'
+import { HubMark } from '@adh-sdk/adh/header'
+import { getSite, splitSiteTitle, type SiteId } from '@adh-sdk/adh-registry'
 
 export type SiteWordmarkProps = {
   /** The marketing site whose brand this wordmark renders. */

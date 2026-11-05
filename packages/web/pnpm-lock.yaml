@@ -52,61 +52,61 @@ importers:
 
   packages/adh:
     dependencies:
-      '@agentic-toolkit/account':
+      '@adh-sdk/account':
         specifier: workspace:*
         version: link:../features/account
-      '@agentic-toolkit/adh-registry':
+      '@adh-sdk/adh-registry':
         specifier: workspace:*
         version: link:../adh-registry
-      '@agentic-toolkit/adh-site-config':
+      '@adh-sdk/adh-site-config':
         specifier: workspace:*
         version: link:../adh-site-config
-      '@agentic-toolkit/adh-ui':
+      '@adh-sdk/adh-ui':
         specifier: workspace:*
         version: link:../adh-ui
-      '@agentic-toolkit/api-explorer':
-        specifier: workspace:*
-        version: link:../api-explorer
-      '@agentic-toolkit/auth':
-        specifier: workspace:*
-        version: link:../auth
-      '@agentic-toolkit/authentication':
-        specifier: workspace:*
-        version: link:../features/authentication
-      '@agentic-toolkit/bitbag':
-        specifier: workspace:*
-        version: link:../features/bitbag
-      '@agentic-toolkit/data':
-        specifier: workspace:*
-        version: link:../data
-      '@agentic-toolkit/ecosystem-config':
-        specifier: workspace:*
-        version: link:../features/ecosystem-config
-      '@agentic-toolkit/messaging':
-        specifier: workspace:*
-        version: link:../messaging
-      '@agentic-toolkit/personas':
-        specifier: workspace:*
-        version: link:../features/personas
-      '@agentic-toolkit/profile':
-        specifier: workspace:*
-        version: link:../features/profile
-      '@agentic-toolkit/resource':
-        specifier: workspace:*
-        version: link:../resource
-      '@agenticdevelopertoolkit/analytics':
+      '@adh-sdk/analytics':
         specifier: workspace:*
         version: link:../analytics
-      '@agenticdevelopertoolkit/landing':
+      '@adh-sdk/api-explorer':
+        specifier: workspace:*
+        version: link:../api-explorer
+      '@adh-sdk/auth':
+        specifier: workspace:*
+        version: link:../auth
+      '@adh-sdk/authentication':
+        specifier: workspace:*
+        version: link:../features/authentication
+      '@adh-sdk/bitbag':
+        specifier: workspace:*
+        version: link:../features/bitbag
+      '@adh-sdk/data':
+        specifier: workspace:*
+        version: link:../data
+      '@adh-sdk/ecosystem-config':
+        specifier: workspace:*
+        version: link:../features/ecosystem-config
+      '@adh-sdk/landing':
         specifier: workspace:*
         version: link:../landing
-      '@agenticdevelopertoolkit/markdown':
+      '@adh-sdk/markdown':
         specifier: workspace:*
         version: link:../markdown
-      '@agenticdevelopertoolkit/themes':
+      '@adh-sdk/messaging':
+        specifier: workspace:*
+        version: link:../messaging
+      '@adh-sdk/personas':
+        specifier: workspace:*
+        version: link:../features/personas
+      '@adh-sdk/profile':
+        specifier: workspace:*
+        version: link:../features/profile
+      '@adh-sdk/resource':
+        specifier: workspace:*
+        version: link:../resource
+      '@adh-sdk/themes':
         specifier: workspace:*
         version: link:../themes
-      '@agenticdevelopertoolkit/ui':
+      '@adh-sdk/ui':
         specifier: workspace:*
         version: link:../ui
       '@monaco-editor/react':
@@ -227,13 +227,13 @@ importers:
 
   packages/adh-api-types:
     devDependencies:
-      '@agentic-toolkit/api-explorer':
+      '@adh-sdk/api-explorer':
         specifier: workspace:*
         version: link:../api-explorer
-      '@agentic-toolkit/crud':
+      '@adh-sdk/crud':
         specifier: workspace:*
         version: link:../crud
-      '@agentic-toolkit/data':
+      '@adh-sdk/data':
         specifier: workspace:*
         version: link:../data
       '@types/node':
@@ -257,19 +257,19 @@ importers:
 
   packages/adh-next-config:
     dependencies:
-      '@agentic-toolkit/adh-registry':
+      '@adh-sdk/adh-registry':
         specifier: workspace:*
         version: link:../adh-registry
-      '@agentic-toolkit/next-env':
+      '@adh-sdk/next-env':
         specifier: workspace:*
         version: link:../next-env
-      '@agentic-toolkit/next-headers':
+      '@adh-sdk/next-headers':
         specifier: workspace:*
         version: link:../next-headers
-      '@agentic-toolkit/next-preflight':
+      '@adh-sdk/next-preflight':
         specifier: workspace:*
         version: link:../next-preflight
-      '@agenticdevelopertoolkit/themes':
+      '@adh-sdk/themes':
         specifier: workspace:*
         version: link:../themes
     devDependencies:
@@ -311,73 +311,73 @@ importers:
 
   packages/adh-site-homes:
     dependencies:
-      '@agentic-toolkit/adh':
+      '@adh-sdk/adh':
         specifier: workspace:*
         version: link:../adh
-      '@agentic-toolkit/adh-billing':
+      '@adh-sdk/adh-billing':
         specifier: workspace:*
         version: link:../features/adh-billing
-      '@agentic-toolkit/adh-ecosystem-panes':
+      '@adh-sdk/adh-ecosystem-panes':
         specifier: workspace:*
         version: link:../features/adh-ecosystem-panes
-      '@agentic-toolkit/adh-products':
+      '@adh-sdk/adh-products':
         specifier: workspace:*
         version: link:../features/adh-products
-      '@agentic-toolkit/adh-registries':
+      '@adh-sdk/adh-registries':
         specifier: workspace:*
         version: link:../features/adh-registries
-      '@agentic-toolkit/adh-registry':
+      '@adh-sdk/adh-registry':
         specifier: workspace:*
         version: link:../adh-registry
-      '@agentic-toolkit/auth':
+      '@adh-sdk/auth':
         specifier: workspace:*
         version: link:../auth
-      '@agentic-toolkit/authentication':
+      '@adh-sdk/authentication':
         specifier: workspace:*
         version: link:../features/authentication
-      '@agentic-toolkit/dashboards':
+      '@adh-sdk/dashboards':
         specifier: workspace:*
         version: link:../features/dashboards
-      '@agentic-toolkit/data':
+      '@adh-sdk/data':
         specifier: workspace:*
         version: link:../data
-      '@agentic-toolkit/ecosystems':
+      '@adh-sdk/ecosystems':
         specifier: workspace:*
         version: link:../features/ecosystems
-      '@agentic-toolkit/games':
+      '@adh-sdk/games':
         specifier: workspace:*
         version: link:../features/games
-      '@agentic-toolkit/gamification':
+      '@adh-sdk/gamification':
         specifier: workspace:*
         version: link:../features/gamification
-      '@agentic-toolkit/integrations':
+      '@adh-sdk/integrations':
         specifier: workspace:*
         version: link:../features/integrations
-      '@agentic-toolkit/knowledgebases':
+      '@adh-sdk/knowledgebases':
         specifier: workspace:*
         version: link:../features/knowledgebases
-      '@agentic-toolkit/notebook':
+      '@adh-sdk/notebook':
         specifier: workspace:*
         version: link:../features/notebook
-      '@agentic-toolkit/organizations':
+      '@adh-sdk/organizations':
         specifier: workspace:*
         version: link:../features/organizations
-      '@agentic-toolkit/personas':
+      '@adh-sdk/personas':
         specifier: workspace:*
         version: link:../features/personas
-      '@agentic-toolkit/projects':
+      '@adh-sdk/projects':
         specifier: workspace:*
         version: link:../features/projects
-      '@agentic-toolkit/research':
+      '@adh-sdk/research':
         specifier: workspace:*
         version: link:../features/research
-      '@agentic-toolkit/resource':
+      '@adh-sdk/resource':
         specifier: workspace:*
         version: link:../resource
-      '@agentic-toolkit/shipr':
+      '@adh-sdk/shipr':
         specifier: workspace:*
         version: link:../features/shipr
-      '@agentic-toolkit/teams':
+      '@adh-sdk/teams':
         specifier: workspace:*
         version: link:../features/teams
     devDependencies:
@@ -408,7 +408,7 @@ importers:
 
   packages/adh-ui:
     dependencies:
-      '@agenticdevelopertoolkit/ui':
+      '@adh-sdk/ui':
         specifier: workspace:*
         version: link:../ui
       '@base-ui/react':
@@ -527,10 +527,10 @@ importers:
 
   packages/api-explorer:
     dependencies:
-      '@agentic-toolkit/auth':
+      '@adh-sdk/auth':
         specifier: workspace:*
         version: link:../auth
-      '@agenticdevelopertoolkit/ui':
+      '@adh-sdk/ui':
         specifier: workspace:*
         version: link:../ui
       lucide-react:
@@ -609,7 +609,7 @@ importers:
 
   packages/auth:
     dependencies:
-      '@agenticdevelopertoolkit/ui':
+      '@adh-sdk/ui':
         specifier: workspace:*
         version: link:../ui
       '@simplewebauthn/browser':
@@ -793,14 +793,14 @@ importers:
 
   packages/controls:
     dependencies:
-      '@agenticdevelopertoolkit/model':
+      '@adh-sdk/model':
         specifier: workspace:*
         version: link:../model
       shiki:
         specifier: ^1.24.0
         version: 1.29.2
     devDependencies:
-      '@agenticdevelopertoolkit/themes':
+      '@adh-sdk/themes':
         specifier: workspace:*
         version: link:../themes
       '@testing-library/jest-dom':
@@ -839,16 +839,16 @@ importers:
 
   packages/crud:
     dependencies:
-      '@agentic-toolkit/api-explorer':
+      '@adh-sdk/api-explorer':
         specifier: workspace:*
         version: link:../api-explorer
-      '@agentic-toolkit/auth':
+      '@adh-sdk/auth':
         specifier: workspace:*
         version: link:../auth
-      '@agentic-toolkit/resource':
+      '@adh-sdk/resource':
         specifier: workspace:*
         version: link:../resource
-      '@agenticdevelopertoolkit/ui':
+      '@adh-sdk/ui':
         specifier: workspace:*
         version: link:../ui
       lucide-react:
@@ -927,13 +927,13 @@ importers:
 
   packages/data:
     dependencies:
-      '@agentic-toolkit/adh-ui':
+      '@adh-sdk/adh-ui':
         specifier: workspace:*
         version: link:../adh-ui
-      '@agentic-toolkit/auth':
+      '@adh-sdk/auth':
         specifier: workspace:*
         version: link:../auth
-      '@agenticdevelopertoolkit/ui':
+      '@adh-sdk/ui':
         specifier: workspace:*
         version: link:../ui
       '@tanstack/react-query':
@@ -1025,7 +1025,7 @@ importers:
 
   packages/editing:
     dependencies:
-      '@agenticdevelopertoolkit/ui':
+      '@adh-sdk/ui':
         specifier: workspace:*
         version: link:../ui
       react:
@@ -1068,31 +1068,31 @@ importers:
 
   packages/features/account:
     dependencies:
-      '@agentic-toolkit/api-explorer':
+      '@adh-sdk/api-explorer':
         specifier: workspace:*
         version: link:../../api-explorer
-      '@agentic-toolkit/auth':
+      '@adh-sdk/auth':
         specifier: workspace:*
         version: link:../../auth
-      '@agentic-toolkit/authentication':
+      '@adh-sdk/authentication':
         specifier: workspace:*
         version: link:../authentication
-      '@agentic-toolkit/crud':
+      '@adh-sdk/crud':
         specifier: workspace:*
         version: link:../../crud
-      '@agentic-toolkit/data':
+      '@adh-sdk/data':
         specifier: workspace:*
         version: link:../../data
-      '@agentic-toolkit/personas':
+      '@adh-sdk/personas':
         specifier: workspace:*
         version: link:../personas
-      '@agentic-toolkit/profile':
+      '@adh-sdk/profile':
         specifier: workspace:*
         version: link:../profile
-      '@agentic-toolkit/resource':
+      '@adh-sdk/resource':
         specifier: workspace:*
         version: link:../../resource
-      '@agenticdevelopertoolkit/ui':
+      '@adh-sdk/ui':
         specifier: workspace:*
         version: link:../../ui
       '@tanstack/react-query':
@@ -1168,28 +1168,28 @@ importers:
 
   packages/features/adh-admin:
     dependencies:
-      '@agentic-toolkit/adh':
+      '@adh-sdk/adh':
         specifier: workspace:*
         version: link:../../adh
-      '@agentic-toolkit/adh-api-types':
+      '@adh-sdk/adh-api-types':
         specifier: workspace:*
         version: link:../../adh-api-types
-      '@agentic-toolkit/adh-ui':
+      '@adh-sdk/adh-ui':
         specifier: workspace:*
         version: link:../../adh-ui
-      '@agentic-toolkit/api-explorer':
+      '@adh-sdk/api-explorer':
         specifier: workspace:*
         version: link:../../api-explorer
-      '@agentic-toolkit/auth':
+      '@adh-sdk/auth':
         specifier: workspace:*
         version: link:../../auth
-      '@agentic-toolkit/data':
+      '@adh-sdk/data':
         specifier: workspace:*
         version: link:../../data
-      '@agentic-toolkit/resource':
+      '@adh-sdk/resource':
         specifier: workspace:*
         version: link:../../resource
-      '@agenticdevelopertoolkit/ui':
+      '@adh-sdk/ui':
         specifier: workspace:*
         version: link:../../ui
       '@tanstack/react-query':
@@ -1265,19 +1265,19 @@ importers:
 
   packages/features/adh-billing:
     dependencies:
-      '@agentic-toolkit/auth':
+      '@adh-sdk/auth':
         specifier: workspace:*
         version: link:../../auth
-      '@agentic-toolkit/data':
+      '@adh-sdk/data':
         specifier: workspace:*
         version: link:../../data
-      '@agentic-toolkit/integrations':
+      '@adh-sdk/integrations':
         specifier: workspace:*
         version: link:../integrations
-      '@agentic-toolkit/resource':
+      '@adh-sdk/resource':
         specifier: workspace:*
         version: link:../../resource
-      '@agenticdevelopertoolkit/ui':
+      '@adh-sdk/ui':
         specifier: workspace:*
         version: link:../../ui
       lucide-react:
@@ -1350,37 +1350,37 @@ importers:
 
   packages/features/adh-ecosystem-panes:
     dependencies:
-      '@agentic-toolkit/adh':
+      '@adh-sdk/adh':
         specifier: workspace:*
         version: link:../../adh
-      '@agentic-toolkit/adh-api-types':
+      '@adh-sdk/adh-api-types':
         specifier: workspace:*
         version: link:../../adh-api-types
-      '@agentic-toolkit/adh-ui':
+      '@adh-sdk/adh-ui':
         specifier: workspace:*
         version: link:../../adh-ui
-      '@agentic-toolkit/api-explorer':
+      '@adh-sdk/api-explorer':
         specifier: workspace:*
         version: link:../../api-explorer
-      '@agentic-toolkit/auth':
+      '@adh-sdk/auth':
         specifier: workspace:*
         version: link:../../auth
-      '@agentic-toolkit/authentication':
+      '@adh-sdk/authentication':
         specifier: workspace:*
         version: link:../authentication
-      '@agentic-toolkit/crud':
+      '@adh-sdk/crud':
         specifier: workspace:*
         version: link:../../crud
-      '@agentic-toolkit/data':
+      '@adh-sdk/data':
         specifier: workspace:*
         version: link:../../data
-      '@agentic-toolkit/ecosystem-config':
+      '@adh-sdk/ecosystem-config':
         specifier: workspace:*
         version: link:../ecosystem-config
-      '@agentic-toolkit/resource':
+      '@adh-sdk/resource':
         specifier: workspace:*
         version: link:../../resource
-      '@agenticdevelopertoolkit/ui':
+      '@adh-sdk/ui':
         specifier: workspace:*
         version: link:../../ui
       '@tanstack/react-query':
@@ -1453,40 +1453,40 @@ importers:
 
   packages/features/adh-products:
     dependencies:
-      '@agentic-toolkit/adh':
+      '@adh-sdk/adh':
         specifier: workspace:*
         version: link:../../adh
-      '@agentic-toolkit/adh-ecosystem-panes':
+      '@adh-sdk/adh-ecosystem-panes':
         specifier: workspace:*
         version: link:../adh-ecosystem-panes
-      '@agentic-toolkit/auth':
+      '@adh-sdk/auth':
         specifier: workspace:*
         version: link:../../auth
-      '@agentic-toolkit/authentication':
+      '@adh-sdk/authentication':
         specifier: workspace:*
         version: link:../authentication
-      '@agentic-toolkit/data':
+      '@adh-sdk/data':
         specifier: workspace:*
         version: link:../../data
-      '@agentic-toolkit/ecosystem-config':
+      '@adh-sdk/ecosystem-config':
         specifier: workspace:*
         version: link:../ecosystem-config
-      '@agentic-toolkit/ecosystems':
+      '@adh-sdk/ecosystems':
         specifier: workspace:*
         version: link:../ecosystems
-      '@agentic-toolkit/games':
+      '@adh-sdk/games':
         specifier: workspace:*
         version: link:../games
-      '@agentic-toolkit/gamification':
+      '@adh-sdk/gamification':
         specifier: workspace:*
         version: link:../gamification
-      '@agentic-toolkit/integrations':
+      '@adh-sdk/integrations':
         specifier: workspace:*
         version: link:../integrations
-      '@agentic-toolkit/resource':
+      '@adh-sdk/resource':
         specifier: workspace:*
         version: link:../../resource
-      '@agenticdevelopertoolkit/ui':
+      '@adh-sdk/ui':
         specifier: workspace:*
         version: link:../../ui
       lucide-react:
@@ -1556,25 +1556,25 @@ importers:
 
   packages/features/adh-registries:
     dependencies:
-      '@agentic-toolkit/adh-registry':
+      '@adh-sdk/adh-registry':
         specifier: workspace:*
         version: link:../../adh-registry
-      '@agentic-toolkit/adh-ui':
+      '@adh-sdk/adh-ui':
         specifier: workspace:*
         version: link:../../adh-ui
-      '@agentic-toolkit/auth':
+      '@adh-sdk/auth':
         specifier: workspace:*
         version: link:../../auth
-      '@agentic-toolkit/data':
+      '@adh-sdk/data':
         specifier: workspace:*
         version: link:../../data
-      '@agentic-toolkit/registry':
+      '@adh-sdk/registry':
         specifier: workspace:*
         version: link:../registry
-      '@agentic-toolkit/resource':
+      '@adh-sdk/resource':
         specifier: workspace:*
         version: link:../../resource
-      '@agenticdevelopertoolkit/ui':
+      '@adh-sdk/ui':
         specifier: workspace:*
         version: link:../../ui
       lucide-react:
@@ -1647,19 +1647,19 @@ importers:
 
   packages/features/authentication:
     dependencies:
-      '@agentic-toolkit/adh-ui':
+      '@adh-sdk/adh-ui':
         specifier: workspace:*
         version: link:../../adh-ui
-      '@agentic-toolkit/auth':
+      '@adh-sdk/auth':
         specifier: workspace:*
         version: link:../../auth
-      '@agentic-toolkit/data':
+      '@adh-sdk/data':
         specifier: workspace:*
         version: link:../../data
-      '@agentic-toolkit/resource':
+      '@adh-sdk/resource':
         specifier: workspace:*
         version: link:../../resource
-      '@agenticdevelopertoolkit/ui':
+      '@adh-sdk/ui':
         specifier: workspace:*
         version: link:../../ui
       '@tanstack/react-query':
@@ -1732,16 +1732,16 @@ importers:
 
   packages/features/bitbag:
     devDependencies:
-      '@agenticdevelopertoolkit/avatar':
+      '@adh-sdk/avatar':
         specifier: workspace:*
         version: link:../../avatar
-      '@agenticdevelopertoolkit/chat':
+      '@adh-sdk/chat':
         specifier: workspace:*
         version: link:../../chat
-      '@agenticdevelopertoolkit/themes':
+      '@adh-sdk/themes':
         specifier: workspace:*
         version: link:../../themes
-      '@agenticdevelopertoolkit/viewport':
+      '@adh-sdk/viewport':
         specifier: workspace:*
         version: link:../../viewport
       '@testing-library/jest-dom':
@@ -1783,10 +1783,10 @@ importers:
 
   packages/features/categories:
     dependencies:
-      '@agentic-toolkit/data':
+      '@adh-sdk/data':
         specifier: workspace:*
         version: link:../../data
-      '@agenticdevelopertoolkit/ui':
+      '@adh-sdk/ui':
         specifier: workspace:*
         version: link:../../ui
       lucide-react:
@@ -1856,16 +1856,16 @@ importers:
 
   packages/features/dashboards:
     dependencies:
-      '@agentic-toolkit/auth':
+      '@adh-sdk/auth':
         specifier: workspace:*
         version: link:../../auth
-      '@agentic-toolkit/data':
+      '@adh-sdk/data':
         specifier: workspace:*
         version: link:../../data
-      '@agentic-toolkit/resource':
+      '@adh-sdk/resource':
         specifier: workspace:*
         version: link:../../resource
-      '@agenticdevelopertoolkit/ui':
+      '@adh-sdk/ui':
         specifier: workspace:*
         version: link:../../ui
       lucide-react:
@@ -1935,19 +1935,19 @@ importers:
 
   packages/features/ecosystem-config:
     dependencies:
-      '@agentic-toolkit/adh-ui':
+      '@adh-sdk/adh-ui':
         specifier: workspace:*
         version: link:../../adh-ui
-      '@agentic-toolkit/auth':
+      '@adh-sdk/auth':
         specifier: workspace:*
         version: link:../../auth
-      '@agentic-toolkit/data':
+      '@adh-sdk/data':
         specifier: workspace:*
         version: link:../../data
-      '@agentic-toolkit/resource':
+      '@adh-sdk/resource':
         specifier: workspace:*
         version: link:../../resource
-      '@agenticdevelopertoolkit/ui':
+      '@adh-sdk/ui':
         specifier: workspace:*
         version: link:../../ui
       '@tanstack/react-query':
@@ -2020,19 +2020,19 @@ importers:
 
   packages/features/ecosystems:
     dependencies:
-      '@agentic-toolkit/adh-ui':
+      '@adh-sdk/adh-ui':
         specifier: workspace:*
         version: link:../../adh-ui
-      '@agentic-toolkit/auth':
+      '@adh-sdk/auth':
         specifier: workspace:*
         version: link:../../auth
-      '@agentic-toolkit/data':
+      '@adh-sdk/data':
         specifier: workspace:*
         version: link:../../data
-      '@agentic-toolkit/resource':
+      '@adh-sdk/resource':
         specifier: workspace:*
         version: link:../../resource
-      '@agenticdevelopertoolkit/ui':
+      '@adh-sdk/ui':
         specifier: workspace:*
         version: link:../../ui
       '@tanstack/react-query':
@@ -2105,19 +2105,19 @@ importers:
 
   packages/features/games:
     dependencies:
-      '@agentic-toolkit/auth':
+      '@adh-sdk/auth':
         specifier: workspace:*
         version: link:../../auth
-      '@agentic-toolkit/data':
+      '@adh-sdk/data':
         specifier: workspace:*
         version: link:../../data
-      '@agentic-toolkit/ecosystems':
+      '@adh-sdk/ecosystems':
         specifier: workspace:*
         version: link:../ecosystems
-      '@agentic-toolkit/resource':
+      '@adh-sdk/resource':
         specifier: workspace:*
         version: link:../../resource
-      '@agenticdevelopertoolkit/ui':
+      '@adh-sdk/ui':
         specifier: workspace:*
         version: link:../../ui
       lucide-react:
@@ -2187,19 +2187,19 @@ importers:
 
   packages/features/gamification:
     dependencies:
-      '@agentic-toolkit/auth':
+      '@adh-sdk/auth':
         specifier: workspace:*
         version: link:../../auth
-      '@agentic-toolkit/data':
+      '@adh-sdk/data':
         specifier: workspace:*
         version: link:../../data
-      '@agentic-toolkit/ecosystems':
+      '@adh-sdk/ecosystems':
         specifier: workspace:*
         version: link:../ecosystems
-      '@agentic-toolkit/resource':
+      '@adh-sdk/resource':
         specifier: workspace:*
         version: link:../../resource
-      '@agenticdevelopertoolkit/ui':
+      '@adh-sdk/ui':
         specifier: workspace:*
         version: link:../../ui
       lucide-react:
@@ -2269,19 +2269,19 @@ importers:
 
   packages/features/integrations:
     dependencies:
-      '@agentic-toolkit/auth':
+      '@adh-sdk/auth':
         specifier: workspace:*
         version: link:../../auth
-      '@agentic-toolkit/crud':
+      '@adh-sdk/crud':
         specifier: workspace:*
         version: link:../../crud
-      '@agentic-toolkit/data':
+      '@adh-sdk/data':
         specifier: workspace:*
         version: link:../../data
-      '@agentic-toolkit/resource':
+      '@adh-sdk/resource':
         specifier: workspace:*
         version: link:../../resource
-      '@agenticdevelopertoolkit/ui':
+      '@adh-sdk/ui':
         specifier: workspace:*
         version: link:../../ui
       class-variance-authority:
@@ -2357,19 +2357,19 @@ importers:
 
   packages/features/knowledgebases:
     dependencies:
-      '@agentic-toolkit/auth':
+      '@adh-sdk/auth':
         specifier: workspace:*
         version: link:../../auth
-      '@agentic-toolkit/crud':
+      '@adh-sdk/crud':
         specifier: workspace:*
         version: link:../../crud
-      '@agentic-toolkit/data':
+      '@adh-sdk/data':
         specifier: workspace:*
         version: link:../../data
-      '@agentic-toolkit/resource':
+      '@adh-sdk/resource':
         specifier: workspace:*
         version: link:../../resource
-      '@agenticdevelopertoolkit/ui':
+      '@adh-sdk/ui':
         specifier: workspace:*
         version: link:../../ui
       lucide-react:
@@ -2439,22 +2439,22 @@ importers:
 
   packages/features/notebook:
     dependencies:
-      '@agentic-toolkit/auth':
+      '@adh-sdk/auth':
         specifier: workspace:*
         version: link:../../auth
-      '@agentic-toolkit/categories':
+      '@adh-sdk/categories':
         specifier: workspace:*
         version: link:../categories
-      '@agentic-toolkit/data':
+      '@adh-sdk/data':
         specifier: workspace:*
         version: link:../../data
-      '@agentic-toolkit/resource':
-        specifier: workspace:*
-        version: link:../../resource
-      '@agenticdevelopertoolkit/markdown':
+      '@adh-sdk/markdown':
         specifier: workspace:*
         version: link:../../markdown
-      '@agenticdevelopertoolkit/ui':
+      '@adh-sdk/resource':
+        specifier: workspace:*
+        version: link:../../resource
+      '@adh-sdk/ui':
         specifier: workspace:*
         version: link:../../ui
       lucide-react:
@@ -2560,31 +2560,31 @@ importers:
 
   packages/features/organizations:
     dependencies:
-      '@agentic-toolkit/adh-ui':
+      '@adh-sdk/adh-ui':
         specifier: workspace:*
         version: link:../../adh-ui
-      '@agentic-toolkit/auth':
+      '@adh-sdk/auth':
         specifier: workspace:*
         version: link:../../auth
-      '@agentic-toolkit/crud':
+      '@adh-sdk/crud':
         specifier: workspace:*
         version: link:../../crud
-      '@agentic-toolkit/data':
+      '@adh-sdk/data':
         specifier: workspace:*
         version: link:../../data
-      '@agentic-toolkit/ecosystem-config':
+      '@adh-sdk/ecosystem-config':
         specifier: workspace:*
         version: link:../ecosystem-config
-      '@agentic-toolkit/profile':
+      '@adh-sdk/profile':
         specifier: workspace:*
         version: link:../profile
-      '@agentic-toolkit/resource':
+      '@adh-sdk/resource':
         specifier: workspace:*
         version: link:../../resource
-      '@agentic-toolkit/teams':
+      '@adh-sdk/teams':
         specifier: workspace:*
         version: link:../teams
-      '@agenticdevelopertoolkit/ui':
+      '@adh-sdk/ui':
         specifier: workspace:*
         version: link:../../ui
       '@tanstack/react-query':
@@ -2657,28 +2657,28 @@ importers:
 
   packages/features/personas:
     dependencies:
-      '@agentic-toolkit/adh-ui':
+      '@adh-sdk/adh-ui':
         specifier: workspace:*
         version: link:../../adh-ui
-      '@agentic-toolkit/auth':
+      '@adh-sdk/auth':
         specifier: workspace:*
         version: link:../../auth
-      '@agentic-toolkit/crud':
+      '@adh-sdk/crud':
         specifier: workspace:*
         version: link:../../crud
-      '@agentic-toolkit/data':
+      '@adh-sdk/data':
         specifier: workspace:*
         version: link:../../data
-      '@agentic-toolkit/persona':
+      '@adh-sdk/persona':
         specifier: workspace:*
         version: link:../../persona
-      '@agentic-toolkit/resource':
+      '@adh-sdk/resource':
         specifier: workspace:*
         version: link:../../resource
-      '@agentic-toolkit/teams':
+      '@adh-sdk/teams':
         specifier: workspace:*
         version: link:../teams
-      '@agenticdevelopertoolkit/ui':
+      '@adh-sdk/ui':
         specifier: workspace:*
         version: link:../../ui
       '@tanstack/react-query':
@@ -2754,13 +2754,13 @@ importers:
 
   packages/features/profile:
     dependencies:
-      '@agentic-toolkit/data':
+      '@adh-sdk/data':
         specifier: workspace:*
         version: link:../../data
-      '@agentic-toolkit/resource':
+      '@adh-sdk/resource':
         specifier: workspace:*
         version: link:../../resource
-      '@agenticdevelopertoolkit/ui':
+      '@adh-sdk/ui':
         specifier: workspace:*
         version: link:../../ui
       '@tanstack/react-query':
@@ -2833,19 +2833,19 @@ importers:
 
   packages/features/projects:
     dependencies:
-      '@agentic-toolkit/auth':
+      '@adh-sdk/auth':
         specifier: workspace:*
         version: link:../../auth
-      '@agentic-toolkit/data':
+      '@adh-sdk/data':
         specifier: workspace:*
         version: link:../../data
-      '@agentic-toolkit/resource':
+      '@adh-sdk/resource':
         specifier: workspace:*
         version: link:../../resource
-      '@agentic-toolkit/teams':
+      '@adh-sdk/teams':
         specifier: workspace:*
         version: link:../teams
-      '@agenticdevelopertoolkit/ui':
+      '@adh-sdk/ui':
         specifier: workspace:*
         version: link:../../ui
       lucide-react:
@@ -2915,13 +2915,13 @@ importers:
 
   packages/features/registry:
     devDependencies:
-      '@agentic-toolkit/auth':
+      '@adh-sdk/auth':
         specifier: workspace:*
         version: link:../../auth
-      '@agenticdevelopertoolkit/registry-profile':
+      '@adh-sdk/registry-profile':
         specifier: workspace:*
         version: link:../../registry-profile
-      '@agenticdevelopertoolkit/registry-types':
+      '@adh-sdk/registry-types':
         specifier: workspace:*
         version: link:../../registry-types
       '@testing-library/jest-dom':
@@ -2963,25 +2963,25 @@ importers:
 
   packages/features/research:
     dependencies:
-      '@agentic-toolkit/auth':
+      '@adh-sdk/auth':
         specifier: workspace:*
         version: link:../../auth
-      '@agentic-toolkit/categories':
+      '@adh-sdk/categories':
         specifier: workspace:*
         version: link:../categories
-      '@agentic-toolkit/crud':
+      '@adh-sdk/crud':
         specifier: workspace:*
         version: link:../../crud
-      '@agentic-toolkit/data':
+      '@adh-sdk/data':
         specifier: workspace:*
         version: link:../../data
-      '@agentic-toolkit/resource':
-        specifier: workspace:*
-        version: link:../../resource
-      '@agenticdevelopertoolkit/markdown':
+      '@adh-sdk/markdown':
         specifier: workspace:*
         version: link:../../markdown
-      '@agenticdevelopertoolkit/ui':
+      '@adh-sdk/resource':
+        specifier: workspace:*
+        version: link:../../resource
+      '@adh-sdk/ui':
         specifier: workspace:*
         version: link:../../ui
       lucide-react:
@@ -3087,19 +3087,19 @@ importers:
 
   packages/features/shipr:
     dependencies:
-      '@agentic-toolkit/auth':
+      '@adh-sdk/auth':
         specifier: workspace:*
         version: link:../../auth
-      '@agentic-toolkit/data':
+      '@adh-sdk/data':
         specifier: workspace:*
         version: link:../../data
-      '@agentic-toolkit/integrations':
+      '@adh-sdk/integrations':
         specifier: workspace:*
         version: link:../integrations
-      '@agentic-toolkit/resource':
+      '@adh-sdk/resource':
         specifier: workspace:*
         version: link:../../resource
-      '@agenticdevelopertoolkit/ui':
+      '@adh-sdk/ui':
         specifier: workspace:*
         version: link:../../ui
       lucide-react:
@@ -3172,19 +3172,19 @@ importers:
 
   packages/features/teams:
     dependencies:
-      '@agentic-toolkit/adh-ui':
+      '@adh-sdk/adh-ui':
         specifier: workspace:*
         version: link:../../adh-ui
-      '@agentic-toolkit/auth':
+      '@adh-sdk/auth':
         specifier: workspace:*
         version: link:../../auth
-      '@agentic-toolkit/data':
+      '@adh-sdk/data':
         specifier: workspace:*
         version: link:../../data
-      '@agentic-toolkit/resource':
+      '@adh-sdk/resource':
         specifier: workspace:*
         version: link:../../resource
-      '@agenticdevelopertoolkit/ui':
+      '@adh-sdk/ui':
         specifier: workspace:*
         version: link:../../ui
       lucide-react:
@@ -3254,7 +3254,7 @@ importers:
 
   packages/landing:
     dependencies:
-      '@agenticdevelopertoolkit/textlens':
+      '@adh-sdk/textlens':
         specifier: workspace:*
         version: link:../textlens
       react:
@@ -3294,7 +3294,7 @@ importers:
 
   packages/markdown:
     dependencies:
-      '@agenticdevelopertoolkit/ui':
+      '@adh-sdk/ui':
         specifier: workspace:*
         version: link:../ui
       '@shikijs/rehype':
@@ -3373,13 +3373,13 @@ importers:
 
   packages/messaging:
     dependencies:
-      '@agentic-toolkit/auth':
+      '@adh-sdk/auth':
         specifier: workspace:*
         version: link:../auth
-      '@agentic-toolkit/data':
+      '@adh-sdk/data':
         specifier: workspace:*
         version: link:../data
-      '@agenticdevelopertoolkit/ui':
+      '@adh-sdk/ui':
         specifier: workspace:*
         version: link:../ui
       lucide-react:
@@ -3495,16 +3495,16 @@ importers:
 
   packages/persona:
     devDependencies:
-      '@agenticdevelopertoolkit/avatar':
+      '@adh-sdk/avatar':
         specifier: workspace:*
         version: link:../avatar
-      '@agenticdevelopertoolkit/chat':
+      '@adh-sdk/chat':
         specifier: workspace:*
         version: link:../chat
-      '@agenticdevelopertoolkit/themes':
+      '@adh-sdk/themes':
         specifier: workspace:*
         version: link:../themes
-      '@agenticdevelopertoolkit/viewport':
+      '@adh-sdk/viewport':
         specifier: workspace:*
         version: link:../viewport
       '@types/react':
@@ -3570,7 +3570,7 @@ importers:
 
   packages/registry-profile:
     devDependencies:
-      '@agenticdevelopertoolkit/registry-types':
+      '@adh-sdk/registry-types':
         specifier: workspace:*
         version: link:../registry-types
       '@testing-library/jest-dom':
@@ -3630,13 +3630,13 @@ importers:
 
   packages/resource:
     dependencies:
-      '@agentic-toolkit/auth':
+      '@adh-sdk/auth':
         specifier: workspace:*
         version: link:../auth
-      '@agentic-toolkit/data':
+      '@adh-sdk/data':
         specifier: workspace:*
         version: link:../data
-      '@agenticdevelopertoolkit/ui':
+      '@adh-sdk/ui':
         specifier: workspace:*
         version: link:../ui
       '@base-ui/react':
@@ -3706,14 +3706,14 @@ importers:
 
   packages/search:
     dependencies:
-      '@agenticdevelopertoolkit/markdown':
+      '@adh-sdk/markdown':
         specifier: workspace:*
         version: link:../markdown
-      '@agenticdevelopertoolkit/ui':
+      '@adh-sdk/ui':
         specifier: workspace:*
         version: link:../ui
     devDependencies:
-      '@agenticdevelopertoolkit/themes':
+      '@adh-sdk/themes':
         specifier: workspace:*
         version: link:../themes
       '@tailwindcss/cli':
@@ -3752,32 +3752,32 @@ importers:
 
   packages/site-template:
     dependencies:
-      '@agentic-toolkit/bitbag':
-        specifier: workspace:*
-        version: link:../features/bitbag
-      '@agenticdevelopertoolkit/avatar':
+      '@adh-sdk/avatar':
         specifier: workspace:*
         version: link:../avatar
-      '@agenticdevelopertoolkit/chat':
+      '@adh-sdk/bitbag':
+        specifier: workspace:*
+        version: link:../features/bitbag
+      '@adh-sdk/chat':
         specifier: workspace:*
         version: link:../chat
-      '@agenticdevelopertoolkit/chrome':
+      '@adh-sdk/chrome':
         specifier: workspace:*
         version: link:../chrome
-      '@agenticdevelopertoolkit/landing':
+      '@adh-sdk/landing':
         specifier: workspace:*
         version: link:../landing
-      '@agenticdevelopertoolkit/themes':
+      '@adh-sdk/themes':
         specifier: workspace:*
         version: link:../themes
-      '@agenticdevelopertoolkit/viewport':
+      '@adh-sdk/viewport':
         specifier: workspace:*
         version: link:../viewport
       gsap:
         specifier: ^3.13.0
         version: 3.15.0
     devDependencies:
-      '@agentic-toolkit/next-env':
+      '@adh-sdk/next-env':
         specifier: workspace:*
         version: link:../next-env
       '@testing-library/jest-dom':
@@ -3822,7 +3822,7 @@ importers:
 
   packages/status-server:
     dependencies:
-      '@agentic-toolkit/deploy-platform':
+      '@adh-sdk/deploy-platform':
         specifier: workspace:*
         version: link:../deploy-platform
       '@modelcontextprotocol/sdk':
@@ -3874,20 +3874,20 @@ importers:
 
   packages/status-web:
     dependencies:
-      '@agentic-toolkit/deploy-platform':
+      '@adh-sdk/deploy-platform':
         specifier: workspace:*
         version: link:../deploy-platform
-      '@agenticdevelopertoolkit/themes':
+      '@adh-sdk/themes':
         specifier: workspace:*
         version: link:../themes
-      '@agenticdevelopertoolkit/ui':
+      '@adh-sdk/ui':
         specifier: workspace:*
         version: link:../ui
       lucide-react:
         specifier: ^1.16.0
         version: 1.34.0(react@19.2.8)
     devDependencies:
-      '@agentic-toolkit/status-server':
+      '@adh-sdk/status-server':
         specifier: workspace:*
         version: link:../status-server
       '@base-ui/react':

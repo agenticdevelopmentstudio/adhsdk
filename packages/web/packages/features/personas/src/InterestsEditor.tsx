@@ -2,17 +2,17 @@
 
 import { useCallback, useState } from "react";
 import { Trash2 } from "lucide-react";
-import { Field, FieldGroup, ButtonBar } from "@agenticdevelopertoolkit/ui/blocks";
-import { Input } from "@agenticdevelopertoolkit/ui/components/input";
-import { Textarea } from "@agenticdevelopertoolkit/ui/components/textarea";
-import { Button } from "@agenticdevelopertoolkit/ui/components/button";
-import { ErrorText } from "@agenticdevelopertoolkit/ui/components/error-text";
-import { errMsg, httpStatus, useResourceList } from "@agentic-toolkit/data";
+import { Field, FieldGroup, ButtonBar } from "@adh-sdk/ui/blocks";
+import { Input } from "@adh-sdk/ui/components/input";
+import { Textarea } from "@adh-sdk/ui/components/textarea";
+import { Button } from "@adh-sdk/ui/components/button";
+import { ErrorText } from "@adh-sdk/ui/components/error-text";
+import { errMsg, httpStatus, useResourceList } from "@adh-sdk/data";
 import { specialInterestsCacheKey } from "./interests-cache";
 import {
   specialInterestsApi,
   type SpecialInterestRow,
-} from "@agentic-toolkit/data/personas";
+} from "@adh-sdk/data/personas";
 
 // A persona's one or two DEEP interests: three narrowing levels plus the author's own opinions.
 //

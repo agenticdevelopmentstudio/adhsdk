@@ -1,7 +1,7 @@
 ---
 id: 98a0f3de-1489-465d-b1aa-017f4505d05d
 title: Chat Coordinator Runtime
-domain: agenticdevelopertoolkit://recipes/chat-coordinator-runtime
+domain: adhsdk://recipes/chat-coordinator-runtime
 type: ingredient
 version: 1.0.1
 status: review
@@ -22,7 +22,7 @@ tags:
 - runtime
 depends-on: []
 related:
-- agenticdevelopertoolkit://ingredients/chat/persona-chat-coordinator
+- adhsdk://ingredients/chat/persona-chat-coordinator
 references: []
 approved-by: ''
 approved-date: ''

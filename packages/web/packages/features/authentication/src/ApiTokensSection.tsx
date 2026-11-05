@@ -4,14 +4,14 @@ import { useState } from "react";
 import { KeyRound } from "lucide-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
-import { tokensApi, type ApiToken, type ApiTokenCreated } from "@agentic-toolkit/data/security";
-import { Button } from "@agenticdevelopertoolkit/ui/components/button";
-import { Checkbox } from "@agenticdevelopertoolkit/ui/components/checkbox";
-import { Input } from "@agenticdevelopertoolkit/ui/components/input";
-import { Label } from "@agenticdevelopertoolkit/ui/components/label";
-import { ErrorText } from "@agenticdevelopertoolkit/ui/components/error-text";
-import type { TopicDetailItem, TopicLevel } from "@agenticdevelopertoolkit/ui/blocks";
-import { CreateResourceDialog, useStackLevel, type TopicLeaf } from "@agentic-toolkit/resource";
+import { tokensApi, type ApiToken, type ApiTokenCreated } from "@adh-sdk/data/security";
+import { Button } from "@adh-sdk/ui/components/button";
+import { Checkbox } from "@adh-sdk/ui/components/checkbox";
+import { Input } from "@adh-sdk/ui/components/input";
+import { Label } from "@adh-sdk/ui/components/label";
+import { ErrorText } from "@adh-sdk/ui/components/error-text";
+import type { TopicDetailItem, TopicLevel } from "@adh-sdk/ui/blocks";
+import { CreateResourceDialog, useStackLevel, type TopicLeaf } from "@adh-sdk/resource";
 
 import {
   isMissingToken,

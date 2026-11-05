@@ -1,7 +1,7 @@
 ---
 id: 0fe9833b-2a5c-47d5-a455-87e00d3797cf
 title: DefaultDocLink
-domain: agenticdevelopertoolkit://recipes/doc-link
+domain: adhsdk://recipes/doc-link
 type: ingredient
 version: 1.1.1
 status: review
@@ -22,8 +22,8 @@ tags:
 - injection
 depends-on: []
 related:
-- agenticdevelopertoolkit://recipes/doc-breadcrumbs
-- agenticdevelopertoolkit://recipes/doc-nav
+- adhsdk://recipes/doc-breadcrumbs
+- adhsdk://recipes/doc-nav
 references: []
 approved-by: ''
 approved-date: ''

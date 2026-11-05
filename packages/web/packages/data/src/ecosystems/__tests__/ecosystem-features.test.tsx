@@ -19,7 +19,7 @@ import {
   type CatalogFeature,
 } from "../ecosystem-features";
 import { authedRequest, authedJson } from "../../http";
-import { AuthHttpError } from "@agentic-toolkit/auth/client";
+import { AuthHttpError } from "@adh-sdk/auth/client";
 
 // Notify observers synchronously — react-query's default scheduler batches into a macrotask,
 // and these tests read mutation state right after `act`, not through a `waitFor`.

@@ -44,8 +44,8 @@ import { describe, it, expect } from 'vitest'
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { dirname, relative, resolve } from 'node:path'
-import { themes } from '@agenticdevelopertoolkit/themes/manifest'
-import { THEME_FONT_PRELOADS } from '@agenticdevelopertoolkit/themes/fonts'
+import { themes } from '@adh-sdk/themes/manifest'
+import { THEME_FONT_PRELOADS } from '@adh-sdk/themes/fonts'
 import { DEFAULT_ADH_THEME } from '../themes/adh-themes'
 
 /** The six tiers a landing page distinguishes. Adding a seventh means adding it here. */
@@ -143,7 +143,7 @@ function workspaceRoot(): string {
  * toolkit is checked out on its own.
  *
  * This repository is a submodule with more than one host, and it is CI'd twice: adh's
- * `ci.yml` runs these very suites from `frontend/src/external/agentictoolkit/packages/web`
+ * `ci.yml` runs these very suites from `frontend/src/external/adhsdk/packages/web`
  * (the "Toolkit unit tests" step), where frontend/src is right there; the toolkit's own
  * `deployment/run-local-ci` checks this repo out ALONE, where it does not exist at any depth. So a
  * walk-up that throws when the marker is missing — which is what this was — turns the
@@ -161,7 +161,7 @@ function workspaceRoot(): string {
 /**
  * The marker is the sites workspace's OWN manifest, identified by the `-websites` SUFFIX of
  * its name. It was `next-config-base.mjs` until that file was split into
- * `@agentic-toolkit/adh-next-config` and deleted — at which point this walk returned null in
+ * `@adh-sdk/adh-next-config` and deleted — at which point this walk returned null in
  * an adh checkout too, so SITES_SRC was null everywhere and the scale check self-skipped
  * GREEN in the one repository it is about. A sentinel that can be deleted takes the test
  * with it silently. The workspace root every site installs from cannot go without the fleet
@@ -202,7 +202,7 @@ const SITES_SRC = sitesWorkspaceRoot()
  * The themes package's `src/fonts`, reached through this package's own dependency link.
  *
  * Neither a counted hop nor an upward walk survives here. A counted hop is what broke
- * first: the `../../../../external/agentictoolkit/...` written when this file lived in
+ * first: the `../../../../external/adhsdk/...` written when this file lived in
  * adh's old app tier still RESOLVED after the package moved into the submodule, to a
  * doubled path that exists nowhere, so the assertion below failed on a bookkeeping error
  * rather than on the thing it guards. The upward walk that replaced it then broke in turn
@@ -214,11 +214,11 @@ const SITES_SRC = sitesWorkspaceRoot()
 function themeFontsDir(): string {
   const dir = resolve(
     dirname(fileURLToPath(import.meta.url)),
-    '../../node_modules/@agenticdevelopertoolkit/themes/src/fonts',
+    '../../node_modules/@adh-sdk/themes/src/fonts',
   )
   if (!existsSync(resolve(dir, 'metrics.json'))) {
     throw new Error(
-      `the @agenticdevelopertoolkit/themes package is not linked into this one: ${dir} ` +
+      `the @adh-sdk/themes package is not linked into this one: ${dir} ` +
         `has no metrics.json. Check the dependency in package.json and run pnpm install.`,
     )
   }
@@ -234,7 +234,7 @@ function themeFontsDir(): string {
  * — so without the rule a single offender is reported twice and a BUILT copy gets policed
  * as if it were source.
  *
- * The agentictoolkit submodule is deliberately NOT skipped when scanning frontend/src. It
+ * The adhsdk submodule is deliberately NOT skipped when scanning frontend/src. It
  * is another repository, but it is where this scale and its consumers now live
  * (`packages/web/packages/adh`, and the themes package that defines the tokens), so
  * excluding it would make the fallback scan below pass on two thirds less than it thinks.

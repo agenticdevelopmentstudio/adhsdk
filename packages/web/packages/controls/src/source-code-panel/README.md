@@ -1,4 +1,4 @@
-# `@agenticdevelopertoolkit/controls/source-code-panel`
+# `@adh-sdk/controls/source-code-panel`
 
 A React panel that renders prettified source code with Shiki (the
 TextMate-grammar engine VS Code uses). Thin wrapper — Shiki does the
@@ -15,8 +15,8 @@ to a one-liner.
 ## Usage
 
 ```tsx
-import { SourceCodePanel } from '@agenticdevelopertoolkit/controls/source-code-panel'
-import '@agenticdevelopertoolkit/controls/source-code-panel/styles.css'
+import { SourceCodePanel } from '@adh-sdk/controls/source-code-panel'
+import '@adh-sdk/controls/source-code-panel/styles.css'
 
 <SourceCodePanel
   filename="example.tsx"
@@ -45,7 +45,7 @@ import '@agenticdevelopertoolkit/controls/source-code-panel/styles.css'
 ## Headless
 
 ```tsx
-import { useSourceCode } from '@agenticdevelopertoolkit/controls/source-code-panel'
+import { useSourceCode } from '@adh-sdk/controls/source-code-panel'
 
 const { html, loading, error } = useSourceCode({ code, lang: 'json', theme: 'github-dark' })
 ```

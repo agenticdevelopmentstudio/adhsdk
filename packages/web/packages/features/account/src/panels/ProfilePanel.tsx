@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { AuthHttpError } from "@agentic-toolkit/auth";
+import { AuthHttpError } from "@adh-sdk/auth";
 
 import {
   checkSlugAvailable,
@@ -19,21 +19,21 @@ import {
   addressesKey,
   PRIVACY_KEY,
   type PrivacyGrant,
-} from "@agentic-toolkit/data/profile";
-import { slugify, validateSlug } from "@agenticdevelopertoolkit/ui/lib/slug";
+} from "@adh-sdk/data/profile";
+import { slugify, validateSlug } from "@adh-sdk/ui/lib/slug";
 import {
   PrivacyLevelSelect,
   PRIVACY_WIRE_VALUE,
   PRIVACY_LEVEL_FROM_WIRE,
   type PrivacyLevel,
-} from "@agenticdevelopertoolkit/ui/components/privacy-level-select";
-import { DetailsPane, SettingsBody, type DetailsSection } from "@agentic-toolkit/resource";
-import { Card, CardContent } from "@agenticdevelopertoolkit/ui/components/card";
-import { Input } from "@agenticdevelopertoolkit/ui/components/input";
-import { Label } from "@agenticdevelopertoolkit/ui/components/label";
-import { ErrorText } from "@agenticdevelopertoolkit/ui/components/error-text";
-import { UserCard, UserCardSkeleton, type UserCardDto } from "@agenticdevelopertoolkit/ui/blocks";
-import { DetailSection } from "@agentic-toolkit/resource";
+} from "@adh-sdk/ui/components/privacy-level-select";
+import { DetailsPane, SettingsBody, type DetailsSection } from "@adh-sdk/resource";
+import { Card, CardContent } from "@adh-sdk/ui/components/card";
+import { Input } from "@adh-sdk/ui/components/input";
+import { Label } from "@adh-sdk/ui/components/label";
+import { ErrorText } from "@adh-sdk/ui/components/error-text";
+import { UserCard, UserCardSkeleton, type UserCardDto } from "@adh-sdk/ui/blocks";
+import { DetailSection } from "@adh-sdk/resource";
 import { AvatarSection } from "./profile/AvatarSection";
 
 // ── Draft type ─────────────────────────────────────────────────────────────────
@@ -52,7 +52,7 @@ export interface ProfilePanelProps {
    *  Injected rather than imported: this package is MECHANISM tier and must never import
    *  an `adh*`-scoped VOCABULARY package (the reserved list is `reservedWorkspaceSlugs()`
    *  in adh's `packages/adh/src/site/reservedSlugs.ts`), so the host binds its own set here
-   *  — the same seam `@agenticdevelopertoolkit/ui/lib/slug`'s `validateSlug` already documents via
+   *  — the same seam `@adh-sdk/ui/lib/slug`'s `validateSlug` already documents via
    *  its own `reserved` parameter.
    *
    *  REQUIRED, and deliberately not optional. Every host has a URL namespace to protect,

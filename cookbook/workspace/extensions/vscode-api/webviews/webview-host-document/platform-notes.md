@@ -26,7 +26,7 @@
   `WebviewHostDocument.html(wrapping:initialState:)` ("building the host
   document" above) and `messageHandlerName` ("the message channel name"
   above) live in
-  `packages/apple/AgenticToolkit/macOS/Features/Extensions/Webview/WebviewPanelViewController.swift`,
+  `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/Webview/WebviewPanelViewController.swift`,
   which is macOS/AppKit-only in this repository today; there is no
   iOS/UIKit counterpart under this package. "The head-location search"
   above is `headStartTagEnd(in:)`; "escaping a value for script-element

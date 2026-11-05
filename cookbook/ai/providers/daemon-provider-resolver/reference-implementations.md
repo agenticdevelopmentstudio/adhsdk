@@ -1,5 +1,5 @@
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/AIPluginKit/DaemonProviderResolver.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/AIPluginKit/DaemonProviderResolver.swift` |
 

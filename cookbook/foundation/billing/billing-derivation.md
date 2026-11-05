@@ -1,7 +1,7 @@
 ---
 id: BC417768-9933-49B1-B0BA-4BF537167805
 title: "Billing Derivation"
-domain: adtoolkit://cookbook/foundation/billing/billing-derivation
+domain: adhsdk://cookbook/foundation/billing/billing-derivation
 type: ingredient
 version: 1.0.0
 status: review
@@ -21,9 +21,9 @@ tags:
   - derivation
 depends-on: []
 related:
-  - adtoolkit://cookbook/foundation/billing/billing-activity-cache
-  - adtoolkit://cookbook/foundation/billing/billing-rollup
-  - adtoolkit://cookbook/foundation/billing/billing-store
+  - adhsdk://cookbook/foundation/billing/billing-activity-cache
+  - adhsdk://cookbook/foundation/billing/billing-rollup
+  - adhsdk://cookbook/foundation/billing/billing-store
 references: []
 approved-by: ""
 approved-date: ""
@@ -137,7 +137,7 @@ Not applicable: this code makes no log calls.
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/Core/Billing/BillingDerivation.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Billing/BillingDerivation.swift` |
 
 ## Design Decisions
 

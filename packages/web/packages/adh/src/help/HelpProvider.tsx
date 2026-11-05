@@ -11,7 +11,7 @@ import { findTopicPath, type HelpTopicId } from './topics'
 // own tsup entry); the consumer's bundler then resolves + code-splits it. Rendered
 // only while `isOpen` (below), which is false during SSR, so it never server-renders.
 const HelpWindow = dynamic(() =>
-  import('@agentic-toolkit/adh/help/HelpWindow').then((m) => m.HelpWindow),
+  import('@adh-sdk/adh/help/HelpWindow').then((m) => m.HelpWindow),
 )
 
 export interface HelpContextValue {

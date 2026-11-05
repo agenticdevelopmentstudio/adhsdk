@@ -1,5 +1,5 @@
 {
-  "name": "agenticdevelopertoolkit-demo",
+  "name": "adhsdk-demo",
   "private": true,
   "version": "0.0.0",
   "scripts": {
@@ -10,8 +10,8 @@
     "start": "next start"
   },
   "dependencies": {
-    "@agenticdevelopertoolkit/chat": "file:../../packages/web/packages/chat",
-    "@agenticdevelopertoolkit/themes": "file:../../packages/web/packages/themes",
+    "@adh-sdk/chat": "file:../../packages/web/packages/chat",
+    "@adh-sdk/themes": "file:../../packages/web/packages/themes",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "lucide-react": "^1.17.0",

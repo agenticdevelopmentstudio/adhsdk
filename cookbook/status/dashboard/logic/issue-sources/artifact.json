@@ -3,7 +3,7 @@
   "meta": {
     "id": "2d763e2e-ef33-4d49-957e-6b8ced23218e",
     "title": "Issue Sources",
-    "domain": "adtoolkit://cookbook/status/dashboard/logic/issue-sources",
+    "domain": "adhsdk://cookbook/status/dashboard/logic/issue-sources",
     "type": "ingredient",
     "version": "1.1.0",
     "status": "review",
@@ -21,9 +21,9 @@
     "tags": [],
     "depends-on": [],
     "related": [
-      "adtoolkit://cookbook/status/dashboard/state/source-filter",
-      "adtoolkit://cookbook/status/dashboard/logic/board-types",
-      "adtoolkit://cookbook/status/dashboard/logic/endpoint-kinds"
+      "adhsdk://cookbook/status/dashboard/state/source-filter",
+      "adhsdk://cookbook/status/dashboard/logic/board-types",
+      "adhsdk://cookbook/status/dashboard/logic/endpoint-kinds"
     ],
     "references": [],
     "approved-by": "",

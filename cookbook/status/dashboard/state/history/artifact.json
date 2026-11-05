@@ -3,7 +3,7 @@
   "meta": {
     "id": "3bb63ddd-6c9a-41c1-a906-6c8542cb4e5c",
     "title": "Health Check History",
-    "domain": "adtoolkit://cookbook/status/dashboard/state/history",
+    "domain": "adhsdk://cookbook/status/dashboard/state/history",
     "type": "ingredient",
     "version": "1.1.1",
     "status": "review",
@@ -20,10 +20,10 @@
     ],
     "tags": [],
     "depends-on": [
-      "adtoolkit://cookbook/status/dashboard/api"
+      "adhsdk://cookbook/status/dashboard/api"
     ],
     "related": [
-      "adtoolkit://cookbook/status/dashboard/state/activity-history"
+      "adhsdk://cookbook/status/dashboard/state/activity-history"
     ],
     "references": [],
     "approved-by": "",

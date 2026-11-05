@@ -1,7 +1,7 @@
 ---
 id: 82524881-6da8-42fe-85a9-388651ee085d
 title: "Status Server Stores"
-domain: adtoolkit://cookbook/status/service/storage/stores
+domain: adhsdk://cookbook/status/service/storage/stores
 type: ingredient
 version: 1.0.2
 status: review
@@ -27,34 +27,34 @@ depends-on:
   - agenticdevelopercookbook://guidelines/implementing/data/foreign-keys
   - agenticdevelopercookbook://guidelines/implementing/security/sensitive-data
 related:
-  - adtoolkit://cookbook/status/service/storage/libsql
-  - adtoolkit://cookbook/status/service/storage/ports
-  - adtoolkit://cookbook/status/service/auth
+  - adhsdk://cookbook/status/service/storage/libsql
+  - adhsdk://cookbook/status/service/storage/ports
+  - adhsdk://cookbook/status/service/auth
 references:
-  - packages/web/packages/status-server/src/libsql/stores/auth-store.ts (agenticdevelopertoolkit)
-  - packages/web/packages/status-server/src/libsql/stores/token-store.ts (agenticdevelopertoolkit)
-  - packages/web/packages/status-server/src/libsql/stores/device-store.ts (agenticdevelopertoolkit)
-  - packages/web/packages/status-server/src/libsql/stores/health-store.ts (agenticdevelopertoolkit)
-  - packages/web/packages/status-server/src/libsql/stores/history-store.ts (agenticdevelopertoolkit)
-  - packages/web/packages/status-server/src/libsql/stores/issue-store.ts (agenticdevelopertoolkit)
-  - packages/web/packages/status-server/src/libsql/stores/observation-store.ts (agenticdevelopertoolkit)
-  - packages/web/packages/status-server/src/libsql/stores/owned-deploys.ts (agenticdevelopertoolkit)
-  - packages/web/packages/status-server/src/libsql/stores/peer-store.ts (agenticdevelopertoolkit)
-  - packages/web/packages/status-server/src/libsql/stores/deploy-store.ts (agenticdevelopertoolkit)
-  - packages/web/packages/status-server/src/libsql/stores/board-store.ts (agenticdevelopertoolkit)
-  - packages/web/packages/status-server/src/libsql/stores/config-store.ts (agenticdevelopertoolkit)
-  - packages/web/packages/status-server/src/libsql/stores/maintenance-store.ts (agenticdevelopertoolkit)
-  - packages/web/packages/status-server/src/libsql/stores/telemetry-store.ts (agenticdevelopertoolkit)
-  - packages/web/packages/status-server/src/libsql/index.ts (agenticdevelopertoolkit)
-  - packages/web/packages/status-server/src/storage/ports.ts (agenticdevelopertoolkit)
-  - packages/web/packages/status-server/src/monitor/issue-sources.ts (agenticdevelopertoolkit)
-  - packages/web/packages/status-server/src/monitor/deploy-status.ts (agenticdevelopertoolkit)
-  - packages/web/packages/status-server/test/last-admin-guard.int.test.ts (agenticdevelopertoolkit)
-  - packages/web/packages/status-server/test/upsert-deployments.test.ts (agenticdevelopertoolkit)
-  - packages/web/packages/status-server/test/deploy-upsert-guard.test.ts (agenticdevelopertoolkit)
-  - packages/web/packages/status-server/test/telemetry-errors-store.int.test.ts (agenticdevelopertoolkit)
-  - packages/web/packages/status-server/test/device-flow.int.test.ts (agenticdevelopertoolkit)
-  - packages/web/packages/status-server/test/site-delete-purge.int.test.ts (agenticdevelopertoolkit)
+  - packages/web/packages/status-server/src/libsql/stores/auth-store.ts (adhsdk)
+  - packages/web/packages/status-server/src/libsql/stores/token-store.ts (adhsdk)
+  - packages/web/packages/status-server/src/libsql/stores/device-store.ts (adhsdk)
+  - packages/web/packages/status-server/src/libsql/stores/health-store.ts (adhsdk)
+  - packages/web/packages/status-server/src/libsql/stores/history-store.ts (adhsdk)
+  - packages/web/packages/status-server/src/libsql/stores/issue-store.ts (adhsdk)
+  - packages/web/packages/status-server/src/libsql/stores/observation-store.ts (adhsdk)
+  - packages/web/packages/status-server/src/libsql/stores/owned-deploys.ts (adhsdk)
+  - packages/web/packages/status-server/src/libsql/stores/peer-store.ts (adhsdk)
+  - packages/web/packages/status-server/src/libsql/stores/deploy-store.ts (adhsdk)
+  - packages/web/packages/status-server/src/libsql/stores/board-store.ts (adhsdk)
+  - packages/web/packages/status-server/src/libsql/stores/config-store.ts (adhsdk)
+  - packages/web/packages/status-server/src/libsql/stores/maintenance-store.ts (adhsdk)
+  - packages/web/packages/status-server/src/libsql/stores/telemetry-store.ts (adhsdk)
+  - packages/web/packages/status-server/src/libsql/index.ts (adhsdk)
+  - packages/web/packages/status-server/src/storage/ports.ts (adhsdk)
+  - packages/web/packages/status-server/src/monitor/issue-sources.ts (adhsdk)
+  - packages/web/packages/status-server/src/monitor/deploy-status.ts (adhsdk)
+  - packages/web/packages/status-server/test/last-admin-guard.int.test.ts (adhsdk)
+  - packages/web/packages/status-server/test/upsert-deployments.test.ts (adhsdk)
+  - packages/web/packages/status-server/test/deploy-upsert-guard.test.ts (adhsdk)
+  - packages/web/packages/status-server/test/telemetry-errors-store.int.test.ts (adhsdk)
+  - packages/web/packages/status-server/test/device-flow.int.test.ts (adhsdk)
+  - packages/web/packages/status-server/test/site-delete-purge.int.test.ts (adhsdk)
 approved-by: ""
 approved-date: ""
 ---

@@ -11,7 +11,7 @@ export const paneStyle: React.CSSProperties = {
 };
 
 // The pane heading treatment moved to the shared display micro-heading:
-// use `sectionLabelClass` from @agenticdevelopertoolkit/ui/components/section-label
+// use `sectionLabelClass` from @adh-sdk/ui/components/section-label
 // (e.g. <h4 className={sectionLabelClass}>) instead of a local style.
 
 /** Shared style for incident rows. */

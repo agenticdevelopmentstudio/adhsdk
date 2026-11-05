@@ -1,13 +1,13 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import type { TopicLevel } from '@agenticdevelopertoolkit/ui/blocks'
-import { HierarchicalDetailView } from '@agenticdevelopertoolkit/ui/blocks'
+import type { TopicLevel } from '@adh-sdk/ui/blocks'
+import { HierarchicalDetailView } from '@adh-sdk/ui/blocks'
 // Package path, not '../themes/useThemeEditor': the editor state is a stateful module and
-// `@agentic-toolkit/adh/themes` is listed `external`, so it stays one shared copy instead of
+// `@adh-sdk/adh/themes` is listed `external`, so it stays one shared copy instead of
 // being inlined into this entry — SiteThemeBranch takes its `ThemeEditorApi` type from the
 // same specifier.
-import { useThemeEditor } from '@agentic-toolkit/adh/themes'
+import { useThemeEditor } from '@adh-sdk/adh/themes'
 import { useSiteThemeBranch } from './SiteThemeBranch'
 import type { ThemeAreasLoader, ThemeAreasSurface } from './seams'
 

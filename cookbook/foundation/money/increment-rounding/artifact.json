@@ -3,7 +3,7 @@
   "meta": {
     "id": "E846A572-E09A-4123-A6BF-4766A8460154",
     "title": "Increment Rounding",
-    "domain": "adtoolkit://cookbook/foundation/money/increment-rounding",
+    "domain": "adhsdk://cookbook/foundation/money/increment-rounding",
     "type": "ingredient",
     "version": "1.0.0",
     "status": "review",
@@ -26,7 +26,7 @@
     ],
     "depends-on": [],
     "related": [
-      "adtoolkit://cookbook/foundation/money"
+      "adhsdk://cookbook/foundation/money"
     ],
     "references": [],
     "approved-by": "",

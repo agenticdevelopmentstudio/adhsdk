@@ -1,7 +1,7 @@
 ---
 id: 267CDB61-52E4-440C-BFA2-799D8E9E12DC
 title: "Edit Deferred Value"
-domain: adtoolkit://cookbook/foundation/editing/edit-deferred-value
+domain: adhsdk://cookbook/foundation/editing/edit-deferred-value
 type: ingredient
 version: 1.0.0
 status: review
@@ -125,7 +125,7 @@ Not applicable: The holder calls no logging API.
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/Core/Editing/EditDeferredValue.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Editing/EditDeferredValue.swift` |
 
 ## Design Decisions
 
@@ -144,7 +144,7 @@ Not applicable: The holder calls no logging API.
 | [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
 | [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
 
-`separation-of-concerns` passes because the type only decides when a reload may be applied; what a reload contains and how it is applied belong to the table. `unit-test-coverage` passes because `AgenticToolkitCoreTests/Editing/EditDeferredValueTests.swift` covers an offer with no edit applying at once, offers during an edit with only the newest released, a second end releasing nothing, and an edit with no reload.
+`separation-of-concerns` passes because the type only decides when a reload may be applied; what a reload contains and how it is applied belong to the table. `unit-test-coverage` passes because `AgenticDeveloperHubSDKCoreTests/Editing/EditDeferredValueTests.swift` covers an offer with no edit applying at once, offers during an edit with only the newest released, a second end releasing nothing, and an edit with no reload.
 
 ## Change History
 

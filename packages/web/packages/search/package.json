@@ -1,7 +1,7 @@
 {
-  "name": "@agenticdevelopertoolkit/search",
+  "name": "@adh-sdk/search",
   "version": "0.1.0",
-  "description": "Reusable, configurable document-search view for the agenticdevelopertoolkit. Two seams: a per-document-type result+preview renderer registry (markdown today), and an injected search SCOPE/source (base URL + endpoint paths + query-param mapping). Self-contained: ships its own compiled Tailwind stylesheet so marketing apps that do not scan @agenticdevelopertoolkit/ui still get the utilities.",
+  "description": "Reusable, configurable document-search view for the adhsdk. Two seams: a per-document-type result+preview renderer registry (markdown today), and an injected search SCOPE/source (base URL + endpoint paths + query-param mapping). Self-contained: ships its own compiled Tailwind stylesheet so marketing apps that do not scan @adh-sdk/ui still get the utilities.",
   "license": "Apache-2.0",
   "type": "module",
   "main": "./dist/index.js",
@@ -9,11 +9,11 @@
   "sideEffects": [
     "**/*.css"
   ],
-  "comment:files": "`dist` carries the JS + the COMPILED `dist/styles.css` (built by `build:css` via the Tailwind CLI). Unlike @agenticdevelopertoolkit/markdown/ui/themes \u2014 which ship hand-written src CSS \u2014 this package's `./styles` is a Tailwind BUILD over its own components AND the @agenticdevelopertoolkit/ui components it composes, so a marketing app (which deliberately does not @source node_modules/@agenticdevelopertoolkit/ui) still gets the needed utility classes. The export points at the compiled dist file, so `dist` is the only path needed.",
+  "comment:files": "`dist` carries the JS + the COMPILED `dist/styles.css` (built by `build:css` via the Tailwind CLI). Unlike @adh-sdk/markdown/ui/themes \u2014 which ship hand-written src CSS \u2014 this package's `./styles` is a Tailwind BUILD over its own components AND the @adh-sdk/ui components it composes, so a marketing app (which deliberately does not @source node_modules/@adh-sdk/ui) still gets the needed utility classes. The export points at the compiled dist file, so `dist` is the only path needed.",
   "files": [
     "dist"
   ],
-  "comment:exports": "`development` \u2192 src for `next dev` (HMR of the COMPONENT logic, no build/restart); prod skips it \u2192 dist. Mirrors @agenticdevelopertoolkit/markdown. NOTE: `./styles` resolves to the COMPILED `dist/styles.css` in both dev and prod (it is a build artifact, not source CSS), so editing a component's utility classes needs a `build:css` to refresh it.",
+  "comment:exports": "`development` \u2192 src for `next dev` (HMR of the COMPONENT logic, no build/restart); prod skips it \u2192 dist. Mirrors @adh-sdk/markdown. NOTE: `./styles` resolves to the COMPILED `dist/styles.css` in both dev and prod (it is a build artifact, not source CSS), so editing a component's utility classes needs a `build:css` to refresh it.",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -37,11 +37,11 @@
     "react-dom": "^19.0.0"
   },
   "dependencies": {
-    "@agenticdevelopertoolkit/markdown": "workspace:*",
-    "@agenticdevelopertoolkit/ui": "workspace:*"
+    "@adh-sdk/markdown": "workspace:*",
+    "@adh-sdk/ui": "workspace:*"
   },
   "devDependencies": {
-    "@agenticdevelopertoolkit/themes": "workspace:*",
+    "@adh-sdk/themes": "workspace:*",
     "@tailwindcss/cli": "^4.0.0",
     "@types/node": "^24.0.0",
     "@types/react": "^19.2.14",

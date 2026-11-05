@@ -1,7 +1,7 @@
 ---
 id: 76eee228-2fd5-4524-a84e-d221c2e4c8ad
 title: Category Gear Menu
-domain: agenticdevelopertoolkit://recipes/category-gear-menu
+domain: adhsdk://recipes/category-gear-menu
 type: ingredient
 version: 1.1.1
 status: review
@@ -21,8 +21,8 @@ tags:
 - dropdown
 - category-management
 depends-on:
-- agenticdevelopertoolkit://recipes/gear-menu-trigger
-- agenticdevelopertoolkit://recipes/dropdown-menu
+- adhsdk://recipes/gear-menu-trigger
+- adhsdk://recipes/dropdown-menu
 related: []
 references: []
 approved-by: ''

@@ -13,16 +13,16 @@ import type { BuildPhase, DeployPhase } from '../monitor/deploy-status';
 import { deployEventsSince } from '../monitor/live-buffer';
 import { providerDeployToDTO, type ProviderDeploy } from '../monitor/provider-deploy';
 import { deployTargetKey, platformCanon } from '../monitor/overview';
-import { deployProjectKey } from '@agentic-toolkit/deploy-platform/canon';
+import { deployProjectKey } from '@adh-sdk/deploy-platform/canon';
 import { envFromProject } from '../monitor/deploy-view';
 import { hostOf } from '../monitor/url';
 import type { StatusConfig } from '../config/port';
 import { siteLinks, type PlatformMeta } from '../lib/links';
-import { cachedSingleFlight } from '@agentic-toolkit/deploy-platform/util';
+import { cachedSingleFlight } from '@adh-sdk/deploy-platform/util';
 import { enumerateDeployProjects, providerConn } from '../monitor/provider-conn';
 import { refreshVercelProjectMetaFromConfig, type VercelRefreshResult } from '../monitor/refresh-project-meta';
-import type { EnumeratedProject } from '@agentic-toolkit/deploy-platform/enumerate';
-import { partitionPending, endpointUnconfigured } from '@agentic-toolkit/deploy-platform/engine';
+import type { EnumeratedProject } from '@adh-sdk/deploy-platform/enumerate';
+import { partitionPending, endpointUnconfigured } from '@adh-sdk/deploy-platform/engine';
 import { uptimePercent, dayStatus, type Counts } from '../monitor/uptime';
 import { runIntegrationsCheck } from '../monitor/integrations';
 import type {
@@ -673,13 +673,13 @@ export function readsRoutes(storage: Storage, config: StatusConfig): Hono<{ Vari
 }
 
 // `enumerateDeployProjects` (with its `EnumeratedProject` shape and the internal
-// resolveRailwayDomains helper) is implemented in @agentic-toolkit/deploy-platform/enumerate;
+// resolveRailwayDomains helper) is implemented in @adh-sdk/deploy-platform/enumerate;
 // `../monitor/provider-conn` is this package's storage-port wrapper around it (the DB-based
 // `enumerateDeployProjectsVerified` may not leave `src/libsql/`). Re-exported here so this
 // module's public surface (the enumerate function + its type) is unchanged for any
 // downstream importer.
 export { enumerateDeployProjects };
-export type { EnumeratedProject } from '@agentic-toolkit/deploy-platform/enumerate';
+export type { EnumeratedProject } from '@adh-sdk/deploy-platform/enumerate';
 
 /**
  * Enrich the raw enumerated deploy projects with their live wiring + ignored flags —

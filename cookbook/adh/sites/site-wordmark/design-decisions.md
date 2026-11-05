@@ -11,14 +11,14 @@ generic toolkit package.
 brand string, and the boundary is mechanism → the generic packages, vocabulary →
 the site family's own package; a registry-bound component in a generic UI or theme
 package would make a generic package depend on one consumer's site list. On the web
-this means `@agentic-toolkit/adh` rather than `@agenticdevelopertoolkit/ui` or
-`@agenticdevelopertoolkit/themes`.
+this means `@adh-sdk/adh` rather than `@adh-sdk/ui` or
+`@adh-sdk/themes`.
 **Approved**: pending
 
 *History*: two namespaces ago this component sat in `@adh-shared/adh` for a Tailwind
 reason — marketing apps `@source`d the `adh` package but not `ui`, so a ui-package
 wordmark rendered unstyled. That reason has since expired: those apps `@source`
-`@agentic-toolkit/adh` too, and `@agenticdevelopertoolkit/ui` self-registers its own
+`@adh-sdk/adh` too, and `@adh-sdk/ui` self-registers its own
 sources. The vocabulary rule above is what governs now.
 
 **Decision**: Ship on its own importable entry point, importing only the pure registry.

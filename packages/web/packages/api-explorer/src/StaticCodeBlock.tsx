@@ -8,7 +8,7 @@
 // Package path (not relative): lib/highlight caches a lazy shiki highlighter
 // promise shared with the client entry's own import of it — see the `external`
 // entry + comment in tsup.config.ts for why a relative import here would fork it.
-import { highlightToHtml, type HighlightLang } from '@agentic-toolkit/api-explorer/lib/highlight'
+import { highlightToHtml, type HighlightLang } from '@adh-sdk/api-explorer/lib/highlight'
 
 export interface StaticCodeBlockProps {
   code: string

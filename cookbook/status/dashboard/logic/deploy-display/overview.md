@@ -21,5 +21,5 @@ status vocabulary and its color-role map from two sibling modules. The
 callers are dashboard components and views that render deploy or platform
 badges; they render the returned strings and never branch on them. The
 server-side status vocabulary is specified in [Monitor Deploy
-Status](adtoolkit://cookbook/status/service/monitor/deploy-status).
+Status](adhsdk://cookbook/status/service/monitor/deploy-status).
 

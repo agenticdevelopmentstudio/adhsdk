@@ -6,7 +6,7 @@
 export {
   FIELD_TYPES, SHOW_IF_OPS, coerceFieldValue, evaluateShowIf, isFieldType, publishBlockers,
   searchableText, validateFieldValue,
-} from '@agenticdevelopertoolkit/registry-types';
+} from '@adh-sdk/registry-types';
 export type {
   AddressValue, FieldDefLike, FieldType, PublishBlocker, ShowIfOp, ShowIfRule,
-} from '@agenticdevelopertoolkit/registry-types';
+} from '@adh-sdk/registry-types';

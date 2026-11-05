@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback, useSyncExternalStore } from 'react'
-import { themeIds, type ThemeKey } from '@agenticdevelopertoolkit/themes'
+import { themeIds, type ThemeKey } from '@adh-sdk/themes'
 
 /**
  * Single source for the demo's selected theme. The theme is persisted in

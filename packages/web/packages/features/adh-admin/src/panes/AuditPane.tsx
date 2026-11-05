@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, type ReactNode } from "react";
-import { FeatureTitle } from "@agentic-toolkit/resource";
+import { FeatureTitle } from "@adh-sdk/resource";
 import { useAccessAudit, type AccessAuditEvent } from "../api/admin";
 import {
   EditableList,

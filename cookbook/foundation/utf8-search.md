@@ -1,7 +1,7 @@
 ---
 id: CC43F118-215C-4794-BB67-6D97BAB9DFE4
 title: "UTF-8 Search"
-domain: adtoolkit://cookbook/foundation/utf8-search
+domain: adhsdk://cookbook/foundation/utf8-search
 type: ingredient
 version: 1.0.0
 status: review
@@ -22,7 +22,7 @@ tags:
   - performance
 depends-on: []
 related:
-  - adtoolkit://cookbook/foundation/core-utilities
+  - adhsdk://cookbook/foundation/core-utilities
 references: []
 approved-by: ""
 approved-date: ""
@@ -123,7 +123,7 @@ Not applicable: The search helper calls no logging API.
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/Core/UTF8Search.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/UTF8Search.swift` |
 
 ## Design Decisions
 
@@ -138,7 +138,7 @@ Not applicable: The search helper calls no logging API.
 | [separation-of-concerns](agenticdevelopercookbook://compliance/best-practices#separation-of-concerns) | passed | Best Practices |
 | [unit-test-coverage](agenticdevelopercookbook://compliance/best-practices#unit-test-coverage) | passed | Best Practices |
 
-`separation-of-concerns` passes because the extension only answers whether bytes occur; what a hit means is the caller's. `unit-test-coverage` passes because `AgenticToolkitCoreTests/UniqueNameTests.swift` includes a test that finds a needle by its bytes, a multi-byte needle, an absent needle, the empty needle and the empty haystack (the test shares a file with the unique-name tests).
+`separation-of-concerns` passes because the extension only answers whether bytes occur; what a hit means is the caller's. `unit-test-coverage` passes because `AgenticDeveloperHubSDKCoreTests/UniqueNameTests.swift` includes a test that finds a needle by its bytes, a multi-byte needle, an absent needle, the empty needle and the empty haystack (the test shares a file with the unique-name tests).
 
 ## Change History
 

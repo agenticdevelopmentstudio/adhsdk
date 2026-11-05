@@ -9,8 +9,8 @@ import { cn } from "../lib/utils"
  * `role="separator"` that reports a new RATIO (0…1, the fraction of the split given to
  * the pane BEFORE it — above for a horizontal separator, to the left for a vertical
  * one). It owns NO panes and NO collapse state — the caller renders the regions and
- * applies the ratio (e.g. @agenticdevelopertoolkit/search's result-list / preview-dock stack,
- * or @agentic-toolkit/shipr's repository-tree / activity-log pair).
+ * applies the ratio (e.g. @adh-sdk/search's result-list / preview-dock stack,
+ * or @adh-sdk/shipr's repository-tree / activity-log pair).
  *
  * **`orientation` is the SEPARATOR's own**, which is how `aria-orientation` defines it
  * and the opposite of how people usually say it out loud: a `"vertical"` separator is a

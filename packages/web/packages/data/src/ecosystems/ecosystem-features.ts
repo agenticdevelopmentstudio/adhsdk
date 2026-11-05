@@ -17,7 +17,7 @@
 // So there is a bespoke route, and this is its only client.
 //
 // Wire types are hand-written here rather than imported from
-// `@agentic-toolkit/adh-api-types`, following `./wire.ts`: this package is portable
+// `@adh-sdk/adh-api-types`, following `./wire.ts`: this package is portable
 // mechanism and must not take on adh product vocabulary.
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -28,7 +28,7 @@ import { enc } from "../client-helpers";
 // functions ../http doesn't re-export. Needed here to read the parsed body a 409
 // `feature_required` response carries (see `remove` below); ../http's own helpers
 // (`isConflict` etc.) duck-type on `.status` only and drop everything else.
-import { AuthHttpError } from "@agentic-toolkit/auth/client";
+import { AuthHttpError } from "@adh-sdk/auth/client";
 import { listedCatalog } from "./feature-requirements";
 
 // ── Types ─────────────────────────────────────────────────────────────────────

@@ -440,7 +440,7 @@ describe('AlertModal — Escape key contract', () => {
 // gesture routes to onConfirm, because dismissing an acknowledgement IS
 // acknowledging it. That is right until the confirm writes to a server, at
 // which point Escape — a keystroke that means "make this go away" — saves.
-// @agenticdevelopertoolkit/editing's repair prompt is exactly that alert, so the escape
+// @adh-sdk/editing's repair prompt is exactly that alert, so the escape
 // hatch is to opt out of dismissal entirely and leave the button as the only
 // way through.
 // ---------------------------------------------------------------------------

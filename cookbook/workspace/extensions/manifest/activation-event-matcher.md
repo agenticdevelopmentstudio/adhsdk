@@ -1,7 +1,7 @@
 ---
 id: a29c23d4-a086-4413-9843-6b319e340646
 title: "Activation Event Matcher"
-domain: adtoolkit://cookbook/workspace/extensions/manifest/activation-event-matcher
+domain: adhsdk://cookbook/workspace/extensions/manifest/activation-event-matcher
 type: ingredient
 version: 1.1.0
 status: review
@@ -23,12 +23,12 @@ tags:
 depends-on: []
 related: []
 references:
-  - packages/apple/AgenticToolkit/Core/Extensions/ActivationEventMatcher.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Core/Extensions/ExtensionManifest.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Core/Extensions/VSCodeEngineRange.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Core/SemanticVersion.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Tests/AgenticToolkitCoreTests/Extensions/ActivationEventMatcherTests.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/macOS/Features/Extensions/Host/ExtensionHostInstaller.swift (agenticdevelopertoolkit)
+  - packages/apple/AgenticDeveloperHubSDK/Core/Extensions/ActivationEventMatcher.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Core/Extensions/ExtensionManifest.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Core/Extensions/VSCodeEngineRange.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Core/SemanticVersion.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKCoreTests/Extensions/ActivationEventMatcherTests.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/Host/ExtensionHostInstaller.swift (adhsdk)
 approved-by: ""
 approved-date: ""
 ---
@@ -416,7 +416,7 @@ logged by this component itself.
   tokenizer the source implements, not a general-purpose glob library.
 - **AppKit / UIKit**: identical to the SwiftUI note — the component depends
   on neither AppKit nor UIKit, so a macOS or iOS host consumes the same
-  `AgenticToolkitCore` type directly with no translation.
+  `AgenticDeveloperHubSDKCore` type directly with no translation.
 - **WinUI 3**: there is no .NET or Windows App SDK type that already
   implements VS Code's `activationEvents` grammar or its `engines.vscode`
   range grammar, so both need a direct C# port rather than an existing
@@ -447,7 +447,7 @@ logged by this component itself.
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/Core/Extensions/ActivationEventMatcher.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Extensions/ActivationEventMatcher.swift` |
 
 ## Design Decisions
 

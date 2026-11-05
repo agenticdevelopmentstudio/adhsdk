@@ -3,7 +3,7 @@
   "meta": {
     "id": "24e1710c-a805-4f6e-b720-fbd869472ca9",
     "title": "Extension Manifest Localization",
-    "domain": "adtoolkit://cookbook/workspace/extensions/manifest/extension-manifest-localization",
+    "domain": "adhsdk://cookbook/workspace/extensions/manifest/extension-manifest-localization",
     "type": "ingredient",
     "version": "1.1.0",
     "status": "review",
@@ -27,11 +27,11 @@
     ],
     "depends-on": [],
     "related": [
-      "adtoolkit://cookbook/workspace/extensions/manifest/extension-manifest"
+      "adhsdk://cookbook/workspace/extensions/manifest/extension-manifest"
     ],
     "references": [
-      "packages/apple/AgenticToolkit/Core/Extensions/ExtensionManifestLocalization.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/Tests/AgenticToolkitCoreTests/Extensions/ExtensionManifestLocalizationTests.swift (agenticdevelopertoolkit)"
+      "packages/apple/AgenticDeveloperHubSDK/Core/Extensions/ExtensionManifestLocalization.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKCoreTests/Extensions/ExtensionManifestLocalizationTests.swift (adhsdk)"
     ],
     "approved-by": "",
     "approved-date": ""

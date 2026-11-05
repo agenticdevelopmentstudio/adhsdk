@@ -1,7 +1,7 @@
 ---
 id: f8cbc576-a5ef-4e8c-90a0-7d0712b24b72
 title: FlowHero
-domain: agenticdevelopertoolkit://recipes/flow-hero
+domain: adhsdk://recipes/flow-hero
 type: ingredient
 version: 1.1.1
 status: review
@@ -22,11 +22,11 @@ tags:
 - composition
 depends-on: []
 related:
-- agenticdevelopertoolkit://recipes/wrap
-- agenticdevelopertoolkit://recipes/btn
-- agenticdevelopertoolkit://recipes/bleed
-- agenticdevelopertoolkit://recipes/cta
-- agenticdevelopertoolkit://recipes/hero
+- adhsdk://recipes/wrap
+- adhsdk://recipes/btn
+- adhsdk://recipes/bleed
+- adhsdk://recipes/cta
+- adhsdk://recipes/hero
 references: []
 approved-by: ''
 approved-date: ''
@@ -82,7 +82,7 @@ FlowHero is a landing page hero section component that presents a centered compo
 - **Semantic structure**: Uses `<h1>` for headline (main page heading) and `<p>` for subheading and metadata. The root is a `<div>`, not a `<section>`, to avoid creating an unlabeled landmark region in screen reader outlines (see **Design Decisions**).
 - **Headline labeling**: Host-supplied `headline` content is expected to describe the product's claim or purpose meaningfully, since it renders as the page's `<h1>` (see **single-per-page**).
 - **Subheading relationship**: The `<p>` with class `lp-hero-sub` provides supplementary information; position immediately after the headline creates a logical reading order (see **render-order**).
-- **Action buttons**: `children` are expected to be bare, properly labeled `Btn` elements (see agenticdevelopertoolkit://recipes/btn); the parent `<div class="lp-hero-actions">` is a non-semantic container for layout only.
+- **Action buttons**: `children` are expected to be bare, properly labeled `Btn` elements (see adhsdk://recipes/btn); the parent `<div class="lp-hero-actions">` is a non-semantic container for layout only.
 - **Image alt text**: The `mark` prop is supplied as a ReactNode by the host; the host is responsible for providing appropriate alt text if the mark contains an image.
 - **Metadata styling**: Text is uppercased by CSS `text-transform` on the `<p>` the component renders. Hosts cannot override that transform from outside; a host needing non-uppercase content (e.g. a product name) wraps that content in its own child element with an inline style resetting `text-transform`, since the property is inherited and a descendant element can override it.
 
@@ -180,7 +180,7 @@ Not applicable: FlowHero does not perform logging.
 ## Design Decisions
 
 - **Decision**: Render a `<div>` (not a `<section>`) as `FlowHero`'s root element.
-  **Rationale**: A `<section>` here would create an unlabeled landmark region at the top of every screen reader's outline; the bands below the hero are the page's semantic landmarks. `agenticdevelopertoolkit://recipes/hero` makes the same call for the deck's `Hero` component for the same reason.
+  **Rationale**: A `<section>` here would create an unlabeled landmark region at the top of every screen reader's outline; the bands below the hero are the page's semantic landmarks. `adhsdk://recipes/hero` makes the same call for the deck's `Hero` component for the same reason.
   **Approved**: pending
 
 - **Decision**: Accept `mark` as a `ReactNode`, not an `<img>`/`<Image>` element.
@@ -192,7 +192,7 @@ Not applicable: FlowHero does not perform logging.
   **Approved**: pending
 
 - **Decision**: Render `children` as bare `Btn` elements, never wrapped in a `Cta`.
-  **Rationale**: `.lp-hero-actions` is already the centered, wrapping flex row; a `Cta` (`agenticdevelopertoolkit://recipes/cta`) inside it nests a second one whose own 0.75rem gap wins over the hero's own spacing, leaving it inert.
+  **Rationale**: `.lp-hero-actions` is already the centered, wrapping flex row; a `Cta` (`adhsdk://recipes/cta`) inside it nests a second one whose own 0.75rem gap wins over the hero's own spacing, leaving it inert.
   **Approved**: pending
 
 - **Decision**: Uppercase the `meta` text via CSS `text-transform`, not JavaScript.
@@ -218,5 +218,5 @@ Not applicable: FlowHero does not perform logging.
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
 | 1.1.1 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: passed). |
-| 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed requirements to subject-only kebab-case everywhere they're cited; corrected the null/empty-string suppression contradiction (only `undefined` hides a section) in Design Decisions and Edge Cases; corrected the uppercase-meta opt-out mechanism (child-element override, not the component's own `<p>`); verified the Reduce Motion claim against `flow.css` and corrected it (component has no motion of its own); linked the no-section-element decision to `agenticdevelopertoolkit://recipes/hero`; populated `related` with Wrap/Btn/Bleed/Cta/Hero; replaced the made-up compliance checks with catalog-linked accessibility and internationalization checks plus a sourcing sentence; reformatted Design Decisions to Decision/Rationale/Approved; renamed the Platform Notes bullet to React/Web and corrected WinUI/SwiftUI/Compose/AppKit-UIKit heading-semantics APIs; named the hero background's CSS custom property; added `render-order` and `single-per-page` requirements with a matching test vector; added null/empty-string test vectors and fixed vector 011's self-contradictory input; replaced app-specific test-vector copy with `{{placeholder}}` tokens; added a locale-sensitivity note for the meta uppercase transform; fixed an unescaped `\|` breaking the Configuration table |
+| 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed requirements to subject-only kebab-case everywhere they're cited; corrected the null/empty-string suppression contradiction (only `undefined` hides a section) in Design Decisions and Edge Cases; corrected the uppercase-meta opt-out mechanism (child-element override, not the component's own `<p>`); verified the Reduce Motion claim against `flow.css` and corrected it (component has no motion of its own); linked the no-section-element decision to `adhsdk://recipes/hero`; populated `related` with Wrap/Btn/Bleed/Cta/Hero; replaced the made-up compliance checks with catalog-linked accessibility and internationalization checks plus a sourcing sentence; reformatted Design Decisions to Decision/Rationale/Approved; renamed the Platform Notes bullet to React/Web and corrected WinUI/SwiftUI/Compose/AppKit-UIKit heading-semantics APIs; named the hero background's CSS custom property; added `render-order` and `single-per-page` requirements with a matching test vector; added null/empty-string test vectors and fixed vector 011's self-contradictory input; replaced app-specific test-vector copy with `{{placeholder}}` tokens; added a locale-sensitivity note for the meta uppercase transform; fixed an unescaped `\|` breaking the Configuration table |
 | 1.0.0 | 2026-09-22 | Claude Haiku 4.5 | Initial creation from source analysis |

@@ -3,7 +3,7 @@
   "meta": {
     "id": "ef2a5ca9-04a4-46ab-8fef-3fdc6db2041d",
     "title": "Daemon Provider Resolver",
-    "domain": "adtoolkit://cookbook/ai/providers/daemon-provider-resolver",
+    "domain": "adhsdk://cookbook/ai/providers/daemon-provider-resolver",
     "type": "ingredient",
     "version": "1.2.0",
     "status": "review",
@@ -25,18 +25,18 @@
       "provider-resolver"
     ],
     "depends-on": [
-      "adtoolkit://cookbook/ai/providers/provider-config-keys"
+      "adhsdk://cookbook/ai/providers/provider-config-keys"
     ],
     "related": [],
     "references": [
-      "packages/apple/AgenticToolkit/AIPluginKit/DaemonProviderResolver.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/AIPluginKit/AIProviderConfigKeys.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/AIPluginKit/AIProviderConfiguration.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/AIPluginKit/AIProviderConfigSync.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/AIPluginKit/DaemonAIChat.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/Tests/AIPluginKitTests/DaemonAIChatTests.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/macOS/Features/AIPlugins/AIProviderResolver.swift (agenticdevelopertoolkit)",
-      "packages/apple/AgenticToolkit/project.yml (agenticdevelopertoolkit)"
+      "packages/apple/AgenticDeveloperHubSDK/AIPluginKit/DaemonProviderResolver.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/AIPluginKit/AIProviderConfigKeys.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/AIPluginKit/AIProviderConfiguration.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/AIPluginKit/AIProviderConfigSync.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/AIPluginKit/DaemonAIChat.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/Tests/AIPluginKitTests/DaemonAIChatTests.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/macOS/Features/AIPlugins/AIProviderResolver.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/project.yml (adhsdk)"
     ],
     "approved-by": "",
     "approved-date": ""

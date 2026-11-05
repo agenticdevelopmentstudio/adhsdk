@@ -1,6 +1,6 @@
 
 - **SwiftUI**: The source is
-  `packages/apple/AgenticToolkit/macOS/Features/Projects/GitRepo.swift`, a
+  `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/GitRepo.swift`, a
   plain Foundation file with no import beyond `Foundation` and no dependency
   on SwiftUI, AppKit, or UIKit at all — the three types are UI-framework-free
   and port unchanged into any Swift target.

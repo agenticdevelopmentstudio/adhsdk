@@ -1,5 +1,5 @@
-import { FIELD_TYPES, SHOW_IF_OPS } from '@agenticdevelopertoolkit/registry-types';
-import type { FieldType, ShowIfRule } from '@agenticdevelopertoolkit/registry-types';
+import { FIELD_TYPES, SHOW_IF_OPS } from '@adh-sdk/registry-types';
+import type { FieldType, ShowIfRule } from '@adh-sdk/registry-types';
 import { FIELD_VISIBILITIES } from '../client';
 import type { FieldVisibility } from '../client';
 

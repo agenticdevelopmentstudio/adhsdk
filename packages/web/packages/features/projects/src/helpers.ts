@@ -1,6 +1,6 @@
 import { type ComponentProps } from "react";
-import { Badge } from "@agenticdevelopertoolkit/ui/components/badge";
-import type { ProjectActivity, ProjectComment, WorkItem } from "@agentic-toolkit/data/projects";
+import { Badge } from "@adh-sdk/ui/components/badge";
+import type { ProjectActivity, ProjectComment, WorkItem } from "@adh-sdk/data/projects";
 import type {
   EstimateScale,
   IterationState,
@@ -10,7 +10,7 @@ import type {
   PriorityScale,
   RelationKind,
   StatusCategory,
-} from "@agentic-toolkit/data/projects";
+} from "@adh-sdk/data/projects";
 import { participantLabel } from "./AssigneePicker";
 import { DEFAULT_ITEM_WORDS, type ItemWords } from "./vocabulary";
 

@@ -2,9 +2,9 @@
 import { useState } from "react";
 import { describe, it, expect, afterEach, vi } from "vitest";
 import { render, screen, fireEvent, waitFor, cleanup } from "@testing-library/react";
-import { SettingsDirtyProvider, useSettingsDirty } from "@agentic-toolkit/resource";
+import { SettingsDirtyProvider, useSettingsDirty } from "@adh-sdk/resource";
 
-vi.mock("@agentic-toolkit/auth", () => ({
+vi.mock("@adh-sdk/auth", () => ({
   reportUnexpectedAuthError: vi.fn(),
 }));
 
@@ -19,7 +19,7 @@ const { listEventTypes, createEventType, updateEventType } = vi.hoisted(() => ({
   createEventType: vi.fn(),
   updateEventType: vi.fn(),
 }));
-vi.mock("@agentic-toolkit/data/gamification", () => ({
+vi.mock("@adh-sdk/data/gamification", () => ({
   gamificationApi: {
     listEventTypes,
     createEventType,
@@ -29,7 +29,7 @@ vi.mock("@agentic-toolkit/data/gamification", () => ({
 }));
 
 import { EventTypesSection, sameEventTypeDraft } from "./EventTypesSection";
-import type { RealmEventType } from "@agentic-toolkit/data/gamification";
+import type { RealmEventType } from "@adh-sdk/data/gamification";
 
 afterEach(cleanup);
 

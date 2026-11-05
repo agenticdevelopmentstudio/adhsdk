@@ -3,7 +3,7 @@
   "meta": {
     "id": "b976c0d2-084c-4a47-928a-14e33983077f",
     "title": "Messaging Client",
-    "domain": "adtoolkit://cookbook/adh/hub/messaging/messaging-client",
+    "domain": "adhsdk://cookbook/adh/hub/messaging/messaging-client",
     "type": "ingredient",
     "version": "1.1.1",
     "status": "review",
@@ -28,12 +28,12 @@
     ],
     "depends-on": [],
     "related": [
-      "adtoolkit://cookbook/ui/navigation/htdv"
+      "adhsdk://cookbook/ui/navigation/htdv"
     ],
     "references": [
-      "packages/apple/AgenticToolkit/Hub/Features/Messaging/MessagingModels.swift (apple)",
-      "packages/apple/AgenticToolkit/Hub/Features/Messaging/MessagingTopic.swift (apple)",
-      "packages/apple/AgenticToolkit/Tests/AgenticToolkitHubTests/MessagingTopicTests.swift (apple)"
+      "packages/apple/AgenticDeveloperHubSDK/Hub/Features/Messaging/MessagingModels.swift (apple)",
+      "packages/apple/AgenticDeveloperHubSDK/Hub/Features/Messaging/MessagingTopic.swift (apple)",
+      "packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKHubTests/MessagingTopicTests.swift (apple)"
     ],
     "approved-by": "",
     "approved-date": ""

@@ -1,7 +1,7 @@
 ---
 id: 8f0a3e2b-4d61-4a2f-9e4d-6c1a7b3f0d92
 title: "Project Tree"
-domain: adtoolkit://cookbook/workspace/projects/project-tree
+domain: adhsdk://cookbook/workspace/projects/project-tree
 type: ingredient
 version: 1.2.1
 status: review
@@ -22,13 +22,13 @@ tags:
   - value-type
 depends-on: []
 related:
-  - adtoolkit://cookbook/workspace/projects/git-repo
-  - adtoolkit://cookbook/workspace/projects/project-filter
+  - adhsdk://cookbook/workspace/projects/git-repo
+  - adhsdk://cookbook/workspace/projects/project-filter
 references:
-  - packages/apple/AgenticToolkit/macOS/Features/Projects/ProjectTree.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/macOS/Features/Projects/GitRepo.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/macOS/Features/Projects/ProjectBrowserViewController.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Tests/AgenticToolkitMacOSTests/Projects/ProjectTreeTests.swift (agenticdevelopertoolkit)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectTree.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/GitRepo.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectBrowserViewController.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKMacOSTests/Projects/ProjectTreeTests.swift (adhsdk)
 approved-by: ""
 approved-date: ""
 ---
@@ -296,9 +296,9 @@ including on the path where a degenerate repository is silently dropped
 ## Platform Notes
 
 - **SwiftUI**: The source is
-  `packages/apple/AgenticToolkit/macOS/Features/Projects/ProjectTree.swift`,
+  `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectTree.swift`,
   tested by
-  `Tests/AgenticToolkitMacOSTests/Projects/ProjectTreeTests.swift`; it
+  `Tests/AgenticDeveloperHubSDKMacOSTests/Projects/ProjectTreeTests.swift`; it
   imports only `Foundation` and depends on no AppKit, UIKit, or SwiftUI type,
   so it ports unchanged into a SwiftUI-hosted app. A SwiftUI `List` or
   `OutlineGroup` would bind directly to the returned `[ProjectTreeNode]`
@@ -364,7 +364,7 @@ including on the path where a degenerate repository is silently dropped
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/macOS/Features/Projects/ProjectTree.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectTree.swift` |
 
 ## Design Decisions
 

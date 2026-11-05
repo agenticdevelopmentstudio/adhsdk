@@ -1,4 +1,4 @@
-import { endpointHasUrl } from '@agentic-toolkit/deploy-platform';
+import { endpointHasUrl } from '@adh-sdk/deploy-platform';
 import { platformCanon } from '../monitor/overview';
 
 // ---------------------------------------------------------------------------

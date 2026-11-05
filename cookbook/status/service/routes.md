@@ -1,7 +1,7 @@
 ---
 id: 77587f0b-5a27-44d9-a507-46bb90c9046a
 title: "Status Server Routes"
-domain: adtoolkit://cookbook/status/service/routes
+domain: adhsdk://cookbook/status/service/routes
 type: ingredient
 version: 1.0.3
 status: review
@@ -34,7 +34,7 @@ depends-on:
   - agenticdevelopercookbook://guidelines/implementing/security/token-handling
   - agenticdevelopercookbook://guidelines/implementing/testing/testing
 related:
-  - adtoolkit://cookbook/status/service/board
+  - adhsdk://cookbook/status/service/board
 approved-by: ""
 approved-date: ""
 references: []
@@ -63,7 +63,7 @@ Route modules delegate policy to lower layers rather than re-implementing it:
 persistence and atomic guards live behind the `Storage` port, roster-vs-board
 folding lives in `reconcileBoardLedger`/`deriveBoard` (documented in the
 sibling `status-server-board` recipe), and project-matching/wiring for
-auto-configure lives in the external `@agentic-toolkit/deploy-platform/engine`
+auto-configure lives in the external `@adh-sdk/deploy-platform/engine`
 package. This recipe documents the route layer's own contract: what each
 endpoint validates, what it returns, what authorization tier gates it, and
 where its error/edge-case behavior is and isn't defined.
@@ -811,7 +811,7 @@ Several routes log on failure via `console.error`, and one notably does not:
 ## Design Decisions
 
 - **Decision**: keep the auto-configure matching/creation engine
-  (`@agentic-toolkit/deploy-platform/engine`) HTTP-agnostic; the route
+  (`@adh-sdk/deploy-platform/engine`) HTTP-agnostic; the route
   talks to it only through the in-process `statusAdapter`.
   **Rationale**: the engine is reused outside the HTTP layer and stays
   independently testable against a fake `StatusAddApi` without spinning up

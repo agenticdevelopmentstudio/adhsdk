@@ -3,7 +3,7 @@
   "meta": {
     "id": "A252605D-12CE-4235-9EB4-2582678F6F49",
     "title": "Billing Rollup",
-    "domain": "adtoolkit://cookbook/foundation/billing/billing-rollup",
+    "domain": "adhsdk://cookbook/foundation/billing/billing-rollup",
     "type": "ingredient",
     "version": "1.0.0",
     "status": "review",
@@ -26,11 +26,11 @@
     ],
     "depends-on": [],
     "related": [
-      "adtoolkit://cookbook/foundation/billing/billing-rate",
-      "adtoolkit://cookbook/foundation/billing/billing-rounding",
-      "adtoolkit://cookbook/foundation/billing/billing-clock",
-      "adtoolkit://cookbook/foundation/billing/billing-persistence",
-      "adtoolkit://cookbook/foundation/billing/billing-store"
+      "adhsdk://cookbook/foundation/billing/billing-rate",
+      "adhsdk://cookbook/foundation/billing/billing-rounding",
+      "adhsdk://cookbook/foundation/billing/billing-clock",
+      "adhsdk://cookbook/foundation/billing/billing-persistence",
+      "adhsdk://cookbook/foundation/billing/billing-store"
     ],
     "references": [],
     "approved-by": "",

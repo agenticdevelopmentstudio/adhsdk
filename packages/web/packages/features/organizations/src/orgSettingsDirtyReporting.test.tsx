@@ -3,22 +3,22 @@ import { useState } from 'react'
 import { render, screen, fireEvent, cleanup } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { describe, it, expect, afterEach, beforeEach, vi } from 'vitest'
-import { SettingsDirtyProvider, useSettingsDirty } from '@agentic-toolkit/resource'
+import { SettingsDirtyProvider, useSettingsDirty } from '@adh-sdk/resource'
 
 // Same shape as paneDirtyReporting.test.tsx: the provider mounts its own UnsavedChangesGuard
 // when no rail host is above it, and that guard calls router.push.
 const { push } = vi.hoisted(() => ({ push: vi.fn() }))
 vi.mock('next/navigation', () => ({ useRouter: () => ({ push }) }))
 
-vi.mock('@agentic-toolkit/auth', () => ({ reportUnexpectedAuthError: vi.fn() }))
+vi.mock('@adh-sdk/auth', () => ({ reportUnexpectedAuthError: vi.fn() }))
 
 // The slug field probes the shared user/org handle namespace. Dirt is what's under test here, so
 // the probe is stubbed permissive — its own behaviour is covered by orgSlugAvailability.test.tsx.
 const { checkWorkspaceSlugAvailable } = vi.hoisted(() => ({ checkWorkspaceSlugAvailable: vi.fn() }))
 // Only the probe is stubbed: `WORKSPACES_QUERY_KEY` is a real export of this module and the
 // form invalidates it, so a whole-module factory would replace the key the assertion checks.
-vi.mock('@agentic-toolkit/data', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('@agentic-toolkit/data')>()),
+vi.mock('@adh-sdk/data', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@adh-sdk/data')>()),
   checkWorkspaceSlugAvailable,
 }))
 

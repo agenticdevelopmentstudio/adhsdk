@@ -1,6 +1,6 @@
 import { defineConfig } from 'vitest/config'
 
-// Self-contained config so `pnpm --filter @agentic-toolkit/crud run test`
+// Self-contained config so `pnpm --filter @adh-sdk/crud run test`
 // (cwd = this package) discovers src/__tests__/*. The workspace-root
 // config excludes every package that owns a config, so this is the only one that runs
 // these tests. We reuse the root setup file for its deterministic jest-dom/

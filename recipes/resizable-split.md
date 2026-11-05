@@ -1,7 +1,7 @@
 ---
 id: c21473ee-a075-4800-96db-ff3de0888515
 title: "ResizableSplit"
-domain: agenticdevelopertoolkit://recipes/resizable-split
+domain: adhsdk://recipes/resizable-split
 type: ingredient
 version: 2.2.1
 status: review
@@ -31,7 +31,7 @@ approved-date: ''
 
 ## Overview
 
-A vertical (top/bottom) split with a draggable divider and a collapse toggle for the bottom pane, in `@agenticdevelopertoolkit/ui`. It lays out two stacked panes — PEERS in the column; the bottom never overlays the top — whose split ratio the user drags; the bottom pane can be collapsed/expanded via a chevron on the divider, with an animated boundary. It offers controlled collapse plus an optional persisted ratio, and is otherwise self-contained.
+A vertical (top/bottom) split with a draggable divider and a collapse toggle for the bottom pane, in `@adh-sdk/ui`. It lays out two stacked panes — PEERS in the column; the bottom never overlays the top — whose split ratio the user drags; the bottom pane can be collapsed/expanded via a chevron on the divider, with an animated boundary. It offers controlled collapse plus an optional persisted ratio, and is otherwise self-contained.
 
 The divider has two forms:
 

@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { correlateDeployProjects, type EndpointWiring } from '../src/routes/reads';
-import type { EnumeratedProject } from '@agentic-toolkit/deploy-platform/enumerate';
+import type { EnumeratedProject } from '@adh-sdk/deploy-platform/enumerate';
 
 // ---------------------------------------------------------------------------
 // `wired` is a CONFIGURATION fact, not a runtime one.

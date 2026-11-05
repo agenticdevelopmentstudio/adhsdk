@@ -8,18 +8,18 @@ import { useSettingsOverlay } from '../../settings/settings-overlay'
 vi.mock('next/navigation', () => ({ usePathname: () => '/', useRouter: () => ({ push: () => {} }) }))
 
 // AppShell's footer slot renders SiteFooter, and SiteFooter.tsx itself self-references
-// '@agentic-toolkit/adh/footer' for the toolkit's AdhFooter primitive — which resolves to the
+// '@adh-sdk/adh/footer' for the toolkit's AdhFooter primitive — which resolves to the
 // WHOLE footer/index.ts barrel, including its `useChatTheme` export from chat-theme-store.ts,
-// which statically imports @agentic-toolkit/bitbag, which re-exports theme vocabulary from the
-// sibling `agenticdevelopertoolkit` submodule. That submodule has no built dist in this
+// which statically imports @adh-sdk/bitbag, which re-exports theme vocabulary from the
+// sibling `adhsdk` submodule. That submodule has no built dist in this
 // worktree — the same pre-existing gap `src/__tests__/footerDock.test.tsx` and
 // `footerBitbag.test.tsx` already carry (confirmed: both fail on the identical
-// "@agenticdevelopertoolkit/themes" resolution error, even footerBitbag.test.tsx despite it
+// "@adh-sdk/themes" resolution error, even footerBitbag.test.tsx despite it
 // already stubbing FooterChat down to a marker — the barrel self-reference reaches bitbag by a
 // path that mock doesn't cover). None of it is what this file tests (settings context
 // propagation to the header and children slots), so stub the whole footer barrel rather than
 // let an already-known-broken, unrelated chain turn this new test red too.
-vi.mock('@agentic-toolkit/adh/footer', () => ({
+vi.mock('@adh-sdk/adh/footer', () => ({
   SiteFooter: () => null,
 }))
 

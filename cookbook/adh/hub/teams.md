@@ -1,7 +1,7 @@
 ---
 id: 28581588-68f5-465d-8e8e-3aaaaef00560
 title: "Teams"
-domain: adtoolkit://cookbook/adh/hub/teams
+domain: adhsdk://cookbook/adh/hub/teams
 type: ingredient
 version: 1.2.0
 status: review
@@ -23,15 +23,15 @@ tags:
   - slug
 depends-on: []
 related:
-  - adtoolkit://cookbook/adh/hub/ecosystems/ecosystems
+  - adhsdk://cookbook/adh/hub/ecosystems/ecosystems
 references:
-  - packages/web/packages/data/src/teams/team-members.ts (agenticdevelopertoolkit)
-  - packages/web/packages/data/src/teams/teams.ts (agenticdevelopertoolkit)
-  - packages/web/packages/data/src/teams/wire.ts (agenticdevelopertoolkit)
-  - packages/web/packages/data/src/teams/index.ts (agenticdevelopertoolkit)
-  - packages/web/packages/data/src/teams/__tests__/teams.test.ts (agenticdevelopertoolkit)
-  - packages/web/packages/data/src/http.ts (agenticdevelopertoolkit)
-  - packages/web/packages/data/src/client-helpers.ts (agenticdevelopertoolkit)
+  - packages/web/packages/data/src/teams/team-members.ts (adhsdk)
+  - packages/web/packages/data/src/teams/teams.ts (adhsdk)
+  - packages/web/packages/data/src/teams/wire.ts (adhsdk)
+  - packages/web/packages/data/src/teams/index.ts (adhsdk)
+  - packages/web/packages/data/src/teams/__tests__/teams.test.ts (adhsdk)
+  - packages/web/packages/data/src/http.ts (adhsdk)
+  - packages/web/packages/data/src/client-helpers.ts (adhsdk)
 approved-by: ""
 approved-date: ""
 ---

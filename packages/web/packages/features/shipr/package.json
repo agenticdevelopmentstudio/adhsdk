@@ -1,5 +1,5 @@
 {
-  "name": "@agentic-toolkit/shipr",
+  "name": "@adh-sdk/shipr",
   "version": "0.1.0",
   "description": "The shipr deployment console: the folder tree over deploy repositories, the toolbar that runs prepare/deploy/status/register/unregister on the selection, the column-aligned commit ladder, and the activity log beside it.",
   "license": "UNLICENSED",
@@ -41,11 +41,11 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@agentic-toolkit/auth": "workspace:*",
-    "@agentic-toolkit/data": "workspace:*",
-    "@agentic-toolkit/integrations": "workspace:*",
-    "@agentic-toolkit/resource": "workspace:*",
-    "@agenticdevelopertoolkit/ui": "workspace:*",
+    "@adh-sdk/auth": "workspace:*",
+    "@adh-sdk/data": "workspace:*",
+    "@adh-sdk/integrations": "workspace:*",
+    "@adh-sdk/resource": "workspace:*",
+    "@adh-sdk/ui": "workspace:*",
     "lucide-react": "^1.16.0"
   },
   "peerDependencies": {

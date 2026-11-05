@@ -43,16 +43,13 @@ from pathlib import Path
 # (relative to the citing file, so not ours to resolve) and `https://…/docs/x.md`.
 CITATION = re.compile(r"(?<![./\w-])((?:docs|recipes)/[\w./-]+\.md)\b")
 
-# The recipe corpus's own cross-reference scheme: `agenticdeveloperhub://recipes/<slug>`,
-# used in a recipe's `domain:` (self-resolving — the file always exists, it's citing
+# The recipe corpus's own cross-reference scheme: `adhsdk://recipes/<slug>`, or the
+# older `agenticdeveloperhub://recipes/<slug>` a few recipes still carry, used in a recipe's `domain:` (self-resolving — the file always exists, it's citing
 # itself), `ingredients:`/`related:` frontmatter lists, and an ingredient table's Domain
-# column. check_no_private_scope.py's product-name pattern carries a matching
-# `(?!://recipes/)` lookahead that carves this same scheme shape out of its leak check —
-# that guard is answering "is this a product-name leak?" (no, it's an internal URI
-# scheme); this pattern answers the complementary question "does it still resolve to a
-# real file?" (not necessarily — a slug can name a recipe that stayed private, or one
-# that was never written). Both claims are true of the same string at once.
-RECIPE_URI = re.compile(r"agenticdeveloperhub://recipes/([a-z0-9-]+)\b")
+# column. This pattern answers "does it still resolve to a real file?" (not
+# necessarily — a slug can name a recipe that stayed private, or one that was never
+# written).
+RECIPE_URI = re.compile(r"(?:adhsdk|agenticdeveloperhub)://recipes/([a-z0-9-]+)\b")
 
 # A repo-relative path of two or more segments, checked ONLY inside docs/ and recipes/
 # and ONLY when its first segment is a real top-level directory (see the docstring).
@@ -67,7 +64,8 @@ PROSE_DIRS = ("docs", "recipes")
 
 # Trailing sentence punctuation the regex happily swallows.
 _TRAILING = "/.,;:)]}\"'`"
-SKIP_DIRS = {"node_modules", "dist", ".turbo", ".git", "coverage", ".next"}
+# `worktrees` is other sessions' checkouts under .claude/: their docs are their branch's, not this one's.
+SKIP_DIRS = {"node_modules", "dist", ".turbo", ".git", "coverage", ".next", "worktrees"}
 # A file under any `archive/` directory is a record of how the code looked when it was
 # written — an executed plan's `git rm` list, a research note's "files modified" log.
 # Repointing its coordinates would falsify the record, and the files it names are gone
@@ -81,10 +79,9 @@ SKIP_NAMES = {"pnpm-lock.yaml", "package-lock.json"}
 # sit in the self-test's own source, and a repo-root scan (this guard's
 # default) walks tools/ same as everything else. Skip that one file rather
 # than the strings inside it: they are proof-of-behavior, not a citation
-# into this repo. The private-scope guard's self-test carries the same kind
-# of fixture — a recipe URI written to prove the `(?!://recipes/)` carve-out
-# fires — and is skipped for the same reason.
-SKIP_NAMES |= {"check_doc_links_test.py", "check_no_private_scope_test.py"}
+# into this repo. The retired-names guard's self-test is skipped by the same
+# rule, so a fixture written there never has to resolve.
+SKIP_NAMES |= {"check_doc_links_test.py", "check_no_retired_names_test.py"}
 
 
 def normalize_source_path(raw: str, rest: str, top_level: set[str]) -> str | None:

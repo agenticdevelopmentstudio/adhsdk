@@ -1,5 +1,5 @@
 {
-  "name": "@agentic-toolkit/personas",
+  "name": "@adh-sdk/personas",
   "version": "0.1.0",
   "description": "The Personas feature: persona editor, services, abilities/permissions panels.",
   "license": "UNLICENSED",
@@ -36,16 +36,16 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@agentic-toolkit/adh-ui": "workspace:*",
-    "@agentic-toolkit/auth": "workspace:*",
-    "@agentic-toolkit/crud": "workspace:*",
-    "@agentic-toolkit/data": "workspace:*",
-    "@agentic-toolkit/persona": "workspace:*",
-    "@agentic-toolkit/teams": "workspace:*",
-    "@agentic-toolkit/resource": "workspace:*",
+    "@adh-sdk/adh-ui": "workspace:*",
+    "@adh-sdk/auth": "workspace:*",
+    "@adh-sdk/crud": "workspace:*",
+    "@adh-sdk/data": "workspace:*",
+    "@adh-sdk/persona": "workspace:*",
+    "@adh-sdk/teams": "workspace:*",
+    "@adh-sdk/resource": "workspace:*",
     "@tanstack/react-query": "^5.62.0",
     "lucide-react": "^1.16.0",
-    "@agenticdevelopertoolkit/ui": "workspace:*"
+    "@adh-sdk/ui": "workspace:*"
   },
   "peerDependencies": {
     "next": ">=15",

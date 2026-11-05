@@ -1,7 +1,7 @@
 ---
 id: 93f50554-5ae3-4a43-b8db-539d4d804890
 title: "Help Content View"
-domain: adtoolkit://cookbook/ui/containers/help-content-view
+domain: adhsdk://cookbook/ui/containers/help-content-view
 type: ingredient
 version: 1.3.0
 status: review
@@ -19,10 +19,10 @@ tags:
   - settings
   - help
 depends-on:
-  - adtoolkit://cookbook/ui/settings/layout/explanation-view
-  - adtoolkit://cookbook/ui/settings/layout/group-view
-  - adtoolkit://cookbook/ui/settings/layout/panel-scroll-view
-  - adtoolkit://cookbook/ui/settings/layout/panel-view
+  - adhsdk://cookbook/ui/settings/layout/explanation-view
+  - adhsdk://cookbook/ui/settings/layout/group-view
+  - adhsdk://cookbook/ui/settings/layout/panel-scroll-view
+  - adhsdk://cookbook/ui/settings/layout/panel-view
 related: []
 references: []
 approved-by: ""
@@ -147,7 +147,7 @@ feeds it the active panel's help content.
   the literal string `"Help"` (**fixed-help-heading**). Per-topic labeling
   is a Group View's and an Explanation View's responsibility, not this
   file's; the Explanation View's own recipe
-  (`adtoolkit://cookbook/ui/settings/layout/explanation-view`) covers
+  (`adhsdk://cookbook/ui/settings/layout/explanation-view`) covers
   its label behavior.
 - **Announce state changes (e.g., loading, disabled)**: The content-setting
   operation tears down and rebuilds the entire scrolled panel with no
@@ -331,7 +331,7 @@ source.
   `scrollTop = 0` on the scrollable container whenever the topic list
   changes, mirroring **scroll-reset**.
 - **AppKit / UIKit** (source platform): Source at
-  `packages/apple/AgenticToolkit/macOS/UI/Help/HelpContentView.swift` (this
+  `packages/apple/AgenticDeveloperHubSDK/macOS/UI/Help/HelpContentView.swift` (this
   recipe's source): a macOS-only (`import AppKit`) `NSView` subclass,
   `@MainActor`, composing one `NSTextField` heading with a
   `ComposableSettings.PanelScrollView` hosting a `ComposableSettings.PanelView`
@@ -425,7 +425,7 @@ source.
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/macOS/UI/Help/HelpContentView.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/Help/HelpContentView.swift` |
 
 ## Design Decisions
 
@@ -466,7 +466,7 @@ source.
   equality check or partial-update path. The content-setting operation is
   called only when the panel/topic selection changes — `SplitViewController.show(_:)` and
   `refreshHelp()`, in
-  `packages/apple/AgenticToolkit/macOS/SystemIntegration/ComposableSettingsWindow/SplitViewController/SplitViewController.swift`,
+  `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/SplitViewController/SplitViewController.swift`,
   are the only call sites (reached through `PanelHostView` and
   `HelpDrawerController.setHelp(_:)`), and both fire from the reader
   changing which panel or topic is selected — not on a hot or

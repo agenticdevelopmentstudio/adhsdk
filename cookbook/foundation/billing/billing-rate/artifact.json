@@ -3,7 +3,7 @@
   "meta": {
     "id": "BBE7358F-2001-4E67-83CB-0627DE522C42",
     "title": "Billing Rate",
-    "domain": "adtoolkit://cookbook/foundation/billing/billing-rate",
+    "domain": "adhsdk://cookbook/foundation/billing/billing-rate",
     "type": "ingredient",
     "version": "1.0.0",
     "status": "review",
@@ -25,8 +25,8 @@
     ],
     "depends-on": [],
     "related": [
-      "adtoolkit://cookbook/foundation/billing/billing-rollup",
-      "adtoolkit://cookbook/foundation/billing/billing-dt-os"
+      "adhsdk://cookbook/foundation/billing/billing-rollup",
+      "adhsdk://cookbook/foundation/billing/billing-dt-os"
     ],
     "references": [],
     "approved-by": "",

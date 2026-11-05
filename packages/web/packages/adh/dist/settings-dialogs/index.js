@@ -10,7 +10,7 @@ import {
   duplicateFlagKeyMessage,
   flagFormBlockedReason,
   isFlagFormDirty
-} from "@agentic-toolkit/ecosystem-config/dialog-state";
+} from "@adh-sdk/ecosystem-config/dialog-state";
 export {
   BAG_KEY_REQUIRED_MESSAGE,
   FLAG_KEY_REQUIRED_MESSAGE,

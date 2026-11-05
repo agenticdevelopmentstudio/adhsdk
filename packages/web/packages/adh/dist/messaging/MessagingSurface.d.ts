@@ -14,7 +14,7 @@ import { type ReactElement, type ReactNode } from "react";
  * keys, the enabled-conditions and the invalidation are the host's — and because a hook prop
  * would make the number of hooks this component runs depend on which host mounted it.
  *
- * Unrelated to `@agentic-toolkit/messaging`, which is in-app messaging between users
+ * Unrelated to `@adh-sdk/messaging`, which is in-app messaging between users
  * (notifications, DMs, presence). This is the OUTBOUND tool: email/SMS to a person, through
  * a Postmark/Twilio account, with a log of what was sent.
  */

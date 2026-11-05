@@ -6,19 +6,19 @@ import {
   applyBaseTheme,
   persistTheme,
   readStoredTheme,
-} from "@agentic-toolkit/adh/themes/theme-preview";
-import { Select } from "@agenticdevelopertoolkit/ui/components/select";
+} from "@adh-sdk/adh/themes/theme-preview";
+import { Select } from "@adh-sdk/ui/components/select";
 
-import { SettingRow } from "@agentic-toolkit/account";
+import { SettingRow } from "@adh-sdk/account";
 
 /**
  * The dev-only theme picker, in its OWN module — and its OWN tsup entry
- * (`settings/ThemePickerRow`, `@agentic-toolkit/adh/settings/ThemePickerRow` in
+ * (`settings/ThemePickerRow`, `@adh-sdk/adh/settings/ThemePickerRow` in
  * tsup.config.ts's `external`) — so it can be gated out of production bundles.
  * AppearancePanel reaches it through a `next/dynamic` behind inlined
  * `process.env.NEXT_PUBLIC_DEPLOYMENT_ENV === '…'` comparisons; it used to be a
  * function in that file behind `DEV_BUILD ? … : null`, which hid the row but shipped
- * this code — and `@agentic-toolkit/adh/themes/theme-preview` with it — to all ~45
+ * this code — and `@adh-sdk/adh/themes/theme-preview` with it — to all ~45
  * production sites. `DEV_BUILD` is an identifier, and webpack will not fold past one
  * (the reasoning is written out in adh-registry's src/deployment-env.ts).
  *

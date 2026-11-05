@@ -3,12 +3,12 @@ import { describe, it, expect, afterEach, vi } from "vitest";
 import { render, screen, fireEvent, cleanup, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
-import { tokensApi, type ApiToken } from "@agentic-toolkit/data/security";
+import { tokensApi, type ApiToken } from "@adh-sdk/data/security";
 import { TokensPanel } from "./TokensPanel";
 
 // The panel calls useQuery/useMutation on `tokensApi` directly, so only the network is stubbed.
-vi.mock("@agentic-toolkit/data/security", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("@agentic-toolkit/data/security")>();
+vi.mock("@adh-sdk/data/security", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@adh-sdk/data/security")>();
   return {
     ...actual,
     tokensApi: {

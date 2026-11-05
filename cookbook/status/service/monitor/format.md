@@ -1,7 +1,7 @@
 ---
 id: ae9a73de-80c8-4deb-82ab-89c7c5854c54
 title: "Status Server Monitor Format"
-domain: adtoolkit://cookbook/status/service/monitor/format
+domain: adhsdk://cookbook/status/service/monitor/format
 type: ingredient
 version: 1.0.3
 status: review
@@ -23,15 +23,15 @@ tags:
 depends-on: []
 related: []
 references:
-  - packages/web/packages/status-server/src/monitor/format.ts (agenticdevelopertoolkit)
-  - packages/web/packages/status-server/test/format.test.ts (agenticdevelopertoolkit)
-  - packages/web/packages/status-server/src/monitor/webhook-events.ts (agenticdevelopertoolkit)
-  - packages/web/packages/status-server/src/monitor/fetch-vercel.ts (agenticdevelopertoolkit)
-  - packages/web/packages/status-server/src/monitor/fetch-vercel-projects.ts (agenticdevelopertoolkit)
-  - packages/web/packages/status-server/src/monitor/fetch-railway.ts (agenticdevelopertoolkit)
-  - packages/web/packages/status-server/src/monitor/fetch-cloudflare.ts (agenticdevelopertoolkit)
-  - packages/web/packages/status-server/src/board/derive-activity.ts (agenticdevelopertoolkit)
-  - packages/web/packages/status-server/src/board/derive-problems.ts (agenticdevelopertoolkit)
+  - packages/web/packages/status-server/src/monitor/format.ts (adhsdk)
+  - packages/web/packages/status-server/test/format.test.ts (adhsdk)
+  - packages/web/packages/status-server/src/monitor/webhook-events.ts (adhsdk)
+  - packages/web/packages/status-server/src/monitor/fetch-vercel.ts (adhsdk)
+  - packages/web/packages/status-server/src/monitor/fetch-vercel-projects.ts (adhsdk)
+  - packages/web/packages/status-server/src/monitor/fetch-railway.ts (adhsdk)
+  - packages/web/packages/status-server/src/monitor/fetch-cloudflare.ts (adhsdk)
+  - packages/web/packages/status-server/src/board/derive-activity.ts (adhsdk)
+  - packages/web/packages/status-server/src/board/derive-problems.ts (adhsdk)
 approved-by: ""
 approved-date: ""
 ---

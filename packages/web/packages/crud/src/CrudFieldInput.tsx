@@ -1,9 +1,9 @@
 'use client'
 
-import { Checkbox } from '@agenticdevelopertoolkit/ui/components/checkbox'
-import { Input } from '@agenticdevelopertoolkit/ui/components/input'
-import { Select } from '@agenticdevelopertoolkit/ui/components/select'
-import { Textarea } from '@agenticdevelopertoolkit/ui/components/textarea'
+import { Checkbox } from '@adh-sdk/ui/components/checkbox'
+import { Input } from '@adh-sdk/ui/components/input'
+import { Select } from '@adh-sdk/ui/components/select'
+import { Textarea } from '@adh-sdk/ui/components/textarea'
 import type { CrudColumn } from './types'
 
 /** Columns edited as JSON text. 'unknown' is included: the spec types jsonb

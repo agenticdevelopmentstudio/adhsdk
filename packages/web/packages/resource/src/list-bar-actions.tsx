@@ -3,7 +3,7 @@
 import type { ReactNode } from "react";
 import { Pencil, Plus, Trash2 } from "lucide-react";
 
-import { Button } from "@agenticdevelopertoolkit/ui/components/button";
+import { Button } from "@adh-sdk/ui/components/button";
 
 /**
  * The Add / Edit / Delete verbs an `EditableList`'s bar carries, laid out the way admin's Users

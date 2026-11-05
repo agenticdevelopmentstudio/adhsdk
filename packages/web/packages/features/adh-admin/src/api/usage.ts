@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import type { RequestBody, SuccessBody } from "@agentic-toolkit/adh-api-types";
+import type { RequestBody, SuccessBody } from "@adh-sdk/adh-api-types";
 import { authedJson } from "./http";
 import { useCreateFlag, useUpdateFlag } from "./admin";
 

@@ -1,7 +1,7 @@
 ---
 id: 91114bf5-ad41-4cbd-b91b-c49bba9625d5
 title: ChatWindowController
-domain: agenticdevelopertoolkit://recipes/chat-window-controller
+domain: adhsdk://recipes/chat-window-controller
 type: ingredient
 version: 1.1.1
 status: review
@@ -22,7 +22,7 @@ tags:
 - macos
 - appkit
 depends-on:
-- agenticdevelopertoolkit://recipes/inline-chat
+- adhsdk://recipes/inline-chat
 related: []
 references: []
 approved-by: ''
@@ -176,7 +176,7 @@ Subsystem: Determined by host application | Category: ChatWindowController
 
 ## Platform Notes
 
-- **Apple (source)**: `ChatWindowController` in `packages/apple/AgenticDeveloperToolkit/SourcesUI/macOS/Chat/ChatWindowController.swift`. An AppKit `NSWindowController` subclass that manages a window with no title bar, transparent background, and frame persistence. Uses `ChatWindowConfiguration` as a value type to support multiple windows with independent settings. Delegates chat display to `InlineChatView` and appearance controls to `ChatWindowAppearanceController`. The `ChatContentViewController` wrapper ensures the content view scales to the requested size rather than shrink-wrapping it.
+- **Apple (source)**: `ChatWindowController` in `packages/apple/AgenticDeveloperHubSDK/SDK/SourcesUI/macOS/Chat/ChatWindowController.swift`. An AppKit `NSWindowController` subclass that manages a window with no title bar, transparent background, and frame persistence. Uses `ChatWindowConfiguration` as a value type to support multiple windows with independent settings. Delegates chat display to `InlineChatView` and appearance controls to `ChatWindowAppearanceController`. The `ChatContentViewController` wrapper ensures the content view scales to the requested size rather than shrink-wrapping it.
 - **SwiftUI**: SwiftUI does not provide a direct equivalent to AppKit's `NSWindowController`. `NSViewControllerRepresentable` wraps view controllers, not window controllers, so it cannot host `ChatWindowController` directly; `@Environment(\.openWindow)` opens a SwiftUI `Window` scene, not an arbitrary `NSWindowController`. The closer equivalent is a `Window` scene styled with `.windowStyle(.hiddenTitleBar)` and `.containerBackground(.clear, for: .window)` to approximate the hidden title bar and translucency, built from SwiftUI views; or, when the AppKit implementation itself must be reused, keep `ChatWindowController` as a plain AppKit controller instantiated and shown from the SwiftUI app's `@main` entry point rather than trying to wrap it as a scene.
 - **Compose**: Android does not have a single-window model; Chat UI is typically displayed full-screen or in a modal dialog. Equivalent behavior would be a modal `Dialog` or `ModalBottomSheet` with a `TopAppBar` containing appearance controls and a text input field for the composer.
 - **AppKit / UIKit**: The actual implementation is AppKit: an `NSWindowController` subclass managing an `NSWindow` with `titleVisibility = .hidden`, `titlebarAppearsTransparent = true`, explicit `standardWindowButton(_:)?.isHidden = true` for each title-bar button, `isOpaque = false`/`backgroundColor = .clear` for translucency, `isMovableByWindowBackground = true`, and `windowFrameAutosaveName` for frame persistence (see **hide-title-bar**, **translucent**, **movable-by-background**, **autosave-frame**). None of this applies directly on iOS — UIKit has no window chrome to hide and no window-frame autosave API. Present a chat interface in a modal `UIViewController` or a dedicated screen in a navigation stack instead, using `navigationBarTitleDisplayMode(.inline)` or a custom header view for a minimal title presentation, and `UIApplication.supportsMultipleScenes`/`SceneDelegate` state restoration in place of frame autosave.

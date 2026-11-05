@@ -2,8 +2,8 @@
 - **SwiftUI**: The three pieces are implemented as `JITAvailability`,
   `UpstreamDivergence` (with its nested `Detection` enum and companion
   `UpstreamDivergenceHit`), and `UpstreamDivergenceLedger`, in
-  `packages/apple/AgenticToolkit/Core/Diagnostics/`, part of the
-  `AgenticToolkitCore` framework target. `JITAvailability` is a `Sendable,
+  `packages/apple/AgenticDeveloperHubSDK/Core/Diagnostics/`, part of the
+  `AgenticDeveloperHubSDKCore` framework target. `JITAvailability` is a `Sendable,
   Hashable` struct with a public initializer that assigns its two `Bool`
   properties (`isHardenedRuntime`, `hasJITEntitlement`) directly; its
   `current` is a `static let`, memoized once by Swift's own thread-safe
@@ -60,7 +60,7 @@
   single-threaded event loop needs no `NSLock` equivalent at all.
 - **AppKit / UIKit**: Identical to the SwiftUI note — none of the three
   types is UI-framework-specific; only the host application embedding
-  `AgenticToolkitCore` differs, never this contract. (`JITAvailability`'s
+  `AgenticDeveloperHubSDKCore` differs, never this contract. (`JITAvailability`'s
   own consumer, `ExtensionHost.swift`, happens to be an AppKit-hosted,
   macOS-only feature, but that is a fact about the caller, not this
   component.)

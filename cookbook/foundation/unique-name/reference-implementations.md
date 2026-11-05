@@ -1,5 +1,5 @@
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/Core/UniqueName.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/UniqueName.swift` |
 

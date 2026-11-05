@@ -39,7 +39,7 @@
   Implement zoom by conditionally rendering `display: none` on every sibling
   not on the path to the zoomed leaf, the DOM analog of `isCollapsed`.
 - **AppKit/UIKit** (source platform): Implemented across
-  `packages/apple/AgenticToolkit/macOS/UI/ViewControllers/ComposableTabs/ComposableTabsViewController.swift`
+  `packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/ComposableTabs/ComposableTabsViewController.swift`
   (the tree itself: init, layout, arrangement, thickness capture/persist,
   split/remove/move/rebuild, spec-gated mutation, and `LayoutNode`
   construction) and `ComposableTabsPaneHost.swift` (the `PaneHost` conformance

@@ -2,8 +2,8 @@
 "use client";
 
 // src/profile/ProfileView.tsx
-import { siteUrl, siteProdUrl } from "@agentic-toolkit/adh-registry";
-import { UserCard, UserCardSkeleton } from "@agenticdevelopertoolkit/ui/blocks/user-card";
+import { siteUrl, siteProdUrl } from "@adh-sdk/adh-registry";
+import { UserCard, UserCardSkeleton } from "@adh-sdk/ui/blocks/user-card";
 
 // src/header/useClientHost.ts
 import { useEffect, useState } from "react";
@@ -18,8 +18,8 @@ var PROFILE_FRAME_CLASS = "mx-auto max-w-2xl px-4 py-16 sm:px-6";
 
 // src/profile/useViewerPrincipal.ts
 import { useEffect as useEffect2, useState as useState2 } from "react";
-import { useOptionalAuth } from "@agentic-toolkit/auth";
-import { authedJson } from "@agentic-toolkit/auth/client";
+import { useOptionalAuth } from "@adh-sdk/auth";
+import { authedJson } from "@adh-sdk/auth/client";
 
 // src/profile/normalize.ts
 function principalFromUserCard(body) {
@@ -126,10 +126,10 @@ function ProfileSkeleton() {
 import { useState as useState3, useCallback, useRef } from "react";
 import Link from "next/link";
 import { Search } from "lucide-react";
-import { Avatar, AvatarImage, AvatarFallback } from "@agenticdevelopertoolkit/ui/components/avatar";
-import { Input } from "@agenticdevelopertoolkit/ui/components/input";
-import { Button } from "@agenticdevelopertoolkit/ui/components/button";
-import { ErrorText } from "@agenticdevelopertoolkit/ui/components/error-text";
+import { Avatar, AvatarImage, AvatarFallback } from "@adh-sdk/ui/components/avatar";
+import { Input } from "@adh-sdk/ui/components/input";
+import { Button } from "@adh-sdk/ui/components/button";
+import { ErrorText } from "@adh-sdk/ui/components/error-text";
 import { jsx as jsx2, jsxs as jsxs2 } from "react/jsx-runtime";
 function initials(name) {
   return name.split(/\s+/).filter(Boolean).slice(0, 2).map((p) => p[0]?.toUpperCase() ?? "").join("");

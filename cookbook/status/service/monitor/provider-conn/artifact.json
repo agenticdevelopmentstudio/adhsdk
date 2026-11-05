@@ -3,7 +3,7 @@
   "meta": {
     "id": "4aad9d0a-4984-4021-ad1f-d8aa6a15b066",
     "title": "Status Server Monitor Provider Connection",
-    "domain": "adtoolkit://cookbook/status/service/monitor/provider-conn",
+    "domain": "adhsdk://cookbook/status/service/monitor/provider-conn",
     "type": "ingredient",
     "version": "1.0.3",
     "status": "review",
@@ -29,20 +29,20 @@
       "agenticdevelopercookbook://guidelines/implementing/security/secure-storage"
     ],
     "related": [
-      "adtoolkit://cookbook/status/service/config",
-      "adtoolkit://cookbook/status/service/monitor/enrich-deploy-errors",
-      "adtoolkit://cookbook/status/service/monitor/fetch-vercel-projects"
+      "adhsdk://cookbook/status/service/config",
+      "adhsdk://cookbook/status/service/monitor/enrich-deploy-errors",
+      "adhsdk://cookbook/status/service/monitor/fetch-vercel-projects"
     ],
     "references": [
-      "packages/web/packages/status-server/src/monitor/provider-conn.ts (agenticdevelopertoolkit)",
-      "packages/web/packages/status-server/src/config/port.ts (agenticdevelopertoolkit)",
-      "packages/web/packages/status-server/src/storage/ports.ts (agenticdevelopertoolkit)",
-      "packages/web/packages/deploy-platform/src/conn/index.ts (agenticdevelopertoolkit)",
-      "packages/web/packages/deploy-platform/src/enumerate/index.ts (agenticdevelopertoolkit)",
-      "packages/web/packages/status-server/src/monitor/sync.ts (agenticdevelopertoolkit)",
-      "packages/web/packages/status-server/src/monitor/refresh-project-meta.ts (agenticdevelopertoolkit)",
-      "packages/web/packages/status-server/src/routes/reads.ts (agenticdevelopertoolkit)",
-      "packages/web/packages/status-server/src/routes/deploy-logs.ts (agenticdevelopertoolkit)"
+      "packages/web/packages/status-server/src/monitor/provider-conn.ts (adhsdk)",
+      "packages/web/packages/status-server/src/config/port.ts (adhsdk)",
+      "packages/web/packages/status-server/src/storage/ports.ts (adhsdk)",
+      "packages/web/packages/deploy-platform/src/conn/index.ts (adhsdk)",
+      "packages/web/packages/deploy-platform/src/enumerate/index.ts (adhsdk)",
+      "packages/web/packages/status-server/src/monitor/sync.ts (adhsdk)",
+      "packages/web/packages/status-server/src/monitor/refresh-project-meta.ts (adhsdk)",
+      "packages/web/packages/status-server/src/routes/reads.ts (adhsdk)",
+      "packages/web/packages/status-server/src/routes/deploy-logs.ts (adhsdk)"
     ],
     "approved-by": "",
     "approved-date": ""

@@ -1,7 +1,7 @@
 ---
 id: 93e8b186-b7a6-41c5-90a8-21b67a47ef72
 title: Site Header
-domain: agenticdevelopertoolkit://recipes/site-header
+domain: adhsdk://recipes/site-header
 type: ingredient
 version: 1.1.1
 status: review
@@ -22,7 +22,7 @@ tags:
 - responsive
 - flow-page
 depends-on:
-- agenticdevelopertoolkit://recipes/nav-chrome
+- adhsdk://recipes/nav-chrome
 related: []
 references: []
 approved-by: ''

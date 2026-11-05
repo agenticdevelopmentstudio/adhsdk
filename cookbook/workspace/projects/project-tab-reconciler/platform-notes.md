@@ -1,7 +1,7 @@
 
 - **SwiftUI**: The source is
-  `packages/apple/AgenticToolkit/macOS/Features/Projects/ProjectTabReconciler.swift`,
-  which imports only `AgenticToolkitCore` and `Foundation` — no SwiftUI,
+  `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectTabReconciler.swift`,
+  which imports only `AgenticDeveloperHubSDKCore` and `Foundation` — no SwiftUI,
   AppKit, or UIKit dependency. A port needs its sibling value types
   alongside it: `TabRecord` and `Edge` from
   `macOS/UI/ViewControllers/ComposableTabs/LayoutNode.swift` and

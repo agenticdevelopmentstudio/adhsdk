@@ -1,9 +1,9 @@
 "use client";
 
 import { useCallback, useMemo, useState } from "react";
-import { useResourceList } from "@agentic-toolkit/data";
-import { projectsApi, type SavedView } from "@agentic-toolkit/data/projects";
-import { errorMessage } from "@agenticdevelopertoolkit/ui/lib/errors";
+import { useResourceList } from "@adh-sdk/data";
+import { projectsApi, type SavedView } from "@adh-sdk/data/projects";
+import { errorMessage } from "@adh-sdk/ui/lib/errors";
 import { EMPTY_FILTER } from "./filters";
 import {
   decodeViewConfig,

@@ -3,7 +3,7 @@ import {
   listRailwayProjectDomains,
   railwayProjectEnvironments,
   type RailwayServiceDomains,
-} from '@agentic-toolkit/deploy-platform/providers';
+} from '@adh-sdk/deploy-platform/providers';
 
 afterEach(() => vi.unstubAllGlobals());
 

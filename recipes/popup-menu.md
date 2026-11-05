@@ -1,7 +1,7 @@
 ---
 id: bf49f12b-61cd-4e34-b395-0b6e5fe715a2
 title: Popup Menu
-domain: agenticdevelopertoolkit://recipes/popup-menu
+domain: adhsdk://recipes/popup-menu
 type: ingredient
 version: 1.1.1
 status: review
@@ -20,7 +20,7 @@ tags:
 - dropdown
 - selector
 depends-on:
-- agenticdevelopertoolkit://recipes/dropdown-menu
+- adhsdk://recipes/dropdown-menu
 related: []
 references: []
 approved-by: ''
@@ -181,7 +181,7 @@ Subsystem: implicit (browser console); no explicit logger configured in componen
 
 ## Platform Notes
 
-- **React/Web (source)**: Implemented in `packages/web/packages/ui/src/blocks/popup-menu.tsx` using React hooks and the shared `dropdown-menu` primitives — `DropdownMenu`, `DropdownMenuTrigger`, `DropdownMenuContent`, `DropdownMenuRadioGroup`, `DropdownMenuRadioItem`, `DropdownMenuSeparator`, `DropdownMenuItem` (see agenticdevelopertoolkit://recipes/dropdown-menu) — plus lucide-react icons and Tailwind CSS utility classes. The single-selection group (**single-select-item-group**) is implemented with `DropdownMenuRadioGroup`/`DropdownMenuRadioItem`; the internal "All" sentinel value is the string `"__all__"`. The default affordance icon (**default-affordance-icon**) is `ChevronsUpDown` at 13px. Consumer class overrides (**accept-trigger-class-name**) are merged with the `cn()` helper, whose later arguments win. Trigger uses semantic color tokens (`apt-*`) and includes focus/hover state styling. The component is a faithful port of a prior internal resource-selector implementation (see the source file's header comment for provenance).
+- **React/Web (source)**: Implemented in `packages/web/packages/ui/src/blocks/popup-menu.tsx` using React hooks and the shared `dropdown-menu` primitives — `DropdownMenu`, `DropdownMenuTrigger`, `DropdownMenuContent`, `DropdownMenuRadioGroup`, `DropdownMenuRadioItem`, `DropdownMenuSeparator`, `DropdownMenuItem` (see adhsdk://recipes/dropdown-menu) — plus lucide-react icons and Tailwind CSS utility classes. The single-selection group (**single-select-item-group**) is implemented with `DropdownMenuRadioGroup`/`DropdownMenuRadioItem`; the internal "All" sentinel value is the string `"__all__"`. The default affordance icon (**default-affordance-icon**) is `ChevronsUpDown` at 13px. Consumer class overrides (**accept-trigger-class-name**) are merged with the `cn()` helper, whose later arguments win. Trigger uses semantic color tokens (`apt-*`) and includes focus/hover state styling. The component is a faithful port of a prior internal resource-selector implementation (see the source file's header comment for provenance).
 
 - **SwiftUI**: Build using a `Picker` with `.pickerStyle(.menu)` bound to the selected id (mapping `nil` through an internal sentinel for the "All" state, per **single-select-item-group**); populate options with `ForEach` over `items`, prepending an "All" option when `allLabel != nil`. Render "New…" as a `Button` below a `Divider` when the `onNew` callback exists. Satisfy **focus-indicator-contrast** with a custom border-color change driven by a `@FocusState` binding — `.focusEffectDisabled()` only suppresses the system focus ring, it does not itself apply styling. Use `.accessibilityLabel()` for `ariaLabel`.
 

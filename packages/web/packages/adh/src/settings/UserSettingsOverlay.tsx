@@ -6,13 +6,13 @@ import {
   Dialog,
   DialogContent,
   DialogTitle,
-} from "@agenticdevelopertoolkit/ui/components/dialog";
-import { UnsavedChangesAlert } from "@agenticdevelopertoolkit/ui/components/unsaved-changes-alert";
-import { SettingsLayout } from "@agentic-toolkit/account";
-import { SettingsDirtyProvider, useSettingsDirty } from "@agentic-toolkit/resource";
+} from "@adh-sdk/ui/components/dialog";
+import { UnsavedChangesAlert } from "@adh-sdk/ui/components/unsaved-changes-alert";
+import { SettingsLayout } from "@adh-sdk/account";
+import { SettingsDirtyProvider, useSettingsDirty } from "@adh-sdk/resource";
 // The react-query runtime every panel below fetches through, mounted HERE rather than in
 // settings-overlay.tsx for two independent reasons. (1) Bundle: that module is the
-// always-loaded barrel, so a static `@agentic-toolkit/data/query` import there puts
+// always-loaded barrel, so a static `@adh-sdk/data/query` import there puts
 // react-query in the eager graph of every page of ~45 sites, for a dialog a signed-out
 // visitor cannot open — the same cost the lazy() split exists to avoid. This entry is the
 // lazy chunk, so the import is paid on first open only. (2) Correctness: there it was a
@@ -21,13 +21,13 @@ import { SettingsDirtyProvider, useSettingsDirty } from "@agentic-toolkit/resour
 // every site that mounts one inside its own tree got a second client — the exact
 // two-caches-one-subtree trap that check was added to close. Wrapping the overlay makes it
 // a real ancestor of the panels and a real descendant of the host's shell provider.
-import { ToolkitQueryProvider } from "@agentic-toolkit/data/query";
+import { ToolkitQueryProvider } from "@adh-sdk/data/query";
 import { buildSettingsTopics } from "./registry";
 // Package path, not "./topics": this is the same specifier a Server Component outside this
 // package must use to reach these exports without going through the "use client"-tainted
 // settings/index barrel — using it here too keeps one documented route, in and out of the
 // package. See topics.ts's and settings/index.ts's own header comments.
-import { DEFAULT_SETTINGS_TOPIC } from "@agentic-toolkit/adh/settings/topics";
+import { DEFAULT_SETTINGS_TOPIC } from "@adh-sdk/adh/settings/topics";
 
 /**
  * The User Settings master-detail (Account / Subscription / Profile) shown as a
@@ -151,7 +151,7 @@ function UserSettingsDialog({
 // graph of every consuming build, undoing the split (measured — see the comment in
 // settings/index.ts). So the barrel no longer names them, and a host that renders the
 // settings rail as a routed page rather than as the overlay — hub's /settings, the only one —
-// imports "@agentic-toolkit/adh/settings/UserSettingsOverlay" itself. That host pays for the
+// imports "@adh-sdk/adh/settings/UserSettingsOverlay" itself. That host pays for the
 // panel graph on the route whose entire purpose is the panel graph; nobody else pays at all.
 export { buildSettingsTopics, SettingsTab } from "./registry";
-export type { Topic } from "@agentic-toolkit/account";
+export type { Topic } from "@adh-sdk/account";

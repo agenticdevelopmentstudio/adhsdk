@@ -26,21 +26,21 @@ import {
   RailHostContext,
   type RailHostRegistry,
   type RegisteredLevels,
-} from "@agentic-toolkit/resource";
+} from "@adh-sdk/resource";
 // The shared rail/toolbar stand-in (G68, Mike, 2026-09-25) — see its own doc comment for why a
 // single copy replaced five near-identical ones and what it draws. `showTitle` because this
 // harness always rendered each level's `<h3>{title}</h3>`.
-import { RailStandIn } from "@agentic-toolkit/resource/testing";
-import type { TopicLevel } from "@agenticdevelopertoolkit/ui/blocks";
+import { RailStandIn } from "@adh-sdk/resource/testing";
+import type { TopicLevel } from "@adh-sdk/ui/blocks";
 
-vi.mock("@agentic-toolkit/auth", () => ({
+vi.mock("@adh-sdk/auth", () => ({
   useAuth: () => ({ user: { name: "Ada Lovelace" } }),
   reportUnexpectedAuthError: vi.fn(),
 }));
 
 // Both clients are mocked, because the assertion that matters is a NEGATIVE one: the notes
 // client has to be present and observable for "it was never called" to mean anything.
-vi.mock("@agentic-toolkit/data/notes", () => ({
+vi.mock("@adh-sdk/data/notes", () => ({
   notesApi: {
     list: vi.fn(),
     get: vi.fn(),
@@ -62,7 +62,7 @@ vi.mock("@agentic-toolkit/data/notes", () => ({
   },
 }));
 
-vi.mock("@agentic-toolkit/data/docs", () => ({
+vi.mock("@adh-sdk/data/docs", () => ({
   docsApi: {
     list: vi.fn(),
     get: vi.fn(),
@@ -82,8 +82,8 @@ import {
   type Note,
   type NoteCategory,
   type NoteSummary,
-} from "@agentic-toolkit/data/notes";
-import { docsApi } from "@agentic-toolkit/data/docs";
+} from "@adh-sdk/data/notes";
+import { docsApi } from "@adh-sdk/data/docs";
 
 const docs = {
   list: vi.mocked(docsApi.list),

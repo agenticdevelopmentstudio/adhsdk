@@ -35,7 +35,7 @@
   value that doesn't map to a known option to mirror
   ignores-unresolvable-selection.
 - **AppKit/UIKit** (source platform): Source file
-  `packages/apple/AgenticToolkit/macOS/SystemIntegration/ComposableSettingsWindow/Views/PopupMenuChoiceView.swift`.
+  `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/Views/PopupMenuChoiceView.swift`.
   A macOS-only (`import AppKit`) `NSView` subclass, `@MainActor`, generic
   over `Value: Codable & Sendable & Equatable`, inside the
   `ComposableSettings` namespace, conforming to `SettingsViewProtocol`. It

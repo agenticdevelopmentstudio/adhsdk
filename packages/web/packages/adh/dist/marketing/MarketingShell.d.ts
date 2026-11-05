@@ -1,9 +1,9 @@
 import { type ComponentType, type ReactElement, type ReactNode } from "react";
-import { type AppShellProps } from "@agentic-toolkit/adh/layout";
-import type { SiteId } from "@agentic-toolkit/adh-registry";
-import type { NavLink } from "@agentic-toolkit/adh/header";
-import type { FooterLink } from "@agentic-toolkit/adh/footer";
-import { type SiteHelp } from "@agenticdevelopertoolkit/ui/components/help-content";
+import { type AppShellProps } from "@adh-sdk/adh/layout";
+import type { SiteId } from "@adh-sdk/adh-registry";
+import type { NavLink } from "@adh-sdk/adh/header";
+import type { FooterLink } from "@adh-sdk/adh/footer";
+import { type SiteHelp } from "@adh-sdk/ui/components/help-content";
 /** The serializable half of a link: what a server layout can hand across the
  *  boundary. NavLink's `icon`/function form and FooterLink's `onSelect` cannot
  *  cross it, and a site that needs either is not describing chrome any more.
@@ -126,7 +126,7 @@ export declare const FAMILY_ROOT_CLASS = "adh-family";
  *
  * `MarketingRootHtml` is this inside `<html>`/`<head>`/`<body>`, and every family site whose
  * root layout is its own mounts that. This exists for the one case where the document is
- * somebody else's: a site built on `@agenticdevelopertoolkit/site-template` has the template's
+ * somebody else's: a site built on `@adh-sdk/site-template` has the template's
  * root layout, which already writes `<html>` and `<body>`, and keeps its family routes (privacy,
  * terms, the signed-in pages) in a route group below it. That group mounts this, with
  * `<AdhThemeStyle/>` beside it, instead of copying the chain — the copy is what the uniformity

@@ -1,6 +1,6 @@
 
 - **SwiftUI**: The sources are
-  `packages/apple/AgenticToolkit/macOS/UI/ViewControllers/FileBrowser/Model/Git/GitStatusProvider.swift`
+  `packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/FileBrowser/Model/Git/GitStatusProvider.swift`
   and `GitFileStatus+Color.swift` in the same directory, alongside their
   collaborators `GitClient.swift`, `GitStatus.swift`, `GitFileStatus.swift`,
   and `GitClientError.swift` (all under `Core/Git`). Both files are plain

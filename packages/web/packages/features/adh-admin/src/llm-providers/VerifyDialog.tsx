@@ -8,13 +8,13 @@ import {
   DialogHeader,
   DialogTitle,
   DialogDescription,
-} from "@agenticdevelopertoolkit/ui/components/dialog";
-import { DialogActions } from "@agenticdevelopertoolkit/ui/components/dialog-actions";
-import { Input } from "@agenticdevelopertoolkit/ui/components/input";
-import { Field } from "@agenticdevelopertoolkit/ui/blocks/field";
-import { Alert, AlertTitle, AlertDescription } from "@agenticdevelopertoolkit/ui/components/alert";
-import { Badge } from "@agenticdevelopertoolkit/ui/components/badge";
-import { errorMessage } from "@agenticdevelopertoolkit/ui/lib/errors";
+} from "@adh-sdk/ui/components/dialog";
+import { DialogActions } from "@adh-sdk/ui/components/dialog-actions";
+import { Input } from "@adh-sdk/ui/components/input";
+import { Field } from "@adh-sdk/ui/blocks/field";
+import { Alert, AlertTitle, AlertDescription } from "@adh-sdk/ui/components/alert";
+import { Badge } from "@adh-sdk/ui/components/badge";
+import { errorMessage } from "@adh-sdk/ui/lib/errors";
 import {
   useVerifyProviderTemplate,
   type ProviderTemplate,

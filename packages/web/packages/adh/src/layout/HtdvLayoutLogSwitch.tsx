@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect } from 'react'
-import { setHtdvLayoutLog } from '@agenticdevelopertoolkit/ui/blocks'
+import { setHtdvLayoutLog } from '@adh-sdk/ui/blocks'
 
 /**
  * Turns the toolkit's HTDV layout log on (see `htdv-log.ts` in the ui blocks): one console line per
@@ -10,7 +10,7 @@ import { setHtdvLayoutLog } from '@agenticdevelopertoolkit/ui/blocks'
  *
  * Mounted from {@link AdhAppShell} behind its `devTools` prop, which the host derives from its own
  * build-inlined environment allowlist (`DEV_TOOLS_BUILD_ENABLED` in
- * `@agentic-toolkit/adh/header`): every
+ * `@adh-sdk/adh/header`): every
  * environment except production gets the log by default. Note the gate is a RUNTIME one — this
  * component ships in the production bundle and simply never mounts there, so the toolkit's default
  * (off) stands. See the `devTools` prop doc on {@link AdhAppShell} for why that is the accepted

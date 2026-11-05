@@ -1,5 +1,5 @@
 // The profile wire shapes, transcribed from the backend rather than imported from
-// `@agentic-toolkit/adh-api-types` — the convention every client in this package follows, so a
+// `@adh-sdk/adh-api-types` — the convention every client in this package follows, so a
 // consumer needs one dependency to talk to the API rather than two that must agree.
 //
 // `adh-api-types/src/data-profile-wire.test-d.ts` is what CHECKS the transcription — it measures
@@ -93,7 +93,7 @@ export interface PrivacyGrant {
 export type PrivacyTargetTable = string;
 
 /** The three audience levels the UI exposes. Mirrors PrivacyLevel from
- *  @agenticdevelopertoolkit/ui/components/privacy-level-select without coupling this module to the UI. */
+ *  @adh-sdk/ui/components/privacy-level-select without coupling this module to the UI. */
 export type PrivacyLevel = "only-me" | "hub" | "public";
 
 // ── Metered usage ─────────────────────────────────────────────────────────────────────────

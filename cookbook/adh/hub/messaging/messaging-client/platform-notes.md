@@ -4,10 +4,10 @@
   presentation layer; a SwiftUI-based presenter would consume the same values unchanged, since
   `MessagingTopic.swift` imports no SwiftUI and performs no rendering itself.
 - **AppKit / UIKit**: this is the source. `MessagingModels.swift` and `MessagingTopic.swift` live
-  in the `Hub` module shared between the `AgenticToolkitHub-macOS` and `AgenticToolkitHub-iOS`
+  in the `Hub` module shared between the `AgenticDeveloperHubSDKHub-macOS` and `AgenticDeveloperHubSDKHub-iOS`
   targets (both declared in `project.yml`, one source set). Neither file imports `AppKit` or
   `UIKit` directly — `MessagingModels.swift` is plain `Foundation`, and `MessagingTopic.swift` adds
-  only `AgenticToolkitHTDV`, with the platform-specific `NSViewController`/`UIViewController` split
+  only `AgenticDeveloperHubSDKHTDV`, with the platform-specific `NSViewController`/`UIViewController` split
   handled entirely inside `FormViewController`, one layer below where these types operate.
   Concurrency: `MessagingTopic` is declared `@MainActor final class`, so `child(for:path:rail:)`
   and every private helper it calls run only on the main actor; `MessagingDataSource` is declared

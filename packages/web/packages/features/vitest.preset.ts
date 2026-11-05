@@ -3,7 +3,7 @@ import { join } from 'node:path'
 import { defineConfig } from 'vitest/config'
 
 // Single source of the feature-package vitest config (DRY). Self-contained so
-// `pnpm --filter @agentic-toolkit/<pkg> run test` (cwd = the package) discovers
+// `pnpm --filter @adh-sdk/<pkg> run test` (cwd = the package) discovers
 // src/**/*.test.tsx — the workspace-root config excludes every package that owns a
 // config, so this is the only one that runs these tests. Reuses the root setup file
 // for its ResizeObserver / localStorage / matchMedia shims (jsdom doesn't provide them).
@@ -14,7 +14,7 @@ import { defineConfig } from 'vitest/config'
 //
 // `setupFiles` adds a package's OWN setup after the shared one. It exists because the
 // root file can only reach dependency-free shims: it lives at the workspace root,
-// which has no `@agentic-toolkit/*` in scope, so anything that must reset a toolkit
+// which has no `@adh-sdk/*` in scope, so anything that must reset a toolkit
 // package's module-scope state (the query cache — see `vitest.setup.ts` next to any
 // config that passes this) has to be imported from inside the package that depends on it.
 

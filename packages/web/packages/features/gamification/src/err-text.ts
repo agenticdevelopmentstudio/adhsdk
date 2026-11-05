@@ -1,4 +1,4 @@
-import { isForbidden } from "@agentic-toolkit/data";
+import { isForbidden } from "@adh-sdk/data";
 
 /**
  * Build a section's error formatter: a 403 becomes that section's own sentence, anything else

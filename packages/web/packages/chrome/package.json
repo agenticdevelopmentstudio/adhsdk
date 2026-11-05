@@ -1,5 +1,5 @@
 {
-  "name": "@agenticdevelopertoolkit/chrome",
+  "name": "@adh-sdk/chrome",
   "version": "0.1.0",
   "description": "Site-chrome primitives — the menu button and the close glyph derived from it, with the bar geometry in one place so every site rasterises them the same way.",
   "license": "Apache-2.0",

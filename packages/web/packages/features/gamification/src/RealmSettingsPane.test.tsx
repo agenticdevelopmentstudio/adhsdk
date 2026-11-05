@@ -5,9 +5,9 @@
 // DetailsPane bar, whether they draw that pane themselves or sit in a bigger one (Mike, 2026-09-29).
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { DetailsPane, SettingsDirtyProvider } from "@agentic-toolkit/resource";
+import { DetailsPane, SettingsDirtyProvider } from "@adh-sdk/resource";
 
-vi.mock("@agentic-toolkit/auth", () => ({ reportUnexpectedAuthError: vi.fn() }));
+vi.mock("@adh-sdk/auth", () => ({ reportUnexpectedAuthError: vi.fn() }));
 const { push } = vi.hoisted(() => ({ push: vi.fn() }));
 vi.mock("next/navigation", () => ({ useRouter: () => ({ push }) }));
 
@@ -15,13 +15,13 @@ const { getRealmConfig, updateRealmConfig } = vi.hoisted(() => ({
   getRealmConfig: vi.fn(),
   updateRealmConfig: vi.fn(),
 }));
-vi.mock("@agentic-toolkit/data/gamification", () => ({
+vi.mock("@adh-sdk/data/gamification", () => ({
   gamificationApi: { getRealmConfig, updateRealmConfig },
 }));
 
 // The on/off switch is the shared FeatureSwitch (its own test covers the feature write); here it
 // stands in as a marker, so what these tests pin is that it is there, and where.
-vi.mock("@agentic-toolkit/ecosystems", () => ({
+vi.mock("@adh-sdk/ecosystems", () => ({
   FeatureSwitch: ({ featureKey, lockedBy }: { featureKey: string; lockedBy?: string }) => (
     <div data-testid={`feature-switch-${featureKey}`} data-locked-by={lockedBy ?? ""} />
   ),

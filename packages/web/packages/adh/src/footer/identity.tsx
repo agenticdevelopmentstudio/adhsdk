@@ -11,7 +11,7 @@ import {
   siteProdUrl,
   type SiteDef,
   type SiteId,
-} from '@agentic-toolkit/adh-registry'
+} from '@adh-sdk/adh-registry'
 
 /** The class on the family footer's root element: the scope a site confines its stylesheet to
  *  (`/*! @confine .adh-landing-footer *\/`). Here rather than beside FamilyFooter, which is

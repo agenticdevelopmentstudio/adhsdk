@@ -1,9 +1,9 @@
 'use client'
 
-import { type SiteId } from '@agentic-toolkit/adh-registry'
+import { type SiteId } from '@adh-sdk/adh-registry'
 // By the PACKAGE PATH for the reason useSiteMenu.ts records: this leaf has its own entry and is
 // listed `external`, and a relative specifier here would inline a second copy into the header.
-import { isHubWorkspacePath } from '@agentic-toolkit/adh/site/hubWorkspacePath'
+import { isHubWorkspacePath } from '@adh-sdk/adh/site/hubWorkspacePath'
 
 /**
  * The dispatch the header's {@link SiteMenuSwitcher} keys off: is this the signed-in

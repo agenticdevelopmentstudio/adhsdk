@@ -1,4 +1,4 @@
-# `@agenticdevelopertoolkit/chrome`
+# `@adh-sdk/chrome`
 
 Site-chrome primitives. One component so far: the menu button, and the close
 glyph derived from it.
@@ -25,8 +25,8 @@ which is the argument for it living in one package rather than in each site.
 ## Usage
 
 ```tsx
-import { MenuButton } from '@agenticdevelopertoolkit/chrome'
-import '@agenticdevelopertoolkit/chrome/css/base.css'
+import { MenuButton } from '@adh-sdk/chrome'
+import '@adh-sdk/chrome/css/base.css'
 
 <MenuButton label="Open menu" aria-expanded={open} onClick={() => setOpen(true)} />
 <MenuButton icon="close" label="Close menu" onClick={() => setOpen(false)} />

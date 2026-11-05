@@ -1,9 +1,9 @@
 import { timeAgo } from "./time-ago";
-import { mapLimit } from "@agentic-toolkit/deploy-platform/util";
+import { mapLimit } from "@adh-sdk/deploy-platform/util";
 import { vercelPhases } from "./deploy-status";
 import { shortSha, commitFullMessage } from "./format";
 import { toValidDate, type ProviderDeploy } from "./provider-deploy";
-import { noteRateLimited, rateLimitedUntil } from "@agentic-toolkit/deploy-platform/cooldown";
+import { noteRateLimited, rateLimitedUntil } from "@adh-sdk/deploy-platform/cooldown";
 
 /** Per-request cap on a projects/teams call. These fetches used to carry NO timeout at
  *  all, so one hung socket could stall the poll indefinitely. */

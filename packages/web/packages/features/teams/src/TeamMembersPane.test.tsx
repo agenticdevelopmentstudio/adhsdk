@@ -2,7 +2,7 @@
 //
 // Component test for TeamMembersPane — the team roster. This package's vitest config is
 // jsdom (see vitest.config.ts) and drives React with @testing-library/react. Only the
-// data domain boundaries (@agentic-toolkit/data/teams, @agentic-toolkit/data/personas)
+// data domain boundaries (@adh-sdk/data/teams, @adh-sdk/data/personas)
 // are mocked, so the roster's kind-aware render + add-persona wiring are exercised, not
 // the transport.
 //
@@ -15,16 +15,16 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, fireEvent, waitFor, within, cleanup, act } from "@testing-library/react";
 import { useMemo, useState, type ReactNode } from "react";
-import { List, ListItem } from "@agenticdevelopertoolkit/ui/components/list";
-import type { TopicLevel } from "@agenticdevelopertoolkit/ui/blocks";
+import { List, ListItem } from "@adh-sdk/ui/components/list";
+import type { TopicLevel } from "@adh-sdk/ui/blocks";
 import {
   RailHostContext,
   type RailHostRegistry,
   type RegisteredLevels,
   type PaneExitGuard,
-} from "@agentic-toolkit/resource";
+} from "@adh-sdk/resource";
 
-vi.mock("@agentic-toolkit/data/teams", () => ({
+vi.mock("@adh-sdk/data/teams", () => ({
   teamMembersApi: {
     list: vi.fn(),
     counts: vi.fn(),
@@ -33,13 +33,13 @@ vi.mock("@agentic-toolkit/data/teams", () => ({
     remove: vi.fn(),
   },
 }));
-vi.mock("@agentic-toolkit/data/personas", () => ({
+vi.mock("@adh-sdk/data/personas", () => ({
   api: { personas: { list: vi.fn() } },
 }));
 
 import { TeamMembersPane } from "./TeamMembersPane";
-import { teamMembersApi, type TeamMember } from "@agentic-toolkit/data/teams";
-import { api as personaApi, type Persona } from "@agentic-toolkit/data/personas";
+import { teamMembersApi, type TeamMember } from "@adh-sdk/data/teams";
+import { api as personaApi, type Persona } from "@adh-sdk/data/personas";
 
 const list = vi.mocked(teamMembersApi.list);
 const add = vi.mocked(teamMembersApi.add);

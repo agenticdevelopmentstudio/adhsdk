@@ -26,10 +26,10 @@ import { cn } from "../lib/utils"
  * />
  * ```
  *
- * Anywhere else, `useAppearancePreferences()` (@agenticdevelopertoolkit/themes) is the same
+ * Anywhere else, `useAppearancePreferences()` (@adh-sdk/themes) is the same
  * shape without the account leg.
  *
- * Not to be confused with `@agenticdevelopertoolkit/controls`' `AppearanceModeToggle`, which
+ * Not to be confused with `@adh-sdk/controls`' `AppearanceModeToggle`, which
  * binds the LEGACY appearance system (`data-appearance-mode` + `awt:appearance-cycle`,
  * see themes/src/colorMode.tsx) for the toolkit's own demo site. Same picture, and it
  * stays separate until that site migrates — merging them would change a live site's

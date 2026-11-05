@@ -14,7 +14,7 @@ push op, a push request, a push result, a push response), a schema-flexible
 JSON payload type, a UUIDv7 id generator, and a generated resource catalog.
 The product-specific enrollment and backend rules the engine serves are
 specified in
-[Offline Sync Client](adtoolkit://cookbook/data/sync/offline-sync-client).
+[Offline Sync Client](adhsdk://cookbook/data/sync/offline-sync-client).
 
 Use it when a host (an app or a daemon) keeps a local mirror of server rows,
 lets the user edit offline, and needs those edits pushed later without ever

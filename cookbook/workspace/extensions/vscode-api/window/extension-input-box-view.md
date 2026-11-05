@@ -1,7 +1,7 @@
 ---
 id: b85dc186-31e9-472b-99ea-2c097fc926c8
 title: "Extension Input Box"
-domain: adtoolkit://cookbook/workspace/extensions/vscode-api/window/extension-input-box-view
+domain: adhsdk://cookbook/workspace/extensions/vscode-api/window/extension-input-box-view
 type: ingredient
 version: 1.2.2
 status: review
@@ -22,7 +22,7 @@ tags:
   - validation
 depends-on: []
 related:
-  - adtoolkit://cookbook/workspace/extensions/vscode-api/window/extension-quick-pick-view
+  - adhsdk://cookbook/workspace/extensions/vscode-api/window/extension-quick-pick-view
 references: []
 approved-by: ""
 approved-date: ""
@@ -378,7 +378,7 @@ Not applicable: this component makes no logging call.
   `keydown` handler (or a Cancel button) to cancellation, mirroring
   `escape-cancellation`.
 - **AppKit/UIKit** (source platform): Source file
-  `packages/apple/AgenticToolkit/macOS/Features/Extensions/UI/ExtensionInputBoxViewController.swift`
+  `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/UI/ExtensionInputBoxViewController.swift`
   — macOS-only (`import AppKit`), `@MainActor` `NSViewController`, laid
   out entirely with programmatic Auto Layout (no XIB/Storyboard), sharing
   `PickerKeyboardController` with `ExtensionQuickPickViewController`.
@@ -433,7 +433,7 @@ Not applicable: this component makes no logging call.
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/macOS/Features/Extensions/UI/ExtensionInputBoxViewController.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/UI/ExtensionInputBoxViewController.swift` |
 
 ## Design Decisions
 

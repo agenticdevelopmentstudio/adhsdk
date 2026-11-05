@@ -10,7 +10,7 @@ import { Wrench as Wrench2 } from "lucide-react";
 import { useId } from "react";
 import Link from "next/link";
 import { ChevronDown, Home, LogOut, Settings, User as UserIcon, Wrench } from "lucide-react";
-import { Avatar, AvatarFallback, AvatarImage } from "@agenticdevelopertoolkit/ui/components/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@adh-sdk/ui/components/avatar";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -18,9 +18,9 @@ import {
   DropdownMenuItem,
   DropdownMenuLinkItem,
   DropdownMenuSeparator
-} from "@agenticdevelopertoolkit/ui/components/dropdown-menu";
-import { isModifiedClick } from "@agenticdevelopertoolkit/ui/lib/navigation-guard";
-import { slideNavigate } from "@agentic-toolkit/adh/layout/SlideNavigation";
+} from "@adh-sdk/ui/components/dropdown-menu";
+import { isModifiedClick } from "@adh-sdk/ui/lib/navigation-guard";
+import { slideNavigate } from "@adh-sdk/adh/layout/SlideNavigation";
 import { Fragment, jsx, jsxs } from "react/jsx-runtime";
 function firstNameOf(name) {
   return name.trim().split(/\s+/)[0] || name;
@@ -157,7 +157,7 @@ function AuthButtons({
   loginLabel = "login"
 }) {
   const loginNode = onLogin ? (
-    // adh-ui-allow: cs-no-bespoke — this is the <a> two lines down in button clothing: same affordance, same .adh-header__nav-link identity, chosen only by whether a handler or an href was passed. A @agenticdevelopertoolkit/ui <Button> brings its own visual identity, which is exactly what must NOT happen to a nav link.
+    // adh-ui-allow: cs-no-bespoke — this is the <a> two lines down in button clothing: same affordance, same .adh-header__nav-link identity, chosen only by whether a handler or an href was passed. A @adh-sdk/ui <Button> brings its own visual identity, which is exactly what must NOT happen to a nav link.
     /* @__PURE__ */ jsx2("button", { type: "button", onClick: onLogin, className: "adh-header__nav-link adh-header__nav-link--button", children: loginLabel })
   ) : loginHref ? /* @__PURE__ */ jsx2("a", { href: loginHref, className: "adh-header__nav-link", children: loginLabel }) : null;
   const signupNode = onSignup ? (
@@ -215,13 +215,13 @@ function NavLinkItem({ link }) {
 }
 
 // src/header/NavigationPopover.tsx
-import { cn, noAutofillProps } from "@agenticdevelopertoolkit/ui";
+import { cn, noAutofillProps } from "@adh-sdk/ui";
 import {
   confirmNavigation,
   GUARDED_NAV_ATTR,
   isModifiedClick as isModifiedClick2
-} from "@agenticdevelopertoolkit/ui/lib/navigation-guard";
-import { useShortcut, chordFromEvent, sameChord } from "@agenticdevelopertoolkit/ui/hooks/useShortcut";
+} from "@adh-sdk/ui/lib/navigation-guard";
+import { useShortcut, chordFromEvent, sameChord } from "@adh-sdk/ui/hooks/useShortcut";
 import {
   DropdownMenu as DropdownMenu2,
   DropdownMenuTrigger as DropdownMenuTrigger2,
@@ -231,7 +231,7 @@ import {
   DropdownMenuSub,
   DropdownMenuSubTrigger,
   DropdownMenuSubContent
-} from "@agenticdevelopertoolkit/ui/components/dropdown-menu";
+} from "@adh-sdk/ui/components/dropdown-menu";
 import { Fragment as Fragment4, jsx as jsx4, jsxs as jsxs3 } from "react/jsx-runtime";
 var GUARDED_NAV_PROPS = { [GUARDED_NAV_ATTR]: "" };
 function highlightMatch(text, query) {
@@ -853,7 +853,7 @@ import {
   DropdownMenuLinkItem as DropdownMenuLinkItem2,
   DropdownMenuLabel as DropdownMenuLabel2,
   DropdownMenuSeparator as DropdownMenuSeparator3
-} from "@agenticdevelopertoolkit/ui/components/dropdown-menu";
+} from "@adh-sdk/ui/components/dropdown-menu";
 import { jsx as jsx6, jsxs as jsxs4 } from "react/jsx-runtime";
 function SiteOptionsMenu({
   sites,
@@ -980,8 +980,8 @@ function PreviewNotice({
 }
 
 // src/header/AdhHeader.tsx
-import { Badge } from "@agenticdevelopertoolkit/ui/components/badge";
-import { HelpEnabled } from "@agenticdevelopertoolkit/ui/components/help-enabled";
+import { Badge } from "@adh-sdk/ui/components/badge";
+import { HelpEnabled } from "@adh-sdk/ui/components/help-enabled";
 import { Fragment as Fragment5, jsx as jsx9, jsxs as jsxs6 } from "react/jsx-runtime";
 function AdhHeader({
   siteName,
@@ -1206,14 +1206,14 @@ import { usePathname as usePathname6 } from "next/navigation";
 import {
   AdhHeader as AdhHeader2,
   useClientHost as useClientHost4
-} from "@agentic-toolkit/adh/header";
-import { useAnonymousHeaderAuth } from "@agentic-toolkit/adh/header-auth";
-import { getSite as getSite4, siteHeaderTitle as siteHeaderTitle2, siteHomePath, siteProdUrl as siteProdUrl2, siteUrl as siteUrl2 } from "@agentic-toolkit/adh-registry";
-import { isConceptSite } from "@agentic-toolkit/adh/concepts/participating";
-import { useSettingsOverlay } from "@agentic-toolkit/adh/settings";
+} from "@adh-sdk/adh/header";
+import { useAnonymousHeaderAuth } from "@adh-sdk/adh/header-auth";
+import { getSite as getSite4, siteHeaderTitle as siteHeaderTitle2, siteHomePath, siteProdUrl as siteProdUrl2, siteUrl as siteUrl2 } from "@adh-sdk/adh-registry";
+import { isConceptSite } from "@adh-sdk/adh/concepts/participating";
+import { useSettingsOverlay } from "@adh-sdk/adh/settings";
 
 // src/profile/profileRoute.ts
-import { SITE_ROUTES } from "@agentic-toolkit/adh-registry/routes";
+import { SITE_ROUTES } from "@adh-sdk/adh-registry/routes";
 var PROFILE_ROUTE = "/[workspace]/profile";
 function hasProfileRoute(siteId) {
   return (SITE_ROUTES[siteId] ?? []).includes(PROFILE_ROUTE);
@@ -1235,7 +1235,7 @@ import {
   getSite,
   groupSitesByCategory,
   siteProdUrl
-} from "@agentic-toolkit/adh-registry";
+} from "@adh-sdk/adh-registry";
 import { jsx as jsx12 } from "react/jsx-runtime";
 var FAMILY_OMITTED = /* @__PURE__ */ new Set(["shipr", "registry", "fishlamp", "fishlampdesign"]);
 var FAMILY_SITES = DIRECTORY_SITES.filter((s) => !FAMILY_OMITTED.has(s.id));
@@ -1262,19 +1262,19 @@ var SITES_PANEL_ADDITIONS = [
 var SITES_OVERVIEW_POPOVER_ID = "adh-sites-overview";
 
 // src/header/SiteMenu.tsx
-import { getSite as getSite3, siteHeaderTitle } from "@agentic-toolkit/adh-registry";
+import { getSite as getSite3, siteHeaderTitle } from "@adh-sdk/adh-registry";
 import {
   HubMark as HubMark2,
   NavigationPopover as NavigationPopover2,
   useWorkspacesMenu as useWorkspacesMenu2
-} from "@agentic-toolkit/adh/header";
-import { useRecents } from "@agentic-toolkit/adh/header/recents";
-import { useHubPreferences } from "@agentic-toolkit/adh/header/hub-preferences";
+} from "@adh-sdk/adh/header";
+import { useRecents } from "@adh-sdk/adh/header/recents";
+import { useHubPreferences } from "@adh-sdk/adh/header/hub-preferences";
 
 // src/header/useSiteMenu.ts
 import { useCallback as useCallback2, useMemo as useMemo2 } from "react";
 import { usePathname as usePathname2, useRouter } from "next/navigation";
-import { confirmNavigation as confirmNavigation2 } from "@agenticdevelopertoolkit/ui/lib/navigation-guard";
+import { confirmNavigation as confirmNavigation2 } from "@adh-sdk/ui/lib/navigation-guard";
 import {
   buildSiteHref,
   detectEnv,
@@ -1285,12 +1285,12 @@ import {
   HUB_WORKSPACE_SEGMENTS,
   SITE_FOR_HUB_SEGMENT as SITE_FOR_HUB_SEGMENT2,
   siteUrl
-} from "@agentic-toolkit/adh-registry";
-import { hubWorkspaceSlug, isHubWorkspacePath } from "@agentic-toolkit/adh/site/hubWorkspacePath";
-import { appendThemePreview, readPreviewTheme } from "@agentic-toolkit/adh/themes/theme-preview";
+} from "@adh-sdk/adh-registry";
+import { hubWorkspaceSlug, isHubWorkspacePath } from "@adh-sdk/adh/site/hubWorkspacePath";
+import { appendThemePreview, readPreviewTheme } from "@adh-sdk/adh/themes/theme-preview";
 import {
   useClientHost as useClientHost2
-} from "@agentic-toolkit/adh/header";
+} from "@adh-sdk/adh/header";
 
 // src/header/menu-icons.ts
 import {
@@ -1368,7 +1368,7 @@ import {
   UsersRound,
   Wrench as Wrench3
 } from "lucide-react";
-import { SITE_FOR_HUB_SEGMENT } from "@agentic-toolkit/adh-registry";
+import { SITE_FOR_HUB_SEGMENT } from "@adh-sdk/adh-registry";
 var ICONS = {
   // --- Hub + its ecosystem sites (inline sub-items under Hub) ---
   hub: Hexagon,
@@ -1812,7 +1812,7 @@ function settingsTrailing({
 }
 
 // src/header/fleetMenuGroups.ts
-import { ADMIN_SITE_IDS } from "@agentic-toolkit/adh-registry";
+import { ADMIN_SITE_IDS } from "@adh-sdk/adh-registry";
 var FLEET_SECTION = 1;
 var ADMIN_SECTION = FLEET_SECTION + 1;
 var HELP_SECTION = FLEET_SECTION + 1;
@@ -2232,12 +2232,12 @@ function WorkspaceSiteMenu(props) {
 import { useCallback as useCallback4, useMemo as useMemo4 } from "react";
 import { usePathname as usePathname4, useRouter as useRouter2 } from "next/navigation";
 import { ChevronDown as ChevronDown4 } from "lucide-react";
-import { confirmNavigation as confirmNavigation3 } from "@agenticdevelopertoolkit/ui/lib/navigation-guard";
+import { confirmNavigation as confirmNavigation3 } from "@adh-sdk/ui/lib/navigation-guard";
 import {
   HubMark as HubMark3,
   NavigationPopover as NavigationPopover3
-} from "@agentic-toolkit/adh/header";
-import { useHubPreferences as useHubPreferences2 } from "@agentic-toolkit/adh/header/hub-preferences";
+} from "@adh-sdk/adh/header";
+import { useHubPreferences as useHubPreferences2 } from "@adh-sdk/adh/header/hub-preferences";
 import { Fragment as Fragment6, jsx as jsx18, jsxs as jsxs9 } from "react/jsx-runtime";
 var WORKSPACES_SECTION = 0;
 var HELP_SECTION2 = 1;
@@ -2346,18 +2346,18 @@ function WorkspaceMenu({
 }
 
 // src/header/SiteMenuSwitcher.tsx
-import { useWorkspacesMenu as useWorkspacesMenu3 } from "@agentic-toolkit/adh/header";
+import { useWorkspacesMenu as useWorkspacesMenu3 } from "@adh-sdk/adh/header";
 
 // src/header/activeMenuGroups.ts
-import "@agentic-toolkit/adh-registry";
-import { isHubWorkspacePath as isHubWorkspacePath2 } from "@agentic-toolkit/adh/site/hubWorkspacePath";
+import "@adh-sdk/adh-registry";
+import { isHubWorkspacePath as isHubWorkspacePath2 } from "@adh-sdk/adh/site/hubWorkspacePath";
 function isWorkspaceMenuRoute(currentSiteId, pathname) {
   return currentSiteId === "hub" && isHubWorkspacePath2(pathname);
 }
 
 // src/header/PrefetchSiblingSites.tsx
 import { useEffect as useEffect4 } from "react";
-import { detectEnv as detectEnv2 } from "@agentic-toolkit/adh-registry";
+import { detectEnv as detectEnv2 } from "@adh-sdk/adh-registry";
 function PrefetchSiblingSites() {
   useEffect4(() => {
     if (typeof window === "undefined") return;
@@ -2413,12 +2413,12 @@ function SiteMenuSwitcher(props) {
 // src/header/useDebugOptions.tsx
 import { useState as useState4 } from "react";
 import dynamic from "next/dynamic";
-import { detectEnv as detectEnv4 } from "@agentic-toolkit/adh-registry";
-import { useClientHost as useClientHost3 } from "@agentic-toolkit/adh/header";
+import { detectEnv as detectEnv4 } from "@adh-sdk/adh-registry";
+import { useClientHost as useClientHost3 } from "@adh-sdk/adh/header";
 
 // src/header/devToolsEntries.ts
-import { DEV_BUILD, isDevDeploymentEnv } from "@agentic-toolkit/adh-registry/deployment-env";
-import "@agentic-toolkit/adh-registry";
+import { DEV_BUILD, isDevDeploymentEnv } from "@adh-sdk/adh-registry/deployment-env";
+import "@adh-sdk/adh-registry";
 var DEV_TOOLS_BUILD_ENABLED = DEV_BUILD;
 function isDevEnv(env) {
   return isDevDeploymentEnv(env);
@@ -2432,7 +2432,7 @@ function debugOptionsHint(override) {
 
 // src/header/envOverride.ts
 import { useSyncExternalStore as useSyncExternalStore2 } from "react";
-import { detectEnv as detectEnv3 } from "@agentic-toolkit/adh-registry";
+import { detectEnv as detectEnv3 } from "@adh-sdk/adh-registry";
 var STORAGE_KEY = "adh:debug:env-override";
 var ENV_VALUES = ["production", "staging", "testing", "local"];
 function parseEnvOverride(raw) {
@@ -2487,7 +2487,7 @@ function useEffectiveEnv(hostname) {
 // src/header/useDebugOptions.tsx
 import { jsx as jsx20 } from "react/jsx-runtime";
 var DebugConsoleWindow = dynamic(
-  () => import("@agentic-toolkit/adh/debug-console").then((m) => m.DebugConsoleWindow)
+  () => import("@adh-sdk/adh/debug-console").then((m) => m.DebugConsoleWindow)
 );
 function useDebugOptions(userIsAdmin) {
   const host = useClientHost3();
@@ -2509,10 +2509,10 @@ function useDebugOptions(userIsAdmin) {
 }
 
 // src/header/SiteHeader.tsx
-import { SITE_TITLE_HELP_ID } from "@agentic-toolkit/adh-ui/help-ids";
+import { SITE_TITLE_HELP_ID } from "@adh-sdk/adh-ui/help-ids";
 import { Fragment as Fragment8, jsx as jsx21, jsxs as jsxs11 } from "react/jsx-runtime";
 var NotificationBell = dynamic2(
-  () => import("@agentic-toolkit/messaging/components/notification-bell").then((m) => m.NotificationBell)
+  () => import("@adh-sdk/messaging/components/notification-bell").then((m) => m.NotificationBell)
 );
 function SiteHeader({
   siteId,
@@ -2625,7 +2625,7 @@ import {
   readRecents,
   recordRecent,
   useRecents as useRecents2
-} from "@agentic-toolkit/adh/header/recents";
+} from "@adh-sdk/adh/header/recents";
 export {
   ADMIN_MENU_GROUPS,
   ADMIN_SECTION,

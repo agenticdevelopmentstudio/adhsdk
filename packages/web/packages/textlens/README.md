@@ -1,4 +1,4 @@
-# @agenticdevelopertoolkit/textlens
+# @adh-sdk/textlens
 
 A travelling lens for a line of text. A soft focal point drifts back and forth
 along the line; each character it passes swells slightly, blurs slightly, and
@@ -28,7 +28,7 @@ them:
 'use client'
 
 import { useRef } from 'react'
-import { useTextLens } from '@agenticdevelopertoolkit/textlens'
+import { useTextLens } from '@adh-sdk/textlens'
 
 export function TagRow({ tags, anyPanelOpen }) {
   const rowRef = useRef<HTMLDivElement>(null)
@@ -54,7 +54,7 @@ export function TagRow({ tags, anyPanelOpen }) {
 Outside React, drive it directly:
 
 ```ts
-import { createLens } from '@agenticdevelopertoolkit/textlens'
+import { createLens } from '@adh-sdk/textlens'
 
 const lens = createLens([...document.querySelectorAll<HTMLElement>('.tag')], {
   fromColor: '--text-muted',

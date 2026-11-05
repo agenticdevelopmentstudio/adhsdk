@@ -42,7 +42,7 @@
   `onInput` tick, since source never writes the value label outside the
   `viewModel.onChange` round trip (see Edge Cases).
 - **AppKit/UIKit** (source platform): Source file
-  `packages/apple/AgenticToolkit/macOS/SystemIntegration/ComposableSettingsWindow/Views/ChoiceSliderView.swift`.
+  `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/Views/ChoiceSliderView.swift`.
   A macOS-only (`import AppKit`), generic-over-`Value` `NSView` subclass,
   `@MainActor`-isolated (the mechanism behind confines-to-ui-thread),
   inside the `ComposableSettings` namespace, conforming to

@@ -1,5 +1,5 @@
 {
-  "name": "@agentic-toolkit/projects",
+  "name": "@adh-sdk/projects",
   "version": "0.1.0",
   "description": "The Projects feature: ProjectsFeature + its panes/views (overview, work-items surface with five views, editor, activity) over the resource substrate.",
   "license": "UNLICENSED",
@@ -36,12 +36,12 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@agentic-toolkit/auth": "workspace:*",
-    "@agentic-toolkit/data": "workspace:*",
-    "@agentic-toolkit/teams": "workspace:*",
-    "@agentic-toolkit/resource": "workspace:*",
+    "@adh-sdk/auth": "workspace:*",
+    "@adh-sdk/data": "workspace:*",
+    "@adh-sdk/teams": "workspace:*",
+    "@adh-sdk/resource": "workspace:*",
     "lucide-react": "^1.16.0",
-    "@agenticdevelopertoolkit/ui": "workspace:*"
+    "@adh-sdk/ui": "workspace:*"
   },
   "peerDependencies": {
     "next": ">=15",

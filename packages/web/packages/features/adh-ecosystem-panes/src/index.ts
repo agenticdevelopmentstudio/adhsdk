@@ -1,13 +1,13 @@
-// @agentic-toolkit/adh-ecosystem-panes — an ecosystem's own sub-resources, as panes.
+// @adh-sdk/adh-ecosystem-panes — an ecosystem's own sub-resources, as panes.
 //
 // Applications, Storage Buckets, Users and Messaging are the four surfaces of an ecosystem
 // that a host arranges on a rail but does not implement. They lived in the hub until the
 // Products and Storage feature sites needed the same four: a second host meant either a
 // second copy (which drifts) or one package (this).
 //
-// Why not `@agentic-toolkit/ecosystem-config`, where Auth / Feature flags / Server bags /
+// Why not `@adh-sdk/ecosystem-config`, where Auth / Feature flags / Server bags /
 // Sign-in apps / Tokens / Billing already sit: these four are typed against
-// `@agentic-toolkit/adh-api-types`, adh's generated OpenAPI bodies. That is the VOCABULARY
+// `@adh-sdk/adh-api-types`, adh's generated OpenAPI bodies. That is the VOCABULARY
 // tier, and a mechanism package may not import it (tools/check_boundaries.py) — see this
 // package's `comment:tier`. The split is the boundary the guard draws, not a taxonomy of
 // what "configuration" means.
@@ -41,7 +41,7 @@ export { StorageGroup } from "./storage/StorageGroup";
 export { AllDataPane } from "./storage/AllDataPane";
 
 // The clients behind the panes. Exported because two of them are also DIRECTORIES a host
-// injects elsewhere: `AccessPane` (in @agentic-toolkit/authentication) takes
+// injects elsewhere: `AccessPane` (in @adh-sdk/authentication) takes
 // `usersDirectory` / `applicationsDirectory`, and those are exactly these two `.list`
 // calls — the same rows the Users and Applications panes show, which is the point.
 export { ecosystemUsersApi, type EcosystemUser, type EcosystemUserInput } from "./api/customers";

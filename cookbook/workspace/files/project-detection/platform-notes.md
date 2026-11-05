@@ -1,6 +1,6 @@
 
 - **SwiftUI**: Both types (`IDEDetector.swift`, `LanguageDetection.swift`,
-  test `Tests/AgenticToolkitMacOSTests/FileBrowser/LanguageDetectionTests.swift`)
+  test `Tests/AgenticDeveloperHubSDKMacOSTests/FileBrowser/LanguageDetectionTests.swift`)
   are consumed by SwiftUI-adjacent AppKit code today (`FileTreeManager`,
   `FileEditorState`) but have no SwiftUI import of their own. A SwiftUI
   consumer would drive `IDEDetector` as an `@ObservedObject`/

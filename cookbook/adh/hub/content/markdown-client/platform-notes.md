@@ -2,7 +2,7 @@
 - **SwiftUI / Swift**: a Swift port of markdown.ts/taxonomy.ts has no
   existing Apple counterpart among this repo's sources; the closest
   relative is `MarkdownStore`/`MarkdownRemoteWriter`
-  (`packages/apple/AgenticToolkit/Markdown/`), which is a local notes store,
+  (`packages/apple/AgenticDeveloperHubSDK/Markdown/`), which is a local notes store,
   not a client for this backend surface. A port of `schemasApi` already
   exists as the Apple Hub's `BucketsDataSource`/`BucketsModels`
   (`hub-domain-buckets`) under different model names for the same rows —
@@ -17,7 +17,7 @@
   shared options object, to keep the divergence visible in the port's own
   type signatures.
 - **React / Web (source platform)**: this is the source implementation;
-  `authedJson`/`authedRequest` (from `@agentic-toolkit/auth/client` via
+  `authedJson`/`authedRequest` (from `@adh-sdk/auth/client` via
   `../http`) and the helpers in `../client-helpers` (`enc`, `compact`,
   `scopeByOwner`, `sortByText`, `workspaceQuery`) are shared with every
   other client in this data package and MUST be reused, not reimplemented.

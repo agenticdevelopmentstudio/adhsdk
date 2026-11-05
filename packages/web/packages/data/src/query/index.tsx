@@ -1,7 +1,7 @@
 "use client";
 
 // The toolkit's own react-query runtime — the QueryClient(+Provider) that every
-// react-query hook in @agentic-toolkit/* packages reads.
+// react-query hook in @adh-sdk/* packages reads.
 //
 // WHY THE TOOLKIT OWNS THIS: react-query's context only connects a provider and
 // a consumer when both import the SAME physical copy of the library. Hosts
@@ -52,7 +52,7 @@ import {
   useQueryClient,
   type QueryClient as QueryClientType,
 } from "@tanstack/react-query";
-import { onSessionChange, readTokenSubject } from "@agentic-toolkit/auth/client";
+import { onSessionChange, readTokenSubject } from "@adh-sdk/auth/client";
 import { type ReactNode } from "react";
 
 // ONE client per browser tab, at MODULE scope — not in component state.

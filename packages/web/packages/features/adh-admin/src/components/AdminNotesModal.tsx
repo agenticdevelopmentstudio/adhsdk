@@ -1,9 +1,9 @@
 "use client";
 
 import { type ReactElement } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@agenticdevelopertoolkit/ui/components/dialog";
-import { Button } from "@agenticdevelopertoolkit/ui/components/button";
-import { AdminNotesModal as SharedAdminNotesModal } from "@agentic-toolkit/adh-ui/blocks";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@adh-sdk/ui/components/dialog";
+import { Button } from "@adh-sdk/ui/components/button";
+import { AdminNotesModal as SharedAdminNotesModal } from "@adh-sdk/adh-ui/blocks";
 import { useRowNotes, useSaveNotes } from "../api/invitations";
 
 /**

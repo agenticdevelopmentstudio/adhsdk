@@ -1,6 +1,6 @@
 "use client";
 
-// Auth HTTP logic now lives in @agentic-toolkit/auth. Re-exported here so the
+// Auth HTTP logic now lives in @adh-sdk/auth. Re-exported here so the
 // admin's api modules keep importing from "./http".
 export {
   authedJson,
@@ -11,4 +11,4 @@ export {
   tokensFromResponse,
   readAccessToken,
   type BackendTokenFields,
-} from "@agentic-toolkit/auth/client";
+} from "@adh-sdk/auth/client";

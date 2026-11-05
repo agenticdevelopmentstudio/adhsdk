@@ -1,7 +1,7 @@
 ---
 id: ff1089d7-170c-4658-91c6-e3946710b29f
 title: "Local Model Server"
-domain: adtoolkit://cookbook/ai/models/local/local-model-server
+domain: adhsdk://cookbook/ai/models/local/local-model-server
 type: ingredient
 version: 1.1.1
 status: review
@@ -21,11 +21,11 @@ tags:
 depends-on: []
 related: []
 references:
-  - packages/apple/AgenticToolkit/AIPluginKit/LocalModelServer.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/Tests/AIPluginKitTests/LocalModelServerTests.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/AIPluginKit/LocalModelCatalog.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/AIPluginKit/LocalProviderModelStore.swift (agenticdevelopertoolkit)
-  - packages/apple/AgenticToolkit/AIPluginKit/DaemonAIChat.swift (agenticdevelopertoolkit)
+  - packages/apple/AgenticDeveloperHubSDK/AIPluginKit/LocalModelServer.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Tests/AIPluginKitTests/LocalModelServerTests.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/AIPluginKit/LocalModelCatalog.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/AIPluginKit/LocalProviderModelStore.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/AIPluginKit/DaemonAIChat.swift (adhsdk)
 approved-by: ""
 approved-date: ""
 ---
@@ -310,7 +310,7 @@ omission.
 ## Platform Notes
 
 - **SwiftUI**: The source
-  (`packages/apple/AgenticToolkit/AIPluginKit/LocalModelServer.swift`,
+  (`packages/apple/AgenticDeveloperHubSDK/AIPluginKit/LocalModelServer.swift`,
   tested by `Tests/AIPluginKitTests/LocalModelServerTests.swift`) has no
   SwiftUI, or any UI framework, dependency — it is a plain
   `Foundation`-only Swift `enum` with no case. A SwiftUI model-picker view
@@ -347,7 +347,7 @@ omission.
   `AIPluginKit` target that contains `LocalModelServer.swift` builds for
   macOS only (`platform: macOS` in `project.yml`), and is consumed from
   AppKit-hosted code at
-  `AgenticToolkit/macOS/Features/AIPlugins/Settings/ModelChooserContent.swift`
+  `AgenticDeveloperHubSDK/macOS/Features/AIPlugins/Settings/ModelChooserContent.swift`
   and `ModelChooserViewController.swift`, as well as from the non-UI
   callers `LocalModelCatalog.swift`, `LocalProviderModelStore.swift`, and
   `DaemonAIChat.swift`. Nothing in `LocalModelServer` itself is
@@ -391,7 +391,7 @@ omission.
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/AIPluginKit/LocalModelServer.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/AIPluginKit/LocalModelServer.swift` |
 
 ## Design Decisions
 

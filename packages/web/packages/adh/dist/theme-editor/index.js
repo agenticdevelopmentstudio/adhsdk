@@ -6,9 +6,9 @@ import {
   SiteMenuSwitcher,
   WorkspacesMenuProvider,
   useWorkspacesMenu
-} from "@agentic-toolkit/adh/header";
-import { SiteFooter } from "@agentic-toolkit/adh/footer";
-import { Button } from "@agenticdevelopertoolkit/ui/components/button";
+} from "@adh-sdk/adh/header";
+import { SiteFooter } from "@adh-sdk/adh/footer";
+import { Button } from "@adh-sdk/ui/components/button";
 import {
   Card,
   CardHeader,
@@ -16,8 +16,8 @@ import {
   CardDescription,
   CardContent,
   CardFooter
-} from "@agenticdevelopertoolkit/ui/components/card";
-import { Input } from "@agenticdevelopertoolkit/ui/components/input";
+} from "@adh-sdk/ui/components/card";
+import { Input } from "@adh-sdk/ui/components/input";
 import { jsx, jsxs } from "react/jsx-runtime";
 var usePreviewHeaderAuth = () => ({
   user: { name: "Ada Lovelace", email: "ada@example.com" },
@@ -347,7 +347,7 @@ ${decls.map((d) => `  ${d}`).join("\n")}
 // src/theme-editor/CssEditor.tsx
 import { useRef } from "react";
 import Editor from "@monaco-editor/react";
-import { Button as Button2 } from "@agenticdevelopertoolkit/ui/components/button";
+import { Button as Button2 } from "@adh-sdk/ui/components/button";
 import { jsx as jsx2, jsxs as jsxs2 } from "react/jsx-runtime";
 function CssEditor({
   value,

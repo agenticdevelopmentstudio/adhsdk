@@ -1,7 +1,7 @@
 ---
 id: 19839612-1fd1-44c5-8659-674c264240be
 title: "Security Client"
-domain: adtoolkit://cookbook/adh/hub/security/security-client
+domain: adhsdk://cookbook/adh/hub/security/security-client
 type: ingredient
 version: 1.2.0
 status: review
@@ -23,17 +23,17 @@ tags:
   - buckets
 depends-on: []
 related:
-  - adtoolkit://cookbook/adh/hub/security/authentication-client
-  - adtoolkit://cookbook/adh/hub/access
+  - adhsdk://cookbook/adh/hub/security/authentication-client
+  - adhsdk://cookbook/adh/hub/access
 references:
-  - packages/web/packages/data/src/security/tokens.ts (agenticdevelopertoolkit)
-  - packages/web/packages/data/src/security/bucket-access.ts (agenticdevelopertoolkit)
-  - packages/web/packages/data/src/security/wire.ts (agenticdevelopertoolkit)
-  - packages/web/packages/data/src/security/index.ts (agenticdevelopertoolkit)
-  - packages/web/packages/data/src/http.ts (agenticdevelopertoolkit)
-  - packages/web/packages/data/src/client-helpers.ts (agenticdevelopertoolkit)
-  - packages/web/packages/auth/src/client.ts (agenticdevelopertoolkit)
-  - packages/web/packages/adh-api-types/src/schema.ts (agenticdevelopertoolkit)
+  - packages/web/packages/data/src/security/tokens.ts (adhsdk)
+  - packages/web/packages/data/src/security/bucket-access.ts (adhsdk)
+  - packages/web/packages/data/src/security/wire.ts (adhsdk)
+  - packages/web/packages/data/src/security/index.ts (adhsdk)
+  - packages/web/packages/data/src/http.ts (adhsdk)
+  - packages/web/packages/data/src/client-helpers.ts (adhsdk)
+  - packages/web/packages/auth/src/client.ts (adhsdk)
+  - packages/web/packages/adh-api-types/src/schema.ts (adhsdk)
 approved-by: ""
 approved-date: ""
 ---
@@ -366,11 +366,11 @@ Not applicable: no logging or other diagnostic call of any kind appears in this 
 - **React/Web** (source platform): `packages/web/packages/data/src/security/tokens.ts` and
   `bucket-access.ts` hold the two clients; `wire.ts` holds their shared wire shapes; `index.ts`
   re-exports all three as the package's public surface. Both clients are built entirely on
-  `authedJson`/`authedRequest` from `@agentic-toolkit/auth/client` (re-exported through `./http`) and
+  `authedJson`/`authedRequest` from `@adh-sdk/auth/client` (re-exported through `./http`) and
   `enc` (`encodeURIComponent`) from `./client-helpers`; `tokens.ts` alone calls the global
   `encodeURIComponent` directly rather than the `enc` alias, per `token-revoke-request-shape`.
 - **SwiftUI**: a Swift port already exists for this exact backend surface —
-  `packages/apple/AgenticToolkit/Hub/Features/Authentication/ApiTokensRail.swift` and
+  `packages/apple/AgenticDeveloperHubSDK/Hub/Features/Authentication/ApiTokensRail.swift` and
   `AccessListsTopic.swift` (documented in the sibling `auth-client-authentication` recipe) — and models
   the wire rows as `Codable, Sendable` structs and each client as an `@MainActor final class` exposing
   `async throws` methods over an injected data-source protocol, with a `HubError` in place of
@@ -422,7 +422,7 @@ inconsistency forward.
 **Approved**: pending
 
 **Decision**: `wire.ts`'s types are declared as a package-local mirror of the OpenAPI-generated shapes
-in `@agentic-toolkit/adh-api-types`, rather than importing them directly.
+in `@adh-sdk/adh-api-types`, rather than importing them directly.
 **Rationale**: per `wire.ts`'s own header comment, this keeps the toolkit decoupled from the hub's
 generated types "without narrowing what a caller can rely on" — the mirrored interfaces carry full
 backend-schema fidelity (every field the backend's OpenAPI schema declares), not only the subset

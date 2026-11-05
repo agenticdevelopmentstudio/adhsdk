@@ -3,7 +3,7 @@
   "meta": {
     "id": "47eb19ef-2c42-4a52-a60b-54b6f01c8791",
     "title": "AI Plugin",
-    "domain": "adtoolkit://cookbook/ai/plugins/ai-plugin",
+    "domain": "adhsdk://cookbook/ai/plugins/ai-plugin",
     "type": "ingredient",
     "version": "1.1.0",
     "status": "review",
@@ -23,14 +23,14 @@
       "protocol"
     ],
     "depends-on": [
-      "adtoolkit://cookbook/ai/chat/chat-context",
-      "adtoolkit://cookbook/ai/plugins/request-spec",
-      "adtoolkit://cookbook/ai/plugins/stream-event"
+      "adhsdk://cookbook/ai/chat/chat-context",
+      "adhsdk://cookbook/ai/plugins/request-spec",
+      "adhsdk://cookbook/ai/plugins/stream-event"
     ],
     "related": [
-      "adtoolkit://cookbook/ai/plugins/plugin-manager",
-      "adtoolkit://cookbook/ai/plugins/plugin-transport",
-      "adtoolkit://cookbook/ai/plugins/plugin-descriptor"
+      "adhsdk://cookbook/ai/plugins/plugin-manager",
+      "adhsdk://cookbook/ai/plugins/plugin-transport",
+      "adhsdk://cookbook/ai/plugins/plugin-descriptor"
     ],
     "references": [],
     "approved-by": "",

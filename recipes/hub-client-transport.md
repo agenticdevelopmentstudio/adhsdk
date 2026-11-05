@@ -1,7 +1,7 @@
 ---
 id: d9dfd305-be0d-4770-9db8-43a35218c8b7
 title: Hub Client Transport
-domain: agenticdevelopertoolkit://recipes/hub-client-transport
+domain: adhsdk://recipes/hub-client-transport
 type: ingredient
 version: 1.0.2
 status: review

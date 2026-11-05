@@ -1,7 +1,7 @@
 ---
 id: 7d5c5a1f-30df-460e-b6c4-7cfe9ab42784
 title: "Plugin Transport"
-domain: adtoolkit://cookbook/ai/plugins/plugin-transport
+domain: adhsdk://cookbook/ai/plugins/plugin-transport
 type: ingredient
 version: 1.1.1
 status: review
@@ -22,11 +22,11 @@ tags:
   - subprocess
   - concurrency
 depends-on:
-  - adtoolkit://cookbook/ai/plugins/ai-plugin
-  - adtoolkit://cookbook/ai/plugins/request-spec
-  - adtoolkit://cookbook/ai/plugins/stream-event
+  - adhsdk://cookbook/ai/plugins/ai-plugin
+  - adhsdk://cookbook/ai/plugins/request-spec
+  - adhsdk://cookbook/ai/plugins/stream-event
 related:
-  - adtoolkit://cookbook/ai/chat/daemon-ai-chat
+  - adhsdk://cookbook/ai/chat/daemon-ai-chat
 references: []
 approved-by: ""
 approved-date: ""
@@ -353,7 +353,7 @@ I/O and control-flow logic with no diagnostic side effects of its own.
 
 ## Platform Notes
 
-- **SwiftUI**: The source is `packages/apple/AgenticToolkit/AIPluginKit/PluginTransport.swift`, consumed by `DaemonAIChat.swift` (same directory) and by every host chat backend that drives an `AIPlugin`. It depends on `Foundation`'s `URLSession`/`URLRequest`, on `AgenticToolkitCore`'s `SubprocessChannel` and `withWallClockBudget`, and is itself UI-framework-agnostic — a SwiftUI host consumes the `AsyncThrowingStream<AIStreamEvent, Error>` it returns identically to an AppKit one. Concretely: the transport type is the enum `PluginTransport`; its single entry point is `run(spec:plugin:) -> AsyncThrowingStream<AIStreamEvent, Error>`; the timeout-error and error-passthrough requirements are enforced through `withWallClockBudget`, `WallClockBudgetExceeded`, and the case `TransportError.timedOut(after:)`; the HTTP path is `runHTTP`, using `URLRequest`, `URLSession.shared.bytes(for:)`, `HTTPURLResponse`, and throwing `TransportError.invalidResponse` / `TransportError.http(status:message:)`; the command path is `runCommand`, using `SubprocessChannel` (`environmentPolicy: .replace`, `framing: .newlineDelimited`), `channel.launch()`, `sendRaw(_:)`, `closeInput()`, `channel.messages()`, `channel.waitUntilExit()`, `channel.terminate()`, `channel.standardErrorData()`, and throwing `TransportError.commandFailed(status:message:)`; the byte-pumping logic is the free function `pump(bytes:through:into:)`; and every cancellation check is `Task.checkCancellation()` inside the one unstructured `Task` the call starts.
+- **SwiftUI**: The source is `packages/apple/AgenticDeveloperHubSDK/AIPluginKit/PluginTransport.swift`, consumed by `DaemonAIChat.swift` (same directory) and by every host chat backend that drives an `AIPlugin`. It depends on `Foundation`'s `URLSession`/`URLRequest`, on `AgenticDeveloperHubSDKCore`'s `SubprocessChannel` and `withWallClockBudget`, and is itself UI-framework-agnostic — a SwiftUI host consumes the `AsyncThrowingStream<AIStreamEvent, Error>` it returns identically to an AppKit one. Concretely: the transport type is the enum `PluginTransport`; its single entry point is `run(spec:plugin:) -> AsyncThrowingStream<AIStreamEvent, Error>`; the timeout-error and error-passthrough requirements are enforced through `withWallClockBudget`, `WallClockBudgetExceeded`, and the case `TransportError.timedOut(after:)`; the HTTP path is `runHTTP`, using `URLRequest`, `URLSession.shared.bytes(for:)`, `HTTPURLResponse`, and throwing `TransportError.invalidResponse` / `TransportError.http(status:message:)`; the command path is `runCommand`, using `SubprocessChannel` (`environmentPolicy: .replace`, `framing: .newlineDelimited`), `channel.launch()`, `sendRaw(_:)`, `closeInput()`, `channel.messages()`, `channel.waitUntilExit()`, `channel.terminate()`, `channel.standardErrorData()`, and throwing `TransportError.commandFailed(status:message:)`; the byte-pumping logic is the free function `pump(bytes:through:into:)`; and every cancellation check is `Task.checkCancellation()` inside the one unstructured `Task` the call starts.
 - **Compose**: Model `runHTTP` with OkHttp's `Call` and a streaming `ResponseBody` source, wrapped in `kotlinx.coroutines.withTimeout(spec.timeoutMillis)` to reproduce the wall-clock (not idle) bound `withWallClockBudget` provides — OkHttp's own `callTimeout`/`readTimeout` settings are per-operation, idle-style timeouts, the same gap the source's own doc comment calls out for `URLRequest.timeoutInterval`. Model `runCommand` with `ProcessBuilder`/`Runtime.exec`, writing to the process's output stream then closing it for EOF, and draining stdout line-by-line (matching `.newlineDelimited`) on a background dispatcher; note that most Android app sandboxes cannot spawn arbitrary executables, so a Compose/Android port would typically support only the HTTP path, as the sibling `AIRequestSpec` recipe's Compose note also observes. Use `callbackFlow`/`channelFlow` with `awaitClose` as the `AsyncThrowingStream` equivalent, cancelling the underlying `Call` or `Process` from `awaitClose` the way `continuation.onTermination` cancels `PluginTransport`'s internal `Task`.
 - **React/Web**: In a Node.js or Electron host (a browser has no subprocess primitive), model `runHTTP` with `fetch` plus a `ReadableStream` reader, tying an `AbortController` both to consumer cancellation and to a `setTimeout(timeout)` for the wall-clock bound — matching the sibling `AIRequestSpec` recipe's own React/Web note. Model `runCommand` with `child_process.spawn`, writing to `.stdin` then calling `.stdin.end()` for EOF, and reading `.stdout` through a `readline.createInterface` (or manual `\n`-splitting) to reproduce `.newlineDelimited` framing; read `.stderr` as a `Buffer` (never decoded to a string) to preserve `command-nonzero-exit-error`'s raw-bytes guarantee. Represent the returned sequence as an `async function*` generator or a `ReadableStream<AIStreamEvent>`, calling `AbortController.abort()`/killing the child process when the consumer stops iterating, in place of `continuation.onTermination`.
 - **AppKit / UIKit**: Identical to the SwiftUI note — this component is UI-framework-agnostic; only the application embedding `AIPluginKit` differs, never this contract.
@@ -363,7 +363,7 @@ I/O and control-flow logic with no diagnostic side effects of its own.
 
 | Platform | Path |
 |----------|------|
-| apple | `packages/apple/AgenticToolkit/AIPluginKit/PluginTransport.swift` |
+| apple | `packages/apple/AgenticDeveloperHubSDK/AIPluginKit/PluginTransport.swift` |
 
 ## Design Decisions
 

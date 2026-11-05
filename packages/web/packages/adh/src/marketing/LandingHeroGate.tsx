@@ -8,7 +8,7 @@ import type { ReactNode } from 'react'
 // THIS entry, giving the gate a second, unsubscribed context object. The mechanism and
 // the FLAG vocabulary used to live in separate packages (toolkit / the former `@adh/chrome`, Task
 // 5.3) — the merge made them one barrel, not one bundling unit.
-import { useFlagEnabled, FLAG } from '@agentic-toolkit/adh/flags'
+import { useFlagEnabled, FLAG } from '@adh-sdk/adh/flags'
 
 export type LandingHeroGateProps = {
   /** The interactive concept-graph explorer (server-rendered, passed through). */

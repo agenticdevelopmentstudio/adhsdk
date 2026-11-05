@@ -1,6 +1,6 @@
 import { Worker, type MessagePort } from "node:worker_threads";
 import { createRequire } from "node:module";
-import { cooldownState } from "@agentic-toolkit/deploy-platform/cooldown";
+import { cooldownState } from "@adh-sdk/deploy-platform/cooldown";
 import type { StatusConfig } from "../config/port";
 
 // Main-thread handle to the monitor worker (worker.ts). The scheduler stays on the
@@ -90,9 +90,9 @@ export class MonitorWorkerClient<Conn = unknown> {
     // whether the host installed via a workspace link or a vendored+hard-linked
     // copy. A container image ships no `tsx` and no TypeScript loader, so spawning
     // the source file directly would work in dev and die on first boot in prod;
-    // resolving "@agentic-toolkit/status-server/worker" instead always lands on
+    // resolving "@adh-sdk/status-server/worker" instead always lands on
     // `dist/monitor/worker.js`, the only form guaranteed runnable in that container.
-    const entry = createRequire(import.meta.url).resolve("@agentic-toolkit/status-server/worker");
+    const entry = createRequire(import.meta.url).resolve("@adh-sdk/status-server/worker");
     // The provider-cooldown state rides along as workerData: the cycle (here) and
     // the API thread's dashboard enumerations poll the SAME provider tokens, so a
     // 429 either one sees has to back BOTH off. A respawned worker re-adopts the
