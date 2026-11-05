@@ -22,7 +22,7 @@ import type {
   VercelTrafficSection,
   VitalsRow,
 } from "../telemetry/dashboard-types";
-import { openOnRowClick, SiteFailureRate, WrappedCell } from "./DashboardParts";
+import { OpenOnClickTable, SiteFailureRate, WrappedCell } from "./DashboardParts";
 import { ResponseChart } from "./ResponseChart";
 
 // What Analytics' overview and its site pages share, so the two can't disagree about what a figure
@@ -95,12 +95,12 @@ export function SitesTable({
   onSort: (sort: SiteSort) => void;
 }): ReactElement {
   return (
-    <DataTable
+    <OpenOnClickTable
       ariaLabel="Traffic per site"
       columns={SITE_COLUMNS}
       rows={[...rows]}
       getRowId={(row) => row.key}
-      {...openOnRowClick(onSite)}
+      onOpen={onSite}
       sort={sort}
       onSortChange={onSort}
       autoSizeColumns
