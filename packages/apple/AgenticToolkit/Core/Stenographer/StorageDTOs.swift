@@ -77,6 +77,48 @@ public struct StorageFileDTO: Codable, Sendable, Equatable {
     }
 }
 
+/// Where the background history backfill stands: the replay of the raw
+/// archive's older records into a live `events.db` after a cutover that
+/// started the daemon on a partly replayed one.
+public struct HistoryBackfillDTO: Codable, Sendable, Equatable {
+    /// The last archive id the backfill must reach.
+    public let targetRawID: Int64
+    /// The last archive id replayed so far.
+    public let lastRawID: Int64
+    /// Whether a slice of it runs now.
+    public let running: Bool
+    /// The last slice's error, nil when it ended cleanly or none ran yet.
+    public let lastError: String?
+
+    public init(targetRawID: Int64, lastRawID: Int64, running: Bool, lastError: String? = nil) {
+        self.targetRawID = targetRawID
+        self.lastRawID = lastRawID
+        self.running = running
+        self.lastError = lastError
+    }
+
+    /// Archive ids still to replay (an upper bound: ids can have gaps).
+    public var remaining: Int64 { max(0, targetRawID - lastRawID) }
+
+    /// One line for a reader, the same in `steno storage` and the app:
+    /// "Replaying older history: raw record 2,486,251 of 15,812,119 (running now)".
+    public var summary: String {
+        let state = running ? " (running now)" : lastError.map { " (last slice failed: \($0))" } ?? ""
+        return "Replaying older history: raw record \(Self.grouped(lastRawID)) of \(Self.grouped(targetRawID))"
+            + state
+    }
+
+    private static func grouped(_ value: Int64) -> String {
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .decimal
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.usesGroupingSeparator = true
+        formatter.groupingSeparator = ","
+        formatter.groupingSize = 3
+        return formatter.string(from: NSNumber(value: value)) ?? String(value)
+    }
+}
+
 /// A daemon's storage: the history window, its database files and the last
 /// trim pass.
 public struct StorageStatusDTO: Codable, Sendable, Equatable {
@@ -99,10 +141,14 @@ public struct StorageStatusDTO: Codable, Sendable, Equatable {
     /// the pass, false when it joined one already running. Nil on every other
     /// reply, and from a daemon older than this field.
     public let trimStarted: Bool?
+    /// The history backfill while one is pending; nil when none is, and from a
+    /// daemon older than this field.
+    public let historyBackfill: HistoryBackfillDTO?
 
     public init(
         historyDays: Int, allowedHistoryDays: [Int], files: [StorageFileDTO], lastTrim: TrimReportDTO?,
-        trimRunning: Bool, claudePipeline: String?, trimRunningSince: Double? = nil, trimStarted: Bool? = nil
+        trimRunning: Bool, claudePipeline: String?, trimRunningSince: Double? = nil, trimStarted: Bool? = nil,
+        historyBackfill: HistoryBackfillDTO? = nil
     ) {
         self.historyDays = historyDays
         self.allowedHistoryDays = allowedHistoryDays
@@ -112,6 +158,7 @@ public struct StorageStatusDTO: Codable, Sendable, Equatable {
         self.claudePipeline = claudePipeline
         self.trimRunningSince = trimRunningSince
         self.trimStarted = trimStarted
+        self.historyBackfill = historyBackfill
     }
 }
 
