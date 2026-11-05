@@ -1,6 +1,7 @@
 "use client";
-import type { ReactElement, ReactNode } from "react";
+import { useRef, useState, type ReactElement, type ReactNode } from "react";
 import { StatCard } from "@agenticdevelopertoolkit/ui/blocks/stat-card";
+import { DataTable, type DataTableProps } from "@agenticdevelopertoolkit/ui/components/data-table";
 import { Skeleton } from "@agenticdevelopertoolkit/ui/components/skeleton";
 import { useNow } from "../hooks/use-now";
 import { timeAgo } from "../lib/time-ago";
@@ -115,20 +116,43 @@ export function WrappedCell({ children }: { children: ReactNode }): ReactElement
   return <span className="whitespace-normal [overflow-wrap:anywhere]">{children}</span>;
 }
 
-const NO_SELECTION = new Set<string>();
-
-/** DataTable props for a table whose rows each open a page on one click, and which never holds a selection. */
-export function openOnRowClick(onOpen: (id: string) => void): {
-  selectedIds: Set<string>;
-  onSelectionChange: (ids: Set<string>) => void;
-} {
-  return {
-    selectedIds: NO_SELECTION,
-    onSelectionChange: (ids) => {
-      const [next] = ids;
-      if (next !== undefined) onOpen(next);
-    },
-  };
+/**
+ * A DataTable whose rows each open a page: a click, a double-click or Enter opens one.
+ *
+ * The arrow keys only move the highlight. DataTable reports a click and an arrow key the same
+ * way (a new selection), so opening on every selection change sent a keyboard user to the first
+ * row they arrowed onto. The click is told apart here instead: the wrapper's capture phase marks
+ * it before the row's own handler reports the selection it causes.
+ */
+export function OpenOnClickTable<T>({
+  onOpen,
+  ...table
+}: Omit<DataTableProps<T>, "selectedIds" | "onSelectionChange" | "onRowActivate"> & {
+  onOpen: (id: string) => void;
+}): ReactElement {
+  const [selected, setSelected] = useState<Set<string>>(() => new Set());
+  const clicking = useRef(false);
+  return (
+    <div
+      onClickCapture={() => {
+        clicking.current = true;
+      }}
+      onClick={() => {
+        clicking.current = false;
+      }}
+    >
+      <DataTable
+        {...table}
+        selectedIds={selected}
+        onSelectionChange={(ids) => {
+          setSelected(ids);
+          const [next] = ids;
+          if (clicking.current && ids.size === 1 && next !== undefined) onOpen(next);
+        }}
+        onRowActivate={onOpen}
+      />
+    </div>
+  );
 }
 
 /** The worst failure rate on a page is what an operator scans for. */
