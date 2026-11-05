@@ -25085,7 +25085,7 @@
 			repositoryURL = "https://github.com/migueldeicaza/SwiftTerm";
 			requirement = {
 				kind = versionRange;
-				maximumVersion = 2.0.0;
+				maximumVersion = 1.99.0;
 				minimumVersion = 1.20.0;
 			};
 		};
