@@ -14,12 +14,25 @@ export interface PosthogEnv {
 
 export type HogqlResult = { ok: true; rows: unknown[][] } | { ok: false; error: string };
 
+/** The last HogQL request queued in this process; the next one starts after it settles. */
+let hogqlTail: Promise<unknown> = Promise.resolve();
+
 /**
  * One HogQL query → its rows. Failures are RETURNED, not logged, so each caller decides how
- * loud a degraded provider should be. Run these one at a time: the API 503s under concurrent
- * load.
+ * loud a degraded provider should be.
+ *
+ * One at a time, for the whole process: the API 503s under concurrent load, and the callers
+ * (the dashboards' sections, the Errors detail, the KPI poll) do not know about each other, so
+ * the rule is kept here rather than trusted to each of them. `timeoutMs` starts when the query
+ * does, not while it waits its turn.
  */
-export async function hogqlRows(env: PosthogEnv, query: string, timeoutMs: number): Promise<HogqlResult> {
+export function hogqlRows(env: PosthogEnv, query: string, timeoutMs: number): Promise<HogqlResult> {
+  const run = hogqlTail.then(() => hogqlRowsNow(env, query, timeoutMs));
+  hogqlTail = run;
+  return run;
+}
+
+async function hogqlRowsNow(env: PosthogEnv, query: string, timeoutMs: number): Promise<HogqlResult> {
   const { POSTHOG_HOST, POSTHOG_API_KEY, POSTHOG_PROJECT_ID } = env;
   if (!POSTHOG_HOST || !POSTHOG_API_KEY || !POSTHOG_PROJECT_ID) return { ok: false, error: "PostHog is not configured" };
   const controller = new AbortController();

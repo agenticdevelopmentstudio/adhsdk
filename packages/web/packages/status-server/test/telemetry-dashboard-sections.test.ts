@@ -164,6 +164,28 @@ describe("PostHog shapers", () => {
       vi.stubGlobal("fetch", async () => ({ ok: false, status: 504, json: async () => ({}) }));
       await expect(loadSiteErrorDetail(ENV, rangeWindow("30d", NOW))).rejects.toThrow("HTTP 504");
     });
+
+    it("stops at the first failed query instead of spending the other scans", async () => {
+      const fetch = vi.fn(async () => ({ ok: false, status: 503, json: async () => ({}) }));
+      vi.stubGlobal("fetch", fetch);
+      await expect(loadSiteErrorDetail(ENV, rangeWindow("30d", NOW))).rejects.toThrow("HTTP 503");
+      expect(fetch).toHaveBeenCalledTimes(1);
+    });
+
+    // PostHog 503s under concurrent load, and its callers don't know about each other.
+    it("never has two HogQL queries in flight, even across sections loading at once", async () => {
+      let inFlight = 0;
+      let most = 0;
+      vi.stubGlobal("fetch", async () => {
+        inFlight += 1;
+        most = Math.max(most, inFlight);
+        await new Promise((r) => setTimeout(r, 2));
+        inFlight -= 1;
+        return answer([]);
+      });
+      await Promise.all([loadSiteErrorDetail(ENV, rangeWindow("30d", NOW)), loadTraffic(ENV, rangeWindow("7d", NOW))]);
+      expect(most).toBe(1);
+    });
   });
 
   it("a failed query fails the section rather than reading as no traffic", async () => {
