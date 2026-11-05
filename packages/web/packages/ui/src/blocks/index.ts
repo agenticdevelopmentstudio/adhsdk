@@ -210,6 +210,11 @@ export {
 } from "./view-source-disclosure";
 export { ViewTabBar, type ViewTabItem, type ViewTabLink } from "./view-tab-bar";
 export { ButtonBar, type ButtonBarActions } from "./button-bar";
+export {
+  DocumentSaveBar,
+  type DocumentSaveBarMessages,
+  type DocumentSaveBarProps,
+} from "./document-save-bar";
 export { PopupMenu, type PopupMenuItem } from "./popup-menu";
 export {
   FocusedTopicDetail,

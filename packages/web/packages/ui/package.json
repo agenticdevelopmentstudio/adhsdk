@@ -146,6 +146,11 @@
       "development": "./src/hooks/useDirtyDraft.ts",
       "import": "./dist/hooks/useDirtyDraft.js"
     },
+    "./hooks/useVersionedDocument": {
+      "types": "./dist/hooks/useVersionedDocument.d.ts",
+      "development": "./src/hooks/useVersionedDocument.ts",
+      "import": "./dist/hooks/useVersionedDocument.js"
+    },
     "./hooks/useScrollSpy": {
       "types": "./dist/hooks/useScrollSpy.d.ts",
       "development": "./src/hooks/useScrollSpy.ts",
