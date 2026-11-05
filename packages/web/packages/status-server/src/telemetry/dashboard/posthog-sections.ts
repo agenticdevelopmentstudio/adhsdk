@@ -29,9 +29,20 @@ const HOST = "properties.$host";
 // Only production sites report analytics; the host filters keep out a stray local or preview hit.
 const PRODUCTION_HOSTS = `${HOST} NOT LIKE 'testing.%' AND ${HOST} NOT LIKE 'staging.%' AND ${HOST} NOT LIKE '%localhost%' AND ${HOST} NOT LIKE '%127.0.0.1%' AND ${HOST} NOT LIKE '%.vercel.app'`;
 
-function since(w: RangeWindow): string {
+// Every time in these queries is UTC, as the windows' buckets are. HogQL otherwise reads a zone-less
+// literal, and starts a day or an hour, in the PostHog PROJECT's timezone: in a project not set to
+// UTC, rows landed in the wrong bucket (or none) and the window started hours off.
+const UTC = "'UTC'";
+
+/** The start of the hour or day a row's timestamp falls in, in UTC. */
+export function bucketStart(unit: RangeWindow["unit"]): string {
+  return unit === "hour" ? `toStartOfHour(timestamp, ${UTC})` : `toStartOfDay(timestamp, ${UTC})`;
+}
+
+/** The window's lower bound, as a UTC instant. */
+export function since(w: RangeWindow): string {
   const at = w.since.toISOString().slice(0, 19).replace("T", " ");
-  return `timestamp >= toDateTime('${at}')`;
+  return `timestamp >= toDateTime('${at}', ${UTC})`;
 }
 
 const count = (v: unknown): number => toMetricValue(v) ?? 0;
@@ -76,7 +87,7 @@ export function shapeTraffic(raw: unknown[][], buckets: string[]): TrafficSectio
 }
 
 export async function loadTraffic(env: PosthogEnv, w: RangeWindow): Promise<TrafficSection> {
-  const bucket = w.unit === "hour" ? "toStartOfHour(timestamp)" : "toStartOfDay(timestamp)";
+  const bucket = bucketStart(w.unit);
   const raw = await rows(
     env,
     `SELECT ${HOST}, ${bucket}, count(), uniq(properties.$session_id) FROM events ` +
@@ -232,7 +243,7 @@ export async function loadSiteErrorDetail(env: PosthogEnv, w: RangeWindow): Prom
   // In turn, so the first failure ends the section without spending the other two scans.
   const days = await rows(
     env,
-    `SELECT ${HOST}, toStartOfDay(timestamp), countIf(event = 'error_reported'), countIf(${isFailure}) FROM events ` +
+    `SELECT ${HOST}, ${bucketStart("day")}, countIf(event = 'error_reported'), countIf(${isFailure}) FROM events ` +
       `WHERE event IN ('error_reported', 'http_request') AND ${since(w)} AND ${PRODUCTION_HOSTS} GROUP BY 1, 2 ORDER BY 2 LIMIT ${ERROR_DETAIL_ROW_LIMIT}`,
   );
   const errors = await rows(
