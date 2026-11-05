@@ -6,6 +6,8 @@ import { buildAnalyticsFetcher, buildErrorsFetcher } from '../telemetry/server';
 import type { Fetcher } from '../telemetry/ports';
 import { cachedSingleFlight } from '@agentic-toolkit/deploy-platform/util';
 import type { AnalyticsMetricDTO, ErrorDTO, TelemetrySnapshot } from '../telemetry/types';
+import { errorCountsAsProblem } from '../board/derive-problems';
+import { isoMs } from '../telemetry/dashboard/errors-sections';
 
 // ---------------------------------------------------------------------------
 // The TELEMETRY read API — the production-visibility band (errors + analytics).
@@ -57,8 +59,18 @@ export function telemetryRoutes(
   const cachedErrors = cachedSingleFlight(ERRORS_CACHE_TTL_MS, async () => {
     const r = await errorsFetcher.fetch();
     if (r.ok) lastGood.errors = r.items;
-    return lastGood.errors ?? [];
+    // A failed poll serving older rows is the board's frozen feed, and is judged as one.
+    return { items: lastGood.errors ?? [], frozen: !r.ok && lastGood.errors !== null };
   });
+
+  /** Each error marked with the board's own verdict, so no view re-derives part of it. */
+  function judged(errors: { items: ErrorDTO[]; frozen: boolean }): ErrorDTO[] {
+    const judging = { nowMs: Date.now(), frozen: errors.frozen, allowlist: config.glitchtipProjects };
+    return errors.items.map((e) => ({
+      ...e,
+      active: errorCountsAsProblem({ project: e.project, level: e.level, lastSeenMs: isoMs(e.lastSeen) }, judging),
+    }));
+  }
   const cachedAnalytics = cachedSingleFlight(ANALYTICS_CACHE_TTL_MS, async () => {
     const r = await analyticsFetcher.fetch();
     if (r.ok) lastGood.analytics = r.items;
@@ -97,8 +109,9 @@ export function telemetryRoutes(
     const [errors, analytics] = await Promise.all([cachedErrors(fresh), analyticsForSnapshot(fresh)]);
     const snapshot: TelemetrySnapshot = {
       generatedAt: new Date().toISOString(),
-      errors,
+      errors: judged(errors),
       analytics: analytics ?? [],
+      ...(errors.frozen ? { errorsFrozen: true } : {}),
       ...(analytics ? {} : { analyticsPending: true }),
     };
     return c.json(snapshot, 200, { 'Cache-Control': 'no-store' });

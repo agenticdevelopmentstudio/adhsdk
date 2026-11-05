@@ -192,6 +192,57 @@ describe('telemetry live snapshot — single-flight + stale fallback', () => {
     }
   });
 
+  // The Overview card reads `active` rather than re-deriving it, so these are the board's rule.
+  it('marks each error with the board verdict, the GLITCHTIP_PROJECTS allowlist included', async () => {
+    const recent = new Date(Date.now() - 3_600_000).toISOString();
+    const errorsFetcher: Fetcher<ErrorDTO> = {
+      fetch: async () => ({
+        ok: true as const,
+        items: [
+          { ...errItem, id: 'a', issueKey: 'a', project: 'app', lastSeen: recent },
+          { ...errItem, id: 'b', issueKey: 'b', project: 'scratch', lastSeen: recent },
+        ],
+      }),
+    };
+    const analyticsFetcher: Fetcher<AnalyticsMetricDTO> = { fetch: async () => ({ ok: true as const, items: [] }) };
+    process.env.GLITCHTIP_PROJECTS = 'app';
+    try {
+      const routes = telemetryRoutes(createLibsqlStorage(db), testConfig(), { errorsFetcher, analyticsFetcher });
+      const body = (await (await routes.request('/telemetry?fresh=1')).json()) as {
+        errors: ErrorDTO[];
+        errorsFrozen?: boolean;
+      };
+      expect(body.errors.map((e) => [e.id, e.active])).toEqual([
+        ['a', true],
+        ['b', false],
+      ]);
+      expect(body.errorsFrozen).toBeUndefined();
+    } finally {
+      delete process.env.GLITCHTIP_PROJECTS;
+    }
+  });
+
+  it('while GlitchTip cannot be read, says so and keeps its last errors active however old', async () => {
+    let fail = false;
+    // errItem was last seen in June: far outside the 24h window.
+    const errorsFetcher: Fetcher<ErrorDTO> = {
+      fetch: async () => (fail ? { ok: false as const, items: [] } : { ok: true as const, items: [errItem] }),
+    };
+    const analyticsFetcher: Fetcher<AnalyticsMetricDTO> = { fetch: async () => ({ ok: true as const, items: [] }) };
+    const routes = telemetryRoutes(createLibsqlStorage(db), testConfig(), { errorsFetcher, analyticsFetcher });
+
+    const fresh = (await (await routes.request('/telemetry?fresh=1')).json()) as { errors: ErrorDTO[] };
+    expect(fresh.errors[0]!.active).toBe(false);
+
+    fail = true;
+    const frozen = (await (await routes.request('/telemetry?fresh=1')).json()) as {
+      errors: ErrorDTO[];
+      errorsFrozen?: boolean;
+    };
+    expect(frozen.errorsFrozen).toBe(true);
+    expect(frozen.errors[0]!.active).toBe(true);
+  });
+
   it('a cold start that gives up on PostHog says the analytics are pending, not empty', async () => {
     const errorsFetcher: Fetcher<ErrorDTO> = { fetch: async () => ({ ok: true as const, items: [errItem] }) };
     const analyticsFetcher: Fetcher<AnalyticsMetricDTO> = { fetch: () => new Promise(() => undefined) };

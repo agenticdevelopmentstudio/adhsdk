@@ -523,7 +523,7 @@ export const ERROR_JUDGED_LEVELS = new Set(["error", "fatal"]);
  */
 export const ERROR_RECENT_MS = ACTIVITY_WINDOW_MS;
 
-function judgedError(e: ErrorFact, nowMs: number, frozen: boolean): boolean {
+function judgedError(e: Pick<ErrorFact, "level" | "lastSeenMs">, nowMs: number, frozen: boolean): boolean {
   if (!ERROR_JUDGED_LEVELS.has((e.level ?? "").toLowerCase())) return false;
   // While the feed is frozen the recency test is SUSPENDED — see `errorFeedFrozen`. The
   // rows cannot age honestly when nothing is refreshing them, and letting our own blindness
@@ -532,6 +532,32 @@ function judgedError(e: ErrorFact, nowMs: number, frozen: boolean): boolean {
   // No lastSeen at all → cannot show it is current, so it is not judged. Erring toward
   // silence here matches the null-level rule above.
   return e.lastSeenMs !== null && nowMs - e.lastSeenMs <= ERROR_RECENT_MS;
+}
+
+/** What the error rule needs besides the error itself. */
+export interface ErrorJudging {
+  nowMs: number;
+  /** The feed cannot be read, so the rows on hand are its last answer: see `errorFeedFrozen`. */
+  frozen: boolean;
+  /** `GLITCHTIP_PROJECTS`; null means every project. */
+  allowlist: readonly string[] | null;
+}
+
+/**
+ * Would this error hold a Problem open? The board's whole rule, exported so every view that
+ * calls an error "active" (the Overview card, the Errors topic) asks the board rather than a copy
+ * of part of it: a view that disagrees shows red with nothing in Problems, or an all-clear while
+ * a Problem is open.
+ */
+export function errorCountsAsProblem(
+  e: { project: string; level: string | null; lastSeenMs: number | null },
+  j: ErrorJudging,
+): boolean {
+  return projectAllowed(j.allowlist, e.project) && judgedError(e, j.nowMs, j.frozen);
+}
+
+function projectAllowed(allowlist: readonly string[] | null, project: string): boolean {
+  return allowlist === null || allowlist.includes(project);
 }
 
 /**
@@ -563,7 +589,7 @@ function errorFeedFrozen(facts: BoardFacts): boolean {
  * nothing can close, or closes a live row silently as `unmonitored`.
  */
 function allowedProject(facts: BoardFacts, project: string): boolean {
-  return facts.errorProjectAllowlist === null || facts.errorProjectAllowlist.includes(project);
+  return projectAllowed(facts.errorProjectAllowlist, project);
 }
 
 /**
@@ -605,12 +631,11 @@ function clip(text: string, max = 120): string {
 export function errorProblems(facts: BoardFacts, nowMs: number): Problem[] {
   if (!facts.errorsConfigured) return [];
   const onset = onsetMap(facts);
-  const frozen = errorFeedFrozen(facts);
+  const judging: ErrorJudging = { nowMs, frozen: errorFeedFrozen(facts), allowlist: facts.errorProjectAllowlist };
 
   const byProject = new Map<string, ErrorFact[]>();
   for (const e of facts.errors) {
-    if (!allowedProject(facts, e.project)) continue;
-    if (!judgedError(e, nowMs, frozen)) continue;
+    if (!errorCountsAsProblem(e, judging)) continue;
     const list = byProject.get(e.project);
     if (list) list.push(e);
     else byProject.set(e.project, [e]);
