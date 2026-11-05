@@ -54,6 +54,9 @@ export const FAMILY_ROUTE_SEGMENTS: readonly string[] = [
   'opengraph-image.png',
   'robots.txt',
   'sitemap.xml',
+  // The template's agent-discovery routes: `app/index.md` and `app/llms.txt` in the skeleton.
+  'index.md',
+  'llms.txt',
   // The framework's own namespace.
   '_next',
 ]
