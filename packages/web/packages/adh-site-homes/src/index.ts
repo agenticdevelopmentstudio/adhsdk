@@ -30,6 +30,7 @@ export const FLEET_HOME_SITE_IDS = [
   'games',
   'gamification',
   'help',
+  'hub-sdk',
   'integrations',
   'knowledgebases',
   'messages',

@@ -119,6 +119,11 @@
       "development": "./src/sites/help.tsx",
       "import": "./dist/sites/help.js"
     },
+    "./hub-sdk": {
+      "types": "./dist/sites/hub-sdk.d.ts",
+      "development": "./src/sites/hub-sdk.tsx",
+      "import": "./dist/sites/hub-sdk.js"
+    },
     "./integrations": {
       "types": "./dist/sites/integrations.d.ts",
       "development": "./src/sites/integrations.tsx",

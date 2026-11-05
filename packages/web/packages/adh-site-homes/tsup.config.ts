@@ -3,11 +3,11 @@ import { featureTsup } from '../features/tsup.preset'
 // Shares the feature build knowledge (ESM, browser, splitting, directives preserved,
 // react/next/@adh-sdk external) rather than restating it. The entry MAP is the
 // only thing this package adds: one entry per site, so mounting one model never pulls
-// the other 47. Generated alongside package.json's exports -- the two must
-// name the same 48 sites, which `pnpm lint` in this package proves by resolving them.
+// the other 48. Generated alongside package.json's exports -- the two must
+// name the same 49 sites, which `pnpm lint` in this package proves by resolving them.
 export default featureTsup({
   // The `.` entry: data only (FLEET_HOME_SITE_IDS), and it imports no model — see src/index.ts
-  // for why there is deliberately no barrel of the 48 here.
+  // for why there is deliberately no barrel of the 49 here.
   index: "src/index.ts",
   "sites/academy": "src/sites/academy.tsx",
   "sites/authentication": "src/sites/authentication.tsx",
@@ -29,6 +29,7 @@ export default featureTsup({
   "sites/games": "src/sites/games.tsx",
   "sites/gamification": "src/sites/gamification.tsx",
   "sites/help": "src/sites/help.tsx",
+  "sites/hub-sdk": "src/sites/hub-sdk.tsx",
   "sites/integrations": "src/sites/integrations.tsx",
   "sites/knowledgebases": "src/sites/knowledgebases.tsx",
   "sites/messages": "src/sites/messages.tsx",
