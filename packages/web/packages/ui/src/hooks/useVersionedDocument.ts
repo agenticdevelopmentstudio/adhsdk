@@ -2,6 +2,8 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 
+import { errorMessage } from '../lib/errors'
+
 /** A document's text at one stored version. */
 export interface VersionedText {
   text: string
@@ -33,9 +35,9 @@ export interface VersionedDocumentSource {
 export interface VersionedDocument {
   /** The stored text and version, once loaded. */
   doc: VersionedText | null
-  /** What an editor shows: the draft while there is one, else the stored text. */
+  /** What the editor shows: the stored text plus any unsaved edits. */
   value: string | null
-  /** True while the draft differs from the stored text. */
+  /** True while the editor's text differs from the stored text. */
   dirty: boolean
   /** `dirty` read at call time — stable identity, for exit guards that outlive a render. */
   isDirty: () => boolean
@@ -52,15 +54,15 @@ export interface VersionedDocument {
   saving: boolean
   /** The last save failed for a reason other than a conflict or a missing document. */
   saveError: string | null
-  /** Set the draft. Typing back to the stored text clears it, so that is not an unsaved edit. */
+  /** Set the editor's text. Typing back to the stored text is not an unsaved edit. */
   edit: (text: string) => void
   /** Save the draft against the version it was loaded at. */
   save: () => Promise<void>
   /** After a conflict: save the draft over their version. */
   overwrite: () => Promise<void>
-  /** Drop the draft (and reload, if the stored document changed meanwhile). */
+  /** Drop the draft (and reload, if the stored document changed or vanished meanwhile). */
   revert: () => void
-  /** After a conflict: drop the draft and adopt their version. */
+  /** After a conflict: drop the draft, adopt their version, and reload in case of a newer one. */
   takeTheirs: () => void
   /**
    * Tell the hook the stored document may have changed. With a `version` (a change event),
@@ -73,17 +75,50 @@ export interface VersionedDocument {
 const statusIs404 = (err: unknown): boolean =>
   (err as { status?: unknown } | null)?.status === 404
 
-const message = (err: unknown): string => (err instanceof Error ? err.message : String(err))
+interface State {
+  /** Which document; a new key starts a fresh state, and `gen` with it. */
+  key: string
+  gen: number
+  doc: VersionedText | null
+  /** What the editor shows. Unsaved edits are exactly `text !== doc.text`. */
+  text: string | null
+  missing: boolean
+  loadError: string | null
+  gone: boolean
+  changedElsewhere: boolean
+  conflict: VersionedText | null
+  saving: boolean
+  saveError: string | null
+}
+
+let nextGen = 0
+const fresh = (key: string): State => ({
+  key,
+  gen: ++nextGen,
+  doc: null,
+  text: null,
+  missing: false,
+  loadError: null,
+  gone: false,
+  changedElsewhere: false,
+  conflict: null,
+  saving: false,
+  saveError: null,
+})
+
+const isDirtyState = (s: State): boolean => s.doc !== null && s.text !== null && s.text !== s.doc.text
 
 /**
- * One editable document stored with optimistic versioning: load it, keep a draft, save against
- * the version the draft started from, and say so — rather than clobber — when someone else got
- * there first or the document changed or vanished underneath the draft.
+ * One editable document stored with optimistic versioning: load it, keep the editor's text,
+ * save against the version that text started from, and say so — rather than clobber — when
+ * someone else got there first or the document changed or vanished underneath unsaved edits.
  *
- * The draft is `null` whenever it matches the stored text, so "there is a draft" always means
- * "there are unsaved edits". Every async result is dropped if the document (`key`) changed or
- * the component unmounted since it started, and loads within one document apply in order, so a
- * slow early load cannot overwrite a later one.
+ * All state is one object, and every change goes through it synchronously, so callbacks fired
+ * between renders (a change event right after a save) see what the hook already knows. A new
+ * `key` resets it during render, so a different document never renders with the last one's
+ * text. Every async result is dropped if the document changed or the component unmounted since
+ * it started, and loads within one document apply in order, so a slow early load cannot
+ * overwrite a later one.
  *
  * Rendering is the host's: pair it with `DocumentSaveBar` for the Save/Revert strip and its
  * notices, and with `UnsavedChangesGuard` for leaving the page.
@@ -93,26 +128,25 @@ export function useVersionedDocument(source: VersionedDocumentSource): Versioned
   const sourceRef = useRef(source)
   sourceRef.current = source
 
-  const [doc, setDoc] = useState<VersionedText | null>(null)
-  const [draft, setDraft] = useState<string | null>(null)
-  const [missing, setMissing] = useState(false)
-  const [loadError, setLoadError] = useState<string | null>(null)
-  const [gone, setGone] = useState(false)
-  const [changedElsewhere, setChangedElsewhere] = useState(false)
-  const [conflict, setConflict] = useState<VersionedText | null>(null)
-  const [saving, setSaving] = useState(false)
-  const [saveError, setSaveError] = useState<string | null>(null)
+  const [state, setState] = useState(() => fresh(key))
+  const stateRef = useRef(state)
+  let s = state
+  if (s.key !== key) {
+    // A different document: reset now, during render, rather than after a commit of the old one.
+    s = fresh(key)
+    stateRef.current = s
+    setState(s)
+  }
 
-  const docRef = useRef(doc)
-  docRef.current = doc
-  const draftRef = useRef(draft)
-  draftRef.current = draft
-  const changedRef = useRef(changedElsewhere)
-  changedRef.current = changedElsewhere
-
-  // epoch moves with the document shown (key) and on unmount; loadSeq orders loads within one.
-  const epoch = useRef(0)
+  const alive = useRef(true)
   const loadSeq = useRef(0)
+  const update = useCallback((gen: number, change: (s: State) => Partial<State>) => {
+    const cur = stateRef.current
+    if (cur.gen !== gen || !alive.current) return
+    const next = { ...cur, ...change(cur) }
+    stateRef.current = next
+    setState(next)
+  }, [])
 
   const isMissing = useCallback(
     (err: unknown) => (sourceRef.current.isMissing ?? statusIs404)(err),
@@ -120,155 +154,148 @@ export function useVersionedDocument(source: VersionedDocumentSource): Versioned
   )
 
   const load = useCallback(() => {
-    const mineEpoch = epoch.current
-    const mineSeq = ++loadSeq.current
-    const current = () => mineEpoch === epoch.current && mineSeq === loadSeq.current
+    const gen = stateRef.current.gen
+    const seq = ++loadSeq.current
+    const apply = (change: (s: State) => Partial<State>) =>
+      seq === loadSeq.current && update(gen, change)
     sourceRef.current
       .load()
-      .then((d) => {
-        if (!current()) return
-        setDoc(d)
-        setMissing(false)
-        setLoadError(null)
-        setGone(false)
-        setChangedElsewhere(false)
-      })
-      .catch((err: unknown) => {
-        if (!current()) return
-        if (isMissing(err)) {
-          setMissing(true)
-          setLoadError(null)
-        } else {
-          setMissing(false)
-          setLoadError(message(err))
-        }
-      })
-  }, [isMissing])
+      .then((d) =>
+        apply((cur) =>
+          // Edits typed while the load was in flight keep their base; a newer stored version
+          // is a change underneath them, so the next save conflicts instead of clobbering it.
+          isDirtyState(cur)
+            ? { changedElsewhere: cur.changedElsewhere || d.version !== cur.doc?.version }
+            : { doc: d, text: d.text, missing: false, loadError: null, gone: false, changedElsewhere: false },
+        ),
+      )
+      .catch((err: unknown) =>
+        apply((cur) => {
+          if (isDirtyState(cur)) return isMissing(err) ? { gone: true } : {}
+          // Drop the old doc with it, so its version can't mask the document coming back.
+          return isMissing(err)
+            ? { missing: true, loadError: null, doc: null, text: null }
+            : { missing: false, loadError: errorMessage(err) }
+        }),
+      )
+  }, [isMissing, update])
 
   useEffect(() => {
-    epoch.current++
-    setDoc(null)
-    setDraft(null)
-    setConflict(null)
-    setChangedElsewhere(false)
-    setSaving(false)
-    setSaveError(null)
-    setMissing(false)
-    setLoadError(null)
-    setGone(false)
+    alive.current = true
     load()
     return () => {
-      epoch.current++
+      alive.current = false
     }
   }, [key, load])
 
-  const isDirty = useCallback(
-    () => draftRef.current !== null && draftRef.current !== docRef.current?.text,
-    [],
-  )
+  const isDirty = useCallback(() => isDirtyState(stateRef.current), [])
 
-  const edit = useCallback((text: string) => {
-    setDraft(text === docRef.current?.text ? null : text)
-  }, [])
+  const edit = useCallback(
+    (text: string) => {
+      const cur = stateRef.current
+      update(cur.gen, (c) => ({ text, ...(c.doc && text === c.doc.text ? { saveError: null } : {}) }))
+      // Back to the stored text under a change notice: clean now, so take the change.
+      if (cur.changedElsewhere && cur.doc && text === cur.doc.text) load()
+    },
+    [load, update],
+  )
 
   const write = useCallback(
     async (base: string) => {
-      const sent = draftRef.current
+      const start = stateRef.current
+      const sent = start.text
       if (sent === null) return
-      const mineEpoch = epoch.current
-      setSaving(true)
-      setSaveError(null)
+      const gen = start.gen
+      update(gen, () => ({ saving: true, saveError: null }))
       try {
         const result = await sourceRef.current.save(sent, base)
-        if (mineEpoch !== epoch.current) return
-        if (result.ok) {
-          setDoc({ text: sent, version: result.version })
-          // Edits typed while the save was in flight stay a draft.
-          setDraft((d) => (d === sent ? null : d))
-          setConflict(null)
-          setChangedElsewhere(false)
-          setGone(false)
-        } else {
-          setConflict(result.conflict)
-        }
+        // `text` is untouched: whatever the editor holds now (edits or a revert made during
+        // the save) stays, and is unsaved exactly when it differs from what was stored.
+        update(gen, () =>
+          result.ok
+            ? { doc: { text: sent, version: result.version }, conflict: null, changedElsewhere: false, gone: false }
+            : { conflict: result.conflict },
+        )
       } catch (err) {
-        if (mineEpoch !== epoch.current) return
-        if (isMissing(err)) setGone(true)
-        else setSaveError(message(err))
+        update(gen, () => (isMissing(err) ? { gone: true } : { saveError: errorMessage(err) }))
       } finally {
-        if (mineEpoch === epoch.current) setSaving(false)
+        update(gen, () => ({ saving: false }))
       }
     },
-    [isMissing],
+    [isMissing, update],
   )
 
   const save = useCallback(async () => {
-    const base = docRef.current?.version
-    if (base !== undefined) await write(base)
+    const cur = stateRef.current
+    if (cur.doc && isDirtyState(cur)) await write(cur.doc.version)
   }, [write])
 
-  const conflictRef = useRef(conflict)
-  conflictRef.current = conflict
   const overwrite = useCallback(async () => {
-    const theirs = conflictRef.current
+    const theirs = stateRef.current.conflict
     if (theirs) await write(theirs.version)
   }, [write])
 
   const revert = useCallback(() => {
-    const stale = changedRef.current
-    setDraft(null)
-    setConflict(null)
-    setSaveError(null)
-    if (stale) load()
-  }, [load])
+    const cur = stateRef.current
+    update(cur.gen, (c) => ({ text: c.doc?.text ?? null, conflict: null, saveError: null }))
+    if (cur.changedElsewhere || cur.gone) load()
+  }, [load, update])
 
   const takeTheirs = useCallback(() => {
-    const theirs = conflictRef.current
+    const cur = stateRef.current
+    const theirs = cur.conflict
     if (!theirs) return
-    setDoc(theirs)
-    setDraft(null)
-    setConflict(null)
-    setChangedElsewhere(false)
-  }, [])
+    update(cur.gen, () => ({
+      doc: theirs,
+      text: theirs.text,
+      conflict: null,
+      changedElsewhere: false,
+      gone: false,
+      saveError: null,
+    }))
+    // Their snapshot is from the failed save; anything stored since then is newer still.
+    load()
+  }, [load, update])
 
   const notifyChanged = useCallback(
     (version?: string) => {
-      if (version !== undefined && version === docRef.current?.version) return
-      if (draftRef.current === null) {
+      const cur = stateRef.current
+      if (version !== undefined && version === cur.doc?.version) return
+      if (!isDirtyState(cur)) {
         load()
         return
       }
       if (version !== undefined) {
-        setChangedElsewhere(true)
+        update(cur.gen, () => ({ changedElsewhere: true }))
         return
       }
-      // Unknown whether anything changed (a reconnect): look, without touching the draft.
-      const mineEpoch = epoch.current
+      // Unknown whether anything changed (a reconnect): look, without touching the edits.
+      const gen = cur.gen
       sourceRef.current
         .load()
         .then((d) => {
-          if (mineEpoch === epoch.current && d.version !== docRef.current?.version) {
-            setChangedElsewhere(true)
-          }
+          const now = stateRef.current
+          if (now.gen !== gen || d.version === now.doc?.version) return
+          if (isDirtyState(now)) update(gen, () => ({ changedElsewhere: true }))
+          else load()
         })
         .catch(() => {})
     },
-    [load],
+    [load, update],
   )
 
-  const dirty = draft !== null && draft !== doc?.text
   return {
-    doc,
-    value: draft ?? doc?.text ?? null,
-    dirty,
+    doc: s.doc,
+    value: s.text,
+    dirty: isDirtyState(s),
     isDirty,
-    missing,
-    loadError,
-    gone,
-    changedElsewhere,
-    conflict,
-    saving,
-    saveError,
+    missing: s.missing,
+    loadError: s.loadError,
+    gone: s.gone,
+    changedElsewhere: s.changedElsewhere,
+    conflict: s.conflict,
+    saving: s.saving,
+    saveError: s.saveError,
     edit,
     save,
     overwrite,
