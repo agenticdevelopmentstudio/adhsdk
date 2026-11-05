@@ -189,5 +189,7 @@ export const PAGEVIEWS_NOTE =
 export function projectsNote(vercel: VercelTrafficSection | null): string | undefined {
   if (!vercel) return undefined;
   const failed = vercel.failed > 0 ? ` ${vercel.failed} could not be read, so totals may be short.` : "";
-  return `${vercel.projectsEnabled} of ${vercel.projectsTotal} production sites have Web Analytics on.${failed}`;
+  const incomplete =
+    vercel.incomplete > 0 ? ` ${vercel.incomplete} could not be read in full, so the charts and top lists may be short.` : "";
+  return `${vercel.projectsEnabled} of ${vercel.projectsTotal} production sites have Web Analytics on.${failed}${incomplete}`;
 }

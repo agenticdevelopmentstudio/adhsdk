@@ -74,6 +74,8 @@ export interface VercelProjectTraffic {
   referrers: Marginal[];
   paths: Marginal[];
   devices: Marginal[];
+  /** A breakdown call failed, so `series` and the lists are short; `pageviews` is still whole. */
+  incomplete: boolean;
 }
 
 /** One production project, whether or not it has analytics on or had any traffic. */
@@ -91,8 +93,10 @@ export interface VercelTrafficSection {
   /** Production projects only: staging and testing are never counted. */
   projectsTotal: number;
   projectsEnabled: number;
-  /** Projects with at least one call that failed, so their numbers may be short. */
+  /** Projects whose count could not be read, so `totals` and the roster are short. */
   failed: number;
+  /** Projects counted in `totals` whose breakdowns could not all be read, so the series and lists are short. */
+  incomplete: number;
   roster: VercelRosterEntry[];
   totals: { pageviews: number; visitors: number };
   pageviews: number[];

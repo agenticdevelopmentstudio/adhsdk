@@ -50,6 +50,7 @@ function project(over: Partial<VercelProjectTraffic>): VercelProjectTraffic {
     referrers: [],
     paths: [],
     devices: [],
+    incomplete: false,
     ...over,
   };
 }
@@ -59,6 +60,7 @@ const VERCEL: VercelTrafficSection = {
   projectsTotal: 3,
   projectsEnabled: 2,
   failed: 0,
+  incomplete: 0,
   roster: [],
   totals: { pageviews: 11, visitors: 6 },
   pageviews: [4, 7],
@@ -288,6 +290,15 @@ describe("siteReport", () => {
     expect(report.health).toMatchObject({ errors: 3, requests: 20, failures: 1, p95Ms: 300 });
     expect(report.projects.map((row) => row.project)).toEqual(["a-production"]);
     expect(report.vitals.map((row) => row.host)).toEqual(["www.a.com"]);
+    expect(report.vercelIncomplete).toBe(false);
+  });
+
+  it("says when this site's Vercel breakdown is short, and not another site's", () => {
+    const short = sections({
+      vercel: answered({ ...VERCEL, incomplete: 1, projects: [project({ incomplete: true })] }) as never,
+    });
+    expect(siteReport(short, "a.com").vercelIncomplete).toBe(true);
+    expect(siteReport(short, "b.com").vercelIncomplete).toBe(false);
   });
 
   it("lists breakdowns in page order, with the bare path on Pages and each provider's own list", () => {

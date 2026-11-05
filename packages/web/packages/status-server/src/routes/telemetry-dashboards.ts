@@ -68,6 +68,8 @@ export function dashboardRoutes(config: StatusConfig): Hono<{ Variables: { tier:
   const vercel = sectionedDashboard<AnalyticsRange, VercelSections>({
     ttlMs: ANALYTICS_TTL_MS,
     sections: VERCEL_SECTIONS,
+    // One project's timeout shouldn't leave its chart flat for the whole TTL.
+    incomplete: (_name, data) => data.failed > 0 || data.incomplete > 0,
     loaders: (range) => ({ vercel: () => loadVercelTraffic(creds, rangeWindow(range, Date.now())) }),
   });
   const glitchtip = sectionedDashboard<'all', GlitchtipSections>({
