@@ -3,6 +3,10 @@
 the content content-buildr generated.
 
     python3 <toolkit>/packages/web/packages/site-template/tools/assemble_site.py --site <repo> [--check]
+        [--source <folder>] [--output websites/<app>]
+
+`--source` names the folder holding `site.json` when it is not `site/` (a repo with a second
+site), and `--output` overrides `site.json`'s `output`.
 
 A site repo holds only `site/` — `site.json`, custom components and routes, the code they need,
 its public assets and a token sheet — and the app `site.json`'s `output` names. This script
@@ -76,6 +80,9 @@ FRAME_SHEETS = [
 ]
 
 # Where each site folder lands in the app.
+# The folder under a site repo's root that holds `site.json` and the site's own files, unless
+# `--source` names another.
+SOURCE = "site"
 SITE_TREES = [
     ("components", "src/components"),
     ("routes", "app/(frame)"),
@@ -173,7 +180,7 @@ SITEMAP_OFF = (
 )
 
 
-def plan_sitemap(site: Path, entry: str | None) -> tuple[str, list[str]]:
+def plan_sitemap(src: Path, entry: str | None) -> tuple[str, list[str]]:
     """`src/site/sitemap.ts`, and what is wrong with `sitemapRoutes` if anything is. The site's
     function is imported under an alias, so it may itself be called `sitemapRoutes`, and
     re-exported typed, so a function whose result is not `FrameSitemapRoute[]` fails the site's
@@ -181,7 +188,7 @@ def plan_sitemap(site: Path, entry: str | None) -> tuple[str, list[str]]:
     if entry is None:
         return SITEMAP_OFF, []
     file, _, name = entry.partition("#")
-    source_root = (site / "site" / "src").resolve()
+    source_root = (src / "src").resolve()
     source = (source_root / file).resolve()
     if not name or source_root not in source.parents or not source.is_file():
         return SITEMAP_OFF, [
@@ -208,13 +215,13 @@ SLOT_MARKDOWN_OFF = (
 )
 
 
-def plan_slot_markdown(site: Path, entry: str | None) -> tuple[str, list[str]]:
+def plan_slot_markdown(src: Path, entry: str | None) -> tuple[str, list[str]]:
     """`src/site/markdown.ts`, and what is wrong with `slotMarkdown` if anything is. Re-exported
     typed, so an export that is not section id to Markdown fails the site's typecheck here."""
     if entry is None:
         return SLOT_MARKDOWN_OFF, []
     file, _, name = entry.partition("#")
-    source_root = (site / "site" / "src").resolve()
+    source_root = (src / "src").resolve()
     source = (source_root / file).resolve()
     if not name or source_root not in source.parents or not source.is_file():
         return SLOT_MARKDOWN_OFF, [
@@ -747,7 +754,7 @@ def drawer_problems(app: Path, drawer: list[dict]) -> list[str]:
     ]
 
 
-def plan_slots(site: Path, slots: dict[str, str], ids: list[str], slotted: list[str]) -> tuple[str, list[str]]:
+def plan_slots(src: Path, slots: dict[str, str], ids: list[str], slotted: list[str]) -> tuple[str, list[str]]:
     """`src/site/slots.tsx`: one import per slot component, and the `SlotMap` that places it.
 
     A `{slot}` section has no blocks of its own, so one no `band:<id>` fills would be a band
@@ -762,7 +769,7 @@ def plan_slots(site: Path, slots: dict[str, str], ids: list[str], slotted: list[
     imports: list[str] = []
     places: list[str] = []
     bands: list[str] = []
-    components = (site / "site" / "components").resolve()
+    components = (src / "components").resolve()
     order = ["header", "drawer", "drawerFoot", "hero", "afterHero", "footer", "bitbag"] + [key for key in slots if key.startswith("band:")]
     for n, key in enumerate(key for key in order if key in slots):
         file, name = slots[key].split("#")
@@ -1097,10 +1104,17 @@ def url_collisions(plan: AppPlan) -> list[str]:
     return problems
 
 
-def plan_app(site: Path, web: Path) -> tuple[Path, AppPlan]:
-    """Everything the assembler would write; `Refused`, with every problem found, if it cannot."""
+def plan_app(site: Path, web: Path, source: str = SOURCE, output: str | None = None) -> tuple[Path, AppPlan]:
+    """Everything the assembler would write; `Refused`, with every problem found, if it cannot.
+
+    `source` is the folder under `site` that holds `site.json` and the site's own files, and
+    `output`, when given, is where the app goes in place of `site.json`'s `output`: a repo
+    holding more than one templated site keeps each in a folder of its own."""
+    if safe_rel(source) is None or not inside(site, source):
+        raise Refused([f"--source {source!r} must be a plain relative path inside {site}"])
+    src = site / source
     try:
-        config = json.loads((site / "site" / "site.json").read_text())
+        config = json.loads((src / "site.json").read_text())
     except FileNotFoundError:
         raise Refused([f"no site/site.json under {site}"]) from None
     except ValueError as error:
@@ -1110,6 +1124,8 @@ def plan_app(site: Path, web: Path) -> tuple[Path, AppPlan]:
     check_schema(config, schema, "", problems)
     # The schema's pattern says the same; this is the check the deletion logic relies on, so it
     # does not rest on a regex alone. The app is written, and pruned, only under websites/.
+    if output is not None:
+        config = {**config, "output": output}
     output = config.get("output")
     parts = str(output).split("/")
     if not problems and (safe_rel(output) is None or parts[0] != "websites" or len(parts) < 2):
@@ -1142,7 +1158,7 @@ def plan_app(site: Path, web: Path) -> tuple[Path, AppPlan]:
         theme = {"css": None, "fonts": []}
     # Theme font paths are relative to the toolkit's packages/web/, a site's to its site/.
     fonts = [(font, web, f"themes.json {theme_name}") for font in theme["fonts"]]
-    fonts += [(font, site / "site", f"site/site.json: fonts[{i}]") for i, font in enumerate(config.get("fonts", []))]
+    fonts += [(font, src, f"site/site.json: fonts[{i}]") for i, font in enumerate(config.get("fonts", []))]
 
     sheets = ([theme["css"]] if theme["css"] else []) + KIT_SHEETS + FRAME_SHEETS
     css = (
@@ -1154,9 +1170,9 @@ def plan_app(site: Path, web: Path) -> tuple[Path, AppPlan]:
         + plan_font_roles(fonts, plan.problems)
     )
     if "tokens" in config:
-        tokens = site / "site" / config["tokens"]
+        tokens = src / config["tokens"]
         label = f"site/{config['tokens']}"
-        if not inside(site / "site", config["tokens"]):
+        if not inside(src, config["tokens"]):
             plan.problems.append(f"site/site.json: tokens: {config['tokens']} is outside site/")
         elif not tokens.is_file():
             plan.problems.append(f"site/site.json: tokens: {label} does not exist")
@@ -1172,7 +1188,7 @@ def plan_app(site: Path, web: Path) -> tuple[Path, AppPlan]:
 
     ids, slotted, landing_problems = section_ids(app)
     plan.problems += landing_problems
-    slots_text, slot_problems = plan_slots(site, config.get("slots", {}), ids, slotted)
+    slots_text, slot_problems = plan_slots(src, config.get("slots", {}), ids, slotted)
     plan.problems += slot_problems
     plan.add("src/site/slots.tsx", slots_text.encode(), "generated")
 
@@ -1218,10 +1234,10 @@ def plan_app(site: Path, web: Path) -> tuple[Path, AppPlan]:
     plan.add("src/site/shot.tsx", SHOT_TS.encode(), "generated")
     family = family_ts(config["family"]) if "family" in config else FAMILY_OFF
     plan.add("src/site/family.ts", family.encode(), "generated")
-    sitemap_text, sitemap_problems = plan_sitemap(site, config.get("sitemapRoutes"))
+    sitemap_text, sitemap_problems = plan_sitemap(src, config.get("sitemapRoutes"))
     plan.problems += sitemap_problems
     plan.add("src/site/sitemap.ts", sitemap_text.encode(), "generated")
-    markdown_text, markdown_problems = plan_slot_markdown(site, config.get("slotMarkdown"))
+    markdown_text, markdown_problems = plan_slot_markdown(src, config.get("slotMarkdown"))
     plan.problems += markdown_problems
     plan.add("src/site/markdown.ts", markdown_text.encode(), "generated")
     # What next.config.ts resolves against the build's environment (the `./next` export's
@@ -1250,7 +1266,7 @@ def plan_app(site: Path, web: Path) -> tuple[Path, AppPlan]:
 
     # The site's own files, after everything the template writes, so a collision names both.
     for folder, target_root in SITE_TREES:
-        root = site / "site" / folder
+        root = src / folder
         for path in tree_files(root):
             rel = path.relative_to(root).as_posix()
             label = f"site/{folder}/{rel}"
@@ -1365,17 +1381,35 @@ def write(app: Path, plan: AppPlan) -> tuple[int, int]:
     return written, removed
 
 
+def source_label(problem: str, source: str) -> str:
+    """A problem as the site's author would find it: the messages name the default `site/`, so a
+    site kept in another folder sees that folder instead."""
+    if source == SOURCE:
+        return problem
+    return re.sub(r"(?<![\w/.@-])site/", lambda _: f"{source.rstrip('/')}/", problem)
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Assemble a content site's Next app from the site template.")
     parser.add_argument("--site", required=True, type=Path, help="the site repo's root, which holds site/site.json")
+    parser.add_argument(
+        "--source",
+        default=SOURCE,
+        help=f"the folder under --site holding site.json and the site's files (default: {SOURCE})",
+    )
+    parser.add_argument(
+        "--output",
+        default=None,
+        help="where the app goes, relative to --site, in place of site.json's `output` (a path under websites/)",
+    )
     parser.add_argument("--check", action="store_true", help="write nothing; exit 1 naming each path that is out of date")
     args = parser.parse_args(argv)
     site = args.site.resolve()
     try:
-        app, plan = plan_app(site, find_toolkit_web())
+        app, plan = plan_app(site, find_toolkit_web(), args.source, args.output)
     except Refused as refused:
         for problem in refused.problems:
-            print(f"assemble: {problem}", file=sys.stderr)
+            print(f"assemble: {source_label(problem, args.source)}", file=sys.stderr)
         return 2
     except SchemaError as error:
         print(f"assemble: internal error: {error}", file=sys.stderr)

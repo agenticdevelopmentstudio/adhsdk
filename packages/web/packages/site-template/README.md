@@ -393,6 +393,12 @@ python3 tools/assemble_site.py --site <site repo>            # write
 python3 tools/assemble_site.py --site <site repo> --check    # write nothing
 ```
 
+A repo that holds more than one templated site keeps each extra site in a folder of its own and names it with `--source` (default `site`), relative to `--site`. `--output` puts the app somewhere other than `site.json`'s `output`; it is held to the same rule, a path under `websites/`. Problems name the folder `--source` gave, so a second site's messages point at its own files.
+
+```
+python3 tools/assemble_site.py --site <site repo> --source sites/sdk    # the site in sites/sdk/
+```
+
 Every command below runs from the toolkit's `packages/web/packages/site-template/` directory. The template used is whichever toolkit copy runs the script.
 
 | Exit | Meaning |

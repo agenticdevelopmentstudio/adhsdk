@@ -1727,6 +1727,61 @@ class AssembleTest(unittest.TestCase):
         self.write("site/fonts/x.eot", "eot")
         self.assert_refused(self.assemble(), "fonts[0].files[0].path")
 
+    # --- a site kept in a folder of its own ----------------------------------------------------
+
+    def setup_second_site(self, source: str, output: str) -> Path:
+        """A second site beside the default one: its own source folder and its own app."""
+        self.write(f"{source}/site.json", json.dumps({"output": output, "port": 5211}, indent=2))
+        self.write(f"{output}/src/landing.json", json.dumps({"hero": {}, "sections": [{"id": "features", "blocks": []}]}))
+        return self.site / output
+
+    def test_source_names_the_folder_the_site_is_read_from(self) -> None:
+        app = self.setup_second_site("sites/sdk", "websites/sdk")
+        self.write("sites/sdk/routes/downloads/page.tsx", "export default function P() { return null }\n")
+        result = run(self.site, "--source", "sites/sdk")
+        self.assert_ok(result)
+        self.assertIn("websites/sdk:", result.stdout)
+        self.assertTrue((app / "app/(frame)/downloads/page.tsx").is_file())
+        self.assertIn('"dev": "next dev -p 5211"', (app / "package.json").read_text())
+        self.assertFalse(self.app.exists(), "the default site's app was written")
+        self.assert_ok(run(self.site, "--source", "sites/sdk", "--check"))
+
+    def test_the_default_source_is_unchanged_beside_a_second_site(self) -> None:
+        self.setup_second_site("sites/sdk", "websites/sdk")
+        self.write("site/routes/downloads/page.tsx", "export default function P() { return null }\n")
+        self.assert_ok(self.assemble())
+        self.assertTrue((self.app / "app/(frame)/downloads/page.tsx").is_file())
+        self.assertFalse((self.site / "websites/sdk/package.json").exists())
+
+    def test_output_overrides_site_json(self) -> None:
+        self.write("websites/other/src/landing.json", json.dumps({"hero": {}, "sections": [{"id": "features", "blocks": []}]}))
+        result = self.assemble("--output", "websites/other")
+        self.assert_ok(result)
+        self.assertTrue((self.site / "websites/other/package.json").is_file())
+        self.assertIn('"name": "other"', (self.site / "websites/other/package.json").read_text())
+        self.assertFalse((self.app / "package.json").exists())
+        self.assert_ok(run(self.site, "--output", "websites/other", "--check"))
+
+    def test_output_outside_websites_is_refused(self) -> None:
+        self.assert_refused(self.assemble("--output", "elsewhere/app"), "must be a path under websites/")
+
+    def test_a_source_outside_the_site_is_refused(self) -> None:
+        self.setup_site()
+        self.assert_refused(run(self.site, "--source", "../elsewhere"), "--source")
+
+    def test_a_missing_source_is_refused(self) -> None:
+        self.setup_site()
+        self.assert_refused(run(self.site, "--source", "sites/none"), "no sites/none/site.json")
+
+    def test_problems_name_the_source_folder(self) -> None:
+        self.setup_second_site("sites/sdk", "websites/sdk")
+        config = json.loads((self.site / "sites/sdk/site.json").read_text())
+        config["tokens"] = "missing.css"
+        self.write("sites/sdk/site.json", json.dumps(config))
+        result = run(self.site, "--source", "sites/sdk")
+        self.assert_refused(result, "sites/sdk/site.json: tokens: sites/sdk/missing.css does not exist")
+        self.assertNotIn(" site/", result.stderr)
+
 
 def load_assembler():  # type: ignore[no-untyped-def]
     import importlib.util
