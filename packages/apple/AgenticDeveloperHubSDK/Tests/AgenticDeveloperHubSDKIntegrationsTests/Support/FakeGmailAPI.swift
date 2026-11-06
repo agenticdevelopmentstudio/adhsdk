@@ -26,12 +26,18 @@ final class FakeGmailAPI: GmailAPI, @unchecked Sendable {
         var listPages: [[String]]?
         var historyPages: [GmailHistoryPage] = []
         var historyError: (any Error)?
+        var profileError: (any Error)?
+        var labelsError: (any Error)?
+        var listMessageIdsError: (any Error)?
         var messageErrors: [String: any Error] = [:]
         var batchModifyError: (any Error)?
         var onListMessageIds: (@Sendable (FakeGmailAPI) -> Void)?
         var listCalls: [ListCall] = []
         var historyCalls: [String] = []
         var batchModifyCalls: [BatchModifyCall] = []
+        var profileCalls = 0
+        var labelsCalls = 0
+        var messageCalls: [String] = []
     }
 
     private func with<T>(_ body: (inout State) -> T) -> T {
@@ -42,6 +48,10 @@ final class FakeGmailAPI: GmailAPI, @unchecked Sendable {
 
     // MARK: Configuration
 
+    var emailAddress: String {
+        get { with { $0.emailAddress } }
+        set { with { $0.emailAddress = newValue } }
+    }
     var historyId: String {
         get { with { $0.historyId } }
         set { with { $0.historyId = newValue } }
@@ -68,6 +78,21 @@ final class FakeGmailAPI: GmailAPI, @unchecked Sendable {
         get { with { $0.historyError } }
         set { with { $0.historyError = newValue } }
     }
+    /// Thrown by `profile` when set; cleared with `nil`.
+    var profileError: (any Error)? {
+        get { with { $0.profileError } }
+        set { with { $0.profileError = newValue } }
+    }
+    /// Thrown by `labels` when set; cleared with `nil`.
+    var labelsError: (any Error)? {
+        get { with { $0.labelsError } }
+        set { with { $0.labelsError = newValue } }
+    }
+    /// Thrown by `listMessageIds` when set; cleared with `nil`.
+    var listMessageIdsError: (any Error)? {
+        get { with { $0.listMessageIdsError } }
+        set { with { $0.listMessageIdsError = newValue } }
+    }
     var messageErrors: [String: any Error] {
         get { with { $0.messageErrors } }
         set { with { $0.messageErrors = newValue } }
@@ -87,6 +112,10 @@ final class FakeGmailAPI: GmailAPI, @unchecked Sendable {
     var listCalls: [ListCall] { with { $0.listCalls } }
     var historyCalls: [String] { with { $0.historyCalls } }
     var batchModifyCalls: [BatchModifyCall] { with { $0.batchModifyCalls } }
+    var profileCalls: Int { with { $0.profileCalls } }
+    var labelsCalls: Int { with { $0.labelsCalls } }
+    /// Ids passed to `message`, in call order.
+    var messageCalls: [String] { with { $0.messageCalls } }
 
     func setMessage(_ message: GmailMessageDTO) {
         with { $0.messages[message.id] = message }
@@ -95,14 +124,20 @@ final class FakeGmailAPI: GmailAPI, @unchecked Sendable {
     // MARK: GmailAPI
 
     func profile() async throws -> GmailProfile {
-        with { GmailProfile(emailAddress: $0.emailAddress, historyId: $0.historyId) }
+        let (profile, error) = with { state -> (GmailProfile, (any Error)?) in
+            state.profileCalls += 1
+            return (GmailProfile(emailAddress: state.emailAddress, historyId: state.historyId), state.profileError)
+        }
+        if let error { throw error }
+        return profile
     }
 
     func listMessageIds(query: String, includeSpamTrash: Bool, pageToken: String?) async throws -> GmailIdPage {
-        let hook = with { state -> (@Sendable (FakeGmailAPI) -> Void)? in
+        let (hook, error) = with { state -> ((@Sendable (FakeGmailAPI) -> Void)?, (any Error)?) in
             state.listCalls.append(ListCall(query: query, includeSpamTrash: includeSpamTrash))
-            return state.onListMessageIds
+            return (state.onListMessageIds, state.listMessageIdsError)
         }
+        if let error { throw error }
         hook?(self)
         let pages = with { $0.listPages ?? [$0.messages.keys.sorted()] }
         let index = pageToken.flatMap(Int.init) ?? 0
@@ -111,7 +146,10 @@ final class FakeGmailAPI: GmailAPI, @unchecked Sendable {
     }
 
     func message(id: String) async throws -> GmailMessageDTO {
-        let (message, error) = with { ($0.messages[id], $0.messageErrors[id]) }
+        let (message, error) = with { state -> (GmailMessageDTO?, (any Error)?) in
+            state.messageCalls.append(id)
+            return (state.messages[id], state.messageErrors[id])
+        }
         if let error { throw error }
         guard let message else { throw IntegrationError.gmail(status: 404, message: "Not Found") }
         return message
@@ -134,13 +172,29 @@ final class FakeGmailAPI: GmailAPI, @unchecked Sendable {
     }
 
     func labels() async throws -> [GmailLabelDTO] {
-        with { $0.labels }
+        let (labels, error) = with { state -> ([GmailLabelDTO], (any Error)?) in
+            state.labelsCalls += 1
+            return (state.labels, state.labelsError)
+        }
+        if let error { throw error }
+        return labels
     }
 
+    /// Records the call; unless `batchModifyError` is set, applies the label change to the stored
+    /// messages the way Gmail would.
     func batchModify(ids: [String], add: [String], remove: [String]) async throws {
         let error = with { state -> (any Error)? in
             state.batchModifyCalls.append(BatchModifyCall(ids: ids, add: add, remove: remove))
-            return state.batchModifyError
+            guard state.batchModifyError == nil else { return state.batchModifyError }
+            for id in ids {
+                guard let old = state.messages[id] else { continue }
+                var labelIds = (old.labelIds ?? []).filter { !remove.contains($0) }
+                for label in add where !labelIds.contains(label) { labelIds.append(label) }
+                state.messages[id] = GmailMessageDTO(
+                    id: old.id, threadId: old.threadId, labelIds: labelIds, snippet: old.snippet,
+                    historyId: old.historyId, internalDate: old.internalDate, payload: old.payload)
+            }
+            return nil
         }
         if let error { throw error }
     }

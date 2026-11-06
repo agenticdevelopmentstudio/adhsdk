@@ -23,6 +23,39 @@ private actor FakeEndpoint: GoogleTokenEndpoint {
     }
 }
 
+/// A token endpoint that holds every refresh until `release()`, so a test can act while one is
+/// in progress without sleeping.
+private actor GatedEndpoint: GoogleTokenEndpoint {
+    private(set) var calls = 0
+    private let result: Result<(accessToken: String, expiresIn: TimeInterval), IntegrationError>
+    private var entered: [CheckedContinuation<Void, Never>] = []
+    private var gates: [CheckedContinuation<Void, Never>] = []
+
+    init(result: Result<(accessToken: String, expiresIn: TimeInterval), IntegrationError>) {
+        self.result = result
+    }
+
+    func refresh(refreshToken: String, config: GoogleOAuthClientConfig) async throws
+        -> (accessToken: String, expiresIn: TimeInterval) {
+        calls += 1
+        entered.forEach { $0.resume() }
+        entered = []
+        await withCheckedContinuation { gates.append($0) }
+        return try result.get()
+    }
+
+    /// Returns once a refresh is waiting at the gate.
+    func waitUntilEntered() async {
+        if calls > 0 { return }
+        await withCheckedContinuation { entered.append($0) }
+    }
+
+    func release() {
+        gates.forEach { $0.resume() }
+        gates = []
+    }
+}
+
 private let config = GoogleOAuthClientConfig(clientId: "id", clientSecret: "secret")
 private let epoch = Date(timeIntervalSince1970: 1_000_000)
 
@@ -154,6 +187,24 @@ private func makeProvider(
                                      expiresAt: epoch.addingTimeInterval(3600))
         try await provider.store(fresh, connectionId: "c")
         #expect(try await pending.value == "signed-in")
+        let raw = try #require(secrets.get(forKey: GoogleTokenProvider.key(connectionId: "c")))
+        #expect(try JSONDecoder().decode(GoogleCredential.self, from: Data(raw.utf8)) == fresh)
+    }
+
+    @Test func storeDuringFailingRefreshReturnsNewCredential() async throws {
+        let endpoint = GatedEndpoint(result: .failure(.revoked))
+        let secrets = InMemorySecretStore()
+        let provider = GoogleTokenProvider(secrets: secrets, endpoint: endpoint, now: { epoch })
+        try await provider.store(GoogleCredential(accessToken: "old", refreshToken: "r1",
+                                                  expiresAt: epoch), connectionId: "c")
+        let pending = Task { try await provider.accessToken(connectionId: "c", config: config) }
+        await endpoint.waitUntilEntered()
+        let fresh = GoogleCredential(accessToken: "signed-in", refreshToken: "r2",
+                                     expiresAt: epoch.addingTimeInterval(3600))
+        try await provider.store(fresh, connectionId: "c")
+        await endpoint.release()
+        #expect(try await pending.value == "signed-in")
+        #expect(await endpoint.calls == 1)
         let raw = try #require(secrets.get(forKey: GoogleTokenProvider.key(connectionId: "c")))
         #expect(try JSONDecoder().decode(GoogleCredential.self, from: Data(raw.utf8)) == fresh)
     }
