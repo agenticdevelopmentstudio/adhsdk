@@ -27,6 +27,8 @@ struct IntegrationRecordsTests {
             let row = try Row.fetchOne(conn, sql: "SELECT * FROM integration_connections")
             let text: String? = row?["sync_settings"]
             #expect(text?.contains("includeSpam") == true)
+            let status: String? = row?["status"]
+            #expect(status == "active")
             let back = try IntegrationConnection.fetchOne(conn, key: "c1")
             #expect(back?.syncSettings.includeSpam == true)
             #expect(back?.status == .active)
@@ -57,6 +59,10 @@ struct IntegrationRecordsTests {
         let back = try queue.read { try EmailMessage.fetchOne($0, key: "m1") }
         #expect(back == message)
         #expect(back?.mailClass == .filed)
+        let rawClass = try queue.read {
+            try String.fetchOne($0, sql: "SELECT mail_class FROM integration_email_messages")
+        }
+        #expect(rawClass == "filed")
     }
 
     @Test("the clock emits ISO-8601 UTC with fractional seconds")
