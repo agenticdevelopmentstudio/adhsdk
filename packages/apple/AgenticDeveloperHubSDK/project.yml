@@ -399,6 +399,33 @@ targets:
     # AppleScript runner, so an app can be scriptable without linking the
     # whole of AgenticDeveloperHubSDKMacOS.
 
+  AgenticDeveloperHubSDKNotifications:
+    type: framework
+    supportedDestinations: [macOS, iOS]
+    templates:
+      - SwiftLint
+    sources:
+      - Notifications
+    settings:
+      base:
+        SDKROOT: auto
+        MACOSX_DEPLOYMENT_TARGET: "26.0"
+        IPHONEOS_DEPLOYMENT_TARGET: "26.0"
+    # Foundation only: the Notice model, its wire coding and filter predicate.
+    # A daemon, a CLI and an iOS app can all link it.
+
+  AgenticDeveloperHubSDKNotificationsTests:
+    type: bundle.unit-test
+    platform: macOS
+    templates:
+      - SwiftLint
+    sources:
+      - Tests/AgenticDeveloperHubSDKNotificationsTests
+    dependencies:
+      - target: AgenticDeveloperHubSDKNotifications
+        embed: true
+        codeSign: true
+
   AgenticDeveloperHubSDKDatabase:
     type: framework
     supportedDestinations: [macOS, iOS]
@@ -1633,6 +1660,7 @@ aggregateTargets:
       - AgenticDeveloperHubSDKSystemMonitor
       - AgenticDeveloperHubSDKSystemMonitorUI
       - AgenticDeveloperHubSDKDatabase
+      - AgenticDeveloperHubSDKNotifications
       - AgenticDeveloperHubSDKLanguage
       - AgenticDeveloperHubSDKSync
       - AgenticDeveloperHubSDKSyncGRDB
@@ -1654,6 +1682,7 @@ aggregateTargets:
   AgenticDeveloperHubSDKiOSAll:
     targets:
       - AgenticDeveloperHubSDKDatabase
+      - AgenticDeveloperHubSDKNotifications
       - AgenticDeveloperHubSDKSync
       - AgenticDeveloperHubSDKSyncGRDB
       - AgenticDeveloperHubSDKMarkdown-iOS
@@ -1694,6 +1723,8 @@ aggregateTargets:
       - AgenticDeveloperHubSDKSystemMonitorUITests
       - AgenticDeveloperHubSDKDatabase
       - AgenticDeveloperHubSDKDatabaseTests
+      - AgenticDeveloperHubSDKNotifications
+      - AgenticDeveloperHubSDKNotificationsTests
       - AgenticDeveloperHubSDKLanguage
       - AgenticDeveloperHubSDKLanguageTests
       - AgenticDeveloperHubSDKSync
@@ -1720,6 +1751,23 @@ schemes:
         AgenticDeveloperHubSDKChromium: all
     run:
       config: Debug
+    profile:
+      config: Release
+    analyze:
+      config: Debug
+    archive:
+      config: Release
+
+  AgenticDeveloperHubSDKNotifications:
+    build:
+      targets:
+        AgenticDeveloperHubSDKNotifications: all
+    run:
+      config: Debug
+    test:
+      config: Debug
+      targets:
+        - AgenticDeveloperHubSDKNotificationsTests
     profile:
       config: Release
     analyze:
