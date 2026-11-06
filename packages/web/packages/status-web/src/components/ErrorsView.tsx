@@ -112,7 +112,10 @@ export function ErrorsView({ site, onSite }: ErrorsViewProps): ReactElement {
 
   const body = query.data;
   const sections = body?.sections ?? EMPTY_SECTIONS;
-  const refreshing = body ? body.refreshing : query.isLoading;
+  // A failed read keeps the last body (TanStack Query holds on to it), and that body may have
+  // been taken mid-refresh: claiming it is still filling in would leave skeletons up for a
+  // refresh nobody can see finish. The alert below says what happened instead.
+  const refreshing = query.isError ? false : body ? body.refreshing : query.isLoading;
   const glitchtipOn = body?.configured.glitchtip ?? true;
   const posthogOn = body?.configured.posthog ?? true;
 
@@ -168,9 +171,12 @@ export function ErrorsView({ site, onSite }: ErrorsViewProps): ReactElement {
   return (
     <div className="min-h-0 flex-1 overflow-y-auto">
       <div className="flex w-full flex-col gap-4 p-4">
-        {query.isError && !body && (
+        {query.isError && (
+          // Shown with a body as well: a refetch that fails keeps the last one on screen, and
+          // without this nothing would say it is no longer being kept up to date.
           <p role="alert" className="m-0 font-mono text-xs text-apt-red">
-            Could not load errors: {query.error.message}
+            {body ? "Could not refresh errors, so this is the last answer" : "Could not load errors"}:{" "}
+            {query.error.message}
           </p>
         )}
 

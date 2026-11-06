@@ -161,7 +161,10 @@ export function AnalyticsView({
   const query = useAnalyticsDashboard(range);
   const body = query.data;
   const sections = body?.sections ?? EMPTY_SECTIONS;
-  const refreshing = body ? body.refreshing : query.isLoading;
+  // A failed read keeps the last body (TanStack Query holds on to it), and that body may have
+  // been taken mid-refresh: claiming it is still filling in would leave "Refreshing…" and the
+  // skeletons up for a refresh nobody can see finish. The alert below says what happened instead.
+  const refreshing = query.isError ? false : body ? body.refreshing : query.isLoading;
   const posthogOn = body?.configured.posthog ?? true;
   const vercelOn = body?.configured.vercel ?? true;
 
@@ -182,9 +185,12 @@ export function AnalyticsView({
           </span>
         )}
 
-        {query.isError && !body && (
+        {query.isError && (
+          // Shown with a body as well: a refetch that fails keeps the last one on screen, and
+          // without this nothing would say it is no longer being kept up to date.
           <p role="alert" className="m-0 font-mono text-xs text-apt-red">
-            Could not load analytics: {query.error.message}
+            {body ? "Could not refresh analytics, so this is the last answer" : "Could not load analytics"}:{" "}
+            {query.error.message}
           </p>
         )}
 

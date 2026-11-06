@@ -17,6 +17,16 @@ export function dashboardPollMs(data: { refreshing: boolean } | undefined): numb
   return data?.refreshing ? FILLING_POLL_MS : SETTLED_POLL_MS;
 }
 
+/**
+ * The poll interval for a dashboard query. A failed read keeps the last body, and if that body
+ * was taken mid-refresh it still says `refreshing`: judged by the body alone, a backend that has
+ * started failing would be polled every 5s for as long as it fails. Nothing is filling in while
+ * the read fails, so it goes back to the usual pace.
+ */
+function refetchMs(query: { state: { status: string; data?: { refreshing: boolean } } }): number {
+  return query.state.status === "error" ? SETTLED_POLL_MS : dashboardPollMs(query.state.data);
+}
+
 type Api = ReturnType<typeof useStatusApi>;
 
 async function getDashboard<T>(api: Api, path: string): Promise<T> {
@@ -36,7 +46,7 @@ export function useAnalyticsDashboard(
     queryFn: () => getDashboard(api, `/analytics/dashboard?range=${range}`),
     // Keep the last chart up while another range loads, instead of flashing skeletons.
     placeholderData: keepPreviousData,
-    refetchInterval: (query) => dashboardPollMs(query.state.data),
+    refetchInterval: refetchMs,
     refetchOnWindowFocus: true,
   });
 }
@@ -47,7 +57,7 @@ export function useErrorsDashboard(options?: { enabled?: boolean }): UseQueryRes
     queryKey: ["errors-dashboard"],
     enabled: options?.enabled ?? true,
     queryFn: () => getDashboard(api, "/errors/dashboard"),
-    refetchInterval: (query) => dashboardPollMs(query.state.data),
+    refetchInterval: refetchMs,
     refetchOnWindowFocus: true,
   });
 }
