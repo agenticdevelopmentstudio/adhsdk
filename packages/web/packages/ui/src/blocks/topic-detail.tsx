@@ -143,8 +143,10 @@ export type RailSlot = ReactNode | ((collapsed: boolean) => ReactNode)
 export interface TopicListSearch {
   /** Controlled query. Omit to let the rail hold it and filter its own rows. */
   query?: string
-  /** Every keystroke in the field, controlled or not, and `""` when the panel closes (except with
-   *  `live`, whose query outlives the panel until ✕ clears it). */
+  /** Every keystroke in the field, controlled or not, and `""` once when Escape, ✕ or a chosen
+   *  suggestion closes the panel. Focus merely leaving the field keeps a CONTROLLED query: the
+   *  host may be narrowing its rows by it alongside filters of its own, which the user is about
+   *  to reach for. A `live` query outlives the panel until ✕ clears it. */
   onQueryChange?: (query: string) => void
   /** Placeholder and accessible name for the field. Defaults to "Filter". */
   placeholder?: string
@@ -1173,18 +1175,21 @@ export function TopicRail({
     if (!controlledQuery) setOwnQuery(q)
     listSearch.onQueryChange?.(q)
   }
-  // The query belongs to the open panel: closing it, however it closes, clears it and puts every
-  // row back. Only `live` keeps a query past the panel, and only ✕ clears that one.
-  const dismissSearch = () => {
-    if (!listSearch.live && query !== "") setQuery("")
+  // Closes the panel, clearing the query only when asked to, and then exactly once. The caller
+  // decides: Escape, ✕ and a choice clear (Escape not in `live`, whose query outlives the panel);
+  // focus leaving clears only the rail's OWN query, which narrows nothing once the panel is gone.
+  // A controlled host's query survives a blur, because the host may filter by it together with
+  // filters of its own, and reaching for one of those is exactly what moves focus away.
+  const dismissSearch = (clear: boolean) => {
+    if (clear && query !== "") setQuery("")
     setSearchOpen(false)
   }
+  const blurClears = !controlledQuery && !listSearch.live
   // Escape, Enter and ✕ all close through here, and each hands focus BACK to the filter button:
   // closing unmounts the field that has focus, and focus used to fall to <body>, dropping a
   // keyboard user out of the rail altogether.
-  const closeSearch = (clear = false) => {
-    if (clear) setQuery("")
-    dismissSearch()
+  const closeSearch = (clear: boolean) => {
+    dismissSearch(clear)
     searchTriggerRef.current?.focus()
   }
   const openSearch = () => {
@@ -1279,7 +1284,7 @@ export function TopicRail({
           label={searchLabel}
           title={queryActive ? `${searchLabel}: “${query}”` : searchLabel}
           aria-expanded={searchOpen}
-          onClick={() => (searchOpen ? dismissSearch() : openSearch())}
+          onClick={() => (searchOpen ? dismissSearch(blurClears) : openSearch())}
           // Gold while a query is narrowing the list with the field closed — otherwise a short
           // list would look like all there is.
           active={queryActive}
@@ -1305,7 +1310,7 @@ export function TopicRail({
           // picker's confirm takes focus on Return, and a field closed by that blur was gone when
           // the confirm was cancelled, so focus had nowhere to come back to.
           onBlur={(e) => {
-            if (!listSearch.live && !e.currentTarget.contains(e.relatedTarget)) dismissSearch()
+            if (!listSearch.live && !e.currentTarget.contains(e.relatedTarget)) dismissSearch(blurClears)
           }}
         >
           <span className="flex w-4 shrink-0 items-center justify-center text-apt-text-muted">
@@ -1339,7 +1344,7 @@ export function TopicRail({
                 // closed the dialog the rail sits in as well (RegisterWizard has the same guard).
                 e.stopPropagation()
                 e.nativeEvent.stopImmediatePropagation()
-                closeSearch()
+                closeSearch(!listSearch.live)
               } else if ((e.key === "ArrowDown" || e.key === "ArrowUp") && suggestions.length > 0) {
                 // The caret stays put; the highlight moves, wrapping at either end.
                 e.preventDefault()
