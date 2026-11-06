@@ -3,7 +3,11 @@ import Foundation
 /// Turns a Gmail `format=full` message into an `EmailMessage`.
 public enum GmailMessageParser {
 
-    public static func parse(_ dto: GmailMessageDTO, connectionId: String, existingId: String?) -> EmailMessage {
+    /// - Parameter now: the date given to a message that carries neither `internalDate` nor a
+    ///   readable `Date` header, so it sorts as new rather than as 1970.
+    public static func parse(
+        _ dto: GmailMessageDTO, connectionId: String, existingId: String?, now: Date = Date()
+    ) -> EmailMessage {
         let headers = dto.payload?.headers ?? []
         let labelIds = dto.labelIds ?? []
         var content = Content()
@@ -21,7 +25,8 @@ public enum GmailMessageParser {
             bodyText: content.text,
             bodyHtml: content.html,
             labelIds: labelIds,
-            internalDate: isoDate(fromEpochMillis: dto.internalDate),
+            internalDate: IntegrationClock.string(
+                from: date(fromEpochMillis: dto.internalDate) ?? date(fromHeader: header("Date", in: headers)) ?? now),
             historyId: dto.historyId,
             attachments: content.attachments,
             mailClass: MailClassifier.classify(labelIds: labelIds)
@@ -38,11 +43,14 @@ public enum GmailMessageParser {
 
     private static func walk(_ part: GmailPart, into content: inout Content) {
         let mime = (part.mimeType ?? "").lowercased()
-        if let filename = part.filename, !filename.isEmpty, let attachmentId = part.body?.attachmentId {
+        let filename = part.filename ?? ""
+        if !filename.isEmpty, let attachmentId = part.body?.attachmentId {
             content.attachments.append(EmailAttachmentRef(
                 attachmentId: attachmentId, filename: filename,
                 mimeType: part.mimeType ?? "application/octet-stream", size: part.body?.size ?? 0
             ))
+        } else if !filename.isEmpty {
+            // A named part is a file even when Gmail inlined it; it is never the message body.
         } else if mime == "text/plain", content.text == nil, let decoded = decodeBody(part) {
             content.text = decoded
         } else if mime == "text/html", content.html == nil, let decoded = decodeBody(part) {
@@ -117,8 +125,23 @@ public enum GmailMessageParser {
         return parts.map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }
     }
 
-    private static func isoDate(fromEpochMillis value: String?) -> String {
-        let millis = value.flatMap(Double.init) ?? 0
-        return IntegrationClock.string(from: Date(timeIntervalSince1970: millis / 1000))
+    private static func date(fromEpochMillis value: String?) -> Date? {
+        guard let millis = value.flatMap(Double.init) else { return nil }
+        return Date(timeIntervalSince1970: millis / 1000)
+    }
+
+    /// Reads an RFC 5322 `Date` header, with or without the weekday and a trailing comment.
+    private static func date(fromHeader value: String?) -> Date? {
+        guard var value = value?.trimmingCharacters(in: .whitespaces), !value.isEmpty else { return nil }
+        if let comment = value.firstIndex(of: "(") {
+            value = value[..<comment].trimmingCharacters(in: .whitespaces)
+        }
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        for format in ["EEE, d MMM yyyy HH:mm:ss Z", "d MMM yyyy HH:mm:ss Z", "EEE, d MMM yyyy HH:mm Z"] {
+            formatter.dateFormat = format
+            if let date = formatter.date(from: value) { return date }
+        }
+        return nil
     }
 }

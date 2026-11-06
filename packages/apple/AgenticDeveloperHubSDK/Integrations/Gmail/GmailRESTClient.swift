@@ -2,13 +2,32 @@ import Foundation
 
 /// `GmailAPI` over URLSession. Holds no mutable state; the token closure supplies a fresh
 /// access token per request.
+///
+/// A 429, a 5xx or a transient network error (timed out, connection lost, offline, host
+/// unreachable) is retried up to `maxRetries` times with exponential backoff — 1 s, doubling,
+/// capped at 32 s — or after the server's `Retry-After` seconds when it sends one (also capped).
+/// Anything else, and the last failure once the retries are spent, is thrown.
 public final class GmailRESTClient: GmailAPI {
     private static let baseURL = "https://gmail.googleapis.com/gmail/v1/users/me/"
+    /// Gmail's own limit on ids per `messages/batchModify` call.
+    public static let batchModifyLimit = 1000
+    static let maxRetries = 4
+    private static let baseDelay: Duration = .seconds(1)
+    private static let maxDelay: Duration = .seconds(32)
+    private static let transientCodes: Set<URLError.Code> = [
+        .timedOut, .networkConnectionLost, .notConnectedToInternet, .cannotConnectToHost
+    ]
+
     private let session: URLSession
+    private let sleep: @Sendable (Duration) async throws -> Void
     private let accessToken: @Sendable () async throws -> String
 
-    public init(session: URLSession = .shared, accessToken: @escaping @Sendable () async throws -> String) {
+    /// - Parameter sleep: waits out a backoff. Injected so tests record delays instead of sleeping.
+    public init(session: URLSession = .shared,
+                sleep: @escaping @Sendable (Duration) async throws -> Void = { try await Task.sleep(for: $0) },
+                accessToken: @escaping @Sendable () async throws -> String) {
         self.session = session
+        self.sleep = sleep
         self.accessToken = accessToken
     }
 
@@ -86,6 +105,11 @@ public final class GmailRESTClient: GmailAPI {
             let addLabelIds: [String]
             let removeLabelIds: [String]
         }
+        // The caller chunks; an empty or oversized list is a caller bug, not a Gmail call.
+        guard (1...Self.batchModifyLimit).contains(ids.count) else {
+            throw IntegrationError.gmail(
+                status: 0, message: "batchModify takes 1–\(Self.batchModifyLimit) ids, got \(ids.count)")
+        }
         var request = try await makeRequest("messages/batchModify", [])
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
@@ -119,12 +143,42 @@ public final class GmailRESTClient: GmailAPI {
     }
 
     private func send(_ request: URLRequest) async throws -> Data {
-        let (data, response) = try await session.data(for: request)
-        let status = (response as? HTTPURLResponse)?.statusCode ?? 0
-        guard (200..<300).contains(status) else {
-            throw IntegrationError.gmail(status: status, message: Self.errorMessage(data, status: status))
+        var retry = 0
+        while true {
+            let data: Data
+            let response: URLResponse
+            do {
+                (data, response) = try await session.data(for: request)
+            } catch let error as URLError where Self.transientCodes.contains(error.code) && retry < Self.maxRetries {
+                try await sleep(Self.backoff(retry: retry, retryAfter: nil))
+                retry += 1
+                continue
+            }
+            let http = response as? HTTPURLResponse
+            let status = http?.statusCode ?? 0
+            if (200..<300).contains(status) { return data }
+            guard Self.isRetryable(status), retry < Self.maxRetries else {
+                throw IntegrationError.gmail(status: status, message: Self.errorMessage(data, status: status))
+            }
+            let retryAfter = http?.value(forHTTPHeaderField: "Retry-After")
+                .flatMap { Int($0.trimmingCharacters(in: .whitespaces)) }
+            try await sleep(Self.backoff(retry: retry, retryAfter: retryAfter))
+            retry += 1
         }
-        return data
+    }
+
+    private static func isRetryable(_ status: Int) -> Bool { status == 429 || (500..<600).contains(status) }
+
+    /// The wait before retry number `retry` (0-based): the server's `Retry-After` seconds when
+    /// given, else 1 s doubled per retry; either way no more than 32 s.
+    static func backoff(retry: Int, retryAfter: Int?) -> Duration {
+        let wanted: Duration
+        if let retryAfter {
+            wanted = .seconds(max(retryAfter, 0))
+        } else {
+            wanted = baseDelay * (1 << min(retry, 6))
+        }
+        return min(wanted, maxDelay)
     }
 
     private static func errorMessage(_ data: Data, status: Int) -> String {

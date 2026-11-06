@@ -81,7 +81,7 @@ struct GmailSyncWorkerTests {
         #expect(try liveIds(store) == ["a", "d"])
     }
 
-    @Test("full sync tombstones in-window rows that were not kept, and leaves older rows alone")
+    @Test("full sync tombstones in-window rows that were not kept, and rows older than the window")
     func fullSyncTombstonesMissing() async throws {
         let api = FakeGmailAPI()
         api.setMessage(dto("a", labels: ["INBOX"]))
@@ -93,8 +93,89 @@ struct GmailSyncWorkerTests {
 
         let outcome = try await worker.sync(connection: connection)
 
-        #expect(outcome.tombstoned == 1)
-        #expect(try liveIds(store) == ["a", "old"])
+        #expect(outcome.tombstoned == 2)
+        #expect(try liveIds(store) == ["a"])
+    }
+
+    @Test("full sync reads every page of ids")
+    func fullSyncReadsEveryPage() async throws {
+        let api = FakeGmailAPI()
+        for id in ["a", "b", "c"] { api.setMessage(dto(id, labels: ["INBOX"])) }
+        api.listPages = [["a"], ["b"], ["c"]]
+        let (worker, store, connection) = try makeWorker(api: api)
+
+        let outcome = try await worker.sync(connection: connection)
+
+        #expect(api.listCalls.count == 3)
+        #expect(outcome.upserted == 3)
+        #expect(try liveIds(store) == ["a", "b", "c"])
+    }
+
+    @Test("full sync stores more than one upsert batch")
+    func fullSyncStoresMoreThanOneBatch() async throws {
+        let api = FakeGmailAPI()
+        let ids = (0..<250).map { String(format: "m%03d", $0) }
+        for id in ids { api.setMessage(dto(id, labels: ["INBOX"])) }
+        let (worker, store, connection) = try makeWorker(api: api)
+
+        let outcome = try await worker.sync(connection: connection)
+
+        #expect(outcome == GmailSyncOutcome(mode: .full, upserted: 250, tombstoned: 0))
+        #expect(try liveIds(store) == Set(ids))
+    }
+
+    @Test("a full sync that fails partway keeps the batches already stored and writes no cursor")
+    func fullSyncFailurePartwayKeepsStoredBatches() async throws {
+        let api = FakeGmailAPI()
+        let ids = (0..<250).map { String(format: "m%03d", $0) }
+        for id in ids { api.setMessage(dto(id, labels: ["INBOX"])) }
+        api.messageErrors["m240"] = IntegrationError.gmail(status: 500, message: "Boom")
+        let (worker, store, connection) = try makeWorker(api: api)
+        try store.upsertMessages([parsed(dto("stale", labels: ["INBOX"], ageDays: 2))])
+
+        await #expect(throws: IntegrationError.gmail(status: 500, message: "Boom")) {
+            _ = try await worker.sync(connection: connection)
+        }
+
+        let stored = try liveIds(store).subtracting(["stale"])
+        #expect(stored.count >= 200, "every whole batch fetched before the failure was stored")
+        #expect(stored.count % 100 == 0)
+        #expect(try liveIds(store).contains("stale"), "no tombstoning without a complete pass")
+        #expect(try store.connection(idOrEmail: "c1")?.syncCursor == nil)
+    }
+
+    @Test("a full sync whose listing fails stores nothing and writes no cursor")
+    func fullSyncListErrorPropagates() async throws {
+        let api = FakeGmailAPI()
+        api.setMessage(dto("a", labels: ["INBOX"]))
+        api.listMessageIdsError = IntegrationError.gmail(status: 403, message: "Forbidden")
+        let (worker, store, connection) = try makeWorker(api: api)
+        try store.upsertMessages([parsed(dto("kept", labels: ["INBOX"], ageDays: 2))])
+
+        await #expect(throws: IntegrationError.gmail(status: 403, message: "Forbidden")) {
+            _ = try await worker.sync(connection: connection)
+        }
+        #expect(try liveIds(store) == ["kept"])
+        #expect(try store.connection(idOrEmail: "c1")?.syncCursor == nil)
+    }
+
+    @Test("spam and trash are listed and kept only when the settings include them")
+    func spamAndTrashFollowSettings() async throws {
+        let api = FakeGmailAPI()
+        api.setMessage(dto("in", labels: ["INBOX"]))
+        api.setMessage(dto("spam", labels: ["SPAM"]))
+        api.setMessage(dto("trash", labels: ["TRASH"]))
+
+        let (plain, plainStore, plainConnection) = try makeWorker(api: api)
+        _ = try await plain.sync(connection: plainConnection)
+        #expect(api.listCalls.last?.includeSpamTrash == false)
+        #expect(try liveIds(plainStore) == ["in"])
+
+        let (both, bothStore, bothConnection) = try makeWorker(
+            api: api, settings: MailSyncSettings(includeSpam: true, includeTrash: true))
+        _ = try await both.sync(connection: bothConnection)
+        #expect(api.listCalls.last?.includeSpamTrash == true)
+        #expect(try liveIds(bothStore) == ["in", "spam", "trash"])
     }
 
     @Test("a re-synced message keeps its local id")
@@ -126,6 +207,48 @@ struct GmailSyncWorkerTests {
         #expect(try liveIds(store) == ["new"])
         #expect(api.historyCalls == ["600", "600"])
         #expect(try store.connection(idOrEmail: "c1")?.syncCursor == "620")
+    }
+
+    @Test("incremental counts only rows it actually tombstoned")
+    func incrementalCountsRealTombstones() async throws {
+        let api = FakeGmailAPI()
+        api.historyPages = [
+            GmailHistoryPage(changedIds: [], deletedIds: ["del", "never-stored"], historyId: "610", nextPageToken: nil)
+        ]
+        let (worker, store, connection) = try makeWorker(api: api, cursor: "600")
+        try store.upsertMessages([parsed(dto("del", labels: ["INBOX"]))])
+
+        let outcome = try await worker.sync(connection: connection)
+
+        #expect(outcome == GmailSyncOutcome(mode: .incremental, upserted: 0, tombstoned: 1))
+    }
+
+    @Test("incremental tombstones a changed message that is older than the window")
+    func incrementalTombstonesOutOfWindowChange() async throws {
+        let api = FakeGmailAPI()
+        api.setMessage(dto("old", labels: ["INBOX", "STARRED"], ageDays: 90))
+        api.historyPages = [GmailHistoryPage(changedIds: ["old"], deletedIds: [], historyId: "610", nextPageToken: nil)]
+        let (worker, store, connection) = try makeWorker(api: api, cursor: "600")
+        try store.upsertMessages([parsed(dto("old", labels: ["INBOX"], ageDays: 90))])
+
+        let outcome = try await worker.sync(connection: connection)
+
+        #expect(outcome == GmailSyncOutcome(mode: .incremental, upserted: 0, tombstoned: 1))
+        #expect(try liveIds(store).isEmpty)
+    }
+
+    @Test("the full sync after an expired cursor tombstones rows Gmail no longer lists")
+    func fallbackFullSyncTombstones() async throws {
+        let api = FakeGmailAPI()
+        api.historyError = GmailCursorExpired()
+        api.setMessage(dto("a", labels: ["INBOX"]))
+        let (worker, store, connection) = try makeWorker(api: api, cursor: "600")
+        try store.upsertMessages([parsed(dto("gone", labels: ["INBOX"], ageDays: 3))])
+
+        let outcome = try await worker.sync(connection: connection)
+
+        #expect(outcome == GmailSyncOutcome(mode: .full, upserted: 1, tombstoned: 1))
+        #expect(try liveIds(store) == ["a"])
     }
 
     @Test("incremental tombstones a message that became archived")
