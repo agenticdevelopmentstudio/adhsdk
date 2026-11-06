@@ -28,6 +28,9 @@ vi.mock('../components/MarkdownRenderer', () => ({
 
 import { MarkdownDocumentEditor } from '../components/MarkdownDocumentEditor'
 
+const paneLabel = (container: HTMLElement, pane: 'source' | 'preview') =>
+  container.querySelector(`[data-slot="markdown-${pane}-pane"]`)?.firstElementChild?.textContent
+
 function setViewport(matches: boolean) {
   window.matchMedia = ((query: string) => ({
     matches,
@@ -170,6 +173,15 @@ describe('MarkdownDocumentEditor — narrow', () => {
     expect(container.querySelector('[data-slot="markdown-preview"]')).toBeNull()
   })
 
+  it('labels the one pane it shows, so tabbed and side by side keep the same box', () => {
+    const { container } = render(<Harness />)
+    expect(paneLabel(container, 'source')).toBe('Source')
+    expect(container.querySelector('[data-slot="markdown-preview-pane"]')).toBeNull()
+    fireEvent.click(screen.getByRole('button', { name: /^preview$/i }))
+    expect(paneLabel(container, 'preview')).toBe('Preview')
+    expect(container.querySelector('[data-slot="markdown-source-pane"]')).toBeNull()
+  })
+
   it('points both pane-chooser buttons at a real element, in either tab state', () => {
     render(<Harness />)
     const editBtn = screen.getByRole('button', { name: /^source$/i })
@@ -209,6 +221,14 @@ describe('MarkdownDocumentEditor — wide', () => {
     )
     expect(screen.queryByRole('button', { name: /^source$/i })).toBeNull()
     expect(screen.queryByRole('button', { name: /^preview$/i })).toBeNull()
+  })
+
+  it('labels each side of the split, the source on the left and the preview on the right', () => {
+    const { container } = render(<Harness defaultLayout="split" />)
+    expect(paneLabel(container, 'source')).toBe('Source')
+    expect(paneLabel(container, 'preview')).toBe('Preview')
+    const panes = container.querySelectorAll('[data-slot$="-pane"]')
+    expect([...panes].map((el) => el.getAttribute('data-slot'))).toEqual(['markdown-source-pane', 'markdown-preview-pane'])
   })
 
   it('previews the current text once typing settles', async () => {

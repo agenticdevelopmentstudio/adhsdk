@@ -14,6 +14,7 @@ import {
   type SplitViewLayout,
   type SplitViewPane,
 } from '@adh-sdk/ui/blocks/split-view-control'
+import { SectionLabel } from '@adh-sdk/ui/components/section-label'
 import { cn } from '@adh-sdk/ui/lib/utils'
 
 import type { ProseMeasure } from '../lib/prose-class'
@@ -90,9 +91,11 @@ export interface MarkdownDocumentEditorProps extends MarkdownEditorProps {
  *
  * The control strip is ONE row: on the left the layout toggle (wide viewports only) and the
  * Source / Preview tabs, on the right the editor's toolbar (extras, upload, the Markdown
- * quick reference). The
- * editor pane carries no caption row of its own (`label` is still the textarea's accessible
- * name), so the source and the preview start at the same height, directly under the strip.
+ * quick reference). Each pane carries the same small label above its body ("Source",
+ * "Preview"), whichever layout is showing: side by side the labels say which side is which,
+ * and tabbed the pane keeps the same box, so switching layouts never shifts the body. The
+ * editor's own caption row is off (`label` is still the textarea's accessible name), so the
+ * source and the preview start at the same height.
  *
  * `readOnly` shows the same view over a document that cannot be changed: the Source tab
  * shows the source, selectable but not editable, and the editing aids are not offered.
@@ -166,36 +169,42 @@ export function MarkdownDocumentEditor({
           // The wrapper is unconditional: `relative` with no overlay costs nothing, and a
           // wrapper that appears only when an overlay does would change the pane's box the
           // moment a mention listbox opened.
-          <div className="relative flex min-h-0 min-w-0 flex-1 flex-col">
-            <MarkdownEditor
-              {...editor}
-              chrome="none"
-              fill={fill}
-              className={cn('min-h-0 min-w-0 flex-1', editor.className)}
-            />
-            {overlay}
+          <div data-slot="markdown-source-pane" className="flex min-h-0 min-w-0 flex-1 flex-col gap-1.5">
+            <SectionLabel>Source</SectionLabel>
+            <div className="relative flex min-h-0 min-w-0 flex-1 flex-col">
+              <MarkdownEditor
+                {...editor}
+                chrome="none"
+                fill={fill}
+                className={cn('min-h-0 min-w-0 flex-1', editor.className)}
+              />
+              {overlay}
+            </div>
           </div>
         )}
         {view.showPreview && (
-          <MarkdownReadingPalette
-            themeId={themeId}
-            data-slot="markdown-preview"
-            className={cn(
-              'min-h-0 min-w-0 flex-1 rounded-md border border-apt-border',
-              previewClassName,
-            )}
-          >
-            {/* The document itself is not a live region: every debounce tick would otherwise
-                re-announce the whole rendered document to screen readers 300ms after the
-                author stops typing. */}
-            <div aria-live="off">
-              {source.trim() ? (
-                <MarkdownRenderer content={source} measure={previewMeasure} />
-              ) : (
-                <p className="text-sm text-apt-text-dim">Nothing to preview yet.</p>
+          <div data-slot="markdown-preview-pane" className="flex min-h-0 min-w-0 flex-1 flex-col gap-1.5">
+            <SectionLabel>Preview</SectionLabel>
+            <MarkdownReadingPalette
+              themeId={themeId}
+              data-slot="markdown-preview"
+              className={cn(
+                'min-h-0 min-w-0 flex-1 rounded-md border border-apt-border',
+                previewClassName,
               )}
-            </div>
-          </MarkdownReadingPalette>
+            >
+              {/* The document itself is not a live region: every debounce tick would otherwise
+                  re-announce the whole rendered document to screen readers 300ms after the
+                  author stops typing. */}
+              <div aria-live="off">
+                {source.trim() ? (
+                  <MarkdownRenderer content={source} measure={previewMeasure} />
+                ) : (
+                  <p className="text-sm text-apt-text-dim">Nothing to preview yet.</p>
+                )}
+              </div>
+            </MarkdownReadingPalette>
+          </div>
         )}
       </div>
     </div>
