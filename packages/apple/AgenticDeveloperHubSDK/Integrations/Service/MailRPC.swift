@@ -96,12 +96,27 @@ public struct MailAccount: Codable, Sendable, Equatable {
 
 public struct MailProviderStatus: Codable, Sendable, Equatable {
     public var configured: Bool
-    /// The last 12 characters of the OAuth client id.
-    public var clientIdHint: String?
+    /// The imported OAuth client id. A desktop client id is not secret; it appears in every
+    /// sign-in URL.
+    public var clientId: String?
+    /// The last `secretSuffixLength` characters of the client secret, so the user can tell
+    /// which secret is stored. Nil when the secret is too short to show part of it safely.
+    /// The whole secret never leaves the daemon.
+    public var clientSecretSuffix: String?
 
-    public init(configured: Bool, clientIdHint: String?) {
+    public static let secretSuffixLength = 5
+
+    public init(configured: Bool, clientId: String?, clientSecretSuffix: String? = nil) {
         self.configured = configured
-        self.clientIdHint = clientIdHint
+        self.clientId = clientId
+        self.clientSecretSuffix = clientSecretSuffix
+    }
+
+    /// The part of `secret` that may be shown: its last `secretSuffixLength` characters, and
+    /// only when at least twice that many characters stay hidden.
+    public static func visibleSuffix(ofSecret secret: String) -> String? {
+        guard secret.count >= secretSuffixLength * 3 else { return nil }
+        return String(secret.suffix(secretSuffixLength))
     }
 }
 

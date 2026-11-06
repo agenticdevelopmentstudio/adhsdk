@@ -325,13 +325,34 @@ struct MailIntegrationServiceTests {
     @Test func importReportsProviderStatus() async throws {
         let harness = try Harness()
         #expect(await harness.service.handle(.providerStatus)
-            == .providerStatus(MailProviderStatus(configured: false, clientIdHint: nil)))
+            == .providerStatus(MailProviderStatus(configured: false, clientId: nil)))
         let response = await harness.service.handle(.importOAuthClient(json: clientJSON))
-        let expected = MailProviderStatus(configured: true, clientIdHint: "rcontent.com")
+        // "shh" is too short to show any of it.
+        let expected = MailProviderStatus(
+            configured: true, clientId: "1234567890-abcdefghijkl.apps.googleusercontent.com",
+            clientSecretSuffix: nil)
         #expect(response == .providerStatus(expected))
         #expect(harness.secrets.get(forKey: GoogleTokenProvider.clientSecretKey) == "shh")
         #expect(try harness.store.providerConfig(providerId: "gmail")?.clientId
             == "1234567890-abcdefghijkl.apps.googleusercontent.com")
+    }
+
+    @Test func providerStatusShowsOnlyTheLastFiveCharactersOfTheSecret() async throws {
+        let harness = try Harness()
+        let config = GoogleOAuthClientConfig(
+            clientId: "id-9.apps.googleusercontent.com", clientSecret: "GOCSPX-abcdefghij12345")
+        _ = await harness.service.handle(.importOAuthClient(json: try config.installedJSON()))
+        let response = await harness.service.handle(.providerStatus)
+        #expect(response == .providerStatus(MailProviderStatus(
+            configured: true, clientId: "id-9.apps.googleusercontent.com", clientSecretSuffix: "12345")))
+        let wire = try #require(String(bytes: try JSONEncoder().encode(response), encoding: .utf8))
+        #expect(wire.contains("GOCSPX") == false, "the whole secret must never leave the daemon")
+    }
+
+    @Test func visibleSuffixKeepsAtLeastTwiceAsMuchHidden() {
+        #expect(MailProviderStatus.visibleSuffix(ofSecret: "") == nil)
+        #expect(MailProviderStatus.visibleSuffix(ofSecret: "abcdefghijklmn") == nil)
+        #expect(MailProviderStatus.visibleSuffix(ofSecret: "abcdefghij12345") == "12345")
     }
 
     @Test func importThenSignInCreatesAccountAndSyncs() async throws {
@@ -756,7 +777,7 @@ struct MailIntegrationServiceTests {
         #expect(harness.secrets.get(forKey: GoogleTokenProvider.key(connectionId: account.id)) == nil)
         #expect(try harness.store.providerConfig(providerId: "gmail") == nil)
         #expect(await harness.service.handle(.providerStatus)
-            == .providerStatus(MailProviderStatus(configured: false, clientIdHint: nil)))
+            == .providerStatus(MailProviderStatus(configured: false, clientId: nil)))
     }
 
     @Test func unknownAccountFails() async throws {
@@ -770,7 +791,7 @@ struct MailIntegrationServiceTests {
         let service = harness.service
         let client = MailClient { await service.handle(requestData: $0) }
         #expect(try await client.accounts() == [])
-        #expect(try await client.providerStatus() == MailProviderStatus(configured: false, clientIdHint: nil))
+        #expect(try await client.providerStatus() == MailProviderStatus(configured: false, clientId: nil))
         await #expect(throws: MailClientError.remote("No connected account matches “x”")) {
             try await client.labels(account: "x")
         }

@@ -49,6 +49,39 @@ public final class GmailSettingsModel: ObservableObject {
         }
     }
 
+    /// The OAuth client form's fields: the values from Google Cloud → Clients.
+    @Published public var clientIdDraft = ""
+    @Published public var clientSecretDraft = ""
+
+    /// Whether the form has both values to save.
+    public var canSaveClientDraft: Bool {
+        !Self.trimmed(clientIdDraft).isEmpty && !Self.trimmed(clientSecretDraft).isEmpty
+    }
+
+    /// Imports the client typed into the form. The fields clear once the service accepts it
+    /// and stay filled on failure, so a typo can be corrected.
+    public func saveClientDraft() async {
+        guard canSaveClientDraft else {
+            errorMessage = "Enter both the client ID and the client secret."
+            return
+        }
+        let config = GoogleOAuthClientConfig(
+            clientId: Self.trimmed(clientIdDraft), clientSecret: Self.trimmed(clientSecretDraft))
+        var saved = false
+        await perform {
+            _ = try await self.client.send(.importOAuthClient(json: try config.installedJSON()))
+            saved = true
+        }
+        if saved {
+            clientIdDraft = ""
+            clientSecretDraft = ""
+        }
+    }
+
+    private static func trimmed(_ text: String) -> String {
+        text.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
     /// Clears the error message without making a call.
     public func dismissError() {
         errorMessage = nil
@@ -120,13 +153,25 @@ public final class GmailSettingsModel: ObservableObject {
     public var oauthClientText: String {
         guard let provider else { return "Checking for an OAuth client…" }
         guard provider.configured else {
-            return "Import the OAuth client JSON you downloaded from Google Cloud (Desktop app). "
-                + "One client serves every Gmail account."
+            return "Enter the client ID and secret of your Google Cloud Desktop app OAuth client, "
+                + "or import its downloaded JSON. One client serves every Gmail account."
         }
-        if let hint = provider.clientIdHint, !hint.isEmpty {
-            return "Using the OAuth client ending in …\(hint)."
-        }
-        return "An OAuth client is imported."
+        return "Gmail signs in with this OAuth client. To change it, enter new values below "
+            + "or import a new JSON file."
+    }
+
+    /// The imported client id, shown in full.
+    public var currentClientId: String? {
+        guard isClientImported else { return nil }
+        return provider?.clientId
+    }
+
+    /// The stored secret with all but its last five characters hidden. The daemon sends only
+    /// those characters, and the mask is a fixed length so it does not reveal the secret's.
+    public var maskedClientSecret: String? {
+        guard isClientImported else { return nil }
+        guard let suffix = provider?.clientSecretSuffix, !suffix.isEmpty else { return "Stored (hidden)" }
+        return String(repeating: "•", count: 10) + suffix
     }
 
     public static func statusText(_ status: ConnectionStatus) -> String {
