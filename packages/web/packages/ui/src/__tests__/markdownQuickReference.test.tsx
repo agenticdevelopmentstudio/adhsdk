@@ -45,6 +45,11 @@ describe('MarkdownQuickReference', () => {
     )
   })
 
+  it('reads "Reference" on its trigger by default', () => {
+    render(<MarkdownQuickReference />)
+    expect(trigger()).toHaveTextContent('Reference')
+  })
+
   it('honors a custom trigger label', () => {
     render(<MarkdownQuickReference triggerLabel="Syntax" />)
     // Same aria-label, different visible text.

@@ -41,6 +41,15 @@ export interface MarkdownEditorProps {
   textareaClassName?: string
   /** Disable typing, upload, and toolbar controls. */
   disabled?: boolean
+  /** Show the source without letting it be changed: the text stays selectable and
+   *  scrollable (unlike `disabled`, which greys it out), and the editing aids, upload and
+   *  the quick reference, are not offered, since there is nothing to write. */
+  readOnly?: boolean
+  /** Where the caption and toolbar go. `"above"` (default) puts them in a row over the
+   *  textarea. `"none"` renders the textarea alone, its caption kept as the accessible name
+   *  only: for a host that shows {@link MarkdownEditorToolbar} in its own control strip, so
+   *  the textarea's top lines up with whatever sits beside it. */
+  chrome?: "above" | "none"
   /** Take the height the parent gives instead of a fixed `rows` box: the root becomes a
    *  `min-h-0 flex-1` column and the textarea flexes inside it (and stops offering the
    *  manual resize grip, since the height is no longer the user's to set). `rows` is
@@ -97,10 +106,49 @@ function UploadMarkdownControl({
   )
 }
 
+export type MarkdownEditorToolbarProps = Pick<
+  MarkdownEditorProps,
+  "onUpload" | "quickReference" | "toolbarExtras" | "toolbarLabel" | "disabled" | "readOnly"
+> & { className?: string }
+
+/** Which controls the toolbar offers. One answer, shared by the editor and any host that
+ *  places the toolbar itself, so the two can't disagree about whether there is a toolbar. */
+function toolbarControls({
+  onUpload,
+  quickReference = true,
+  toolbarExtras,
+  readOnly = false,
+}: MarkdownEditorToolbarProps) {
+  const upload = !readOnly && Boolean(onUpload)
+  const reference = !readOnly && quickReference
+  return { upload, reference, any: Boolean(toolbarExtras) || upload || reference }
+}
+
+/**
+ * The editor's toolbar on its own: the extras slot, the `.md` upload control and the
+ * "Reference" quick-reference popover. `MarkdownEditor` renders it above its textarea;
+ * `MarkdownDocumentEditor` renders it in its control strip, beside the pane tabs. Renders
+ * nothing when there are no controls.
+ */
+export function MarkdownEditorToolbar(props: MarkdownEditorToolbarProps) {
+  const { onUpload, toolbarExtras, toolbarLabel = "Markdown editor toolbar", disabled, className } = props
+  const controls = toolbarControls(props)
+  if (!controls.any) return null
+  return (
+    <EditorToolbar ariaLabel={toolbarLabel} className={className}>
+      {toolbarExtras}
+      {controls.upload && onUpload && (
+        <UploadMarkdownControl onUpload={onUpload} disabled={disabled} />
+      )}
+      {controls.reference && <MarkdownQuickReference />}
+    </EditorToolbar>
+  )
+}
+
 /**
  * The shared markdown **body** editor: a labelled textarea for the raw markdown
  * source, with an editor toolbar row above it (an optional `.md` upload control,
- * a built-in quick-reference popover, and a slot for extra controls). The label
+ * a built-in "Reference" quick-reference popover, and a slot for extra controls). The label
  * is associated with the textarea via `htmlFor`, so it is the textarea's
  * accessible name. Controlled via `value` / `onChange`; the editor owns no title
  * or classification fields — those stay with the consuming form.
@@ -124,35 +172,39 @@ export function MarkdownEditor({
   className,
   textareaClassName,
   disabled,
+  readOnly = false,
+  chrome = "above",
   fill = false,
 }: MarkdownEditorProps) {
   const textareaId = useId()
-  const hasToolbar = Boolean(toolbarExtras) || Boolean(onUpload) || quickReference
 
   return (
     <div className={cn("flex flex-col gap-1.5", fill && "min-h-0 flex-1", className)}>
-      <div className="flex items-center justify-between gap-3">
-        <Label
-          htmlFor={textareaId}
-          className={fieldCaptionClass}
-        >
+      {chrome === "above" ? (
+        <div className="flex items-center justify-between gap-3">
+          <Label htmlFor={textareaId} className={fieldCaptionClass}>
+            {label}
+          </Label>
+          <MarkdownEditorToolbar
+            onUpload={onUpload}
+            quickReference={quickReference}
+            toolbarExtras={toolbarExtras}
+            toolbarLabel={toolbarLabel}
+            disabled={disabled}
+            readOnly={readOnly}
+          />
+        </div>
+      ) : (
+        <Label htmlFor={textareaId} className="sr-only">
           {label}
         </Label>
-        {hasToolbar && (
-          <EditorToolbar ariaLabel={toolbarLabel}>
-            {toolbarExtras}
-            {onUpload && (
-              <UploadMarkdownControl onUpload={onUpload} disabled={disabled} />
-            )}
-            {quickReference && <MarkdownQuickReference />}
-          </EditorToolbar>
-        )}
-      </div>
+      )}
       <Textarea
         id={textareaId}
         rows={fill ? undefined : rows}
         spellCheck={spellCheck}
         disabled={disabled}
+        readOnly={readOnly}
         className={cn(
           "font-mono text-[0.8rem]",
           fill && "min-h-0 flex-1 resize-none",

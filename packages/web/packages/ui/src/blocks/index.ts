@@ -1,6 +1,11 @@
 export { AppTabs, type AppTab } from "./app-tabs";
 export { EditorSection, type EditorSectionItem } from "./editor-section";
-export { MarkdownEditor, type MarkdownEditorProps } from "./markdown-editor";
+export {
+  MarkdownEditor,
+  MarkdownEditorToolbar,
+  type MarkdownEditorProps,
+  type MarkdownEditorToolbarProps,
+} from "./markdown-editor";
 export { Field } from "./field";
 export { FieldGroup } from "./field-group";
 export { GearMenuTrigger, type GearMenuTriggerProps } from "./gear-menu-trigger";

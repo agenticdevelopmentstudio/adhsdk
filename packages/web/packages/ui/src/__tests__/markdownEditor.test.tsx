@@ -6,7 +6,7 @@
 import * as React from 'react'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { describe, it, expect, vi } from 'vitest'
-import { MarkdownEditor } from '../blocks/markdown-editor'
+import { MarkdownEditor, MarkdownEditorToolbar } from '../blocks/markdown-editor'
 
 function ControlledEditor({
   initial = '',
@@ -90,6 +90,34 @@ describe('MarkdownEditor — toolbar', () => {
       />,
     )
     expect(screen.getByRole('button', { name: 'Spell check' })).toBeInTheDocument()
+  })
+})
+
+describe('MarkdownEditor — readOnly', () => {
+  it('shows the source selectable but not editable, without the editing aids', () => {
+    render(<MarkdownEditor value="# Hi" onChange={vi.fn()} onUpload={vi.fn()} readOnly />)
+    const textarea = screen.getByLabelText('Markdown body') as HTMLTextAreaElement
+    expect(textarea).toHaveAttribute('readonly')
+    expect(textarea).not.toBeDisabled()
+    expect(textarea.value).toBe('# Hi')
+    expect(screen.queryByRole('button', { name: /Upload \.md/ })).toBeNull()
+    expect(screen.queryByRole('button', { name: 'Markdown quick reference' })).toBeNull()
+  })
+})
+
+describe('MarkdownEditor — chrome="none"', () => {
+  it('renders the textarea alone, still named by its label', () => {
+    render(<MarkdownEditor value="" onChange={vi.fn()} label="Notes" chrome="none" />)
+    expect(screen.getByLabelText('Notes').tagName).toBe('TEXTAREA')
+    expect(screen.queryByRole('toolbar')).toBeNull()
+    expect(screen.getByText('Notes')).toHaveClass('sr-only')
+  })
+})
+
+describe('MarkdownEditorToolbar', () => {
+  it('renders nothing when it has no controls', () => {
+    const { container } = render(<MarkdownEditorToolbar quickReference={false} />)
+    expect(container).toBeEmptyDOMElement()
   })
 })
 

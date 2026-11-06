@@ -21,21 +21,28 @@ function doc(over: Partial<DocumentSaveBarProps['document']> = {}): DocumentSave
 const button = (name: string) => screen.getByRole('button', { name }) as HTMLButtonElement
 
 describe('DocumentSaveBar', () => {
-  it('disables Save and Revert with nothing to save', () => {
+  it('is the standard editing button bar, with Cancel and Save and nothing else', () => {
     render(<DocumentSaveBar document={doc()} />)
-    expect(button('Save').disabled).toBe(true)
-    expect(button('Revert').disabled).toBe(true)
+    const bar = screen.getByRole('toolbar', { name: 'Editing actions' })
+    expect([...bar.querySelectorAll('button')].map((b) => b.textContent)).toEqual(['Cancel', 'Save'])
   })
 
-  it('wires Save and Revert when dirty, and holds Save while saving', () => {
+  it('disables Cancel and Save with nothing to save', () => {
+    render(<DocumentSaveBar document={doc()} />)
+    expect(button('Save').disabled).toBe(true)
+    expect(button('Cancel').disabled).toBe(true)
+  })
+
+  it('wires Save and Cancel when dirty, and holds both while saving', () => {
     const d = doc({ dirty: true })
     const { rerender } = render(<DocumentSaveBar document={d} />)
     fireEvent.click(button('Save'))
-    fireEvent.click(button('Revert'))
+    fireEvent.click(button('Cancel'))
     expect(d.save).toHaveBeenCalled()
     expect(d.revert).toHaveBeenCalled()
     rerender(<DocumentSaveBar document={{ ...d, saving: true }} />)
-    expect(button('Save').disabled).toBe(true)
+    expect(button('Saving…').disabled).toBe(true)
+    expect(button('Cancel').disabled).toBe(true)
   })
 
   it('names the document in its default notices', () => {

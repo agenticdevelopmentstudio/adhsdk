@@ -120,7 +120,7 @@ const isDirtyState = (s: State): boolean => s.doc !== null && s.text !== null &&
  * it started, and loads within one document apply in order, so a slow early load cannot
  * overwrite a later one.
  *
- * Rendering is the host's: pair it with `DocumentSaveBar` for the Save/Revert strip and its
+ * Rendering is the host's: pair it with `DocumentSaveBar` for the Cancel/Save button bar and its
  * notices, and with `UnsavedChangesGuard` for leaving the page.
  */
 export function useVersionedDocument(source: VersionedDocumentSource): VersionedDocument {

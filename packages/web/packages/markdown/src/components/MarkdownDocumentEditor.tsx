@@ -4,6 +4,7 @@ import { useEffect, useState, type ReactNode } from 'react'
 
 import {
   MarkdownEditor,
+  MarkdownEditorToolbar,
   type MarkdownEditorProps,
 } from '@adh-sdk/ui/blocks/markdown-editor'
 import {
@@ -87,6 +88,14 @@ export interface MarkdownDocumentEditorProps extends MarkdownEditorProps {
  * pipeline and reading palette the published page uses, and a control strip for choosing
  * between them.
  *
+ * The control strip is ONE row: on the left the layout toggle (wide viewports only) and the
+ * Markdown / Preview tabs, on the right the editor's toolbar (extras, upload, Reference). The
+ * editor pane carries no caption row of its own (`label` is still the textarea's accessible
+ * name), so the source and the preview start at the same height, directly under the strip.
+ *
+ * `readOnly` shows the same view over a document that cannot be changed: the Markdown tab
+ * shows the source, selectable but not editable, and the editing aids are not offered.
+ *
  * Consumers must import `@adh-sdk/markdown/styles` once at their seam — this package
  * follows the repo's seam-owns-its-CSS convention (see the research site's PaperRenderer),
  * so the stylesheet is never pulled in by a component. Every ADH family site already has it
@@ -133,12 +142,21 @@ export function MarkdownDocumentEditor({
     >
       {header}
 
-      <SplitViewControl view={view} subject={subject} />
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <SplitViewControl view={view} subject={subject} editLabel="Markdown" />
+        <MarkdownEditorToolbar
+          onUpload={editor.onUpload}
+          quickReference={editor.quickReference}
+          toolbarExtras={editor.toolbarExtras}
+          toolbarLabel={editor.toolbarLabel}
+          disabled={editor.disabled}
+          readOnly={editor.readOnly}
+        />
+      </div>
 
       {/* The body's FLOOR. `fill` hands this row the pane's leftover height, and leftover height
           can be nothing at all — so a floor is what keeps a filling editor from filling with
-          zero. 14rem leaves the textarea ~10rem once the label and the toolbar above it have
-          taken theirs, which is a body you can actually write in rather than a slot. Above the
+          zero. 14rem is a body you can actually write in rather than a slot. Above the
           floor nothing changes: `flex-1` still takes every spare pixel of a tall pane. Only the
           `fill` layout needs it — a `fill={false}` host sizes the textarea by `rows` and has no
           leftover height to run out of (notebook's NoteFields). */}
@@ -150,6 +168,7 @@ export function MarkdownDocumentEditor({
           <div className="relative flex min-h-0 min-w-0 flex-1 flex-col">
             <MarkdownEditor
               {...editor}
+              chrome="none"
               fill={fill}
               className={cn('min-h-0 min-w-0 flex-1', editor.className)}
             />
