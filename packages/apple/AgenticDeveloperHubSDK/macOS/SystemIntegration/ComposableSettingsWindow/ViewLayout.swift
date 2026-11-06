@@ -54,6 +54,13 @@ extension ComposableSettings {
 
 extension NSView {
 
+    /// The settings row `makeRow` builds, for panels outside this framework:
+    /// the naming label leads, every control trails.
+    @MainActor
+    public static func makeSettingsRow(_ views: [NSView]) -> NSStackView {
+        makeRow(views)
+    }
+
     /// A settings row: the naming label leads, every control trails.
     ///
     /// The spacer is what produces the System Settings layout — label pinned
@@ -62,7 +69,7 @@ extension NSView {
     /// rather than hug the right edge (a slider) says so by taking a horizontal
     /// hugging priority below `rowSpacerHugging`.
     @MainActor
-    public static func makeRow(
+    static func makeRow(
         _ views: [NSView]
     ) -> NSStackView {
         for view in views {

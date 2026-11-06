@@ -62,7 +62,8 @@ public struct NoticeRoutingRules: Codable, Sendable, Equatable {
         self.crawlLeftToRight = crawlLeftToRight
     }
 
-    private static func defaultProfile(for urgency: Notice.Urgency) -> NoticeProfile {
+    /// The built-in profile for an urgency, before any user change.
+    public static func defaultProfile(for urgency: Notice.Urgency) -> NoticeProfile {
         switch urgency {
         case .fyi:
             NoticeProfile(style: .toast, position: .topRight, screens: .main, layer: .floating,

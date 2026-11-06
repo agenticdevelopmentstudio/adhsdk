@@ -14,12 +14,16 @@ public protocol NoticePresenter: AnyObject {
     /// removing it and adding a new one at the end (replace-by-key, and a
     /// flood summary whose count grows).
     func replace(oldID: String, with notice: Notice, profile: NoticeProfile, actions: NoticeCardActions)
-    /// Put the cursor in the notice's reply field, if this presenter has one.
-    func focusReply(id: String)
+    /// Put the cursor in the notice's reply field. `false` when this
+    /// presenter draws none for it (crawl, system), so the caller can offer
+    /// another way to answer.
+    @discardableResult
+    func focusReply(id: String) -> Bool
 }
 
 public extension NoticePresenter {
-    func focusReply(id: String) {}
+    @discardableResult
+    func focusReply(id: String) -> Bool { false }
 }
 
 /// What a card's controls do. Built by the presentation center per notice, so

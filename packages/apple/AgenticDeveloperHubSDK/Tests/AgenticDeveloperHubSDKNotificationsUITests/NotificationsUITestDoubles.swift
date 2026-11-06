@@ -1,3 +1,4 @@
+import AppKit
 import XCTest
 import AgenticDeveloperHubSDKNotifications
 @testable import AgenticDeveloperHubSDKNotificationsUI
@@ -36,6 +37,8 @@ final class RecordingPresenter: NoticePresenter {
     private(set) var focusedReplies: [String] = []
     private(set) var actions: [String: NoticeCardActions] = [:]
     private(set) var notices: [String: Notice] = [:]
+    /// Whether this presenter draws a reply field (crawl and system do not).
+    var hasReplyField = true
 
     func show(_ notice: Notice, profile: NoticeProfile, actions: NoticeCardActions) {
         shown.append(notice)
@@ -60,7 +63,32 @@ final class RecordingPresenter: NoticePresenter {
         notices[notice.id] = notice
     }
 
-    func focusReply(id: String) { focusedReplies.append(id) }
+    func focusReply(id: String) -> Bool {
+        focusedReplies.append(id)
+        return hasReplyField
+    }
+}
+
+/// Records what a presenter does with its panels and never puts one on
+/// screen.
+@MainActor
+final class RecordingWindowing: NoticeWindowing {
+    private(set) var presented: [NoticePanel] = []
+    private(set) var keyed: [NoticePanel] = []
+    private(set) var dismissed: [NoticePanel] = []
+
+    func present(_ panel: NoticePanel) { presented.append(panel) }
+    func makeKey(_ panel: NoticePanel, firstResponder: NSResponder?) {
+        keyed.append(panel)
+        if let firstResponder { panel.makeFirstResponder(firstResponder) }
+    }
+    func dismiss(_ panel: NoticePanel) { dismissed.append(panel) }
+}
+
+/// A screen for presenter tests, so none reads `NSScreen`.
+func testScreen(_ displayID: UInt32, width: CGFloat = 1512, originX: CGFloat = 0) -> NoticeScreen {
+    let frame = CGRect(x: originX, y: 0, width: width, height: 982)
+    return NoticeScreen(displayID: displayID, frame: frame, visibleFrame: frame.insetBy(dx: 0, dy: 30))
 }
 
 final class Clock {

@@ -26,13 +26,14 @@ final class NoticePresentationCenterTests: XCTestCase {
         rules: NoticeRoutingRules = .defaults,
         filter: NoticeFilter = NoticeFilter(),
         focus: NoticeFocusMonitor = NeverFocused(),
-        idle: IdleMonitor = IdleMonitor(idleSeconds: { 0 })
+        idle: IdleMonitor = IdleMonitor(idleSeconds: { 0 }),
+        untilBackStore: UserDefaults? = nil,
+        clock: Clock = Clock()
     ) -> Harness {
         let handler = RecordingHandler()
-        let clock = Clock()
         let center = NoticePresentationCenter(
             handler: handler, rules: { rules }, filter: { filter }, focus: focus, idle: idle,
-            clock: { clock.now })
+            untilBackStore: untilBackStore, clock: { clock.now })
         let toast = RecordingPresenter()
         let alert = RecordingPresenter()
         center.presenters = [.toast: toast, .alert: alert]
@@ -220,6 +221,67 @@ final class NoticePresentationCenterTests: XCTestCase {
         idle.step()
         idle.step()
         XCTAssertFalse(env.handler.calls.contains(.setState("a", .unread)))
+    }
+
+    /// Until-back snoozes survive a relaunch: a new center over the same
+    /// store still wakes them when the user returns.
+    func testUntilBackSurvivesARelaunch() throws {
+        let suite = "NoticePresentationCenterTests.untilBack.\(UUID().uuidString)"
+        let store = try XCTUnwrap(UserDefaults(suiteName: suite))
+        defer { store.removePersistentDomain(forName: suite) }
+        let clock = Clock()
+        do {
+            let first = harness(untilBackStore: store, clock: clock)
+            first.center.receive(notice("a", at: clock))
+            first.center.receive(notice("b", at: clock))
+            first.center.snooze(id: "a", option: .untilBack)
+            first.center.snooze(id: "b", option: .untilBack)
+            first.center.apply(NoticeStateChange(id: "b", state: .archived, stateAt: clock.now))
+        }
+
+        let readings = IdleReadings([301, 1])
+        let idle = IdleMonitor(idleSeconds: readings.next, threshold: 300, poll: 15)
+        let second = harness(idle: idle, untilBackStore: store, clock: clock)
+        XCTAssertTrue(idle.isRunning, "a relaunch re-arms the idle watch")
+        idle.step()
+        idle.step()
+        XCTAssertEqual(second.handler.calls, [.setState("a", .unread)])
+        XCTAssertFalse(idle.isRunning)
+
+        let third = harness(idle: IdleMonitor(idleSeconds: { 0 }), untilBackStore: store, clock: clock)
+        XCTAssertFalse(third.center.hasUntilBackNotices, "a woken notice is forgotten in the store too")
+    }
+
+    func testExpiredUntilBackSnoozesAreNotRearmed() throws {
+        let suite = "NoticePresentationCenterTests.untilBack.\(UUID().uuidString)"
+        let store = try XCTUnwrap(UserDefaults(suiteName: suite))
+        defer { store.removePersistentDomain(forName: suite) }
+        let clock = Clock()
+        do {
+            let first = harness(untilBackStore: store, clock: clock)
+            first.center.receive(notice("a", at: clock))
+            first.center.snooze(id: "a", option: .untilBack)
+        }
+        clock.now = clock.now.addingTimeInterval(25 * 60 * 60)
+        let later = harness(idle: IdleMonitor(idleSeconds: { 0 }), untilBackStore: store, clock: clock)
+        XCTAssertFalse(later.center.hasUntilBackNotices, "past the 24 h fallback the snooze already ended")
+    }
+
+    /// Crawl and system draw no reply field, so acting on a notice whose
+    /// primary action is a reply opens the history, where it can be answered.
+    func testActingOnAReplyWithoutAFieldOpensHistory() {
+        var rules = NoticeRoutingRules.defaults
+        rules.profiles[.soon]?.style = .crawl
+        let env = harness(rules: rules)
+        let crawl = RecordingPresenter()
+        crawl.hasReplyField = false
+        env.center.setPresenter(crawl, for: .crawl)
+        env.center.receive(notice(
+            "a", actions: [.init(id: "r", label: "Reply", kind: .reply(placeholder: nil))], at: env.clock))
+        env.center.act(id: "a")
+        XCTAssertEqual(crawl.focusedReplies, ["a"])
+        XCTAssertEqual(env.handler.calls, [.showHistory])
+        XCTAssertEqual(crawl.shownIDs, ["a"], "it stays up; nothing was answered")
     }
 
     func testShowHistoryReachesTheHandler() {

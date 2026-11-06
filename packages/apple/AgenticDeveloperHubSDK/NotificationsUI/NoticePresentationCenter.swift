@@ -57,9 +57,13 @@ public final class NoticePresentationCenter {
     /// that gap must not bring the card back.
     private var actedIDs: Set<String> = []
     private var escalationTimer: Timer?
-    /// Ids snoozed "until I'm back": woken early, as `unread`, the first time
-    /// the user returns from being idle.
-    private var untilBackIDs: Set<String> = []
+    /// Ids snoozed "until I'm back", with when that snooze ends on its own:
+    /// woken early, as `unread`, the first time the user returns from being
+    /// idle. Kept in `untilBackStore`, when there is one, so a relaunch while
+    /// the user is away still wakes them.
+    private var untilBack: [String: Date] = [:]
+    private let untilBackStore: UserDefaults?
+    static let untilBackKey = "NoticePresentationCenter.untilBack"
 
     public init(
         handler: NoticeActionHandler,
@@ -67,6 +71,7 @@ public final class NoticePresentationCenter {
         filter: @escaping @MainActor () -> NoticeFilter,
         focus: NoticeFocusMonitor = NeverFocused(),
         idle: IdleMonitor = IdleMonitor(),
+        untilBackStore: UserDefaults? = nil,
         clock: @escaping () -> Date = Date.init
     ) {
         self.handler = handler
@@ -74,11 +79,13 @@ public final class NoticePresentationCenter {
         self.filter = filter
         self.focus = focus
         self.idle = idle
+        self.untilBackStore = untilBackStore
         self.clock = clock
         presenters[.toast] = ToastPresenter(
             rules: rules, showHistory: { [weak handler] in handler?.showHistory() })
         presenters[.alert] = AlertPresenter(rules: rules)
         idle.onReturn = { [weak self] in self?.wakeUntilBack() }
+        restoreUntilBack()
     }
 
     isolated deinit {
@@ -94,9 +101,11 @@ public final class NoticePresentationCenter {
         rules: @escaping @MainActor () -> NoticeRoutingRules,
         filter: @escaping @MainActor () -> NoticeFilter,
         focus: NoticeFocusMonitor = NeverFocused(),
-        systemSound: @escaping @MainActor () -> Bool = { true }
+        systemSound: @escaping @MainActor () -> Bool = { true },
+        untilBackStore: UserDefaults? = .standard
     ) -> NoticePresentationCenter {
-        let center = NoticePresentationCenter(handler: handler, rules: rules, filter: filter, focus: focus)
+        let center = NoticePresentationCenter(
+            handler: handler, rules: rules, filter: filter, focus: focus, untilBackStore: untilBackStore)
         center.setPresenter(CrawlPresenter(rules: rules), for: .crawl)
         center.setPresenter(FullScreenPresenter(rules: rules), for: .fullScreen)
         center.setPresenter(SystemNotificationPresenter(playsSound: systemSound), for: .system)
@@ -251,7 +260,11 @@ public final class NoticePresentationCenter {
             return
         }
         if case .reply = action.kind {
-            presenters[entry.profile.style]?.focusReply(id: id)
+            // Crawl and system draw no field: the history is where it can
+            // be answered.
+            if presenters[entry.profile.style]?.focusReply(id: id) != true {
+                handler.showHistory()
+            }
             return
         }
         userDismiss(id)
@@ -282,9 +295,11 @@ public final class NoticePresentationCenter {
             dismiss(id)
         } else {
             userDismiss(id)
-            handler.snooze(id, until: option.until(now: clock(), calendar: calendar))
+            let until = option.until(now: clock(), calendar: calendar)
+            handler.snooze(id, until: until)
             if option == .untilBack {
-                untilBackIDs.insert(id)
+                untilBack[id] = until
+                saveUntilBack()
                 idle.start()
             }
         }
@@ -292,9 +307,14 @@ public final class NoticePresentationCenter {
 
     // MARK: Until I'm back
 
+    /// Whether any notice is waiting for the user to come back.
+    var hasUntilBackNotices: Bool { !untilBack.isEmpty }
+
     private func wakeUntilBack() {
-        let woken = untilBackIDs.sorted()
-        untilBackIDs = []
+        let now = clock()
+        let woken = untilBack.filter { $0.value > now }.keys.sorted()
+        untilBack = [:]
+        saveUntilBack()
         idle.stop()
         for id in woken {
             handler.setState(id, .unread)
@@ -302,8 +322,34 @@ public final class NoticePresentationCenter {
     }
 
     private func forgetUntilBack(_ id: String) {
-        guard untilBackIDs.remove(id) != nil, untilBackIDs.isEmpty else { return }
-        idle.stop()
+        guard untilBack.removeValue(forKey: id) != nil else { return }
+        saveUntilBack()
+        if untilBack.isEmpty {
+            idle.stop()
+        }
+    }
+
+    /// Picks up what a previous launch left, minus snoozes that have since
+    /// run out on their own, and watches for the user's return again.
+    private func restoreUntilBack() {
+        guard let stored = untilBackStore?.dictionary(forKey: Self.untilBackKey) as? [String: Double] else { return }
+        let now = clock()
+        untilBack = stored.mapValues(Date.init(timeIntervalSince1970:)).filter { $0.value > now }
+        if untilBack.count != stored.count {
+            saveUntilBack()
+        }
+        if !untilBack.isEmpty {
+            idle.start()
+        }
+    }
+
+    private func saveUntilBack() {
+        guard let untilBackStore else { return }
+        if untilBack.isEmpty {
+            untilBackStore.removeObject(forKey: Self.untilBackKey)
+        } else {
+            untilBackStore.set(untilBack.mapValues(\.timeIntervalSince1970), forKey: Self.untilBackKey)
+        }
     }
 
     /// The close button or an auto-dismiss expiry: off screen, marked `read`.

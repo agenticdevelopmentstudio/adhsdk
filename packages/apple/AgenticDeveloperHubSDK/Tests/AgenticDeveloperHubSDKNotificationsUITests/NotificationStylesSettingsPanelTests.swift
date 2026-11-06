@@ -43,6 +43,23 @@ final class NotificationStylesSettingsPanelTests: XCTestCase {
         XCTAssertEqual(Self.buttons(in: panel.view, titled: "Send test").count, Notice.Urgency.allCases.count)
     }
 
+    /// An urgency's row shows that urgency's own profile: an override that
+    /// happens to match the sample notice must not leak into it.
+    func testUrgencyRowsIgnoreOverrides() {
+        var rules = NoticeRoutingRules.defaults
+        let base = NotificationStylesSettingsPanel.baseProfile(for: .fyi, in: rules)
+        var crawl = base
+        crawl.style = .crawl
+        rules.overrides = [.init(category: "test", profile: crawl)]
+        XCTAssertEqual(rules.profile(for: NotificationStylesSettingsPanel.sample(for: .fyi)).style, .crawl)
+        XCTAssertEqual(NotificationStylesSettingsPanel.baseProfile(for: .fyi, in: rules), base)
+
+        rules.profiles[.fyi] = nil
+        XCTAssertEqual(
+            NotificationStylesSettingsPanel.baseProfile(for: .fyi, in: rules),
+            NoticeRoutingRules.defaultProfile(for: .fyi))
+    }
+
     private static func strings(in view: NSView) -> [String] {
         var found: [String] = []
         if let field = view as? NSTextField { found.append(field.stringValue) }

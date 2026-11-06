@@ -59,6 +59,7 @@ public final class NoticeCardView: NSView, Themeable, NSTextFieldDelegate {
     private var observer: ThemePaletteObserver?
     private let countdown: DismissCountdown
     private(set) var isHovered = false
+    private var resignObserver: NSObjectProtocol?
 
     public convenience init(notice: Notice, actions: NoticeCardActions, style: Style) {
         self.init(notice: notice, actions: actions, style: style,
@@ -89,6 +90,12 @@ public final class NoticeCardView: NSView, Themeable, NSTextFieldDelegate {
 
     @available(*, unavailable)
     public required init?(coder: NSCoder) { fatalError() }
+
+    isolated deinit {
+        if let resignObserver {
+            NotificationCenter.default.removeObserver(resignObserver)
+        }
+    }
 
     // MARK: Content
 
@@ -191,7 +198,7 @@ public final class NoticeCardView: NSView, Themeable, NSTextFieldDelegate {
     // MARK: Reply
 
     /// The user is about to type a reply: the panel may become key, and the
-    /// card holds still until the reply is sent or cancelled.
+    /// card holds still until the reply is sent, cancelled, or abandoned.
     func beginReply() {
         guard replyField != nil else { return }
         if let panel = window as? NoticePanel {
@@ -206,19 +213,32 @@ public final class NoticeCardView: NSView, Themeable, NSTextFieldDelegate {
     func endReply() {
         replyField?.abortEditing()
         replyField?.stringValue = ""
-        if let panel = window as? NoticePanel {
-            panel.makeFirstResponder(nil)
-            panel.allowKeyForReply = false
-        }
+        (window as? NoticePanel)?.relinquishKey()
         countdown.setPaused(false, for: .replying)
     }
 
+    /// The user went elsewhere mid-reply: the panel resigned key. The
+    /// countdown runs again; an empty field also gives up the panel's right
+    /// to be key, while a draft keeps it so it can be clicked back into.
+    /// (Not on the field's end-editing: that also fires while the click that
+    /// starts the reply is still being tracked, before the panel is key.)
+    private func replyLostFocus() {
+        countdown.setPaused(false, for: .replying)
+        let draft = replyField?.stringValue.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        if draft.isEmpty {
+            (window as? NoticePanel)?.allowKeyForReply = false
+        }
+    }
+
     /// Puts the cursor in the reply field (the card was clicked, or a hotkey
-    /// acted on a notice whose primary action is a reply).
-    func focusReply() {
-        guard let replyField else { return }
+    /// acted on a notice whose primary action is a reply). `false` when the
+    /// card has no reply field.
+    @discardableResult
+    func focusReply() -> Bool {
+        guard let replyField else { return false }
         beginReply()
         window?.makeFirstResponder(replyField)
+        return true
     }
 
     public func control(_ control: NSControl, textView: NSTextView, doCommandBy commandSelector: Selector) -> Bool {
@@ -227,7 +247,9 @@ public final class NoticeCardView: NSView, Themeable, NSTextFieldDelegate {
         case #selector(NSResponder.insertNewline(_:)):
             let text = replyField.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
             guard !text.isEmpty, let replyActionID else { return true }
-            (window as? NoticePanel)?.allowKeyForReply = false
+            // Other cards may stay up after this one goes: the keyboard
+            // goes back before the reply is handed on.
+            (window as? NoticePanel)?.relinquishKey()
             countdown.setPaused(false, for: .replying)
             actions.respond(replyActionID, text)
             return true
@@ -236,6 +258,20 @@ public final class NoticeCardView: NSView, Themeable, NSTextFieldDelegate {
             return true
         default:
             return false
+        }
+    }
+
+    public override func viewDidMoveToWindow() {
+        super.viewDidMoveToWindow()
+        if let resignObserver {
+            NotificationCenter.default.removeObserver(resignObserver)
+            self.resignObserver = nil
+        }
+        guard let window else { return }
+        resignObserver = NotificationCenter.default.addObserver(
+            forName: NSWindow.didResignKeyNotification, object: window, queue: nil
+        ) { [weak self] _ in
+            MainActor.assumeIsolated { self?.replyLostFocus() }
         }
     }
 

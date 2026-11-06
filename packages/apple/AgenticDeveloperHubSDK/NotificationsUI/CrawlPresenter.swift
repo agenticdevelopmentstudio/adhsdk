@@ -32,15 +32,15 @@ public final class CrawlPresenter: NoticePresenter {
     private struct Item {
         var notice: Notice
         var actions: NoticeCardActions
-        var strips: [StripKey]
         let countdown: DismissCountdown
     }
 
     private final class Strip {
         let panel: NoticePanel
         let view: CrawlStripView
-        var ids: [String] = []
         var elapsed: TimeInterval = 0
+        /// Read from the rules when the content changes, not on every frame.
+        var leftToRight = false
 
         init(panel: NoticePanel, view: CrawlStripView) {
             self.panel = panel
@@ -54,17 +54,41 @@ public final class CrawlPresenter: NoticePresenter {
     private static let frameInterval: TimeInterval = 1.0 / 30
 
     private let rules: @MainActor () -> NoticeRoutingRules
-    public private(set) var shownIDs: [String] = []
+    private let windowing: NoticeWindowing
+    private let screens: NoticeScreenProvider
+    private var model = CrawlModel()
     private var items: [String: Item] = [:]
     private var strips: [StripKey: Strip] = [:]
     private var timer: Timer?
+    private var screenObserver: NSObjectProtocol?
 
-    public init(rules: @escaping @MainActor () -> NoticeRoutingRules) {
+    public var shownIDs: [String] { model.order }
+
+    public convenience init(rules: @escaping @MainActor () -> NoticeRoutingRules) {
+        self.init(rules: rules, windowing: LiveNoticeWindowing(), screens: ScreenSelector.noticeScreens)
+    }
+
+    /// With the windows and screens injected, so tests put nothing on screen.
+    init(
+        rules: @escaping @MainActor () -> NoticeRoutingRules,
+        windowing: NoticeWindowing,
+        screens: @escaping NoticeScreenProvider
+    ) {
         self.rules = rules
+        self.windowing = windowing
+        self.screens = screens
+        screenObserver = NotificationCenter.default.addObserver(
+            forName: NSApplication.didChangeScreenParametersNotification, object: nil, queue: .main
+        ) { [weak self] _ in
+            MainActor.assumeIsolated { self?.screensDidChange() }
+        }
     }
 
     isolated deinit {
         timer?.invalidate()
+        if let screenObserver {
+            NotificationCenter.default.removeObserver(screenObserver)
+        }
     }
 
     // MARK: Geometry
@@ -91,108 +115,116 @@ public final class CrawlPresenter: NoticePresenter {
     // MARK: NoticePresenter
 
     public func show(_ notice: Notice, profile: NoticeProfile, actions: NoticeCardActions) {
-        if items[notice.id] != nil {
-            remove(id: notice.id)
+        items.removeValue(forKey: notice.id)?.countdown.stop()
+        let (keys, frames) = placement(for: profile)
+        guard !keys.isEmpty else {
+            apply(model.remove(notice.id), layer: profile.layer, frames: frames)
+            return
         }
-        let edge = Edge(profile.position)
-        let keys = ScreenSelector.current(for: profile.screens).map {
-            StripKey(displayID: $0.noticeDisplayID, edge: edge)
-        }
-        guard !keys.isEmpty else { return }
         let countdown = DismissCountdown()
-        items[notice.id] = Item(notice: notice, actions: actions, strips: keys, countdown: countdown)
-        shownIDs.append(notice.id)
-        for key in keys {
-            let strip = strips[key] ?? makeStrip(key, layer: profile.layer)
-            strip.ids.append(notice.id)
-            refresh(strip)
-            if strip.view.isHovered {
-                countdown.setPaused(true, for: .hover)
-            }
+        items[notice.id] = Item(notice: notice, actions: actions, countdown: countdown)
+        apply(model.show(notice.id, on: keys), layer: profile.layer, frames: frames)
+        if keys.contains(where: { strips[$0]?.view.isHovered == true }) {
+            countdown.setPaused(true, for: .hover)
         }
         countdown.start(after: profile.autoDismiss) { [weak self] in self?.items[notice.id]?.actions.close() }
-        startTimerIfNeeded()
     }
 
     public func remove(id: String) {
         guard let item = items.removeValue(forKey: id) else { return }
         item.countdown.stop()
-        shownIDs.removeAll { $0 == id }
-        for key in item.strips {
-            guard let strip = strips[key] else { continue }
-            strip.ids.removeAll { $0 == id }
-            if strip.ids.isEmpty {
-                close(key)
-            } else {
-                refresh(strip)
-            }
-        }
-        if strips.isEmpty {
-            timer?.invalidate()
-            timer = nil
-        }
+        apply(model.remove(id), layer: .floating, frames: [:])
     }
 
+    /// In place where it can be: strips the old and new notice share keep
+    /// its slot; a change of edge or of screens moves it, closing any strip
+    /// left empty.
     public func replace(oldID: String, with notice: Notice, profile: NoticeProfile, actions: NoticeCardActions) {
-        guard var item = items.removeValue(forKey: oldID), item.strips.allSatisfy({ $0.edge == Edge(profile.position) })
-        else {
-            remove(id: oldID)
+        guard var item = items[oldID] else {
             show(notice, profile: profile, actions: actions)
             return
         }
-        if oldID != notice.id {
-            remove(id: notice.id)
+        let (keys, frames) = placement(for: profile)
+        guard !keys.isEmpty else {
+            remove(id: oldID)
+            return
         }
+        if oldID != notice.id {
+            items.removeValue(forKey: notice.id)?.countdown.stop()
+        }
+        items[oldID] = nil
         item.notice = notice
         item.actions = actions
         items[notice.id] = item
-        if let index = shownIDs.firstIndex(of: oldID) {
-            shownIDs[index] = notice.id
-        }
+        apply(model.replace(oldID, with: notice.id, on: keys), layer: profile.layer, frames: frames)
         item.countdown.start(after: profile.autoDismiss) { [weak self] in self?.items[notice.id]?.actions.close() }
-        for key in item.strips {
-            guard let strip = strips[key] else { continue }
-            strip.ids = strip.ids.map { $0 == oldID ? notice.id : $0 }
-            refresh(strip)
-        }
     }
 
     // MARK: Strips
 
-    private func makeStrip(_ key: StripKey, layer: NoticeProfile.Layer) -> Strip {
+    /// The strips a profile runs on now, with the visible frame of each.
+    private func placement(for profile: NoticeProfile) -> ([StripKey], [StripKey: CGRect]) {
+        let edge = Edge(profile.position)
+        var frames: [StripKey: CGRect] = [:]
+        let keys = screens(profile.screens).map { screen in
+            let key = StripKey(displayID: screen.displayID, edge: edge)
+            frames[key] = screen.visibleFrame
+            return key
+        }
+        return (keys, frames)
+    }
+
+    private func apply(_ change: CrawlModel.Change, layer: NoticeProfile.Layer, frames: [StripKey: CGRect]) {
+        for key in change.closed {
+            if let strip = strips.removeValue(forKey: key) {
+                windowing.dismiss(strip.panel)
+            }
+        }
+        for key in change.opened {
+            makeStrip(key, layer: layer, visibleFrame: frames[key])
+        }
+        for key in change.opened.union(change.refreshed) {
+            refresh(key)
+        }
+        if strips.isEmpty {
+            timer?.invalidate()
+            timer = nil
+        } else {
+            startTimerIfNeeded()
+        }
+    }
+
+    private func makeStrip(_ key: StripKey, layer: NoticeProfile.Layer, visibleFrame: CGRect?) {
         let panel = NoticePanel(layer: layer, hideFromSharing: rules().hideFromScreenSharing)
         let view = CrawlStripView()
         panel.contentView = view
         let strip = Strip(panel: panel, view: view)
-        view.onHoverChange = { [weak self, weak strip] hovered in
-            guard let self, let strip else { return }
-            for id in strip.ids {
+        view.onHoverChange = { [weak self] hovered in
+            guard let self else { return }
+            for id in self.model.ids(on: key) {
                 self.items[id]?.countdown.setPaused(hovered, for: .hover)
             }
         }
-        view.onClick = { [weak self, weak strip] index in
-            guard let self, let strip, strip.ids.indices.contains(index) else { return }
-            self.items[strip.ids[index]]?.actions.act()
+        view.onClick = { [weak self] index in
+            guard let self else { return }
+            let ids = self.model.ids(on: key)
+            guard ids.indices.contains(index) else { return }
+            self.items[ids[index]]?.actions.act()
         }
         strips[key] = strip
-        if let screen = NSScreen.screens.first(where: { $0.noticeDisplayID == key.displayID }) {
-            panel.setFrame(
-                Self.stripFrame(in: screen.visibleFrame, edge: key.edge, height: Self.stripHeight), display: false)
+        if let visibleFrame {
+            panel.setFrame(Self.stripFrame(in: visibleFrame, edge: key.edge, height: Self.stripHeight), display: false)
         }
-        panel.orderFrontRegardless()
-        return strip
+        windowing.present(panel)
     }
 
-    private func refresh(_ strip: Strip) {
-        let notices = strip.ids.compactMap { items[$0]?.notice }
-        strip.view.setNotices(notices)
+    /// New content: redraw it and start its pass over.
+    private func refresh(_ key: StripKey) {
+        guard let strip = strips[key] else { return }
+        strip.view.setNotices(model.ids(on: key).compactMap { items[$0]?.notice })
+        strip.elapsed = 0
+        strip.leftToRight = rules().crawlLeftToRight
         place(strip)
-    }
-
-    private func close(_ key: StripKey) {
-        guard let strip = strips.removeValue(forKey: key) else { return }
-        strip.panel.orderOut(nil)
-        strip.panel.close()
     }
 
     private func startTimerIfNeeded() {
@@ -204,7 +236,8 @@ public final class CrawlPresenter: NoticePresenter {
         self.timer = timer
     }
 
-    private func advance(by interval: TimeInterval) {
+    /// One frame. The timer calls this; tests call it directly.
+    func advance(by interval: TimeInterval) {
         for strip in strips.values where !strip.view.isHovered {
             strip.elapsed += interval
             place(strip)
@@ -214,8 +247,29 @@ public final class CrawlPresenter: NoticePresenter {
     private func place(_ strip: Strip) {
         strip.view.setContentX(Self.offset(
             elapsed: strip.elapsed, speed: Self.speed, contentWidth: strip.view.contentWidth,
-            stripWidth: strip.view.bounds.width, leftToRight: rules().crawlLeftToRight))
+            stripWidth: strip.view.bounds.width, leftToRight: strip.leftToRight))
     }
+
+    /// Refits every strip to its screen after a display was added, removed
+    /// or rearranged.
+    func screensDidChange() {
+        let visible = Dictionary(
+            screens(.all).map { ($0.displayID, $0.visibleFrame) }, uniquingKeysWith: { first, _ in first })
+        for (key, strip) in strips {
+            guard let frame = visible[key.displayID] else { continue }
+            strip.panel.setFrame(Self.stripFrame(in: frame, edge: key.edge, height: Self.stripHeight), display: true)
+            place(strip)
+        }
+    }
+
+    // MARK: Test hooks
+
+    /// Whether the frame timer is running.
+    var isAnimating: Bool { timer != nil }
+
+    func elapsed(of key: StripKey) -> TimeInterval? { strips[key]?.elapsed }
+
+    func leftToRight(of key: StripKey) -> Bool? { strips[key]?.leftToRight }
 }
 
 /// One strip: a themed bar with the notices in a row that slides across it.

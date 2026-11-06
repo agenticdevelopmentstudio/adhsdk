@@ -10,8 +10,12 @@ import AgenticDeveloperHubSDKNotifications
 /// - `takesFocus` (full screen), because it covers the user's work and
 ///   keystrokes must not keep going to a hidden app;
 /// - `allowKeyForReply`, set only once the user clicks into a reply field.
-///   A non-activating panel can be key without activating its app, which is
-///   how Spotlight takes typing without stealing the frontmost app.
+///
+/// Every notice panel is non-activating, the full-screen one included: a
+/// non-activating panel can be key without activating its app, which is how
+/// Spotlight takes typing without stealing the frontmost app. It also means
+/// nothing waits on `NSApp.activate()`, which is only a request on macOS 14
+/// and later.
 public final class NoticePanel: NSPanel {
 
     public let takesFocus: Bool
@@ -22,11 +26,8 @@ public final class NoticePanel: NSPanel {
 
     public init(layer: NoticeProfile.Layer, hideFromSharing: Bool, takesFocus: Bool = false) {
         self.takesFocus = takesFocus
-        var style: NSWindow.StyleMask = [.borderless]
-        if !takesFocus {
-            style.insert(.nonactivatingPanel)
-        }
-        super.init(contentRect: .zero, styleMask: style, backing: .buffered, defer: true)
+        super.init(
+            contentRect: .zero, styleMask: [.borderless, .nonactivatingPanel], backing: .buffered, defer: true)
 
         isFloatingPanel = layer == .floating
         // After `isFloatingPanel`, which sets its own level.
@@ -48,4 +49,27 @@ public final class NoticePanel: NSPanel {
     public override var canBecomeKey: Bool { takesFocus || allowKeyForReply }
 
     public override var canBecomeMain: Bool { takesFocus }
+
+    /// Hands the keyboard back to the app the user was in, once a reply is
+    /// sent or cancelled. Reordering a panel that can no longer become key
+    /// lets the window server give key to the active app; it never calls
+    /// `resignKey()` or `NSApp.deactivate()`. A full-screen panel keeps the
+    /// keyboard, with its backdrop as first responder so Esc still snoozes.
+    func relinquishKey() {
+        allowKeyForReply = false
+        if takesFocus {
+            makeFirstResponder(contentView)
+            return
+        }
+        makeFirstResponder(nil)
+        handOffKey(self)
+    }
+
+    /// How `relinquishKey()` returns key. A seam, so tests never reorder a
+    /// real window.
+    var handOffKey: @MainActor (NoticePanel) -> Void = { panel in
+        guard panel.isKeyWindow else { return }
+        panel.orderOut(nil)
+        panel.orderFrontRegardless()
+    }
 }

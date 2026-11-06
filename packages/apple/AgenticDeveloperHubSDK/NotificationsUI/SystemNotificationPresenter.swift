@@ -6,15 +6,22 @@ import AgenticDeveloperHubSDKNotifications
 /// Notification Center.
 @MainActor
 protocol SystemNotificationPosting: AnyObject {
+    /// Becomes the Notification Center's delegate and registers the
+    /// presenter's category.
+    func becomeDelegate()
     func requestAuthorization()
     func post(_ request: UNNotificationRequest)
     func removeDelivered(withIdentifiers identifiers: [String])
+    func removePending(withIdentifiers identifiers: [String])
 }
 
 /// The `system` style, and `forwardToSystem`: the notice goes to macOS's own
 /// Notification Center as a banner, under the notice's id, so it can be
 /// withdrawn when the notice is acted on anywhere else. Clicking the banner
-/// acts on the notice, like clicking its card.
+/// acts on the notice, like clicking its card; clearing it closes the notice.
+///
+/// Call `start()` at launch, so a banner clicked after a relaunch (or the one
+/// that launched the app) still reaches the presenter.
 @MainActor
 public final class SystemNotificationPresenter: NSObject, NoticePresenter, UNUserNotificationCenterDelegate {
 
@@ -24,6 +31,11 @@ public final class SystemNotificationPresenter: NSObject, NoticePresenter, UNUse
     private let playsSound: @MainActor () -> Bool
     private var actions: [String: NoticeCardActions] = [:]
     private var authorized = false
+    private var started = false
+
+    /// The category every banner is posted under. It asks for the dismiss
+    /// callback, so a banner the user clears comes back as a close.
+    static let categoryIdentifier = "com.agentic-cookbook.notice"
 
     /// Posts through `UNUserNotificationCenter.current()`, which is touched
     /// only once the first notice is shown.
@@ -45,9 +57,21 @@ public final class SystemNotificationPresenter: NSObject, NoticePresenter, UNUse
         return made
     }
 
+    /// Makes this presenter the `UNUserNotificationCenter` delegate. Call it
+    /// once at launch, before the app finishes launching, so banner clicks
+    /// and clears after a relaunch arrive here. It replaces any delegate the
+    /// host set: a host that needs its own must forward to this presenter.
+    /// Idempotent; `show` calls it too.
+    public func start() {
+        guard !started else { return }
+        started = true
+        poster.becomeDelegate()
+    }
+
     // MARK: NoticePresenter
 
     public func show(_ notice: Notice, profile: NoticeProfile, actions: NoticeCardActions) {
+        start()
         if !authorized {
             authorized = true
             poster.requestAuthorization()
@@ -61,6 +85,7 @@ public final class SystemNotificationPresenter: NSObject, NoticePresenter, UNUse
     public func remove(id: String) {
         guard actions.removeValue(forKey: id) != nil else { return }
         shownIDs.removeAll { $0 == id }
+        poster.removePending(withIdentifiers: [id])
         poster.removeDelivered(withIdentifiers: [id])
     }
 
@@ -77,6 +102,12 @@ public final class SystemNotificationPresenter: NSObject, NoticePresenter, UNUse
         actions[identifier]?.act()
     }
 
+    /// The user cleared a banner: the notice closes, which takes it out of
+    /// the center's newest-shown order so a hotkey does not act on it.
+    func handleDismiss(identifier: String) {
+        actions[identifier]?.close()
+    }
+
     public nonisolated func userNotificationCenter(
         _ center: UNUserNotificationCenter, willPresent notification: UNNotification
     ) async -> UNNotificationPresentationOptions {
@@ -87,9 +118,15 @@ public final class SystemNotificationPresenter: NSObject, NoticePresenter, UNUse
     public nonisolated func userNotificationCenter(
         _ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse
     ) async {
-        guard response.actionIdentifier == UNNotificationDefaultActionIdentifier else { return }
         let identifier = response.notification.request.identifier
-        await MainActor.run { self.handleTap(identifier: identifier) }
+        switch response.actionIdentifier {
+        case UNNotificationDefaultActionIdentifier:
+            await MainActor.run { self.handleTap(identifier: identifier) }
+        case UNNotificationDismissActionIdentifier:
+            await MainActor.run { self.handleDismiss(identifier: identifier) }
+        default:
+            break
+        }
     }
 
     // MARK: Content
@@ -102,12 +139,12 @@ public final class SystemNotificationPresenter: NSObject, NoticePresenter, UNUse
         content.body = notice.body ?? ""
         content.sound = playsSound() ? .default : nil
         content.threadIdentifier = notice.source
+        content.categoryIdentifier = Self.categoryIdentifier
         return content
     }
 }
 
-/// The real Notification Center. Becomes its delegate when authorization is
-/// first asked for, so banner clicks come back to the presenter.
+/// The real Notification Center.
 @MainActor
 private final class UserNotificationCenterPoster: SystemNotificationPosting {
 
@@ -117,10 +154,16 @@ private final class UserNotificationCenterPoster: SystemNotificationPosting {
         self.delegate = delegate
     }
 
-    func requestAuthorization() {
+    func becomeDelegate() {
         let center = UNUserNotificationCenter.current()
         center.delegate = delegate
-        center.requestAuthorization(options: [.alert, .sound]) { _, _ in }
+        center.setNotificationCategories([UNNotificationCategory(
+            identifier: SystemNotificationPresenter.categoryIdentifier, actions: [], intentIdentifiers: [],
+            options: [.customDismissAction])])
+    }
+
+    func requestAuthorization() {
+        UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound]) { _, _ in }
     }
 
     func post(_ request: UNNotificationRequest) {
@@ -129,5 +172,9 @@ private final class UserNotificationCenterPoster: SystemNotificationPosting {
 
     func removeDelivered(withIdentifiers identifiers: [String]) {
         UNUserNotificationCenter.current().removeDeliveredNotifications(withIdentifiers: identifiers)
+    }
+
+    func removePending(withIdentifiers identifiers: [String]) {
+        UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: identifiers)
     }
 }
