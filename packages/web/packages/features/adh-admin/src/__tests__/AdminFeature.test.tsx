@@ -36,6 +36,7 @@ vi.mock("@adh-sdk/ui/lib/navigation-guard", async (importOriginal) => ({
 }));
 
 import { AdminFeature } from "../AdminFeature";
+import { resetAdminCategorySelectionForTests } from "../adminTopics";
 
 const settle = () => act(() => new Promise((resolve) => setTimeout(resolve, 0)));
 const categories = () => h.levels["admin-categories"];
@@ -45,6 +46,8 @@ beforeEach(() => {
   h.pushSegment.mockReset();
   h.confirm.mockReset();
   h.levels = {};
+  // Each test is a fresh page load: no category remembered from the last one.
+  resetAdminCategorySelectionForTests();
 });
 
 describe("AdminFeature's rail", () => {
@@ -98,11 +101,26 @@ describe("AdminFeature's category switch with a section open", () => {
 
   it("stays put when the guard says no", async () => {
     h.confirm.mockResolvedValue(false);
-    render(<AdminFeature basePath="/admin" topicId="users" />);
+    const { unmount } = render(<AdminFeature basePath="/admin" topicId="users" />);
     act(() => categories().urlSelection.onSelect("ai-processing"));
     await settle();
     expect(h.pushSegment).not.toHaveBeenCalled();
     expect(categories().urlSelection.selectedId).toBe("access");
+    // The refused choice is not remembered either: the console the hub mounts next (on closing
+    // Users) opens Access, not the category the guard turned down.
+    unmount();
+    render(<AdminFeature basePath="/admin" />);
+    expect(categories().urlSelection.selectedId).toBe("access");
+  });
+
+  it("keeps the chosen category across the remount the hub's route change makes", async () => {
+    h.confirm.mockResolvedValue(true);
+    const { unmount } = render(<AdminFeature basePath="/admin" topicId="llm-providers" />);
+    act(() => categories().urlSelection.onSelect("communication"));
+    await settle();
+    unmount();
+    render(<AdminFeature basePath="/admin" />);
+    expect(categories().urlSelection.selectedId).toBe("communication");
   });
 
   it("keeps the category open once its section closes", () => {
