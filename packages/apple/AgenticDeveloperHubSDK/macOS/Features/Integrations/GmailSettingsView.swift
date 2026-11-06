@@ -8,6 +8,8 @@ struct GmailSettingsView: View {
     @ObservedObject var model: GmailSettingsModel
 
     private static let pollChoices = [5, 15, 30, 60]
+    /// Fixed windows rather than a stepper: each change re-syncs, so a day at a time is costly.
+    private static let windowChoices = [7, 14, 30, 90, 180, 365]
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -56,14 +58,32 @@ struct GmailSettingsView: View {
                 Button("Add Account…") { Task { await model.addAccount() } }
                     .disabled(model.busy)
                 Button("Remove") {
-                    if let id = model.selectedAccountId { Task { await model.remove(accountId: id) } }
+                    if let account = model.selectedAccount { confirmRemove(account) }
                 }
                 .disabled(model.selectedAccount == nil || model.busy)
+                if model.signingIn {
+                    ProgressView().controlSize(.small)
+                    Text("Waiting for Google sign-in in your browser…").font(.caption)
+                    Button("Cancel") { Task { await model.cancelSignIn() } }
+                }
             }
             if let account = model.selectedAccount {
                 settings(for: account)
             }
         }
+    }
+
+    private func confirmRemove(_ account: MailAccount) {
+        let alert = NSAlert()
+        alert.messageText = "Remove \(account.email)?"
+        alert.informativeText = "This signs the account out of Google, removes its stored sign-in "
+            + "and deletes its mail from this Mac."
+        alert.alertStyle = .warning
+        alert.addButton(withTitle: "Remove")
+        alert.addButton(withTitle: "Cancel")
+        alert.buttons.first?.hasDestructiveAction = true
+        guard alert.runModal() == .alertFirstButtonReturn else { return }
+        Task { await model.remove(accountId: account.id) }
     }
 
     private func accountRow(_ account: MailAccount) -> some View {
@@ -86,7 +106,7 @@ struct GmailSettingsView: View {
     private func settings(for account: MailAccount) -> some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack {
-                if account.status == .revoked {
+                if account.status == .revoked || account.status == .error {
                     Button("Reconnect") { Task { await model.addAccount() } }
                         .disabled(model.busy)
                 }
@@ -96,11 +116,15 @@ struct GmailSettingsView: View {
             Toggle("Sync archived mail", isOn: binding(account, \.includeArchived))
             Toggle("Sync junk mail", isOn: binding(account, \.includeSpam))
             Toggle("Sync deleted mail", isOn: binding(account, \.includeTrash))
-            Stepper(
-                "Fetch mail from the last \(account.settings.windowDays) days",
-                value: binding(account, \.windowDays), in: MailSyncSettings.windowDaysRange)
+            Picker("Fetch mail from the last", selection: binding(account, \.windowDays)) {
+                ForEach(Self.choices(Self.windowChoices, including: account.settings.windowDays), id: \.self) { days in
+                    Text("\(days) days").tag(days)
+                }
+            }
+            .frame(maxWidth: 300)
             Picker("Check for mail every", selection: binding(account, \.pollIntervalMinutes)) {
-                ForEach(pollChoices(including: account.settings.pollIntervalMinutes), id: \.self) { minutes in
+                ForEach(Self.choices(Self.pollChoices, including: account.settings.pollIntervalMinutes),
+                        id: \.self) { minutes in
                     Text("\(minutes) minutes").tag(minutes)
                 }
             }
@@ -109,8 +133,8 @@ struct GmailSettingsView: View {
     }
 
     /// The fixed choices, plus the account's current value when it is a custom one.
-    private func pollChoices(including current: Int) -> [Int] {
-        Self.pollChoices.contains(current) ? Self.pollChoices : (Self.pollChoices + [current]).sorted()
+    private static func choices(_ fixed: [Int], including current: Int) -> [Int] {
+        fixed.contains(current) ? fixed : (fixed + [current]).sorted()
     }
 
     /// Reads one field of the account's settings; a write sends the whole settings at once.

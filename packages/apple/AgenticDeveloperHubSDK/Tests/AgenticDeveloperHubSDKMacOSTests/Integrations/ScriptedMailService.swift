@@ -1,4 +1,5 @@
 import Foundation
+import Testing
 import AgenticDeveloperHubSDKIntegrations
 
 /// A scripted mail service for the settings-model tests: answers each request from
@@ -40,9 +41,20 @@ final class ScriptedMailService: @unchecked Sendable {
         held.forEach { $0.resume() }
     }
 
-    /// Suspends until at least `count` requests have reached the transport.
-    func waitForRequests(_ count: Int) async {
-        while requests.count < count { await Task.yield() }
+    /// Suspends until at least `count` requests have reached the transport, or records an
+    /// issue and returns false once `timeout` passes, so a missing request fails the test
+    /// rather than hanging it.
+    @discardableResult
+    func waitForRequests(_ count: Int, timeout: Duration = .seconds(5)) async -> Bool {
+        let deadline = ContinuousClock.now + timeout
+        while requests.count < count {
+            if ContinuousClock.now >= deadline {
+                Issue.record("timed out waiting for \(count) requests; saw \(requests.count)")
+                return false
+            }
+            try? await Task.sleep(for: .milliseconds(1))
+        }
+        return true
     }
 
     private func holdIfGated(_ request: MailRequest) async {
