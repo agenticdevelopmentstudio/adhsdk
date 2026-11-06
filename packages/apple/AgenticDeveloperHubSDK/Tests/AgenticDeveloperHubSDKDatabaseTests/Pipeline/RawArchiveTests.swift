@@ -236,4 +236,26 @@ final class RawArchiveTests: XCTestCase {
         XCTAssertEqual(picked.map(\.id), wanted)
         XCTAssertEqual(picked.map(\.record.payload), wanted.indices.map { Data("p\($0 * 2)".utf8) })
     }
+
+    /// The reading methods take their own deadline (the replay passes
+    /// `EventStore.bulkDeadline`): an expired one ejects the read, and leaving it
+    /// out keeps the archive's own 30 s budget.
+    func testReadsHonourAPassedDeadlineAndDefaultToTheArchives() throws {
+        let archive = try makeArchive()
+        let ids = try archive.append((0..<3000).map { rec("d\($0)", "payload \($0)") }).ids
+        func assertEjected(_ body: () throws -> Void) {
+            XCTAssertThrowsError(try body()) { error in
+                guard case BoundedDatabaseError.deadlineExceeded(let lane, _) = error else {
+                    return XCTFail("expected deadlineExceeded, got \(error)")
+                }
+                XCTAssertEqual(lane, "read")
+            }
+        }
+        assertEjected { _ = try archive.records(ids: ids, deadline: .zero) }
+        assertEjected { _ = try archive.ids(after: 0, limit: 3000, maxBytes: .max, deadline: .zero) }
+        XCTAssertEqual(try archive.records(ids: ids).count, 3000)
+        XCTAssertEqual(try archive.ids(after: 0, limit: 3000, maxBytes: .max).count, 3000)
+        XCTAssertEqual(try archive.records(ids: ids, deadline: .seconds(60)).count, 3000)
+        XCTAssertNotNil(try archive.record(id: ids[0], deadline: .seconds(60)))
+    }
 }

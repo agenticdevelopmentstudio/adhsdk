@@ -89,13 +89,18 @@ final class ReplayerTests: XCTestCase {
         let outcome = try PipelineDrainer(spool: spool, archive: archive, normalizer: ReplayTestNormalizer(),
                                           store: live, batchSize: 7).drainUntilEmpty()
         XCTAssertFalse(outcome.failed)
-        XCTAssertEqual(try archive.count(), 48)
+        // k3 and k10 came again with other bytes: kept as two conflict copies.
+        XCTAssertEqual(outcome.conflictCopies, 2)
+        XCTAssertEqual(try archive.count(), 50)
 
         let rebuilt = try makeStore("rebuilt.db")
         let report = try Replayer.replay(archive: archive, normalizer: ReplayTestNormalizer(),
                                          into: rebuilt, chunk: 10)
-        XCTAssertEqual(report.records, 48)
+        XCTAssertEqual(report.records, 50)
         XCTAssertEqual(report.failed, 0)
+        // The conflict copies replay into nothing: skipped, not failed.
+        XCTAssertEqual(report.skipped, 2)
+        XCTAssertEqual(report.skippedIDs.count, 2)
         XCTAssertEqual(try rebuilt.canonicalDump(), try live.canonicalDump())
         XCTAssertFalse(try live.canonicalDump().isEmpty)
         XCTAssertEqual(try rebuilt.counts().sessions, 3)
@@ -288,6 +293,81 @@ final class ReplayerTests: XCTestCase {
         }
         XCTAssertEqual(try store.counts().events, 0)
         XCTAssertFalse(try store.isInBulkLoad())
+    }
+
+    // MARK: - Live replay
+
+    func testLiveReplayKeepsIndexesStopsAtThroughAndResumesFromItsCheckpoint() throws {
+        let archive = try makeArchive()
+        let ids = try archive.append((0..<10).map { record("k\($0)") }).ids
+        let full = try makeStore("full.db")
+        _ = try Replayer.replay(archive: archive, normalizer: ReplayTestNormalizer(), into: full)
+
+        let store = try makeStore("e.db")
+        let expectedIndexes = try store.indexNames()
+        let bulkSeen = LockedFlags()
+        let progress = ProgressLog()
+        // Chunks of 4 against a bound of ids[5]: the second chunk is cut at the bound.
+        let first = try Replayer.replayLive(
+            ReplaySource(archive: archive, normalizer: ReplayTestNormalizer(), checkpointKey: "cursor",
+                         through: ids[5]),
+            into: store, chunk: 4,
+            progress: { report in
+                bulkSeen.add(((try? store.isInBulkLoad()) ?? true)
+                             || ((try? store.indexNames()) ?? []) != expectedIndexes)
+                progress.add(report.records)
+            })
+        XCTAssertEqual(progress.values, [4, 6])
+        XCTAssertTrue(bulkSeen.values.allSatisfy { !$0 }, "a live replay never drops the indexes")
+        XCTAssertFalse(first.stopped)
+        XCTAssertEqual(first.lastID, ids[5])
+        XCTAssertEqual(try store.metaValue(forKey: "cursor"), String(ids[5]))
+        XCTAssertEqual(try store.counts().events, 6)
+
+        // A bound already reached reads nothing.
+        let none = try Replayer.replayLive(
+            ReplaySource(archive: archive, normalizer: ReplayTestNormalizer(), after: ids[5], through: ids[5]),
+            into: store)
+        XCTAssertEqual(none.records, 0)
+        XCTAssertEqual(none.lastID, ids[5])
+
+        // Resuming from the checkpoint through the end gives the full replay's rows.
+        let after = try XCTUnwrap(try store.metaValue(forKey: "cursor").flatMap { Int64($0) })
+        let rest = try Replayer.replayLive(
+            ReplaySource(archive: archive, normalizer: ReplayTestNormalizer(), after: after, checkpointKey: "cursor",
+                         through: ids[9]),
+            into: store, chunk: 3)
+        XCTAssertEqual(rest.records, 4)
+        XCTAssertEqual(rest.lastID, ids[9])
+        XCTAssertEqual(try store.canonicalDump(), try full.canonicalDump())
+    }
+
+    func testLiveReplayRefusesABulkLoadWhileItRunsAndStopsWhenAsked() throws {
+        let archive = try makeArchive()
+        _ = try archive.append((0..<6).map { record("k\($0)") })
+        let store = try makeStore("e.db")
+        let refusals = LockedFlags()
+        let chunks = ProgressLog()
+        let report = try Replayer.replayLive(
+            ReplaySource(archive: archive, normalizer: ReplayTestNormalizer()),
+            into: store, chunk: 2,
+            shouldContinue: { chunks.values.count < 2 },
+            progress: { report in
+                chunks.add(report.records)
+                do {
+                    try store.beginBulkLoad()
+                    try? store.endBulkLoad()
+                    refusals.add(false)
+                } catch {
+                    refusals.add((error as? EventStoreError) == .liveWritersAttached(count: 1))
+                }
+            })
+        XCTAssertTrue(report.stopped)
+        XCTAssertEqual(report.records, 4)
+        XCTAssertEqual(refusals.values, [true, true])
+        // Detached once it returns: a bulk load may start again.
+        XCTAssertNoThrow(try store.beginBulkLoad())
+        XCTAssertNoThrow(try store.endBulkLoad())
     }
 }
 
