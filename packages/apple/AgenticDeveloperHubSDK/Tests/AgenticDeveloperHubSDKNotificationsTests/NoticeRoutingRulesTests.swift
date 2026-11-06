@@ -99,4 +99,47 @@ final class NoticeRoutingRulesTests: XCTestCase {
         let json = try XCTUnwrap(String(data: data, encoding: .utf8))
         XCTAssertTrue(json.contains(#""fyi":{"#), "profiles are keyed by urgency name, not a flat array")
     }
+
+    func testLegacyMigrationIgnoresOverrides() {
+        var rules = NoticeRoutingRules.defaults
+        let override = NoticeRoutingRules.Override(profile: profile(style: .crawl))
+        rules.overrides = [override, .init(urgency: .fyi, profile: profile(style: .system))]
+
+        let migrated = NoticeRoutingRules.migratingLegacyDeliverSetting(true, into: rules)
+
+        var expectedFyi = NoticeRoutingRules.defaults.profiles[.fyi]
+        expectedFyi?.forwardToSystem = true
+        XCTAssertEqual(migrated.profiles[.fyi], expectedFyi)
+        XCTAssertEqual(migrated.overrides, rules.overrides)
+    }
+
+    func testProfileFallsBackToDefaultWhenUrgencyIsMissing() {
+        var rules = NoticeRoutingRules.defaults
+        rules.profiles = [.fyi: profile(style: .crawl)]
+        XCTAssertEqual(rules.profile(for: notice(urgency: .fyi)).style, .crawl)
+        XCTAssertEqual(rules.profile(for: notice(urgency: .now)).style, .alert)
+    }
+
+    func testPartialJSONDecodesToDefaultsForTheRest() throws {
+        let json = #"{"profiles":{"soon":{"style":"crawl","position":"topLeft","screens":"all","#
+            + #""layer":"normal","forwardToSystem":true}},"toastStackLimit":2}"#
+        let rules = try NoticeCoding.decoder.decode(NoticeRoutingRules.self, from: Data(json.utf8))
+
+        XCTAssertEqual(rules.profiles[.soon]?.style, .crawl)
+        XCTAssertNil(rules.profiles[.soon]?.autoDismiss)
+        XCTAssertEqual(rules.profiles[.fyi], NoticeRoutingRules.defaults.profiles[.fyi])
+        XCTAssertEqual(rules.profiles[.emergency], NoticeRoutingRules.defaults.profiles[.emergency])
+        XCTAssertEqual(rules.toastStackLimit, 2)
+        XCTAssertEqual(rules.flood, NoticeRoutingRules.defaults.flood)
+        XCTAssertEqual(rules.escalation, NoticeRoutingRules.defaults.escalation)
+        XCTAssertTrue(rules.hideFromScreenSharing)
+        XCTAssertTrue(rules.hotkeysEnabled)
+        XCTAssertFalse(rules.crawlLeftToRight)
+        XCTAssertTrue(rules.overrides.isEmpty)
+    }
+
+    func testEmptyJSONDecodesToDefaults() throws {
+        let rules = try NoticeCoding.decoder.decode(NoticeRoutingRules.self, from: Data("{}".utf8))
+        XCTAssertEqual(rules, .defaults)
+    }
 }

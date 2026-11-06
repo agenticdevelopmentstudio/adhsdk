@@ -107,7 +107,7 @@ public struct NoticeRoutingRules: Codable, Sendable, Equatable {
     ) -> NoticeRoutingRules {
         guard value == true else { return rules }
         var migrated = rules
-        var fyi = migrated.profile(for: Notice(source: "", title: ""), effectiveUrgency: .fyi)
+        var fyi = migrated.profiles[.fyi] ?? defaultProfile(for: .fyi)
         fyi.forwardToSystem = true
         migrated.profiles[.fyi] = fyi
         return migrated
@@ -123,21 +123,30 @@ public struct NoticeRoutingRules: Codable, Sendable, Equatable {
         case hideFromScreenSharing, hotkeysEnabled, crawlLeftToRight
     }
 
+    /// Every key is optional, falling back to `defaults`, so rules stored by an
+    /// older build survive fields added later. Urgencies missing from
+    /// `profiles` take that urgency's default profile.
     public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
-        let raw = try container.decode([String: NoticeProfile].self, forKey: .profiles)
+        let base = Self.defaults
+        let raw = try container.decodeIfPresent([String: NoticeProfile].self, forKey: .profiles) ?? [:]
         var decoded: [Notice.Urgency: NoticeProfile] = [:]
-        for (key, value) in raw {
-            if let urgency = Notice.Urgency(rawValue: key) { decoded[urgency] = value }
+        for urgency in Notice.Urgency.allCases {
+            decoded[urgency] = raw[urgency.rawValue] ?? Self.defaultProfile(for: urgency)
         }
         self.profiles = decoded
-        self.overrides = try container.decode([Override].self, forKey: .overrides)
-        self.toastStackLimit = try container.decode(Int.self, forKey: .toastStackLimit)
-        self.flood = try container.decode(FloodFolder.Configuration.self, forKey: .flood)
-        self.escalation = try container.decode(EscalationPolicy.self, forKey: .escalation)
-        self.hideFromScreenSharing = try container.decode(Bool.self, forKey: .hideFromScreenSharing)
-        self.hotkeysEnabled = try container.decode(Bool.self, forKey: .hotkeysEnabled)
-        self.crawlLeftToRight = try container.decode(Bool.self, forKey: .crawlLeftToRight)
+        self.overrides = try container.decodeIfPresent([Override].self, forKey: .overrides) ?? base.overrides
+        self.toastStackLimit = try container.decodeIfPresent(Int.self, forKey: .toastStackLimit)
+            ?? base.toastStackLimit
+        self.flood = try container.decodeIfPresent(FloodFolder.Configuration.self, forKey: .flood) ?? base.flood
+        self.escalation = try container.decodeIfPresent(EscalationPolicy.self, forKey: .escalation)
+            ?? base.escalation
+        self.hideFromScreenSharing = try container.decodeIfPresent(Bool.self, forKey: .hideFromScreenSharing)
+            ?? base.hideFromScreenSharing
+        self.hotkeysEnabled = try container.decodeIfPresent(Bool.self, forKey: .hotkeysEnabled)
+            ?? base.hotkeysEnabled
+        self.crawlLeftToRight = try container.decodeIfPresent(Bool.self, forKey: .crawlLeftToRight)
+            ?? base.crawlLeftToRight
     }
 
     public func encode(to encoder: Encoder) throws {

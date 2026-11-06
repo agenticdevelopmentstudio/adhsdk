@@ -21,6 +21,20 @@ final class SnoozeOptionTests: XCTestCase {
         XCTAssertEqual(SnoozeOption.tomorrowMorning.until(now: now, calendar: calendar), expected)
     }
 
+    func testTomorrowMorningAcrossSpringForward() throws {
+        let calendar = try calendar("America/Los_Angeles")
+        let now = try date(calendar, 3, 7, 22, 0)
+        let expected = try date(calendar, 3, 8, 9, 0)
+        XCTAssertEqual(SnoozeOption.tomorrowMorning.until(now: now, calendar: calendar), expected)
+    }
+
+    func testTomorrowMorningAcrossFallBack() throws {
+        let calendar = try calendar("America/Los_Angeles")
+        let now = try date(calendar, 10, 31, 22, 0)
+        let expected = try date(calendar, 11, 1, 9, 0)
+        XCTAssertEqual(SnoozeOption.tomorrowMorning.until(now: now, calendar: calendar), expected)
+    }
+
     func testTomorrowMorningLateEvening() throws {
         let calendar = try calendar("America/New_York")
         let now = try date(calendar, 3, 10, 23, 59)
