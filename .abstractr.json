@@ -213,6 +213,19 @@
       "holds": "AgenticDeveloperHubSDKMarkdown. The GRDB-backed markdown note store, built for macOS and iOS, re-exporting AgenticDeveloperHubSDK. Storage and sync only — no UI."
     },
     {
+      "name": "apple-integrations",
+      "paths": [
+        "packages/apple/AgenticDeveloperHubSDK/Integrations/"
+      ],
+      "depends_on": [
+        "apple-core",
+        "apple-pluginkit",
+        "apple-database"
+      ],
+      "shared": true,
+      "holds": "AgenticDeveloperHubSDKIntegrations. Third-party service integrations (Gmail): models, store, client, sync."
+    },
+    {
       "name": "apple-activity",
       "paths": [
         "packages/apple/AgenticDeveloperHubSDK/Activity/"
@@ -243,7 +256,8 @@
         "apple-database",
         "apple-language",
         "apple-markdown",
-        "apple-displays"
+        "apple-displays",
+        "apple-integrations"
       ],
       "shared": true,
       "holds": "AgenticDeveloperHubSDKMacOS. The feature-rich framework the host app, plugins, Whippet and Stenographer all consume."
@@ -378,7 +392,8 @@
         "apple-systemmonitorui",
         "apple-adt",
         "apple-hubclient",
-        "apple-hubauth"
+        "apple-hubauth",
+        "apple-integrations"
       ],
       "shared": false,
       "holds": "Test bundles. Nothing depends on these."

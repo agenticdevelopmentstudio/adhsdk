@@ -108,6 +108,9 @@ packages:
   Sparkle:
     url: https://github.com/sparkle-project/Sparkle
     from: "2.10.0"
+  AppAuth:
+    url: https://github.com/openid/AppAuth-iOS
+    from: "3.0.0"
 
 settingGroups:
   # The targets that were the AgenticDeveloperHubSDK project until Phase 5
@@ -591,6 +594,53 @@ targets:
         embed: true
         codeSign: true
       - target: AgenticDeveloperHubSDKSync
+        embed: true
+        codeSign: true
+      - package: GRDB
+        product: GRDB
+
+  # Third-party service integrations (Gmail first): models, store, client, sync.
+  AgenticDeveloperHubSDKIntegrations:
+    type: framework
+    platform: macOS
+    templates:
+      - SwiftLint
+    sources:
+      - Integrations
+    dependencies:
+      - target: AgenticDeveloperHubSDKCore
+      - target: AIPluginKit
+      - target: AgenticDeveloperHubSDKDatabase
+      - package: GRDB
+        product: GRDB
+      - package: AppAuth
+        product: AppAuth
+    settings:
+      base:
+        MACOSX_DEPLOYMENT_TARGET: "26.0"
+
+  AgenticDeveloperHubSDKIntegrationsTests:
+    type: bundle.unit-test
+    platform: macOS
+    templates:
+      - SwiftLint
+    sources:
+      - Tests/AgenticDeveloperHubSDKIntegrationsTests
+    dependencies:
+      - target: AgenticDeveloperHubSDKIntegrations
+        embed: true
+        codeSign: true
+      - target: AgenticDeveloperHubSDKDatabase
+        embed: true
+        codeSign: true
+      - target: AgenticDeveloperHubSDKCore
+        embed: true
+        codeSign: true
+      - target: AIPluginKit
+        embed: true
+        codeSign: true
+      # Closure completion -- see the note in AgenticDeveloperHubSDKLanguageTests.
+      - target: AgenticDeveloperHubSDK-macOS
         embed: true
         codeSign: true
       - package: GRDB
@@ -1588,6 +1638,7 @@ aggregateTargets:
       - AgenticDeveloperHubSDKHubService-macOS
       - AgenticDeveloperHubSDKHubUI-macOS
       - AgenticDeveloperHubSDKActivity-macOS
+      - AgenticDeveloperHubSDKIntegrations
 
   # The spec files this store under "macOS, iOS", and `AgenticDeveloperHubSDKMarkdown-iOS`
   # existed but was reachable from no aggregate and no scheme — so nothing ever
@@ -1656,6 +1707,8 @@ aggregateTargets:
       - AgenticDeveloperHubSDKHubUITests
       - AgenticDeveloperHubSDKActivity-macOS
       - AgenticDeveloperHubSDKActivityTests
+      - AgenticDeveloperHubSDKIntegrations
+      - AgenticDeveloperHubSDKIntegrationsTests
 
 schemes:
   AgenticDeveloperHubSDKDatabase:
@@ -1736,6 +1789,23 @@ schemes:
       config: Debug
       targets:
         - AgenticDeveloperHubSDKMarkdownTests
+    profile:
+      config: Release
+    analyze:
+      config: Debug
+    archive:
+      config: Release
+
+  AgenticDeveloperHubSDKIntegrations:
+    build:
+      targets:
+        AgenticDeveloperHubSDKIntegrations: all
+    run:
+      config: Debug
+    test:
+      config: Debug
+      targets:
+        - AgenticDeveloperHubSDKIntegrationsTests
     profile:
       config: Release
     analyze:
