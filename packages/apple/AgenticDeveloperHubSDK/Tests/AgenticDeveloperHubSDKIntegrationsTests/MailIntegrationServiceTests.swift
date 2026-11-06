@@ -2,6 +2,7 @@ import Foundation
 import Testing
 import AIPluginKit
 import AgenticDeveloperHubSDKDatabase
+import GRDB
 @testable import AgenticDeveloperHubSDKIntegrations
 
 /// A clock tests move by hand.
@@ -51,6 +52,102 @@ private final class CredentialRejectingSecretStore: SecretStoring, @unchecked Se
     func deleteLegacy(forKey key: String) -> Bool { inner.deleteLegacy(forKey: key) }
 }
 
+/// An in-memory secret store that runs `onSet` (synchronously) on every write.
+private final class HookedSecretStore: SecretStoring, @unchecked Sendable {
+    let inner = InMemorySecretStore()
+    private let lock = NSLock()
+    private var hook: (@Sendable (String) -> Void)?
+
+    var onSet: (@Sendable (String) -> Void)? {
+        get { lock.withLock { hook } }
+        set { lock.withLock { hook = newValue } }
+    }
+
+    func get(forKey key: String) -> String? { inner.get(forKey: key) }
+    func set(_ value: String, forKey key: String) -> Bool {
+        let result = inner.set(value, forKey: key)
+        onSet?(key)
+        return result
+    }
+    func delete(forKey key: String) -> Bool { inner.delete(forKey: key) }
+    func deleteLegacy(forKey key: String) -> Bool { inner.deleteLegacy(forKey: key) }
+}
+
+/// Holds every caller at `pass()` until `open()`; tests learn a caller has arrived without sleeping.
+private actor Gate {
+    private var arrivals = 0
+    private var isOpen = false
+    private var arrivalWaiters: [CheckedContinuation<Void, Never>] = []
+    private var passWaiters: [CheckedContinuation<Void, Never>] = []
+
+    func pass() async {
+        arrivals += 1
+        arrivalWaiters.forEach { $0.resume() }
+        arrivalWaiters = []
+        if isOpen { return }
+        await withCheckedContinuation { passWaiters.append($0) }
+    }
+
+    func waitForArrival() async {
+        if arrivals > 0 { return }
+        await withCheckedContinuation { arrivalWaiters.append($0) }
+    }
+
+    func open() {
+        isOpen = true
+        passWaiters.forEach { $0.resume() }
+        passWaiters = []
+    }
+}
+
+/// Asks for an access token before every call, the way `GmailRESTClient` does.
+private struct TokenCheckingAPI: GmailAPI {
+    let inner: FakeGmailAPI
+    let accessToken: @Sendable () async throws -> String
+
+    func profile() async throws -> GmailProfile {
+        _ = try await accessToken()
+        return try await inner.profile()
+    }
+    func listMessageIds(query: String, includeSpamTrash: Bool, pageToken: String?) async throws -> GmailIdPage {
+        _ = try await accessToken()
+        return try await inner.listMessageIds(query: query, includeSpamTrash: includeSpamTrash, pageToken: pageToken)
+    }
+    func message(id: String) async throws -> GmailMessageDTO {
+        _ = try await accessToken()
+        return try await inner.message(id: id)
+    }
+    func history(startHistoryId: String, pageToken: String?) async throws -> GmailHistoryPage {
+        _ = try await accessToken()
+        return try await inner.history(startHistoryId: startHistoryId, pageToken: pageToken)
+    }
+    func labels() async throws -> [GmailLabelDTO] {
+        _ = try await accessToken()
+        return try await inner.labels()
+    }
+    func batchModify(ids: [String], add: [String], remove: [String]) async throws {
+        _ = try await accessToken()
+        try await inner.batchModify(ids: ids, add: add, remove: remove)
+    }
+}
+
+/// Collects service events; `next(matching:)` awaits one without sleeping.
+private struct EventLog {
+    let stream: AsyncStream<MailServiceEvent>
+    let observer: @Sendable (MailServiceEvent) -> Void
+
+    init() {
+        let (stream, continuation) = AsyncStream.makeStream(of: MailServiceEvent.self)
+        self.stream = stream
+        self.observer = { continuation.yield($0) }
+    }
+
+    func next(matching predicate: (MailServiceEvent) -> Bool) async -> MailServiceEvent? {
+        for await event in stream where predicate(event) { return event }
+        return nil
+    }
+}
+
 private let start = Date(timeIntervalSince1970: 1_793_000_000)
 private let clientJSON = Data("""
     {"installed":{"client_id":"1234567890-abcdefghijkl.apps.googleusercontent.com","client_secret":"shh"}}
@@ -63,21 +160,41 @@ private struct Harness {
     let api: FakeGmailAPI
     let clock: TestClock
     let signIn: FakeSignIn
+    let database: BoundedDatabase
 
-    init(secrets: any SecretStoring = InMemorySecretStore()) throws {
-        let store = try IntegrationsStore(database: BoundedDatabase(path: ":memory:"))
+    /// `checkTokens` makes every API call ask the service's token provider for a token first.
+    init(
+        secrets: any SecretStoring = InMemorySecretStore(),
+        tokenEndpoint: any GoogleTokenEndpoint = UnusedTokenEndpoint(),
+        credentialExpiresAt: Date = start.addingTimeInterval(86_400 * 30), checkTokens: Bool = false
+    ) throws {
+        let database = try BoundedDatabase(path: ":memory:")
+        let store = try IntegrationsStore(database: database)
         let api = FakeGmailAPI()
         let clock = TestClock(start)
         let signIn = FakeSignIn(credential: GoogleCredential(
-            accessToken: "tok", refreshToken: "refresh", expiresAt: start.addingTimeInterval(86_400 * 30)))
+            accessToken: "tok", refreshToken: "refresh", expiresAt: credentialExpiresAt))
+        self.database = database
         self.store = store
         self.secrets = secrets
         self.api = api
         self.clock = clock
         self.signIn = signIn
         self.service = MailIntegrationService(
-            store: store, secrets: secrets, signIn: signIn, tokenEndpoint: UnusedTokenEndpoint(),
-            makeAPI: { _ in api }, now: { clock.now })
+            store: store, secrets: secrets, signIn: signIn, tokenEndpoint: tokenEndpoint,
+            makeAPI: { token in checkTokens ? TokenCheckingAPI(inner: api, accessToken: token) as any GmailAPI : api },
+            now: { clock.now })
+    }
+
+    func actionLogs() throws -> [ActionLog] {
+        try database.read { try ActionLog.order(Column("created_at")).fetchAll($0) }
+    }
+
+    /// Clears the cursor so the next sync is a full one (which lists messages).
+    func clearCursor(_ id: String) throws {
+        let current = try account(id)
+        try store.updateSyncState(id: id, cursor: nil, lastSyncAt: current.lastSyncAt,
+                                  status: current.status, lastError: current.lastError)
     }
 
     func dto(_ id: String, labels: [String], ageDays: Double = 1) -> GmailMessageDTO {
@@ -596,5 +713,259 @@ struct MailIntegrationServiceTests {
             try await client.labels(account: "x")
         }
         #expect(MailClientError.remote("boom").localizedDescription == "boom")
+    }
+
+    // MARK: - Concurrency and failure handling
+
+    @Test func modifyLabelsRefetchHonoursSettingsChangedMeanwhile() async throws {
+        let harness = try Harness()
+        let account = try await labelled(harness)
+        _ = await harness.service.handle(.updateSettings(
+            account: account.id, settings: MailSyncSettings(includeArchived: true)))
+        await harness.service.waitForIdle()
+        let gate = Gate()
+        harness.api.messageGate = { _ in await gate.pass() }
+
+        // Removing INBOX archives m1, which the settings applied meanwhile no longer mirror.
+        let service = harness.service
+        let write = Task {
+            await service.handle(.modifyLabels(account: account.id, messageIds: ["m1"], add: [], remove: ["INBOX"]))
+        }
+        await gate.waitForArrival()
+        _ = await service.handle(.updateSettings(account: account.id, settings: .default))
+        await service.waitForIdle()
+        await gate.open()
+        _ = await write.value
+
+        #expect(try !harness.liveIds(account.id).contains("m1"))
+    }
+
+    @Test func modifyLabelsRefetchSkipsWritesAfterAccountRemoved() async throws {
+        let harness = try Harness()
+        let account = try await labelled(harness)
+        let gate = Gate()
+        harness.api.messageGate = { _ in await gate.pass() }
+
+        let service = harness.service
+        let write = Task {
+            await service.handle(.modifyLabels(account: account.id, messageIds: ["m1"], add: ["STARRED"], remove: []))
+        }
+        await gate.waitForArrival()
+        #expect(await service.handle(.removeAccount(account: account.id)) == .ok)
+        await gate.open()
+        _ = await write.value
+
+        #expect(try harness.liveIds(account.id).isEmpty)
+    }
+
+    @Test func listMessagesRejectsUnknownLabel() async throws {
+        let harness = try Harness()
+        let account = try await labelled(harness)
+        let filter = MailMessageFilter(account: account.id, labels: ["work"])
+        #expect(await harness.service.handle(.listMessages(filter)) == .failure("unknown label: work"))
+        let byId = MailMessageFilter(account: account.id, labels: ["Label_1"])
+        guard case .messages(let page) = await harness.service.handle(.listMessages(byId)) else {
+            Issue.record("listMessages by label id failed")
+            return
+        }
+        #expect(page.messages.map(\.gmailId) == ["m2"])
+    }
+
+    @Test func modifyLabelsRefetchFailureLogsOkAndReportsAppliedLabels() async throws {
+        let harness = try Harness()
+        let account = try await labelled(harness)
+        harness.api.messageErrors = ["m1": IntegrationError.gmail(status: 500, message: "boom")]
+
+        let response = await harness.service.handle(.modifyLabels(
+            account: account.id, messageIds: ["m1"], add: ["STARRED"], remove: []))
+
+        #expect(response == .failure("labels applied; refreshing messages failed: Gmail returned 500: boom"))
+        #expect(harness.api.batchModifyCalls.count == 1)
+        let log = try #require(try harness.actionLogs().last)
+        #expect(log.actionType == "modify_labels")
+        #expect(log.status == "ok")
+        #expect(log.error == nil)
+        #expect(log.result == #"{"modified":1,"refreshError":"Gmail returned 500: boom"}"#)
+    }
+
+    @Test func modifyLabelsBatchFailureLogsHowManyWereApplied() async throws {
+        let harness = try Harness()
+        harness.api.labels = [GmailLabelDTO(id: "STARRED", name: "STARRED", type: "system")]
+        let ids = (0..<1_500).map { String(format: "m%04d", $0) }
+        for id in ids { harness.api.setMessage(harness.dto(id, labels: ["INBOX"])) }
+        let account = try await harness.connect()
+        harness.api.batchModifyErrorsByCall = [1: IntegrationError.gmail(status: 500, message: "boom")]
+
+        let response = await harness.service.handle(.modifyLabels(
+            account: account.id, messageIds: ids, add: ["STARRED"], remove: []))
+
+        #expect(response == .failure("Gmail returned 500: boom"))
+        #expect(harness.api.batchModifyCalls.map(\.ids.count) == [1_000, 500])
+        let log = try #require(try harness.actionLogs().last)
+        #expect(log.status == "error")
+        #expect(log.error == "Gmail returned 500: boom")
+        #expect(log.result == #"{"applied":1000}"#)
+    }
+
+    @Test func failedSyncRetriesAtPollIntervalNotEveryTick() async throws {
+        let harness = try Harness()
+        let account = try await harness.connect()
+        harness.api.labelsError = IntegrationError.gmail(status: 500, message: "boom")
+        harness.clock.advance(minutes: 15)
+        await harness.service.runDueSyncs()
+        #expect(try harness.account(account.id).status == .error)
+        let calls = harness.api.labelsCalls
+
+        harness.clock.advance(minutes: 1)
+        await harness.service.runDueSyncs()
+        #expect(harness.api.labelsCalls == calls)
+
+        harness.clock.advance(minutes: 14)
+        await harness.service.runDueSyncs()
+        #expect(harness.api.labelsCalls == calls + 1)
+    }
+
+    @Test func malformedLastSyncAtCountsAsNeverSynced() async throws {
+        let harness = try Harness()
+        let account = try await harness.connect()
+        let current = try harness.account(account.id)
+        try harness.store.updateSyncState(id: account.id, cursor: current.syncCursor, lastSyncAt: "garbage",
+                                          status: .active, lastError: nil)
+        let calls = harness.api.labelsCalls
+
+        // The sign-in sync was attempted at `start`, so the account is due again after one interval.
+        harness.clock.advance(minutes: 1)
+        await harness.service.runDueSyncs()
+        #expect(harness.api.labelsCalls == calls)
+        harness.clock.advance(minutes: 14)
+        await harness.service.runDueSyncs()
+        #expect(harness.api.labelsCalls == calls + 1)
+    }
+
+    @Test func signInKeepsSyncStateWrittenWhileSavingCredential() async throws {
+        let secrets = HookedSecretStore()
+        let harness = try Harness(secrets: secrets)
+        let account = try await harness.connect()
+        let store = harness.store
+        let id = account.id
+        // Stands in for a sync that finishes while sign-in is saving the credential.
+        secrets.onSet = { key in
+            guard key == GoogleTokenProvider.key(connectionId: id) else { return }
+            try? store.updateSyncState(id: id, cursor: "999", lastSyncAt: IntegrationClock.string(from: start),
+                                       status: .active, lastError: nil)
+        }
+        _ = await harness.service.handle(.signIn)
+        await harness.service.waitForIdle()
+        #expect(harness.api.historyCalls.last == "999")
+        #expect(try harness.account(id).syncCursor == "999")
+    }
+
+    @Test func updateSettingsOnRevokedAccountSavesWithoutSyncing() async throws {
+        let harness = try Harness()
+        let account = try await harness.connect()
+        harness.api.labelsError = IntegrationError.revoked
+        harness.clock.advance(minutes: 15)
+        await harness.service.runDueSyncs()
+        #expect(try harness.account(account.id).status == .revoked)
+        harness.api.labelsError = nil
+        let calls = harness.api.labelsCalls
+
+        let settings = MailSyncSettings(includeArchived: true)
+        let response = await harness.service.handle(.updateSettings(account: account.id, settings: settings))
+        await harness.service.waitForIdle()
+
+        guard case .account(let updated) = response else {
+            Issue.record("updateSettings returned \(response)")
+            return
+        }
+        #expect(updated.settings == settings)
+        #expect(updated.status == .revoked)
+        #expect(harness.api.labelsCalls == calls)
+    }
+
+    @Test(.timeLimit(.minutes(1)))
+    func schedulerTicksAndStops() async throws {
+        let harness = try Harness()
+        try await harness.connect()
+        let calls = harness.api.labelsCalls
+        let events = EventLog()
+        await harness.service.setObserver(events.observer)
+        harness.clock.advance(minutes: 15)
+
+        await harness.service.start(tick: .milliseconds(1))
+        _ = await events.next { $0 == .schedulerTick }
+        await harness.service.waitForIdle()
+        #expect(harness.api.labelsCalls == calls + 1)
+
+        let loop = try #require(await harness.service.schedulerTask)
+        await harness.service.stop()
+        await loop.value
+        #expect(await harness.service.schedulerTask == nil)
+    }
+
+    @Test(.timeLimit(.minutes(1)))
+    func schedulerDoesNotRetainService() async throws {
+        var service: MailIntegrationService? = MailIntegrationService(
+            store: try IntegrationsStore(database: BoundedDatabase(path: ":memory:")),
+            secrets: InMemorySecretStore(),
+            signIn: FakeSignIn(credential: GoogleCredential(accessToken: "a", refreshToken: "r", expiresAt: start)),
+            tokenEndpoint: UnusedTokenEndpoint(), makeAPI: { _ in FakeGmailAPI() })
+        weak let weakService = service
+        let events = EventLog()
+        await service?.setObserver(events.observer)
+        await service?.start(tick: .seconds(3_600))
+        let loop = try #require(await service?.schedulerTask)
+        _ = await events.next { $0 == .schedulerTick }
+
+        // The loop is now sleeping out its hour; it must not be what keeps the service alive.
+        service = nil
+        #expect(weakService == nil)
+        loop.cancel()
+        await loop.value
+    }
+
+    @Test(.timeLimit(.minutes(1)))
+    func syncNowDuringScheduledSyncRunsOnce() async throws {
+        let harness = try Harness()
+        let account = try await harness.connect()
+        try harness.clearCursor(account.id)
+        let gate = Gate()
+        harness.api.listGate = { await gate.pass() }
+        let events = EventLog()
+        let service = harness.service
+        await service.setObserver(events.observer)
+        let lists = harness.api.listCalls.count
+        let profiles = harness.api.profileCalls
+        harness.clock.advance(minutes: 15)
+
+        let tick = Task { await service.runDueSyncs() }
+        await gate.waitForArrival()
+        let manual = Task { await service.handle(.syncNow(account: account.id)) }
+        _ = await events.next { $0 == .joinedRunningSync(account.id) }
+        await gate.open()
+        await tick.value
+        let response = await manual.value
+
+        #expect(harness.api.listCalls.count == lists + 1)
+        #expect(harness.api.profileCalls == profiles + 1)
+        guard case .accounts(let accounts) = response else {
+            Issue.record("syncNow returned \(response)")
+            return
+        }
+        #expect(accounts.first?.status == .active)
+    }
+
+    @Test func invalidGrantOnRefreshMarksAccountRevoked() async throws {
+        let body = Data(#"{"error":"invalid_grant","error_description":"Token has been expired or revoked."}"#.utf8)
+        let (session, _) = StubURLProtocol.session(status: 400, body: body)
+        let harness = try Harness(
+            tokenEndpoint: URLSessionGoogleTokenEndpoint(session: session), credentialExpiresAt: start,
+            checkTokens: true)
+        let account = try await harness.connect()
+
+        let saved = try harness.account(account.id)
+        #expect(saved.status == .revoked)
+        #expect(saved.lastError == "Google access was revoked — sign in again")
+        #expect(harness.api.labelsCalls == 0)
     }
 }

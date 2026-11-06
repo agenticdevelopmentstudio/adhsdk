@@ -31,6 +31,9 @@ final class FakeGmailAPI: GmailAPI, @unchecked Sendable {
         var listMessageIdsError: (any Error)?
         var messageErrors: [String: any Error] = [:]
         var batchModifyError: (any Error)?
+        var batchModifyErrorsByCall: [Int: any Error] = [:]
+        var listGate: (@Sendable () async -> Void)?
+        var messageGate: (@Sendable (String) async -> Void)?
         var onListMessageIds: (@Sendable (FakeGmailAPI) -> Void)?
         var listCalls: [ListCall] = []
         var historyCalls: [String] = []
@@ -101,6 +104,21 @@ final class FakeGmailAPI: GmailAPI, @unchecked Sendable {
         get { with { $0.batchModifyError } }
         set { with { $0.batchModifyError = newValue } }
     }
+    /// Thrown by the `batchModify` call with that 0-based index; earlier calls still apply.
+    var batchModifyErrorsByCall: [Int: any Error] {
+        get { with { $0.batchModifyErrorsByCall } }
+        set { with { $0.batchModifyErrorsByCall = newValue } }
+    }
+    /// Awaited by every `listMessageIds` before it answers, so a test can hold a sync mid-flight.
+    var listGate: (@Sendable () async -> Void)? {
+        get { with { $0.listGate } }
+        set { with { $0.listGate = newValue } }
+    }
+    /// Awaited by every `message(id:)` before it answers.
+    var messageGate: (@Sendable (String) async -> Void)? {
+        get { with { $0.messageGate } }
+        set { with { $0.messageGate = newValue } }
+    }
     /// Runs on every `listMessageIds`, outside the lock, so it may mutate the fake.
     var onListMessageIds: (@Sendable (FakeGmailAPI) -> Void)? {
         get { with { $0.onListMessageIds } }
@@ -139,6 +157,7 @@ final class FakeGmailAPI: GmailAPI, @unchecked Sendable {
         }
         if let error { throw error }
         hook?(self)
+        if let gate = with({ $0.listGate }) { await gate() }
         let pages = with { $0.listPages ?? [$0.messages.keys.sorted()] }
         let index = pageToken.flatMap(Int.init) ?? 0
         guard index < pages.count else { return GmailIdPage(ids: [], nextPageToken: nil) }
@@ -146,6 +165,7 @@ final class FakeGmailAPI: GmailAPI, @unchecked Sendable {
     }
 
     func message(id: String) async throws -> GmailMessageDTO {
+        if let gate = with({ $0.messageGate }) { await gate(id) }
         let (message, error) = with { state -> (GmailMessageDTO?, (any Error)?) in
             state.messageCalls.append(id)
             return (state.messages[id], state.messageErrors[id])
@@ -184,8 +204,9 @@ final class FakeGmailAPI: GmailAPI, @unchecked Sendable {
     /// messages the way Gmail would.
     func batchModify(ids: [String], add: [String], remove: [String]) async throws {
         let error = with { state -> (any Error)? in
+            let index = state.batchModifyCalls.count
             state.batchModifyCalls.append(BatchModifyCall(ids: ids, add: add, remove: remove))
-            guard state.batchModifyError == nil else { return state.batchModifyError }
+            if let error = state.batchModifyError ?? state.batchModifyErrorsByCall[index] { return error }
             for id in ids {
                 guard let old = state.messages[id] else { continue }
                 var labelIds = (old.labelIds ?? []).filter { !remove.contains($0) }
