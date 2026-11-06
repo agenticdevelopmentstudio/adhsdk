@@ -157,8 +157,13 @@ public final class RawArchive: @unchecked Sendable {
 
     // MARK: - Reading
 
-    public func record(id: Int64) throws -> ArchivedRecord? {
-        try pool.read { conn in
+    /// Every reading method takes an optional `deadline`: nil keeps the archive's
+    /// `readDeadline` (30 s), right for the live drain. A bulk pass over a large
+    /// archive (`Replayer`) passes `EventStore.bulkDeadline`, the same budget its
+    /// writes get: one 5,000-record chunk read on a slow volume can take longer
+    /// than 30 s, and a replay stopped by it ends with `deadlineExceeded`.
+    public func record(id: Int64, deadline: Duration? = nil) throws -> ArchivedRecord? {
+        try pool.read(deadline: deadline) { conn in
             guard let row = try Row.fetchOne(conn, sql: Self.selectSQL + " WHERE id = ?", arguments: [id]) else {
                 return nil
             }
@@ -178,8 +183,9 @@ public final class RawArchive: @unchecked Sendable {
     /// Ids greater than `id`, ascending, at most `limit`, and cut so their total
     /// payload size stays within `maxBytes` (always at least one id).
     public func ids(after id: Int64, limit: Int,
-                    maxBytes: Int = PipelineLimits.defaultMaxBatchBytes) throws -> [Int64] {
-        try pool.read { conn in
+                    maxBytes: Int = PipelineLimits.defaultMaxBatchBytes,
+                    deadline: Duration? = nil) throws -> [Int64] {
+        try pool.read(deadline: deadline) { conn in
             let rows = try Row.fetchAll(
                 conn, sql: "SELECT id, payload_size FROM raw_record WHERE id > ? ORDER BY id ASC LIMIT ?",
                 arguments: [id, limit])
@@ -196,10 +202,10 @@ public final class RawArchive: @unchecked Sendable {
     /// skipped. Reads exactly the requested rows (`WHERE id IN (…)`, at most
     /// `maxIDsPerStatement` ids per statement, all in one read transaction), so a
     /// batch mixing an old id with new ones never touches the rows between them.
-    public func records(ids: [Int64]) throws -> [ArchivedRecord] {
+    public func records(ids: [Int64], deadline: Duration? = nil) throws -> [ArchivedRecord] {
         let wanted = Array(Set(ids)).sorted()
         guard !wanted.isEmpty else { return [] }
-        return try pool.read { conn in
+        return try pool.read(deadline: deadline) { conn in
             var result: [ArchivedRecord] = []
             result.reserveCapacity(wanted.count)
             var start = 0
