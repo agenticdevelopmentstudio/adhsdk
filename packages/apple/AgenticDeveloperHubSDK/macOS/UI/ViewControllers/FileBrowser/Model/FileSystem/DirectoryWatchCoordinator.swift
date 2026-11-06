@@ -170,7 +170,7 @@ public final class DirectoryWatchCoordinator: ObservableObject {
                 // directories, and swapping those in would collapse whatever
                 // the user had open below the directory that changed.
                 for (node, newChildren) in updates {
-                    node.merge(children: newChildren)
+                    Self.apply(newChildren, to: node, root: root)
                 }
 
                 self.isSyncing = false
@@ -205,19 +205,26 @@ public final class DirectoryWatchCoordinator: ObservableObject {
             DispatchQueue.main.async {
                 guard let self, generation == self.exclusionsGeneration else { return }
                 for (node, fresh) in updates {
-                    // `nil` for a read directory left with nothing to show,
-                    // as `loadChildrenIfNeeded()` does: an empty array is
-                    // "not read yet" and would keep a triangle that opens
-                    // onto nothing. The root is always a list.
-                    if fresh.isEmpty && node !== root {
-                        node.children = nil
-                    } else {
-                        node.merge(children: fresh)
-                    }
+                    Self.apply(fresh, to: node, root: root)
                 }
                 self.isSyncing = false
                 self.onChangeCallback?()
             }
+        }
+    }
+
+    /// Puts a fresh read of `node`'s directory in place, merged so expanded
+    /// folders stay expanded.
+    ///
+    /// `nil` for a read directory left with nothing to show, as
+    /// `loadChildrenIfNeeded()` does: an empty array is "not read yet" and
+    /// would keep a triangle that opens onto nothing. The root is always a
+    /// list.
+    private static func apply(_ fresh: [FileTreeNode], to node: FileTreeNode, root: FileTreeNode) {
+        if fresh.isEmpty && node !== root {
+            node.children = nil
+        } else {
+            node.merge(children: fresh)
         }
     }
 
