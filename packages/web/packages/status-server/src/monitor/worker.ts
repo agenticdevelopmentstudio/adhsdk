@@ -4,6 +4,7 @@ import { attachCooldownState } from "@adh-sdk/deploy-platform/cooldown";
 import { createLibsqlStorage } from "../libsql";
 import { connectStorage } from "../storage/remote";
 import { runMonitorCycle } from "./cycle-runner";
+import { attachHogqlLockState } from "../telemetry/fetchers/posthog";
 import type { CycleRequest, CycleReply, MonitorWorkerData } from "./worker-client";
 
 // The monitor worker: runs the ENTIRE monitoring cycle on its own thread — its own
@@ -20,7 +21,7 @@ if (!port) throw new Error("monitor worker must be spawned via worker_threads (s
 // Fail fast on a malformed spawn rather than surfacing a confusing crash deep inside
 // openLibsql/runMonitorCycle: `db`/`config` are the two things the client MUST supply
 // (see MonitorWorkerData) and a missing one means the client itself is broken.
-const { db: conn, storage: storagePort, config, cooldowns } = (workerData ?? {}) as Partial<MonitorWorkerData<LibsqlConnection>>;
+const { db: conn, storage: storagePort, config, cooldowns, hogqlLock } = (workerData ?? {}) as Partial<MonitorWorkerData<LibsqlConnection>>;
 if (!storagePort && !conn?.url) throw new Error("monitor worker spawned without workerData.storage or workerData.db.url (see MonitorWorkerData)");
 if (!config) throw new Error("monitor worker spawned without workerData.config (see MonitorWorkerData)");
 
@@ -29,6 +30,9 @@ if (!config) throw new Error("monitor worker spawned without workerData.config (
 // must back BOTH off. Without this the worker would keep a private registry and
 // keep hammering a provider the API thread already knows is throttled.
 attachCooldownState(cooldowns);
+// And the HogQL lease, for the same reason: this cycle's KPI poll and the API thread's
+// dashboard sections query the same PostHog, and a private lease would let them overlap.
+attachHogqlLockState(hogqlLock);
 
 // With a storage port, every DB call goes through the host's database thread and this
 // worker holds no connection. Otherwise it opens its own (migrations already ran on the

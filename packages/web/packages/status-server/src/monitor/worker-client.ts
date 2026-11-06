@@ -2,6 +2,7 @@ import { Worker, type MessagePort } from "node:worker_threads";
 import { createRequire } from "node:module";
 import { cooldownState } from "@adh-sdk/deploy-platform/cooldown";
 import type { StatusConfig } from "../config/port";
+import { hogqlLockState } from "../telemetry/fetchers/posthog";
 
 // Main-thread handle to the monitor worker (worker.ts). The scheduler stays on the
 // main thread (single-flight, watchdog, cadence, /health staleness) and each cycle
@@ -27,7 +28,7 @@ export interface CycleReply {
 
 /** The `workerData` a monitor worker boots with — plain, structured-clone-safe data
  *  only (it crosses the `worker_threads` boundary), never a live connection or
- *  function. `cooldowns` is attached by the client at spawn time, not supplied by
+ *  function. `cooldowns` and `hogqlLock` are attached by the client at spawn time, not supplied by
  *  the host — see {@link MonitorWorkerClient.spawn}. Generic over the connection
  *  shape so this module never has to name `LibsqlConnection` (it lives under
  *  `../libsql/`, which this file — unlike `worker.ts` — may not import).
@@ -40,6 +41,8 @@ export interface MonitorWorkerData<Conn = unknown> {
   storage?: MessagePort;
   config: StatusConfig;
   cooldowns?: SharedArrayBuffer;
+  /** The HogQL lease (`hogqlLockState`): one PostHog query at a time across both threads. */
+  hogqlLock?: SharedArrayBuffer;
 }
 
 interface Pending {
@@ -96,13 +99,16 @@ export class MonitorWorkerClient<Conn = unknown> {
     // The provider-cooldown state rides along as workerData: the cycle (here) and
     // the API thread's dashboard enumerations poll the SAME provider tokens, so a
     // 429 either one sees has to back BOTH off. A respawned worker re-adopts the
-    // same buffer, so an in-force cooldown survives the respawn.
+    // same buffer, so an in-force cooldown survives the respawn. The HogQL lease rides
+    // along for the same reason: the cycle's KPI poll and the API thread's dashboard
+    // sections query the same PostHog, which 503s when they overlap.
     const storage = this.opts.storagePort?.();
     const worker = new Worker(entry, {
       workerData: {
         ...this.opts.workerData,
         storage,
         cooldowns: cooldownState(),
+        hogqlLock: hogqlLockState(),
       } satisfies MonitorWorkerData<Conn>,
       transferList: storage ? [storage] : [],
     });

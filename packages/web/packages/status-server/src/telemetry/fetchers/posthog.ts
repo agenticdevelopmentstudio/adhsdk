@@ -14,8 +14,58 @@ export interface PosthogEnv {
 
 export type HogqlResult = { ok: true; rows: unknown[][] } | { ok: false; error: string };
 
-/** The last HogQL request queued in this process; the next one starts after it settles. */
+/** The last HogQL request queued on this thread; the next one starts after it settles. */
 let hogqlTail: Promise<unknown> = Promise.resolve();
+
+// The PROCESS-wide half of "one at a time". `hogqlTail` orders the queries of one thread, but
+// the monitor's worker thread loads its own copy of this module, so its KPI poll had a queue
+// of its own and ran beside the API thread's dashboard sections: two queues, concurrent HogQL,
+// the 503s this rule exists to prevent. The cooldowns hit the same thread boundary and solved
+// it the same way (`@adh-sdk/deploy-platform/cooldown`): one SharedArrayBuffer, created on the
+// API thread and handed to the worker as `workerData`.
+//
+// The one slot holds a LEASE — the epoch ms the holder's turn ends, 0 when free — rather than
+// a held/free flag, because the monitor client terminates a wedged worker outright, and a flag
+// set by a thread that no longer exists would never clear: every later query on either thread
+// would wait forever. A lease outlives its holder by at most one query's timeout. BigInt64 so
+// the reads and writes can go through Atomics (Float64 is not allowed).
+let hogqlLease = new BigInt64Array(new SharedArrayBuffer(8));
+
+/** How long past a query's own timeout its lease is held: the abort has to land and unwind. */
+const HOGQL_LEASE_GRACE_MS = 1_000;
+/** How often a thread waiting on the other thread's query looks again. Queries take seconds. */
+const HOGQL_LEASE_POLL_MS = 50;
+
+/** The state to hand a worker thread (workerData), so both threads take turns on one lease. */
+export function hogqlLockState(): SharedArrayBuffer {
+  return hogqlLease.buffer as SharedArrayBuffer;
+}
+
+/** Adopt the state passed from the parent thread. Called once, at worker boot; without it the
+ *  worker keeps a private lease and queries PostHog alongside the API thread. */
+export function attachHogqlLockState(buffer: SharedArrayBuffer | undefined): void {
+  if (buffer) hogqlLease = new BigInt64Array(buffer);
+}
+
+/** Wait until the lease is free (or its holder's turn has run out), then take it. */
+async function acquireHogqlLease(leaseMs: number): Promise<bigint> {
+  for (;;) {
+    const now = Date.now();
+    const held = Atomics.load(hogqlLease, 0);
+    if (held === 0n || held <= BigInt(now)) {
+      const mine = BigInt(now + leaseMs);
+      // Only one thread's exchange can still find `held` there; the other looks again.
+      if (Atomics.compareExchange(hogqlLease, 0, held, mine) === held) return mine;
+      continue;
+    }
+    await new Promise((resolve) => setTimeout(resolve, HOGQL_LEASE_POLL_MS));
+  }
+}
+
+/** Give the lease back, unless it lapsed and the other thread already holds it. */
+function releaseHogqlLease(mine: bigint): void {
+  Atomics.compareExchange(hogqlLease, 0, mine, 0n);
+}
 
 /**
  * One HogQL query → its rows. Failures are RETURNED, not logged, so each caller decides how
@@ -23,11 +73,20 @@ let hogqlTail: Promise<unknown> = Promise.resolve();
  *
  * One at a time, for the whole process: the API 503s under concurrent load, and the callers
  * (the dashboards' sections, the Errors detail, the KPI poll) do not know about each other, so
- * the rule is kept here rather than trusted to each of them. `timeoutMs` starts when the query
- * does, not while it waits its turn.
+ * the rule is kept here rather than trusted to each of them. Each thread queues its own queries
+ * on `hogqlTail`, and the head of that queue then takes the shared lease, so the API thread and
+ * the monitor's worker take turns as well. `timeoutMs` starts when the query does, not while it
+ * waits its turn.
  */
 export function hogqlRows(env: PosthogEnv, query: string, timeoutMs: number): Promise<HogqlResult> {
-  const run = hogqlTail.then(() => hogqlRowsNow(env, query, timeoutMs));
+  const run = hogqlTail.then(async () => {
+    const lease = await acquireHogqlLease(timeoutMs + HOGQL_LEASE_GRACE_MS);
+    try {
+      return await hogqlRowsNow(env, query, timeoutMs);
+    } finally {
+      releaseHogqlLease(lease);
+    }
+  });
   hogqlTail = run;
   return run;
 }
