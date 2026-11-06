@@ -10,6 +10,8 @@ final class ScriptedMailService: @unchecked Sendable {
     private var accountList: [MailAccount]
     private var failure: String?
     private var failingRequest: ((MailRequest) -> Bool)?
+    private var gateMatches: (@Sendable (MailRequest) -> Bool)?
+    private var waiting: [CheckedContinuation<Void, Never>] = []
 
     init(provider: MailProviderStatus = MailProviderStatus(configured: true, clientIdHint: "abc"),
          accounts: [MailAccount] = []) {
@@ -24,18 +26,51 @@ final class ScriptedMailService: @unchecked Sendable {
         lock.withLock { failure = message; failingRequest = matches }
     }
 
+    /// Holds requests matching `matches` inside the transport (after recording them) until `release()`.
+    func gate(when matches: @escaping @Sendable (MailRequest) -> Bool) {
+        lock.withLock { gateMatches = matches }
+    }
+
+    func release() {
+        let held = lock.withLock { () -> [CheckedContinuation<Void, Never>] in
+            gateMatches = nil
+            defer { waiting = [] }
+            return waiting
+        }
+        held.forEach { $0.resume() }
+    }
+
+    /// Suspends until at least `count` requests have reached the transport.
+    func waitForRequests(_ count: Int) async {
+        while requests.count < count { await Task.yield() }
+    }
+
+    private func holdIfGated(_ request: MailRequest) async {
+        let gated = lock.withLock { gateMatches?(request) == true }
+        guard gated else { return }
+        await withCheckedContinuation { continuation in
+            let resumeNow = lock.withLock { () -> Bool in
+                if gateMatches == nil { return true }
+                waiting.append(continuation)
+                return false
+            }
+            if resumeNow { continuation.resume() }
+        }
+    }
+
     func setAccounts(_ accounts: [MailAccount]) { lock.withLock { accountList = accounts } }
 
     var client: MailClient {
         MailClient { data in
             let request = try JSONDecoder().decode(MailRequest.self, from: data)
+            self.lock.withLock { self.recorded.append(request) }
+            await self.holdIfGated(request)
             return try JSONEncoder().encode(self.answer(request))
         }
     }
 
     private func answer(_ request: MailRequest) -> MailResponse {
         lock.withLock {
-            recorded.append(request)
             if let failure, failingRequest?(request) == true { return .failure(failure) }
             switch request {
             case .providerStatus: return .providerStatus(provider)

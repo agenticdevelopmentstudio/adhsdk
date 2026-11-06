@@ -23,7 +23,6 @@ struct GmailSettingsView: View {
         }
         .padding(20)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-        .disabled(model.busy)
     }
 
     // MARK: - Not configured
@@ -32,6 +31,7 @@ struct GmailSettingsView: View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Add the OAuth client JSON you downloaded from Google Cloud (Desktop app).")
             Button("Import Client JSON…") { importClientJSON() }
+                .disabled(model.busy)
         }
     }
 
@@ -40,8 +40,8 @@ struct GmailSettingsView: View {
         panel.allowedContentTypes = [.json]
         panel.allowsMultipleSelection = false
         panel.canChooseDirectories = false
-        guard panel.runModal() == .OK, let url = panel.url, let data = try? Data(contentsOf: url) else { return }
-        Task { await model.importClientJSON(data) }
+        guard panel.runModal() == .OK, let url = panel.url else { return }
+        Task { await model.importClientJSON(from: url) }
     }
 
     // MARK: - Configured
@@ -54,10 +54,11 @@ struct GmailSettingsView: View {
             .frame(minHeight: 120)
             HStack {
                 Button("Add Account…") { Task { await model.addAccount() } }
+                    .disabled(model.busy)
                 Button("Remove") {
                     if let id = model.selectedAccountId { Task { await model.remove(accountId: id) } }
                 }
-                .disabled(model.selectedAccount == nil)
+                .disabled(model.selectedAccount == nil || model.busy)
             }
             if let account = model.selectedAccount {
                 settings(for: account)
@@ -87,8 +88,10 @@ struct GmailSettingsView: View {
             HStack {
                 if account.status == .revoked {
                     Button("Reconnect") { Task { await model.addAccount() } }
+                        .disabled(model.busy)
                 }
                 Button("Sync Now") { Task { await model.syncNow(accountId: account.id) } }
+                    .disabled(model.busy)
             }
             Toggle("Sync archived mail", isOn: binding(account, \.includeArchived))
             Toggle("Sync junk mail", isOn: binding(account, \.includeSpam))
