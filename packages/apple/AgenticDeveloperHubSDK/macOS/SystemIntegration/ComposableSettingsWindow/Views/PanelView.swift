@@ -72,5 +72,14 @@ extension ComposableSettings {
             return heading
         }
 
+        /// Takes away every group and heading, for a panel that draws itself
+        /// from a model that can change after it was first built.
+        public func removeAllContent() {
+            for view in self.stackView.arrangedSubviews {
+                self.stackView.removeArrangedSubview(view)
+                view.removeFromSuperview()
+            }
+        }
+
     }
 }

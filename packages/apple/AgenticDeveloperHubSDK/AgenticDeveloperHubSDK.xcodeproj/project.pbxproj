@@ -1371,7 +1371,6 @@
 		603C214A655CF1D87C230240 /* ActivityPersistence.swift in Sources */ = {isa = PBXBuildFile; fileRef = 073DA7C182200E61A29D29FD /* ActivityPersistence.swift */; };
 		603FBF6944B1FC47948E8BF3 /* SingleWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = ADEE7D6B98EA22C5680A39EF /* SingleWindowController.swift */; };
 		604421F105E4E6FF26C2880A /* SessionListViewTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A4C7EBB4BE22E2FF03BC4612 /* SessionListViewTests.swift */; };
-		6061A396B799C0F740A0710A /* KeyboardSettingsPanelViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A85846E754342CC5F720945 /* KeyboardSettingsPanelViewController.swift */; };
 		60672770AA128EB1B706580E /* QuietPeriodDetectorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9ABB549741A9EEA4796EF79E /* QuietPeriodDetectorTests.swift */; };
 		6068B164B4029403F1C67B59 /* WholePointLabel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8528EF67A983EB3FF7591A00 /* WholePointLabel.swift */; };
 		60801D803A9873B62D3F142C /* HubText.swift in Sources */ = {isa = PBXBuildFile; fileRef = 087275CC2FD49912319C070E /* HubText.swift */; };
@@ -2381,6 +2380,7 @@
 		B2140D74859344FE11DA2DB8 /* MarkdownProjectionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5442FC025797B4600EB47554 /* MarkdownProjectionTests.swift */; };
 		B221C9EA04DBCE4301EB0C7D /* AgenticDeveloperHubSDKCore.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 99B0EDCF642AA70D3B9E629F /* AgenticDeveloperHubSDKCore.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		B2395F388C37F5C748A103A1 /* AgenticDeveloperHubAuth.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6AB5ADC411A6E4F89369D8BB /* AgenticDeveloperHubAuth.framework */; };
+		B248A5F2443CC1F4321C4078 /* CommandPaletteShortcutSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = E94058F26EEBF7AF9B7BC896 /* CommandPaletteShortcutSettings.swift */; };
 		B25D0BA81961AB529E3AC1BF /* AgenticDeveloperHubSDKMarkdown-macOS.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 68E7562A3D616D46F1B35DAC /* AgenticDeveloperHubSDKMarkdown-macOS.framework */; };
 		B26207321D5F137452942E30 /* OpenAPIRuntime in Frameworks */ = {isa = PBXBuildFile; productRef = B8144C759E04385984B67A8A /* OpenAPIRuntime */; };
 		B27EC87685E8EB49BDA44BEE /* ModelFitPolicyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 477BD6673BB7DE98EB35B166 /* ModelFitPolicyTests.swift */; };
@@ -5765,7 +5765,6 @@
 		0A4E6D917E80A0246716CCCD /* DocumentEditorViewControllerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentEditorViewControllerTests.swift; sourceTree = "<group>"; };
 		0A5701E89294A622B05AE441 /* VSCodeEngineRangeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VSCodeEngineRangeTests.swift; sourceTree = "<group>"; };
 		0A6265F90203F358534C7663 /* ScreenChange.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenChange.swift; sourceTree = "<group>"; };
-		0A85846E754342CC5F720945 /* KeyboardSettingsPanelViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyboardSettingsPanelViewController.swift; sourceTree = "<group>"; };
 		0A8CB231513307547B60A85F /* NotesCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotesCoordinator.swift; sourceTree = "<group>"; };
 		0AAD9382F24773C65BCDED71 /* InteractiveWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InteractiveWidget.swift; sourceTree = "<group>"; };
 		0B07A483943CAEA58AA2FCF4 /* LaunchAtLoginManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LaunchAtLoginManager.swift; sourceTree = "<group>"; };
@@ -7797,6 +7796,7 @@
 		E8DB03C241AECFD5B23C1606 /* HookCaptureCommand.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HookCaptureCommand.swift; sourceTree = "<group>"; };
 		E8ECE8662EA237236EE39911 /* InputActivityTrigger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InputActivityTrigger.swift; sourceTree = "<group>"; };
 		E904291106FB8BE145111B77 /* ThemeScope.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemeScope.swift; sourceTree = "<group>"; };
+		E94058F26EEBF7AF9B7BC896 /* CommandPaletteShortcutSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommandPaletteShortcutSettings.swift; sourceTree = "<group>"; };
 		E95DD68D513022F44BC48CEE /* PartnerGitFixture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PartnerGitFixture.swift; sourceTree = "<group>"; };
 		E97D208892B1325C4795F300 /* UTCDayTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UTCDayTests.swift; sourceTree = "<group>"; };
 		E98200516DC0DBB4F32B9CD6 /* TerminalSessionSplitViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerminalSessionSplitViewController.swift; sourceTree = "<group>"; };
@@ -10509,9 +10509,9 @@
 			children = (
 				153042935DA3BD98F4C29EED /* CommandPaletteCoordinator.swift */,
 				1D122B81384538ED52A95BBE /* CommandPaletteModel.swift */,
+				E94058F26EEBF7AF9B7BC896 /* CommandPaletteShortcutSettings.swift */,
 				AE004B9C4C122C226DB9358B /* CommandPaletteViewController.swift */,
 				A53B5D4DEED8BD698D63D940 /* CommandPaletteWindowController.swift */,
-				0A85846E754342CC5F720945 /* KeyboardSettingsPanelViewController.swift */,
 			);
 			path = CommandPalette;
 			sourceTree = "<group>";
@@ -18689,6 +18689,7 @@
 				35924BBAD401DA4AF3C1BC3F /* CommandLineToolFeature.swift in Sources */,
 				D129389508AAD24C8F3C7B3C /* CommandPaletteCoordinator.swift in Sources */,
 				5F416A40D1E9F0EAD4374AE0 /* CommandPaletteModel.swift in Sources */,
+				B248A5F2443CC1F4321C4078 /* CommandPaletteShortcutSettings.swift in Sources */,
 				DF90E93BB43A242BA6DFCF47 /* CommandPaletteViewController.swift in Sources */,
 				08A4722BF4103740AA4AA10E /* CommandPaletteWindowController.swift in Sources */,
 				8DA3A2144068412CE02D46E0 /* CommitCrawler.swift in Sources */,
@@ -18823,7 +18824,6 @@
 				6538BE17DABA523D8C96B254 /* KeyCommandRegistry.swift in Sources */,
 				983F7B5F1D6F55504C45178B /* KeyCommandRowView.swift in Sources */,
 				F1EB73CFA0EEED81DFFCB10F /* KeyCommandsSettingsPanelViewController.swift in Sources */,
-				6061A396B799C0F740A0710A /* KeyboardSettingsPanelViewController.swift in Sources */,
 				03ECE37988A51A52E212A81D /* KnownTerminals.swift in Sources */,
 				B4AFE06BD23F4971E029765A /* LLMChatPicker.swift in Sources */,
 				AB1798FD67A98C251501ED04 /* LLMChatViewController.swift in Sources */,

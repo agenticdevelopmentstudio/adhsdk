@@ -28,6 +28,12 @@ public final class KeyCommandRegistry {
     public static let bindingsDidChangeNotification =
         Notification.Name("KeyCommandRegistry.bindingsDidChange")
 
+    /// Posted, with the registry as its object, when a section is installed.
+    /// Commands arrive as the app starts, often after a panel listing them was
+    /// already built, so the list follows this rather than reading once.
+    public static let sectionsDidChangeNotification =
+        Notification.Name("KeyCommandRegistry.sectionsDidChange")
+
     public private(set) var sections: [KeyCommandSection] = []
 
     private var descriptorsByID: [String: KeyCommandDescriptor] = [:]
@@ -102,6 +108,7 @@ public final class KeyCommandRegistry {
             installAppMonitor()
         }
         postBindingsDidChange()
+        NotificationCenter.default.post(name: Self.sectionsDidChangeNotification, object: self)
     }
 
     private func withdraw(_ command: KeyCommandDescriptor) {

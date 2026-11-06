@@ -13,11 +13,33 @@ import AgenticDeveloperHubSDKCore
 public final class KeyCommandsSettingsPanelViewController: ComposableSettings.SettingsPanelViewController {
 
     private let registry: KeyCommandRegistry
+    private let leadingGroups: [@MainActor () -> ComposableSettings.GroupView]
+    private let leadingHelp: [ComposableSettings.PanelHelp.Topic]
+    private let leadingKeywords: [String]
+    private var sectionsObserver: NSObjectProtocol?
 
-    public init(registry: KeyCommandRegistry = .shared) {
+    /// - Parameters:
+    ///   - title: the panel's name; an app that folds other shortcuts in
+    ///     calls it something broader than "Key Commands".
+    ///   - leadingGroups: groups drawn above the registry's commands, for
+    ///     shortcuts the registry does not own (the command palette's
+    ///     recorder). Builders, because the panel is redrawn whenever the
+    ///     registry gains a section.
+    ///   - leadingHelp: help topics for those groups, before the panel's own.
+    ///   - leadingKeywords: search words for those groups.
+    public init(
+        registry: KeyCommandRegistry = .shared,
+        title: String = "Key Commands",
+        leadingGroups: [@MainActor () -> ComposableSettings.GroupView] = [],
+        leadingHelp: [ComposableSettings.PanelHelp.Topic] = [],
+        leadingKeywords: [String] = []
+    ) {
         self.registry = registry
+        self.leadingGroups = leadingGroups
+        self.leadingHelp = leadingHelp
+        self.leadingKeywords = leadingKeywords
         super.init(with: ComposableSettings.SettingsPanelDescriptor(
-            title: "Key Commands",
+            title: title,
             icon: NSImage(systemSymbolName: "command", accessibilityDescription: nil)
         ))
     }
@@ -28,6 +50,7 @@ public final class KeyCommandsSettingsPanelViewController: ComposableSettings.Se
     /// user actually searches the sidebar with.
     public override var searchKeywords: [String] {
         ["key", "keys", "command", "commands", "shortcut", "shortcuts", "hotkey", "keyboard", "binding"]
+            + leadingKeywords
     }
 
     public override var helpContent: ComposableSettings.PanelHelp? {
@@ -36,7 +59,7 @@ public final class KeyCommandsSettingsPanelViewController: ComposableSettings.Se
         let sectionTopics: [ComposableSettings.PanelHelp.Topic] = registry.sections.compactMap { section in
             section.caption.map { .init(title: section.title, body: $0) }
         }
-        return ComposableSettings.PanelHelp(topics: [
+        return ComposableSettings.PanelHelp(topics: leadingHelp + [
             .init(
                 title: "Recording a key command",
                 body: "Click the field beside a command and press the keys you want. "
@@ -67,9 +90,31 @@ public final class KeyCommandsSettingsPanelViewController: ComposableSettings.Se
 
     public override func viewDidLoad() {
         super.viewDidLoad()
+        rebuild()
+        // Commands are installed as the app starts, and a panel built before
+        // that — a section's first panel is built with the section — would
+        // otherwise say the app has none.
+        sectionsObserver = NotificationCenter.default.addObserver(
+            forName: KeyCommandRegistry.sectionsDidChangeNotification,
+            object: registry,
+            queue: .main
+        ) { [weak self] _ in
+            MainActor.assumeIsolated { self?.rebuild() }
+        }
+    }
+
+    isolated deinit {
+        if let sectionsObserver { NotificationCenter.default.removeObserver(sectionsObserver) }
+    }
+
+    private func rebuild() {
+        settingsView.removeAllContent()
+        for makeGroup in leadingGroups {
+            settingsView.addGroup(makeGroup())
+        }
 
         guard !registry.sections.isEmpty else {
-            settingsView.addGroup(makeEmptyGroup())
+            if leadingGroups.isEmpty { settingsView.addGroup(makeEmptyGroup()) }
             return
         }
 
