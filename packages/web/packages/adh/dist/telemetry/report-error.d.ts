@@ -14,7 +14,9 @@ export declare function captureException(error: unknown, context?: ErrorContext)
  * Report a HANDLED error UNLESS it's an expected client (4xx) failure. A
  * status-carrying error (e.g. an HTTP error class a fetch wrapper throws on a
  * non-ok response) with a 4xx status is a user/permission error and is dropped;
- * network errors (no numeric `status`) and 5xx backend failures are reported.
+ * 5xx backend failures and other status-less errors are reported. (The browser's own
+ * network failures — "Failed to fetch" and kin — are then dropped by TelemetryProvider's
+ * noise filter, along with every other event nobody can act on: see noise-filter.ts.)
  * Duck-types `status` so this leaf stays dependency-free — it imports no HTTP or
  * auth client.
  *
