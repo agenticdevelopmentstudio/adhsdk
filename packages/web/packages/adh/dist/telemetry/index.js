@@ -184,10 +184,17 @@ function noiseReason(event, env = {}) {
   if (values.some((v) => v.type === "TypeError" && NETWORK_FAILURE.test(v.value ?? ""))) return "network";
   return null;
 }
+function errorNoiseReason(error, env = {}) {
+  const value = error instanceof Error ? { type: error.name, value: error.message } : {};
+  return noiseReason({ exception: { values: [value] } }, env);
+}
 
 // src/telemetry/TelemetryProvider.tsx
 import { setErrorReporter } from "@adh-sdk/adh/telemetry/report-error";
 var started = false;
+function noiseEnvironment() {
+  return { userAgent: navigator.userAgent, webdriver: navigator.webdriver };
+}
 function startTelemetry(resolveEnvironment) {
   if (started || typeof window === "undefined") return;
   started = true;
@@ -213,7 +220,7 @@ function startTelemetry(resolveEnvironment) {
       sendDefaultPii: false,
       // never infer the user's IP or attach PII
       beforeSend(event) {
-        if (noiseReason(event, { userAgent: navigator.userAgent, webdriver: navigator.webdriver })) return null;
+        if (noiseReason(event, noiseEnvironment())) return null;
         delete event.user;
         if (event.request) {
           delete event.request.cookies;
@@ -229,6 +236,7 @@ function startTelemetry(resolveEnvironment) {
       if (context) scope.setExtras(context);
       Sentry.captureException(error);
     });
+    if (errorNoiseReason(error, noiseEnvironment())) return;
     captureEvent("error_reported", {
       // `error_name` (not `name`) so a caller-supplied `name` in context can't be
       // silently clobbered by the spread.

@@ -5,7 +5,7 @@ import * as Sentry from '@sentry/react'
 import { scrubUrl, startPostHog } from '@adh-sdk/analytics'
 import { setPosthogReady, captureEvent } from './analytics'
 import { instrumentFetch } from './fetch-instrumentation'
-import { noiseReason } from './noise-filter'
+import { errorNoiseReason, noiseReason, type NoiseEnvironment } from './noise-filter'
 // Package-path specifier, not relative: this leaf is `external` in this package's own
 // tsup.config.ts (module-level `reporter` state must stay a single instance across every
 // entry that reaches it — see the comment beside '@adh-sdk/adh/telemetry/report-error'
@@ -28,6 +28,10 @@ import { setErrorReporter } from '@adh-sdk/adh/telemetry/report-error'
 // ship before the GlitchTip / PostHog projects exist.
 
 let started = false
+
+function noiseEnvironment(): NoiseEnvironment {
+  return { userAgent: navigator.userAgent, webdriver: navigator.webdriver }
+}
 
 function startTelemetry(resolveEnvironment: (hostname: string) => string): void {
   if (started || typeof window === 'undefined') return
@@ -61,7 +65,7 @@ function startTelemetry(resolveEnvironment: (hostname: string) => string): void 
       beforeSend(event) {
         // Drop what nobody can act on (bots, third-party scripts, stale chunks, the
         // visitor's own network) — see noise-filter.ts for each rule and its evidence.
-        if (noiseReason(event, { userAgent: navigator.userAgent, webdriver: navigator.webdriver })) return null
+        if (noiseReason(event, noiseEnvironment())) return null
         // Belt-and-suspenders scrub: drop user + cookies, strip URL queries.
         delete event.user
         if (event.request) {
@@ -90,6 +94,9 @@ function startTelemetry(resolveEnvironment: (hostname: string) => string): void 
       if (context) scope.setExtras(context)
       Sentry.captureException(error)
     })
+    // Noise beforeSend drops (bots, stale chunks, the visitor's network) is not
+    // counted here either, so the dashboard's per-site error figure matches GlitchTip.
+    if (errorNoiseReason(error, noiseEnvironment())) return
     captureEvent('error_reported', {
       // `error_name` (not `name`) so a caller-supplied `name` in context can't be
       // silently clobbered by the spread.

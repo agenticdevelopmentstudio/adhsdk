@@ -58,3 +58,12 @@ export function noiseReason(event: NoiseCandidate, env: NoiseEnvironment = {}): 
   if (values.some((v) => v.type === 'TypeError' && NETWORK_FAILURE.test(v.value ?? ''))) return 'network'
   return null
 }
+
+/** {@link noiseReason} for a raw caught error, before Sentry has turned it into an
+ *  event. With no parsed frames the foreign-code rule can't apply; every other rule
+ *  does. The PostHog `error_reported` metric uses it, so the per-site error count
+ *  leaves out exactly what GlitchTip drops. */
+export function errorNoiseReason(error: unknown, env: NoiseEnvironment = {}): string | null {
+  const value = error instanceof Error ? { type: error.name, value: error.message } : {}
+  return noiseReason({ exception: { values: [value] } }, env)
+}

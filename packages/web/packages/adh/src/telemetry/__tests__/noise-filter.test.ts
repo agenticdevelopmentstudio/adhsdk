@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { noiseReason, type NoiseCandidate } from '../noise-filter'
+import { errorNoiseReason, noiseReason, type NoiseCandidate } from '../noise-filter'
 
 // Fixtures are shaped after real GlitchTip events from the Nov 2026 triage.
 const CHROME = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36'
@@ -83,5 +83,22 @@ describe('noiseReason', () => {
   it('keeps a TypeError that merely mentions fetching', () => {
     expect(noiseReason(exc('TypeError', 'Failed to fetch user: profile is undefined', 'https://a.com/app.js'), { userAgent: CHROME }))
       .toBeNull()
+  })
+})
+
+describe('errorNoiseReason (a raw caught error, for the PostHog metric)', () => {
+  function named(name: string, message: string): Error {
+    return Object.assign(new Error(message), { name })
+  }
+
+  it('applies the same rules as the event filter', () => {
+    expect(errorNoiseReason(named('ChunkLoadError', 'Loading chunk 42 failed.'), { userAgent: CHROME })).toBe('stale-deploy')
+    expect(errorNoiseReason(new TypeError('Failed to fetch (api.example.com)'), { userAgent: CHROME })).toBe('network')
+    expect(errorNoiseReason(new Error('boom'), { webdriver: true })).toBe('automation')
+  })
+
+  it('keeps a genuine error and a non-Error throw', () => {
+    expect(errorNoiseReason(new TypeError("Cannot read properties of undefined (reading 'id')"), { userAgent: CHROME })).toBeNull()
+    expect(errorNoiseReason('a string', { userAgent: CHROME })).toBeNull()
   })
 })
