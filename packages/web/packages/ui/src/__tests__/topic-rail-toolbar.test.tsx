@@ -3,7 +3,7 @@ import type { ComponentProps } from 'react'
 import { render, screen, cleanup, fireEvent, within, act } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { TopicRail } from '../blocks/topic-detail'
+import { MIN_FIT_RAIL, TopicRail } from '../blocks/topic-detail'
 // Through the barrel, as a host reaches it: the export is half of what makes it shareable.
 import { ListToolButton } from '../blocks'
 
@@ -631,6 +631,62 @@ describe('auto-fit while a live rail filters its own rows', () => {
       rerender(rail([long, ...props.items, wider]))
       fireEvent.click(screen.getByRole('button', { name: 'Clear filter' }))
       expect(onFit.mock.calls.map(([w]) => w)).toEqual([300, 350])
+    } finally {
+      if (real) Object.defineProperty(HTMLElement.prototype, 'scrollWidth', real)
+      else delete (HTMLElement.prototype as unknown as Record<string, unknown>).scrollWidth
+    }
+  })
+
+  it("never measures a controlled host's matches either, and measures the list once the query clears", () => {
+    const real = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'scrollWidth')
+    Object.defineProperty(HTMLElement.prototype, 'scrollWidth', {
+      configurable: true,
+      get(this: HTMLElement) {
+        const rows = [...this.querySelectorAll('[data-htd-row]')]
+        return rows.reduce((w, r) => Math.max(w, (r.textContent ?? '').length * 10), 0)
+      },
+    })
+    try {
+      const long = { id: 'long', label: 'x'.repeat(30) } // 300px
+      const onFit = vi.fn()
+      // The host narrows its own rows to the query, as the resource explorer does.
+      const rail = (query: string, items: typeof props.items) => (
+        <TopicRail {...props} items={items} onFit={onFit} search={{ query, onQueryChange: () => {} }} />
+      )
+      const { rerender } = render(rail('', [long, ...props.items]))
+      rerender(rail('b', [props.items[1]!]))
+      rerender(rail('be', [props.items[1]!, { id: 'z', label: 'Bezel' }]))
+      // While the query narrows the rows, the rail (and the field typed in) keeps its width.
+      expect(onFit.mock.calls.map(([w]) => w)).toEqual([300])
+      rerender(rail('', [long, ...props.items]))
+      expect(onFit.mock.calls.map(([w]) => w)).toEqual([300, 300])
+    } finally {
+      if (real) Object.defineProperty(HTMLElement.prototype, 'scrollWidth', real)
+      else delete (HTMLElement.prototype as unknown as Record<string, unknown>).scrollWidth
+    }
+  })
+})
+
+// A rail fitted to its rows alone clipped a host's tools at its edge: the Platforms rail's
+// Refresh and Auto Configure read "⚙ Auto C…".
+describe("auto-fit and the list toolbar's tools", () => {
+  it('is wide enough for the toolbar when its tools outgrow the rows', () => {
+    const real = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'scrollWidth')
+    Object.defineProperty(HTMLElement.prototype, 'scrollWidth', {
+      configurable: true,
+      get(this: HTMLElement) {
+        // The toolbar's max-content: 260px with the host's tools in it, 40px without.
+        if (this.hasAttribute('data-htd-toolbar')) return this.querySelector('[data-htd-tool-actions]') ? 260 : 40
+        const rows = [...this.querySelectorAll('[data-htd-row]')]
+        return rows.reduce((w, r) => Math.max(w, (r.textContent ?? '').length * 10), 0)
+      },
+    })
+    try {
+      const onFit = vi.fn()
+      const { rerender } = render(<TopicRail {...props} title="Platforms" onFit={onFit} />)
+      expect(onFit).toHaveBeenLastCalledWith(MIN_FIT_RAIL)
+      rerender(<TopicRail {...props} title="Platforms" onFit={onFit} titleActions={<button>Auto Configure</button>} />)
+      expect(onFit).toHaveBeenLastCalledWith(260)
     } finally {
       if (real) Object.defineProperty(HTMLElement.prototype, 'scrollWidth', real)
       else delete (HTMLElement.prototype as unknown as Record<string, unknown>).scrollWidth

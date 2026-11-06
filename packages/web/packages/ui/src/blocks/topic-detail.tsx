@@ -1006,6 +1006,12 @@ export function TopicRail({
   // are always the whole list. An uncontrolled query hides rows only in `live` mode: otherwise
   // its matches go to the autocomplete and the rail keeps every row.
   const selfFiltering = !controlledQuery && listSearch.live === true && query.trim() !== ""
+  // The rows on screen are NARROWED by a query: the rail's own (`live`), or a controlled host's,
+  // which passes only its matches as `items`. Either way they are not the list, and the auto-fit
+  // below must not size the rail to them.
+  const narrowed = selfFiltering || (controlledQuery && query.trim() !== "")
+  // The list toolbar (see `toolbar` below); declared here because the auto-fit measures its tools.
+  const toolbarRef = useRef<HTMLDivElement>(null)
 
   /**
    * MEASURE THE ROWS, before paint.
@@ -1028,8 +1034,11 @@ export function TopicRail({
   const sig = items.map((it) => it.id).join("\u0000")
   // The header's share of the answer moves when its title or its riders do. A non-string title
   // (a node) cannot be compared cheaply, so it re-measures only when the rows or riders change.
-  // The toolbar's tools are NOT riders: they sit on their own row, which never outgrows a rail.
-  const headerSig = `${typeof title === "string" ? title : ""}|${!!onClose}|${!!showToggle}`
+  // The toolbar's tools count as well (the filter, `+` and the host's `titleActions`): a rail
+  // fitted to short rows clipped a host's tools at its edge ("⚙ Auto C…" in the Platforms rail).
+  // Whether there are tools is in the signature; a tool that changes width (a label that reads
+  // "Refreshing…") is caught by the observer in the effect.
+  const headerSig = `${typeof title === "string" ? title : ""}|${!!onClose}|${!!showToggle}|${!!onNew}|${!!titleActions}`
   // Held in a ref, and NOT a dependency: a parent that passes an inline arrow would otherwise
   // re-run this on every render, and every run costs two forced reflows for a width that has
   // not moved.
@@ -1040,12 +1049,14 @@ export function TopicRail({
     const report = onFitRef.current
     // A collapsed rail is an icon strip whose width is COLLAPSED_RAIL by definition, and
     // measuring one would report the width of icons — so the last real answer stands.
-    // The same while the rail FILTERS ITS OWN ROWS: the box holds only the matches, and a width
-    // taken from them outlived the query. A Personas rail searched while its `+` added a persona
-    // (a new id, so a re-measure) kept the width of the matching rows after the query cleared,
-    // ellipsising the full list, because clearing a query changed nothing this effect keyed on.
-    // `selfFiltering` is a dependency, so the full list is measured again the moment it clears.
-    if (!report || collapsed || !el || selfFiltering) return
+    // The same while a query NARROWS THE ROWS (`narrowed`): the box holds only the matches, and a
+    // width taken from them outlived the query. A Personas rail searched while its `+` added a
+    // persona (a new id, so a re-measure) kept the width of the matching rows after the query
+    // cleared, ellipsising the full list, because clearing a query changed nothing this effect
+    // keyed on. A controlled host's matches arrive as new `items` on every keystroke, so its rail
+    // (and the field being typed in) changed width as the user typed. `narrowed` is a dependency,
+    // so the full list is measured again the moment the query clears.
+    if (!report || collapsed || !el || narrowed) return
     const measure = () => {
       // THE HEADER COUNTS TOO. A rail sized to its rows alone truncated its own title whenever
       // the title plus its riders (`+`, the right-hand controls, the ✕) outgrew the rows — a
@@ -1055,6 +1066,9 @@ export function TopicRail({
       // spinner is left out on purpose: it comes and goes with every read, and a rail that
       // widened and narrowed under it would shift every list to its right each time.
       const header = headerRef.current
+      // The toolbar asks the same question of its tools. Its filter field and suggestions are
+      // absolutely positioned, so they add nothing to its max-content; its spacer is `min-w-0`.
+      const tools = toolbarRef.current
       const busy = header?.querySelector<HTMLElement>("[data-htd-busy]") ?? null
       // EVERY write, then every read, then every restore — so the first read below forces the
       // one layout this measurement costs and every later read finds it clean. The header used
@@ -1065,9 +1079,11 @@ export function TopicRail({
       // it is measured and moves nothing the list's reads depend on.
       const restoreList = el.style.width
       const restoreHeader = header?.style.width ?? ""
+      const restoreTools = tools?.style.width ?? ""
       const restoreBusy = busy?.style.display ?? ""
       el.style.width = "max-content"
       if (header) header.style.width = "max-content"
+      if (tools) tools.style.width = "max-content"
       if (busy) busy.style.display = "none"
       // The gutter a vertical scrollbar takes out of the box (0 with overlay scrollbars).
       const scrollbar = el.offsetWidth - el.clientWidth
@@ -1101,10 +1117,12 @@ export function TopicRail({
       const headerWidth = header
         ? Math.max(header.scrollWidth, header.getBoundingClientRect().width)
         : 0
+      const toolsWidth = tools ? Math.max(tools.scrollWidth, tools.getBoundingClientRect().width) : 0
       el.style.width = restoreList
       if (header) header.style.width = restoreHeader
+      if (tools) tools.style.width = restoreTools
       if (busy) busy.style.display = restoreBusy
-      const natural = Math.max(rows, headerWidth) + Math.max(0, chrome)
+      const natural = Math.max(rows, headerWidth, toolsWidth) + Math.max(0, chrome)
       // A box with no layout measures 0 — a rail rendered inside a `display:none` ancestor,
       // and every rail under jsdom. Zero is not an answer, and clamping it up to the floor
       // would dress it as one: say nothing and leave the caller's own width standing.
@@ -1125,10 +1143,24 @@ export function TopicRail({
     void document.fonts?.ready.then(() => {
       if (live) measure()
     })
+    // A host's tools are `shrink-0`, so their box is their content's width: watch it, and fit
+    // again when a tool's label grows or shrinks. The observer's first call reports the size it
+    // started with, which `measure()` above has already answered.
+    const hostTools = toolbarRef.current?.querySelector<HTMLElement>("[data-htd-tool-actions]")
+    let seen = false
+    const resized =
+      hostTools && typeof ResizeObserver !== "undefined"
+        ? new ResizeObserver(() => {
+            if (seen) measure()
+            seen = true
+          })
+        : null
+    if (hostTools) resized?.observe(hostTools)
     return () => {
       live = false
+      resized?.disconnect()
     }
-  }, [collapsed, sig, headerSig, selfFiltering])
+  }, [collapsed, sig, headerSig, narrowed])
 
   // The create affordance: a compact `+` (replaces the old leading "New…" rail row). On a titled
   // rail it sits first in the list toolbar under the header (see `toolbar`); an untitled or
@@ -1170,7 +1202,6 @@ export function TopicRail({
   // make room for them, and the list's filter lived in a page-wide strip above every rail — far
   // from the list it filtered. The search state they read is declared above, with the auto-fit.
   const searchTriggerRef = useRef<HTMLButtonElement>(null)
-  const toolbarRef = useRef<HTMLDivElement>(null)
   const setQuery = (q: string) => {
     if (!controlledQuery) setOwnQuery(q)
     listSearch.onQueryChange?.(q)
@@ -1297,7 +1328,11 @@ export function TopicRail({
       </div>
       {newButton}
       <div className="min-w-0 flex-1" />
-      {titleActions && <span className="flex shrink-0 items-center gap-1">{titleActions}</span>}
+      {titleActions && (
+        <span data-htd-tool-actions className="flex shrink-0 items-center gap-1">
+          {titleActions}
+        </span>
+      )}
       {searchOpen && (
         <div
           data-htd-search
