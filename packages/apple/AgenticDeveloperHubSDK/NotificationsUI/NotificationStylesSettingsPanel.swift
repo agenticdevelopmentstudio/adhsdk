@@ -98,12 +98,18 @@ public final class NotificationStylesSettingsPanel: ComposableSettings.SettingsP
         addGroup(focus)
     }
 
+    /// An urgency's own profile, as the user set it: never bent by an
+    /// override, which a sample notice could match.
+    static func baseProfile(for urgency: Notice.Urgency, in rules: NoticeRoutingRules) -> NoticeProfile {
+        rules.profiles[urgency] ?? NoticeRoutingRules.defaultProfile(for: urgency)
+    }
+
     private func profileGroup(for urgency: Notice.Urgency) -> ComposableSettings.GroupView {
         let group = ComposableSettings.GroupView(withTitle: Self.title(for: urgency))
-        let profile = rules.profile(for: Self.sample(for: urgency))
+        let profile = Self.baseProfile(for: urgency, in: rules)
         func edit(_ change: @escaping (inout NoticeProfile) -> Void) {
             mutate { rules in
-                var updated = rules.profiles[urgency] ?? rules.profile(for: Self.sample(for: urgency))
+                var updated = Self.baseProfile(for: urgency, in: rules)
                 change(&updated)
                 rules.profiles[urgency] = updated
             }
@@ -164,7 +170,7 @@ public final class NotificationStylesSettingsPanel: ComposableSettings.SettingsP
             self?.newOverrideStyle = style
         }
         let add = button("Add") { [weak self] in self?.addOverride() }
-        group.addSettingSubview(NSView.makeRow([
+        group.addSettingSubview(NSView.makeSettingsRow([
             newOverrideSource, newOverrideCategory, urgencyPopup, stylePopup, add
         ]))
         return group
@@ -189,7 +195,7 @@ public final class NotificationStylesSettingsPanel: ComposableSettings.SettingsP
                 }
                 self?.rebuildOverrideList()
             }
-            let line = NSView.makeRow([label, remove])
+            let line = NSView.makeSettingsRow([label, remove])
             overrideList.addArrangedSubview(line)
             line.widthAnchor.constraint(equalTo: overrideList.widthAnchor).isActive = true
         }
@@ -202,7 +208,7 @@ public final class NotificationStylesSettingsPanel: ComposableSettings.SettingsP
         let style = newOverrideStyle
         guard !source.isEmpty || !category.isEmpty || urgency != nil else { return }
         mutate { rules in
-            var profile = rules.profile(for: Self.sample(for: urgency ?? .fyi))
+            var profile = Self.baseProfile(for: urgency ?? .fyi, in: rules)
             profile.style = style
             rules.overrides.append(.init(
                 source: source.isEmpty ? nil : source,
@@ -272,7 +278,7 @@ public final class NotificationStylesSettingsPanel: ComposableSettings.SettingsP
     // MARK: Controls
 
     private func row(_ title: String, _ control: NSView) -> NSView {
-        NSView.makeRow([ComposableSettings.makeRowLabel(title), control])
+        NSView.makeSettingsRow([ComposableSettings.makeRowLabel(title), control])
     }
 
     private func popup<Value: Equatable>(

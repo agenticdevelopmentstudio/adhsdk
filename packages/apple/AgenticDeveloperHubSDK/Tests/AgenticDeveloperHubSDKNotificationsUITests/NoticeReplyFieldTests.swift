@@ -11,6 +11,7 @@ final class NoticeReplyFieldTests: XCTestCase {
     private final class Recorder {
         var responses: [(String, String?)] = []
         var acts = 0
+        var handoffs = 0
     }
 
     private func replyNotice() -> Notice {
@@ -26,6 +27,8 @@ final class NoticeReplyFieldTests: XCTestCase {
             respond: { recorder.responses.append(($0, $1)) },
             snooze: { _ in }, archive: {}, close: {})
         let panel = NoticePanel(layer: .floating, hideFromSharing: false)
+        // Records the key handoff instead of reordering a real window.
+        panel.handOffKey = { _ in recorder.handoffs += 1 }
         let card = NoticeCardView(notice: notice, actions: actions, style: .toast)
         panel.contentView = card
         card.layoutSubtreeIfNeeded()
@@ -105,10 +108,15 @@ final class NoticeReplyFieldTests: XCTestCase {
         XCTAssertTrue(card.control(field, textView: NSTextView(), doCommandBy: newline))
         XCTAssertTrue(recorder.responses.isEmpty, "an empty reply is not sent")
 
+        card.beginReply()
         field.stringValue = "main"
         XCTAssertTrue(card.control(field, textView: NSTextView(), doCommandBy: newline))
         XCTAssertEqual(recorder.responses.map(\.0), ["answer"])
         XCTAssertEqual(recorder.responses.map(\.1), ["main"])
+        // Other cards may remain: the panel must not keep the user's typing.
+        XCTAssertFalse(panel.allowKeyForReply)
+        XCTAssertEqual(recorder.handoffs, 1, "the keyboard goes back to the active app")
+        XCTAssertFalse(panel.isKeyWindow)
     }
 
     func testEscapeClearsAndGivesUpKey() throws {
@@ -125,7 +133,39 @@ final class NoticeReplyFieldTests: XCTestCase {
         XCTAssertEqual(field.stringValue, "")
         XCTAssertFalse(panel.allowKeyForReply)
         XCTAssertFalse(panel.canBecomeKey)
+        XCTAssertEqual(recorder.handoffs, 1, "the keyboard goes back to the active app")
+        XCTAssertFalse(panel.isKeyWindow)
         XCTAssertTrue(recorder.responses.isEmpty)
+    }
+
+    /// Clicking into another app mid-reply ends the reply: the countdown
+    /// runs again, and an empty field gives up the right to be key.
+    func testClickingAwayEndsAnEmptyReply() throws {
+        let recorder = Recorder()
+        let (panel, card) = makeCard(replyNotice(), recorder: recorder)
+        defer { panel.close() }
+        card.startAutoDismiss(after: 8)
+        card.beginReply()
+        XCTAssertFalse(card.isCountdownRunning)
+        NotificationCenter.default.post(name: NSWindow.didResignKeyNotification, object: panel)
+        XCTAssertTrue(card.isCountdownRunning)
+        XCTAssertFalse(panel.allowKeyForReply)
+        card.stop()
+    }
+
+    func testClickingAwayKeepsADraftReply() throws {
+        let recorder = Recorder()
+        let (panel, card) = makeCard(replyNotice(), recorder: recorder)
+        defer { panel.close() }
+        let field = try XCTUnwrap(card.replyField)
+        card.startAutoDismiss(after: 8)
+        card.beginReply()
+        field.stringValue = "half"
+        NotificationCenter.default.post(name: NSWindow.didResignKeyNotification, object: panel)
+        XCTAssertTrue(card.isCountdownRunning, "the reply is over, so the card counts down again")
+        XCTAssertTrue(panel.allowKeyForReply, "a draft can be clicked back into")
+        XCTAssertEqual(field.stringValue, "half")
+        card.stop()
     }
 
     func testFocusReplyPutsTheCursorInTheField() throws {

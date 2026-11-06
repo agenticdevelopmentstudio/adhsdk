@@ -136,8 +136,9 @@ class CardStackPresenter: NoticePresenter {
         }
     }
 
-    func focusReply(id: String) {
-        placements[id]?.first?.card.focusReply()
+    @discardableResult
+    func focusReply(id: String) -> Bool {
+        placements[id]?.first?.card.focusReply() ?? false
     }
 
     // MARK: Hover

@@ -1,5 +1,6 @@
 import Carbon.HIToolbox
 import Foundation
+import OSLog
 import AgenticDeveloperHubSDKNotifications
 
 /// Registers system-wide hotkeys. A seam, so tests never grab real keys.
@@ -42,9 +43,16 @@ public final class NoticeHotkeys {
         ]
     }()
 
+    private static let log = Logger(subsystem: "com.agentic-cookbook.adhsdk", category: "NoticeHotkeys")
+
     private weak var center: NoticePresentationCenter?
     private let registrar: HotkeyRegistrar
+    /// Whether at least one hotkey is registered. Stays `false` when the
+    /// system refused every one, so a later `setEnabled(true)` tries again.
     public private(set) var isEnabled = false
+    /// The commands whose hotkey the system refused (another app holds the
+    /// combination). Empty while disabled.
+    public private(set) var unavailableCommands: [Command] = []
 
     /// Nothing is registered until `setEnabled(true)`.
     public convenience init(center: NoticePresentationCenter) {
@@ -62,19 +70,29 @@ public final class NoticeHotkeys {
         }
     }
 
-    /// Turns the hotkeys on or off (the settings switch). Idempotent.
+    /// Turns the hotkeys on or off (the settings switch). Idempotent. A
+    /// hotkey the system refuses is logged and listed in
+    /// `unavailableCommands`; the rest still work.
     public func setEnabled(_ enabled: Bool) {
         guard enabled != isEnabled else { return }
-        isEnabled = enabled
         if enabled {
+            var refused: [Command] = []
             for binding in Self.bindings {
                 let command = binding.command
-                _ = registrar.register(keyCode: binding.keyCode, modifiers: binding.modifiers) { [weak self] in
-                    self?.perform(command)
+                let handler: @MainActor () -> Void = { [weak self] in self?.perform(command) }
+                let registered = registrar.register(
+                    keyCode: binding.keyCode, modifiers: binding.modifiers, handler: handler)
+                if !registered {
+                    refused.append(command)
+                    Self.log.error("hotkey for \(String(describing: command), privacy: .public) was refused")
                 }
             }
+            unavailableCommands = refused
+            isEnabled = refused.count < Self.bindings.count
         } else {
             registrar.unregisterAll()
+            unavailableCommands = []
+            isEnabled = false
         }
     }
 

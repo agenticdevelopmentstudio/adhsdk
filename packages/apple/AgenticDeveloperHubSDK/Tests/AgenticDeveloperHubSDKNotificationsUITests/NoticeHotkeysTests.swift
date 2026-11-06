@@ -9,8 +9,11 @@ private final class FakeRegistrar: HotkeyRegistrar {
     private(set) var registered: [(keyCode: UInt32, modifiers: UInt32)] = []
     private var handlers: [@MainActor () -> Void] = []
     private(set) var unregisterCount = 0
+    /// Key codes the "system" refuses, as if another app held them.
+    var refused: Set<UInt32> = []
 
     func register(keyCode: UInt32, modifiers: UInt32, handler: @escaping @MainActor () -> Void) -> Bool {
+        guard !refused.contains(keyCode) else { return false }
         registered.append((keyCode, modifiers))
         handlers.append(handler)
         return true
@@ -68,6 +71,33 @@ final class NoticeHotkeysTests: XCTestCase {
         hotkeys.setEnabled(false)
         XCTAssertTrue(registrar.registered.isEmpty)
         XCTAssertEqual(registrar.unregisterCount, 1)
+    }
+
+    func testARefusedHotkeyIsReported() {
+        let env = makeEnv()
+        let registrar = FakeRegistrar()
+        registrar.refused = [UInt32(kVK_ANSI_S)]
+        let hotkeys = NoticeHotkeys(center: env.center, registrar: registrar)
+        hotkeys.setEnabled(true)
+        XCTAssertTrue(hotkeys.isEnabled)
+        XCTAssertEqual(hotkeys.unavailableCommands, [.snooze])
+        hotkeys.setEnabled(false)
+        XCTAssertTrue(hotkeys.unavailableCommands.isEmpty)
+    }
+
+    func testEveryHotkeyRefusedLeavesThemOff() {
+        let env = makeEnv()
+        let registrar = FakeRegistrar()
+        registrar.refused = Set(NoticeHotkeys.bindings.map(\.keyCode))
+        let hotkeys = NoticeHotkeys(center: env.center, registrar: registrar)
+        hotkeys.setEnabled(true)
+        XCTAssertFalse(hotkeys.isEnabled, "isEnabled reflects what the system accepted")
+        XCTAssertEqual(hotkeys.unavailableCommands, [.act, .archive, .snooze, .history])
+
+        registrar.refused = []
+        hotkeys.setEnabled(true)
+        XCTAssertTrue(hotkeys.isEnabled, "a later attempt tries again")
+        XCTAssertEqual(registrar.registered.count, 4)
     }
 
     func testCommandsActOnTheNewestShownNotice() {

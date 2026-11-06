@@ -3,40 +3,72 @@ import AgenticDeveloperHubSDK
 import AgenticDeveloperHubSDKNotifications
 
 /// Full screen: a dimmed window over each selected screen with the notice's
-/// card in the middle. Unlike every other style it takes focus, because it
-/// covers the user's work and their keystrokes must not keep going to an app
-/// they can no longer see. Esc snoozes it for five minutes. It never times
-/// out.
+/// card in the middle. Unlike every other style it takes the keyboard,
+/// because it covers the user's work and their keystrokes must not keep going
+/// to an app they can no longer see. Its panel is still non-activating: it
+/// becomes key without activating the host app, so it never depends on
+/// `NSApp.activate()`, which macOS 14 and later treat as a request. Esc
+/// snoozes it for five minutes. It never times out.
+///
+/// With several up at once the newest has the keyboard; when it goes, the
+/// newest one left takes it back.
 @MainActor
 public final class FullScreenPresenter: NoticePresenter {
 
     private struct Placement {
+        let displayID: UInt32
         let panel: NoticePanel
         let view: FullScreenNoticeView
     }
 
     private let rules: @MainActor () -> NoticeRoutingRules
-    private let activate: @MainActor () -> Void
+    private let windowing: NoticeWindowing
+    private let screens: NoticeScreenProvider
     public private(set) var shownIDs: [String] = []
     private var placements: [String: [Placement]] = [:]
+    private var screenObserver: NSObjectProtocol?
 
-    /// - Parameter activate: brings the host app forward so the panel gets
-    ///   the keyboard; defaults to `NSApp.activate()`.
-    public init(
-        rules: @escaping @MainActor () -> NoticeRoutingRules,
-        activate: @escaping @MainActor () -> Void = { NSApp.activate() }
-    ) {
-        self.rules = rules
-        self.activate = activate
+    public convenience init(rules: @escaping @MainActor () -> NoticeRoutingRules) {
+        self.init(rules: rules, windowing: LiveNoticeWindowing(), screens: ScreenSelector.noticeScreens)
     }
 
-    /// A focus-taking panel exactly covering `frame` (a screen's whole frame,
-    /// menu bar and Dock included).
+    /// With the windows and screens injected, so tests put nothing on screen.
+    init(
+        rules: @escaping @MainActor () -> NoticeRoutingRules,
+        windowing: NoticeWindowing,
+        screens: @escaping NoticeScreenProvider
+    ) {
+        self.rules = rules
+        self.windowing = windowing
+        self.screens = screens
+        screenObserver = NotificationCenter.default.addObserver(
+            forName: NSApplication.didChangeScreenParametersNotification, object: nil, queue: .main
+        ) { [weak self] _ in
+            MainActor.assumeIsolated { self?.screensDidChange() }
+        }
+    }
+
+    isolated deinit {
+        if let screenObserver {
+            NotificationCenter.default.removeObserver(screenObserver)
+        }
+    }
+
+    /// A keyboard-taking panel exactly covering `frame` (a screen's whole
+    /// frame, menu bar and Dock included). At least at status-bar level
+    /// whatever the profile's layer, so it is never under the menu bar or
+    /// another app's floating window.
     static func makePanel(frame: CGRect, layer: NoticeProfile.Layer, hideFromSharing: Bool) -> NoticePanel {
         let panel = NoticePanel(layer: layer, hideFromSharing: hideFromSharing, takesFocus: true)
+        panel.level = NSWindow.Level(rawValue: max(panel.level.rawValue, NSWindow.Level.statusBar.rawValue))
         panel.hasShadow = false
         panel.setFrame(frame, display: false)
         return panel
+    }
+
+    /// The panels showing `id`, first screen first. For tests.
+    func panels(for id: String) -> [NoticePanel] {
+        placements[id]?.map(\.panel) ?? []
     }
 
     // MARK: NoticePresenter
@@ -47,23 +79,21 @@ public final class FullScreenPresenter: NoticePresenter {
         }
         let hideFromSharing = rules().hideFromScreenSharing
         var made: [Placement] = []
-        for screen in ScreenSelector.current(for: profile.screens) {
+        for screen in screens(profile.screens) {
             let panel = Self.makePanel(frame: screen.frame, layer: profile.layer, hideFromSharing: hideFromSharing)
             let view = FullScreenNoticeView(notice: notice, actions: actions)
             panel.contentView = view
-            made.append(Placement(panel: panel, view: view))
+            made.append(Placement(displayID: screen.displayID, panel: panel, view: view))
         }
         guard !made.isEmpty else { return }
         placements[notice.id] = made
         shownIDs.append(notice.id)
-        activate()
         for placement in made {
-            placement.panel.orderFrontRegardless()
+            windowing.present(placement.panel)
         }
         // The newest one, on the first screen, takes the keyboard.
         if let first = made.first {
-            first.panel.makeKeyAndOrderFront(nil)
-            first.panel.makeFirstResponder(first.view)
+            windowing.makeKey(first.panel, firstResponder: first.view)
         }
     }
 
@@ -71,16 +101,25 @@ public final class FullScreenPresenter: NoticePresenter {
         guard let removed = placements.removeValue(forKey: id) else { return }
         shownIDs.removeAll { $0 == id }
         for placement in removed {
-            placement.panel.orderOut(nil)
-            placement.panel.close()
+            placement.view.card.stop()
+            windowing.dismiss(placement.panel)
+        }
+        // Ordering a non-activating panel out hands key back to the active
+        // app; with another full screen still up, it takes the keyboard.
+        if let next = shownIDs.last, let placement = placements[next]?.first {
+            windowing.makeKey(placement.panel, firstResponder: placement.view)
         }
     }
 
     public func replace(oldID: String, with notice: Notice, profile: NoticeProfile, actions: NoticeCardActions) {
-        guard let existing = placements.removeValue(forKey: oldID) else {
+        guard placements[oldID] != nil else {
             show(notice, profile: profile, actions: actions)
             return
         }
+        if oldID != notice.id {
+            remove(id: notice.id)
+        }
+        guard let existing = placements.removeValue(forKey: oldID) else { return }
         for placement in existing {
             placement.view.update(notice: notice, actions: actions)
         }
@@ -90,8 +129,21 @@ public final class FullScreenPresenter: NoticePresenter {
         }
     }
 
-    public func focusReply(id: String) {
-        placements[id]?.first?.view.card.focusReply()
+    @discardableResult
+    public func focusReply(id: String) -> Bool {
+        placements[id]?.first?.view.card.focusReply() ?? false
+    }
+
+    // MARK: Screens
+
+    /// Refits every panel to its screen after a display was added, removed
+    /// or rearranged.
+    func screensDidChange() {
+        let byID = Dictionary(screens(.all).map { ($0.displayID, $0) }, uniquingKeysWith: { first, _ in first })
+        for placement in placements.values.flatMap({ $0 }) {
+            guard let screen = byID[placement.displayID] else { continue }
+            placement.panel.setFrame(screen.frame, display: true)
+        }
     }
 }
 
