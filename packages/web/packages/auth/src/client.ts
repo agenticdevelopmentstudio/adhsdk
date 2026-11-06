@@ -160,6 +160,15 @@ export async function readErrorMessage(res: Response, fallback: string): Promise
   return extractErrorMessage(body, fallback)
 }
 
+/** The {@link AuthHttpError} for a non-ok response, its body read once for the
+ *  message, code and body. `throw await responseError(res, '…')` keeps the status
+ *  on the error, which is what lets reportUnexpectedAuthError drop an expected 4xx
+ *  (a plain `new Error(message)` has none, so every 4xx used to be reported). */
+export async function responseError(res: Response, fallback: string): Promise<AuthHttpError> {
+  const body = await res.json().catch(() => null)
+  return new AuthHttpError(res.status, extractErrorMessage(body, fallback), extractErrorCode(body), body)
+}
+
 async function rawFetch(
   url: string,
   init: RequestInit,

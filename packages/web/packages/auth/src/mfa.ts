@@ -1,7 +1,7 @@
 'use client'
 
 import { startAuthentication, type PublicKeyCredentialRequestOptionsJSON } from '@simplewebauthn/browser'
-import { readErrorMessage } from './client'
+import { responseError } from './client'
 import type { BackendTokenFields } from './tokens'
 import type { AuthUser } from './types'
 
@@ -64,7 +64,7 @@ async function runAssertion(
     headers: JSON_HEADERS,
     body: JSON.stringify(body),
   })
-  if (!optRes.ok) throw new Error(await readErrorMessage(optRes, optionsError))
+  if (!optRes.ok) throw await responseError(optRes, optionsError)
   const { options, token } = (await optRes.json()) as {
     options: PublicKeyCredentialRequestOptionsJSON
     token: string
@@ -97,7 +97,7 @@ export async function requestLoginSms(token: string): Promise<void> {
     headers: JSON_HEADERS,
     body: JSON.stringify({ token }),
   })
-  if (!res.ok) throw new Error(await readErrorMessage(res, 'Could not send a code.'))
+  if (!res.ok) throw await responseError(res, 'Could not send a code.')
 }
 
 /** Complete the second-factor step with a typed code (sms / totp / recovery). */
@@ -111,7 +111,7 @@ export async function completeLoginCode(
     headers: JSON_HEADERS,
     body: JSON.stringify({ token, method, code }),
   })
-  if (!res.ok) throw new Error(await readErrorMessage(res, 'That code didn’t match.'))
+  if (!res.ok) throw await responseError(res, 'That code didn’t match.')
   return (await res.json()) as BackendAuthResponse
 }
 
@@ -124,7 +124,7 @@ export async function completeLoginPasskey(token: string): Promise<BackendAuthRe
     headers: JSON_HEADERS,
     body: JSON.stringify(assertion),
   })
-  if (!res.ok) throw new Error(await readErrorMessage(res, 'Passkey verification failed.'))
+  if (!res.ok) throw await responseError(res, 'Passkey verification failed.')
   return (await res.json()) as BackendAuthResponse
 }
 
@@ -137,6 +137,6 @@ export async function passwordlessPasskeyLogin(identifier: string): Promise<Back
     headers: JSON_HEADERS,
     body: JSON.stringify(assertion),
   })
-  if (!res.ok) throw new Error(await readErrorMessage(res, 'Passkey login failed.'))
+  if (!res.ok) throw await responseError(res, 'Passkey login failed.')
   return (await res.json()) as BackendAuthResponse
 }
