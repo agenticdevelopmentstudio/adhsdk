@@ -81,6 +81,29 @@ final class EventStoreTrimTests: XCTestCase {
                        EventStoreTrimResult(events: 0, messages: 0, turns: 0, sessions: 0, finished: true))
     }
 
+    /// `maxTurnId` keeps every old timed turn with a higher id; events and
+    /// messages are trimmed as usual.
+    func testMaxTurnIdKeepsNewerTurns() throws {
+        let store = try makeStore()
+        var batch = NormalizedBatch()
+        for index in 0..<4 {
+            batch.events.append(event("e\(index)", session: "s1", at: Double(index)))
+            batch.turns.append(turn("t\(index)", session: "s1", at: Double(index)))
+            batch.messages.append(message("m\(index)", session: "s1", at: Double(index)))
+        }
+        batch.sessions = [SessionUpsert(sessionID: "s1", asOf: date(0), status: "active", startedAt: date(0))]
+        try store.write(batch, provider: "mock")
+        let ids = try store.read { conn in try Int64.fetchAll(conn, sql: "SELECT id FROM turns ORDER BY id") }
+
+        let result = try store.trim(olderThan: date(100).timeIntervalSince1970, maxTurnId: ids[1], deadline: future)
+
+        XCTAssertEqual(result, EventStoreTrimResult(events: 4, messages: 4, turns: 2, sessions: 0, finished: true))
+        XCTAssertEqual(try store.read { conn in try Int64.fetchAll(conn, sql: "SELECT id FROM turns ORDER BY id") },
+                       Array(ids[2...]))
+        // With no bound, the rest go.
+        XCTAssertEqual(try store.trim(olderThan: date(100).timeIntervalSince1970, deadline: future).turns, 2)
+    }
+
     func testTrimDeletesOnlyEndedSessionsLeftEmpty() throws {
         let store = try makeStore()
         var batch = NormalizedBatch()

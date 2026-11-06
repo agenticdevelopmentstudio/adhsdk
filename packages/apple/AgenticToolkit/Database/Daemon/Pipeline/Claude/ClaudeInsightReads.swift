@@ -259,16 +259,39 @@ extension DaemonDatabase {
     /// another provider's, so a cursor still moves past it). A new turn gets a
     /// larger id than every turn held, so walking ids from a saved cursor finds
     /// the turns that arrived since, whatever day they belong to.
+    ///
+    /// Each arrival carries the turn's own columns, so a caller can add it to a
+    /// summary whose day no longer holds the turns to recount.
     public func claudeTurnArrivals(
         afterId: Int64, limit: Int, deadline: Duration? = nil
-    ) throws -> [(id: Int64, time: Double?)] {
+    ) throws -> [ClaudeTurnArrival] {
         guard limit > 0 else { return [] }
         return try withEventReads([], deadline: deadline) { conn in
             try Row.fetchAll(conn, sql: """
-                SELECT id, CASE WHEN provider = ? AND time >= ? THEN time END
+                SELECT id, CASE WHEN provider = ? AND time >= ? THEN time END, session_id, COALESCE(model, ''),
+                       COALESCE(input_tokens, 0), COALESCE(output_tokens, 0),
+                       COALESCE(cache_read_tokens, 0), COALESCE(cache_write_tokens, 0),
+                       CAST(COALESCE(json_extract(attrs, '$.cache_creation_1h_tokens'), 0) AS INTEGER), raw_ref
                 FROM turns WHERE id > ? ORDER BY id LIMIT ?
                 """, arguments: [ClaudeProvider.name, Self.claudeEarliestKnownEventTime, afterId, limit])
-                .map { (id: $0[0] ?? 0, time: $0[1]) }
+                .map { row in
+                    ClaudeTurnArrival(
+                        id: row[0] ?? 0, time: row[1], sessionId: row[2] ?? "", model: row[3] ?? "",
+                        inputTokens: row[4] ?? 0, outputTokens: row[5] ?? 0, cacheReadTokens: row[6] ?? 0,
+                        cacheCreationTokens: row[7] ?? 0, cacheCreation1hTokens: row[8] ?? 0, rawRef: row[9])
+                }
+        }
+    }
+
+    /// The history backfill's target archive id (`store_meta`
+    /// ``ClaudeArchiveReplay/backfillTargetKey``), or nil when none was ever set.
+    /// It stays after the backfill finishes: a turn whose `raw_ref` is at most it
+    /// came from history the cutover's converted summaries already count, and a
+    /// larger one was captured live.
+    public func claudeHistoryBackfillTarget(deadline: Duration? = nil) throws -> Int64? {
+        try withEventReads(nil, deadline: deadline) { conn in
+            try String.fetchOne(conn, sql: "SELECT value FROM store_meta WHERE key = ?",
+                                arguments: [ClaudeArchiveReplay.backfillTargetKey]).flatMap { Int64($0) }
         }
     }
 

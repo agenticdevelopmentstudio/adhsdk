@@ -165,12 +165,20 @@ extension EventStore {
     /// Throws `EventStoreError.bulkLoadInProgress` during a bulk load, before any
     /// delete. A batch that fails throws `EventStoreTrimFailure` carrying what the
     /// committed batches before it deleted.
-    public func trim(olderThan cutoff: Double, batch: Int = 500, deadline: Date) throws -> EventStoreTrimResult {
-        try withMaintenance { try trimRows(olderThan: cutoff, batch: batch, until: Self.monotonic(deadline)) }
+    ///
+    /// `maxTurnId` bounds the timed turns stage to `turns.id <= maxTurnId`: a
+    /// caller whose summaries have read the turns only up to some id passes it,
+    /// so a turn stored after that read stays until the summaries count it. nil
+    /// is unbounded. Untimed turns are never summarised by day and are not bounded.
+    public func trim(olderThan cutoff: Double, maxTurnId: Int64? = nil, batch: Int = 500,
+                     deadline: Date) throws -> EventStoreTrimResult {
+        try withMaintenance {
+            try trimRows(olderThan: cutoff, maxTurnId: maxTurnId, batch: batch, until: Self.monotonic(deadline))
+        }
     }
 
-    private func trimRows(olderThan cutoff: Double, batch: Int, until end: ContinuousClock.Instant) throws
-        -> EventStoreTrimResult {
+    private func trimRows(olderThan cutoff: Double, maxTurnId: Int64?, batch: Int,
+                          until end: ContinuousClock.Instant) throws -> EventStoreTrimResult {
         let limit = max(1, batch)
         var result = EventStoreTrimResult(finished: false)
         var ranBatch = false
@@ -222,7 +230,7 @@ extension EventStore {
         }
 
         guard try drain("", [], into: \.turns, batchWork: { conn in
-            try Self.foldAndDeleteTurns(olderThan: cutoff, limit: limit, conn)
+            try Self.foldAndDeleteTurns(olderThan: cutoff, maxTurnId: maxTurnId, limit: limit, conn)
         }) else { return result }
 
         // The untimed rows of sessions that ended before the cutoff.
@@ -265,11 +273,13 @@ extension EventStore {
     /// deletes them. The fold and the delete commit together or not at all, so a
     /// crash between them cannot count a turn twice or lose it; a turn whose key is
     /// already recorded (stored again by a replay into this file) is deleted without
-    /// being added again. Returns the turns deleted.
-    static func foldAndDeleteTurns(olderThan cutoff: Double, limit: Int, _ conn: Database) throws -> Int {
+    /// being added again. Returns the turns deleted. `maxTurnId` keeps every turn
+    /// with a larger id (nil: no bound).
+    static func foldAndDeleteTurns(olderThan cutoff: Double, maxTurnId: Int64? = nil, limit: Int,
+                                   _ conn: Database) throws -> Int {
         try foldAndDeleteTurns(selecting: """
-            SELECT id FROM turns WHERE time > 0 AND time < ? ORDER BY time, id LIMIT ?
-            """, arguments: [cutoff, limit], conn)
+            SELECT id FROM turns WHERE time > 0 AND time < ? AND id <= ? ORDER BY time, id LIMIT ?
+            """, arguments: [cutoff, maxTurnId ?? Int64.max, limit], conn)
     }
 
     /// One batch of untimed turns (`time <= 0`) of sessions that ended before

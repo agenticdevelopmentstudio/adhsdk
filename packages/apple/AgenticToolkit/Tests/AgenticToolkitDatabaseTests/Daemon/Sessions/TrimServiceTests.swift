@@ -1,6 +1,7 @@
 import XCTest
 import Foundation
 import GRDB
+import os
 import AgenticToolkitCore
 @testable import AgenticToolkitDatabase
 
@@ -44,6 +45,8 @@ final class TrimServiceTests: XCTestCase {
     private func service(
         historyDays: Int = 7, covered: String?, eventStore: EventStore?? = .none,
         snapshotsReadThrough: (@Sendable () -> Int?)? = nil,
+        turnsReadThrough: (@Sendable () -> Int64?)? = nil,
+        willTrimEvents: (@Sendable (Double) throws -> Void)? = nil,
         hold: TrimHold? = nil,
         holdFails: Bool = false,
         extra: [@Sendable (Double, Date) throws -> Int] = []
@@ -51,6 +54,7 @@ final class TrimServiceTests: XCTestCase {
         TrimService(
             database: database, eventStore: eventStore ?? store, historyDays: historyDays,
             coveredThroughDay: { covered }, snapshotsReadThrough: snapshotsReadThrough,
+            turnsReadThrough: turnsReadThrough, willTrimEvents: willTrimEvents,
             hold: {
                 if holdFails { throw HoldUnreadable() }
                 return hold
@@ -341,6 +345,62 @@ final class TrimServiceTests: XCTestCase {
         XCTAssertNotNil(report.error)
         XCTAssertFalse(report.finished, "a failed stage asks for a rerun")
         XCTAssertEqual(report.events, 1)
+    }
+
+    private func turnIds() throws -> [Int64] {
+        try store.read { conn in try Int64.fetchAll(conn, sql: "SELECT id FROM turns ORDER BY id") }
+    }
+
+    /// The turn read-through bounds the turns a pass deletes: a turn the
+    /// caller has not read yet stays, however old it is.
+    func testTurnsAboveTheReadThroughAreKept() throws {
+        try storeRows("a", daysAgo: 60)
+        try storeRows("b", daysAgo: 60)
+        let ids = try turnIds()
+        XCTAssertEqual(ids.count, 2)
+        let readThrough = ids[0]
+
+        let report = try service(covered: Self.day(1), turnsReadThrough: { readThrough }).run(deadline: future)
+
+        XCTAssertNil(report.error)
+        XCTAssertEqual(report.turns, 1)
+        XCTAssertEqual(try turnIds(), [ids[1]])
+        XCTAssertEqual(report.events, 2, "the bound is on turns only")
+    }
+
+    /// A read-through that has read nothing yet keeps every timed turn.
+    func testANilTurnReadThroughKeepsEveryTimedTurn() throws {
+        try storeRows("a", daysAgo: 60)
+
+        let report = try service(covered: Self.day(1), turnsReadThrough: { nil }).run(deadline: future)
+
+        XCTAssertNil(report.error)
+        XCTAssertEqual(report.turns, 0)
+        XCTAssertEqual(try count("turns"), 1)
+        XCTAssertEqual(report.events, 1)
+    }
+
+    /// The pre-trim hook gets the cutoff before anything goes; when it throws,
+    /// no events.db row is deleted and the pass asks for a rerun.
+    func testWillTrimEventsRunsFirstAndAThrowDeletesNothing() throws {
+        try storeRows("a", daysAgo: 60)
+        struct Boom: Error {}
+        let seen = OSAllocatedUnfairLock<Double?>(initialState: nil)
+        let passed = try service(covered: Self.day(1), willTrimEvents: { cutoff in
+            seen.withLock { $0 = cutoff }
+        }).run(deadline: future)
+        XCTAssertNil(passed.error)
+        XCTAssertEqual(seen.withLock { $0 }, passed.cutoff)
+        XCTAssertEqual(passed.events, 1)
+
+        try storeRows("b", daysAgo: 60)
+        let failed = try service(covered: Self.day(1), willTrimEvents: { _ in throw Boom() }).run(deadline: future)
+        XCTAssertTrue(failed.error?.hasPrefix("events.db:") == true, failed.error ?? "no error")
+        XCTAssertFalse(failed.finished)
+        XCTAssertEqual([failed.events, failed.messages, failed.turns], [0, 0, 0])
+        XCTAssertEqual(try count("events"), 1)
+        XCTAssertEqual(try count("turns"), 1)
+        XCTAssertEqual(try count("messages"), 1)
     }
 
     /// A batch that fails after earlier ones committed: the report carries what

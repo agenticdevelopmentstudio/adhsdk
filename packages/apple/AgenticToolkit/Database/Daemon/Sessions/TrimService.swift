@@ -126,6 +126,8 @@ public final class TrimService: Sendable {
     private let historyDays: Int
     private let coveredThroughDay: @Sendable () -> String?
     private let snapshotsReadThrough: (@Sendable () -> Int?)?
+    private let turnsReadThrough: (@Sendable () -> Int64?)?
+    private let willTrimEvents: (@Sendable (_ cutoff: Double) throws -> Void)?
     private let hold: (@Sendable () throws -> TrimHold?)?
     private let extraMainTrims: [@Sendable (_ cutoff: Double, _ deadline: Date) throws -> Int]
     private let now: @Sendable () -> Date
@@ -140,11 +142,20 @@ public final class TrimService: Sendable {
     ///   - snapshotsReadThrough: when given, the highest `rate_limit_snapshots.id`
     ///     the daemon's own readers have consumed; rows above it are never
     ///     deleted, and nil from it deletes no snapshot.
+    ///   - turnsReadThrough: when given, the highest `turns.id` the daemon's
+    ///     summaries have counted; a timed turn above it is never deleted, and nil
+    ///     from it deletes no timed turn.
+    ///   - willTrimEvents: called with the cutoff before any `events.db` row is
+    ///     deleted, so the daemon can record which days are about to lose rows;
+    ///     when it throws, the pass deletes nothing from `events.db` and reports
+    ///     the error.
     ///   - extraMainTrims: the daemon's own main-db trims, each returning rows deleted.
     public init(
         database: DaemonDatabase, eventStore: EventStore?, historyDays: Int,
         coveredThroughDay: @escaping @Sendable () -> String?,
         snapshotsReadThrough: (@Sendable () -> Int?)? = nil,
+        turnsReadThrough: (@Sendable () -> Int64?)? = nil,
+        willTrimEvents: (@Sendable (_ cutoff: Double) throws -> Void)? = nil,
         hold: (@Sendable () throws -> TrimHold?)? = nil,
         extraMainTrims: [@Sendable (_ cutoff: Double, _ deadline: Date) throws -> Int] = [],
         now: @escaping @Sendable () -> Date = Date.init
@@ -154,6 +165,8 @@ public final class TrimService: Sendable {
         self.historyDays = max(Self.minimumHistoryDays, historyDays)
         self.coveredThroughDay = coveredThroughDay
         self.snapshotsReadThrough = snapshotsReadThrough
+        self.turnsReadThrough = turnsReadThrough
+        self.willTrimEvents = willTrimEvents
         self.hold = hold
         self.extraMainTrims = extraMainTrims
         self.now = now
@@ -292,7 +305,11 @@ public final class TrimService: Sendable {
         // 3. events.db rows, then its incremental vacuum.
         if let eventStore {
             do {
-                let result = try eventStore.trim(olderThan: cutoff, batch: Self.batchSize, deadline: deadline)
+                try willTrimEvents?(cutoff)
+                // A read-through that answers nil keeps every timed turn (ids start at 1).
+                let maxTurnId: Int64? = turnsReadThrough.map { $0() ?? 0 }
+                let result = try eventStore.trim(olderThan: cutoff, maxTurnId: maxTurnId,
+                                                 batch: Self.batchSize, deadline: deadline)
                 report.events = result.events
                 report.messages = result.messages
                 report.turns = result.turns
