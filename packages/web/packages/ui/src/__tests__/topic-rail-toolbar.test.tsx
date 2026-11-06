@@ -605,6 +605,86 @@ describe('the search panel', () => {
   })
 })
 
+// A menu-detail cascade's child menu is an `overflow-hidden` box that hugs its rows. The list
+// overhung it, its last options clipped out of reach, and `scrollIntoView` scrolled the box
+// itself, pushing the menu's title and the field away with no scrollbar to bring them back.
+describe('the suggestions inside a clipping box', () => {
+  it('scroll the list alone as the arrows walk it', () => {
+    const scrolled: Element[] = []
+    const realInto = HTMLElement.prototype.scrollIntoView
+    HTMLElement.prototype.scrollIntoView = function (this: HTMLElement) {
+      scrolled.push(this)
+    }
+    const tops = new WeakMap<Element, number>()
+    const stubs = {
+      offsetTop: function (this: HTMLElement) {
+        return this.matches('[role="option"]') ? Number(this.dataset.index) * 30 : 0
+      },
+      offsetHeight: function (this: HTMLElement) {
+        return this.matches('[role="option"]') ? 30 : 0
+      },
+      clientHeight: function (this: HTMLElement) {
+        return this.matches('[role="listbox"]') ? 60 : 0
+      },
+    }
+    const reals = Object.fromEntries(
+      Object.keys(stubs).map((k) => [k, Object.getOwnPropertyDescriptor(HTMLElement.prototype, k)]),
+    )
+    const realScrollTop = Object.getOwnPropertyDescriptor(Element.prototype, 'scrollTop')
+    for (const [k, get] of Object.entries(stubs)) Object.defineProperty(HTMLElement.prototype, k, { configurable: true, get })
+    Object.defineProperty(Element.prototype, 'scrollTop', {
+      configurable: true,
+      get(this: Element) {
+        return tops.get(this) ?? 0
+      },
+      set(this: Element, v: number) {
+        tops.set(this, v)
+      },
+    })
+    try {
+      render(<TopicRail {...props} search={{}} />)
+      fireEvent.click(filterButton())
+      type('a')
+      const list = screen.getByRole('listbox')
+      key('ArrowDown')
+      key('ArrowDown')
+      expect(highlighted()).toBe('Gamma')
+      expect(list.scrollTop).toBe(30)
+      key('ArrowDown') // wraps to the first
+      expect(list.scrollTop).toBe(0)
+      expect(scrolled).toEqual([])
+    } finally {
+      HTMLElement.prototype.scrollIntoView = realInto
+      for (const [k, d] of Object.entries(reals)) {
+        if (d) Object.defineProperty(HTMLElement.prototype, k, d)
+        else delete (HTMLElement.prototype as unknown as Record<string, unknown>)[k]
+      }
+      if (realScrollTop) Object.defineProperty(Element.prototype, 'scrollTop', realScrollTop)
+    }
+  })
+
+  it('are no taller than the room left in the box that clips them', () => {
+    const real = Element.prototype.getBoundingClientRect
+    Element.prototype.getBoundingClientRect = function (this: Element) {
+      if (this.hasAttribute('data-clip')) return { top: 0, bottom: 200 } as DOMRect
+      if (this.matches('[role="listbox"]')) return { top: 120, bottom: 400 } as DOMRect
+      return real.call(this)
+    }
+    try {
+      render(
+        <div data-clip style={{ overflowY: 'hidden' }}>
+          <TopicRail {...props} search={{}} />
+        </div>,
+      )
+      fireEvent.click(filterButton())
+      type('a')
+      expect(screen.getByRole('listbox').style.maxHeight).toBe('min(18rem, 80px)')
+    } finally {
+      Element.prototype.getBoundingClientRect = real
+    }
+  })
+})
+
 // A rail filtering its own rows measured just the MATCHES when something else made it
 // re-measure, and kept that width after the query cleared, ellipsising the full list.
 describe('auto-fit while a live rail filters its own rows', () => {
