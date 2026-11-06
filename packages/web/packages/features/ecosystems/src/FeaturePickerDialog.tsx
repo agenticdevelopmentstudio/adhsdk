@@ -27,10 +27,11 @@ import {
  *
  * Built on the shared stack rather than a bespoke list because the picker is a
  * list-plus-details surface and `HierarchicalDetailView` already is one — its `checkable`
- * mode gives the checkboxes, `headerSlot` gives the filter field, and its detail pane
- * gives the description + subscription line. The one thing it does NOT give is keyboard
- * navigation of the rows (the rail has no key handling at all), which is why the arrow /
- * space handling below is written here.
+ * mode gives the checkboxes, its rail's `live` filter (`search`) gives the filter field, and
+ * its detail pane gives the description + subscription line. The one thing it does NOT give
+ * is keyboard navigation of the rows from that field (a `live` filter leaves its arrows,
+ * Space and Return to the host), which is why the arrow / space handling below is written
+ * here.
  *
  * Purely presentational: it holds the filter text, the ticks and the confirm, and hands
  * the change back. Fetching the catalog and applying the change belong to the caller.
@@ -351,7 +352,7 @@ export function FeaturePickerDialog({
   }, [changeCount, busy, loading]);
 
   /**
-   * The picker's keyboard, wired on the filter row because that is where focus lives: the
+   * The picker's keyboard, wired on the list box because focus lives in the filter field: the
    * user types to narrow the list and never leaves the field, so the arrows, Space and
    * Return have to work from there. The field is the rail's own filter (opened on mount by
    * `search.autoOpen`); keydown bubbles out of its `<input>` to the list box, which hands only

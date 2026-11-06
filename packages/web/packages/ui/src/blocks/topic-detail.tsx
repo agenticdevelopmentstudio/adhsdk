@@ -22,6 +22,7 @@ import { AlertModal } from "../components/alert-modal"
 import { Checkbox } from "../components/checkbox"
 import { CollapseToggle } from "../components/collapse-toggle"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../components/tooltip"
+import { stepIndex } from "../lib/step-index"
 import { cn } from "../lib/utils"
 
 // Faithful port of the adh.com/home topic rail, originally translated 1:1 from
@@ -121,8 +122,8 @@ export interface TopicDetailItem {
 /** A leading rail row rendered ABOVE the topics (e.g. a custom list header, or a PopupMenu control in
  *  FocusedTopicDetail). A function form receives the rail's collapsed state so it can shrink/hide when
  *  undisclosed. Rendered only when provided — an absent slot reserves NO space (the first topic sits at
- *  the top padding). This is distinct from the `+` create affordance (`onNew`) — first in a titled
- *  rail's list toolbar — which the hierarchical stack uses for its "New …" button. */
+ *  the top padding). This is distinct from the `+` create affordance (`onNew`) — beside the filter
+ *  in a titled rail's list toolbar — which the hierarchical stack uses for its "New …" button. */
 export type RailSlot = ReactNode | ((collapsed: boolean) => ReactNode)
 
 /**
@@ -136,12 +137,14 @@ export type RailSlot = ReactNode | ((collapsed: boolean) => ReactNode)
  * "clunky", and a field squeezed into a 180px rail is worse).
  *
  * Every titled rail has one (Mike, 2026-11-06: "always show the filter button"); this only
- * customises it. Leave it out, or pass `{}`, and the rail filters its own rows on label +
- * sublabel. Pass `query` (with `onQueryChange`) and the HOST owns the query and the filtering — for
- * a list whose rows are matched on more than what they show, or whose query is also read elsewhere.
+ * customises it. Leave it out, or pass `{}`, and the rail holds the query and offers its own rows
+ * that match on label + sublabel as suggestions, leaving the rows themselves whole; only `live`
+ * hides the rows that do not match. Pass `query` (with `onQueryChange`) and the HOST owns the
+ * query and the filtering — for a list whose rows are matched on more than what they show, or
+ * whose query is also read elsewhere.
  */
 export interface TopicListSearch {
-  /** Controlled query. Omit to let the rail hold it and filter its own rows. */
+  /** Controlled query. Omit to let the rail hold it and match its own rows. */
   query?: string
   /** Every keystroke in the field, controlled or not, and `""` once when Escape, ✕ or a chosen
    *  suggestion closes the panel. Focus merely leaving the field keeps a CONTROLLED query: the
@@ -872,8 +875,8 @@ export function TopicRail({
   railSlot?: RailSlot
   /** Move the gold selection bar onto the rail slot (nothing in the list selected). */
   railSlotActive?: boolean
-  /** Create affordance: when set, a `+` fires it — first in the list TOOLBAR of a titled rail,
-   *  in the bare control strip of an untitled one. */
+  /** Create affordance: when set, a `+` fires it — right after the filter in the list TOOLBAR of
+   *  a titled rail, in the bare control strip of an untitled one. */
   onNew?: () => void
   /** Accessible name + tooltip for the `+` (e.g. "New Persona"). Defaults to "New". */
   newLabel?: string
@@ -884,7 +887,7 @@ export function TopicRail({
    *  they used to ride — the title row — which every consumer across the fleet still spells. */
   titleActions?: ReactNode
   /** Customise this list's filter — see {@link TopicListSearch}. Every titled, un-collapsed rail
-   *  has the filter; omit this and it filters its own rows. */
+   *  has the filter; omit this and it offers its own matching rows as an autocomplete. */
   search?: TopicListSearch
   collapsed: boolean
   /** The click event is forwarded so the hierarchical stack can read its modifier keys (⌘/Ctrl-click
@@ -938,8 +941,8 @@ export function TopicRail({
   isRoot?: boolean
   /** Selected-row marking: `"bar"` (classic gold bar; default) or `"marker"` (dash + connector). */
   selectionStyle?: "bar" | "marker"
-  /** Full-width row between the titled header and the list — the hook for the shared
-   *  `ListHeader` (filter + actions) when an entity list lives inside the stack.
+  /** Full-width row between the list toolbar and the rows — for a control that belongs with
+   *  the list but is not a tool (the list's filter is in the toolbar, see `search`).
    *  Hidden while the rail is collapsed to an icon strip. */
   headerSlot?: ReactNode
   /** Trailing chevron on every selectable row (narrow/nav-stack mode's disclosure hint — see
@@ -1010,7 +1013,7 @@ export function TopicRail({
   // auto-fit, which has to know when the rows on screen are a subset the rail filtered itself.
   // EVERY list can be filtered (Mike, 2026-11-06: "always show the filter button"). A host's
   // `search` only customises it — its placeholder, or a query it owns; without one the rail holds
-  // the query and filters its own rows on label + sublabel.
+  // the query and matches its own rows on label + sublabel (hiding the rest only in `live`).
   const listSearch: TopicListSearch = search ?? {}
   const [ownQuery, setOwnQuery] = useState("")
   const [searchOpen, setSearchOpen] = useState(listSearch.autoOpen === true)
@@ -1300,6 +1303,11 @@ export function TopicRail({
     const room = floor - list.getBoundingClientRect().top
     list.style.maxHeight = room > 0 ? `min(18rem, ${Math.floor(room)}px)` : ""
   }, [suggestionsOpen])
+  // The topic a suggestion chose, until the list shows it selected: it may be far down a long
+  // list, scrolled out of sight behind the suggestions. Keyed on `selectedId` as well, because a
+  // host may select it a render (or a route change) later. A link row selects nothing, so it is
+  // never waited for.
+  const revealChosen = useRef<string | null>(null)
   // Choosing a suggestion selects its topic exactly as clicking its row would — a link row runs
   // its link through the owner's `onSelect` — and dismisses the filter. The topic already
   // selected is left as it is: re-selecting a row in an uncovered list TOGGLES it off.
@@ -1308,17 +1316,11 @@ export function TopicRail({
     closeSearch(true)
     if (item.id !== selectedId || item.onLink) onSelect(item.id)
   }
-  // The topic a suggestion chose, until the list shows it selected: it may be far down a long
-  // list, scrolled out of sight behind the suggestions. Keyed on `selectedId` as well, because a
-  // host may select it a render (or a route change) later. A link row selects nothing, so it is
-  // never waited for.
-  const revealChosen = useRef<string | null>(null)
   // EVERY titled rail has the toolbar, because every list has its filter — so every rail's rows
   // start at the same height without the stacks having to agree on it.
   const showToolbar = title !== undefined && !collapsed
-  // The pop-over is on screen exactly when this holds. The effect below keys on it, not on
-  // `searchOpen`: a collapse takes the toolbar away with the field still open, and the toolbar
-  // that comes back is a new element to measure and observe.
+  // The pop-over is on screen exactly when this holds: a collapse takes the toolbar away with the
+  // field still open, so `searchOpen` alone can name a field that is not there.
   const searchShown = showToolbar && searchOpen
   const queryActive = query.trim() !== ""
   // Waiting on a controlled host's rows for what is typed: "Searching…" hangs where the
@@ -1348,8 +1350,8 @@ export function TopicRail({
       data-htd-toolbar
       role="toolbar"
       aria-label={typeof title === "string" ? `${title} tools` : "List tools"}
-      // Same `pl-2.5` + `w-4` slot + `gap-2` geometry as the header, so the `+` sits over the row
-      // icons and the rails' first rows still line up.
+      // Same `pl-2.5` + `w-4` slot + `gap-2` geometry as the header, so the filter sits over the
+      // row icons and the rails' first rows still line up.
       className="relative flex min-h-[2rem] shrink-0 items-center gap-2 border-b border-apt-border pr-2 pl-2.5"
     >
       {/* The filter is ALWAYS first, in the slot over the row icons: the one tool every list
@@ -1428,9 +1430,8 @@ export function TopicRail({
               } else if ((e.key === "ArrowDown" || e.key === "ArrowUp") && suggestions.length > 0) {
                 // The caret stays put; the highlight moves, wrapping at either end.
                 e.preventDefault()
-                const step = e.key === "ArrowDown" ? 1 : -1
                 setActiveSuggestionId(
-                  suggestions[(highlighted + step + suggestions.length) % suggestions.length]?.id ?? null,
+                  suggestions[stepIndex(suggestions.length, highlighted, e.key, { wrap: true })]?.id ?? null,
                 )
               } else if (e.key === "Enter") {
                 // An IME commits its candidate on Return; that keystroke is the typing, not the filter.
