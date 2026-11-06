@@ -139,10 +139,8 @@ public struct GitIgnoreMatcher: Sendable, Equatable {
             case "?":
                 regex += "[^/]"
             case "[":
-                if let close = classEnd(in: characters, from: index) {
-                    var body = String(characters[(index + 1)..<close])
-                    if body.hasPrefix("!") { body = "^" + body.dropFirst() }
-                    regex += "[" + body.replacingOccurrences(of: "\\", with: "\\\\") + "]"
+                if let (classRegex, close) = bracketClass(in: characters, from: index) {
+                    regex += classRegex
                     index = close + 1
                     continue
                 }
@@ -162,18 +160,93 @@ public struct GitIgnoreMatcher: Sendable, Equatable {
         return regex
     }
 
-    /// The index of the `]` closing the class opened at `start`, or nil when
-    /// it is never closed — an unclosed `[` is a literal bracket.
-    private static func classEnd(in characters: [Character], from start: Int) -> Int? {
+    /// POSIX character classes a bracket expression may name, as git's
+    /// `wildmatch` accepts them; ICU reads the same `[:name:]` spelling inside
+    /// a set.
+    private static let posixClasses: Set<String> = [
+        "alnum", "alpha", "blank", "cntrl", "digit", "graph",
+        "lower", "print", "punct", "space", "upper", "xdigit"
+    ]
+
+    /// The bracket expression opened at `start`, translated member by member
+    /// into an ICU set, and the index of the `]` that closes it — or nil when
+    /// it is never closed or names an unknown class, which makes the `[` a
+    /// literal bracket.
+    ///
+    /// Never pasted through: ICU gives `[`, `&&`, `--` and `\` inside a set
+    /// meanings a glob does not, and a set that fails to compile is a rule
+    /// that silently never matches. Every literal member is escaped, ranges
+    /// and `[:name:]` classes are rebuilt, and the set never matches `/` —
+    /// git matches each path segment on its own, negated or not.
+    static func bracketClass(in characters: [Character], from start: Int) -> (String, Int)? {
         var index = start + 1
-        if index < characters.count, characters[index] == "!" { index += 1 }
-        // A `]` straight after the opening is a member, not the close.
-        if index < characters.count, characters[index] == "]" { index += 1 }
+        var negated = false
+        if index < characters.count, characters[index] == "!" || characters[index] == "^" {
+            negated = true
+            index += 1
+        }
+        var members = ""
+        var isFirst = true
         while index < characters.count {
-            if characters[index] == "]" { return index }
+            let character = characters[index]
+            // A `]` straight after the opening is a member, not the close.
+            if character == "]" && !isFirst {
+                if negated { return ("[^/" + members + "]", index) }
+                // Every range was backwards: a set that matches nothing,
+                // which ICU will not spell as `[]`.
+                if members.isEmpty { return ("(?!)", index) }
+                return ("(?!/)[" + members + "]", index)
+            }
+            isFirst = false
+            if character == "[", index + 1 < characters.count, characters[index + 1] == ":" {
+                guard let close = posixClassEnd(in: characters, from: index + 2) else { return nil }
+                let name = String(characters[(index + 2)..<close])
+                guard posixClasses.contains(name) else { return nil }
+                members += "[:" + name + ":]"
+                index = close + 2
+                continue
+            }
+            var low = character
+            if character == "\\" {
+                index += 1
+                guard index < characters.count else { return nil }
+                low = characters[index]
+            }
+            index += 1
+            // `a-z`, unless the `-` is last in the set, where it is literal.
+            if index + 1 < characters.count, characters[index] == "-", characters[index + 1] != "]" {
+                var high = characters[index + 1]
+                index += 2
+                if high == "\\" {
+                    guard index < characters.count else { return nil }
+                    high = characters[index]
+                    index += 1
+                }
+                // A backwards range matches nothing in git; in ICU it is an
+                // error, and the whole rule would never match.
+                if low <= high { members += setLiteral(low) + "-" + setLiteral(high) }
+            } else {
+                members += setLiteral(low)
+            }
+        }
+        return nil
+    }
+
+    /// The index of the `:` of the `:]` closing a `[:name` begun at `from`.
+    private static func posixClassEnd(in characters: [Character], from: Int) -> Int? {
+        var index = from
+        while index + 1 < characters.count {
+            if characters[index] == ":" && characters[index + 1] == "]" { return index }
+            if !characters[index].isLetter { return nil }
             index += 1
         }
         return nil
+    }
+
+    /// One character as a literal set member: letters and digits as they are,
+    /// everything else backslash-escaped, which ICU always reads as literal.
+    private static func setLiteral(_ character: Character) -> String {
+        character.isLetter || character.isNumber ? String(character) : "\\" + String(character)
     }
 
     private static func matches(_ pattern: String, _ subject: String) -> Bool {

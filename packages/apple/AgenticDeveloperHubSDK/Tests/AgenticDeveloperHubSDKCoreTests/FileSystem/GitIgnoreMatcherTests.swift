@@ -58,6 +58,26 @@ final class GitIgnoreMatcherTests: XCTestCase {
         XCTAssertFalse(excluded(["*.[!oa]"], "lib.o"))
     }
 
+    /// Bracket expressions are rebuilt for ICU, never pasted through: ICU
+    /// reads `[`, `&&`, `--` and `\\` in a set differently from a glob.
+    func testBracketExpressionsMatchAsGitDoes() {
+        XCTAssertTrue(excluded(["[[]"], "["))
+        XCTAssertTrue(excluded(["[]]"], "]"))
+        XCTAssertTrue(excluded(["[\\]]"], "]"))
+        XCTAssertFalse(excluded(["[\\]]"], "\\"))
+        XCTAssertTrue(excluded(["[a&&b]"], "&"))
+        XCTAssertTrue(excluded(["[a&&b]"], "a"))
+        XCTAssertTrue(excluded(["[a--z]"], "z"))
+        XCTAssertFalse(excluded(["[a--z]"], "m"))
+        XCTAssertTrue(excluded(["[a-c]x"], "bx"))
+        XCTAssertTrue(excluded(["[a-]"], "-"))
+        XCTAssertTrue(excluded(["[[:digit:]]*"], "7up"))
+        XCTAssertFalse(excluded(["[[:digit:]]*"], "up"))
+        XCTAssertFalse(excluded(["/foo[!x]bar"], "foo/bar"))
+        XCTAssertFalse(excluded(["/foo[/]bar"], "foo/bar"))
+        XCTAssertTrue(excluded(["/foo[!x]bar"], "fooybar"))
+    }
+
     func testNegationAndLastMatchWins() {
         let patterns = ["*.log", "!keep.log"]
         XCTAssertTrue(excluded(patterns, "a.log"))
