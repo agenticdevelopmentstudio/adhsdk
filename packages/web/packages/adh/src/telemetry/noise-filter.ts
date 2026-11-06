@@ -21,7 +21,9 @@
 
 type Frame = { filename?: string; abs_path?: string }
 type ExceptionValue = { type?: string; value?: string; stacktrace?: { frames?: Frame[] } }
-export type NoiseCandidate = { exception?: { values?: ExceptionValue[] }; message?: string }
+/** Only the exception is read: a message-only event (captureMessage) meets just the
+ *  bot and automation rules. */
+export type NoiseCandidate = { exception?: { values?: ExceptionValue[] } }
 export type NoiseEnvironment = { userAgent?: string; webdriver?: boolean }
 
 const BOT_USER_AGENT = /HeadlessChrome|\bbot\b|bot\/|crawler|spider|Lighthouse|PhantomJS|Puppeteer|Playwright|Obscura/i
