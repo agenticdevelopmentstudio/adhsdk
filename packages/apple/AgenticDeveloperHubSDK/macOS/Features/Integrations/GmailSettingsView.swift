@@ -31,10 +31,34 @@ struct GmailSettingsView: View {
         VStack(alignment: .leading, spacing: 8) {
             Text("OAuth Client").font(.headline)
             Text(model.oauthClientText).fixedSize(horizontal: false, vertical: true)
-            Button(model.isClientImported ? "Replace Client JSON…" : "Import Client JSON…") {
-                importClientJSON()
+            if let clientId = model.currentClientId, let secret = model.maskedClientSecret {
+                Grid(alignment: .leading, horizontalSpacing: 8, verticalSpacing: 4) {
+                    GridRow {
+                        Text("Current client ID").foregroundStyle(.secondary)
+                        Text(clientId).textSelection(.enabled).monospaced()
+                    }
+                    GridRow {
+                        Text("Current secret").foregroundStyle(.secondary)
+                        Text(secret).monospaced()
+                    }
+                }
             }
-            .disabled(model.busy)
+            Form {
+                TextField("Client ID", text: $model.clientIdDraft, prompt: Text("….apps.googleusercontent.com"))
+                SecureField("Client secret", text: $model.clientSecretDraft)
+            }
+            .frame(maxWidth: 460)
+            HStack {
+                Button(model.isClientImported ? "Replace Client" : "Save Client") {
+                    Task { await model.saveClientDraft() }
+                }
+                .disabled(model.busy || !model.canSaveClientDraft)
+                Text("or").foregroundStyle(.secondary)
+                Button(model.isClientImported ? "Replace from JSON…" : "Import Client JSON…") {
+                    importClientJSON()
+                }
+                .disabled(model.busy)
+            }
             if model.isClientImported && !model.accounts.isEmpty {
                 Text("Accounts signed in with a replaced client need Reconnect.")
                     .font(.caption).foregroundStyle(.secondary)
@@ -57,7 +81,7 @@ struct GmailSettingsView: View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Accounts").font(.headline)
             if !model.isClientImported {
-                Text("Import the OAuth client above before adding an account.")
+                Text("Add the OAuth client above before adding an account.")
                     .font(.caption).foregroundStyle(.secondary)
             }
             List(model.accounts, id: \.id, selection: $model.selectedAccountId) { account in

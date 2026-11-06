@@ -29,4 +29,12 @@ public struct GoogleOAuthClientConfig: Sendable, Equatable {
         }
         return GoogleOAuthClientConfig(clientId: clientId, clientSecret: clientSecret)
     }
+
+    /// This client in the downloaded file's shape, so values typed into a form go through the
+    /// same import (and the same `parse` checks) as an uploaded file.
+    public func installedJSON() throws -> Data {
+        try JSONSerialization.data(
+            withJSONObject: ["installed": ["client_id": clientId, "client_secret": clientSecret]],
+            options: [.sortedKeys])
+    }
 }

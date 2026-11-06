@@ -9,7 +9,7 @@ struct GmailSettingsModelTests {
         let service = ScriptedMailService(accounts: [.fixture()])
         let model = GmailSettingsModel(client: service.client)
         await model.reload()
-        #expect(model.provider == MailProviderStatus(configured: true, clientIdHint: "abc"))
+        #expect(model.provider == MailProviderStatus(configured: true, clientId: "abc"))
         #expect(model.accounts == [.fixture()])
         #expect(model.selectedAccountId == "a1")
         #expect(model.busy == false)
@@ -255,7 +255,7 @@ struct GmailSettingsModelTests {
     }
 
     @Test func importFromURLSendsTheFileBytes() async throws {
-        let service = ScriptedMailService(provider: MailProviderStatus(configured: false, clientIdHint: nil))
+        let service = ScriptedMailService(provider: MailProviderStatus(configured: false, clientId: nil))
         let model = GmailSettingsModel(client: service.client)
         let url = FileManager.default.temporaryDirectory.appendingPathComponent("\(UUID().uuidString).json")
         let bytes = Data(#"{"installed":{"client_id":"x"}}"#.utf8)
@@ -268,7 +268,7 @@ struct GmailSettingsModelTests {
     }
 
     @Test func importFromMissingURLSetsErrorMessage() async {
-        let service = ScriptedMailService(provider: MailProviderStatus(configured: false, clientIdHint: nil))
+        let service = ScriptedMailService(provider: MailProviderStatus(configured: false, clientId: nil))
         let model = GmailSettingsModel(client: service.client)
         let url = FileManager.default.temporaryDirectory.appendingPathComponent("\(UUID().uuidString).json")
         await model.importClientJSON(from: url)
@@ -283,27 +283,39 @@ struct GmailSettingsModelTests {
     }
 
     @Test func oauthClientTextWhenNoClientIsImported() async {
-        let service = ScriptedMailService(provider: MailProviderStatus(configured: false, clientIdHint: nil))
+        let service = ScriptedMailService(provider: MailProviderStatus(configured: false, clientId: nil))
         let model = GmailSettingsModel(client: service.client)
         await model.reload()
         #expect(model.isClientImported == false)
-        #expect(model.oauthClientText == "Import the OAuth client JSON you downloaded from Google Cloud "
-            + "(Desktop app). One client serves every Gmail account.")
+        #expect(model.oauthClientText == "Enter the client ID and secret of your Google Cloud Desktop app "
+            + "OAuth client, or import its downloaded JSON. One client serves every Gmail account.")
     }
 
-    @Test func oauthClientTextNamesTheImportedClient() async {
-        let service = ScriptedMailService(accounts: [.fixture()])
+    @Test func theImportedClientIsShownWithTheSecretMasked() async {
+        let service = ScriptedMailService(provider: MailProviderStatus(
+            configured: true, clientId: "id-9.apps.googleusercontent.com", clientSecretSuffix: "12345"))
         let model = GmailSettingsModel(client: service.client)
         await model.reload()
         #expect(model.isClientImported == true)
-        #expect(model.oauthClientText == "Using the OAuth client ending in …abc.")
+        #expect(model.oauthClientText == "Gmail signs in with this OAuth client. To change it, enter new "
+            + "values below or import a new JSON file.")
+        #expect(model.currentClientId == "id-9.apps.googleusercontent.com")
+        #expect(model.maskedClientSecret == "••••••••••12345")
     }
 
-    @Test func oauthClientTextWithoutAHint() async {
-        let service = ScriptedMailService(provider: MailProviderStatus(configured: true, clientIdHint: nil))
+    @Test func aSecretTooShortToPartlyShowIsFullyHidden() async {
+        let service = ScriptedMailService(provider: MailProviderStatus(configured: true, clientId: "id"))
         let model = GmailSettingsModel(client: service.client)
         await model.reload()
-        #expect(model.oauthClientText == "An OAuth client is imported.")
+        #expect(model.maskedClientSecret == "Stored (hidden)")
+    }
+
+    @Test func nothingIsShownWithoutAnImportedClient() async {
+        let service = ScriptedMailService(provider: MailProviderStatus(configured: false, clientId: nil))
+        let model = GmailSettingsModel(client: service.client)
+        await model.reload()
+        #expect(model.currentClientId == nil)
+        #expect(model.maskedClientSecret == nil)
     }
 
     @Test func replacingTheClientSendsTheNewJSONAndKeepsAccounts() async throws {
@@ -318,6 +330,53 @@ struct GmailSettingsModelTests {
         #expect(service.requests.contains(.importOAuthClient(json: bytes)))
         #expect(model.accounts == [.fixture()])
         #expect(model.errorMessage == nil)
+    }
+
+    @Test func savingTheClientFormSendsItAsInstalledJSONAndClearsTheFields() async throws {
+        let service = ScriptedMailService(provider: MailProviderStatus(configured: false, clientId: nil))
+        let model = GmailSettingsModel(client: service.client)
+        model.clientIdDraft = "  id-1.apps.googleusercontent.com \n"
+        model.clientSecretDraft = " GOCSPX-secret "
+        #expect(model.canSaveClientDraft)
+        await model.saveClientDraft()
+        let sent = service.requests.compactMap { request -> Data? in
+            if case .importOAuthClient(let json) = request { return json }
+            return nil
+        }
+        #expect(sent.count == 1)
+        let parsed = try GoogleOAuthClientConfig.parse(json: try #require(sent.first))
+        #expect(parsed == GoogleOAuthClientConfig(
+            clientId: "id-1.apps.googleusercontent.com", clientSecret: "GOCSPX-secret"))
+        #expect(model.clientIdDraft.isEmpty)
+        #expect(model.clientSecretDraft.isEmpty)
+        #expect(model.errorMessage == nil)
+        #expect(model.isClientImported)
+    }
+
+    @Test func aRejectedClientKeepsTheFormFilled() async {
+        let service = ScriptedMailService(provider: MailProviderStatus(configured: false, clientId: nil))
+        service.fail(with: "bad client") {
+            if case .importOAuthClient = $0 { return true }
+            return false
+        }
+        let model = GmailSettingsModel(client: service.client)
+        model.clientIdDraft = "id"
+        model.clientSecretDraft = "secret"
+        await model.saveClientDraft()
+        #expect(model.errorMessage == "bad client")
+        #expect(model.clientIdDraft == "id")
+        #expect(model.clientSecretDraft == "secret")
+    }
+
+    @Test func anIncompleteClientFormSendsNothing() async {
+        let service = ScriptedMailService(provider: MailProviderStatus(configured: false, clientId: nil))
+        let model = GmailSettingsModel(client: service.client)
+        model.clientIdDraft = "id"
+        model.clientSecretDraft = "   "
+        #expect(!model.canSaveClientDraft)
+        await model.saveClientDraft()
+        #expect(model.errorMessage == "Enter both the client ID and the client secret.")
+        #expect(!service.requests.contains { if case .importOAuthClient = $0 { return true } else { return false } })
     }
 
     @Test func dismissErrorClearsIt() async {

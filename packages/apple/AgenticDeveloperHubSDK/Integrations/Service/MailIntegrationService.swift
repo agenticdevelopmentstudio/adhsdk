@@ -113,10 +113,12 @@ public actor MailIntegrationService {
 
     private func providerStatus() throws -> MailProviderStatus {
         guard let config = try store.providerConfig(providerId: Self.provider),
-              secrets.get(forKey: GoogleTokenProvider.clientSecretKey) != nil else {
-            return MailProviderStatus(configured: false, clientIdHint: nil)
+              let secret = secrets.get(forKey: GoogleTokenProvider.clientSecretKey) else {
+            return MailProviderStatus(configured: false, clientId: nil)
         }
-        return MailProviderStatus(configured: true, clientIdHint: String(config.clientId.suffix(12)))
+        return MailProviderStatus(
+            configured: true, clientId: config.clientId,
+            clientSecretSuffix: MailProviderStatus.visibleSuffix(ofSecret: secret))
     }
 
     private func importOAuthClient(json: Data) throws -> MailProviderStatus {

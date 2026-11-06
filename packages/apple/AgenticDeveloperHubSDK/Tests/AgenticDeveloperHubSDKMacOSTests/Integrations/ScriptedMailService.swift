@@ -14,7 +14,7 @@ final class ScriptedMailService: @unchecked Sendable {
     private var gateMatches: (@Sendable (MailRequest) -> Bool)?
     private var waiting: [CheckedContinuation<Void, Never>] = []
 
-    init(provider: MailProviderStatus = MailProviderStatus(configured: true, clientIdHint: "abc"),
+    init(provider: MailProviderStatus = MailProviderStatus(configured: true, clientId: "abc"),
          accounts: [MailAccount] = []) {
         self.provider = provider
         self.accountList = accounts
@@ -88,11 +88,11 @@ final class ScriptedMailService: @unchecked Sendable {
             case .providerStatus: return .providerStatus(provider)
             case .listAccounts: return .accounts(accountList)
             case .removeProvider:
-                provider = MailProviderStatus(configured: false, clientIdHint: nil)
+                provider = MailProviderStatus(configured: false, clientId: nil)
                 accountList = []
                 return .ok
             case .importOAuthClient:
-                provider = MailProviderStatus(configured: true, clientIdHint: "abc")
+                provider = MailProviderStatus(configured: true, clientId: "abc")
                 return .ok
             case .updateSettings(let account, let settings):
                 if let index = accountList.firstIndex(where: { $0.id == account }) {

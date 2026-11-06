@@ -43,8 +43,9 @@ open class IntegrationsSettingsPanel: ComposableSettings.SettingsPanelSplitViewC
             ),
             .init(
                 title: "Gmail",
-                body: "Gmail needs an OAuth client JSON downloaded from Google Cloud (Desktop app). "
-                    + "Once imported, add one or more accounts and choose which mail to sync. "
+                body: "Gmail needs a Google Cloud OAuth client (Desktop app): enter its client ID and "
+                    + "secret, or import its downloaded JSON. Then add one or more accounts and "
+                    + "choose which mail to sync. "
                     + "Sign-in tokens are kept in your login Keychain."
             )
         ])
