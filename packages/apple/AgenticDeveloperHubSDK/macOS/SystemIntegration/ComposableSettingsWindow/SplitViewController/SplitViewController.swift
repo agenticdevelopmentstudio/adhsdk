@@ -373,6 +373,7 @@ extension ComposableSettings {
             // window yet to paint — so without this the window keeps its stock
             // grey, which a transparent titlebar puts on show along the top.
             applyTheme(ThemePaletteObserver.currentPalette)
+            hasAppeared = true
             updateSidebarLayout()
             // Laying the split out can bring a collapsed sidebar back; a hidden
             // list stays hidden.
@@ -411,7 +412,14 @@ extension ComposableSettings {
         /// their topic lists needs — so switching between them never moves the
         /// inner divider. Force-loads each so its list is populated enough to
         /// report a content width (they otherwise load lazily on first show).
+        ///
+        /// Only once this split has been on screen. Before that the pass would
+        /// load every section — and so every section's first panel, whose
+        /// `viewDidLoad` may spawn processes, load plugins or call the daemon —
+        /// at launch, for a window nobody has opened. `viewWillAppear` runs it
+        /// the first time the window does open.
         private func unifyNestedSidebars() {
+            guard hasAppeared else { return }
             // A split whose list is hidden (a section of one panel) has no
             // sidebar width to share, and counting it would widen the others'
             // lists to fit a list nobody sees.
@@ -442,6 +450,9 @@ extension ComposableSettings {
         /// separately from `detailMinimumThickness` so the nested-sidebar pass can
         /// be re-run without overwriting the subclass's own floor.
         private var nestedDetailFloor: CGFloat = 0
+
+        /// Set by the first `viewWillAppear`; see `unifyNestedSidebars`.
+        private var hasAppeared = false
 
         /// The detail item's floor: whichever of the two floors is larger. Help
         /// contributes nothing — the drawer opens *outside* the window, so it
