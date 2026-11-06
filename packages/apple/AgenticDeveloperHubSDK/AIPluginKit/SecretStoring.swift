@@ -21,21 +21,37 @@ public protocol SecretStoring: Sendable {
     @discardableResult func deleteLegacy(forKey key: String) -> Bool
 }
 
-/// Production `SecretStoring` backed by the host process's `KeychainHelper` namespace.
+/// Production `SecretStoring` backed by `KeychainHelper`.
+///
+/// With no `service` it uses the host process's `KeychainHelper.service`,
+/// read at each call (so a host that pins that global after building the
+/// store still gets the pinned one). With a `service` it keeps its items under
+/// that service alone, without touching the process-wide global, so one
+/// process can hold stores for different services side by side.
 public struct KeychainSecretStore: SecretStoring {
     /// The pre-pin fallback service a bundle-id-less daemon used before hosts
     /// pinned an explicit one. Mirrors `KeychainHelper`'s own default fallback.
     public static let legacyService = "com.agentictoolkit"
 
-    public init() {}
+    /// The Keychain service this store reads and writes, or nil for the
+    /// process-wide `KeychainHelper.service`.
+    public let service: String?
 
-    public func get(forKey key: String) -> String? { KeychainHelper.get(forKey: key) }
+    public init(service: String? = nil) {
+        self.service = service
+    }
+
+    private var resolvedService: String { service ?? KeychainHelper.service }
+
+    public func get(forKey key: String) -> String? { KeychainHelper.get(forKey: key, service: resolvedService) }
 
     @discardableResult
-    public func set(_ value: String, forKey key: String) -> Bool { KeychainHelper.set(value, forKey: key) }
+    public func set(_ value: String, forKey key: String) -> Bool {
+        KeychainHelper.set(value, forKey: key, service: resolvedService)
+    }
 
     @discardableResult
-    public func delete(forKey key: String) -> Bool { KeychainHelper.delete(forKey: key) }
+    public func delete(forKey key: String) -> Bool { KeychainHelper.delete(forKey: key, service: resolvedService) }
 
     @discardableResult
     public func deleteLegacy(forKey key: String) -> Bool {

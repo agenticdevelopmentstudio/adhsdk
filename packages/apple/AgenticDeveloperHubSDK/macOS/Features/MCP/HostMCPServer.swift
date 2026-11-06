@@ -26,7 +26,7 @@ public actor HostMCPServer {
     /// next client's `initialize` with "Server is already initialized".
     private var server: Server?
     private var registrations: [Registration] = []
-    private let log = Logger(subsystem: "AgenticDeveloperHubSDK", category: "automation")
+    let log = Logger(subsystem: "AgenticDeveloperHubSDK", category: "automation")
 
     public init(appName: String, appVersion: String) {
         self.appName = appName
