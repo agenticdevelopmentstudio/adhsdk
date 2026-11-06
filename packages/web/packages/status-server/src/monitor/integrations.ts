@@ -4,7 +4,9 @@ import { timeAgo } from "./time-ago";
 import { resolveCfAccountId, listWorkerScripts } from "@adh-sdk/deploy-platform/providers";
 import { createSelfCheckStabilizer } from "./self-check-stability";
 import type { CheckState, IntegrationCheck, IntegrationsResponse } from "./types";
-import type { StatusConfig } from "../config/port";
+import { vercelConfigured, type StatusConfig } from "../config/port";
+import { PLATFORM_UNREACHABLE_POLLS } from "./issue-sources";
+import { RUNTIME_ERROR_WINDOW_MS } from "../telemetry/runtime-errors";
 
 export type { IntegrationCheck };
 
@@ -310,6 +312,44 @@ async function checkPosthog(config: StatusConfig): Promise<IntegrationCheck> {
   }
 }
 
+/**
+ * Vercel runtime logs. Reading them means holding a stream open for seconds per deployment, so
+ * this does NOT probe: it reports what the monitor cycle's own read recorded (the
+ * `vercel-runtime` platform observation, with its failure streak) and what it stored. The token
+ * itself is probed by the `vercel` check.
+ */
+async function checkVercelRuntime(storage: Storage, config: StatusConfig, nowMs: number): Promise<IntegrationCheck> {
+  const id = "vercel-runtime";
+  const label = "Vercel runtime logs";
+  if (!vercelConfigured(config)) return missingWarn(id, label, ["VERCEL_API_TOKEN"]);
+  const fact = (await storage.board.readPlatformFacts()).find((p) => p.source === "vercel-runtime");
+  if (!fact || !fact.configured) {
+    return { id, label, configured: true, ok: false, state: "warn", detail: "first runtime-log read pending" };
+  }
+  const ago = timeAgo(new Date(fact.sampledAtMs).toISOString(), nowMs);
+  if (!fact.ok) {
+    const failing = fact.streak >= PLATFORM_UNREACHABLE_POLLS;
+    return {
+      id,
+      label,
+      configured: true,
+      ok: false,
+      state: failing ? "error" : "warn",
+      detail: `last read failed ${ago} ago (${fact.streak} in a row)`,
+    };
+  }
+  const groups = await storage.telemetry.runtimeErrors.load({ sinceMs: nowMs - RUNTIME_ERROR_WINDOW_MS });
+  const noun = groups.length === 1 ? "group" : "groups";
+  return {
+    id,
+    label,
+    configured: true,
+    ok: true,
+    state: "ok",
+    detail: `last read ${ago} ago · ${groups.length} runtime error ${noun} in the last 24h`,
+  };
+}
+
 // Cross-run debounce/correlation state for the reachability checks. Module-level:
 // the check runs per /integrations request and the streaks must survive between
 // them. Process-restart resets it, which only re-arms the (short) confirmation
@@ -344,14 +384,24 @@ export async function runIntegrationsCheck(
     checkRailway(config),
     checkGlitchtip(config),
     checkPosthog(config),
+    checkVercelRuntime(storage, config, nowMs),
   ]);
 
   const checks: IntegrationCheck[] = results.map((r, i) => {
     if (r.status === "fulfilled") return r.value;
     // A check threw unexpectedly — surface as error, never crash the route.
     // Order must match the Promise.allSettled array above.
-    const ids = ["stats", "cron", "vercel", "cloudflare", "railway", "glitchtip", "posthog"] as const;
-    const labels = ["Stats store", "Stats freshness", "Vercel", "Cloudflare", "Railway", "GlitchTip", "PostHog"] as const;
+    const ids = ["stats", "cron", "vercel", "cloudflare", "railway", "glitchtip", "posthog", "vercel-runtime"] as const;
+    const labels = [
+      "Stats store",
+      "Stats freshness",
+      "Vercel",
+      "Cloudflare",
+      "Railway",
+      "GlitchTip",
+      "PostHog",
+      "Vercel runtime logs",
+    ] as const;
     return {
       id: ids[i] ?? "unknown",
       label: labels[i] ?? "Unknown",

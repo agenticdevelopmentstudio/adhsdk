@@ -9,13 +9,23 @@ import { platformCanon } from "./overview";
  * `glitchtip` is the odd one out and deliberately so: the other sources answer "is the thing
  * reachable", it answers "is the thing THROWING". A site can be up on every probe and still
  * have an error Problem open, which is the whole point of carrying it here rather than
- * folding it into `http`.
+ * folding it into `http`. `vercel-runtime` is the same kind of source for the server side: it
+ * only ever opens a `platform-health|vercel-runtime` row when the runtime-log read keeps
+ * failing.
  *
  * MIRRORED CLIENT-SIDE in `web/src/lib/issue-sources.ts` — same union, same labels, same
  * order. The client indexes `SOURCE_LABEL[row.source]`, so a source the server can emit and
  * the client has never heard of renders `undefined` in the filter and the badge.
  */
-export type IssueSource = "dns" | "http" | "glitchtip" | "vercel" | "cloudflare-pages" | "railway" | "crunchy";
+export type IssueSource =
+  | "dns"
+  | "http"
+  | "glitchtip"
+  | "vercel"
+  | "vercel-runtime"
+  | "cloudflare-pages"
+  | "railway"
+  | "crunchy";
 
 /** Display labels for the source filter + badges. */
 export const SOURCE_LABEL: Record<IssueSource, string> = {
@@ -23,13 +33,23 @@ export const SOURCE_LABEL: Record<IssueSource, string> = {
   http: "HTTP",
   glitchtip: "GlitchTip",
   vercel: "Vercel",
+  "vercel-runtime": "Vercel runtime logs",
   "cloudflare-pages": "Cloudflare",
   railway: "Railway",
   crunchy: "Crunchy Bridge",
 };
 
 /** Canonical order for the source filter UI. */
-export const ISSUE_SOURCES: IssueSource[] = ["dns", "http", "glitchtip", "vercel", "cloudflare-pages", "railway", "crunchy"];
+export const ISSUE_SOURCES: IssueSource[] = [
+  "dns",
+  "http",
+  "glitchtip",
+  "vercel",
+  "vercel-runtime",
+  "cloudflare-pages",
+  "railway",
+  "crunchy",
+];
 
 /**
  * A `deploy_integrations.platform` string → the `platform_health_state.source` (and

@@ -93,5 +93,10 @@
     "tag": "0018_brief_molly_hayes",
     "when": 1793292446348,
     "sha256": "db454f60837b7cca20a6ba503cc624e897ef0846e1b803fcd07f29b505d4a4c7"
+  },
+  {
+    "tag": "0019_long_frightful_four",
+    "when": 1793986488033,
+    "sha256": "2f370ec12fc9904c5e7704b4b5c57c1ac82897859c113ad4c2fd3f13d3f86c69"
   }
 ]

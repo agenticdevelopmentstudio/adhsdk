@@ -443,6 +443,41 @@ export const analyticsMetrics = sqliteTable(
   ],
 );
 
+// Vercel runtime errors (error/fatal log lines and 5xx responses of each production project's
+// current production deployment), grouped by project, source, method, normalized path, status
+// and first message line. `key` is the hash of those, so a poll upserts. A group not seen for
+// 7 days is pruned. The grouping and counting rules live in `telemetry/runtime-errors.ts`.
+export const runtimeErrors = sqliteTable(
+  "runtime_errors",
+  {
+    key: text("key").primaryKey(),
+    project: text("project").notNull(), // Vercel project name
+    deploymentId: text("deployment_id").notNull(), // the deployment it was LAST seen on
+    domain: text("domain"),
+    source: text("source").notNull(), // request | serverless | edge-function | edge-middleware | delimiter
+    method: text("method"),
+    path: text("path"), // normalized: id-like segments read `:id`
+    status: integer("status"),
+    level: text("level").notNull(), // the worst level seen
+    message: text("message").notNull(), // first line, ≤ 200 chars
+    count: integer("count").notNull().default(0),
+    firstSeen: integer("first_seen", { mode: "timestamp" }).notNull(),
+    lastSeen: integer("last_seen", { mode: "timestamp" }).notNull(),
+    sampleRowId: text("sample_row_id"),
+  },
+  (t) => [index("idx_runtime_errors_last_seen").on(t.lastSeen)],
+);
+
+// Where counting got to in each deployment's runtime-log stream, so re-reading lines already
+// counted adds nothing: the newest line's timestamp (ms) and the rowIds counted AT it.
+export const runtimeLogCursors = sqliteTable("runtime_log_cursors", {
+  deploymentId: text("deployment_id").primaryKey(),
+  project: text("project").notNull(),
+  lastTimestampMs: integer("last_timestamp_ms").notNull(),
+  lastRowIds: text("last_row_ids", { mode: "json" }).$type<string[]>().notNull(),
+  updatedAt: integer("updated_at", { mode: "timestamp" }).notNull().default(now),
+});
+
 // --- User auth (self-enclosed; no central auth server) -----------------------
 // A real user-account system replaces the old shared-secret VIEW/ADMIN tokens.
 // `passwordHash` is null for OAuth-only accounts; `githubId` is null for

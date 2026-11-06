@@ -1,5 +1,8 @@
 import type { AnalyticsRange } from "./ranges";
 import type { DashboardSections } from "./sectioned-dashboard";
+import type { RuntimeErrorsReport } from "../types";
+
+export type { RuntimeErrorGroup, RuntimeErrorsReport } from "../types";
 
 export { ANALYTICS_RANGES } from "./ranges";
 
@@ -203,11 +206,13 @@ export interface ErrorsSectionData {
   issues: ErrorsIssuesSection;
   sites: SiteHealthRow[];
   detail: SiteErrorDetailSection;
+  /** Vercel runtime errors of the last 24h, read from the store (same body as `GET /errors/runtime`). */
+  runtime: RuntimeErrorsReport;
 }
 
 export interface ErrorsDashboardResponse {
   generatedAt: string;
   refreshing: boolean;
-  configured: { glitchtip: boolean; posthog: boolean };
+  configured: { glitchtip: boolean; posthog: boolean; vercel: boolean };
   sections: DashboardSections<ErrorsSectionData>;
 }

@@ -1,9 +1,18 @@
-import { and, desc, eq, notInArray, sql } from "drizzle-orm";
+import { and, desc, eq, gte, inArray, lt, notInArray, sql, type SQL } from "drizzle-orm";
 import type { Db } from "../client";
-import { analyticsMetrics, errors } from "../schema";
+import { analyticsMetrics, errors, runtimeErrors, runtimeLogCursors } from "../schema";
 import type { Store } from "../../telemetry/ports";
-import type { AnalyticsMetricDTO, ErrorDTO } from "../../telemetry/types";
-import type { TelemetryStore } from "../../storage/ports";
+import {
+  advanceCursor,
+  groupRuntimeEntries,
+  levelRank,
+  RUNTIME_ERROR_RETENTION_MS,
+  RUNTIME_LEVELS,
+  unseenEntries,
+  type RuntimeCursor,
+} from "../../telemetry/runtime-errors";
+import type { AnalyticsMetricDTO, ErrorDTO, RuntimeErrorGroup, RuntimeLogEntry } from "../../telemetry/types";
+import type { RuntimeErrorsStore, TelemetryStore } from "../../storage/ports";
 
 // SQLite/libSQL adapter of TelemetryStore — the ONLY place that knows the
 // errors/analytics streams live in a database. Each closes over `db` so nothing
@@ -181,9 +190,142 @@ function createAnalyticsStore(db: Db): Store<AnalyticsMetricDTO> {
   };
 }
 
+/** Rows per multi-row INSERT, well under SQLite's bound-variable limit. */
+const INSERT_CHUNK = 200;
+
+function chunks<T>(items: T[], size: number): T[][] {
+  const out: T[][] = [];
+  for (let i = 0; i < items.length; i += size) out.push(items.slice(i, i + size));
+  return out;
+}
+
+/** The SQL twin of `levelRank`, built from the same level list so the two cannot disagree. */
+function levelRankSql(level: SQL): SQL {
+  const arms = RUNTIME_LEVELS.map((l) => `WHEN '${l}' THEN ${levelRank(l)}`).join(" ");
+  return sql`(CASE ${level} ${sql.raw(arms)} ELSE ${levelRank(null)} END)`;
+}
+
+function rowToRuntimeGroup(r: typeof runtimeErrors.$inferSelect): RuntimeErrorGroup {
+  return {
+    key: r.key,
+    project: r.project,
+    deploymentId: r.deploymentId,
+    domain: r.domain,
+    source: r.source,
+    method: r.method,
+    path: r.path,
+    status: r.status,
+    level: r.level,
+    message: r.message,
+    count: r.count,
+    firstSeen: r.firstSeen.toISOString(),
+    lastSeen: r.lastSeen.toISOString(),
+    sampleRowId: r.sampleRowId,
+  };
+}
+
+function createRuntimeErrorsStore(db: Db): RuntimeErrorsStore {
+  return {
+    // APPENDING, never reconciling: a group absent from this read just was not seen again, so
+    // `complete` is ignored. Each line counts once per deployment, against that deployment's
+    // cursor, so reading the same stream twice adds nothing.
+    async save(entries: RuntimeLogEntry[], opts?: { nowMs?: number }): Promise<void> {
+      const nowMs = opts?.nowMs ?? Date.now();
+      const cutoffMs = nowMs - RUNTIME_ERROR_RETENTION_MS;
+      const fresh = entries.filter((e) => e.timestampMs >= cutoffMs);
+
+      const byDeployment = new Map<string, RuntimeLogEntry[]>();
+      for (const e of fresh) {
+        const list = byDeployment.get(e.deploymentId);
+        if (list) list.push(e);
+        else byDeployment.set(e.deploymentId, [e]);
+      }
+      const ids = [...byDeployment.keys()];
+      const prior = new Map<string, RuntimeCursor>();
+      for (const part of chunks(ids, INSERT_CHUNK)) {
+        const rows = await db.select().from(runtimeLogCursors).where(inArray(runtimeLogCursors.deploymentId, part));
+        for (const r of rows) prior.set(r.deploymentId, { lastTimestampMs: r.lastTimestampMs, lastRowIds: r.lastRowIds });
+      }
+
+      const counted: RuntimeLogEntry[] = [];
+      const cursors: (typeof runtimeLogCursors.$inferInsert)[] = [];
+      for (const [deploymentId, list] of byDeployment) {
+        const unseen = unseenEntries(list, prior.get(deploymentId));
+        if (unseen.length === 0) continue;
+        counted.push(...unseen);
+        const next = advanceCursor(prior.get(deploymentId), unseen)!;
+        cursors.push({ deploymentId, project: unseen[0]!.project, ...next, updatedAt: new Date(nowMs) });
+      }
+
+      const deltas = groupRuntimeEntries(counted);
+      const queries = [];
+      const newer = sql`excluded.last_seen >= ${runtimeErrors.lastSeen}`;
+      for (const part of chunks(deltas, INSERT_CHUNK)) {
+        queries.push(
+          db
+            .insert(runtimeErrors)
+            .values(
+              part.map(({ firstSeenMs, lastSeenMs, ...g }) => ({
+                ...g,
+                firstSeen: new Date(firstSeenMs),
+                lastSeen: new Date(lastSeenMs),
+              })),
+            )
+            .onConflictDoUpdate({
+              target: runtimeErrors.key,
+              set: {
+                count: sql`${runtimeErrors.count} + excluded.count`,
+                firstSeen: sql`min(${runtimeErrors.firstSeen}, excluded.first_seen)`,
+                lastSeen: sql`max(${runtimeErrors.lastSeen}, excluded.last_seen)`,
+                level: sql`CASE WHEN ${levelRankSql(sql`excluded.level`)} > ${levelRankSql(sql`${runtimeErrors.level}`)} THEN excluded.level ELSE ${runtimeErrors.level} END`,
+                // The newest line speaks for where the group lives now.
+                deploymentId: sql`CASE WHEN ${newer} THEN excluded.deployment_id ELSE ${runtimeErrors.deploymentId} END`,
+                domain: sql`CASE WHEN ${newer} THEN coalesce(excluded.domain, ${runtimeErrors.domain}) ELSE coalesce(${runtimeErrors.domain}, excluded.domain) END`,
+                sampleRowId: sql`CASE WHEN ${newer} THEN excluded.sample_row_id ELSE ${runtimeErrors.sampleRowId} END`,
+              },
+            }),
+        );
+      }
+      for (const part of chunks(cursors, INSERT_CHUNK)) {
+        queries.push(
+          db
+            .insert(runtimeLogCursors)
+            .values(part)
+            .onConflictDoUpdate({
+              target: runtimeLogCursors.deploymentId,
+              set: {
+                project: sql`excluded.project`,
+                lastTimestampMs: sql`excluded.last_timestamp_ms`,
+                lastRowIds: sql`excluded.last_row_ids`,
+                updatedAt: sql`excluded.updated_at`,
+              },
+            }),
+        );
+      }
+      // Retention: a group not seen for 7 days goes, and so does a cursor past it — any line it
+      // guards is older than retention and is dropped above before counting.
+      queries.push(db.delete(runtimeErrors).where(lt(runtimeErrors.lastSeen, new Date(cutoffMs))));
+      queries.push(db.delete(runtimeLogCursors).where(lt(runtimeLogCursors.lastTimestampMs, cutoffMs)));
+      // One batch is one transaction: the counts and the cursors that make them exact move together.
+      const [first, ...rest] = queries;
+      await db.batch([first!, ...rest]);
+    },
+
+    async load(opts?: { sinceMs?: number }): Promise<RuntimeErrorGroup[]> {
+      const base = db.select().from(runtimeErrors);
+      const rows = await (opts?.sinceMs === undefined
+        ? base
+        : base.where(gte(runtimeErrors.lastSeen, new Date(opts.sinceMs)))
+      ).orderBy(desc(runtimeErrors.lastSeen));
+      return rows.map(rowToRuntimeGroup);
+    },
+  };
+}
+
 export function createTelemetryStore(db: Db): TelemetryStore {
   return {
     errors: createErrorsStore(db),
     analytics: createAnalyticsStore(db),
+    runtimeErrors: createRuntimeErrorsStore(db),
   };
 }

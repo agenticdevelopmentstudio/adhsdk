@@ -306,7 +306,7 @@ export function createApp(opts: AppDeps): OpenAPIHono<{ Variables: AuthVars }> {
   if (opts.scheduler) app.route('/', cronRoutes(opts.storage, opts.scheduler));
   app.route('/', fleetRoutes(opts.storage, opts.config));
   app.route('/', telemetryRoutes(opts.storage, opts.config));
-  app.route('/', dashboardRoutes(opts.config));
+  app.route('/', dashboardRoutes(opts.config, opts.storage));
   // API bearer tokens (mint/list/revoke) — admin-gated, EXCEPT a token may revoke
   // itself (view tier). It MUST mount before usersRoutes: usersRoutes does
   // `use('*', requireAdmin)` at '/', which in Hono leaks onto every route

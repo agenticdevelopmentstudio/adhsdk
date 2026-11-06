@@ -63,10 +63,23 @@ describe('dashboard routes, with no provider configured', () => {
     expect(res.headers.get('cache-control')).toBe('no-store');
     const body = await parse(res);
     expect(body.refreshing).toBe(false);
-    expect(body.configured).toEqual({ glitchtip: false, posthog: false });
-    expect(Object.keys(body.sections).sort()).toEqual(['detail', 'issues', 'sites']);
+    expect(body.configured).toEqual({ glitchtip: false, posthog: false, vercel: false });
+    expect(Object.keys(body.sections).sort()).toEqual(['detail', 'issues', 'runtime', 'sites']);
     for (const section of Object.values<Record<string, unknown>>(body.sections)) {
       expect(section).toEqual({ data: null, error: null, updatedAt: null });
     }
+  });
+
+  it('answers the runtime errors with an empty 24h report, behind the view gate', async () => {
+    expect((await app.request('/errors/runtime')).status).toBe(401);
+    const res = await app.request('/errors/runtime', { headers: viewAuth });
+    expect(res.status).toBe(200);
+    expect(res.headers.get('cache-control')).toBe('no-store');
+    const body = await parse(res);
+    expect(Object.keys(body).sort()).toEqual(['generatedAt', 'groups', 'total', 'window']);
+    expect(body.window).toBe('24h');
+    expect(body.total).toBe(0);
+    expect(body.groups).toEqual([]);
+    expect(Number.isNaN(Date.parse(body.generatedAt))).toBe(false);
   });
 });

@@ -32,6 +32,28 @@ function section(data: Record<string, unknown>): Record<string, unknown> {
 export const dashboardSchemas: Schemas = {
   SiteHealthRow: object({ host: str, errors: num, requests: num, failures: num, p95Ms: nullableNum }),
   DashboardMarginal: object({ name: str, pageviews: num }),
+  RuntimeErrorGroup: object({
+    key: str,
+    project: str,
+    deploymentId: str,
+    domain: nullableStr,
+    source: str,
+    method: nullableStr,
+    path: nullableStr,
+    status: nullableNum,
+    level: str,
+    message: str,
+    count: num,
+    firstSeen: str,
+    lastSeen: str,
+    sampleRowId: nullableStr,
+  }),
+  RuntimeErrorsReport: object({
+    generatedAt: str,
+    window: { type: 'string', enum: ['24h'] },
+    total: num,
+    groups: list(ref('RuntimeErrorGroup')),
+  }),
 };
 
 const siteHealth = ref('SiteHealthRow');
@@ -143,6 +165,7 @@ const errorsSections = object({
       truncated: bool,
     }),
   ),
+  runtime: section(ref('RuntimeErrorsReport')),
 });
 
 export const dashboardPaths: Paths = {
@@ -172,7 +195,8 @@ export const dashboardPaths: Paths = {
   '/errors/dashboard': {
     get: {
       tags: [tag],
-      summary: 'Every unresolved GlitchTip issue, 30-day event history, and each site’s errors and failed requests',
+      summary:
+        'Every unresolved GlitchTip issue, 30-day event history, each site’s errors and failed requests, and the last 24h of Vercel runtime errors',
       security: BEARER,
       responses: {
         200: okJson(
@@ -180,10 +204,26 @@ export const dashboardPaths: Paths = {
           object({
             generatedAt: str,
             refreshing: bool,
-            configured: object({ glitchtip: bool, posthog: bool }),
+            configured: object({ glitchtip: bool, posthog: bool, vercel: bool }),
             sections: errorsSections,
           }),
         ),
+        ...errors(401),
+      },
+    },
+  },
+  '/errors/runtime': {
+    get: {
+      tags: [tag],
+      summary: 'Vercel runtime errors of the last 24h, grouped',
+      description:
+        'Error/fatal log lines and 5xx responses of each production project’s current production deployment, ' +
+        'as the monitor cycle last read them. Grouped by project, source, method, normalized path, status and ' +
+        'first message line; `count` is lines since `firstSeen` (7-day retention). Worst level first, then most ' +
+        'frequent. `total` counts every group in the window; `groups` is capped at 200.',
+      security: BEARER,
+      responses: {
+        200: okJson('Groups last seen in the window', ref('RuntimeErrorsReport')),
         ...errors(401),
       },
     },
