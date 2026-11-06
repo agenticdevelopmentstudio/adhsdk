@@ -1,10 +1,33 @@
 import type { AnalyticsRange } from "./ranges";
 import type { DashboardSections } from "./sectioned-dashboard";
 import type { RuntimeErrorsReport } from "../types";
+import type { AnalyticsViews, ErrorsViews } from "./views";
 
 export type { RuntimeErrorGroup, RuntimeErrorsReport } from "../types";
 
 export { ANALYTICS_RANGES } from "./ranges";
+export { DIMENSIONS, VERCEL_BREAKDOWNS, VITALS } from "./views";
+export type {
+  AnalyticsViews,
+  BreakdownTopic,
+  ChartSeries,
+  Dimension,
+  ErrorsSiteChart,
+  ErrorsSiteReport,
+  ErrorsViews,
+  JoinedSite,
+  RatedHealth,
+  RatedVitalsRow,
+  SectionFailure,
+  SiteBreakdown,
+  SiteErrorView,
+  SiteFailedRequestView,
+  SiteReport,
+  VercelBreakdown,
+  VercelProjectBar,
+  Vital,
+  VitalRating,
+} from "./views";
 
 // The wire shapes of GET /analytics/dashboard and GET /errors/dashboard. status-web keeps a hand
 // mirror in telemetry/dashboard-types.ts, held to this file by dashboard-types-parity.test.ts.
@@ -124,6 +147,8 @@ export interface AnalyticsDashboardResponse {
   range: AnalyticsRange;
   configured: { posthog: boolean; vercel: boolean };
   sections: DashboardSections<AnalyticsSectionData>;
+  /** What the pages draw, derived from `sections` on the server (src/telemetry/dashboard/views.ts). */
+  views: AnalyticsViews;
 }
 
 export interface ErrorIssue {
@@ -215,4 +240,6 @@ export interface ErrorsDashboardResponse {
   refreshing: boolean;
   configured: { glitchtip: boolean; posthog: boolean; vercel: boolean };
   sections: DashboardSections<ErrorsSectionData>;
+  /** What the per-site pages draw, derived from `sections` on the server (views.ts). */
+  views: ErrorsViews;
 }

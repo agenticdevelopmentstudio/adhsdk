@@ -1,5 +1,5 @@
 "use client";
-import { type ReactElement, useMemo } from "react";
+import type { ReactElement } from "react";
 import { Stat, StatRow, type StatTone } from "@adh-sdk/ui/components/stat";
 import { sectionLabelClass } from "@adh-sdk/ui/components/section-label";
 import {
@@ -12,7 +12,8 @@ import {
 import { menuTriggerPillClass } from "./menu-pill";
 import { useResponseHistory } from "../hooks/use-response-history";
 import { useBoard } from "../hooks/use-board";
-import { activityWindowLabel, deployCounts } from "../lib/overview";
+import { activityWindowLabel } from "../lib/overview";
+import type { UptimeTone } from "../types";
 import { ResponseChart } from "./ResponseChart";
 import { OptionsGear, OptionSection, optionRow } from "./OptionsGear";
 
@@ -32,6 +33,8 @@ export const DEFAULT_SPAN = SPANS[1]!; // 7d
 export interface OverviewStatsProps {
   /** Portfolio uptime % over the uptime window, or null until loaded. */
   uptimePercent: number | null;
+  /** How the server reads that figure (`/uptime`'s `overallUptimeTone`). */
+  uptimeTone: UptimeTone;
   /** "strip" = horizontal row (mobile hero); "card" = vertical stack (the
    *  desktop stats pane beside the activity list). */
   layout?: "strip" | "card";
@@ -40,13 +43,13 @@ export interface OverviewStatsProps {
   onSpanChange: (s: Span) => void;
 }
 
-/** Uptime figure tone — green ≥99, amber ≥95, red below; dim when unknown. */
-function uptimeTone(pct: number | null): StatTone {
-  if (pct == null) return "muted";
-  if (pct >= 99) return "success";
-  if (pct >= 95) return "accent";
-  return "error";
-}
+/** The colour for the server's uptime verdict — the thresholds behind it are the server's. */
+const UPTIME_STAT_TONE: Record<UptimeTone, StatTone> = {
+  good: "success",
+  warn: "accent",
+  bad: "error",
+  unknown: "muted",
+};
 
 /** The Stats panel's options gear — a single "Range" radio group (last X days). */
 export function StatsGear({ span, onSpanChange }: { span: Span; onSpanChange: (s: Span) => void }): ReactElement {
@@ -125,16 +128,13 @@ function AverageResponse({ spanLabel, points, height }: { spanLabel: string; poi
  * StatsGear}); the mobile hero strip carries its own compact menu. The figures
  * themselves are the shared Stat/StatRow grammar.
  */
-export function OverviewStats({ uptimePercent, layout = "strip", span, onSpanChange }: OverviewStatsProps): ReactElement {
+export function OverviewStats({ uptimePercent, uptimeTone, layout = "strip", span, onSpanChange }: OverviewStatsProps): ReactElement {
   const history = useResponseHistory(span.hours);
-  // Deploy counts come from the board's activity feed (the server's record of what
-  // happened), so the WINDOW is the server's too — `activityFromMs`, not a constant of our
-  // own — and it is independent of the span menu (which drives uptime% and the chart).
+  // Deploy counts are the board's own (`deployCounts`, counted by the server over its
+  // activity window `activityFromMs`), independent of the span menu (which drives uptime%
+  // and the chart).
   const { board } = useBoard();
-  const stats = useMemo(
-    () => (board == null ? null : deployCounts(board.activity, board.activityFromMs)),
-    [board],
-  );
+  const stats = board?.deployCounts ?? null;
   const window = board == null ? null : activityWindowLabel(board.activityFromMs, Date.parse(board.generatedAt));
   const points = history.data?.points ?? [];
 
@@ -142,7 +142,7 @@ export function OverviewStats({ uptimePercent, layout = "strip", span, onSpanCha
   // cannot name is a claim that nothing deployed, which we have no standing to make.
   const count = (n: number | undefined): string => (n == null ? "—" : String(n));
   const figures: { label: string; value: string; tone: StatTone }[] = [
-    { label: "uptime", value: uptimePercent != null ? `${uptimePercent}%` : "—", tone: uptimeTone(uptimePercent) },
+    { label: "uptime", value: uptimePercent != null ? `${uptimePercent}%` : "—", tone: UPTIME_STAT_TONE[uptimeTone] },
     { label: `builds · ${window ?? "—"}`, value: count(stats?.builds), tone: "neutral" },
     { label: `deploys · ${window ?? "—"}`, value: count(stats?.deploys), tone: "neutral" },
     {

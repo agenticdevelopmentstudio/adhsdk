@@ -132,6 +132,7 @@ export interface AnalyticsDashboardResponse {
   range: AnalyticsRange;
   configured: { posthog: boolean; vercel: boolean };
   sections: DashboardSections<AnalyticsSectionData>;
+  views: AnalyticsViews;
 }
 
 export interface ErrorIssue {
@@ -210,15 +211,167 @@ export interface SiteErrorDetailSection {
   truncated: boolean;
 }
 
+/**
+ * One group of Vercel runtime errors: same project, source, method, normalized path, status and
+ * first message line.
+ */
+export interface RuntimeErrorGroup {
+  /** Stable hash of the grouping fields. */
+  key: string;
+  project: string;
+  /** The deployment the group was LAST seen on. */
+  deploymentId: string;
+  domain: string | null;
+  source: string;
+  method: string | null;
+  /** Numeric, uuid and hash segments read `:id`. */
+  path: string | null;
+  status: number | null;
+  /** The worst level any of its lines carried. */
+  level: string;
+  /** First line of the message, at most 200 characters. */
+  message: string;
+  /** Lines counted since `firstSeen` (within the 7-day retention), each `rowId` once. */
+  count: number;
+  firstSeen: string;
+  lastSeen: string;
+  /** A `rowId` of the most recent line, to look it up in Vercel. */
+  sampleRowId: string | null;
+}
+
+/** `GET /errors/runtime`, and the errors dashboard's `runtime` section. */
+export interface RuntimeErrorsReport {
+  generatedAt: string;
+  window: "24h";
+  /** Groups seen in the window; `groups` may be capped below it. */
+  total: number;
+  /** Seen in the window, worst level first, then most frequent. */
+  groups: RuntimeErrorGroup[];
+}
+
 export interface ErrorsSectionData {
   issues: ErrorsIssuesSection;
   sites: SiteHealthRow[];
   detail: SiteErrorDetailSection;
+  /** Vercel runtime errors of the last 24h (same body as `GET /errors/runtime`). */
+  runtime: RuntimeErrorsReport;
 }
 
 export interface ErrorsDashboardResponse {
   generatedAt: string;
   refreshing: boolean;
-  configured: { glitchtip: boolean; posthog: boolean };
+  configured: { glitchtip: boolean; posthog: boolean; vercel: boolean };
   sections: DashboardSections<ErrorsSectionData>;
+  views: ErrorsViews;
 }
+
+// ── Views: what the Analytics and Errors pages draw, derived by the server ──────────────────────
+// Every join, sort, threshold and rating behind these lives in status-server's
+// telemetry/dashboard/views.ts; the pages only lay them out.
+
+export const DIMENSIONS = ["country", "device", "browser", "referrer"] as const;
+export type Dimension = (typeof DIMENSIONS)[number];
+export const VERCEL_BREAKDOWNS = ["countries", "referrers", "paths", "devices"] as const;
+export type VercelBreakdown = (typeof VERCEL_BREAKDOWNS)[number];
+export type BreakdownTopic = "pages" | "countries" | "referrers" | "devices" | "browsers";
+export const VITALS = ["lcp", "inp", "cls", "fcp"] as const;
+export type Vital = (typeof VITALS)[number];
+export type VitalRating = "good" | "fair" | "poor";
+
+export interface RatedHealth extends SiteHealthRow {
+  /** The server's verdict that `failures / requests` is high. */
+  failureRateHigh: boolean;
+}
+
+export interface JoinedSite {
+  key: string;
+  posthog: { pageviews: number; sessions: number; series: number[] } | null;
+  vercel: { project: string; pageviews: number; visitors: number; series: number[] } | null;
+  health: RatedHealth | null;
+}
+
+export interface ChartSeries {
+  labels: string[];
+  posthog: (number | null)[] | null;
+  vercel: (number | null)[] | null;
+}
+
+export interface RatedVitalsRow extends VitalsRow {
+  site: string;
+  ratings: Record<Vital, VitalRating | null>;
+}
+
+export interface SiteBreakdown {
+  topic: BreakdownTopic;
+  posthog: Marginal[] | null;
+  vercel: Marginal[] | null;
+}
+
+export interface SiteReport {
+  posthog: { pageviews: number; sessions: number } | null;
+  vercel: { pageviews: number; visitors: number } | null;
+  health: RatedHealth | null;
+  pageviews: ChartSeries | null;
+  breakdowns: SiteBreakdown[];
+  projects: VercelRosterEntry[];
+  vercelIncomplete: boolean;
+  vitals: RatedVitalsRow[];
+  empty: boolean;
+}
+
+export interface SectionFailure {
+  source: "PostHog" | "Vercel";
+  what: string[];
+  error: string;
+}
+
+export interface VercelProjectBar {
+  site: string;
+  project: string;
+  pageviews: number;
+  visitors: number;
+}
+
+export interface AnalyticsViews {
+  sites: string[];
+  joined: JoinedSite[];
+  pageviews: ChartSeries;
+  pages: Marginal[] | null;
+  dimensions: Record<Dimension, Marginal[]> | null;
+  vercelProjects: VercelProjectBar[] | null;
+  vercelBreakdowns: Record<VercelBreakdown, Marginal[]> | null;
+  vitals: RatedVitalsRow[] | null;
+  siteReports: Record<string, SiteReport>;
+  failures: SectionFailure[];
+}
+
+export interface ErrorsSiteChart {
+  buckets: string[];
+  errors: number[];
+  failures: number[];
+}
+
+export interface SiteErrorView extends SiteErrorRow {
+  id: string;
+}
+
+export interface SiteFailedRequestView extends SiteFailedRequestRow {
+  id: string;
+}
+
+export interface ErrorsSiteReport {
+  health: RatedHealth | null;
+  chart: ErrorsSiteChart | null;
+  errors: SiteErrorView[];
+  requests: SiteFailedRequestView[];
+  empty: boolean;
+}
+
+export interface ErrorsViews {
+  sites: string[];
+  mostErrors: RatedHealth[];
+  mostErrorsLimit: number;
+  siteReports: Record<string, ErrorsSiteReport>;
+  siteFailures: SectionFailure[];
+}
+

@@ -1,19 +1,20 @@
 "use client";
-import { useMemo, type ReactElement } from "react";
+import type { ReactElement } from "react";
 import { BarList } from "@adh-sdk/ui/blocks/bar-list";
 import { formatCount } from "@adh-sdk/ui/blocks/trend-chart";
 import { Stat, StatStrip } from "@adh-sdk/ui/components/stat";
-import {
-  sectionFailures,
-  siteReport,
-  siteReportIsEmpty,
-  type BreakdownTopic,
-  type SiteBreakdown,
-  type SiteReport,
-  type Vital,
-} from "../lib/analytics-model";
 import { ANALYTICS_SOURCE_COLORS } from "../lib/colors";
-import type { AnalyticsRange, AnalyticsSectionData, DashboardSections, Marginal } from "../telemetry/dashboard-types";
+import type {
+  AnalyticsRange,
+  AnalyticsSectionData,
+  AnalyticsViews,
+  BreakdownTopic,
+  DashboardSections,
+  Marginal,
+  SiteBreakdown,
+  SiteReport,
+  Vital,
+} from "../telemetry/dashboard-types";
 import { PAGEVIEWS_NOTE, PageviewsChart, toBars, VITALS_NOTE, VitalCell } from "./AnalyticsParts";
 import { DashboardPanel, eitherSection, SiteFailureRate } from "./DashboardParts";
 
@@ -36,11 +37,23 @@ export interface AnalyticsSitePageProps {
   site: string;
   range: AnalyticsRange;
   sections: DashboardSections<AnalyticsSectionData>;
-  posthogOn: boolean;
-  vercelOn: boolean;
+  views: AnalyticsViews;
   refreshing: boolean;
   posthogUrl: string | undefined;
 }
+
+/** A site the server has no report for has nothing: the same report the server gives an unknown site. */
+const NO_REPORT: SiteReport = {
+  posthog: null,
+  vercel: null,
+  health: null,
+  pageviews: null,
+  breakdowns: [],
+  projects: [],
+  vercelIncomplete: false,
+  vitals: [],
+  empty: true,
+};
 
 function SourceList({
   source,
@@ -157,27 +170,21 @@ function ProjectsCard({
 
 /**
  * Everything one site has, as one scrolling page of the shared panels. What it does not have is not
- * drawn: `siteReport` decides, so no card has an empty state of its own. What could not be READ is a
+ * drawn: the server's report decides, so no card has an empty state of its own. What could not be READ is a
  * different thing and stays on the page, or a failed provider would look like a quiet one.
  */
 export function AnalyticsSitePage({
   site,
   range,
   sections,
-  posthogOn,
-  vercelOn,
+  views,
   refreshing,
   posthogUrl,
 }: AnalyticsSitePageProps): ReactElement {
-  const report = useMemo(() => siteReport(sections, site), [sections, site]);
-  const failures = useMemo(
-    () => sectionFailures(sections, { posthog: posthogOn, vercel: vercelOn }),
-    [sections, posthogOn, vercelOn],
-  );
-  const { posthog, vercel, health, breakdowns, projects, vitals } = report;
-  const empty = siteReportIsEmpty(report);
-  const charted = (posthog?.pageviews ?? 0) > 0 || (vercel?.pageviews ?? 0) > 0;
-  const bothCharted = (posthog?.pageviews ?? 0) > 0 && (vercel?.pageviews ?? 0) > 0;
+  const report = views.siteReports[site] ?? NO_REPORT;
+  const failures = views.failures;
+  const { posthog, vercel, health, pageviews, breakdowns, projects, vitals, empty } = report;
+  const bothCharted = pageviews !== null && pageviews.posthog !== null && pageviews.vercel !== null;
 
   return (
     <>
@@ -256,7 +263,7 @@ export function AnalyticsSitePage({
                     <Stat
                       align="start"
                       label="Failed requests"
-                      value={<SiteFailureRate failures={health.failures} requests={health.requests} />}
+                      value={<SiteFailureRate failures={health.failures} requests={health.requests} high={health.failureRateHigh} />}
                     />
                   )}
                   {health.p95Ms !== null && <Stat align="start" label="p95" value={`${Math.round(health.p95Ms)}ms`} />}
@@ -267,24 +274,16 @@ export function AnalyticsSitePage({
         </div>
       )}
 
-      {charted && (
+      {pageviews && (
         <DashboardPanel
           title="Pageviews"
-          source={bothCharted ? "PostHog and Vercel" : (posthog?.pageviews ?? 0) > 0 ? "PostHog" : "Vercel"}
+          source={bothCharted ? "PostHog and Vercel" : pageviews.posthog ? "PostHog" : "Vercel"}
           section={eitherSection({ PostHog: sections.traffic, Vercel: sections.vercel })}
           configured
           refreshing={refreshing}
           note={bothCharted ? PAGEVIEWS_NOTE : undefined}
         >
-          {() => (
-            <PageviewsChart
-              traffic={(posthog?.pageviews ?? 0) > 0 ? sections.traffic.data : null}
-              vercel={(vercel?.pageviews ?? 0) > 0 ? sections.vercel.data : null}
-              site={site}
-              range={range}
-              height={240}
-            />
-          )}
+          {() => <PageviewsChart series={pageviews} site={site} range={range} height={240} />}
         </DashboardPanel>
       )}
 
@@ -328,7 +327,7 @@ export function AnalyticsSitePage({
                         key={vital}
                         align="start"
                         label={label}
-                        value={<VitalCell vital={vital} value={row[vital]} />}
+                        value={<VitalCell vital={vital} value={row[vital]} rating={row.ratings[vital]} />}
                       />
                     ),
                   )}

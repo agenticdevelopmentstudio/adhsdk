@@ -6,9 +6,7 @@ import { useUptime } from "../hooks/use-uptime";
 import { useLiveSnapshot } from "../hooks/use-live-snapshot";
 import { useBoard } from "../hooks/use-board";
 import { useIntegrations } from "../hooks/use-integrations";
-import { computeSelfCheck } from "../lib/self-check";
 import type { UptimeDay } from "../types";
-import { summarizeByPlatform } from "../lib/deploy-view";
 import { timeAgo } from "../lib/time-ago";
 import { useNow } from "../hooks/use-now";
 import { KpiStrip } from "./KpiStrip";
@@ -44,10 +42,11 @@ export function Dashboard(): ReactElement {
   const hasError = status.error || !status.data;
 
   const services = status.data?.services ?? [];
+  // Deploys and each endpoint's deploy correlation come from the live snapshot, which
+  // the server has already joined (`deployIds`, `latestTerminalDeployId`,
+  // `deployFailures` per service) and judged (`effectiveStatus` per deploy).
   const deploys = store.snapshot?.deployments ?? [];
-  // Backend probe cadence — threaded to the deploy panels so they demote a stale
-  // in-flight deploy on the same cadence-scaled clock the activity list uses.
-  const probeIntervalMs = store.snapshot?.probeIntervalMs;
+  const liveBySlug = new Map((store.snapshot?.services ?? []).map((s) => [s.slug, s]));
 
   // "All clear": the BOARD says the portfolio is operational → show a big faint green
   // ✓ behind the matrix. This used to be re-derived from /api/status services + live
@@ -65,13 +64,11 @@ export function Dashboard(): ReactElement {
   // platform-unreachable, Crunchy and stale-prod problems, so these can legitimately all
   // read "up" during a real incident. They are labelled as endpoint counts in the strip
   // for exactly that reason.
-  const up = services.filter((s) => s.status === "healthy").length;
-  const degraded = services.filter((s) => s.status === "degraded").length;
-  const down = services.filter((s) => s.status === "down" || s.status === "unknown").length;
-  const total = services.length;
+  // The server tallies them (`counts`) — an unprobed endpoint counts as down, never up.
+  const counts = status.data?.counts ?? { up: 0, degraded: 0, down: 0, total: 0 };
 
   const nowMs = useNow();
-  const platforms = summarizeByPlatform(deploys, nowMs, probeIntervalMs);
+  const platforms = store.snapshot?.platformSummary ?? [];
   // The strip's TWO board-derived facts, both from `board` and both null together —
   // Fix Round 2 item C7: the headline verdict used to come from /api/status while the
   // incident count came from the board, so the most prominent element on the page could
@@ -84,14 +81,10 @@ export function Dashboard(): ReactElement {
   const updatedLabel = status.data?.checkedAt ? `updated ${timeAgo(status.data.checkedAt, nowMs)} ago` : "—";
 
   const integrationsData = integrationsQuery.data;
-  // Count issues the SAME way the SelfCheckBanner does (reachability chips + missing-env
-  // vars, minus the internal cron check) so the pill and the bar never disagree.
-  const selfCheckView = computeSelfCheck(integrationsData);
+  // The pill and the SelfCheckBanner read the same server view (`selfCheck`), so they
+  // never disagree about how many issues there are.
   const selfCheck = integrationsData
-    ? {
-        overall: integrationsData.overall,
-        issues: selfCheckView ? selfCheckView.issues.length + selfCheckView.missingEnv.length : 0,
-      }
+    ? { overall: integrationsData.overall, issues: integrationsData.selfCheck?.issueCount ?? 0 }
     : undefined;
 
   // Build uptimeBySlug map (keyed by slug, covers all env endpoints)
@@ -130,10 +123,10 @@ export function Dashboard(): ReactElement {
       {/* KPI strip — always rendered */}
       <KpiStrip
         overall={portfolioVerdict}
-        up={up}
-        degraded={degraded}
-        down={down}
-        total={total}
+        up={counts.up}
+        degraded={counts.degraded}
+        down={counts.down}
+        total={counts.total}
         platforms={platforms}
         incidents={activeIncidentCount}
         updatedLabel={updatedLabel}
@@ -228,6 +221,7 @@ export function Dashboard(): ReactElement {
                 <StatusMatrix
                   services={services}
                   uptimeBySlug={uptimeBySlug}
+                  liveBySlug={liveBySlug}
                   deploys={deploys}
                   selectedSlug={selectedSlug}
                   onSelect={handleSelect}
@@ -242,8 +236,8 @@ export function Dashboard(): ReactElement {
                   selectedSlug={selectedSlug}
                   svc={selectedSvc}
                   uptime={selectedUptime}
+                  live={selectedSlug ? liveBySlug.get(selectedSlug) : undefined}
                   deploys={deploys}
-                  probeIntervalMs={probeIntervalMs}
                 />
               ) : (
                 <GlobalPanel platforms={platforms} />

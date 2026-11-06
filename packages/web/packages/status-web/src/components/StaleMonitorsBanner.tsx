@@ -1,12 +1,11 @@
 "use client";
-import { useMemo, useState, type ReactElement, type ReactNode } from "react";
+import { useState, type ReactElement, type ReactNode } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useStatusApi } from "../api/client";
 import { deleteEndpoint } from "../api/monitored-sites";
 import { useLiveSnapshot } from "../hooks/use-live-snapshot";
 import { useNow } from "../hooks/use-now";
 import { COLORS, PALETTE, TINT } from "../lib/colors";
-import { selectStaleMonitors, STALE_MONITOR_MS } from "../lib/stale-monitors";
 import { timeAgo } from "../lib/time-ago";
 import { hostOf } from "../lib/url";
 import { plural } from "../lib/format";
@@ -14,8 +13,6 @@ import { Popover, PopoverTrigger, PopoverContent } from "@adh-sdk/ui/components/
 import { AlertModal } from "@adh-sdk/ui/components/alert-modal";
 import { BANNER_MONO, bannerBarStyle, bannerColor, bannerTriggerClass } from "./banner-bar";
 import { invalidateConfigQueries } from "../hooks/use-config-status";
-
-const THRESHOLD_DAYS = Math.floor(STALE_MONITOR_MS / 86_400_000);
 
 /** One monitor offered for removal. `id` is the endpoint id — both the React key and what
  *  `DELETE /config/endpoints/:id` takes; the rest is this row's copy. */
@@ -36,8 +33,9 @@ interface Row {
  * cycle deletes a monitor no platform project claims any more, with no banner and nothing to
  * click. What reaches here is a judgement call — something still claimed (or exempt from the
  * rule entirely, like a `health` probe) that has been down for a week: a site nobody turned
- * off, or an outage nobody fixed. `selectStaleMonitors` owns that rule. Whether the host
- * resolves is not part of it; it only words the confirm.
+ * off, or an outage nobody fixed. The SERVER owns that rule and publishes its picks as
+ * `/live`'s `staleMonitors`. Whether the host resolves is not part of it; it only words
+ * the confirm.
  *
  * Because nothing here is provably dead, removal is never automatic: every row arms the
  * destructive confirm and nothing is deleted without the operator confirming THAT row.
@@ -55,11 +53,8 @@ export function StaleMonitorsBanner(): ReactElement | null {
   const [pending, setPending] = useState<Row | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const services = store.snapshot?.services;
-  // The 7-day threshold only changes at day granularity, so key the memo to the day
-  // (not the 30s `nowMs` tick); using the day-floored "now" keeps ages stable too.
-  const dayMs = Math.floor(nowMs / 86_400_000) * 86_400_000;
-  const stale = useMemo(() => selectStaleMonitors(services ?? [], dayMs), [services, dayMs]);
+  const stale = store.snapshot?.staleMonitors.monitors ?? [];
+  const thresholdDays = store.snapshot?.staleMonitors.thresholdDays ?? 0;
 
   const rows: Row[] = stale.map((m) => {
     const host = hostOf(m.url) || m.url;
@@ -118,13 +113,13 @@ export function StaleMonitorsBanner(): ReactElement | null {
           aria-label="Review monitors that have been down long enough to retire"
           className={bannerTriggerClass("red")}
         >
-          {`🗑 RETIRE: ${plural(stale.length, "stale monitor")} down ${THRESHOLD_DAYS}d+`}
+          {`🗑 RETIRE: ${plural(stale.length, "stale monitor")} down ${thresholdDays}d+`}
           <span aria-hidden style={{ opacity: 0.7 }}>▾</span>
         </PopoverTrigger>
         <PopoverContent align="start" sideOffset={6} className="w-auto p-1.5" style={{ minWidth: 320, maxWidth: 480 }}>
           <div style={{ maxHeight: 360, overflowY: "auto", display: "flex", flexDirection: "column", gap: 4 }}>
             <div style={{ fontFamily: BANNER_MONO, fontSize: 10, fontWeight: 700, letterSpacing: "0.06em", color: bannerColor("red"), padding: "2px 6px" }}>
-              {`🗑 DOWN ${THRESHOLD_DAYS}d+`} · {rows.length}
+              {`🗑 DOWN ${thresholdDays}d+`} · {rows.length}
             </div>
             {rows.map((row) => {
               const working = busy === row.id;

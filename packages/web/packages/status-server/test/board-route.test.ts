@@ -185,10 +185,13 @@ describe("GET /board", () => {
     const nowMs = Date.now();
     const expected = deriveBoard(await readBoardFacts(storage, nowMs, testConfig()), nowMs);
     const body = (await (await app.request("/board")).json()) as Board;
-    // The two CLOCK-DERIVED fields are the only ones that legitimately differ — two clock
-    // reads, ms apart. `activityFromMs` is `nowMs` minus a constant, so it carries the same
-    // skew as `generatedAt` and is blanked alongside it rather than compared.
-    const atNow = (b: Board): Board => ({ ...b, generatedAt: "", activityFromMs: 0 });
+    // The three CLOCK-DERIVED fields are the only ones that legitimately differ — two clock
+    // reads, ms apart. `activityFromMs` is `nowMs` minus a constant and `freshness.staleAt`
+    // is `nowMs` plus one, so both carry the same skew as `generatedAt` and are blanked
+    // alongside it rather than compared.
+    const atNow = (b: Board): Board => ({
+      ...b, generatedAt: "", activityFromMs: 0, freshness: { ...b.freshness, staleAt: "" },
+    });
     expect(atNow(body)).toEqual(atNow(expected));
   });
 });

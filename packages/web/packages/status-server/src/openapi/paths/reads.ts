@@ -27,7 +27,7 @@ export const readsSchemas: Schemas = {
     type: 'object',
     required: [
       'slug', 'group', 'name', 'url', 'environment', 'platform', 'deployProject',
-      'status', 'responseTimeMs', 'statusCode', 'error', 'lastCheckedAt',
+      'status', 'responseTimeMs', 'statusCode', 'error', 'lastCheckedAt', 'slow',
     ],
     properties: {
       slug: { type: 'string' },
@@ -42,20 +42,91 @@ export const readsSchemas: Schemas = {
       statusCode: nul('number'),
       error: nul('string'),
       lastCheckedAt: nul('string'),
+      slow: { type: 'boolean', description: 'The last response was slower than 1000 ms' },
       // Additive canonical links (GET /status only); absent on the other reads.
       links: ref('Links'),
     },
   },
-  // LiveServiceDTO = ServiceStatusDTO + dnsOk + downSince (monitor/live-types.ts).
+  // LiveServiceDTO = ServiceStatusDTO + dnsOk + downSince + the endpoint's deploy
+  // correlation (monitor/live-types.ts, monitor/overview.ts endpointDeploys).
   LiveService: {
     allOf: [
       ref('ServiceStatus'),
       {
         type: 'object',
-        required: ['dnsOk', 'downSince'],
-        properties: { dnsOk: { type: 'boolean' }, downSince: nul('string') },
+        required: ['dnsOk', 'downSince', 'deployIds', 'latestTerminalDeployId', 'deployFailures'],
+        properties: {
+          dnsOk: { type: 'boolean' },
+          downSince: nul('string'),
+          deployIds: {
+            type: 'array',
+            items: { type: 'string' },
+            description: "Ids of this snapshot's deployments that belong to the endpoint's deploy target, newest first",
+          },
+          latestTerminalDeployId: {
+            ...nul('string'),
+            description: 'Id of the newest definitive (success or failed) deploy of the target — canceled and in-flight are skipped — or null',
+          },
+          deployFailures: { type: 'number', description: "Count of the target's failed deploys in this snapshot" },
+        },
       },
     ],
+  },
+  // LiveDeploymentDTO = Deployment + the status a view should show (monitor/live-types.ts).
+  LiveDeployment: {
+    allOf: [
+      ref('Deployment'),
+      {
+        type: 'object',
+        required: ['effectiveStatus'],
+        properties: {
+          effectiveStatus: {
+            type: 'string',
+            description:
+              "`status`, except an in-flight (building/queued) phase no poll has re-confirmed within the window reads 'unknown'",
+          },
+        },
+      },
+    ],
+  },
+  // PlatformSummary (monitor/overview.ts) — one per-platform pill, in canonical platform order.
+  PlatformSummary: {
+    type: 'object',
+    required: ['platform', 'ready', 'building', 'failed', 'total'],
+    properties: {
+      platform: { type: 'string' },
+      ready: { type: 'number' },
+      building: { type: 'number' },
+      failed: { type: 'number' },
+      total: { type: 'number' },
+    },
+  },
+  // StaleMonitor (monitor/live-view.ts) — an endpoint down past the stale-monitor threshold.
+  StaleMonitor: {
+    type: 'object',
+    required: ['slug', 'name', 'url', 'environment', 'detail', 'dnsOk', 'downSince', 'ageMs'],
+    properties: {
+      slug: { type: 'string' },
+      name: { type: 'string' },
+      url: { type: 'string' },
+      environment: nul('string'),
+      detail: { type: 'string' },
+      dnsOk: { type: 'boolean' },
+      downSince: { type: 'string' },
+      ageMs: { type: 'number' },
+    },
+  },
+  // SelfCheckView (monitor/types.ts) — the self-check bar's verdict, or null when all is well.
+  SelfCheckView: {
+    type: 'object',
+    required: ['missingEnv', 'missingEnvError', 'issues', 'hasError', 'issueCount'],
+    properties: {
+      missingEnv: { type: 'array', items: { type: 'string' } },
+      missingEnvError: { type: 'boolean' },
+      issues: { type: 'array', items: ref('IntegrationCheck') },
+      hasError: { type: 'boolean' },
+      issueCount: { type: 'number' },
+    },
   },
   // DeploymentDTO (monitor/types.ts) — the key fields; the provider mapper adds more.
   Deployment: {
@@ -133,14 +204,21 @@ export const readsSchemas: Schemas = {
       correlated: { type: 'boolean' },
     },
   },
+  // UptimeTone (monitor/uptime.ts) — good at 99% and up, warn at 95% and up, bad below.
+  UptimeTone: {
+    type: 'string',
+    enum: ['good', 'warn', 'bad', 'unknown'],
+    description: 'good ≥ 99%, warn ≥ 95%, bad below; unknown when there is no figure',
+  },
   // UptimeService + its per-day rows (monitor/types.ts).
   UptimeService: {
     type: 'object',
-    required: ['slug', 'name', 'uptimePercent', 'totalChecks', 'daily'],
+    required: ['slug', 'name', 'uptimePercent', 'uptimeTone', 'totalChecks', 'daily'],
     properties: {
       slug: { type: 'string' },
       name: { type: 'string' },
       uptimePercent: { type: 'number' },
+      uptimeTone: ref('UptimeTone'),
       totalChecks: { type: 'number' },
       daily: {
         type: 'array',
@@ -176,6 +254,7 @@ export const readsPaths: Paths = {
           required: [
             'generatedAt', 'lastCycleAt', 'probeIntervalMs', 'monitorVersion', 'services',
             'deployments', 'staleProd', 'providers', 'configDegraded', 'configReason',
+            'freshness', 'blind', 'platformSummary', 'staleMonitors',
           ],
           properties: {
             generatedAt: { type: 'string' },
@@ -183,7 +262,7 @@ export const readsPaths: Paths = {
             probeIntervalMs: { type: 'number' },
             monitorVersion: nul('string'),
             services: { type: 'array', items: ref('LiveService') },
-            deployments: { type: 'array', items: ref('Deployment') },
+            deployments: { type: 'array', items: ref('LiveDeployment') },
             staleProd: {
               type: 'array',
               items: {
@@ -208,6 +287,25 @@ export const readsPaths: Paths = {
             },
             configDegraded: { type: 'boolean' },
             configReason: nul('string'),
+            freshness: {
+              type: 'object',
+              required: ['state', 'asOf'],
+              description: 'How far the data clock (lastCycleAt) lags generatedAt — the frozen-snapshot verdict',
+              properties: {
+                state: { type: 'string', enum: ['fresh', 'stale', 'very-stale'] },
+                asOf: nul('string'),
+              },
+            },
+            blind: { type: 'boolean', description: 'True when the snapshot has no endpoints at all — never read as healthy' },
+            platformSummary: { type: 'array', items: ref('PlatformSummary') },
+            staleMonitors: {
+              type: 'object',
+              required: ['thresholdDays', 'monitors'],
+              properties: {
+                thresholdDays: { type: 'number' },
+                monitors: { type: 'array', items: ref('StaleMonitor') },
+              },
+            },
           },
         }),
         ...errors(401),
@@ -222,11 +320,22 @@ export const readsPaths: Paths = {
       responses: {
         200: okJson('StatusResponse', {
           type: 'object',
-          required: ['overall', 'services', 'checkedAt'],
+          required: ['overall', 'services', 'checkedAt', 'counts'],
           properties: {
             overall: { type: 'string', enum: ['operational', 'degraded', 'major_outage', 'unknown'] },
             services: { type: 'array', items: ref('ServiceStatus') },
             checkedAt: { type: 'string' },
+            counts: {
+              type: 'object',
+              required: ['up', 'degraded', 'down', 'total'],
+              description: 'Endpoint tallies; an unprobed (unknown) endpoint counts as down, never up',
+              properties: {
+                up: { type: 'number' },
+                degraded: { type: 'number' },
+                down: { type: 'number' },
+                total: { type: 'number' },
+              },
+            },
           },
         }),
         ...errors(401),
@@ -319,10 +428,15 @@ export const readsPaths: Paths = {
       responses: {
         200: okJson('UptimeResponse', {
           type: 'object',
-          required: ['services', 'days'],
+          required: ['services', 'days', 'overallUptimePercent', 'overallUptimeTone'],
           properties: {
             services: { type: 'array', items: ref('UptimeService') },
             days: { type: 'number' },
+            overallUptimePercent: {
+              ...nul('number'),
+              description: "Mean of the services' uptime over those with data; null when none has data",
+            },
+            overallUptimeTone: ref('UptimeTone'),
           },
         }),
         ...errors(401),
@@ -430,11 +544,15 @@ export const readsPaths: Paths = {
       responses: {
         200: okJson('IntegrationsResponse', {
           type: 'object',
-          required: ['generatedAt', 'overall', 'checks'],
+          required: ['generatedAt', 'overall', 'checks', 'selfCheck'],
           properties: {
             generatedAt: { type: 'string' },
             overall: { type: 'string' },
             checks: { type: 'array', items: ref('IntegrationCheck') },
+            selfCheck: {
+              anyOf: [ref('SelfCheckView'), { type: 'null' }],
+              description: 'The self-check bar verdict; null when every check is ok',
+            },
           },
         }),
         ...errors(401),

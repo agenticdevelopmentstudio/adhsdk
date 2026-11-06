@@ -5,22 +5,16 @@ import { BarList } from "@adh-sdk/ui/blocks/bar-list";
 import { StatCard } from "@adh-sdk/ui/blocks/stat-card";
 import { formatCount } from "@adh-sdk/ui/blocks/trend-chart";
 import { useAnalyticsDashboard } from "../hooks/use-dashboards";
-import {
-  dimensionTotals,
-  joinSites,
-  pathTotals,
-  projectKey,
-  vercelTotals,
-  type Dimension,
-  type JoinedSite,
-  type VercelBreakdown,
-} from "../lib/analytics-model";
 import { ANALYTICS_SOURCE_COLORS } from "../lib/colors";
 import {
   ANALYTICS_RANGES,
   type AnalyticsRange,
   type AnalyticsSectionData,
+  type AnalyticsViews,
   type DashboardSections,
+  type Dimension,
+  type JoinedSite,
+  type VercelBreakdown,
 } from "../telemetry/dashboard-types";
 import {
   countOrDash,
@@ -87,6 +81,21 @@ const EMPTY_SECTIONS: DashboardSections<AnalyticsSectionData> = {
   vitals: { data: null, error: null, updatedAt: null },
   health: { data: null, error: null, updatedAt: null },
   vercel: { data: null, error: null, updatedAt: null },
+};
+
+// Before the first answer. Every panel that draws from it is gated on its section having answered,
+// so none of this is shown as a finding.
+const EMPTY_VIEWS: AnalyticsViews = {
+  sites: [],
+  joined: [],
+  pageviews: { labels: [], posthog: null, vercel: null },
+  pages: null,
+  dimensions: null,
+  vercelProjects: null,
+  vercelBreakdowns: null,
+  vitals: null,
+  siteReports: {},
+  failures: [],
 };
 
 const POSTHOG_BREAKDOWNS: { dimension: Dimension; title: string }[] = [
@@ -161,6 +170,7 @@ export function AnalyticsView({
   const query = useAnalyticsDashboard(range);
   const body = query.data;
   const sections = body?.sections ?? EMPTY_SECTIONS;
+  const views = body?.views ?? EMPTY_VIEWS;
   // A failed read keeps the last body (TanStack Query holds on to it), and that body may have
   // been taken mid-refresh: claiming it is still filling in would leave "Refreshing…" and the
   // skeletons up for a refresh nobody can see finish. The alert below says what happened instead.
@@ -170,10 +180,7 @@ export function AnalyticsView({
 
   const traffic = sections.traffic.data;
   const vercel = sections.vercel.data;
-  const health = sections.health.data;
-
-  const rows = useMemo(() => joinSites(traffic, vercel, health), [traffic, vercel, health]);
-  const sortedRows = useMemo(() => sortSites(rows, sort.key as SiteSortKey, sort.dir), [rows, sort]);
+  const sortedRows = useMemo(() => sortSites(views.joined, sort.key as SiteSortKey, sort.dir), [views.joined, sort]);
   const showRefreshing = refreshing || query.isPlaceholderData;
 
   return (
@@ -201,8 +208,7 @@ export function AnalyticsView({
               site={site}
               range={range}
               sections={sections}
-              posthogOn={posthogOn}
-              vercelOn={vercelOn}
+              views={views}
               refreshing={refreshing}
               posthogUrl={posthogUrl}
             />
@@ -244,7 +250,7 @@ export function AnalyticsView({
               skeletonHeight={240}
               note={PAGEVIEWS_NOTE}
             >
-              {() => <PageviewsChart traffic={traffic} vercel={vercel} site={null} range={range} height={240} />}
+              {() => <PageviewsChart series={views.pageviews} site={null} range={range} height={240} />}
             </DashboardPanel>
 
             <DashboardPanel
@@ -271,10 +277,10 @@ export function AnalyticsView({
                 configured={posthogOn}
                 refreshing={refreshing}
               >
-                {(paths) => (
+                {() => (
                   <BarList
                     ariaLabel="Top pages by pageviews, from PostHog"
-                    items={toBars(pathTotals(paths, null))}
+                    items={toBars(views.pages ?? [])}
                     color={ANALYTICS_SOURCE_COLORS.posthog}
                     emptyLabel="No pageviews in this range."
                   />
@@ -291,10 +297,10 @@ export function AnalyticsView({
                   refreshing={refreshing}
                   note={sections.dimensions.data?.truncated ? "The rarest combinations were cut off, so small rows may be short." : undefined}
                 >
-                  {(dimensions) => (
+                  {() => (
                     <BarList
                       ariaLabel={`${title} by pageviews, from PostHog`}
-                      items={toBars(dimensionTotals(dimensions.rows, dimension, null))}
+                      items={toBars(views.dimensions?.[dimension] ?? [])}
                       color={ANALYTICS_SOURCE_COLORS.posthog}
                       emptyLabel="No pageviews in this range."
                     />
@@ -309,12 +315,14 @@ export function AnalyticsView({
                 refreshing={refreshing}
                 note={projectsNote(vercel)}
               >
-                {(data) => (
+                {() => (
                   <BarList
                     ariaLabel="Vercel projects by pageviews"
-                    items={data.projects
-                      .filter((p) => p.pageviews > 0)
-                      .map((p) => ({ name: projectKey(p), value: p.pageviews, detail: `${formatCount(p.pageviews)} · ${formatCount(p.visitors)} visitors` }))}
+                    items={(views.vercelProjects ?? []).map((p) => ({
+                      name: p.site,
+                      value: p.pageviews,
+                      detail: `${formatCount(p.pageviews)} · ${formatCount(p.visitors)} visitors`,
+                    }))}
                     color={ANALYTICS_SOURCE_COLORS.vercel}
                     onSelect={onSite}
                     emptyLabel="No pageviews in this range."
@@ -330,10 +338,10 @@ export function AnalyticsView({
                   configured={vercelOn}
                   refreshing={refreshing}
                 >
-                  {(data) => (
+                  {() => (
                     <BarList
                       ariaLabel={`${title} by pageviews, from Vercel`}
-                      items={toBars(vercelTotals(data.projects, breakdown, null))}
+                      items={toBars(views.vercelBreakdowns?.[breakdown] ?? [])}
                       color={ANALYTICS_SOURCE_COLORS.vercel}
                       emptyLabel="No pageviews in this range."
                     />
@@ -351,9 +359,9 @@ export function AnalyticsView({
               refreshing={refreshing}
               note={VITALS_NOTE}
             >
-              {(data) => (
+              {() => (
                 <div className="-mx-1 max-h-[320px] overflow-auto">
-                  <VitalsTable rows={data} />
+                  <VitalsTable rows={views.vitals ?? []} />
                 </div>
               )}
             </DashboardPanel>

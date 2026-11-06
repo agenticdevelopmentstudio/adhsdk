@@ -17,13 +17,29 @@ export interface ServiceStatusDTO {
   statusCode: number | null;
   error: string | null;
   lastCheckedAt: string | null;
+  /** The server's verdict that the last response was slow (`isSlowResponse`). */
+  slow: boolean;
+}
+
+/** Endpoint tallies `GET /status` publishes. `down` includes an unprobed ("unknown")
+ *  endpoint: an endpoint with no probe is never counted as up. */
+export interface EndpointCounts {
+  up: number;
+  degraded: number;
+  down: number;
+  total: number;
 }
 
 export interface StatusResponse {
   overall: OverallStatus;
   services: ServiceStatusDTO[];
   checkedAt: string;
+  counts: EndpointCounts;
 }
+
+/** How an uptime figure reads — good ≥ 99%, warn ≥ 95%, bad below, unknown with no figure.
+ *  The thresholds are the server's (`monitor/uptime.ts`); the client maps a tone to a colour. */
+export type UptimeTone = "good" | "warn" | "bad" | "unknown";
 
 export interface UptimeDay {
   day: string;
@@ -34,18 +50,26 @@ export interface UptimeService {
   slug: string;
   name: string;
   uptimePercent: number | null;
+  /** How `uptimePercent` reads, judged by the server (`uptimeTone`). */
+  uptimeTone: UptimeTone;
   totalChecks: number;
   daily: UptimeDay[];
 }
 export interface UptimeResponse {
   services: UptimeService[];
   days: number;
+  /** Portfolio-wide uptime, judged by the server; null when no service has data. */
+  overallUptimePercent: number | null;
+  /** How `overallUptimePercent` reads, judged by the server. */
+  overallUptimeTone: UptimeTone;
 }
 
 export interface DeploymentDTO {
   id: string;
   platform: string;
   projectName: string;
+  /** The provider's immutable project id, when the row has one. */
+  providerProjectId: string | null;
   status: DeployStatus;          // derived (combinedStatus) — for the Details/KPI views
   buildPhase: BuildPhase | null; // for the activity transcript
   deployPhase: DeployPhase;
@@ -66,11 +90,9 @@ export interface DeploymentDTO {
   errorText: string | null;
   liveHost: string | null; // resolved live custom domain host (correlation key + live url)
   createdAt: string;
-  /** ISO time the PHASES were last confirmed against provider truth. An in-flight
-   *  phase is a claim with a freshness deadline, not a fact — row-model demotes one
-   *  whose confirmation is old instead of asserting "building" on nothing. Optional
-   *  (older backend / persisted pre-upgrade rows) → createdAt is the floor. */
-  phaseConfirmedAt?: string;
+  /** ISO time the PHASES were last confirmed against provider truth. The server judges
+   *  an in-flight phase against it (`/live`'s `effectiveStatus`); the client never does. */
+  phaseConfirmedAt: string;
 }
 
 export interface HistoryCheck {
@@ -107,8 +129,23 @@ export interface IntegrationCheck {
   correlated?: boolean;
 }
 
+/** The self-check bar's verdict, judged by the server; null on the wire when all is well. */
+export interface SelfCheckView {
+  /** Expected env vars found unset, deduped, in check order. */
+  missingEnv: string[];
+  /** A missing-env check is error-severity — the env chip goes red rather than amber. */
+  missingEnvError: boolean;
+  /** Reachability/freshness issues to chip out. */
+  issues: IntegrationCheck[];
+  /** Any errored check → the bar renders in its red state. */
+  hasError: boolean;
+  /** How many things the bar lists — the KPI pill's count. */
+  issueCount: number;
+}
+
 export interface IntegrationsResponse {
   generatedAt: string;
   overall: CheckState;
   checks: IntegrationCheck[];
+  selfCheck: SelfCheckView | null;
 }

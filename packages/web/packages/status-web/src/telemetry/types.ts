@@ -34,6 +34,18 @@ export interface AnalyticsMetricDTO {
   capturedAt: string; // ISO
 }
 
+/**
+ * The Errors card's figures, judged by the server (`errorsSummary`): active issues, the
+ * backlog behind them, the events all of them carry, and the loudest active issues.
+ */
+export interface ErrorsSummary {
+  active: number;
+  backlog: number;
+  events: number;
+  /** At most five active issues, the most events first. */
+  top: ErrorDTO[];
+}
+
 /** One self-contained read of everything the production-visibility band shows. */
 export interface TelemetrySnapshot {
   generatedAt: string; // ISO
@@ -46,6 +58,11 @@ export interface TelemetrySnapshot {
    * for want of an answer, not because there is no traffic. A client keeps what it last knew.
    */
   analyticsPending?: boolean;
+  /**
+   * The Errors card's figures. Set on the live snapshot only — like `active`, a stored row
+   * has no verdict — so a snapshot without it makes no claim about errors at all.
+   */
+  errorsSummary?: ErrorsSummary;
 }
 
 export function emptySnapshot(): TelemetrySnapshot {

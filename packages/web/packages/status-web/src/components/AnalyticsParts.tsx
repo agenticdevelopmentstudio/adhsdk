@@ -3,24 +3,17 @@ import type { ReactElement } from "react";
 import { formatCount, TrendChart, type TrendSeries } from "@adh-sdk/ui/blocks/trend-chart";
 import { DataTable, type DataTableColumn } from "@adh-sdk/ui/components/data-table";
 import { StatusDot } from "@adh-sdk/ui/components/status-dot";
-import {
-  bucketDetail,
-  bucketLabel,
-  formatVital,
-  pageviewSeries,
-  siteKey,
-  vitalRating,
-  type JoinedSite,
-  type Vital,
-  type VitalRating,
-} from "../lib/analytics-model";
 import { ANALYTICS_SOURCE_COLORS } from "../lib/colors";
+import { bucketDetail, bucketLabel, formatVital } from "../lib/dashboard-format";
 import type {
   AnalyticsRange,
+  ChartSeries,
+  JoinedSite,
   Marginal,
-  TrafficSection,
+  RatedVitalsRow,
   VercelTrafficSection,
-  VitalsRow,
+  Vital,
+  VitalRating,
 } from "../telemetry/dashboard-types";
 import { OpenOnClickTable, SiteFailureRate, WrappedCell } from "./DashboardParts";
 import { ResponseChart } from "./ResponseChart";
@@ -67,7 +60,11 @@ const SITE_COLUMNS: DataTableColumn<JoinedSite>[] = [
     header: "Failed requests",
     sortable: true,
     render: (row) =>
-      row.health ? <SiteFailureRate failures={row.health.failures} requests={row.health.requests} /> : "—",
+      row.health ? (
+        <SiteFailureRate failures={row.health.failures} requests={row.health.requests} high={row.health.failureRateHigh} />
+      ) : (
+        "—"
+      ),
   },
   {
     key: "p95",
@@ -116,9 +113,17 @@ const RATING_TONE: Record<VitalRating, "success" | "accent" | "error"> = {
   poor: "error",
 };
 
-export function VitalCell({ vital, value }: { vital: Vital; value: number | null }): ReactElement {
-  if (value === null) return <>—</>;
-  const rating = vitalRating(vital, value);
+/** A vital's value with the server's rating of it. */
+export function VitalCell({
+  vital,
+  value,
+  rating,
+}: {
+  vital: Vital;
+  value: number | null;
+  rating: VitalRating | null;
+}): ReactElement {
+  if (value === null || rating === null) return <>—</>;
   return (
     <span className="inline-flex items-center gap-1.5" title={`${vital.toUpperCase()}: ${rating}`}>
       <StatusDot tone={RATING_TONE[rating]} size={7} />
@@ -128,19 +133,25 @@ export function VitalCell({ vital, value }: { vital: Vital; value: number | null
   );
 }
 
-const VITALS_COLUMNS: DataTableColumn<VitalsRow>[] = [
-  { key: "host", header: "Site", width: "minmax(16rem, 1fr)", render: (row) => <WrappedCell>{siteKey(row.host)}</WrappedCell> },
+const vitalColumn = (vital: Vital): DataTableColumn<RatedVitalsRow> => ({
+  key: vital,
+  header: vital.toUpperCase(),
+  render: (row) => <VitalCell vital={vital} value={row[vital]} rating={row.ratings[vital]} />,
+});
+
+const VITALS_COLUMNS: DataTableColumn<RatedVitalsRow>[] = [
+  { key: "host", header: "Site", width: "minmax(16rem, 1fr)", render: (row) => <WrappedCell>{row.site}</WrappedCell> },
   { key: "samples", header: "Samples", render: (row) => formatCount(row.samples) },
-  { key: "lcp", header: "LCP", render: (row) => <VitalCell vital="lcp" value={row.lcp} /> },
-  { key: "inp", header: "INP", render: (row) => <VitalCell vital="inp" value={row.inp} /> },
-  { key: "cls", header: "CLS", render: (row) => <VitalCell vital="cls" value={row.cls} /> },
-  { key: "fcp", header: "FCP", render: (row) => <VitalCell vital="fcp" value={row.fcp} /> },
+  vitalColumn("lcp"),
+  vitalColumn("inp"),
+  vitalColumn("cls"),
+  vitalColumn("fcp"),
 ];
 
 export const VITALS_NOTE =
   "75th percentile of real page loads, rated against Google's Core Web Vitals limits. Vercel Speed Insights is off on every project.";
 
-export function VitalsTable({ rows }: { rows: readonly VitalsRow[] }): ReactElement {
+export function VitalsTable({ rows }: { rows: readonly RatedVitalsRow[] }): ReactElement {
   return (
     <DataTable
       ariaLabel="Web vitals per site"
@@ -153,20 +164,18 @@ export function VitalsTable({ rows }: { rows: readonly VitalsRow[] }): ReactElem
   );
 }
 
+/** The server's pageview series, one line per provider that has one. */
 export function PageviewsChart({
-  traffic,
-  vercel,
+  series,
   site,
   range,
   height,
 }: {
-  traffic: TrafficSection | null;
-  vercel: VercelTrafficSection | null;
+  series: ChartSeries;
   site: string | null;
   range: AnalyticsRange;
   height: number;
 }): ReactElement {
-  const series = pageviewSeries(traffic, vercel, site);
   const lines: TrendSeries[] = [];
   if (series.posthog) lines.push({ name: "PostHog", color: ANALYTICS_SOURCE_COLORS.posthog, values: series.posthog });
   if (series.vercel) lines.push({ name: "Vercel", color: ANALYTICS_SOURCE_COLORS.vercel, values: series.vercel });

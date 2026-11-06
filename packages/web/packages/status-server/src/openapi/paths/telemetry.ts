@@ -27,6 +27,18 @@ export const telemetrySchemas: Schemas = {
       firstSeen: { type: ['string', 'null'] },
       lastSeen: { type: ['string', 'null'] },
       permalink: { type: ['string', 'null'] },
+      active: { type: 'boolean', description: 'Would this issue hold a board Problem open (live snapshot only)' },
+    },
+  },
+  // ErrorsSummary (telemetry/types.ts) — the Errors card's server-judged figures.
+  ErrorsSummary: {
+    type: 'object',
+    required: ['active', 'backlog', 'events', 'top'],
+    properties: {
+      active: { type: 'number' },
+      backlog: { type: 'number' },
+      events: { type: 'number' },
+      top: { type: 'array', items: ref('ErrorDTO'), description: 'At most five active issues, most events first' },
     },
   },
   // AnalyticsMetricDTO (telemetry/types.ts) — one anonymous, aggregate KPI sample.
@@ -57,6 +69,9 @@ export const telemetryPaths: Paths = {
             generatedAt: { type: 'string' },
             errors: { type: 'array', items: ref('ErrorDTO') },
             analytics: { type: 'array', items: ref('AnalyticsMetricDTO') },
+            errorsFrozen: { type: 'boolean', description: 'GlitchTip could not be read just now; `errors` is its last answer' },
+            analyticsPending: { type: 'boolean', description: 'No analytics read since the backend started' },
+            errorsSummary: ref('ErrorsSummary'),
           },
         }),
         ...errors(401),

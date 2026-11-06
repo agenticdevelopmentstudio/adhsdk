@@ -2,7 +2,7 @@ import { Hono } from 'hono';
 import type { StatusConfig } from '../config/port';
 import type { Storage } from '../storage/ports';
 import { requireAdmin } from '../middleware/auth';
-import { deriveBoard, readBoardFacts, reconcileBoardLedger } from '../board';
+import { deriveBoard, parseEnvironments, readBoardFacts, reconcileBoardLedger } from '../board';
 
 export function boardRoutes(storage: Storage, config: StatusConfig) {
   const app = new Hono();
@@ -13,7 +13,9 @@ export function boardRoutes(storage: Storage, config: StatusConfig) {
    */
   app.get('/board', async (c) => {
     const nowMs = Date.now();
-    return c.json(deriveBoard(await readBoardFacts(storage, nowMs, config), nowMs));
+    // `?environments=a,b` scopes ONLY `scope` (the env-filtered headline); the lists stay whole.
+    const environments = parseEnvironments(c.req.query('environments'));
+    return c.json(deriveBoard(await readBoardFacts(storage, nowMs, config), nowMs, { environments }));
   });
 
   /**

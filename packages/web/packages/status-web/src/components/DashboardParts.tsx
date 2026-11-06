@@ -176,10 +176,7 @@ export function OpenOnClickTable<T>({
   );
 }
 
-/** The worst failure rate on a page is what an operator scans for. */
-export function SiteFailureRate({ failures, requests }: { failures: number; requests: number }): ReactElement {
-  const rate = requests > 0 ? failures / requests : 0;
-  return (
-    <span className={rate >= 0.05 ? "font-semibold text-apt-red" : undefined}>{formatRate(failures, requests)}</span>
-  );
+/** A failure rate, in red when the server judged it high (`failureRateHigh`): the worst rate on a page is what an operator scans for. */
+export function SiteFailureRate({ failures, requests, high }: { failures: number; requests: number; high: boolean }): ReactElement {
+  return <span className={high ? "font-semibold text-apt-red" : undefined}>{formatRate(failures, requests)}</span>;
 }

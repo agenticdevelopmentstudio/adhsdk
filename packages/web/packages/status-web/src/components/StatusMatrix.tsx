@@ -1,10 +1,7 @@
 "use client";
 import { Fragment, useMemo, type ReactElement } from "react";
-import type { ServiceStatusDTO, UptimeDay, DeploymentDTO } from "../types";
-import {
-  latestTerminalForEndpoint,
-  failuresForEndpoint,
-} from "../lib/deploy-view";
+import type { ServiceStatusDTO, UptimeDay } from "../types";
+import type { LiveDeploymentDTO, LiveServiceDTO } from "../lib/live-types";
 import { endpointLabel } from "../lib/url";
 import { platformGlyph, deployStatusColor } from "../lib/deploy-display";
 import { COLORS, PALETTE, TINT, envBadgeLabel, envColor } from "../lib/colors";
@@ -16,7 +13,10 @@ import { UptimeBar } from "./UptimeBar";
 export interface StatusMatrixProps {
   services: ServiceStatusDTO[];
   uptimeBySlug: Map<string, UptimeDay[]>;
-  deploys: DeploymentDTO[];
+  /** Each endpoint as the live snapshot serves it — carries the server's deploy join. */
+  liveBySlug: Map<string, LiveServiceDTO>;
+  /** The live snapshot's deployments, which the join's ids index into. */
+  deploys: LiveDeploymentDTO[];
   selectedSlug: string | null;
   onSelect(slug: string): void;
 }
@@ -46,11 +46,13 @@ function groupServices(services: ServiceStatusDTO[]): GroupedRows[] {
 export function StatusMatrix({
   services,
   uptimeBySlug,
+  liveBySlug,
   deploys,
   selectedSlug,
   onSelect,
 }: StatusMatrixProps): ReactElement {
   const grouped = useMemo(() => groupServices(services), [services]);
+  const deployById = useMemo(() => new Map(deploys.map((d) => [d.id, d])), [deploys]);
   const nowMs = useNow();
 
   return (
@@ -86,9 +88,10 @@ export function StatusMatrix({
               const isDown = svc.status === "down" || svc.status === "unknown";
               const isDeg = svc.status === "degraded";
 
-              // Correlate deploys to this endpoint by its url host (liveHost).
-              const latestDeploy = latestTerminalForEndpoint(deploys, svc);
-              const failures = failuresForEndpoint(deploys, svc);
+              // The server's join of this endpoint to its deploys.
+              const live = liveBySlug.get(svc.slug);
+              const latestDeploy = live?.latestTerminalDeployId ? deployById.get(live.latestTerminalDeployId) ?? null : null;
+              const failures = live?.deployFailures ?? 0;
 
               // Row accent — selected wins; down/degraded; failures-only (up but failed builds)
               let rowBg = "transparent";
@@ -119,7 +122,7 @@ export function StatusMatrix({
               // Response time
               const respMs = svc.responseTimeMs;
               const respLabel = respMs != null ? `${respMs}ms` : "—";
-              const isSlow = respMs != null && respMs > 1000;
+              const isSlow = svc.slow; // the server's verdict (`isSlowResponse`)
 
               // Uptime bar data
               const daily = uptimeBySlug.get(svc.slug) ?? [];

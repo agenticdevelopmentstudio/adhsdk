@@ -10,6 +10,13 @@ import type { Board, Problem } from '../src/board';
 import { MIGRATIONS_FOLDER } from '../src/libsql/client';
 import { createLibsqlStorage } from '../src/libsql';
 
+/** The board's view fields — the ledger writer reads none of them; stated so the shape is a real Board. */
+const BOARD_VIEW = {
+  freshness: { state: 'current' as const, staleAt: new Date(183_000).toISOString(), pollIntervalMs: 60_000 },
+  deployCounts: { builds: 0, deploys: 0, failures: 0 },
+  scope: { environments: null, indicator: 'operational' as const, problemCount: 0, endpoints: { total: 0, healthy: 0 } },
+};
+
 // The monitor detected outages but told NO ONE — an issue was only visible to
 // someone already looking at the wallboard. Issue open/resolve transitions now
 // post to ALERT_WEBHOOK_URL (one batched webhook per cycle), fail-soft.
@@ -26,7 +33,7 @@ async function freshDb(): Promise<Db> {
 // below states the board directly instead of feeding an observation to a recorder.
 const board = (problems: Problem[], monitoredTargets: string[]): Board => ({
   generatedAt: new Date(3000).toISOString(),
-  dataAsOfMs: 3000, probeIntervalMs: 60_000, activityFromMs: 0,
+  dataAsOfMs: 3000, probeIntervalMs: 60_000, activityFromMs: 0, ...BOARD_VIEW,
   indicator: problems.length > 0 ? 'degraded' : 'operational',
   problems,
   activity: [],

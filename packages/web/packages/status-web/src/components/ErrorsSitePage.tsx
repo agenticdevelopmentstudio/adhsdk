@@ -4,27 +4,22 @@ import { formatCount, TrendChart } from "@adh-sdk/ui/blocks/trend-chart";
 import { DataTable, type DataTableColumn } from "@adh-sdk/ui/components/data-table";
 import { Stat, StatStrip } from "@adh-sdk/ui/components/stat";
 import { useNow } from "../hooks/use-now";
-import { bucketDetail, bucketLabel } from "../lib/analytics-model";
 import { SITE_ERROR_SERIES_COLORS } from "../lib/colors";
-import {
-  errorRowId,
-  errorsSiteFailures,
-  errorsSiteReport,
-  errorsSiteReportIsEmpty,
-  failedRequestRowId,
-} from "../lib/errors-model";
+import { bucketDetail, bucketLabel } from "../lib/dashboard-format";
 import type {
   DashboardSections,
   ErrorsSectionData,
-  SiteErrorRow,
-  SiteFailedRequestRow,
+  ErrorsSiteReport,
+  ErrorsViews,
+  SiteErrorView,
+  SiteFailedRequestView,
 } from "../telemetry/dashboard-types";
 import { DashboardPanel, formatAge, SiteFailureRate, WrappedCell } from "./DashboardParts";
 
 const TRUNCATED_NOTE = "PostHog's rarest rows across the fleet were cut off, so this list may be short.";
 
 // Written once, here: a column an error never reported is left out with the rest of what a site lacks.
-const ERROR_DETAILS: { key: string; header: string; value: (row: SiteErrorRow) => string | null }[] = [
+const ERROR_DETAILS: { key: string; header: string; value: (row: SiteErrorView) => string | null }[] = [
   { key: "feature", header: "Feature", value: (row) => row.feature },
   { key: "step", header: "Step", value: (row) => row.step },
   { key: "boundary", header: "Boundary", value: (row) => row.boundary },
@@ -34,39 +29,41 @@ const ERROR_DETAILS: { key: string; header: string; value: (row: SiteErrorRow) =
 export interface ErrorsSitePageProps {
   site: string;
   sections: DashboardSections<ErrorsSectionData>;
+  views: ErrorsViews;
   posthogOn: boolean;
   refreshing: boolean;
   posthogUrl: string | undefined;
 }
 
+/** A site the server has no report for has nothing: the same report the server gives an unknown site. */
+const NO_REPORT: ErrorsSiteReport = { health: null, chart: null, errors: [], requests: [], empty: true };
+
 /**
  * Everything one site reported, as one scrolling page of the shared panels. What it does not have is
- * not drawn: `errorsSiteReport` decides, so no card has an empty state of its own. What could not be
- * READ stays on the page, or a failed provider would look like a quiet site.
+ * not drawn: the server's report decides, so no card has an empty state of its own. What could not
+ * be READ stays on the page, or a failed provider would look like a quiet site.
  */
-export function ErrorsSitePage({ site, sections, posthogOn, refreshing, posthogUrl }: ErrorsSitePageProps): ReactElement {
+export function ErrorsSitePage({ site, sections, views, posthogOn, refreshing, posthogUrl }: ErrorsSitePageProps): ReactElement {
   const now = useNow();
-  const report = useMemo(() => errorsSiteReport(sections, site), [sections, site]);
-  const failures = useMemo(() => (posthogOn ? errorsSiteFailures(sections) : []), [sections, posthogOn]);
-  const { health, chart, errors, requests } = report;
-  const empty = errorsSiteReportIsEmpty(report);
+  const { health, chart, errors, requests, empty } = views.siteReports[site] ?? NO_REPORT;
+  const failures = views.siteFailures;
   const truncated = sections.detail.data?.truncated ? TRUNCATED_NOTE : undefined;
 
-  const errorColumns = useMemo((): DataTableColumn<SiteErrorRow>[] => {
+  const errorColumns = useMemo((): DataTableColumn<SiteErrorView>[] => {
     const seen = ERROR_DETAILS.filter(({ value }) => errors.some((row) => value(row) !== null));
     return [
       { key: "name", header: "Error", width: "minmax(12rem, 1fr)", render: (row) => <WrappedCell>{row.name}</WrappedCell> },
       ...seen.map(({ key, header, value }) => ({
         key,
         header,
-        render: (row: SiteErrorRow) => <WrappedCell>{value(row) ?? "—"}</WrappedCell>,
+        render: (row: SiteErrorView) => <WrappedCell>{value(row) ?? "—"}</WrappedCell>,
       })),
       { key: "count", header: "Count", render: (row) => formatCount(row.count) },
       { key: "lastSeen", header: "Last seen", render: (row) => formatAge(row.lastSeen, now) },
     ];
   }, [errors, now]);
 
-  const requestColumns: DataTableColumn<SiteFailedRequestRow>[] = [
+  const requestColumns: DataTableColumn<SiteFailedRequestView>[] = [
     { key: "path", header: "Path", width: "minmax(14rem, 1fr)", render: (row) => <WrappedCell>{row.path}</WrappedCell> },
     { key: "status", header: "Status", render: (row) => (row.status === 0 ? "No response" : String(row.status)) },
     { key: "method", header: "Method", render: (row) => row.method ?? "—" },
@@ -125,7 +122,7 @@ export function ErrorsSitePage({ site, sections, posthogOn, refreshing, posthogU
                 <Stat
                   align="start"
                   label="Failed"
-                  value={<SiteFailureRate failures={health.failures} requests={health.requests} />}
+                  value={<SiteFailureRate failures={health.failures} requests={health.requests} high={health.failureRateHigh} />}
                 />
               )}
               {health.p95Ms !== null && <Stat align="start" label="p95" value={`${Math.round(health.p95Ms)}ms`} />}
@@ -175,7 +172,7 @@ export function ErrorsSitePage({ site, sections, posthogOn, refreshing, posthogU
                 ariaLabel={`Errors reported by ${site}`}
                 columns={errorColumns}
                 rows={errors}
-                getRowId={errorRowId}
+                getRowId={(row) => row.id}
                 autoSizeColumns
                 emptyLabel="No errors."
               />
@@ -200,7 +197,7 @@ export function ErrorsSitePage({ site, sections, posthogOn, refreshing, posthogU
                 ariaLabel={`Failed requests for ${site}`}
                 columns={requestColumns}
                 rows={requests}
-                getRowId={failedRequestRowId}
+                getRowId={(row) => row.id}
                 autoSizeColumns
                 emptyLabel="No failed requests."
               />

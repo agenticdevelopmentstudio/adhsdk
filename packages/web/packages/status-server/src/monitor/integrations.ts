@@ -3,6 +3,7 @@ import { withTimeout } from "@adh-sdk/deploy-platform/util";
 import { timeAgo } from "./time-ago";
 import { resolveCfAccountId, listWorkerScripts } from "@adh-sdk/deploy-platform/providers";
 import { createSelfCheckStabilizer } from "./self-check-stability";
+import { selfCheckView } from "./self-check";
 import type { CheckState, IntegrationCheck, IntegrationsResponse } from "./types";
 import { vercelConfigured, type StatusConfig } from "../config/port";
 import { PLATFORM_UNREACHABLE_POLLS } from "./issue-sources";
@@ -417,5 +418,6 @@ export async function runIntegrationsCheck(
     generatedAt: new Date(nowMs).toISOString(),
     overall: overallState(stabilized),
     checks: stabilized,
+    selfCheck: selfCheckView(stabilized),
   };
 }

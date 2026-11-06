@@ -1,15 +1,35 @@
-import type { ServiceStatusDTO, DeploymentDTO } from "../types";
+import type { ServiceStatusDTO, DeploymentDTO, DeployStatus } from "../types";
 
 // The /api/live contract — one self-contained snapshot of everything the client
-// displays, pulled live from providers + HTTP probes. Type-only module (shared by
-// the route and the client store); no DB imports.
+// displays. A HAND MIRROR of status-server's monitor/live-types.ts (this package has
+// the server only as a devDependency); read-types-parity.test.ts holds the two together.
+//
+// Every verdict here — freshness, blindness, the per-platform pills, which monitors are
+// retire candidates, an endpoint's deploys and an unconfirmed deploy's status — is the
+// SERVER's. The client renders these fields; it owns no copy of the rules behind them.
 
-export interface LiveServiceDTO extends ServiceStatusDTO {
+/** The deploy correlation `/live` publishes per endpoint (status-server overview.ts). */
+export interface EndpointDeploys {
+  /** Ids of this snapshot's `deployments` that belong to the endpoint's deploy target, newest first. */
+  deployIds: string[];
+  /** The newest definitive (success or failed) deploy of the target, or null. */
+  latestTerminalDeployId: string | null;
+  /** How many of the target's deploys in this snapshot failed. */
+  deployFailures: number;
+}
+
+export interface LiveServiceDTO extends ServiceStatusDTO, EndpointDeploys {
   /** Whether the hostname resolved in DNS. false → a `dns`-source problem, not `http`. */
   dnsOk: boolean;
   /** ISO time the endpoint's current http/dns issue opened — SERVER-truth "down since",
-   *  durable across browsers (unlike the client store's per-tab onset). null = not down. */
+   *  durable across browsers. null = not down. */
   downSince: string | null;
+}
+
+/** A deployment as `/live` serves it: the raw row plus the status a view should SHOW —
+ *  its own, or "unknown" once an in-flight phase has gone unconfirmed too long. */
+export interface LiveDeploymentDTO extends DeploymentDTO {
+  effectiveStatus: DeployStatus;
 }
 
 /** A Vercel project whose LIVE production deploy is errored/behind (already filtered to stale). */
@@ -30,28 +50,63 @@ export interface ProviderHealth {
   ok: boolean;
 }
 
+export type SnapshotFreshnessState = "fresh" | "stale" | "very-stale";
+
+/** The server's verdict on how far the data clock (`lastCycleAt`) lags `generatedAt`. */
+export interface LiveFreshness {
+  state: SnapshotFreshnessState;
+  /** The data clock the verdict was judged on, for an "as of" label. */
+  asOf: string | null;
+}
+
+/** One per-platform deploy pill. */
+export interface PlatformSummary {
+  platform: string;
+  ready: number;
+  building: number;
+  failed: number;
+  total: number;
+}
+
+/** An endpoint down long enough to be a retire candidate. */
+export interface StaleMonitor {
+  slug: string;
+  name: string;
+  url: string;
+  environment: string | null;
+  /** What the probe last saw: its error, else the status code, else "down". */
+  detail: string;
+  dnsOk: boolean;
+  downSince: string;
+  ageMs: number;
+}
+
+export interface StaleMonitorsView {
+  thresholdDays: number;
+  monitors: StaleMonitor[];
+}
+
 export interface LiveSnapshot {
   generatedAt: string; // ISO, server clock — the client's event-time reference
-  /** ISO time of the NEWEST PERSISTED PROBE — the data-freshness clock for what's on
-   *  screen, null before the first probe. Distinct from the scheduler's cycle-
-   *  COMPLETION clock at `/health` (that's the loop-health signal). The client warns
-   *  when this lags `generatedAt` by more than a few probe intervals, so a wedged /
-   *  never-redeployed poller can't masquerade as live data (`generatedAt` is read-time
-   *  and always looks fresh). Optional so an older backend degrades to "no warning". */
-  lastCycleAt?: string | null;
-  /** The backend's probe interval (ms), so the client's staleness window can scale
-   *  with it instead of hardcoding a threshold that false-trips when the operator
-   *  raises `PROBE_INTERVAL_SECONDS`. Optional (older backend → the client's floor). */
-  probeIntervalMs?: number;
-  /** Git commit the MONITOR ITSELF is running (Railway build env; null locally).
-   *  Shown on the board so "did my status-site deploy actually take?" is answerable
-   *  from the board. Optional so an older backend degrades to "not shown". */
-  monitorVersion?: string | null;
+  /** ISO time of the NEWEST PERSISTED PROBE, null before the first probe. */
+  lastCycleAt: string | null;
+  /** The backend's probe interval (ms). */
+  probeIntervalMs: number;
+  /** Git commit the MONITOR ITSELF is running (null locally). */
+  monitorVersion: string | null;
   services: LiveServiceDTO[];
-  deployments: DeploymentDTO[];
+  deployments: LiveDeploymentDTO[];
   staleProd: StaleProdDTO[];
   providers: Record<ProviderKey, ProviderHealth>;
   /** True when the config read fell back to the static list (DB unreachable). */
   configDegraded: boolean;
   configReason: string | null;
+  /** Whether the snapshot is frozen — drives the "monitoring paused" banner and the sign. */
+  freshness: LiveFreshness;
+  /** No endpoint is monitored at all — never read as healthy. */
+  blind: boolean;
+  /** Per-platform deploy pills, in canonical platform order. */
+  platformSummary: PlatformSummary[];
+  /** Endpoints down long enough to be retire candidates, longest-down first. */
+  staleMonitors: StaleMonitorsView;
 }

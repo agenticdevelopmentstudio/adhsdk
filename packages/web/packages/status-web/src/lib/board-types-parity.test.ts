@@ -3,12 +3,8 @@ import { describe, it, expect } from "vitest";
 // backend and its embedded web app — see deploy-status-parity.test.ts for the precedent).
 import type * as server from "@adh-sdk/status-server/board";
 import type * as web from "./board-types";
-// RUNTIME import from the pure ./activity subpath (derive-activity.ts and what it
-// reaches import no drizzle/libsql), so this browser-side package's tests never
-// load the ORM — ./board also re-exports the drizzle-backed facts reader.
-import { indicatorFor } from "@adh-sdk/status-server/activity";
-import { INDICATOR_STATE, indicatorFromProblems } from "./overview";
-import type { Problem } from "./board-types";
+import type { IssueSource } from "./issue-sources";
+import { INDICATOR_STATE } from "./overview";
 
 // DRIFT GUARD. web/src/lib/board-types.ts is a HAND MIRROR of src/board/types.ts (there is no
 // shared package between the backend and its embedded web app). If the two drift — a renamed
@@ -35,73 +31,21 @@ const _indicator: Exact<server.Indicator, web.Indicator> = true;
 // server renamed on one side only would page silently wrong rather than fail to compile.
 const _activityCursor: Exact<server.ActivityCursor, web.ActivityCursor> = true;
 const _activityPage: Exact<server.ActivityPage, web.ActivityPage> = true;
+// The verdicts the board publishes beside its problems — freshness, the stats strip's
+// counts and the scoped headline. The client renders them; it no longer derives them.
+const _freshness: Exact<server.BoardFreshness, web.BoardFreshness> = true;
+const _deployCounts: Exact<server.DeployCounts, web.DeployCounts> = true;
+const _scope: Exact<server.BoardScope, web.BoardScope> = true;
+const _issueSource: Exact<server.Problem["source"], IssueSource> = true;
 void [
   _board, _problem, _activityRow, _activityTone, _activityKind, _indicator,
-  _activityCursor, _activityPage,
+  _activityCursor, _activityPage, _freshness, _deployCounts, _scope, _issueSource,
 ];
-
-/** A minimal, override-able Problem fixture — only `severity` varies across the cases below. */
-function problem(severity: Problem["severity"], overrides: Partial<Problem> = {}): Problem {
-  return {
-    target: "vercel|example",
-    source: "vercel",
-    name: "example",
-    environment: null,
-    severity,
-    state: "failed",
-    statusCode: null,
-    detail: null,
-    sourceUrl: null,
-    liveUrl: null,
-    commitHash: null,
-    commitMessage: null,
-    commitRepo: null,
-    branch: null,
-    errorText: null,
-    since: "2026-06-30T00:00:00.000Z",
-    ...overrides,
-  };
-}
 
 describe("board-types parity (web mirrors server)", () => {
   it("INDICATOR_STATE covers every member of the server's Indicator union, with no extras", () => {
     // A Record<BoardIndicator, …> is exhaustive by construction at compile time — but only
     // this key check catches a member removed from both the union and the map together.
     expect(Object.keys(INDICATOR_STATE).sort()).toEqual(["degraded", "operational", "outage"]);
-  });
-
-  // The client's indicatorFromProblems is a rendering projection of the server's indicatorFor
-  // (src/board/derive-activity.ts:220) — these cases pin the two together on the unfiltered
-  // set, so the client rule can't drift from the server's the way it did before this task.
-  it("agrees with the server's indicatorFor on an empty problem set", () => {
-    const problems: Problem[] = [];
-    expect(indicatorFromProblems(problems)).toEqual({
-      state: INDICATOR_STATE[indicatorFor(problems)],
-      count: problems.length,
-    });
-  });
-
-  it("agrees with the server's indicatorFor on a minor-only problem set", () => {
-    const problems: Problem[] = [problem("minor"), problem("minor")];
-    expect(indicatorFromProblems(problems)).toEqual({
-      state: INDICATOR_STATE[indicatorFor(problems)],
-      count: problems.length,
-    });
-  });
-
-  it("agrees with the server's indicatorFor on a major-only problem set", () => {
-    const problems: Problem[] = [problem("major"), problem("minor")];
-    expect(indicatorFromProblems(problems)).toEqual({
-      state: INDICATOR_STATE[indicatorFor(problems)],
-      count: problems.length,
-    });
-  });
-
-  it("agrees with the server's indicatorFor on a critical-bearing problem set", () => {
-    const problems: Problem[] = [problem("minor"), problem("major"), problem("critical")];
-    expect(indicatorFromProblems(problems)).toEqual({
-      state: INDICATOR_STATE[indicatorFor(problems)],
-      count: problems.length,
-    });
   });
 });

@@ -4,7 +4,6 @@ import { render, screen, cleanup, renderHook, waitFor } from "@testing-library/r
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 import type { Board } from "../lib/board-types";
-import { BOARD_STALE_MS, boardDataStaleMs } from "../lib/board-staleness";
 import { useBoard } from "./use-board";
 import { usePortfolioIndicator } from "./use-portfolio-indicator";
 import { GlobalPanel } from "../components/GlobalPanel";
@@ -23,10 +22,9 @@ vi.mock("./use-live-snapshot", () => ({
   useLiveSnapshot: () => ({ snapshot: null, offline: false, blind: false }),
 }));
 
-// `generatedAt` is computed fresh (not a fixed literal) because Fix Round 3 item 1
-// made `useBoard` itself judge every board against the real wall clock
-// (`isBoardStale`, via `useNow`) — a hardcoded past date would go stale by
-// construction and no test below would ever see a real (non-null) board.
+// `freshness.staleAt` is computed from the real clock (not a fixed literal) because
+// `useBoard` compares the wall clock against the server's deadline — a hardcoded past
+// instant would go stale by construction and no test below would ever see a real board.
 const board: Board = {
   generatedAt: new Date().toISOString(),
   // Same reasoning for the DATA clock: a fixed literal would read as a wedged monitor.
@@ -46,7 +44,17 @@ const board: Board = {
     commitRepo: "adh", branch: null, errorText: null, since: "2026-08-02T11:00:00.000Z",
   }],
   activity: [],
+  // The server's verdicts (src/board/view.ts). The client only reads them.
+  freshness: { state: "current", staleAt: new Date(Date.now() + 180_000).toISOString(), pollIntervalMs: 60_000 },
+  deployCounts: { builds: 0, deploys: 0, failures: 0 },
+  scope: { environments: null, indicator: "degraded", problemCount: 1, endpoints: { total: 0, healthy: 0 } },
 };
+
+/** A board whose read deadline has already passed on the client's clock. */
+const pastDeadline = (): Board["freshness"] => ({
+  ...board.freshness,
+  staleAt: new Date(Date.now() - 5_000).toISOString(),
+});
 
 function wrapper({ children }: { children: ReactNode }) {
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
@@ -107,13 +115,35 @@ describe("useBoard", () => {
 
     await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2));
   });
+
+  it("asks the server to scope the headline to the chosen environments", async () => {
+    const fetchMock = vi.fn(async (_url: string) => new Response(JSON.stringify(board), {
+      status: 200, headers: { "content-type": "application/json" },
+    }));
+    vi.stubGlobal("fetch", fetchMock);
+
+    renderHook(() => useBoard({ environments: ["staging", "production"] }), { wrapper });
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
+    expect(String(fetchMock.mock.calls[0]![0])).toContain("environments=production%2Cstaging");
+  });
+
+  it("asks for every environment when none is chosen", async () => {
+    const fetchMock = vi.fn(async (_url: string) => new Response(JSON.stringify(board), {
+      status: 200, headers: { "content-type": "application/json" },
+    }));
+    vi.stubGlobal("fetch", fetchMock);
+
+    renderHook(() => useBoard(), { wrapper });
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
+    expect(String(fetchMock.mock.calls[0]![0])).not.toContain("environments=");
+  });
 });
 
 describe("useBoard — folding staleness into null (Fix Round 3 item 1)", () => {
   it("a stale-but-present board reads as null, with reason \"stale\" — a successful fetch is not the same as a current one", async () => {
     const staleBoard: Board = {
       ...board,
-      generatedAt: new Date(Date.now() - BOARD_STALE_MS - 5_000).toISOString(),
+      freshness: pastDeadline(),
     };
     vi.stubGlobal("fetch", vi.fn(async () => new Response(JSON.stringify(staleBoard), {
       status: 200, headers: { "content-type": "application/json" },
@@ -141,7 +171,7 @@ describe("useBoard — folding staleness into null (Fix Round 3 item 1)", () => 
       // NOT let one of them render it as current health.
       indicator: "operational",
       problems: [],
-      generatedAt: new Date(Date.now() - BOARD_STALE_MS - 5_000).toISOString(),
+      freshness: pastDeadline(),
     };
     vi.stubGlobal("fetch", vi.fn(async () => new Response(JSON.stringify(staleBoard), {
       status: 200, headers: { "content-type": "application/json" },
@@ -162,8 +192,8 @@ describe("useBoard — folding staleness into null (Fix Round 3 item 1)", () => 
 });
 
 // Fix Round 4 group 6: the monitor can wedge while `/api/board` keeps answering
-// perfectly. Every board below has a BRAND-NEW `generatedAt`, so `isBoardStale` says
-// "fresh" and only the data clock can catch it.
+// perfectly. Every board below has a read deadline well in the future, so only the
+// server's data-clock verdict (`freshness.state`) can catch it.
 describe("useBoard — folding a WEDGED MONITOR into null (Fix Round 4 group 6)", () => {
   function frozenBoard(over: Partial<Board>): Board {
     return {
@@ -172,6 +202,7 @@ describe("useBoard — folding a WEDGED MONITOR into null (Fix Round 4 group 6)"
       indicator: "operational",
       problems: [],
       generatedAt: new Date().toISOString(),
+      freshness: { ...board.freshness },
       ...over,
     };
   }
@@ -183,7 +214,7 @@ describe("useBoard — folding a WEDGED MONITOR into null (Fix Round 4 group 6)"
   }
 
   it("a fresh board over FROZEN data reads as null, with reason \"frozen\"", async () => {
-    stubFetch(frozenBoard({ dataAsOfMs: Date.now() - boardDataStaleMs() - 5_000 }));
+    stubFetch(frozenBoard({ freshness: { ...board.freshness, state: "frozen" } }));
 
     const { result } = renderHook(() => useBoard(), { wrapper });
     await waitFor(() => expect(result.current.reason).not.toBe("loading"));
@@ -196,7 +227,7 @@ describe("useBoard — folding a WEDGED MONITOR into null (Fix Round 4 group 6)"
   });
 
   it("a board resting on NO observations reads as null — an empty problems list is not health", async () => {
-    stubFetch(frozenBoard({ dataAsOfMs: null }));
+    stubFetch(frozenBoard({ dataAsOfMs: null, freshness: { ...board.freshness, state: "no-data" } }));
 
     const { result } = renderHook(() => useBoard(), { wrapper });
     await waitFor(() => expect(result.current.reason).not.toBe("loading"));
@@ -220,7 +251,7 @@ describe("useBoard — folding a WEDGED MONITOR into null (Fix Round 4 group 6)"
   });
 
   it("the pill agrees a wedged monitor is unknown, not its last verdict", async () => {
-    stubFetch(frozenBoard({ dataAsOfMs: Date.now() - boardDataStaleMs() - 5_000 }));
+    stubFetch(frozenBoard({ freshness: { ...board.freshness, state: "frozen" } }));
 
     const { result } = renderHook(() => usePortfolioIndicator(), { wrapper });
     await waitFor(() => expect(result.current.pillKey).toBe("unknown"));

@@ -5,6 +5,9 @@ import type { LiveSnapshot } from "./live-types";
 export function liveSnapshot(over: Partial<LiveSnapshot> = {}): LiveSnapshot {
   return {
     generatedAt: "2026-06-30T00:00:00.000Z",
+    lastCycleAt: null,
+    probeIntervalMs: 60_000,
+    monitorVersion: null,
     services: [],
     deployments: [],
     staleProd: [],
@@ -16,6 +19,10 @@ export function liveSnapshot(over: Partial<LiveSnapshot> = {}): LiveSnapshot {
     },
     configDegraded: false,
     configReason: null,
+    freshness: { state: "fresh", asOf: null },
+    blind: false,
+    platformSummary: [],
+    staleMonitors: { thresholdDays: 7, monitors: [] },
     ...over,
   };
 }

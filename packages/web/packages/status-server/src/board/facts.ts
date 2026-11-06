@@ -5,6 +5,8 @@ import { deployIsBad, deployIsResolving } from "../monitor/issue-sources";
 import type { PageCursor, Storage } from "../storage/ports";
 import { deriveActivity, pageActivity } from "./derive-activity";
 import { monitoredTargets } from "./derive-problems";
+import { deriveProblems } from "./derive";
+import { withAttention } from "./view";
 import { rosterDeployProjects } from "./ownership";
 import { ACTIVITY_WINDOW_MS } from "./types";
 import type { ActivityCursor, ActivityPage, BoardFacts, DeployFact, EndpointFact, IssueEvent } from "./types";
@@ -174,7 +176,10 @@ export async function readActivityPage(
   // OLDEST candidates, which on this path are the ones the reader is scrolling towards.
   // The input is already bounded by the three storage-layer limits above.
   const derived = deriveActivity(pageFacts, nowMs, undefined, undefined, floorMs ?? 0, Infinity);
-  return pageActivity(derived, cursor, limit, sourcesExhausted, floorMs);
+  const page = pageActivity(derived, cursor, limit, sourcesExhausted, floorMs);
+  // Judged against the CURRENT problems — the base facts are the live board's — so a page
+  // of history carries the same `unresolved` / `running` verdicts the live window does.
+  return { ...page, rows: withAttention(page.rows, deriveProblems(base, nowMs)) };
 }
 
 /** How long a scrolled page may reuse the previous page's board facts. */

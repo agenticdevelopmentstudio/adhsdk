@@ -1,3 +1,4 @@
+import type { UptimeTone } from "./uptime";
 import type { HealthStatus } from "./health";
 import type { OverallStatus } from "./overall";
 import type { DeployStatus, BuildPhase, DeployPhase } from "./deploy-status";
@@ -17,6 +18,8 @@ export interface ServiceStatusDTO {
   statusCode: number | null;
   error: string | null;
   lastCheckedAt: string | null;
+  /** The last response was slower than `SLOW_RESPONSE_MS` (`monitor/uptime.ts`). */
+  slow: boolean;
 }
 
 export interface UptimeDay {
@@ -28,12 +31,35 @@ export interface UptimeService {
   slug: string;
   name: string;
   uptimePercent: number | null;
+  /** How `uptimePercent` reads (`uptimeTone`, `monitor/uptime.ts`). */
+  uptimeTone: UptimeTone;
   totalChecks: number;
   daily: UptimeDay[];
 }
 export interface UptimeResponse {
   services: UptimeService[];
   days: number;
+  /** Portfolio-wide uptime: the simple mean of each service's own %, so every service
+   *  counts equally. Null when no service has data. */
+  overallUptimePercent: number | null;
+  /** How `overallUptimePercent` reads (`uptimeTone`). */
+  overallUptimeTone: UptimeTone;
+}
+
+/** Endpoint counts as `GET /status` publishes them beside the services. `down` includes an
+ *  endpoint with no probe yet ("unknown"): an unprobed endpoint is never counted as up. */
+export interface EndpointCounts {
+  up: number;
+  degraded: number;
+  down: number;
+  total: number;
+}
+
+export interface StatusResponse {
+  overall: OverallStatus;
+  services: ServiceStatusDTO[];
+  checkedAt: string;
+  counts: EndpointCounts;
 }
 
 export interface DeploymentDTO {
@@ -119,9 +145,26 @@ export interface IntegrationCheck {
   correlated?: boolean;
 }
 
+/** What the dashboard's self-check bar shows (see `selfCheckView`). */
+export interface SelfCheckView {
+  /** Expected env vars found unset, deduped, in check order. */
+  missingEnv: string[];
+  /** A missing-env check is error-severity — the env chip goes red rather than amber. */
+  missingEnvError: boolean;
+  /** Reachability/freshness issues to chip out — excludes missing-env checks, the internal
+   *  "cron" check, and correlated provider failures. */
+  issues: IntegrationCheck[];
+  /** Any errored check → the bar renders in its red state. */
+  hasError: boolean;
+  /** How many things the bar lists (issues + missing variables) — the KPI pill's count. */
+  issueCount: number;
+}
+
 export interface IntegrationsResponse {
   generatedAt: string;
   overall: CheckState;
   checks: IntegrationCheck[];
+  /** The self-check bar's verdict over `checks`; null when there is nothing to show. */
+  selfCheck: SelfCheckView | null;
 }
 

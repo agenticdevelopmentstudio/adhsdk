@@ -1,7 +1,6 @@
 import { HTTPException } from "hono/http-exception";
 import { describe, expect, it, vi } from "vitest";
-import type { LiveSnapshot } from "../src/monitor/live-types";
-import type { DeploymentDTO } from "../src/monitor/types";
+import type { LiveDeploymentDTO, LiveSnapshot } from "../src/monitor/live-types";
 import {
   gatherReport,
   LOG_DEPLOY_CAP,
@@ -13,6 +12,7 @@ import {
 } from "../src/report/report-gather";
 import type { DashboardSet } from "../src/telemetry/dashboard/dashboard-set";
 import type { AnalyticsDashboardResponse, ErrorsDashboardResponse } from "../src/telemetry/dashboard/types";
+import { analyticsViews, errorsViews } from "../src/telemetry/dashboard/views";
 
 // The reading half: every source fail-soft, the dashboards given `wait` to settle, and a
 // dashboard still refreshing at the deadline disclosed rather than read as healthy.
@@ -20,16 +20,18 @@ import type { AnalyticsDashboardResponse, ErrorsDashboardResponse } from "../src
 const NOW = () => new Date("2026-11-06T12:00:00Z");
 
 function errorsDash(refreshing: boolean): ErrorsDashboardResponse {
+  const sections = {
+    issues: { data: null, error: null, updatedAt: null },
+    sites: { data: null, error: null, updatedAt: null },
+    detail: { data: null, error: null, updatedAt: null },
+    runtime: { data: null, error: null, updatedAt: null },
+  };
   return {
     generatedAt: "x",
     refreshing,
     configured: { glitchtip: false, posthog: false, vercel: false },
-    sections: {
-      issues: { data: null, error: null, updatedAt: null },
-      sites: { data: null, error: null, updatedAt: null },
-      detail: { data: null, error: null, updatedAt: null },
-      runtime: { data: null, error: null, updatedAt: null },
-    },
+    sections,
+    views: errorsViews(sections, { posthog: false }),
   };
 }
 
@@ -41,10 +43,14 @@ function analyticsDash(refreshing: boolean): AnalyticsDashboardResponse {
     range: "24h",
     configured: { posthog: false, vercel: false },
     sections: { traffic: empty, dimensions: empty, paths: empty, vitals: empty, health: empty, vercel: empty },
+    views: analyticsViews(
+      { traffic: empty, dimensions: empty, paths: empty, vitals: empty, health: empty, vercel: empty },
+      { posthog: false, vercel: false },
+    ),
   };
 }
 
-function failed(id: string, createdAt: string): DeploymentDTO {
+function failed(id: string, createdAt: string): LiveDeploymentDTO {
   return {
     id,
     platform: "vercel",
@@ -64,7 +70,8 @@ function failed(id: string, createdAt: string): DeploymentDTO {
     liveHost: null,
     createdAt,
     phaseConfirmedAt: createdAt,
-  } as DeploymentDTO;
+    effectiveStatus: "failed",
+  } as LiveDeploymentDTO;
 }
 
 const LIVE: LiveSnapshot = {
@@ -83,6 +90,10 @@ const LIVE: LiveSnapshot = {
   },
   configDegraded: false,
   configReason: null,
+  freshness: { state: "fresh", asOf: null },
+  blind: false,
+  platformSummary: [],
+  staleMonitors: { thresholdDays: 7, monitors: [] },
 };
 
 function dashboards(over: Partial<DashboardSet> = {}): DashboardSet {
@@ -107,9 +118,9 @@ function sources(over: Partial<ReportSources> = {}): ReportSources {
     }),
     live: async () => LIVE,
     deployLog: async () => ({ error: "unused" }),
-    integrations: async () => ({ generatedAt: "x", overall: "ok", checks: [] }),
+    integrations: async () => ({ generatedAt: "x", overall: "ok", checks: [], selfCheck: null }),
     runtimeErrors: async () => ({ configured: false, report: { generatedAt: "x", window: "24h", total: 0, groups: [] } }),
-    uptime: async (days) => ({ days, services: [] }),
+    uptime: async (days) => ({ days, services: [], overallUptimePercent: null, overallUptimeTone: "unknown" }),
     ...over,
   };
 }

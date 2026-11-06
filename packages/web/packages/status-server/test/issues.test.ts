@@ -27,6 +27,13 @@ import type { Board, Problem } from '../src/board';
 import { freshDb } from './helpers/db';
 import { testConfig } from './helpers/config';
 
+/** The board's view fields — the ledger writer reads none of them; stated so the shape is a real Board. */
+const BOARD_VIEW = {
+  freshness: { state: 'current' as const, staleAt: new Date(183_000).toISOString(), pollIntervalMs: 60_000 },
+  deployCounts: { builds: 0, deploys: 0, failures: 0 },
+  scope: { environments: null, indicator: 'operational' as const, problemCount: 0, endpoints: { total: 0, healthy: 0 } },
+};
+
 type TestDb = Awaited<ReturnType<typeof freshDb>>;
 
 /**
@@ -40,7 +47,7 @@ function board(problems: Problem[], monitoredTargets: string[]): Board {
     generatedAt: new Date(3000).toISOString(),
     // The ledger writer never reads the data clock — it records the verdict the board
     // already made. Stated anyway so the shape is a real Board, not a partial one.
-    dataAsOfMs: 3000, probeIntervalMs: 60_000, activityFromMs: 0,
+    dataAsOfMs: 3000, probeIntervalMs: 60_000, activityFromMs: 0, ...BOARD_VIEW,
     indicator: problems.length > 0 ? 'degraded' : 'operational',
     problems,
     activity: [],
@@ -620,7 +627,7 @@ describe("applyBoardToLedger", () => {
   it("opens a ledger row for a new problem", async () => {
     const db = await freshDb();
     const storage = createLibsqlStorage(db);
-    const board = { generatedAt: new Date(3000).toISOString(), dataAsOfMs: 3000, probeIntervalMs: 60_000, activityFromMs: 0, indicator: "degraded" as const, activity: [],
+    const board = { generatedAt: new Date(3000).toISOString(), dataAsOfMs: 3000, probeIntervalMs: 60_000, activityFromMs: 0, ...BOARD_VIEW, indicator: "degraded" as const, activity: [],
       monitoredTargets: ["vercel|hub-help-testing|"],
       problems: [{ target: "vercel|hub-help-testing|", source: "vercel" as const, name: "hub-help-testing",
         environment: "production", severity: "major" as const, state: "failed", statusCode: null,
@@ -635,7 +642,7 @@ describe("applyBoardToLedger", () => {
   it("is idempotent — re-applying the same board opens nothing new", async () => {
     const db = await freshDb();
     const storage = createLibsqlStorage(db);
-    const board = { generatedAt: new Date(3000).toISOString(), dataAsOfMs: 3000, probeIntervalMs: 60_000, activityFromMs: 0, indicator: "degraded" as const, activity: [],
+    const board = { generatedAt: new Date(3000).toISOString(), dataAsOfMs: 3000, probeIntervalMs: 60_000, activityFromMs: 0, ...BOARD_VIEW, indicator: "degraded" as const, activity: [],
       monitoredTargets: ["vercel|hub-help-testing|"],
       problems: [{ target: "vercel|hub-help-testing|", source: "vercel" as const, name: "hub-help-testing",
         environment: "production", severity: "major" as const, state: "failed", statusCode: null,
@@ -658,7 +665,7 @@ describe("applyBoardToLedger", () => {
     await db.insert(issues).values({ target: "vercel|hub-help-testing|", source: "vercel",
       name: "hub-help-testing", environment: "production", severity: "major", state: "failed",
       openedAt: new Date(2000) });
-    const board = { generatedAt: new Date(3000).toISOString(), dataAsOfMs: 3000, probeIntervalMs: 60_000, activityFromMs: 0, indicator: "degraded" as const, activity: [],
+    const board = { generatedAt: new Date(3000).toISOString(), dataAsOfMs: 3000, probeIntervalMs: 60_000, activityFromMs: 0, ...BOARD_VIEW, indicator: "degraded" as const, activity: [],
       monitoredTargets: ["vercel|hub-help-testing|"],
       problems: [{ target: "vercel|hub-help-testing|", source: "vercel" as const, name: "hub-help-testing",
         environment: "testing", severity: "major" as const, state: "failed", statusCode: null,
@@ -679,7 +686,7 @@ describe("applyBoardToLedger", () => {
     await db.insert(issues).values({ target: "vercel|prj_abc|", source: "vercel",
       name: "hub-web", environment: "production", severity: "major", state: "failed",
       openedAt: new Date(2000) });
-    const board = { generatedAt: new Date(3000).toISOString(), dataAsOfMs: 3000, probeIntervalMs: 60_000, activityFromMs: 0, indicator: "degraded" as const, activity: [],
+    const board = { generatedAt: new Date(3000).toISOString(), dataAsOfMs: 3000, probeIntervalMs: 60_000, activityFromMs: 0, ...BOARD_VIEW, indicator: "degraded" as const, activity: [],
       monitoredTargets: ["vercel|prj_abc|"],
       problems: [{ target: "vercel|prj_abc|", source: "vercel" as const, name: "hub-web-v2",
         environment: "production", severity: "major" as const, state: "failed", statusCode: null,
@@ -695,7 +702,7 @@ describe("applyBoardToLedger", () => {
     await db.insert(issues).values({ target: "vercel|hub-help-testing|", source: "vercel",
       name: "hub-help-testing", severity: "major", state: "failed", openedAt: new Date(2000) });
     // Still WATCHED, just no longer failing — a genuine recovery, so this one alerts.
-    const recovered = { generatedAt: new Date(3000).toISOString(), dataAsOfMs: 3000, probeIntervalMs: 60_000, activityFromMs: 0, indicator: "operational" as const,
+    const recovered = { generatedAt: new Date(3000).toISOString(), dataAsOfMs: 3000, probeIntervalMs: 60_000, activityFromMs: 0, ...BOARD_VIEW, indicator: "operational" as const,
       problems: [], activity: [], monitoredTargets: ["vercel|hub-help-testing|"] };
     expect(await applyBoardToLedger(storage, recovered)).toMatchObject({ resolved: 1 });
     expect((await db.select().from(issues))[0]!.resolvedAt).not.toBeNull();
@@ -769,7 +776,7 @@ describe("issueOrphaned — the whole target, not just the project", () => {
     // The board watches the PRODUCTION env of the same project but not scratch1. The old
     // issueOrphaned compared only `parts[1]` ("adh-backend") and so declared this target
     // still configured, leaving it open forever.
-    const empty = { generatedAt: new Date(3000).toISOString(), dataAsOfMs: 3000, probeIntervalMs: 60_000, activityFromMs: 0, indicator: "operational" as const,
+    const empty = { generatedAt: new Date(3000).toISOString(), dataAsOfMs: 3000, probeIntervalMs: 60_000, activityFromMs: 0, ...BOARD_VIEW, indicator: "operational" as const,
       problems: [], activity: [], monitoredTargets: ["railway|adh-backend|production"] };
     await applyBoardToLedger(storage, empty);
     expect((await db.select().from(issues))[0]!.resolvedAt).not.toBeNull();
@@ -783,7 +790,7 @@ describe("issueOrphaned — the whole target, not just the project", () => {
     // Watched and no longer failing → a real recovery → alert.
     await db.insert(issues).values({ target: "vercel|watched|", source: "vercel", name: "watched",
       severity: "major", state: "failed", openedAt: new Date(2000) });
-    await applyBoardToLedger(storage, { generatedAt: new Date(3000).toISOString(), dataAsOfMs: 3000, probeIntervalMs: 60_000, activityFromMs: 0,
+    await applyBoardToLedger(storage, { generatedAt: new Date(3000).toISOString(), dataAsOfMs: 3000, probeIntervalMs: 60_000, activityFromMs: 0, ...BOARD_VIEW,
       indicator: "operational" as const, problems: [], activity: [],
       monitoredTargets: ["vercel|watched|"] });
     expect(alertMock).toHaveBeenCalledTimes(1);
@@ -792,7 +799,7 @@ describe("issueOrphaned — the whole target, not just the project", () => {
     alertMock.mockClear();
     await db.insert(issues).values({ target: "vercel|gone|", source: "vercel", name: "gone",
       severity: "major", state: "failed", openedAt: new Date(2000) });
-    await applyBoardToLedger(storage, { generatedAt: new Date(4000).toISOString(), dataAsOfMs: 4000, probeIntervalMs: 60_000, activityFromMs: 0,
+    await applyBoardToLedger(storage, { generatedAt: new Date(4000).toISOString(), dataAsOfMs: 4000, probeIntervalMs: 60_000, activityFromMs: 0, ...BOARD_VIEW,
       indicator: "operational" as const, problems: [], activity: [], monitoredTargets: [] });
     expect(alertMock).not.toHaveBeenCalled();
   });

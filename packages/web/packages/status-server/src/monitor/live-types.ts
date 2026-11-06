@@ -1,16 +1,31 @@
 import type { ServiceStatusDTO, DeploymentDTO } from "./types";
+import type { DeployStatus } from "./deploy-status";
+import type { LiveFreshness, StaleMonitorsView } from "./live-view";
+import type { EndpointDeploys, PlatformSummary } from "./overview";
+
+// The view types the snapshot carries, re-exported so `@adh-sdk/status-server/types`
+// names the whole /live contract (status-web's parity test reads them from there).
+export type { LiveFreshness, SnapshotFreshnessState, StaleMonitor, StaleMonitorsView } from "./live-view";
+export type { EndpointDeploys, PlatformSummary } from "./overview";
 
 // The /api/live contract — one self-contained snapshot of everything the client
 // displays, pulled live from providers + HTTP probes. Type-only module (shared by
 // the route and the client store); no DB imports.
 
-export interface LiveServiceDTO extends ServiceStatusDTO {
+export interface LiveServiceDTO extends ServiceStatusDTO, EndpointDeploys {
   /** Whether the hostname resolved in DNS. false → a `dns`-source problem, not `http`. */
   dnsOk: boolean;
   /** ISO time the endpoint's current http/dns issue opened — SERVER-truth "down since",
    *  durable across browsers (unlike the client store's per-tab onset). null = not down.
    *  Drives the "retire stale monitor" surface: a host down this long is a likely ghost. */
   downSince: string | null;
+}
+
+/** A deployment as `/live` serves it: the raw provider row plus the status a view should
+ *  SHOW — its own, or "unknown" once an in-flight phase has gone unconfirmed past the
+ *  cadence-scaled window (`effectiveDeployStatus`). Judged against `generatedAt`. */
+export interface LiveDeploymentDTO extends DeploymentDTO {
+  effectiveStatus: DeployStatus;
 }
 
 /** A Vercel project whose LIVE production deploy is errored/behind (already filtered to stale). */
@@ -50,10 +65,20 @@ export interface LiveSnapshot {
    *  an old sha on screen, which no amount of in-board monitoring can otherwise show. */
   monitorVersion: string | null;
   services: LiveServiceDTO[];
-  deployments: DeploymentDTO[];
+  deployments: LiveDeploymentDTO[];
   staleProd: StaleProdDTO[];
   providers: Record<ProviderKey, ProviderHealth>;
   /** True when the config read fell back to the static list (DB unreachable). */
   configDegraded: boolean;
   configReason: string | null;
+  /** Whether `lastCycleAt` lags `generatedAt` past the cadence-scaled window — the
+   *  wedged-poller verdict the dashboard's stale banner shows. */
+  freshness: LiveFreshness;
+  /** No endpoint is monitored at all — the dashboard says it is watching nothing rather
+   *  than painting an empty board as clear. */
+  blind: boolean;
+  /** Per-platform deploy pills (ready / building / failed / total), in `PLATFORM_ORDER`. */
+  platformSummary: PlatformSummary[];
+  /** Endpoints down long enough to be retire candidates, longest-down first. */
+  staleMonitors: StaleMonitorsView;
 }

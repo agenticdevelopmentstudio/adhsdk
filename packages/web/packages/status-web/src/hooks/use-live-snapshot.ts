@@ -444,7 +444,7 @@ export function useLiveSnapshot(): LiveSnapshotStore {
     snapshot,
     offline,
     disconnected,
-    blind: snapshot !== null && snapshot.services.length === 0,
+    blind: snapshot?.blind ?? false,
     // `liveError` IS the detail, and it is already exactly as sticky as `disconnected`
     // (same source), so the overlay's detail line stays put across probes instead of
     // blinking to null during each re-read.

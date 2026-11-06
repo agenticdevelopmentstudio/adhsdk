@@ -53,6 +53,10 @@ describe("GlobalPanel — problems-by-source pane never claims health off a null
           activity: [],
           indicator: "operational",
           monitoredTargets: [],
+          // The server's verdicts (src/board/view.ts): a current read over current data.
+          freshness: { state: "current", staleAt: new Date(Date.now() + 180_000).toISOString(), pollIntervalMs: 60_000 },
+          deployCounts: { builds: 0, deploys: 0, failures: 0 },
+          scope: { environments: null, indicator: "operational", problemCount: 0, endpoints: { total: 0, healthy: 0 } },
         }),
         { status: 200, headers: { "content-type": "application/json" } },
       ),

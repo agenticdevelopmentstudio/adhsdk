@@ -7,12 +7,13 @@ import {
   type DeployIdentity, type Problem,
 } from '../board';
 import type { ConfiguredEndpoint, DeploymentRow, Storage } from '../storage/ports';
-import { computeOverall, publicOverall, type OverallStatus } from '../monitor/overall';
+import { computeOverall, endpointCounts, publicOverall, type OverallStatus } from '../monitor/overall';
 import type { HealthStatus } from '../monitor/health';
 import type { BuildPhase, DeployPhase } from '../monitor/deploy-status';
 import { deployEventsSince } from '../monitor/live-buffer';
 import { providerDeployToDTO, type ProviderDeploy } from '../monitor/provider-deploy';
-import { deployTargetKey, platformCanon } from '../monitor/overview';
+import { deployTargetKey, endpointDeploys, platformCanon, summarizeByPlatform } from '../monitor/overview';
+import { effectiveDeployStatus, liveFreshness, staleMonitorsView } from '../monitor/live-view';
 import { deployProjectKey } from '@adh-sdk/deploy-platform/canon';
 import { envFromProject } from '../monitor/deploy-view';
 import { hostOf } from '../monitor/url';
@@ -23,7 +24,7 @@ import { enumerateDeployProjects, providerConn } from '../monitor/provider-conn'
 import { refreshVercelProjectMetaFromConfig, type VercelRefreshResult } from '../monitor/refresh-project-meta';
 import type { EnumeratedProject } from '@adh-sdk/deploy-platform/enumerate';
 import { partitionPending, endpointUnconfigured } from '@adh-sdk/deploy-platform/engine';
-import { uptimePercent, dayStatus, type Counts } from '../monitor/uptime';
+import { uptimePercent, dayStatus, overallUptimePercent, uptimeTone, isSlowResponse, type Counts } from '../monitor/uptime';
 import { runIntegrationsCheck } from '../monitor/integrations';
 import type {
   LiveSnapshot,
@@ -110,6 +111,7 @@ function serviceDtos(
       statusCode: c?.statusCode ?? null,
       error: c?.error ?? null,
       lastCheckedAt: c ? c.checkedAt.toISOString() : null,
+      slow: isSlowResponse(c?.responseTimeMs ?? null),
     };
   });
 }
@@ -313,6 +315,10 @@ export async function buildLiveSnapshot(storage: Storage, config: StatusConfig):
   ]);
 
   const generatedAt = new Date().toISOString();
+  const nowMs = Date.parse(generatedAt);
+  const probeIntervalMs = config.probeIntervalSeconds * 1000;
+  // Built before the services so each one can carry its own slice of the feed.
+  const rawDeployments = deploymentDtos(deployRows, owners, 0, keepDeploy);
   const services: LiveServiceDTO[] = serviceDtos(endpoints, latest).map((s) => {
     const c = latest.get(s.slug);
     // A `dns`-source open problem means the hostname failed to resolve. `dnsOk` IS a
@@ -339,7 +345,13 @@ export async function buildLiveSnapshot(storage: Storage, config: StatusConfig):
     // lastCheckedAt on the live snapshot is the cycle clock (generatedAt) when a
     // check exists, matching the source which stamped every service with the sweep
     // time; null only when the endpoint has never been probed.
-    return { ...s, lastCheckedAt: c ? generatedAt : null, dnsOk: !dnsBad, downSince: downProblem?.since ?? null };
+    return {
+      ...s,
+      lastCheckedAt: c ? generatedAt : null,
+      dnsOk: !dnsBad,
+      downSince: downProblem?.since ?? null,
+      ...endpointDeploys(rawDeployments, s),
+    };
   });
 
   // `deployments` is the MONITORED deploy feed, not an account-wide one — every consumer
@@ -348,14 +360,17 @@ export async function buildLiveSnapshot(storage: Storage, config: StatusConfig):
   // to. Surfaces that legitimately need the whole account enumerate it live via
   // /deploy-projects and are untouched by this. The second gate here is for the
   // webhook-buffer overlay, which never passed through ownedDeploysWhere.
-  const deployments = deploymentDtos(deployRows, owners, 0, keepDeploy);
+  const deployments = rawDeployments.map((d) => ({
+    ...d,
+    effectiveStatus: effectiveDeployStatus(d, nowMs, probeIntervalMs),
+  }));
   const staleProd = staleProdFromBoard(problems);
   const providers = await providerHealth(storage, config, problems);
 
   return {
     generatedAt,
     lastCycleAt: lastCheckAt?.toISOString() ?? null,
-    probeIntervalMs: config.probeIntervalSeconds * 1000,
+    probeIntervalMs,
     monitorVersion: config.gitCommitSha,
     services,
     deployments,
@@ -364,6 +379,10 @@ export async function buildLiveSnapshot(storage: Storage, config: StatusConfig):
     // A successful DB read is never the static-fallback degraded path.
     configDegraded: false,
     configReason: null,
+    freshness: liveFreshness(lastCheckAt?.toISOString() ?? null, generatedAt, probeIntervalMs),
+    blind: services.length === 0,
+    platformSummary: summarizeByPlatform(rawDeployments, nowMs, probeIntervalMs),
+    staleMonitors: staleMonitorsView(services, nowMs),
   };
 }
 
@@ -513,10 +532,12 @@ export async function buildUptime(storage: Storage, days: number): Promise<Uptim
         }),
         { total: 0, healthy: 0, degraded: 0, down: 0 },
       );
-      return { slug: svc.slug, name: svc.name, uptimePercent: uptimePercent(totals), totalChecks: totals.total, daily };
+      const pct = uptimePercent(totals);
+      return { slug: svc.slug, name: svc.name, uptimePercent: pct, uptimeTone: uptimeTone(pct), totalChecks: totals.total, daily };
     }),
   );
-  return { services, days };
+  const overall = overallUptimePercent(services);
+  return { services, days, overallUptimePercent: overall, overallUptimeTone: uptimeTone(overall) };
 }
 
 /** The configuration-gap partition: pending/addable deploy projects + endpoints that
@@ -615,7 +636,12 @@ export function readsRoutes(
     const overall: OverallStatus = computeOverall(
       services.map((s) => s.status).filter((s): s is HealthStatus => s !== 'unknown'),
     );
-    return c.json({ overall, services, checkedAt: new Date().toISOString() });
+    return c.json({
+      overall,
+      services,
+      checkedAt: new Date().toISOString(),
+      counts: endpointCounts(services.map((s) => s.status)),
+    });
   });
 
   app.get('/snapshot', async (c) => c.json(await buildSnapshot(storage, config)));

@@ -2,21 +2,22 @@
 import { describe, it, expect, vi, afterEach } from "vitest";
 import { render, screen, fireEvent, cleanup, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import type { LiveServiceDTO } from "../lib/live-types";
+import type { StaleMonitor } from "../lib/live-types";
 import { StaleMonitorsBanner } from "./StaleMonitorsBanner";
 
 const deleteEndpoint = vi.hoisted(() => vi.fn(async () => {}));
 vi.mock("../api/monitored-sites", () => ({ deleteEndpoint }));
 
-const services = vi.hoisted(() => ({ current: [] as LiveServiceDTO[] }));
+// The SERVER picks the retire candidates (`/live`'s `staleMonitors`); the banner renders them.
+const monitors = vi.hoisted(() => ({ current: [] as StaleMonitor[] }));
 vi.mock("../hooks/use-live-snapshot", () => ({
-  useLiveSnapshot: () => ({ snapshot: { services: services.current } }),
+  useLiveSnapshot: () => ({ snapshot: { staleMonitors: { thresholdDays: 7, monitors: monitors.current } } }),
 }));
 
 afterEach(() => {
   cleanup(); // no vitest globals → RTL's auto-cleanup never registers
   deleteEndpoint.mockClear();
-  services.current = [];
+  monitors.current = [];
 });
 
 // jsdom has no ResizeObserver; the Popover primitive observes its content size.
@@ -27,26 +28,20 @@ class ResizeObserverStub {
 }
 (globalThis as { ResizeObserver?: unknown }).ResizeObserver ??= ResizeObserverStub;
 
-const svc = (over: Partial<LiveServiceDTO> = {}): LiveServiceDTO => ({
+const svc = (over: Partial<StaleMonitor> = {}): StaleMonitor => ({
   slug: "ep-1",
-  group: "g",
   name: "docs.example.com",
   url: "https://docs.example.com",
   environment: "production",
-  platform: null,
-  deployProject: null,
-  status: "down",
-  responseTimeMs: null,
-  statusCode: null,
-  error: "HTTP 500",
-  lastCheckedAt: null,
+  detail: "HTTP 500",
   dnsOk: true,
   downSince: new Date(Date.now() - 21 * 86_400_000).toISOString(),
+  ageMs: 21 * 86_400_000,
   ...over,
 });
 
-function banner(list: LiveServiceDTO[]) {
-  services.current = list;
+function banner(list: StaleMonitor[]) {
+  monitors.current = list;
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   return render(
     <QueryClientProvider client={client}>
@@ -64,7 +59,7 @@ const open = () =>
 // deleted by the backend cycle and never reaches this component at all.
 describe("StaleMonitorsBanner", () => {
   it("renders nothing when there is nothing to retire", () => {
-    const { container } = banner([svc({ status: "healthy", downSince: null })]);
+    const { container } = banner([]);
     expect(container.firstChild).toBeNull();
   });
 
@@ -98,7 +93,7 @@ describe("StaleMonitorsBanner", () => {
     // decided whether the backend would delete the row. It no longer does, so there is one
     // banner saying one thing: down this long, and nothing said it was deleted.
     for (const dnsOk of [true, false]) {
-      banner([svc({ dnsOk, error: dnsOk ? "HTTP 500" : "DNS: does not resolve" })]);
+      banner([svc({ dnsOk, detail: dnsOk ? "HTTP 500" : "DNS: does not resolve" })]);
       expect(screen.getByText(/🗑 RETIRE: 1 stale monitor down 7d\+/)).toBeTruthy();
       open();
       expect(await screen.findByRole("button", { name: "Retire" })).toBeTruthy();
@@ -115,7 +110,7 @@ describe("StaleMonitorsBanner", () => {
 
     // A dead name is the operator's call too, and the copy has to say why: not resolving is
     // not proof the deployment is gone, and nothing is going to remove this row for them.
-    banner([svc({ dnsOk: false, error: "DNS: does not resolve" })]);
+    banner([svc({ dnsOk: false, detail: "DNS: does not resolve" })]);
     open();
     fireEvent.click(await screen.findByRole("button", { name: "Retire" }));
     expect(screen.getByText(/has not resolved for/)).toBeTruthy();
