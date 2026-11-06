@@ -125,6 +125,19 @@ describe('UnsavedChangesGuard — programmatic navigation registry', () => {
     fireEvent.click(await screen.findByRole('button', { name: 'Stay' }))
     await waitFor(() => expect(resolved).toBe(false))
   })
+
+  it('a confirm replaced by another (Back pressed while it is up) settles as Stay', async () => {
+    render(<UnsavedChangesGuard when />)
+    let first: boolean | undefined
+    void confirmNavigation().then((ok) => {
+      first = ok
+    })
+    await screen.findByRole('dialog')
+    fireEvent.popState(window)
+    // The first navigation is not the one the user is answering now: it did not happen.
+    await waitFor(() => expect(first).toBe(false))
+    expect(screen.getByRole('dialog')).toBeTruthy()
+  })
 })
 
 describe('UnsavedChangesGuard — history and unload', () => {

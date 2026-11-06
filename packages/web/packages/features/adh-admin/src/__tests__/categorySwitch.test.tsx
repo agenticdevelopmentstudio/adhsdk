@@ -87,3 +87,26 @@ describe.each([
     expect(screen.queryByText("LLM Providers")).not.toBeNull();
   });
 });
+
+describe("a category choice the unsaved-changes guard refused", () => {
+  it("leaves the open section's category for the next mount, not the refused one", async () => {
+    // The guard answers false: Stay, or a Back press that replaced this choice's dialog.
+    function Guarded({ topicId }: { topicId: AdminTopicId | null }) {
+      const category = useAdminCategorySelection(topicId, async () => false);
+      return (
+        <button type="button" onClick={() => category.onSelect("communication")}>
+          {category.selectedId ?? "none"}
+        </button>
+      );
+    }
+    render(<Guarded topicId="llm-providers" />);
+    const open = screen.getByRole("button").textContent;
+    fireEvent.click(screen.getByRole("button"));
+    await settle();
+    cleanup();
+    // The hub remounts the console on the next route (Back to /admin): it opens where the user
+    // actually was.
+    render(<Guarded topicId={null} />);
+    expect(screen.getByRole("button").textContent).toBe(open);
+  });
+});
