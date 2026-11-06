@@ -33,29 +33,23 @@ public struct AppAuthGoogleSignIn: GoogleSignInFlow {
     public init(timeout: Duration = .seconds(300)) { self.timeout = timeout }
 
     public func signIn(config: GoogleOAuthClientConfig) async throws -> GoogleCredential {
-        let session = SessionBox()
-        return try await withTaskCancellationHandler {
-            try await withThrowingTaskGroup(of: GoogleCredential.self) { group in
-                group.addTask { try await Self.run(config: config, box: session) }
-                group.addTask {
-                    try await Task.sleep(for: timeout)
-                    throw IntegrationError.signInCancelled
-                }
-                defer { group.cancelAll() }
-                guard let first = try await group.next() else { throw IntegrationError.signInCancelled }
-                return first
-            }
-        } onCancel: {
-            Task { @MainActor in session.cancel() }
-        }
+        let box = SessionBox()
+        return try await withSignInDeadline(
+            timeout: timeout,
+            cancel: { await box.cancel() },
+            operation: { try await Self.run(config: config, box: box) })
     }
 
+    /// Main-actor handle on the live AppAuth flow so a timeout or cancellation can tear it down.
     @MainActor
     private final class SessionBox: @unchecked Sendable {
         nonisolated init() {}
         var flow: (any OIDExternalUserAgentSession)?
         var handler: OIDRedirectHTTPHandler?
+        private(set) var cancelled = false
+
         func cancel() {
+            cancelled = true
             flow?.cancel()
             handler?.cancelHTTPListener()
         }
@@ -68,11 +62,12 @@ public struct AppAuthGoogleSignIn: GoogleSignInFlow {
         }
         let handler = OIDRedirectHTTPHandler(successURL: nil)
         box.handler = handler
-        var listenerError: NSError?
-        let listenerURL: URL? = handler.startHTTPListener(&listenerError)
-        guard let redirect = listenerURL else {
-            throw IntegrationError.signInFailed(
-                "could not start the local redirect listener: \(listenerError?.localizedDescription ?? "unknown")")
+        // startHTTPListener returns nil on a bind failure, but Swift imports it as non-null and
+        // would trap. Calling it through the runtime (a nil error out-parameter is tolerated)
+        // yields an optional we can check.
+        let raw = handler.perform(NSSelectorFromString("startHTTPListener:"), with: nil)
+        guard let redirect = raw?.takeUnretainedValue() as? URL else {
+            throw IntegrationError.signInFailed("Could not start the local sign-in listener")
         }
         defer { handler.cancelHTTPListener() }
 
@@ -82,6 +77,9 @@ public struct AppAuthGoogleSignIn: GoogleSignInFlow {
             redirectURL: redirect, responseType: OIDResponseTypeCode,
             additionalParameters: ["access_type": "offline", "prompt": "consent"])
 
+        // The deadline helper cancels via `box` (main actor), so no browser opens once cancelled and
+        // a cancel after presenting resumes the continuation through AppAuth's callback.
+        if box.cancelled { throw IntegrationError.signInCancelled }
         let state: OIDAuthState = try await withCheckedThrowingContinuation { continuation in
             box.flow = OIDAuthState.authState(
                 byPresenting: request, externalUserAgent: DefaultBrowserUserAgent()
@@ -93,6 +91,7 @@ public struct AppAuthGoogleSignIn: GoogleSignInFlow {
                 }
             }
             handler.currentAuthorizationFlow = box.flow
+            if box.cancelled { box.cancel() }
         }
         let tokens = state.lastTokenResponse
         guard let access = tokens?.accessToken else {
@@ -114,6 +113,48 @@ public struct AppAuthGoogleSignIn: GoogleSignInFlow {
         }
         return .signInFailed(error.localizedDescription)
     }
+}
+
+/// Runs `operation` under a deadline. `cancel` must make a suspended `operation` finish (for
+/// AppAuth: cancel the flow, which fires its callback). Deadline expiry throws
+/// `signInFailed("Sign-in timed out")`; cancelling the calling task throws `signInCancelled`.
+func withSignInDeadline<T: Sendable>(
+    timeout: Duration,
+    cancel: @escaping @Sendable () async -> Void,
+    operation: @escaping @Sendable () async throws -> T
+) async throws -> T {
+    let timedOut = OneShotFlag()
+    do {
+        return try await withTaskCancellationHandler {
+            try await withThrowingTaskGroup(of: T?.self) { group in
+                group.addTask { try await operation() }
+                group.addTask {
+                    try await Task.sleep(for: timeout)
+                    timedOut.set()
+                    await cancel()
+                    return nil
+                }
+                defer { group.cancelAll() }
+                while let result = try await group.next() {
+                    if let result { return result }
+                }
+                throw IntegrationError.signInCancelled
+            }
+        } onCancel: {
+            Task { await cancel() }
+        }
+    } catch {
+        if timedOut.isSet { throw IntegrationError.signInFailed("Sign-in timed out") }
+        if error is CancellationError || Task.isCancelled { throw IntegrationError.signInCancelled }
+        throw error
+    }
+}
+
+private final class OneShotFlag: @unchecked Sendable {
+    private let lock = NSLock()
+    private var value = false
+    func set() { lock.withLock { value = true } }
+    var isSet: Bool { lock.withLock { value } }
 }
 
 /// Opens the authorization URL in the default browser. AppAuth's own macOS agent only does this
@@ -186,7 +227,12 @@ public actor GoogleTokenProvider {
     private let secrets: any SecretStoring
     private let endpoint: any GoogleTokenEndpoint
     private let now: @Sendable () -> Date
-    private var inFlight: [String: Task<GoogleCredential, Error>] = [:]
+    private struct Refresh {
+        let id: UUID
+        let task: Task<GoogleCredential, Error>
+    }
+
+    private var inFlight: [String: Refresh] = [:]
 
     public init(secrets: any SecretStoring, endpoint: any GoogleTokenEndpoint,
                 now: @escaping @Sendable () -> Date = Date.init) {
@@ -195,13 +241,16 @@ public actor GoogleTokenProvider {
         self.now = now
     }
 
-    public func store(_ credential: GoogleCredential, connectionId: String) {
-        guard let data = try? JSONEncoder().encode(credential),
-              let text = String(data: data, encoding: .utf8) else { return }
-        secrets.set(text, forKey: Self.key(connectionId: connectionId))
+    /// Saves a credential (a fresh sign-in). Supersedes any refresh in progress for the connection:
+    /// that refresh's result is discarded rather than overwriting this credential.
+    public func store(_ credential: GoogleCredential, connectionId: String) throws {
+        inFlight[connectionId] = nil
+        try persist(credential, connectionId: connectionId)
     }
 
+    /// Removes the credential. A refresh in progress is superseded and its result discarded.
     public func forget(connectionId: String) {
+        inFlight[connectionId] = nil
         secrets.delete(forKey: Self.key(connectionId: connectionId))
     }
 
@@ -211,7 +260,9 @@ public actor GoogleTokenProvider {
         if credential.expiresAt.timeIntervalSince(now()) >= Self.refreshMargin {
             return credential.accessToken
         }
-        if let running = inFlight[connectionId] { return try await running.value.accessToken }
+        if let running = inFlight[connectionId] {
+            return try await settle(running, connectionId: connectionId, config: config)
+        }
 
         let endpoint = self.endpoint
         let now = self.now
@@ -220,11 +271,36 @@ public actor GoogleTokenProvider {
             return GoogleCredential(accessToken: reply.accessToken, refreshToken: credential.refreshToken,
                                     expiresAt: now().addingTimeInterval(reply.expiresIn))
         }
-        inFlight[connectionId] = task
-        defer { inFlight[connectionId] = nil }
-        let refreshed = try await task.value
-        store(refreshed, connectionId: connectionId)
+        let refresh = Refresh(id: UUID(), task: task)
+        inFlight[connectionId] = refresh
+        return try await settle(refresh, connectionId: connectionId, config: config)
+    }
+
+    /// Awaits a refresh and persists it only if it is still the current one for the connection
+    /// (no `store` or `forget` ran meanwhile). A superseded refresh re-reads the current state.
+    private func settle(_ refresh: Refresh, connectionId: String,
+                        config: GoogleOAuthClientConfig) async throws -> String {
+        let refreshed: GoogleCredential
+        do {
+            refreshed = try await refresh.task.value
+        } catch {
+            if inFlight[connectionId]?.id == refresh.id { inFlight[connectionId] = nil }
+            throw error
+        }
+        guard inFlight[connectionId]?.id == refresh.id else {
+            return try await accessToken(connectionId: connectionId, config: config)
+        }
+        inFlight[connectionId] = nil
+        try persist(refreshed, connectionId: connectionId)
         return refreshed.accessToken
+    }
+
+    private func persist(_ credential: GoogleCredential, connectionId: String) throws {
+        guard let data = try? JSONEncoder().encode(credential),
+              let text = String(data: data, encoding: .utf8),
+              secrets.set(text, forKey: Self.key(connectionId: connectionId)) else {
+            throw IntegrationError.signInFailed("Could not save the Google credential to the Keychain")
+        }
     }
 
     private func load(connectionId: String) -> GoogleCredential? {
