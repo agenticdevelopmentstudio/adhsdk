@@ -28,12 +28,25 @@ export function setAuthErrorReporter(fn: Reporter | null): void {
 const REPORT_DEDUPE_WINDOW_MS = 60_000
 const lastReportAt = new Map<string, number>()
 
+// The WebAuthn ceremony ended by the user or the browser, not by a bug: the user
+// dismissed the passkey sheet or let it time out (`NotAllowedError`), or a newer
+// ceremony aborted this one (`AbortError`). @simplewebauthn's WebAuthnError keeps
+// the DOMException's name, and a raw DOMException carries it too, so the name is
+// the one check that covers both. Passkey cancel is the commonest passkey outcome.
+const CEREMONY_CANCELLED = new Set(['NotAllowedError', 'AbortError'])
+
+function isCeremonyCancelled(err: unknown): boolean {
+  const name = typeof err === 'object' && err !== null ? (err as { name?: unknown }).name : undefined
+  return typeof name === 'string' && CEREMONY_CANCELLED.has(name)
+}
+
 /**
  * Report a CAUGHT auth error — but only when it's unexpected. A status-carrying
  * HTTP error (e.g. an {@link import('./client').AuthHttpError} thrown by
  * `authedJson` on a non-ok response) with a 4xx status is an expected user/flow
  * error (wrong password, stale exchange code, email already taken, capability
- * rejection) and is dropped to avoid noise; network errors (no numeric `status`)
+ * rejection) and is dropped to avoid noise, as is a passkey ceremony the user
+ * cancelled or that timed out (`NotAllowedError` / `AbortError`); network errors (no numeric `status`)
  * and 5xx backend failures are reported — deduped to one report per identical
  * (message + context) signature per minute, so an outage under react-query's
  * focus/remount refetches can't flood the reporter. Fail-safe: never throws.
@@ -47,6 +60,7 @@ const lastReportAt = new Map<string, number>()
 export function reportUnexpectedAuthError(err: unknown, context?: ErrorContext): void {
   const status = err instanceof Error ? (err as { status?: unknown }).status : undefined
   if (typeof status === 'number' && status < 500) return
+  if (isCeremonyCancelled(err)) return
   const signature = `${err instanceof Error ? err.message : String(err)}|${JSON.stringify(context ?? null)}`
   const now = Date.now()
   const last = lastReportAt.get(signature)

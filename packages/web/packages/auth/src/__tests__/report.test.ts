@@ -32,6 +32,26 @@ describe('reportUnexpectedAuthError', () => {
     expect(sink).not.toHaveBeenCalled()
   })
 
+  it('drops a passkey ceremony the user cancelled or that timed out', () => {
+    const spy = vi.spyOn(console, 'error').mockImplementation(() => {})
+    const sink = vi.fn()
+    setAuthErrorReporter(sink)
+    // @simplewebauthn's WebAuthnError keeps the DOMException's name.
+    const cancelled = Object.assign(new Error('The operation either timed out or was not allowed.'), { name: 'NotAllowedError' })
+    reportUnexpectedAuthError(cancelled)
+    reportUnexpectedAuthError(new DOMException('aborted', 'AbortError'))
+    expect(spy).not.toHaveBeenCalled()
+    expect(sink).not.toHaveBeenCalled()
+  })
+
+  it('reports a passkey failure that is not a cancel', () => {
+    vi.spyOn(console, 'error').mockImplementation(() => {})
+    const sink = vi.fn()
+    setAuthErrorReporter(sink)
+    reportUnexpectedAuthError(Object.assign(new Error('bad rp id'), { name: 'SecurityError' }))
+    expect(sink).toHaveBeenCalledTimes(1)
+  })
+
   it('reports a 5xx (a backend failure, not an expected client error)', () => {
     const spy = vi.spyOn(console, 'error').mockImplementation(() => {})
     const sink = vi.fn()
