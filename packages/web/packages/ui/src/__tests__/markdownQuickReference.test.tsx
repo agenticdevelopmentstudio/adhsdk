@@ -45,9 +45,9 @@ describe('MarkdownQuickReference', () => {
     )
   })
 
-  it('reads "Reference" on its trigger by default', () => {
+  it('reads "Markdown" on its trigger by default', () => {
     render(<MarkdownQuickReference />)
-    expect(trigger()).toHaveTextContent('Reference')
+    expect(trigger()).toHaveTextContent('Markdown')
   })
 
   it('honors a custom trigger label', () => {

@@ -63,9 +63,9 @@ afterEach(() => {
 })
 
 describe('MarkdownDocumentEditor — narrow', () => {
-  it('offers Markdown and Preview, and no layout choice at all', () => {
+  it('offers Source and Preview, and no layout choice at all', () => {
     render(<Harness />)
-    expect(screen.getByRole('button', { name: /^markdown$/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /^source$/i })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /^preview$/i })).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: /side by side/i })).toBeNull()
   })
@@ -87,11 +87,11 @@ describe('MarkdownDocumentEditor — narrow', () => {
 
   it('puts the toolbar in the control strip, not over the textarea, so both panes start level', () => {
     render(<Harness />)
-    const strip = screen.getByRole('button', { name: /^markdown$/i }).closest('[data-slot="split-view-control"]')!
+    const strip = screen.getByRole('button', { name: /^source$/i }).closest('[data-slot="split-view-control"]')!
       .parentElement!
-    // The Reference toggle lives in the same row as the pane tabs...
+    // The Markdown quick reference lives in the same row as the pane tabs...
     expect(strip).toContainElement(screen.getByRole('button', { name: 'Markdown quick reference' }))
-    expect(screen.getByRole('button', { name: 'Markdown quick reference' })).toHaveTextContent('Reference')
+    expect(screen.getByRole('button', { name: 'Markdown quick reference' })).toHaveTextContent('Markdown')
     // ...and the editor pane has no visible caption row of its own.
     expect(screen.getByText('Markdown body')).toHaveClass('sr-only')
     expect(strip).not.toContainElement(screen.getByRole('textbox'))
@@ -99,7 +99,7 @@ describe('MarkdownDocumentEditor — narrow', () => {
 
   it('shows a read-only document through the same view, its source selectable but not editable', () => {
     render(<MarkdownDocumentEditor value="# Doc" onChange={() => {}} onUpload={() => {}} readOnly />)
-    expect(screen.getByRole('button', { name: /^markdown$/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /^source$/i })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /^preview$/i })).toBeInTheDocument()
     const textbox = screen.getByRole('textbox') as HTMLTextAreaElement
     expect(textbox).toHaveAttribute('readonly')
@@ -164,7 +164,7 @@ describe('MarkdownDocumentEditor — narrow', () => {
     const { container } = render(<Harness defaultLayout="split" />)
     // Tabbed: exactly one pane mounted at a time, and the tab buttons exist at all (the split
     // layout drops them entirely — see the "wide" describe block below).
-    expect(screen.getByRole('button', { name: /^markdown$/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /^source$/i })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /^preview$/i })).toBeInTheDocument()
     expect(screen.getByRole('textbox')).toBeInTheDocument()
     expect(container.querySelector('[data-slot="markdown-preview"]')).toBeNull()
@@ -172,7 +172,7 @@ describe('MarkdownDocumentEditor — narrow', () => {
 
   it('points both pane-chooser buttons at a real element, in either tab state', () => {
     render(<Harness />)
-    const editBtn = screen.getByRole('button', { name: /^markdown$/i })
+    const editBtn = screen.getByRole('button', { name: /^source$/i })
     const previewBtn = screen.getByRole('button', { name: /^preview$/i })
 
     // Same target for both — there is exactly one pane container, not one per pane.
@@ -198,7 +198,7 @@ describe('MarkdownDocumentEditor — wide', () => {
     render(<Harness />)
     expect(screen.getByRole('button', { name: /single tabbed view/i })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /side by side view/i })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /^markdown$/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /^source$/i })).toBeInTheDocument()
   })
 
   it('shows both panes at once in the split, and drops the now-meaningless pane tabs', async () => {
@@ -207,7 +207,7 @@ describe('MarkdownDocumentEditor — wide', () => {
     await waitFor(() =>
       expect(container.querySelector('[data-slot="markdown-preview"]')).not.toBeNull(),
     )
-    expect(screen.queryByRole('button', { name: /^markdown$/i })).toBeNull()
+    expect(screen.queryByRole('button', { name: /^source$/i })).toBeNull()
     expect(screen.queryByRole('button', { name: /^preview$/i })).toBeNull()
   })
 

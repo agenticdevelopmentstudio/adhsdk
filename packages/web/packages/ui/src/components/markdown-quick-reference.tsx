@@ -28,7 +28,7 @@ type PopoverContentProps = React.ComponentProps<typeof PopoverContent>
 export function MarkdownQuickReference({
   side = "bottom",
   align = "end",
-  triggerLabel = "Reference",
+  triggerLabel = "Markdown",
   className,
 }: {
   side?: PopoverContentProps["side"]

@@ -126,7 +126,7 @@ function toolbarControls({
 
 /**
  * The editor's toolbar on its own: the extras slot, the `.md` upload control and the
- * "Reference" quick-reference popover. `MarkdownEditor` renders it above its textarea;
+ * "Markdown" quick-reference popover. `MarkdownEditor` renders it above its textarea;
  * `MarkdownDocumentEditor` renders it in its control strip, beside the pane tabs. Renders
  * nothing when there are no controls.
  */
@@ -148,7 +148,7 @@ export function MarkdownEditorToolbar(props: MarkdownEditorToolbarProps) {
 /**
  * The shared markdown **body** editor: a labelled textarea for the raw markdown
  * source, with an editor toolbar row above it (an optional `.md` upload control,
- * a built-in "Reference" quick-reference popover, and a slot for extra controls). The label
+ * a built-in "Markdown" quick-reference popover, and a slot for extra controls). The label
  * is associated with the textarea via `htmlFor`, so it is the textarea's
  * accessible name. Controlled via `value` / `onChange`; the editor owns no title
  * or classification fields — those stay with the consuming form.

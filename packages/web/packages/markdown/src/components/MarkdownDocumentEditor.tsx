@@ -89,11 +89,12 @@ export interface MarkdownDocumentEditorProps extends MarkdownEditorProps {
  * between them.
  *
  * The control strip is ONE row: on the left the layout toggle (wide viewports only) and the
- * Markdown / Preview tabs, on the right the editor's toolbar (extras, upload, Reference). The
+ * Source / Preview tabs, on the right the editor's toolbar (extras, upload, the Markdown
+ * quick reference). The
  * editor pane carries no caption row of its own (`label` is still the textarea's accessible
  * name), so the source and the preview start at the same height, directly under the strip.
  *
- * `readOnly` shows the same view over a document that cannot be changed: the Markdown tab
+ * `readOnly` shows the same view over a document that cannot be changed: the Source tab
  * shows the source, selectable but not editable, and the editing aids are not offered.
  *
  * Consumers must import `@adh-sdk/markdown/styles` once at their seam — this package
@@ -143,7 +144,7 @@ export function MarkdownDocumentEditor({
       {header}
 
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <SplitViewControl view={view} subject={subject} editLabel="Markdown" />
+        <SplitViewControl view={view} subject={subject} editLabel="Source" />
         <MarkdownEditorToolbar
           onUpload={editor.onUpload}
           quickReference={editor.quickReference}
