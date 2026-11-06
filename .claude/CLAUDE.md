@@ -238,6 +238,7 @@ open packages/apple/AgenticDeveloperHubSDK.xcworkspace
 | `AgenticDeveloperHubSDKSystemMonitor` | `SystemMonitor/` | `AgenticDeveloperHubSDKCore` |
 | `AgenticDeveloperHubSDKSystemMonitorUI` | `SystemMonitorUI/` | `AgenticDeveloperHubSDKSystemMonitor`, `AgenticDeveloperHubSDKCore`, `AgenticDeveloperHubSDKMacOS`, `AgenticDeveloperHubSDKUI` |
 | `AgenticDeveloperHubSDKNotifications` | `Notifications/` | none (Foundation only; macOS + iOS) |
+| `AgenticDeveloperHubSDKNotificationsUI` | `NotificationsUI/` | `AgenticDeveloperHubSDKNotifications`, `AgenticDeveloperHubSDKCore`, `AgenticDeveloperHubSDKMacOS`, `AgenticDeveloperHubSDKUI` |
 
 `AgenticDeveloperHubSDKCore` is Foundation-only; `AgenticDeveloperHubSDKCoreUI` holds
 cross-cutting AppKit utilities; `AgenticDeveloperHubSDKCoreMacOS` adds macOS-only

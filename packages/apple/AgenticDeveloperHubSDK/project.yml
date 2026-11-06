@@ -426,6 +426,100 @@ targets:
         embed: true
         codeSign: true
 
+  AgenticDeveloperHubSDKNotificationsUI:
+    type: framework
+    platform: macOS
+    templates:
+      - SwiftLint
+    sources:
+      - NotificationsUI
+    dependencies:
+      - target: AgenticDeveloperHubSDKNotifications
+      - target: AgenticDeveloperHubSDKCore
+      - target: AgenticDeveloperHubSDKMacOS
+      - target: AgenticDeveloperHubSDKUI-macOS
+      - sdk: UserNotifications.framework
+      - sdk: Carbon.framework
+    # AppKit: the presentation center that routes notices to presenters, the
+    # non-activating NoticePanel, the card, and the toast and alert presenters.
+    # AgenticDeveloperHubSDKMacOS for ComposableSettings and menu targets;
+    # AgenticDeveloperHubSDKUI-macOS for ThemeManager and the themed views.
+
+  AgenticDeveloperHubSDKNotificationsUITests:
+    type: bundle.unit-test
+    platform: macOS
+    templates:
+      - SwiftLint
+    sources:
+      - Tests/AgenticDeveloperHubSDKNotificationsUITests
+    dependencies:
+      - target: AgenticDeveloperHubSDKNotificationsUI
+        embed: true
+        codeSign: true
+      - target: AgenticDeveloperHubSDKNotifications
+        embed: true
+        codeSign: true
+      # Closure completion -- see the note in AgenticDeveloperHubSDKLanguageTests.
+      - target: AgenticDeveloperHubSDKMacOS
+        embed: true
+        codeSign: true
+      - target: AgenticDeveloperHubSDKScripting
+        embed: true
+        codeSign: true
+      - target: AgenticDeveloperHubSDKCoreMacOS
+        embed: true
+        codeSign: true
+      - target: AgenticDeveloperHubSDKCoreUI
+        embed: true
+        codeSign: true
+      - target: AgenticDeveloperHubSDKCore
+        embed: true
+        codeSign: true
+      - target: AgenticDeveloperHubSDK-macOS
+        embed: true
+        codeSign: true
+      - target: AgenticDeveloperHubSDKUI-macOS
+        embed: true
+        codeSign: true
+      - target: AgenticDeveloperHubSDKMarkdown-macOS
+        embed: true
+        codeSign: true
+      - target: AgenticDeveloperHubSDKPermissions
+        embed: true
+        codeSign: true
+      - target: AgenticDeveloperHubSDKPermissionsUI
+        embed: true
+        codeSign: true
+      - target: AgenticDeveloperHubSDKDisplays
+        embed: true
+        codeSign: true
+      - target: AIPluginKit
+        embed: true
+        codeSign: true
+      - target: AgenticDeveloperHubSDKLanguage
+        embed: true
+        codeSign: true
+      - target: AgenticDeveloperHubSDKDatabase
+        embed: true
+        codeSign: true
+      - target: AgenticDeveloperHubSDKSync
+        embed: true
+        codeSign: true
+      - target: AgenticDeveloperHubSDKSyncGRDB
+        embed: true
+        codeSign: true
+      - package: GRDB
+        product: GRDB
+      # AgenticDeveloperHubSDKMacOS links Sparkle (AppUpdater); the test bundle loads
+      # its frameworks out of its own Frameworks directory, so Sparkle has to
+      # be there too — same "closure completion" reason as GRDB above.
+      - package: Sparkle
+        product: Sparkle
+      # AgenticDeveloperHubSDKMacOS links FlyingFox (MCPHTTPEndpoint); same closure
+      # completion as Sparkle above.
+      - package: FlyingFox
+        product: FlyingFox
+
   AgenticDeveloperHubSDKDatabase:
     type: framework
     supportedDestinations: [macOS, iOS]
@@ -1661,6 +1755,7 @@ aggregateTargets:
       - AgenticDeveloperHubSDKSystemMonitorUI
       - AgenticDeveloperHubSDKDatabase
       - AgenticDeveloperHubSDKNotifications
+      - AgenticDeveloperHubSDKNotificationsUI
       - AgenticDeveloperHubSDKLanguage
       - AgenticDeveloperHubSDKSync
       - AgenticDeveloperHubSDKSyncGRDB
@@ -1725,6 +1820,8 @@ aggregateTargets:
       - AgenticDeveloperHubSDKDatabaseTests
       - AgenticDeveloperHubSDKNotifications
       - AgenticDeveloperHubSDKNotificationsTests
+      - AgenticDeveloperHubSDKNotificationsUI
+      - AgenticDeveloperHubSDKNotificationsUITests
       - AgenticDeveloperHubSDKLanguage
       - AgenticDeveloperHubSDKLanguageTests
       - AgenticDeveloperHubSDKSync
@@ -1768,6 +1865,23 @@ schemes:
       config: Debug
       targets:
         - AgenticDeveloperHubSDKNotificationsTests
+    profile:
+      config: Release
+    analyze:
+      config: Debug
+    archive:
+      config: Release
+
+  AgenticDeveloperHubSDKNotificationsUI:
+    build:
+      targets:
+        AgenticDeveloperHubSDKNotificationsUI: all
+    run:
+      config: Debug
+    test:
+      config: Debug
+      targets:
+        - AgenticDeveloperHubSDKNotificationsUITests
     profile:
       config: Release
     analyze:
