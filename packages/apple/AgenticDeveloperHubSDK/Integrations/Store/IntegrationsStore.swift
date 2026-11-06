@@ -28,6 +28,9 @@ public struct MessageQuery: Codable, Sendable, Equatable {
 /// The local mirror of the hub's integration tables. "Live" means not tombstoned:
 /// `deleted_at IS NULL` for connections and configs, `is_deleted = 0` for messages and labels.
 public final class IntegrationsStore: Sendable {
+    /// Ids bound per `IN (…)` statement; well under SQLite's 32766-variable limit.
+    static let inListChunkSize = 500
+
     private let database: BoundedDatabase
 
     public init(database: BoundedDatabase) throws {
@@ -84,26 +87,28 @@ public final class IntegrationsStore: Sendable {
         }
     }
 
+    /// Email addresses match without regard to case: Gmail addresses are case-insensitive.
     public func connection(idOrEmail: String) throws -> IntegrationConnection? {
         try database.read { conn in
             try IntegrationConnection
                 .filter(
-                    (Column("id") == idOrEmail || Column("external_account_id") == idOrEmail)
+                    (Column("id") == idOrEmail
+                        || Column("external_account_id").collating(.nocase) == idOrEmail)
                         && Column("deleted_at") == nil)
                 .order(Column("created_at"))
                 .fetchOne(conn)
         }
     }
 
-    /// Keyed by `(provider, externalAccountId)` among live rows: signing in again with the
-    /// same account updates the existing row and keeps its id.
+    /// Keyed by `(provider, externalAccountId)` among live rows, the address compared without
+    /// regard to case: signing in again with the same account updates the existing row and keeps its id.
     public func upsertConnection(_ connection: IntegrationConnection) throws {
         try database.write { conn in
             var record = connection
             let existing = try IntegrationConnection
                 .filter(
                     Column("provider") == connection.provider
-                        && Column("external_account_id") == connection.externalAccountId
+                        && Column("external_account_id").collating(.nocase) == connection.externalAccountId
                         && Column("deleted_at") == nil)
                 .fetchOne(conn)
             if let existing {
@@ -137,10 +142,11 @@ public final class IntegrationsStore: Sendable {
         }
     }
 
+    /// Throws `IntegrationError.unknownAccount` when no live connection has `id`.
     public func updateSyncState(
         id: String, cursor: String?, lastSyncAt: String?, status: ConnectionStatus, lastError: String?
     ) throws {
-        try database.write { conn in
+        let changed = try database.write { conn -> Int in
             try conn.execute(
                 sql: """
                     UPDATE integration_connections
@@ -148,7 +154,9 @@ public final class IntegrationsStore: Sendable {
                     WHERE id = ? AND deleted_at IS NULL
                     """,
                 arguments: [cursor, lastSyncAt, status.rawValue, lastError, IntegrationClock.now(), id])
+            return conn.changesCount
         }
+        guard changed > 0 else { throw IntegrationError.unknownAccount(id) }
     }
 
     // MARK: - Messages
@@ -174,25 +182,37 @@ public final class IntegrationsStore: Sendable {
         }
     }
 
-    public func tombstoneMessages(connectionId: String, externalIds: [String]) throws {
-        guard !externalIds.isEmpty else { return }
+    /// Tombstones the live rows among `externalIds`, binding at most `inListChunkSize` ids per
+    /// statement, all in one transaction. Returns how many rows it tombstoned.
+    @discardableResult
+    public func tombstoneMessages(connectionId: String, externalIds: [String]) throws -> Int {
+        let unique = Array(Set(externalIds))
+        guard !unique.isEmpty else { return 0 }
         let now = IntegrationClock.now()
-        try database.write { conn in
-            try conn.execute(
-                sql: """
-                    UPDATE integration_email_messages SET is_deleted = 1, deleted_at = ?, updated_at = ?
-                    WHERE connection_id = ? AND is_deleted = 0
-                        AND external_id IN (\(Self.placeholders(externalIds.count)))
-                    """,
-                arguments: StatementArguments([now, now, connectionId] + externalIds))
+        return try database.write { conn in
+            var removed = 0
+            for start in stride(from: 0, to: unique.count, by: Self.inListChunkSize) {
+                let chunk = Array(unique[start..<min(start + Self.inListChunkSize, unique.count)])
+                try conn.execute(
+                    sql: """
+                        UPDATE integration_email_messages SET is_deleted = 1, deleted_at = ?, updated_at = ?
+                        WHERE connection_id = ? AND is_deleted = 0
+                            AND external_id IN (\(Self.placeholders(chunk.count)))
+                        """,
+                    arguments: StatementArguments([now, now, connectionId] + chunk))
+                removed += conn.changesCount
+            }
+            return removed
         }
     }
 
-    public func tombstoneMessages(connectionId: String, classes: Set<MailClass>) throws {
-        guard !classes.isEmpty else { return }
+    /// Returns how many rows it tombstoned.
+    @discardableResult
+    public func tombstoneMessages(connectionId: String, classes: Set<MailClass>) throws -> Int {
+        guard !classes.isEmpty else { return 0 }
         let now = IntegrationClock.now()
         let names = classes.map(\.rawValue).sorted()
-        try database.write { conn in
+        return try database.write { conn in
             try conn.execute(
                 sql: """
                     UPDATE integration_email_messages SET is_deleted = 1, deleted_at = ?, updated_at = ?
@@ -200,6 +220,23 @@ public final class IntegrationsStore: Sendable {
                         AND mail_class IN (\(Self.placeholders(names.count)))
                     """,
                 arguments: StatementArguments([now, now, connectionId] + names))
+            return conn.changesCount
+        }
+    }
+
+    /// Tombstones the live rows dated before `cutoff` (an ISO-8601 string, exclusive) — the rows
+    /// that have fallen out of a shrunken sync window. Returns how many it tombstoned.
+    @discardableResult
+    public func tombstoneMessages(connectionId: String, olderThan cutoff: String) throws -> Int {
+        let now = IntegrationClock.now()
+        return try database.write { conn in
+            try conn.execute(
+                sql: """
+                    UPDATE integration_email_messages SET is_deleted = 1, deleted_at = ?, updated_at = ?
+                    WHERE connection_id = ? AND is_deleted = 0 AND internal_date < ?
+                    """,
+                arguments: [now, now, connectionId, cutoff])
+            return conn.changesCount
         }
     }
 

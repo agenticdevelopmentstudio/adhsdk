@@ -112,6 +112,80 @@ struct IntegrationsStoreTests {
         #expect(try store.connections(provider: "gmail").count == 1)
     }
 
+    @Test("email lookup and the upsert key ignore case")
+    func emailMatchingIgnoresCase() throws {
+        let (store, _) = try makeStore()
+        try store.upsertConnection(connection("c1", email: "Me@Example.com"))
+        #expect(try store.connection(idOrEmail: "me@example.COM")?.id == "c1")
+        try store.upsertConnection(connection("c2", email: "me@example.com"))
+        #expect(try store.connections(provider: "gmail").map(\.id) == ["c1"])
+    }
+
+    @Test("updating the sync state of an unknown or removed connection throws")
+    func updateSyncStateOnUnknownIdThrows() throws {
+        let (store, _) = try makeStore()
+        #expect(throws: IntegrationError.unknownAccount("nope")) {
+            try store.updateSyncState(id: "nope", cursor: "1", lastSyncAt: nil, status: .active, lastError: nil)
+        }
+        try store.upsertConnection(connection())
+        try store.deleteConnection(id: "c1")
+        #expect(throws: IntegrationError.unknownAccount("c1")) {
+            try store.updateSyncState(id: "c1", cursor: "1", lastSyncAt: nil, status: .active, lastError: nil)
+        }
+    }
+
+    @Test("tombstoning more ids than one statement may bind works and counts what it removed")
+    func tombstoneManyIdsIsChunkedAndCounted() throws {
+        let (store, _) = try makeStore()
+        let ids = (0..<1_200).map { "e\($0)" }
+        try store.upsertMessages(ids.map { message($0) })
+        let removed = try store.tombstoneMessages(
+            connectionId: "c1", externalIds: ids + ["never-stored"] + Array(repeating: "e0", count: 40_000))
+        #expect(removed == 1_200)
+        #expect(try store.messages(MessageQuery(connectionId: "c1", limit: 10)).isEmpty)
+        #expect(try store.tombstoneMessages(connectionId: "c1", externalIds: ids) == 0, "already tombstoned")
+    }
+
+    @Test("tombstoning by date removes only live rows older than the cutoff")
+    func tombstoneOlderThan() throws {
+        let (store, _) = try makeStore()
+        try store.upsertMessages([message("old", day: 1), message("edge", day: 3), message("new", day: 5)])
+        let removed = try store.tombstoneMessages(connectionId: "c1", olderThan: "2026-11-03T10:00:00.000Z")
+        #expect(removed == 1)
+        #expect(Set(try store.messages(MessageQuery(connectionId: "c1")).map(\.externalId)) == ["edge", "new"])
+    }
+
+    @Test("re-upserting a deleted connection's email makes a new live row")
+    func reUpsertAfterDelete() throws {
+        let (store, _) = try makeStore()
+        try store.upsertConnection(connection("c1"))
+        try store.deleteConnection(id: "c1")
+        try store.upsertConnection(connection("c2"))
+        #expect(try store.connection(idOrEmail: "a@b.c")?.id == "c2")
+        #expect(try store.connections(provider: "gmail").map(\.id) == ["c2"])
+    }
+
+    @Test("one connection's messages and tombstones never touch another's")
+    func connectionsAreIsolated() throws {
+        let (store, _) = try makeStore()
+        try store.upsertMessages([message("e1", connectionId: "c1"),
+                                  EmailMessage(id: "other-e1", connectionId: "c2", externalId: "e1", threadId: "t",
+                                               fromAddress: "x@y.z", subject: "Hi", snippet: "s",
+                                               labelIds: ["INBOX"], internalDate: "2026-11-01T10:00:00.000Z")])
+        try store.tombstoneMessages(connectionId: "c1", externalIds: ["e1"])
+        #expect(try store.message(connectionId: "c1", idOrExternalId: "e1") == nil)
+        #expect(try store.message(connectionId: "c2", idOrExternalId: "e1")?.id == "other-e1")
+        #expect(try store.messages(MessageQuery(connectionId: "c2")).count == 1)
+        #expect(try store.liveExternalIds(connectionId: "c2", since: "2026-01-01T00:00:00.000Z") == ["e1"])
+    }
+
+    @Test("liveExternalIds includes a row dated exactly at `since` and excludes one just before")
+    func liveExternalIdsSinceBoundary() throws {
+        let (store, _) = try makeStore()
+        try store.upsertMessages([message("before", day: 2), message("at", day: 3)])
+        #expect(try store.liveExternalIds(connectionId: "c1", since: "2026-11-03T10:00:00.000Z") == ["at"])
+    }
+
     @Test("upserting a connection for the same email reuses its id")
     func upsertConnectionReusesRowForSameEmail() throws {
         let (store, _) = try makeStore()

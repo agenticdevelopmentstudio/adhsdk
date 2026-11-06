@@ -64,6 +64,42 @@ enum GmailFixture {
         #expect(msg.internalDate == "2024-11-05T09:46:40.000Z")
     }
 
+    @Test func parsesANonEmptyCcList() {
+        let dto = GmailMessageDTO(id: "m", threadId: "t", internalDate: "0", payload: GmailPart(headers: [
+            GmailHeader(name: "cc", value: "\"Roe, Ann\" <a@x.com>, b@y.com")
+        ]))
+        let msg = GmailMessageParser.parse(dto, connectionId: "c", existingId: nil)
+        #expect(msg.ccAddresses == ["\"Roe, Ann\" <a@x.com>", "b@y.com"])
+    }
+
+    @Test func aNamedTextPartWithoutAnAttachmentIdIsNotTheBody() {
+        let named = GmailPart(mimeType: "text/plain", filename: "notes.txt",
+                              body: GmailBody(data: "bm90ZXM"))
+        let body = GmailPart(mimeType: "text/plain", body: GmailBody(data: "Ym9keQ"))
+        let dto = GmailMessageDTO(id: "m", threadId: "t", internalDate: "0",
+                                  payload: GmailPart(mimeType: "multipart/mixed", parts: [named, body]))
+        let msg = GmailMessageParser.parse(dto, connectionId: "c", existingId: nil)
+        #expect(msg.bodyText == "body")
+        #expect(msg.attachments.isEmpty)
+    }
+
+    @Test func missingInternalDateFallsBackToTheDateHeader() {
+        let dto = GmailMessageDTO(id: "m", threadId: "t", payload: GmailPart(headers: [
+            GmailHeader(name: "Date", value: "Tue, 05 Nov 2024 09:46:40 +0000")
+        ]))
+        let msg = GmailMessageParser.parse(dto, connectionId: "c", existingId: nil,
+                                           now: Date(timeIntervalSince1970: 1_793_000_000))
+        #expect(msg.internalDate == "2024-11-05T09:46:40.000Z")
+    }
+
+    @Test func missingInternalDateAndDateHeaderFallsBackToNowNotTheEpoch() {
+        let now = Date(timeIntervalSince1970: 1_793_000_000)
+        let dto = GmailMessageDTO(id: "m", threadId: "t", internalDate: "not-a-number",
+                                  payload: GmailPart(headers: [GmailHeader(name: "Date", value: "garbage")]))
+        let msg = GmailMessageParser.parse(dto, connectionId: "c", existingId: nil, now: now)
+        #expect(msg.internalDate == IntegrationClock.string(from: now))
+    }
+
     @Test func keepsExistingIdElseGeneratesOne() throws {
         let dto = try GmailFixture.message("message-multipart")
         #expect(GmailMessageParser.parse(dto, connectionId: "c", existingId: "keep").id == "keep")

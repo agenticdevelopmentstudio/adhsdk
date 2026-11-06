@@ -2,82 +2,66 @@ import Foundation
 import Testing
 @testable import AgenticDeveloperHubSDKIntegrations
 
-/// URLProtocol stub. State is a lock-protected registry keyed by a per-test id carried in a
-/// session header, so tests running in parallel never see each other's handlers or requests.
-class StubURLProtocol: URLProtocol, @unchecked Sendable {
-    struct Reply: Sendable {
-        var status: Int
-        var body: Data
-    }
-
-    nonisolated(unsafe) private static var replies: [String: Reply] = [:]
-    nonisolated(unsafe) private static var seen: [String: [URLRequest]] = [:]
-    private static let lock = NSLock()
-    static let headerName = "X-Stub-Id"
-
-    static func session(status: Int, body: Data) -> (URLSession, String) {
-        let id = UUID().uuidString
-        lock.withLock { replies[id] = Reply(status: status, body: body) }
-        let config = URLSessionConfiguration.ephemeral
-        config.protocolClasses = [StubURLProtocol.self]
-        config.httpAdditionalHeaders = [headerName: id]
-        return (URLSession(configuration: config), id)
-    }
-
-    static func requests(_ id: String) -> [URLRequest] { lock.withLock { seen[id] ?? [] } }
-
-    override class func canInit(with request: URLRequest) -> Bool { true }
-    override class func canonicalRequest(for request: URLRequest) -> URLRequest { request }
-
-    override func startLoading() {
-        let id = request.value(forHTTPHeaderField: Self.headerName) ?? ""
-        let reply = Self.lock.withLock { () -> Reply? in
-            Self.seen[id, default: []].append(request)
-            return Self.replies[id]
-        }
-        guard let reply, let url = request.url,
-              let response = HTTPURLResponse(url: url, statusCode: reply.status, httpVersion: nil, headerFields: nil)
-        else {
-            client?.urlProtocol(self, didFailWithError: URLError(.badServerResponse))
-            return
-        }
-        client?.urlProtocol(self, didReceive: response, cacheStoragePolicy: .notAllowed)
-        client?.urlProtocol(self, didLoad: reply.body)
-        client?.urlProtocolDidFinishLoading(self)
-    }
-
-    override func stopLoading() {}
+/// Records each backoff the client asks for instead of sleeping.
+private actor SleepLog {
+    private(set) var slept: [Duration] = []
+    func record(_ duration: Duration) { slept.append(duration) }
 }
 
-@Suite struct GmailRESTClientTests {
-    private func client(status: Int = 200, body: Data, token: String = "tok") -> (GmailRESTClient, String) {
-        let (session, id) = StubURLProtocol.session(status: status, body: body)
-        return (GmailRESTClient(session: session, accessToken: { token }), id)
+/// A client over a stub session whose sleeps are recorded, not slept.
+private struct Subject {
+    let api: GmailRESTClient
+    let stub: StubURLProtocol.Stub
+    let sleeps: SleepLog
+
+    init(_ replies: [StubURLProtocol.Reply], token: String = "tok") {
+        let stub = StubURLProtocol.stub(replies)
+        let sleeps = SleepLog()
+        self.stub = stub
+        self.sleeps = sleeps
+        api = GmailRESTClient(session: stub.session, sleep: { await sleeps.record($0) }, accessToken: { token })
     }
 
+    init(status: Int = 200, body: Data, token: String = "tok") {
+        self.init([.http(status: status, body: body)], token: token)
+    }
+
+    var requests: [URLRequest] { stub.requests }
+}
+
+private let profileBody = Data(#"{"emailAddress":"me@x.com","historyId":"7"}"#.utf8)
+private let unavailable = StubURLProtocol.Reply.http(
+    status: 503, body: Data(#"{"error":{"code":503,"message":"Backend Error"}}"#.utf8))
+
+@Suite struct GmailRESTClientTests {
     @Test func historyNotFoundThrowsCursorExpired() async throws {
-        let (api, _) = client(status: 404, body: Data(#"{"error":{"code":404,"message":"Not Found"}}"#.utf8))
+        let subject = Subject(status: 404, body: Data(#"{"error":{"code":404,"message":"Not Found"}}"#.utf8))
+        defer { subject.stub.unregister() }
         await #expect(throws: GmailCursorExpired.self) {
-            _ = try await api.history(startHistoryId: "1", pageToken: nil)
+            _ = try await subject.api.history(startHistoryId: "1", pageToken: nil)
         }
     }
 
     @Test func errorBodyMessageSurfaces() async throws {
         let body = #"{"error":{"code":403,"message":"Insufficient Permission","status":"PERMISSION_DENIED"}}"#
-        let (api, _) = client(status: 403, body: Data(body.utf8))
+        let subject = Subject(status: 403, body: Data(body.utf8))
+        defer { subject.stub.unregister() }
         await #expect(throws: IntegrationError.gmail(status: 403, message: "Insufficient Permission")) {
-            _ = try await api.profile()
+            _ = try await subject.api.profile()
         }
+        #expect(await subject.sleeps.slept.isEmpty, "a 403 is not retried")
+        #expect(subject.requests.count == 1)
     }
 
     @Test func historyPageCollectsChangedAndDeleted() async throws {
-        let (api, id) = client(body: try GmailFixture.data("history"))
-        let page = try await api.history(startHistoryId: "100", pageToken: "p1")
+        let subject = Subject(body: try GmailFixture.data("history"))
+        defer { subject.stub.unregister() }
+        let page = try await subject.api.history(startHistoryId: "100", pageToken: "p1")
         #expect(page.changedIds == ["a", "b"])
         #expect(page.deletedIds == ["c"])
         #expect(page.historyId == "950")
         #expect(page.nextPageToken == "p2")
-        let url = try #require(StubURLProtocol.requests(id).first?.url)
+        let url = try #require(subject.requests.first?.url)
         let items = URLComponents(url: url, resolvingAgainstBaseURL: false)?.queryItems ?? []
         #expect(items.filter { $0.name == "historyTypes" }.compactMap(\.value)
             == ["messageAdded", "messageDeleted", "labelAdded", "labelRemoved"])
@@ -87,41 +71,116 @@ class StubURLProtocol: URLProtocol, @unchecked Sendable {
     }
 
     @Test func sendsBearerToken() async throws {
-        let (api, id) = client(body: Data(#"{"emailAddress":"me@x.com","historyId":"7"}"#.utf8), token: "secret")
-        let profile = try await api.profile()
+        let subject = Subject(body: profileBody, token: "secret")
+        defer { subject.stub.unregister() }
+        let profile = try await subject.api.profile()
         #expect(profile.emailAddress == "me@x.com")
-        #expect(StubURLProtocol.requests(id).first?.value(forHTTPHeaderField: "Authorization") == "Bearer secret")
+        #expect(subject.requests.first?.value(forHTTPHeaderField: "Authorization") == "Bearer secret")
     }
 
     @Test func listMessageIdsDedupesAndToleratesEmpty() async throws {
-        let (api, _) = client(body: Data(#"{"messages":[{"id":"x"},{"id":"y"},{"id":"x"}],"nextPageToken":"n"}"#.utf8))
-        let page = try await api.listMessageIds(query: "q", includeSpamTrash: true, pageToken: nil)
+        let subject = Subject(body: Data(#"{"messages":[{"id":"x"},{"id":"y"},{"id":"x"}],"nextPageToken":"n"}"#.utf8))
+        defer { subject.stub.unregister() }
+        let page = try await subject.api.listMessageIds(query: "q", includeSpamTrash: true, pageToken: nil)
         #expect(page.ids == ["x", "y"])
         #expect(page.nextPageToken == "n")
-        let (empty, _) = client(body: Data("{}".utf8))
-        #expect(try await empty.listMessageIds(query: "q", includeSpamTrash: false, pageToken: nil).ids.isEmpty)
+        let empty = Subject(body: Data("{}".utf8))
+        defer { empty.stub.unregister() }
+        #expect(try await empty.api.listMessageIds(query: "q", includeSpamTrash: false, pageToken: nil).ids.isEmpty)
+    }
+
+    @Test func listMessageIdsSendsItsParameters() async throws {
+        let subject = Subject(body: Data("{}".utf8))
+        defer { subject.stub.unregister() }
+        _ = try await subject.api.listMessageIds(query: "after:1 in:inbox", includeSpamTrash: true, pageToken: "p9")
+        _ = try await subject.api.listMessageIds(query: "after:2", includeSpamTrash: false, pageToken: nil)
+        let urls = subject.requests.compactMap(\.url)
+        #expect(urls.count == 2)
+        let first = URLComponents(url: urls[0], resolvingAgainstBaseURL: false)?.queryItems ?? []
+        #expect(urls[0].path == "/gmail/v1/users/me/messages")
+        #expect(first.contains { $0.name == "q" && $0.value == "after:1 in:inbox" })
+        #expect(first.contains { $0.name == "maxResults" && $0.value == "500" })
+        #expect(first.contains { $0.name == "includeSpamTrash" && $0.value == "true" })
+        #expect(first.contains { $0.name == "pageToken" && $0.value == "p9" })
+        let second = URLComponents(url: urls[1], resolvingAgainstBaseURL: false)?.queryItems ?? []
+        #expect(second.contains { $0.name == "q" && $0.value == "after:2" })
+        #expect(!second.contains { $0.name == "includeSpamTrash" })
+        #expect(!second.contains { $0.name == "pageToken" })
     }
 
     @Test func batchModifyPostsBody() async throws {
-        let (api, id) = client(body: Data())
-        try await api.batchModify(ids: ["a"], add: ["STARRED"], remove: ["INBOX"])
-        let request = try #require(StubURLProtocol.requests(id).first)
+        let subject = Subject(body: Data())
+        defer { subject.stub.unregister() }
+        try await subject.api.batchModify(ids: ["a"], add: ["STARRED"], remove: ["INBOX"])
+        let request = try #require(subject.requests.first)
         #expect(request.httpMethod == "POST")
-        let bodyData = try #require(request.httpBody ?? request.httpBodyStream.map(Self.drain))
+        let bodyData = try #require(StubURLProtocol.body(of: request))
         let json = try #require(try JSONSerialization.jsonObject(with: bodyData) as? [String: [String]])
         #expect(json == ["ids": ["a"], "addLabelIds": ["STARRED"], "removeLabelIds": ["INBOX"]])
     }
 
-    private static func drain(_ stream: InputStream) -> Data {
-        stream.open()
-        defer { stream.close() }
-        var data = Data()
-        var buffer = [UInt8](repeating: 0, count: 4096)
-        while stream.hasBytesAvailable {
-            let count = stream.read(&buffer, maxLength: buffer.count)
-            if count <= 0 { break }
-            data.append(buffer, count: count)
+    @Test func batchModifyRejectsEmptyAndOversizedListsWithoutCallingGmail() async throws {
+        let subject = Subject(body: Data())
+        defer { subject.stub.unregister() }
+        await #expect(throws: IntegrationError.self) {
+            try await subject.api.batchModify(ids: [], add: ["STARRED"], remove: [])
         }
-        return data
+        let tooMany = (0...GmailRESTClient.batchModifyLimit).map { "m\($0)" }
+        await #expect(throws: IntegrationError.self) {
+            try await subject.api.batchModify(ids: tooMany, add: ["STARRED"], remove: [])
+        }
+        #expect(subject.requests.isEmpty)
+    }
+
+    // MARK: - Retry
+
+    @Test func serviceUnavailableIsRetriedAndSucceeds() async throws {
+        let subject = Subject([unavailable, .http(status: 200, body: profileBody)])
+        defer { subject.stub.unregister() }
+        let profile = try await subject.api.profile()
+        #expect(profile.historyId == "7")
+        #expect(subject.requests.count == 2)
+        #expect(await subject.sleeps.slept == [.seconds(1)])
+    }
+
+    @Test func retryAfterIsHonoured() async throws {
+        let limited = StubURLProtocol.Reply.http(status: 429, body: Data(), headers: ["Retry-After": "7"])
+        let subject = Subject([limited, .http(status: 200, body: profileBody)])
+        defer { subject.stub.unregister() }
+        _ = try await subject.api.profile()
+        #expect(await subject.sleeps.slept == [.seconds(7)])
+    }
+
+    @Test func transientNetworkErrorsAreRetried() async throws {
+        let subject = Subject([.failure(.timedOut), .failure(.networkConnectionLost),
+                               .failure(.notConnectedToInternet), .failure(.cannotConnectToHost),
+                               .http(status: 200, body: profileBody)])
+        defer { subject.stub.unregister() }
+        _ = try await subject.api.profile()
+        #expect(await subject.sleeps.slept == [.seconds(1), .seconds(2), .seconds(4), .seconds(8)])
+    }
+
+    @Test func retriesStopAfterFourAndTheLastErrorSurfaces() async throws {
+        let subject = Subject([unavailable])
+        defer { subject.stub.unregister() }
+        await #expect(throws: IntegrationError.gmail(status: 503, message: "Backend Error")) {
+            _ = try await subject.api.profile()
+        }
+        #expect(subject.requests.count == 5)
+        #expect(await subject.sleeps.slept == [.seconds(1), .seconds(2), .seconds(4), .seconds(8)])
+    }
+
+    @Test func backoffIsCappedAt32Seconds() {
+        #expect(GmailRESTClient.backoff(retry: 0, retryAfter: nil) == .seconds(1))
+        #expect(GmailRESTClient.backoff(retry: 5, retryAfter: nil) == .seconds(32))
+        #expect(GmailRESTClient.backoff(retry: 9, retryAfter: nil) == .seconds(32))
+        #expect(GmailRESTClient.backoff(retry: 0, retryAfter: 300) == .seconds(32))
+    }
+
+    @Test func nonTransientNetworkErrorsAreNotRetried() async {
+        let subject = Subject([.failure(.badURL)])
+        defer { subject.stub.unregister() }
+        await #expect(throws: URLError.self) { _ = try await subject.api.profile() }
+        #expect(await subject.sleeps.slept.isEmpty)
     }
 }

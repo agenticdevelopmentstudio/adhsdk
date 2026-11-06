@@ -29,6 +29,8 @@ struct IntegrationRecordsTests {
             #expect(text?.contains("includeSpam") == true)
             let status: String? = row?["status"]
             #expect(status == "active")
+            let statusType = try String.fetchOne(conn, sql: "SELECT typeof(status) FROM integration_connections")
+            #expect(statusType == "text", "the status is stored as plain text, not JSON or a number")
             let back = try IntegrationConnection.fetchOne(conn, key: "c1")
             #expect(back?.syncSettings.includeSpam == true)
             #expect(back?.status == .active)
@@ -63,6 +65,10 @@ struct IntegrationRecordsTests {
             try String.fetchOne($0, sql: "SELECT mail_class FROM integration_email_messages")
         }
         #expect(rawClass == "filed")
+        let classType = try queue.read {
+            try String.fetchOne($0, sql: "SELECT typeof(mail_class) FROM integration_email_messages")
+        }
+        #expect(classType == "text", "the class is stored as plain text, not JSON or a number")
     }
 
     @Test("the clock emits ISO-8601 UTC with fractional seconds")

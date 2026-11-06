@@ -71,6 +71,9 @@ public struct GmailSyncWorker: Sendable {
 
     // MARK: - Full sync
 
+    /// Lists the window, then fetches and stores it batch by batch, so a long first sync keeps
+    /// what it has fetched if it fails partway. Tombstoning — rows in the window Gmail no longer
+    /// lists, and rows older than the window — happens only after the whole pass.
     private func full(connection: IntegrationConnection) async throws -> (GmailSyncOutcome, String) {
         let settings = connection.syncSettings
         // Taken before listing, so a change made while listing is replayed by the next incremental sync.
@@ -85,21 +88,26 @@ public struct GmailSyncWorker: Sendable {
             pageToken = page.nextPageToken
         } while pageToken != nil
 
-        let kept = try await fetch(ids: ids, connection: connection)
-            .compactMap { $0.1 }
-            .filter { settings.allows($0.mailClass) }
-        try upsert(kept)
+        var keptIds = Set<String>()
+        try await fetch(ids: ids, connection: connection) { batch in
+            let kept = batch.compactMap { $0.1 }.filter { settings.allows($0.mailClass) }
+            try store.upsertMessages(kept)
+            keptIds.formUnion(kept.map(\.externalId))
+        }
 
-        let windowStart = now().addingTimeInterval(-Double(settings.windowDays) * 86_400)
-        let live = try store.liveExternalIds(
-            connectionId: connection.id, since: IntegrationClock.string(from: windowStart))
-        let stale = Array(live.subtracting(kept.map(\.externalId)))
-        try store.tombstoneMessages(connectionId: connection.id, externalIds: stale)
-        return (GmailSyncOutcome(mode: .full, upserted: kept.count, tombstoned: stale.count), baseline)
+        let windowStart = IntegrationClock.string(from: windowStart(settings))
+        let live = try store.liveExternalIds(connectionId: connection.id, since: windowStart)
+        var tombstoned = try store.tombstoneMessages(
+            connectionId: connection.id, externalIds: Array(live.subtracting(keptIds)))
+        tombstoned += try store.tombstoneMessages(connectionId: connection.id, olderThan: windowStart)
+        return (GmailSyncOutcome(mode: .full, upserted: keptIds.count, tombstoned: tombstoned), baseline)
     }
 
     // MARK: - Incremental sync
 
+    /// Replays history since `cursor`. A changed message is stored unless the settings exclude
+    /// its class or it is older than the window; then (or when Gmail no longer has it) it is
+    /// tombstoned. The outcome counts the rows actually written.
     private func incremental(
         connection: IntegrationConnection, since cursor: String
     ) async throws -> (GmailSyncOutcome, String) {
@@ -119,35 +127,44 @@ public struct GmailSyncWorker: Sendable {
         let deletedSet = Set(deleted)
         var seen = Set<String>()
         let toFetch = changed.filter { !deletedSet.contains($0) && seen.insert($0).inserted }
+        let windowStart = IntegrationClock.string(from: windowStart(settings))
 
-        var tombstones = deletedSet
-        var upserts: [EmailMessage] = []
-        for (id, message) in try await fetch(ids: toFetch, connection: connection) {
-            if let message, settings.allows(message.mailClass) {
-                upserts.append(message)
-            } else {
-                tombstones.insert(id)
+        var tombstoned = try store.tombstoneMessages(connectionId: connection.id, externalIds: Array(deletedSet))
+        var upserted = 0
+        try await fetch(ids: toFetch, connection: connection) { batch in
+            var upserts: [EmailMessage] = []
+            var tombstones: [String] = []
+            for (id, message) in batch {
+                if let message, settings.allows(message.mailClass), message.internalDate >= windowStart {
+                    upserts.append(message)
+                } else {
+                    tombstones.append(id)
+                }
             }
+            tombstoned += try store.tombstoneMessages(connectionId: connection.id, externalIds: tombstones)
+            try store.upsertMessages(upserts)
+            upserted += upserts.count
         }
-        try store.tombstoneMessages(connectionId: connection.id, externalIds: Array(tombstones))
-        try upsert(upserts)
-        return (GmailSyncOutcome(mode: .incremental, upserted: upserts.count, tombstoned: tombstones.count), latest)
+        return (GmailSyncOutcome(mode: .incremental, upserted: upserted, tombstoned: tombstoned), latest)
     }
 
     // MARK: - Shared
 
-    private func upsert(_ messages: [EmailMessage]) throws {
-        for start in stride(from: 0, to: messages.count, by: Self.upsertBatchSize) {
-            try store.upsertMessages(Array(messages[start..<min(start + Self.upsertBatchSize, messages.count)]))
-        }
+    private func windowStart(_ settings: MailSyncSettings) -> Date {
+        now().addingTimeInterval(-Double(settings.windowDays) * 86_400)
     }
 
-    /// Fetches and parses `ids`, `fetchConcurrency` at a time. A message Gmail no longer has
-    /// (404) comes back as `nil`; any other error fails the sync.
-    private func fetch(ids: [String], connection: IntegrationConnection) async throws -> [(String, EmailMessage?)] {
+    /// Fetches and parses `ids`, `fetchConcurrency` at a time, handing them to `store` in batches
+    /// of `upsertBatchSize` as they arrive (the last batch may be smaller). A message Gmail no
+    /// longer has (404) comes back as `nil`; any other error fails the sync, after every batch
+    /// already handed over.
+    private func fetch(
+        ids: [String], connection: IntegrationConnection,
+        store handle: ([(String, EmailMessage?)]) throws -> Void
+    ) async throws {
         let api = self.api
         let connectionId = connection.id
-        var results: [(String, EmailMessage?)] = []
+        let now = now()
         try await withThrowingTaskGroup(of: (String, EmailMessage?).self) { group in
             var iterator = ids.makeIterator()
             func addNext() {
@@ -156,18 +173,24 @@ public struct GmailSyncWorker: Sendable {
                     do {
                         let dto = try await api.message(id: id)
                         // The store keeps the local id of a row that already exists.
-                        return (id, GmailMessageParser.parse(dto, connectionId: connectionId, existingId: nil))
+                        return (id, GmailMessageParser.parse(
+                            dto, connectionId: connectionId, existingId: nil, now: now))
                     } catch IntegrationError.gmail(status: 404, message: _) {
                         return (id, nil)
                     }
                 }
             }
             for _ in 0..<Self.fetchConcurrency { addNext() }
+            var pending: [(String, EmailMessage?)] = []
             while let result = try await group.next() {
-                results.append(result)
+                pending.append(result)
+                if pending.count == Self.upsertBatchSize {
+                    try handle(pending)
+                    pending.removeAll(keepingCapacity: true)
+                }
                 addNext()
             }
+            if !pending.isEmpty { try handle(pending) }
         }
-        return results
     }
 }
