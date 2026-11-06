@@ -1252,12 +1252,35 @@ export function TopicRail({
   const suggestionsId = useId()
   const suggestionId = (i: number) => `${suggestionsId}-${i}`
   const suggestionsRef = useRef<HTMLUListElement>(null)
-  // Keep the highlighted suggestion in view as the arrows walk past the list's edge.
+  // Keep the highlighted suggestion in view as the arrows walk past the list's edge — by scrolling
+  // the LIST and nothing else. `scrollIntoView` scrolls every scrollable ancestor too, and a
+  // menu-detail cascade's child box is `overflow-hidden` with no scrollbar: it scrolled that box,
+  // pushing the menu's title and this field out of reach for good.
   useLayoutEffect(() => {
-    suggestionsRef.current
-      ?.querySelector<HTMLElement>(`[data-index="${highlighted}"]`)
-      ?.scrollIntoView?.({ block: "nearest" })
+    const list = suggestionsRef.current
+    const option = list?.querySelector<HTMLElement>(`[data-index="${highlighted}"]`)
+    if (!list || !option) return
+    // The list is positioned, so it is its options' `offsetParent`.
+    const top = option.offsetTop
+    const bottom = top + option.offsetHeight
+    if (top < list.scrollTop) list.scrollTop = top
+    else if (bottom > list.scrollTop + list.clientHeight) list.scrollTop = bottom - list.clientHeight
   }, [highlighted, suggestions.length])
+  // No taller than the room below the field. The list hangs over the rail's rows, and the box
+  // that clips them (a cascade's child menu hugs its rows, `overflow-hidden`) clipped the list's
+  // last options out of reach, where no scrollbar could bring them back. Capped at that box's
+  // bottom, the list scrolls instead. A box with no layout (jsdom) measures nothing and leaves
+  // the class's own cap standing.
+  const suggestionsOpen = searchOpen && suggestions.length > 0
+  useLayoutEffect(() => {
+    const list = suggestionsRef.current
+    if (!suggestionsOpen || !list) return
+    let clip = list.parentElement
+    while (clip && getComputedStyle(clip).overflowY === "visible") clip = clip.parentElement
+    const floor = clip ? clip.getBoundingClientRect().bottom : window.innerHeight
+    const room = floor - list.getBoundingClientRect().top
+    list.style.maxHeight = room > 0 ? `min(18rem, ${Math.floor(room)}px)` : ""
+  }, [suggestionsOpen])
   // Choosing a suggestion selects its topic exactly as clicking its row would — a link row runs
   // its link through the owner's `onSelect` — and dismisses the filter. The topic already
   // selected is left as it is: re-selecting a row in an uncovered list TOGGLES it off.
