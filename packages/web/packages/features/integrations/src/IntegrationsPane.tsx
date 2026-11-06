@@ -14,12 +14,19 @@ import {
   MessagesSquare,
   Music,
   Plug,
+  Settings,
   Share2,
   StickyNote,
   UserRound,
 } from "lucide-react";
 import { EmptyState } from "@adh-sdk/ui/components/empty-state";
-import { BatchSelectButton, ButtonBar, TopicSelectHint, useBatchSelect } from "@adh-sdk/ui/blocks";
+import {
+  BatchSelectButton,
+  ButtonBar,
+  ListToolButton,
+  TopicSelectHint,
+  useBatchSelect,
+} from "@adh-sdk/ui/blocks";
 import { Button } from "@adh-sdk/ui/components/button";
 import { Select } from "@adh-sdk/ui/components/select";
 import { Label } from "@adh-sdk/ui/components/label";
@@ -792,6 +799,20 @@ export function IntegrationsPane({
     // The rail's `+` is GONE: the bar above it has a labelled Add, and two creators in one field
     // of view — one of them a bare glyph — is one more than anybody can name.
     showNew: false,
+    // ...but the bar lives in the DETAIL column's toolbar slot, and a host that collapses that
+    // column (the hub's /home stack, with no row open) leaves the list with no way to add at all.
+    // So the list's own title row carries the one verb an empty or unopened list needs: a gear
+    // that opens the same picker the bar's Add does. `setModalOpen` is a state setter — stable —
+    // so the registered node never goes stale for want of a plain companion field.
+    titleActions: (
+      <ListToolButton
+        label="Add integration"
+        aria-haspopup="dialog"
+        onClick={() => setModalOpen(true)}
+      >
+        <Settings size={15} aria-hidden />
+      </ListToolButton>
+    ),
     checkable: batch.active,
     checkedIds: batch.selectedIds,
     onToggleChecked: toggleChecked,

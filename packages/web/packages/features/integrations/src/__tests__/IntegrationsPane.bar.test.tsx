@@ -166,9 +166,11 @@ describe("the integrations button bar", () => {
     for (const verb of ["Add", "Remove", "Select", "Export", "Import", "Test", "Transfer"]) {
       expect(await screen.findByRole("button", { name: verb })).toBeInTheDocument();
     }
-    // The rail's creator is gone: `showNew: false`. Two creators in one field of view, one of
-    // them an unlabelled glyph, is one more than anybody can name.
-    expect(screen.queryByRole("button", { name: "Add integration" })).toBeNull();
+    // The rail's bare `+` is gone (`showNew: false`). Its place is taken by ONE labelled gear in
+    // the list's title row — the bar sits in the detail column's toolbar slot, which a host may
+    // collapse, so the list has to carry its own way in (IntegrationsPane.gear.test.tsx). The rail
+    // `+` shares the gear's "Add integration" name, so exactly one such button means no `+`.
+    expect(screen.getAllByRole("button", { name: "Add integration" })).toHaveLength(1);
   });
 
   it("offers nothing to act on until something is selected", async () => {
