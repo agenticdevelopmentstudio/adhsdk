@@ -4,7 +4,11 @@ import GRDB
 /// ISO-8601 UTC timestamps with fractional seconds, the format every integration column uses.
 public enum IntegrationClock {
     public static func now() -> String {
-        Date().formatted(Date.ISO8601FormatStyle(includingFractionalSeconds: true))
+        string(from: Date())
+    }
+
+    public static func string(from date: Date) -> String {
+        date.formatted(Date.ISO8601FormatStyle(includingFractionalSeconds: true))
     }
 }
 

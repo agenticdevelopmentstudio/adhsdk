@@ -805,7 +805,9 @@ targets:
     templates:
       - SwiftLint
     sources:
-      - Tests/AgenticDeveloperHubSDKIntegrationsTests
+      - path: Tests/AgenticDeveloperHubSDKIntegrationsTests
+        excludes:
+          - "Fixtures/**"
     dependencies:
       - target: AgenticDeveloperHubSDKIntegrations
         embed: true

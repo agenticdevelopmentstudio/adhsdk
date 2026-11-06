@@ -1,0 +1,52 @@
+{
+ "history": [
+  {
+   "messagesAdded": [
+    {
+     "message": {
+      "id": "a"
+     }
+    }
+   ],
+   "labelsAdded": [
+    {
+     "message": {
+      "id": "b"
+     },
+     "labelIds": [
+      "STARRED"
+     ]
+    }
+   ]
+  },
+  {
+   "messagesDeleted": [
+    {
+     "message": {
+      "id": "c"
+     }
+    }
+   ],
+   "labelsRemoved": [
+    {
+     "message": {
+      "id": "a"
+     },
+     "labelIds": [
+      "INBOX"
+     ]
+    },
+    {
+     "message": {
+      "id": "c"
+     },
+     "labelIds": [
+      "INBOX"
+     ]
+    }
+   ]
+  }
+ ],
+ "historyId": "950",
+ "nextPageToken": "p2"
+}
