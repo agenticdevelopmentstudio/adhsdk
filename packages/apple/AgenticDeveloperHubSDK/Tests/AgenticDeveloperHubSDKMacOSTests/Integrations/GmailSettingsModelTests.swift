@@ -276,6 +276,50 @@ struct GmailSettingsModelTests {
         #expect(!service.requests.contains { if case .importOAuthClient = $0 { return true } else { return false } })
     }
 
+    @Test func oauthClientTextBeforeTheFirstLoad() {
+        let model = GmailSettingsModel(client: ScriptedMailService().client)
+        #expect(model.isClientImported == false)
+        #expect(model.oauthClientText == "Checking for an OAuth client…")
+    }
+
+    @Test func oauthClientTextWhenNoClientIsImported() async {
+        let service = ScriptedMailService(provider: MailProviderStatus(configured: false, clientIdHint: nil))
+        let model = GmailSettingsModel(client: service.client)
+        await model.reload()
+        #expect(model.isClientImported == false)
+        #expect(model.oauthClientText == "Import the OAuth client JSON you downloaded from Google Cloud "
+            + "(Desktop app). One client serves every Gmail account.")
+    }
+
+    @Test func oauthClientTextNamesTheImportedClient() async {
+        let service = ScriptedMailService(accounts: [.fixture()])
+        let model = GmailSettingsModel(client: service.client)
+        await model.reload()
+        #expect(model.isClientImported == true)
+        #expect(model.oauthClientText == "Using the OAuth client ending in …abc.")
+    }
+
+    @Test func oauthClientTextWithoutAHint() async {
+        let service = ScriptedMailService(provider: MailProviderStatus(configured: true, clientIdHint: nil))
+        let model = GmailSettingsModel(client: service.client)
+        await model.reload()
+        #expect(model.oauthClientText == "An OAuth client is imported.")
+    }
+
+    @Test func replacingTheClientSendsTheNewJSONAndKeepsAccounts() async throws {
+        let service = ScriptedMailService(accounts: [.fixture()])
+        let model = GmailSettingsModel(client: service.client)
+        await model.reload()
+        let url = FileManager.default.temporaryDirectory.appendingPathComponent("\(UUID().uuidString).json")
+        let bytes = Data(#"{"installed":{"client_id":"y"}}"#.utf8)
+        try bytes.write(to: url)
+        defer { try? FileManager.default.removeItem(at: url) }
+        await model.importClientJSON(from: url)
+        #expect(service.requests.contains(.importOAuthClient(json: bytes)))
+        #expect(model.accounts == [.fixture()])
+        #expect(model.errorMessage == nil)
+    }
+
     @Test func dismissErrorClearsIt() async {
         let service = ScriptedMailService()
         service.fail(with: "boom") { $0 == .signIn }

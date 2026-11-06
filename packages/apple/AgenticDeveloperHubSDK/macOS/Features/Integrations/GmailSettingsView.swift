@@ -13,11 +13,9 @@ struct GmailSettingsView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            if model.provider?.configured == true {
-                configured
-            } else {
-                notConfigured
-            }
+            oauthClientSection
+            Divider()
+            accountsSection
             if let message = model.errorMessage {
                 Text(message).foregroundStyle(.red).fixedSize(horizontal: false, vertical: true)
             }
@@ -27,13 +25,20 @@ struct GmailSettingsView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
     }
 
-    // MARK: - Not configured
+    // MARK: - OAuth client
 
-    private var notConfigured: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text("Add the OAuth client JSON you downloaded from Google Cloud (Desktop app).")
-            Button("Import Client JSON…") { importClientJSON() }
-                .disabled(model.busy)
+    private var oauthClientSection: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("OAuth Client").font(.headline)
+            Text(model.oauthClientText).fixedSize(horizontal: false, vertical: true)
+            Button(model.isClientImported ? "Replace Client JSON…" : "Import Client JSON…") {
+                importClientJSON()
+            }
+            .disabled(model.busy)
+            if model.isClientImported && !model.accounts.isEmpty {
+                Text("Accounts signed in with a replaced client need Reconnect.")
+                    .font(.caption).foregroundStyle(.secondary)
+            }
         }
     }
 
@@ -46,17 +51,22 @@ struct GmailSettingsView: View {
         Task { await model.importClientJSON(from: url) }
     }
 
-    // MARK: - Configured
+    // MARK: - Accounts
 
-    private var configured: some View {
+    private var accountsSection: some View {
         VStack(alignment: .leading, spacing: 12) {
+            Text("Accounts").font(.headline)
+            if !model.isClientImported {
+                Text("Import the OAuth client above before adding an account.")
+                    .font(.caption).foregroundStyle(.secondary)
+            }
             List(model.accounts, id: \.id, selection: $model.selectedAccountId) { account in
                 accountRow(account)
             }
             .frame(minHeight: 120)
             HStack {
                 Button("Add Account…") { Task { await model.addAccount() } }
-                    .disabled(model.busy)
+                    .disabled(model.busy || !model.isClientImported)
                 Button("Remove") {
                     if let account = model.selectedAccount { confirmRemove(account) }
                 }

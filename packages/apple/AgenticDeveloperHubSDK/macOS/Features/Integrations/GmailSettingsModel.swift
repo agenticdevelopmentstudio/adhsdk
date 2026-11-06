@@ -111,6 +111,24 @@ public final class GmailSettingsModel: ObservableObject {
 
     // MARK: - Display text
 
+    /// Whether a Google OAuth client has been imported; accounts can be added only then.
+    public var isClientImported: Bool {
+        provider?.configured == true
+    }
+
+    /// What the OAuth client section says about the imported client.
+    public var oauthClientText: String {
+        guard let provider else { return "Checking for an OAuth client…" }
+        guard provider.configured else {
+            return "Import the OAuth client JSON you downloaded from Google Cloud (Desktop app). "
+                + "One client serves every Gmail account."
+        }
+        if let hint = provider.clientIdHint, !hint.isEmpty {
+            return "Using the OAuth client ending in …\(hint)."
+        }
+        return "An OAuth client is imported."
+    }
+
     public static func statusText(_ status: ConnectionStatus) -> String {
         switch status {
         case .active: return "Connected"
