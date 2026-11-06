@@ -25,6 +25,10 @@ public actor MailIntegrationService {
     /// One in-flight sync per connection id.
     private var running: [String: RunningSync] = [:]
     private var scheduler: Task<Void, Never>?
+    private var observer: (@Sendable (MailServiceEvent) -> Void)?
+    /// When each connection's latest sync started, successful or not. In memory only: after a
+    /// restart, due-ness falls back to `lastSyncAt`.
+    private var lastAttempt: [String: Date] = [:]
 
     public init(
         store: IntegrationsStore, secrets: any SecretStoring, signIn: any GoogleSignInFlow = AppAuthGoogleSignIn(),
@@ -145,11 +149,13 @@ public actor MailIntegrationService {
         let accessToken = credential.accessToken
         let email = try await makeAPI({ accessToken }).profile().emailAddress.lowercased()
 
-        let existing = try store.connections(provider: Self.provider).first { $0.externalAccountId == email }
-        let id = existing?.id ?? Self.newId()
+        let id = try existingConnection(email: email)?.id ?? Self.newId()
         // The credential is saved first, so a failed Keychain write leaves no active connection
         // without one.
         try await tokens.store(credential, connectionId: id)
+        // Re-read after the await: a sync that finished meanwhile wrote a newer cursor and
+        // `lastSyncAt`, which a snapshot taken before it would roll back.
+        let existing = try existingConnection(email: email)
         try store.upsertConnection(IntegrationConnection(
             id: id, provider: Self.provider, externalAccountId: email, displayName: email, status: .active,
             lastSyncAt: existing?.lastSyncAt, lastError: nil, syncCursor: existing?.syncCursor,
@@ -159,10 +165,15 @@ public actor MailIntegrationService {
         return Self.account(saved)
     }
 
+    private func existingConnection(email: String) throws -> IntegrationConnection? {
+        try store.connections(provider: Self.provider).first { $0.externalAccountId == email }
+    }
+
     private func removeAccount(_ connection: IntegrationConnection) async throws {
         await quiesce(connectionId: connection.id)
         await tokens.forget(connectionId: connection.id)
         try store.deleteConnection(id: connection.id)
+        lastAttempt[connection.id] = nil
     }
 
     private func updateSettings(account: String, settings: MailSyncSettings) async throws -> MailAccount {
@@ -181,7 +192,8 @@ public actor MailIntegrationService {
         record.syncSettings = settings
         try store.upsertConnection(record)
 
-        startSync(connectionId: id)
+        // A revoked account keeps its new settings but waits for sign-in to sync.
+        if Self.isSyncable(record) { startSync(connectionId: id) }
         return Self.account(try connection(id))
     }
 
@@ -201,10 +213,13 @@ public actor MailIntegrationService {
     /// Starts the poll loop: every `tick`, syncs the accounts that are due.
     public func start(tick: Duration = .seconds(60)) {
         scheduler?.cancel()
+        let observer = self.observer
+        // `self` is bound weakly per iteration, so the loop never keeps the service alive while it
+        // sleeps; once the service is gone the next iteration ends the loop.
         scheduler = Task { [weak self] in
             while !Task.isCancelled {
-                guard let self else { return }
-                await self.startDueSyncs()
+                guard await self?.startDueSyncs() != nil else { return }
+                observer?(.schedulerTick)
                 try? await Task.sleep(for: tick)
             }
         }
@@ -220,6 +235,15 @@ public actor MailIntegrationService {
     /// One scheduler tick: starts every due sync and waits for them.
     public func runDueSyncs() async {
         for task in startDueSyncs() { await task.value }
+    }
+
+    /// The poll loop, while started. For tests.
+    var schedulerTask: Task<Void, Never>? { scheduler }
+
+    /// Reports internal events. For tests: they wait on events instead of sleeping. The scheduler
+    /// takes the observer when `start` is called, so set it first.
+    func setObserver(_ observer: (@Sendable (MailServiceEvent) -> Void)?) {
+        self.observer = observer
     }
 
     /// Waits until no sync is running. For tests: sign-in and settings changes start syncs
@@ -251,8 +275,12 @@ public actor MailIntegrationService {
         }
         for target in targets {
             // Not twice at once: join the sync already running.
-            let task = startSync(connectionId: target.id) ?? running[target.id]?.task
-            await task?.value
+            if let task = startSync(connectionId: target.id) {
+                await task.value
+            } else if let task = running[target.id]?.task {
+                observer?(.joinedRunningSync(target.id))
+                await task.value
+            }
         }
         return try targets.map { Self.account(try connection($0.id)) }
     }
@@ -261,12 +289,16 @@ public actor MailIntegrationService {
         connection.status == .active || connection.status == .error
     }
 
+    /// Due once a poll interval has passed since the later of the last successful sync and the
+    /// last attempt, so a failing account retries at the poll interval rather than every tick.
+    /// A missing or malformed `lastSyncAt` counts as never synced.
     private func isDue(_ connection: IntegrationConnection, at current: Date) -> Bool {
-        guard let last = connection.lastSyncAt,
-              let lastDate = try? Date.ISO8601FormatStyle(includingFractionalSeconds: true).parse(last) else {
-            return true
+        let synced = connection.lastSyncAt.flatMap {
+            try? Date.ISO8601FormatStyle(includingFractionalSeconds: true).parse($0)
         }
-        return lastDate.addingTimeInterval(Double(connection.syncSettings.pollIntervalMinutes) * 60) <= current
+        let attempted = lastAttempt[connection.id]
+        guard let last = [synced, attempted].compactMap({ $0 }).max() else { return true }
+        return last.addingTimeInterval(Double(connection.syncSettings.pollIntervalMinutes) * 60) <= current
     }
 
     /// Starts a sync unless one is already running for the connection; returns the new task.
@@ -296,6 +328,7 @@ public actor MailIntegrationService {
 
     private func performSync(connectionId: String) async {
         guard let connection = try? store.connection(idOrEmail: connectionId) else { return }
+        lastAttempt[connectionId] = now()
         do {
             let worker = GmailSyncWorker(api: try gmailAPI(for: connectionId), store: store, now: now)
             _ = try await worker.sync(connection: connection)
@@ -333,7 +366,7 @@ public actor MailIntegrationService {
         }
         let limit = MailMessageFilter.clamp(filter.limit)
         let labels = try store.labels(connectionId: owner.id)
-        let labelIds = filter.labels.map { Self.resolveLabel($0, in: labels) ?? $0 }
+        let labelIds = try Self.resolveLabels(filter.labels, in: labels)
         // One extra row tells whether another page follows.
         let rows = try store.messages(MessageQuery(
             connectionId: owner.id, since: filter.since, until: filter.until, labelIds: labelIds,
@@ -350,17 +383,8 @@ public actor MailIntegrationService {
         connection: IntegrationConnection, messageIds: [String], add: [String], remove: [String]
     ) async throws -> [MailMessage] {
         let labels = try store.labels(connectionId: connection.id)
-        func resolve(_ names: [String]) throws -> [String] {
-            var seen = Set<String>()
-            return try names.compactMap { name in
-                guard let id = Self.resolveLabel(name, in: labels) else {
-                    throw RequestFailure("unknown label: \(name)")
-                }
-                return seen.insert(id).inserted ? id : nil
-            }
-        }
-        let addIds = try resolve(add)
-        let removeIds = try resolve(remove)
+        let addIds = try Self.resolveLabels(add, in: labels)
+        let removeIds = try Self.resolveLabels(remove, in: labels)
         let originals = try messageIds.map { id in
             guard let message = try store.message(connectionId: connection.id, idOrExternalId: id) else {
                 throw IntegrationError.unknownMessage(id)
@@ -379,20 +403,38 @@ public actor MailIntegrationService {
         try store.insertActionLog(ActionLog(
             id: logId, connectionId: connection.id, actionType: "modify_labels",
             requestPayload: Self.json(payload)))
+
+        // Write the change to Gmail. A failure logs how many ids Gmail had already applied.
+        let api: any GmailAPI
+        var applied = 0
         do {
-            let api = try gmailAPI(for: connection.id)
+            api = try gmailAPI(for: connection.id)
             for start in stride(from: 0, to: gmailIds.count, by: Self.batchModifyLimit) {
                 let chunk = Array(gmailIds[start..<min(start + Self.batchModifyLimit, gmailIds.count)])
                 try await api.batchModify(ids: chunk, add: addIds, remove: removeIds)
+                applied += chunk.count
             }
-            let refreshed = try await refetch(originals, api: api, connection: connection)
-            try store.finishActionLog(
-                id: logId, status: "ok", result: Self.json(["modified": refreshed.count]), error: nil)
-            return refreshed.map { Self.mailMessage($0, account: account, names: names, includeBodies: false) }
         } catch {
-            try? store.finishActionLog(id: logId, status: "error", result: nil, error: error.localizedDescription)
+            try? store.finishActionLog(id: logId, status: "error", result: Self.json(["applied": applied]),
+                                       error: error.localizedDescription)
             if (error as? IntegrationError) == .revoked { record(error, connectionId: connection.id) }
             throw error
+        }
+
+        // The change is in Gmail now, so the action succeeded even if refreshing the local copies fails.
+        do {
+            let fetched = try await fetch(originals, api: api, connectionId: connection.id)
+            let refreshed = try storeRefetched(fetched, originals: originals, connectionId: connection.id)
+            try store.finishActionLog(
+                id: logId, status: "ok", result: Self.json(ModifyResult(modified: applied)), error: nil)
+            return refreshed.map { Self.mailMessage($0, account: account, names: names, includeBodies: false) }
+        } catch {
+            let message = error.localizedDescription
+            try? store.finishActionLog(
+                id: logId, status: "ok", result: Self.json(ModifyResult(modified: applied, refreshError: message)),
+                error: nil)
+            if (error as? IntegrationError) == .revoked { record(error, connectionId: connection.id) }
+            throw RequestFailure("labels applied; refreshing messages failed: \(message)")
         }
     }
 
@@ -402,12 +444,16 @@ public actor MailIntegrationService {
         let remove: [String]
     }
 
-    /// Re-reads each message from Gmail and stores it, or tombstones it when the connection no
-    /// longer mirrors its class or Gmail no longer has it. Returns the re-read messages in order.
-    private func refetch(
-        _ originals: [EmailMessage], api: any GmailAPI, connection: IntegrationConnection
-    ) async throws -> [EmailMessage] {
-        let connectionId = connection.id
+    private struct ModifyResult: Encodable {
+        let modified: Int
+        var refreshError: String?
+    }
+
+    /// Re-reads each message from Gmail, `refetchConcurrency` at a time. The result is keyed by index into
+    /// `originals`; a message Gmail no longer has (404) is absent.
+    private func fetch(
+        _ originals: [EmailMessage], api: any GmailAPI, connectionId: String
+    ) async throws -> [Int: EmailMessage] {
         var fetched: [Int: EmailMessage] = [:]
         try await withThrowingTaskGroup(of: (Int, EmailMessage?).self) { group in
             var next = 0
@@ -428,14 +474,28 @@ public actor MailIntegrationService {
             }
             for _ in 0..<Self.refetchConcurrency { addNext() }
             while let (index, message) = try await group.next() {
-                fetched[index] = message
+                if let message { fetched[index] = message }
                 addNext()
             }
         }
+        return fetched
+    }
+
+    /// Stores re-read messages, or tombstones them when the connection no longer mirrors their class
+    /// or Gmail no longer has them. Returns the re-read messages in order.
+    ///
+    /// Synchronous on purpose: the connection is re-read here, after the fetch's awaits, so settings
+    /// changed or an account removed meanwhile are honoured, and nothing can change it again before
+    /// the writes. A removed account gets no writes at all.
+    private func storeRefetched(
+        _ fetched: [Int: EmailMessage], originals: [EmailMessage], connectionId: String
+    ) throws -> [EmailMessage] {
         let refreshed = originals.indices.compactMap { fetched[$0] }
-        let kept = refreshed.filter { connection.syncSettings.allows($0.mailClass) }
+        guard let current = try store.connection(idOrEmail: connectionId) else { return refreshed }
+        let settings = current.syncSettings
+        let kept = refreshed.filter { settings.allows($0.mailClass) }
         let gone = originals.indices.filter { fetched[$0] == nil }.map { originals[$0].externalId }
-            + refreshed.filter { !connection.syncSettings.allows($0.mailClass) }.map(\.externalId)
+            + refreshed.filter { !settings.allows($0.mailClass) }.map(\.externalId)
         try store.upsertMessages(kept)
         try store.tombstoneMessages(connectionId: connectionId, externalIds: gone)
         return refreshed
@@ -451,9 +511,17 @@ public actor MailIntegrationService {
 
     // MARK: - Mapping
 
-    /// Exact Gmail label id, else exact (case-sensitive) name.
-    private static func resolveLabel(_ value: String, in labels: [EmailLabel]) -> String? {
-        labels.first { $0.externalId == value }?.externalId ?? labels.first { $0.name == value }?.externalId
+    /// Resolves each value to a Gmail label id, without duplicates: an exact label id, else an exact
+    /// (case-sensitive) name. Any other value fails with "unknown label".
+    private static func resolveLabels(_ values: [String], in labels: [EmailLabel]) throws -> [String] {
+        var seen = Set<String>()
+        return try values.compactMap { value in
+            guard let id = labels.first(where: { $0.externalId == value })?.externalId
+                    ?? labels.first(where: { $0.name == value })?.externalId else {
+                throw RequestFailure("unknown label: \(value)")
+            }
+            return seen.insert(id).inserted ? id : nil
+        }
     }
 
     private static func labelNames(_ labels: [EmailLabel]) -> [String: String] {
@@ -495,6 +563,14 @@ public actor MailIntegrationService {
         encoder.outputFormatting = .sortedKeys
         return (try? encoder.encode(value)).flatMap { String(data: $0, encoding: .utf8) } ?? "{}"
     }
+}
+
+/// Internal events a test can wait on.
+enum MailServiceEvent: Sendable, Equatable {
+    /// The scheduler finished starting due syncs and is about to sleep.
+    case schedulerTick
+    /// `syncNow` joined the sync already running for this connection id.
+    case joinedRunningSync(String)
 }
 
 /// A request-level failure whose message is shown as is.
