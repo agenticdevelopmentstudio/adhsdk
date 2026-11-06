@@ -1,6 +1,8 @@
 import { Hono } from 'hono';
 import { glitchtipConfigured, posthogConfigured, vercelConfigured, type StatusConfig } from '../config/port';
 import type { Tier } from '../middleware/auth';
+import type { Storage } from '../storage/ports';
+import { loadRuntimeErrorsReport } from '../telemetry/runtime-errors';
 import { loadErrorIssues, resolvedCounter } from '../telemetry/dashboard/errors-sections';
 import {
   loadDimensions,
@@ -11,12 +13,17 @@ import {
   loadVitals,
 } from '../telemetry/dashboard/posthog-sections';
 import { ANALYTICS_RANGES, rangeWindow, type AnalyticsRange } from '../telemetry/dashboard/ranges';
-import { emptySections, sectionedDashboard } from '../telemetry/dashboard/sectioned-dashboard';
+import {
+  emptySections,
+  sectionedDashboard,
+  type DashboardSection,
+} from '../telemetry/dashboard/sectioned-dashboard';
 import {
   type AnalyticsDashboardResponse,
   type AnalyticsSectionData,
   type ErrorsDashboardResponse,
   type ErrorsSectionData,
+  type RuntimeErrorsReport,
 } from '../telemetry/dashboard/types';
 import { loadVercelTraffic } from '../telemetry/dashboard/vercel-section';
 
@@ -35,7 +42,7 @@ const ERRORS_TTL_MS = 60_000;
 type PosthogSections = Omit<AnalyticsSectionData, 'vercel'>;
 type VercelSections = Pick<AnalyticsSectionData, 'vercel'>;
 type SitesSections = Pick<ErrorsSectionData, 'sites' | 'detail'>;
-type GlitchtipSections = Omit<ErrorsSectionData, keyof SitesSections>;
+type GlitchtipSections = Omit<ErrorsSectionData, keyof SitesSections | 'runtime'>;
 
 const POSTHOG_SECTIONS = ['traffic', 'dimensions', 'paths', 'vitals', 'health'] as const;
 const VERCEL_SECTIONS = ['vercel'] as const;
@@ -46,7 +53,23 @@ function isOneOf<T extends string>(allowed: readonly T[], value: string): value 
   return (allowed as readonly string[]).includes(value);
 }
 
-export function dashboardRoutes(config: StatusConfig): Hono<{ Variables: { tier: Tier } }> {
+/**
+ * The runtime section is a read of OUR store (the monitor cycle polls Vercel), so unlike the
+ * provider sections it is answered in this request, never left for a later poll.
+ */
+async function runtimeSection(storage: Storage, nowMs: number): Promise<DashboardSection<RuntimeErrorsReport>> {
+  try {
+    const data = await loadRuntimeErrorsReport(storage.telemetry.runtimeErrors, nowMs);
+    return { data, error: null, updatedAt: data.generatedAt };
+  } catch (err) {
+    return { data: null, error: err instanceof Error ? err.message : String(err), updatedAt: null };
+  }
+}
+
+export function dashboardRoutes(
+  config: StatusConfig,
+  storage: Storage,
+): Hono<{ Variables: { tier: Tier } }> {
   const app = new Hono<{ Variables: { tier: Tier } }>();
   const creds = config.credentials;
 
@@ -114,21 +137,35 @@ export function dashboardRoutes(config: StatusConfig): Hono<{ Variables: { tier:
     return c.json(body, 200, { 'Cache-Control': 'no-store' });
   });
 
-  app.get('/errors/dashboard', (c) => {
+  app.get('/errors/dashboard', async (c) => {
+    const nowMs = Date.now();
     const glitchtipOn = glitchtipConfigured(config);
     const posthogOn = posthogConfigured(config);
+    const vercelOn = vercelConfigured(config);
     const gt = glitchtipOn ? glitchtip.read('all') : null;
     const sites = posthogOn ? errorSites.read('all') : null;
+    const runtime: DashboardSection<RuntimeErrorsReport> = vercelOn
+      ? await runtimeSection(storage, nowMs)
+      : { data: null, error: null, updatedAt: null };
 
     const body: ErrorsDashboardResponse = {
-      generatedAt: new Date().toISOString(),
+      generatedAt: new Date(nowMs).toISOString(),
       refreshing: Boolean(gt?.refreshing || sites?.refreshing),
-      configured: { glitchtip: glitchtipOn, posthog: posthogOn },
+      configured: { glitchtip: glitchtipOn, posthog: posthogOn, vercel: vercelOn },
       sections: {
         ...(gt?.sections ?? emptySections<GlitchtipSections>(GLITCHTIP_SECTIONS)),
         ...(sites?.sections ?? emptySections<SitesSections>(SITES_SECTIONS)),
+        runtime,
       },
     };
+    return c.json(body, 200, { 'Cache-Control': 'no-store' });
+  });
+
+  // Vercel runtime errors of the last 24h, grouped: what the server side of every production site
+  // threw or answered 5xx. Read from the store the monitor cycle fills; empty until Vercel is
+  // configured and the first read lands.
+  app.get('/errors/runtime', async (c) => {
+    const body = await loadRuntimeErrorsReport(storage.telemetry.runtimeErrors);
     return c.json(body, 200, { 'Cache-Control': 'no-store' });
   });
 

@@ -12,7 +12,8 @@ import {
   shapeTraffic,
   shapeVitals,
 } from "../src/telemetry/dashboard/posthog-sections";
-import { analyticsEnabled, isProductionProject, loadVercelTraffic, productionDomain, shapeMarginal } from "../src/telemetry/dashboard/vercel-section";
+import { analyticsEnabled, loadVercelTraffic, shapeMarginal } from "../src/telemetry/dashboard/vercel-section";
+import { isProductionProject, productionDomain } from "../src/telemetry/vercel-api";
 import { loadErrorIssues, resolvedCounter, summarizeIssues, toErrorIssues } from "../src/telemetry/dashboard/errors-sections";
 
 const NOW = Date.parse("2026-11-04T15:30:20.000Z");

@@ -481,7 +481,8 @@
               "cloudflare-pages",
               "railway",
               "crunchy",
-              "glitchtip"
+              "glitchtip",
+              "vercel-runtime"
             ]
           },
           "name": {
@@ -621,6 +622,7 @@
               "railway",
               "crunchy",
               "glitchtip",
+              "vercel-runtime",
               null
             ]
           },
@@ -1254,6 +1256,113 @@
           },
           "pageviews": {
             "type": "number"
+          }
+        }
+      },
+      "RuntimeErrorGroup": {
+        "type": "object",
+        "required": [
+          "key",
+          "project",
+          "deploymentId",
+          "domain",
+          "source",
+          "method",
+          "path",
+          "status",
+          "level",
+          "message",
+          "count",
+          "firstSeen",
+          "lastSeen",
+          "sampleRowId"
+        ],
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "project": {
+            "type": "string"
+          },
+          "deploymentId": {
+            "type": "string"
+          },
+          "domain": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "source": {
+            "type": "string"
+          },
+          "method": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "path": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "status": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "level": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "count": {
+            "type": "number"
+          },
+          "firstSeen": {
+            "type": "string"
+          },
+          "lastSeen": {
+            "type": "string"
+          },
+          "sampleRowId": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      },
+      "RuntimeErrorsReport": {
+        "type": "object",
+        "required": [
+          "generatedAt",
+          "window",
+          "total",
+          "groups"
+        ],
+        "properties": {
+          "generatedAt": {
+            "type": "string"
+          },
+          "window": {
+            "type": "string",
+            "enum": [
+              "24h"
+            ]
+          },
+          "total": {
+            "type": "number"
+          },
+          "groups": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RuntimeErrorGroup"
+            }
           }
         }
       },
@@ -5315,7 +5424,7 @@
         "tags": [
           "dashboards"
         ],
-        "summary": "Every unresolved GlitchTip issue, 30-day event history, and each site’s errors and failed requests",
+        "summary": "Every unresolved GlitchTip issue, 30-day event history, each site’s errors and failed requests, and the last 24h of Vercel runtime errors",
         "security": [
           {
             "bearerAuth": []
@@ -5345,13 +5454,17 @@
                       "type": "object",
                       "required": [
                         "glitchtip",
-                        "posthog"
+                        "posthog",
+                        "vercel"
                       ],
                       "properties": {
                         "glitchtip": {
                           "type": "boolean"
                         },
                         "posthog": {
+                          "type": "boolean"
+                        },
+                        "vercel": {
                           "type": "boolean"
                         }
                       }
@@ -5361,7 +5474,8 @@
                       "required": [
                         "issues",
                         "sites",
-                        "detail"
+                        "detail",
+                        "runtime"
                       ],
                       "properties": {
                         "issues": {
@@ -5768,10 +5882,78 @@
                               ]
                             }
                           }
+                        },
+                        "runtime": {
+                          "type": "object",
+                          "required": [
+                            "data",
+                            "error",
+                            "updatedAt"
+                          ],
+                          "properties": {
+                            "data": {
+                              "anyOf": [
+                                {
+                                  "$ref": "#/components/schemas/RuntimeErrorsReport"
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
+                            "error": {
+                              "type": [
+                                "string",
+                                "null"
+                              ]
+                            },
+                            "updatedAt": {
+                              "type": [
+                                "string",
+                                "null"
+                              ]
+                            }
+                          }
                         }
                       }
                     }
                   }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/errors/runtime": {
+      "get": {
+        "tags": [
+          "dashboards"
+        ],
+        "summary": "Vercel runtime errors of the last 24h, grouped",
+        "description": "Error/fatal log lines and 5xx responses of each production project’s current production deployment, as the monitor cycle last read them. Grouped by project, source, method, normalized path, status and first message line; `count` is lines since `firstSeen` (7-day retention). Worst level first, then most frequent. `total` counts every group in the window; `groups` is capped at 200.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Groups last seen in the window",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RuntimeErrorsReport"
                 }
               }
             }

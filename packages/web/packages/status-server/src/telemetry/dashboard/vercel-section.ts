@@ -1,6 +1,15 @@
-import { noteRateLimited, rateLimitedUntil } from "@adh-sdk/deploy-platform/cooldown";
 import { fetchProjectPrimaryDomain } from "@adh-sdk/deploy-platform/providers";
 import { mapLimit } from "@adh-sdk/deploy-platform/util";
+import {
+  isNonProductionHost,
+  isProductionProject,
+  listProjects,
+  productionDomain,
+  VercelRateLimited,
+  vercelGet,
+  type ListedProject,
+  type VercelEnv,
+} from "../vercel-api";
 import { alignToBuckets, type RangeWindow } from "./ranges";
 import type { Marginal, VercelProjectTraffic, VercelRosterEntry, VercelTrafficSection } from "./types";
 
@@ -13,92 +22,12 @@ import type { Marginal, VercelProjectTraffic, VercelRosterEntry, VercelTrafficSe
 // one with analytics on, and the costlier breakdowns only for those that had traffic: most have
 // none.
 
-const API = "https://api.vercel.com";
-const CALL_TIMEOUT_MS = 20_000;
 const CONCURRENCY = 6;
-const MAX_PROJECT_PAGES = 20;
 /** The API's maximum. It defaults to 10, which would cut a 30-day series short. */
 const AGGREGATE_LIMIT = "100";
 
-export interface VercelEnv {
-  VERCEL_API_TOKEN?: string;
-  VERCEL_TEAM_ID?: string;
-}
-
-interface ListedProject {
-  id?: string;
-  name?: string;
-  webAnalytics?: { enabledAt?: number | null; disabledAt?: number | null } | null;
-  targets?: { production?: { alias?: string[] | null } | null } | null;
-}
-
-class VercelRateLimited extends Error {}
-
-/**
- * Every call checks the shared cooldown first, not just the load's first call. Up to CONCURRENCY
- * workers run at once, so after one 429 the rest would otherwise keep firing at a throttled API,
- * and each of their 429s pushes the cooldown, which the deploy poll also honors, further out.
- */
-async function vercelGet(env: VercelEnv, path: string, params: Record<string, string>): Promise<unknown> {
-  const cooling = rateLimitedUntil("vercel");
-  if (cooling) throw new VercelRateLimited(`Vercel rate limited until ${new Date(cooling).toISOString()}`);
-  const url = new URL(path, API);
-  if (env.VERCEL_TEAM_ID) url.searchParams.set("teamId", env.VERCEL_TEAM_ID);
-  for (const [k, v] of Object.entries(params)) url.searchParams.set(k, v);
-  const res = await fetch(url, {
-    headers: { Authorization: `Bearer ${env.VERCEL_API_TOKEN}` },
-    signal: AbortSignal.timeout(CALL_TIMEOUT_MS),
-  });
-  if (res.status === 429) {
-    noteRateLimited("vercel", res.headers.get("retry-after"));
-    throw new VercelRateLimited("Vercel rate limited");
-  }
-  if (!res.ok) throw new Error(`Vercel ${path} HTTP ${res.status}`);
-  return res.json();
-}
-
-async function listProjects(env: VercelEnv): Promise<ListedProject[]> {
-  const out: ListedProject[] = [];
-  let until: string | undefined;
-  for (let page = 0; page < MAX_PROJECT_PAGES; page++) {
-    const body = (await vercelGet(env, "/v9/projects", { limit: "100", ...(until ? { until } : {}) })) as {
-      projects?: ListedProject[];
-      pagination?: { next?: number | null };
-    };
-    out.push(...(body.projects ?? []));
-    if (!body.pagination?.next) break;
-    until = String(body.pagination.next);
-  }
-  return out;
-}
-
 export function analyticsEnabled(p: ListedProject): boolean {
   return Boolean(p.webAnalytics?.enabledAt) && !p.webAnalytics?.disabledAt;
-}
-
-/**
- * The first production alias that a person would call the site's domain. These belong to the latest
- * production deployment, so a queued deployment leaves only `*.vercel.app` here. That makes this a
- * cheap first filter and a fallback, not the answer: `loadVercelTraffic` asks the domains API.
- */
-export function productionDomain(p: ListedProject): string | null {
-  return p.targets?.production?.alias?.find((a) => !a.endsWith(".vercel.app")) ?? null;
-}
-
-/**
- * Every site is three Vercel projects, `x-production`, `x-staging` and `x-testing`, and analytics
- * only runs on the first. The other two are not sites to report on, so they are dropped before
- * anything is counted or queried.
- *
- * It has to be the end of the name: `testing-production` is the production site of a site about
- * testing.
- */
-export function isProductionProject(p: ListedProject): boolean {
-  return !/-(staging|testing)$/i.test(p.name ?? "") && !isNonProductionHost(productionDomain(p));
-}
-
-function isNonProductionHost(domain: string | null): boolean {
-  return /^(staging|testing)\./i.test(domain ?? "");
 }
 
 /** The API takes dates for whole days. Hourly needs instants or it can't tell the hours apart. */

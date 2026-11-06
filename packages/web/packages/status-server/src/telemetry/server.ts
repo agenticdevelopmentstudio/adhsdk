@@ -1,11 +1,12 @@
 import type { StatusConfig } from "../config/port";
-import { glitchtipConfigured, posthogConfigured } from "../config/port";
+import { glitchtipConfigured, posthogConfigured, vercelConfigured } from "../config/port";
 import type { Storage } from "../storage/ports";
 import { collect } from "./collect";
 import { glitchtipFetcher } from "./fetchers/glitchtip";
 import { posthogFetcher } from "./fetchers/posthog";
+import { vercelRuntimeFetcher } from "./fetchers/vercel-runtime";
 import type { Fetcher } from "./ports";
-import type { AnalyticsMetricDTO, ErrorDTO } from "./types";
+import type { AnalyticsMetricDTO, ErrorDTO, RuntimeLogEntry } from "./types";
 
 // THE server composition root — the single place that picks which provider feeds
 // each stream. Which store persists/serves it is decided at the STORAGE
@@ -32,20 +33,34 @@ export function buildAnalyticsFetcher(config: StatusConfig): Fetcher<AnalyticsMe
   });
 }
 
+/** Build the Vercel runtime-logs fetcher from the given config — see {@link buildErrorsFetcher}. */
+export function buildRuntimeErrorsFetcher(config: StatusConfig): Fetcher<RuntimeLogEntry> {
+  return vercelRuntimeFetcher({
+    VERCEL_API_TOKEN: config.credentials.VERCEL_API_TOKEN,
+    VERCEL_TEAM_ID: config.credentials.VERCEL_TEAM_ID,
+  });
+}
+
 /** The in-process replacement for the old /api/cron/errors + /api/cron/analytics
  *  Vercel crons: poll each configured provider and persist into the SQLite trend
  *  store (`storage.telemetry`). GUARDED (skips a provider whose credentials are
  *  unset) + fail-soft (each in its own try/catch) so a provider outage can never
  *  abort the scheduler cycle. */
-export async function collectTelemetry(storage: Storage, config: StatusConfig): Promise<void> {
+export async function collectTelemetry(
+  storage: Storage,
+  config: StatusConfig,
+  fetchers: { runtimeErrors?: Fetcher<RuntimeLogEntry> } = {},
+): Promise<void> {
   const gtConfigured = glitchtipConfigured(config);
+  const runtimeConfigured = vercelConfigured(config);
   const errorsFetcher = buildErrorsFetcher(config);
   const analyticsFetcher = buildAnalyticsFetcher(config);
+  const runtimeFetcher = fetchers.runtimeErrors ?? buildRuntimeErrorsFetcher(config);
   // Poll the providers CONCURRENTLY, each independently fail-soft. Serially, the
   // cycle paid the SUM of both providers' timeouts — which, stacked on the deploy
   // polls, helped blow the scheduler's cycle budget and trigger container restarts.
   // Each still swallows its own error so one provider's outage can't abort the other.
-  const [errorsReachable] = await Promise.all([
+  const [errorsReachable, , runtimeReachable] = await Promise.all([
     gtConfigured
       ? collect(errorsFetcher, storage.telemetry.errors)
           .then((r) => r.ok)
@@ -62,6 +77,16 @@ export async function collectTelemetry(storage: Storage, config: StatusConfig): 
           console.error("[telemetry] analytics collection failed", err),
         )
       : Promise.resolve(),
+    // Vercel runtime logs: the server-side errors GlitchTip never hears about. Same shape as
+    // the GlitchTip leg — unconfigured is reachable, a failed read is not.
+    runtimeConfigured
+      ? collect(runtimeFetcher, storage.telemetry.runtimeErrors)
+          .then((r) => r.ok)
+          .catch((err) => {
+            console.error("[telemetry] Vercel runtime-log collection failed", err);
+            return false;
+          })
+      : Promise.resolve(true),
   ]);
 
   // GlitchTip gets a platform-health row exactly as the four deploy platforms do, and it
@@ -81,8 +106,9 @@ export async function collectTelemetry(storage: Storage, config: StatusConfig): 
   try {
     await storage.observations.recordObservations([
       { source: "glitchtip", configured: gtConfigured, reachable: errorsReachable },
+      { source: "vercel-runtime", configured: runtimeConfigured, reachable: runtimeReachable },
     ]);
   } catch (err) {
-    console.error("[telemetry] recording GlitchTip platform health failed", err);
+    console.error("[telemetry] recording telemetry platform health failed", err);
   }
 }

@@ -36,14 +36,15 @@ export interface Fetcher<T> {
 }
 
 /** Server-side persistence for one telemetry stream. Knows no provider/trigger,
- *  and no connection — the adapter behind this port owns that. */
-export interface Store<T> {
+ *  and no connection — the adapter behind this port owns that. `R` is what it
+ *  serves back, when that is not what it was given (a store that groups lines). */
+export interface Store<T, R = T> {
   /** Persist a freshly-fetched set (upsert or append per the stream's semantics).
    *  `opts.complete` is the fetcher's `FetchResult.complete`, threaded through by
    *  `collect` — an APPENDING store ignores it; a RECONCILING one must not. */
   save(items: T[], opts?: { complete?: boolean }): Promise<void>;
   /** Read the current set for surfacing. */
-  load(): Promise<T[]>;
+  load(): Promise<R[]>;
 }
 
 /** Where a client reads a snapshot from — an HTTP boundary hides the server

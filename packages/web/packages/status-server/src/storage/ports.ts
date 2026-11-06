@@ -1,6 +1,6 @@
 import type { StatusConfig } from '../config/port';
 import type { Store } from '../telemetry/ports';
-import type { AnalyticsMetricDTO, ErrorDTO } from '../telemetry/types';
+import type { AnalyticsMetricDTO, ErrorDTO, RuntimeErrorGroup, RuntimeLogEntry } from '../telemetry/types';
 import type {
   DeployFact,
   ErrorFact,
@@ -869,6 +869,18 @@ export interface PeerStore {
 export interface TelemetryStore {
   errors: Store<ErrorDTO>;
   analytics: Store<AnalyticsMetricDTO>;
+  runtimeErrors: RuntimeErrorsStore;
+}
+
+/**
+ * Vercel runtime errors, grouped. `save` takes the kept log lines of a read; it counts each line
+ * once per deployment (a re-read of the same stream adds nothing), merges them into their groups,
+ * and drops groups not seen for 7 days. `load` answers every stored group, newest first;
+ * `sinceMs` keeps only those last seen at or after it.
+ */
+export interface RuntimeErrorsStore extends Store<RuntimeLogEntry, RuntimeErrorGroup> {
+  save(entries: RuntimeLogEntry[], opts?: { complete?: boolean; nowMs?: number }): Promise<void>;
+  load(opts?: { sinceMs?: number }): Promise<RuntimeErrorGroup[]>;
 }
 
 // --- composed storage ---------------------------------------------------------

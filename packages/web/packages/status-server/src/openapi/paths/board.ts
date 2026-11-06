@@ -24,7 +24,7 @@ const nul = (t: string) => ({ type: [t, 'null'] });
 // `errors|<project>` rows and `platform-health|glitchtip` rows.
 const issueSource = {
   type: 'string',
-  enum: ['dns', 'http', 'vercel', 'cloudflare-pages', 'railway', 'crunchy', 'glitchtip'],
+  enum: ['dns', 'http', 'vercel', 'cloudflare-pages', 'railway', 'crunchy', 'glitchtip', 'vercel-runtime'],
 };
 const severity = { type: 'string', enum: ['critical', 'major', 'minor'] };
 

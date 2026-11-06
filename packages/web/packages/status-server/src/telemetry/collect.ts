@@ -7,7 +7,7 @@ import type { Fetcher, Store } from "./ports";
 // good data with an empty set.
 export async function collect<T>(
   fetcher: Fetcher<T>,
-  store: Store<T>,
+  store: Pick<Store<T, unknown>, "save">,
 ): Promise<{ ok: boolean; count: number }> {
   const { ok, items, complete } = await fetcher.fetch();
   if (!ok) return { ok: false, count: 0 };
