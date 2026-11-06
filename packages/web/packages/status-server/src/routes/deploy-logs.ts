@@ -2,7 +2,7 @@ import { Hono } from 'hono';
 import { HTTPException } from 'hono/http-exception';
 import type { Tier } from '../middleware/auth';
 import type { StatusConfig } from '../config/port';
-import type { Storage } from '../storage/ports';
+import type { DeployLogRow, Storage } from '../storage/ports';
 import { type ProviderConn } from '@adh-sdk/deploy-platform/conn';
 import { providerConn } from '../monitor/provider-conn';
 import { fetchVercelBuildLog } from '../monitor/fetch-vercel';
@@ -51,29 +51,42 @@ async function fetchLogFor(
  *  response — but still bounded, so a hung provider can't pin the handler. */
 const LOG_TIMEOUT_MS = 25_000;
 
+/**
+ * One deployment row and its full provider log, or null when the row is not in the monitored
+ * feed. The single body behind `GET /deployments/:id/log` AND `/report?logs=1`, so the two can
+ * never disagree about which log a deployment has.
+ */
+export async function fetchDeploymentLog(
+  storage: Storage,
+  config: StatusConfig,
+  id: string,
+  timeoutMs: number = LOG_TIMEOUT_MS,
+): Promise<{ row: DeployLogRow; log: string | null } | null> {
+  const row = await storage.deploy.findById(id);
+  if (!row) return null;
+  const conn = await providerConn(storage, config);
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return { row, log: await fetchLogFor(row, conn, controller.signal) };
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 export function deployLogRoutes(storage: Storage, config: StatusConfig): Hono<{ Variables: { tier: Tier } }> {
   const app = new Hono<{ Variables: { tier: Tier } }>();
 
   app.get('/deployments/:id/log', async (c) => {
     const id = c.req.param('id');
-    const row = await storage.deploy.findById(id);
+    const found = await fetchDeploymentLog(storage, config, id);
     // A 404 here means "no such deployment in the monitored feed" — a real client
     // error worth distinguishing from a deployment that exists but has no log.
-    if (!row) throw new HTTPException(404, { message: `Unknown deployment: ${id}` });
-
-    const conn = await providerConn(storage, config);
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), LOG_TIMEOUT_MS);
-    let log: string | null;
-    try {
-      log = await fetchLogFor(row, conn, controller.signal);
-    } finally {
-      clearTimeout(timer);
-    }
+    if (!found) throw new HTTPException(404, { message: `Unknown deployment: ${id}` });
 
     // `errorText` travels with the log so one request answers the whole question:
     // the summary is always available (it is persisted), the log is best-effort.
-    return c.json({ ...row, log });
+    return c.json({ ...found.row, log: found.log });
   });
 
   return app;

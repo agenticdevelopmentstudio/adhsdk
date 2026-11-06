@@ -48,6 +48,34 @@ export const dashboardSchemas: Schemas = {
     lastSeen: str,
     sampleRowId: nullableStr,
   }),
+  VitalsRow: object({ host: str, samples: num, lcp: nullableNum, inp: nullableNum, cls: nullableNum, fcp: nullableNum }),
+  ErrorIssue: object({
+    id: str,
+    shortId: nullableStr,
+    title: str,
+    type: nullableStr,
+    source: nullableStr,
+    level: nullableStr,
+    count: num,
+    userCount: num,
+    firstSeen: nullableStr,
+    lastSeen: nullableStr,
+    release: nullableStr,
+    project: str,
+    permalink: nullableStr,
+    active: bool,
+  }),
+  SiteErrorRow: object({
+    host: str,
+    name: str,
+    feature: nullableStr,
+    step: nullableStr,
+    boundary: nullableStr,
+    page: nullableStr,
+    count: num,
+    lastSeen: nullableStr,
+  }),
+  SiteFailedRequestRow: object({ host: str, status: num, method: nullableStr, path: str, count: num, lastSeen: nullableStr }),
   RuntimeErrorsReport: object({
     generatedAt: str,
     window: { type: 'string', enum: ['24h'] },
@@ -77,7 +105,7 @@ const analyticsSections = object({
   ),
   paths: section(list(object({ host: str, path: str, pageviews: num }))),
   vitals: section(
-    list(object({ host: str, samples: num, lcp: nullableNum, inp: nullableNum, cls: nullableNum, fcp: nullableNum })),
+    list(ref('VitalsRow')),
   ),
   health: section(list(siteHealth)),
   vercel: section(
@@ -113,24 +141,7 @@ const errorsSections = object({
   issues: section(
     object({
       buckets: strs,
-      issues: list(
-        object({
-          id: str,
-          shortId: nullableStr,
-          title: str,
-          type: nullableStr,
-          source: nullableStr,
-          level: nullableStr,
-          count: num,
-          userCount: num,
-          firstSeen: nullableStr,
-          lastSeen: nullableStr,
-          release: nullableStr,
-          project: str,
-          permalink: nullableStr,
-          active: bool,
-        }),
-      ),
+      issues: list(ref('ErrorIssue')),
       summary: object({
         active: num,
         backlog: num,
@@ -147,21 +158,8 @@ const errorsSections = object({
     object({
       buckets: strs,
       days: list(object({ host: str, errors: nums, failures: nums })),
-      errors: list(
-        object({
-          host: str,
-          name: str,
-          feature: nullableStr,
-          step: nullableStr,
-          boundary: nullableStr,
-          page: nullableStr,
-          count: num,
-          lastSeen: nullableStr,
-        }),
-      ),
-      requests: list(
-        object({ host: str, status: num, method: nullableStr, path: str, count: num, lastSeen: nullableStr }),
-      ),
+      errors: list(ref('SiteErrorRow')),
+      requests: list(ref('SiteFailedRequestRow')),
       truncated: bool,
     }),
   ),

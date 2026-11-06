@@ -36,6 +36,14 @@ export interface DashboardRead<S> {
 
 export interface SectionedDashboard<K extends string, S> {
   read(key: K): DashboardRead<S>;
+  /**
+   * Wait for the refresh in flight for `key` to finish, but no longer than `timeoutMs`.
+   * Resolves true when nothing is refreshing any more, false when the deadline passed first.
+   * Never STARTS a refresh: `read` does that, so a caller that wants a warm answer reads,
+   * settles, and reads again. For a server-side reader (`/report`) that must not push the
+   * polling `read` implies onto its own client.
+   */
+  settle(key: K, timeoutMs: number): Promise<boolean>;
 }
 
 export interface SectionedDashboardOptions<K extends string, S> {
@@ -71,6 +79,8 @@ interface KeyState<S> {
   sections: DashboardSections<S>;
   refreshing: boolean;
   schedule: Record<keyof S & string, SectionSchedule>;
+  /** The refresh in flight, while `refreshing`: what `settle` waits on. */
+  inflight: Promise<void> | null;
 }
 
 const DEFAULT_RETRY_MS = 60_000;
@@ -132,16 +142,39 @@ export function sectionedDashboard<K extends string, S>(
       if (!state) {
         const schedule = {} as Record<keyof S & string, SectionSchedule>;
         for (const name of opts.sections) schedule[name] = { dueAt: 0, failures: 0 };
-        state = { sections: emptySections<S>(opts.sections), refreshing: false, schedule };
+        state = { sections: emptySections<S>(opts.sections), refreshing: false, schedule, inflight: null };
         states.set(key, state);
       }
       if (!state.refreshing) {
         const t = now();
         const { schedule } = state;
         const due = opts.sections.filter((name) => schedule[name].dueAt <= t);
-        if (due.length > 0) void refresh(key, state, due);
+        if (due.length > 0) {
+          const current = state;
+          const run = refresh(key, current, due);
+          current.inflight = run;
+          void run.finally(() => {
+            if (current.inflight === run) current.inflight = null;
+          });
+        }
       }
       return { refreshing: state.refreshing, sections: { ...state.sections } };
+    },
+
+    async settle(key: K, timeoutMs: number): Promise<boolean> {
+      const state = states.get(key);
+      const inflight = state?.inflight;
+      if (!state || !inflight) return true;
+      let timer: ReturnType<typeof setTimeout> | undefined;
+      const deadline = new Promise<void>((resolve) => {
+        timer = setTimeout(resolve, Math.max(0, timeoutMs));
+      });
+      try {
+        await Promise.race([inflight, deadline]);
+      } finally {
+        clearTimeout(timer);
+      }
+      return !state.refreshing;
     },
   };
 }

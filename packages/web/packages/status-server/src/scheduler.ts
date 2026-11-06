@@ -25,6 +25,14 @@ export interface Scheduler {
   cycleStale(): boolean;
 }
 
+/** The default {@link Scheduler.cycleStale} window for a loop ticking every `intervalMs`:
+ *  5× the interval, floored at 5min. Exported so a reader WITHOUT a scheduler in hand
+ *  (`/report` built where no loop runs) judges staleness by this same rule, never a
+ *  second number. */
+export function defaultStaleAfterMs(intervalMs: number): number {
+  return Math.max(intervalMs * 5, 300_000);
+}
+
 /** A single-flight interval runner: never starts a new cycle while one is in
  *  flight, never crashes the loop (each cycle is try/caught), and — via a per-cycle
  *  watchdog — never lets one hung cycle freeze the loop. Without the watchdog a
@@ -48,7 +56,7 @@ export function createScheduler(opts: {
   staleAfterMs?: number;
 }): Scheduler {
   const cycleTimeoutMs = opts.cycleTimeoutMs ?? Math.max(opts.intervalMs * 3, 120_000);
-  const staleAfterMs = opts.staleAfterMs ?? Math.max(opts.intervalMs * 5, 300_000);
+  const staleAfterMs = opts.staleAfterMs ?? defaultStaleAfterMs(opts.intervalMs);
   let timer: ReturnType<typeof setInterval> | null = null;
   let inFlight = false;
   let last: Date | null = null;

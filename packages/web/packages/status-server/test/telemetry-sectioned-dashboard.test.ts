@@ -188,4 +188,46 @@ describe("sectionedDashboard", () => {
     await flush();
     expect(dash.read("k").refreshing).toBe(false);
   });
+
+  describe("settle", () => {
+    it("resolves true at once when nothing was ever read, and never starts a refresh", async () => {
+      const { dash, built } = setup({ a: async () => 1, b: async () => "x" });
+      await expect(dash.settle("k1", 1_000)).resolves.toBe(true);
+      expect(built).not.toHaveBeenCalled();
+    });
+
+    it("waits for the refresh in flight, then a second read has the data", async () => {
+      const a = deferred<number>();
+      const { dash } = setup({ a: () => a.promise, b: async () => "two" });
+      expect(dash.read("k1").refreshing).toBe(true);
+      const settled = dash.settle("k1", 60_000);
+      a.resolve(1);
+      await expect(settled).resolves.toBe(true);
+      const r = dash.read("k1");
+      expect(r.refreshing).toBe(false);
+      expect(r.sections.a.data).toBe(1);
+      expect(r.sections.b.data).toBe("two");
+    });
+
+    it("gives up at the deadline and reports the key still refreshing", async () => {
+      vi.useFakeTimers();
+      try {
+        const { dash } = setup({ a: () => new Promise(() => undefined), b: async () => "x" });
+        dash.read("k1");
+        const settled = dash.settle("k1", 5_000);
+        await vi.advanceTimersByTimeAsync(5_000);
+        await expect(settled).resolves.toBe(false);
+        expect(dash.read("k1").refreshing).toBe(true);
+      } finally {
+        vi.useRealTimers();
+      }
+    });
+
+    it("resolves true once the refresh has finished, without waiting", async () => {
+      const { dash } = setup({ a: async () => 1, b: async () => "x" });
+      dash.read("k1");
+      await flush();
+      await expect(dash.settle("k1", 60_000)).resolves.toBe(true);
+    });
+  });
 });

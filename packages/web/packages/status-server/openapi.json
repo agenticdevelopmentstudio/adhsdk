@@ -1337,6 +1337,227 @@
           }
         }
       },
+      "VitalsRow": {
+        "type": "object",
+        "required": [
+          "host",
+          "samples",
+          "lcp",
+          "inp",
+          "cls",
+          "fcp"
+        ],
+        "properties": {
+          "host": {
+            "type": "string"
+          },
+          "samples": {
+            "type": "number"
+          },
+          "lcp": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "inp": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "cls": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "fcp": {
+            "type": [
+              "number",
+              "null"
+            ]
+          }
+        }
+      },
+      "ErrorIssue": {
+        "type": "object",
+        "required": [
+          "id",
+          "shortId",
+          "title",
+          "type",
+          "source",
+          "level",
+          "count",
+          "userCount",
+          "firstSeen",
+          "lastSeen",
+          "release",
+          "project",
+          "permalink",
+          "active"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "shortId": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "title": {
+            "type": "string"
+          },
+          "type": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "source": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "level": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "count": {
+            "type": "number"
+          },
+          "userCount": {
+            "type": "number"
+          },
+          "firstSeen": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "lastSeen": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "release": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "project": {
+            "type": "string"
+          },
+          "permalink": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "active": {
+            "type": "boolean"
+          }
+        }
+      },
+      "SiteErrorRow": {
+        "type": "object",
+        "required": [
+          "host",
+          "name",
+          "feature",
+          "step",
+          "boundary",
+          "page",
+          "count",
+          "lastSeen"
+        ],
+        "properties": {
+          "host": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "feature": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "step": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "boundary": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "page": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "count": {
+            "type": "number"
+          },
+          "lastSeen": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      },
+      "SiteFailedRequestRow": {
+        "type": "object",
+        "required": [
+          "host",
+          "status",
+          "method",
+          "path",
+          "count",
+          "lastSeen"
+        ],
+        "properties": {
+          "host": {
+            "type": "string"
+          },
+          "status": {
+            "type": "number"
+          },
+          "method": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "path": {
+            "type": "string"
+          },
+          "count": {
+            "type": "number"
+          },
+          "lastSeen": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      },
       "RuntimeErrorsReport": {
         "type": "object",
         "required": [
@@ -1363,6 +1584,144 @@
             "items": {
               "$ref": "#/components/schemas/RuntimeErrorGroup"
             }
+          }
+        }
+      },
+      "ReportCoverage": {
+        "type": "object",
+        "required": [
+          "ok"
+        ],
+        "properties": {
+          "ok": {
+            "type": "boolean"
+          },
+          "error": {
+            "type": "string"
+          },
+          "notes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "unconfigured": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "updatedAt": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      },
+      "ReportFinding": {
+        "type": "object",
+        "required": [
+          "severity",
+          "source",
+          "title"
+        ],
+        "properties": {
+          "severity": {
+            "type": "string",
+            "enum": [
+              "critical",
+              "major",
+              "minor"
+            ]
+          },
+          "source": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "detail": {
+            "type": "string"
+          },
+          "since": {
+            "type": "string"
+          },
+          "link": {
+            "type": "string"
+          },
+          "issueKey": {
+            "type": "string"
+          }
+        }
+      },
+      "ReportFailingDeploy": {
+        "type": "object",
+        "required": [
+          "id",
+          "platform",
+          "project",
+          "tier",
+          "branch",
+          "createdAt",
+          "commit",
+          "error",
+          "url"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "platform": {
+            "type": "string"
+          },
+          "project": {
+            "type": "string"
+          },
+          "tier": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "branch": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "createdAt": {
+            "type": "string"
+          },
+          "commit": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "error": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "url": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "logTail": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "logLines": {
+            "type": "number"
+          },
+          "logError": {
+            "type": "string"
           }
         }
       },
@@ -5102,47 +5461,7 @@
                                 {
                                   "type": "array",
                                   "items": {
-                                    "type": "object",
-                                    "required": [
-                                      "host",
-                                      "samples",
-                                      "lcp",
-                                      "inp",
-                                      "cls",
-                                      "fcp"
-                                    ],
-                                    "properties": {
-                                      "host": {
-                                        "type": "string"
-                                      },
-                                      "samples": {
-                                        "type": "number"
-                                      },
-                                      "lcp": {
-                                        "type": [
-                                          "number",
-                                          "null"
-                                        ]
-                                      },
-                                      "inp": {
-                                        "type": [
-                                          "number",
-                                          "null"
-                                        ]
-                                      },
-                                      "cls": {
-                                        "type": [
-                                          "number",
-                                          "null"
-                                        ]
-                                      },
-                                      "fcp": {
-                                        "type": [
-                                          "number",
-                                          "null"
-                                        ]
-                                      }
-                                    }
+                                    "$ref": "#/components/schemas/VitalsRow"
                                   }
                                 },
                                 {
@@ -5505,91 +5824,7 @@
                                     "issues": {
                                       "type": "array",
                                       "items": {
-                                        "type": "object",
-                                        "required": [
-                                          "id",
-                                          "shortId",
-                                          "title",
-                                          "type",
-                                          "source",
-                                          "level",
-                                          "count",
-                                          "userCount",
-                                          "firstSeen",
-                                          "lastSeen",
-                                          "release",
-                                          "project",
-                                          "permalink",
-                                          "active"
-                                        ],
-                                        "properties": {
-                                          "id": {
-                                            "type": "string"
-                                          },
-                                          "shortId": {
-                                            "type": [
-                                              "string",
-                                              "null"
-                                            ]
-                                          },
-                                          "title": {
-                                            "type": "string"
-                                          },
-                                          "type": {
-                                            "type": [
-                                              "string",
-                                              "null"
-                                            ]
-                                          },
-                                          "source": {
-                                            "type": [
-                                              "string",
-                                              "null"
-                                            ]
-                                          },
-                                          "level": {
-                                            "type": [
-                                              "string",
-                                              "null"
-                                            ]
-                                          },
-                                          "count": {
-                                            "type": "number"
-                                          },
-                                          "userCount": {
-                                            "type": "number"
-                                          },
-                                          "firstSeen": {
-                                            "type": [
-                                              "string",
-                                              "null"
-                                            ]
-                                          },
-                                          "lastSeen": {
-                                            "type": [
-                                              "string",
-                                              "null"
-                                            ]
-                                          },
-                                          "release": {
-                                            "type": [
-                                              "string",
-                                              "null"
-                                            ]
-                                          },
-                                          "project": {
-                                            "type": "string"
-                                          },
-                                          "permalink": {
-                                            "type": [
-                                              "string",
-                                              "null"
-                                            ]
-                                          },
-                                          "active": {
-                                            "type": "boolean"
-                                          }
-                                        }
+                                        "$ref": "#/components/schemas/ErrorIssue"
                                       }
                                     },
                                     "summary": {
@@ -5765,98 +6000,13 @@
                                     "errors": {
                                       "type": "array",
                                       "items": {
-                                        "type": "object",
-                                        "required": [
-                                          "host",
-                                          "name",
-                                          "feature",
-                                          "step",
-                                          "boundary",
-                                          "page",
-                                          "count",
-                                          "lastSeen"
-                                        ],
-                                        "properties": {
-                                          "host": {
-                                            "type": "string"
-                                          },
-                                          "name": {
-                                            "type": "string"
-                                          },
-                                          "feature": {
-                                            "type": [
-                                              "string",
-                                              "null"
-                                            ]
-                                          },
-                                          "step": {
-                                            "type": [
-                                              "string",
-                                              "null"
-                                            ]
-                                          },
-                                          "boundary": {
-                                            "type": [
-                                              "string",
-                                              "null"
-                                            ]
-                                          },
-                                          "page": {
-                                            "type": [
-                                              "string",
-                                              "null"
-                                            ]
-                                          },
-                                          "count": {
-                                            "type": "number"
-                                          },
-                                          "lastSeen": {
-                                            "type": [
-                                              "string",
-                                              "null"
-                                            ]
-                                          }
-                                        }
+                                        "$ref": "#/components/schemas/SiteErrorRow"
                                       }
                                     },
                                     "requests": {
                                       "type": "array",
                                       "items": {
-                                        "type": "object",
-                                        "required": [
-                                          "host",
-                                          "status",
-                                          "method",
-                                          "path",
-                                          "count",
-                                          "lastSeen"
-                                        ],
-                                        "properties": {
-                                          "host": {
-                                            "type": "string"
-                                          },
-                                          "status": {
-                                            "type": "number"
-                                          },
-                                          "method": {
-                                            "type": [
-                                              "string",
-                                              "null"
-                                            ]
-                                          },
-                                          "path": {
-                                            "type": "string"
-                                          },
-                                          "count": {
-                                            "type": "number"
-                                          },
-                                          "lastSeen": {
-                                            "type": [
-                                              "string",
-                                              "null"
-                                            ]
-                                          }
-                                        }
+                                        "$ref": "#/components/schemas/SiteFailedRequestRow"
                                       }
                                     },
                                     "truncated": {
@@ -5954,6 +6104,784 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/RuntimeErrorsReport"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/report": {
+      "get": {
+        "tags": [
+          "report"
+        ],
+        "summary": "One-call health digest of every source: verdict, findings, coverage, sections",
+        "description": "Reads the monitor, deploys, integrations, GlitchTip and PostHog errors, Vercel runtime errors, PostHog and Vercel analytics, and uptime in parallel. Every judgement is the server’s: `verdict` is the worst finding (critical→down, major→degraded, minor→attention; none → healthy when `complete`, else unknown). `complete` is false when any source could not be read, a dashboard section failed or was still refreshing at the `wait` deadline, or the monitor stopped probing; providers with no credentials are listed under `coverage[*].unconfigured` and do not clear it. A section is null exactly when its source could not be read. The MCP tool `get_report` returns the same payload.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "range",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "24h",
+                "7d",
+                "30d"
+              ],
+              "default": "24h"
+            }
+          },
+          {
+            "name": "days",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 365,
+              "default": 7
+            }
+          },
+          {
+            "name": "wait",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 60,
+              "default": 20
+            }
+          },
+          {
+            "name": "logs",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "0",
+                "1"
+              ],
+              "default": "0"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "ReportResponse",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "schema",
+                    "generatedAt",
+                    "monitorVersion",
+                    "verdict",
+                    "complete",
+                    "counts",
+                    "coverage",
+                    "findings",
+                    "sections"
+                  ],
+                  "properties": {
+                    "schema": {
+                      "type": "string",
+                      "enum": [
+                        "status.report/1"
+                      ]
+                    },
+                    "generatedAt": {
+                      "type": "string"
+                    },
+                    "monitorVersion": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "verdict": {
+                      "type": "string",
+                      "enum": [
+                        "healthy",
+                        "attention",
+                        "degraded",
+                        "down",
+                        "unknown"
+                      ]
+                    },
+                    "complete": {
+                      "type": "boolean"
+                    },
+                    "counts": {
+                      "type": "object",
+                      "required": [
+                        "critical",
+                        "major",
+                        "minor"
+                      ],
+                      "properties": {
+                        "critical": {
+                          "type": "number"
+                        },
+                        "major": {
+                          "type": "number"
+                        },
+                        "minor": {
+                          "type": "number"
+                        }
+                      }
+                    },
+                    "coverage": {
+                      "type": "object",
+                      "required": [
+                        "monitor",
+                        "deploys",
+                        "integrations",
+                        "errors",
+                        "runtimeErrors",
+                        "analytics",
+                        "uptime"
+                      ],
+                      "properties": {
+                        "monitor": {
+                          "$ref": "#/components/schemas/ReportCoverage"
+                        },
+                        "deploys": {
+                          "$ref": "#/components/schemas/ReportCoverage"
+                        },
+                        "integrations": {
+                          "$ref": "#/components/schemas/ReportCoverage"
+                        },
+                        "errors": {
+                          "$ref": "#/components/schemas/ReportCoverage"
+                        },
+                        "runtimeErrors": {
+                          "$ref": "#/components/schemas/ReportCoverage"
+                        },
+                        "analytics": {
+                          "$ref": "#/components/schemas/ReportCoverage"
+                        },
+                        "uptime": {
+                          "$ref": "#/components/schemas/ReportCoverage"
+                        }
+                      }
+                    },
+                    "findings": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/ReportFinding"
+                      }
+                    },
+                    "sections": {
+                      "type": "object",
+                      "required": [
+                        "monitor",
+                        "deploys",
+                        "integrations",
+                        "errors",
+                        "runtimeErrors",
+                        "analytics",
+                        "uptime"
+                      ],
+                      "properties": {
+                        "monitor": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "required": [
+                                "overall",
+                                "checkedAt",
+                                "lastCycleAt",
+                                "stale",
+                                "services",
+                                "byStatus",
+                                "openIssues",
+                                "unprobed"
+                              ],
+                              "properties": {
+                                "overall": {
+                                  "type": "string",
+                                  "enum": [
+                                    "healthy",
+                                    "degraded",
+                                    "down"
+                                  ]
+                                },
+                                "checkedAt": {
+                                  "type": "string"
+                                },
+                                "lastCycleAt": {
+                                  "type": [
+                                    "string",
+                                    "null"
+                                  ]
+                                },
+                                "stale": {
+                                  "type": "boolean"
+                                },
+                                "services": {
+                                  "type": "number"
+                                },
+                                "byStatus": {
+                                  "type": "object",
+                                  "additionalProperties": {
+                                    "type": "number"
+                                  }
+                                },
+                                "openIssues": {
+                                  "type": "number"
+                                },
+                                "unprobed": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "string"
+                                  }
+                                }
+                              }
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "deploys": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "required": [
+                                "deployTargets",
+                                "inFlight",
+                                "failing",
+                                "staleProd",
+                                "providers"
+                              ],
+                              "properties": {
+                                "deployTargets": {
+                                  "type": "number"
+                                },
+                                "inFlight": {
+                                  "type": "number"
+                                },
+                                "failing": {
+                                  "type": "array",
+                                  "items": {
+                                    "$ref": "#/components/schemas/ReportFailingDeploy"
+                                  }
+                                },
+                                "staleProd": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "object",
+                                    "required": [
+                                      "projectName",
+                                      "environment",
+                                      "detail",
+                                      "sourceUrl",
+                                      "liveUrl"
+                                    ],
+                                    "properties": {
+                                      "projectName": {
+                                        "type": "string"
+                                      },
+                                      "environment": {
+                                        "type": "string"
+                                      },
+                                      "detail": {
+                                        "type": [
+                                          "string",
+                                          "null"
+                                        ]
+                                      },
+                                      "sourceUrl": {
+                                        "type": [
+                                          "string",
+                                          "null"
+                                        ]
+                                      },
+                                      "liveUrl": {
+                                        "type": [
+                                          "string",
+                                          "null"
+                                        ]
+                                      }
+                                    }
+                                  }
+                                },
+                                "providers": {
+                                  "type": "object",
+                                  "additionalProperties": {
+                                    "type": "object",
+                                    "required": [
+                                      "configured",
+                                      "ok"
+                                    ],
+                                    "properties": {
+                                      "configured": {
+                                        "type": "boolean"
+                                      },
+                                      "ok": {
+                                        "type": "boolean"
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "integrations": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "required": [
+                                "overall",
+                                "checks"
+                              ],
+                              "properties": {
+                                "overall": {
+                                  "type": "string",
+                                  "enum": [
+                                    "ok",
+                                    "warn",
+                                    "error"
+                                  ]
+                                },
+                                "checks": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "object",
+                                    "required": [
+                                      "id",
+                                      "label",
+                                      "configured",
+                                      "state",
+                                      "detail"
+                                    ],
+                                    "properties": {
+                                      "id": {
+                                        "type": "string"
+                                      },
+                                      "label": {
+                                        "type": "string"
+                                      },
+                                      "configured": {
+                                        "type": "boolean"
+                                      },
+                                      "state": {
+                                        "type": "string",
+                                        "enum": [
+                                          "ok",
+                                          "warn",
+                                          "error"
+                                        ]
+                                      },
+                                      "detail": {
+                                        "type": [
+                                          "string",
+                                          "null"
+                                        ]
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "errors": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "required": [
+                                "summary",
+                                "active",
+                                "sites",
+                                "siteErrors",
+                                "failedRequests"
+                              ],
+                              "properties": {
+                                "summary": {
+                                  "anyOf": [
+                                    {
+                                      "type": "object",
+                                      "required": [
+                                        "active",
+                                        "backlog",
+                                        "events",
+                                        "resolved",
+                                        "complete",
+                                        "byType",
+                                        "newPerDay"
+                                      ],
+                                      "properties": {
+                                        "active": {
+                                          "type": "number"
+                                        },
+                                        "backlog": {
+                                          "type": "number"
+                                        },
+                                        "events": {
+                                          "type": "number"
+                                        },
+                                        "resolved": {
+                                          "type": [
+                                            "number",
+                                            "null"
+                                          ]
+                                        },
+                                        "complete": {
+                                          "type": "boolean"
+                                        },
+                                        "byType": {
+                                          "type": "array",
+                                          "items": {
+                                            "type": "object",
+                                            "required": [
+                                              "name",
+                                              "issues",
+                                              "events"
+                                            ],
+                                            "properties": {
+                                              "name": {
+                                                "type": "string"
+                                              },
+                                              "issues": {
+                                                "type": "number"
+                                              },
+                                              "events": {
+                                                "type": "number"
+                                              }
+                                            }
+                                          }
+                                        },
+                                        "newPerDay": {
+                                          "type": "array",
+                                          "items": {
+                                            "type": "number"
+                                          }
+                                        }
+                                      }
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ]
+                                },
+                                "active": {
+                                  "type": "array",
+                                  "items": {
+                                    "$ref": "#/components/schemas/ErrorIssue"
+                                  }
+                                },
+                                "sites": {
+                                  "type": "array",
+                                  "items": {
+                                    "$ref": "#/components/schemas/SiteHealthRow"
+                                  }
+                                },
+                                "siteErrors": {
+                                  "type": "array",
+                                  "items": {
+                                    "$ref": "#/components/schemas/SiteErrorRow"
+                                  }
+                                },
+                                "failedRequests": {
+                                  "type": "array",
+                                  "items": {
+                                    "$ref": "#/components/schemas/SiteFailedRequestRow"
+                                  }
+                                }
+                              }
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "runtimeErrors": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "required": [
+                                "window",
+                                "total",
+                                "groups"
+                              ],
+                              "properties": {
+                                "window": {
+                                  "type": "string",
+                                  "enum": [
+                                    "24h"
+                                  ]
+                                },
+                                "total": {
+                                  "type": "number"
+                                },
+                                "groups": {
+                                  "type": "array",
+                                  "items": {
+                                    "$ref": "#/components/schemas/RuntimeErrorGroup"
+                                  }
+                                }
+                              }
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "analytics": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "required": [
+                                "range",
+                                "posthog",
+                                "vercel",
+                                "vitals"
+                              ],
+                              "properties": {
+                                "range": {
+                                  "type": "string",
+                                  "enum": [
+                                    "24h",
+                                    "7d",
+                                    "30d"
+                                  ]
+                                },
+                                "posthog": {
+                                  "type": "object",
+                                  "required": [
+                                    "totals",
+                                    "sites"
+                                  ],
+                                  "properties": {
+                                    "totals": {
+                                      "anyOf": [
+                                        {
+                                          "type": "object",
+                                          "required": [
+                                            "pageviews",
+                                            "sessions"
+                                          ],
+                                          "properties": {
+                                            "pageviews": {
+                                              "type": "number"
+                                            },
+                                            "sessions": {
+                                              "type": "number"
+                                            }
+                                          }
+                                        },
+                                        {
+                                          "type": "null"
+                                        }
+                                      ]
+                                    },
+                                    "sites": {
+                                      "type": "array",
+                                      "items": {
+                                        "type": "object",
+                                        "required": [
+                                          "host",
+                                          "pageviews",
+                                          "sessions"
+                                        ],
+                                        "properties": {
+                                          "host": {
+                                            "type": "string"
+                                          },
+                                          "pageviews": {
+                                            "type": "number"
+                                          },
+                                          "sessions": {
+                                            "type": "number"
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                },
+                                "vercel": {
+                                  "type": "object",
+                                  "required": [
+                                    "totals",
+                                    "projectsTotal",
+                                    "projectsEnabled",
+                                    "failed",
+                                    "projects"
+                                  ],
+                                  "properties": {
+                                    "totals": {
+                                      "anyOf": [
+                                        {
+                                          "type": "object",
+                                          "required": [
+                                            "pageviews",
+                                            "visitors"
+                                          ],
+                                          "properties": {
+                                            "pageviews": {
+                                              "type": "number"
+                                            },
+                                            "visitors": {
+                                              "type": "number"
+                                            }
+                                          }
+                                        },
+                                        {
+                                          "type": "null"
+                                        }
+                                      ]
+                                    },
+                                    "projectsTotal": {
+                                      "type": [
+                                        "number",
+                                        "null"
+                                      ]
+                                    },
+                                    "projectsEnabled": {
+                                      "type": [
+                                        "number",
+                                        "null"
+                                      ]
+                                    },
+                                    "failed": {
+                                      "type": [
+                                        "number",
+                                        "null"
+                                      ]
+                                    },
+                                    "projects": {
+                                      "type": "array",
+                                      "items": {
+                                        "type": "object",
+                                        "required": [
+                                          "project",
+                                          "domain",
+                                          "pageviews",
+                                          "visitors"
+                                        ],
+                                        "properties": {
+                                          "project": {
+                                            "type": "string"
+                                          },
+                                          "domain": {
+                                            "type": [
+                                              "string",
+                                              "null"
+                                            ]
+                                          },
+                                          "pageviews": {
+                                            "type": "number"
+                                          },
+                                          "visitors": {
+                                            "type": "number"
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                },
+                                "vitals": {
+                                  "type": "array",
+                                  "items": {
+                                    "$ref": "#/components/schemas/VitalsRow"
+                                  }
+                                }
+                              }
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "uptime": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "required": [
+                                "days",
+                                "floor",
+                                "services"
+                              ],
+                              "properties": {
+                                "days": {
+                                  "type": "number"
+                                },
+                                "floor": {
+                                  "type": "number"
+                                },
+                                "services": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "object",
+                                    "required": [
+                                      "slug",
+                                      "name",
+                                      "uptimePercent",
+                                      "totalChecks"
+                                    ],
+                                    "properties": {
+                                      "slug": {
+                                        "type": "string"
+                                      },
+                                      "name": {
+                                        "type": "string"
+                                      },
+                                      "uptimePercent": {
+                                        "type": [
+                                          "number",
+                                          "null"
+                                        ]
+                                      },
+                                      "totalChecks": {
+                                        "type": "number"
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
                 }
               }
             }

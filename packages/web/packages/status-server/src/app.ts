@@ -10,7 +10,7 @@ import type { AuthGate } from './auth/port';
 import { cachedSingleFlight } from '@adh-sdk/deploy-platform/util';
 import { authRoutes } from './routes/auth';
 import { usersRoutes } from './routes/users';
-import { readsRoutes, buildSnapshot } from './routes/reads';
+import { readsRoutes, buildSnapshot, cachedIntegrationsCheck } from './routes/reads';
 import { deployLogRoutes } from './routes/deploy-logs';
 import { boardRoutes } from './routes/board';
 import { activityRoutes } from './routes/activity';
@@ -24,6 +24,9 @@ import { hooksRoutes } from './routes/hooks';
 import { fleetRoutes } from './routes/fleet';
 import { telemetryRoutes } from './routes/telemetry';
 import { dashboardRoutes } from './routes/telemetry-dashboards';
+import { reportRoutes } from './routes/fleet-report';
+import { reportSources } from './report/report-gather';
+import { createDashboardSet } from './telemetry/dashboard/dashboard-set';
 import { tokensRoutes } from './routes/tokens';
 import { devicePublicRoutes, deviceApprovalRoutes } from './routes/device';
 import { mountMcp } from './mcp/route';
@@ -134,6 +137,18 @@ export function createApp(opts: AppDeps): OpenAPIHono<{ Variables: AuthVars }> {
   const app = new OpenAPIHono<{ Variables: AuthVars }>();
   const allowed = opts.config.corsAllowedHosts;
   const cachedSummary = cachedSingleFlight(STATUS_SUMMARY_CACHE_MS, () => buildStatusSummary(opts.storage, opts.config));
+  // ONE set of dashboard caches and ONE integrations cache per app, shared by their REST
+  // routes, `GET /report` and MCP — so a report never pays for a second refresh of an
+  // answer an open tab is already holding.
+  const dashboards = createDashboardSet(opts.config, opts.storage);
+  const integrations = cachedIntegrationsCheck(opts.storage, opts.config);
+  const report = reportSources({
+    storage: opts.storage,
+    config: opts.config,
+    dashboards,
+    integrations,
+    scheduler: opts.scheduler,
+  });
 
   app.use(
     '*',
@@ -288,8 +303,10 @@ export function createApp(opts: AppDeps): OpenAPIHono<{ Variables: AuthVars }> {
   // MCP transport (GET/POST/DELETE /mcp) — the tier the seam resolved selects the tool
   // set (view → read-only, admin → all). Mounted FIRST post-seam, well before usersRoutes'
   // blanket `use('*', requireAdmin)`, so a view-tier caller reaches its read-only tools.
-  mountMcp(app, opts.storage, opts.config);
-  app.route('/', readsRoutes(opts.storage, opts.config));
+  mountMcp(app, opts.storage, opts.config, report);
+  app.route('/', readsRoutes(opts.storage, opts.config, integrations));
+  // GET /report — view tier, the one-call digest of every source below.
+  app.route('/', reportRoutes(report));
   // GET /deployments/:id/log — view tier, beside the reads it completes. Kept in its
   // own module because, unlike every route in reads.ts, it calls the provider.
   app.route('/', deployLogRoutes(opts.storage, opts.config));
@@ -306,7 +323,7 @@ export function createApp(opts: AppDeps): OpenAPIHono<{ Variables: AuthVars }> {
   if (opts.scheduler) app.route('/', cronRoutes(opts.storage, opts.scheduler));
   app.route('/', fleetRoutes(opts.storage, opts.config));
   app.route('/', telemetryRoutes(opts.storage, opts.config));
-  app.route('/', dashboardRoutes(opts.config, opts.storage));
+  app.route('/', dashboardRoutes(dashboards, opts.storage));
   // API bearer tokens (mint/list/revoke) — admin-gated, EXCEPT a token may revoke
   // itself (view tier). It MUST mount before usersRoutes: usersRoutes does
   // `use('*', requireAdmin)` at '/', which in Hono leaks onto every route
