@@ -239,6 +239,7 @@ targets:
       - target: AgenticDeveloperHubSDKUI-macOS
       - target: AgenticDeveloperHubSDKMarkdown-macOS
       - target: AgenticDeveloperHubSDKDatabase
+      - target: AgenticDeveloperHubSDKIntegrations
       # `BrowserHistoryStore` sits on `BoundedDatabase` and reads GRDB rows.
       - package: GRDB
         product: GRDB

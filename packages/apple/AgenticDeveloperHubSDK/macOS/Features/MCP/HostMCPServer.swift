@@ -55,6 +55,11 @@ public actor HostMCPServer {
         server = fresh
     }
 
+    /// Returns when the current connection's message loop ends (its transport closed).
+    func waitUntilServerCompleted() async {
+        await server?.waitUntilCompleted()
+    }
+
     /// Stops serving. Registrations survive a stop, so a later `serve(over:)`
     /// serves the same tools; callers must not re-register.
     public func stop() async {
