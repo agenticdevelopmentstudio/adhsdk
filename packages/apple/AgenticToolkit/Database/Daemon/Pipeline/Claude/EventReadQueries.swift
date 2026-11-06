@@ -424,10 +424,15 @@ extension DaemonDatabase {
     /// (the provider first). A ranged read leaves out turns stored before
     /// `claudeEarliestKnownEventTime` — a line with no timestamp sits at the
     /// epoch, and a range must never catch it.
-    private static func claudeTurnFilter(
-        since: Double?, until: Double?, toolName: String?
+    ///
+    /// A ranged read that names no sessions binds the provider through
+    /// ``claudeProviderOfTimeRead`` so `turns_time` answers it; one scoped to
+    /// sessions (`sessionScoped`) keeps `provider = ?` for `turns_session`.
+    static func claudeTurnFilter(
+        since: Double?, until: Double?, toolName: String?, sessionScoped: Bool
     ) -> (conditions: [String], arguments: [any DatabaseValueConvertible]) {
-        var conditions = ["provider = ?"]
+        let ranged = since != nil || until != nil
+        var conditions = [ranged && !sessionScoped ? claudeProviderOfTimeRead : "provider = ?"]
         var arguments: [any DatabaseValueConvertible] = [ClaudeProvider.name]
         if since != nil || until != nil {
             conditions.append("time >= ?")
@@ -472,7 +477,8 @@ extension DaemonDatabase {
     ) throws -> [ClaudeTurnTotals] {
         let unique = sessionIds.map { Array(Set($0)).sorted() }
         if let unique, unique.isEmpty { return [] }
-        let filter = Self.claudeTurnFilter(since: since, until: until, toolName: toolName)
+        let filter = Self.claudeTurnFilter(
+            since: since, until: until, toolName: toolName, sessionScoped: unique != nil)
         let keySQL: String
         switch groupBy {
         case .all: keySQL = "'all'"
@@ -568,7 +574,7 @@ extension DaemonDatabase {
     ) throws -> [(sessionId: String, time: Double)] {
         let unique = sessionIds.map { Array(Set($0)).sorted() }
         if let unique, unique.isEmpty { return [] }
-        let filter = Self.claudeTurnFilter(since: since, until: until, toolName: nil)
+        let filter = Self.claudeTurnFilter(since: since, until: until, toolName: nil, sessionScoped: unique != nil)
         func fetch(_ conn: Database, _ chunk: [String]?) throws -> [(sessionId: String, time: Double)] {
             var conditions = filter.conditions
             var arguments = filter.arguments

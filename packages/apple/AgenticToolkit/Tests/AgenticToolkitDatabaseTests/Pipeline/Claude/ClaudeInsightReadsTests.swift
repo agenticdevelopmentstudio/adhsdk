@@ -186,6 +186,39 @@ final class ClaudeInsightReadsTests: XCTestCase {
         XCTAssertEqual(late.map(\.misses), [2], "since filters the differenced ticks, not the window")
     }
 
+    // MARK: - Query plans
+
+    /// The details of `sql`'s query plan on the event store, joined.
+    private func plan(_ sql: String, _ arguments: [any DatabaseValueConvertible]) throws -> String {
+        try database.withEventReads("") { conn in
+            try Row.fetchAll(conn, sql: "EXPLAIN QUERY PLAN " + sql, arguments: StatementArguments(arguments))
+                .map { ($0["detail"] as String?) ?? "" }.joined(separator: " | ")
+        }
+    }
+
+    /// A read bounded only by time walks the time index, never a provider-led
+    /// one: with no planner statistics a `provider = ?` equality looks more
+    /// selective than the range, and with one provider it walks every row.
+    func testTimeRangedReadsUseTheTimeIndexes() throws {
+        try harness.ingest([hook("SessionStart", "s1", "2026-06-01T12:00:00Z")])
+        let provider = DaemonDatabase.claudeProviderOfTimeRead
+        let events = try plan(
+            "SELECT provider_type, COUNT(*) FROM events WHERE \(provider) AND time >= ? AND time < ? "
+                + "GROUP BY provider_type",
+            [ClaudeProvider.name, 1.0, 2.0])
+        XCTAssertTrue(events.contains("events_time"), events)
+        XCTAssertTrue(try plan("SELECT MIN(time) FROM events WHERE \(provider) AND time > 0",
+                               [ClaudeProvider.name]).contains("events_time"))
+
+        let ranged = DaemonDatabase.claudeTurnFilter(since: 1, until: 2, toolName: nil, sessionScoped: false)
+        let turns = try plan("SELECT COUNT(*) FROM turns WHERE \(ranged.conditions.joined(separator: " AND "))",
+                             ranged.arguments)
+        XCTAssertTrue(turns.contains("turns_time"), turns)
+
+        let scoped = DaemonDatabase.claudeTurnFilter(since: 1, until: 2, toolName: nil, sessionScoped: true)
+        XCTAssertEqual(scoped.conditions.first, "provider = ?", "a session-scoped read keeps the session index")
+    }
+
     // MARK: - No store
 
     func testEveryInsightReadIsEmptyWithoutAStore() throws {

@@ -73,6 +73,17 @@ public struct ClaudeSessionEventActivity: Sendable, Equatable {
 /// epoch seconds; nil is no bound.
 extension DaemonDatabase {
 
+    /// The provider condition of an `events` or `turns` read bounded by time
+    /// and nothing narrower. Those tables index time alone (`events_time`,
+    /// `turns_time`) beside provider-led indexes (`(provider, session_id,
+    /// time)`, `(provider, provider_type, time)`). Given a bare `provider = ?`,
+    /// SQLite picks a provider-led index, and with one provider in the store
+    /// that walks every row of it: a one-day read of a 10 GB store took
+    /// minutes. The unary `+` keeps the condition but takes it out of index
+    /// selection, so the time index answers. A read that also names a session
+    /// or a hook type keeps the bare form, which its own index answers.
+    static let claudeProviderOfTimeRead = "+provider = ?"
+
     /// The time condition every read here shares, with its arguments.
     private static func claudeTimeRange(
         from: Double?, until: Double?
@@ -98,7 +109,7 @@ extension DaemonDatabase {
             try Row.fetchAll(conn, sql: """
                 SELECT date(time, 'unixepoch') AS day, provider_type, COUNT(*)
                 FROM events
-                WHERE provider = ? AND \(range.sql)
+                WHERE \(Self.claudeProviderOfTimeRead) AND \(range.sql)
                 GROUP BY day, provider_type
                 """, arguments: StatementArguments([ClaudeProvider.name] + range.arguments))
                 .map { (day: $0[0] ?? "", providerType: $0[1] ?? "", count: $0[2] ?? 0) }
@@ -167,7 +178,7 @@ extension DaemonDatabase {
         let range = Self.claudeTimeRange(from: from, until: until)
         return try withEventReads(0) { conn in
             try Int.fetchOne(conn, sql: """
-                SELECT COUNT(*) FROM events WHERE provider = ? AND \(range.sql)
+                SELECT COUNT(*) FROM events WHERE \(Self.claudeProviderOfTimeRead) AND \(range.sql)
                 """, arguments: StatementArguments([ClaudeProvider.name] + range.arguments)) ?? 0
         }
     }
@@ -183,7 +194,7 @@ extension DaemonDatabase {
             try Row.fetchAll(conn, sql: """
                 SELECT COALESCE(cwd, ''), session_id, COUNT(*)
                 FROM events
-                WHERE provider = ? AND \(range.sql)
+                WHERE \(Self.claudeProviderOfTimeRead) AND \(range.sql)
                 GROUP BY cwd, session_id
                 """, arguments: StatementArguments([ClaudeProvider.name] + range.arguments))
                 .map { (cwd: $0[0] ?? "", sessionId: $0[1] ?? "", count: $0[2] ?? 0) }
@@ -212,7 +223,7 @@ extension DaemonDatabase {
     public func claudeEarliestEventTime(deadline: Duration? = nil) throws -> Double? {
         try withEventReads(nil, deadline: deadline) { conn in
             try Double.fetchOne(conn, sql: """
-                SELECT MIN(time) FROM events WHERE provider = ? AND time >= ?
+                SELECT MIN(time) FROM events WHERE \(Self.claudeProviderOfTimeRead) AND time >= ?
                 """, arguments: [ClaudeProvider.name, Self.claudeEarliestKnownEventTime])
         }
     }
@@ -290,7 +301,7 @@ extension DaemonDatabase {
                 // still answer (slowly) rather than fail.
                 guard let time = try Double.fetchOne(conn, sql: """
                     SELECT time FROM \(table.rawValue)
-                    WHERE provider = ? AND time >= ?\(untilClause)
+                    WHERE \(Self.claudeProviderOfTimeRead) AND time >= ?\(untilClause)
                     ORDER BY time LIMIT 1
                     """, arguments: StatementArguments(arguments)) else { break }
                 // Unix time has no leap seconds, so a UTC day is a whole multiple
@@ -315,7 +326,7 @@ extension DaemonDatabase {
             let rows = try Row.fetchAll(conn, sql: """
                 SELECT session_id, COUNT(*), MIN(time), MAX(time)
                 FROM events
-                WHERE provider = ? AND \(range.sql)
+                WHERE \(Self.claudeProviderOfTimeRead) AND \(range.sql)
                 GROUP BY session_id
                 """, arguments: StatementArguments([ClaudeProvider.name] + range.arguments))
             return try rows.map { row in
