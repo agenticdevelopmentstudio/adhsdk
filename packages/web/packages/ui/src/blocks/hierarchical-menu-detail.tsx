@@ -1605,7 +1605,10 @@ function useSelectionConnectors(
       const crect = cont.getBoundingClientRect()
       const anchor = (i: number) => {
         const sel = cont.querySelector(`[data-htd-col="${i}"] [aria-current="true"]`)
-        if (!sel) return null
+        // A row whose list is HIDDEN under its rail's filter autocomplete keeps its layout, so it
+        // still measures — and the line drawn from it (or into it) struck through the
+        // suggestions, which the overlay paints above. No line until the list is back.
+        if (!sel || sel.closest("[data-htd-hidden]")) return null
         const r = sel.getBoundingClientRect()
         const iconEl = sel.querySelector("[data-htd-icon]")
         const end = rowExitEl(sel)
@@ -1690,7 +1693,14 @@ function useSelectionConnectors(
       if (performance.now() - start < trackMs) raf = requestAnimationFrame(loop)
     }
     loop()
-    return () => cancelAnimationFrame(raf)
+    // A rail's rows hide under its filter autocomplete and come back on no event this stack
+    // hears (typing, a host's rows landing): watch the flag itself, and re-measure once per flip.
+    const hidden = new MutationObserver(() => measure())
+    hidden.observe(cont, { subtree: true, attributes: true, attributeFilter: ["data-htd-hidden"] })
+    return () => {
+      cancelAnimationFrame(raf)
+      hidden.disconnect()
+    }
   }, [containerRef, levelCount, sig, possible, trackMs])
   return { connectors, onScroll: () => measureRef.current() }
 }

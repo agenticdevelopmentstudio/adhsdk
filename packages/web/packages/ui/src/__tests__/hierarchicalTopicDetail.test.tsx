@@ -15,7 +15,7 @@
  * listener).
  */
 import { startTransition, useState } from 'react'
-import { act, render, screen, fireEvent, within } from '@testing-library/react'
+import { act, render, screen, fireEvent, within, waitFor } from '@testing-library/react'
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import {
   HierarchicalTopicDetail,
@@ -426,6 +426,22 @@ describe('HierarchicalTopicDetail — hover reveal, the hovered list and its chi
     const overlayZ = Number(overlay.style.zIndex)
     const columnZ = [0, 1, 2].map((i) => Number(col(i).style.zIndex))
     expect(overlayZ).toBeGreaterThan(Math.max(...columnZ))
+  })
+
+  it('draws no connector to or from a list hidden under its filter autocomplete', async () => {
+    render(
+      <HierarchicalTopicDetail levels={levelsFor({ region: 'us', eco: 'core', topic: 'apps' })}>
+        <p>detail</p>
+      </HierarchicalTopicDetail>,
+    )
+    const paths = () => document.querySelectorAll('[data-htd-connectors] path').length
+    expect(paths()).toBe(2)
+    // The rail flags its rows hidden while the suggestions stand over them; the line struck
+    // through the suggestions. Flipping the flag alone must re-measure: typing fires nothing else.
+    col(1).setAttribute('data-htd-hidden', '')
+    await waitFor(() => expect(paths()).toBe(0))
+    col(1).removeAttribute('data-htd-hidden')
+    await waitFor(() => expect(paths()).toBe(2))
   })
 
   it('gives the click-rooted branch an edge on BOTH sides — leading and trailing', () => {
