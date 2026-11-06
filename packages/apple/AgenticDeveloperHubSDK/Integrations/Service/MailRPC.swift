@@ -6,8 +6,10 @@ public enum MailRequest: Codable, Sendable, Equatable {
     case importOAuthClient(json: Data)
     case removeProvider
     case listAccounts
-    /// Runs the browser flow in the service's process.
+    /// Runs the browser flow in the service's process. Refused while another sign-in is pending.
     case signIn
+    /// Ends a pending sign-in, which then answers "Sign-in was cancelled". Harmless when none is.
+    case cancelSignIn
     case removeAccount(account: String)
     case updateSettings(account: String, settings: MailSyncSettings)
     /// `nil` syncs every account.

@@ -29,6 +29,10 @@ public actor MailIntegrationService {
     /// When each connection's latest sync started, successful or not. In memory only: after a
     /// restart, due-ness falls back to `lastSyncAt`.
     private var lastAttempt: [String: Date] = [:]
+    /// Connections being removed. No sync starts for them while the removal awaits.
+    private var removing: Set<String> = []
+    /// The browser sign-in in progress, if any. Only one runs at a time.
+    private var pendingSignIn: Task<GoogleCredential, Error>?
 
     public init(
         store: IntegrationsStore, secrets: any SecretStoring, signIn: any GoogleSignInFlow = AppAuthGoogleSignIn(),
@@ -80,6 +84,9 @@ public actor MailIntegrationService {
             return .accounts(try store.connections(provider: Self.provider).map(Self.account))
         case .signIn:
             return .account(try await signIn())
+        case .cancelSignIn:
+            pendingSignIn?.cancel()
+            return .ok
         case .removeAccount(let account):
             try await removeAccount(try connection(account))
             return .ok
@@ -145,7 +152,23 @@ public actor MailIntegrationService {
 
     private func signIn() async throws -> MailAccount {
         let config = try oauthConfig()
-        let credential = try await signInFlow.signIn(config: config)
+        guard pendingSignIn == nil else { throw RequestFailure("a sign-in is already in progress") }
+        let flow = signInFlow
+        let task = Task { try await flow.signIn(config: config) }
+        pendingSignIn = task
+        let credential: GoogleCredential
+        do {
+            credential = try await withTaskCancellationHandler {
+                try await task.value
+            } onCancel: {
+                task.cancel()
+            }
+            pendingSignIn = nil
+        } catch {
+            pendingSignIn = nil
+            if error is CancellationError || task.isCancelled { throw IntegrationError.signInCancelled }
+            throw error
+        }
         let accessToken = credential.accessToken
         let email = try await makeAPI({ accessToken }).profile().emailAddress.lowercased()
 
@@ -169,16 +192,26 @@ public actor MailIntegrationService {
         try store.connections(provider: Self.provider).first { $0.externalAccountId == email }
     }
 
+    /// Stops the account's sync, revokes its grant at Google (best effort), forgets its
+    /// credential and deletes it. No sync starts for it meanwhile. A credential the Keychain
+    /// will not remove fails the removal, leaving the account in place.
     private func removeAccount(_ connection: IntegrationConnection) async throws {
-        await quiesce(connectionId: connection.id)
-        await tokens.forget(connectionId: connection.id)
-        try store.deleteConnection(id: connection.id)
-        lastAttempt[connection.id] = nil
+        let id = connection.id
+        removing.insert(id)
+        defer { removing.remove(id) }
+        await quiesce(connectionId: id)
+        await tokens.revoke(connectionId: id)
+        try await tokens.forget(connectionId: id)
+        try store.deleteConnection(id: id)
+        lastAttempt[id] = nil
     }
 
     private func updateSettings(account: String, settings: MailSyncSettings) async throws -> MailAccount {
         let settings = try settings.validated()
-        let id = try connection(account).id
+        let current = try connection(account)
+        // Nothing changed: no reason to interrupt a running sync or start another.
+        if current.syncSettings == settings { return Self.account(current) }
+        let id = current.id
         // A running sync would write back a cursor taken under the old settings.
         await quiesce(connectionId: id)
         var record = try connection(id)
@@ -186,6 +219,11 @@ public actor MailIntegrationService {
 
         let disallowed = Set(MailClass.allCases.filter { old.allows($0) && !settings.allows($0) })
         try store.tombstoneMessages(connectionId: id, classes: disallowed)
+        if settings.windowDays < old.windowDays {
+            // Rows that fell out of the narrower window go now, not at the next full sync.
+            let windowStart = now().addingTimeInterval(-Double(settings.windowDays) * 86_400)
+            try store.tombstoneMessages(connectionId: id, olderThan: IntegrationClock.string(from: windowStart))
+        }
         let widened = MailClass.allCases.contains { !old.allows($0) && settings.allows($0) }
             || settings.windowDays > old.windowDays
         if widened { record.syncCursor = nil }
@@ -225,12 +263,30 @@ public actor MailIntegrationService {
         }
     }
 
-    /// Stops the poll loop and cancels running syncs.
-    public func stop() {
+    /// Stops the poll loop, cancels running syncs and waits for them to end, for at most
+    /// `timeout`: a sync stuck in a call that ignores cancellation does not hold up shutdown.
+    public func stop(timeout: Duration = .seconds(5)) async {
         scheduler?.cancel()
         scheduler = nil
-        for sync in running.values { sync.task.cancel() }
+        let tasks = running.values.map(\.task)
+        for task in tasks { task.cancel() }
+        guard !tasks.isEmpty else { return }
+        let box = RaceBox<Void>()
+        let waiter = Task {
+            for task in tasks { await task.value }
+            box.finish(.success(()))
+        }
+        let timer = Task {
+            try? await Task.sleep(for: timeout)
+            box.finish(.success(()))
+        }
+        try? await box.value()
+        waiter.cancel()
+        timer.cancel()
     }
+
+    /// How many syncs are running. For tests.
+    var runningSyncCount: Int { running.count }
 
     /// One scheduler tick: starts every due sync and waits for them.
     public func runDueSyncs() async {
@@ -257,7 +313,7 @@ public actor MailIntegrationService {
         guard let connections = try? store.connections(provider: Self.provider) else { return [] }
         let current = now()
         return connections
-            .filter { Self.isSyncable($0) && isDue($0, at: current) }
+            .filter { Self.isSyncable($0) && !removing.contains($0.id) && isDue($0, at: current) }
             .compactMap { startSync(connectionId: $0.id) }
     }
 
@@ -304,7 +360,7 @@ public actor MailIntegrationService {
     /// Starts a sync unless one is already running for the connection; returns the new task.
     @discardableResult
     private func startSync(connectionId: String) -> Task<Void, Never>? {
-        guard running[connectionId] == nil else { return nil }
+        guard running[connectionId] == nil, !removing.contains(connectionId) else { return nil }
         let token = UUID()
         let task = Task {
             await self.performSync(connectionId: connectionId)
@@ -455,6 +511,7 @@ public actor MailIntegrationService {
         _ originals: [EmailMessage], api: any GmailAPI, connectionId: String
     ) async throws -> [Int: EmailMessage] {
         var fetched: [Int: EmailMessage] = [:]
+        let now = now()
         try await withThrowingTaskGroup(of: (Int, EmailMessage?).self) { group in
             var next = 0
             func addNext() {
@@ -466,7 +523,7 @@ public actor MailIntegrationService {
                     do {
                         let dto = try await api.message(id: original.externalId)
                         return (index, GmailMessageParser.parse(dto, connectionId: connectionId,
-                                                                existingId: original.id))
+                                                                existingId: original.id, now: now))
                     } catch IntegrationError.gmail(status: 404, message: _) {
                         return (index, nil)
                     }
