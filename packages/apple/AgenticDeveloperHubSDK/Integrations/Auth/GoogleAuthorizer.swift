@@ -229,10 +229,13 @@ public actor GoogleTokenProvider {
     private let now: @Sendable () -> Date
     private struct Refresh {
         let id: UUID
+        /// The connection's generation when the refresh started; `store`/`forget` bump it.
+        let generation: Int
         let task: Task<GoogleCredential, Error>
     }
 
     private var inFlight: [String: Refresh] = [:]
+    private var generations: [String: Int] = [:]
 
     public init(secrets: any SecretStoring, endpoint: any GoogleTokenEndpoint,
                 now: @escaping @Sendable () -> Date = Date.init) {
@@ -244,13 +247,13 @@ public actor GoogleTokenProvider {
     /// Saves a credential (a fresh sign-in). Supersedes any refresh in progress for the connection:
     /// that refresh's result is discarded rather than overwriting this credential.
     public func store(_ credential: GoogleCredential, connectionId: String) throws {
-        inFlight[connectionId] = nil
+        supersede(connectionId: connectionId)
         try persist(credential, connectionId: connectionId)
     }
 
     /// Removes the credential. A refresh in progress is superseded and its result discarded.
     public func forget(connectionId: String) {
-        inFlight[connectionId] = nil
+        supersede(connectionId: connectionId)
         secrets.delete(forKey: Self.key(connectionId: connectionId))
     }
 
@@ -271,27 +274,30 @@ public actor GoogleTokenProvider {
             return GoogleCredential(accessToken: reply.accessToken, refreshToken: credential.refreshToken,
                                     expiresAt: now().addingTimeInterval(reply.expiresIn))
         }
-        let refresh = Refresh(id: UUID(), task: task)
+        let refresh = Refresh(id: UUID(), generation: generations[connectionId, default: 0], task: task)
         inFlight[connectionId] = refresh
         return try await settle(refresh, connectionId: connectionId, config: config)
     }
 
-    /// Awaits a refresh and persists it only if it is still the current one for the connection
-    /// (no `store` or `forget` ran meanwhile). A superseded refresh re-reads the current state.
+    private func supersede(connectionId: String) {
+        inFlight[connectionId] = nil
+        generations[connectionId, default: 0] += 1
+    }
+
+    /// Awaits a refresh. A refresh superseded by a `store` or `forget` that ran meanwhile, whether
+    /// it succeeded or failed, is discarded and the current credential re-read: a stale
+    /// `invalid_grant` must not report `revoked` after a fresh sign-in. Otherwise the first
+    /// caller to settle persists the result and every waiter gets the same outcome.
     private func settle(_ refresh: Refresh, connectionId: String,
                         config: GoogleOAuthClientConfig) async throws -> String {
-        let refreshed: GoogleCredential
-        do {
-            refreshed = try await refresh.task.value
-        } catch {
-            if inFlight[connectionId]?.id == refresh.id { inFlight[connectionId] = nil }
-            throw error
-        }
-        guard inFlight[connectionId]?.id == refresh.id else {
+        let outcome = await refresh.task.result
+        guard generations[connectionId, default: 0] == refresh.generation else {
             return try await accessToken(connectionId: connectionId, config: config)
         }
-        inFlight[connectionId] = nil
-        try persist(refreshed, connectionId: connectionId)
+        let owner = inFlight[connectionId]?.id == refresh.id
+        if owner { inFlight[connectionId] = nil }
+        let refreshed = try outcome.get()
+        if owner { try persist(refreshed, connectionId: connectionId) }
         return refreshed.accessToken
     }
 
