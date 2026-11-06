@@ -98,7 +98,7 @@ public final class CommandPaletteCoordinator: AppFeature {
             commands: [KeyCommandDescriptor(
                 id: Self.shortcutCommandID,
                 title: "Command Palette",
-                defaultShortcut: KeyboardShortcuts.Name.showCommandPalette.defaultShortcut,
+                defaultShortcut: Self.defaultShortcut,
                 run: { [weak self] in self?.showPalette() })]))
     }
 
@@ -120,6 +120,15 @@ public final class CommandPaletteCoordinator: AppFeature {
     }
 
     static let shortcutSectionTitle = "Command Palette"
+
+    /// The palette's default chord, shipped off like every global command.
+    ///
+    /// ⌃⌥C rather than VS Code's ⇧⌘P because the shortcut is a
+    /// *system-global* hotkey: ⇧⌘P taken globally would be stolen from every
+    /// other app on the machine, VS Code included. ⌃⌥ is this toolkit's
+    /// established global family (see `SystemWindowShortcutNames`) and `.c` is
+    /// the one letter in reach that family has not already spent.
+    static let defaultShortcut = KeyboardShortcuts.Shortcut(.c, modifiers: [.control, .option])
     static let shortcutCommandID = "commandPalette.show"
 
     static let shortcutCaption = "Opens the command palette: a search field listing every "
@@ -133,13 +142,21 @@ public final class CommandPaletteCoordinator: AppFeature {
     /// one who rebound it would lose their chord too. Once only: after this the
     /// key command's binding is what the user authored, and the old entry is
     /// cleared so its hotkey never fires beside the new one.
+    ///
+    /// Nothing to adopt — a fresh install, or one that switched the old
+    /// shortcut off — authors nothing, so the command keeps its default and
+    /// ships off like every global command. The legacy name is declared with
+    /// no default for the same reason: `KeyboardShortcuts` writes a name's
+    /// default into `UserDefaults` the first time the name is used, which would
+    /// make a fresh install look like a user who chose ⌃⌥C.
     private func adoptLegacyShortcut() {
-        guard !keyCommands.hasAuthoredBinding(for: Self.shortcutCommandID) else { return }
-        let legacy = KeyboardShortcuts.getShortcut(for: .showCommandPalette)
+        guard !keyCommands.hasAuthoredBinding(for: Self.shortcutCommandID),
+              let legacy = KeyboardShortcuts.getShortcut(for: .legacyShowCommandPalette)
+        else { return }
         keyCommands.setBinding(
-            KeyCommandBinding(shortcut: legacy, isEnabled: legacy != nil),
+            KeyCommandBinding(shortcut: legacy, isEnabled: true),
             for: Self.shortcutCommandID)
-        KeyboardShortcuts.setShortcut(nil, for: .showCommandPalette)
+        KeyboardShortcuts.setShortcut(nil, for: .legacyShowCommandPalette)
     }
 
     // MARK: - Showing
@@ -183,20 +200,13 @@ extension CommandPaletteCoordinator: Loggable {
     public static nonisolated let logger = makeLogger()
 }
 
-/// Where the palette's shortcut lived before it was a global key command, and
-/// still the source of its default.
-///
-/// The default is ⌃⌥C rather than VS Code's ⇧⌘P because the shortcut is a
-/// *system-global* hotkey: ⇧⌘P taken globally would be stolen from every other
-/// app on the machine, VS Code included. ⌃⌥ is this toolkit's established
-/// global family (see `SystemWindowShortcutNames`) and `.c` is the one letter
-/// in reach that family has not already spent.
+/// Where the palette's shortcut lived before it was a global key command.
 extension KeyboardShortcuts.Name {
 
-    /// The raw value is a persisted `UserDefaults` key holding a user's
-    /// rebinding from before the move, read once by `adoptLegacyShortcut` —
-    /// renaming it silently discards that customisation.
-    public static let showCommandPalette = Self(
-        "showCommandPalette",
-        default: .init(.c, modifiers: [.control, .option]))
+    /// The raw value is a persisted `UserDefaults` key holding the shortcut
+    /// from before the move, read once by `adoptLegacyShortcut` — renaming it
+    /// silently discards that customisation. Declared with no default: a
+    /// default is written into `UserDefaults` on the name's first use, and
+    /// would be adopted as if the user had chosen it.
+    static let legacyShowCommandPalette = Self("showCommandPalette")
 }
