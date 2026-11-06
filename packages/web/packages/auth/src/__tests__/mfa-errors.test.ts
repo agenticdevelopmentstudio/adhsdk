@@ -73,6 +73,19 @@ describe('MFA login steps throw AuthHttpError carrying the HTTP status', () => {
     })
   })
 
+  it('a 5xx with no message in its body reads as a server error, not a user mistake', async () => {
+    stubFetch(new Response('<html>Bad Gateway</html>', { status: 502 }))
+    expect(await rejection(completeLoginCode('t', 'totp', '000000'))).toMatchObject({
+      status: 502,
+      message: 'Server error (502)',
+    })
+    stubFetch(respond(503, {}))
+    expect(await rejection(passwordlessPasskeyLogin('someone@example.com'))).toMatchObject({
+      status: 503,
+      message: 'Server error (503)',
+    })
+  })
+
   it('so the report gate drops a 4xx and still reports a 5xx', async () => {
     vi.spyOn(console, 'error').mockImplementation(() => {})
     const sink = vi.fn()
