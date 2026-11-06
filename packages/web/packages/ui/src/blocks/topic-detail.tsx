@@ -234,15 +234,34 @@ function topicMatches(it: TopicDetailItem, q: string): boolean {
  *  own idea of a match) comes back as it is. */
 export function underlineMatch(label: string, query: string): ReactNode {
   const q = query.trim().toLowerCase()
-  const at = q ? label.toLowerCase().indexOf(q) : -1
-  if (at < 0) return label
+  if (!q) return label
+  // Case-folding can change a label's LENGTH ('İ' folds to two code units), so a position found
+  // in the folded label is not a position in the label: the underline landed on the wrong
+  // letters ("İstanbul" / "stan" underlined "tanb"). Fold one character at a time and remember
+  // where each folded unit came from.
+  let folded = ""
+  const from: number[] = []
+  for (let i = 0; i < label.length; ) {
+    const ch = String.fromCodePoint(label.codePointAt(i)!)
+    const low = ch.toLowerCase()
+    folded += low
+    for (let k = 0; k < low.length; k++) from.push(i)
+    i += ch.length
+  }
+  from.push(label.length)
+  const hit = folded.indexOf(q)
+  if (hit < 0) return label
+  const start = from[hit]!
+  // The end is the end of the character the match's last unit came from.
+  const lastFrom = from[hit + q.length - 1]!
+  const end = lastFrom + String.fromCodePoint(label.codePointAt(lastFrom)!).length
   return (
     <>
-      {label.slice(0, at)}
+      {label.slice(0, start)}
       <span data-htd-match className="underline decoration-apt-gold underline-offset-2">
-        {label.slice(at, at + q.length)}
+        {label.slice(start, end)}
       </span>
-      {label.slice(at + q.length)}
+      {label.slice(end)}
     </>
   )
 }
@@ -1488,8 +1507,11 @@ export function TopicRail({
               // keyboard: Return then chose the row under the pointer, not the one arrowed to.
               onMouseMove={() => setActiveSuggestionId(item.id)}
               onClick={() => chooseSuggestion(item)}
+              // The row's own icon sizing — a host's unsized lucide icon is 24px, which made the
+              // option taller than its row — and `adh-touch-row`, so it grows on a touch screen
+              // as the rows under it do (its `py-1.5` is what that class declares).
               className={cn(
-                "flex cursor-pointer items-center gap-2 py-1.5 pr-2 pl-2.5 text-[0.8rem]",
+                "adh-touch-row flex cursor-pointer items-center gap-2 py-1.5 pr-2 pl-2.5 text-[0.8rem] [&_svg]:h-4 [&_svg]:w-4 [&_svg]:shrink-0",
                 i === highlighted ? "bg-apt-gold/15 text-apt-text" : "text-apt-text-muted",
               )}
             >
