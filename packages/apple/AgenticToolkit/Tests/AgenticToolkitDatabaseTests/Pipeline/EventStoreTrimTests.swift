@@ -246,6 +246,35 @@ final class EventStoreTrimTests: XCTestCase {
         XCTAssertEqual(try SQLiteFileStats.stats(path: store.path).autoVacuum, 2)
     }
 
+    /// A status read answers while long maintenance reads hold every reader.
+    func testFileStatsAnswersWhileEveryReaderIsHeld() throws {
+        let store = try makeStore()
+        var batch = NormalizedBatch()
+        batch.events = [event("e", session: "s", at: 1)]
+        try store.write(batch, provider: "mock")
+
+        let release = DispatchSemaphore(value: 0)
+        let holding = DispatchGroup()
+        let finished = DispatchGroup()
+        for _ in 0..<3 {
+            holding.enter()
+            finished.enter()
+            DispatchQueue.global().async {
+                _ = try? store.read { _ in holding.leave(); release.wait() }
+                finished.leave()
+            }
+        }
+        XCTAssertEqual(holding.wait(timeout: .now() + 10), .success, "every reader is held")
+        let answered = expectation(description: "fileStats answers")
+        DispatchQueue.global().async {
+            XCTAssertGreaterThan((try? store.fileStats().pageCount) ?? 0, 0)
+            answered.fulfill()
+        }
+        wait(for: [answered], timeout: 5)
+        for _ in 0..<3 { release.signal() }
+        XCTAssertEqual(finished.wait(timeout: .now() + 10), .success)
+    }
+
     func testSQLiteFileStatsThrowsOnAMissingFileAndNeverCreatesIt() {
         let missing = path("missing.db")
         XCTAssertThrowsError(try SQLiteFileStats.stats(path: missing))

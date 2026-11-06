@@ -383,8 +383,12 @@ extension EventStore {
         return freed
     }
 
-    /// This store's file: sizes on disk and page accounting.
+    /// This store's file: sizes on disk and page accounting. Read on a
+    /// connection of its own, never one of the pool's readers: a usage recount
+    /// can hold every reader for minutes, and a status read must not wait
+    /// behind it. The store is open, so its `-wal` and `-shm` exist and
+    /// `SQLiteFileStats` opens the file read-only, WAL frames included.
     public func fileStats() throws -> StoreFileStats {
-        try pool.read { conn in try StoreFileStats.read(path: path, conn) }
+        try SQLiteFileStats.stats(path: path)
     }
 }
