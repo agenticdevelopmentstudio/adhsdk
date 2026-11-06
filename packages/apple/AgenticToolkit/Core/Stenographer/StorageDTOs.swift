@@ -90,6 +90,17 @@ public struct HistoryBackfillDTO: Codable, Sendable, Equatable {
     /// The last slice's error, nil when it ended cleanly or none ran yet.
     public let lastError: String?
 
+    /// `targetRawID` encodes as `target_raw_id` under the wire's snake case,
+    /// which `.convertFromSnakeCase` reads back as `targetRawId` — a key the
+    /// synthesized decoding never matches. Naming the keys the way the decoder
+    /// spells them keeps the same wire name and lets both directions agree.
+    private enum CodingKeys: String, CodingKey {
+        case targetRawID = "targetRawId"
+        case lastRawID = "lastRawId"
+        case running
+        case lastError
+    }
+
     public init(targetRawID: Int64, lastRawID: Int64, running: Bool, lastError: String? = nil) {
         self.targetRawID = targetRawID
         self.lastRawID = lastRawID
