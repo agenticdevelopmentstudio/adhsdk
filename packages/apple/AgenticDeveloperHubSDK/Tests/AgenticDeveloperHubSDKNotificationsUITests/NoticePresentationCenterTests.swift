@@ -252,6 +252,41 @@ final class NoticePresentationCenterTests: XCTestCase {
         XCTAssertFalse(third.center.hasUntilBackNotices, "a woken notice is forgotten in the store too")
     }
 
+    /// Ruling 10: a notice archived (say, from the CLI) while the app was down
+    /// is still in the persisted until-back set. On the user's return the wake
+    /// goes to the host, the daemon refuses it, and no broadcast follows. The
+    /// center must have dropped the id anyway: not retried on the next return,
+    /// not left in the store, and nothing put on screen.
+    func testARefusedUntilBackWakeIsDroppedAndNotRetried() throws {
+        let suite = "NoticePresentationCenterTests.untilBack.\(UUID().uuidString)"
+        let store = try XCTUnwrap(UserDefaults(suiteName: suite))
+        defer { store.removePersistentDomain(forName: suite) }
+        let clock = Clock()
+        do {
+            let first = harness(untilBackStore: store, clock: clock)
+            first.center.receive(notice("a", at: clock))
+            first.center.snooze(id: "a", option: .untilBack)
+            // The app quits here; "a" is archived while it is down, so no
+            // archived change ever reaches a center.
+        }
+
+        let readings = IdleReadings([301, 1, 400, 2])
+        let idle = IdleMonitor(idleSeconds: readings.next, threshold: 300, poll: 15)
+        let second = harness(idle: idle, untilBackStore: store, clock: clock)
+        idle.step() // away
+        idle.step() // back: the wake is sent, and the host refuses it
+        XCTAssertEqual(second.handler.calls, [.setState("a", .unread)])
+        XCTAssertFalse(second.center.hasUntilBackNotices)
+        XCTAssertNil(store.object(forKey: NoticePresentationCenter.untilBackKey), "dropped from the store too")
+
+        idle.start()
+        idle.step() // away again
+        idle.step() // back again
+        XCTAssertEqual(second.handler.calls.count, 1, "a refused wake is not retried")
+        XCTAssertTrue(second.toast.shownIDs.isEmpty, "nothing is shown")
+        XCTAssertTrue(second.alert.shownIDs.isEmpty)
+    }
+
     func testExpiredUntilBackSnoozesAreNotRearmed() throws {
         let suite = "NoticePresentationCenterTests.untilBack.\(UUID().uuidString)"
         let store = try XCTUnwrap(UserDefaults(suiteName: suite))

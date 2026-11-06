@@ -29,6 +29,9 @@ final class NoticeReplyFieldTests: XCTestCase {
         let panel = NoticePanel(layer: .floating, hideFromSharing: false)
         // Records the key handoff instead of reordering a real window.
         panel.handOffKey = { _ in recorder.handoffs += 1 }
+        // A panel never ordered front cannot really become key: report that
+        // it did, as a clicked reply field's panel does on screen.
+        panel.takeKey = { _, done in done(true) }
         let card = NoticeCardView(notice: notice, actions: actions, style: .toast)
         panel.contentView = card
         card.layoutSubtreeIfNeeded()
@@ -165,6 +168,22 @@ final class NoticeReplyFieldTests: XCTestCase {
         XCTAssertTrue(card.isCountdownRunning, "the reply is over, so the card counts down again")
         XCTAssertTrue(panel.allowKeyForReply, "a draft can be clicked back into")
         XCTAssertEqual(field.stringValue, "half")
+        card.stop()
+    }
+
+    /// The panel was refused key (`makeKey` did nothing): no resign
+    /// notification will ever come, so the reply ends here rather than
+    /// leaving the countdown paused for good.
+    func testAReplyThatCannotTakeKeyResumesTheCountdown() throws {
+        let recorder = Recorder()
+        let (panel, card) = makeCard(replyNotice(), recorder: recorder)
+        defer { panel.close() }
+        panel.takeKey = { _, done in done(false) }
+        card.startAutoDismiss(after: 8)
+        card.beginReply()
+        XCTAssertTrue(card.isCountdownRunning, "a reply that never got the keyboard does not hold the card")
+        XCTAssertFalse(panel.allowKeyForReply)
+        XCTAssertFalse(panel.canBecomeKey)
         card.stop()
     }
 

@@ -201,11 +201,20 @@ public final class NoticeCardView: NSView, Themeable, NSTextFieldDelegate {
     /// card holds still until the reply is sent, cancelled, or abandoned.
     func beginReply() {
         guard replyField != nil else { return }
-        if let panel = window as? NoticePanel {
-            panel.allowKeyForReply = true
-            panel.makeKey()
-        }
         countdown.setPaused(true, for: .replying)
+        guard let panel = window as? NoticePanel else { return }
+        panel.allowKeyForReply = true
+        panel.takeKey(panel) { [weak self] isKey in
+            if !isKey { self?.replyRefusedKey() }
+        }
+    }
+
+    /// The panel never became key, so the user cannot type and no resign
+    /// notification will come to end the reply: end it now, or the countdown
+    /// would stay paused for good.
+    private func replyRefusedKey() {
+        countdown.setPaused(false, for: .replying)
+        (window as? NoticePanel)?.allowKeyForReply = false
     }
 
     /// The reply was cancelled: the field empties, the panel gives up the
