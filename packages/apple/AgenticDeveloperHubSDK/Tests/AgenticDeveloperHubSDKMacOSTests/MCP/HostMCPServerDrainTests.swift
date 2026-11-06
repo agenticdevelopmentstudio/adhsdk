@@ -69,6 +69,24 @@ final class HostMCPServerDrainTests: XCTestCase {
         XCTAssertEqual(ids.sorted(), [1, 2], "both the initialize and the tools/list replies are written")
     }
 
+    func testACancelledRequestIsNoLongerOwedAReply() async throws {
+        let transport = ReplyCountingTransport(wrapping: ScriptedTransport(script: [
+            #"{"jsonrpc":"2.0","id":5,"method":"tools/call","params":{"name":"slow"}}"#,
+            #"{"jsonrpc":"2.0","id":"6","method":"tools/list"}"#,
+            #"{"jsonrpc":"2.0","method":"notifications/cancelled","params":{"requestId":5,"reason":"x"}}"#
+        ]))
+        for try await _ in await transport.receive() {}
+
+        let owed = await transport.owedCount
+        XCTAssertEqual(owed, 1, "only the request that was not cancelled is still owed")
+        try await transport.send(Data(#"{"jsonrpc":"2.0","id":"6","result":{}}"#.utf8))
+        let clock = ContinuousClock()
+        let start = clock.now
+        let drained = await transport.waitUntilNothingOwed(deadline: .seconds(30))
+        XCTAssertTrue(drained)
+        XCTAssertLessThan(clock.now - start, .seconds(5), "the cancelled request does not hold the drain open")
+    }
+
     func testDrainGivesUpAtItsDeadline() async throws {
         let server = HostMCPServer(appName: "Test", appVersion: "1")
         await server.register(SlowSource(delay: .seconds(60)))
