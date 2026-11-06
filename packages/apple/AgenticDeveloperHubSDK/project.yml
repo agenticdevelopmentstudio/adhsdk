@@ -999,6 +999,9 @@ targets:
         codeSign: true
       # The scripting tests import it directly (`@testable`), not through the
       # AgenticDeveloperHubSDKMacOS re-export, so its internal `reset()` is reachable.
+      - target: AgenticDeveloperHubSDKIntegrations
+        embed: true
+        codeSign: true
       - target: AgenticDeveloperHubSDKScripting
         embed: true
         codeSign: true
