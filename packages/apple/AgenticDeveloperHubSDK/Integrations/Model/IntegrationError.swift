@@ -11,6 +11,10 @@ public enum IntegrationError: Error, Equatable, Sendable, LocalizedError {
     case gmail(status: Int, message: String)
     case signInCancelled
     case signInFailed(String)
+    /// Google's token endpoint failed for a reason other than revoked access (a 5xx, a bad reply).
+    case tokenRefresh(String)
+    /// The Keychain could not read or remove a credential (for example, it is locked).
+    case keychain(String)
 
     public var errorDescription: String? {
         switch self {
@@ -23,6 +27,8 @@ public enum IntegrationError: Error, Equatable, Sendable, LocalizedError {
         case .gmail(let status, let message): return "Gmail returned \(status): \(message)"
         case .signInCancelled: return "Sign-in was cancelled"
         case .signInFailed(let reason): return "Sign-in failed: \(reason)"
+        case .tokenRefresh(let reason): return "Token refresh failed: \(reason)"
+        case .keychain(let reason): return "Keychain error: \(reason)"
         }
     }
 }
