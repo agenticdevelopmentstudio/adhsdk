@@ -28,11 +28,12 @@ public final class NoticePresentationCenter {
     private let rules: @MainActor () -> NoticeRoutingRules
     private let filter: @MainActor () -> NoticeFilter
     private let focus: NoticeFocusMonitor
+    private let idle: IdleMonitor
     private let clock: () -> Date
 
     /// The presenters by the style they draw. Internal so tests can register
     /// recording presenters; a host adds others (full screen, crawl, system)
-    /// through `register(_:for:)`.
+    /// through `setPresenter(_:for:)`, or takes them all from `standard`.
     var presenters: [NoticeProfile.Style: NoticePresenter] = [:]
 
     /// The calendar snooze times ("tomorrow at 9:00") are computed in.
@@ -56,31 +57,60 @@ public final class NoticePresentationCenter {
     /// that gap must not bring the card back.
     private var actedIDs: Set<String> = []
     private var escalationTimer: Timer?
+    /// Ids snoozed "until I'm back": woken early, as `unread`, the first time
+    /// the user returns from being idle.
+    private var untilBackIDs: Set<String> = []
 
     public init(
         handler: NoticeActionHandler,
         rules: @escaping @MainActor () -> NoticeRoutingRules,
         filter: @escaping @MainActor () -> NoticeFilter,
         focus: NoticeFocusMonitor = NeverFocused(),
+        idle: IdleMonitor = IdleMonitor(),
         clock: @escaping () -> Date = Date.init
     ) {
         self.handler = handler
         self.rules = rules
         self.filter = filter
         self.focus = focus
+        self.idle = idle
         self.clock = clock
         presenters[.toast] = ToastPresenter(
             rules: rules, showHistory: { [weak handler] in handler?.showHistory() })
         presenters[.alert] = AlertPresenter(rules: rules)
+        idle.onReturn = { [weak self] in self?.wakeUntilBack() }
     }
 
     isolated deinit {
         escalationTimer?.invalidate()
+        idle.stop()
+    }
+
+    /// A center with every style the SDK draws: toast and alert, plus crawl,
+    /// full screen and the system's own Notification Center. What a host
+    /// normally wants; the plain initializer leaves the last three to it.
+    public static func standard(
+        handler: NoticeActionHandler,
+        rules: @escaping @MainActor () -> NoticeRoutingRules,
+        filter: @escaping @MainActor () -> NoticeFilter,
+        focus: NoticeFocusMonitor = NeverFocused(),
+        systemSound: @escaping @MainActor () -> Bool = { true }
+    ) -> NoticePresentationCenter {
+        let center = NoticePresentationCenter(handler: handler, rules: rules, filter: filter, focus: focus)
+        center.setPresenter(CrawlPresenter(rules: rules), for: .crawl)
+        center.setPresenter(FullScreenPresenter(rules: rules), for: .fullScreen)
+        center.setPresenter(SystemNotificationPresenter(playsSound: systemSound), for: .system)
+        return center
     }
 
     /// Adds or replaces the presenter for a style.
-    public func register(_ presenter: NoticePresenter, for style: NoticeProfile.Style) {
+    public func setPresenter(_ presenter: NoticePresenter, for style: NoticeProfile.Style) {
         presenters[style] = presenter
+    }
+
+    /// Brings up the host's history (the history hotkey, a menu item).
+    public func showHistory() {
+        handler.showHistory()
     }
 
     // MARK: Queries
@@ -98,6 +128,8 @@ public final class NoticePresentationCenter {
     public func receive(_ notice: Notice) {
         let now = clock()
         guard notice.state.isActive else { return }
+        // Back before the user returned (it was unsnoozed some other way).
+        forgetUntilBack(notice.id)
         if let expiresAt = notice.expiresAt, expiresAt <= now { return }
         guard filter().admits(notice) else { return }
         let rules = rules()
@@ -140,6 +172,9 @@ public final class NoticePresentationCenter {
     /// notice off screen; it is not echoed back to the handler.
     public func apply(_ change: NoticeStateChange) {
         guard change.state != .unread else { return }
+        if change.state != .snoozed {
+            forgetUntilBack(change.id)
+        }
         held.removeAll { $0.id == change.id }
         foldedIDs[change.id] = nil
         evaluatedIDs.remove(change.id)
@@ -248,7 +283,27 @@ public final class NoticePresentationCenter {
         } else {
             userDismiss(id)
             handler.snooze(id, until: option.until(now: clock(), calendar: calendar))
+            if option == .untilBack {
+                untilBackIDs.insert(id)
+                idle.start()
+            }
         }
+    }
+
+    // MARK: Until I'm back
+
+    private func wakeUntilBack() {
+        let woken = untilBackIDs.sorted()
+        untilBackIDs = []
+        idle.stop()
+        for id in woken {
+            handler.setState(id, .unread)
+        }
+    }
+
+    private func forgetUntilBack(_ id: String) {
+        guard untilBackIDs.remove(id) != nil, untilBackIDs.isEmpty else { return }
+        idle.stop()
     }
 
     /// The close button or an auto-dismiss expiry: off screen, marked `read`.

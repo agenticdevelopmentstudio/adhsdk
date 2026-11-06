@@ -48,6 +48,8 @@ final class DismissCountdown {
         case peerHover
         /// The card is in a stack's overflow, so nobody can see it.
         case hidden
+        /// The user is typing a reply on this card.
+        case replying
     }
 
     private let scheduler: CountdownScheduler
