@@ -86,6 +86,7 @@ open class IntegrationsSettingsPanel: ComposableSettings.SettingsPanelSplitViewC
 
     private func showAddMenu() {
         let menu = NSMenu()
+        menu.autoenablesItems = false
         let item = NSMenuItem(title: "Gmail", action: #selector(addGmail), keyEquivalent: "")
         item.target = self
         item.isEnabled = !gmailIsAdded
@@ -114,8 +115,14 @@ open class IntegrationsSettingsPanel: ComposableSettings.SettingsPanelSplitViewC
 
         let confirmed: () -> Void = { [weak self] in
             guard let self else { return }
+            let wasConfigured = self.model.provider?.configured == true
             self.gmailPicked = false
-            Task { await self.model.removeIntegration() }
+            if wasConfigured {
+                Task { await self.model.removeIntegration() }
+            } else {
+                // Picked from + but never imported: nothing to remove on the service.
+                self.model.dismissError()
+            }
             self.rebuildPanels()
         }
         if let window = view.window {

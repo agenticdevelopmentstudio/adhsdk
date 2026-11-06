@@ -13,6 +13,10 @@ public final class GmailSettingsModel: ObservableObject {
     @Published public private(set) var errorMessage: String?
 
     private let client: MailClient
+    /// Calls in flight; `busy` is true while any is.
+    private var inFlight = 0 {
+        didSet { busy = inFlight > 0 }
+    }
 
     public init(client: MailClient) {
         self.client = client
@@ -29,6 +33,19 @@ public final class GmailSettingsModel: ObservableObject {
 
     public func importClientJSON(_ data: Data) async {
         await perform { _ = try await self.client.send(.importOAuthClient(json: data)) }
+    }
+
+    /// Reads the file inside the call, so a read failure becomes `errorMessage`.
+    public func importClientJSON(from url: URL) async {
+        await perform {
+            let data = try Data(contentsOf: url)
+            _ = try await self.client.send(.importOAuthClient(json: data))
+        }
+    }
+
+    /// Clears the error message without making a call.
+    public func dismissError() {
+        errorMessage = nil
     }
 
     /// Also the "Reconnect" flow: the service matches the account by email and reuses it.
@@ -70,10 +87,11 @@ public final class GmailSettingsModel: ObservableObject {
         }
     }
 
-    public static func lastSyncedText(_ lastSyncAt: String?, now: Date = Date()) -> String {
+    public static func lastSyncedText(_ lastSyncAt: String?, now: Date = Date(), locale: Locale = .current) -> String {
         guard let lastSyncAt, let date = parse(lastSyncAt) else { return "Never synced" }
         let formatter = RelativeDateTimeFormatter()
         formatter.unitsStyle = .full
+        formatter.locale = locale
         return "Last synced " + formatter.localizedString(for: date, relativeTo: now)
     }
 
@@ -87,9 +105,9 @@ public final class GmailSettingsModel: ObservableObject {
     /// when the call starts and set from the first failure; a reload always follows so the
     /// model shows the server's state.
     private func perform(_ action: () async throws -> Void) async {
-        busy = true
+        inFlight += 1
         errorMessage = nil
-        defer { busy = false }
+        defer { inFlight -= 1 }
         do {
             try await action()
         } catch {

@@ -75,13 +75,144 @@ struct GmailSettingsModelTests {
         #expect(model.selectedAccountId == nil)
     }
 
-    @Test func statusTextAndLastSynced() {
+    @Test func statusText() {
         #expect(GmailSettingsModel.statusText(.active) == "Connected")
         #expect(GmailSettingsModel.statusText(.error) == "Error")
         #expect(GmailSettingsModel.statusText(.revoked) == "Reconnect needed")
         #expect(GmailSettingsModel.statusText(.pending) == "Pending")
-        #expect(GmailSettingsModel.lastSyncedText(nil) == "Never synced")
-        let recent = IntegrationClock.string(from: Date().addingTimeInterval(-3600))
-        #expect(GmailSettingsModel.lastSyncedText(recent).hasPrefix("Last synced "))
+    }
+
+    @Test func lastSyncedTextIsExactForAFixedDate() throws {
+        let now = try Date.ISO8601FormatStyle(includingFractionalSeconds: true).parse("2026-01-02T05:04:05.000Z")
+        let locale = Locale(identifier: "en_US")
+        #expect(GmailSettingsModel.lastSyncedText(nil, now: now, locale: locale) == "Never synced")
+        #expect(GmailSettingsModel.lastSyncedText("2026-01-02T03:04:05.000Z", now: now, locale: locale)
+            == "Last synced 2 hours ago")
+        #expect(GmailSettingsModel.lastSyncedText("garbage", now: now, locale: locale) == "Never synced")
+    }
+
+    @Test func removeSendsRemoveAccount() async {
+        let service = ScriptedMailService(accounts: [.fixture()])
+        let model = GmailSettingsModel(client: service.client)
+        await model.reload()
+        await model.remove(accountId: "a1")
+        #expect(service.requests.contains(.removeAccount(account: "a1")))
+    }
+
+    @Test func syncNowSendsSyncNow() async {
+        let service = ScriptedMailService(accounts: [.fixture()])
+        let model = GmailSettingsModel(client: service.client)
+        await model.reload()
+        await model.syncNow(accountId: "a1")
+        #expect(service.requests.contains(.syncNow(account: "a1")))
+    }
+
+    @Test func errorMessageClearsWhenTheNextCallStarts() async {
+        let service = ScriptedMailService(accounts: [.fixture()])
+        service.fail(with: "boom") { $0 == .signIn }
+        let model = GmailSettingsModel(client: service.client)
+        await model.addAccount()
+        #expect(model.errorMessage == "boom")
+        service.gate { $0 == .syncNow(account: "a1") }
+        let before = service.requests.count
+        let call = Task { await model.syncNow(accountId: "a1") }
+        await service.waitForRequests(before + 1)
+        #expect(model.errorMessage == nil)
+        service.release()
+        await call.value
+    }
+
+    @Test func busyIsTrueDuringACall() async {
+        let service = ScriptedMailService(accounts: [.fixture()])
+        let model = GmailSettingsModel(client: service.client)
+        await model.reload()
+        service.gate { $0 == .signIn }
+        let before = service.requests.count
+        let call = Task { await model.addAccount() }
+        await service.waitForRequests(before + 1)
+        #expect(model.busy == true)
+        service.release()
+        await call.value
+        #expect(model.busy == false)
+    }
+
+    @Test func busyStaysTrueUntilOverlappingCallsBothFinish() async {
+        let service = ScriptedMailService(accounts: [.fixture()])
+        let model = GmailSettingsModel(client: service.client)
+        await model.reload()
+        service.gate { $0 == .signIn || $0 == .syncNow(account: "a1") }
+        let before = service.requests.count
+        let first = Task { await model.addAccount() }
+        let second = Task { await model.syncNow(accountId: "a1") }
+        await service.waitForRequests(before + 2)
+        service.release()
+        await first.value
+        await second.value
+        #expect(model.busy == false)
+    }
+
+    @Test func busyIsNotClearedByTheFirstOfTwoOverlappingCalls() async {
+        let service = ScriptedMailService(accounts: [.fixture()])
+        let model = GmailSettingsModel(client: service.client)
+        await model.reload()
+        service.gate { $0 == .signIn }
+        let before = service.requests.count
+        let slow = Task { await model.addAccount() }
+        await service.waitForRequests(before + 1)
+        await model.syncNow(accountId: "a1")
+        #expect(model.busy == true)
+        service.release()
+        await slow.value
+        #expect(model.busy == false)
+    }
+
+    @Test func updateAppliesLocallyBeforeTheSend() async {
+        let service = ScriptedMailService(accounts: [.fixture()])
+        let model = GmailSettingsModel(client: service.client)
+        await model.reload()
+        var settings = MailSyncSettings.default
+        settings.windowDays = 7
+        service.gate {
+            if case .updateSettings = $0 { return true }
+            return false
+        }
+        let before = service.requests.count
+        let call = Task { await model.update(accountId: "a1", settings) }
+        await service.waitForRequests(before + 1)
+        #expect(model.accounts.first?.settings == settings)
+        #expect(model.busy == true)
+        service.release()
+        await call.value
+    }
+
+    @Test func importFromURLSendsTheFileBytes() async throws {
+        let service = ScriptedMailService(provider: MailProviderStatus(configured: false, clientIdHint: nil))
+        let model = GmailSettingsModel(client: service.client)
+        let url = FileManager.default.temporaryDirectory.appendingPathComponent("\(UUID().uuidString).json")
+        let bytes = Data(#"{"installed":{"client_id":"x"}}"#.utf8)
+        try bytes.write(to: url)
+        defer { try? FileManager.default.removeItem(at: url) }
+        await model.importClientJSON(from: url)
+        #expect(service.requests.contains(.importOAuthClient(json: bytes)))
+        #expect(model.errorMessage == nil)
+        #expect(model.provider?.configured == true)
+    }
+
+    @Test func importFromMissingURLSetsErrorMessage() async {
+        let service = ScriptedMailService(provider: MailProviderStatus(configured: false, clientIdHint: nil))
+        let model = GmailSettingsModel(client: service.client)
+        let url = FileManager.default.temporaryDirectory.appendingPathComponent("\(UUID().uuidString).json")
+        await model.importClientJSON(from: url)
+        #expect(model.errorMessage?.isEmpty == false)
+        #expect(!service.requests.contains { if case .importOAuthClient = $0 { return true } else { return false } })
+    }
+
+    @Test func dismissErrorClearsIt() async {
+        let service = ScriptedMailService()
+        service.fail(with: "boom") { $0 == .signIn }
+        let model = GmailSettingsModel(client: service.client)
+        await model.addAccount()
+        model.dismissError()
+        #expect(model.errorMessage == nil)
     }
 }
