@@ -5,6 +5,7 @@ import * as Sentry from '@sentry/react'
 import { scrubUrl, startPostHog } from '@adh-sdk/analytics'
 import { setPosthogReady, captureEvent } from './analytics'
 import { instrumentFetch } from './fetch-instrumentation'
+import { noiseReason } from './noise-filter'
 // Package-path specifier, not relative: this leaf is `external` in this package's own
 // tsup.config.ts (module-level `reporter` state must stay a single instance across every
 // entry that reaches it — see the comment beside '@adh-sdk/adh/telemetry/report-error'
@@ -58,6 +59,9 @@ function startTelemetry(resolveEnvironment: (hostname: string) => string): void 
       tracesSampleRate: 0, // errors only — no performance tracing (GlitchTip is errors-only)
       sendDefaultPii: false, // never infer the user's IP or attach PII
       beforeSend(event) {
+        // Drop what nobody can act on (bots, third-party scripts, stale chunks, the
+        // visitor's own network) — see noise-filter.ts for each rule and its evidence.
+        if (noiseReason(event, { userAgent: navigator.userAgent, webdriver: navigator.webdriver })) return null
         // Belt-and-suspenders scrub: drop user + cookies, strip URL queries.
         delete event.user
         if (event.request) {
