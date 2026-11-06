@@ -11,6 +11,11 @@ import { mapLimit } from "@adh-sdk/deploy-platform/util";
 //
 // Refreshes are driven by reads, not timers, so an idle dashboard costs no provider quota.
 // Keys must come from a bounded enum: state is kept per key, forever.
+//
+// Each section keeps its own schedule. A refresh re-runs only the sections that are due, so
+// one failing section is retried on its own rather than dragging every healthy one back to
+// the provider with it, and its retries back off (see `retryMs`) rather than hitting a
+// provider that keeps failing once a minute for as long as it fails.
 
 export interface DashboardSection<T> {
   /** The last good answer. Survives a later failure, so stale data stays on screen. */
@@ -36,7 +41,10 @@ export interface SectionedDashboard<K extends string, S> {
 export interface SectionedDashboardOptions<K extends string, S> {
   /** How long a fully successful refresh is good for. */
   ttlMs: number;
-  /** How soon to retry when any section failed: a blip shouldn't cost a whole TTL. */
+  /**
+   * How soon to retry a section that failed or came back short: a blip shouldn't cost a whole
+   * TTL. Doubles with each further failure in a row, up to `ttlMs`; a full success resets it.
+   */
   retryMs?: number;
   /** 1 runs sections strictly one after another. */
   concurrency?: number;
@@ -52,11 +60,17 @@ export interface SectionedDashboardOptions<K extends string, S> {
   now?: () => number;
 }
 
+interface SectionSchedule {
+  /** Epoch ms from which the section may be fetched again; 0 = never fetched. */
+  dueAt: number;
+  /** Failed (or short) attempts in a row, for the backoff. */
+  failures: number;
+}
+
 interface KeyState<S> {
   sections: DashboardSections<S>;
   refreshing: boolean;
-  finishedAt: number | null;
-  anyFailed: boolean;
+  schedule: Record<keyof S & string, SectionSchedule>;
 }
 
 const DEFAULT_RETRY_MS = 60_000;
@@ -75,30 +89,39 @@ export function sectionedDashboard<K extends string, S>(
   const retryMs = Math.min(opts.retryMs ?? DEFAULT_RETRY_MS, opts.ttlMs);
   const states = new Map<K, KeyState<S>>();
 
-  async function refresh(key: K, state: KeyState<S>): Promise<void> {
+  /** Schedule a section's next fetch from how this attempt went. */
+  function settle(state: KeyState<S>, name: keyof S & string, ok: boolean): void {
+    const s = state.schedule[name];
+    s.failures = ok ? 0 : s.failures + 1;
+    const wait = ok ? opts.ttlMs : Math.min(retryMs * 2 ** (s.failures - 1), opts.ttlMs);
+    s.dueAt = now() + wait;
+  }
+
+  async function refresh(key: K, state: KeyState<S>, due: readonly (keyof S & string)[]): Promise<void> {
     state.refreshing = true;
-    let anyFailed = false;
+    const settled = new Set<keyof S & string>();
     try {
       const loaders = opts.loaders(key);
-      await mapLimit([...opts.sections], opts.concurrency ?? 1, async (name) => {
+      await mapLimit([...due], opts.concurrency ?? 1, async (name) => {
         const prior = state.sections[name];
         try {
           const data = await loaders[name]();
           state.sections[name] = { data, error: null, updatedAt: new Date(now()).toISOString() };
-          if (opts.incomplete?.(name, data)) anyFailed = true;
+          settle(state, name, !opts.incomplete?.(name, data));
         } catch (err) {
-          anyFailed = true;
           const error = err instanceof Error ? err.message : String(err);
           state.sections[name] = { ...prior, error };
+          settle(state, name, false);
           console.warn(`[telemetry] dashboard section ${name} (${key}) failed: ${error}`);
         }
+        settled.add(name);
       });
     } catch (err) {
-      anyFailed = true;
       console.warn(`[telemetry] dashboard refresh (${key}) failed: ${err instanceof Error ? err.message : String(err)}`);
     } finally {
-      state.anyFailed = anyFailed;
-      state.finishedAt = now();
+      // A refresh that died before reaching a section (a `loaders` builder that threw) counts
+      // as a failure of that section, so it is retried rather than left due on every read.
+      for (const name of due) if (!settled.has(name)) settle(state, name, false);
       state.refreshing = false;
     }
   }
@@ -107,11 +130,17 @@ export function sectionedDashboard<K extends string, S>(
     read(key: K): DashboardRead<S> {
       let state = states.get(key);
       if (!state) {
-        state = { sections: emptySections<S>(opts.sections), refreshing: false, finishedAt: null, anyFailed: false };
+        const schedule = {} as Record<keyof S & string, SectionSchedule>;
+        for (const name of opts.sections) schedule[name] = { dueAt: 0, failures: 0 };
+        state = { sections: emptySections<S>(opts.sections), refreshing: false, schedule };
         states.set(key, state);
       }
-      const age = state.finishedAt === null ? Infinity : now() - state.finishedAt;
-      if (!state.refreshing && age >= (state.anyFailed ? retryMs : opts.ttlMs)) void refresh(key, state);
+      if (!state.refreshing) {
+        const t = now();
+        const { schedule } = state;
+        const due = opts.sections.filter((name) => schedule[name].dueAt <= t);
+        if (due.length > 0) void refresh(key, state, due);
+      }
       return { refreshing: state.refreshing, sections: { ...state.sections } };
     },
   };

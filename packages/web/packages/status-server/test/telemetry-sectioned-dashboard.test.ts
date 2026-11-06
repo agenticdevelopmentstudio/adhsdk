@@ -124,6 +124,26 @@ describe("sectionedDashboard", () => {
     await flush();
   });
 
+  it("retries only the failing section, backing off with each failure in a row", async () => {
+    vi.spyOn(console, "warn").mockImplementation(() => {});
+    const a = vi.fn(async () => Promise.reject(new Error("x")));
+    const b = vi.fn(async () => "x");
+    const { dash, clock } = setup({ a, b });
+    dash.read("k1");
+    await flush();
+    clock.t += 1_000; // a's first retry is due after retryMs
+    dash.read("k1");
+    await flush();
+    expect([a.mock.calls.length, b.mock.calls.length]).toEqual([2, 1]);
+    clock.t += 1_999; // the second waits twice as long
+    dash.read("k1");
+    expect(a).toHaveBeenCalledTimes(2);
+    clock.t += 1;
+    dash.read("k1");
+    await flush();
+    expect([a.mock.calls.length, b.mock.calls.length]).toEqual([3, 1]);
+  });
+
   it("an answer known to be short is shown as a success but retried like a failure", async () => {
     const clock = { t: 1_000_000 };
     const built = vi.fn();
