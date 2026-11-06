@@ -349,6 +349,30 @@
       "holds": "AgenticDeveloperHubSDKSystemMonitorUI. The themed System Status window and its reading cards and gauges."
     },
     {
+      "name": "apple-notifications",
+      "paths": [
+        "packages/apple/AgenticDeveloperHubSDK/Notifications/"
+      ],
+      "depends_on": [],
+      "shared": true,
+      "holds": "AgenticDeveloperHubSDKNotifications. Foundation only, macOS + iOS: the Notice model and its wire coding, the filter, routing rules and profiles, snooze math, flood folding and escalation policy. A daemon, a CLI and an iOS app can link it."
+    },
+    {
+      "name": "apple-notificationsui",
+      "paths": [
+        "packages/apple/AgenticDeveloperHubSDK/NotificationsUI/"
+      ],
+      "depends_on": [
+        "apple-notifications",
+        "apple-core",
+        "apple-coreui",
+        "apple-coremacos",
+        "apple-macos"
+      ],
+      "shared": true,
+      "holds": "AgenticDeveloperHubSDKNotificationsUI. AppKit: the presentation center that routes notices to presenters, the non-activating NoticePanel, the themed card, the toast and alert presenters, screen selection and the snooze menu."
+    },
+    {
       "name": "apple-tests",
       "paths": [
         "packages/apple/AgenticDeveloperHubSDK/Tests/"
@@ -376,6 +400,8 @@
         "apple-displays",
         "apple-systemmonitor",
         "apple-systemmonitorui",
+        "apple-notifications",
+        "apple-notificationsui",
         "apple-adt",
         "apple-hubclient",
         "apple-hubauth"
