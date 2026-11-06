@@ -24,6 +24,9 @@ public final class GmailSettingsModel: ObservableObject {
     private var pendingSettings: [String: MailSyncSettings] = [:]
     /// Accounts with a settings send in flight.
     private var sendingSettings: Set<String> = []
+    /// The newest settings the user chose, per account, kept until its sends finish — so a
+    /// reload landing mid-send shows that choice rather than the service's previous value.
+    private var latestSettings: [String: MailSyncSettings] = [:]
 
     public init(client: MailClient) {
         self.client = client
@@ -80,9 +83,13 @@ public final class GmailSettingsModel: ObservableObject {
             accounts[index].settings = settings
         }
         pendingSettings[accountId] = settings
+        latestSettings[accountId] = settings
         guard sendingSettings.insert(accountId).inserted else { return }
         await perform {
-            defer { self.sendingSettings.remove(accountId) }
+            defer {
+                self.sendingSettings.remove(accountId)
+                self.latestSettings[accountId] = nil
+            }
             do {
                 while let next = self.pendingSettings.removeValue(forKey: accountId) {
                     _ = try await self.client.send(.updateSettings(account: accountId, settings: next))
@@ -149,7 +156,7 @@ public final class GmailSettingsModel: ObservableObject {
             provider = status
             var loaded = status.configured ? try await client.accounts() : []
             // A change made while reloading has not reached the service yet; keep showing it.
-            for (id, settings) in pendingSettings {
+            for (id, settings) in latestSettings {
                 if let index = loaded.firstIndex(where: { $0.id == id }) { loaded[index].settings = settings }
             }
             accounts = loaded

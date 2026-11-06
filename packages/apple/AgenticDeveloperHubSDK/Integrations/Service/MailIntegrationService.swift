@@ -6,8 +6,6 @@ import Foundation
 public actor MailIntegrationService {
     static let provider = "gmail"
     static let scopes = "openid email https://www.googleapis.com/auth/gmail.modify"
-    /// Gmail's `messages.batchModify` limit.
-    static let batchModifyLimit = 1000
     private static let refetchConcurrency = 8
 
     private let store: IntegrationsStore
@@ -197,7 +195,8 @@ public actor MailIntegrationService {
     /// will not remove fails the removal, leaving the account in place.
     private func removeAccount(_ connection: IntegrationConnection) async throws {
         let id = connection.id
-        removing.insert(id)
+        // Another removal of this account is already under way; it finishes the job.
+        guard removing.insert(id).inserted else { return }
         defer { removing.remove(id) }
         await quiesce(connectionId: id)
         await tokens.revoke(connectionId: id)
@@ -465,8 +464,8 @@ public actor MailIntegrationService {
         var applied = 0
         do {
             api = try gmailAPI(for: connection.id)
-            for start in stride(from: 0, to: gmailIds.count, by: Self.batchModifyLimit) {
-                let chunk = Array(gmailIds[start..<min(start + Self.batchModifyLimit, gmailIds.count)])
+            for start in stride(from: 0, to: gmailIds.count, by: GmailRESTClient.batchModifyLimit) {
+                let chunk = Array(gmailIds[start..<min(start + GmailRESTClient.batchModifyLimit, gmailIds.count)])
                 try await api.batchModify(ids: chunk, add: addIds, remove: removeIds)
                 applied += chunk.count
             }

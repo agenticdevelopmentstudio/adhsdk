@@ -82,8 +82,14 @@ struct GmailSettingsView: View {
         alert.addButton(withTitle: "Remove")
         alert.addButton(withTitle: "Cancel")
         alert.buttons.first?.hasDestructiveAction = true
-        guard alert.runModal() == .alertFirstButtonReturn else { return }
-        Task { await model.remove(accountId: account.id) }
+        let remove = { Task { await model.remove(accountId: account.id) } }
+        if let window = NSApp.keyWindow {
+            alert.beginSheetModal(for: window) { response in
+                if response == .alertFirstButtonReturn { _ = remove() }
+            }
+        } else if alert.runModal() == .alertFirstButtonReturn {
+            _ = remove()
+        }
     }
 
     private func accountRow(_ account: MailAccount) -> some View {

@@ -905,6 +905,28 @@ struct MailIntegrationServiceTests {
     }
 
     @Test(.timeLimit(.minutes(1)))
+    func anOverlappingRemovalDoesNotReopenTheAccountToSyncs() async throws {
+        let gate = Gate()
+        let endpoint = RevokeRecordingEndpoint(gate: gate)
+        let harness = try Harness(tokenEndpoint: endpoint)
+        let account = try await harness.connect()
+        let labels = harness.api.labelsCalls
+        let service = harness.service
+
+        let first = Task { await service.handle(.removeAccount(account: account.id)) }
+        await gate.waitForArrival()
+        // A second removal (the CLI beside the panel) finishes while the first is still revoking.
+        #expect(await service.handle(.removeAccount(account: account.id)) == .ok)
+        harness.clock.advance(minutes: 15)
+        await service.runDueSyncs()
+        #expect(harness.api.labelsCalls == labels, "the first removal still holds the account out of syncs")
+
+        await gate.open()
+        #expect(await first.value == .ok)
+        #expect(await service.handle(.listAccounts) == .accounts([]))
+    }
+
+    @Test(.timeLimit(.minutes(1)))
     func aSecondSignInIsRefusedAndCancelSignInEndsThePendingOne() async throws {
         let flow = PendingSignIn()
         let harness = try Harness(signInFlow: flow)
