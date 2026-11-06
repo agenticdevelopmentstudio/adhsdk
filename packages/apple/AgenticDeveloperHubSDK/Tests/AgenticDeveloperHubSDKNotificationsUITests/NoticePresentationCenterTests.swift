@@ -296,4 +296,152 @@ final class NoticePresentationCenterTests: XCTestCase {
         env.center.focusDidChange()
         XCTAssertEqual(env.toast.shownIDs, ["quiet"])
     }
+
+    // MARK: Fix round 1
+
+    private func harnessWithSystem(rules: NoticeRoutingRules = .defaults) -> (Harness, RecordingPresenter) {
+        let env = harness(rules: rules)
+        let system = RecordingPresenter()
+        env.center.register(system, for: .system)
+        return (env, system)
+    }
+
+    private func rules(_ edit: (inout NoticeProfile) -> Void, for urgency: Notice.Urgency) -> NoticeRoutingRules {
+        var rules = NoticeRoutingRules.defaults
+        var profile = rules.profile(for: Notice(source: "x", title: "x", urgency: urgency))
+        edit(&profile)
+        rules.profiles[urgency] = profile
+        return rules
+    }
+
+    func testReconcileDoesNotResurrectACardTheUserJustActedOn() {
+        let env = harness()
+        let shown = notice("a", at: env.clock)
+        env.center.receive(shown)
+        env.center.close(id: "a")
+        // The host has not applied the read yet, so its active list still has it.
+        env.center.reconcile(active: [shown])
+        XCTAssertEqual(env.toast.shown.filter { $0.id == "a" }.count, 1, "the closed card came back")
+        XCTAssertTrue(env.toast.shownIDs.isEmpty)
+
+        // Once the host has caught up, the id is forgotten: a genuine re-post shows.
+        env.center.apply(NoticeStateChange(id: "a", state: .read, stateAt: env.clock.now))
+        env.center.receive(shown)
+        XCTAssertEqual(env.toast.shownIDs, ["a"])
+    }
+
+    func testActedIDIsForgottenWhenItLeavesTheActiveList() {
+        let env = harness()
+        let shown = notice("a", at: env.clock)
+        env.center.receive(shown)
+        env.center.archive(id: "a")
+        env.center.reconcile(active: [])
+        env.center.reconcile(active: [shown])
+        XCTAssertEqual(env.toast.shownIDs, ["a"], "absent once, so a later active copy is real")
+    }
+
+    func testForwardToSystemShowsOnBothPresenters() {
+        let (env, system) = harnessWithSystem(rules: rules({ $0.forwardToSystem = true }, for: .soon))
+        env.center.receive(notice("a", at: env.clock))
+        XCTAssertEqual(env.toast.shownIDs, ["a"])
+        XCTAssertEqual(system.shownIDs, ["a"])
+        env.center.close(id: "a")
+        XCTAssertTrue(system.shownIDs.isEmpty)
+    }
+
+    func testReplaceByKeyUpdatesTheSystemPresenter() {
+        let (env, system) = harnessWithSystem(rules: rules({ $0.forwardToSystem = true }, for: .soon))
+        env.center.receive(notice("run", key: "build", at: env.clock))
+        env.center.receive(notice("pass", key: "build", at: env.clock))
+        XCTAssertTrue(system.removed.contains("run"))
+        XCTAssertEqual(system.shownIDs, ["pass"])
+    }
+
+    func testReplaceIntoAProfileThatDoesNotForwardLeavesTheSystemPresenter() {
+        var rules = rules({ $0.forwardToSystem = true }, for: .soon)
+        rules.profiles[.fyi]?.forwardToSystem = false
+        let (env, system) = harnessWithSystem(rules: rules)
+        env.center.receive(notice("run", urgency: .soon, key: "build", at: env.clock))
+        env.center.receive(notice("pass", urgency: .fyi, key: "build", at: env.clock))
+        XCTAssertTrue(system.shownIDs.isEmpty)
+        XCTAssertEqual(env.toast.shownIDs, ["pass"])
+    }
+
+    func testApplyOnAnUntrackedIDStillReachesEveryPresenter() {
+        let (env, system) = harnessWithSystem()
+        env.center.apply(NoticeStateChange(id: "ghost", state: .read, stateAt: env.clock.now))
+        XCTAssertEqual(env.toast.removed, ["ghost"])
+        XCTAssertEqual(env.alert.removed, ["ghost"])
+        XCTAssertEqual(system.removed, ["ghost"])
+    }
+
+    func testClosingTwiceTellsTheHostOnce() {
+        let env = harness()
+        env.center.receive(notice("a", at: env.clock))
+        env.center.close(id: "a")
+        env.center.close(id: "a")
+        env.toast.actions["a"]?.close()
+        XCTAssertEqual(env.handler.calls, [.setState("a", .read)])
+    }
+
+    func testApplyReleasesAHeldNotice() {
+        let box = FocusBox()
+        let env = harness(focus: StubFocus(box: box))
+        env.center.receive(notice("quiet", urgency: .soon, at: env.clock))
+        env.center.apply(NoticeStateChange(id: "quiet", state: .read, stateAt: env.clock.now))
+        box.focused = false
+        env.center.focusDidChange()
+        XCTAssertTrue(env.toast.shownIDs.isEmpty, "a notice read elsewhere is not shown when Focus ends")
+    }
+
+    func testApplyForgetsAFoldedID() {
+        var rules = NoticeRoutingRules.defaults
+        rules.flood = .init(threshold: 1, window: 10)
+        let env = harness(rules: rules)
+        env.center.receive(notice("n0", urgency: .fyi, at: env.clock))
+        let folded = notice("n1", urgency: .fyi, at: env.clock)
+        env.center.receive(folded)
+        XCTAssertEqual(env.toast.shownIDs, ["n0", "flood:ci"])
+        env.center.apply(NoticeStateChange(id: "n1", state: .read, stateAt: env.clock.now))
+        env.clock.now.addTimeInterval(60)
+        env.center.receive(folded)
+        XCTAssertTrue(env.toast.shownIDs.contains("n1"), "once applied, the id is no longer swallowed as folded")
+    }
+
+    func testClosingTheFloodSummaryDoesNotTellTheHost() {
+        var rules = NoticeRoutingRules.defaults
+        rules.flood = .init(threshold: 1, window: 10)
+        let env = harness(rules: rules)
+        env.center.receive(notice("n0", urgency: .fyi, at: env.clock))
+        env.center.receive(notice("n1", urgency: .fyi, at: env.clock))
+        env.toast.actions["flood:ci"]?.close()
+        XCTAssertTrue(env.handler.calls.isEmpty)
+        XCTAssertFalse(env.toast.shownIDs.contains("flood:ci"))
+    }
+
+    func testFloodSummaryGoesWhenNothingItFoldedIsStillActive() {
+        var rules = NoticeRoutingRules.defaults
+        rules.flood = .init(threshold: 1, window: 10)
+        let env = harness(rules: rules)
+        let first = notice("n0", urgency: .fyi, at: env.clock)
+        let second = notice("n1", urgency: .fyi, at: env.clock)
+        env.center.receive(first)
+        env.center.receive(second)
+        env.center.reconcile(active: [first, second])
+        XCTAssertTrue(env.toast.shownIDs.contains("flood:ci"), "still folding n1")
+        env.center.reconcile(active: [first])
+        XCTAssertFalse(env.toast.shownIDs.contains("flood:ci"))
+    }
+
+    func testNoneStyleNoticeIsNotRecountedIntoAFalseFlood() {
+        var rules = rules({ $0.style = .none }, for: .fyi)
+        rules.flood = .init(threshold: 2, window: 60)
+        let env = harness(rules: rules)
+        let quiet = notice("q", urgency: .fyi, at: env.clock)
+        for _ in 0..<5 {
+            env.center.reconcile(active: [quiet])
+        }
+        XCTAssertTrue(env.toast.shownIDs.isEmpty, "a notice drawn nowhere is evaluated once, not folded")
+        XCTAssertTrue(env.toast.shown.isEmpty)
+    }
 }

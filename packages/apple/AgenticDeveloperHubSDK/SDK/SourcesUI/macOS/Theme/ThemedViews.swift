@@ -370,6 +370,14 @@ public final class ThemedActionButton: FadingPushButton, Themeable {
 
     private var observer: ThemePaletteObserver?
 
+    /// Whether a click into an inactive window both activates and presses the
+    /// button. Off by default, as for any `NSButton`; a button in a window that
+    /// never becomes key (a non-activating panel) turns it on, or every press
+    /// takes two clicks.
+    public var acceptsFirstClick = false
+
+    public override func acceptsFirstMouse(for event: NSEvent?) -> Bool { acceptsFirstClick }
+
     public init(title: String, style: Style = .secondary, target: AnyObject? = nil, action: Selector? = nil) {
         self.style = style
         super.init(frame: .zero)

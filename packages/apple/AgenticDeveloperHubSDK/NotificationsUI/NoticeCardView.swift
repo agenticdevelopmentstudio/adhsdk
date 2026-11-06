@@ -9,8 +9,8 @@ import AgenticDeveloperHubSDKNotifications
 /// close controls.
 ///
 /// Clicking anywhere that is not a control acts on the notice. Hovering pauses
-/// the auto-dismiss countdown; when it runs out the card calls `close`, which
-/// marks the notice read.
+/// the auto-dismiss countdown, and so does being folded out of sight; when it
+/// runs out the card calls `close`, which marks the notice read.
 @MainActor
 public final class NoticeCardView: NSView, Themeable {
 
@@ -48,14 +48,27 @@ public final class NoticeCardView: NSView, Themeable {
     private let actionRow = NSStackView()
     private var actionIDs: [String] = []
     private var observer: ThemePaletteObserver?
-    private var dismissTimer: Timer?
-    private var remainingDismiss: TimeInterval?
+    private let countdown: DismissCountdown
     private(set) var isHovered = false
 
-    public init(notice: Notice, actions: NoticeCardActions, style: Style) {
+    public convenience init(notice: Notice, actions: NoticeCardActions, style: Style) {
+        self.init(notice: notice, actions: actions, style: style,
+                  scheduler: TimerCountdownScheduler(), clock: Date.init)
+    }
+
+    /// With the countdown's timers and clock injected, so expiry is tested
+    /// without waiting.
+    init(
+        notice: Notice,
+        actions: NoticeCardActions,
+        style: Style,
+        scheduler: CountdownScheduler,
+        clock: @escaping () -> Date
+    ) {
         self.notice = notice
         self.actions = actions
         self.style = style
+        countdown = DismissCountdown(scheduler: scheduler, clock: clock)
         super.init(frame: .zero)
         translatesAutoresizingMaskIntoConstraints = false
         buildLayout()
@@ -116,6 +129,9 @@ public final class NoticeCardView: NSView, Themeable {
                 title: action.label, style: index == 0 ? .primary : .secondary,
                 target: self, action: #selector(actionButtonClicked(_:)))
             button.tag = index
+            // The panel never becomes key, so a button that waited for
+            // activation would need two clicks.
+            button.acceptsFirstClick = true
             return button
         }
         for button in actionButtons {
@@ -139,41 +155,28 @@ public final class NoticeCardView: NSView, Themeable {
 
     // MARK: Auto-dismiss
 
-    /// Starts the countdown, if the profile has one. Paused while hovered.
+    /// Starts the countdown, if the profile has one. It runs only while the
+    /// card is visible and nobody is pointing at it; when it runs out the card
+    /// calls `close`, once.
     func startAutoDismiss(after seconds: TimeInterval?) {
-        stop()
-        remainingDismiss = seconds
-        if !isHovered {
-            resumeAutoDismiss()
-        }
+        countdown.start(after: seconds) { [weak self] in self?.actions.close() }
     }
 
     /// Cancels any countdown. A presenter calls this when it removes the card.
     func stop() {
-        dismissTimer?.invalidate()
-        dismissTimer = nil
-        remainingDismiss = nil
+        countdown.stop()
     }
 
-    private func pauseAutoDismiss() {
-        guard let timer = dismissTimer else { return }
-        remainingDismiss = max(1, timer.fireDate.timeIntervalSinceNow)
-        timer.invalidate()
-        dismissTimer = nil
+    /// Folded behind the "+N more" pill (or back out of it). A card nobody
+    /// can see must not expire unseen.
+    func setInOverflow(_ hidden: Bool) {
+        countdown.setPaused(hidden, for: .hidden)
     }
 
-    private func resumeAutoDismiss() {
-        guard let remaining = remainingDismiss, dismissTimer == nil else { return }
-        let timer = Timer(timeInterval: remaining, repeats: false) { [weak self] _ in
-            MainActor.assumeIsolated {
-                guard let self else { return }
-                self.dismissTimer = nil
-                self.remainingDismiss = nil
-                self.actions.close()
-            }
-        }
-        RunLoop.main.add(timer, forMode: .common)
-        dismissTimer = timer
+    /// The pointer is over another placement of this notice, on another
+    /// screen: every copy holds still together.
+    func setPeerHovered(_ hovered: Bool) {
+        countdown.setPaused(hovered, for: .peerHover)
     }
 
     // MARK: Events
@@ -231,14 +234,10 @@ public final class NoticeCardView: NSView, Themeable {
         setHovered(false)
     }
 
-    private func setHovered(_ hovered: Bool) {
+    func setHovered(_ hovered: Bool) {
         guard hovered != isHovered else { return }
         isHovered = hovered
-        if hovered {
-            pauseAutoDismiss()
-        } else {
-            resumeAutoDismiss()
-        }
+        countdown.setPaused(hovered, for: .hover)
         updateDetailLines()
         onHoverChange?(hovered)
     }

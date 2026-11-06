@@ -7,7 +7,8 @@ import AgenticDeveloperHubSDKNotifications
 /// Index 0 is the newest card and sits nearest the anchor: the corner or edge
 /// the position names. Top and center positions grow downward, bottom
 /// positions grow upward. `center` puts the newest card in the middle of the
-/// screen and stacks older ones below it.
+/// screen and stacks older ones below it, rising as far as it must to stay on
+/// screen. Every frame is clamped inside `visible`, less the margin.
 public enum ToastStackLayout {
 
     public static func frames(
@@ -42,7 +43,12 @@ public enum ToastStackLayout {
             cursor = visible.maxY - margin
         case .center:
             growsDown = true
-            cursor = visible.midY + first.height / 2
+            // Newest in the middle, unless the stack would then run off the
+            // bottom: then it rises just enough to fit.
+            let total = sizes.map(\.height).reduce(0, +) + spacing * CGFloat(sizes.count - 1)
+            cursor = min(
+                max(visible.midY + first.height / 2, visible.minY + margin + total),
+                visible.maxY - margin)
         case .bottomLeft, .bottomCenter, .bottomRight:
             growsDown = false
             cursor = visible.minY + margin
@@ -66,7 +72,10 @@ public enum ToastStackLayout {
                 originY = cursor
                 cursor = originY + size.height + spacing
             }
-            return CGRect(x: originX, y: originY, width: size.width, height: size.height)
+            // A stack taller than the screen keeps every card on it; the
+            // oldest overlap at the far edge rather than vanish past it.
+            let clampedY = max(visible.minY + margin, min(originY, visible.maxY - margin - size.height))
+            return CGRect(x: originX, y: clampedY, width: size.width, height: size.height)
         }
     }
 }
