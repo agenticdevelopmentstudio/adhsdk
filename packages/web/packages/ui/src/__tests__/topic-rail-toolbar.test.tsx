@@ -187,6 +187,23 @@ describe('topic list filter', () => {
     expect(screen.getByRole('option', { name: 'Alpha' }).querySelector('[data-htd-match]')).toBeNull()
   })
 
+  it('underlines the right letters when case-folding changes the label’s length', () => {
+    // 'İ' folds to two code units, so a position in the folded label is one off in the label.
+    render(<TopicRail {...props} items={[{ id: 'i', label: 'İstanbul' }]} />)
+    fireEvent.click(filterButton())
+    type('stan')
+    expect(screen.getByRole('option').querySelector('[data-htd-match]')).toHaveTextContent(/^stan$/)
+    type('i̇s')
+    expect(screen.getByRole('option').querySelector('[data-htd-match]')).toHaveTextContent(/^İs$/)
+  })
+
+  it('sizes a host’s icons like the rows do', () => {
+    render(<TopicRail {...props} items={[{ id: 'a', label: 'Alpha', icon: <svg data-testid="icon" /> }]} />)
+    fireEvent.click(filterButton())
+    type('al')
+    expect(screen.getByRole('option')).toHaveClass('[&_svg]:h-4', '[&_svg]:w-4')
+  })
+
   it("hides the rail's rows under the list while it is up, and only then", () => {
     render(<TopicRail {...props} />)
     const list = () => document.querySelector('[data-htd-row]')!.closest('.overflow-y-auto')!

@@ -463,6 +463,29 @@ describe('touch rows — every row shape is grown from its own height', () => {
       }
     })
 
+    it('a filter suggestion: its `py-1.5` around one line, like the Tailwind rows', async () => {
+      // A titled rail: the filter lives in the toolbar under its header.
+      render(
+        <TopicRail
+          title="Settings"
+          items={[
+            { id: 'a', label: 'Appearance' },
+            { id: 'b', label: 'Keyboard' },
+          ]}
+          selectedId={null}
+          onSelect={() => {}}
+          emptyLabel="Nothing"
+          collapsed={false}
+          onToggle={() => {}}
+        />,
+      )
+      fireEvent.click(screen.getByRole('button', { name: 'Filter' }))
+      fireEvent.change(screen.getByRole('combobox'), { target: { value: 'e' } })
+      const options = screen.getAllByRole('option')
+      expect(options).toHaveLength(2)
+      for (const row of options) await expectTouchRow(row, oneLine)
+    })
+
     it('a collapsed strip: its `py-1.5` around the icon alone, the same above and below', async () => {
       for (const row of renderRail('collapsed')) {
         expect(row).toHaveAttribute('data-htd-strip', 'collapsed')
