@@ -1,6 +1,15 @@
 {
-  "originHash" : "79f59c45da758a4d0d6da81b7de553567807b3b542eb0da7a5fb9d0a1fceb190",
+  "originHash" : "955d41ad7a84343227bee5168a3081200632ffab6611fbcf51cc0bfe4875b2bb",
   "pins" : [
+    {
+      "identity" : "appauth-ios",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/openid/AppAuth-iOS",
+      "state" : {
+        "revision" : "a972daac82d449d58ab119e91c68153e29ddac33",
+        "version" : "3.0.0"
+      }
+    },
     {
       "identity" : "codeeditlanguages",
       "kind" : "remoteSourceControl",
@@ -175,7 +184,7 @@
     {
       "identity" : "swift-collections",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/apple/swift-collections.git",
+      "location" : "https://github.com/apple/swift-collections",
       "state" : {
         "revision" : "98ef3c98609a1e31b7e157b5b619579001a789d6",
         "version" : "1.7.1"
