@@ -6,7 +6,7 @@ import { buildAnalyticsFetcher, buildErrorsFetcher } from '../telemetry/server';
 import type { Fetcher } from '../telemetry/ports';
 import { cachedSingleFlight } from '@adh-sdk/deploy-platform/util';
 import type { AnalyticsMetricDTO, ErrorDTO, TelemetrySnapshot } from '../telemetry/types';
-import { errorCountsAsProblem } from '../board/derive-problems';
+import { errorCountsAsProblem, errorFeedFrozen } from '../board/derive-problems';
 import { isoMs } from '../telemetry/dashboard/errors-sections';
 
 // ---------------------------------------------------------------------------
@@ -59,13 +59,22 @@ export function telemetryRoutes(
   const cachedErrors = cachedSingleFlight(ERRORS_CACHE_TTL_MS, async () => {
     const r = await errorsFetcher.fetch();
     if (r.ok) lastGood.errors = r.items;
-    // A failed poll serving older rows is the board's frozen feed, and is judged as one.
+    // A failed poll serving older rows says so (`errorsFrozen`); the verdict is `judged`'s.
     return { items: lastGood.errors ?? [], frozen: !r.ok && lastGood.errors !== null };
   });
 
-  /** Each error marked with the board's own verdict, so no view re-derives part of it. */
-  function judged(errors: { items: ErrorDTO[]; frozen: boolean }): ErrorDTO[] {
-    const judging = { nowMs: Date.now(), frozen: errors.frozen, allowlist: config.glitchtipProjects };
+  /**
+   * Each error marked with the board's own verdict, so no view re-derives part of it. The
+   * frozen half is the board's too: the monitor's `glitchtip` observation in
+   * `platform_health_state`, read the way `deriveBoard` reads it — NOT this route's own poll
+   * above. The two fail independently, and judging by our own would let one failed request
+   * here hold the card red with nothing in Problems, or a failed monitor cycle open a Problem
+   * beside an all-clear card. (`errorsFrozen` on the snapshot still reports THIS poll: it says
+   * the rows shown are an old answer, which is a statement about them, not the verdict.)
+   */
+  async function judged(errors: { items: ErrorDTO[] }): Promise<ErrorDTO[]> {
+    const frozen = errorFeedFrozen({ platforms: await storage.board.readPlatformFacts() });
+    const judging = { nowMs: Date.now(), frozen, allowlist: config.glitchtipProjects };
     return errors.items.map((e) => ({
       ...e,
       active: errorCountsAsProblem({ project: e.project, level: e.level, lastSeenMs: isoMs(e.lastSeen) }, judging),
@@ -109,7 +118,7 @@ export function telemetryRoutes(
     const [errors, analytics] = await Promise.all([cachedErrors(fresh), analyticsForSnapshot(fresh)]);
     const snapshot: TelemetrySnapshot = {
       generatedAt: new Date().toISOString(),
-      errors: judged(errors),
+      errors: await judged(errors),
       analytics: analytics ?? [],
       ...(errors.frozen ? { errorsFrozen: true } : {}),
       ...(analytics ? {} : { analyticsPending: true }),

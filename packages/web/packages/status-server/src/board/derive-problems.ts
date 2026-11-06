@@ -575,8 +575,14 @@ function projectAllowed(allowlist: readonly string[] | null, project: string): b
  * reports an unreachable GlitchTip — and this reads the raw flag to FREEZE the error rows
  * in their last observed state until the feed comes back. Absent row → not frozen: a
  * deployment that has never recorded an observation must not have its errors pinned.
+ *
+ * Exported so every view that calls an error "active" passes `errorCountsAsProblem` THIS
+ * verdict, read from the same `platform_health_state` rows, rather than one of its own: the
+ * `/telemetry` route used to judge its own 30s-cached GlitchTip poll, so one failed request
+ * turned the Overview card red with nothing in Problems, and a failed monitor cycle opened a
+ * Problem beside an all-clear card.
  */
-function errorFeedFrozen(facts: BoardFacts): boolean {
+export function errorFeedFrozen(facts: Pick<BoardFacts, "platforms">): boolean {
   const gt = facts.platforms.find((p) => p.source === "glitchtip");
   return gt !== undefined && gt.configured && !gt.ok;
 }

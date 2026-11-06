@@ -222,7 +222,7 @@ describe('telemetry live snapshot — single-flight + stale fallback', () => {
     }
   });
 
-  it('while GlitchTip cannot be read, says so and keeps its last errors active however old', async () => {
+  it('while its own GlitchTip poll fails, says so but judges by the board, not by that poll', async () => {
     let fail = false;
     // errItem was last seen in June: far outside the 24h window.
     const errorsFetcher: Fetcher<ErrorDTO> = {
@@ -234,13 +234,30 @@ describe('telemetry live snapshot — single-flight + stale fallback', () => {
     const fresh = (await (await routes.request('/telemetry?fresh=1')).json()) as { errors: ErrorDTO[] };
     expect(fresh.errors[0]!.active).toBe(false);
 
+    // The monitor has not lost GlitchTip, so the board is not frozen and nor is the verdict.
     fail = true;
-    const frozen = (await (await routes.request('/telemetry?fresh=1')).json()) as {
+    const failed = (await (await routes.request('/telemetry?fresh=1')).json()) as {
       errors: ErrorDTO[];
       errorsFrozen?: boolean;
     };
-    expect(frozen.errorsFrozen).toBe(true);
-    expect(frozen.errors[0]!.active).toBe(true);
+    expect(failed.errorsFrozen).toBe(true);
+    expect(failed.errors[0]!.active).toBe(false);
+  });
+
+  it('while the monitor cannot read GlitchTip, keeps the errors active however old, as the board does', async () => {
+    const storage = createLibsqlStorage(db);
+    await storage.observations.recordObservations([{ source: 'glitchtip', configured: true, reachable: false }]);
+    // errItem was last seen in June: far outside the 24h window.
+    const errorsFetcher: Fetcher<ErrorDTO> = { fetch: async () => ({ ok: true as const, items: [errItem] }) };
+    const analyticsFetcher: Fetcher<AnalyticsMetricDTO> = { fetch: async () => ({ ok: true as const, items: [] }) };
+    const routes = telemetryRoutes(storage, testConfig(), { errorsFetcher, analyticsFetcher });
+
+    const body = (await (await routes.request('/telemetry?fresh=1')).json()) as {
+      errors: ErrorDTO[];
+      errorsFrozen?: boolean;
+    };
+    expect(body.errorsFrozen).toBeUndefined();
+    expect(body.errors[0]!.active).toBe(true);
   });
 
   it('a cold start that gives up on PostHog says the analytics are pending, not empty', async () => {
